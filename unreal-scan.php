@@ -1,230 +1,258 @@
 <?php
-ini_set("max_execution_time", (3600*5)); // 1 houre limit for scaning large folders!!
-require_once 'UPackage.php';
-$files = array_slice(scandir('O:\un-uz2'), 2);
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+ini_set('max_execution_time', (string)(3600 * 5));
+ini_set('memory_limit', '512M');
 
-if (($key = array_search(".", $files)) !== false) {
-    unset($files[$key]);
-}
-if (($key = array_search("..", $files)) !== false) {
-    unset($files[$key]);
+$dbhost = 'localhost';
+$dbname = 'unreal_files';
+$dbuser = 'root';
+$dbpass = 'MyPASSWORD';
+
+$defaultScanDir = __DIR__ . '/uploads';
+$scanDir = isset($_REQUEST['scan_dir']) && trim((string)$_REQUEST['scan_dir']) !== '' ? trim((string)$_REQUEST['scan_dir']) : $defaultScanDir;
+$doScan = isset($_REQUEST['run']) && (string)$_REQUEST['run'] === '1';
+$messages = [];
+$errors = [];
+$inserted = 0;
+$skipped = 0;
+$failed = 0;
+
+function h($s): string {
+    return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-$filesCount = count($files);
-$dbpass     = "MyPASSWORD";
-$dbname     = "unreal_files";
-$dbhost     = "localhost";
-$dbuser     = "root";
-$i          = 0;
+function out_msg(array &$messages, string $message): void {
+    $messages[] = $message;
+    if (PHP_SAPI !== 'cli') {
+        echo h($message) . "<br>\n";
+        @ob_flush();
+        @flush();
+    }
+}
 
-try {
-	$dblink = new PDO("mysql:host=".$dbhost.";charset=utf8", $dbuser, $dbpass); # MySQL Database
-		
-	if(!$dblink) {
-		echo "No DB<BR>\n";
-		Exit;
-	}
-		
-	$dblink->query("CREATE DATABASE IF NOT EXISTS $dbname;");
-	$dblink->query("USE $dbname;");
-	$dblink->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	$dblink->setAttribute(PDO::ATTR_EMULATE_PREPARES, true);
-} 
-catch(PDOException $ex) {
-	echo "ERROR: ".$e->getMessage()."\n";
+function out_err(array &$errors, string $message): void {
+    $errors[] = $message;
+    if (PHP_SAPI !== 'cli') {
+        echo '<span style="color:#b00020">' . h($message) . "</span><br>\n";
+        @ob_flush();
+        @flush();
+    }
 }
-//echo "<pre>\n";
-//print_r($files);
-//echo "</pre>\n";
 
+function tableExists(PDO $db): bool {
+    $stmt = $db->query("SHOW TABLES LIKE 'files'");
+    return (bool)$stmt->fetchColumn();
+}
 
-foreach($files as $file)
-{
-	$fileFull = "O:\\un-uz2\\".$file;
-	/*
-	$package  = $fileFull;
-	
-	try {		
-		//-- Load package and get GUID
-		echo "Loading package $package<BR>\n";
-		UPackage::loadPackage($package);
-		echo "GUID: ".UPackage::getGUID(true)."\n";		
-		var_dump(UPackage::getSignature(true));
-		var_dump(UPackage::getVersion());
-		var_dump(UPackage::getNameTable());
-		var_dump(UPackage::getImportTable());
-		var_dump(UPackage::getExportTable());
-		var_dump(UPackage::getDependencies());
-		var_dump(UPackage::getOuterClasses());
-		var_dump(UPackage::getInnerClasses());
-		var_dump(UPackage::getClassTree());
-		var_dump(UPackage::getObjects());
-		
-	} catch (Exception $e) {
-		echo "ERROR: ".$e->getMessage()."\n";
-	}
-	*/	
-	
-	$fileFull   = "O:\\un-uz2\\".$file;	
-	$file_parts = pathinfo($fileFull);
-	//echo $file_parts['dirname'], "\n";
-	//echo $file_parts['basename'], "\n";
-	//echo $file_parts['extension'], "\n";
-	//echo $file_parts['filename'], "\n";	
-	$fileSize   = filesize($fileFull);	
-	$fileHash   = strtoupper(sha1_file($fileFull));
-	$FileHeader = GetFileHeaderData($fileFull);	
-	$FileHeader['FileName'] = $file_parts['basename'];
-	$FileHeader['FilePath'] = $file_parts['dirname'];
-	$FileHeader['FileSize'] = $fileSize;
-	$FileHeader['FileHash'] = $fileHash;
-	
-	if(strlen(@$file_parts['extension'])==0)
-		$FileHeader['FileType'] = "unknown";
-	else if (strlen(@$file_parts['extension'])>7)
-		continue;
-	else
-		$FileHeader['FileType'] = $file_parts['extension'];	
-	//echo "<pre>\n<br>";
-	//echo ($i+1)."/".$filesCount." - ".$fileFull." - ".$fileSize." - ".$fileHash."\n<BR>";
-	//print_r($FileHeader);
-	//echo "</pre>\n<br>";
-	
-	try	{		
-			$query = "INSERT INTO files(FileName, FilePath, FileSize, FileHash, FileType, FileVersion, FileGUID) VALUES(:FileName, :FilePath, :FileSize, :FileHash, :FileType, :FileVersion, :FileGUID);";		
-			$sdt   = $dblink->prepare($query);			
-			$sdt->bindParam(':FileName',    $FileHeader['FileName']);
-			$sdt->bindParam(':FilePath',    $FileHeader['FilePath']);			
-			$sdt->bindParam(':FileSize',    $FileHeader['FileSize']);
-			$sdt->bindParam(':FileHash',    $FileHeader['FileHash']);
-			$sdt->bindParam(':FileType',    $FileHeader['FileType']);
-			$sdt->bindParam(':FileVersion', $FileHeader['Version']);	
-			$sdt->bindParam(':FileGUID',    $FileHeader['GUID']);		
-			$sdt->execute();
-			$sdt->closeCursor();
-		}
-		catch(PDOException $e) {		
-			echo "ERROR: ".$e->getMessage()."\n";
-			continue;
-		}
-		
-	echo ($i+1)."/$filesCount - Added: $fileFull - $fileHash<BR>\n";
-	//.getHeaderValue($FileHeader, false)."<BR>\n";
-	$i++;
-	
-	//if($i>10)
-	//	break;
+function ensureFilesTable(PDO $db): void {
+    $db->exec("CREATE TABLE IF NOT EXISTS files (
+        id int NOT NULL AUTO_INCREMENT,
+        FileName varchar(150) NOT NULL DEFAULT 'Unknown',
+        FilePath varchar(200) DEFAULT NULL,
+        FileSize bigint NOT NULL DEFAULT 0,
+        FileHash varchar(40) NOT NULL DEFAULT 'Unknown',
+        FileType varchar(10) NOT NULL DEFAULT '',
+        FileVersion int NOT NULL DEFAULT 0,
+        FileGUID varchar(36) NOT NULL DEFAULT 'Unknown',
+        PRIMARY KEY (id),
+        KEY idx_filehash (FileHash),
+        KEY idx_filename (FileName)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 }
-//---------------------------------------------------------------------------------------------------------------------------
-function GetFileHeaderData($FILENAME)
-{
-	$fileHeader = array();
-	$data = "";
-	
-	try
-	{
-		$handle           = fopen($FILENAME, "r");
-		$data             = fread($handle, 52);// or die ("Could not read data from file $filename"); // 52
-		$header           = unpack("C4Unreal Header/vVersion/vLicense Mode/v2Package Flags/VNumber Of Names/VName Directory Offset/VNumber Of Files/VFile Directory Offset/VNumber Of Types/VType Directory Offset/C16GUID Hash", $data);
-		$header['Header'] = GetFileHeader($header);
-		$header['GUID']   = GetGUID($header);	
-	}
-	catch (Exception $e)
-	{
-		echo "ERROR 2: ".$e->getMessage()."\n";
-	}
-	/*
-	if($header['Version']<68)
-	{
-		echo "Old Format\n";
-		$data   = fread($handle, 4);
-		$header = unpack("vHeritage Count/vHeritage Offset", $data);	
-		print_r($header);
-		
-		echo "<HR>\n";	
-	}
-	else
-	{
-		$data   = fread($handle, 2);
-		$header = unpack("vGeneration Count", $data);
-		echo "Generations to Process\n";
-		print_r($header);
-		echo "<HR>\n";
-		$loop = $header['Generation Count'];
 
-		for($i=0;$i<$loop;$i++)
-		{
-			echo "Generation ".($i+1)."\n";
-			$data   = fread($handle, 4);
-			$header = unpack("vExport Count/vName Count", $data);	
-			print_r($header);
-		}
+function getFileList(string $dir): array {
+    if (!is_dir($dir)) {
+        throw new RuntimeException('Scan folder does not exist: ' . $dir);
+    }
+    if (!is_readable($dir)) {
+        throw new RuntimeException('Scan folder is not readable by PHP/Web Station: ' . $dir);
+    }
 
-		echo "<HR>\n";	
-	}
-	*/
-	
-	// old guid {1E90ACA4-ED66-11D1-444553540000}
-	//echo "</pre>\n";
-	fclose($handle);
-	return $header;
+    $items = scandir($dir);
+    if ($items === false) {
+        throw new RuntimeException('Unable to scan folder: ' . $dir);
+    }
+
+    $files = [];
+    foreach ($items as $item) {
+        if ($item === '.' || $item === '..') {
+            continue;
+        }
+        $path = rtrim($dir, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $item;
+        if (!is_file($path)) {
+            continue;
+        }
+        $files[] = $path;
+    }
+    sort($files, SORT_NATURAL | SORT_FLAG_CASE);
+    return $files;
 }
-//---------------------------------------------------------------------------------------------------------------------------
-function GetFileHeader($HEADER)
-{
-	if(isLittleEndian()!=1) // rearange to get correct hash
-	{ //0x9E2A83C1 - unreal file
-		return "0x".strtoupper(str_pad(dechex($HEADER['Unreal Header1']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['Unreal Header2']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['Unreal Header3']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['Unreal Header4']),  2, "0", STR_PAD_LEFT));
-	}
-	else
-	{ // rearange
-		return "0x".strtoupper(str_pad(dechex($HEADER['Unreal Header4']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['Unreal Header3']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['Unreal Header2']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['Unreal Header1']),  2, "0", STR_PAD_LEFT));
-	}	
+
+function getFileHeaderData(string $filename): array {
+    $header = [
+        'Header' => 'Unknown',
+        'Version' => 0,
+        'GUID' => 'Unknown',
+    ];
+
+    if (!is_readable($filename)) {
+        throw new RuntimeException('File is not readable: ' . $filename);
+    }
+
+    $handle = fopen($filename, 'rb');
+    if (!$handle) {
+        throw new RuntimeException('Could not open file: ' . $filename);
+    }
+
+    try {
+        $data = fread($handle, 52);
+        if ($data === false || strlen($data) < 52) {
+            throw new RuntimeException('File is too small to contain an Unreal package header: ' . $filename);
+        }
+
+        $parsed = unpack('C4UnrealHeader/vVersion/vLicenseMode/v2PackageFlags/VNumberOfNames/VNameDirectoryOffset/VNumberOfFiles/VFileDirectoryOffset/VNumberOfTypes/VTypeDirectoryOffset/C16GUIDHash', $data);
+        if (!is_array($parsed)) {
+            throw new RuntimeException('Unable to unpack header: ' . $filename);
+        }
+
+        $parsed['Header'] = getFileHeader($parsed);
+        $parsed['GUID'] = getGUID($parsed);
+        return $parsed;
+    } finally {
+        fclose($handle);
+    }
 }
-//---------------------------------------------------------------------------------------------------------------------------
-function GetGUID($HEADER)
-{
-	if(isLittleEndian()!=1) // rearange to get correct hash
-	{ 
-		return strtoupper(str_pad(dechex($HEADER['GUID Hash1']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash2']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash3']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash4']),  2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash5']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash6']),  2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash7']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash8']),  2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash9']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash10']), 2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash11']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash12']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash13']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash14']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash15']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash16']), 2, "0", STR_PAD_LEFT));	
-	}
-	else
-	{ // rearange
-		return strtoupper(str_pad(dechex($HEADER['GUID Hash4']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash3']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash2']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash1']),  2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash6']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash5']),  2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash8']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash7']),  2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash9']),  2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash10']), 2, "0", STR_PAD_LEFT)."-".
-						  str_pad(dechex($HEADER['GUID Hash11']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash12']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash13']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash14']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash15']), 2, "0", STR_PAD_LEFT).str_pad(dechex($HEADER['GUID Hash16']), 2, "0", STR_PAD_LEFT));	
-	}
+
+function getFileHeader(array $header): string {
+    return '0x' . strtoupper(
+        str_pad(dechex((int)$header['UnrealHeader4']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['UnrealHeader3']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['UnrealHeader2']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['UnrealHeader1']), 2, '0', STR_PAD_LEFT)
+    );
 }
-//---------------------------------------------------------------------------------------------------------------------------
-function isLittleEndian() { return unpack('S',"\x01\x00")[1] === 1; }
-//---------------------------------------------------------------------------------------------------------------------------
-function swapEndianness($hex) { return implode('', array_reverse(str_split($hex, 2))); }
-//---------------------------------------------------------------------------------------------------------------------------
-function dexHexZero($n){
-	$n = dechex($n);
-		return ((strlen($n)%2) == 1 ? "0$n" : $n);	
+
+function getGUID(array $header): string {
+    return strtoupper(
+        str_pad(dechex((int)$header['GUIDHash4']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash3']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash2']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash1']), 2, '0', STR_PAD_LEFT) . '-' .
+        str_pad(dechex((int)$header['GUIDHash6']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash5']), 2, '0', STR_PAD_LEFT) . '-' .
+        str_pad(dechex((int)$header['GUIDHash8']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash7']), 2, '0', STR_PAD_LEFT) . '-' .
+        str_pad(dechex((int)$header['GUIDHash9']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash10']), 2, '0', STR_PAD_LEFT) . '-' .
+        str_pad(dechex((int)$header['GUIDHash11']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash12']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash13']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash14']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash15']), 2, '0', STR_PAD_LEFT) .
+        str_pad(dechex((int)$header['GUIDHash16']), 2, '0', STR_PAD_LEFT)
+    );
 }
-//---------------------------------------------------------------------------------------------------------------------------	
-function getHeaderValue($HEADER, $returnHex=false)
-{		
-	$ref = $HEADER['GUID Hash1'].$HEADER['GUID Hash2'].$HEADER['GUID Hash3'].$HEADER['GUID Hash4'].$HEADER['GUID Hash5'].$HEADER['GUID Hash6'].$HEADER['GUID Hash7'].$HEADER['GUID Hash8'].
-	       $HEADER['GUID Hash9'].$HEADER['GUID Hash10'].$HEADER['GUID Hash11'].$HEADER['GUID Hash12'].$HEADER['GUID Hash13'].$HEADER['GUID Hash14'].$HEADER['GUID Hash15'].$HEADER['GUID Hash16'];
-	
-	//substr($data, $offset, $dl);	
-echo $ref."<HR>\n";	
-	
-	$hexArray = array();
-	for ($i = 0; $i<strlen($ref); $i++)
-		$hexArray[] = dexHexZero(ord($ref[$i]));
-	$value = implode('', array_reverse($hexArray));
-	if (!$returnHex)
-		return hexdec($value);
-	return $value;
+
+function extensionForPath(string $path): string {
+    $ext = strtolower((string)pathinfo($path, PATHINFO_EXTENSION));
+    if ($ext === '') {
+        return 'unknown';
+    }
+    if (strlen($ext) > 10) {
+        return substr($ext, 0, 10);
+    }
+    return $ext;
+}
+
+?><!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Unreal File Scanner</title>
+<style>
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:24px;background:#111;color:#ddd}input{padding:6px 8px;margin:4px;background:#1b1b1b;color:#ddd;border:1px solid #444;border-radius:4px}button,input[type=submit]{cursor:pointer;background:#26394f}code,pre{background:#000;color:#8f8;padding:8px;border-radius:6px}label{display:block;margin:8px 0}.box{border:1px solid #333;border-radius:8px;padding:12px;margin:12px 0;background:#181818}.err{color:#ff9f9f}.ok{color:#9fdf9f}.muted{color:#999}</style>
+</head>
+<body>
+<h1>Unreal File Scanner</h1>
+
+<div class="box">
+<form method="get">
+    <input type="hidden" name="run" value="1">
+    <label>Scan folder:<br><input type="text" name="scan_dir" value="<?=h($scanDir)?>" style="width:520px"></label>
+    <input type="submit" value="Scan folder">
+</form>
+<p class="muted">Default folder is <code><?=h($defaultScanDir)?></code>. Use a Synology/Linux path, not <code>O:\un-uz2</code>.</p>
+</div>
+
+<?php
+if ($doScan) {
+    echo '<div class="box"><strong>Scan started...</strong><br>';
+
+    try {
+        $dsn = 'mysql:host=' . $dbhost . ';dbname=' . $dbname . ';charset=utf8mb4';
+        $dblink = new PDO($dsn, $dbuser, $dbpass, [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ]);
+
+        ensureFilesTable($dblink);
+        out_msg($messages, 'Connected to database: ' . $dbname);
+
+        $files = getFileList($scanDir);
+        $filesCount = count($files);
+        out_msg($messages, 'Files found: ' . $filesCount);
+
+        $stmt = $dblink->prepare("INSERT INTO files(FileName, FilePath, FileSize, FileHash, FileType, FileVersion, FileGUID)
+            VALUES(:FileName, :FilePath, :FileSize, :FileHash, :FileType, :FileVersion, :FileGUID)");
+
+        foreach ($files as $index => $fileFull) {
+            try {
+                $fileSize = filesize($fileFull);
+                if ($fileSize === false) {
+                    throw new RuntimeException('Unable to read file size');
+                }
+
+                $fileHash = sha1_file($fileFull);
+                if ($fileHash === false) {
+                    throw new RuntimeException('Unable to calculate SHA1');
+                }
+                $fileHash = strtoupper($fileHash);
+
+                $fileHeader = getFileHeaderData($fileFull);
+                $fileName = basename($fileFull);
+                $filePath = dirname($fileFull);
+                $fileType = extensionForPath($fileFull);
+                $fileVersion = (int)($fileHeader['Version'] ?? 0);
+                $fileGUID = (string)($fileHeader['GUID'] ?? 'Unknown');
+
+                $stmt->execute([
+                    ':FileName' => $fileName,
+                    ':FilePath' => $filePath,
+                    ':FileSize' => (int)$fileSize,
+                    ':FileHash' => $fileHash,
+                    ':FileType' => $fileType,
+                    ':FileVersion' => $fileVersion,
+                    ':FileGUID' => $fileGUID,
+                ]);
+
+                $inserted++;
+                out_msg($messages, ($index + 1) . '/' . $filesCount . ' - Added: ' . $fileName . ' - ' . $fileHash);
+            } catch (Throwable $t) {
+                $failed++;
+                out_err($errors, ($index + 1) . '/' . $filesCount . ' - Failed: ' . basename($fileFull) . ' - ' . $t->getMessage());
+                continue;
+            }
+        }
+
+        out_msg($messages, 'Done. Added: ' . $inserted . ', failed/skipped: ' . $failed);
+    } catch (Throwable $t) {
+        out_err($errors, 'Fatal scan error: ' . $t->getMessage());
+    }
+
+    echo '</div>';
 }
 ?>
+</body>
+</html>
