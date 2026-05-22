@@ -2,586 +2,238 @@
 
 namespace net\shrimpworks\unreal\packages;
 
-use net\shrimpworks\unreal\packages\compression\CompressedChunk;
-use net\shrimpworks\unreal\packages\compression\CompressionFormat;
-use net\shrimpworks\unreal\packages\entities\Export;
-use net\shrimpworks\unreal\packages\entities\ExportedEntry;
-use net\shrimpworks\unreal\packages\entities\ExportedField;
-use net\shrimpworks\unreal\packages\entities\ExportedObject;
-use net\shrimpworks\unreal\packages\entities\FieldTypes;
-use net\shrimpworks\unreal\packages\entities\Import;
-use net\shrimpworks\unreal\packages\entities\Name;
-use net\shrimpworks\unreal\packages\entities\NameNumber;
-use net\shrimpworks\unreal\packages\entities\Named;
-use net\shrimpworks\unreal\packages\entities\ObjectFlag;
-use net\shrimpworks\unreal\packages\entities\ObjectReference;
-use net\shrimpworks\unreal\packages\entities\objects\ObjectFactory;
-use net\shrimpworks\unreal\packages\entities\objects\ObjectHeader;
-use net\shrimpworks\unreal\packages\entities\properties\ArrayProperty;
-use net\shrimpworks\unreal\packages\entities\properties\BooleanProperty;
-use net\shrimpworks\unreal\packages\entities\properties\ByteProperty;
-use net\shrimpworks\unreal\packages\entities\properties\EnumProperty;
-use net\shrimpworks\unreal\packages\entities\properties\FixedArrayProperty;
-use net\shrimpworks\unreal\packages\entities\properties\FloatProperty;
-use net\shrimpworks\unreal\packages\entities\properties\IntegerProperty;
-use net\shrimpworks\unreal\packages\entities\properties\NameProperty;
-use net\shrimpworks\unreal\packages\entities\properties\ObjectProperty;
-use net\shrimpworks\unreal\packages\entities\properties\Property;
-use net\shrimpworks\unreal\packages\entities\properties\PropertyType;
-use net\shrimpworks\unreal\packages\entities\properties\StringProperty;
-use net\shrimpworks\unreal\packages\entities\properties\StructProperty;
-use net\shrimpworks\unreal\packages\entities\properties\UnknownArrayProperty;
+use RuntimeException;
+use Throwable;
 
-class Package implements Closeable {
+require_once __DIR__ . '/TUnrealPackage.php';
 
-    const PKG_SIGNATURE = 0x9E2A83C1;
-    private const MAX_PROPERTIES = 256;
+/**
+ * Compatibility wrapper for older code that expected a Package class.
+ *
+ * The previous version of this file was an incomplete Java-to-PHP port and was
+ * not valid PHP in this project. This wrapper delegates parsing to the active
+ * TUnrealPackage.php reader and exposes simple header/name/import/export access.
+ */
+class Package
+{
+    public const PKG_SIGNATURE = 0x9E2A83C1;
 
-    private const SHA1 = "SHA-1";
+    private string $filePath;
+    private object $reader;
 
-    private const PROPERTY_SIZE_MAP = [1, 2, 4, 12, 16];
+    public int $version = 0;
+    public int $license = 0;
+    public int $engineVersion = 0;
+    public int $flags = 0;
 
-    public const PackageFlag = [
-        'AllowDownload' => 0x0001,
-        'ClientOptional' => 0x0002,
-        'ServerSideOnly' => 0x0004,
-        'BrokenLinks' => 0x0008,
-        'Unsecure' => 0x0010,
-        'Need' => 0x8000
-    ];
+    public array $header = [];
+    public array $names = [];
+    public array $exports = [];
+    public array $imports = [];
+    public array $objects = [];
+    public array $fields = [];
 
-    private $reader;
-
-    public $version;
-    public $license;
-    public $engineVersion;
-    public $compressionFormat;
-    public $compressedChunkCount;
-    public $flags;
-    public $names;
-    public $exports;
-    public $imports;
-    public $objects;
-    public $fields;
-
-    private $loadedObjects;
-    private $objectReferences;
-
-    public function __construct($packageFile) {
-        $this->reader = new PackageReader($packageFile);
-
-        $this->reader->moveTo(0);
-
-        if ($this->reader->readInt() != self::PKG_SIGNATURE) throw new \InvalidArgumentException("Package does not seem to be an Unreal package");
-
-        $this->loadedObjects = new \WeakHashMap();
-        $this->objectReferences = new \WeakHashMap();
-
-        $this->version = $this->reader->readShort();
-        $this->reader->version = $this->version;
-
-        $this->license = $this->reader->readShort();
-
-        if ($this->version >= 249) {
-            $headerSize = $this->reader->readInt();
+    public function __construct(string $packageFile)
+    {
+        if (!is_file($packageFile)) {
+            throw new RuntimeException('File not found: ' . $packageFile);
         }
-        if ($this->version >= 269) {
-            $folderName = $this->reader->readString();
+        if (!is_readable($packageFile)) {
+            throw new RuntimeException('File is not readable by PHP/Web Station: ' . $packageFile);
         }
 
-        $this->flags = $this->reader->readInt();
+        $this->filePath = $packageFile;
+        $this->reader = \TPackageReader::open($packageFile);
 
-        $nameCount = $this->reader->readInt();
-        $namePos = $this->reader->readInt();
-
-        $exportCount = $this->reader->readInt();
-        $exportPos = $this->reader->readInt();
-
-        $importCount = $this->reader->readInt();
-        $importPos = $this->reader->readInt();
-
-        if ($this->version >= 415) {
-            $dependsPos = $this->reader->readInt();
+        if (method_exists($this->reader, 'annotateTablesWithText')) {
+            $this->reader->annotateTablesWithText();
         }
 
-        if ($this->version >= 584) {
-            $unknown = array_fill(0, 16, 0);
-            $this->reader->readBytes($unknown, 0, 16);
-        }
+        $this->header = $this->reader->getHeader();
+        $this->names = $this->reader->getNames();
+        $this->exports = $this->reader->getExports();
+        $this->imports = $this->reader->getImports();
 
-        if ($this->version < 68) {
-            $this->reader->readInt();
-            $this->reader->readInt();
-        } else {
-            $guid = array_fill(0, 16, 0);
-            $this->reader->readBytes($guid, 0, 16);
-            $generationCount = $this->reader->readInt();
-            for ($i = 0; $i < $generationCount; $i++) {
-                $this->reader->readInt();
-                $this->reader->readInt();
-                if ($this->version > 322) {
-                    $this->reader->readInt();
-                }
+        $this->version = (int)($this->header['version'] ?? 0);
+        $this->engineVersion = $this->version;
+        $this->license = (int)($this->header['licensee'] ?? $this->header['licenseeVersion'] ?? 0);
+        $this->flags = (int)($this->header['pkgFlags'] ?? $this->header['packageFlags'] ?? 0);
+    }
+
+    public function close(): void
+    {
+        // TPackageReader currently loads/parses from a file path and does not expose a close method.
+    }
+
+    public function sha1Hash(): string
+    {
+        $hash = sha1_file($this->filePath);
+        if ($hash === false) {
+            throw new RuntimeException('Unable to calculate SHA1 for: ' . $this->filePath);
+        }
+        return $hash;
+    }
+
+    public function flags(): array
+    {
+        return $this->decodePackageFlags($this->flags);
+    }
+
+    public function packageImports(): array
+    {
+        $out = [];
+        foreach ($this->imports as $i => $import) {
+            $row = self::rowRaw((array)$import);
+            $outer = (int)($row['outerIndex'] ?? $row['OuterIndex'] ?? $row['packageIndex'] ?? $row['PackageIndex'] ?? 0);
+            if ($outer === 0) {
+                $out[$i] = $import;
             }
         }
+        return $out;
+    }
 
-        $this->engineVersion = $this->version >= 245 ? $this->reader->readInt() : $this->version;
-
-        if ($this->version >= 277) {
-            $cookerVersion = $this->reader->readInt();
-        }
-
-        $this->compressionFormat = $this->version >= 334 ? CompressionFormat::fromFlag($this->reader->readInt()) : CompressionFormat::NONE;
-        $this->compressedChunkCount = $this->version >= 334 ? $this->reader->readInt() : 0;
-        if ($this->compressionFormat != CompressionFormat::NONE) {
-            $chunks = array_fill(0, $this->compressedChunkCount, null);
-            for ($i = 0; $i < $this->compressedChunkCount; $i++) {
-                $chunks[$i] = new CompressedChunk(
-                    $this->compressionFormat,
-                    $this->reader->readInt(),
-                    $this->reader->readInt(),
-                    $this->reader->readInt(),
-                    $this->reader->readInt()
-                );
-            }
-            $this->reader->setChunks($chunks);
-        }
-
-        $this->names = $this->names($nameCount, $namePos);
-
-        $this->exports = $this->exports($exportCount, $exportPos);
-
-        $this->imports = $this->imports($importCount, $importPos);
-
-        $this->objects = array_fill(0, count($this->exports), null);
-        $this->fields = array_fill(0, count($this->exports), null);
-        for ($i = 0; $i < count($this->exports); $i++) {
-            $e = $this->exports[$i];
-            if (FieldTypes::isField($e->classIndex)) {
-                $this->fields[$i] = $e->asField();
-            } else {
-                $this->objects[$i] = $e->asObject();
+    public function rootExports(): array
+    {
+        $out = [];
+        foreach ($this->exports as $i => $export) {
+            $row = self::rowRaw((array)$export);
+            $outer = (int)($row['outerIndex'] ?? $row['OuterIndex'] ?? $row['packageIndex'] ?? $row['PackageIndex'] ?? 0);
+            if ($outer === 0) {
+                $out[$i] = $export;
             }
         }
+        return $out;
     }
 
-    public function close() {
-        $this->reader->close();
-    }
-
-    public function sha1Hash() {
-        return $this->reader->hash(self::SHA1);
-    }
-
-    public function flags() {
-        return $this->fromFlags($this->flags);
-    }
-
-    public function packageImports() {
-        $packages = [];
-        foreach ($this->imports as $i) {
-            if ($i->packageIndex->index == 0) $packages[] = $i;
-        }
-        return $packages;
-    }
-
-    public function rootExports() {
-        $roots = [];
-        foreach ($this->exports as $e) {
-            if ($e->groupIndex->index == 0) $roots[] = $e;
-        }
-        return $roots;
-    }
-
-    public function exportsByClassName($className) {
-        $exports = [];
-        foreach ($this->exports as $ex) {
-            $type = $ex->classIndex->get();
-            if ($type instanceof Import && $type->name->name == $className) {
-                $exports[] = $ex;
+    public function exportsByClassName(string $className): array
+    {
+        $out = [];
+        foreach ($this->exports as $i => $export) {
+            $row = (array)$export;
+            $view = self::rowView($row);
+            $class = (string)($view['classNameText'] ?? $row['classNameText'] ?? '');
+            if ($class !== '' && strcasecmp($class, $className) === 0) {
+                $out[$i] = $export;
             }
         }
-        return $exports;
+        return $out;
     }
 
-    public function objectsByClassName($className) {
-        $exports = [];
-        foreach ($this->objects as $ex) {
-            if ($ex == null) continue;
-            $type = $ex->classIndex->get();
-            if ($type instanceof Import && $type->name->name == $className) {
-                $exports[] = $ex;
+    public function objectsByClassName(string $className): array
+    {
+        return $this->exportsByClassName($className);
+    }
+
+    public function objectByRef($ref)
+    {
+        $index = is_int($ref) ? $ref : (int)($ref->index ?? 0);
+        if ($index <= 0) {
+            return null;
+        }
+        return $this->exports[$index - 1] ?? null;
+    }
+
+    public function objectByName($name)
+    {
+        $needle = is_string($name) ? $name : (string)($name->name ?? '');
+        foreach ($this->exports as $export) {
+            $row = (array)$export;
+            $view = self::rowView($row);
+            $objectName = (string)($view['objectNameText'] ?? $row['objectNameText'] ?? $row['name'] ?? '');
+            if ($objectName !== '' && strcasecmp($objectName, $needle) === 0) {
+                return $export;
             }
         }
-        return $exports;
-    }
-
-    public function objectByRef($ref) {
-        $resolved = $ref->get();
-        if (!($resolved instanceof Export)) throw new \InvalidArgumentException("No exported object found for reference " . $ref);
-
-        $exportedObject = $this->objects[$resolved->index];
-
-        if ($exportedObject == null) throw new \InvalidArgumentException("Found export is not an object " . $ref);
-
-        return $exportedObject;
-    }
-
-    public function objectByName($name) {
-        foreach ($this->objects as $object) {
-            if ($object == null) continue;
-
-            if (strcasecmp($object->name->name, $name->name) == 0) return $object;
-        }
-
         return null;
     }
 
-    public function objectByExport($export) {
-        $exportedObject = $this->objects[$export->index];
-        if ($exportedObject == null) throw new \InvalidArgumentException("Found export is not an object " . $export);
-        return $exportedObject;
+    public function objectByExport($export)
+    {
+        return $export;
     }
 
-    private function names($count, $pos) {
-        $names = [];
-
-        $this->reader->moveTo($pos);
-
-        for ($i = 0; $i < $count; $i++) {
-            $this->reader->ensureRemaining(256); // more-or-less
-            $names[$i] = new Name($this->reader->readString(), 0, $this->version >= 141 ? $this->reader->readLong() : $this->reader->readInt());
-        }
-
-        return $names;
+    public function getReader(): object
+    {
+        return $this->reader;
     }
 
-    private function exports($count, $pos) {
-        assert($this->names != null && count($this->names) > 0);
-
-        $exports = [];
-
-        $this->reader->moveTo($pos);
-
-        for ($i = 0; $i < $count; $i++) {
-            $this->reader->ensureRemaining(128); // more-or-less, usually less
-            $exports[$i] = $this->readExport($i);
-        }
-
-        return $exports;
+    private static function rowRaw(array $row): array
+    {
+        return isset($row['raw']) && is_array($row['raw']) ? $row['raw'] : $row;
     }
 
-    private function imports($count, $pos) {
-        assert($this->names != null && count($this->names) > 0);
-
-        $imports = [];
-
-        $this->reader->moveTo($pos);
-
-        for ($i = 0; $i < $count; $i++) {
-            $this->reader->ensureRemaining(40); // more-or-less, usually less
-            $imports[$i] = $this->readImport($i);
-        }
-
-        return $imports;
+    private static function rowView(array $row): array
+    {
+        return isset($row['view']) && is_array($row['view']) ? $row['view'] : [];
     }
 
-    private function objectReference($index) {
-        if ($index == 0) return ObjectReference::NULL;
-        else return $this->objectReferences->computeIfAbsent($index, function($i) { return new ObjectReference($this, $i); });
-    }
+    private function decodePackageFlags(int $flags): array
+    {
+        $map = [
+            0x00000001 => 'PKG_AllowDownload',
+            0x00000002 => 'PKG_ClientOptional',
+            0x00000004 => 'PKG_ServerSideOnly',
+            0x00000008 => 'PKG_BrokenLinks',
+            0x00000010 => 'PKG_Unsecure',
+            0x00008000 => 'PKG_Need',
+        ];
 
-    private function name($index) {
-        return $this->names[$index];
-    }
-
-    private function name($name) {
-        return new Name($this->names[$name->name]->name, $name->number, $this->names[$name->name]->flags);
-    }
-
-    private function readExport($index) {
-        $classIndex = $this->objectReference($this->reader->readIndex());
-        $superClassIndex = $this->objectReference($this->reader->readIndex());
-        $groupIndex = $this->objectReference($this->reader->readInt());
-
-        $name = $this->name($this->reader->readNameIndex());
-
-        $archetype = $this->version >= 220
-            ? $this->objectReference($this->reader->readInt())
-            : ObjectReference::NULL;
-
-        $flags = $this->version >= 195 ? $this->reader->readLong() : $this->reader->readInt();
-
-        $size = $this->reader->readIndex();
-        $pos = $size > 0 || $this->version >= 249
-            ? $this->reader->readIndex()
-            : 0;
-
-        $components = [];
-        if ($this->version >= 220 && $this->version < 543) {
-            $componentCount = $this->reader->readInt();
-            $components = [];
-            if ($componentCount > 0) $this->reader->ensureRemaining(($componentCount * 12) + 28);
-            for ($i = 0; $i < $componentCount; $i++) {
-                $components[$this->name($this->reader->readNameIndex())] = $this->objectReference($this->reader->readInt());
+        $out = [];
+        foreach ($map as $bit => $name) {
+            if (($flags & $bit) !== 0) {
+                $out[] = $name;
             }
         }
-
-        if ($this->version >= 220) {
-            $exportFlags = $this->reader->readInt();
-        }
-
-        $netObjectCount = 0;
-        if ($this->version >= 322) {
-            $netObjectCount = $this->reader->readInt();
-        }
-
-        if ($this->version >= 220) {
-            $guid = array_fill(0, 16, 0);
-            $this->reader->readBytes($guid, 0, 16);
-        }
-
-        if ($this->version >= 487) {
-            $packageFlags = $this->reader->readInt();
-        }
-
-        if ($netObjectCount > 0) {
-            $netObjects = array_fill(0, $netObjectCount, null);
-            for ($i = 0; $i < $netObjectCount; $i++) {
-                $netObjects[$i] = $this->objectReference($this->reader->readIndex());
-            }
-        }
-
-        return new ExportedEntry(
-            $this, $index,
-            $classIndex, $superClassIndex, $groupIndex,
-            $name, $flags, $size, $pos,
-            $components
-        );
+        return $out;
     }
-
-
-    private function readImport($index) {
-        $classPackage = $this->name($this->reader->readNameIndex());
-        $className = $this->name($this->reader->readNameIndex());
-        $packageIndex = $this->objectReference($this->reader->readInt());
-        $name = $this->name($this->reader->readNameIndex());
-
-        return new Import(
-            $this, $index,
-            $classPackage, $className, $packageIndex, $name
-        );
-    }
-
-
-    public function object($export) {
-        $existing = $this->loadedObjects->get($export->pos);
-        if ($existing != null) return $existing;
-
-        if ($export->size <= 0) throw new \RuntimeException(sprintf("Export %s has no associated object data!", $export->name));
-
-        if ($export->classIndex->index == 0) return null;
-
-        $this->reader->moveTo($export->pos);
-
-        $header = null;
-        if ($export->flags()->contains(ObjectFlag::HasStack)) {
-            $node = $this->reader->readIndex();
-            $header = new ObjectHeader(
-                $node, $this->reader->readIndex(), $this->reader->readLong(), $this->reader->readInt(),
-                $node != 0 ? $this->reader->readIndex() : 0
-            );
-        }
-
-        if ($this->version >= 322) {
-            $netIndex = $this->reader->readIndex();
-        }
-
-        $properties = $this->readProperties();
-        $postPropsPosition = $this->reader->currentPosition();
-        $newObject = ObjectFactory::newInstance($this, $this->reader, $export, $header, $properties, $postPropsPosition);
-        $this->loadedObjects->put($export->pos, $newObject);
-
-        return $newObject;
-    }
-
-    private function readProperties() {
-        $properties = [];
-        for ($i = 0; $i < self::MAX_PROPERTIES; $i++) {
-            $p = $this->readProperty();
-
-            if ($p->name->equals(Name::NONE())) break;
-            else {
-                if ($p instanceof ArrayProperty\ArrayItem && !empty($properties)) {
-
-                    $lastProperty = $properties[count($properties) - 1];
-                    if ($lastProperty instanceof ArrayProperty) {
-                        array_pop($properties);
-                        $properties[] = $lastProperty->add($p);
-                    } else if ($lastProperty->name->equals($p->name)) {
-                        array_pop($properties);
-                        $properties[] = new ArrayProperty($p->property);
-                    } else $properties[] = $p->property;
-                } else $properties[] = $p;
-            }
-        }
-        return $properties;
-    }
-
-    private function readProperty() {
-        $name = $this->name($this->reader->readNameIndex());
-
-
-        if ($name->equals(Name::NONE())) return new NameProperty($this, $name, $name);
-
-        if ($this->version > 220) return $this->readPropertyUE3($name);
-
-        $propInfo = $this->reader->readByte();
-
-        $type = $propInfo & 0b00001111;
-        $size = ($propInfo & 0b01110000) >> 4;
-        $boolOrArrayFlag = ($propInfo & 0b10000000) != 0;
-
-        $propType = PropertyType::get($type);
-
-        if ($propType == null) {
-            throw new \RuntimeException(sprintf("Unknown property type index %d for property %s", $type, $name->name));
-        }
-
-        $structType = null;
-        if ($propType == PropertyType::StructProperty) {
-            $structIdx = $this->reader->readIndex();
-            $structType = $structIdx >= 0 ? StructProperty\StructType::get($this->names[$structIdx]) : null;
-            if ($structType == null) {
-                throw new \RuntimeException(sprintf("Unknown struct type index %d for property %s", $structIdx, $name->name));
-            }
-        }
-
-        $size = match ($size) {
-            0, 1, 2, 3, 4 => self::PROPERTY_SIZE_MAP[$size],
-            5 => $this->reader->readByte() & 0xFF,
-            6 => $this->reader->readShort(),
-            7 => $this->reader->readInt(),
-            default => throw new \InvalidArgumentException(sprintf("Unknown property field size %d", $size))
-        };
-
-        $arrayIndex = 0;
-        if ($boolOrArrayFlag && $propType != PropertyType::BoolProperty) {
-            $arrayIndex = $this->reader->readByte();
-        }
-
-        $property = $this->createProperty($name, $propType, $structType, $size, $boolOrArrayFlag);
-
-        if ($boolOrArrayFlag && $propType != PropertyType::BoolProperty) {
-            return new ArrayProperty\ArrayItem($property, $arrayIndex);
-        }
-
-        return $property;
-    }
-
-    private function readPropertyUE3($name) {
-        $typeName = $this->name($this->reader->readNameIndex());
-        $propType = PropertyType::get($typeName);
-
-        if ($propType == null) {
-            throw new \RuntimeException(sprintf("Unknown property type named %s for property %s", $typeName->name, $name->name));
-        }
-
-        if ($propType == PropertyType::ByteProperty) $propType = PropertyType::EnumProperty;
-
-        $size = $this->reader->readInt();
-        $arrayIndex = $this->reader->readInt();
-
-        $structType = $propType == PropertyType::StructProperty
-            ? StructProperty\StructType::get($this->name($this->reader->readNameIndex()))
-            : null;
-
-        $booleanFlag = $propType == PropertyType::BoolProperty && $this->reader->readInt() > 0;
-
-        $property = $this->createProperty($name, $propType, $structType, $size, $booleanFlag);
-
-        if ($propType == PropertyType::ArrayProperty && !($property instanceof ArrayProperty)) {
-            return new ArrayProperty\ArrayItem($property, $arrayIndex);
-        }
-
-        return $property;
-    }
-
-    private function createProperty($name, $type, $structType, $size, $arrayFlag) {
-
-        $startPos = $this->reader->position();
-
-        try {
-            switch ($type) {
-                case PropertyType::BoolProperty:
-                    return new BooleanProperty($this, $name, $arrayFlag);
-                case PropertyType::ByteProperty:
-                    return new ByteProperty($this, $name, $this->reader->readByte());
-                case PropertyType::EnumProperty:
-                    return new EnumProperty($this, $name, $this->name($this->reader->readNameIndex()));
-                case PropertyType::IntProperty:
-                    return new IntegerProperty($this, $name, $this->reader->readInt());
-                case PropertyType::FloatProperty:
-                    return new FloatProperty($this, $name, $this->reader->readFloat());
-                case PropertyType::StrProperty:
-                case PropertyType::StringProperty:
-                    return new StringProperty($this, $name, $this->reader->readString($size));
-                case PropertyType::NameProperty:
-                    return new NameProperty($this, $name, $name->equals(Name::NONE()) ? Name::NONE() : $this->name($this->reader->readNameIndex()));
-                case PropertyType::ObjectProperty:
-                    return new ObjectProperty($this, $name, $this->objectReference($this->reader->readIndex()));
-                case PropertyType::StructProperty:
-                    switch ($structType) {
-                        case StructProperty\StructType::PointRegion():
-                            return new StructProperty\PointRegionProperty($this, $name, $this->objectReference($this->reader->readIndex()),
-                                $this->reader->readInt(), $this->reader->readByte());
-                        case StructProperty\StructType::Scale():
-                            return new StructProperty\ScaleProperty($this, $name, $this->reader->readFloat(), $this->reader->readFloat(), $this->reader->readFloat(),
-                                $this->reader->readFloat(), $this->reader->readByte());
-                        case StructProperty\StructType::Rotator():
-                            return new StructProperty\RotatorProperty($this, $name, $this->reader->readInt(), $this->reader->readInt(), $this->reader->readInt());
-                        case StructProperty\StructType::Color():
-                            return new StructProperty\ColorProperty($this, $name, $this->reader->readByte(), $this->reader->readByte(), $this->reader->readByte(),
-                                $this->reader->readByte());
-                        case StructProperty\StructType::Sphere():
-                            return new StructProperty\SphereProperty($this, $name, $this->reader->readFloat(), $this->reader->readFloat(), $this->reader->readFloat(),
-                                $this->reader->readFloat());
-                        case StructProperty\StructType::Vector():
-                        default:
-                            if ($size == 12) {
-                                return new StructProperty\VectorProperty($this, $name, $this->reader->readFloat(), $this->reader->readFloat(),
-                                    $this->reader->readFloat());
-                            }
-                            return new StructProperty\UnknownStructProperty($this, $name);
-                    }
-                case PropertyType::RotatorProperty:
-                    return new StructProperty\RotatorProperty($this, $name, $this->reader->readInt(), $this->reader->readInt(), $this->reader->readInt());
-                case PropertyType::VectorProperty:
-                    return new StructProperty\VectorProperty($this, $name, $this->reader->readFloat(), $this->reader->readFloat(), $this->reader->readFloat());
-                case PropertyType::ArrayProperty:
-                    $arraySize = $this->reader->readIndex();
-                    if (strcasecmp($name->name, "ReferencedTextures") == 0) {
-                        $items = [];
-                        for ($i = 0; $i < $arraySize; $i++) {
-                            $items[] = new ObjectProperty(
-                                $this, $name, $this->objectReference($this->reader->readIndex())
-                            );
-                        }
-                        return new ArrayProperty($this, $name, $items);
-                    }
-                    return new UnknownArrayProperty($this, $name, $arraySize);
-                case PropertyType::FixedArrayProperty:
-                    return new FixedArrayProperty($this, $name, $this->objectReference($this->reader->readIndex()), $this->reader->readIndex());
-                default:
-                    throw new \InvalidArgumentException("Cannot read unsupported property type " . $type->name());
-            }
-        } finally {
-            if ($this->reader->position() - $startPos < $size) {
-                $this->reader->moveRelative($size - ($this->reader->position() - $startPos));
-            }
-        }
-    }
-
 }
 
+if (PHP_SAPI !== 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
+    error_reporting(E_ALL & ~E_DEPRECATED);
+    ini_set('display_errors', '1');
 
+    function package_h($s): string
+    {
+        return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
+    $file = isset($_GET['file']) ? trim((string)$_GET['file']) : '';
+    if ($file === '') {
+        foreach ([__DIR__ . '/test.utx', __DIR__ . '/oldtest.utx', __DIR__ . '/uploads/test.utx'] as $candidate) {
+            if (is_file($candidate)) {
+                $file = $candidate;
+                break;
+            }
+        }
+    }
+
+    echo '<!doctype html><html><head><meta charset="utf-8"><title>Package.php</title>';
+    echo '<style>body{font-family:system-ui;margin:24px;background:#111;color:#ddd}input{padding:6px 8px;margin:4px;background:#1b1b1b;color:#ddd;border:1px solid #444}table{border-collapse:collapse;width:100%;margin:12px 0 24px}th,td{border:1px solid #333;padding:6px 8px;text-align:left;vertical-align:top}th{background:#222}.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}.err{color:#ff9f9f;background:#2a1116;border:1px solid #55303a;border-radius:8px;padding:10px}.muted{color:#999}</style>';
+    echo '</head><body><h1>Package.php compatibility viewer</h1>';
+    echo '<form method="get"><label>File: <input type="text" name="file" value="' . package_h($file) . '" style="width:620px"></label><input type="submit" value="Open"></form>';
+
+    if ($file === '') {
+        echo '<p class="muted">Enter a full Synology path, for example <span class="mono">/volume1/web/ut_reader/uploads/test.utx</span>.</p></body></html>';
+        exit;
+    }
+
+    try {
+        $pkg = new Package($file);
+        echo '<p class="mono">' . package_h($file) . '</p>';
+        echo '<table><tbody>';
+        echo '<tr><th>Version</th><td>' . package_h($pkg->version) . '</td></tr>';
+        echo '<tr><th>License</th><td>' . package_h($pkg->license) . '</td></tr>';
+        echo '<tr><th>Flags</th><td class="mono">0x' . package_h(str_pad(strtoupper(dechex($pkg->flags)), 8, '0', STR_PAD_LEFT)) . ' ' . package_h(implode(', ', $pkg->flags())) . '</td></tr>';
+        echo '<tr><th>Names</th><td>' . count($pkg->names) . '</td></tr>';
+        echo '<tr><th>Imports</th><td>' . count($pkg->imports) . '</td></tr>';
+        echo '<tr><th>Exports</th><td>' . count($pkg->exports) . '</td></tr>';
+        echo '<tr><th>SHA1</th><td class="mono">' . package_h($pkg->sha1Hash()) . '</td></tr>';
+        echo '</tbody></table>';
+
+        echo '<h2>Header</h2><pre class="mono">' . package_h(print_r($pkg->header, true)) . '</pre>';
+    } catch (Throwable $t) {
+        echo '<div class="err"><strong>Error:</strong> ' . package_h($t->getMessage()) . '</div>';
+    }
+
+    echo '</body></html>';
+}
