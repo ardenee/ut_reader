@@ -1,6 +1,6 @@
 <?php
 // viewer2.php — Unreal package loader & explorer
-error_reporting(E_ALL);
+error_reporting(E_ALL & ~E_DEPRECATED);
 ini_set('display_errors', 1);
 
 require_once __DIR__ . '/UnrealPackageReader.php';
@@ -9,18 +9,31 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE,
 function dump_pre($x){ return '<pre>'.h(print_r($x,true)).'</pre>'; }
 
 $uploaded = null;
+$uploadError = null;
+$uploadDir = __DIR__ . '/uploads';
+
 if (!empty($_FILES['file']['tmp_name'])) {
-    @mkdir(__DIR__.'/uploads', 0777, true);
-    $safe = preg_replace('/[^A-Za-z0-9_.-]/', '_', basename($_FILES['file']['name']));
-    $uploaded = __DIR__.'/uploads/'.$safe;
-    move_uploaded_file($_FILES['file']['tmp_name'], $uploaded);
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
+        $uploadError = 'Upload folder does not exist and could not be created: ' . $uploadDir;
+    } elseif (!is_writable($uploadDir)) {
+        $uploadError = 'Upload folder is not writable by PHP/Web Station: ' . $uploadDir;
+    } elseif (!is_uploaded_file($_FILES['file']['tmp_name'])) {
+        $uploadError = 'Upload failed: invalid temporary upload file.';
+    } else {
+        $safe = preg_replace('/[^A-Za-z0-9_.-]/', '_', basename($_FILES['file']['name']));
+        $uploaded = $uploadDir . '/' . $safe;
+        if (!move_uploaded_file($_FILES['file']['tmp_name'], $uploaded)) {
+            $uploadError = 'Unable to move uploaded file to: ' . $uploaded;
+            $uploaded = null;
+        }
+    }
 }
 
 $default = __DIR__ . '/test.utx';
 $file = $uploaded ?: (is_file($default) ? $default : null);
 $pkg = null;
-$err = null;
-if ($file) {
+$err = $uploadError;
+if ($file && !$err) {
     try {
         $pkg = new UnrealPackageReader($file);
     } catch (Throwable $t) {
