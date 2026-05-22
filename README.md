@@ -76,20 +76,6 @@ Avoid committing:
 - Temporary test data
 - Logs containing private paths or usernames
 
-Suggested `.gitignore` entries may include:
-
-```gitignore
-*.log
-*.tmp
-*.bak
-.env
-.env.*
-config.local.*
-/output/
-/tmp/
-/cache/
-```
-
 ## Repository Notes
 
 At the time this README was updated, the visible GitHub repository contents were limited, so the description is intentionally general. The README should be updated again after the main script files are pushed and the exact functions can be documented accurately.
