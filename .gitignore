@@ -7,3 +7,8 @@ config.local.*
 /output/
 /tmp/
 /cache/
+# Local native libraries
+liblzo2.so
+liblzo2.so.*
+liblzo2-2.dll
+lzo2.dll
