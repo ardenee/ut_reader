@@ -1,0 +1,9 @@
+*.log
+*.tmp
+*.bak
+.env
+.env.*
+config.local.*
+/output/
+/tmp/
+/cache/
