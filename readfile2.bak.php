@@ -1,8 +1,3 @@
-I'm using this code but not sure if I'm following the unreal file format or deviating, can you review the code and suggest updates to improve or correct any parts
-
-IThe file format is based off of the following document - https://darkrealm.333networks.com/Archive/Deus%20Ex/UEditor%20Developing/UT-package-file-format.pdf
-
-
 <?php
 
 $file = 'test.utx';    // guid {E484D857-00B7-4107-A58A-36FF29F6A3A5}
