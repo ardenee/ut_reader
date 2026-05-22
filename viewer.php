@@ -13,11 +13,26 @@ function fmt($x) {
 
 // --- handle upload ---
 $uploadPath = null;
+$uploadError = null;
+$uploadDir = __DIR__ . '/uploads';
+
 if (!empty($_FILES['file']['tmp_name'])) {
-    $name = basename($_FILES['file']['name']);
-    $uploadPath = __DIR__ . "/uploads/" . preg_replace('/[^A-Za-z0-9_.-]/', '_', $name);
-    @mkdir(__DIR__ . '/uploads', 0777, true);
-    move_uploaded_file($_FILES['file']['tmp_name'], $uploadPath);
+    if (!is_dir($uploadDir) && !mkdir($uploadDir, 0775, true)) {
+        $uploadError = 'Upload folder does not exist and could not be created: ' . $uploadDir;
+    } elseif (!is_writable($uploadDir)) {
+        $uploadError = 'Upload folder is not writable by PHP/Web Station: ' . $uploadDir;
+    } elseif (!is_uploaded_file($_FILES['file']['tmp_name'])) {
+        $uploadError = 'Upload failed: invalid temporary upload file.';
+    } else {
+        $name = basename($_FILES['file']['name']);
+        $safeName = preg_replace('/[^A-Za-z0-9_.-]/', '_', $name);
+        $uploadPath = $uploadDir . '/' . $safeName;
+
+        if (!move_uploaded_file($_FILES['file']['tmp_name'], $uploadPath)) {
+            $uploadError = 'Unable to move uploaded file to: ' . $uploadPath;
+            $uploadPath = null;
+        }
+    }
 }
 
 ?>
@@ -52,6 +67,10 @@ input[type=file] { color:#fff; }
 </form>
 
 <?php
+if ($uploadError) {
+    echo "<section style='color:#f88'><b>Upload error:</b> ".h($uploadError)."</section>";
+}
+
 if ($uploadPath && file_exists($uploadPath)) {
     echo "<section><h2>Loaded File</h2><b>".h(basename($uploadPath))."</b> (".number_format(filesize($uploadPath))." bytes)</section>";
 
@@ -130,7 +149,7 @@ if ($uploadPath && file_exists($uploadPath)) {
                     echo "<h4>Sections</h4>".fmt($sum);
                     $norm = $pkg->computeLodMeshNormals($geo);
                     echo "<h4>Normals</h4>".fmt(array_slice($norm,0,5));
-                    $outPng = __DIR__."/uploads/preview_$i.png";
+                    $outPng = $uploadDir . "/preview_$i.png";
                     if ($pkg->renderLodMeshPNG($i, $outPng, ['mode'=>'flat','size'=>[480,480]])) {
                         echo "<h4>Preview</h4><img src='uploads/".basename($outPng)."' style='max-width:480px;border:1px solid #444;border-radius:6px'>";
                     }
