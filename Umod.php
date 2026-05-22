@@ -2,214 +2,348 @@
 
 namespace net\shrimpworks\unreal\packages;
 
-use Exception;
+use InvalidArgumentException;
 use RuntimeException;
-use SplFileObject;
-use SeekableIterator;
 
 /**
- * An Unreal modification package.
- * <p>
- * UMod files are used to bundle third party Unreal Engine 1 and 2 content,
- * normally for more complex modifications with many files, rather than
- * individual pieces of content like maps. The Unreal game in question will
- * unpack these packages into their installation directories.
- * <p>
- * They may hold any content, not just Unreal {@link Package}s.
- * <p>
- * This implementation supports reading the file list, and then reading the
- * individual files as {@link UmodFile}s, which may be either saved to disk
- * or used in conjunction with the {@link Package} class to inspect and
- * extract package contents without first unpacking the Umod.
+ * Reader for Unreal UMOD packages.
+ *
+ * This file intentionally avoids Java-style nested classes. PHP does not support
+ * declarations such as "public class" inside another class, so the helper
+ * classes are declared as normal top-level classes in this namespace.
  */
-class Umod implements \Closeable {
-
+class Umod
+{
     private const UMOD_SIGNATURE = 0x9FE3C5A3;
-    private const SHA1 = 'sha1';
 
-    private $reader;
+    private UmodBinaryReader $reader;
 
-    public $version;
-    public $size;
-    public $files;
+    public int $version = 0;
+    public int $size = 0;
+    /** @var UmodFile[] */
+    public array $files = [];
 
-    public $manifestIni;
-    public $manifestInt;
+    public ?UmodFile $manifestIni = null;
+    public ?UmodFile $manifestInt = null;
 
-    public function __construct($umodFile) {
-        if (is_string($umodFile)) {
-            $this->reader = new PackageReader($umodFile);
-        } else {
-            $this->reader = $umodFile;
+    public function __construct(string|UmodBinaryReader $umodFile)
+    {
+        $this->reader = is_string($umodFile) ? new UmodBinaryReader($umodFile) : $umodFile;
+
+        $fileSize = $this->reader->size();
+        if ($fileSize < 20) {
+            throw new InvalidArgumentException('File is too small to be a UMOD package.');
         }
 
-        $this->reader->moveTo($this->reader->size() - 20);
+        $this->reader->seek($fileSize - 20);
 
-        if ($this->reader->readInt() != self::UMOD_SIGNATURE) {
-            throw new \InvalidArgumentException("Package does not seem to be a UMOD package");
+        $signature = $this->reader->readUInt32();
+        if ($signature !== self::UMOD_SIGNATURE) {
+            throw new InvalidArgumentException(sprintf('Package does not seem to be a UMOD package. Signature was 0x%08X.', $signature));
         }
 
-        $filesOffset = $this->reader->readInt();
+        $filesOffset = $this->reader->readInt32();
+        $this->size = $this->reader->readInt32();
+        $this->version = $this->reader->readInt32();
+        $checksum = $this->reader->readInt32();
 
-        $this->size = $this->reader->readInt(); // this is actually just the filesize; perhaps useful for validation
-        $this->version = $this->reader->readInt();
-        $this->reader->version = $this->version; // not strictly accurate, since this version is "1", but we only need it from `readIndex`
+        if ($filesOffset < 0 || $filesOffset >= $fileSize) {
+            throw new RuntimeException('Invalid UMOD file table offset: ' . $filesOffset);
+        }
 
-        $checksum = $this->reader->readInt(); // cool story bro
+        $this->reader->seek($filesOffset);
+        $fileCount = $this->reader->readCompactIndex();
 
-        // read the files directory/table
-        $this->reader->moveTo($filesOffset);
+        if ($fileCount < 0 || $fileCount > 100000) {
+            throw new RuntimeException('Invalid UMOD file count: ' . $fileCount);
+        }
 
-        // read number of entries within the file
-        $fileCount = $this->reader->readIndex();
-        $this->files = [];
-
-        // keep reading until we get back to the header
         for ($i = 0; $i < $fileCount; $i++) {
-            $this->reader->ensureRemaining(270); // enough to read a full file path and the other bytes
-            $file = $this->readFile();
-            $this->files[] = $file;
+            $this->files[] = $this->readFile();
         }
 
-        $this->manifestIni = array_filter($this->files, function($f) {
-            return strtolower(substr($f->name, -12)) === 'manifest.ini';
-        });
-        $this->manifestIni = reset($this->manifestIni) ?: null;
-
-        $this->manifestInt = array_filter($this->files, function($f) {
-            return strtolower(substr($f->name, -12)) === 'manifest.int';
-        });
-        $this->manifestInt = reset($this->manifestInt) ?: null;
+        foreach ($this->files as $file) {
+            $lower = strtolower($file->name);
+            if ($this->manifestIni === null && substr($lower, -12) === 'manifest.ini') {
+                $this->manifestIni = $file;
+            }
+            if ($this->manifestInt === null && substr($lower, -12) === 'manifest.int') {
+                $this->manifestInt = $file;
+            }
+        }
     }
 
-    public function close() {
+    public function close(): void
+    {
         $this->reader->close();
     }
 
-    private function readFile() {
-        $nameSize = $this->reader->readIndex();
-        $val = $this->reader->readBytes($nameSize);
-        $name = trim($val);
-        $offset = $this->reader->readInt();
-        $size = $this->reader->readInt();
-        $flags = $this->reader->readInt();
-
-        return new UmodFile($name, $size, $offset, $flags);
-    }
-
-    /**
-     * Represents a single file entry in a Umod package.
-     */
-    public class UmodFile {
-
-        public $name;
-        public $size;
-
-        private $offset;
-        private $flags;
-
-        public function __construct($name, $size, $offset, $flags) {
-            $this->name = $name;
-            $this->size = $size;
-            $this->offset = $offset;
-            $this->flags = $flags;
+    private function readFile(): UmodFile
+    {
+        $nameSize = $this->reader->readCompactIndex();
+        if ($nameSize <= 0 || $nameSize > 4096) {
+            throw new RuntimeException('Invalid UMOD filename length: ' . $nameSize);
         }
 
-        /**
-         * Get a byte channel exposing the contents of this file.
-         * <p>
-         * This channel may be used in conjunction with a {@link PackageReader}
-         * and {@link Package} to inspect the contents of Unreal packages
-         * without the need to extract them first, or may simply be written to
-         * a file on disk.
-         *
-         * @return SeekableByteChannel
-         */
-        public function read() {
-            // provide a channel which presents the contents of this file as a standalone-seeming channel
-            return new UmodFileChannel($this->reader, $this->offset, $this->size);
+        $name = rtrim($this->reader->readBytes($nameSize), "\0\r\n\t ");
+        $offset = $this->reader->readInt32();
+        $size = $this->reader->readInt32();
+        $flags = $this->reader->readInt32();
+
+        if ($offset < 0 || $size < 0 || ($offset + $size) > $this->reader->size()) {
+            throw new RuntimeException('Invalid UMOD file entry: ' . $name);
         }
 
-        /**
-         * Utility to get the SHA-1 hash for this file.
-         *
-         * @return string sha1 hash string
-         * @throws IOException read failure
-         */
-        public function sha1() {
-            $reader = new PackageReader($this->read());
-            return $reader->hash(self::SHA1);
-        }
-
-        public function __toString() {
-            return sprintf("UmodFile [name=%s]", $this->name);
-        }
-    }
-
-    /**
-     * A simple channel implementation which remains within the bounds of a
-     * file within a Umod archive.
-     */
-    private static class UmodFileChannel implements SeekableIterator {
-
-        private $reader;
-
-        private $offset;
-        private $size;
-
-        public function __construct($reader, $offset, $size) {
-            $this->reader = $reader;
-            $this->offset = $offset;
-            $this->size = $size;
-
-            $this->reader->moveTo($offset);
-        }
-
-        public function read($dst) {
-            if ($this->position() == $this->size) return -1;
-
-            $cnt = $dst->position();
-            $remain = $this->size - $this->position();
-            $buff = min($dst->remaining(), $remain); // possibly expensive if using a large buffer
-
-            $this->reader->ensureRemaining($buff);
-            $read = $this->reader->readBytes($buff);
-            $dst->put($read);
-
-            return $dst->position() - $cnt;
-        }
-
-        public function position() {
-            return $this->reader->currentPosition() - $this->offset;
-        }
-
-        public function position($newPosition) {
-            if ($newPosition > $this->size) throw new \InvalidArgumentException("Cannot seek beyond size " . $this->size);
-            $this->reader->moveTo($this->offset + $newPosition);
-            return $this;
-        }
-
-        public function size() {
-            return $this->size;
-        }
-
-        public function truncate($size) {
-            throw new \RuntimeException("Truncate not supported");
-        }
-
-        public function write($src) {
-            throw new \RuntimeException("Write not supported");
-        }
-
-        public function isOpen() {
-            return true;
-        }
-
-        public function close() {
-            // no-op
-        }
+        return new UmodFile($this->reader, $name, $size, $offset, $flags);
     }
 }
-?>
 
+class UmodFile
+{
+    private UmodBinaryReader $reader;
 
+    public string $name;
+    public int $size;
+    public int $offset;
+    public int $flags;
+
+    public function __construct(UmodBinaryReader $reader, string $name, int $size, int $offset, int $flags)
+    {
+        $this->reader = $reader;
+        $this->name = $name;
+        $this->size = $size;
+        $this->offset = $offset;
+        $this->flags = $flags;
+    }
+
+    public function read(): UmodFileChannel
+    {
+        return new UmodFileChannel($this->reader, $this->offset, $this->size);
+    }
+
+    public function contents(): string
+    {
+        $this->reader->seek($this->offset);
+        return $this->reader->readBytes($this->size);
+    }
+
+    public function saveTo(string $targetPath): void
+    {
+        $dir = dirname($targetPath);
+        if (!is_dir($dir) && !mkdir($dir, 0775, true)) {
+            throw new RuntimeException('Could not create output folder: ' . $dir);
+        }
+
+        if (file_put_contents($targetPath, $this->contents()) === false) {
+            throw new RuntimeException('Could not write file: ' . $targetPath);
+        }
+    }
+
+    public function sha1(): string
+    {
+        return sha1($this->contents());
+    }
+
+    public function __toString(): string
+    {
+        return sprintf('UmodFile [name=%s, size=%d, offset=%d]', $this->name, $this->size, $this->offset);
+    }
+}
+
+class UmodFileChannel
+{
+    private UmodBinaryReader $reader;
+    private int $offset;
+    private int $size;
+    private int $position = 0;
+
+    public function __construct(UmodBinaryReader $reader, int $offset, int $size)
+    {
+        $this->reader = $reader;
+        $this->offset = $offset;
+        $this->size = $size;
+    }
+
+    public function read(int $length): string
+    {
+        if ($length < 0) {
+            throw new InvalidArgumentException('Read length cannot be negative.');
+        }
+
+        if ($this->position >= $this->size) {
+            return '';
+        }
+
+        $length = min($length, $this->size - $this->position);
+        $this->reader->seek($this->offset + $this->position);
+        $data = $this->reader->readBytes($length);
+        $this->position += strlen($data);
+        return $data;
+    }
+
+    public function seek(int $newPosition): void
+    {
+        if ($newPosition < 0 || $newPosition > $this->size) {
+            throw new InvalidArgumentException('Cannot seek outside UMOD file entry bounds.');
+        }
+        $this->position = $newPosition;
+    }
+
+    public function tell(): int
+    {
+        return $this->position;
+    }
+
+    public function size(): int
+    {
+        return $this->size;
+    }
+}
+
+class UmodBinaryReader
+{
+    /** @var resource */
+    private $handle;
+    private int $size;
+
+    public function __construct(string $path)
+    {
+        if (!is_file($path)) {
+            throw new RuntimeException('File not found: ' . $path);
+        }
+        if (!is_readable($path)) {
+            throw new RuntimeException('File is not readable: ' . $path);
+        }
+
+        $handle = fopen($path, 'rb');
+        if (!$handle) {
+            throw new RuntimeException('Could not open file: ' . $path);
+        }
+
+        $this->handle = $handle;
+        $fileSize = filesize($path);
+        if ($fileSize === false) {
+            throw new RuntimeException('Could not determine file size: ' . $path);
+        }
+        $this->size = (int)$fileSize;
+    }
+
+    public function close(): void
+    {
+        if (is_resource($this->handle)) {
+            fclose($this->handle);
+        }
+    }
+
+    public function size(): int
+    {
+        return $this->size;
+    }
+
+    public function tell(): int
+    {
+        $pos = ftell($this->handle);
+        if ($pos === false) {
+            throw new RuntimeException('Could not get file position.');
+        }
+        return $pos;
+    }
+
+    public function seek(int $offset): void
+    {
+        if ($offset < 0 || $offset > $this->size) {
+            throw new RuntimeException('Seek outside file bounds: ' . $offset);
+        }
+        if (fseek($this->handle, $offset, SEEK_SET) !== 0) {
+            throw new RuntimeException('Could not seek to offset: ' . $offset);
+        }
+    }
+
+    public function readBytes(int $length): string
+    {
+        if ($length < 0) {
+            throw new InvalidArgumentException('Read length cannot be negative.');
+        }
+        if ($length === 0) {
+            return '';
+        }
+
+        $data = fread($this->handle, $length);
+        if ($data === false) {
+            throw new RuntimeException('Failed reading bytes.');
+        }
+        if (strlen($data) !== $length) {
+            throw new RuntimeException('Unexpected end of file. Wanted ' . $length . ' bytes, got ' . strlen($data) . '.');
+        }
+        return $data;
+    }
+
+    public function readUInt8(): int
+    {
+        return ord($this->readBytes(1));
+    }
+
+    public function readUInt32(): int
+    {
+        $v = unpack('V', $this->readBytes(4));
+        return (int)$v[1];
+    }
+
+    public function readInt32(): int
+    {
+        $v = $this->readUInt32();
+        return ($v >= 0x80000000) ? ($v - 0x100000000) : $v;
+    }
+
+    /**
+     * Reads Unreal's compact index format.
+     */
+    public function readCompactIndex(): int
+    {
+        $b0 = $this->readUInt8();
+        $negative = ($b0 & 0x80) !== 0;
+        $value = $b0 & 0x3F;
+        $shift = 6;
+
+        if (($b0 & 0x40) !== 0) {
+            for ($i = 0; $i < 4; $i++) {
+                $b = $this->readUInt8();
+                $value |= ($b & 0x7F) << $shift;
+                if (($b & 0x80) === 0) {
+                    break;
+                }
+                $shift += 7;
+            }
+        }
+
+        return $negative ? -$value : $value;
+    }
+}
+
+if (PHP_SAPI !== 'cli' && basename(__FILE__) === basename($_SERVER['SCRIPT_FILENAME'] ?? '')) {
+    error_reporting(E_ALL);
+    ini_set('display_errors', '1');
+
+    echo '<!doctype html><html><head><meta charset="utf-8"><title>UMOD Reader</title>';
+    echo '<style>body{font-family:system-ui;margin:24px;background:#111;color:#ddd}input{padding:6px;margin:4px;background:#1b1b1b;color:#ddd;border:1px solid #444}table{border-collapse:collapse;width:100%;margin-top:16px}td,th{border-bottom:1px solid #333;padding:6px;text-align:left}.err{color:#ff9f9f}</style>';
+    echo '</head><body><h1>UMOD Reader</h1>';
+    echo '<form method="get"><label>UMOD path: <input type="text" name="file" style="width:520px" value="' . htmlspecialchars((string)($_GET['file'] ?? ''), ENT_QUOTES) . '"></label><input type="submit" value="Open"></form>';
+
+    $file = trim((string)($_GET['file'] ?? ''));
+    if ($file !== '') {
+        try {
+            $umod = new Umod($file);
+            echo '<p>Version: ' . htmlspecialchars((string)$umod->version) . ' | Size: ' . htmlspecialchars((string)$umod->size) . ' | Files: ' . count($umod->files) . '</p>';
+            echo '<table><thead><tr><th>#</th><th>Name</th><th>Size</th><th>Offset</th><th>Flags</th><th>SHA1</th></tr></thead><tbody>';
+            foreach ($umod->files as $i => $entry) {
+                echo '<tr><td>' . $i . '</td><td>' . htmlspecialchars($entry->name, ENT_QUOTES) . '</td><td>' . number_format($entry->size) . '</td><td>' . $entry->offset . '</td><td>0x' . strtoupper(str_pad(dechex($entry->flags), 8, '0', STR_PAD_LEFT)) . '</td><td>' . htmlspecialchars($entry->sha1(), ENT_QUOTES) . '</td></tr>';
+            }
+            echo '</tbody></table>';
+            $umod->close();
+        } catch (\Throwable $t) {
+            echo '<p class="err"><strong>Error:</strong> ' . htmlspecialchars($t->getMessage(), ENT_QUOTES) . '</p>';
+        }
+    }
+
+    echo '</body></html>';
+}
