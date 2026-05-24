@@ -22,10 +22,6 @@ $exports         = $pkg->getExports();
 $pkgFlagsDecoded = $pkg->decodePKG(intval($hdr['pkgFlags'] ?? 0));
 
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-
-echo "<pre>";
-print_r($hdr);
-echo "</pre>";
 ?>
 <!doctype html>
 <html lang="en">

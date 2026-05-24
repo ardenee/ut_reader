@@ -23,7 +23,6 @@ $pkgFlagsDecoded = $pkg->decodePKG((int)($ex['objectFlags'] ?? 0));
 
 // Small helpers
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-
 ?>
 <!doctype html>
 <html lang="en">

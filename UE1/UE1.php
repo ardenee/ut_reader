@@ -21,19 +21,7 @@ $imports         = $pkg->getImports();
 $exports         = $pkg->getExports();
 $pkgFlagsDecoded = $pkg->decodePKG(intval($hdr['pkgFlags'] ?? 0));
 
-//echo "<pre>";
-//echo "hHeader<hr>\n";
-//print_r($hdr);
-//echo "names Table<hr>\n";
-//print_r($names);
-//echo "exports Table<hr>\n";
-//print_r($exports);
-//echo "imports Table<hr>\n";
-//print_r($imports);
-//echo "</pre>";
-// Small helpers
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-
 ?>
 <!doctype html>
 <html lang="en">
