@@ -988,10 +988,11 @@ UE_Decompress::register(1, function(string $data, int $expected): string {
     return $out;
 });
 
-// LZO (codec flag 0x02) — uses UE_LZO1X pure-PHP below
+// LZO (codec flag 0x02)
+// Uses liblzo2 via FFI, native php-lzo extension, or exec(lzop) — in that order.
+// A pure-PHP LZO1X-1 is not feasible: the algorithm is too complex to get right
+// without the reference C library. Install liblzo2 (apt install liblzo2-2).
 UE_Decompress::register(2, function(string $data, int $expected): string {
-    if (function_exists('lzo1x_decompress'))
-        return lzo1x_decompress($data, $expected);
     return UE_LZO1X::decompress($data, $expected);
 });
 
@@ -1001,40 +1002,109 @@ UE_Decompress::register(4, function(string $data, int $expected): string {
 });
 
 // ============================================================
-// UE_LZO1X  — minimal pure-PHP LZO1X decompressor
+// UE_LZO1X  — LZO1X decompressor via liblzo2 FFI / extension / exec
+//
+// DOES NOT contain a pure-PHP implementation; LZO1X-1 is a state-machine
+// with complex match/literal interleaving that requires the reference C
+// library to decode correctly. Options (in priority order):
+//
+//  1. PHP FFI + system liblzo2   (apt install liblzo2-2; enable ffi in php.ini)
+//  2. php-lzo native extension   (pecl install lzo)
+//  3. lzop binary on PATH        (apt install lzop)
+//
+// If none are available the class throws a clear RuntimeException.
 // ============================================================
 final class UE_LZO1X {
-    public static function decompress(string $c, int $expected): string {
-        $i = 0; $n = strlen($c); $o = '';
-        while ($i < $n && strlen($o) < $expected) {
-            $ctrl = ord($c[$i++]);
-            if ($ctrl >= 0xE0) {
-                $lit = (($ctrl & 0x1F) << 2);
-                if ($i < $n) $lit |= (ord($c[$i++]) >> 6);
-                for ($k = 0; $k < $lit && $i < $n; $k++) $o .= $c[$i++];
-                continue;
-            }
-            if ($ctrl >= 0xC0) {
-                $len = ($ctrl & 0x1F) + 3;
-                $dist = ord($c[$i++]) | ((($ctrl & 0x20) ? 1 : 0) << 8);
-                self::copy($o, $dist + 1, $len); continue;
-            }
-            if ($ctrl >= 0x80) {
-                $lit = ($ctrl & 0x1F);
-                for ($k = 0; $k < $lit && $i < $n; $k++) $o .= $c[$i++];
-                if ($i + 1 >= $n) break;
-                $len  = 3 + (ord($c[$i]) >> 5);
-                $dist = ((ord($c[$i]) & 0x1F) << 8) | ord($c[$i+1]); $i += 2;
-                self::copy($o, $dist + 1, $len); continue;
-            }
-            for ($k = 0; $k < ($ctrl & 0x7F) && $i < $n; $k++) $o .= $c[$i++];
+    private static ?FFI   $ffi    = null;
+    private static bool   $ffiTried = false;
+    private static ?bool  $hasLzop  = null;
+
+    // ---- Try to load liblzo2 via PHP FFI ----
+    private static function loadFFI(): ?FFI {
+        if (self::$ffiTried) return self::$ffi;
+        self::$ffiTried = true;
+        if (!extension_loaded('ffi')) return null;
+
+        $candidates = [
+            'liblzo2.so.2',          // Linux
+            'liblzo2.so',
+            '/usr/lib/x86_64-linux-gnu/liblzo2.so.2',
+            '/usr/lib/aarch64-linux-gnu/liblzo2.so.2',
+            '/usr/local/lib/liblzo2.so.2',
+            'liblzo2.2.dylib',       // macOS (Homebrew)
+            '/opt/homebrew/lib/liblzo2.2.dylib',
+            'lzo2.dll',              // Windows
+        ];
+
+        $sig = "int lzo1x_decompress_safe(
+                    const char *src, unsigned long src_len,
+                    char *dst, unsigned long *dst_len,
+                    void *wrkmem);";
+
+        foreach ($candidates as $lib) {
+            try {
+                self::$ffi = FFI::cdef($sig, $lib);
+                return self::$ffi;
+            } catch (\Throwable $e) {}
         }
-        return $o;
+        return null;
     }
-    private static function copy(string &$o, int $dist, int $len): void {
-        $L = strlen($o); $src = $L - $dist;
-        for ($k = 0; $k < $len; $k++)
-            $o .= ($src + $k >= 0 && $src + $k < $L) ? $o[$src + $k] : "\x00";
+
+    // ---- Decompress one block via liblzo2 FFI ----
+    private static function decompressFFI(FFI $ffi, string $data, int $expected): string {
+        $dst    = $ffi->new("char[$expected]");
+        $dstLen = $ffi->new('unsigned long');
+        FFI::memset($dst, 0, $expected);
+        $dstLen->cdata = $expected;
+        $ret = $ffi->lzo1x_decompress_safe($data, strlen($data),
+                                            $dst, FFI::addr($dstLen), null);
+        if ($ret !== 0)
+            throw new \RuntimeException("liblzo2 lzo1x_decompress_safe returned $ret");
+        return FFI::string($dst, (int)$dstLen->cdata);
+    }
+
+    // ---- Decompress via lzop shell command ----
+    private static function decompressLzop(string $data, int $expected): string {
+        if (self::$hasLzop === null)
+            self::$hasLzop = (shell_exec('which lzop 2>/dev/null') !== null);
+        if (!self::$hasLzop)
+            throw new \RuntimeException("lzop not found");
+
+        $tmp = sys_get_temp_dir().'/ue_lzo_'.bin2hex(random_bytes(6)).'.lzo';
+        file_put_contents($tmp, $data);
+        $out  = shell_exec("lzop -d -c ".escapeshellarg($tmp)." 2>/dev/null");
+        unlink($tmp);
+        if ($out === null || $out === false)
+            throw new \RuntimeException("lzop decompression failed");
+        return $out;
+    }
+
+    // ---- Public entry point ----
+    public static function decompress(string $data, int $expected): string {
+        // 1. Native php-lzo extension (fastest)
+        if (function_exists('lzo1x_decompress')) {
+            $out = lzo1x_decompress($data, $expected);
+            if ($out === false) throw new \RuntimeException("lzo1x_decompress() failed");
+            return $out;
+        }
+
+        // 2. liblzo2 via PHP FFI
+        $ffi = self::loadFFI();
+        if ($ffi !== null) {
+            return self::decompressFFI($ffi, $data, $expected);
+        }
+
+        // 3. lzop binary
+        try { return self::decompressLzop($data, $expected); }
+        catch (\Throwable $e) {}
+
+        // Nothing worked — give the user a clear message
+        throw new \RuntimeException(
+            "LZO decompression unavailable. Install one of:\n".
+            "  • liblzo2-2 + enable PHP FFI (apt install liblzo2-2; ffi.enable=true in php.ini)\n".
+            "  • php-lzo PECL extension (pecl install lzo)\n".
+            "  • lzop binary (apt install lzop)"
+        );
     }
 }
 
