@@ -7,7 +7,7 @@ $filePath = isset($_GET['file']) ? (string)$_GET['file'] : (isset($filePath) ? (
 if ($filePath === '' || !file_exists($filePath)) {
     header('Content-Type: text/plain; charset=utf-8');
     echo "UE1.php: missing or invalid ?file= parameter.\n";
-    echo "Example: UE1.php?file=oldtest.utx\n";
+    echo "Example: UE3.php?file=testde.utx\n";
     exit;
 }
 
