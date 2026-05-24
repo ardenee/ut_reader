@@ -8,8 +8,8 @@ final class UnrealPackageReader
 	private array $names       = [];
     private array $imports     = [];
     private array $exports     = [];
-	private array $exportProps = [];  // [exportIndex => list of props]
-	private array $importProps = [];  // imports don’t serialize props; keep empty lists
+	private array $exportProps = []; // [exportIndex => list of props]
+	private array $importProps = []; // imports don’t serialize props; keep empty lists
 	private array $chunkCache  = []; // ensure this property exists
 	/** Cached per-export property maps (filled by parse or on demand). */
 	private array $exportPropertiesCache = [];
@@ -372,7 +372,6 @@ public function readPropertiesForExport(int $exportIndex): array {
     return $props;
 }
 
-
 /** Disassemble tokens into readable lines up to an optional byte limit. */
 private function disasmScript(UEReader $R, int $limit = 4096): array {
     $base  = $R->tell();
@@ -521,8 +520,6 @@ private function disasmScript(UEReader $R, int $limit = 4096): array {
     }
     return $lines;
 }
-
-
 
     public function __construct(string $path)
     {

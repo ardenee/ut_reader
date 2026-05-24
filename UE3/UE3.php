@@ -21,26 +21,6 @@ $imports         = $pkg->getImports();
 $exports         = $pkg->getExports();
 $pkgFlagsDecoded = $pkg->decodePKG((int)($ex['objectFlags'] ?? 0));
 
-
-
-
-//$c = $pkg->getCompressionHeader();
-//echo "<pre class='small mono'>Compression: ".htmlspecialchars(json_encode($c))."</pre>";
-
-echo "<pre>";
-//print_r($exports);
-//var_dump($pkg->getCompressionHeader());
-
-
-//echo "Header<hr>\n";
-//print_r($hdr);
-//echo "names Table<hr>\n";
-//print_r($names);
-//echo "exports Table<hr>\n";
-//print_r($exports);
-//echo "imports Table<hr>\n";
-//print_r($imports);
-echo "</pre>";
 // Small helpers
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 
