@@ -21,21 +21,11 @@ $imports         = $pkg->getImports();
 $exports         = $pkg->getExports();
 $pkgFlagsDecoded = $pkg->decodePKG(intval($hdr['pkgFlags'] ?? 0));
 
-echo "<pre>";
-//print_r($imports);
-//echo "<pre>";
-//echo "hHeader<hr>\n";
-//print_r($hdr);
-//echo "names Table<hr>\n";
-//print_r($names);
-//echo "exports Table<hr>\n";
-//print_r($exports);
-//echo "imports Table<hr>\n";
-//print_r($imports);
-echo "</pre>";
-// Small helpers
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 
+echo "<pre>";
+print_r($hdr);
+echo "</pre>";
 ?>
 <!doctype html>
 <html lang="en">
@@ -166,14 +156,11 @@ function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SU
 	<?php endif; ?>
 
 
-
-
-
 <?php if (!empty($hdr['generations'])): ?>
 <h2>Generations (<?=count($hdr['generations'])?>)</h2>
 <table><tr><th>ExportCount</th><th>NameCount</th><th>Num.</th><th class="small">Raw (ExportCount / NameCount)</th></tr>
 <?php foreach ($hdr['generations'] as $i=>$g): ?>
-<tr><td><?=$g['exportCount']?></td><td><?=$g['nameCount']?></td><td><?=$i?></td><td class="small"><?=$g['exportCount'] ?> / <?= $g['nameCount']?></td></tr>
+<tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?></td></tr>
 <?php endforeach; ?>
 </table>
 <?php endif; ?>

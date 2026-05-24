@@ -197,9 +197,9 @@ function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SU
 <?php foreach ($hdr['generations'] as $i=>$g): ?>
 
 		<?php if (isset($hdr['netObjectCount'])): ?>		
-        <tr><td><?=$g['exportCount']?></td><td><?=$g['nameCount']?></td><td><?=$g['netObjectCount']?></td><td><?=$i?></td><td class="small"><?=$g['exportCount'] ?> / <?= $g['nameCount']?> / <?=$g['netObjectCount']?></td></tr>
+        <tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td><?=$g['netObjectCount']?></td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?> / <?=$g['netObjectCount']?></td></tr>
 	    <?php else: ?>
-        <tr><td><?=$g['exportCount']?></td><td><?=$g['nameCount']?></td><td>&nbsp;</td><td><?=$i?></td><td class="small"><?=$g['exportCount'] ?> / <?= $g['nameCount']?></td></tr>
+        <tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td>&nbsp;</td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?></td></tr>
         <?php endif; ?>
 
 <?php endforeach; ?>
