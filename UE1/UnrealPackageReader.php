@@ -210,6 +210,8 @@ final class UnrealPackageReader
             'heritageOffset' => '',
             'dependsOffset' => '',
             'guid' => '',
+            'guidRaw' => '',
+            'guidDwords' => '',
             'generations' => [],
             'chunks' => [],
             'compressedChunks' => [],
@@ -217,6 +219,15 @@ final class UnrealPackageReader
             'compressionFlags' => 0,
             'cFlags' => 0,
         ];
+    }
+
+    private function readGuidFromReader(UE1BinaryReader $r): void
+    {
+        $dwords = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
+        $this->header['guidArray'] = $dwords;
+        $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X', $dwords[0], $dwords[1], $dwords[2], $dwords[3]);
+        $this->header['guidDwords'] = $this->header['guid'];
+        $this->header['guidRaw'] = strtoupper(bin2hex(pack('V4', $dwords[0], $dwords[1], $dwords[2], $dwords[3])));
     }
 
     private function parse(): void
@@ -253,7 +264,7 @@ final class UnrealPackageReader
             $this->header['heritageOffset'] = $r->i32();
             $remainingBeforeNames = (int)$this->header['nameOffset'] - $r->tell();
             if ($remainingBeforeNames >= 16) {
-                $this->header['guid'] = strtoupper(bin2hex($r->bytes(16)));
+                $this->readGuidFromReader($r);
             }
             $this->header['generations'] = [[
                 'e' => $this->header['exportCount'],
@@ -262,8 +273,7 @@ final class UnrealPackageReader
                 'nameCount' => $this->header['nameCount'],
             ]];
         } else {
-            $guidRaw = $r->bytes(16);
-            $this->header['guid'] = strtoupper(bin2hex($guidRaw));
+            $this->readGuidFromReader($r);
             $genCount = $r->i32();
             $this->header['genCount'] = $genCount;
             for ($i = 0; $i < $genCount; $i++) {
