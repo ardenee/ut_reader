@@ -45,8 +45,8 @@ function ensure_upload_dir(string $uploadDir, string &$message): bool
     if (!is_writable($uploadDir)) {
         $message = 'Uploads folder exists but PHP cannot write to it: ' . $uploadDir . "\n\n" .
             'Fix on Synology/host shell, for example:' . "\n" .
-            'chmod 775 ' . escapeshellarg($uploadDir) . "\n" .
-            'chown http:http ' . escapeshellarg($uploadDir) . '   # adjust user/group if your web user differs';
+            'sudo chmod 775 ' . escapeshellarg($uploadDir) . "\n" .
+            'sudo chown http:http ' . escapeshellarg($uploadDir) . '   # adjust user/group if your web user differs';
         return false;
     }
 
@@ -102,7 +102,7 @@ body{font-family:Segoe UI,Tahoma,Arial,sans-serif;background:#eef6f8;color:#0716
 </head>
 <body>
 <div class="box">
-<h1>Upload UE package</h1>
+<h1>Upload UE1 package</h1>
 <?php if ($message !== ''): ?><div class="msg"><?= h($message) ?></div><?php endif; ?>
 <form method="post" enctype="multipart/form-data">
     <input type="file" name="package_file" accept=".u,.utx,.umx,.uax,.unr,.ut2,.ut3,.upk" required>
