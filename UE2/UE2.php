@@ -2,741 +2,236 @@
 declare(strict_types=1);
 require_once __DIR__ . '/UnrealPackageReader.php';
 
-// Accept ?file=... (or set a default)
-$filePath = isset($_GET['file']) ? (string)$_GET['file'] : (isset($filePath) ? (string)$filePath : 'test.utx');
-if ($filePath === '' || !file_exists($filePath)) {
-    header('Content-Type: text/plain; charset=utf-8');
-    echo "UE1.php: missing or invalid ?file= parameter.\n";
-    echo "Example: UE2.php?file=test.utx\n";
-    exit;
-}
-
-// Build package
-$pkg = new UnrealPackageReader($filePath);
-
-// Pull data using the NEW getters
-$hdr             = $pkg->getHeader();
-$names           = $pkg->getNames();
-$imports         = $pkg->getImports();
-$exports         = $pkg->getExports();
-$pkgFlagsDecoded = $pkg->decodePKG(intval($hdr['pkgFlags'] ?? 0));
+$uploadDir = __DIR__ . '/uploads';
+$uploadRelDir = 'uploads';
+$allowedExt = ['u', 'utx', 'umx', 'uax', 'unr', 'ut2', 'ut3', 'upk'];
 
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function hx_any($v): string { return sprintf('0x%08X', (int)$v); }
+function hx2(int $v): string { return sprintf('0x%02X', $v); }
+function flag_names(array $flags): string { return $flags ? ' (' . implode(', ', $flags) . ')' : ''; }
+function safe_package_name(string $name): string
+{
+    $base = basename(str_replace('\\', '/', rawurldecode($name)));
+    $base = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $base) ?? '';
+    return trim($base, " .\t\n\r\0\x0B");
+}
+function upload_file_list(string $uploadDir, string $uploadRelDir, array $allowedExt): array
+{
+    if (!is_dir($uploadDir)) return [];
+    $out = [];
+    foreach (scandir($uploadDir) ?: [] as $file) {
+        if ($file === '.' || $file === '..') continue;
+        $full = $uploadDir . DIRECTORY_SEPARATOR . $file;
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (!is_file($full) || !in_array($ext, $allowedExt, true)) continue;
+        $out[] = ['name' => $file, 'rel' => $uploadRelDir . '/' . rawurlencode($file), 'path' => $full, 'size' => filesize($full) ?: 0, 'mtime' => filemtime($full) ?: 0];
+    }
+    usort($out, static fn(array $a, array $b): int => ($b['mtime'] <=> $a['mtime']) ?: strcasecmp($a['name'], $b['name']));
+    return $out;
+}
+function resolve_package_path(string $fileParam, string $uploadDir, array $uploadedFiles): string
+{
+    $root = realpath(__DIR__);
+    if ($root === false) return '';
+    if ($fileParam !== '') {
+        $decoded = rawurldecode($fileParam);
+        $base = safe_package_name($decoded);
+        if ($base !== '') {
+            $uploadCandidate = $uploadDir . DIRECTORY_SEPARATOR . $base;
+            if (is_file($uploadCandidate)) return $uploadCandidate;
+        }
+        $localCandidate = __DIR__ . DIRECTORY_SEPARATOR . ltrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $decoded), DIRECTORY_SEPARATOR);
+        $localReal = realpath($localCandidate);
+        if ($localReal !== false && is_file($localReal) && str_starts_with($localReal, $root . DIRECTORY_SEPARATOR)) return $localReal;
+    }
+    $default = __DIR__ . DIRECTORY_SEPARATOR . 'test.utx';
+    if (is_file($default)) return $default;
+    $fallback = __DIR__ . DIRECTORY_SEPARATOR . 'oldtest.utx';
+    if (is_file($fallback)) return $fallback;
+    return $uploadedFiles[0]['path'] ?? '';
+}
+function object_ref_target_id(int $ref): string { return $ref < 0 ? 'ref-import-' . abs($ref) : 'ref-export-' . $ref; }
+function name_ref_target_id(int $idx): string { return 'ref-name-' . $idx; }
+function object_ref_label(UnrealPackageReader $pkg, int $ref): string
+{
+    if ($ref === 0) return '';
+    $name = $pkg->displayNameFromRef($ref);
+    return $name !== '' ? $name . '(' . $ref . ')' : '(' . $ref . ')';
+}
+function split_ref_for_display(string $label): array
+{
+    if (preg_match('/^(.*?)(\(-?\d+\))$/', $label, $m)) return [$m[1], $m[2], (int)trim($m[2], '()')];
+    return [$label, '', 0];
+}
+function ref_value_html(string $label): string
+{
+    [$name, $refText, $ref] = split_ref_for_display($label);
+    $html = '<span class="mono">' . h($name) . '</span>';
+    if ($refText !== '' && $ref !== 0) $html .= '<a class="ref-tag ref-link" href="#' . h(object_ref_target_id($ref)) . '" data-ref="' . h($ref) . '">' . h($refText) . '</a>';
+    return $html;
+}
+function name_link_html(UnrealPackageReader $pkg, int $idx, string $label = ''): string
+{
+    if ($idx < 0) return h($label);
+    $text = $label !== '' ? $label : $pkg->nameByIndex($idx);
+    return '<a class="name-link mono" href="#' . h(name_ref_target_id($idx)) . '" data-name-index="' . h($idx) . '">' . h($text) . '</a><a class="name-tag name-link" href="#' . h(name_ref_target_id($idx)) . '" data-name-index="' . h($idx) . '">#' . h($idx) . '</a>';
+}
+function name_index_link(int $idx): string
+{
+    if ($idx < 0) return '';
+    return '<a class="name-tag name-link" href="#' . h(name_ref_target_id($idx)) . '" data-name-index="' . h($idx) . '">#' . h($idx) . '</a>';
+}
+function prop_value_text($value): string { return is_scalar($value) ? (string)$value : trim(print_r($value, true)); }
+
+$uploadedFiles = upload_file_list($uploadDir, $uploadRelDir, $allowedExt);
+$fileParam = isset($_GET['file']) ? (string)$_GET['file'] : '';
+$filePath = resolve_package_path($fileParam, $uploadDir, $uploadedFiles);
+if ($filePath === '' || !file_exists($filePath)) {
+    header('Content-Type: text/plain; charset=utf-8');
+    echo "UE2.php: no package file is available.\n";
+    echo "Use UE2/upload.php, put a supported UE2 package into UE2/uploads/, or keep test.utx beside UE2.php.\n";
+    exit;
+}
+$currentRel = str_starts_with($filePath, $uploadDir . DIRECTORY_SEPARATOR) ? $uploadRelDir . '/' . basename($filePath) : basename($filePath);
+
+$pkg = new UnrealPackageReader($filePath);
+$hdr = $pkg->getHeader();
+$names = $pkg->getNames();
+$imports = $pkg->getImports();
+$exports = $pkg->getExports();
+$issues = $pkg->validatePackage();
+$comp = $pkg->getCompressionInfo();
+$pkgFlagsDecoded = $pkg->decodePKG((int)($hdr['pkgFlags'] ?? 0));
+$displayGuid = strtoupper(str_replace('-', '', (string)($hdr['guid'] ?? '')));
+$version = (int)($hdr['version'] ?? 0);
+$buildLabel = $version >= 334 ? 'Unreal3' : 'Unreal2';
+
+$importsByOuter = [];
+foreach ($imports as $idx => $im) $importsByOuter[(int)($im['outerIndex'] ?? 0)][] = (int)$idx;
+$exportsByOuter = [];
+foreach ($exports as $idx => $ex) $exportsByOuter[(int)($ex['packageIndex'] ?? $ex['outerIndex'] ?? 0)][] = (int)$idx;
+
+function renderPropsTree(array $props): void
+{
+    echo '<div class="props-tree">';
+    foreach ($props as $p) {
+        $name = (string)($p['name'] ?? '');
+        $type = (string)($p['type'] ?? '');
+        $valueText = prop_value_text($p['value'] ?? '');
+        $raw = json_encode($p, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+        $extras = $p;
+        unset($extras['name'], $extras['type'], $extras['value'], $extras['rawHex']);
+        echo '<details class="prop-node"><summary><span class="ico prop">▤</span><span class="prop-name">' . h($name) . '</span>';
+        if ($type !== '') echo '<span class="prop-type">' . h($type) . '</span>';
+        if ($valueText !== '') echo '<span class="prop-value">' . h($valueText) . '</span>';
+        echo '</summary><div class="prop-lines">';
+        if ($name !== '') echo '<div>Name:<span class="mono">' . h($name) . '</span></div>';
+        if ($type !== '') echo '<div>Type:<span class="mono">' . h($type) . '</span></div>';
+        if ($valueText !== '') echo '<div>Value:<span class="mono raw-inline">' . h($valueText) . '</span></div>';
+        foreach ($extras as $k => $v) {
+            if ($v === '' || $v === null || $v === []) continue;
+            echo '<div class="extra-line">' . h($k) . ':<span class="mono raw-inline">' . h(is_scalar($v) ? (string)$v : json_encode($v, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</span></div>';
+        }
+        if (!empty($p['rawHex'])) echo '<div class="extra-line">rawHex:<span class="mono raw-inline">' . h($p['rawHex']) . '</span></div>';
+        echo '<details class="raw-prop"><summary>Raw property record</summary><pre>' . h((string)$raw) . '</pre></details></div></details>';
+    }
+    echo '</div>';
+}
+function renderImportNode(UnrealPackageReader $pkg, array $imports, array $importsByOuter, int $idx, bool $includeChildren, string $idPrefix = ''): void
+{
+    $im = $imports[$idx] ?? null;
+    if (!is_array($im)) return;
+    $ref = -($idx + 1);
+    $objectIdx = (int)($im['objectName'] ?? -1);
+    $classIdx = (int)($im['className'] ?? -1);
+    $classPackageIdx = (int)($im['classPackage'] ?? -1);
+    $object = $pkg->importObjectName($objectIdx);
+    $class = $pkg->importClassName($classIdx);
+    $classPackage = $pkg->importClassPackageName($classPackageIdx);
+    $outerLabel = object_ref_label($pkg, (int)($im['outerIndex'] ?? 0));
+    $children = $includeChildren ? ($importsByOuter[$ref] ?? []) : [];
+    $anchor = $idPrefix === 'tables-' ? object_ref_target_id($ref) : $idPrefix . object_ref_target_id($ref);
+    echo '<details id="' . h($anchor) . '" class="tree-node" data-filter-row>';
+    echo '<summary><span class="ico package">▣</span><span class="name">' . name_link_html($pkg, $objectIdx, $object) . '</span></summary><div class="tree-lines">';
+    echo '<div>Object:' . name_link_html($pkg, $objectIdx, $object) . '<a class="ref-tag ref-link" href="#' . h(object_ref_target_id($ref)) . '" data-ref="' . h($ref) . '">(' . h($ref) . ')</a></div>';
+    echo '<div>Class:' . name_link_html($pkg, $classIdx, $class) . '</div>';
+    echo '<div>Package:' . name_link_html($pkg, $classPackageIdx, $classPackage) . '</div>';
+    if ($outerLabel !== '') echo '<div class="extra-line">Outer:' . ref_value_html($outerLabel) . '</div>';
+    foreach ($children as $childIdx) renderImportNode($pkg, $imports, $importsByOuter, (int)$childIdx, true, $idPrefix);
+    echo '</div></details>';
+}
+function renderExportNode(UnrealPackageReader $pkg, array $exports, array $exportsByOuter, int $idx, bool $withProps = false, string $idPrefix = '', bool $includeChildren = true): void
+{
+    $ex = $exports[$idx] ?? null;
+    if (!is_array($ex)) return;
+    $ref = $idx + 1;
+    $objectIdx = (int)($ex['objectName'] ?? -1);
+    $object = $pkg->exportObjectName($objectIdx);
+    $class = object_ref_label($pkg, (int)($ex['classIndex'] ?? 0));
+    $super = object_ref_label($pkg, (int)($ex['superIndex'] ?? 0));
+    $outer = object_ref_label($pkg, (int)($ex['packageIndex'] ?? 0));
+    $flags = (int)($ex['objectFlags'] ?? 0);
+    $props = $withProps ? ($pkg->getExportProperties($idx) ?? []) : [];
+    $children = $includeChildren ? ($exportsByOuter[$ref] ?? []) : [];
+    $anchor = $idPrefix === 'tables-' ? object_ref_target_id($ref) : $idPrefix . object_ref_target_id($ref);
+    $propsId = 'props-' . (int)$idx;
+    echo '<details id="' . h($anchor) . '" class="tree-node" open data-filter-row>';
+    echo '<summary><span class="ico export">≡</span><span class="name">' . name_link_html($pkg, $objectIdx, $object) . '</span>';
+    if ($class !== '') echo '<span class="class-name">' . ref_value_html($class) . '</span>';
+    echo '</summary><div class="tree-lines">';
+    echo '<div>ObjectFlags:<span class="mono">' . h(sprintf('%08X', $flags)) . '</span>' . h(flag_names($pkg->decodeRF($flags))) . '</div>';
+    echo '<div>Object:' . name_link_html($pkg, $objectIdx, $object) . '<a class="ref-tag ref-link" href="#' . h(object_ref_target_id($ref)) . '" data-ref="' . h($ref) . '">(' . h($ref) . ')</a></div>';
+    if ($class !== '') echo '<div>Class:' . ref_value_html($class) . '</div>';
+    if ($super !== '') echo '<div class="extra-line">Super:' . ref_value_html($super) . '</div>';
+    if ($outer !== '') echo '<div class="extra-line">Package:' . ref_value_html($outer) . '</div>';
+    if (!empty($ex['archetype'])) echo '<div class="extra-line">Archetype:' . ref_value_html(object_ref_label($pkg, (int)$ex['archetype'])) . '</div>';
+    echo '<div class="extra-line">Object Size:<span class="mono">' . h($ex['serialSize'] ?? '') . '</span></div>';
+    echo '<div class="extra-line">Object Offset:<span class="mono">' . h($ex['serialOffset'] ?? '') . '</span></div>';
+    if (!empty($ex['exportFlags'])) echo '<div class="extra-line">Export Flags:<span class="mono">' . h(hx_any($ex['exportFlags'])) . '</span></div>';
+    if (!empty($ex['components'])) echo '<div class="extra-line">Components:<span class="mono">' . h(count($ex['components'])) . '</span></div>';
+    if ($withProps && $props) {
+        echo '<div class="prop-tools"><button class="prop-btn" type="button" onclick="toggleProps(\'' . h($propsId) . '\')">Properties <span>' . count($props) . '</span></button><button class="prop-btn small" type="button" onclick="setPropsOpen(\'' . h($propsId) . '\', true)">Expand all</button><button class="prop-btn small" type="button" onclick="setPropsOpen(\'' . h($propsId) . '\', false)">Collapse all</button><button class="prop-btn small" type="button" onclick="copyPropsText(\'' . h($propsId) . '\')">Copy text</button></div>';
+        echo '<div id="' . h($propsId) . '" class="props-block">';
+        renderPropsTree($props);
+        echo '</div>';
+    }
+    foreach ($children as $childIdx) renderExportNode($pkg, $exports, $exportsByOuter, (int)$childIdx, $withProps, $idPrefix, true);
+    echo '</div></details>';
+}
 ?>
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<title>Unreal Package Viewer — <?= h(basename($filePath)) ?></title>
+<meta charset="utf-8">
+<title>UE2 Explorer — <?= h(basename($filePath)) ?></title>
 <style>
-    :root {
-        --b: #d0d7de;
-        --bg: #fff;
-        --muted: #f6f8fa;
-        --text: #24292f;
-        --sub: #57606a;
-        --accent: #0969da;
-    }
-    html, body { background: var(--bg); color: var(--text); }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.35; padding: 16px; }
-    h1, h2 { margin: 0.4em 0; }
-    .small { font-size: 12px; color: var(--sub); }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
-
-    table { border-collapse: collapse; width: 100%; margin: 12px 0 24px; }
-    th, td { border: 1px solid var(--b); padding: 6px 8px; vertical-align: top; font-size: 14px; }
-    th { background: var(--muted); text-align: left; }
-
-    /* Dropdown toggle button */
-    .toggle-btn {display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--b); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 13px; color: var(--text); }
-    .toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .chev { transition: transform 0.2s ease; display: inline-block; }
-    .chev.open { transform: rotate(90deg); }
-
-    /* Hidden row that contains the properties table */
-    .props-row { display: none; background: #fcfcfd; }
-    .props-wrap { padding: 10px 4px; }
-
-    /* Nested table style */
-    .nested { width: 100%; border-collapse: collapse; margin: 6px 0 0; }
-    .nested th, .nested td { border: 1px dashed var(--b); font-size: 13px; background: #E5F2FF;}
-    .nested th { background: #69BEFF; }
-    .pill { display: inline-block; padding: 2px 6px; border-radius: 999px; background: #e7f5ff; color: #0b74c9; font-size: 12px; border: 1px solid #b6dfff; }	
+:root{--b:#cfd7df;--bg:#eef6f8;--panel:#fff;--muted:#f5f7f9;--text:#071629;--sub:#536471;--accent:#0969da;--soft:#eaf4ff;--orange:#c26700;--extra:#537895;--extra-bg:#f4f9ff}*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);scroll-behavior:smooth}body{font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:14px}.mono{font-family:Consolas,Menlo,monospace}.raw,.raw-inline{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.workspace{padding:12px}.viewer{width:100%;background:var(--panel);border:1px solid var(--b);min-height:650px}.doc-tabs{display:flex;margin-left:12px}.doc-tab{padding:9px 28px;border:1px solid var(--b);border-bottom:0;border-radius:6px 6px 0 0;background:#fff;font-weight:600}.toolbar{display:grid;grid-template-columns:minmax(420px,1fr) minmax(260px,420px);gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--b);background:#fbfbfb}.file-open-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.file-open-bar form{display:flex;gap:6px;align-items:center;margin:0}.file-select{min-width:320px;padding:6px 8px;border:1px solid #9aa7b1;background:#fff}.btn{border:1px solid var(--b);background:#fff;border-radius:5px;padding:5px 9px;cursor:pointer;text-decoration:none;color:var(--text)}.btn:hover{background:#eef6ff}.package-name{text-align:right;color:#475569}.tabs,.subtabs{display:flex;border-bottom:1px solid var(--b);background:#f8fafb}.tab,.subtab{border:0;border-right:1px solid var(--b);background:transparent;padding:10px 18px;font-weight:700;cursor:pointer}.tab.active,.subtab.active{background:#fff;color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}.panel,.subpanel{display:none;padding:16px}.panel.active,.subpanel.active{display:block}.package-grid{display:grid;grid-template-columns:minmax(560px,760px) minmax(320px,520px);gap:24px;align-items:start}.field-grid{display:grid;grid-template-columns:170px minmax(0,1fr);gap:10px 18px;align-items:center}.field-label{font-weight:600}.field-value{min-height:30px;border:1px solid var(--b);background:#fbfbfb;padding:6px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.flag-table,.data{border-collapse:collapse;width:100%;margin-top:20px}.flag-table th,.flag-table td,.data th,.data td{border:1px solid var(--b);padding:7px 9px;vertical-align:top}.flag-table th,.data th{background:var(--muted);text-align:left}.flag-true{background:#0078d7;color:#fff}.tree-box{border:1px solid var(--b);background:#fff;padding:12px;margin:12px 0 18px;width:100%}.tree-node{margin:3px 0;scroll-margin-top:20px}.tree-node.is-target>summary,.data tr.is-target td{background:#fff3cd!important;outline:2px solid #f0c36d}.tree-node summary{cursor:pointer;list-style:none;padding:3px 4px;border-radius:3px}.tree-node summary::-webkit-details-marker,.prop-node summary::-webkit-details-marker{display:none}.tree-node[open]>summary:before,.prop-node[open]>summary:before{content:'▾ ';color:#546170}.tree-node:not([open])>summary:before,.prop-node:not([open])>summary:before{content:'▸ ';color:#546170}.ico{display:inline-block;width:22px;color:#2f5e87}.ico.export{color:#111}.ico.prop{color:#6f42c1}.name{font-weight:650}.class-name{margin-left:10px;color:var(--orange)}.tree-lines{margin-left:30px;padding-left:12px;border-left:1px dotted #aeb8c2}.tree-lines>div{padding:2px 0}.tree-lines span.mono{margin-left:5px}.extra-line{color:var(--extra);background:var(--extra-bg);border-left:2px solid #bdd7ee;margin:2px 0 2px -6px;padding-left:6px!important}.ref-tag,.name-tag{display:inline-block;margin-left:4px;color:#2f6f9f;background:#edf6ff;border:1px solid #c7dff2;border-radius:3px;padding:0 3px;font-family:Consolas,Menlo,monospace;font-size:.92em}.ref-link,.name-link{text-decoration:none}.ref-link:hover,.name-link:hover{text-decoration:underline;background:#dff0ff}.content-item{display:grid;grid-template-columns:1fr auto;border-bottom:1px solid #e5e7eb;padding:6px 8px}.content-class{color:var(--orange)}.grid-after-tree summary{cursor:pointer;font-weight:700;color:var(--accent);padding:4px 0}.props-block{display:none;margin-top:8px;max-width:100%;overflow-x:auto}.prop-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.prop-btn{border:1px solid var(--b);background:#fff;border-radius:5px;padding:4px 8px;cursor:pointer}.prop-btn.small{font-size:12px;color:#0958b8}.prop-btn span{display:inline-block;margin-left:5px;background:#e7f5ff;border:1px solid #b6dfff;border-radius:999px;padding:1px 6px}.props-tree{border:1px solid #c8d9ea;background:#fbfdff;margin-top:8px;padding:8px}.prop-node{border-bottom:1px solid #e2edf7;padding:4px 0}.prop-node summary{cursor:pointer;list-style:none;padding:4px 6px}.prop-name{font-weight:650}.prop-type{margin-left:10px;color:#6f42c1}.prop-value{margin-left:10px;color:#116329;font-family:Consolas,Menlo,monospace}.prop-lines{margin-left:30px;padding-left:12px;border-left:1px dotted #b7c8d9}.prop-lines>div{padding:2px 0}.raw-prop summary{font-weight:600;color:#0969da}.raw-prop pre{margin:6px 0 0;background:#f6f8fa;border:1px solid #d0d7de;padding:8px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.names-table{table-layout:fixed}.warn{border:1px solid #d1242f;background:#fff8f8;padding:8px 12px;margin-top:14px}@media(max-width:1000px){.package-grid,.toolbar{grid-template-columns:1fr}.package-name{text-align:left}}
 </style>
-
-
-<style id="hl-css-ref">
-  .hl-row{ background: rgba(9,105,218,.08)!important }
-  .hl-cell{ outline: 2px solid rgba(9,105,218,.55); position: relative }
-  .hl-strong{ background: rgba(9,105,218,.16)!important }
-  td[data-ref-type]{ cursor:pointer }
-</style>
-
-<style id="hl-css-clean">
-  .hl-row{ background: rgba(9,105,218,.08)!important }
-  .hl-cell{ outline: 2px solid rgba(9,105,218,.55); position: relative }
-  .hl-strong{ background: rgba(9,105,218,.16)!important }
-  td{ user-select: none; }
-  td[data-ref-type]{ cursor:pointer }
-</style>
+<script>
+function showPanel(id){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.panel===id));document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id===id));}
+function showSub(id){document.querySelectorAll('.subtab').forEach(e=>e.classList.toggle('active',e.dataset.sub===id));document.querySelectorAll('.subpanel').forEach(e=>e.classList.toggle('active',e.id===id));}
+function toggleProps(id){const e=document.getElementById(id);if(e)e.style.display=(e.style.display==='block')?'none':'block';}
+function setPropsOpen(id,open){const e=document.getElementById(id);if(!e)return;e.style.display='block';e.querySelectorAll('details').forEach(d=>d.open=open);}
+function copyPropsText(id){const e=document.getElementById(id);if(!e)return;setPropsOpen(id,true);const text=e.innerText.replace(/\n{3,}/g,'\n\n');navigator.clipboard&&navigator.clipboard.writeText(text);}
+function openContainingDetails(el){let p=el;while(p){if(p.tagName&&p.tagName.toLowerCase()==='details')p.open=true;p=p.parentElement;}}
+function clearTargetState(){document.querySelectorAll('.tree-node.is-target,.data tr.is-target').forEach(e=>e.classList.remove('is-target'));}
+function jumpToRef(targetId){if(!targetId)return;if(targetId.indexOf('ref-import-')===0){showPanel('tables-panel');showSub('imports-sub');}else if(targetId.indexOf('ref-export-')===0){showPanel('tables-panel');showSub('exports-sub');}else if(targetId.indexOf('ref-name-')===0){showPanel('tables-panel');showSub('names-sub');}window.setTimeout(()=>{const target=document.getElementById(targetId);if(!target)return;clearTargetState();openContainingDetails(target);target.classList.add('is-target');target.scrollIntoView({behavior:'smooth',block:'center'});},60);}
+document.addEventListener('click',function(ev){const a=ev.target.closest&&ev.target.closest('a.ref-link,a.name-link');if(!a)return;const href=a.getAttribute('href')||'';if(href.charAt(0)!=='#')return;ev.preventDefault();history.replaceState(null,'',window.location.pathname+window.location.search);jumpToRef(href.substring(1));});
+window.addEventListener('load',function(){if(location.hash){const targetId=location.hash.substring(1);history.replaceState(null,'',window.location.pathname+window.location.search);jumpToRef(targetId);}});
+</script>
 </head>
 <body>
-
-<h1>Unreal Package Viewer</h1>
-<div class="small"><?= h($filePath) ?> (<?=h($pkg->getFileSize())?>)</div>
-
-<h2>Header</h2>
-<table>
-<tr><th>Name</th><th>Value</th><th class="small">Raw</th></tr>
-
-    <tbody>
-        <tr><th>Signature</th><td class="mono">            <?= h(sprintf("0x%08X",$hdr['signature']) ?? '') ?></td><td class="small"><?= h($hdr['signature']) ?></td></tr>
-        <tr><th>Version</th><td class="mono">              <?= h($hdr['version'] ?? '') ?></td><td class="small"><?= h($hdr['version'] ?? '') ?></td></tr>
-        <tr><th>Licensee</th><td class="mono">             <?= h($hdr['licensee'] ?? '') ?></td><td class="small"><?= h($hdr['licensee'] ?? '') ?></td></tr>
-        <tr><th>Package Flags</th><td class="mono">        <?= h(sprintf("0x%08X",$hdr['pkgFlags']) ?? '')." (".implode(', ', $pkgFlagsDecoded).")" ?></td><td class="small"><?= h($hdr['pkgFlags']) ?></td></tr>
-		
-        <tr><th>Name Count / Offset</th><td class="mono">  <?= h($hdr['nameCount'])." / ".h($hdr['nameOffset']) ?></td><td class="small"><?=h($hdr['nameCount'])." / ".h($hdr['nameOffset']) ?></td></tr> 
-        <tr><th>Export Count / Offset</th><td class="mono"><?= h($hdr['exportCount'])." / ".h($hdr['exportOffset'])?></td><td class="small"><?=h($hdr['exportCount'])." / ".h($hdr['exportOffset']) ?></td></tr>
-        <tr><th>Import Count / Offset</th><td class="mono"><?= h($hdr['importCount'])." / ".h($hdr['importOffset'])?></td><td class="small"><?=h($hdr['importCount'])." / ".h($hdr['importOffset']) ?></td></tr>
-		
-		
-        <?php if (!empty($hdr['guid'])): ?>
-        <tr><th>GUID</th><td class="mono"><?= h($hdr['guid']) ?></td><td class="small"><?= h($hdr['guid']) ?></td></tr>
-        <?php endif; ?>		
-		<?php if (($hdr['version']??0) < 68): ?>
-		<tr><th>Heritage count </th><td class="mono"><?=$hdr['heritageCount']?></td><td class="small"> <?=h($hdr['heritageCount']) ?></td></tr>
-		<tr><th>Heritage offset</th><td class="mono"><?=$hdr['heritageOffset']?></td><td class="small"><?=h($hdr['heritageOffset']) ?></td></tr>
-		<?php endif; ?>		
-    </tbody>
-</table>
-	<?php
-		// Compression summary
-		$comp   = $pkg->getCompressionInfo();
-		$issues = $pkg->validatePackage();
-	?>
-
-	<?php if (!empty($comp['isCompressed']) || !empty($comp['chunks'])): ?>
-	<h2>Compression</h2>
-	<table>
-	  <tr><th>Compressed?</th><td class="mono"><?= $comp['isCompressed'] ? 'Yes' : 'No' ?></td></tr>
-	  <tr><th>Total (compressed → uncompressed)</th>
-		  <td class="mono"><?= h($comp['totalCompressed']) ?> → <?= h($comp['totalUncompressed']) ?> bytes</td></tr>
-	</table>
-
-	<?php if (!empty($comp['chunks'])): ?>
-	<h3>Chunks (<?= count($comp['chunks']) ?>)</h3>
-	<table>
-	  <thead><tr><th>#</th><th>Comp Off/Len</th><th>Uncomp Off/Len</th></tr></thead>
-	  <tbody>
-		<?php foreach ($comp['chunks'] as $ci => $c): ?>
-		<tr>
-		  <td class="mono"><?= (int)$ci ?></td>
-		  <td class="mono"><?= h($c['cOff']) ?> / <?= h($c['cLen']) ?></td>
-		  <td class="mono"><?= h($c['uOff']) ?> / <?= h($c['uLen']) ?></td>
-		</tr>
-		<?php endforeach; ?>
-	  </tbody>
-	</table>
-	<?php endif; ?>
-	<?php endif; ?>
-
-	<?php if (!empty($issues)): ?>
-	<h2>Validation</h2>
-	<div class="warn">
-	  <ul>
-		<?php foreach ($issues as $w): ?>
-		  <li class="mono"><?= h($w) ?></li>
-		<?php endforeach; ?>
-	  </ul>
-	</div>
-	<?php endif; ?>
-
-
-<?php if (!empty($hdr['generations'])): ?>
-<h2>Generations (<?=count($hdr['generations'])?>)</h2>
-<table><tr><th>ExportCount</th><th>NameCount</th><th>Num.</th><th class="small">Raw (ExportCount / NameCount)</th></tr>
-<?php foreach ($hdr['generations'] as $i=>$g): ?>
-<tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?></td></tr>
-<?php endforeach; ?>
-</table>
-<?php endif; ?>
-
-
-
-<h2>Names (<?=$hdr['nameCount']?>:<?=$hdr['nameOffset']?>)</h2></h2>
-
-<table>
-    <thead>
-        <tr><th>Name</th><th>Flags</th><th>Num.</th><th class="small">Raw (index / flags)</th></tr>
-    </thead>
-    <tbody>
-    <?php foreach ($names as $n): ?>
-	<?php $pkgFlagsDecoded = $pkg->decodePKG(intval($n['objectFlags'] ?? 0)); ?>
-        <tr>
-            <td><?= h($n['name']) ?></td>
-            <td class="mono"><?=  h(sprintf("0x%08X",$n['flags']))." (".implode(', ',$pkg->decodeRF($n['flags']))?>)</td>			
-			<td class="mono"><?=  h($n['index']." (".sprintf("0x%02X",$n['index'])) ?>)</td>	
-			<td class="small"><?= h($n['name'])?> / <?= $n['flags']?></td>					
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
-
-
-<h2>Imports (<?=$hdr['importCount']?>:<?=$hdr['importOffset']?>)</h2>
-<table>
-    <thead>
-        <tr>            
-            <th>Class Package</th><th>Class Name</th><th>Package Name</th><th>Object Name</th><th>Num.</th>
-            <th class="small">Raw (classPackage / className / outerIndex / objectName)</th>
-        </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($imports as $i => $im): ?>
-        <tr>  
-		    <td><?= h($pkg->importClassPackageName($im['classPackage'])) ?></td>
-		    <td><?= h($pkg->importClassName($im['className'])) ?></td>
-		    <td><?= h($pkg->importPackageName($im['outerIndex'])) ?></td>
-		    <td><?= h($pkg->importObjectName($im['objectName'])) ?></td>
-            <td class="mono"><?= h($i." (".sprintf("0x%02X",$i)) ?>)</td>
-            <td class="mono small"><?= h(($im['classPackage'] ?? '') . ' / ' . ($im['className'] ?? '') . ' / ' . ($im['outerIndex'] ?? '') . ' / ' . ($im['objectName'] ?? '')) ?></td>
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>
-
-
-
-<h2>Exports (<?=$hdr['exportCount']?>:<?=$hdr['exportOffset']?>)</h2></h2>
-<table>
-    <thead>
-        <tr>
-		    <th>Class Index</th><th>Super Index</th><th>Package Index</th><th>Object Name</th><th>Object Flags</th><th>Serial Size</th><th>Serial Offset</th><th>Num.</th><th>Properties</th><th class="small">Raw (cla / sup / pac / obj / flg / si / off)</th>
-        </tr>
-    </thead>
-    <tbody>
-    <?php foreach ($exports as $i => $ex): ?>
-        <?php
-            $props           = $pkg->getExportProperties($i);// getExportProps($pkg, $i);
-            $hasProps        = is_array($props) && !empty($props);
-			$pkgFlagsDecoded = $pkg->decodePKG(intval($i['objectFlags'] ?? 0));
-        ?>
-        <tr>		
-			<td class="mono"><?= h($pkg->exportClassName($ex['classIndex']))   ?></td>
-			<td class="mono"><?= h($pkg->exportSuperName($ex['superIndex'])) ?></td>
-			<td class="mono"><?= h($pkg->exportPackageName($ex['packageIndex']))   ?></td>
-		    <td class="mono"><?= h($pkg->exportObjectName($ex['objectName'])) ?></td> 
-		    <td class="mono"><?= h(sprintf("0x%08X",$ex['objectFlags']))." (".implode(', ',$pkg->decodeRF($ex['objectFlags']))?>)</td>
-			<td class="mono"><?= h($ex['serialSize'] ?? '') ?></td>
-			<td class="mono"><?= h(sprintf("0x%08X",$ex['serialOffset'])) ?></td>					
-            <td class="mono"><?= h($i." (".sprintf("0x%02X",$i)) ?>)</td>   
-            <td>
-          <?php if ($hasProps): ?>
-              <button class="toggle-btn" onclick="toggleProps(<?= (int)$i ?>)"><span id="chev-<?= (int)$i ?>" class="chev">▶</span> Properties <span class="pill"><?= count($props) ?></span></button>
-          <?php else: ?>
-              <span class="small mono">—</span>
-          <?php endif; ?>
-            </td>
-            <td class="mono small"><?= h(($ex['classIndex'] ?? '') . ' / ' . ($ex['superIndex'] ?? '') . ' / ' . ($ex['packageIndex'] ?? '') . ' / ' . ($ex['objectName'] ?? '') . ' / ' . ($ex['objectFlags'] ?? '') . ' / ' . ($ex['serialSize'] ?? '') . ' / ' . ($ex['serialOffset'] ?? '')) ?></td>
-        </tr>
-
-
-
-        <?php if ($hasProps): 
-		//echo "<pre>";
-		//print_r($props);
-		//echo "</pre>";		?>
-        <tr id="props-<?= (int)$i ?>" class="props-row">
-            <td colspan="10">
-                <div class="props-wrap">
-                    <table class="nested">
-                        <thead>
-                            <tr><th>Offset</th><th>Length</th><th>Name</th><th>Type</th><th>Struct</th><th>isArray</th><th>idx</th><th>idxFromFile</th><th>Value</th><th>Num.</th><th class="small">Raw</th></tr>
-                        </thead>
-						
-						
-						
-						
-						
-						
-                        <tbody>
-                            <?php foreach ($props as $pi => $p): ?>
-                                <?php   
-								
-		//echo "<HR><pre>";
-		//print_r($pi);
-		//print_r($p);
-		//echo "<HR></pre>";	
-								
-								
-                                    $val   = $p['value'] ?? ($p['val'] ?? ($p['data'] ?? ''));
-                                    $raw   = json_encode($p, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
-                                ?>
-                                <tr>
-                                    <td class="mono"><?= h(sprintf("0x%08X", $p['offset'])) ?></td>
-									<td class="mono"><?= h($p['length']) ?></td>
-									<td class="mono"><?= h($p['name']) ?></td>
-                                    <td class="mono"><?= h($p['type']) ?></td>
-									<td class="mono"><?= h($p['struct']) ?></td>
-									<td class="mono"><?= h($p['isArray']) ?></td>
-									<td class="mono"><?= h($p['idx']) ?></td>
-									<td class="mono"><?= h($p['idxFromFile']) ?></td>
-                                    <td><?= is_scalar($val) ? h((string)$val) : '<pre class="mono small">'.h(print_r($val, true)).'</pre>' ?></td>
-									<td class="mono small"><?= h($pi) ?></td>
-                                    <td class="mono small" style="white-space: pre-wrap;  overflow-wrap: anywhere;   word-break: break-word; line-break: anywhere; max-width: 40rem;"><?= h($raw) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-						
-						
-						
-						
-						
-						
-                    </table>
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-<?php
-  // Type-specific summaries based on export class
-  $clsName = strtolower((string)$pkg->exportClassName($ex['classIndex']));
-?>
-
-<!-- Type-specific summaries -->
-<?php if ($clsName === 'texture'): ?>
-  <?php if ($sum = $pkg->peekTextureSummary($i)): ?>
-    <h4>Texture Summary</h4>
-    <table class="nested">
-      <tr><th>MipMaps</th><td class="mono"><?= h($sum['mipmaps']) ?></td></tr>
-      <tr><th>Width</th><td class="mono"><?= h($sum['width']) ?></td></tr>
-      <tr><th>Height</th><td class="mono"><?= h($sum['height']) ?></td></tr>
-    </table>
-  <?php endif; ?>
-<?php endif; ?>
-
-<?php if ($clsName === 'sound'): ?>
-  <?php if ($sum = $pkg->peekSoundSummary($i)): ?>
-    <h4>Sound Summary</h4>
-    <table class="nested">
-      <tr><th>Format</th><td class="mono"><?= h($sum['format'] ?? '') ?></td></tr>
-      <tr><th>Size (bytes)</th><td class="mono"><?= h($sum['bytes'] ?? '') ?></td></tr>
-    </table>
-  <?php endif; ?>
-<?php endif; ?>
-
-<?php if ($clsName === 'music'): ?>
-  <?php if ($sum = $pkg->peekMusicSummary($i)): ?>
-    <h4>Music Summary</h4>
-    <table class="nested">
-      <tr><th>Text Size</th><td class="mono"><?= h($sum['bytes'] ?? '') ?></td></tr>
-      <tr><th>Preview</th><td class="mono small"><?= h($sum['preview'] ?? '') ?></td></tr>
-    </table>
-  <?php endif; ?>
-<?php endif; ?>
-
-<?php if ($clsName === 'function'): ?>
-  <?php if ($sum = $pkg->peekFunction($i)): ?>
-    <h4>Function Header</h4>
-    <table class="nested">
-      <tr><th>iNative</th><td class="mono"><?= h($sum['iNative'] ?? '') ?></td></tr>
-      <tr><th>Flags</th>
-          <td class="mono"><?= h(sprintf("0x%08X", intval($sum['FunctionFlagsRaw'] ?? 0))) ?>
-              (<?= h(implode(', ', $sum['FunctionFlags'] ?? [])) ?>)
-          </td></tr>
-      <?php if (!empty($sum['ScriptPreview'])): ?>
-      <tr><th>Script Preview</th>
-          <td><pre class="mono small"><?php foreach ($sum['ScriptPreview'] as $ln) echo h($ln)."\n"; ?></pre></td></tr>
-      <?php endif; ?>
-    </table>
-  <?php endif; ?>
-<?php endif; ?>
-
-<?php if ($clsName === 'state'): ?>
-  <?php if ($sum = $pkg->peekState($i)): ?>
-    <h4>State Header</h4>
-    <table class="nested">
-      <tr><th>State Flags</th>
-          <td class="mono"><?= h(sprintf("0x%08X", intval($sum['StateFlagsRaw'] ?? 0))) ?>
-              (<?= h(implode(', ', $sum['StateFlags'] ?? [])) ?>)
-          </td></tr>
-      <?php if (!empty($sum['ScriptPreview'])): ?>
-      <tr><th>Script Preview</th>
-          <td><pre class="mono small"><?php foreach ($sum['ScriptPreview'] as $ln) echo h($ln)."\n"; ?></pre></td></tr>
-      <?php endif; ?>
-    </table>
-  <?php endif; ?>
-<?php endif; ?>
-
-<?php if ($clsName === 'class'): ?>
-  <?php if ($sum = $pkg->peekClass($i)): ?>
-    <h4>Class Header</h4>
-    <table class="nested">
-      <?php if (isset($sum['Dependencies'])): ?>
-      <tr><th>Dependencies</th><td class="mono"><?= h($sum['Dependencies']) ?></td></tr>
-      <?php endif; ?>
-      <?php if (!empty($sum['DepsDetail'])): ?>
-      <tr><th>Deps Detail</th>
-          <td>
-            <table class="nested">
-              <thead><tr><th>Class</th><th>Deep</th><th>ScriptTextCRC</th></tr></thead>
-              <tbody>
-                <?php foreach ($sum['DepsDetail'] as $d): ?>
-                  <tr><td class="mono"><?= h($d['class'] ?? '') ?></td>
-                      <td class="mono"><?= h($d['deep'] ?? '') ?></td>
-                      <td class="mono"><?= h($d['crc'] ?? '') ?></td></tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </td>
-      </tr>
-      <?php endif; ?>
-      <?php if (!empty($sum['PackageImports'])): ?>
-      <tr><th>Package Imports</th><td class="mono"><?= h($sum['PackageImports']) ?></td></tr>
-      <?php endif; ?>
-      <?php if (!empty($sum['ImportsDetail'])): ?>
-      <tr><th>Imports Detail</th>
-          <td class="mono small"><?= h(implode(', ', $sum['ImportsDetail'])) ?></td></tr>
-      <?php endif; ?>
-      <?php if (!empty($sum['ClassWithin'])): ?>
-      <tr><th>Within</th><td class="mono"><?= h($sum['ClassWithin']) ?></td></tr>
-      <?php endif; ?>
-      <?php if (!empty($sum['ClassConfigName'])): ?>
-      <tr><th>ConfigName</th><td class="mono"><?= h($sum['ClassConfigName']) ?></td></tr>
-      <?php endif; ?>
-    </table>
-  <?php endif; ?>
-<?php endif; ?>
-				
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-					
-                </div>
-            </td>
-        </tr>
-        <?php endif; ?>
-		
-		
-		
-		
-		
-		
-
-    <?php endforeach; ?>
-    </tbody>
-</table>
-
+<div class="workspace"><div class="doc-tabs"><div class="doc-tab"><?= h(basename($filePath)) ?></div></div><div class="viewer"><div class="toolbar"><div class="file-open-bar"><form method="get"><select class="file-select" name="file"><?php foreach ($uploadedFiles as $up): ?><option value="<?= h($up['rel']) ?>"<?= basename($filePath) === $up['name'] ? ' selected' : '' ?>><?= h($up['name']) ?> (<?= h(number_format((int)$up['size'])) ?> bytes)</option><?php endforeach; ?><?php if (is_file(__DIR__ . '/test.utx')): ?><option value="test.utx"<?= $currentRel === 'test.utx' ? ' selected' : '' ?>>test.utx</option><?php endif; ?><?php if (is_file(__DIR__ . '/oldtest.utx')): ?><option value="oldtest.utx"<?= $currentRel === 'oldtest.utx' ? ' selected' : '' ?>>oldtest.utx</option><?php endif; ?></select><button class="btn" type="submit">Open</button><a class="btn" href="upload.php">Upload</a></form></div><span class="package-name"><?= h($currentRel) ?> (<?= h($pkg->getFileSize()) ?>)</span></div>
+<div class="tabs"><button class="tab active" data-panel="package-panel" onclick="showPanel('package-panel')">▣ Package</button><button class="tab" data-panel="content-panel" onclick="showPanel('content-panel')">▤ Content</button><button class="tab" data-panel="externs-panel" onclick="showPanel('externs-panel')">⌘ Externs</button><button class="tab" data-panel="tables-panel" onclick="showPanel('tables-panel')">▦ Tables</button></div>
+<section id="package-panel" class="panel active"><div class="package-grid"><div class="field-grid"><div class="field-label">GUID</div><div class="field-value mono"><?= h($displayGuid) ?></div><div class="field-label">Version</div><div class="field-value mono"><?= h($hdr['version'] ?? '') ?></div><div class="field-label">Licensee Version</div><div class="field-value mono"><?= h($hdr['licensee'] ?? '') ?></div><div class="field-label">Signature</div><div class="field-value mono"><?= h(hx_any($hdr['signature'] ?? 0)) ?></div></div><div class="field-grid"><div class="field-label">Flags</div><div class="field-value mono"><?= h(hx_any($hdr['pkgFlags'] ?? 0)) ?></div><div class="field-label">Build</div><div class="field-value"><?= h($buildLabel) ?></div><div class="field-label">Folder</div><div class="field-value mono"><?= h($hdr['folderName'] ?? '') ?></div><div class="field-label">Counts</div><div class="field-value mono">N <?= h($hdr['nameCount'] ?? '') ?> / I <?= h($hdr['importCount'] ?? '') ?> / E <?= h($hdr['exportCount'] ?? '') ?></div></div></div><table class="flag-table"><thead><tr><th>Flag</th><th>Condition</th></tr></thead><tbody><?php foreach ($pkgFlagsDecoded as $flag): ?><tr><td class="flag-true"><?= h(str_replace('PKG_', '', $flag)) ?></td><td>True</td></tr><?php endforeach; ?><?php if (!$pkgFlagsDecoded): ?><tr><td></td><td></td></tr><?php endif; ?></tbody></table><?php if (!empty($comp['isCompressed']) || !empty($comp['chunks'])): ?><h2>Compression</h2><table class="data"><tr><th>Compressed?</th><td class="mono"><?= !empty($comp['isCompressed']) ? 'Yes' : 'No' ?></td></tr><tr><th>Total compressed / uncompressed</th><td class="mono"><?= h($comp['totalCompressed'] ?? 0) ?> / <?= h($comp['totalUncompressed'] ?? 0) ?></td></tr></table><?php endif; ?><?php if ($issues): ?><div class="warn"><strong>Validation</strong><ul><?php foreach ($issues as $w): ?><li class="mono raw"><?= h($w) ?></li><?php endforeach; ?></ul></div><?php endif; ?></section>
+<section id="content-panel" class="panel"><div class="content-list"><?php foreach ($exports as $i => $ex): ?><div class="content-item" data-filter-row><span><?= name_link_html($pkg, (int)($ex['objectName'] ?? -1), $pkg->exportObjectName((int)($ex['objectName'] ?? -1))) ?></span><span class="content-class"><?= ref_value_html(object_ref_label($pkg, (int)($ex['classIndex'] ?? 0))) ?></span></div><?php endforeach; ?></div></section>
+<section id="externs-panel" class="panel"><div class="tree-box"><?php foreach (($importsByOuter[0] ?? []) as $rootIdx) renderImportNode($pkg, $imports, $importsByOuter, (int)$rootIdx, true, 'externs-'); foreach (($exportsByOuter[0] ?? []) as $rootIdx) renderExportNode($pkg, $exports, $exportsByOuter, (int)$rootIdx, false, 'externs-', true); ?></div></section>
+<section id="tables-panel" class="panel"><div class="subtabs"><button class="subtab active" data-sub="names-sub" onclick="showSub('names-sub')">☰ Names</button><button class="subtab" data-sub="exports-sub" onclick="showSub('exports-sub')">▤ Exports</button><button class="subtab" data-sub="imports-sub" onclick="showSub('imports-sub')">▧ Imports</button><button class="subtab" data-sub="gens-sub" onclick="showSub('gens-sub')">☷ Generations</button></div>
+<div id="names-sub" class="subpanel active"><h2>Names (<?= h($hdr['nameCount'] ?? '') ?>:<?= h($hdr['nameOffset'] ?? '') ?>)</h2><table class="data names-table"><thead><tr><th>Name</th><th>Flags</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($names as $n): $flags=(int)($n['flags']??0); $ni=(int)($n['index']??0); ?><tr id="<?= h(name_ref_target_id($ni)) ?>" data-filter-row><td><?= h($n['name']??'') ?></td><td class="mono raw"><?= h(hx_any($flags)) ?><?= h(flag_names($pkg->decodeRF($flags))) ?></td><td class="mono"><?= h(($n['index']??'').' ('.hx2($ni).')') ?></td><td class="mono raw"><?= h(($n['name']??'').' / '.$flags) ?></td></tr><?php endforeach; ?></tbody></table></div>
+<div id="exports-sub" class="subpanel"><h2>Exports Tree (<?= h($hdr['exportCount'] ?? '') ?>:<?= h($hdr['exportOffset'] ?? '') ?>)</h2><div class="tree-box"><?php foreach ($exports as $i => $_ex) renderExportNode($pkg, $exports, $exportsByOuter, (int)$i, true, 'tables-', false); ?></div><div class="grid-after-tree"><details><summary>Raw Exports Grid</summary><table class="data"><thead><tr><th>Class</th><th>Super</th><th>Package</th><th>Object</th><th>Flags</th><th>Size</th><th>Offset</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($exports as $i=>$ex): $objIdx=(int)($ex['objectName']??-1); ?><tr data-filter-row><td><?= ref_value_html(object_ref_label($pkg,(int)($ex['classIndex']??0))) ?></td><td><?= ref_value_html(object_ref_label($pkg,(int)($ex['superIndex']??0))) ?></td><td><?= ref_value_html(object_ref_label($pkg,(int)($ex['packageIndex']??0))) ?></td><td><?= name_link_html($pkg,$objIdx,$pkg->exportObjectName($objIdx)) ?></td><td class="mono raw"><?= h(hx_any($ex['objectFlags']??0)) ?></td><td><?= h($ex['serialSize']??'') ?></td><td><?= h($ex['serialOffset']??'') ?></td><td><?= h($i.' ('.hx2($i).')') ?></td><td class="mono raw"><?= h(($ex['classIndex']??'').' / '.($ex['superIndex']??'').' / '.($ex['packageIndex']??'').' / ') ?><?= name_index_link($objIdx) ?><?= h(' / '.($ex['objectFlags']??'').' / '.($ex['serialSize']??'').' / '.($ex['serialOffset']??'')) ?></td></tr><?php endforeach; ?></tbody></table></details></div></div>
+<div id="imports-sub" class="subpanel"><h2>Imports Tree (<?= h($hdr['importCount'] ?? '') ?>:<?= h($hdr['importOffset'] ?? '') ?>)</h2><div class="tree-box"><?php foreach ($imports as $i => $_im) renderImportNode($pkg, $imports, $importsByOuter, (int)$i, false, 'tables-'); ?></div><div class="grid-after-tree"><details><summary>Raw Imports Grid</summary><table class="data"><thead><tr><th>Class Package</th><th>Class Name</th><th>Package Name</th><th>Object Name</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($imports as $i=>$im): $cp=(int)($im['classPackage']??-1); $cn=(int)($im['className']??-1); $on=(int)($im['objectName']??-1); ?><tr data-filter-row><td><?= name_link_html($pkg,$cp,$pkg->importClassPackageName($cp)) ?></td><td><?= name_link_html($pkg,$cn,$pkg->importClassName($cn)) ?></td><td><?= ref_value_html(object_ref_label($pkg,(int)($im['outerIndex']??0))) ?></td><td><?= name_link_html($pkg,$on,$pkg->importObjectName($on)) ?></td><td><?= h($i.' ('.hx2($i).')') ?></td><td class="mono raw"><?= name_index_link($cp) ?><?= h(' / ') ?><?= name_index_link($cn) ?><?= h(' / '.($im['outerIndex']??'').' / ') ?><?= name_index_link($on) ?></td></tr><?php endforeach; ?></tbody></table></details></div></div>
+<div id="gens-sub" class="subpanel"><h2>Generations (<?= count($hdr['generations'] ?? []) ?>)</h2><table class="data"><thead><tr><th>ExportCount</th><th>NameCount</th><th>NetObjectCount</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach (($hdr['generations']??[]) as $i=>$g): ?><tr><td><?= h($g['e']??'') ?></td><td><?= h($g['n']??'') ?></td><td><?= h($g['netObjectCount']??'') ?></td><td><?= h($i) ?></td><td><?= h(($g['e']??'').' / '.($g['n']??'').' / '.($g['netObjectCount']??'')) ?></td></tr><?php endforeach; ?></tbody></table></div>
+</section></div></div>
 </body>
 </html>
-<script>
-  // --- Document-level capture: ensure Properties buttons always toggle ---
-  (function(){
-    function getIndexFromButton(btn){
-      if (!btn) return NaN;
-      var ixAttr = btn.getAttribute && btn.getAttribute('data-ix');
-      if (ixAttr){
-        var n = parseInt(ixAttr,10); if (!isNaN(n)) return n;
-      }
-      var chev = btn.querySelector && btn.querySelector('.chev[id^="chev-"]');
-      if (chev && chev.id){
-        var m = chev.id.match(/^chev-(\d+)$/);
-        if (m){ var n2 = parseInt(m[1],10); if (!isNaN(n2)) return n2; }
-      }
-      var tr = btn.closest && btn.closest('tr');
-      if (tr && tr.nextElementSibling && tr.nextElementSibling.id){
-        var m2 = tr.nextElementSibling.id.match(/^props-(\d+)$/);
-        if (m2){ var n3 = parseInt(m2[1],10); if (!isNaN(n3)) return n3; }
-      }
-      return NaN;
-    }
-    function onDocCapture(ev){
-      var t = ev.target;
-      if (!t || !t.closest) return;
-      var btn = t.closest('.toggle-btn');
-      if (!btn) return;
-      var idx = getIndexFromButton(btn);
-      if (isNaN(idx)) return;
-      if (typeof toggleProps === 'function') toggleProps(idx);
-      if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
-      if (ev.stopPropagation) ev.stopPropagation();
-      if (ev.preventDefault) ev.preventDefault();
-    }
-    if (document && document.addEventListener){
-      // only attach once
-      if (!document.__ue_props_doc_capture){
-        document.__ue_props_doc_capture = true;
-        document.addEventListener('click', onDocCapture, true);
-      }
-    }
-  })();
-
-  // --- Minimal toggle for Properties rows (id=props-<i>) ---
-  if (typeof toggleProps !== 'function'){
-    function toggleProps(i){
-      var row = document.getElementById('props-' + i);
-      if (!row) return;
-      var chev = document.getElementById('chev-' + i);
-      var hidden = (window.getComputedStyle ? window.getComputedStyle(row).display === 'none'
-                                            : (row.style.display === '' || row.style.display === 'none'));
-      if (hidden){
-        row.style.display = 'table-row';
-        if (chev) chev.classList.add('open');
-      } else {
-        row.style.display = 'none';
-        if (chev) chev.classList.remove('open');
-      }
-    }
-  }
-
-document.addEventListener('DOMContentLoaded', function(){
-  const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
-  const txt = el => (el && el.textContent || '').trim();
-  const num = s => { const m=(s||'').match(/-?\d+/); return m ? parseInt(m[0],10) : NaN; };
-
-  function clearHL(){
-    $$('.hl-row').forEach(el => el.classList.remove('hl-row'));
-    $$('.hl-cell').forEach(el => el.classList.remove('hl-cell','hl-strong'));
-  }
-  function rowFor(table, idx){
-    return document.querySelector(`tr[data-table="${table}"][data-${table.slice(0,-1)}-index="${idx}"]`);
-  }
-  function markRow(r){ if (r) r.classList.add('hl-row'); }
-  function markCell(td, strong=true){ if (!td) return; td.classList.add('hl-cell'); if (strong) td.classList.add('hl-strong'); }
-
-  function tableAfterH2(prefix){
-    const hs = Array.from(document.querySelectorAll('h2'));
-    for (const h of hs){
-      if (txt(h).toLowerCase().startsWith(prefix.toLowerCase())){
-        let t = h.nextElementSibling;
-        while (t && t.tagName !== 'TABLE') t = t.nextElementSibling;
-        return t || null;
-      }
-    }
-    return null;
-  }
-
-  const namesT   = tableAfterH2('names');
-  const importsT = tableAfterH2('imports');
-  const exportsT = tableAfterH2('exports');
-
-  // Helper: parse Raw column (last cell) -> array of ints split by '/'
-  function rawParts(tr){
-    const tds = tr.querySelectorAll('td');
-    const raw = tds[tds.length-1];
-    return txt(raw).split('/').map(s=>s.trim()).map(num);
-  }
-
-  // Names: detect "Num" and "Name" columns by header; only mark Name as ref
-  if (namesT){
-    const head = namesT.querySelector('thead tr');
-    let idxCol = 0, nameCol = 1;
-    if (head){
-      const ths = Array.from(head.querySelectorAll('th')).map(th => txt(th).toLowerCase());
-      const numPos  = ths.findIndex(t => t.startsWith('num'));
-      const namePos = ths.findIndex(t => t.startsWith('name'));
-      if (numPos  >= 0) idxCol  = numPos;
-      if (namePos >= 0) nameCol = namePos;
-    }
-    namesT.querySelectorAll('tbody tr').forEach(tr => {
-      const tds = tr.querySelectorAll('td'); if (tds.length === 0) return;
-      const idxCell  = tds[idxCol]  || tds[0];
-      const nameCell = tds[nameCol] || tds[1] || tds[0];
-      const ix = num(txt(idxCell));
-      tr.dataset.table = 'names';
-      tr.dataset.nameIndex = String(ix);
-      // ONLY the Name cell is a reference; flags/others are not
-      if (nameCell){
-        nameCell.dataset.field = 'name';
-        nameCell.dataset.refType = 'name';
-        nameCell.dataset.refValue = String(ix);
-      }
-    });
-  }
-
-  // Imports: use header names to find columns
-  if (importsT){
-    const head = importsT.querySelector('thead tr');
-    let colClassPkg=-1, colClassName=-1, colPackage=-1, colObjectName=-1, colNum=-1;
-    if (head){
-      const ths = Array.from(head.querySelectorAll('th')).map(th => txt(th).toLowerCase());
-      colClassPkg   = ths.findIndex(t => t.includes('class package'));
-      colClassName  = ths.findIndex(t => t.includes('class name'));
-      colPackage    = ths.findIndex(t => t === 'package' || t.startsWith('package '));
-      colObjectName = ths.findIndex(t => t.includes('object name'));
-      colNum        = ths.findIndex(t => t.startsWith('num'));
-    }
-    importsT.querySelectorAll('tbody tr').forEach(tr => {
-      const tds = tr.querySelectorAll('td'); if (tds.length === 0) return;
-      tr.dataset.table = 'imports';
-      const rowIdx = (colNum>=0 && tds[colNum]) ? num(txt(tds[colNum])) : num(txt(tds[tds.length-2] || tds[0]));
-      tr.dataset.importIndex = String(rowIdx);
-      const parts = rawParts(tr);
-      if (parts.length >= 4){
-        const [classPkgIx, classNameIx, packageRef, objectNameIx] = parts;
-        const tdClassPkg   = (colClassPkg  >=0 ? tds[colClassPkg]   : tds[0]);
-        const tdClassName  = (colClassName >=0 ? tds[colClassName]  : tds[1]);
-        const tdPackage    = (colPackage   >=0 ? tds[colPackage]    : tds[2]);
-        const tdObjectName = (colObjectName>=0 ? tds[colObjectName] : tds[3]);
-        if (tdClassPkg)   { tdClassPkg.dataset.refType='name';   tdClassPkg.dataset.refValue=String(classPkgIx);  tdClassPkg.dataset.field='classPackage'; }
-        if (tdClassName)  { tdClassName.dataset.refType='name';  tdClassName.dataset.refValue=String(classNameIx); tdClassName.dataset.field='className'; }
-        if (tdPackage)    { tdPackage.dataset.refType='object';  tdPackage.dataset.refValue=String(packageRef);   tdPackage.dataset.field='package'; }
-        if (tdObjectName) { tdObjectName.dataset.refType='name'; tdObjectName.dataset.refValue=String(objectNameIx); tdObjectName.dataset.field='objectName'; }
-      }
-    });
-  }
-
-  // Exports: use header names to find columns
-  if (exportsT){
-    const head = exportsT.querySelector('thead tr');
-    let colClass=-1, colSuper=-1, colPackage=-1, colObjectName=-1, colNum=-1;
-    if (head){
-      const ths = Array.from(head.querySelectorAll('th')).map(th => txt(th).toLowerCase());
-      colClass      = ths.findIndex(t => t === 'class' || t.startsWith('class '));
-      colSuper      = ths.findIndex(t => t.startsWith('super'));
-      colPackage    = ths.findIndex(t => t === 'package' || t.startsWith('package '));
-      colObjectName = ths.findIndex(t => t.includes('object name'));
-      colNum        = ths.findIndex(t => t.startsWith('num'));
-    }
-    exportsT.querySelectorAll('tbody tr').forEach(tr => {
-      const tds = tr.querySelectorAll('td'); if (tds.length === 0) return;
-      tr.dataset.table = 'exports';
-      const rowIdx = (colNum>=0 && tds[colNum]) ? num(txt(tds[colNum])) : num(txt(tds[tds.length-2] || tds[0]));
-      tr.dataset.exportIndex = String(rowIdx);
-      const parts = rawParts(tr);
-      if (parts.length >= 4){
-        const [classRef, superRef, packageRef, objectNameIx] = parts;
-        const tdClass      = (colClass     >=0 ? tds[colClass]      : tds[0]);
-        const tdSuper      = (colSuper     >=0 ? tds[colSuper]      : tds[1]);
-        const tdPackage    = (colPackage   >=0 ? tds[colPackage]    : tds[2]);
-        const tdObjectName = (colObjectName>=0 ? tds[colObjectName] : tds[3]);
-        if (tdClass)      { tdClass.dataset.refType='object';  tdClass.dataset.refValue=String(classRef);     tdClass.dataset.field='class'; }
-        if (tdSuper)      { tdSuper.dataset.refType='object';  tdSuper.dataset.refValue=String(superRef);     tdSuper.dataset.field='super'; }
-        if (tdPackage)    { tdPackage.dataset.refType='object'; tdPackage.dataset.refValue=String(packageRef); tdPackage.dataset.field='package'; }
-        if (tdObjectName) { tdObjectName.dataset.refType='name'; tdObjectName.dataset.refValue=String(objectNameIx); tdObjectName.dataset.field='objectName'; }
-      }
-    });
-  }
-
-  // Highlight helpers
-  function highlightNamesRowOnly(ix){
-    const r = rowFor('names', ix);
-    if (r){ markRow(r); const c=r.querySelector('[data-field="name"]'); markCell(c, true); }
-  }
-  function highlightObjectRef(ref){
-    const v = parseInt(ref,10);
-    if (!v) return; // 0=None
-    if (v > 0){
-      const r = rowFor('exports', v-1); markRow(r);
-      if (r){ const c=r.querySelector('[data-field="objectName"]'); markCell(c, true); }
-    } else {
-      const r = rowFor('imports', (-v)-1); markRow(r);
-      if (r){ const c=r.querySelector('[data-field="objectName"]'); markCell(c, true); }
-    }
-  }
-
-  // Click behavior
-  function onCellClick(ev){
-    const td = ev.target.closest('td[data-ref-type]'); if (!td) return false;
-    ev.stopImmediatePropagation(); ev.stopPropagation(); ev.preventDefault();
-    clearHL();
-    const row = td.closest('tr[data-table]'); markRow(row); markCell(td, true);
-    const kind = td.getAttribute('data-ref-type');
-    const val  = td.getAttribute('data-ref-value');
-    const table= row ? row.getAttribute('data-table') : '';
-
-    if (kind === 'name'){
-      if (table !== 'names'){ // clicking a name field in imports/exports
-        highlightNamesRowOnly(val);
-      } else {
-        // clicking the Name cell in the Names table itself: also bring up all referencing fields outside Names
-        document.querySelectorAll(`[data-ref-type="name"][data-ref-value="${val}"]`).forEach(cell => {
-          const tr = cell.closest('tr[data-table]');
-          if (tr && tr.getAttribute('data-table') !== 'names'){ markCell(cell, true); markRow(tr); }
-        });
-      }
-    } else if (kind === 'object'){
-      highlightObjectRef(val);
-    }
-    return true;
-  }
-
-  function onRowClick(ev){
-    if (ev.target.closest('td[data-ref-type]')) return false;
-    const row = ev.target.closest('tr[data-table]'); if (!row) return false;
-    ev.stopImmediatePropagation(); ev.stopPropagation(); ev.preventDefault();
-    clearHL(); markRow(row);
-    /* NAMES ROW CLICK MIRROR */
-    try {
-      const table = row.getAttribute('data-table');
-      if (table === 'names'){
-        // Get the Name cell and its index
-        const nameCell = row.querySelector('td[data-ref-type="name"]');
-        if (nameCell){
-          const val = nameCell.getAttribute('data-ref-value');
-          if (val !== null && val !== ''){
-            // Darken the Names cell itself (user expectation of "darker" on Names col)
-            markCell(nameCell, true);
-            // Highlight referencing fields outside Names exactly like the Name-cell branch does
-            document.querySelectorAll('[data-ref-type="name"][data-ref-value="' + val + '"]').forEach(function(cell){
-              const tr = cell.closest('tr[data-table]');
-              if (tr && tr.getAttribute('data-table') !== 'names'){ 
-                markCell(cell, true); 
-                markRow(tr);
-              }
-            });
-          }
-        }
-        return true;
-      }
-    } catch(e) { /* no-op */ }
-
-    // Darken all referenced fields IN THE ROW
-    row.querySelectorAll('td[data-ref-type]').forEach(td => markCell(td, true));
-
-    // Highlight targets
-    const names = Array.from(row.querySelectorAll('td[data-ref-type="name"]')).map(td => td.getAttribute('data-ref-value'));
-    const objs  = Array.from(row.querySelectorAll('td[data-ref-type="object"]')).map(td => td.getAttribute('data-ref-value'));
-    names.forEach(ix => highlightNamesRowOnly(ix));
-    objs.forEach(ref => highlightObjectRef(ref));
-    return true;
-  }
-
-  if (namesT)   namesT.addEventListener('click', function(ev){ if (!onCellClick(ev)) onRowClick(ev); }, true);
-  if (importsT) importsT.addEventListener('click', function(ev){ if (!onCellClick(ev)) onRowClick(ev); }, true);
-  if (exportsT) exportsT.addEventListener('click', function(ev){ if (!onCellClick(ev)) onRowClick(ev); }, true);
-
-  // Global clear
-  document.addEventListener('click', function(ev){
-    if (!ev.target.closest('table')) clearHL();
-  }, true);
-});
-</script>
