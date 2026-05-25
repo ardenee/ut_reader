@@ -345,7 +345,7 @@ final class UnrealPackageReader
 
     private function readUE3Exports(): void
     {
-        $this->header['exportTableLayout'] = 'ueviewer-serialize3';
+        $this->header['exportTableLayout'] = 'uelib-ue3';
         $r = $this->tableReader((int)$this->header['exportOffset']);
         $v = (int)$this->header['version'];
         for ($i = 0; $i < (int)$this->header['exportCount']; $i++) {
@@ -354,22 +354,32 @@ final class UnrealPackageReader
             $outer = $r->i32();
             $objectName = $this->readUE3FName($r);
             $archetype = $v >= 220 ? $r->i32() : 0;
-            $flagsLo = $r->u32();
-            $flagsHi = $v >= 195 ? $r->u32() : 0;
+            if ($v >= 195) {
+                $fileFlagsLo = $r->u32();
+                $fileFlagsHi = $r->u32();
+                $flags = $fileFlagsHi;
+                $flagsHigh = $fileFlagsLo;
+            } else {
+                $flags = $r->u32();
+                $flagsHigh = 0;
+            }
             $serialSize = $r->versionIndex($v);
-            $serialOffset = ($serialSize !== 0 || $v >= 249) ? $r->versionIndex($v) : 0;
+            $serialOffset = ($serialSize > 0 || $v >= 249) ? $r->versionIndex($v) : 0;
             $components = [];
-            if ($v < 543) $components = $this->readUE3ComponentMap($r, $i);
+            if ($v >= 220 && $v < 543) $components = $this->readUE3ComponentMap($r, $i);
             $exportFlags = $v >= 247 ? $r->u32() : 0;
             $netObjectCount = [];
             $guid = '';
+            $packageFlags = 0;
             if ($v >= 322) {
-                for ($j = 0; $j < 16; $j++) $netObjectCount[] = $r->i32();
+                $netCount = $r->i32();
+                if ($netCount < 0 || $netCount > 1024) throw new RuntimeException("Bad UE3 net object count $netCount in export $i at offset " . ($r->tell() - 4));
+                for ($j = 0; $j < $netCount; $j++) $netObjectCount[] = $r->i32();
                 $guidParts = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
                 $guid = sprintf('%08X-%08X-%08X-%08X', $guidParts[0], $guidParts[1], $guidParts[2], $guidParts[3]);
             }
-            $u3unk6C = $v >= 475 ? $r->i32() : 0;
-            $this->exports[] = $this->makeExport($i, $class, $super, $outer, $objectName['index'], $objectName['number'], $archetype, $flagsLo, $serialSize, $serialOffset, $components, $exportFlags, $flagsHi, $netObjectCount, $guid, $u3unk6C);
+            if ($v >= 475) $packageFlags = $r->u32();
+            $this->exports[] = $this->makeExport($i, $class, $super, $outer, $objectName['index'], $objectName['number'], $archetype, $flags, $serialSize, $serialOffset, $components, $exportFlags, $flagsHigh, $netObjectCount, $guid, $packageFlags);
         }
     }
     private function readUE3ComponentMap(UEFolderBinaryReader $r, int $exportIndex): array
@@ -392,9 +402,9 @@ final class UnrealPackageReader
         $on = $this->nameByIndex($objectName, $objectNameNumber);
         return ['index'=>$i,'classPackage'=>$classPackage,'className'=>$className,'outerIndex'=>$outer,'outer'=>$outer,'outerName'=>$this->displayNameFromRef($outer),'objectName'=>$objectName,'classPackageText'=>$cp,'classNameText'=>$cn,'objectNameText'=>$on,'ClassPackage'=>['index'=>$classPackage,'number'=>$classPackageNumber,'text'=>$cp],'ClassName'=>['index'=>$className,'number'=>$classNameNumber,'text'=>$cn],'OuterIndex'=>$outer,'ObjectName'=>['index'=>$objectName,'number'=>$objectNameNumber,'text'=>$on]];
     }
-    private function makeExport(int $i, int $class, int $super, int $outer, int $objectName, int $objectNameNumber, int $archetype, int $flags, int $serialSize, int $serialOffset, array $components = [], int $exportFlags = 0, int $objectFlagsHigh = 0, array $netObjectCount = [], string $guid = '', int $u3unk6C = 0): array
+    private function makeExport(int $i, int $class, int $super, int $outer, int $objectName, int $objectNameNumber, int $archetype, int $flags, int $serialSize, int $serialOffset, array $components = [], int $exportFlags = 0, int $objectFlagsHigh = 0, array $netObjectCount = [], string $guid = '', int $packageFlags = 0): array
     {
-        return ['index'=>$i,'classIndex'=>$class,'class'=>$class,'superIndex'=>$super,'super'=>$super,'packageIndex'=>$outer,'outerIndex'=>$outer,'outer'=>$outer,'objectName'=>$objectName,'nameIndex'=>$objectName,'nameNumber'=>$objectNameNumber,'objectNameText'=>$this->nameByIndex($objectName,$objectNameNumber),'objectFlags'=>$flags,'objectFlagsHigh'=>$objectFlagsHigh,'serialSize'=>$serialSize,'serialOffset'=>$serialOffset,'archetype'=>$archetype,'components'=>$components,'componentMap'=>$components,'exportFlags'=>$exportFlags,'netObjectCount'=>$netObjectCount,'guid'=>$guid,'u3unk6C'=>$u3unk6C];
+        return ['index'=>$i,'classIndex'=>$class,'class'=>$class,'superIndex'=>$super,'super'=>$super,'packageIndex'=>$outer,'outerIndex'=>$outer,'outer'=>$outer,'objectName'=>$objectName,'nameIndex'=>$objectName,'nameNumber'=>$objectNameNumber,'objectNameText'=>$this->nameByIndex($objectName,$objectNameNumber),'objectFlags'=>$flags,'objectFlagsHigh'=>$objectFlagsHigh,'serialSize'=>$serialSize,'serialOffset'=>$serialOffset,'archetype'=>$archetype,'components'=>$components,'componentMap'=>$components,'exportFlags'=>$exportFlags,'netObjectCount'=>$netObjectCount,'guid'=>$guid,'packageFlags'=>$packageFlags,'u3unk6C'=>$packageFlags];
     }
 
     public function getHeader(): array { return $this->header; }
