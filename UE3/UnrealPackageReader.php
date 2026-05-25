@@ -485,13 +485,21 @@ final class UnrealPackageReader
             $idx = $r->i32();
             $bool = 0;
             $struct = '';
-            if ($typeId === 10) { $sr = $this->readUE3FName($r); $struct = $this->nameByIndex($sr['index'], $sr['number']); }
-            elseif ($typeId === 3) { $bool = $r->i32(); }
+            $enumName = '';
+            if ($typeId === 10) {
+                $sr = $this->readUE3FName($r);
+                $struct = $this->nameByIndex($sr['index'], $sr['number']);
+            } elseif ($typeId === 1 && (int)$this->header['version'] >= 500) {
+                $er = $this->readUE3FName($r);
+                $enumName = $this->nameByIndex($er['index'], $er['number']);
+            } elseif ($typeId === 3) {
+                $bool = ((int)$this->header['version'] >= 500) ? $r->u8() : $r->i32();
+            }
             $valOff = $r->tell();
             $raw = '';
             $value = (bool)$bool;
             if ($typeId !== 3) { $raw = $r->bytes(min(max(0, $size), max(0, $end - $r->tell()))); $value = $this->decodeUE3PropertyValue($typeId, $raw, $struct); }
-            $props[] = ['offset'=>$start,'length'=>$r->tell()-$start,'name'=>$name,'type'=>$typeName ?: (self::PROP_TYPES[$typeId] ?? ('Type' . $typeId)),'typeName'=>$typeName,'struct'=>$struct,'idx'=>$idx,'idxFromFile'=>$idx,'dataSize'=>$size,'value'=>$value,'rawHex'=>strtoupper(bin2hex($raw)),'valueOffset'=>$valOff,'tagFormat'=>'UE3'];
+            $props[] = ['offset'=>$start,'length'=>$r->tell()-$start,'name'=>$name,'type'=>$typeName ?: (self::PROP_TYPES[$typeId] ?? ('Type' . $typeId)),'typeName'=>$typeName,'struct'=>$struct,'enumName'=>$enumName,'idx'=>$idx,'idxFromFile'=>$idx,'dataSize'=>$size,'value'=>$value,'rawHex'=>strtoupper(bin2hex($raw)),'valueOffset'=>$valOff,'tagFormat'=>'UE3'];
         }
         return $props;
     }
