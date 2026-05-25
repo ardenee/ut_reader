@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 error_reporting(E_ALL);
-ini_set('display_errors','1');
-ini_set('display_startup_errors','1');
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
 
 final class UEFolderBinaryReader
 {
@@ -47,7 +47,6 @@ final class UnrealPackageReader
     private array $exports=[];
     private array $issues=[];
     private array $propertyCache=[];
-    private static ?object $lzoFfi=null;
     private const COMPRESS_ZLIB=0x01;
     private const COMPRESS_LZO=0x02;
     private const PKG_FLAGS=[0x00000001=>'PKG_AllowDownload',0x00000002=>'PKG_ClientOptional',0x00000004=>'PKG_ServerSideOnly',0x00000008=>'PKG_NoExportAllowed',0x00000010=>'PKG_Cooked',0x00000020=>'PKG_Encrypted',0x00800000=>'PKG_ContainsMap'];
@@ -70,15 +69,11 @@ final class UnrealPackageReader
     private function parseUE3(UEFolderBinaryReader $r,int $tag,int $packed,int $version,int $licensee): void
     {
         $this->header=$this->blankHeader();$this->header+=['signature'=>$tag,'tag'=>$tag,'packedVersion'=>$packed,'version'=>$version,'licensee'=>$licensee,'licenseeVersion'=>$licensee];
-        $this->header['headerSize']=$version>=249?$r->u32():0;
-        $this->header['folderName']=$version>=269?$r->fstring32():'';
-        $flags=$r->u32();$this->header['packageFlags']=$flags;$this->header['pkgFlags']=$flags;
-        $this->header['nameCount']=$r->u32();$this->header['nameOffset']=$r->u32();$this->header['exportCount']=$r->u32();$this->header['exportOffset']=$r->u32();$this->header['importCount']=$r->u32();$this->header['importOffset']=$r->u32();
-        $this->header['dependsOffset']=$version>=415?$r->u32():0;
-        if($version>=623){$this->header['importExportGuidsOffset']=$r->u32();$this->header['importGuidsCount']=$r->u32();$this->header['exportGuidsCount']=$r->u32();}
-        if($version>=584)$this->header['thumbnailTableOffset']=$r->u32();
-        $guid=[$r->u32(),$r->u32(),$r->u32(),$r->u32()];$this->header['guidArray']=$guid;$this->header['guid']=sprintf('%08X-%08X-%08X-%08X',$guid[0],$guid[1],$guid[2],$guid[3]);
-        $genCount=$r->u32();$this->header['genCount']=$genCount;for($i=0;$i<$genCount;$i++){$e=$r->u32();$n=$r->u32();$net=$version>=322?$r->u32():0;$this->header['generations'][]=['e'=>$e,'n'=>$n,'exportCount'=>$e,'nameCount'=>$n,'netObjectCount'=>$net];}
+        $this->header['headerSize']=$version>=249?$r->u32():0;$this->header['folderName']=$version>=269?$r->fstring32():'';$flags=$r->u32();$this->header['packageFlags']=$flags;$this->header['pkgFlags']=$flags;
+        $this->header['nameCount']=$r->u32();$this->header['nameOffset']=$r->u32();$this->header['exportCount']=$r->u32();$this->header['exportOffset']=$r->u32();$this->header['importCount']=$r->u32();$this->header['importOffset']=$r->u32();$this->header['dependsOffset']=$version>=415?$r->u32():0;
+        if($version>=623){$this->header['importExportGuidsOffset']=$r->u32();$this->header['importGuidsCount']=$r->u32();$this->header['exportGuidsCount']=$r->u32();}if($version>=584)$this->header['thumbnailTableOffset']=$r->u32();
+        $guid=[$r->u32(),$r->u32(),$r->u32(),$r->u32()];$this->header['guidArray']=$guid;$this->header['guid']=sprintf('%08X-%08X-%08X-%08X',$guid[0],$guid[1],$guid[2],$guid[3]);$genCount=$r->u32();$this->header['genCount']=$genCount;
+        for($i=0;$i<$genCount;$i++){$e=$r->u32();$n=$r->u32();$net=$version>=322?$r->u32():0;$this->header['generations'][]=['e'=>$e,'n'=>$n,'exportCount'=>$e,'nameCount'=>$n,'netObjectCount'=>$net];}
         $this->header['engineVersion']=$version>=245?$r->u32():0;$this->header['cookerVersion']=$version>=277?$r->u32():0;$this->header['compressionFlags']=$version>=334?$r->u32():0;$this->header['cFlags']=$this->header['compressionFlags'];$this->header['compressed']=$this->header['compressionFlags']!==0;
         if($this->header['compressed']){$chunkCount=$r->u32();for($i=0;$i<$chunkCount;$i++){$uOff=$r->u32();$uSize=$r->u32();$cOff=$r->u32();$cSize=$r->u32();$this->header['chunks'][]=['cOff'=>$cOff,'cLen'=>$cSize,'cSize'=>$cSize,'uOff'=>$uOff,'uLen'=>$uSize,'uSize'=>$uSize];}$this->header['compressedChunks']=$this->header['chunks'];$this->materializeCompressedUE3();}
         $this->readUE3Names();$this->readUE3Imports();$this->readUE3Exports();
@@ -86,42 +81,16 @@ final class UnrealPackageReader
     private function materializeCompressedUE3(): void{$chunks=$this->header['chunks']??[];if(!$chunks)return;$logical='';$first=min(array_map(static fn($c)=>(int)$c['uOff'],$chunks));if($first>0)$logical=substr($this->bytes,0,$first);foreach($chunks as $c){$uOff=(int)$c['uOff'];$uSize=(int)$c['uLen'];$cOff=(int)$c['cOff'];$cSize=(int)$c['cLen'];if(strlen($logical)<$uOff)$logical.=str_repeat("\0",$uOff-strlen($logical));$payload=substr($this->bytes,$cOff,$cSize);if(strlen($payload)!==$cSize)throw new RuntimeException("compressed chunk outside file cOff=$cOff cSize=$cSize");$decoded=$this->decompressUE3ChunkPayload($payload,$uSize);if(strlen($decoded)!==$uSize)throw new RuntimeException('decoded chunk size mismatch expected='.$uSize.' got='.strlen($decoded));$logical=substr($logical,0,$uOff).$decoded.substr($logical,$uOff+strlen($decoded));}$this->bytes=$logical;$this->header['logicalDecompressed']=true;$this->header['logicalSize']=strlen($logical);$this->validateLogicalUE3NameTable();}
     private function validateLogicalUE3NameTable(): void{$nameOffset=(int)($this->header['nameOffset']??0);if($nameOffset<=0||$nameOffset+18>strlen($this->bytes))throw new RuntimeException('logical decompressed buffer does not contain the UE3 name table');$layout=$this->detectUE3NameTableLayout($nameOffset);if($layout==='invalid')throw new RuntimeException('invalid logical data at name table offset='.$nameOffset.' firstDword='.$this->tableReader($nameOffset)->peekI32());}
     private function decompressUE3ChunkPayload(string $payload,int $expected): string{$r=new UEFolderBinaryReader($payload);$tag=$r->u32();if($tag!==0x9E2A83C1)throw new RuntimeException(sprintf('bad compressed chunk tag 0x%08X',$tag));$blockSize=$r->u32();$compressedTotal=$r->u32();$uncompressedTotal=$r->u32();$blockCount=(int)ceil($uncompressedTotal/max(1,$blockSize));$blocks=[];for($i=0;$i<$blockCount;$i++)$blocks[]=['c'=>$r->i32(),'u'=>$r->i32()];$out='';foreach($blocks as $b)$out.=$this->decompressBlock($r->bytes((int)$b['c']),(int)$b['u']);if(strlen($out)!==$uncompressedTotal)throw new RuntimeException("inner chunk size mismatch expected=$uncompressedTotal got=".strlen($out));if($expected>0&&strlen($out)!==$expected)throw new RuntimeException("outer chunk size mismatch expected=$expected got=".strlen($out));return $out;}
-    private function decompressBlock(string $src,int $expected): string{$flags=(int)($this->header['compressionFlags']??0);if(($flags&self::COMPRESS_ZLIB)!==0){$out=@gzuncompress($src,$expected);if($out===false)$out=@gzdecode($src);if($out===false)throw new RuntimeException('zlib decompression failed');return $out;}if(($flags&self::COMPRESS_LZO)!==0)return $this->decompressLzoBlock($src,$expected);throw new RuntimeException('unsupported compression flags '.sprintf('0x%08X',$flags));}
-    private function decompressLzoBlock(string $src,int $expected): string{$ffi=$this->getLzoFfi();$clen=strlen($src);$srcBuf=FFI::new("char[$clen]");FFI::memcpy($srcBuf,$src,$clen);$dst=FFI::new("char[$expected]");$dstLen=FFI::new('unsigned long[1]');$dstLen[0]=$expected;$ret=$ffi->lzo1x_decompress_safe($srcBuf,$clen,$dst,$dstLen,null);if($ret!==0||(int)$dstLen[0]!==$expected)throw new RuntimeException('liblzo2 failed ret='.$ret.' expected='.$expected.' got='.(int)$dstLen[0]);return FFI::string($dst,$expected);}
-    private function getLzoFfi(): object{if(self::$lzoFfi!==null)return self::$lzoFfi;if(!extension_loaded('FFI')||!class_exists('FFI',false))throw new RuntimeException('LZO package requires PHP FFI + liblzo2. Enable ffi.enable=true and install liblzo2 on Synology.');$libs=['liblzo2.so.2','liblzo2.so','/lib/liblzo2.so.2','/lib64/liblzo2.so.2','/usr/lib/liblzo2.so.2','/usr/lib64/liblzo2.so.2','/usr/local/lib/liblzo2.so.2','/opt/lib/liblzo2.so.2','/usr/syno/lib/liblzo2.so.2'];$last='';foreach($libs as $lib){try{self::$lzoFfi=FFI::cdef('int lzo1x_decompress_safe(const char *src, unsigned long src_len, char *dst, unsigned long *dst_len, void *wrkmem);',$lib);return self::$lzoFfi;}catch(Throwable $e){$last=$e->getMessage();}}throw new RuntimeException('Could not load liblzo2 through PHP FFI. Last error: '.$last);}
+    private function decompressBlock(string $src,int $expected): string{if(((int)($this->header['compressionFlags']??0)&self::COMPRESS_ZLIB)!==0){$out=@gzuncompress($src,$expected);if($out===false)$out=@gzdecode($src);if($out===false)throw new RuntimeException('zlib decompression failed');return $out;}if(((int)($this->header['compressionFlags']??0)&self::COMPRESS_LZO)!==0)throw new RuntimeException('LZO package requires PHP FFI + liblzo2. Enable ffi.enable=true and install liblzo2 on Synology.');throw new RuntimeException('unsupported compression flags '.sprintf('0x%08X',(int)($this->header['compressionFlags']??0)));}
     private function tableReader(int $offset): UEFolderBinaryReader{$r=new UEFolderBinaryReader($this->bytes);$r->seek($offset);return $r;}
     private function looksLikeFStringAt(int $offset): bool{if($offset<0||$offset+4>strlen($this->bytes))return false;$r=$this->tableReader($offset);$len=$r->i32();if($len>0)return $len<=1024&&$len<=$r->remaining();if($len<0){$chars=-$len;return $chars<=1024&&($chars*2)<=$r->remaining();}return true;}
-    private function detectUE3NameTableLayout(int $offset): string
-    {
-        if($this->looksLikeFStringAt($offset))return 'string-flags64';
-        if($this->looksLikeFStringAt($offset+4))return 'flags32-string';
-        if($this->looksLikeFStringAt($offset+8))return 'flags64-string';
-        return 'invalid';
-    }
+    private function detectUE3NameTableLayout(int $offset): string{if($this->looksLikeFStringAt($offset))return 'string-flags64';if($this->looksLikeFStringAt($offset+4))return 'flags32-string';if($this->looksLikeFStringAt($offset+8))return 'flags64-string';return 'invalid';}
     private function readUE12Names(): void{$r=$this->tableReader((int)$this->header['nameOffset']);$version=(int)$this->header['version'];for($i=0;$i<(int)$this->header['nameCount'];$i++){$name=$version<64?$r->cstring():$r->fstringIndex($version);$flags=$r->u32();$this->names[]=['index'=>$i,'name'=>$name,'flags'=>$flags,'objectFlags'=>$flags];}}
     private function readUE12Imports(): void{$r=$this->tableReader((int)$this->header['importOffset']);$v=(int)$this->header['version'];for($i=0;$i<(int)$this->header['importCount'];$i++)$this->imports[]=$this->makeImport($i,$r->versionIndex($v),0,$r->versionIndex($v),0,$r->i32(),$r->versionIndex($v),0);}
     private function readUE12Exports(): void{$r=$this->tableReader((int)$this->header['exportOffset']);$v=(int)$this->header['version'];for($i=0;$i<(int)$this->header['exportCount'];$i++){$class=$r->versionIndex($v);$super=$r->versionIndex($v);$outer=$r->i32();$name=$r->versionIndex($v);$flags=$r->u32();$size=$r->versionIndex($v);$off=$size>0?$r->versionIndex($v):0;$this->exports[]=$this->makeExport($i,$class,$super,$outer,$name,0,0,$flags,$size,$off);}}
-    private function readUE3Names(): void
-    {
-        $offset=(int)$this->header['nameOffset'];$layout=$this->detectUE3NameTableLayout($offset);$this->header['nameTableLayout']=$layout;if($layout==='invalid')throw new RuntimeException('Could not detect UE3 name table layout at nameOffset='.$offset.' firstDword='.$this->tableReader($offset)->peekI32());
-        $r=$this->tableReader($offset);
-        for($i=0;$i<(int)$this->header['nameCount'];$i++){
-            if($layout==='flags32-string'){$flags=$r->u32();$name=$r->fstring32();}
-            elseif($layout==='flags64-string'){$flags=$r->u64();$name=$r->fstring32();}
-            else{$name=$r->fstring32();$flags=$r->u64();}
-            $this->names[]=['index'=>$i,'name'=>$name,'flags'=>$flags,'objectFlags'=>$flags];
-        }
-    }
+    private function readUE3Names(): void{$offset=(int)$this->header['nameOffset'];$layout=$this->detectUE3NameTableLayout($offset);$this->header['nameTableLayout']=$layout;if($layout==='invalid')throw new RuntimeException('Could not detect UE3 name table layout at nameOffset='.$offset.' firstDword='.$this->tableReader($offset)->peekI32());$r=$this->tableReader($offset);for($i=0;$i<(int)$this->header['nameCount'];$i++){if($layout==='flags32-string'){$flags=$r->u32();$name=$r->fstring32();}elseif($layout==='flags64-string'){$flags=$r->u64();$name=$r->fstring32();}else{$name=$r->fstring32();$flags=$r->u64();}$this->names[]=['index'=>$i,'name'=>$name,'flags'=>$flags,'objectFlags'=>$flags];}}
     private function readUE3Imports(): void{$r=$this->tableReader((int)$this->header['importOffset']);for($i=0;$i<(int)$this->header['importCount'];$i++)$this->imports[]=$this->makeImport($i,$r->i32(),$r->i32(),$r->i32(),$r->i32(),$r->i32(),$r->i32(),$r->i32());}
-    private function readUE3Exports(): void
-    {
-        $r=$this->tableReader((int)$this->header['exportOffset']);$v=(int)$this->header['version'];
-        for($i=0;$i<(int)$this->header['exportCount'];$i++){
-            $class=$r->i32();$super=$r->i32();$outer=$r->i32();$objectName=$r->i32();$objectNameNumber=$r->i32();$archetype=$v>=220?$r->i32():0;$flagsLo=$r->u32();$flagsHi=$v>=195?$r->u32():0;$flags=($flagsHi<<32)|$flagsLo;$serialSize=$r->i32();$serialOffset=($serialSize!==0||$v>=249)?$r->i32():0;$components=[];
-            if($v>=220&&$v<543){$componentCount=$r->i32();if($componentCount<0||$componentCount>65536)throw new RuntimeException("Bad component count $componentCount in export $i");for($j=0;$j<$componentCount;$j++)$components[]=['name'=>$r->i32(),'nameNumber'=>$r->i32(),'ref'=>$r->i32()];}
-            $exportFlags=$v>=247?$r->u32():0;if($v>=322){for($j=0;$j<16;$j++)$r->i32();$r->u32();$r->u32();$r->u32();$r->u32();}if($v>=475)$r->i32();$this->exports[]=$this->makeExport($i,$class,$super,$outer,$objectName,$objectNameNumber,$archetype,$flags,$serialSize,$serialOffset,$components,$exportFlags);
-        }
-    }
+    private function readUE3Exports(): void{$r=$this->tableReader((int)$this->header['exportOffset']);$v=(int)$this->header['version'];for($i=0;$i<(int)$this->header['exportCount'];$i++){$class=$r->i32();$super=$r->i32();$outer=$r->i32();$objectName=$r->i32();$objectNameNumber=$r->i32();$archetype=$v>=220?$r->i32():0;$flagsLo=$r->u32();$flagsHi=$v>=195?$r->u32():0;$flags=($flagsHi<<32)|$flagsLo;$serialSize=$r->i32();$serialOffset=($serialSize!==0||$v>=249)?$r->i32():0;$exportFlags=$v>=247?$r->u32():0;$components=[];if($v>=220&&$v<543){$componentCount=$r->i32();if($componentCount<0||$componentCount>65536)throw new RuntimeException("Bad component count $componentCount in export $i at offset ".$r->tell());for($j=0;$j<$componentCount;$j++)$components[]=['name'=>$r->i32(),'nameNumber'=>$r->i32(),'ref'=>$r->i32()];}if($v>=322){for($j=0;$j<16;$j++)$r->i32();$r->u32();$r->u32();$r->u32();$r->u32();}if($v>=475)$r->i32();$this->exports[]=$this->makeExport($i,$class,$super,$outer,$objectName,$objectNameNumber,$archetype,$flags,$serialSize,$serialOffset,$components,$exportFlags);}}
     private function makeImport(int $i,int $classPackage,int $classPackageNumber,int $className,int $classNameNumber,int $outer,int $objectName,int $objectNameNumber): array{$cp=$this->nameByIndex($classPackage,$classPackageNumber);$cn=$this->nameByIndex($className,$classNameNumber);$on=$this->nameByIndex($objectName,$objectNameNumber);return ['index'=>$i,'classPackage'=>$classPackage,'className'=>$className,'outerIndex'=>$outer,'outer'=>$outer,'outerName'=>$this->displayNameFromRef($outer),'objectName'=>$objectName,'classPackageText'=>$cp,'classNameText'=>$cn,'objectNameText'=>$on,'ClassPackage'=>['index'=>$classPackage,'number'=>$classPackageNumber,'text'=>$cp],'ClassName'=>['index'=>$className,'number'=>$classNameNumber,'text'=>$cn],'OuterIndex'=>$outer,'ObjectName'=>['index'=>$objectName,'number'=>$objectNameNumber,'text'=>$on]];}
     private function makeExport(int $i,int $class,int $super,int $outer,int $objectName,int $objectNameNumber,int $archetype,int $flags,int $serialSize,int $serialOffset,array $components=[],int $exportFlags=0): array{return ['index'=>$i,'classIndex'=>$class,'class'=>$class,'superIndex'=>$super,'super'=>$super,'packageIndex'=>$outer,'outerIndex'=>$outer,'outer'=>$outer,'objectName'=>$objectName,'nameIndex'=>$objectName,'nameNumber'=>$objectNameNumber,'objectNameText'=>$this->nameByIndex($objectName,$objectNameNumber),'objectFlags'=>$flags,'serialSize'=>$serialSize,'serialOffset'=>$serialOffset,'archetype'=>$archetype,'components'=>$components,'componentMap'=>$components,'exportFlags'=>$exportFlags];}
     public function getHeader(): array{return $this->header;}
