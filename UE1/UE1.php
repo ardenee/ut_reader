@@ -24,6 +24,21 @@ function hx(int $v): string { return sprintf('0x%08X', $v); }
 function hx2(int $v): string { return sprintf('0x%02X', $v); }
 function flag_names(array $flags): string { return $flags ? ' (' . implode(', ', $flags) . ')' : ''; }
 
+function object_ref_label(UnrealPackageReader $pkg, int $ref): string
+{
+    if ($ref === 0) {
+        return '';
+    }
+
+    if ($ref > 0) {
+        $name = $pkg->exportObjectName($ref - 1);
+        return $name !== '' ? $name . '(' . $ref . ')' : '(' . $ref . ')';
+    }
+
+    $name = $pkg->importObjectName((-1 * $ref) - 1);
+    return $name !== '' ? $name . '(' . $ref . ')' : '(' . $ref . ')';
+}
+
 $displayGuid = strtoupper(str_replace('-', '', (string)($hdr['guid'] ?? '')));
 $searchValue = pathinfo($filePath, PATHINFO_FILENAME);
 
@@ -37,7 +52,7 @@ foreach ($exports as $idx => $ex) {
     $exportsByOuter[(int)($ex['packageIndex'] ?? $ex['outerIndex'] ?? 0)][] = (int)$idx;
 }
 
-function renderImportNode(UnrealPackageReader $pkg, array $imports, array $importsByOuter, int $idx): void
+function renderImportNode(UnrealPackageReader $pkg, array $imports, array $importsByOuter, int $idx, bool $includeChildren): void
 {
     $im = $imports[$idx] ?? null;
     if (!is_array($im)) {
@@ -48,8 +63,9 @@ function renderImportNode(UnrealPackageReader $pkg, array $imports, array $impor
     $object = $pkg->importObjectName((int)($im['objectName'] ?? -1));
     $class = $pkg->importClassName((int)($im['className'] ?? -1));
     $classPackage = $pkg->importClassPackageName((int)($im['classPackage'] ?? -1));
-    $outer = $pkg->importPackageName((int)($im['outerIndex'] ?? 0));
-    $children = $importsByOuter[$ref] ?? [];
+    $outerIndex = (int)($im['outerIndex'] ?? 0);
+    $outerLabel = object_ref_label($pkg, $outerIndex);
+    $children = $includeChildren ? ($importsByOuter[$ref] ?? []) : [];
     ?>
     <details class="tree-node" data-filter-row>
         <summary><span class="ico package">▣</span><span class="name"><?= h($object) ?></span></summary>
@@ -57,8 +73,8 @@ function renderImportNode(UnrealPackageReader $pkg, array $imports, array $impor
             <div>Object:<span class="mono"><?= h($object) ?></span><span class="muted">(<?= h($ref) ?>)</span></div>
             <div>Class:<span class="mono"><?= h($class) ?></span></div>
             <div>Package:<span class="mono"><?= h($classPackage) ?></span></div>
-            <?php if ($outer !== ''): ?><div>Outer:<span class="mono"><?= h($outer) ?></span></div><?php endif; ?>
-            <?php foreach ($children as $childIdx): renderImportNode($pkg, $imports, $importsByOuter, (int)$childIdx); endforeach; ?>
+            <?php if ($outerLabel !== ''): ?><div>Outer:<span class="mono"><?= h($outerLabel) ?></span></div><?php endif; ?>
+            <?php foreach ($children as $childIdx): renderImportNode($pkg, $imports, $importsByOuter, (int)$childIdx, true); endforeach; ?>
         </div>
     </details>
     <?php
@@ -73,9 +89,9 @@ function renderExportNode(UnrealPackageReader $pkg, array $exports, array $expor
 
     $ref = $idx + 1;
     $object = $pkg->exportObjectName((int)($ex['objectName'] ?? -1));
-    $class = $pkg->exportClassName((int)($ex['classIndex'] ?? 0));
-    $super = $pkg->exportSuperName((int)($ex['superIndex'] ?? 0));
-    $outer = $pkg->exportPackageName((int)($ex['packageIndex'] ?? 0));
+    $class = object_ref_label($pkg, (int)($ex['classIndex'] ?? 0));
+    $super = object_ref_label($pkg, (int)($ex['superIndex'] ?? 0));
+    $outer = object_ref_label($pkg, (int)($ex['packageIndex'] ?? 0));
     $children = $exportsByOuter[$ref] ?? [];
     $flags = (int)($ex['objectFlags'] ?? 0);
     $props = $withProps ? ($pkg->getExportProperties($idx) ?? []) : [];
@@ -85,7 +101,7 @@ function renderExportNode(UnrealPackageReader $pkg, array $exports, array $expor
         <div class="tree-lines">
             <div>ObjectFlags:<span class="mono"><?= h(sprintf('%08X', $flags)) ?></span><?= h(flag_names($pkg->decodeRF($flags))) ?></div>
             <div>Object:<span class="mono"><?= h($object) ?></span><span class="muted">(<?= h($ref) ?>)</span></div>
-            <div>Class:<span class="mono"><?= h($class) ?></span><?php if ((int)($ex['classIndex'] ?? 0) !== 0): ?><span class="muted">(<?= h($ex['classIndex']) ?>)</span><?php endif; ?></div>
+            <?php if ($class !== ''): ?><div>Class:<span class="mono"><?= h($class) ?></span></div><?php endif; ?>
             <?php if ($super !== ''): ?><div>Super:<span class="mono"><?= h($super) ?></span></div><?php endif; ?>
             <?php if ($outer !== ''): ?><div>Package:<span class="mono"><?= h($outer) ?></span></div><?php endif; ?>
             <div>Object Size:<span class="mono"><?= h($ex['serialSize'] ?? '') ?></span></div>
@@ -147,15 +163,15 @@ function filterVisibleText(input){const term=(input.value||'').toLowerCase();doc
             <?php if ($issues): ?><div class="warn"><strong>Validation</strong><ul><?php foreach ($issues as $w): ?><li class="mono raw"><?= h($w) ?></li><?php endforeach; ?></ul></div><?php endif; ?>
         </section>
 
-        <section id="content-panel" class="panel"><div class="content-list"><?php foreach ($exports as $i=>$ex): ?><div class="content-item" data-filter-row><span class="mono"><?= h($pkg->exportObjectName((int)($ex['objectName'] ?? -1))) ?></span><span class="content-class mono"><?= h($pkg->exportClassName((int)($ex['classIndex'] ?? 0))) ?></span></div><?php endforeach; ?></div></section>
+        <section id="content-panel" class="panel"><div class="content-list"><?php foreach ($exports as $i=>$ex): ?><div class="content-item" data-filter-row><span class="mono"><?= h($pkg->exportObjectName((int)($ex['objectName'] ?? -1))) ?></span><span class="content-class mono"><?= h(object_ref_label($pkg, (int)($ex['classIndex'] ?? 0))) ?></span></div><?php endforeach; ?></div></section>
 
-        <section id="externs-panel" class="panel"><div class="tree-box"><?php foreach (($importsByOuter[0] ?? []) as $rootIdx): renderImportNode($pkg,$imports,$importsByOuter,(int)$rootIdx); endforeach; ?><?php foreach (($exportsByOuter[0] ?? []) as $rootIdx): renderExportNode($pkg,$exports,$exportsByOuter,(int)$rootIdx,false); endforeach; ?></div></section>
+        <section id="externs-panel" class="panel"><div class="tree-box"><?php foreach (($importsByOuter[0] ?? []) as $rootIdx): renderImportNode($pkg,$imports,$importsByOuter,(int)$rootIdx,true); endforeach; ?><?php foreach (($exportsByOuter[0] ?? []) as $rootIdx): renderExportNode($pkg,$exports,$exportsByOuter,(int)$rootIdx,false); endforeach; ?></div></section>
 
         <section id="tables-panel" class="panel">
             <div class="subtabs"><button class="subtab active" data-sub="names-sub" onclick="showSub('names-sub')">☰ Names</button><button class="subtab" data-sub="exports-sub" onclick="showSub('exports-sub')">▤ Exports</button><button class="subtab" data-sub="imports-sub" onclick="showSub('imports-sub')">▧ Imports</button><button class="subtab" data-sub="gens-sub" onclick="showSub('gens-sub')">☷ Generations</button></div>
             <div id="names-sub" class="subpanel active"><h2>Names (<?= h($hdr['nameCount'] ?? '') ?>:<?= h($hdr['nameOffset'] ?? '') ?>)</h2><table class="data names-table"><thead><tr><th>Name</th><th>Flags</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($names as $n): ?><?php $flags=(int)($n['flags']??0); ?><tr data-filter-row><td><?= h($n['name']??'') ?></td><td class="mono raw"><?= h(hx($flags)) ?><?= h(flag_names($pkg->decodeRF($flags))) ?></td><td class="mono"><?= h(($n['index']??'').' ('.hx2((int)($n['index']??0)).')') ?></td><td class="mono raw"><?= h(($n['name']??'').' / '.$flags) ?></td></tr><?php endforeach; ?></tbody></table></div>
-            <div id="exports-sub" class="subpanel"><h2>Exports Tree (<?= h($hdr['exportCount'] ?? '') ?>:<?= h($hdr['exportOffset'] ?? '') ?>)</h2><div class="tree-box"><?php foreach (($exportsByOuter[0] ?? []) as $rootIdx): renderExportNode($pkg,$exports,$exportsByOuter,(int)$rootIdx,true); endforeach; ?></div><div class="grid-after-tree"><details><summary>Raw Exports Grid</summary><table class="data"><thead><tr><th>Class</th><th>Super</th><th>Package</th><th>Object</th><th>Flags</th><th>Size</th><th>Offset</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($exports as $i=>$ex): ?><tr data-filter-row><td><?= h($pkg->exportClassName((int)($ex['classIndex']??0))) ?></td><td><?= h($pkg->exportSuperName((int)($ex['superIndex']??0))) ?></td><td><?= h($pkg->exportPackageName((int)($ex['packageIndex']??0))) ?></td><td><?= h($pkg->exportObjectName((int)($ex['objectName']??-1))) ?></td><td class="mono raw"><?= h(hx((int)($ex['objectFlags']??0))) ?></td><td><?= h($ex['serialSize']??'') ?></td><td><?= h($ex['serialOffset']??'') ?></td><td><?= h($i.' ('.hx2($i).')') ?></td><td class="mono raw"><?= h(($ex['classIndex']??'').' / '.($ex['superIndex']??'').' / '.($ex['packageIndex']??'').' / '.($ex['objectName']??'').' / '.($ex['objectFlags']??'').' / '.($ex['serialSize']??'').' / '.($ex['serialOffset']??'')) ?></td></tr><?php endforeach; ?></tbody></table></details></div></div>
-            <div id="imports-sub" class="subpanel"><h2>Imports Tree (<?= h($hdr['importCount'] ?? '') ?>:<?= h($hdr['importOffset'] ?? '') ?>)</h2><div class="tree-box"><?php foreach ($imports as $i=>$im): renderImportNode($pkg,$imports,$importsByOuter,(int)$i); endforeach; ?></div><div class="grid-after-tree"><details><summary>Raw Imports Grid</summary><table class="data"><thead><tr><th>Class Package</th><th>Class Name</th><th>Package Name</th><th>Object Name</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($imports as $i=>$im): ?><tr data-filter-row><td><?= h($pkg->importClassPackageName((int)($im['classPackage']??-1))) ?></td><td><?= h($pkg->importClassName((int)($im['className']??-1))) ?></td><td><?= h($pkg->importPackageName((int)($im['outerIndex']??0))) ?></td><td><?= h($pkg->importObjectName((int)($im['objectName']??-1))) ?></td><td><?= h($i.' ('.hx2($i).')') ?></td><td class="mono raw"><?= h(($im['classPackage']??'').' / '.($im['className']??'').' / '.($im['outerIndex']??'').' / '.($im['objectName']??'')) ?></td></tr><?php endforeach; ?></tbody></table></details></div></div>
+            <div id="exports-sub" class="subpanel"><h2>Exports Tree (<?= h($hdr['exportCount'] ?? '') ?>:<?= h($hdr['exportOffset'] ?? '') ?>)</h2><div class="tree-box"><?php foreach (($exportsByOuter[0] ?? []) as $rootIdx): renderExportNode($pkg,$exports,$exportsByOuter,(int)$rootIdx,true); endforeach; ?></div><div class="grid-after-tree"><details><summary>Raw Exports Grid</summary><table class="data"><thead><tr><th>Class</th><th>Super</th><th>Package</th><th>Object</th><th>Flags</th><th>Size</th><th>Offset</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($exports as $i=>$ex): ?><tr data-filter-row><td><?= h(object_ref_label($pkg,(int)($ex['classIndex']??0))) ?></td><td><?= h(object_ref_label($pkg,(int)($ex['superIndex']??0))) ?></td><td><?= h(object_ref_label($pkg,(int)($ex['packageIndex']??0))) ?></td><td><?= h($pkg->exportObjectName((int)($ex['objectName']??-1))) ?></td><td class="mono raw"><?= h(hx((int)($ex['objectFlags']??0))) ?></td><td><?= h($ex['serialSize']??'') ?></td><td><?= h($ex['serialOffset']??'') ?></td><td><?= h($i.' ('.hx2($i).')') ?></td><td class="mono raw"><?= h(($ex['classIndex']??'').' / '.($ex['superIndex']??'').' / '.($ex['packageIndex']??'').' / '.($ex['objectName']??'').' / '.($ex['objectFlags']??'').' / '.($ex['serialSize']??'').' / '.($ex['serialOffset']??'')) ?></td></tr><?php endforeach; ?></tbody></table></details></div></div>
+            <div id="imports-sub" class="subpanel"><h2>Imports Tree (<?= h($hdr['importCount'] ?? '') ?>:<?= h($hdr['importOffset'] ?? '') ?>)</h2><div class="tree-box"><?php foreach ($imports as $i=>$im): renderImportNode($pkg,$imports,$importsByOuter,(int)$i,false); endforeach; ?></div><div class="grid-after-tree"><details><summary>Raw Imports Grid</summary><table class="data"><thead><tr><th>Class Package</th><th>Class Name</th><th>Package Name</th><th>Object Name</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach ($imports as $i=>$im): ?><tr data-filter-row><td><?= h($pkg->importClassPackageName((int)($im['classPackage']??-1))) ?></td><td><?= h($pkg->importClassName((int)($im['className']??-1))) ?></td><td><?= h(object_ref_label($pkg,(int)($im['outerIndex']??0))) ?></td><td><?= h($pkg->importObjectName((int)($im['objectName']??-1))) ?></td><td><?= h($i.' ('.hx2($i).')') ?></td><td class="mono raw"><?= h(($im['classPackage']??'').' / '.($im['className']??'').' / '.($im['outerIndex']??'').' / '.($im['objectName']??'')) ?></td></tr><?php endforeach; ?></tbody></table></details></div></div>
             <div id="gens-sub" class="subpanel"><h2>Generations (<?= count($hdr['generations'] ?? []) ?>)</h2><table class="data"><thead><tr><th>ExportCount</th><th>NameCount</th><th>Num.</th><th>Raw</th></tr></thead><tbody><?php foreach (($hdr['generations']??[]) as $i=>$g): ?><tr><td><?= h($g['e']??'') ?></td><td><?= h($g['n']??'') ?></td><td><?= h($i) ?></td><td><?= h(($g['e']??'').' / '.($g['n']??'')) ?></td></tr><?php endforeach; ?></tbody></table></div>
         </section>
     </div>
