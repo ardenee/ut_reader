@@ -2,7 +2,7 @@
 require_once __DIR__ . '/TUnrealPackage.php';
 
 // ---- config ----
-$path = $argv[1] ?? 'test.ut3'; // CLI: php view2.php myfile.uxx  OR set directly
+$path = $argv[1] ?? 'testde.ut3'; // CLI: php view2.php myfile.uxx  OR set directly
 // For web: $path = $_GET['file'] ?? 'test.ut3';
 
 try {
@@ -21,15 +21,14 @@ try {
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES|ENT_SUBSTITUTE, 'UTF-8'); }
 function hex32(int $v): string { return sprintf('0x%08X', $v & 0xFFFFFFFF); }
 function hex64(int $v): string { return sprintf('0x%016X', $v); }
-function fmtGuid(array $g): string {
-    return sprintf('%08X-%08X-%08X-%08X', $g[0]??0, $g[1]??0, $g[2]??0, $g[3]??0);
-}
-function flagBadge(string $name): string {
-    return '<span class="badge">' . h($name) . '</span>';
-}
+function fmtGuid(array $g): string { return sprintf('%08X-%08X-%08X-%08X', $g[0]??0, $g[1]??0, $g[2]??0, $g[3]??0); }
+function flagBadge(string $name): string { return '<span class="badge">' . h($name) . '</span>'; }
 function renderFlags(int $flags, array $map): string {
     $bits = decodeFlagBits($flags, $map);
-    if (!$bits) return '<span class="muted">—</span>';
+	
+    if (!$bits) 
+		return '<span class="muted">—</span>';
+	
     return implode(' ', array_map('flagBadge', $bits));
 }
 ?>
