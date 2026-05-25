@@ -20,6 +20,7 @@ final class UEFolderBinaryReader
     public function tell(): int { return $this->pos; }
     public function seek(int $pos): void { $this->pos = max(0, min($pos, $this->len)); }
     public function remaining(): int { return $this->len - $this->pos; }
+    public function size(): int { return $this->len; }
 
     public function bytes(int $count): string
     {
@@ -35,6 +36,7 @@ final class UEFolderBinaryReader
     public function u16(): int { return unpack('v', $this->bytes(2))[1]; }
     public function u32(): int { return (int)unpack('V', $this->bytes(4))[1]; }
     public function i32(): int { $v = $this->u32(); return ($v & 0x80000000) ? $v - 0x100000000 : $v; }
+    public function f32(): float { return unpack('g', $this->bytes(4))[1]; }
     public function u64(): int { $lo = $this->u32(); $hi = $this->u32(); return ($hi << 32) | $lo; }
 
     public function compactIndex(): int
@@ -55,7 +57,6 @@ final class UEFolderBinaryReader
             $value |= ($b & 0x7F) << $shift;
             $shift += 7;
         }
-
         return $negative ? -$value : $value;
     }
 
@@ -77,22 +78,14 @@ final class UEFolderBinaryReader
         return self::toUtf8($out);
     }
 
-    public function fstring32(): string
-    {
-        return $this->stringByLength($this->i32());
-    }
-
-    public function fstringIndex(int $version): string
-    {
-        return $this->stringByLength($this->versionIndex($version));
-    }
+    public function fstring32(): string { return $this->stringByLength($this->i32()); }
+    public function fstringIndex(int $version): string { return $this->stringByLength($this->versionIndex($version)); }
 
     private function stringByLength(int $length): string
     {
         if ($length === 0) {
             return '';
         }
-
         if ($length > 0) {
             if ($length > 65536 || $length > $this->remaining()) {
                 throw new OutOfBoundsException("bad FString length=$length pos={$this->pos} remaining={$this->remaining()}");
@@ -103,7 +96,6 @@ final class UEFolderBinaryReader
             }
             return self::toUtf8($raw);
         }
-
         $chars = -$length;
         $bytes = $chars * 2;
         if ($chars > 32768 || $bytes > $this->remaining()) {
@@ -117,7 +109,7 @@ final class UEFolderBinaryReader
         return $out === false ? '' : $out;
     }
 
-    private static function toUtf8(string $raw): string
+    public static function toUtf8(string $raw): string
     {
         $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
         return $out === false ? $raw : $out;
@@ -133,6 +125,7 @@ final class UnrealPackageReader
     private array $imports = [];
     private array $exports = [];
     private array $issues = [];
+    private array $propertyCache = [];
 
     private const PKG_FLAGS = [
         0x00000001 => 'PKG_AllowDownload',
@@ -162,6 +155,25 @@ final class UnrealPackageReader
         0x04000000 => 'RF_Native',
     ];
 
+    private const PROP_TYPES = [
+        0 => 'None',
+        1 => 'ByteProperty',
+        2 => 'IntProperty',
+        3 => 'BoolProperty',
+        4 => 'FloatProperty',
+        5 => 'ObjectProperty',
+        6 => 'NameProperty',
+        7 => 'StringProperty',
+        8 => 'ClassProperty',
+        9 => 'ArrayProperty',
+        10 => 'StructProperty',
+        11 => 'VectorProperty',
+        12 => 'RotatorProperty',
+        13 => 'StrProperty',
+        14 => 'MapProperty',
+        15 => 'FixedArrayProperty',
+    ];
+
     public function __construct(string $path)
     {
         $this->path = $path;
@@ -186,27 +198,11 @@ final class UnrealPackageReader
     private function blankHeader(): array
     {
         return [
-            'signature' => 0,
-            'tag' => 0,
-            'version' => 0,
-            'licensee' => 0,
-            'licenseeVersion' => 0,
-            'pkgFlags' => 0,
-            'packageFlags' => 0,
-            'nameCount' => 0,
-            'nameOffset' => 0,
-            'exportCount' => 0,
-            'exportOffset' => 0,
-            'importCount' => 0,
-            'importOffset' => 0,
-            'dependsOffset' => 0,
-            'guid' => '',
-            'generations' => [],
-            'chunks' => [],
-            'compressedChunks' => [],
-            'compressed' => false,
-            'compressionFlags' => 0,
-            'cFlags' => 0,
+            'signature' => 0, 'tag' => 0, 'version' => 0, 'licensee' => 0, 'licenseeVersion' => 0,
+            'pkgFlags' => 0, 'packageFlags' => 0, 'nameCount' => 0, 'nameOffset' => 0,
+            'exportCount' => 0, 'exportOffset' => 0, 'importCount' => 0, 'importOffset' => 0,
+            'dependsOffset' => 0, 'guid' => '', 'generations' => [], 'chunks' => [],
+            'compressedChunks' => [], 'compressed' => false, 'compressionFlags' => 0, 'cFlags' => 0,
         ];
     }
 
@@ -222,7 +218,6 @@ final class UnrealPackageReader
         $licensee = ($packed >> 16) & 0xFFFF;
         $ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
         $isUE3 = in_array($ext, ['ut3', 'upk', 'xxx'], true) || $version >= 334;
-
         if ($isUE3) {
             $this->parseUE3($r, $tag, $packed, $version, $licensee);
         } else {
@@ -248,17 +243,11 @@ final class UnrealPackageReader
         $this->header['exportOffset'] = $r->i32();
         $this->header['importCount'] = $r->i32();
         $this->header['importOffset'] = $r->i32();
-
         if ($version < 68) {
             $this->header['heritageCount'] = $r->i32();
             $this->header['heritageOffset'] = $r->i32();
             $this->header['guid'] = '';
-            $this->header['generations'] = [[
-                'e' => $this->header['exportCount'],
-                'n' => $this->header['nameCount'],
-                'exportCount' => $this->header['exportCount'],
-                'nameCount' => $this->header['nameCount'],
-            ]];
+            $this->header['generations'] = [['e' => $this->header['exportCount'], 'n' => $this->header['nameCount'], 'exportCount' => $this->header['exportCount'], 'nameCount' => $this->header['nameCount']]];
         } else {
             $guid = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
             $this->header['guidArray'] = $guid;
@@ -271,7 +260,6 @@ final class UnrealPackageReader
                 $this->header['generations'][] = ['e' => $e, 'n' => $n, 'exportCount' => $e, 'nameCount' => $n];
             }
         }
-
         $this->readUE12Names();
         $this->readUE12Imports();
         $this->readUE12Exports();
@@ -345,7 +333,6 @@ final class UnrealPackageReader
         $this->header['importCount'] = $r->u32();
         $this->header['importOffset'] = $r->u32();
         $this->header['dependsOffset'] = $version >= 415 ? $r->u32() : 0;
-
         if ($version >= 623) {
             $this->header['importExportGuidsOffset'] = $r->u32();
             $this->header['importGuidsCount'] = $r->u32();
@@ -354,7 +341,6 @@ final class UnrealPackageReader
         if ($version >= 584) {
             $this->header['thumbnailTableOffset'] = $r->u32();
         }
-
         $guid = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
         $this->header['guidArray'] = $guid;
         $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X', $guid[0], $guid[1], $guid[2], $guid[3]);
@@ -371,7 +357,6 @@ final class UnrealPackageReader
         $this->header['compressionFlags'] = $version >= 334 ? $r->u32() : 0;
         $this->header['cFlags'] = $this->header['compressionFlags'];
         $this->header['compressed'] = $this->header['compressionFlags'] !== 0;
-
         if ($this->header['compressed']) {
             $chunkCount = $r->u32();
             for ($i = 0; $i < $chunkCount; $i++) {
@@ -383,7 +368,6 @@ final class UnrealPackageReader
             }
             $this->header['compressedChunks'] = $this->header['chunks'];
         }
-
         $this->readUE3Names();
         $this->readUE3Imports();
         $this->readUE3Exports();
@@ -457,16 +441,9 @@ final class UnrealPackageReader
         $cnText = $this->nameByIndex($className, $classNameNumber);
         $onText = $this->nameByIndex($objectName, $objectNameNumber);
         return [
-            'index' => $i,
-            'classPackage' => $classPackage,
-            'className' => $className,
-            'outerIndex' => $outer,
-            'outer' => $outer,
-            'outerName' => $this->displayNameFromRef($outer),
-            'objectName' => $objectName,
-            'classPackageText' => $cpText,
-            'classNameText' => $cnText,
-            'objectNameText' => $onText,
+            'index' => $i, 'classPackage' => $classPackage, 'className' => $className, 'outerIndex' => $outer,
+            'outer' => $outer, 'outerName' => $this->displayNameFromRef($outer), 'objectName' => $objectName,
+            'classPackageText' => $cpText, 'classNameText' => $cnText, 'objectNameText' => $onText,
             'ClassPackage' => ['index' => $classPackage, 'number' => $classPackageNumber, 'text' => $cpText],
             'ClassName' => ['index' => $className, 'number' => $classNameNumber, 'text' => $cnText],
             'OuterIndex' => $outer,
@@ -477,25 +454,11 @@ final class UnrealPackageReader
     private function makeExport(int $i, int $class, int $super, int $outer, int $objectName, int $objectNameNumber, int $archetype, int $flags, int $serialSize, int $serialOffset, array $components = [], int $exportFlags = 0): array
     {
         return [
-            'index' => $i,
-            'classIndex' => $class,
-            'class' => $class,
-            'superIndex' => $super,
-            'super' => $super,
-            'packageIndex' => $outer,
-            'outerIndex' => $outer,
-            'outer' => $outer,
-            'objectName' => $objectName,
-            'nameIndex' => $objectName,
-            'nameNumber' => $objectNameNumber,
-            'objectNameText' => $this->nameByIndex($objectName, $objectNameNumber),
-            'objectFlags' => $flags,
-            'serialSize' => $serialSize,
-            'serialOffset' => $serialOffset,
-            'archetype' => $archetype,
-            'components' => $components,
-            'componentMap' => $components,
-            'exportFlags' => $exportFlags,
+            'index' => $i, 'classIndex' => $class, 'class' => $class, 'superIndex' => $super, 'super' => $super,
+            'packageIndex' => $outer, 'outerIndex' => $outer, 'outer' => $outer, 'objectName' => $objectName,
+            'nameIndex' => $objectName, 'nameNumber' => $objectNameNumber, 'objectNameText' => $this->nameByIndex($objectName, $objectNameNumber),
+            'objectFlags' => $flags, 'serialSize' => $serialSize, 'serialOffset' => $serialOffset,
+            'archetype' => $archetype, 'components' => $components, 'componentMap' => $components, 'exportFlags' => $exportFlags,
         ];
     }
 
@@ -552,10 +515,212 @@ final class UnrealPackageReader
     public function decodePKG(int $flags): array { return $this->decodeFlags($flags, self::PKG_FLAGS); }
     public function decodeRF(int $flags): array { return $this->decodeFlags($flags, self::RF_FLAGS); }
     public function describeCompressionFlags(int $flags): string { return $flags === 0 ? '' : implode(', ', $this->decodePKG($flags)); }
-    public function getExportProperties(int $exportIndex): ?array { return []; }
-    public function getExportProperty(int $exportIndex, string $name, $default = null) { return $default; }
+
+    public function getExportProperties(int $exportIndex): ?array
+    {
+        if (isset($this->propertyCache[$exportIndex])) {
+            return $this->propertyCache[$exportIndex];
+        }
+        $ex = $this->exports[$exportIndex] ?? null;
+        if (!$ex || (int)$ex['serialSize'] <= 0 || (int)$ex['serialOffset'] <= 0) {
+            return $this->propertyCache[$exportIndex] = [];
+        }
+        try {
+            return $this->propertyCache[$exportIndex] = $this->readPropertyList((int)$ex['serialOffset'], (int)$ex['serialSize']);
+        } catch (Throwable $e) {
+            $this->issues[] = 'Property parse failed for export ' . $exportIndex . ': ' . $e->getMessage();
+            return $this->propertyCache[$exportIndex] = [];
+        }
+    }
+
+    public function getExportProperty(int $exportIndex, string $name, $default = null)
+    {
+        foreach ($this->getExportProperties($exportIndex) ?? [] as $prop) {
+            if (($prop['name'] ?? '') === $name) {
+                return $prop['value'] ?? $default;
+            }
+        }
+        return $default;
+    }
+
     public function getPropertiesByClass(string $className): array { return []; }
-    public function readPropertiesForExport(int $exportIndex): array { return []; }
+    public function readPropertiesForExport(int $exportIndex): array { return $this->getExportProperties($exportIndex) ?? []; }
+
+    private function readPropertyList(int $offset, int $serialSize): array
+    {
+        $version = (int)$this->header['version'];
+        $r = $this->tableReader($offset);
+        $end = min($r->size(), $offset + $serialSize);
+        $props = [];
+        for ($i = 0; $i < 2048 && $r->tell() < $end; $i++) {
+            $propStart = $r->tell();
+            $nameIndex = $r->versionIndex($version);
+            $name = $this->nameByIndex($nameIndex);
+            if ($name === '' || strcasecmp($name, 'None') === 0) {
+                break;
+            }
+            $info = $r->u8();
+            $typeId = $info & 0x0F;
+            $sizeCode = ($info >> 4) & 0x07;
+            $boolFlag = ($info & 0x80) !== 0;
+            $isBool = $typeId === 3;
+            $structName = '';
+            if ($typeId === 10) {
+                $structNameIndex = $r->versionIndex($version);
+                $structName = $this->nameByIndex($structNameIndex);
+            }
+            $size = $this->readPropertySize($r, $sizeCode);
+            $arrayIndex = 0;
+            if (!$isBool && $boolFlag) {
+                $arrayIndex = $this->readPropertyArrayIndex($r);
+            }
+            $valueOffset = $r->tell();
+            $raw = '';
+            if ($isBool) {
+                $value = $boolFlag;
+            } else {
+                $readSize = min($size, max(0, $end - $r->tell()));
+                $raw = $readSize > 0 ? $r->bytes($readSize) : '';
+                $value = $this->decodePropertyValue($typeId, $raw, $version, $structName);
+            }
+            $props[] = [
+                'offset' => $propStart,
+                'length' => $r->tell() - $propStart,
+                'name' => $name,
+                'type' => self::PROP_TYPES[$typeId] ?? ('Type' . $typeId),
+                'struct' => $structName,
+                'isArray' => (!$isBool && $boolFlag) ? 1 : 0,
+                'boolFlag' => $isBool ? (int)$boolFlag : 0,
+                'idx' => $arrayIndex,
+                'idxFromFile' => $arrayIndex,
+                'sizeCode' => $sizeCode,
+                'dataSize' => $size,
+                'infoByte' => $info,
+                'value' => $value,
+                'rawHex' => strtoupper(bin2hex($raw)),
+                'valueOffset' => $valueOffset,
+            ];
+        }
+        return $props;
+    }
+
+    private function readPropertySize(UEFolderBinaryReader $r, int $sizeCode): int
+    {
+        return match ($sizeCode) {
+            0 => 1,
+            1 => 2,
+            2 => 4,
+            3 => 12,
+            4 => 16,
+            5 => $r->u8(),
+            6 => $r->u16(),
+            7 => $r->i32(),
+            default => 0,
+        };
+    }
+
+    private function readPropertyArrayIndex(UEFolderBinaryReader $r): int
+    {
+        $b = $r->u8();
+        if ($b < 128) {
+            return $b;
+        }
+        $b2 = $r->u8();
+        if (($b & 0x40) !== 0) {
+            $b3 = $r->u8();
+            $b4 = $r->u8();
+            return (($b << 24) | ($b2 << 16) | ($b3 << 8) | $b4) & 0x3FFFFF;
+        }
+        return (($b << 8) | $b2) & 0x3FFF;
+    }
+
+    private function decodePropertyValue(int $typeId, string $raw, int $version, string $structName = '')
+    {
+        $r = new UEFolderBinaryReader($raw);
+        try {
+            return match ($typeId) {
+                1 => strlen($raw) >= 1 ? $r->u8() : '',
+                2 => $this->decodeIntegerRaw($raw),
+                3 => '',
+                4 => strlen($raw) >= 4 ? $r->f32() : '',
+                5, 8 => strlen($raw) >= 1 ? $this->formatObjectRef($r->versionIndex($version)) : '',
+                6 => strlen($raw) >= 1 ? $this->nameByIndex($r->versionIndex($version)) : '',
+                7, 13 => strlen($raw) > 0 ? UEFolderBinaryReader::toUtf8(rtrim($raw, "\0")) : '',
+                10 => $this->decodeStructProperty($structName, $raw),
+                11 => strlen($raw) >= 12 ? $this->formatVector($raw) : strtoupper(bin2hex($raw)),
+                12 => strlen($raw) >= 12 ? $this->formatRotator($raw) : strtoupper(bin2hex($raw)),
+                default => strtoupper(bin2hex($raw)),
+            };
+        } catch (Throwable $e) {
+            return strtoupper(bin2hex($raw));
+        }
+    }
+
+    private function decodeStructProperty(string $structName, string $raw)
+    {
+        if (strcasecmp($structName, 'Color') === 0 && strlen($raw) === 4) {
+            return $this->formatColor($raw);
+        }
+        if ((strcasecmp($structName, 'Vector') === 0 || strcasecmp($structName, 'Plane') === 0) && strlen($raw) >= 12) {
+            return $this->formatVector($raw);
+        }
+        if (strcasecmp($structName, 'Rotator') === 0 && strlen($raw) >= 12) {
+            return $this->formatRotator($raw);
+        }
+        return strtoupper(bin2hex($raw));
+    }
+
+    private function decodeIntegerRaw(string $raw)
+    {
+        return match (strlen($raw)) {
+            1 => ord($raw),
+            2 => unpack('v', $raw)[1],
+            4 => $this->signed32((int)unpack('V', $raw)[1]),
+            default => strtoupper(bin2hex($raw)),
+        };
+    }
+
+    private function signed32(int $v): int
+    {
+        return ($v & 0x80000000) ? $v - 0x100000000 : $v;
+    }
+
+    private function formatObjectRef(int $ref): string
+    {
+        if ($ref === 0) {
+            return '';
+        }
+        $name = $this->displayNameFromRef($ref);
+        return $name !== '' ? $name . '(' . $ref . ')' : '(' . $ref . ')';
+    }
+
+    private function formatVector(string $raw): string
+    {
+        $x = unpack('g', substr($raw, 0, 4))[1];
+        $y = unpack('g', substr($raw, 4, 4))[1];
+        $z = unpack('g', substr($raw, 8, 4))[1];
+        return sprintf('(X=%s,Y=%s,Z=%s)', $this->fmtFloat((float)$x), $this->fmtFloat((float)$y), $this->fmtFloat((float)$z));
+    }
+
+    private function formatRotator(string $raw): string
+    {
+        $p = unpack('V', substr($raw, 0, 4))[1];
+        $y = unpack('V', substr($raw, 4, 4))[1];
+        $r = unpack('V', substr($raw, 8, 4))[1];
+        return sprintf('(Pitch=%d,Yaw=%d,Roll=%d)', $p, $y, $r);
+    }
+
+    private function formatColor(string $raw): string
+    {
+        $c = unpack('C4', $raw);
+        return sprintf('(R=%d,G=%d,B=%d,A=%d)', $c[1], $c[2], $c[3], $c[4]);
+    }
+
+    private function fmtFloat(float $v): string
+    {
+        $s = rtrim(rtrim(sprintf('%.6F', $v), '0'), '.');
+        return $s === '-0' ? '0' : $s;
+    }
 
     private function decodeFlags(int $flags, array $map): array
     {
