@@ -159,8 +159,8 @@ final class UnrealPackageReader
     private const PROP_TYPES = [
         0 => 'ByteProperty',
         1 => 'IntProperty',
-        2 => 'BoolProperty',
-        3 => 'FloatProperty',
+        2 => 'FloatProperty',
+        3 => 'BoolProperty',
         4 => 'ObjectProperty',
         5 => 'NameProperty',
         6 => 'StringProperty',
@@ -172,6 +172,7 @@ final class UnrealPackageReader
         12 => 'StrProperty',
         13 => 'MapProperty',
         14 => 'FixedArrayProperty',
+        15 => 'FixedArrayProperty',
     ];
 
     public function __construct(string $path)
@@ -485,7 +486,7 @@ final class UnrealPackageReader
             $valueOffset = $r->tell();
             $value = '';
 
-            if ($typeId === 2) {
+            if ($typeId === 3) {
                 $value = $sizeCode !== 0;
             } else {
                 $size = $this->readPropertySize($r, $sizeCode);
@@ -505,6 +506,7 @@ final class UnrealPackageReader
                 'idx' => $arrayIndex,
                 'idxFromFile' => $arrayIndex,
                 'sizeCode' => $sizeCode,
+                'infoByte' => $info,
                 'value' => $value,
                 'rawHex' => strtoupper(bin2hex($raw)),
                 'valueOffset' => $valueOffset,
@@ -535,20 +537,35 @@ final class UnrealPackageReader
         try {
             return match ($typeId) {
                 0 => strlen($raw) >= 1 ? $r->u8() : '',
-                1 => strlen($raw) >= 4 ? $r->i32() : '',
-                2 => '',
-                3 => strlen($raw) >= 4 ? $r->f32() : '',
+                1 => $this->decodeIntegerRaw($raw),
+                2 => strlen($raw) >= 4 ? $r->f32() : '',
+                3 => '',
                 4, 7 => strlen($raw) >= 1 ? $this->formatObjectRef($r->indexForVersion($version)) : '',
                 5 => strlen($raw) >= 1 ? $this->nameByIndex($r->indexForVersion($version)) : '',
                 6, 12 => strlen($raw) > 0 ? UE1BinaryReader::toUtf8(rtrim($raw, "\0")) : '',
+                9 => strlen($raw) === 4 ? $this->formatColor($raw) : strtoupper(bin2hex($raw)),
                 10 => strlen($raw) >= 12 ? $this->formatVector($raw) : strtoupper(bin2hex($raw)),
                 11 => strlen($raw) >= 12 ? $this->formatRotator($raw) : strtoupper(bin2hex($raw)),
-                9 => strlen($raw) === 4 ? $this->formatColor($raw) : strtoupper(bin2hex($raw)),
                 default => strtoupper(bin2hex($raw)),
             };
         } catch (Throwable $e) {
             return strtoupper(bin2hex($raw));
         }
+    }
+
+    private function decodeIntegerRaw(string $raw)
+    {
+        return match (strlen($raw)) {
+            1 => ord($raw),
+            2 => unpack('v', $raw)[1],
+            4 => $this->signed32((int)unpack('V', $raw)[1]),
+            default => strtoupper(bin2hex($raw)),
+        };
+    }
+
+    private function signed32(int $v): int
+    {
+        return ($v & 0x80000000) ? $v - 0x100000000 : $v;
     }
 
     private function formatObjectRef(int $ref): string
