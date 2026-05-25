@@ -86,10 +86,10 @@ final class UnrealPackageReader
                 $this->pkg->annotateTablesWithText();
             }
 
-            $this->names = $this->pkg->getNames();
-            $this->imports = $this->pkg->getImports();
-            $this->exports = $this->pkg->getExports();
             $this->header = $this->normaliseHeader($this->pkg->getHeader());
+            $this->names = $this->normaliseNames($this->pkg->getNames());
+            $this->imports = $this->normaliseImports($this->pkg->getImports());
+            $this->exports = $this->normaliseExports($this->pkg->getExports());
         } catch (Throwable $t) {
             $this->debugErrors[] = $this->formatThrowable($t);
             $GLOBALS['UT_READER_LAST_ERROR'] = $this->debugErrors[0];
@@ -124,13 +124,121 @@ final class UnrealPackageReader
         $h['signature'] = $h['signature'] ?? $h['tag'] ?? 0;
         $h['licensee'] = $h['licensee'] ?? $h['licenseeVersion'] ?? 0;
         $h['pkgFlags'] = $h['pkgFlags'] ?? $h['packageFlags'] ?? 0;
+        $h['heritageCount'] = $h['heritageCount'] ?? 0;
+        $h['heritageOffset'] = $h['heritageOffset'] ?? 0;
+        $h['compressionFlags'] = $h['compressionFlags'] ?? 0;
+        $h['compressed'] = $h['compressed'] ?? false;
+        $h['chunks'] = $this->normaliseChunks($h['chunks'] ?? []);
 
         if (isset($h['guid']) && is_array($h['guid'])) {
             $h['guidArray'] = $h['guid'];
             $h['guid'] = sprintf('%08X-%08X-%08X-%08X', $h['guidArray'][0] ?? 0, $h['guidArray'][1] ?? 0, $h['guidArray'][2] ?? 0, $h['guidArray'][3] ?? 0);
         }
 
+        if (!isset($h['generations']) || !is_array($h['generations'])) {
+            $h['generations'] = [];
+        }
+
+        foreach ($h['generations'] as $i => $g) {
+            if (!is_array($g)) {
+                $g = [];
+            }
+            $h['generations'][$i] = [
+                'e' => $g['e'] ?? $g['exportCount'] ?? 0,
+                'n' => $g['n'] ?? $g['nameCount'] ?? 0,
+                'exportCount' => $g['exportCount'] ?? $g['e'] ?? 0,
+                'nameCount' => $g['nameCount'] ?? $g['n'] ?? 0,
+                'netObjectCount' => $g['netObjectCount'] ?? 0,
+            ];
+        }
+
         return $h;
+    }
+
+    private function normaliseChunks(array $chunks): array
+    {
+        foreach ($chunks as $i => $c) {
+            if (!is_array($c)) {
+                $c = [];
+            }
+            $chunks[$i] = [
+                'cOff' => $c['cOff'] ?? 0,
+                'cLen' => $c['cLen'] ?? $c['cSize'] ?? 0,
+                'cSize' => $c['cSize'] ?? $c['cLen'] ?? 0,
+                'uOff' => $c['uOff'] ?? 0,
+                'uLen' => $c['uLen'] ?? $c['uSize'] ?? 0,
+                'uSize' => $c['uSize'] ?? $c['uLen'] ?? 0,
+            ];
+        }
+
+        return $chunks;
+    }
+
+    private function normaliseNames(array $names): array
+    {
+        foreach ($names as $i => $n) {
+            if (!is_array($n)) {
+                $n = ['name' => (string)$n];
+            }
+            $names[$i] = [
+                'index' => $n['index'] ?? $i,
+                'name' => $n['name'] ?? '',
+                'flags' => $n['flags'] ?? 0,
+                'objectFlags' => $n['objectFlags'] ?? $n['flags'] ?? 0,
+            ];
+        }
+
+        return $names;
+    }
+
+    private function normaliseImports(array $imports): array
+    {
+        foreach ($imports as $i => $im) {
+            if (!is_array($im)) {
+                $im = [];
+            }
+            $imports[$i] = $im + [
+                'index' => $i,
+                'classPackage' => $im['classPackageIndex'] ?? -1,
+                'className' => $im['classNameIndex'] ?? -1,
+                'outerIndex' => $im['outer'] ?? 0,
+                'objectName' => $im['objectNameIndex'] ?? -1,
+                'classPackageText' => $im['classPackageText'] ?? '',
+                'classNameText' => $im['classNameText'] ?? '',
+                'objectNameText' => $im['objectNameText'] ?? '',
+            ];
+        }
+
+        return $imports;
+    }
+
+    private function normaliseExports(array $exports): array
+    {
+        foreach ($exports as $i => $ex) {
+            if (!is_array($ex)) {
+                $ex = [];
+            }
+
+            $outer = $ex['packageIndex'] ?? $ex['outerIndex'] ?? $ex['outer'] ?? 0;
+            $name = $ex['objectName'] ?? $ex['nameIndex'] ?? -1;
+
+            $exports[$i] = $ex + [
+                'index' => $i,
+                'classIndex' => $ex['class'] ?? 0,
+                'superIndex' => $ex['super'] ?? 0,
+                'packageIndex' => $outer,
+                'outerIndex' => $outer,
+                'outer' => $outer,
+                'objectName' => $name,
+                'nameIndex' => $name,
+                'objectNameText' => $ex['objectNameText'] ?? '',
+                'objectFlags' => $ex['objectFlags'] ?? 0,
+                'serialSize' => $ex['serialSize'] ?? 0,
+                'serialOffset' => $ex['serialOffset'] ?? 0,
+            ];
+        }
+
+        return $exports;
     }
 
     public function getHeader(): array { return $this->header; }
@@ -145,10 +253,21 @@ final class UnrealPackageReader
 
     public function getCompressionInfo(): array
     {
+        $chunks = $this->normaliseChunks($this->header['chunks'] ?? []);
+        $totalCompressed = 0;
+        $totalUncompressed = 0;
+
+        foreach ($chunks as $c) {
+            $totalCompressed += (int)($c['cLen'] ?? 0);
+            $totalUncompressed += (int)($c['uLen'] ?? 0);
+        }
+
         return [
             'isCompressed' => (bool)($this->header['compressed'] ?? false),
             'flags' => (int)($this->header['compressionFlags'] ?? 0),
-            'chunks' => $this->header['chunks'] ?? [],
+            'chunks' => $chunks,
+            'totalCompressed' => $totalCompressed,
+            'totalUncompressed' => $totalUncompressed,
         ];
     }
 
@@ -194,22 +313,40 @@ final class UnrealPackageReader
         return $out;
     }
 
+    private function nameAt(int $index): string
+    {
+        return ($index >= 0 && isset($this->names[$index])) ? (string)($this->names[$index]['name'] ?? '') : '';
+    }
+
+    private function objectRefName(int $ref): string
+    {
+        if ($ref === 0) {
+            return 'None';
+        }
+
+        if ($ref > 0) {
+            $ex = $this->exports[$ref - 1] ?? null;
+            return is_array($ex) ? $this->exportObjectName((int)($ex['objectName'] ?? -1)) : '';
+        }
+
+        $im = $this->imports[-$ref - 1] ?? null;
+        return is_array($im) ? $this->importObjectName((int)($im['objectName'] ?? -1)) : '';
+    }
+
+    public function importClassPackageName(int $index): string { return $this->nameAt($index); }
+    public function importClassName(int $index): string { return $this->nameAt($index); }
+    public function importPackageName(int $ref): string { return $this->objectRefName($ref); }
+    public function importObjectName(int $index): string { return $this->nameAt($index); }
+
+    public function exportClassName(int $ref): string { return $this->objectRefName($ref); }
+    public function exportSuperName(int $ref): string { return $this->objectRefName($ref); }
+    public function exportPackageName(int $ref): string { return $this->objectRefName($ref); }
+    public function exportObjectName(int $index): string { return $this->nameAt($index); }
+
     public function getExportProperties(int $exportIndex): ?array { return []; }
     public function getExportProperty(int $exportIndex, string $name, $default = null) { return $default; }
     public function getPropertiesByClass(string $className): array { return []; }
     public function readPropertiesForExport(int $exportIndex): array { return []; }
-
-    public function exportClassName(int $exportIndex): string
-    {
-        $ex = $this->exports[$exportIndex] ?? null;
-
-        if (!$ex) {
-            return '';
-        }
-
-        $text = $ex['text']['class'] ?? $ex['classNameText'] ?? '';
-        return is_string($text) ? $text : '';
-    }
 
     public function __call(string $name, array $arguments)
     {
