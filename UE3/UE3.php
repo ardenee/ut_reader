@@ -177,19 +177,6 @@ function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SU
 	<?php endif; ?>
 	<?php endif; ?>
 
-	<?php if (!empty($issues)): ?>
-	<h2>Validation</h2>
-	<div class="warn">
-	  <ul>
-		<?php foreach ($issues as $w): ?>
-		  <li class="mono"><?= h($w) ?></li>
-		<?php endforeach; ?>
-	  </ul>
-	</div>
-	<?php endif; ?>
-
-
-
 <?php if (!empty($hdr['generations'])): ?>
 <h2>Generations (<?=count($hdr['generations'])?>)</h2>
 <table><tr><th>ExportCount</th><th>NameCount</th><th>Num.</th><th class="small">Raw (ExportCount / NameCount)</th></tr>
@@ -198,7 +185,7 @@ function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SU
 		<?php if (isset($hdr['netObjectCount'])): ?>		
         <tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?> / <?=$g['netObjectCount']?></td></tr>
 	    <?php else: ?>
-        <tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td>&nbsp;</td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?></td></tr>
+        <tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?></td></tr>
         <?php endif; ?>
 
 <?php endforeach; ?>
