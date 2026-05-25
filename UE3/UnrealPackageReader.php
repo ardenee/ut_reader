@@ -16,6 +16,7 @@ final class UEFolderBinaryReader
     public function seek(int $pos): void { $this->pos = max(0, min($pos, $this->len)); }
     public function remaining(): int { return $this->len - $this->pos; }
     public function size(): int { return $this->len; }
+
     public function bytes(int $count): string
     {
         if ($count < 0 || $this->pos + $count > $this->len) {
@@ -25,30 +26,48 @@ final class UEFolderBinaryReader
         $this->pos += $count;
         return $out;
     }
+
     public function u8(): int { return ord($this->bytes(1)); }
     public function u16(): int { return unpack('v', $this->bytes(2))[1]; }
     public function u32(): int { return (int)unpack('V', $this->bytes(4))[1]; }
     public function i32(): int { $v = $this->u32(); return ($v & 0x80000000) ? $v - 0x100000000 : $v; }
     public function f32(): float { return unpack('g', $this->bytes(4))[1]; }
     public function u64(): int { $lo = $this->u32(); $hi = $this->u32(); return ($hi << 32) | $lo; }
+
     public function compactIndex(): int
     {
-        $b = $this->u8(); $negative = ($b & 0x80) !== 0; $more = ($b & 0x40) !== 0; $value = $b & 0x3F; $shift = 6; $count = 1;
+        $b = $this->u8();
+        $negative = ($b & 0x80) !== 0;
+        $more = ($b & 0x40) !== 0;
+        $value = $b & 0x3F;
+        $shift = 6;
+        $count = 1;
         while ($more) {
             if (++$count > 5) throw new RuntimeException('Invalid compact index length');
-            $b = $this->u8(); $more = ($b & 0x80) !== 0; $value |= ($b & 0x7F) << $shift; $shift += 7;
+            $b = $this->u8();
+            $more = ($b & 0x80) !== 0;
+            $value |= ($b & 0x7F) << $shift;
+            $shift += 7;
         }
         return $negative ? -$value : $value;
     }
+
     public function versionIndex(int $version): int { return $version < 178 ? $this->compactIndex() : $this->i32(); }
+
     public function cstring(int $max = 1024): string
     {
         $out = '';
-        for ($i = 0; $i < $max && $this->remaining() > 0; $i++) { $c = $this->bytes(1); if ($c === "\0") break; $out .= $c; }
+        for ($i = 0; $i < $max && $this->remaining() > 0; $i++) {
+            $c = $this->bytes(1);
+            if ($c === "\0") break;
+            $out .= $c;
+        }
         return self::toUtf8($out);
     }
+
     public function fstring32(): string { return $this->stringByLength($this->i32()); }
     public function fstringIndex(int $version): string { return $this->stringByLength($this->versionIndex($version)); }
+
     private function stringByLength(int $length): string
     {
         if ($length === 0) return '';
@@ -58,13 +77,15 @@ final class UEFolderBinaryReader
             if ($raw !== '' && substr($raw, -1) === "\0") $raw = substr($raw, 0, -1);
             return self::toUtf8($raw);
         }
-        $chars = -$length; $bytes = $chars * 2;
+        $chars = -$length;
+        $bytes = $chars * 2;
         if ($chars > 32768 || $bytes > $this->remaining()) throw new OutOfBoundsException("bad wide FString length=$length pos={$this->pos} remaining={$this->remaining()}");
         $raw = $this->bytes($bytes);
         if (substr($raw, -2) === "\0\0") $raw = substr($raw, 0, -2);
         $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16LE');
         return $out === false ? '' : $out;
     }
+
     public static function toUtf8(string $raw): string
     {
         $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
@@ -82,6 +103,7 @@ final class UnrealPackageReader
     private array $exports = [];
     private array $issues = [];
     private array $propertyCache = [];
+    private static ?object $lzoFfi = null;
 
     private const COMPRESS_ZLIB = 0x01;
     private const COMPRESS_LZO  = 0x02;
@@ -90,12 +112,14 @@ final class UnrealPackageReader
         0x00000001 => 'PKG_AllowDownload', 0x00000002 => 'PKG_ClientOptional', 0x00000004 => 'PKG_ServerSideOnly',
         0x00000008 => 'PKG_NoExportAllowed', 0x00000010 => 'PKG_Cooked', 0x00000020 => 'PKG_Encrypted',
     ];
+
     private const RF_FLAGS = [
         0x00000001 => 'RF_Transactional', 0x00000002 => 'RF_Unreachable', 0x00000004 => 'RF_Public', 0x00000008 => 'RF_TagImp',
         0x00000010 => 'RF_TagExp', 0x00000020 => 'RF_SourceModified', 0x00000040 => 'RF_TagGarbage', 0x00000200 => 'RF_NeedLoad',
         0x00000400 => 'RF_HighlightedName', 0x00004000 => 'RF_Transient', 0x00010000 => 'RF_LoadForClient', 0x00020000 => 'RF_LoadForServer',
         0x00040000 => 'RF_LoadForEdit', 0x00080000 => 'RF_Standalone', 0x01000000 => 'RF_NeedPostLoad', 0x04000000 => 'RF_Native',
     ];
+
     private const PROP_TYPES = [0 => 'None', 1 => 'ByteProperty', 2 => 'IntProperty', 3 => 'BoolProperty', 4 => 'FloatProperty', 5 => 'ObjectProperty', 6 => 'NameProperty', 7 => 'StringProperty', 8 => 'ClassProperty', 9 => 'ArrayProperty', 10 => 'StructProperty', 11 => 'VectorProperty', 12 => 'RotatorProperty', 13 => 'StrProperty', 14 => 'MapProperty', 15 => 'FixedArrayProperty'];
     private const PROP_TYPE_NAMES = ['ByteProperty'=>1,'IntProperty'=>2,'BoolProperty'=>3,'FloatProperty'=>4,'ObjectProperty'=>5,'NameProperty'=>6,'StringProperty'=>7,'DelegateProperty'=>7,'ClassProperty'=>8,'ArrayProperty'=>9,'StructProperty'=>10,'VectorProperty'=>11,'RotatorProperty'=>12,'StrProperty'=>13,'MapProperty'=>14,'TextProperty'=>14,'FixedArrayProperty'=>15,'InterfaceProperty'=>15];
 
@@ -117,9 +141,10 @@ final class UnrealPackageReader
     {
         return get_class($e) . ': ' . $e->getMessage() . ' File: ' . $e->getFile() . ':' . $e->getLine() . ' PHP: ' . PHP_VERSION . ' Package: ' . $this->path . ' Trace: ' . $e->getTraceAsString();
     }
+
     private function blankHeader(): array
     {
-        return ['signature'=>0,'tag'=>0,'version'=>0,'licensee'=>0,'licenseeVersion'=>0,'pkgFlags'=>0,'packageFlags'=>0,'nameCount'=>0,'nameOffset'=>0,'exportCount'=>0,'exportOffset'=>0,'importCount'=>0,'importOffset'=>0,'dependsOffset'=>0,'guid'=>'','generations'=>[],'chunks'=>[],'compressedChunks'=>[],'compressed'=>false,'compressionFlags'=>0,'cFlags'=>0,'logicalDecompressed'=>false];
+        return ['signature'=>0,'tag'=>0,'version'=>0,'licensee'=>0,'licenseeVersion'=>0,'pkgFlags'=>0,'packageFlags'=>0,'nameCount'=>0,'nameOffset'=>0,'exportCount'=>0,'exportOffset'=>0,'importCount'=>0,'importOffset'=>0,'dependsOffset'=>0,'guid'=>'','generations'=>[],'chunks'=>[],'compressedChunks'=>[],'compressed'=>false,'compressionFlags'=>0,'cFlags'=>0,'logicalDecompressed'=>false,'logicalSize'=>0];
     }
 
     private function parse(): void
@@ -127,7 +152,9 @@ final class UnrealPackageReader
         $r = new UEFolderBinaryReader($this->bytes);
         $tag = $r->u32();
         if ($tag !== 0x9E2A83C1) throw new RuntimeException(sprintf('Bad package tag 0x%08X', $tag));
-        $packed = $r->u32(); $version = $packed & 0xFFFF; $licensee = ($packed >> 16) & 0xFFFF;
+        $packed = $r->u32();
+        $version = $packed & 0xFFFF;
+        $licensee = ($packed >> 16) & 0xFFFF;
         $ext = strtolower(pathinfo($this->path, PATHINFO_EXTENSION));
         if (in_array($ext, ['ut3','upk','xxx'], true) || $version >= 334) $this->parseUE3($r, $tag, $packed, $version, $licensee);
         else $this->parseUE12($r, $tag, $packed, $version, $licensee);
@@ -135,11 +162,19 @@ final class UnrealPackageReader
 
     private function parseUE12(UEFolderBinaryReader $r, int $tag, int $packed, int $version, int $licensee): void
     {
-        $flags = $r->u32(); $this->header = $this->blankHeader();
+        $flags = $r->u32();
+        $this->header = $this->blankHeader();
         $this->header += ['signature'=>$tag,'tag'=>$tag,'packedVersion'=>$packed,'version'=>$version,'licensee'=>$licensee,'licenseeVersion'=>$licensee,'pkgFlags'=>$flags,'packageFlags'=>$flags];
         $this->header['nameCount'] = $r->i32(); $this->header['nameOffset'] = $r->i32(); $this->header['exportCount'] = $r->i32(); $this->header['exportOffset'] = $r->i32(); $this->header['importCount'] = $r->i32(); $this->header['importOffset'] = $r->i32();
-        if ($version < 68) { $this->header['heritageCount'] = $r->i32(); $this->header['heritageOffset'] = $r->i32(); $this->header['generations'][] = ['e'=>$this->header['exportCount'],'n'=>$this->header['nameCount']]; }
-        else { $guid = [$r->u32(),$r->u32(),$r->u32(),$r->u32()]; $this->header['guidArray'] = $guid; $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X',$guid[0],$guid[1],$guid[2],$guid[3]); $genCount = $r->i32(); for ($i=0;$i<$genCount;$i++) $this->header['generations'][] = ['e'=>$r->i32(),'n'=>$r->i32()]; }
+        if ($version < 68) {
+            $this->header['heritageCount'] = $r->i32(); $this->header['heritageOffset'] = $r->i32();
+            $this->header['generations'][] = ['e'=>$this->header['exportCount'],'n'=>$this->header['nameCount'],'exportCount'=>$this->header['exportCount'],'nameCount'=>$this->header['nameCount']];
+        } else {
+            $guid = [$r->u32(),$r->u32(),$r->u32(),$r->u32()];
+            $this->header['guidArray'] = $guid; $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X',$guid[0],$guid[1],$guid[2],$guid[3]);
+            $genCount = $r->i32(); $this->header['genCount'] = $genCount;
+            for ($i=0;$i<$genCount;$i++) $this->header['generations'][] = ['e'=>$r->i32(),'n'=>$r->i32()];
+        }
         $this->readUE12Names(); $this->readUE12Imports(); $this->readUE12Exports();
     }
 
@@ -156,7 +191,8 @@ final class UnrealPackageReader
         $this->header['dependsOffset'] = $version >= 415 ? $r->u32() : 0;
         if ($version >= 623) { $this->header['importExportGuidsOffset'] = $r->u32(); $this->header['importGuidsCount'] = $r->u32(); $this->header['exportGuidsCount'] = $r->u32(); }
         if ($version >= 584) $this->header['thumbnailTableOffset'] = $r->u32();
-        $guid = [$r->u32(),$r->u32(),$r->u32(),$r->u32()]; $this->header['guidArray'] = $guid; $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X',$guid[0],$guid[1],$guid[2],$guid[3]);
+        $guid = [$r->u32(),$r->u32(),$r->u32(),$r->u32()];
+        $this->header['guidArray'] = $guid; $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X',$guid[0],$guid[1],$guid[2],$guid[3]);
         $genCount = $r->u32(); $this->header['genCount'] = $genCount;
         for ($i=0;$i<$genCount;$i++) { $e=$r->u32(); $n=$r->u32(); $net=$version>=322 ? $r->u32() : 0; $this->header['generations'][] = ['e'=>$e,'n'=>$n,'exportCount'=>$e,'nameCount'=>$n,'netObjectCount'=>$net]; }
         $this->header['engineVersion'] = $version >= 245 ? $r->u32() : 0;
@@ -166,10 +202,12 @@ final class UnrealPackageReader
         $this->header['compressed'] = $this->header['compressionFlags'] !== 0;
         if ($this->header['compressed']) {
             $chunkCount = $r->u32();
-            for ($i=0;$i<$chunkCount;$i++) { $uOff=$r->u32(); $uSize=$r->u32(); $cOff=$r->u32(); $cSize=$r->u32(); $this->header['chunks'][] = ['cOff'=>$cOff,'cLen'=>$cSize,'cSize'=>$cSize,'uOff'=>$uOff,'uLen'=>$uSize,'uSize'=>$uSize]; }
+            for ($i=0;$i<$chunkCount;$i++) {
+                $uOff=$r->u32(); $uSize=$r->u32(); $cOff=$r->u32(); $cSize=$r->u32();
+                $this->header['chunks'][] = ['cOff'=>$cOff,'cLen'=>$cSize,'cSize'=>$cSize,'uOff'=>$uOff,'uLen'=>$uSize,'uSize'=>$uSize];
+            }
             $this->header['compressedChunks'] = $this->header['chunks'];
-            try { $this->materializeCompressedUE3(); }
-            catch (Throwable $e) { $this->issues[] = 'Compressed package tables were not read: ' . $e->getMessage(); return; }
+            $this->materializeCompressedUE3();
         }
         $this->readUE3Names(); $this->readUE3Imports(); $this->readUE3Exports();
     }
@@ -193,6 +231,16 @@ final class UnrealPackageReader
         $this->bytes = $logical;
         $this->header['logicalDecompressed'] = true;
         $this->header['logicalSize'] = strlen($logical);
+        $this->validateLogicalUE3NameTable();
+    }
+
+    private function validateLogicalUE3NameTable(): void
+    {
+        $nameOffset = (int)($this->header['nameOffset'] ?? 0);
+        if ($nameOffset <= 0 || $nameOffset + 18 > strlen($this->bytes)) throw new RuntimeException('logical decompressed buffer does not contain the UE3 name table');
+        $r = $this->tableReader($nameOffset);
+        $len = $r->i32();
+        if ($len <= 0 || $len > 1024 || $len > $r->remaining()) throw new RuntimeException('LZO decoder produced invalid logical data at name table; first FString length=' . $len);
     }
 
     private function decompressUE3ChunkPayload(string $chunkPayload, int $expectedUncompressed): string
@@ -205,10 +253,7 @@ final class UnrealPackageReader
         $blocks = [];
         for ($i=0;$i<$blockCount;$i++) $blocks[] = ['c'=>$r->i32(), 'u'=>$r->i32()];
         $out = '';
-        foreach ($blocks as $b) {
-            $src = $r->bytes((int)$b['c']);
-            $out .= $this->decompressBlock($src, (int)$b['u']);
-        }
+        foreach ($blocks as $b) $out .= $this->decompressBlock($r->bytes((int)$b['c']), (int)$b['u']);
         if (strlen($out) !== $uncompressedTotal) throw new RuntimeException("inner chunk size mismatch expected=$uncompressedTotal got=" . strlen($out));
         if ($expectedUncompressed > 0 && strlen($out) !== $expectedUncompressed) throw new RuntimeException("outer chunk size mismatch expected=$expectedUncompressed got=" . strlen($out));
         return $out;
@@ -229,25 +274,31 @@ final class UnrealPackageReader
 
     private function decompressLzoBlock(string $src, int $expected): string
     {
-        foreach (['lzo1x_decompress', 'lzo_decompress'] as $fn) {
-            if (function_exists($fn)) {
-                $out = @$fn($src, $expected);
-                if (is_string($out) && strlen($out) === $expected) return $out;
-            }
+        $ffi = $this->getLzoFfi();
+        $clen = strlen($src);
+        $srcBuf = FFI::new("char[$clen]");
+        FFI::memcpy($srcBuf, $src, $clen);
+        $dst = FFI::new("char[$expected]");
+        $dstLen = FFI::new('unsigned long[1]');
+        $dstLen[0] = $expected;
+        $ret = $ffi->lzo1x_decompress_safe($srcBuf, $clen, $dst, $dstLen, null);
+        if ($ret !== 0 || (int)$dstLen[0] !== $expected) throw new RuntimeException('liblzo2 failed ret=' . $ret . ' expected=' . $expected . ' got=' . (int)$dstLen[0]);
+        return FFI::string($dst, $expected);
+    }
+
+    private function getLzoFfi(): object
+    {
+        if (self::$lzoFfi !== null) return self::$lzoFfi;
+        if (!extension_loaded('FFI') || !class_exists('FFI', false)) throw new RuntimeException('LZO package requires PHP FFI + liblzo2. Enable ffi.enable=true and install liblzo2 on Synology. Refusing unsafe PHP lzo_decompress fallback because it produced corrupt name-table data.');
+        $libs = ['liblzo2.so.2','liblzo2.so','/lib/liblzo2.so.2','/lib64/liblzo2.so.2','/usr/lib/liblzo2.so.2','/usr/lib64/liblzo2.so.2','/usr/local/lib/liblzo2.so.2','/opt/lib/liblzo2.so.2','/usr/syno/lib/liblzo2.so.2'];
+        $last = '';
+        foreach ($libs as $lib) {
+            try {
+                self::$lzoFfi = FFI::cdef('int lzo1x_decompress_safe(const char *src, unsigned long src_len, char *dst, unsigned long *dst_len, void *wrkmem);', $lib);
+                return self::$lzoFfi;
+            } catch (Throwable $e) { $last = $e->getMessage(); }
         }
-        if (extension_loaded('FFI') && class_exists('FFI', false)) {
-            foreach (['liblzo2.so.2','liblzo2.so','/usr/lib/liblzo2.so.2','/usr/local/lib/liblzo2.so.2','/opt/lib/liblzo2.so.2'] as $lib) {
-                try {
-                    $ffi = FFI::cdef('int lzo1x_decompress_safe(const char *src, unsigned long src_len, char *dst, unsigned long *dst_len, void *wrkmem);', $lib);
-                    $clen = strlen($src);
-                    $srcBuf = FFI::new("char[$clen]"); FFI::memcpy($srcBuf, $src, $clen);
-                    $dst = FFI::new("char[$expected]"); $dstLen = FFI::new('unsigned long[1]'); $dstLen[0] = $expected;
-                    $ret = $ffi->lzo1x_decompress_safe($srcBuf, $clen, $dst, $dstLen, null);
-                    if ($ret === 0 && (int)$dstLen[0] === $expected) return FFI::string($dst, $expected);
-                } catch (Throwable $e) { }
-            }
-        }
-        throw new RuntimeException('LZO compression is used, but no LZO decoder is available. Install/enable php-lzo or enable PHP FFI and liblzo2 on Synology. The old code was incorrectly reading compressed bytes as if they were tables.');
+        throw new RuntimeException('Could not load liblzo2 through PHP FFI. Last error: ' . $last);
     }
 
     private function tableReader(int $offset): UEFolderBinaryReader { $r = new UEFolderBinaryReader($this->bytes); $r->seek($offset); return $r; }
@@ -285,11 +336,7 @@ final class UnrealPackageReader
             $flagsLo=$r->u32(); $flagsHi=$version>=195?$r->u32():0; $flags=($flagsHi<<32)|$flagsLo;
             $serialSize=$r->i32(); $serialOffset=($serialSize!==0||$version>=249)?$r->i32():0;
             $components=[];
-            if ($version>=220 && $version<543) {
-                $componentCount=$r->i32();
-                if ($componentCount<0 || $componentCount>65536) throw new RuntimeException("Bad component count $componentCount in export $i");
-                for ($j=0;$j<$componentCount;$j++) $components[]=['name'=>$r->i32(),'nameNumber'=>$r->i32(),'ref'=>$r->i32()];
-            }
+            if ($version>=220 && $version<543) { $componentCount=$r->i32(); if ($componentCount<0 || $componentCount>65536) throw new RuntimeException("Bad component count $componentCount in export $i"); for ($j=0;$j<$componentCount;$j++) $components[]=['name'=>$r->i32(),'nameNumber'=>$r->i32(),'ref'=>$r->i32()]; }
             $exportFlags=$version>=247?$r->u32():0;
             if ($version>=322) { for ($j=0;$j<16;$j++) $r->i32(); $r->u32(); $r->u32(); $r->u32(); $r->u32(); }
             if ($version>=475) $r->i32();
