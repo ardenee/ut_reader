@@ -348,7 +348,7 @@ final class UnrealPackageReader
 
     private function readUE3FName(UEFolderBinaryReader $r): array
     {
-        $idx = $r->i32();
+        $idx = $r->versionIndex((int)$this->header['version']);
         $num = ((int)$this->header['version'] >= 343) ? $r->i32() : 0;
         return ['index'=>$idx, 'number'=>$num];
     }
@@ -367,54 +367,53 @@ final class UnrealPackageReader
 
     private function readUE3Exports(): void
     {
-        $this->header['exportTableLayout'] = 'ue3-serialize3-ut3';
+        $this->header['exportTableLayout'] = 'ue3-export-spec';
         $r = $this->tableReader((int)$this->header['exportOffset']);
         $v = (int)$this->header['version'];
         $genCount = count($this->header['generations'] ?? []);
         for ($i = 0; $i < (int)$this->header['exportCount']; $i++) {
-            $class = $r->i32();
-            $super = $r->i32();
+            $class = $r->versionIndex($v);
+            $super = $r->versionIndex($v);
             $outer = $r->i32();
             $objectName = $this->readUE3FName($r);
-            $archetype = 0;
-            if ($v >= 220 && $v !== 512) {
-                $archetype = $r->i32();
-            }
+            $archetype = $v >= 220 ? $r->i32() : 0;
             $flagsLo = $r->u32();
-            $flagsHi = $v >= 195 ? $r->u32() : 0;
+            $flagsHi = 0;
             $flags = $flagsLo;
-            $serialSize = $r->i32();
-            $serialOffset = ($serialSize !== 0 || $v >= 249) ? $r->i32() : 0;
+            $serialSize = $r->versionIndex($v);
+            $serialOffset = $serialSize > 0 ? $r->versionIndex($v) : 0;
             $components = [];
-            if ($v < 543) {
-                $components = $this->readUE3StaticComponentMap($r, $i);
+            if ($v >= 220 && $v < 543) {
+                $components = $this->readUE3ExportUnknownBlock($r, $i);
             }
             $exportFlags = $v >= 247 ? $r->u32() : 0;
-            $netObjectCount = [];
+            $unknownCountItems = [];
             $guid = '';
             if ($v >= 322) {
-                for ($j = 0; $j < $genCount; $j++) {
-                    $netObjectCount[] = $r->i32();
+                $unknownCount = $r->i32();
+                if ($unknownCount < 0 || $unknownCount > 1000000) {
+                    throw new RuntimeException("Bad UE3 export unknown count $unknownCount in export $i at offset " . ($r->tell() - 4));
+                }
+                for ($j = 0; $j < $unknownCount; $j++) {
+                    $unknownCountItems[] = $r->u32();
                 }
                 $guidParts = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
                 $guid = sprintf('%08X-%08X-%08X-%08X', $guidParts[0], $guidParts[1], $guidParts[2], $guidParts[3]);
             }
-            $u3unk6C = $v >= 475 ? $r->i32() : 0;
-            $this->exports[] = $this->makeExport($i, $class, $super, $outer, $objectName['index'], $objectName['number'], $archetype, $flags, $serialSize, $serialOffset, $components, $exportFlags, $flagsHi, $netObjectCount, $guid, $u3unk6C);
+            $u3unk6C = $v >= 487 ? $r->i32() : 0;
+            $this->exports[] = $this->makeExport($i, $class, $super, $outer, $objectName['index'], $objectName['number'], $archetype, $flags, $serialSize, $serialOffset, $components, $exportFlags, $flagsHi, $unknownCountItems, $guid, $u3unk6C);
         }
     }
 
-    private function readUE3StaticComponentMap(UEFolderBinaryReader $r, int $exportIndex): array
+    private function readUE3ExportUnknownBlock(UEFolderBinaryReader $r, int $exportIndex): array
     {
         $count = $r->i32();
-        if ($count < 0 || $count > 16) {
-            throw new RuntimeException("Bad UE3 component map count $count in export $exportIndex at offset " . ($r->tell() - 4));
+        if ($count < 0 || $count > 65536) {
+            throw new RuntimeException("Bad UE3 export unknown block count $count in export $exportIndex at offset " . ($r->tell() - 4));
         }
         $items = [];
         for ($j = 0; $j < $count; $j++) {
-            $name = $this->readUE3FName($r);
-            $ref = $r->i32();
-            $items[] = ['name'=>$name['index'], 'nameNumber'=>$name['number'], 'nameText'=>$this->nameByIndex($name['index'], $name['number']), 'ref'=>$ref];
+            $items[] = ['a'=>$r->i32(), 'b'=>$r->i32(), 'c'=>$r->i32()];
         }
         return $items;
     }
