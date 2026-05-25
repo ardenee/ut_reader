@@ -1,17 +1,51 @@
 <?php
 declare(strict_types=1);
 
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+
+$GLOBALS['UT_READER_LAST_ERROR'] = null;
+
+register_shutdown_function(static function (): void {
+    $err = error_get_last();
+
+    if (!$err) {
+        return;
+    }
+
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR];
+
+    if (!in_array((int)$err['type'], $fatalTypes, true)) {
+        return;
+    }
+
+    if (!headers_sent()) {
+        header('Content-Type: text/plain; charset=utf-8', true, 500);
+    }
+
+    echo "\n\nUT Reader fatal error\n";
+    echo "=====================\n";
+    echo 'Type: ' . $err['type'] . "\n";
+    echo 'Message: ' . $err['message'] . "\n";
+    echo 'File: ' . $err['file'] . "\n";
+    echo 'Line: ' . $err['line'] . "\n";
+    echo 'PHP: ' . PHP_VERSION . "\n";
+    echo 'Request: ' . ($_SERVER['REQUEST_URI'] ?? '') . "\n";
+});
+
 require_once dirname(__DIR__) . '/TUnrealPackage.php';
 require_once dirname(__DIR__) . '/UE_LZO1X_register.php';
 
 final class UnrealPackageReader
 {
     private string $path;
-    private object $pkg;
+    private ?object $pkg = null;
     private array $header = [];
     private array $names = [];
     private array $imports = [];
     private array $exports = [];
+    private array $debugErrors = [];
 
     private const PKG_FLAGS = [
         0x00000001 => 'PKG_AllowDownload',
@@ -44,16 +78,45 @@ final class UnrealPackageReader
     public function __construct(string $path)
     {
         $this->path = $path;
-        $this->pkg = TPackageReader::open($path);
 
-        if (method_exists($this->pkg, 'annotateTablesWithText')) {
-            $this->pkg->annotateTablesWithText();
+        try {
+            $this->pkg = TPackageReader::open($path);
+
+            if (method_exists($this->pkg, 'annotateTablesWithText')) {
+                $this->pkg->annotateTablesWithText();
+            }
+
+            $this->names = $this->pkg->getNames();
+            $this->imports = $this->pkg->getImports();
+            $this->exports = $this->pkg->getExports();
+            $this->header = $this->normaliseHeader($this->pkg->getHeader());
+        } catch (Throwable $t) {
+            $this->debugErrors[] = $this->formatThrowable($t);
+            $GLOBALS['UT_READER_LAST_ERROR'] = $this->debugErrors[0];
+            $this->header = $this->normaliseHeader([
+                'tag' => 0,
+                'version' => 0,
+                'licenseeVersion' => 0,
+                'packageFlags' => 0,
+                'nameCount' => 0,
+                'nameOffset' => 0,
+                'importCount' => 0,
+                'importOffset' => 0,
+                'exportCount' => 0,
+                'exportOffset' => 0,
+                'compressed' => false,
+                'chunks' => [],
+            ]);
         }
+    }
 
-        $this->names = $this->pkg->getNames();
-        $this->imports = $this->pkg->getImports();
-        $this->exports = $this->pkg->getExports();
-        $this->header = $this->normaliseHeader($this->pkg->getHeader());
+    private function formatThrowable(Throwable $t): string
+    {
+        return get_class($t) . ': ' . $t->getMessage() . "\n"
+            . 'File: ' . $t->getFile() . ':' . $t->getLine() . "\n"
+            . 'PHP: ' . PHP_VERSION . "\n"
+            . 'Package: ' . $this->path . "\n"
+            . "Trace:\n" . $t->getTraceAsString();
     }
 
     private function normaliseHeader(array $h): array
@@ -91,7 +154,7 @@ final class UnrealPackageReader
 
     public function validatePackage(): array
     {
-        $issues = [];
+        $issues = $this->debugErrors;
 
         foreach (['nameCount', 'nameOffset', 'importCount', 'importOffset', 'exportCount', 'exportOffset'] as $k) {
             if (!array_key_exists($k, $this->header)) {
@@ -114,6 +177,7 @@ final class UnrealPackageReader
         return $issues;
     }
 
+    public function getDebugErrors(): array { return $this->debugErrors; }
     public function decodePKG(int $flags): array { return $this->decodeFlags($flags, self::PKG_FLAGS); }
     public function decodeRF(int $flags): array { return $this->decodeFlags($flags, self::RF_FLAGS); }
 
