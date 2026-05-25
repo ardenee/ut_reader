@@ -2,8 +2,8 @@
 declare(strict_types=1);
 require_once __DIR__ . '/UnrealPackageReader.php';
 
-// Accept ?file=... (or set a default)
 $filePath = isset($_GET['file']) ? (string)$_GET['file'] : (isset($filePath) ? (string)$filePath : 'oldtest.utx');
+
 if ($filePath === '' || !file_exists($filePath)) {
     header('Content-Type: text/plain; charset=utf-8');
     echo "UE1.php: missing or invalid ?file= parameter.\n";
@@ -11,17 +11,23 @@ if ($filePath === '' || !file_exists($filePath)) {
     exit;
 }
 
-// Build package
 $pkg = new UnrealPackageReader($filePath);
+$hdr = $pkg->getHeader();
+$names = $pkg->getNames();
+$imports = $pkg->getImports();
+$exports = $pkg->getExports();
+$pkgFlagsDecoded = $pkg->decodePKG((int)($hdr['pkgFlags'] ?? 0));
+$issues = $pkg->validatePackage();
 
-// Pull data using the NEW getters
-$hdr             = $pkg->getHeader();
-$names           = $pkg->getNames();
-$imports         = $pkg->getImports();
-$exports         = $pkg->getExports();
-$pkgFlagsDecoded = $pkg->decodePKG(intval($hdr['pkgFlags'] ?? 0));
+function h($s): string
+{
+    return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
 
-function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
+function fmt_hex(int $v): string
+{
+    return sprintf('0x%08X', $v);
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -36,7 +42,10 @@ function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SU
         --text: #24292f;
         --sub: #57606a;
         --accent: #0969da;
+        --prop-bg: #e5f2ff;
+        --prop-head: #69beff;
     }
+
     html, body { background: var(--bg); color: var(--text); }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.35; padding: 16px; }
     h1, h2 { margin: 0.4em 0; }
@@ -47,208 +56,210 @@ function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SU
     th, td { border: 1px solid var(--b); padding: 6px 8px; vertical-align: top; font-size: 14px; }
     th { background: var(--muted); text-align: left; }
 
-    /* Dropdown toggle button */
-    .toggle-btn {display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--b); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 13px; color: var(--text); }
+    .wrap, .wrap * {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-break: anywhere;
+    }
+
+    .raw-cell {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-break: anywhere;
+        max-width: 28rem;
+    }
+
+    .exports-table {
+        table-layout: fixed;
+    }
+
+    .exports-table th:nth-child(1), .exports-table td:nth-child(1) { width: 8%; }
+    .exports-table th:nth-child(2), .exports-table td:nth-child(2) { width: 7%; }
+    .exports-table th:nth-child(3), .exports-table td:nth-child(3) { width: 7%; }
+    .exports-table th:nth-child(4), .exports-table td:nth-child(4) { width: 9%; }
+    .exports-table th:nth-child(5), .exports-table td:nth-child(5) { width: 20%; }
+    .exports-table th:nth-child(6), .exports-table td:nth-child(6) { width: 6%; }
+    .exports-table th:nth-child(7), .exports-table td:nth-child(7) { width: 8%; }
+    .exports-table th:nth-child(8), .exports-table td:nth-child(8) { width: 6%; }
+    .exports-table th:nth-child(9), .exports-table td:nth-child(9) { width: 8%; }
+    .exports-table th:nth-child(10), .exports-table td:nth-child(10) { width: 21%; }
+
+    .toggle-btn { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid var(--b); border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 13px; color: var(--text); }
     .toggle-btn:hover { border-color: var(--accent); color: var(--accent); }
     .chev { transition: transform 0.2s ease; display: inline-block; }
     .chev.open { transform: rotate(90deg); }
+    .pill { display: inline-block; padding: 2px 6px; border-radius: 999px; background: #e7f5ff; color: #0b74c9; font-size: 12px; border: 1px solid #b6dfff; }
 
-    /* Hidden row that contains the properties table */
     .props-row { display: none; background: #fcfcfd; }
-    .props-wrap { padding: 10px 4px; }
+    .props-wrap { padding: 10px 4px; max-width: 100%; overflow-x: auto; }
 
-    /* Nested table style */
-    .nested { width: 100%; border-collapse: collapse; margin: 6px 0 0; }
-    .nested th, .nested td { border: 1px dashed var(--b); font-size: 13px; background: #E5F2FF;}
-    .nested th { background: #69BEFF; }
-    .pill { display: inline-block; padding: 2px 6px; border-radius: 999px; background: #e7f5ff; color: #0b74c9; font-size: 12px; border: 1px solid #b6dfff; }	
+    .nested {
+        width: 100%;
+        max-width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+        margin: 6px 0 0;
+    }
+
+    .nested th, .nested td {
+        border: 1px dashed var(--b);
+        font-size: 13px;
+        background: var(--prop-bg);
+        white-space: normal;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        line-break: anywhere;
+    }
+
+    .nested th { background: var(--prop-head); }
+    .nested pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word; }
+
+    .nested th:nth-child(1), .nested td:nth-child(1) { width: 6%; }
+    .nested th:nth-child(2), .nested td:nth-child(2) { width: 6%; }
+    .nested th:nth-child(3), .nested td:nth-child(3) { width: 10%; }
+    .nested th:nth-child(4), .nested td:nth-child(4) { width: 10%; }
+    .nested th:nth-child(5), .nested td:nth-child(5) { width: 8%; }
+    .nested th:nth-child(6), .nested td:nth-child(6) { width: 5%; }
+    .nested th:nth-child(7), .nested td:nth-child(7) { width: 5%; }
+    .nested th:nth-child(8), .nested td:nth-child(8) { width: 7%; }
+    .nested th:nth-child(9), .nested td:nth-child(9) { width: 15%; }
+    .nested th:nth-child(10), .nested td:nth-child(10) { width: 5%; }
+    .nested th:nth-child(11), .nested td:nth-child(11) { width: 23%; }
+
+    .warn { border: 1px solid #d1242f; background: #fff8f8; padding: 8px 12px; }
 </style>
+<script>
+function toggleProps(i) {
+    var row = document.getElementById('props-' + i);
+    if (!row) return;
 
+    var chev = document.getElementById('chev-' + i);
+    var hidden = row.style.display === '' || row.style.display === 'none';
 
-<style id="hl-css-ref">
-  .hl-row{ background: rgba(9,105,218,.08)!important }
-  .hl-cell{ outline: 2px solid rgba(9,105,218,.55); position: relative }
-  .hl-strong{ background: rgba(9,105,218,.16)!important }
-  td[data-ref-type]{ cursor:pointer }
-</style>
-
-<style id="hl-css-clean">
-  .hl-row{ background: rgba(9,105,218,.08)!important }
-  .hl-cell{ outline: 2px solid rgba(9,105,218,.55); position: relative }
-  .hl-strong{ background: rgba(9,105,218,.16)!important }
-  td{ user-select: none; }
-  td[data-ref-type]{ cursor:pointer }
-</style>
+    row.style.display = hidden ? 'table-row' : 'none';
+    if (chev) {
+        if (hidden) chev.classList.add('open');
+        else chev.classList.remove('open');
+    }
+}
+</script>
 </head>
 <body>
 
 <h1>Unreal Package Viewer</h1>
-<div class="small"><?= h($filePath) ?> (<?=h($pkg->getFileSize())?>)</div>
+<div class="small"><?= h($filePath) ?> (<?= h($pkg->getFileSize()) ?>)</div>
 
 <h2>Header</h2>
 <table>
-<tr><th>Name</th><th>Value</th><th class="small">Raw</th></tr>
-
+    <thead><tr><th>Name</th><th>Value</th><th class="small">Raw</th></tr></thead>
     <tbody>
-        <tr><th>Signature</th><td class="mono">            <?= h(sprintf("0x%08X",$hdr['signature']) ?? '') ?></td><td class="small"><?= h($hdr['signature']) ?></td></tr>
-        <tr><th>Version</th><td class="mono">              <?= h($hdr['version'] ?? '') ?></td><td class="small"><?= h($hdr['version'] ?? '') ?></td></tr>
-        <tr><th>Licensee</th><td class="mono">             <?= h($hdr['licensee'] ?? '') ?></td><td class="small"><?= h($hdr['licensee'] ?? '') ?></td></tr>
-        <tr><th>Package Flags</th><td class="mono">        <?= h(sprintf("0x%08X",$hdr['pkgFlags']) ?? '')." (".implode(', ', $pkgFlagsDecoded).")" ?></td><td class="small"><?= h($hdr['pkgFlags']) ?></td></tr>
-		
-        <tr><th>Name Count / Offset</th><td class="mono">  <?= h($hdr['nameCount'])." / ".h($hdr['nameOffset']) ?></td><td class="small"><?=h($hdr['nameCount'])." / ".h($hdr['nameOffset']) ?></td></tr> 
-        <tr><th>Export Count / Offset</th><td class="mono"><?= h($hdr['exportCount'])." / ".h($hdr['exportOffset'])?></td><td class="small"><?=h($hdr['exportCount'])." / ".h($hdr['exportOffset']) ?></td></tr>
-        <tr><th>Import Count / Offset</th><td class="mono"><?= h($hdr['importCount'])." / ".h($hdr['importOffset'])?></td><td class="small"><?=h($hdr['importCount'])." / ".h($hdr['importOffset']) ?></td></tr>
-		
-		
+        <tr><th>Signature</th><td class="mono"><?= h(fmt_hex((int)($hdr['signature'] ?? 0))) ?></td><td class="small"><?= h($hdr['signature'] ?? '') ?></td></tr>
+        <tr><th>Version</th><td class="mono"><?= h($hdr['version'] ?? '') ?></td><td class="small"><?= h($hdr['version'] ?? '') ?></td></tr>
+        <tr><th>Licensee</th><td class="mono"><?= h($hdr['licensee'] ?? '') ?></td><td class="small"><?= h($hdr['licensee'] ?? '') ?></td></tr>
+        <tr><th>Package Flags</th><td class="mono"><?= h(fmt_hex((int)($hdr['pkgFlags'] ?? 0))) ?><?= $pkgFlagsDecoded ? ' (' . h(implode(', ', $pkgFlagsDecoded)) . ')' : '' ?></td><td class="small"><?= h($hdr['pkgFlags'] ?? '') ?></td></tr>
+        <tr><th>Name Count / Offset</th><td class="mono"><?= h($hdr['nameCount'] ?? '') ?> / <?= h($hdr['nameOffset'] ?? '') ?></td><td class="small"><?= h($hdr['nameCount'] ?? '') ?> / <?= h($hdr['nameOffset'] ?? '') ?></td></tr>
+        <tr><th>Export Count / Offset</th><td class="mono"><?= h($hdr['exportCount'] ?? '') ?> / <?= h($hdr['exportOffset'] ?? '') ?></td><td class="small"><?= h($hdr['exportCount'] ?? '') ?> / <?= h($hdr['exportOffset'] ?? '') ?></td></tr>
+        <tr><th>Import Count / Offset</th><td class="mono"><?= h($hdr['importCount'] ?? '') ?> / <?= h($hdr['importOffset'] ?? '') ?></td><td class="small"><?= h($hdr['importCount'] ?? '') ?> / <?= h($hdr['importOffset'] ?? '') ?></td></tr>
         <?php if (!empty($hdr['guid'])): ?>
-        <tr><th>GUID</th><td class="mono"><?= h($hdr['guid']) ?></td><td class="small"><?= h($hdr['guid']) ?></td></tr>
-        <?php endif; ?>		
-		<?php if (($hdr['version']??0) < 68): ?>
-		<tr><th>Heritage count </th><td class="mono"><?=$hdr['heritageCount']?></td><td class="small"> <?=h($hdr['heritageCount']) ?></td></tr>
-		<tr><th>Heritage offset</th><td class="mono"><?=$hdr['heritageOffset']?></td><td class="small"><?=h($hdr['heritageOffset']) ?></td></tr>
-		<?php endif; ?>		
+        <tr><th>GUID</th><td class="mono wrap"><?= h($hdr['guid']) ?></td><td class="small wrap"><?= h($hdr['guid']) ?></td></tr>
+        <?php endif; ?>
+        <?php if (($hdr['version'] ?? 0) < 68): ?>
+        <tr><th>Heritage count</th><td class="mono"><?= h($hdr['heritageCount'] ?? '') ?></td><td class="small"><?= h($hdr['heritageCount'] ?? '') ?></td></tr>
+        <tr><th>Heritage offset</th><td class="mono"><?= h($hdr['heritageOffset'] ?? '') ?></td><td class="small"><?= h($hdr['heritageOffset'] ?? '') ?></td></tr>
+        <?php endif; ?>
     </tbody>
 </table>
-	<?php
-		// Compression summary
-		$comp = $pkg->getCompressionInfo();
-		$issues = $pkg->validatePackage();
-	?>
 
-	<?php if (!empty($comp['isCompressed']) || !empty($comp['chunks'])): ?>
-	<h2>Compression</h2>
-	<table>
-	  <tr><th>Compressed?</th><td class="mono"><?= $comp['isCompressed'] ? 'Yes' : 'No' ?></td></tr>
-	  <tr><th>Total (compressed → uncompressed)</th>
-		  <td class="mono"><?= h($comp['totalCompressed']) ?> → <?= h($comp['totalUncompressed']) ?> bytes</td></tr>
-	</table>
-
-	<?php if (!empty($comp['chunks'])): ?>
-	<h3>Chunks (<?= count($comp['chunks']) ?>)</h3>
-	<table>
-	  <thead><tr><th>#</th><th>Comp Off/Len</th><th>Uncomp Off/Len</th></tr></thead>
-	  <tbody>
-		<?php foreach ($comp['chunks'] as $ci => $c): ?>
-		<tr>
-		  <td class="mono"><?= (int)$ci ?></td>
-		  <td class="mono"><?= h($c['cOff']) ?> / <?= h($c['cLen']) ?></td>
-		  <td class="mono"><?= h($c['uOff']) ?> / <?= h($c['uLen']) ?></td>
-		</tr>
-		<?php endforeach; ?>
-	  </tbody>
-	</table>
-	<?php endif; ?>
-	<?php endif; ?>
-
-	<?php if (!empty($issues)): ?>
-	<h2>Validation</h2>
-	<div class="warn">
-	  <ul>
-		<?php foreach ($issues as $w): ?>
-		  <li class="mono"><?= h($w) ?></li>
-		<?php endforeach; ?>
-	  </ul>
-	</div>
-	<?php endif; ?>
-
-
-
-
+<?php if (!empty($issues)): ?>
+<h2>Validation</h2>
+<div class="warn">
+    <ul>
+        <?php foreach ($issues as $w): ?>
+        <li class="mono wrap"><?= h($w) ?></li>
+        <?php endforeach; ?>
+    </ul>
+</div>
+<?php endif; ?>
 
 <?php if (!empty($hdr['generations'])): ?>
-<h2>Generations (<?=count($hdr['generations'])?>)</h2>
-<table><tr><th>ExportCount</th><th>NameCount</th><th>Num.</th><th class="small">Raw (ExportCount / NameCount)</th></tr>
-<?php foreach ($hdr['generations'] as $i=>$g): ?>
-<tr><td><?=$g['e']?></td><td><?=$g['n']?></td><td><?=$i?></td><td class="small"><?=$g['e'] ?> / <?= $g['n']?></td></tr>
-<?php endforeach; ?>
+<h2>Generations (<?= count($hdr['generations']) ?>)</h2>
+<table>
+    <thead><tr><th>ExportCount</th><th>NameCount</th><th>Num.</th><th class="small">Raw (ExportCount / NameCount)</th></tr></thead>
+    <tbody>
+        <?php foreach ($hdr['generations'] as $i => $g): ?>
+        <tr><td><?= h($g['e'] ?? '') ?></td><td><?= h($g['n'] ?? '') ?></td><td><?= h($i) ?></td><td class="small"><?= h($g['e'] ?? '') ?> / <?= h($g['n'] ?? '') ?></td></tr>
+        <?php endforeach; ?>
+    </tbody>
 </table>
 <?php endif; ?>
 
-
-
-
-
-<h2>Names (<?=$hdr['nameCount']?>:<?=$hdr['nameOffset']?>)</h2></h2>
-
+<h2>Names (<?= h($hdr['nameCount'] ?? '') ?>:<?= h($hdr['nameOffset'] ?? '') ?>)</h2>
 <table>
-    <thead>
-        <tr><th>Name</th><th>Flags</th><th>Num.</th><th class="small">Raw (index / flags)</th></tr>
-    </thead>
+    <thead><tr><th>Name</th><th>Flags</th><th>Num.</th><th class="small">Raw (index / flags)</th></tr></thead>
     <tbody>
     <?php foreach ($names as $n): ?>
-	<?php $pkgFlagsDecoded = $pkg->decodePKG(intval($n['objectFlags'] ?? 0)); ?>
+        <?php $flags = (int)($n['flags'] ?? 0); ?>
         <tr>
-            <td><?= h($n['name']) ?></td>
-            <td class="mono"><?=  h(sprintf("0x%08X",$n['flags']))." (".implode(', ',$pkg->decodeRF($n['flags']))?>)</td>			
-			<td class="mono"><?=  h($n['index']." (".sprintf("0x%02X",$n['index'])) ?>)</td>	
-			<td class="small"><?= h($n['name'])?> / <?= $n['flags']?></td>					
+            <td class="wrap"><?= h($n['name'] ?? '') ?></td>
+            <td class="mono wrap"><?= h(fmt_hex($flags)) ?><?= $pkg->decodeRF($flags) ? ' (' . h(implode(', ', $pkg->decodeRF($flags))) . ')' : '' ?></td>
+            <td class="mono"><?= h(($n['index'] ?? '') . ' (' . sprintf('0x%02X', (int)($n['index'] ?? 0)) . ')') ?></td>
+            <td class="small wrap"><?= h($n['name'] ?? '') ?> / <?= h($flags) ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>
 </table>
 
-
-<h2>Imports (<?=$hdr['importCount']?>:<?=$hdr['importOffset']?>)</h2>
+<h2>Imports (<?= h($hdr['importCount'] ?? '') ?>:<?= h($hdr['importOffset'] ?? '') ?>)</h2>
 <table>
     <thead>
-        <tr>            
-            <th>Class Package</th><th>Class Name</th><th>Package Name</th><th>Object Name</th><th>Num.</th>
-            <th class="small">Raw (classPackage / className / outerIndex / objectName)</th>
-        </tr>
+        <tr><th>Class Package</th><th>Class Name</th><th>Package Name</th><th>Object Name</th><th>Num.</th><th class="small">Raw (classPackage / className / outerIndex / objectName)</th></tr>
     </thead>
     <tbody>
     <?php foreach ($imports as $i => $im): ?>
-        <tr>  
-		    <td><?= h($pkg->importClassPackageName($im['classPackage'])) ?></td>
-		    <td><?= h($pkg->importClassName($im['className'])) ?></td>
-		    <td><?= h($pkg->importPackageName($im['outerIndex'])) ?></td>
-		    <td><?= h($pkg->importObjectName($im['objectName'])) ?></td>
-            <td class="mono"><?= h($i." (".sprintf("0x%02X",$i)) ?>)</td>
-            <td class="mono small"><?= h(($im['classPackage'] ?? '') . ' / ' . ($im['className'] ?? '') . ' / ' . ($im['outerIndex'] ?? '') . ' / ' . ($im['objectName'] ?? '')) ?></td>
+        <tr>
+            <td class="wrap"><?= h($pkg->importClassPackageName((int)($im['classPackage'] ?? -1))) ?></td>
+            <td class="wrap"><?= h($pkg->importClassName((int)($im['className'] ?? -1))) ?></td>
+            <td class="wrap"><?= h($pkg->importPackageName((int)($im['outerIndex'] ?? 0))) ?></td>
+            <td class="wrap"><?= h($pkg->importObjectName((int)($im['objectName'] ?? -1))) ?></td>
+            <td class="mono"><?= h($i . ' (' . sprintf('0x%02X', $i) . ')') ?></td>
+            <td class="mono small raw-cell"><?= h(($im['classPackage'] ?? '') . ' / ' . ($im['className'] ?? '') . ' / ' . ($im['outerIndex'] ?? '') . ' / ' . ($im['objectName'] ?? '')) ?></td>
         </tr>
     <?php endforeach; ?>
     </tbody>
 </table>
 
-
-
-<h2>Exports (<?=$hdr['exportCount']?>:<?=$hdr['exportOffset']?>)</h2></h2>
-<table>
+<h2>Exports (<?= h($hdr['exportCount'] ?? '') ?>:<?= h($hdr['exportOffset'] ?? '') ?>)</h2>
+<table class="exports-table">
     <thead>
-        <tr>
-		    <th>Class Index</th><th>Super Index</th><th>Package Index</th><th>Object Name</th><th>Object Flags</th><th>Serial Size</th><th>Serial Offset</th><th>Num.</th><th>Properties</th><th class="small">Raw (cla / sup / pac / obj / flg / si / off)</th>
-        </tr>
+        <tr><th>Class Index</th><th>Super Index</th><th>Package Index</th><th>Object Name</th><th>Object Flags</th><th>Serial Size</th><th>Serial Offset</th><th>Num.</th><th>Properties</th><th class="small">Raw (cla / sup / pac / obj / flg / si / off)</th></tr>
     </thead>
     <tbody>
     <?php foreach ($exports as $i => $ex): ?>
         <?php
-            $props           = $pkg->getExportProperties($i);// getExportProps($pkg, $i);
-            $hasProps        = is_array($props) && !empty($props);
-			$pkgFlagsDecoded = $pkg->decodePKG(intval($i['objectFlags'] ?? 0));
+            $props = $pkg->getExportProperties($i);
+            $hasProps = is_array($props) && !empty($props);
+            $objectFlags = (int)($ex['objectFlags'] ?? 0);
         ?>
-        <tr>		
-			<td class="mono"><?= h($pkg->exportClassName($ex['classIndex']))   ?></td>
-			<td class="mono"><?= h($pkg->exportSuperName($ex['superIndex'])) ?></td>
-			<td class="mono"><?= h($pkg->exportPackageName($ex['packageIndex']))   ?></td>
-		    <td class="mono"><?= h($pkg->exportObjectName($ex['objectName'])) ?></td> 
-		    <td class="mono"><?= h(sprintf("0x%08X",$ex['objectFlags']))." (".implode(', ',$pkg->decodeRF($ex['objectFlags']))?>)</td>
-			<td class="mono"><?= h($ex['serialSize'] ?? '') ?></td>
-			<td class="mono"><?= h(sprintf("0x%08X",$ex['serialOffset'])) ?></td>					
-            <td class="mono"><?= h($i." (".sprintf("0x%02X",$i)) ?>)</td>   
+        <tr>
+            <td class="mono wrap"><?= h($pkg->exportClassName((int)($ex['classIndex'] ?? 0))) ?></td>
+            <td class="mono wrap"><?= h($pkg->exportSuperName((int)($ex['superIndex'] ?? 0))) ?></td>
+            <td class="mono wrap"><?= h($pkg->exportPackageName((int)($ex['packageIndex'] ?? 0))) ?></td>
+            <td class="mono wrap"><?= h($pkg->exportObjectName((int)($ex['objectName'] ?? -1))) ?></td>
+            <td class="mono wrap"><?= h(fmt_hex($objectFlags)) ?><?= $pkg->decodeRF($objectFlags) ? ' (' . h(implode(', ', $pkg->decodeRF($objectFlags))) . ')' : '' ?></td>
+            <td class="mono"><?= h($ex['serialSize'] ?? '') ?></td>
+            <td class="mono"><?= h(fmt_hex((int)($ex['serialOffset'] ?? 0))) ?></td>
+            <td class="mono"><?= h($i . ' (' . sprintf('0x%02X', $i) . ')') ?></td>
             <td>
                 <?php if ($hasProps): ?>
-                    <button class="toggle-btn" onclick="toggleProps(<?= (int)$i ?>)">
-                        <span id="chev-<?= (int)$i ?>" class="chev">▶</span> Properties <span class="pill"><?= count($props) ?></span>
-                    </button>
+                <button class="toggle-btn" onclick="toggleProps(<?= (int)$i ?>)"><span id="chev-<?= (int)$i ?>" class="chev">▶</span> Properties <span class="pill"><?= count($props) ?></span></button>
                 <?php else: ?>
-                    <span class="small mono">—</span>
+                <span class="small mono">-</span>
                 <?php endif; ?>
             </td>
-            <td class="mono small">
-                <?= h(($ex['classIndex'] ?? '') . ' / ' . ($ex['superIndex'] ?? '') . ' / ' . ($ex['packageIndex'] ?? '') . ' / ' . ($ex['objectName'] ?? '') . ' / ' . ($ex['objectFlags'] ?? '') . ' / ' . ($ex['serialSize'] ?? '') . ' / ' . ($ex['serialOffset'] ?? '')) ?>
-            </td>
+            <td class="mono small raw-cell"><?= h(($ex['classIndex'] ?? '') . ' / ' . ($ex['superIndex'] ?? '') . ' / ' . ($ex['packageIndex'] ?? '') . ' / ' . ($ex['objectName'] ?? '') . ' / ' . ($ex['objectFlags'] ?? '') . ' / ' . ($ex['serialSize'] ?? '') . ' / ' . ($ex['serialOffset'] ?? '')) ?></td>
         </tr>
-
 
         <?php if ($hasProps): ?>
         <tr id="props-<?= (int)$i ?>" class="props-row">
@@ -259,324 +270,34 @@ function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SU
                             <tr><th>Offset</th><th>Length</th><th>Name</th><th>Type</th><th>Struct</th><th>isArray</th><th>idx</th><th>idxFromFile</th><th>Value</th><th>Num.</th><th class="small">Raw</th></tr>
                         </thead>
                         <tbody>
-                            <?php foreach ($props as $pi => $p): ?>
-                                <?php   
-                                    $val   = $p['value'] ?? ($p['val'] ?? ($p['data'] ?? ''));
-                                    $raw   = json_encode($p, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
-                                ?>
-                                <tr>
-                                    <td class="mono"><?= h($p['offset']) ?></td>
-									<td class="mono"><?= h($p['length']) ?></td>
-									<td class="mono"><?= h($p['name']) ?></td>
-                                    <td class="mono"><?= h($p['type']) ?></td>
-									<td class="mono"><?= h($p['struct']) ?></td>
-									<td class="mono"><?= h($p['isArray']) ?></td>
-									<td class="mono"><?= h($p['idx']) ?></td>
-									<td class="mono"><?= h($p['idxFromFile']) ?></td>
-                                    <td><?= is_scalar($val) ? h((string)$val) : '<pre class="mono small">'.h(print_r($val, true)).'</pre>' ?></td>
-									<td class="mono small"><?= h($pi) ?></td>
-                                    <td class="mono small" style="white-space: pre-wrap;  overflow-wrap: anywhere;   word-break: break-word; line-break: anywhere; max-width: 40rem;"><?= h($raw) ?></td>
-                                </tr>
-                            <?php endforeach; ?>
+                        <?php foreach ($props as $pi => $p): ?>
+                            <?php
+                                $val = $p['value'] ?? ($p['val'] ?? ($p['data'] ?? ''));
+                                $raw = json_encode($p, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+                            ?>
+                            <tr>
+                                <td class="mono raw-cell"><?= h($p['offset'] ?? '') ?></td>
+                                <td class="mono raw-cell"><?= h($p['length'] ?? '') ?></td>
+                                <td class="mono raw-cell"><?= h($p['name'] ?? '') ?></td>
+                                <td class="mono raw-cell"><?= h($p['type'] ?? '') ?></td>
+                                <td class="mono raw-cell"><?= h($p['struct'] ?? '') ?></td>
+                                <td class="mono raw-cell"><?= h($p['isArray'] ?? '') ?></td>
+                                <td class="mono raw-cell"><?= h($p['idx'] ?? '') ?></td>
+                                <td class="mono raw-cell"><?= h($p['idxFromFile'] ?? '') ?></td>
+                                <td class="raw-cell"><?= is_scalar($val) ? h((string)$val) : '<pre class="mono small">' . h(print_r($val, true)) . '</pre>' ?></td>
+                                <td class="mono small raw-cell"><?= h($pi) ?></td>
+                                <td class="mono small raw-cell"><?= h($raw) ?></td>
+                            </tr>
+                        <?php endforeach; ?>
                         </tbody>
                     </table>
                 </div>
             </td>
         </tr>
         <?php endif; ?>
-		
-		
-		
-		
-		
-		
-
     <?php endforeach; ?>
     </tbody>
 </table>
 
 </body>
 </html>
-<script>
-  // --- Document-level capture: ensure Properties buttons always toggle ---
-  (function(){
-    function getIndexFromButton(btn){
-      if (!btn) return NaN;
-      var ixAttr = btn.getAttribute && btn.getAttribute('data-ix');
-      if (ixAttr){
-        var n = parseInt(ixAttr,10); if (!isNaN(n)) return n;
-      }
-      var chev = btn.querySelector && btn.querySelector('.chev[id^="chev-"]');
-      if (chev && chev.id){
-        var m = chev.id.match(/^chev-(\d+)$/);
-        if (m){ var n2 = parseInt(m[1],10); if (!isNaN(n2)) return n2; }
-      }
-      var tr = btn.closest && btn.closest('tr');
-      if (tr && tr.nextElementSibling && tr.nextElementSibling.id){
-        var m2 = tr.nextElementSibling.id.match(/^props-(\d+)$/);
-        if (m2){ var n3 = parseInt(m2[1],10); if (!isNaN(n3)) return n3; }
-      }
-      return NaN;
-    }
-    function onDocCapture(ev){
-      var t = ev.target;
-      if (!t || !t.closest) return;
-      var btn = t.closest('.toggle-btn');
-      if (!btn) return;
-      var idx = getIndexFromButton(btn);
-      if (isNaN(idx)) return;
-      if (typeof toggleProps === 'function') toggleProps(idx);
-      if (ev.stopImmediatePropagation) ev.stopImmediatePropagation();
-      if (ev.stopPropagation) ev.stopPropagation();
-      if (ev.preventDefault) ev.preventDefault();
-    }
-    if (document && document.addEventListener){
-      // only attach once
-      if (!document.__ue_props_doc_capture){
-        document.__ue_props_doc_capture = true;
-        document.addEventListener('click', onDocCapture, true);
-      }
-    }
-  })();
-
-  // --- Minimal toggle for Properties rows (id=props-<i>) ---
-  if (typeof toggleProps !== 'function'){
-    function toggleProps(i){
-      var row = document.getElementById('props-' + i);
-      if (!row) return;
-      var chev = document.getElementById('chev-' + i);
-      var hidden = (window.getComputedStyle ? window.getComputedStyle(row).display === 'none'
-                                            : (row.style.display === '' || row.style.display === 'none'));
-      if (hidden){
-        row.style.display = 'table-row';
-        if (chev) chev.classList.add('open');
-      } else {
-        row.style.display = 'none';
-        if (chev) chev.classList.remove('open');
-      }
-    }
-  }
-
-document.addEventListener('DOMContentLoaded', function(){
-  const $$ = (sel, ctx=document) => Array.from(ctx.querySelectorAll(sel));
-  const txt = el => (el && el.textContent || '').trim();
-  const num = s => { const m=(s||'').match(/-?\d+/); return m ? parseInt(m[0],10) : NaN; };
-
-  function clearHL(){
-    $$('.hl-row').forEach(el => el.classList.remove('hl-row'));
-    $$('.hl-cell').forEach(el => el.classList.remove('hl-cell','hl-strong'));
-  }
-  function rowFor(table, idx){
-    return document.querySelector(`tr[data-table="${table}"][data-${table.slice(0,-1)}-index="${idx}"]`);
-  }
-  function markRow(r){ if (r) r.classList.add('hl-row'); }
-  function markCell(td, strong=true){ if (!td) return; td.classList.add('hl-cell'); if (strong) td.classList.add('hl-strong'); }
-
-  function tableAfterH2(prefix){
-    const hs = Array.from(document.querySelectorAll('h2'));
-    for (const h of hs){
-      if (txt(h).toLowerCase().startsWith(prefix.toLowerCase())){
-        let t = h.nextElementSibling;
-        while (t && t.tagName !== 'TABLE') t = t.nextElementSibling;
-        return t || null;
-      }
-    }
-    return null;
-  }
-
-  const namesT   = tableAfterH2('names');
-  const importsT = tableAfterH2('imports');
-  const exportsT = tableAfterH2('exports');
-
-  // Helper: parse Raw column (last cell) -> array of ints split by '/'
-  function rawParts(tr){
-    const tds = tr.querySelectorAll('td');
-    const raw = tds[tds.length-1];
-    return txt(raw).split('/').map(s=>s.trim()).map(num);
-  }
-
-  // Names: detect "Num" and "Name" columns by header; only mark Name as ref
-  if (namesT){
-    const head = namesT.querySelector('thead tr');
-    let idxCol = 0, nameCol = 1;
-    if (head){
-      const ths = Array.from(head.querySelectorAll('th')).map(th => txt(th).toLowerCase());
-      const numPos  = ths.findIndex(t => t.startsWith('num'));
-      const namePos = ths.findIndex(t => t.startsWith('name'));
-      if (numPos  >= 0) idxCol  = numPos;
-      if (namePos >= 0) nameCol = namePos;
-    }
-    namesT.querySelectorAll('tbody tr').forEach(tr => {
-      const tds = tr.querySelectorAll('td'); if (tds.length === 0) return;
-      const idxCell  = tds[idxCol]  || tds[0];
-      const nameCell = tds[nameCol] || tds[1] || tds[0];
-      const ix = num(txt(idxCell));
-      tr.dataset.table = 'names';
-      tr.dataset.nameIndex = String(ix);
-      // ONLY the Name cell is a reference; flags/others are not
-      if (nameCell){
-        nameCell.dataset.field = 'name';
-        nameCell.dataset.refType = 'name';
-        nameCell.dataset.refValue = String(ix);
-      }
-    });
-  }
-
-  // Imports: use header names to find columns
-  if (importsT){
-    const head = importsT.querySelector('thead tr');
-    let colClassPkg=-1, colClassName=-1, colPackage=-1, colObjectName=-1, colNum=-1;
-    if (head){
-      const ths = Array.from(head.querySelectorAll('th')).map(th => txt(th).toLowerCase());
-      colClassPkg   = ths.findIndex(t => t.includes('class package'));
-      colClassName  = ths.findIndex(t => t.includes('class name'));
-      colPackage    = ths.findIndex(t => t === 'package' || t.startsWith('package '));
-      colObjectName = ths.findIndex(t => t.includes('object name'));
-      colNum        = ths.findIndex(t => t.startsWith('num'));
-    }
-    importsT.querySelectorAll('tbody tr').forEach(tr => {
-      const tds = tr.querySelectorAll('td'); if (tds.length === 0) return;
-      tr.dataset.table = 'imports';
-      const rowIdx = (colNum>=0 && tds[colNum]) ? num(txt(tds[colNum])) : num(txt(tds[tds.length-2] || tds[0]));
-      tr.dataset.importIndex = String(rowIdx);
-      const parts = rawParts(tr);
-      if (parts.length >= 4){
-        const [classPkgIx, classNameIx, packageRef, objectNameIx] = parts;
-        const tdClassPkg   = (colClassPkg  >=0 ? tds[colClassPkg]   : tds[0]);
-        const tdClassName  = (colClassName >=0 ? tds[colClassName]  : tds[1]);
-        const tdPackage    = (colPackage   >=0 ? tds[colPackage]    : tds[2]);
-        const tdObjectName = (colObjectName>=0 ? tds[colObjectName] : tds[3]);
-        if (tdClassPkg)   { tdClassPkg.dataset.refType='name';   tdClassPkg.dataset.refValue=String(classPkgIx);  tdClassPkg.dataset.field='classPackage'; }
-        if (tdClassName)  { tdClassName.dataset.refType='name';  tdClassName.dataset.refValue=String(classNameIx); tdClassName.dataset.field='className'; }
-        if (tdPackage)    { tdPackage.dataset.refType='object';  tdPackage.dataset.refValue=String(packageRef);   tdPackage.dataset.field='package'; }
-        if (tdObjectName) { tdObjectName.dataset.refType='name'; tdObjectName.dataset.refValue=String(objectNameIx); tdObjectName.dataset.field='objectName'; }
-      }
-    });
-  }
-
-  // Exports: use header names to find columns
-  if (exportsT){
-    const head = exportsT.querySelector('thead tr');
-    let colClass=-1, colSuper=-1, colPackage=-1, colObjectName=-1, colNum=-1;
-    if (head){
-      const ths = Array.from(head.querySelectorAll('th')).map(th => txt(th).toLowerCase());
-      colClass      = ths.findIndex(t => t === 'class' || t.startsWith('class '));
-      colSuper      = ths.findIndex(t => t.startsWith('super'));
-      colPackage    = ths.findIndex(t => t === 'package' || t.startsWith('package '));
-      colObjectName = ths.findIndex(t => t.includes('object name'));
-      colNum        = ths.findIndex(t => t.startsWith('num'));
-    }
-    exportsT.querySelectorAll('tbody tr').forEach(tr => {
-      const tds = tr.querySelectorAll('td'); if (tds.length === 0) return;
-      tr.dataset.table = 'exports';
-      const rowIdx = (colNum>=0 && tds[colNum]) ? num(txt(tds[colNum])) : num(txt(tds[tds.length-2] || tds[0]));
-      tr.dataset.exportIndex = String(rowIdx);
-      const parts = rawParts(tr);
-      if (parts.length >= 4){
-        const [classRef, superRef, packageRef, objectNameIx] = parts;
-        const tdClass      = (colClass     >=0 ? tds[colClass]      : tds[0]);
-        const tdSuper      = (colSuper     >=0 ? tds[colSuper]      : tds[1]);
-        const tdPackage    = (colPackage   >=0 ? tds[colPackage]    : tds[2]);
-        const tdObjectName = (colObjectName>=0 ? tds[colObjectName] : tds[3]);
-        if (tdClass)      { tdClass.dataset.refType='object';  tdClass.dataset.refValue=String(classRef);     tdClass.dataset.field='class'; }
-        if (tdSuper)      { tdSuper.dataset.refType='object';  tdSuper.dataset.refValue=String(superRef);     tdSuper.dataset.field='super'; }
-        if (tdPackage)    { tdPackage.dataset.refType='object'; tdPackage.dataset.refValue=String(packageRef); tdPackage.dataset.field='package'; }
-        if (tdObjectName) { tdObjectName.dataset.refType='name'; tdObjectName.dataset.refValue=String(objectNameIx); tdObjectName.dataset.field='objectName'; }
-      }
-    });
-  }
-
-  // Highlight helpers
-  function highlightNamesRowOnly(ix){
-    const r = rowFor('names', ix);
-    if (r){ markRow(r); const c=r.querySelector('[data-field="name"]'); markCell(c, true); }
-  }
-  function highlightObjectRef(ref){
-    const v = parseInt(ref,10);
-    if (!v) return; // 0=None
-    if (v > 0){
-      const r = rowFor('exports', v-1); markRow(r);
-      if (r){ const c=r.querySelector('[data-field="objectName"]'); markCell(c, true); }
-    } else {
-      const r = rowFor('imports', (-v)-1); markRow(r);
-      if (r){ const c=r.querySelector('[data-field="objectName"]'); markCell(c, true); }
-    }
-  }
-
-  // Click behavior
-  function onCellClick(ev){
-    const td = ev.target.closest('td[data-ref-type]'); if (!td) return false;
-    ev.stopImmediatePropagation(); ev.stopPropagation(); ev.preventDefault();
-    clearHL();
-    const row = td.closest('tr[data-table]'); markRow(row); markCell(td, true);
-    const kind = td.getAttribute('data-ref-type');
-    const val  = td.getAttribute('data-ref-value');
-    const table= row ? row.getAttribute('data-table') : '';
-
-    if (kind === 'name'){
-      if (table !== 'names'){ // clicking a name field in imports/exports
-        highlightNamesRowOnly(val);
-      } else {
-        // clicking the Name cell in the Names table itself: also bring up all referencing fields outside Names
-        document.querySelectorAll(`[data-ref-type="name"][data-ref-value="${val}"]`).forEach(cell => {
-          const tr = cell.closest('tr[data-table]');
-          if (tr && tr.getAttribute('data-table') !== 'names'){ markCell(cell, true); markRow(tr); }
-        });
-      }
-    } else if (kind === 'object'){
-      highlightObjectRef(val);
-    }
-    return true;
-  }
-
-  function onRowClick(ev){
-    if (ev.target.closest('td[data-ref-type]')) return false;
-    const row = ev.target.closest('tr[data-table]'); if (!row) return false;
-    ev.stopImmediatePropagation(); ev.stopPropagation(); ev.preventDefault();
-    clearHL(); markRow(row);
-    /* NAMES ROW CLICK MIRROR */
-    try {
-      const table = row.getAttribute('data-table');
-      if (table === 'names'){
-        // Get the Name cell and its index
-        const nameCell = row.querySelector('td[data-ref-type="name"]');
-        if (nameCell){
-          const val = nameCell.getAttribute('data-ref-value');
-          if (val !== null && val !== ''){
-            // Darken the Names cell itself (user expectation of "darker" on Names col)
-            markCell(nameCell, true);
-            // Highlight referencing fields outside Names exactly like the Name-cell branch does
-            document.querySelectorAll('[data-ref-type="name"][data-ref-value="' + val + '"]').forEach(function(cell){
-              const tr = cell.closest('tr[data-table]');
-              if (tr && tr.getAttribute('data-table') !== 'names'){ 
-                markCell(cell, true); 
-                markRow(tr);
-              }
-            });
-          }
-        }
-        return true;
-      }
-    } catch(e) { /* no-op */ }
-
-    // Darken all referenced fields IN THE ROW
-    row.querySelectorAll('td[data-ref-type]').forEach(td => markCell(td, true));
-
-    // Highlight targets
-    const names = Array.from(row.querySelectorAll('td[data-ref-type="name"]')).map(td => td.getAttribute('data-ref-value'));
-    const objs  = Array.from(row.querySelectorAll('td[data-ref-type="object"]')).map(td => td.getAttribute('data-ref-value'));
-    names.forEach(ix => highlightNamesRowOnly(ix));
-    objs.forEach(ref => highlightObjectRef(ref));
-    return true;
-  }
-
-  if (namesT)   namesT.addEventListener('click', function(ev){ if (!onCellClick(ev)) onRowClick(ev); }, true);
-  if (importsT) importsT.addEventListener('click', function(ev){ if (!onCellClick(ev)) onRowClick(ev); }, true);
-  if (exportsT) exportsT.addEventListener('click', function(ev){ if (!onCellClick(ev)) onRowClick(ev); }, true);
-
-  // Global clear
-  document.addEventListener('click', function(ev){
-    if (!ev.target.closest('table')) clearHL();
-  }, true);
-});
-</script>
