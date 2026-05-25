@@ -81,6 +81,14 @@ final class UER
         return ($u & 0x80000000) ? $u - 0x100000000 : $u;
     }
 
+    public function peekI32(): int
+    {
+        $p = $this->tell();
+        $v = $this->i32();
+        $this->seek($p);
+        return $v;
+    }
+
     public function u64(): int
     {
         $lo = $this->u32();
@@ -282,7 +290,7 @@ abstract class AbstractUE implements IPackageReader2
         if ($v < 68) {
             $this->h['heritageCount'] = $r->i32();
             $this->h['heritageOffset'] = $r->i32();
-            $this->h['guid'] = [0, 0, 0, 0];
+            $this->h['guid'] = [];
             $this->h['generations'] = [[
                 'exportCount' => $this->h['exportCount'],
                 'nameCount' => $this->h['nameCount'],
@@ -309,6 +317,30 @@ abstract class AbstractUE implements IPackageReader2
         return $r;
     }
 
+    protected function readUE12NameString(UER $r, int $v): string
+    {
+        if ($v < 64) {
+            return $r->cstr();
+        }
+
+        $pos = $r->tell();
+
+        try {
+            $len = $r->peekI32();
+            $bytesAvailable = max(0, $r->rem() - 4);
+            $looksAnsiFString = $len > 0 && $len <= 1024 && $len <= $bytesAvailable;
+            $looksWideFString = $len < 0 && (-$len) <= 512 && ((-$len) * 2) <= $bytesAvailable;
+
+            if ($looksAnsiFString || $looksWideFString || $len === 0) {
+                return $r->fstr();
+            }
+        } catch (Throwable $ignored) {
+        }
+
+        $r->seek($pos);
+        return $r->cstr();
+    }
+
     protected function readUE12Names(): void
     {
         $r = $this->rr((int)$this->h['nameOffset']);
@@ -316,7 +348,7 @@ abstract class AbstractUE implements IPackageReader2
         $this->n = [];
 
         for ($i = 0; $i < (int)$this->h['nameCount']; $i++) {
-            $name = $v < 64 ? $r->cstr() : $r->fstr();
+            $name = $this->readUE12NameString($r, $v);
             $this->n[] = ['index' => $i, 'name' => $name, 'flags' => $r->u32()];
         }
     }
