@@ -240,40 +240,13 @@ abstract class AbstractUE implements IPackageReader2
     abstract protected function readImportTable(): void;
     abstract protected function readExportTable(): void;
 
-    public function getHeader(): array
-    {
-        return $this->h;
-    }
-
-    public function getNames(): array
-    {
-        return $this->n;
-    }
-
-    public function getImports(): array
-    {
-        return $this->im;
-    }
-
-    public function getExports(): array
-    {
-        return $this->ex;
-    }
-
-    public function getDepends(): array
-    {
-        return $this->dep;
-    }
-
-    public function getVersion(): int
-    {
-        return (int)($this->h['version'] ?? 0);
-    }
-
-    public function isCompressed(): bool
-    {
-        return $this->compressed;
-    }
+    public function getHeader(): array { return $this->h; }
+    public function getNames(): array { return $this->n; }
+    public function getImports(): array { return $this->im; }
+    public function getExports(): array { return $this->ex; }
+    public function getDepends(): array { return $this->dep; }
+    public function getVersion(): int { return (int)($this->h['version'] ?? 0); }
+    public function isCompressed(): bool { return $this->compressed; }
 
     public function nameText(int $i): string
     {
@@ -437,15 +410,8 @@ abstract class AbstractUE implements IPackageReader2
         return 'Import#'.$i.' ('.$name.')';
     }
 
-    public function importName(int $r): string
-    {
-        return $r < 0 ? $this->labelRef($r) : '';
-    }
-
-    public function exportName(int $r): string
-    {
-        return $r > 0 ? $this->labelRef($r) : '';
-    }
+    public function importName(int $r): string { return $r < 0 ? $this->labelRef($r) : ''; }
+    public function exportName(int $r): string { return $r > 0 ? $this->labelRef($r) : ''; }
 
     public function annotateTablesWithText(): void
     {
@@ -471,45 +437,21 @@ abstract class AbstractUE implements IPackageReader2
         unset($x);
     }
 
-    public function annotateExportHex(int $max = 10): void
-    {
-    }
+    public function annotateExportHex(int $max = 10): void {}
 
     public function dumpExportHeader(int $i): string
     {
         $e = $this->ex[$i] ?? [];
-
-        return sprintf(
-            '#%d name=%s serial=%d@%d',
-            $i,
-            $this->fname((int)($e['nameIndex'] ?? $e['objectName'] ?? -1), (int)($e['nameNumber'] ?? 0)),
-            (int)($e['serialSize'] ?? 0),
-            (int)($e['serialOffset'] ?? 0)
-        );
+        return sprintf('#%d name=%s serial=%d@%d', $i, $this->fname((int)($e['nameIndex'] ?? $e['objectName'] ?? -1), (int)($e['nameNumber'] ?? 0)), (int)($e['serialSize'] ?? 0), (int)($e['serialOffset'] ?? 0));
     }
 }
 
-final class TUE1 extends AbstractUE
+class TUE1 extends AbstractUE
 {
-    protected function readHeader(): void
-    {
-        $this->readUE12Header();
-    }
-
-    protected function readNameTable(): void
-    {
-        $this->readUE12Names();
-    }
-
-    protected function readImportTable(): void
-    {
-        $this->readUE12Imports();
-    }
-
-    protected function readExportTable(): void
-    {
-        $this->readUE12Exports();
-    }
+    protected function readHeader(): void { $this->readUE12Header(); }
+    protected function readNameTable(): void { $this->readUE12Names(); }
+    protected function readImportTable(): void { $this->readUE12Imports(); }
+    protected function readExportTable(): void { $this->readUE12Exports(); }
 }
 
 final class TUE2 extends TUE1
@@ -552,11 +494,7 @@ class TUE3 extends AbstractUE
         $g = [];
 
         for ($i = 0; $i < $gc; $i++) {
-            $g[] = [
-                'exportCount' => $r->u32(),
-                'nameCount' => $r->u32(),
-                'netObjectCount' => $v >= 322 ? $r->u32() : 0,
-            ];
+            $g[] = ['exportCount' => $r->u32(), 'nameCount' => $r->u32(), 'netObjectCount' => $v >= 322 ? $r->u32() : 0];
         }
 
         $this->h['genCount'] = $gc;
@@ -570,14 +508,8 @@ class TUE3 extends AbstractUE
 
         if ($this->compressed) {
             $cc = $r->u32();
-
             for ($i = 0; $i < $cc; $i++) {
-                $this->chunks[] = [
-                    'uOff' => $r->u32(),
-                    'uSize' => $r->u32(),
-                    'cOff' => $r->u32(),
-                    'cSize' => $r->u32(),
-                ];
+                $this->chunks[] = ['uOff' => $r->u32(), 'uSize' => $r->u32(), 'cOff' => $r->u32(), 'cSize' => $r->u32()];
             }
         }
 
@@ -625,25 +557,20 @@ class TUE3 extends AbstractUE
 
             if ($bs > 0 && $ut > 0) {
                 $bc = (int)ceil($ut / $bs);
-
                 if ($bc >= 0 && $bc < 100000 && $r->rem() >= $bc * 8) {
                     $pairs = [];
-
                     for ($i = 0; $i < $bc; $i++) {
                         $pairs[] = [$r->i32(), $r->i32()];
                     }
-
                     foreach ($pairs as [$c, $u]) {
                         if ($c <= 0 || $u <= 0 || $r->rem() < $c) {
                             $out = '';
                             break;
                         }
-
                         $out .= UE_Decompress::inflate($this->compFlags, $r->bytes($c), $u);
                     }
                 }
             }
-
             if ($out === '') {
                 $r->seek($save);
             }
@@ -651,15 +578,12 @@ class TUE3 extends AbstractUE
 
         if ($out === '') {
             $r = new UER($raw);
-
             while ($r->rem() >= 8 && strlen($out) < $us) {
                 $c = $r->i32();
                 $u = $r->i32();
-
                 if ($c <= 0 || $u <= 0 || $r->rem() < $c) {
                     break;
                 }
-
                 $out .= UE_Decompress::inflate($this->compFlags, $r->bytes($c), $u);
             }
         }
@@ -667,7 +591,6 @@ class TUE3 extends AbstractUE
         if (strlen($out) > $us) {
             $out = substr($out, 0, $us);
         }
-
         if (strlen($out) < $us) {
             $out = str_pad($out, $us, "\0");
         }
@@ -683,11 +606,7 @@ class TUE3 extends AbstractUE
         $this->n = [];
 
         for ($i = 0; $i < (int)$this->h['nameCount']; $i++) {
-            $this->n[] = [
-                'index' => $i,
-                'name' => $r->fstr(),
-                'flags' => $v >= 195 ? $r->u64() : $r->u32(),
-            ];
+            $this->n[] = ['index' => $i, 'name' => $r->fstr(), 'flags' => $v >= 195 ? $r->u64() : $r->u32()];
         }
     }
 
@@ -749,17 +668,11 @@ class TUE3 extends AbstractUE
 
             if ($v >= 220 && $v < 543) {
                 $cc = $r->i32();
-
                 if ($cc < 0 || $cc > 65536) {
                     throw new RuntimeException("Bad component map count $cc in export $i");
                 }
-
                 for ($j = 0; $j < $cc; $j++) {
-                    $cm[] = [
-                        'nameIndex' => $r->i32(),
-                        'nameNumber' => $r->i32(),
-                        'value' => $r->i32(),
-                    ];
+                    $cm[] = ['nameIndex' => $r->i32(), 'nameNumber' => $r->i32(), 'value' => $r->i32()];
                 }
             }
 
@@ -769,11 +682,9 @@ class TUE3 extends AbstractUE
 
             if ($v >= 322) {
                 $net = [];
-
                 for ($j = 0; $j < 16; $j++) {
                     $net[] = $r->i32();
                 }
-
                 $guid = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
             }
 
@@ -808,9 +719,7 @@ class TUE3 extends AbstractUE
     }
 }
 
-final class TUE4 extends TUE3
-{
-}
+final class TUE4 extends TUE3 {}
 
 final class UE_Decompress
 {
@@ -826,26 +735,21 @@ final class UE_Decompress
         if (($flags & 2) && isset(self::$c[2])) {
             return (self::$c[2])($payload, $expected, $ctx);
         }
-
         if (($flags & 1) && isset(self::$c[1])) {
             return (self::$c[1])($payload, $expected, $ctx);
         }
-
         throw new RuntimeException("No decoder registered for compression flags $flags");
     }
 }
 
 UE_Decompress::register(1, function (string $d, int $e, array $c = []): string {
     $o = @gzuncompress($d);
-
     if ($o === false) {
         $o = @gzinflate($d);
     }
-
     if ($o === false) {
         throw new RuntimeException('zlib decompression failed');
     }
-
     return $o;
 });
 
