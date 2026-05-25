@@ -15,79 +15,56 @@ interface IPackageReader2
 
 final class UER
 {
-    private string $b;
-    private int $l;
-    private int $p = 0;
+    private string $buf;
+    private int $len;
+    private int $pos = 0;
 
-    public function __construct(string $b)
+    public function __construct(string $bytes)
     {
-        $this->b = $b;
-        $this->l = strlen($b);
+        $this->buf = $bytes;
+        $this->len = strlen($bytes);
     }
 
     public function tell(): int
     {
-        return $this->p;
+        return $this->pos;
     }
 
-    public function seek(int $p): void
+    public function seek(int $pos): void
     {
-        $this->p = max(0, min($p, $this->l));
+        $this->pos = max(0, min($pos, $this->len));
     }
 
-    public function rem(): int
+    public function remaining(): int
     {
-        return $this->l - $this->p;
+        return $this->len - $this->pos;
     }
 
-    public function bytes(int $n): string
+    public function bytes(int $count): string
     {
-        if ($n < 0 || $this->p + $n > $this->l) {
-            throw new OutOfBoundsException("read overrun need=$n pos={$this->p} len={$this->l}");
+        if ($count < 0 || $this->pos + $count > $this->len) {
+            throw new OutOfBoundsException("read overrun need=$count pos={$this->pos} len={$this->len}");
         }
 
-        $s = substr($this->b, $this->p, $n);
-        $this->p += $n;
-        return $s;
+        $out = substr($this->buf, $this->pos, $count);
+        $this->pos += $count;
+        return $out;
     }
 
-    public function slice(int $o, int $n): string
+    public function slice(int $offset, int $count): string
     {
-        if ($o < 0 || $n < 0 || $o + $n > $this->l) {
-            throw new OutOfBoundsException("slice $o,$n len={$this->l}");
+        if ($offset < 0 || $count < 0 || $offset + $count > $this->len) {
+            throw new OutOfBoundsException("slice overrun offset=$offset count=$count len={$this->len}");
         }
 
-        return substr($this->b, $o, $n);
+        return substr($this->buf, $offset, $count);
     }
 
-    public function u8(): int
-    {
-        return ord($this->bytes(1));
-    }
-
-    public function u16(): int
-    {
-        return unpack('v', $this->bytes(2))[1];
-    }
-
-    public function u32(): int
-    {
-        return (int)unpack('V', $this->bytes(4))[1];
-    }
-
-    public function i32(): int
-    {
-        $u = $this->u32();
-        return ($u & 0x80000000) ? $u - 0x100000000 : $u;
-    }
-
-    public function peekI32(): int
-    {
-        $p = $this->tell();
-        $v = $this->i32();
-        $this->seek($p);
-        return $v;
-    }
+    public function u8(): int { return ord($this->bytes(1)); }
+    public function u16(): int { return unpack('v', $this->bytes(2))[1]; }
+    public function i16(): int { $v = $this->u16(); return ($v & 0x8000) ? $v - 0x10000 : $v; }
+    public function u32(): int { return (int)unpack('V', $this->bytes(4))[1]; }
+    public function i32(): int { $v = $this->u32(); return ($v & 0x80000000) ? $v - 0x100000000 : $v; }
 
     public function u64(): int
     {
@@ -96,83 +73,102 @@ final class UER
         return ($hi << 32) | $lo;
     }
 
-    public function cstr(int $m = 1024): string
+    public function compactIndex(): int
     {
-        $s = '';
+        $b = $this->u8();
+        $negative = ($b & 0x80) !== 0;
+        $more = ($b & 0x40) !== 0;
+        $value = $b & 0x3f;
+        $shift = 6;
+        $bytes = 1;
 
-        for ($i = 0; $i < $m && $this->rem() > 0; $i++) {
+        while ($more) {
+            if (++$bytes > 5) {
+                throw new RuntimeException('Invalid compact index length');
+            }
+
+            $b = $this->u8();
+            $more = ($b & 0x80) !== 0;
+            $value |= ($b & 0x7f) << $shift;
+            $shift += 7;
+        }
+
+        return $negative ? -$value : $value;
+    }
+
+    public function versionIndex(int $version): int
+    {
+        return $version < 178 ? $this->compactIndex() : $this->i32();
+    }
+
+    public function cstring(int $max = 1024): string
+    {
+        $out = '';
+
+        for ($i = 0; $i < $max && $this->remaining() > 0; $i++) {
             $c = $this->bytes(1);
 
             if ($c === "\0") {
                 break;
             }
 
-            $s .= $c;
+            $out .= $c;
         }
 
-        return self::ansi($s);
+        return self::ansi($out);
     }
 
-    public function fstr(): string
+    public function fstringI32(): string
     {
-        $n = $this->i32();
+        return $this->fstringFromLength($this->i32());
+    }
 
-        if ($n === 0) {
+    public function fstringIndex(int $version): string
+    {
+        return $this->fstringFromLength($this->versionIndex($version));
+    }
+
+    private function fstringFromLength(int $length): string
+    {
+        if ($length === 0) {
             return '';
         }
 
-        if ($n > 0) {
-            $r = $this->bytes($n);
-
-            if ($r !== '' && substr($r, -1) === "\0") {
-                $r = substr($r, 0, -1);
+        if ($length > 0) {
+            if ($length > 65536 || $length > $this->remaining()) {
+                throw new OutOfBoundsException("bad FString length=$length pos={$this->pos} remaining={$this->remaining()}");
             }
 
-            return self::ansi($r);
-        }
+            $raw = $this->bytes($length);
 
-        $r = $this->bytes((-$n) * 2);
-
-        if (substr($r, -2) === "\0\0") {
-            $r = substr($r, 0, -2);
-        }
-
-        $o = @mb_convert_encoding($r, 'UTF-8', 'UTF-16LE');
-        return $o === false ? '' : $o;
-    }
-
-    public function idx(): int
-    {
-        $b = $this->u8();
-        $neg = ($b & 0x80) !== 0;
-        $more = ($b & 0x40) !== 0;
-        $v = $b & 0x3f;
-        $sh = 6;
-        $c = 1;
-
-        while ($more) {
-            if (++$c > 5) {
-                throw new RuntimeException('bad compact index');
+            if ($raw !== '' && substr($raw, -1) === "\0") {
+                $raw = substr($raw, 0, -1);
             }
 
-            $b = $this->u8();
-            $more = ($b & 0x80) !== 0;
-            $v |= ($b & 0x7f) << $sh;
-            $sh += 7;
+            return self::ansi($raw);
         }
 
-        return $neg ? -$v : $v;
+        $chars = -$length;
+        $bytes = $chars * 2;
+
+        if ($chars > 32768 || $bytes > $this->remaining()) {
+            throw new OutOfBoundsException("bad wide FString length=$length pos={$this->pos} remaining={$this->remaining()}");
+        }
+
+        $raw = $this->bytes($bytes);
+
+        if (substr($raw, -2) === "\0\0") {
+            $raw = substr($raw, 0, -2);
+        }
+
+        $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16LE');
+        return $out === false ? '' : $out;
     }
 
-    public function verIndex(int $v): int
+    private static function ansi(string $raw): string
     {
-        return $v < 178 ? $this->idx() : $this->i32();
-    }
-
-    private static function ansi(string $s): string
-    {
-        $o = @mb_convert_encoding($s, 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
-        return $o === false ? $s : $o;
+        $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
+        return $out === false ? $raw : $out;
     }
 }
 
@@ -190,27 +186,27 @@ final class TPackageReader
             throw new RuntimeException("Failed to read: $path");
         }
 
-        $r = new UER($bytes);
-        $tag = $r->u32();
+        $probe = new UER($bytes);
+        $tag = $probe->u32();
 
         if ($tag !== 0x9E2A83C1) {
             throw new RuntimeException(sprintf('Bad package tag 0x%08X', $tag));
         }
 
-        $pv = $r->u32();
-        $ver = $pv & 0xffff;
+        $packedVersion = $probe->u32();
+        $version = $packedVersion & 0xffff;
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
 
-        if (in_array($ext, ['ut3', 'upk', 'xxx'], true) || $ver >= 334) {
-            $p = new TUE3($path, $bytes);
-        } elseif ($ver >= 120) {
-            $p = new TUE2($path, $bytes);
+        if (in_array($ext, ['ut3', 'upk', 'xxx'], true) || $version >= 180 && $version >= 334) {
+            $pkg = new TUE3($path, $bytes);
+        } elseif ($version >= 120) {
+            $pkg = new TUE2($path, $bytes);
         } else {
-            $p = new TUE1($path, $bytes);
+            $pkg = new TUE1($path, $bytes);
         }
 
-        $p->load();
-        return $p;
+        $pkg->load();
+        return $pkg;
     }
 }
 
@@ -219,20 +215,20 @@ abstract class AbstractUE implements IPackageReader2
     protected string $path;
     protected string $bytes;
     protected UER $R;
-    protected array $h = [];
-    protected array $n = [];
-    protected array $im = [];
-    protected array $ex = [];
-    protected array $dep = [];
+    protected array $header = [];
+    protected array $names = [];
+    protected array $imports = [];
+    protected array $exports = [];
+    protected array $depends = [];
     protected array $chunks = [];
     protected bool $compressed = false;
-    protected int $compFlags = 0;
+    protected int $compressionFlags = 0;
 
-    public function __construct(string $p, string $b)
+    public function __construct(string $path, string $bytes)
     {
-        $this->path = $p;
-        $this->bytes = $b;
-        $this->R = new UER($b);
+        $this->path = $path;
+        $this->bytes = $bytes;
+        $this->R = new UER($bytes);
     }
 
     public function load(): void
@@ -248,198 +244,172 @@ abstract class AbstractUE implements IPackageReader2
     abstract protected function readImportTable(): void;
     abstract protected function readExportTable(): void;
 
-    public function getHeader(): array { return $this->h; }
-    public function getNames(): array { return $this->n; }
-    public function getImports(): array { return $this->im; }
-    public function getExports(): array { return $this->ex; }
-    public function getDepends(): array { return $this->dep; }
-    public function getVersion(): int { return (int)($this->h['version'] ?? 0); }
+    public function getHeader(): array { return $this->header; }
+    public function getNames(): array { return $this->names; }
+    public function getImports(): array { return $this->imports; }
+    public function getExports(): array { return $this->exports; }
+    public function getDepends(): array { return $this->depends; }
+    public function getVersion(): int { return (int)($this->header['version'] ?? 0); }
     public function isCompressed(): bool { return $this->compressed; }
 
-    public function nameText(int $i): string
+    public function nameText(int $index): string
     {
-        return ($i >= 0 && isset($this->n[$i])) ? (string)$this->n[$i]['name'] : '';
+        return ($index >= 0 && isset($this->names[$index])) ? (string)($this->names[$index]['name'] ?? '') : '';
     }
 
-    protected function packedVersion(): void
+    protected function readPackedVersion(): void
     {
-        $this->h['tag'] = $this->R->u32();
-        $pv = $this->R->u32();
-        $this->h['packedVersion'] = $pv;
-        $this->h['version'] = $pv & 0xffff;
-        $this->h['licenseeVersion'] = ($pv >> 16) & 0xffff;
+        $this->header['tag'] = $this->R->u32();
+        $packed = $this->R->u32();
+        $this->header['packedVersion'] = $packed;
+        $this->header['version'] = $packed & 0xffff;
+        $this->header['licenseeVersion'] = ($packed >> 16) & 0xffff;
     }
 
-    protected function readUE12Header(): void
+    protected function tableReader(int $offset): UER
     {
-        $this->packedVersion();
-        $r = $this->R;
-        $v = $this->getVersion();
+        $r = new UER($this->bytes);
+        $r->seek($offset);
+        return $r;
+    }
 
-        $this->h['packageFlags'] = $r->u32();
-        $this->h['nameCount'] = $r->i32();
-        $this->h['nameOffset'] = $r->i32();
-        $this->h['exportCount'] = $r->i32();
-        $this->h['exportOffset'] = $r->i32();
-        $this->h['importCount'] = $r->i32();
-        $this->h['importOffset'] = $r->i32();
-        $this->h['dependsOffset'] = 0;
-        $this->compressed = false;
-        $this->h['compressed'] = false;
+    protected function readUE12HeaderFields(): void
+    {
+        $this->readPackedVersion();
+        $version = $this->getVersion();
 
-        if ($v < 68) {
-            $this->h['heritageCount'] = $r->i32();
-            $this->h['heritageOffset'] = $r->i32();
-            $this->h['guid'] = [];
-            $this->h['generations'] = [[
-                'exportCount' => $this->h['exportCount'],
-                'nameCount' => $this->h['nameCount'],
+        $this->header['packageFlags'] = $this->R->u32();
+        $this->header['nameCount'] = $this->R->i32();
+        $this->header['nameOffset'] = $this->R->i32();
+        $this->header['exportCount'] = $this->R->i32();
+        $this->header['exportOffset'] = $this->R->i32();
+        $this->header['importCount'] = $this->R->i32();
+        $this->header['importOffset'] = $this->R->i32();
+        $this->header['dependsOffset'] = 0;
+        $this->header['compressed'] = false;
+
+        if ($version < 68) {
+            $this->header['heritageCount'] = $this->R->i32();
+            $this->header['heritageOffset'] = $this->R->i32();
+            $this->header['guid'] = '';
+            $this->header['generations'] = [[
+                'exportCount' => $this->header['exportCount'],
+                'nameCount' => $this->header['nameCount'],
             ]];
             return;
         }
 
-        $this->h['guid'] = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
-        $gc = $r->i32();
-        $this->h['genCount'] = $gc;
-        $g = [];
+        $guid = [$this->R->u32(), $this->R->u32(), $this->R->u32(), $this->R->u32()];
+        $this->header['guidArray'] = $guid;
+        $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X', $guid[0], $guid[1], $guid[2], $guid[3]);
 
-        for ($i = 0; $i < $gc; $i++) {
-            $g[] = ['exportCount' => $r->i32(), 'nameCount' => $r->i32()];
-        }
+        $genCount = $this->R->i32();
+        $this->header['genCount'] = $genCount;
+        $this->header['generations'] = [];
 
-        $this->h['generations'] = $g;
-    }
-
-    protected function rr(int $o): UER
-    {
-        $r = new UER($this->bytes);
-        $r->seek($o);
-        return $r;
-    }
-
-    protected function readUE12NameString(UER $r, int $v): string
-    {
-        if ($v < 64) {
-            return $r->cstr();
-        }
-
-        $pos = $r->tell();
-
-        try {
-            $len = $r->peekI32();
-            $bytesAvailable = max(0, $r->rem() - 4);
-            $looksAnsiFString = $len > 0 && $len <= 1024 && $len <= $bytesAvailable;
-            $looksWideFString = $len < 0 && (-$len) <= 512 && ((-$len) * 2) <= $bytesAvailable;
-
-            if ($looksAnsiFString || $looksWideFString || $len === 0) {
-                return $r->fstr();
-            }
-        } catch (Throwable $ignored) {
-        }
-
-        $r->seek($pos);
-        return $r->cstr();
-    }
-
-    protected function readUE12Names(): void
-    {
-        $r = $this->rr((int)$this->h['nameOffset']);
-        $v = $this->getVersion();
-        $this->n = [];
-
-        for ($i = 0; $i < (int)$this->h['nameCount']; $i++) {
-            $name = $this->readUE12NameString($r, $v);
-            $this->n[] = ['index' => $i, 'name' => $name, 'flags' => $r->u32()];
-        }
-    }
-
-    protected function readUE12Imports(): void
-    {
-        $r = $this->rr((int)$this->h['importOffset']);
-        $v = $this->getVersion();
-        $this->im = [];
-
-        for ($i = 0; $i < (int)$this->h['importCount']; $i++) {
-            $cp = $r->verIndex($v);
-            $cn = $r->verIndex($v);
-            $outer = $r->i32();
-            $on = $r->verIndex($v);
-
-            $this->im[] = [
-                'index' => $i,
-                'classPackage' => $cp,
-                'className' => $cn,
-                'outerIndex' => $outer,
-                'outer' => $outer,
-                'objectName' => $on,
-                'classPackageText' => $this->nameText($cp),
-                'classNameText' => $this->nameText($cn),
-                'objectNameText' => $this->nameText($on),
+        for ($i = 0; $i < $genCount; $i++) {
+            $this->header['generations'][] = [
+                'exportCount' => $this->R->i32(),
+                'nameCount' => $this->R->i32(),
             ];
         }
     }
 
-    protected function readUE12Exports(): void
+    protected function readUE12NameTable(): void
     {
-        $r = $this->rr((int)$this->h['exportOffset']);
-        $v = $this->getVersion();
-        $this->ex = [];
+        $r = $this->tableReader((int)$this->header['nameOffset']);
+        $version = $this->getVersion();
+        $count = (int)$this->header['nameCount'];
+        $this->names = [];
 
-        for ($i = 0; $i < (int)$this->h['exportCount']; $i++) {
-            $c = $r->verIndex($v);
-            $s = $r->verIndex($v);
-            $o = $r->i32();
-            $n = $r->verIndex($v);
-            $fl = $r->u32();
-            $sz = $r->verIndex($v);
-            $off = $sz > 0 ? $r->verIndex($v) : 0;
+        for ($i = 0; $i < $count; $i++) {
+            $name = $version < 64 ? $r->cstring() : $r->fstringIndex($version);
+            $flags = $r->u32();
+            $this->names[] = ['index' => $i, 'name' => $name, 'flags' => $flags, 'objectFlags' => $flags];
+        }
+    }
 
-            $this->ex[] = [
+    protected function readUE12ImportTable(): void
+    {
+        $r = $this->tableReader((int)$this->header['importOffset']);
+        $version = $this->getVersion();
+        $count = (int)$this->header['importCount'];
+        $this->imports = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $classPackage = $r->versionIndex($version);
+            $className = $r->versionIndex($version);
+            $outerIndex = $r->i32();
+            $objectName = $r->versionIndex($version);
+
+            $this->imports[] = [
                 'index' => $i,
-                'classIndex' => $c,
-                'class' => $c,
-                'superIndex' => $s,
-                'super' => $s,
-                'outerIndex' => $o,
-                'outer' => $o,
-                'objectName' => $n,
-                'nameIndex' => $n,
-                'objectNameText' => $this->nameText($n),
-                'objectFlags' => $fl,
-                'serialSize' => $sz,
-                'serialOffset' => $off,
+                'classPackage' => $classPackage,
+                'className' => $className,
+                'outerIndex' => $outerIndex,
+                'outer' => $outerIndex,
+                'objectName' => $objectName,
+                'classPackageText' => $this->nameText($classPackage),
+                'classNameText' => $this->nameText($className),
+                'objectNameText' => $this->nameText($objectName),
             ];
         }
     }
 
-    protected function fname(int $i, int $num = 0): string
+    protected function readUE12ExportTable(): void
     {
-        $s = $this->nameText($i);
+        $r = $this->tableReader((int)$this->header['exportOffset']);
+        $version = $this->getVersion();
+        $count = (int)$this->header['exportCount'];
+        $this->exports = [];
 
-        if ($s === '') {
-            $s = $i < 0 ? 'None' : '<?>'.$i;
+        for ($i = 0; $i < $count; $i++) {
+            $classIndex = $r->versionIndex($version);
+            $superIndex = $r->versionIndex($version);
+            $outerIndex = $r->i32();
+            $objectName = $r->versionIndex($version);
+            $objectFlags = $r->u32();
+            $serialSize = $r->versionIndex($version);
+            $serialOffset = $serialSize > 0 ? $r->versionIndex($version) : 0;
+
+            $this->exports[] = [
+                'index' => $i,
+                'classIndex' => $classIndex,
+                'class' => $classIndex,
+                'superIndex' => $superIndex,
+                'super' => $superIndex,
+                'outerIndex' => $outerIndex,
+                'outer' => $outerIndex,
+                'packageIndex' => $outerIndex,
+                'objectName' => $objectName,
+                'nameIndex' => $objectName,
+                'objectNameText' => $this->nameText($objectName),
+                'objectFlags' => $objectFlags,
+                'serialSize' => $serialSize,
+                'serialOffset' => $serialOffset,
+            ];
         }
-
-        return $num ? $s.'_'.$num : $s;
     }
 
-    protected function labelRef(int $v): string
+    protected function labelRef(int $ref): string
     {
-        if ($v === 0) {
-            return 'null';
+        if ($ref === 0) {
+            return '';
         }
 
-        if ($v > 0) {
-            $i = $v - 1;
-            $row = $this->ex[$i] ?? null;
-            $name = $row ? $this->fname((int)($row['nameIndex'] ?? $row['objectName'] ?? -1), (int)($row['nameNumber'] ?? 0)) : '<?>'.$i;
-            return 'Export#'.$i.' ('.$name.')';
+        if ($ref > 0) {
+            $row = $this->exports[$ref - 1] ?? null;
+            return is_array($row) ? $this->nameText((int)($row['objectName'] ?? -1)) : '';
         }
 
-        $i = -$v - 1;
-        $row = $this->im[$i] ?? null;
-        $name = $row ? $this->fname((int)($row['objectNameIndex'] ?? $row['objectName'] ?? -1), (int)($row['objectNameNumber'] ?? 0)) : '<?>'.$i;
-        return 'Import#'.$i.' ('.$name.')';
+        $row = $this->imports[-$ref - 1] ?? null;
+        return is_array($row) ? $this->nameText((int)($row['objectName'] ?? -1)) : '';
+    }
+
+    protected function fname(int $index, int $number = 0): string
+    {
+        $name = $this->nameText($index);
+        return $number !== 0 && $name !== '' ? $name . '_' . $number : $name;
     }
 
     public function importName(int $r): string { return $r < 0 ? $this->labelRef($r) : ''; }
@@ -447,43 +417,43 @@ abstract class AbstractUE implements IPackageReader2
 
     public function annotateTablesWithText(): void
     {
-        foreach ($this->im as &$x) {
-            $x['text'] = [
-                'classPackage' => $this->fname((int)($x['classPackageIndex'] ?? $x['classPackage'] ?? -1), (int)($x['classPackageNumber'] ?? 0)),
-                'className' => $this->fname((int)($x['classNameIndex'] ?? $x['className'] ?? -1), (int)($x['classNameNumber'] ?? 0)),
-                'objectName' => $this->fname((int)($x['objectNameIndex'] ?? $x['objectName'] ?? -1), (int)($x['objectNameNumber'] ?? 0)),
-                'outer' => $this->labelRef((int)($x['outer'] ?? $x['outerIndex'] ?? 0)),
+        foreach ($this->imports as &$im) {
+            $im['text'] = [
+                'classPackage' => $this->fname((int)($im['classPackageIndex'] ?? $im['classPackage'] ?? -1), (int)($im['classPackageNumber'] ?? 0)),
+                'className' => $this->fname((int)($im['classNameIndex'] ?? $im['className'] ?? -1), (int)($im['classNameNumber'] ?? 0)),
+                'objectName' => $this->fname((int)($im['objectNameIndex'] ?? $im['objectName'] ?? -1), (int)($im['objectNameNumber'] ?? 0)),
+                'outer' => $this->labelRef((int)($im['outer'] ?? $im['outerIndex'] ?? 0)),
             ];
         }
-        unset($x);
+        unset($im);
 
-        foreach ($this->ex as &$x) {
-            $x['text'] = [
-                'name' => $this->fname((int)($x['nameIndex'] ?? $x['objectName'] ?? -1), (int)($x['nameNumber'] ?? 0)),
-                'class' => $this->labelRef((int)($x['class'] ?? $x['classIndex'] ?? 0)),
-                'super' => $this->labelRef((int)($x['super'] ?? $x['superIndex'] ?? 0)),
-                'outer' => $this->labelRef((int)($x['outer'] ?? $x['outerIndex'] ?? 0)),
-                'archetype' => $this->labelRef((int)($x['archetype'] ?? 0)),
+        foreach ($this->exports as &$ex) {
+            $ex['text'] = [
+                'name' => $this->fname((int)($ex['nameIndex'] ?? $ex['objectName'] ?? -1), (int)($ex['nameNumber'] ?? 0)),
+                'class' => $this->labelRef((int)($ex['class'] ?? $ex['classIndex'] ?? 0)),
+                'super' => $this->labelRef((int)($ex['super'] ?? $ex['superIndex'] ?? 0)),
+                'outer' => $this->labelRef((int)($ex['outer'] ?? $ex['outerIndex'] ?? 0)),
+                'archetype' => $this->labelRef((int)($ex['archetype'] ?? 0)),
             ];
         }
-        unset($x);
+        unset($ex);
     }
 
     public function annotateExportHex(int $max = 10): void {}
 
     public function dumpExportHeader(int $i): string
     {
-        $e = $this->ex[$i] ?? [];
-        return sprintf('#%d name=%s serial=%d@%d', $i, $this->fname((int)($e['nameIndex'] ?? $e['objectName'] ?? -1), (int)($e['nameNumber'] ?? 0)), (int)($e['serialSize'] ?? 0), (int)($e['serialOffset'] ?? 0));
+        $e = $this->exports[$i] ?? [];
+        return sprintf('#%d name=%s serial=%d@%d', $i, $this->nameText((int)($e['objectName'] ?? -1)), (int)($e['serialSize'] ?? 0), (int)($e['serialOffset'] ?? 0));
     }
 }
 
 class TUE1 extends AbstractUE
 {
-    protected function readHeader(): void { $this->readUE12Header(); }
-    protected function readNameTable(): void { $this->readUE12Names(); }
-    protected function readImportTable(): void { $this->readUE12Imports(); }
-    protected function readExportTable(): void { $this->readUE12Exports(); }
+    protected function readHeader(): void { $this->readUE12HeaderFields(); }
+    protected function readNameTable(): void { $this->readUE12NameTable(); }
+    protected function readImportTable(): void { $this->readUE12ImportTable(); }
+    protected function readExportTable(): void { $this->readUE12ExportTable(); }
 }
 
 final class TUE2 extends TUE1
@@ -496,135 +466,161 @@ class TUE3 extends AbstractUE
 
     protected function readHeader(): void
     {
-        $r = $this->R;
-        $this->packedVersion();
-        $v = $this->getVersion();
+        $this->readPackedVersion();
+        $version = $this->getVersion();
 
-        $this->h['headerSize'] = $v >= 249 ? $r->u32() : 0;
-        $this->h['folderName'] = $v >= 269 ? $r->fstr() : '';
-        $this->h['packageFlags'] = $r->u32();
-        $this->h['nameCount'] = $r->u32();
-        $this->h['nameOffset'] = $r->u32();
-        $this->h['exportCount'] = $r->u32();
-        $this->h['exportOffset'] = $r->u32();
-        $this->h['importCount'] = $r->u32();
-        $this->h['importOffset'] = $r->u32();
-        $this->h['dependsOffset'] = $v >= 415 ? $r->u32() : 0;
+        $this->header['headerSize'] = $version >= 249 ? $this->R->u32() : 0;
+        $this->header['folderName'] = $version >= 269 ? $this->R->fstringI32() : '';
+        $this->header['packageFlags'] = $this->R->u32();
+        $this->header['nameCount'] = $this->R->u32();
+        $this->header['nameOffset'] = $this->R->u32();
+        $this->header['exportCount'] = $this->R->u32();
+        $this->header['exportOffset'] = $this->R->u32();
+        $this->header['importCount'] = $this->R->u32();
+        $this->header['importOffset'] = $this->R->u32();
+        $this->header['dependsOffset'] = $version >= 415 ? $this->R->u32() : 0;
 
-        if ($v >= 623) {
-            $this->h['importExportGuidsOffset'] = $r->u32();
-            $this->h['importGuidsCount'] = $r->u32();
-            $this->h['exportGuidsCount'] = $r->u32();
+        if ($version >= 623) {
+            $this->header['importExportGuidsOffset'] = $this->R->u32();
+            $this->header['importGuidsCount'] = $this->R->u32();
+            $this->header['exportGuidsCount'] = $this->R->u32();
         }
 
-        if ($v >= 584) {
-            $this->h['thumbnailTableOffset'] = $r->u32();
+        if ($version >= 584) {
+            $this->header['thumbnailTableOffset'] = $this->R->u32();
         }
 
-        $this->h['guid'] = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
-        $gc = $r->u32();
-        $g = [];
+        $guid = [$this->R->u32(), $this->R->u32(), $this->R->u32(), $this->R->u32()];
+        $this->header['guidArray'] = $guid;
+        $this->header['guid'] = sprintf('%08X-%08X-%08X-%08X', $guid[0], $guid[1], $guid[2], $guid[3]);
 
-        for ($i = 0; $i < $gc; $i++) {
-            $g[] = ['exportCount' => $r->u32(), 'nameCount' => $r->u32(), 'netObjectCount' => $v >= 322 ? $r->u32() : 0];
+        $genCount = $this->R->u32();
+        $this->header['genCount'] = $genCount;
+        $this->header['generations'] = [];
+
+        for ($i = 0; $i < $genCount; $i++) {
+            $this->header['generations'][] = [
+                'exportCount' => $this->R->u32(),
+                'nameCount' => $this->R->u32(),
+                'netObjectCount' => $version >= 322 ? $this->R->u32() : 0,
+            ];
         }
 
-        $this->h['genCount'] = $gc;
-        $this->h['generations'] = $g;
-        $this->h['engineVersion'] = $v >= 245 ? $r->u32() : 0;
-        $this->h['cookerVersion'] = $v >= 277 ? $r->u32() : 0;
-        $this->compFlags = $v >= 334 ? (int)$r->u32() : 0;
-        $this->compressed = $this->compFlags !== 0;
-        $this->h['compressionFlags'] = $this->compFlags;
-        $this->h['compressed'] = $this->compressed;
+        $this->header['engineVersion'] = $version >= 245 ? $this->R->u32() : 0;
+        $this->header['cookerVersion'] = $version >= 277 ? $this->R->u32() : 0;
+        $this->compressionFlags = $version >= 334 ? (int)$this->R->u32() : 0;
+        $this->compressed = $this->compressionFlags !== 0;
+        $this->header['compressionFlags'] = $this->compressionFlags;
+        $this->header['cFlags'] = $this->compressionFlags;
+        $this->header['compressed'] = $this->compressed;
+        $this->chunks = [];
 
         if ($this->compressed) {
-            $cc = $r->u32();
-            for ($i = 0; $i < $cc; $i++) {
-                $this->chunks[] = ['uOff' => $r->u32(), 'uSize' => $r->u32(), 'cOff' => $r->u32(), 'cSize' => $r->u32()];
+            $chunkCount = $this->R->u32();
+
+            for ($i = 0; $i < $chunkCount; $i++) {
+                $this->chunks[] = [
+                    'uOff' => $this->R->u32(),
+                    'uSize' => $this->R->u32(),
+                    'uLen' => 0,
+                    'cOff' => $this->R->u32(),
+                    'cSize' => $this->R->u32(),
+                    'cLen' => 0,
+                ];
+                $last = count($this->chunks) - 1;
+                $this->chunks[$last]['uLen'] = $this->chunks[$last]['uSize'];
+                $this->chunks[$last]['cLen'] = $this->chunks[$last]['cSize'];
             }
         }
 
-        $this->h['chunkCount'] = count($this->chunks);
-        $this->h['chunks'] = $this->chunks;
+        $this->header['chunkCount'] = count($this->chunks);
+        $this->header['chunks'] = $this->chunks;
+        $this->header['compressedChunks'] = $this->chunks;
     }
 
-    protected function logical(): UER
+    protected function logicalReader(): UER
     {
         if (!$this->compressed || !$this->chunks) {
             return new UER($this->bytes);
         }
 
-        $cs = $this->chunks;
-        usort($cs, fn($a, $b) => $a['uOff'] <=> $b['uOff']);
-        $total = strlen($this->bytes);
+        $chunks = $this->chunks;
+        usort($chunks, static fn(array $a, array $b): int => ((int)$a['uOff']) <=> ((int)$b['uOff']));
+        $size = strlen($this->bytes);
 
-        foreach ($cs as $c) {
-            $total = max($total, $c['uOff'] + $c['uSize']);
+        foreach ($chunks as $chunk) {
+            $size = max($size, (int)$chunk['uOff'] + (int)$chunk['uSize']);
         }
 
-        $buf = str_pad($this->bytes, $total, "\0");
+        $buf = str_pad($this->bytes, $size, "\0");
 
-        foreach ($cs as $i => $c) {
-            $part = $this->decomp($c['cOff'], $c['cSize'], $c['uSize']);
-            $buf = substr_replace($buf, $part, $c['uOff'], $c['uSize']);
-            $this->chunkMeta[$i] = $c + ['codec' => $this->compFlags];
+        foreach ($chunks as $i => $chunk) {
+            $part = $this->decompressChunk((int)$chunk['cOff'], (int)$chunk['cSize'], (int)$chunk['uSize']);
+            $buf = substr_replace($buf, $part, (int)$chunk['uOff'], (int)$chunk['uSize']);
+            $this->chunkMeta[$i] = $chunk + ['codec' => $this->compressionFlags];
         }
 
         return new UER($buf);
     }
 
-    protected function decomp(int $co, int $cs, int $us): string
+    protected function decompressChunk(int $compressedOffset, int $compressedSize, int $uncompressedSize): string
     {
-        $raw = $this->R->slice($co, $cs);
+        $raw = $this->R->slice($compressedOffset, $compressedSize);
         $r = new UER($raw);
         $out = '';
 
-        if ($r->rem() >= 16) {
-            $save = $r->tell();
+        if ($r->remaining() >= 16) {
+            $start = $r->tell();
             $tag = $r->u32();
-            $bs = $r->u32();
-            $ct = $r->i32();
-            $ut = $r->i32();
+            $blockSize = $r->u32();
+            $compressedTotal = $r->i32();
+            $uncompressedTotal = $r->i32();
 
-            if ($bs > 0 && $ut > 0) {
-                $bc = (int)ceil($ut / $bs);
-                if ($bc >= 0 && $bc < 100000 && $r->rem() >= $bc * 8) {
-                    $pairs = [];
-                    for ($i = 0; $i < $bc; $i++) {
-                        $pairs[] = [$r->i32(), $r->i32()];
+            if ($blockSize > 0 && $uncompressedTotal > 0) {
+                $blockCount = (int)ceil($uncompressedTotal / $blockSize);
+
+                if ($blockCount >= 0 && $blockCount < 100000 && $r->remaining() >= $blockCount * 8) {
+                    $blocks = [];
+
+                    for ($i = 0; $i < $blockCount; $i++) {
+                        $blocks[] = [$r->i32(), $r->i32()];
                     }
-                    foreach ($pairs as [$c, $u]) {
-                        if ($c <= 0 || $u <= 0 || $r->rem() < $c) {
+
+                    foreach ($blocks as [$cSize, $uSize]) {
+                        if ($cSize <= 0 || $uSize <= 0 || $r->remaining() < $cSize) {
                             $out = '';
                             break;
                         }
-                        $out .= UE_Decompress::inflate($this->compFlags, $r->bytes($c), $u);
+
+                        $out .= UE_Decompress::inflate($this->compressionFlags, $r->bytes($cSize), $uSize);
                     }
                 }
             }
+
             if ($out === '') {
-                $r->seek($save);
+                $r->seek($start);
             }
         }
 
         if ($out === '') {
-            $r = new UER($raw);
-            while ($r->rem() >= 8 && strlen($out) < $us) {
-                $c = $r->i32();
-                $u = $r->i32();
-                if ($c <= 0 || $u <= 0 || $r->rem() < $c) {
+            while ($r->remaining() >= 8 && strlen($out) < $uncompressedSize) {
+                $cSize = $r->i32();
+                $uSize = $r->i32();
+
+                if ($cSize <= 0 || $uSize <= 0 || $r->remaining() < $cSize) {
                     break;
                 }
-                $out .= UE_Decompress::inflate($this->compFlags, $r->bytes($c), $u);
+
+                $out .= UE_Decompress::inflate($this->compressionFlags, $r->bytes($cSize), $uSize);
             }
         }
 
-        if (strlen($out) > $us) {
-            $out = substr($out, 0, $us);
+        if (strlen($out) > $uncompressedSize) {
+            $out = substr($out, 0, $uncompressedSize);
         }
-        if (strlen($out) < $us) {
-            $out = str_pad($out, $us, "\0");
+
+        if (strlen($out) < $uncompressedSize) {
+            $out = str_pad($out, $uncompressedSize, "\0");
         }
 
         return $out;
@@ -632,120 +628,126 @@ class TUE3 extends AbstractUE
 
     protected function readNameTable(): void
     {
-        $r = $this->logical();
-        $r->seek((int)$this->h['nameOffset']);
-        $v = $this->getVersion();
-        $this->n = [];
+        $r = $this->logicalReader();
+        $r->seek((int)$this->header['nameOffset']);
+        $version = $this->getVersion();
+        $this->names = [];
 
-        for ($i = 0; $i < (int)$this->h['nameCount']; $i++) {
-            $this->n[] = ['index' => $i, 'name' => $r->fstr(), 'flags' => $v >= 195 ? $r->u64() : $r->u32()];
+        for ($i = 0; $i < (int)$this->header['nameCount']; $i++) {
+            $name = $r->fstringI32();
+            $flags = $version >= 195 ? $r->u64() : $r->u32();
+            $this->names[] = ['index' => $i, 'name' => $name, 'flags' => $flags, 'objectFlags' => $flags];
         }
     }
 
     protected function readImportTable(): void
     {
-        $r = $this->logical();
-        $r->seek((int)$this->h['importOffset']);
-        $this->im = [];
+        $r = $this->logicalReader();
+        $r->seek((int)$this->header['importOffset']);
+        $this->imports = [];
 
-        for ($i = 0; $i < (int)$this->h['importCount']; $i++) {
-            $cp = $r->i32();
-            $cpn = $r->i32();
-            $cn = $r->i32();
-            $cnn = $r->i32();
-            $o = $r->i32();
-            $on = $r->i32();
-            $onn = $r->i32();
+        for ($i = 0; $i < (int)$this->header['importCount']; $i++) {
+            $classPackageIndex = $r->i32();
+            $classPackageNumber = $r->i32();
+            $classNameIndex = $r->i32();
+            $classNameNumber = $r->i32();
+            $outer = $r->i32();
+            $objectNameIndex = $r->i32();
+            $objectNameNumber = $r->i32();
 
-            $this->im[] = [
+            $this->imports[] = [
                 'index' => $i,
-                'classPackageIndex' => $cp,
-                'classPackageNumber' => $cpn,
-                'classNameIndex' => $cn,
-                'classNameNumber' => $cnn,
-                'outer' => $o,
-                'outerIndex' => $o,
-                'objectNameIndex' => $on,
-                'objectNameNumber' => $onn,
-                'classPackage' => $cp,
-                'className' => $cn,
-                'objectName' => $on,
-                'classPackageText' => $this->fname($cp, $cpn),
-                'classNameText' => $this->fname($cn, $cnn),
-                'objectNameText' => $this->fname($on, $onn),
+                'classPackageIndex' => $classPackageIndex,
+                'classPackageNumber' => $classPackageNumber,
+                'classNameIndex' => $classNameIndex,
+                'classNameNumber' => $classNameNumber,
+                'outer' => $outer,
+                'outerIndex' => $outer,
+                'objectNameIndex' => $objectNameIndex,
+                'objectNameNumber' => $objectNameNumber,
+                'classPackage' => $classPackageIndex,
+                'className' => $classNameIndex,
+                'objectName' => $objectNameIndex,
+                'classPackageText' => $this->fname($classPackageIndex, $classPackageNumber),
+                'classNameText' => $this->fname($classNameIndex, $classNameNumber),
+                'objectNameText' => $this->fname($objectNameIndex, $objectNameNumber),
             ];
         }
     }
 
     protected function readExportTable(): void
     {
-        $r = $this->logical();
-        $r->seek((int)$this->h['exportOffset']);
-        $v = $this->getVersion();
-        $this->ex = [];
+        $r = $this->logicalReader();
+        $r->seek((int)$this->header['exportOffset']);
+        $version = $this->getVersion();
+        $this->exports = [];
 
-        for ($i = 0; $i < (int)$this->h['exportCount']; $i++) {
-            $c = $r->i32();
-            $s = $r->i32();
-            $o = $r->i32();
-            $ni = $r->i32();
-            $nn = $r->i32();
-            $arch = $v >= 220 ? $r->i32() : 0;
-            $fl = $r->u32();
-            $fhi = $v >= 195 ? $r->u32() : 0;
-            $flags = ($fhi << 32) | $fl;
-            $sz = $r->i32();
-            $off = ($sz !== 0 || $v >= 249) ? $r->i32() : 0;
-            $cm = [];
+        for ($i = 0; $i < (int)$this->header['exportCount']; $i++) {
+            $class = $r->i32();
+            $super = $r->i32();
+            $outer = $r->i32();
+            $nameIndex = $r->i32();
+            $nameNumber = $r->i32();
+            $archetype = $version >= 220 ? $r->i32() : 0;
+            $flagsLo = $r->u32();
+            $flagsHi = $version >= 195 ? $r->u32() : 0;
+            $objectFlags = ($flagsHi << 32) | $flagsLo;
+            $serialSize = $r->i32();
+            $serialOffset = ($serialSize !== 0 || $version >= 249) ? $r->i32() : 0;
+            $components = [];
 
-            if ($v >= 220 && $v < 543) {
-                $cc = $r->i32();
-                if ($cc < 0 || $cc > 65536) {
-                    throw new RuntimeException("Bad component map count $cc in export $i");
+            if ($version >= 220 && $version < 543) {
+                $componentCount = $r->i32();
+
+                if ($componentCount < 0 || $componentCount > 65536) {
+                    throw new RuntimeException("Bad component map count $componentCount in export $i");
                 }
-                for ($j = 0; $j < $cc; $j++) {
-                    $cm[] = ['nameIndex' => $r->i32(), 'nameNumber' => $r->i32(), 'value' => $r->i32()];
+
+                for ($j = 0; $j < $componentCount; $j++) {
+                    $components[] = ['name' => $r->i32(), 'nameNumber' => $r->i32(), 'ref' => $r->i32()];
                 }
             }
 
-            $ef = $v >= 247 ? $r->u32() : 0;
-            $net = null;
+            $exportFlags = $version >= 247 ? $r->u32() : 0;
+            $netObjectCount = null;
             $guid = null;
 
-            if ($v >= 322) {
-                $net = [];
+            if ($version >= 322) {
+                $netObjectCount = [];
                 for ($j = 0; $j < 16; $j++) {
-                    $net[] = $r->i32();
+                    $netObjectCount[] = $r->i32();
                 }
                 $guid = [$r->u32(), $r->u32(), $r->u32(), $r->u32()];
             }
 
-            $u = $v >= 475 ? $r->i32() : null;
+            $u3unk6c = $version >= 475 ? $r->i32() : null;
 
-            $this->ex[] = [
+            $this->exports[] = [
                 'index' => $i,
-                'class' => $c,
-                'classIndex' => $c,
-                'super' => $s,
-                'superIndex' => $s,
-                'outer' => $o,
-                'outerIndex' => $o,
-                'nameIndex' => $ni,
-                'nameNumber' => $nn,
-                'objectName' => $ni,
-                'objectNameText' => $this->fname($ni, $nn),
-                'archetype' => $arch,
-                'objectFlagsLo' => $fl,
-                'objectFlagsHi' => $fhi,
-                'objectFlags' => $flags,
-                'serialSize' => $sz,
-                'serialOffset' => $off,
-                'componentCount' => count($cm),
-                'componentMap' => $cm,
-                'exportFlags' => $ef,
-                'netObjectCount' => $net,
+                'class' => $class,
+                'classIndex' => $class,
+                'super' => $super,
+                'superIndex' => $super,
+                'outer' => $outer,
+                'outerIndex' => $outer,
+                'packageIndex' => $outer,
+                'nameIndex' => $nameIndex,
+                'nameNumber' => $nameNumber,
+                'objectName' => $nameIndex,
+                'objectNameText' => $this->fname($nameIndex, $nameNumber),
+                'archetype' => $archetype,
+                'objectFlagsLo' => $flagsLo,
+                'objectFlagsHi' => $flagsHi,
+                'objectFlags' => $objectFlags,
+                'serialSize' => $serialSize,
+                'serialOffset' => $serialOffset,
+                'components' => $components,
+                'componentMap' => $components,
+                'componentCount' => count($components),
+                'exportFlags' => $exportFlags,
+                'netObjectCount' => $netObjectCount,
                 'guid' => $guid,
-                'u3unk6c' => $u,
+                'u3unk6c' => $u3unk6c,
             ];
         }
     }
@@ -755,40 +757,45 @@ final class TUE4 extends TUE3 {}
 
 final class UE_Decompress
 {
-    private static array $c = [];
+    private static array $codecs = [];
 
     public static function register(int $id, callable $fn): void
     {
-        self::$c[$id] = $fn;
+        self::$codecs[$id] = $fn;
     }
 
     public static function inflate(int $flags, string $payload, int $expected, array $ctx = []): string
     {
-        if (($flags & 2) && isset(self::$c[2])) {
-            return (self::$c[2])($payload, $expected, $ctx);
+        if (($flags & 2) && isset(self::$codecs[2])) {
+            return (self::$codecs[2])($payload, $expected, $ctx);
         }
-        if (($flags & 1) && isset(self::$c[1])) {
-            return (self::$c[1])($payload, $expected, $ctx);
+
+        if (($flags & 1) && isset(self::$codecs[1])) {
+            return (self::$codecs[1])($payload, $expected, $ctx);
         }
+
         throw new RuntimeException("No decoder registered for compression flags $flags");
     }
 }
 
-UE_Decompress::register(1, function (string $d, int $e, array $c = []): string {
-    $o = @gzuncompress($d);
-    if ($o === false) {
-        $o = @gzinflate($d);
+UE_Decompress::register(1, function (string $data, int $expected, array $ctx = []): string {
+    $out = @gzuncompress($data);
+
+    if ($out === false) {
+        $out = @gzinflate($data);
     }
-    if ($o === false) {
+
+    if ($out === false) {
         throw new RuntimeException('zlib decompression failed');
     }
-    return $o;
+
+    return $out;
 });
 
 final class UE_LZO1X
 {
-    public static function decompress(string $d, int $e): string
+    public static function decompress(string $data, int $expected): string
     {
-        throw new RuntimeException('Pure PHP LZO fallback not available in TUnrealPackage2.php; use lzo_runtime.php/native FFI.');
+        throw new RuntimeException('Pure PHP LZO fallback not available; use UE_LZO1X_register.php / native LZO for codec 2.');
     }
 }
