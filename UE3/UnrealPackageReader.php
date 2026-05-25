@@ -367,7 +367,7 @@ final class UnrealPackageReader
 
     private function readUE3Exports(): void
     {
-        $this->header['exportTableLayout'] = 'ue3-serialize3';
+        $this->header['exportTableLayout'] = 'ue3-serialize3-ut3';
         $r = $this->tableReader((int)$this->header['exportOffset']);
         $v = (int)$this->header['version'];
         $genCount = count($this->header['generations'] ?? []);
@@ -376,7 +376,10 @@ final class UnrealPackageReader
             $super = $r->i32();
             $outer = $r->i32();
             $objectName = $this->readUE3FName($r);
-            $archetype = $v >= 220 ? $r->i32() : 0;
+            $archetype = 0;
+            if ($v >= 220 && $v !== 512) {
+                $archetype = $r->i32();
+            }
             $flagsLo = $r->u32();
             $flagsHi = $v >= 195 ? $r->u32() : 0;
             $flags = $flagsLo;
