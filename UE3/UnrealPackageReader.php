@@ -385,7 +385,7 @@ final class UnrealPackageReader
     private function readUE3ComponentMap(UEFolderBinaryReader $r, int $exportIndex): array
     {
         $count = $r->i32();
-        if ($count < 0 || $count > 16) throw new RuntimeException("Bad UE3 component map count $count in export $exportIndex at offset " . ($r->tell() - 4));
+        if ($count < 0 || $count > 4096) throw new RuntimeException("Bad UE3 component map count $count in export $exportIndex at offset " . ($r->tell() - 4));
         $items = [];
         for ($j = 0; $j < $count; $j++) {
             $name = $this->readUE3FName($r);
