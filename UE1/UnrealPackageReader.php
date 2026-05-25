@@ -467,7 +467,7 @@ final class UnrealPackageReader
         $end = min($r->size(), $offset + $serialSize);
         $props = [];
 
-        for ($i = 0; $i < 512 && $r->tell() < $end; $i++) {
+        for ($i = 0; $i < 1024 && $r->tell() < $end; $i++) {
             $propStart = $r->tell();
             $nameIndex = $r->indexForVersion($version);
             $name = $this->nameByIndex($nameIndex);
@@ -479,10 +479,21 @@ final class UnrealPackageReader
             $typeId = $info & 0x0F;
             $sizeCode = ($info >> 4) & 0x07;
             $isArray = ($info & 0x80) !== 0;
-            $size = $this->readPropertySize($r, $sizeCode);
-            $arrayIndex = $isArray ? $r->indexForVersion($version) : 0;
+            $size = 0;
+            $arrayIndex = 0;
+            $raw = '';
             $valueOffset = $r->tell();
-            $raw = $size > 0 ? $r->bytes(min($size, max(0, $end - $r->tell()))) : '';
+            $value = '';
+
+            if ($typeId === 2) {
+                $value = $sizeCode !== 0;
+            } else {
+                $size = $this->readPropertySize($r, $sizeCode);
+                $arrayIndex = $isArray ? $r->indexForVersion($version) : 0;
+                $valueOffset = $r->tell();
+                $raw = $size > 0 ? $r->bytes(min($size, max(0, $end - $r->tell()))) : '';
+                $value = $this->decodePropertyValue($typeId, $raw, $version);
+            }
 
             $props[] = [
                 'offset' => $propStart,
@@ -493,7 +504,8 @@ final class UnrealPackageReader
                 'isArray' => $isArray ? 1 : 0,
                 'idx' => $arrayIndex,
                 'idxFromFile' => $arrayIndex,
-                'value' => $this->decodePropertyValue($typeId, $raw, $version),
+                'sizeCode' => $sizeCode,
+                'value' => $value,
                 'rawHex' => strtoupper(bin2hex($raw)),
                 'valueOffset' => $valueOffset,
             ];
@@ -526,14 +538,54 @@ final class UnrealPackageReader
                 1 => strlen($raw) >= 4 ? $r->i32() : '',
                 2 => '',
                 3 => strlen($raw) >= 4 ? $r->f32() : '',
-                4, 7 => strlen($raw) >= 1 ? $r->indexForVersion($version) : '',
+                4, 7 => strlen($raw) >= 1 ? $this->formatObjectRef($r->indexForVersion($version)) : '',
                 5 => strlen($raw) >= 1 ? $this->nameByIndex($r->indexForVersion($version)) : '',
                 6, 12 => strlen($raw) > 0 ? UE1BinaryReader::toUtf8(rtrim($raw, "\0")) : '',
+                10 => strlen($raw) >= 12 ? $this->formatVector($raw) : strtoupper(bin2hex($raw)),
+                11 => strlen($raw) >= 12 ? $this->formatRotator($raw) : strtoupper(bin2hex($raw)),
+                9 => strlen($raw) === 4 ? $this->formatColor($raw) : strtoupper(bin2hex($raw)),
                 default => strtoupper(bin2hex($raw)),
             };
         } catch (Throwable $e) {
             return strtoupper(bin2hex($raw));
         }
+    }
+
+    private function formatObjectRef(int $ref): string
+    {
+        if ($ref === 0) {
+            return '';
+        }
+        $name = $this->displayNameFromRef($ref);
+        return $name !== '' ? $name . '(' . $ref . ')' : '(' . $ref . ')';
+    }
+
+    private function formatVector(string $raw): string
+    {
+        $x = unpack('g', substr($raw, 0, 4))[1];
+        $y = unpack('g', substr($raw, 4, 4))[1];
+        $z = unpack('g', substr($raw, 8, 4))[1];
+        return sprintf('(X=%s,Y=%s,Z=%s)', $this->fmtFloat((float)$x), $this->fmtFloat((float)$y), $this->fmtFloat((float)$z));
+    }
+
+    private function formatRotator(string $raw): string
+    {
+        $p = unpack('V', substr($raw, 0, 4))[1];
+        $y = unpack('V', substr($raw, 4, 4))[1];
+        $r = unpack('V', substr($raw, 8, 4))[1];
+        return sprintf('(Pitch=%d,Yaw=%d,Roll=%d)', $p, $y, $r);
+    }
+
+    private function formatColor(string $raw): string
+    {
+        $c = unpack('C4', $raw);
+        return sprintf('(R=%d,G=%d,B=%d,A=%d)', $c[1], $c[2], $c[3], $c[4]);
+    }
+
+    private function fmtFloat(float $v): string
+    {
+        $s = rtrim(rtrim(sprintf('%.6F', $v), '0'), '.');
+        return $s === '-0' ? '0' : $s;
     }
 
     private function decodeFlags(int $flags, array $map): array
