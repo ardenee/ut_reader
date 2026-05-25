@@ -69,6 +69,7 @@ final class UnrealPackageReader
     }
     private function formatThrowable(Throwable $e): string { return get_class($e) . ': ' . $e->getMessage() . ' File: ' . $e->getFile() . ':' . $e->getLine() . ' PHP: ' . PHP_VERSION . ' Package: ' . $this->path . ' Trace: ' . $e->getTraceAsString(); }
     private function blankHeader(): array { return ['signature'=>0,'tag'=>0,'version'=>0,'licensee'=>0,'licenseeVersion'=>0,'pkgFlags'=>0,'packageFlags'=>0,'nameCount'=>0,'nameOffset'=>0,'exportCount'=>0,'exportOffset'=>0,'importCount'=>0,'importOffset'=>0,'dependsOffset'=>0,'guid'=>'','generations'=>[],'chunks'=>[],'compressedChunks'=>[],'compressed'=>false,'compressionFlags'=>0,'cFlags'=>0,'logicalDecompressed'=>false,'logicalSize'=>0,'nameTableLayout'=>'','exportTableLayout'=>'']; }
+    private function setHeaderBase(array $values): void { $this->header = array_replace($this->blankHeader(), $values); }
     private function parse(): void
     {
         $r = new UEFolderBinaryReader($this->bytes); $tag = $r->u32(); if ($tag !== 0x9E2A83C1) throw new RuntimeException(sprintf('Bad package tag 0x%08X', $tag));
@@ -77,7 +78,7 @@ final class UnrealPackageReader
     }
     private function parseUE12(UEFolderBinaryReader $r, int $tag, int $packed, int $version, int $licensee): void
     {
-        $flags = $r->u32(); $this->header = $this->blankHeader(); $this->header += ['signature'=>$tag,'tag'=>$tag,'packedVersion'=>$packed,'version'=>$version,'licensee'=>$licensee,'licenseeVersion'=>$licensee,'pkgFlags'=>$flags,'packageFlags'=>$flags];
+        $flags = $r->u32(); $this->setHeaderBase(['signature'=>$tag,'tag'=>$tag,'packedVersion'=>$packed,'version'=>$version,'licensee'=>$licensee,'licenseeVersion'=>$licensee,'pkgFlags'=>$flags,'packageFlags'=>$flags]);
         $this->header['nameCount']=$r->i32(); $this->header['nameOffset']=$r->i32(); $this->header['exportCount']=$r->i32(); $this->header['exportOffset']=$r->i32(); $this->header['importCount']=$r->i32(); $this->header['importOffset']=$r->i32();
         if ($version < 68) { $this->header['heritageCount']=$r->i32(); $this->header['heritageOffset']=$r->i32(); $this->header['generations'][]=['e'=>$this->header['exportCount'],'n'=>$this->header['nameCount'],'exportCount'=>$this->header['exportCount'],'nameCount'=>$this->header['nameCount']]; }
         else { $guid=[$r->u32(),$r->u32(),$r->u32(),$r->u32()]; $this->header['guidArray']=$guid; $this->header['guid']=sprintf('%08X-%08X-%08X-%08X',$guid[0],$guid[1],$guid[2],$guid[3]); $genCount=$r->i32(); $this->header['genCount']=$genCount; for($i=0;$i<$genCount;$i++) $this->header['generations'][]=['e'=>$r->i32(),'n'=>$r->i32()]; }
@@ -85,7 +86,7 @@ final class UnrealPackageReader
     }
     private function parseUE3(UEFolderBinaryReader $r, int $tag, int $packed, int $version, int $licensee): void
     {
-        $this->header = $this->blankHeader(); $this->header += ['signature'=>$tag,'tag'=>$tag,'packedVersion'=>$packed,'version'=>$version,'licensee'=>$licensee,'licenseeVersion'=>$licensee];
+        $this->setHeaderBase(['signature'=>$tag,'tag'=>$tag,'packedVersion'=>$packed,'version'=>$version,'licensee'=>$licensee,'licenseeVersion'=>$licensee]);
         $this->header['headerSize']=$version>=249?$r->u32():0; $this->header['folderName']=$version>=269?$r->fstring32():''; $flags=$r->u32(); $this->header['packageFlags']=$flags; $this->header['pkgFlags']=$flags;
         $this->header['nameCount']=$r->u32(); $this->header['nameOffset']=$r->u32(); $this->header['exportCount']=$r->u32(); $this->header['exportOffset']=$r->u32(); $this->header['importCount']=$r->u32(); $this->header['importOffset']=$r->u32(); $this->header['dependsOffset']=$version>=415?$r->u32():0;
         if ($version>=623) { $this->header['importExportGuidsOffset']=$r->u32(); $this->header['importGuidsCount']=$r->u32(); $this->header['exportGuidsCount']=$r->u32(); }
@@ -127,22 +128,6 @@ final class UnrealPackageReader
     private function readUE3Imports(): void { $r=$this->tableReader((int)$this->header['importOffset']); for($i=0;$i<(int)$this->header['importCount'];$i++)$this->imports[]=$this->makeImport($i,$r->i32(),$r->i32(),$r->i32(),$r->i32(),$r->i32(),$r->i32(),$r->i32()); }
     private function readUE3Exports(): void
     {
-        $v=(int)$this->header['version'];
-        if($v===512 && ($this->header['nameTableLayout']??'')==='flags32-string') { $this->readUT3CookedExports(); return; }
-        $this->readUE3StandardExports();
-    }
-    private function readUT3CookedExports(): void
-    {
-        $this->header['exportTableLayout']='ut3-cooked-v512';
-        $r=$this->tableReader((int)$this->header['exportOffset']);
-        for($i=0;$i<(int)$this->header['exportCount'];$i++){
-            $class=$r->i32(); $super=$r->i32(); $outer=$r->i32(); $objectName=$r->i32();
-            $flags=$r->u32(); $exportFlags=$r->u32(); $serialSize=$r->i32(); $serialOffset=$serialSize!==0?$r->i32():0;
-            $this->exports[]=$this->makeExport($i,$class,$super,$outer,$objectName,0,0,$flags,$serialSize,$serialOffset,[],$exportFlags);
-        }
-    }
-    private function readUE3StandardExports(): void
-    {
         $this->header['exportTableLayout']='ue3-standard';
         $r=$this->tableReader((int)$this->header['exportOffset']); $v=(int)$this->header['version'];
         for($i=0;$i<(int)$this->header['exportCount'];$i++){
@@ -154,7 +139,6 @@ final class UnrealPackageReader
     }
     private function makeImport(int $i,int $classPackage,int $classPackageNumber,int $className,int $classNameNumber,int $outer,int $objectName,int $objectNameNumber): array { $cp=$this->nameByIndex($classPackage,$classPackageNumber); $cn=$this->nameByIndex($className,$classNameNumber); $on=$this->nameByIndex($objectName,$objectNameNumber); return ['index'=>$i,'classPackage'=>$classPackage,'className'=>$className,'outerIndex'=>$outer,'outer'=>$outer,'outerName'=>$this->displayNameFromRef($outer),'objectName'=>$objectName,'classPackageText'=>$cp,'classNameText'=>$cn,'objectNameText'=>$on,'ClassPackage'=>['index'=>$classPackage,'number'=>$classPackageNumber,'text'=>$cp],'ClassName'=>['index'=>$className,'number'=>$classNameNumber,'text'=>$cn],'OuterIndex'=>$outer,'ObjectName'=>['index'=>$objectName,'number'=>$objectNameNumber,'text'=>$on]]; }
     private function makeExport(int $i,int $class,int $super,int $outer,int $objectName,int $objectNameNumber,int $archetype,int $flags,int $serialSize,int $serialOffset,array $components=[],int $exportFlags=0): array { return ['index'=>$i,'classIndex'=>$class,'class'=>$class,'superIndex'=>$super,'super'=>$super,'packageIndex'=>$outer,'outerIndex'=>$outer,'outer'=>$outer,'objectName'=>$objectName,'nameIndex'=>$objectName,'nameNumber'=>$objectNameNumber,'objectNameText'=>$this->nameByIndex($objectName,$objectNameNumber),'objectFlags'=>$flags,'serialSize'=>$serialSize,'serialOffset'=>$serialOffset,'archetype'=>$archetype,'components'=>$components,'componentMap'=>$components,'exportFlags'=>$exportFlags]; }
-
     public function getHeader(): array { return $this->header; }
     public function getNames(): array { return $this->names; }
     public function getImports(): array { return $this->imports; }
