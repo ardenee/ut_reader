@@ -157,21 +157,21 @@ final class UnrealPackageReader
     ];
 
     private const PROP_TYPES = [
-        0 => 'ByteProperty',
-        1 => 'IntProperty',
-        2 => 'FloatProperty',
+        0 => 'None',
+        1 => 'ByteProperty',
+        2 => 'IntProperty',
         3 => 'BoolProperty',
-        4 => 'ObjectProperty',
-        5 => 'NameProperty',
-        6 => 'StringProperty',
-        7 => 'ClassProperty',
-        8 => 'ArrayProperty',
-        9 => 'StructProperty',
-        10 => 'VectorProperty',
-        11 => 'RotatorProperty',
-        12 => 'StrProperty',
-        13 => 'MapProperty',
-        14 => 'FixedArrayProperty',
+        4 => 'FloatProperty',
+        5 => 'ObjectProperty',
+        6 => 'NameProperty',
+        7 => 'StringProperty',
+        8 => 'ClassProperty',
+        9 => 'ArrayProperty',
+        10 => 'StructProperty',
+        11 => 'VectorProperty',
+        12 => 'RotatorProperty',
+        13 => 'StrProperty',
+        14 => 'MapProperty',
         15 => 'FixedArrayProperty',
     ];
 
@@ -479,21 +479,32 @@ final class UnrealPackageReader
             $info = $r->u8();
             $typeId = $info & 0x0F;
             $sizeCode = ($info >> 4) & 0x07;
-            $isArray = ($info & 0x80) !== 0;
-            $size = 0;
+            $boolFlag = ($info & 0x80) !== 0;
+            $isBool = $typeId === 3;
+            $structName = '';
+
+            if ($typeId === 10) {
+                $structNameIndex = $r->indexForVersion($version);
+                $structName = $this->nameByIndex($structNameIndex);
+            }
+
+            $size = $this->readPropertySize($r, $sizeCode);
             $arrayIndex = 0;
-            $raw = '';
+
+            if (!$isBool && $boolFlag) {
+                $arrayIndex = $this->readPropertyArrayIndex($r);
+            }
+
             $valueOffset = $r->tell();
+            $raw = '';
             $value = '';
 
-            if ($typeId === 3) {
-                $value = $sizeCode !== 0;
+            if ($isBool) {
+                $value = $boolFlag;
             } else {
-                $size = $this->readPropertySize($r, $sizeCode);
-                $arrayIndex = $isArray ? $r->indexForVersion($version) : 0;
-                $valueOffset = $r->tell();
-                $raw = $size > 0 ? $r->bytes(min($size, max(0, $end - $r->tell()))) : '';
-                $value = $this->decodePropertyValue($typeId, $raw, $version);
+                $readSize = min($size, max(0, $end - $r->tell()));
+                $raw = $readSize > 0 ? $r->bytes($readSize) : '';
+                $value = $this->decodePropertyValue($typeId, $raw, $version, $structName);
             }
 
             $props[] = [
@@ -501,11 +512,13 @@ final class UnrealPackageReader
                 'length' => $r->tell() - $propStart,
                 'name' => $name,
                 'type' => self::PROP_TYPES[$typeId] ?? ('Type' . $typeId),
-                'struct' => '',
-                'isArray' => $isArray ? 1 : 0,
+                'struct' => $structName,
+                'isArray' => (!$isBool && $boolFlag) ? 1 : 0,
+                'boolFlag' => $isBool ? (int)$boolFlag : 0,
                 'idx' => $arrayIndex,
                 'idxFromFile' => $arrayIndex,
                 'sizeCode' => $sizeCode,
+                'dataSize' => $size,
                 'infoByte' => $info,
                 'value' => $value,
                 'rawHex' => strtoupper(bin2hex($raw)),
@@ -531,26 +544,57 @@ final class UnrealPackageReader
         };
     }
 
-    private function decodePropertyValue(int $typeId, string $raw, int $version)
+    private function readPropertyArrayIndex(UE1BinaryReader $r): int
+    {
+        $b = $r->u8();
+        if ($b < 128) {
+            return $b;
+        }
+
+        $b2 = $r->u8();
+        if (($b & 0x40) !== 0) {
+            $b3 = $r->u8();
+            $b4 = $r->u8();
+            return (($b << 24) | ($b2 << 16) | ($b3 << 8) | $b4) & 0x3FFFFF;
+        }
+
+        return (($b << 8) | $b2) & 0x3FFF;
+    }
+
+    private function decodePropertyValue(int $typeId, string $raw, int $version, string $structName = '')
     {
         $r = new UE1BinaryReader($raw);
         try {
             return match ($typeId) {
-                0 => strlen($raw) >= 1 ? $r->u8() : '',
-                1 => $this->decodeIntegerRaw($raw),
-                2 => strlen($raw) >= 4 ? $r->f32() : '',
+                1 => strlen($raw) >= 1 ? $r->u8() : '',
+                2 => $this->decodeIntegerRaw($raw),
                 3 => '',
-                4, 7 => strlen($raw) >= 1 ? $this->formatObjectRef($r->indexForVersion($version)) : '',
-                5 => strlen($raw) >= 1 ? $this->nameByIndex($r->indexForVersion($version)) : '',
-                6, 12 => strlen($raw) > 0 ? UE1BinaryReader::toUtf8(rtrim($raw, "\0")) : '',
-                9 => strlen($raw) === 4 ? $this->formatColor($raw) : strtoupper(bin2hex($raw)),
-                10 => strlen($raw) >= 12 ? $this->formatVector($raw) : strtoupper(bin2hex($raw)),
-                11 => strlen($raw) >= 12 ? $this->formatRotator($raw) : strtoupper(bin2hex($raw)),
+                4 => strlen($raw) >= 4 ? $r->f32() : '',
+                5, 8 => strlen($raw) >= 1 ? $this->formatObjectRef($r->indexForVersion($version)) : '',
+                6 => strlen($raw) >= 1 ? $this->nameByIndex($r->indexForVersion($version)) : '',
+                7, 13 => strlen($raw) > 0 ? UE1BinaryReader::toUtf8(rtrim($raw, "\0")) : '',
+                10 => $this->decodeStructProperty($structName, $raw),
+                11 => strlen($raw) >= 12 ? $this->formatVector($raw) : strtoupper(bin2hex($raw)),
+                12 => strlen($raw) >= 12 ? $this->formatRotator($raw) : strtoupper(bin2hex($raw)),
                 default => strtoupper(bin2hex($raw)),
             };
         } catch (Throwable $e) {
             return strtoupper(bin2hex($raw));
         }
+    }
+
+    private function decodeStructProperty(string $structName, string $raw)
+    {
+        if (strcasecmp($structName, 'Color') === 0 && strlen($raw) === 4) {
+            return $this->formatColor($raw);
+        }
+        if ((strcasecmp($structName, 'Vector') === 0 || strcasecmp($structName, 'Plane') === 0) && strlen($raw) >= 12) {
+            return $this->formatVector($raw);
+        }
+        if (strcasecmp($structName, 'Rotator') === 0 && strlen($raw) >= 12) {
+            return $this->formatRotator($raw);
+        }
+        return strtoupper(bin2hex($raw));
     }
 
     private function decodeIntegerRaw(string $raw)
