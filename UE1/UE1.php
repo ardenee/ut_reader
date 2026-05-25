@@ -2,12 +2,92 @@
 declare(strict_types=1);
 require_once __DIR__ . '/UnrealPackageReader.php';
 
-$filePath = isset($_GET['file']) ? (string)$_GET['file'] : 'oldtest.utx';
+$uploadDir = __DIR__ . '/uploads';
+$uploadRelDir = 'uploads';
+
+function safe_package_name(string $name): string
+{
+    $base = basename(str_replace('\\', '/', rawurldecode($name)));
+    $base = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $base) ?? '';
+    return trim($base, " .\t\n\r\0\x0B");
+}
+
+function upload_file_list(string $uploadDir, string $uploadRelDir): array
+{
+    if (!is_dir($uploadDir)) {
+        return [];
+    }
+
+    $allowed = ['u', 'utx', 'umx', 'uax', 'unr', 'ut2', 'ut3', 'upk'];
+    $out = [];
+    foreach (scandir($uploadDir) ?: [] as $file) {
+        if ($file === '.' || $file === '..') {
+            continue;
+        }
+
+        $full = $uploadDir . DIRECTORY_SEPARATOR . $file;
+        $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+        if (!is_file($full) || !in_array($ext, $allowed, true)) {
+            continue;
+        }
+
+        $out[] = [
+            'name' => $file,
+            'rel' => $uploadRelDir . '/' . rawurlencode($file),
+            'path' => $full,
+            'size' => filesize($full) ?: 0,
+            'mtime' => filemtime($full) ?: 0,
+        ];
+    }
+
+    usort($out, static fn(array $a, array $b): int => ($b['mtime'] <=> $a['mtime']) ?: strcasecmp($a['name'], $b['name']));
+    return $out;
+}
+
+function resolve_package_path(string $fileParam, string $uploadDir, array $uploadedFiles): string
+{
+    $root = realpath(__DIR__);
+    if ($root === false) {
+        return '';
+    }
+
+    if ($fileParam !== '') {
+        $decoded = rawurldecode($fileParam);
+        $base = safe_package_name($decoded);
+        if ($base !== '') {
+            $uploadCandidate = $uploadDir . DIRECTORY_SEPARATOR . $base;
+            if (is_file($uploadCandidate)) {
+                return $uploadCandidate;
+            }
+        }
+
+        $localCandidate = __DIR__ . DIRECTORY_SEPARATOR . ltrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $decoded), DIRECTORY_SEPARATOR);
+        $localReal = realpath($localCandidate);
+        if ($localReal !== false && is_file($localReal) && str_starts_with($localReal, $root . DIRECTORY_SEPARATOR)) {
+            return $localReal;
+        }
+    }
+
+    $default = __DIR__ . DIRECTORY_SEPARATOR . 'oldtest.utx';
+    if (is_file($default)) {
+        return $default;
+    }
+
+    return $uploadedFiles[0]['path'] ?? '';
+}
+
+$uploadedFiles = upload_file_list($uploadDir, $uploadRelDir);
+$fileParam = isset($_GET['file']) ? (string)$_GET['file'] : '';
+$filePath = resolve_package_path($fileParam, $uploadDir, $uploadedFiles);
+
 if ($filePath === '' || !file_exists($filePath)) {
     header('Content-Type: text/plain; charset=utf-8');
-    echo "UE1.php: missing or invalid ?file= parameter.\nExample: UE1.php?file=oldtest.utx\n";
+    echo "UE1.php: no package file is available.\n";
+    echo "Put a supported package file into UE1/uploads/ or keep oldtest.utx beside UE1.php.\n";
     exit;
 }
+
+$currentRel = str_starts_with($filePath, $uploadDir . DIRECTORY_SEPARATOR) ? $uploadRelDir . '/' . basename($filePath) : basename($filePath);
 
 $pkg = new UnrealPackageReader($filePath);
 $hdr = $pkg->getHeader();
@@ -128,7 +208,7 @@ function renderPropsTree(array $props): void
 ?>
 <!doctype html><html lang="en"><head><meta charset="utf-8" /><title>UE1 Explorer — <?= h(basename($filePath)) ?></title>
 <style>
-:root{--b:#cfd7df;--bg:#eef6f8;--panel:#fff;--muted:#f5f7f9;--text:#071629;--sub:#536471;--accent:#0969da;--soft:#eaf4ff;--orange:#c26700;--extra:#537895;--extra-bg:#f4f9ff}*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);scroll-behavior:smooth}body{font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:14px}.mono{font-family:Consolas,Menlo,monospace}.raw,.raw-inline{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.workspace{padding:12px}.viewer{width:100%;background:var(--panel);border:1px solid var(--b);min-height:650px}.doc-tabs{display:flex;margin-left:12px}.doc-tab{padding:9px 28px;border:1px solid var(--b);border-bottom:0;border-radius:6px 6px 0 0;background:#fff;font-weight:600}.toolbar{display:grid;grid-template-columns:minmax(260px,520px) 1fr;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--b);background:#fbfbfb}.searchbox{width:100%;padding:7px 9px;border:1px solid #9aa7b1;font-size:15px}.package-name{text-align:right;color:#475569}.tabs,.subtabs{display:flex;border-bottom:1px solid var(--b);background:#f8fafb}.tab,.subtab{border:0;border-right:1px solid var(--b);background:transparent;padding:10px 18px;font-weight:700;cursor:pointer}.tab.active,.subtab.active{background:#fff;color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}.panel,.subpanel{display:none;padding:16px}.panel.active,.subpanel.active{display:block}.package-grid{display:grid;grid-template-columns:minmax(560px,760px) minmax(320px,520px);gap:24px;align-items:start;max-width:none}.field-grid{display:grid;grid-template-columns:170px minmax(0,1fr);gap:10px 18px;align-items:center}.field-label{font-weight:600}.field-value{min-height:30px;border:1px solid var(--b);background:#fbfbfb;padding:6px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.field-value.guid{font-size:15px;letter-spacing:.2px}.flag-table,.data{border-collapse:collapse;width:100%;margin-top:20px}.flag-table th,.flag-table td,.data th,.data td{border:1px solid var(--b);padding:7px 9px;vertical-align:top}.flag-table th,.data th{background:var(--muted);text-align:left}.flag-true{background:#0078d7;color:#fff}.tree-box{border:1px solid var(--b);background:#fff;padding:12px;margin:12px 0 18px;width:100%;max-width:none}.tree-node{margin:3px 0;scroll-margin-top:20px}.tree-node.is-target>summary,.data tr.is-target td{background:#fff3cd!important;outline:2px solid #f0c36d}.tree-node summary{cursor:pointer;list-style:none;padding:3px 4px;border-radius:3px}.tree-node summary::-webkit-details-marker,.prop-node summary::-webkit-details-marker{display:none}.tree-node summary:hover{background:var(--soft)}.tree-node[open]>summary:before,.prop-node[open]>summary:before{content:'▾ ';color:#546170}.tree-node:not([open])>summary:before,.prop-node:not([open])>summary:before{content:'▸ ';color:#546170}.ico{display:inline-block;width:22px;color:#2f5e87}.ico.export{color:#111}.ico.prop{color:#6f42c1}.name{font-weight:650}.class-name{margin-left:10px;color:var(--orange)}.tree-lines{margin-left:30px;padding-left:12px;border-left:1px dotted #aeb8c2}.tree-lines>div{padding:2px 0}.tree-lines span.mono{margin-left:5px}.extra-line{color:var(--extra);background:var(--extra-bg);border-left:2px solid #bdd7ee;margin:2px 0 2px -6px;padding-left:6px!important}.extra-line .mono{color:#2b5876}.ref-tag,.name-tag{display:inline-block;margin-left:4px;color:#2f6f9f;background:#edf6ff;border:1px solid #c7dff2;border-radius:3px;padding:0 3px;font-family:Consolas,Menlo,monospace;font-size:.92em}.ref-link,.name-link{text-decoration:none}.ref-link:hover,.name-link:hover{text-decoration:underline;background:#dff0ff}.content-list{max-width:none}.content-item{display:grid;grid-template-columns:1fr auto;border-bottom:1px solid #e5e7eb;padding:6px 8px}.content-class{color:var(--orange)}.grid-after-tree details{margin-top:10px}.grid-after-tree summary{cursor:pointer;font-weight:700;color:var(--accent);padding:4px 0}.props-block{display:none;margin-top:8px;max-width:100%;overflow-x:auto}.prop-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.prop-btn{border:1px solid var(--b);background:#fff;border-radius:5px;padding:4px 8px;cursor:pointer}.prop-btn.small{font-size:12px;color:#0958b8}.prop-btn span{display:inline-block;margin-left:5px;background:#e7f5ff;border:1px solid #b6dfff;border-radius:999px;padding:1px 6px}.props-tree{border:1px solid #c8d9ea;background:#fbfdff;margin-top:8px;padding:8px;max-width:100%}.prop-node{border-bottom:1px solid #e2edf7;padding:4px 0;scroll-margin-top:20px}.prop-node:last-child{border-bottom:0}.prop-node summary{cursor:pointer;list-style:none;padding:4px 6px;border-radius:3px}.prop-name{font-weight:650}.prop-type{margin-left:10px;color:#6f42c1}.prop-value{margin-left:10px;color:#116329;font-family:Consolas,Menlo,monospace}.prop-lines{margin-left:30px;padding-left:12px;border-left:1px dotted #b7c8d9}.prop-lines>div{padding:2px 0}.raw-prop{margin-top:4px;color:#475569}.raw-prop summary{font-weight:600;color:#0969da}.raw-prop pre{margin:6px 0 0;background:#f6f8fa;border:1px solid #d0d7de;padding:8px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.names-table{table-layout:fixed}.names-table th:nth-child(1){width:24%}.names-table th:nth-child(2){width:44%}.names-table th:nth-child(3){width:10%}.names-table th:nth-child(4){width:22%}.warn{border:1px solid #d1242f;background:#fff8f8;padding:8px 12px;margin-top:14px}@media(max-width:1000px){.package-grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.package-name{text-align:left}}
+:root{--b:#cfd7df;--bg:#eef6f8;--panel:#fff;--muted:#f5f7f9;--text:#071629;--sub:#536471;--accent:#0969da;--soft:#eaf4ff;--orange:#c26700;--extra:#537895;--extra-bg:#f4f9ff}*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);scroll-behavior:smooth}body{font-family:Segoe UI,Tahoma,Arial,sans-serif;font-size:14px}.mono{font-family:Consolas,Menlo,monospace}.raw,.raw-inline{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.workspace{padding:12px}.viewer{width:100%;background:var(--panel);border:1px solid var(--b);min-height:650px}.doc-tabs{display:flex;margin-left:12px}.doc-tab{padding:9px 28px;border:1px solid var(--b);border-bottom:0;border-radius:6px 6px 0 0;background:#fff;font-weight:600}.toolbar{display:grid;grid-template-columns:minmax(420px,1fr) minmax(260px,420px);gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--b);background:#fbfbfb}.file-open-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.file-open-bar form{display:flex;gap:6px;align-items:center;margin:0}.file-select{min-width:320px;padding:6px 8px;border:1px solid #9aa7b1;background:#fff}.btn{border:1px solid var(--b);background:#fff;border-radius:5px;padding:5px 9px;cursor:pointer}.btn:hover{background:#eef6ff}.package-name{text-align:right;color:#475569}.tabs,.subtabs{display:flex;border-bottom:1px solid var(--b);background:#f8fafb}.tab,.subtab{border:0;border-right:1px solid var(--b);background:transparent;padding:10px 18px;font-weight:700;cursor:pointer}.tab.active,.subtab.active{background:#fff;color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}.panel,.subpanel{display:none;padding:16px}.panel.active,.subpanel.active{display:block}.package-grid{display:grid;grid-template-columns:minmax(560px,760px) minmax(320px,520px);gap:24px;align-items:start;max-width:none}.field-grid{display:grid;grid-template-columns:170px minmax(0,1fr);gap:10px 18px;align-items:center}.field-label{font-weight:600}.field-value{min-height:30px;border:1px solid var(--b);background:#fbfbfb;padding:6px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.field-value.guid{font-size:15px;letter-spacing:.2px}.flag-table,.data{border-collapse:collapse;width:100%;margin-top:20px}.flag-table th,.flag-table td,.data th,.data td{border:1px solid var(--b);padding:7px 9px;vertical-align:top}.flag-table th,.data th{background:var(--muted);text-align:left}.flag-true{background:#0078d7;color:#fff}.tree-box{border:1px solid var(--b);background:#fff;padding:12px;margin:12px 0 18px;width:100%;max-width:none}.tree-node{margin:3px 0;scroll-margin-top:20px}.tree-node.is-target>summary,.data tr.is-target td{background:#fff3cd!important;outline:2px solid #f0c36d}.tree-node summary{cursor:pointer;list-style:none;padding:3px 4px;border-radius:3px}.tree-node summary::-webkit-details-marker,.prop-node summary::-webkit-details-marker{display:none}.tree-node summary:hover{background:var(--soft)}.tree-node[open]>summary:before,.prop-node[open]>summary:before{content:'▾ ';color:#546170}.tree-node:not([open])>summary:before,.prop-node:not([open])>summary:before{content:'▸ ';color:#546170}.ico{display:inline-block;width:22px;color:#2f5e87}.ico.export{color:#111}.ico.prop{color:#6f42c1}.name{font-weight:650}.class-name{margin-left:10px;color:var(--orange)}.tree-lines{margin-left:30px;padding-left:12px;border-left:1px dotted #aeb8c2}.tree-lines>div{padding:2px 0}.tree-lines span.mono{margin-left:5px}.extra-line{color:var(--extra);background:var(--extra-bg);border-left:2px solid #bdd7ee;margin:2px 0 2px -6px;padding-left:6px!important}.extra-line .mono{color:#2b5876}.ref-tag,.name-tag{display:inline-block;margin-left:4px;color:#2f6f9f;background:#edf6ff;border:1px solid #c7dff2;border-radius:3px;padding:0 3px;font-family:Consolas,Menlo,monospace;font-size:.92em}.ref-link,.name-link{text-decoration:none}.ref-link:hover,.name-link:hover{text-decoration:underline;background:#dff0ff}.content-list{max-width:none}.content-item{display:grid;grid-template-columns:1fr auto;border-bottom:1px solid #e5e7eb;padding:6px 8px}.content-class{color:var(--orange)}.grid-after-tree details{margin-top:10px}.grid-after-tree summary{cursor:pointer;font-weight:700;color:var(--accent);padding:4px 0}.props-block{display:none;margin-top:8px;max-width:100%;overflow-x:auto}.prop-tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}.prop-btn{border:1px solid var(--b);background:#fff;border-radius:5px;padding:4px 8px;cursor:pointer}.prop-btn.small{font-size:12px;color:#0958b8}.prop-btn span{display:inline-block;margin-left:5px;background:#e7f5ff;border:1px solid #b6dfff;border-radius:999px;padding:1px 6px}.props-tree{border:1px solid #c8d9ea;background:#fbfdff;margin-top:8px;padding:8px;max-width:100%}.prop-node{border-bottom:1px solid #e2edf7;padding:4px 0;scroll-margin-top:20px}.prop-node:last-child{border-bottom:0}.prop-node summary{cursor:pointer;list-style:none;padding:4px 6px;border-radius:3px}.prop-name{font-weight:650}.prop-type{margin-left:10px;color:#6f42c1}.prop-value{margin-left:10px;color:#116329;font-family:Consolas,Menlo,monospace}.prop-lines{margin-left:30px;padding-left:12px;border-left:1px dotted #b7c8d9}.prop-lines>div{padding:2px 0}.raw-prop{margin-top:4px;color:#475569}.raw-prop summary{font-weight:600;color:#0969da}.raw-prop pre{margin:6px 0 0;background:#f6f8fa;border:1px solid #d0d7de;padding:8px;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.names-table{table-layout:fixed}.names-table th:nth-child(1){width:24%}.names-table th:nth-child(2){width:44%}.names-table th:nth-child(3){width:10%}.names-table th:nth-child(4){width:22%}.warn{border:1px solid #d1242f;background:#fff8f8;padding:8px 12px;margin-top:14px}@media(max-width:1000px){.package-grid,.toolbar{grid-template-columns:1fr}.package-name{text-align:left}}
 </style>
 <script>
 function showPanel(id){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.panel===id));document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id===id));}
@@ -143,7 +223,7 @@ function jumpToRef(targetId){if(!targetId)return;if(targetId.indexOf('ref-import
 document.addEventListener('click',function(ev){const a=ev.target.closest&&ev.target.closest('a.ref-link,a.name-link');if(!a)return;const href=a.getAttribute('href')||'';if(href.charAt(0)!=='#')return;ev.preventDefault();history.replaceState(null,'',window.location.pathname+window.location.search);jumpToRef(href.substring(1));});
 window.addEventListener('load',function(){if(location.hash){const targetId=location.hash.substring(1);history.replaceState(null,'',window.location.pathname+window.location.search);jumpToRef(targetId);}});
 </script></head><body>
-<div class="workspace"><div class="doc-tabs"><div class="doc-tab"><?= h(basename($filePath)) ?></div></div><div class="viewer"><div class="toolbar"><input class="searchbox" type="search" value="<?= h($searchValue) ?>" oninput="filterVisibleText(this)"><span class="package-name"><?= h($filePath) ?> (<?= h($pkg->getFileSize()) ?>)</span></div><div class="tabs"><button class="tab active" data-panel="package-panel" onclick="showPanel('package-panel')">▣ Package</button><button class="tab" data-panel="content-panel" onclick="showPanel('content-panel')">▤ Content</button><button class="tab" data-panel="externs-panel" onclick="showPanel('externs-panel')">⌘ Externs</button><button class="tab" data-panel="tables-panel" onclick="showPanel('tables-panel')">▦ Tables</button></div>
+<div class="workspace"><div class="doc-tabs"><div class="doc-tab"><?= h(basename($filePath)) ?></div></div><div class="viewer"><div class="toolbar"><div class="file-open-bar"><form method="get"><select class="file-select" name="file"><?php if (is_file(__DIR__ . '/oldtest.utx')): ?><option value="oldtest.utx"<?= $currentRel === 'oldtest.utx' ? ' selected' : '' ?>>oldtest.utx</option><?php endif; ?><?php foreach ($uploadedFiles as $up): ?><option value="<?= h($up['rel']) ?>"<?= basename($filePath) === $up['name'] ? ' selected' : '' ?>><?= h($up['name']) ?> (<?= h(number_format((int)$up['size'])) ?> bytes)</option><?php endforeach; ?></select><button class="btn" type="submit">Open</button></form></div><span class="package-name"><?= h($currentRel) ?> (<?= h($pkg->getFileSize()) ?>)</span></div><div class="tabs"><button class="tab active" data-panel="package-panel" onclick="showPanel('package-panel')">▣ Package</button><button class="tab" data-panel="content-panel" onclick="showPanel('content-panel')">▤ Content</button><button class="tab" data-panel="externs-panel" onclick="showPanel('externs-panel')">⌘ Externs</button><button class="tab" data-panel="tables-panel" onclick="showPanel('tables-panel')">▦ Tables</button></div>
 <section id="package-panel" class="panel active"><div class="package-grid"><div class="field-grid"><div class="field-label">GUID</div><div class="field-value guid mono"><?= h($displayGuid) ?></div><div class="field-label">Version</div><div class="field-value mono"><?= h($hdr['version'] ?? '') ?></div><div class="field-label">Licensee Version</div><div class="field-value mono"><?= h($hdr['licensee'] ?? '') ?></div><div class="field-label">Signature</div><div class="field-value mono"><?= h(hx((int)($hdr['signature'] ?? 0))) ?></div></div><div class="field-grid"><div class="field-label">Flags</div><div class="field-value mono"><?= h(hx((int)($hdr['pkgFlags'] ?? 0))) ?></div><div class="field-label">Build</div><div class="field-value">Unreal1</div><div class="field-label">Heritage</div><div class="field-value mono"><?= h(($hdr['heritageCount'] ?? '') . (($hdr['heritageOffset'] ?? '') !== '' ? ' / ' . ($hdr['heritageOffset'] ?? '') : '')) ?></div><div class="field-label">Counts</div><div class="field-value mono">N <?= h($hdr['nameCount'] ?? '') ?> / I <?= h($hdr['importCount'] ?? '') ?> / E <?= h($hdr['exportCount'] ?? '') ?></div></div></div><table class="flag-table"><thead><tr><th>Flag</th><th>Condition</th></tr></thead><tbody><?php foreach ($pkgFlagsDecoded as $flag): ?><tr><td class="flag-true"><?= h(str_replace('PKG_', '', $flag)) ?></td><td>True</td></tr><?php endforeach; ?><?php if (!$pkgFlagsDecoded): ?><tr><td></td><td></td></tr><?php endif; ?></tbody></table><?php if ($issues): ?><div class="warn"><strong>Validation</strong><ul><?php foreach ($issues as $w): ?><li class="mono raw"><?= h($w) ?></li><?php endforeach; ?></ul></div><?php endif; ?></section>
 <section id="content-panel" class="panel"><div class="content-list"><?php foreach ($exports as $i=>$ex): ?><div class="content-item" data-filter-row><span class="mono"><?= name_link_html($pkg, (int)($ex['objectName'] ?? -1), $pkg->exportObjectName((int)($ex['objectName'] ?? -1))) ?></span><span class="content-class mono"><?= ref_value_html(object_ref_label($pkg, (int)($ex['classIndex'] ?? 0))) ?></span></div><?php endforeach; ?></div></section>
 <section id="externs-panel" class="panel"><div class="tree-box"><?php foreach (($importsByOuter[0] ?? []) as $rootIdx): renderImportNode($pkg,$imports,$importsByOuter,(int)$rootIdx,true,'externs-'); endforeach; ?><?php foreach (($exportsByOuter[0] ?? []) as $rootIdx): renderExportNode($pkg,$exports,$exportsByOuter,(int)$rootIdx,false,'externs-'); endforeach; ?></div></section>
