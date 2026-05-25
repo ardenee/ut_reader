@@ -30,12 +30,7 @@ function object_ref_label(UnrealPackageReader $pkg, int $ref): string
         return '';
     }
 
-    if ($ref > 0) {
-        $name = $pkg->exportObjectName($ref - 1);
-        return $name !== '' ? $name . '(' . $ref . ')' : '(' . $ref . ')';
-    }
-
-    $name = $pkg->importObjectName((-1 * $ref) - 1);
+    $name = $pkg->displayNameFromRef($ref);
     return $name !== '' ? $name . '(' . $ref . ')' : '(' . $ref . ')';
 }
 
