@@ -21,16 +21,21 @@ function federation_worker_safe_name(string $name): string
     return $name !== '' ? $name : 'download.bin';
 }
 
-function federation_worker_signed_context(PDO $db, array $job, string $url, array $payload): array
+function federation_worker_file_path(array $config, array $file): string
+{
+    $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+    $path = realpath(__DIR__ . '/../' . (string)$file['relative_path']);
+    if (!$root || !$path || !str_starts_with($path, $root) || !is_file($path)) {
+        throw new RuntimeException('Stored local file missing or outside storage.');
+    }
+    return $path;
+}
+
+function federation_worker_signed_context(PDO $db, array $job, string $url, string $body, array $extraHeaders = []): array
 {
     $secret = (string)$job['shared_secret_plain'];
     if ($secret === '') {
         throw new RuntimeException('Peer has no stored API secret.');
-    }
-
-    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($body === false) {
-        throw new RuntimeException('Could not encode federation payload.');
     }
 
     $timestamp = date('c');
@@ -38,17 +43,22 @@ function federation_worker_signed_context(PDO $db, array $job, string $url, arra
     $path = parse_url($url, PHP_URL_PATH) ?: '/';
     $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
 
+    $headers = [
+        'Content-Type: application/json',
+        'User-Agent: UnrealFileCatalogFederation/1.0',
+        'X-Site-Id: ' . fed_setting($db, 'site_id', ''),
+        'X-Timestamp: ' . $timestamp,
+        'X-Nonce: ' . $nonce,
+        'X-Signature: ' . $signature,
+    ];
+    foreach ($extraHeaders as $header) {
+        $headers[] = $header;
+    }
+
     return [
         'http' => [
             'method' => 'POST',
-            'header' => implode("\r\n", [
-                'Content-Type: application/json',
-                'User-Agent: UnrealFileCatalogFederation/1.0',
-                'X-Site-Id: ' . fed_setting($db, 'site_id', ''),
-                'X-Timestamp: ' . $timestamp,
-                'X-Nonce: ' . $nonce,
-                'X-Signature: ' . $signature,
-            ]) . "\r\n",
+            'header' => implode("\r\n", $headers) . "\r\n",
             'content' => $body,
             'timeout' => 300,
             'ignore_errors' => true,
@@ -63,27 +73,131 @@ function federation_worker_signed_context(PDO $db, array $job, string $url, arra
 function federation_worker_download_info(array $job): array
 {
     if ((string)$job['direction'] === 'parent_pull_from_child') {
-        return [
-            rtrim((string)$job['site_url'], '/') . '/api/federation/download-file.php',
-            ['remote_file_id' => (int)$job['remote_file_id']],
-            'PARENT_PULL_DOWNLOADED',
-        ];
+        return [rtrim((string)$job['site_url'], '/') . '/api/federation/download-file.php', ['remote_file_id' => (int)$job['remote_file_id']], 'PARENT_PULL_DOWNLOADED'];
     }
-
     if ((string)$job['direction'] === 'download_from_parent') {
-        return [
-            rtrim((string)$job['site_url'], '/') . '/api/federation/download-approved-file.php',
-            ['request_item_id' => (int)$job['remote_request_item_id']],
-            'CHILD_APPROVED_DOWNLOADED',
-        ];
+        return [rtrim((string)$job['site_url'], '/') . '/api/federation/download-approved-file.php', ['request_item_id' => (int)$job['remote_request_item_id']], 'CHILD_APPROVED_DOWNLOADED'];
+    }
+    throw new RuntimeException('Unsupported download direction: ' . (string)$job['direction']);
+}
+
+function federation_worker_run_one_download(PDO $db, array $config, array $job): array
+{
+    $jobId = (int)$job['id'];
+    [$url, $payload, $logEvent] = federation_worker_download_info($job);
+    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($body === false) {
+        throw new RuntimeException('Could not encode federation payload.');
     }
 
-    throw new RuntimeException('Unsupported transfer direction: ' . (string)$job['direction']);
+    $remote = @fopen($url, 'rb', false, stream_context_create(federation_worker_signed_context($db, $job, $url, $body)));
+    if (!$remote) {
+        throw new RuntimeException('Could not open remote download stream.');
+    }
+
+    $meta = stream_get_meta_data($remote);
+    $wrapper = $meta['wrapper_data'] ?? [];
+    $statusLine = is_array($wrapper) ? (string)($wrapper[0] ?? '') : '';
+    if ($statusLine !== '' && !str_contains($statusLine, ' 200 ')) {
+        $err = stream_get_contents($remote);
+        fclose($remote);
+        throw new RuntimeException('Remote returned ' . $statusLine . ': ' . substr((string)$err, 0, 500));
+    }
+
+    $incoming = federation_worker_incoming_dir($config);
+    $name = 'peer_' . (int)$job['peer_id'] . '_' . (string)$job['direction'] . '_remote_' . (int)$job['remote_file_id'] . '_item_' . (int)($job['remote_request_item_id'] ?? 0) . '_' . date('Ymd_His') . '.bin';
+    $dest = $incoming . '/' . federation_worker_safe_name($name);
+    $out = fopen($dest, 'wb');
+    if (!$out) {
+        fclose($remote);
+        throw new RuntimeException('Could not open local incoming file for write.');
+    }
+
+    $bytes = 0;
+    $limit = (int)$job['speed_limit_kbps'];
+    while (!feof($remote)) {
+        $chunk = fread($remote, 65536);
+        if ($chunk === false) {
+            throw new RuntimeException('Remote read failed.');
+        }
+        if ($chunk === '') {
+            break;
+        }
+        fwrite($out, $chunk);
+        $bytes += strlen($chunk);
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET bytes_done=? WHERE id=?')->execute([$bytes, $jobId]);
+        if ($limit > 0) {
+            usleep((int)max(0, (strlen($chunk) / max(1, $limit * 1024)) * 1000000));
+        }
+    }
+    fclose($out);
+    fclose($remote);
+
+    $md5 = md5_file($dest) ?: '';
+    $sha1 = sha1_file($dest) ?: '';
+    $relativeIncoming = 'storage/federation/incoming/' . basename($dest);
+    $db->prepare('UPDATE ue_federation_transfer_jobs SET status="downloaded", bytes_done=?, incoming_path=?, downloaded_md5=?, downloaded_sha1=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$bytes, $relativeIncoming, $md5, $sha1, 'Downloaded to incoming: ' . basename($dest), $jobId]);
+    fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', $logEvent, 'Downloaded remote file ' . (int)$job['remote_file_id'] . ' to ' . basename($dest));
+
+    return ['ok' => true, 'job_id' => $jobId, 'direction' => (string)$job['direction'], 'file' => basename($dest), 'bytes' => $bytes, 'md5' => $md5];
+}
+
+function federation_worker_run_one_upload(PDO $db, array $config, array $job): array
+{
+    $jobId = (int)$job['id'];
+    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [(int)$job['local_file_id']]);
+    if (!$file) {
+        throw new RuntimeException('Local verified file not found for upload job.');
+    }
+
+    $path = federation_worker_file_path($config, $file);
+    $bytesTotal = filesize($path) ?: 0;
+    $maxBytes = (int)(fed_setting($db, 'max_transfer_file_size_mb', '1024') ?: 1024) * 1024 * 1024;
+    if ($bytesTotal <= 0 || $bytesTotal > $maxBytes) {
+        throw new RuntimeException('Upload file size is invalid or exceeds max transfer limit.');
+    }
+
+    $body = file_get_contents($path);
+    if ($body === false) {
+        throw new RuntimeException('Could not read local file for upload.');
+    }
+
+    $url = rtrim((string)$job['site_url'], '/') . '/api/federation/upload-file.php';
+    $headers = [
+        'X-UE-Original-Name: ' . (string)$file['original_name'],
+        'X-UE-Remote-File-Id: ' . (int)$file['id'],
+        'X-UE-File-Size: ' . $bytesTotal,
+        'X-UE-MD5: ' . (string)$file['md5'],
+        'X-UE-SHA1: ' . (string)$file['sha1'],
+    ];
+
+    $response = @file_get_contents($url, false, stream_context_create(federation_worker_signed_context($db, $job, $url, $body, $headers)));
+    unset($body);
+    if ($response === false) {
+        throw new RuntimeException('Upload POST failed.');
+    }
+
+    $json = json_decode($response, true);
+    if (!is_array($json)) {
+        throw new RuntimeException('Upload returned invalid JSON: ' . substr($response, 0, 300));
+    }
+    if (empty($json['ok'])) {
+        throw new RuntimeException('Upload rejected: ' . ($json['error'] ?? 'unknown error'));
+    }
+
+    $db->prepare('UPDATE ue_federation_transfer_jobs SET status="imported", bytes_done=?, downloaded_md5=?, downloaded_sha1=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$bytesTotal, (string)$file['md5'], (string)$file['sha1'], 'Uploaded to parent; parent job ID ' . ($json['job_id'] ?? ''), $jobId]);
+    fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'UPLOAD_TO_PARENT_DONE', 'Uploaded local file ID ' . (int)$file['id'] . ' to parent.');
+
+    if ((int)$job['wait_after_seconds'] > 0) {
+        sleep((int)$job['wait_after_seconds']);
+    }
+
+    return ['ok' => true, 'job_id' => $jobId, 'direction' => 'upload_to_parent', 'remote_job_id' => $json['job_id'] ?? null, 'bytes' => $bytesTotal, 'md5' => (string)$file['md5']];
 }
 
 function federation_worker_run_one_transfer(PDO $db, array $config): array
 {
-    $job = catalog_one($db, 'SELECT j.*, p.site_name peer_name, p.site_url, p.peer_site_id, p.shared_secret_plain FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status="queued" AND j.direction IN ("parent_pull_from_child","download_from_parent") AND p.is_active=1 ORDER BY j.created_at ASC LIMIT 1');
+    $job = catalog_one($db, 'SELECT j.*, p.site_name peer_name, p.site_url, p.peer_site_id, p.shared_secret_plain FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status="queued" AND j.direction IN ("parent_pull_from_child","download_from_parent","upload_to_parent") AND p.is_active=1 ORDER BY j.created_at ASC LIMIT 1');
     if (!$job) {
         return ['ok' => true, 'skipped' => true, 'message' => 'No queued transfer jobs.'];
     }
@@ -92,61 +206,10 @@ function federation_worker_run_one_transfer(PDO $db, array $config): array
     $db->prepare('UPDATE ue_federation_transfer_jobs SET status="running", started_at=NOW(), attempts=attempts+1, last_error=NULL WHERE id=?')->execute([$jobId]);
 
     try {
-        [$url, $payload, $logEvent] = federation_worker_download_info($job);
-        $remote = @fopen($url, 'rb', false, stream_context_create(federation_worker_signed_context($db, $job, $url, $payload)));
-        if (!$remote) {
-            throw new RuntimeException('Could not open remote download stream.');
+        if ((string)$job['direction'] === 'upload_to_parent') {
+            return federation_worker_run_one_upload($db, $config, $job);
         }
-
-        $meta = stream_get_meta_data($remote);
-        $wrapper = $meta['wrapper_data'] ?? [];
-        $statusLine = is_array($wrapper) ? (string)($wrapper[0] ?? '') : '';
-        if ($statusLine !== '' && !str_contains($statusLine, ' 200 ')) {
-            $err = stream_get_contents($remote);
-            fclose($remote);
-            throw new RuntimeException('Remote returned ' . $statusLine . ': ' . substr((string)$err, 0, 500));
-        }
-
-        $incoming = federation_worker_incoming_dir($config);
-        $name = 'peer_' . (int)$job['peer_id'] . '_' . (string)$job['direction'] . '_remote_' . (int)$job['remote_file_id'] . '_item_' . (int)($job['remote_request_item_id'] ?? 0) . '_' . date('Ymd_His') . '.bin';
-        $dest = $incoming . '/' . federation_worker_safe_name($name);
-        $out = fopen($dest, 'wb');
-        if (!$out) {
-            fclose($remote);
-            throw new RuntimeException('Could not open local incoming file for write.');
-        }
-
-        $bytes = 0;
-        $limit = (int)$job['speed_limit_kbps'];
-        while (!feof($remote)) {
-            $chunk = fread($remote, 65536);
-            if ($chunk === false) {
-                throw new RuntimeException('Remote read failed.');
-            }
-            if ($chunk === '') {
-                break;
-            }
-            fwrite($out, $chunk);
-            $bytes += strlen($chunk);
-            $db->prepare('UPDATE ue_federation_transfer_jobs SET bytes_done=? WHERE id=?')->execute([$bytes, $jobId]);
-            if ($limit > 0) {
-                usleep((int)max(0, (strlen($chunk) / max(1, $limit * 1024)) * 1000000));
-            }
-        }
-        fclose($out);
-        fclose($remote);
-
-        $md5 = md5_file($dest) ?: '';
-        $sha1 = sha1_file($dest) ?: '';
-        $relativeIncoming = 'storage/federation/incoming/' . basename($dest);
-        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="downloaded", bytes_done=?, incoming_path=?, downloaded_md5=?, downloaded_sha1=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$bytes, $relativeIncoming, $md5, $sha1, 'Downloaded to incoming: ' . basename($dest), $jobId]);
-        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', $logEvent, 'Downloaded remote file ' . (int)$job['remote_file_id'] . ' to ' . basename($dest));
-
-        if ((int)$job['wait_after_seconds'] > 0) {
-            sleep((int)$job['wait_after_seconds']);
-        }
-
-        return ['ok' => true, 'job_id' => $jobId, 'direction' => (string)$job['direction'], 'file' => basename($dest), 'bytes' => $bytes, 'md5' => $md5];
+        return federation_worker_run_one_download($db, $config, $job);
     } catch (Throwable $e) {
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", finished_at=NOW(), last_error=? WHERE id=?')->execute([$e->getMessage(), $jobId]);
         fed_log($db, (int)$job['peer_id'], $jobId, 'ERROR', 'TRANSFER_FAIL', $e->getMessage());
@@ -166,6 +229,13 @@ function federation_worker_resolve_incoming_path(array $config, string $relative
 
 function federation_worker_original_name(PDO $db, array $job): string
 {
+    if ((string)$job['direction'] === 'upload_to_parent') {
+        $file = catalog_one($db, 'SELECT original_name FROM ue_files WHERE id=?', [(int)$job['remote_file_id']]);
+        if ($file && trim((string)$file['original_name']) !== '') {
+            return (string)$file['original_name'];
+        }
+    }
+
     $pf = catalog_one($db, 'SELECT original_name FROM ue_federation_peer_files WHERE peer_id=? AND remote_file_id=? ORDER BY id DESC LIMIT 1', [(int)$job['peer_id'], (int)$job['remote_file_id']]);
     if ($pf && trim((string)$pf['original_name']) !== '') {
         return (string)$pf['original_name'];
@@ -236,7 +306,7 @@ function federation_worker_run_one_import(PDO $db, array $config): array
 
     try {
         $originalName = federation_worker_original_name($db, $job);
-        $preferredGameId = (string)$job['direction'] === 'download_from_parent' ? null : federation_worker_preferred_game_id($db, $job);
+        $preferredGameId = in_array((string)$job['direction'], ['download_from_parent','upload_to_parent'], true) ? null : federation_worker_preferred_game_id($db, $job);
         $result = catalog_import_file($db, $config, $incoming, $originalName, $preferredGameId, $_SESSION['user']['id'] ?? null);
         $status = ($result['status'] === 'verified' || str_starts_with((string)$result['status'], 'duplicate_')) ? 'imported' : 'failed';
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status=?, local_file_id=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$status, $result['file_id'] ?? null, $result['message'] ?? $result['status'], $jobId]);
