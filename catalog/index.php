@@ -68,6 +68,17 @@ function runq(PDO $db, string $sql, array $args = []): int { $s = $db->prepare($
 function load_reader_class(array $config, string $engineKey): string
 {
     $readerConfig = $config['engine_readers'][$engineKey] ?? [];
+
+    if ($engineKey === 'UE3') {
+        $catalogReader = realpath(__DIR__ . '/parsers/UE3CatalogReader.php');
+        if ($catalogReader && is_file($catalogReader)) {
+            require_once $catalogReader;
+            if (class_exists('CatalogUE3PackageReader', false)) {
+                return 'CatalogUE3PackageReader';
+            }
+        }
+    }
+
     $rel = $readerConfig['reader'] ?? '';
     $path = realpath(__DIR__ . '/' . $rel);
     if (!$path || !is_file($path)) { throw new RuntimeException('Reader not found for ' . $engineKey . ': ' . $rel); }
