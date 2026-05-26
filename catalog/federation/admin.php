@@ -36,7 +36,7 @@ try {
         'failed_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"')['c'] ?? 0),
     ];
 
-    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, conflicts, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="conflicts.php">Conflicts</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="docs.php">Docs</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<div class="card"><h2>Local site identity</h2><table>';
     echo '<tr><th>Site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
@@ -57,17 +57,19 @@ try {
     echo '</div>';
 
     echo '<div class="card"><h2>Core tools</h2><div class="grid">';
-    echo '<a class="stat" href="settings.php"><h2>Federation settings</h2><p>Set site role, URL, identity, speed limits, delays, and transfer defaults.</p></a>';
+    echo '<a class="stat" href="settings.php"><h2>Federation settings</h2><p>Set site role, URL, identity, speed limits, delays, transfer defaults, and cron worker token.</p></a>';
     echo '<a class="stat" href="peers.php"><h2>Peers</h2><p>Add/manage parent or child sites and shared secrets.</p></a>';
     echo '<a class="stat" href="queue.php"><h2>Queue overview</h2><p>Review queued/running/downloaded/imported/failed transfer jobs.</p></a>';
+    echo '<a class="stat" href="conflicts.php"><h2>Conflict report</h2><p>Review same-name, same-GUID, and hash mismatch conflicts between local and peer files.</p></a>';
     echo '<a class="stat" href="maintenance.php"><h2>Maintenance</h2><p>Prune old nonces/logs and review federation incoming storage usage.</p></a>';
+    echo '<a class="stat" href="docs.php"><h2>DSM/cron docs</h2><p>Setup notes and curl examples for scheduled federation workers.</p></a>';
     echo '<a class="stat" href="logs.php"><h2>Federation logs</h2><p>View API, pairing, upload/download and transfer logs.</p></a>';
     echo '</div></div>';
 
     echo '<div class="card"><h2>Parent/master tools</h2><div class="grid">';
     echo '<a class="stat" href="peer-inventory.php"><h2>Peer inventory</h2><p>View each child inventory separately.</p></a>';
     echo '<a class="stat" href="parent-pull.php"><h2>Parent pull from children</h2><p>Pull missing dependencies first, then other files the parent does not have.</p></a>';
-    echo '<a class="stat" href="requests.php"><h2>Child requests</h2><p>Approve or deny child missing-dependency requests.</p></a>';
+    echo '<a class="stat" href="requests.php"><h2>Child requests</h2><p>Approve or deny child missing-dependency requests, including selected items.</p></a>';
     echo '</div></div>';
 
     echo '<div class="card"><h2>Child tools</h2><div class="grid">';
