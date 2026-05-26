@@ -26,10 +26,12 @@ try {
         throw new RuntimeException('File not found');
     }
 
+    $depCount = (int)(catalog_one($db, 'SELECT COUNT(DISTINCT rf.id) c FROM ue_dependencies d JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? AND d.status="resolved"', [$id])['c'] ?? 0);
+
     catalog_head('Download');
     echo '<div class="card"><h1>Download</h1><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h($file['original_name']) . '</p>';
     echo '<p class="muted">The real catalog storage location is hidden. Downloads are served through the catalog controller.</p>';
-    echo '<p><a class="button" href="index.php?page=download&id=' . (int)$file['id'] . '">Download selected file</a></p></div>';
+    echo '<p><a class="button" href="index.php?page=download&id=' . (int)$file['id'] . '">Download selected file</a> <a class="button" href="download-bundle.php?id=' . (int)$file['id'] . '">Download selected + dependencies ZIP (' . (1 + $depCount) . ' files)</a></p></div>';
 
     echo '<div class="card"><h2>Selected file availability</h2><table><tr><th>Package</th><th>File</th><th>Availability</th></tr>';
     echo '<tr><td class="mono">' . catalog_h($file['package_name']) . '</td><td>' . catalog_h($file['original_name']) . '</td><td>' . render_availability($db, (int)$file['id']) . '</td></tr></table></div>';
