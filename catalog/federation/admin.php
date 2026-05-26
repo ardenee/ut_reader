@@ -36,7 +36,7 @@ try {
         'failed_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"')['c'] ?? 0),
     ];
 
-    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, peers, inventory, requests, approvals, transfer queues, imports, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<div class="card"><h2>Local site identity</h2><table>';
     echo '<tr><th>Site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
@@ -60,6 +60,7 @@ try {
     echo '<a class="stat" href="settings.php"><h2>Federation settings</h2><p>Set site role, URL, identity, speed limits, delays, and transfer defaults.</p></a>';
     echo '<a class="stat" href="peers.php"><h2>Peers</h2><p>Add/manage parent or child sites and shared secrets.</p></a>';
     echo '<a class="stat" href="queue.php"><h2>Queue overview</h2><p>Review queued/running/downloaded/imported/failed transfer jobs.</p></a>';
+    echo '<a class="stat" href="maintenance.php"><h2>Maintenance</h2><p>Prune old nonces/logs and review federation incoming storage usage.</p></a>';
     echo '<a class="stat" href="logs.php"><h2>Federation logs</h2><p>View API, pairing, upload/download and transfer logs.</p></a>';
     echo '</div></div>';
 
@@ -71,14 +72,17 @@ try {
 
     echo '<div class="card"><h2>Child tools</h2><div class="grid">';
     echo '<a class="stat" href="inventory-push.php"><h2>Push inventory to parent</h2><p>Send verified local file metadata to the parent.</p></a>';
+    echo '<a class="stat" href="upload-to-parent.php"><h2>Upload files to parent</h2><p>Queue selected verified local files for controlled upload to parent.</p></a>';
     echo '<a class="stat" href="request-generate.php"><h2>Generate missing dependency request</h2><p>Submit local missing dependency list to the parent.</p></a>';
     echo '<a class="stat" href="request-status.php"><h2>Request status/cancel</h2><p>Poll parent status and cancel active requests.</p></a>';
     echo '<a class="stat" href="approved-downloads.php"><h2>Approved downloads</h2><p>Queue parent-approved files for controlled download.</p></a>';
     echo '</div></div>';
 
     echo '<div class="card"><h2>Workers</h2><div class="grid">';
-    echo '<a class="stat" href="transfer-run.php"><h2>Run one transfer</h2><p>Download one queued parent-pull or child-approved file.</p></a>';
+    echo '<a class="stat" href="worker-run.php"><h2>Bulk worker</h2><p>Run multiple sequential transfers/imports up to the configured per-run limit.</p></a>';
+    echo '<a class="stat" href="transfer-run.php"><h2>Run one transfer</h2><p>Download or upload one queued federation job.</p></a>';
     echo '<a class="stat" href="import-run.php"><h2>Import one downloaded file</h2><p>Import one downloaded federation file into the local catalog.</p></a>';
+    echo '<a class="stat" href="cron-worker.php" target="_blank"><h2>Cron worker endpoint</h2><p>Token-protected worker endpoint for DSM Task Scheduler.</p></a>';
     echo '<a class="stat" href="../api/federation/hello.php" target="_blank"><h2>Hello endpoint</h2><p>Public identity/status endpoint used for connection testing.</p></a>';
     echo '</div></div>';
 
