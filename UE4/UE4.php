@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . "/UnrealPackageReader4.php";
+require_once __DIR__ . "/UnrealPackageReader.php";
 
 $uploadDir = __DIR__ . "/uploads";
 $uploadRelDir = "uploads";
