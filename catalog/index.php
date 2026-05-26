@@ -90,6 +90,26 @@ function load_reader_class(array $config, string $engineKey): string
     throw new RuntimeException('Reader file loaded for ' . $engineKey . ', but no supported reader class was found. Tried: ' . implode(', ', array_unique($candidates)));
 }
 
+function split_reader_issues(array $issues): array
+{
+    $fatal = [];
+    $notes = [];
+
+    foreach ($issues as $issue) {
+        $text = trim((string)$issue);
+        if ($text === '') { continue; }
+
+        if (str_starts_with($text, 'Package is unversioned; using assumed UE4 version ')) {
+            $notes[] = $text;
+            continue;
+        }
+
+        $fatal[] = $text;
+    }
+
+    return [$fatal, $notes];
+}
+
 function ref_path(int $ref, array $imports, array $exports, array &$cache, array $seen = []): string
 {
     if ($ref === 0) { return ''; }
@@ -172,7 +192,8 @@ function scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, st
     $readerClass = load_reader_class($config, $game['engine_key']);
     $pkg = new $readerClass($tmp);
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
-    if ($issues) { throw new RuntimeException(implode("\n", array_map('strval', $issues))); }
+    [$fatalIssues, $scanNotes] = split_reader_issues($issues);
+    if ($fatalIssues) { throw new RuntimeException(implode("\n", $fatalIssues)); }
 
     foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
         if (!method_exists($pkg, $method)) { throw new RuntimeException('Reader is missing method: ' . $method); }
@@ -183,6 +204,7 @@ function scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, st
     $imports = $pkg->getImports();
     $exports = $pkg->getExports();
     $packageName = clean_name(pathinfo($originalName, PATHINFO_FILENAME));
+    $scanNotesText = $scanNotes ? implode("\n", $scanNotes) : null;
 
     $dir = rtrim($config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . slug_text($game['slug']) . '/verified';
     if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) { throw new RuntimeException('Could not create storage folder: ' . $dir); }
@@ -194,8 +216,8 @@ function scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, st
 
     $db->beginTransaction();
     try {
-        $stmt = $db->prepare('INSERT INTO ue_files(game_id,package_name,original_name,stored_name,relative_path,extension,file_size,md5,sha1,package_guid,package_version,licensee_version,name_count,import_count,export_count,scan_status,uploaded_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $size, $md5, $sha1, (string)($header['guid'] ?? ''), (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), count($names), count($imports), count($exports), 'verified', $userId]);
+        $stmt = $db->prepare('INSERT INTO ue_files(game_id,package_name,original_name,stored_name,relative_path,extension,file_size,md5,sha1,package_guid,package_version,licensee_version,name_count,import_count,export_count,scan_status,scan_notes,uploaded_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
+        $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $size, $md5, $sha1, (string)($header['guid'] ?? ''), (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), count($names), count($imports), count($exports), 'verified', $scanNotesText, $userId]);
         $fileId = (int)$db->lastInsertId();
 
         $stmt = $db->prepare('INSERT INTO ue_names(file_id,name_index,name_text,flags) VALUES(?,?,?,?)');
@@ -361,6 +383,7 @@ try {
         $file = one($db, 'SELECT f.*, g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$id]);
         if (!$file) { throw new RuntimeException('File not found'); }
         echo '<div class="card"><h1>' . h($file['package_name']) . '</h1><p>' . h($file['original_name']) . ' / ' . h($file['game_name']) . '</p><p><a class="button" href="' . h(u(['page' => 'download', 'id' => $id])) . '">Download</a> <a class="button" href="' . h(u(['page' => 'examine', 'id' => $id])) . '">Examine full parse</a></p><div class="grid"><div class="stat">MD5<br><span class="mono small">' . h($file['md5']) . '</span></div><div class="stat">SHA1<br><span class="mono small">' . h($file['sha1']) . '</span></div><div class="stat">GUID<br><span class="mono small">' . h($file['package_guid']) . '</span></div><div class="stat">Tables<br>' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</div></div></div>';
+        if (!empty($file['scan_notes'])) { echo '<div class="card"><h2>Scan notes</h2><pre class="mono">' . h($file['scan_notes']) . '</pre></div>'; }
         $deps = allq($db, 'SELECT d.*, rf.original_name resolved_file FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.required_package, d.required_object_path', [$id]);
         echo '<div class="card"><h2>Dependencies</h2><table><tr><th>Status</th><th>Required object</th><th>Resolved by</th></tr>';
         foreach ($deps as $dep) {
