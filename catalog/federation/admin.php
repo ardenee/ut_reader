@@ -32,10 +32,11 @@ try {
         'peer_files' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files')['c'] ?? 0),
         'requests' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_requests')['c'] ?? 0),
         'queued_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"')['c'] ?? 0),
+        'downloaded_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded"')['c'] ?? 0),
         'failed_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"')['c'] ?? 0),
     ];
 
-    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation foundation. Phase 1 covers identity, settings, peers, signed endpoints, and logs. File transfer comes next.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, peers, inventory, requests, approvals, transfer queues, imports, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<div class="card"><h2>Local site identity</h2><table>';
     echo '<tr><th>Site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
@@ -51,13 +52,33 @@ try {
     echo '<div class="stat"><h2>' . $stats['peer_files'] . '</h2><p>Peer inventory rows</p></div>';
     echo '<div class="stat"><h2>' . $stats['requests'] . '</h2><p>Requests</p></div>';
     echo '<div class="stat"><h2>' . $stats['queued_jobs'] . '</h2><p>Queued transfer jobs</p></div>';
-    echo '<div class="stat"><h2>' . $stats['failed_jobs'] . '</h2><p>Failed transfer jobs</p></div>';
+    echo '<div class="stat"><h2>' . $stats['downloaded_jobs'] . '</h2><p>Waiting import</p></div>';
+    echo '<div class="stat"><h2>' . $stats['failed_jobs'] . '</h2><p>Failed jobs</p></div>';
     echo '</div>';
 
-    echo '<div class="card"><h2>Tools</h2><div class="grid">';
+    echo '<div class="card"><h2>Core tools</h2><div class="grid">';
     echo '<a class="stat" href="settings.php"><h2>Federation settings</h2><p>Set site role, URL, identity, speed limits, delays, and transfer defaults.</p></a>';
     echo '<a class="stat" href="peers.php"><h2>Peers</h2><p>Add/manage parent or child sites and shared secrets.</p></a>';
+    echo '<a class="stat" href="queue.php"><h2>Queue overview</h2><p>Review queued/running/downloaded/imported/failed transfer jobs.</p></a>';
     echo '<a class="stat" href="logs.php"><h2>Federation logs</h2><p>View API, pairing, upload/download and transfer logs.</p></a>';
+    echo '</div></div>';
+
+    echo '<div class="card"><h2>Parent/master tools</h2><div class="grid">';
+    echo '<a class="stat" href="peer-inventory.php"><h2>Peer inventory</h2><p>View each child inventory separately.</p></a>';
+    echo '<a class="stat" href="parent-pull.php"><h2>Parent pull from children</h2><p>Pull missing dependencies first, then other files the parent does not have.</p></a>';
+    echo '<a class="stat" href="requests.php"><h2>Child requests</h2><p>Approve or deny child missing-dependency requests.</p></a>';
+    echo '</div></div>';
+
+    echo '<div class="card"><h2>Child tools</h2><div class="grid">';
+    echo '<a class="stat" href="inventory-push.php"><h2>Push inventory to parent</h2><p>Send verified local file metadata to the parent.</p></a>';
+    echo '<a class="stat" href="request-generate.php"><h2>Generate missing dependency request</h2><p>Submit local missing dependency list to the parent.</p></a>';
+    echo '<a class="stat" href="request-status.php"><h2>Request status/cancel</h2><p>Poll parent status and cancel active requests.</p></a>';
+    echo '<a class="stat" href="approved-downloads.php"><h2>Approved downloads</h2><p>Queue parent-approved files for controlled download.</p></a>';
+    echo '</div></div>';
+
+    echo '<div class="card"><h2>Workers</h2><div class="grid">';
+    echo '<a class="stat" href="transfer-run.php"><h2>Run one transfer</h2><p>Download one queued parent-pull or child-approved file.</p></a>';
+    echo '<a class="stat" href="import-run.php"><h2>Import one downloaded file</h2><p>Import one downloaded federation file into the local catalog.</p></a>';
     echo '<a class="stat" href="../api/federation/hello.php" target="_blank"><h2>Hello endpoint</h2><p>Public identity/status endpoint used for connection testing.</p></a>';
     echo '</div></div>';
 
