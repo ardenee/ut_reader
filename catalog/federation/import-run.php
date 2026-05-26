@@ -40,6 +40,9 @@ function fir_resolve_incoming_path(array $config, string $relativePath): string
 
 function fir_original_name(PDO $db, array $job): string
 {
+    if ((string)$job['direction'] === 'download_from_parent') {
+        return basename((string)$job['incoming_path']);
+    }
     $pf = catalog_one($db, 'SELECT original_name FROM ue_federation_peer_files WHERE peer_id=? AND remote_file_id=? ORDER BY id DESC LIMIT 1', [(int)$job['peer_id'], (int)$job['remote_file_id']]);
     if ($pf && trim((string)$pf['original_name']) !== '') {
         return (string)$pf['original_name'];
@@ -49,6 +52,9 @@ function fir_original_name(PDO $db, array $job): string
 
 function fir_preferred_game_id(PDO $db, array $job): ?int
 {
+    if ((string)$job['direction'] === 'download_from_parent') {
+        return null;
+    }
     $pf = catalog_one($db, 'SELECT game_id, remote_game_name, remote_engine_key FROM ue_federation_peer_files WHERE peer_id=? AND remote_file_id=? ORDER BY id DESC LIMIT 1', [(int)$job['peer_id'], (int)$job['remote_file_id']]);
     if ($pf && !empty($pf['game_id'])) {
         $game = catalog_one($db, 'SELECT id FROM ue_games WHERE id=?', [(int)$pf['game_id']]);
@@ -63,6 +69,32 @@ function fir_preferred_game_id(PDO $db, array $job): ?int
         }
     }
     return null;
+}
+
+function fir_notify_parent(PDO $db, array $job, array $result, string $status): void
+{
+    if ((string)$job['direction'] !== 'download_from_parent' || empty($job['remote_request_item_id'])) {
+        return;
+    }
+
+    $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [(int)$job['peer_id']]);
+    if (!$peer || empty($peer['shared_secret_plain'])) {
+        fed_log($db, (int)$job['peer_id'], (int)$job['id'], 'WARN', 'PARENT_STATUS_NOTIFY_SKIP', 'Parent peer missing or has no API secret.');
+        return;
+    }
+
+    $payload = [
+        'request_item_id' => (int)$job['remote_request_item_id'],
+        'status' => $status === 'imported' ? 'imported' : 'failed',
+        'child_local_file_id' => $result['file_id'] ?? null,
+        'md5' => (string)($job['downloaded_md5'] ?? ''),
+        'sha1' => (string)($job['downloaded_sha1'] ?? ''),
+        'message' => (string)($result['message'] ?? $result['status'] ?? ''),
+    ];
+
+    $url = rtrim((string)$peer['site_url'], '/') . '/api/federation/request-item-status-update.php';
+    $response = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), (string)$peer['shared_secret_plain'], $payload);
+    fed_log($db, (int)$peer['id'], (int)$job['id'], !empty($response['ok']) ? 'INFO' : 'ERROR', 'PARENT_STATUS_NOTIFY', json_encode($response, JSON_UNESCAPED_SLASHES));
 }
 
 function run_one_import(PDO $db, array $config): array
@@ -93,10 +125,12 @@ function run_one_import(PDO $db, array $config): array
         $status = ($result['status'] === 'verified' || str_starts_with((string)$result['status'], 'duplicate_')) ? 'imported' : 'failed';
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status=?, local_file_id=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$status, $result['file_id'] ?? null, $result['message'] ?? $result['status'], $jobId]);
         fed_log($db, (int)$job['peer_id'], $jobId, $status === 'imported' ? 'INFO' : 'WARN', 'FEDERATION_IMPORT', json_encode($result, JSON_UNESCAPED_SLASHES));
-        return ['ok' => true, 'job_id' => $jobId, 'result' => $result];
+        fir_notify_parent($db, $job, $result, $status);
+        return ['ok' => true, 'job_id' => $jobId, 'result' => $result, 'notified_parent' => (string)$job['direction'] === 'download_from_parent'];
     } catch (Throwable $e) {
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", finished_at=NOW(), last_error=? WHERE id=?')->execute([$e->getMessage(), $jobId]);
         fed_log($db, (int)$job['peer_id'], $jobId, 'ERROR', 'FEDERATION_IMPORT_FAIL', $e->getMessage());
+        fir_notify_parent($db, $job, ['status' => 'failed', 'message' => $e->getMessage()], 'failed');
         throw $e;
     }
 }
@@ -123,7 +157,7 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>Federation Import Runner</h1><p class="muted">Imports one downloaded federation file into the normal catalog storage/DB, rebuilds dependencies, and marks the transfer job imported.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="transfer-run.php">Transfer runner</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Import Runner</h1><p class="muted">Imports one downloaded federation file into the normal catalog storage/DB, rebuilds dependencies, marks the transfer job imported, and reports approved child-download imports back to the parent.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="transfer-run.php">Transfer runner</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="approved-downloads.php">Approved downloads</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     if (isset($_SESSION['fed_import_result'])) {
         echo '<div class="card"><h2>Last import</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_import_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
@@ -138,10 +172,10 @@ try {
     if (!$jobs) {
         echo '<p class="muted">No downloaded/imported jobs yet.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>Peer</th><th>Status</th><th>Incoming</th><th>Local file</th><th>Message</th><th>Finished</th></tr>';
+        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Remote item</th><th>Status</th><th>Incoming</th><th>Local file</th><th>Message</th><th>Finished</th></tr>';
         foreach ($jobs as $job) {
             $local = !empty($job['local_file_id']) ? '<a href="../file-info.php?id=' . (int)$job['local_file_id'] . '" target="_blank">file ' . (int)$job['local_file_id'] . '</a>' : '';
-            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['status']) . '</td><td class="mono small">' . catalog_h($job['incoming_path']) . '</td><td>' . $local . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['finished_at']) . '</td></tr>';
+            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td class="mono">' . catalog_h($job['remote_request_item_id']) . '</td><td>' . catalog_h($job['status']) . '</td><td class="mono small">' . catalog_h($job['incoming_path']) . '</td><td>' . $local . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['finished_at']) . '</td></tr>';
         }
         echo '</table>';
     }
