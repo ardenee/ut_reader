@@ -6,6 +6,7 @@ $uploadDir = __DIR__ . '/uploads';
 $uploadRelDir = 'uploads';
 $allowedExt = ['u', 'utx', 'umx', 'uax', 'unr', 'ut2', 'ut3', 'upk'];
 
+function prop_value_text($value): string { return is_scalar($value) ? (string)$value : trim(print_r($value, true)); }
 function h($s): string { return htmlspecialchars((string)$s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function hx(int $v): string { return sprintf('0x%08X', $v); }
 function hx2(int $v): string { return sprintf('0x%02X', $v); }
@@ -111,6 +112,30 @@ function name_index_link(int $idx): string
     return '<a class="name-tag name-link" href="#' . h(name_ref_target_id($idx)) . '" data-name-index="' . h($idx) . '">#' . h($idx) . '</a>';
 }
 function prop_value_text($value): string { return is_scalar($value) ? (string)$value : trim(print_r($value, true)); }
+
+function renderRawHeaderTable(array $hdr): void
+{
+    echo '<details class="raw-header-block" open>';
+    echo '<summary>Raw Header Data</summary>';
+    echo '<table class="data raw-header-table"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>';
+
+    foreach ($hdr as $key => $value) {
+        if ($value === null || $value === '') {
+            $display = '';
+        } elseif (is_bool($value)) {
+            $display = $value ? 'true' : 'false';
+        } elseif (is_scalar($value)) {
+            $display = (string)$value;
+        } else {
+            $display = json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        }
+
+        echo '<tr><td class="mono">' . h((string)$key) . '</td><td class="mono raw">' . h((string)$display) . '</td></tr>';
+    }
+
+    echo '</tbody></table>';
+    echo '</details>';
+}
 
 $uploadedFiles = upload_file_list($uploadDir, $uploadRelDir, $allowedExt);
 $fileParam = isset($_GET['file']) ? (string)$_GET['file'] : '';
@@ -255,7 +280,11 @@ window.addEventListener('load',function(){if(location.hash){const targetId=locat
 <div class="viewer">
 <div class="toolbar"><div class="file-open-bar"><form method="get"><select class="file-select" name="file"><?php if (is_file(__DIR__ . '/oldtest.utx')): ?><option value="oldtest.utx"<?= $currentRel === 'oldtest.utx' ? ' selected' : '' ?>>oldtest.utx</option><?php endif; ?><?php foreach ($uploadedFiles as $up): ?><option value="<?= h($up['rel']) ?>"<?= basename($filePath) === $up['name'] ? ' selected' : '' ?>><?= h($up['name']) ?> (<?= h(number_format((int)$up['size'])) ?> bytes)</option><?php endforeach; ?></select><button class="btn" type="submit">Open</button><a class="btn" href="upload.php">Upload</a></form></div><span class="package-name"><?= h($currentRel) ?> (<?= h($pkg->getFileSize()) ?>)</span></div>
 <div class="tabs"><button class="tab active" data-panel="package-panel" onclick="showPanel('package-panel')">▣ Package</button><button class="tab" data-panel="content-panel" onclick="showPanel('content-panel')">▤ Content</button><button class="tab" data-panel="externs-panel" onclick="showPanel('externs-panel')">⌘ Externs</button><button class="tab" data-panel="tables-panel" onclick="showPanel('tables-panel')">▦ Tables</button></div>
-<section id="package-panel" class="panel active"><div class="package-grid"><div class="field-grid"><div class="field-label">GUID</div><div class="field-value mono"><?= h($displayGuid) ?></div><div class="field-label">Version</div><div class="field-value mono"><?= h($hdr['version'] ?? '') ?></div><div class="field-label">Licensee Version</div><div class="field-value mono"><?= h($hdr['licensee'] ?? '') ?></div><div class="field-label">Signature</div><div class="field-value mono"><?= h(hx((int)($hdr['signature'] ?? 0))) ?></div></div><div class="field-grid"><div class="field-label">Flags</div><div class="field-value mono"><?= h(hx((int)($hdr['pkgFlags'] ?? 0))) ?></div><div class="field-label">Build</div><div class="field-value">Unreal1</div><div class="field-label">Heritage</div><div class="field-value mono"><?= h(($hdr['heritageCount'] ?? '') . (($hdr['heritageOffset'] ?? '') !== '' ? ' / ' . ($hdr['heritageOffset'] ?? '') : '')) ?></div><div class="field-label">Counts</div><div class="field-value mono">N <?= h($hdr['nameCount'] ?? '') ?> / I <?= h($hdr['importCount'] ?? '') ?> / E <?= h($hdr['exportCount'] ?? '') ?></div></div></div><table class="flag-table"><thead><tr><th>Flag</th><th>Condition</th></tr></thead><tbody><?php foreach ($pkgFlagsDecoded as $flag): ?><tr><td class="flag-true"><?= h(str_replace('PKG_', '', $flag)) ?></td><td>True</td></tr><?php endforeach; ?><?php if (!$pkgFlagsDecoded): ?><tr><td></td><td></td></tr><?php endif; ?></tbody></table><?php if ($issues): ?><div class="warn"><strong>Validation / Notes</strong><ul><?php foreach ($issues as $w): ?><li class="mono raw"><?= h($w) ?></li><?php endforeach; ?></ul></div><?php endif; ?></section>
+<section id="package-panel" class="panel active"><div class="package-grid"><div class="field-grid"><div class="field-label">GUID</div><div class="field-value mono"><?= h($displayGuid) ?></div><div class="field-label">Version</div><div class="field-value mono"><?= h($hdr['version'] ?? '') ?></div><div class="field-label">Licensee Version</div><div class="field-value mono"><?= h($hdr['licensee'] ?? '') ?></div><div class="field-label">Signature</div><div class="field-value mono"><?= h(hx((int)($hdr['signature'] ?? 0))) ?></div></div><div class="field-grid"><div class="field-label">Flags</div><div class="field-value mono"><?= h(hx((int)($hdr['pkgFlags'] ?? 0))) ?></div><div class="field-label">Build</div><div class="field-value">Unreal1</div><div class="field-label">Heritage</div><div class="field-value mono"><?= h(($hdr['heritageCount'] ?? '') . (($hdr['heritageOffset'] ?? '') !== '' ? ' / ' . ($hdr['heritageOffset'] ?? '') : '')) ?></div><div class="field-label">Counts</div><div class="field-value mono">N <?= h($hdr['nameCount'] ?? '') ?> / I <?= h($hdr['importCount'] ?? '') ?> / E <?= h($hdr['exportCount'] ?? '') ?></div></div></div><table class="flag-table"><thead><tr><th>Flag</th><th>Condition</th></tr></thead><tbody><?php foreach ($pkgFlagsDecoded as $flag): ?><tr><td class="flag-true"><?= h(str_replace('PKG_', '', $flag)) ?></td><td>True</td></tr><?php endforeach; ?><?php if (!$pkgFlagsDecoded): ?><tr><td></td><td></td></tr><?php endif; ?></tbody></table>
+
+
+<?php renderRawHeaderTable($hdr); ?><?php if ($issues): ?><div class="warn"><strong>Validation / Notes</strong><ul><?php foreach ($issues as $w): ?><li class="mono raw"><?= h($w) ?></li><?php endforeach; ?></ul></div><?php endif; ?></section>
+
 <section id="content-panel" class="panel"><div class="content-list"><?php foreach ($exports as $i => $ex): ?><div class="content-item" data-filter-row><span><?= name_link_html($pkg, (int)($ex['objectName'] ?? -1), $pkg->exportObjectName((int)($ex['objectName'] ?? -1))) ?></span><span class="content-class"><?= ref_value_html(object_ref_label($pkg, (int)($ex['classIndex'] ?? 0))) ?></span></div><?php endforeach; ?></div></section>
 <section id="externs-panel" class="panel"><div class="tree-box"><?php foreach (($importsByOuter[0] ?? []) as $rootIdx) renderImportNode($pkg, $imports, $importsByOuter, (int)$rootIdx, true, 'externs-'); foreach (($exportsByOuter[0] ?? []) as $rootIdx) renderExportNode($pkg, $exports, $exportsByOuter, (int)$rootIdx, false, 'externs-', true); ?></div></section>
 <section id="tables-panel" class="panel"><div class="subtabs"><button class="subtab active" data-sub="names-sub" onclick="showSub('names-sub')">☰ Names</button><button class="subtab" data-sub="exports-sub" onclick="showSub('exports-sub')">▤ Exports</button><button class="subtab" data-sub="imports-sub" onclick="showSub('imports-sub')">▧ Imports</button><button class="subtab" data-sub="gens-sub" onclick="showSub('gens-sub')">☷ Generations</button></div>
