@@ -7,10 +7,24 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
+require_once __DIR__ . '/../lib/FederationAuth.php';
 
 function fq_is_admin(): bool
 {
     return ($_SESSION['user']['role'] ?? '') === 'admin';
+}
+
+function fq_csrf(): string
+{
+    $_SESSION['fed_queue_csrf'] ??= bin2hex(random_bytes(16));
+    return $_SESSION['fed_queue_csrf'];
+}
+
+function fq_check_csrf(): void
+{
+    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_queue_csrf'] ?? '')) {
+        throw new RuntimeException('Bad CSRF token');
+    }
 }
 
 function fq_status_card(PDO $db, string $direction, string $title): void
@@ -27,9 +41,48 @@ function fq_status_card(PDO $db, string $direction, string $title): void
     echo '</div>';
 }
 
+function fq_job_action(PDO $db, int $jobId, string $action): string
+{
+    $job = catalog_one($db, 'SELECT * FROM ue_federation_transfer_jobs WHERE id=?', [$jobId]);
+    if (!$job) {
+        throw new RuntimeException('Job not found.');
+    }
+
+    if ($action === 'retry') {
+        if (!in_array((string)$job['status'], ['failed','cancelled'], true)) {
+            throw new RuntimeException('Only failed/cancelled jobs can be retried.');
+        }
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="queued", bytes_done=0, incoming_path=NULL, downloaded_md5=NULL, downloaded_sha1=NULL, started_at=NULL, finished_at=NULL, last_error=NULL WHERE id=?')->execute([$jobId]);
+        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_RETRY', 'Job reset to queued.');
+        return 'Job #' . $jobId . ' reset to queued.';
+    }
+
+    if ($action === 'cancel') {
+        if (!in_array((string)$job['status'], ['queued','failed'], true)) {
+            throw new RuntimeException('Only queued/failed jobs can be cancelled from this page.');
+        }
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="cancelled", finished_at=NOW(), last_error="Cancelled by admin." WHERE id=?')->execute([$jobId]);
+        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_CANCEL', 'Job cancelled by admin.');
+        return 'Job #' . $jobId . ' cancelled.';
+    }
+
+    throw new RuntimeException('Unknown queue action.');
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!fq_is_admin()) {
+            throw new RuntimeException('Admin required');
+        }
+        fq_check_csrf();
+        $_SESSION['fed_queue_flash'] = fq_job_action($db, (int)($_POST['job_id'] ?? 0), (string)($_POST['action'] ?? ''));
+        header('Location: queue.php');
+        exit;
+    }
+
     catalog_head('Federation Queue');
 
     if (!fq_is_admin()) {
@@ -38,7 +91,12 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>Federation Queue Overview</h1><p class="muted">One place to review parent pulls, child downloads, downloaded files waiting for import, completed imports, and failures.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="transfer-run.php">Run one transfer</a> <a class="button" href="import-run.php">Import one download</a> <a class="button" href="parent-pull.php">Parent pull</a> <a class="button" href="approved-downloads.php">Approved downloads</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    if (isset($_SESSION['fed_queue_flash'])) {
+        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_queue_flash']) . '</strong></div>';
+        unset($_SESSION['fed_queue_flash']);
+    }
+
+    echo '<div class="card"><h1>Federation Queue Overview</h1><p class="muted">One place to review parent pulls, child downloads, downloaded files waiting for import, completed imports, failures, retries, and cancellations.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="transfer-run.php">Run one transfer</a> <a class="button" href="import-run.php">Import one download</a> <a class="button" href="parent-pull.php">Parent pull</a> <a class="button" href="approved-downloads.php">Approved downloads</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<div class="card"><h2>Queue counts</h2><div class="grid">';
     fq_status_card($db, 'parent_pull_from_child', 'Parent pulls from children');
@@ -64,22 +122,27 @@ try {
     if (!$active) {
         echo '<p class="muted">No queued or running transfer jobs.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Remote item</th><th>Remote file</th><th>Progress</th><th>Speed limit</th><th>Created</th></tr>';
+        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Remote item</th><th>Remote file</th><th>Progress</th><th>Speed limit</th><th>Created</th><th>Action</th></tr>';
         foreach ($active as $job) {
-            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td>' . catalog_h($job['status']) . '</td><td class="mono">' . catalog_h($job['remote_request_item_id']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td>' . catalog_h(catalog_bytes((int)$job['bytes_done']) . ' / ' . catalog_bytes((int)$job['bytes_total'])) . '</td><td>' . (int)$job['speed_limit_kbps'] . ' KB/s</td><td>' . catalog_h($job['created_at']) . '</td></tr>';
+            $action = '';
+            if ((string)$job['status'] === 'queued') {
+                $action = '<form method="post" onsubmit="return confirm(\'Cancel queued job?\')"><input type="hidden" name="csrf" value="' . catalog_h(fq_csrf()) . '"><input type="hidden" name="job_id" value="' . (int)$job['id'] . '"><input type="hidden" name="action" value="cancel"><button>Cancel</button></form>';
+            }
+            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td>' . catalog_h($job['status']) . '</td><td class="mono">' . catalog_h($job['remote_request_item_id']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td>' . catalog_h(catalog_bytes((int)$job['bytes_done']) . ' / ' . catalog_bytes((int)$job['bytes_total'])) . '</td><td>' . (int)$job['speed_limit_kbps'] . ' KB/s</td><td>' . catalog_h($job['created_at']) . '</td><td>' . $action . '</td></tr>';
         }
         echo '</table>';
     }
     echo '</div>';
 
-    $failed = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status="failed" ORDER BY j.finished_at DESC, j.id DESC LIMIT 100');
-    echo '<div class="card"><h2>Failed transfer/import jobs</h2>';
+    $failed = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status IN ("failed","cancelled") ORDER BY j.finished_at DESC, j.id DESC LIMIT 100');
+    echo '<div class="card"><h2>Failed / cancelled jobs</h2>';
     if (!$failed) {
-        echo '<p class="muted">No failed transfer/import jobs.</p>';
+        echo '<p class="muted">No failed or cancelled jobs.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Remote item</th><th>Remote file</th><th>Error</th><th>Finished</th></tr>';
+        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Remote item</th><th>Remote file</th><th>Error</th><th>Finished</th><th>Action</th></tr>';
         foreach ($failed as $job) {
-            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td class="mono">' . catalog_h($job['remote_request_item_id']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['finished_at']) . '</td></tr>';
+            $retry = '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(fq_csrf()) . '"><input type="hidden" name="job_id" value="' . (int)$job['id'] . '"><input type="hidden" name="action" value="retry"><button>Retry</button></form>';
+            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td>' . catalog_h($job['status']) . '</td><td class="mono">' . catalog_h($job['remote_request_item_id']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['finished_at']) . '</td><td>' . $retry . '</td></tr>';
         }
         echo '</table>';
     }
