@@ -103,6 +103,106 @@ function fed_verify_signature(string $secret, string $method, string $path, stri
     return hash_equals($expected, $signature);
 }
 
+function fed_request_path(): string
+{
+    $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
+    $pos = strpos($uri, '?');
+    return $pos === false ? $uri : substr($uri, 0, $pos);
+}
+
+function fed_require_signed_peer(PDO $db, string $body): array
+{
+    $siteId = (string)($_SERVER['HTTP_X_SITE_ID'] ?? '');
+    $timestamp = (string)($_SERVER['HTTP_X_TIMESTAMP'] ?? '');
+    $nonce = (string)($_SERVER['HTTP_X_NONCE'] ?? '');
+    $signature = (string)($_SERVER['HTTP_X_SIGNATURE'] ?? '');
+
+    if ($siteId === '' || $timestamp === '' || $nonce === '' || $signature === '') {
+        fed_json_response(['ok' => false, 'error' => 'Missing federation auth headers'], 401);
+    }
+
+    $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE peer_site_id=? AND is_active=1', [$siteId]);
+    if (!$peer) {
+        fed_json_response(['ok' => false, 'error' => 'Unknown or inactive peer'], 403);
+    }
+
+    $secret = (string)($peer['shared_secret_plain'] ?? '');
+    if ($secret === '') {
+        fed_json_response(['ok' => false, 'error' => 'Peer has no API secret stored. Re-add or update the peer after installing update 005.'], 501);
+    }
+
+    $nonceTtl = (int)(fed_setting($db, 'api_nonce_ttl_seconds', '300') ?: 300);
+    $ts = strtotime($timestamp);
+    if ($ts === false || abs(time() - $ts) > $nonceTtl) {
+        fed_json_response(['ok' => false, 'error' => 'Timestamp outside allowed window'], 401);
+    }
+
+    $existingNonce = catalog_one($db, 'SELECT id FROM ue_federation_nonces WHERE nonce=?', [$nonce]);
+    if ($existingNonce) {
+        fed_json_response(['ok' => false, 'error' => 'Nonce already used'], 401);
+    }
+
+    if (!fed_verify_signature($secret, (string)($_SERVER['REQUEST_METHOD'] ?? 'GET'), fed_request_path(), $timestamp, $nonce, $body, $signature)) {
+        fed_log($db, (int)$peer['id'], null, 'WARN', 'SIGNATURE_FAIL', fed_request_path());
+        fed_json_response(['ok' => false, 'error' => 'Invalid signature'], 401);
+    }
+
+    $stmt = $db->prepare('INSERT INTO ue_federation_nonces(peer_id, nonce) VALUES(?,?)');
+    $stmt->execute([(int)$peer['id'], $nonce]);
+    $stmt = $db->prepare('UPDATE ue_federation_peers SET last_seen_at=NOW() WHERE id=?');
+    $stmt->execute([(int)$peer['id']]);
+
+    return $peer;
+}
+
+function fed_http_post_signed(string $url, string $siteId, string $secret, array $payload): array
+{
+    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($body === false) {
+        throw new RuntimeException('Could not encode federation payload.');
+    }
+
+    $timestamp = date('c');
+    $nonce = fed_random_secret();
+    $path = parse_url($url, PHP_URL_PATH) ?: '/';
+    $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
+
+    $headers = [
+        'Content-Type: application/json',
+        'User-Agent: UnrealFileCatalogFederation/1.0',
+        'X-Site-Id: ' . $siteId,
+        'X-Timestamp: ' . $timestamp,
+        'X-Nonce: ' . $nonce,
+        'X-Signature: ' . $signature,
+    ];
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => implode("\r\n", $headers) . "\r\n",
+            'content' => $body,
+            'timeout' => 60,
+            'ignore_errors' => true,
+        ],
+        'ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+        ],
+    ]);
+
+    $response = @file_get_contents($url, false, $context);
+    if ($response === false) {
+        throw new RuntimeException('Federation POST failed: ' . $url);
+    }
+
+    $json = json_decode($response, true);
+    if (!is_array($json)) {
+        throw new RuntimeException('Federation POST returned invalid JSON: ' . substr($response, 0, 300));
+    }
+
+    return $json;
+}
+
 function fed_public_status(PDO $db): array
 {
     $identity = fed_ensure_identity($db);
