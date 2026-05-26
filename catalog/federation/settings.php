@@ -44,7 +44,8 @@ try {
             'delay_between_downloads_seconds', 'delay_between_uploads_seconds',
             'max_files_per_transfer_run', 'max_transfer_file_size_mb',
             'auto_import_downloads', 'require_https_for_remote_sites',
-            'api_nonce_ttl_seconds', 'transfer_token_ttl_seconds', 'log_retention_days'
+            'api_nonce_ttl_seconds', 'transfer_token_ttl_seconds', 'log_retention_days',
+            'cron_worker_enabled', 'cron_worker_token'
         ];
 
         foreach ($allowed as $key) {
@@ -75,7 +76,7 @@ try {
         unset($_SESSION['fed_settings_flash']);
     }
 
-    echo '<div class="card"><h1>Federation Settings</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Settings</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(settings_csrf()) . '">';
     echo '<div class="card"><h2>Site identity</h2><table>';
@@ -119,6 +120,12 @@ try {
     ] as $key => $label) {
         echo '<tr><th>' . catalog_h($label) . '</th><td><input name="' . catalog_h($key) . '" value="' . catalog_h($settings[$key] ?? '') . '" style="width:160px"></td></tr>';
     }
+    echo '</table></div>';
+
+    echo '<div class="card"><h2>Cron / DSM Task Scheduler worker</h2><p class="muted">Use a long random token. The cron endpoint runs the same controlled bulk worker as worker-run.php.</p><table>';
+    $cronEnabled = (string)($settings['cron_worker_enabled'] ?? '0');
+    echo '<tr><th>Cron worker enabled</th><td><select name="cron_worker_enabled"><option value="0"' . ($cronEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($cronEnabled === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
+    echo '<tr><th>Cron worker token</th><td><input name="cron_worker_token" value="' . catalog_h($settings['cron_worker_token'] ?? '') . '" style="min-width:520px" placeholder="long-random-token"></td></tr>';
     echo '</table></div><p><button>Save federation settings</button></p></form>';
 
     catalog_foot();
