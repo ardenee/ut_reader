@@ -1,341 +1,174 @@
 # UT Reader
 
-UT Reader is a utility project for reading, inspecting, decompressing, and processing Unreal Tournament / Unreal Engine package-related files.
+UT Reader is a browser-based PHP project for inspecting Unreal package files from multiple Unreal Engine generations.
 
-> **Status:** This project is still in active development. The code, behaviour, supported file formats, script names, and documentation may change while the project is being built and tested.
+The project is currently focused on readable package inspection rather than full extraction or editing. It parses the package header, name table, import table, export table, generation data, object references, offsets, flags, and selected export/property data where supported.
 
-## Project Description
+> **Status:** Active development. The viewers are useful for inspection and parser debugging, but the project is not yet a stable library or finished application.
 
-UT Reader is intended to provide browser-based PHP tools for inspecting and testing Unreal package data, including older Unreal Tournament package files and newer UE3 package files.
+## Current Viewers
 
-The project currently includes experimental readers/viewers and helper scripts for:
+The main supported entry points are the version-specific folders:
 
-- Unreal package tables: names, imports, exports, headers, flags, offsets, and sizes.
-- UE1 / UE2 / UE3 package inspection.
-- Compressed UE3 package handling.
-- UZ / UZ3 helper workflows.
-- UMOD inspection.
-- Test/development parsing output.
+| Folder | Viewer | Current purpose |
+|---|---|---|
+| `UE1/` | `UE1.php` | UE1 / Unreal Tournament era package inspection |
+| `UE2/` | `UE2.php` | UE2 / UE2.5 package inspection |
+| `UE3/` | `UE3.php` | UE3 / UT3 package inspection, including compressed package handling where supported |
+| `UE4/` | `UE4.php` | UE4 `.uasset` / `.umap` package summary, table, and export map inspection |
 
-The project is not yet a stable library or finished application. Many files are development/debug viewers used while the parser is being built.
+Each viewer has the same general layout:
 
-## Current Purpose
+- **Package**: package summary, decoded flags, raw header data, offsets, validation notes, and version-specific extra information.
+- **Content**: quick list of export/content entries.
+- **Externs**: external/import reference view.
+- **Tables**: names, imports, exports, and generations.
 
-The script/project is being developed to:
+Raw export/import grids and raw header data are collapsed by default so the normal package summary remains readable.
 
-- Read UT / Unreal Engine package files.
-- Parse useful package metadata.
-- Display parsed data in a browser.
-- Help test package decompression and table parsing.
-- Provide a base for future conversion, extraction, or indexing workflows.
+## Current Features
 
-## Main Runtime Requirements
+- Upload/open package files through the browser.
+- Display package summary fields in a consistent layout across UE1, UE2, UE3, and UE4 viewers.
+- Display GUIDs in dashed `XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX` form.
+- Display validation/notes only when there is something useful to report.
+- Decode and display package flags where currently supported.
+- Parse and display name, import, export, and generation tables.
+- Link object/name references between table rows.
+- Display export tree/details and property data where the parser currently supports it.
+- Display collapsed **Raw Header Data** built from bytes read from the loaded file, not from derived UI-only values.
+- Show unparsed summary/header bytes as raw hex when the viewer detects bytes in the header area that have not yet been assigned to a known field.
+- UE4 viewer shows additional UE4-specific information such as engine version details, custom versions, asset registry offset, bulk data start, preload dependency offset, chunk IDs, and `.uexp` sidecar status.
 
-- PHP 8.2 or newer is recommended.
-- Web server capable of running PHP, such as Synology Web Station, Apache, nginx + PHP-FPM, or local PHP development server.
-- Writable `uploads/` folder for browser upload tools.
-- Optional but recommended for compressed UE3 packages: native LZO support through PHP FFI and `liblzo2`.
+## Raw Header Data
 
-## LZO Dependency for Compressed UE3 Packages
+The raw header table is intended for parser development and format comparison.
 
-Some UE3 packages use LZO compression. In this project, codec `2` is handled through:
+It shows:
 
-- `UE_LZO1X_register.php`
-- `lzo_runtime.php`
-- the bundled fallback class `UE_LZO1X` inside `TUnrealPackage.php`
+- File offset.
+- Field size.
+- Field name.
+- Field type.
+- Decoded value.
+- Raw hex bytes.
+- Notes for version-gated or assumed fields.
 
-The preferred path is native LZO through PHP FFI because it is faster and more reliable. If native LZO is not available, the project attempts to fall back to the bundled pure-PHP decoder.
+The raw header table should only contain values read from the package file header/summary bytes. It should not contain helper or derived UI fields such as filesystem paths, parser state, guessed layout names, or sidecar-file checks.
 
-### Files involved
+For UE1/UE2/UE3, version and licensee values are shown as the packed header value where appropriate, because those values are stored together in one raw field.
 
-`viewer2.php` loads:
+For UE4, unversioned packages may have raw version values of zero. The viewer may still show an assumed UE4 version in the normal package summary so table parsing can continue. That assumed value is noted separately and should not be treated as a raw file value.
 
-```php
-require_once __DIR__ . '/TUnrealPackage.php';
-require_once __DIR__ . '/UE_LZO1X_register.php';
-```
+## Supported / Target File Types
 
-`UE_LZO1X_register.php` then loads `lzo_runtime.php` if present and registers codec `2`.
+Current target package types include:
 
-`lzo_runtime.php` tries to find a usable LZO shared library from:
+- UE1-style packages such as `.u`, `.utx`, `.umx`, `.uax`, `.unr`.
+- UE2/UE2.5 packages such as `.ut2`, `.u`, `.utx`, `.uax`, `.umx`.
+- UE3 packages such as `.ut3` and `.upk`.
+- UE4 packages such as `.uasset` and `.umap`.
 
-- `LZO_DLL` constant, if defined.
-- `LZO_DLL` environment variable, if set.
-- repo-local files such as `liblzo2.so`, `liblzo2.so.2`, `lzo2.dll`, or `liblzo2-2.dll`.
-- common Linux paths such as `/usr/lib/...` or `/usr/local/lib/...`.
-- common Windows test paths such as `D:/php8/ext/liblzo2-2.dll`.
+Support is parser-dependent and still being expanded. A file opening successfully does not mean every export payload or property type is fully decoded yet.
 
-## Synology / Linux LZO Setup
+## Runtime Requirements
 
-### 1. Install Entware if `opkg` is missing
+- PHP 8.2 or newer recommended.
+- A PHP-capable web server, such as Synology Web Station, Apache, nginx + PHP-FPM, or a local PHP development server.
+- Writable `uploads/` folder inside each viewer folder that will accept browser uploads.
+- Optional LZO support for UE3 compressed packages that use LZO compression.
 
-Check:
-
-```bash
-opkg update
-```
-
-If you get `opkg: command not found`, install Entware. On x86_64 Synology / DSM VM:
-
-```bash
-cd /tmp
-wget -O entware-install.sh https://bin.entware.net/x64-k3.2/installer/generic.sh
-sudo sh entware-install.sh
-export PATH=/opt/bin:/opt/sbin:$PATH
-```
-
-For other CPU architectures, use the matching Entware installer. Check architecture with:
-
-```bash
-uname -m
-```
-
-### 2. Install LZO
-
-On Entware, the package name is usually `liblzo`, not `lzo`:
-
-```bash
-sudo opkg update
-sudo opkg list | grep -i lzo
-sudo opkg install liblzo
-```
-
-Find the installed library:
-
-```bash
-sudo find /opt -name "liblzo2.so*" -o -name "*lzo*.so*"
-```
-
-Expected example:
+Example writable upload folders:
 
 ```text
-/opt/lib/liblzo2.so.2
-/opt/lib/liblzo2.so.2.0.0
+UE1/uploads/
+UE2/uploads/
+UE3/uploads/
+UE4/uploads/
 ```
 
-Copy it into the project folder:
+On Linux/Synology, make sure the web server user can write to the relevant upload folder.
 
-```bash
-sudo cp /opt/lib/liblzo2.so.2 /volume1/web/ut_reader/liblzo2.so
-sudo chmod 755 /volume1/web/ut_reader/liblzo2.so
-```
+## Basic Usage
 
-Do **not** commit `liblzo2.so` to GitHub. It is a local native binary and is OS/CPU-specific.
+1. Pull or clone the repository onto a PHP-capable web server.
+2. Ensure the relevant `uploads/` folder exists and is writable.
+3. Open the correct viewer for the package type:
+   - `/UE1/UE1.php`
+   - `/UE2/UE2.php`
+   - `/UE3/UE3.php`
+   - `/UE4/UE4.php`
+4. Upload or select a package file.
+5. Review the Package tab first.
+6. Use the Tables tab to inspect names, imports, exports, and generations.
+7. Expand Raw Header Data only when comparing header layouts or debugging parser offsets.
 
-### 3. Enable PHP FFI on Synology
+## UE4 Notes
 
-In the PHP profile used by Web Station, FFI must be enabled.
+UE4 packages may be split across `.uasset`, `.uexp`, and bulk data files. The viewer currently opens `.uasset` / `.umap` files and checks for a matching `.uexp` sidecar where relevant.
 
-Use Linux/Synology settings like:
+The UE4 Package tab includes:
 
-```ini
-extension=ffi
-ffi.enable=true
-```
+- legacy file version values,
+- UE4 version / assumed version note for unversioned packages,
+- package flags,
+- folder name,
+- counts and offsets,
+- raw package summary data,
+- engine/custom version details,
+- asset registry and bulk data offsets,
+- preload dependency information,
+- `.uexp` pair status.
 
-Do **not** use Windows paths on Synology, such as:
+The viewer is primarily an inspection/debugging tool. Full UE4 export object decoding is still limited.
 
-```ini
-extension_dir = "D:/php8/ext"
-auto_prepend_file="D:/php8/preload/lzo_runtime.php"
-```
+## UE3 Compression / LZO Notes
 
-`auto_prepend_file` is not needed for this project because the viewer loads `UE_LZO1X_register.php` directly.
+Some UE3 packages use compression. LZO-compressed packages require LZO support.
 
-Restart Web Station / PHP-FPM after changing PHP settings.
+The current project may use native LZO through PHP FFI when available, with fallback code where supported. Native LZO is preferred because it is faster and more reliable.
 
-### 4. Test LZO from SSH
+Do not commit local native LZO binaries to GitHub. They are platform-specific.
 
-CLI PHP and Web Station PHP can use different PHP configs, but this is still useful:
-
-```bash
-php -m | grep -i ffi
-php -i | grep -i "ffi.enable"
-php -r "require '/volume1/web/ut_reader/lzo_runtime.php'; echo function_exists('lzo1x_decompress') ? 'LZO OK' : 'NO LZO';"
-```
-
-Expected:
+Common local library names that should stay ignored include:
 
 ```text
-LZO OK
-```
-
-### 5. Test LZO through the browser
-
-Create a temporary browser test file:
-
-```bash
-cat > /volume1/web/ut_reader/lzo-test.php <<'PHP'
-<?php
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-
-echo 'FFI extension: ' . (extension_loaded('FFI') ? 'loaded' : 'not loaded') . "<br>";
-echo 'ffi.enable: ' . ini_get('ffi.enable') . "<br>";
-
-require __DIR__ . '/lzo_runtime.php';
-
-echo 'lzo1x_decompress: ' . (function_exists('lzo1x_decompress') ? 'available' : 'missing') . "<br>";
-echo 'lib local: ' . (is_file(__DIR__ . '/liblzo2.so') ? 'found' : 'missing') . "<br>";
-PHP
-```
-
-Open:
-
-```text
-/lzo-test.php
-```
-
-Expected output:
-
-```text
-FFI extension: loaded
-ffi.enable: true
-lzo1x_decompress: available
-lib local: found
-```
-
-Remove the test file when finished:
-
-```bash
-rm /volume1/web/ut_reader/lzo-test.php
-```
-
-## Windows LZO Setup
-
-For Windows PHP development, use a Windows LZO DLL and enable FFI in `php.ini`.
-
-### 1. Place the DLL
-
-Known working/tested names include:
-
-```text
-D:/php8/ext/liblzo2-2.dll
-D:/php8/ext/lzo2.dll
-```
-
-The DLL must match the PHP architecture:
-
-- 64-bit PHP needs a 64-bit DLL.
-- 32-bit PHP needs a 32-bit DLL.
-- Thread-safe vs non-thread-safe usually matters for PHP extensions, less for FFI-loaded DLLs, but the DLL still must be compatible with the runtime.
-
-### 2. Enable FFI in `php.ini`
-
-Example Windows development config:
-
-```ini
-extension=ffi
-ffi.enable=true
-```
-
-Older/test configs may use:
-
-```ini
-extension=php_ffi
-ffi.enable=1
-```
-
-Use whichever matches your PHP build. Confirm with:
-
-```powershell
-php -m | findstr /I ffi
-php -i | findstr /I "ffi.enable"
-```
-
-### 3. Make the DLL visible to the repo
-
-The runtime checks common Windows paths automatically, including:
-
-```text
-D:/php8/ext/liblzo2-2.dll
-D:/php8/ext/lzo2.dll
-```
-
-You can also copy the DLL beside the project as either:
-
-```text
-liblzo2-2.dll
-lzo2.dll
-```
-
-or set an environment variable before running PHP:
-
-```powershell
-$env:LZO_DLL = "D:/php8/ext/liblzo2-2.dll"
-php -r "require 'lzo_runtime.php'; echo function_exists('lzo1x_decompress') ? 'LZO OK' : 'NO LZO';"
-```
-
-### 4. Test on Windows
-
-From the repo folder:
-
-```powershell
-php -r "require 'lzo_runtime.php'; echo function_exists('lzo1x_decompress') ? 'LZO OK' : 'NO LZO';"
-```
-
-Expected:
-
-```text
-LZO OK
-```
-
-## Git Ignore for Native Libraries
-
-Native LZO libraries should not be committed because they are platform-specific binaries.
-
-Add these to `.gitignore`:
-
-```gitignore
-# Local native libraries
 liblzo2.so
 liblzo2.so.*
 liblzo2-2.dll
 lzo2.dll
 ```
 
-On PowerShell, append them with:
+## Current Limitations
 
-```powershell
-Add-Content .gitignore ""
-Add-Content .gitignore "# Local native libraries"
-Add-Content .gitignore "liblzo2.so"
-Add-Content .gitignore "liblzo2.so.*"
-Add-Content .gitignore "liblzo2-2.dll"
-Add-Content .gitignore "lzo2.dll"
-
-git add .gitignore
-git commit -m "Ignore local native LZO libraries"
-git push
-```
-
-## Expected Usage
-
-General workflow:
-
-1. Pull/update the repository.
-2. Ensure PHP can run the scripts through Web Station or a local PHP server.
-3. Ensure `uploads/` exists and is writable by PHP.
-4. Upload or place package files into the project.
-5. Open a viewer script such as `viewer2.php`, `UE1.php`, `UE2.php`, or `readfile7d.php`.
-6. Review names, imports, exports, headers, flags, and offsets.
-7. For compressed UE3 files, ensure LZO is available or rely on the bundled PHP fallback.
+- This is an inspection/debugging project, not a complete Unreal package editor.
+- Not every export payload is decoded.
+- Not every property type is fully interpreted.
+- Some version-gated package header fields may still need refinement.
+- UE4 unversioned package parsing relies on an assumed UE4 version for table parsing.
+- `.uexp` handling is currently for sidecar detection and serial preview support, not full object deserialization.
+- Raw header parsing is used to expose mismatches between the reader and real package data, so some rows may intentionally show undecoded bytes until the parser is improved.
 
 ## Development Notes
 
-This repository is not yet considered stable.
+The repository is being actively cleaned and standardized.
 
-Expect changes to:
+Current development focus:
 
-- File names
-- Function names
-- Output format
-- Configuration options
-- Error handling
-- Supported input data
-- Documentation
+- keeping UE1/UE2/UE3/UE4 viewer layouts consistent,
+- improving raw header visibility without mixing in derived UI values,
+- aligning header parsing with Unreal Engine source layouts,
+- improving export/import/property display accuracy,
+- reducing old experimental one-off viewer scripts in favour of the `UE#/UE#.php` viewers.
 
-Use the project as experimental/development code until a stable version is tagged or documented.
+When adding parser fields, prefer this rule:
+
+```text
+Raw Header Data = bytes actually read from the file header/summary.
+Normal Package Summary = interpreted, derived, or user-friendly display values.
+```
+
+Do not silently skip unknown header bytes. If a header byte range is valid but not decoded yet, show it with offset, size, and raw hex until it can be named correctly.
 
 ## Security and Privacy Notes
 
@@ -343,14 +176,15 @@ Before committing files to this repository, check that no private data is includ
 
 Avoid committing:
 
-- Personal data
-- Credentials
-- API keys
-- Local configuration files
-- Native binary libraries such as `.dll` or `.so` files
-- Large generated output files
-- Temporary test data
-- Logs containing private paths or usernames
+- uploaded package files,
+- personal data,
+- credentials,
+- API keys,
+- local configuration files,
+- native binary libraries such as `.dll` or `.so` files,
+- large generated output files,
+- temporary test data,
+- logs containing private paths or usernames.
 
 ## License
 
