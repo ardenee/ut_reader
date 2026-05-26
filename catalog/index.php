@@ -50,6 +50,8 @@ function db(array $config): PDO
 {
     static $pdo = null;
     if ($pdo instanceof PDO) { return $pdo; }
+    if (!class_exists('PDO')) { throw new RuntimeException('PHP PDO is not available.'); }
+    if (!extension_loaded('pdo_mysql')) { throw new RuntimeException('Missing PHP extension: pdo_mysql. Loaded PDO drivers: ' . implode(', ', PDO::getAvailableDrivers())); }
     $d = $config['db'] ?? [];
     foreach (['host','port','database','username','password'] as $k) {
         if (!array_key_exists($k, $d)) { throw new RuntimeException('Missing DB config value: db.' . $k); }
@@ -63,12 +65,29 @@ function one(PDO $db, string $sql, array $args = []): ?array { $s = $db->prepare
 function allq(PDO $db, string $sql, array $args = []): array { $s = $db->prepare($sql); $s->execute($args); return $s->fetchAll(); }
 function runq(PDO $db, string $sql, array $args = []): int { $s = $db->prepare($sql); $s->execute($args); return $s->rowCount(); }
 
-function load_reader(array $config, string $engineKey): void
+function load_reader_class(array $config, string $engineKey): string
 {
-    $rel = $config['engine_readers'][$engineKey]['reader'] ?? '';
+    $readerConfig = $config['engine_readers'][$engineKey] ?? [];
+    $rel = $readerConfig['reader'] ?? '';
     $path = realpath(__DIR__ . '/' . $rel);
     if (!$path || !is_file($path)) { throw new RuntimeException('Reader not found for ' . $engineKey . ': ' . $rel); }
-    if (!class_exists('UnrealPackageReader', false)) { require_once $path; }
+
+    require_once $path;
+
+    $candidates = [];
+    if (!empty($readerConfig['class'])) { $candidates[] = (string)$readerConfig['class']; }
+    $candidates[] = match ($engineKey) {
+        'UE4' => 'UnrealPackageReader4',
+        default => 'UnrealPackageReader',
+    };
+    $candidates[] = 'UnrealPackageReader';
+    $candidates[] = 'UnrealPackageReader4';
+
+    foreach (array_unique($candidates) as $class) {
+        if ($class !== '' && class_exists($class, false)) { return $class; }
+    }
+
+    throw new RuntimeException('Reader file loaded for ' . $engineKey . ', but no supported reader class was found. Tried: ' . implode(', ', array_unique($candidates)));
 }
 
 function ref_path(int $ref, array $imports, array $exports, array &$cache, array $seen = []): string
@@ -104,7 +123,6 @@ function rebuild_dependencies(PDO $db, array $config, int $fileId): void
         $status = 'missing';
         $resolvedFile = null;
         $resolvedExport = null;
-
         if ((int)$imp['is_common'] === 1) {
             $status = 'common';
         } elseif ($imp['relative_object_path'] === '') {
@@ -114,7 +132,6 @@ function rebuild_dependencies(PDO $db, array $config, int $fileId): void
             $match = one($db, 'SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND e.full_path=? AND f.id<>? ORDER BY f.uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['full_path'], $fileId]);
             if ($match) { $status = 'resolved'; $resolvedFile = (int)$match['file_id']; $resolvedExport = (int)$match['export_id']; }
         }
-
         $insert->execute([$fileId, $imp['id'], $imp['root_package'], $imp['full_path'], $resolvedFile, $resolvedExport, $status]);
     }
 }
@@ -152,8 +169,8 @@ function scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, st
     $duplicate = one($db, 'SELECT id, original_name FROM ue_files WHERE md5=?', [$md5]);
     if ($duplicate) { return ['duplicate', (int)$duplicate['id'], 'Duplicate MD5: ' . $duplicate['original_name']]; }
 
-    load_reader($config, $game['engine_key']);
-    $pkg = new UnrealPackageReader($tmp);
+    $readerClass = load_reader_class($config, $game['engine_key']);
+    $pkg = new $readerClass($tmp);
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     if ($issues) { throw new RuntimeException(implode("\n", array_map('strval', $issues))); }
 
@@ -357,8 +374,8 @@ try {
         $id = (int)($_GET['id'] ?? 0);
         $file = one($db, 'SELECT f.*, g.engine_key FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$id]);
         if (!$file) { throw new RuntimeException('File not found'); }
-        load_reader($config, $file['engine_key']);
-        $pkg = new UnrealPackageReader(__DIR__ . '/' . $file['relative_path']);
+        $readerClass = load_reader_class($config, $file['engine_key']);
+        $pkg = new $readerClass(__DIR__ . '/' . $file['relative_path']);
         echo '<div class="card"><h1>Examine: ' . h($file['original_name']) . '</h1><p><a href="' . h(u(['page' => 'file', 'id' => $id])) . '">Back</a></p></div>';
         foreach (['Header' => $pkg->getHeader(), 'Names' => $pkg->getNames(), 'Imports' => $pkg->getImports(), 'Exports' => $pkg->getExports()] as $label => $data) {
             echo '<div class="card"><h2>' . h($label) . '</h2><div class="scroll"><pre class="mono">' . h(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</pre></div></div>';
