@@ -208,8 +208,16 @@ final class UnrealPackageReader4
         if ($count < 0 || $count > 4096) throw new RuntimeException('Bad custom version count ' . $count . ' at ' . ($r->tell() - 4));
         $out = [];
         for ($i = 0; $i < $count; $i++) {
-            if ($legacy === -2) $out[] = ['key'=>$r->i32(), 'version'=>$r->i32()];
-            else $out[] = ['guid'=>$r->guid(), 'version'=>$r->i32()];
+            if ($legacy === -2) {
+                $out[] = ['format'=>'enum', 'key'=>$r->i32(), 'version'=>$r->i32()];
+            } elseif ($legacy >= -5) {
+                $guid = $r->guid();
+                $version = $r->i32();
+                $friendlyName = $r->fstring();
+                $out[] = ['format'=>'guid-deprecated', 'guid'=>$guid, 'version'=>$version, 'friendlyName'=>$friendlyName];
+            } else {
+                $out[] = ['format'=>'optimized', 'guid'=>$r->guid(), 'version'=>$r->i32()];
+            }
         }
         return $out;
     }
