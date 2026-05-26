@@ -139,8 +139,9 @@ function run_one_parent_pull(PDO $db, array $config): array
 
         $md5 = md5_file($dest) ?: '';
         $sha1 = sha1_file($dest) ?: '';
+        $relativeIncoming = 'storage/federation/incoming/' . basename($dest);
 
-        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="downloaded", bytes_done=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$bytes, 'Downloaded to incoming: ' . basename($dest) . ' MD5=' . $md5 . ' SHA1=' . $sha1, $jobId]);
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="downloaded", bytes_done=?, incoming_path=?, downloaded_md5=?, downloaded_sha1=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$bytes, $relativeIncoming, $md5, $sha1, 'Downloaded to incoming: ' . basename($dest), $jobId]);
         fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'PARENT_PULL_DOWNLOADED', 'Downloaded remote file ' . (int)$job['remote_file_id'] . ' to ' . basename($dest));
 
         $delay = (int)$job['wait_after_seconds'];
@@ -178,7 +179,7 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>Transfer Runner</h1><p class="muted">Runs one queued parent-pull download at a time. This phase downloads into federation incoming storage and verifies hashes; import into the catalog is the next step.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Transfer Runner</h1><p class="muted">Runs one queued parent-pull download at a time. Downloaded jobs can now be imported using the federation import runner.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="import-run.php">Import downloaded files</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     if (isset($_SESSION['fed_transfer_run_result'])) {
         echo '<div class="card"><h2>Last run</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_transfer_run_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
@@ -193,9 +194,9 @@ try {
     if (!$jobs) {
         echo '<p class="muted">No transfer jobs yet.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Remote file</th><th>Status</th><th>Bytes</th><th>Message</th><th>Created</th></tr>';
+        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Remote file</th><th>Status</th><th>Bytes</th><th>Incoming</th><th>Hashes</th><th>Message</th><th>Created</th></tr>';
         foreach ($jobs as $job) {
-            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td>' . catalog_h($job['status']) . '</td><td>' . catalog_h((int)$job['bytes_done'] . ' / ' . (int)$job['bytes_total']) . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['created_at']) . '</td></tr>';
+            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td>' . catalog_h($job['status']) . '</td><td>' . catalog_h((int)$job['bytes_done'] . ' / ' . (int)$job['bytes_total']) . '</td><td class="mono small">' . catalog_h($job['incoming_path'] ?? '') . '</td><td class="mono small">MD5 ' . catalog_h($job['downloaded_md5'] ?? '') . '<br>SHA1 ' . catalog_h($job['downloaded_sha1'] ?? '') . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['created_at']) . '</td></tr>';
         }
         echo '</table>';
     }
