@@ -1,0 +1,157 @@
+<?php
+declare(strict_types=1);
+
+session_start();
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+
+require_once __DIR__ . '/../lib/CatalogSupport.php';
+require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/CatalogImport.php';
+
+function fir_is_admin(): bool
+{
+    return ($_SESSION['user']['role'] ?? '') === 'admin';
+}
+
+function fir_csrf(): string
+{
+    $_SESSION['fed_import_run_csrf'] ??= bin2hex(random_bytes(16));
+    return $_SESSION['fed_import_run_csrf'];
+}
+
+function fir_check_csrf(): void
+{
+    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_import_run_csrf'] ?? '')) {
+        throw new RuntimeException('Bad CSRF token');
+    }
+}
+
+function fir_resolve_incoming_path(array $config, string $relativePath): string
+{
+    $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+    $path = realpath(__DIR__ . '/../' . $relativePath);
+    if (!$root || !$path || !str_starts_with($path, $root) || !is_file($path)) {
+        throw new RuntimeException('Incoming file is missing or outside storage: ' . $relativePath);
+    }
+    return $path;
+}
+
+function fir_original_name(PDO $db, array $job): string
+{
+    $pf = catalog_one($db, 'SELECT original_name FROM ue_federation_peer_files WHERE peer_id=? AND remote_file_id=? ORDER BY id DESC LIMIT 1', [(int)$job['peer_id'], (int)$job['remote_file_id']]);
+    if ($pf && trim((string)$pf['original_name']) !== '') {
+        return (string)$pf['original_name'];
+    }
+    return basename((string)$job['incoming_path']);
+}
+
+function fir_preferred_game_id(PDO $db, array $job): ?int
+{
+    $pf = catalog_one($db, 'SELECT game_id, remote_game_name, remote_engine_key FROM ue_federation_peer_files WHERE peer_id=? AND remote_file_id=? ORDER BY id DESC LIMIT 1', [(int)$job['peer_id'], (int)$job['remote_file_id']]);
+    if ($pf && !empty($pf['game_id'])) {
+        $game = catalog_one($db, 'SELECT id FROM ue_games WHERE id=?', [(int)$pf['game_id']]);
+        if ($game) {
+            return (int)$game['id'];
+        }
+    }
+    if ($pf && !empty($pf['remote_engine_key'])) {
+        $game = catalog_one($db, 'SELECT id FROM ue_games WHERE engine_key=? ORDER BY id LIMIT 1', [(string)$pf['remote_engine_key']]);
+        if ($game) {
+            return (int)$game['id'];
+        }
+    }
+    return null;
+}
+
+function run_one_import(PDO $db, array $config): array
+{
+    $job = catalog_one($db, 'SELECT * FROM ue_federation_transfer_jobs WHERE status="downloaded" AND incoming_path IS NOT NULL AND incoming_path<>"" ORDER BY finished_at ASC, id ASC LIMIT 1');
+    if (!$job) {
+        return ['ok' => true, 'message' => 'No downloaded jobs waiting for import.'];
+    }
+
+    $jobId = (int)$job['id'];
+    $incoming = fir_resolve_incoming_path($config, (string)$job['incoming_path']);
+    $md5 = md5_file($incoming) ?: '';
+    $sha1 = sha1_file($incoming) ?: '';
+
+    if (!empty($job['downloaded_md5']) && !hash_equals((string)$job['downloaded_md5'], $md5)) {
+        throw new RuntimeException('MD5 mismatch before import for job ' . $jobId);
+    }
+    if (!empty($job['downloaded_sha1']) && !hash_equals((string)$job['downloaded_sha1'], $sha1)) {
+        throw new RuntimeException('SHA1 mismatch before import for job ' . $jobId);
+    }
+
+    $db->prepare('UPDATE ue_federation_transfer_jobs SET status="running", started_at=COALESCE(started_at,NOW()), last_error=NULL WHERE id=?')->execute([$jobId]);
+
+    try {
+        $originalName = fir_original_name($db, $job);
+        $preferredGameId = fir_preferred_game_id($db, $job);
+        $result = catalog_import_file($db, $config, $incoming, $originalName, $preferredGameId, $_SESSION['user']['id'] ?? null);
+        $status = ($result['status'] === 'verified' || str_starts_with((string)$result['status'], 'duplicate_')) ? 'imported' : 'failed';
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET status=?, local_file_id=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$status, $result['file_id'] ?? null, $result['message'] ?? $result['status'], $jobId]);
+        fed_log($db, (int)$job['peer_id'], $jobId, $status === 'imported' ? 'INFO' : 'WARN', 'FEDERATION_IMPORT', json_encode($result, JSON_UNESCAPED_SLASHES));
+        return ['ok' => true, 'job_id' => $jobId, 'result' => $result];
+    } catch (Throwable $e) {
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", finished_at=NOW(), last_error=? WHERE id=?')->execute([$e->getMessage(), $jobId]);
+        fed_log($db, (int)$job['peer_id'], $jobId, 'ERROR', 'FEDERATION_IMPORT_FAIL', $e->getMessage());
+        throw $e;
+    }
+}
+
+try {
+    $config = catalog_config();
+    $db = catalog_db($config);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!fir_is_admin()) {
+            throw new RuntimeException('Admin required');
+        }
+        fir_check_csrf();
+        $_SESSION['fed_import_result'] = run_one_import($db, $config);
+        header('Location: import-run.php');
+        exit;
+    }
+
+    catalog_head('Federation Import Runner');
+
+    if (!fir_is_admin()) {
+        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
+        catalog_foot();
+        exit;
+    }
+
+    echo '<div class="card"><h1>Federation Import Runner</h1><p class="muted">Imports one downloaded federation file into the normal catalog storage/DB, rebuilds dependencies, and marks the transfer job imported.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="transfer-run.php">Transfer runner</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="logs.php">Logs</a></p></div>';
+
+    if (isset($_SESSION['fed_import_result'])) {
+        echo '<div class="card"><h2>Last import</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_import_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
+        unset($_SESSION['fed_import_result']);
+    }
+
+    $waiting = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded" AND incoming_path IS NOT NULL AND incoming_path<>""')['c'] ?? 0);
+    echo '<div class="card"><h2>Run import</h2><p>Downloaded jobs waiting for import: <strong>' . $waiting . '</strong></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fir_csrf()) . '"><button>Import one downloaded job</button></form></div>';
+
+    $jobs = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status IN ("downloaded","imported","failed") ORDER BY j.finished_at DESC, j.id DESC LIMIT 100');
+    echo '<div class="card"><h2>Recent downloaded/import jobs</h2>';
+    if (!$jobs) {
+        echo '<p class="muted">No downloaded/imported jobs yet.</p>';
+    } else {
+        echo '<table><tr><th>ID</th><th>Peer</th><th>Status</th><th>Incoming</th><th>Local file</th><th>Message</th><th>Finished</th></tr>';
+        foreach ($jobs as $job) {
+            $local = !empty($job['local_file_id']) ? '<a href="../file-info.php?id=' . (int)$job['local_file_id'] . '" target="_blank">file ' . (int)$job['local_file_id'] . '</a>' : '';
+            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['status']) . '</td><td class="mono small">' . catalog_h($job['incoming_path']) . '</td><td>' . $local . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['finished_at']) . '</td></tr>';
+        }
+        echo '</table>';
+    }
+    echo '</div>';
+
+    catalog_foot();
+} catch (Throwable $e) {
+    if (!headers_sent()) {
+        catalog_head('Federation import error');
+    }
+    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
+    catalog_foot();
+}
