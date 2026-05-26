@@ -75,8 +75,8 @@ try {
             'default_parent_pull_scope' => 'missing_dependencies_first',
         ];
 
-        $stmt = $db->prepare('INSERT INTO ue_federation_peers(peer_role, site_name, site_url, peer_site_id, peer_fingerprint, shared_secret_hash, permissions_json, is_active) VALUES(?,?,?,?,?,?,?,1)');
-        $stmt->execute([$peerRole, $siteName, $siteUrl, $peerSiteId, $peerFingerprint, password_hash($sharedSecret, PASSWORD_DEFAULT), json_encode($permissions, JSON_UNESCAPED_SLASHES)]);
+        $stmt = $db->prepare('INSERT INTO ue_federation_peers(peer_role, site_name, site_url, peer_site_id, peer_fingerprint, shared_secret_hash, shared_secret_plain, permissions_json, is_active) VALUES(?,?,?,?,?,?,?,?,1)');
+        $stmt->execute([$peerRole, $siteName, $siteUrl, $peerSiteId, $peerFingerprint, password_hash($sharedSecret, PASSWORD_DEFAULT), $sharedSecret, json_encode($permissions, JSON_UNESCAPED_SLASHES)]);
         $peerId = (int)$db->lastInsertId();
         fed_log($db, $peerId, null, 'INFO', 'PEER_ADD', 'Peer added: ' . $siteName . ' as ' . $peerRole);
 
@@ -94,10 +94,10 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>Federation Peers</h1><p class="muted">Add parent or child sites. A child site should only have one parent. The shared secret is shown only once when generated/provided.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Peers</h1><p class="muted">Add parent or child sites. A child site should only have one parent. For Phase 2, the shared secret is stored so HMAC signed API calls can be verified. Keep catalog/admin access restricted.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     if (isset($_SESSION['fed_peer_secret_once'])) {
-        echo '<div class="card"><h2>Shared secret for ' . catalog_h($_SESSION['fed_peer_secret_peer'] ?? 'peer') . '</h2><p class="muted">Copy this now. It is not stored in plaintext and cannot be shown again.</p><pre class="mono">' . catalog_h($_SESSION['fed_peer_secret_once']) . '</pre></div>';
+        echo '<div class="card"><h2>Shared secret for ' . catalog_h($_SESSION['fed_peer_secret_peer'] ?? 'peer') . '</h2><p class="muted">Copy this to the matching peer site.</p><pre class="mono">' . catalog_h($_SESSION['fed_peer_secret_once']) . '</pre></div>';
         unset($_SESSION['fed_peer_secret_once'], $_SESSION['fed_peer_secret_peer']);
     }
 
@@ -106,9 +106,10 @@ try {
     if (!$peers) {
         echo '<p class="muted">No peers configured yet.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>Role</th><th>Name</th><th>URL</th><th>Site ID</th><th>Fingerprint</th><th>Active</th><th>Last seen</th><th>Action</th></tr>';
+        echo '<table><tr><th>ID</th><th>Role</th><th>Name</th><th>URL</th><th>Site ID</th><th>Fingerprint</th><th>Secret</th><th>Active</th><th>Last seen</th><th>Action</th></tr>';
         foreach ($peers as $peer) {
-            echo '<tr><td class="mono">' . (int)$peer['id'] . '</td><td>' . catalog_h($peer['peer_role']) . '</td><td>' . catalog_h($peer['site_name']) . '</td><td class="mono path">' . catalog_h($peer['site_url']) . '</td><td class="mono small">' . catalog_h($peer['peer_site_id']) . '</td><td class="mono small">' . catalog_h($peer['peer_fingerprint']) . '</td><td>' . ((int)$peer['is_active'] ? 'yes' : 'no') . '</td><td>' . catalog_h($peer['last_seen_at']) . '</td><td><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(peers_csrf()) . '"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="' . (int)$peer['id'] . '"><button>' . ((int)$peer['is_active'] ? 'Disable' : 'Enable') . '</button></form></td></tr>';
+            $hasSecret = !empty($peer['shared_secret_plain']) ? 'stored' : 'missing';
+            echo '<tr><td class="mono">' . (int)$peer['id'] . '</td><td>' . catalog_h($peer['peer_role']) . '</td><td>' . catalog_h($peer['site_name']) . '</td><td class="mono path">' . catalog_h($peer['site_url']) . '</td><td class="mono small">' . catalog_h($peer['peer_site_id']) . '</td><td class="mono small">' . catalog_h($peer['peer_fingerprint']) . '</td><td>' . catalog_h($hasSecret) . '</td><td>' . ((int)$peer['is_active'] ? 'yes' : 'no') . '</td><td>' . catalog_h($peer['last_seen_at']) . '</td><td><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(peers_csrf()) . '"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="' . (int)$peer['id'] . '"><button>' . ((int)$peer['is_active'] ? 'Disable' : 'Enable') . '</button></form></td></tr>';
         }
         echo '</table>';
     }
