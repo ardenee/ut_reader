@@ -317,7 +317,8 @@ function renderRawHeaderFields(array $fields): void
         return;
     }
 
-    echo '<h2>Raw Header Data</h2>';
+    echo '<details class="grid-after-tree raw-header-details">';
+    echo '<summary>Raw Header Data</summary>';
     echo '<table class="data raw-header-table">';
     echo '<thead><tr><th>Offset</th><th>Size</th><th>Field</th><th>Type</th><th>Value</th><th>Raw Hex</th><th>Note</th></tr></thead><tbody>';
 
@@ -334,6 +335,7 @@ function renderRawHeaderFields(array $fields): void
     }
 
     echo '</tbody></table>';
+    echo '</details>';
 }
 
 $uploadedFiles = upload_file_list($uploadDir, $uploadRelDir, $allowedExt);
