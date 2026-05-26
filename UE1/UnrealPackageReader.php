@@ -127,6 +127,7 @@ final class UnrealPackageReader
     private array $exports = [];
     private array $issues = [];
     private array $propertyCache = [];
+	private array $rawHeaderFields = [];
 
     private const PKG_FLAGS = [
         0x00000001 => 'PKG_AllowDownload',
@@ -233,8 +234,10 @@ final class UnrealPackageReader
 
     private function parse(): void
     {
-        $r = new UE1BinaryReader($this->bytes);
+		$this->rawHeaderFields = [];
+        $r   = new UE1BinaryReader($this->bytes);
         $tag = $r->u32();
+		
         if ($tag !== 0x9E2A83C1) {
             throw new RuntimeException(sprintf('Bad package tag 0x%08X', $tag));
         }
@@ -395,6 +398,7 @@ final class UnrealPackageReader
     public function getDebugErrors(): array { return $this->issues; }
     public function validatePackage(): array { return $this->issues; }
     public function getCompressionInfo(): array { return ['isCompressed' => false, 'flags' => 0, 'chunks' => [], 'totalCompressed' => 0, 'totalUncompressed' => 0]; }
+	public function getRawHeaderFields(): array { return $this->rawHeaderFields; }
 
     public function nameByIndex(int $index, int $number = 0): string
     {
@@ -659,4 +663,93 @@ final class UnrealPackageReader
         }
         return $out;
     }
+	
+	private function rawHexAt(int $offset, int $size): string
+	{
+		if ($size <= 0) {
+			return '';
+		}
+
+		return strtoupper(trim(chunk_split(bin2hex(substr($this->bytes, $offset, $size)), 2, ' ')));
+	}
+
+	private function addRawHeaderField(string $name, int $offset, int $size, string $type, $value, string $note = ''): void
+	{
+		$this->rawHeaderFields[] = [
+			'offset' => $offset,
+			'size' => $size,
+			'name' => $name,
+			'type' => $type,
+			'value' => $value,
+			'rawHex' => $this->rawHexAt($offset, $size),
+			'note' => $note,
+		];
+	}
+
+	private function readHeaderU32(object $r, string $name): int
+	{
+		$offset = $r->tell();
+		$value = $r->u32();
+		$this->addRawHeaderField($name, $offset, 4, 'uint32', $value);
+		return $value;
+	}
+
+	private function readHeaderI32(object $r, string $name): int
+	{
+		$offset = $r->tell();
+		$value = $r->i32();
+		$this->addRawHeaderField($name, $offset, 4, 'int32', $value);
+		return $value;
+	}
+
+	private function readHeaderU16(object $r, string $name): int
+	{
+		$offset = $r->tell();
+		$value = $r->u16();
+		$this->addRawHeaderField($name, $offset, 2, 'uint16', $value);
+		return $value;
+	}
+
+	private function readHeaderI64(object $r, string $name): int
+	{
+		$offset = $r->tell();
+		$value = $r->i64();
+		$this->addRawHeaderField($name, $offset, 8, 'int64', $value);
+		return $value;
+	}
+
+	private function readHeaderGuid(object $r, string $name = 'guid'): string
+	{
+		$offset = $r->tell();
+		$a = $r->u32();
+		$b = $r->u32();
+		$c = $r->u32();
+		$d = $r->u32();
+		$value = sprintf('%08X-%08X-%08X-%08X', $a, $b, $c, $d);
+		$this->addRawHeaderField($name, $offset, 16, 'FGuid', $value);
+		return $value;
+	}
+
+	private function addUnparsedHeaderBytes(int $start, int $end, string $note): void
+	{
+		if ($end <= $start) {
+			return;
+		}
+
+		$size = $end - $start;
+		$this->addRawHeaderField('unparsedHeaderBytes', $start, $size, 'bytes', $size . ' bytes', $note);
+	}
+
+	private function firstPositiveHeaderOffset(array $keys): int
+	{
+		$values = [];
+		foreach ($keys as $key) {
+			$value = (int)($this->header[$key] ?? 0);
+			if ($value > 0) {
+				$values[] = $value;
+			}
+		}
+
+		return $values ? min($values) : 0;
+	}
 }
