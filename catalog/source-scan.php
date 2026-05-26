@@ -7,6 +7,7 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogParser.php';
 
 function is_admin_user(): bool
 {
@@ -29,9 +30,14 @@ function allowed_source_extension(string $path, array $config): bool
     return in_array($ext, $config['allowed_extensions'] ?? [], true);
 }
 
+function record_file_location(PDO $db, PDOStatement $upsert, int $fileId, int $sourceId, string $relativePath): void
+{
+    $upsert->execute([$fileId, $sourceId, $relativePath, 1]);
+}
+
 function scan_local_source(PDO $db, array $config, int $sourceId): array
 {
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
+    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.engine_key FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
     if (!$source) {
         throw new RuntimeException('Source not found');
     }
@@ -47,9 +53,12 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
     $found = 0;
     $matchedMd5 = 0;
     $matchedGuid = 0;
+    $guidAmbiguous = 0;
+    $parseFailed = 0;
     $unknown = 0;
     $locations = 0;
     $unknownSamples = [];
+    $parseFailedSamples = [];
 
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($basePath, FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS),
@@ -69,21 +78,9 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
         }
 
         $found++;
+        $relative = clean_relative_path($basePath, $path);
         $md5 = md5_file($path);
         if (!$md5) {
-            $unknown++;
-            $unknownSamples[] = $path;
-            continue;
-        }
-
-        $file = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND md5=? LIMIT 1', [(int)$source['game_id'], $md5]);
-        if ($file) {
-            $matchedMd5++;
-        }
-
-        if (!$file) {
-            // GUID-level matching for compressed/uncompressed variants cannot be done without parsing.
-            // For now this page records exact MD5 file locations. Unknowns are shown for admin review.
             $unknown++;
             if (count($unknownSamples) < 50) {
                 $unknownSamples[] = $path;
@@ -91,9 +88,53 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
             continue;
         }
 
-        $relative = clean_relative_path($basePath, $path);
-        $upsert->execute([(int)$file['id'], $sourceId, $relative, 1]);
-        $locations++;
+        $file = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND md5=? LIMIT 1', [(int)$source['game_id'], $md5]);
+        if ($file) {
+            record_file_location($db, $upsert, (int)$file['id'], $sourceId, $relative);
+            $matchedMd5++;
+            $locations++;
+            continue;
+        }
+
+        try {
+            $header = catalog_try_read_package_header($config, (string)$source['engine_key'], $path);
+            $guid = catalog_header_guid($header);
+        } catch (Throwable $e) {
+            $parseFailed++;
+            if (count($parseFailedSamples) < 50) {
+                $parseFailedSamples[] = $path . ' - ' . $e->getMessage();
+            }
+            continue;
+        }
+
+        if ($guid === '') {
+            $unknown++;
+            if (count($unknownSamples) < 50) {
+                $unknownSamples[] = $path . ' - no GUID found';
+            }
+            continue;
+        }
+
+        $matches = catalog_all($db, 'SELECT id, original_name, md5 FROM ue_files WHERE game_id=? AND package_guid=? ORDER BY id', [(int)$source['game_id'], $guid]);
+        if (count($matches) === 1) {
+            record_file_location($db, $upsert, (int)$matches[0]['id'], $sourceId, $relative);
+            $matchedGuid++;
+            $locations++;
+            continue;
+        }
+
+        if (count($matches) > 1) {
+            $guidAmbiguous++;
+            if (count($unknownSamples) < 50) {
+                $unknownSamples[] = $path . ' - GUID matches multiple catalog files: ' . $guid;
+            }
+            continue;
+        }
+
+        $unknown++;
+        if (count($unknownSamples) < 50) {
+            $unknownSamples[] = $path . ' - GUID not in catalog: ' . $guid;
+        }
     }
 
     return [
@@ -101,9 +142,12 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
         'found' => $found,
         'matched_md5' => $matchedMd5,
         'matched_guid' => $matchedGuid,
+        'guid_ambiguous' => $guidAmbiguous,
+        'parse_failed' => $parseFailed,
         'unknown' => $unknown,
         'locations' => $locations,
         'unknown_samples' => $unknownSamples,
+        'parse_failed_samples' => $parseFailedSamples,
     ];
 }
 
@@ -129,13 +173,24 @@ try {
         echo '<tr><th>Game</th><td>' . catalog_h($result['source']['game_name']) . '</td></tr>';
         echo '<tr><th>Package-like files found</th><td>' . (int)$result['found'] . '</td></tr>';
         echo '<tr><th>Matched by MD5</th><td>' . (int)$result['matched_md5'] . '</td></tr>';
+        echo '<tr><th>Matched by GUID</th><td>' . (int)$result['matched_guid'] . '</td></tr>';
+        echo '<tr><th>Ambiguous GUID matches</th><td>' . (int)$result['guid_ambiguous'] . '</td></tr>';
+        echo '<tr><th>Parse failed</th><td>' . (int)$result['parse_failed'] . '</td></tr>';
         echo '<tr><th>Unknown / not cataloged</th><td>' . (int)$result['unknown'] . '</td></tr>';
         echo '<tr><th>Locations recorded</th><td>' . (int)$result['locations'] . '</td></tr></table>';
         echo '</div>';
 
         if ($result['unknown_samples']) {
-            echo '<div class="card"><h2>Unknown samples</h2><p class="muted">These files were found in the source but did not match an existing catalog MD5. They may need to be uploaded/scanned or may be compressed/uncompressed variants requiring GUID scan support.</p><table><tr><th>Path</th></tr>';
+            echo '<div class="card"><h2>Unknown / ambiguous samples</h2><p class="muted">These files were found in the source but were not linked automatically.</p><table><tr><th>Path / reason</th></tr>';
             foreach ($result['unknown_samples'] as $sample) {
+                echo '<tr><td class="mono path">' . catalog_h($sample) . '</td></tr>';
+            }
+            echo '</table></div>';
+        }
+
+        if ($result['parse_failed_samples']) {
+            echo '<div class="card"><h2>Parse failed samples</h2><table><tr><th>Path / reason</th></tr>';
+            foreach ($result['parse_failed_samples'] as $sample) {
                 echo '<tr><td class="mono path">' . catalog_h($sample) . '</td></tr>';
             }
             echo '</table></div>';
