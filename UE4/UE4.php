@@ -66,6 +66,59 @@ function name_html(UnrealPackageReader4 $pkg, array $name): string
     if ($idx < 0) return h($text);
     return '<a class="name-link mono" href="#' . h(name_ref_target_id($idx)) . '">' . h($text) . '</a><span class="tag">#' . h($idx) . '</span>';
 }
+function ue4_serial_preview_html(string $packagePath, array $hdr, array $ex): string
+{
+    $serialSize = (int)($ex['serialSize'] ?? 0);
+    $serialOffset = (int)($ex['serialOffset'] ?? 0);
+    $uassetSize = is_file($packagePath) ? (filesize($packagePath) ?: 0) : 0;
+    $uexpPath = (string)($hdr['uexpPath'] ?? '');
+    $totalHeaderSize = (int)($hdr['totalHeaderSize'] ?? 0);
+
+    if ($serialSize <= 0) return '<span class="small">no serial data</span>';
+
+    $candidates = [];
+    $candidates[] = ['label'=>'uasset:absolute', 'path'=>$packagePath, 'offset'=>$serialOffset];
+    if ($uexpPath !== '' && is_file($uexpPath)) {
+        $candidates[] = ['label'=>'uexp:absolute', 'path'=>$uexpPath, 'offset'=>$serialOffset];
+        $candidates[] = ['label'=>'uexp:offset-totalHeader', 'path'=>$uexpPath, 'offset'=>$serialOffset - $totalHeaderSize];
+        $candidates[] = ['label'=>'uexp:offset-uassetSize', 'path'=>$uexpPath, 'offset'=>$serialOffset - $uassetSize];
+    }
+
+    $picked = null;
+    foreach ($candidates as $c) {
+        $path = (string)$c['path'];
+        $off = (int)$c['offset'];
+        $size = is_file($path) ? (filesize($path) ?: 0) : 0;
+        if ($size > 0 && $off >= 0 && $off < $size) {
+            $picked = $c + ['fileSize'=>$size, 'end'=>$off + $serialSize, 'warning'=>($off + $serialSize > $size) ? 'serial range exceeds file' : ''];
+            break;
+        }
+    }
+
+    if ($picked === null) {
+        $msg = 'not in .uasset';
+        if ($uexpPath === '' || !is_file($uexpPath)) $msg .= '; matching .uexp not found';
+        return '<span class="warn-inline">' . h($msg) . '</span><br><span class="mono small">serial=' . h($serialOffset) . '..' . h($serialOffset + $serialSize) . '</span>';
+    }
+
+    $path = (string)$picked['path'];
+    $off = (int)$picked['offset'];
+    $readLen = max(0, min(64, $serialSize, ((int)$picked['fileSize']) - $off));
+    $fh = @fopen($path, 'rb');
+    $hex = '';
+    if ($fh !== false) {
+        @fseek($fh, $off);
+        $data = $readLen > 0 ? (string)@fread($fh, $readLen) : '';
+        @fclose($fh);
+        $hex = strtoupper(trim(chunk_split(bin2hex($data), 2, ' ')));
+    }
+
+    $warning = (string)($picked['warning'] ?? '');
+    $out = '<span class="mono small">source ' . h(basename($path)) . '<br>mode ' . h($picked['label']) . '<br>local ' . h($off) . '..' . h((int)$picked['end']) . '<br>file size ' . h($picked['fileSize']) . '</span>';
+    if ($warning !== '') $out .= '<br><span class="warn-inline">' . h($warning) . '</span>';
+    if ($hex !== '') $out .= '<pre class="hex-preview">' . h($hex) . '</pre>';
+    return $out;
+}
 
 $uploadedFiles = upload_file_list($uploadDir, $uploadRelDir, $allowedExt);
 $fileParam = isset($_GET['file']) ? (string)$_GET['file'] : '';
@@ -90,7 +143,7 @@ $issues = $pkg->validatePackage();
 <meta charset="utf-8">
 <title>UE4 Explorer — <?= h(basename($filePath)) ?></title>
 <style>
-body{font-family:Segoe UI,Tahoma,Arial,sans-serif;background:#eef6f8;color:#071629;margin:0;padding:12px;font-size:14px}.viewer{background:#fff;border:1px solid #cfd7df;min-height:700px}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid #cfd7df;background:#fbfbfb;flex-wrap:wrap}.file-select{min-width:360px;padding:6px 8px}.btn{border:1px solid #cfd7df;background:#fff;border-radius:5px;padding:5px 9px;text-decoration:none;color:#071629;cursor:pointer}.tabs{display:flex;border-bottom:1px solid #cfd7df;background:#f8fafb}.tab{border:0;border-right:1px solid #cfd7df;background:transparent;padding:10px 18px;font-weight:700;cursor:pointer}.tab.active{background:#fff;color:#0969da;box-shadow:inset 0 -2px 0 #0969da}.panel{display:none;padding:16px}.panel.active{display:block}.grid{display:grid;grid-template-columns:190px minmax(0,1fr);gap:10px 18px;max-width:1180px}.label{font-weight:700}.value{border:1px solid #cfd7df;background:#fbfbfb;padding:6px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mono{font-family:Consolas,Menlo,monospace}.raw{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.data{border-collapse:collapse;width:100%;margin-top:12px}.data th,.data td{border:1px solid #cfd7df;padding:7px 9px;vertical-align:top}.data th{background:#f5f7f9;text-align:left}.warn{border:1px solid #d1242f;background:#fff8f8;padding:8px 12px;margin-top:14px}.tag{display:inline-block;margin-left:4px;color:#2f6f9f;background:#edf6ff;border:1px solid #c7dff2;border-radius:3px;padding:0 3px;font-family:Consolas,Menlo,monospace;font-size:.92em}.ref-link,.name-link{text-decoration:none;color:#0969da}.ref-link:hover,.name-link:hover{text-decoration:underline}.is-target td{background:#fff3cd!important;outline:2px solid #f0c36d}.small{font-size:12px;color:#536471}
+body{font-family:Segoe UI,Tahoma,Arial,sans-serif;background:#eef6f8;color:#071629;margin:0;padding:12px;font-size:14px}.viewer{background:#fff;border:1px solid #cfd7df;min-height:700px}.toolbar{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;border-bottom:1px solid #cfd7df;background:#fbfbfb;flex-wrap:wrap}.file-select{min-width:360px;padding:6px 8px}.btn{border:1px solid #cfd7df;background:#fff;border-radius:5px;padding:5px 9px;text-decoration:none;color:#071629;cursor:pointer}.tabs{display:flex;border-bottom:1px solid #cfd7df;background:#f8fafb}.tab{border:0;border-right:1px solid #cfd7df;background:transparent;padding:10px 18px;font-weight:700;cursor:pointer}.tab.active{background:#fff;color:#0969da;box-shadow:inset 0 -2px 0 #0969da}.panel{display:none;padding:16px}.panel.active{display:block}.grid{display:grid;grid-template-columns:190px minmax(0,1fr);gap:10px 18px;max-width:1180px}.label{font-weight:700}.value{border:1px solid #cfd7df;background:#fbfbfb;padding:6px 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mono{font-family:Consolas,Menlo,monospace}.raw{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}.data{border-collapse:collapse;width:100%;margin-top:12px}.data th,.data td{border:1px solid #cfd7df;padding:7px 9px;vertical-align:top}.data th{background:#f5f7f9;text-align:left}.warn{border:1px solid #d1242f;background:#fff8f8;padding:8px 12px;margin-top:14px}.warn-inline{display:inline-block;color:#8a1f11;background:#fff1f0;border:1px solid #ffccc7;border-radius:3px;padding:1px 4px;font-size:12px}.hex-preview{max-width:360px;white-space:pre-wrap;word-break:break-word;background:#f6f8fa;border:1px solid #d0d7de;padding:4px;margin:4px 0 0 0;font-family:Consolas,Menlo,monospace;font-size:12px}.tag{display:inline-block;margin-left:4px;color:#2f6f9f;background:#edf6ff;border:1px solid #c7dff2;border-radius:3px;padding:0 3px;font-family:Consolas,Menlo,monospace;font-size:.92em}.ref-link,.name-link{text-decoration:none;color:#0969da}.ref-link:hover,.name-link:hover{text-decoration:underline}.is-target td{background:#fff3cd!important;outline:2px solid #f0c36d}.small{font-size:12px;color:#536471}
 </style>
 <script>
 function showPanel(id){document.querySelectorAll('.tab').forEach(e=>e.classList.toggle('active',e.dataset.panel===id));document.querySelectorAll('.panel').forEach(e=>e.classList.toggle('active',e.id===id));}
@@ -105,7 +158,7 @@ document.addEventListener('click',function(ev){const a=ev.target.closest&&ev.tar
 <section id="summary-panel" class="panel active"><h2>UE4 Package Summary</h2><div class="grid"><div class="label">GUID</div><div class="value mono"><?= h($hdr['guid'] ?? '') ?></div><div class="label">Legacy Version</div><div class="value mono"><?= h($hdr['legacyFileVersion'] ?? '') ?></div><div class="label">Legacy UE3 Version</div><div class="value mono"><?= h($hdr['legacyUE3Version'] ?? '') ?></div><div class="label">UE4 Version</div><div class="value mono"><?= h($hdr['version'] ?? '') ?><?= !empty($hdr['unversioned']) ? ' (assumed; unversioned)' : '' ?></div><div class="label">Licensee Version</div><div class="value mono"><?= h($hdr['licenseeVersion'] ?? '') ?></div><div class="label">Package Flags</div><div class="value mono"><?= h(hx($hdr['packageFlags'] ?? 0)) ?></div><div class="label">Folder</div><div class="value mono"><?= h($hdr['folderName'] ?? '') ?></div><div class="label">Total Header Size</div><div class="value mono"><?= h($hdr['totalHeaderSize'] ?? '') ?></div><div class="label">Counts</div><div class="value mono">N <?= h($hdr['nameCount'] ?? '') ?> / I <?= h($hdr['importCount'] ?? '') ?> / E <?= h($hdr['exportCount'] ?? '') ?></div><div class="label">Offsets</div><div class="value mono">N <?= h($hdr['nameOffset'] ?? '') ?> / I <?= h($hdr['importOffset'] ?? '') ?> / E <?= h($hdr['exportOffset'] ?? '') ?></div><div class="label">Depends Offset</div><div class="value mono"><?= h($hdr['dependsOffset'] ?? '') ?></div><div class="label">Asset Registry Offset</div><div class="value mono"><?= h($hdr['assetRegistryDataOffset'] ?? '') ?></div><div class="label">Bulk Data Start</div><div class="value mono"><?= h($hdr['bulkDataStartOffset'] ?? '') ?></div><div class="label">Preload Dependencies</div><div class="value mono"><?= h($hdr['preloadDependencyCount'] ?? '') ?> @ <?= h($hdr['preloadDependencyOffset'] ?? '') ?></div><div class="label">UEXP Pair</div><div class="value mono"><?= !empty($hdr['hasUexp']) ? h(basename((string)$hdr['uexpPath'])) : 'not found' ?></div></div><?php if ($issues): ?><div class="warn"><strong>Validation / Notes</strong><ul><?php foreach ($issues as $w): ?><li class="mono raw"><?= h($w) ?></li><?php endforeach; ?></ul></div><?php endif; ?><h2>Version Details</h2><pre class="raw"><?= h(json_encode(['savedByEngineVersion'=>$hdr['savedByEngineVersion'] ?? [], 'compatibleWithEngineVersion'=>$hdr['compatibleWithEngineVersion'] ?? [], 'customVersions'=>array_slice($hdr['customVersions'] ?? [], 0, 20)], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) ?></pre></section>
 <section id="names-panel" class="panel"><h2>Name Map</h2><table class="data"><thead><tr><th>#</th><th>Name</th><th>Offset</th><th>Hashes</th></tr></thead><tbody><?php foreach ($names as $n): ?><tr id="<?= h(name_ref_target_id((int)$n['index'])) ?>"><td class="mono"><?= h($n['index']) ?></td><td class="mono"><?= h($n['name']) ?></td><td class="mono"><?= h($n['offset']) ?></td><td class="mono"><?= h(($n['nonCaseHash'] ?? '') . ' / ' . ($n['caseHash'] ?? '')) ?></td></tr><?php endforeach; ?></tbody></table></section>
 <section id="imports-panel" class="panel"><h2>Import Map</h2><table class="data"><thead><tr><th>Ref</th><th>Object</th><th>Class Package</th><th>Class</th><th>Outer</th><th>Offset</th></tr></thead><tbody><?php foreach ($imports as $im): $ref=(int)$im['ref']; ?><tr id="<?= h(object_ref_target_id($ref)) ?>"><td class="mono"><?= h($ref) ?></td><td><?= name_html($pkg, $im['objectName']) ?></td><td><?= name_html($pkg, $im['classPackage']) ?></td><td><?= name_html($pkg, $im['className']) ?></td><td><?= ref_html($pkg, (int)$im['outerIndex']) ?></td><td class="mono"><?= h($im['offset']) ?></td></tr><?php endforeach; ?></tbody></table></section>
-<section id="exports-panel" class="panel"><h2>Export Map</h2><table class="data"><thead><tr><th>Ref</th><th>Object</th><th>Class</th><th>Outer</th><th>Template</th><th>Flags</th><th>Serial</th><th>Booleans</th><th>Preload</th></tr></thead><tbody><?php foreach ($exports as $ex): $ref=(int)$ex['ref']; ?><tr id="<?= h(object_ref_target_id($ref)) ?>"><td class="mono"><?= h($ref) ?></td><td><?= name_html($pkg, $ex['objectName']) ?></td><td><?= ref_html($pkg, (int)$ex['classIndex']) ?></td><td><?= ref_html($pkg, (int)$ex['outerIndex']) ?></td><td><?= ref_html($pkg, (int)$ex['templateIndex']) ?></td><td class="mono"><?= h(hx($ex['objectFlags'] ?? 0)) ?></td><td class="mono">size <?= h($ex['serialSize']) ?><br>offset <?= h($ex['serialOffset']) ?></td><td class="small">forced <?= !empty($ex['forcedExport'])?'Y':'N' ?><br>client <?= !empty($ex['notForClient'])?'no':'yes' ?><br>server <?= !empty($ex['notForServer'])?'no':'yes' ?><br>asset <?= $ex['isAsset'] === null ? '?' : (!empty($ex['isAsset'])?'Y':'N') ?></td><td class="mono small"><?= h($ex['preload'] ? json_encode($ex['preload'], JSON_UNESCAPED_SLASHES) : '') ?></td></tr><?php endforeach; ?></tbody></table></section>
+<section id="exports-panel" class="panel"><h2>Export Map</h2><table class="data"><thead><tr><th>Ref</th><th>Object</th><th>Class</th><th>Outer</th><th>Template</th><th>Flags</th><th>Serial</th><th>Preview</th><th>Booleans</th><th>Preload</th></tr></thead><tbody><?php foreach ($exports as $ex): $ref=(int)$ex['ref']; ?><tr id="<?= h(object_ref_target_id($ref)) ?>"><td class="mono"><?= h($ref) ?></td><td><?= name_html($pkg, $ex['objectName']) ?></td><td><?= ref_html($pkg, (int)$ex['classIndex']) ?></td><td><?= ref_html($pkg, (int)$ex['outerIndex']) ?></td><td><?= ref_html($pkg, (int)$ex['templateIndex']) ?></td><td class="mono"><?= h(hx($ex['objectFlags'] ?? 0)) ?></td><td class="mono">size <?= h($ex['serialSize']) ?><br>offset <?= h($ex['serialOffset']) ?></td><td><?= ue4_serial_preview_html($filePath, $hdr, $ex) ?></td><td class="small">forced <?= !empty($ex['forcedExport'])?'Y':'N' ?><br>client <?= !empty($ex['notForClient'])?'no':'yes' ?><br>server <?= !empty($ex['notForServer'])?'no':'yes' ?><br>asset <?= $ex['isAsset'] === null ? '?' : (!empty($ex['isAsset'])?'Y':'N') ?></td><td class="mono small"><?= h($ex['preload'] ? json_encode($ex['preload'], JSON_UNESCAPED_SLASHES) : '') ?></td></tr><?php endforeach; ?></tbody></table></section>
 </div>
 </body>
 </html>
