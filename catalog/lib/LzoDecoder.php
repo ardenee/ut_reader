@@ -53,7 +53,7 @@ final class CatalogLzoDecoder
             }
             $t = $readByte();
             if ($t < 16) {
-                $distance = 1 + 0x0800 + ($t >> 2) + ($readByte() << 2);
+                $distance = 0x0801 + ($t >> 2) + ($readByte() << 2);
                 $copyMatch($distance, 3);
                 $copyLiteral($t & 3);
                 if ($ip >= $inLen) {
@@ -78,7 +78,7 @@ final class CatalogLzoDecoder
                 }
                 $t = $readByte();
                 if ($t < 16) {
-                    $distance = 1 + 0x0800 + ($t >> 2) + ($readByte() << 2);
+                    $distance = 0x0801 + ($t >> 2) + ($readByte() << 2);
                     $copyMatch($distance, 3);
                     $copyLiteral($t & 3);
                     if ($ip >= $inLen) {
@@ -103,7 +103,7 @@ final class CatalogLzoDecoder
                 }
                 $b1 = $readByte();
                 $b2 = $readByte();
-                $distance = 1 + (($b1 >> 2) + ($b2 << 6));
+                $distance = 1 + ($b1 >> 2) + ($b2 << 6);
                 $copyMatch($distance, $count + 2);
                 $copyLiteral($b1 & 3);
             } elseif ($t >= 16) {
@@ -121,8 +121,7 @@ final class CatalogLzoDecoder
                 if ($distance === 0) {
                     break;
                 }
-                $distance += 0x4000 + 1;
-                $copyMatch($distance, $count + 2);
+                $copyMatch($distance + 0x4000, $count + 2);
                 $copyLiteral($b1 & 3);
             } else {
                 $distance = 1 + ($t >> 2) + ($readByte() << 2);
