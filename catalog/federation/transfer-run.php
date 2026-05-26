@@ -42,56 +42,80 @@ function tr_safe_name(string $name): string
     return $name !== '' ? $name : 'download.bin';
 }
 
-function run_one_parent_pull(PDO $db, array $config): array
+function tr_signed_download_context(PDO $db, array $job, string $url, array $payload): array
 {
-    $job = catalog_one($db, 'SELECT j.*, p.site_name peer_name, p.site_url, p.peer_site_id, p.shared_secret_plain FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.direction="parent_pull_from_child" AND j.status="queued" AND p.is_active=1 ORDER BY j.created_at ASC LIMIT 1');
+    $secret = (string)$job['shared_secret_plain'];
+    if ($secret === '') {
+        throw new RuntimeException('Peer has no stored API secret.');
+    }
+
+    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    if ($body === false) {
+        throw new RuntimeException('Could not encode download request payload.');
+    }
+
+    $timestamp = date('c');
+    $nonce = fed_random_secret();
+    $path = parse_url($url, PHP_URL_PATH) ?: '/';
+    $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
+    $headers = [
+        'Content-Type: application/json',
+        'User-Agent: UnrealFileCatalogFederation/1.0',
+        'X-Site-Id: ' . fed_setting($db, 'site_id', ''),
+        'X-Timestamp: ' . $timestamp,
+        'X-Nonce: ' . $nonce,
+        'X-Signature: ' . $signature,
+    ];
+
+    return [
+        'http' => [
+            'method' => 'POST',
+            'header' => implode("\r\n", $headers) . "\r\n",
+            'content' => $body,
+            'timeout' => 300,
+            'ignore_errors' => true,
+        ],
+        'ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true,
+        ],
+    ];
+}
+
+function tr_job_download_url_payload(array $job): array
+{
+    if ((string)$job['direction'] === 'parent_pull_from_child') {
+        return [
+            rtrim((string)$job['site_url'], '/') . '/api/federation/download-file.php',
+            ['remote_file_id' => (int)$job['remote_file_id']],
+            'PARENT_PULL_DOWNLOADED',
+        ];
+    }
+
+    if ((string)$job['direction'] === 'download_from_parent') {
+        return [
+            rtrim((string)$job['site_url'], '/') . '/api/federation/download-approved-file.php',
+            ['request_item_id' => (int)$job['remote_request_item_id']],
+            'CHILD_APPROVED_DOWNLOADED',
+        ];
+    }
+
+    throw new RuntimeException('Unsupported queued transfer direction: ' . (string)$job['direction']);
+}
+
+function run_one_transfer(PDO $db, array $config): array
+{
+    $job = catalog_one($db, 'SELECT j.*, p.site_name peer_name, p.site_url, p.peer_site_id, p.shared_secret_plain FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status="queued" AND j.direction IN ("parent_pull_from_child","download_from_parent") AND p.is_active=1 ORDER BY j.created_at ASC LIMIT 1');
     if (!$job) {
-        return ['ok' => true, 'message' => 'No queued parent pull jobs.'];
+        return ['ok' => true, 'message' => 'No queued transfer jobs.'];
     }
 
     $jobId = (int)$job['id'];
     $db->prepare('UPDATE ue_federation_transfer_jobs SET status="running", started_at=NOW(), attempts=attempts+1, last_error=NULL WHERE id=?')->execute([$jobId]);
 
     try {
-        $secret = (string)$job['shared_secret_plain'];
-        if ($secret === '') {
-            throw new RuntimeException('Peer has no stored API secret.');
-        }
-
-        $url = rtrim((string)$job['site_url'], '/') . '/api/federation/download-file.php';
-        $payload = ['remote_file_id' => (int)$job['remote_file_id']];
-        $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if ($body === false) {
-            throw new RuntimeException('Could not encode download request payload.');
-        }
-
-        $timestamp = date('c');
-        $nonce = fed_random_secret();
-        $path = parse_url($url, PHP_URL_PATH) ?: '/';
-        $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
-        $headers = [
-            'Content-Type: application/json',
-            'User-Agent: UnrealFileCatalogFederation/1.0',
-            'X-Site-Id: ' . fed_setting($db, 'site_id', ''),
-            'X-Timestamp: ' . $timestamp,
-            'X-Nonce: ' . $nonce,
-            'X-Signature: ' . $signature,
-        ];
-
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => implode("\r\n", $headers) . "\r\n",
-                'content' => $body,
-                'timeout' => 300,
-                'ignore_errors' => true,
-            ],
-            'ssl' => [
-                'verify_peer' => true,
-                'verify_peer_name' => true,
-            ],
-        ]);
-
+        [$url, $payload, $logEvent] = tr_job_download_url_payload($job);
+        $context = stream_context_create(tr_signed_download_context($db, $job, $url, $payload));
         $remote = @fopen($url, 'rb', false, $context);
         if (!$remote) {
             throw new RuntimeException('Could not open remote download stream.');
@@ -107,7 +131,7 @@ function run_one_parent_pull(PDO $db, array $config): array
         }
 
         $incoming = tr_incoming_dir($config);
-        $name = 'peer_' . (int)$job['peer_id'] . '_remote_' . (int)$job['remote_file_id'] . '_' . date('Ymd_His') . '.bin';
+        $name = 'peer_' . (int)$job['peer_id'] . '_' . (string)$job['direction'] . '_remote_' . (int)$job['remote_file_id'] . '_item_' . (int)($job['remote_request_item_id'] ?? 0) . '_' . date('Ymd_His') . '.bin';
         $dest = $incoming . '/' . tr_safe_name($name);
         $out = fopen($dest, 'wb');
         if (!$out) {
@@ -142,17 +166,17 @@ function run_one_parent_pull(PDO $db, array $config): array
         $relativeIncoming = 'storage/federation/incoming/' . basename($dest);
 
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status="downloaded", bytes_done=?, incoming_path=?, downloaded_md5=?, downloaded_sha1=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$bytes, $relativeIncoming, $md5, $sha1, 'Downloaded to incoming: ' . basename($dest), $jobId]);
-        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'PARENT_PULL_DOWNLOADED', 'Downloaded remote file ' . (int)$job['remote_file_id'] . ' to ' . basename($dest));
+        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', $logEvent, 'Downloaded remote file ' . (int)$job['remote_file_id'] . ' to ' . basename($dest));
 
         $delay = (int)$job['wait_after_seconds'];
         if ($delay > 0) {
             sleep($delay);
         }
 
-        return ['ok' => true, 'message' => 'Downloaded one job to federation incoming folder.', 'job_id' => $jobId, 'file' => basename($dest), 'bytes' => $bytes, 'md5' => $md5];
+        return ['ok' => true, 'message' => 'Downloaded one queued transfer job.', 'job_id' => $jobId, 'direction' => (string)$job['direction'], 'file' => basename($dest), 'bytes' => $bytes, 'md5' => $md5];
     } catch (Throwable $e) {
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", finished_at=NOW(), last_error=? WHERE id=?')->execute([$e->getMessage(), $jobId]);
-        fed_log($db, (int)$job['peer_id'], $jobId, 'ERROR', 'PARENT_PULL_FAIL', $e->getMessage());
+        fed_log($db, (int)$job['peer_id'], $jobId, 'ERROR', 'TRANSFER_FAIL', $e->getMessage());
         throw $e;
     }
 }
@@ -166,7 +190,7 @@ try {
             throw new RuntimeException('Admin required');
         }
         tr_check_csrf();
-        $_SESSION['fed_transfer_run_result'] = run_one_parent_pull($db, $config);
+        $_SESSION['fed_transfer_run_result'] = run_one_transfer($db, $config);
         header('Location: transfer-run.php');
         exit;
     }
@@ -179,7 +203,7 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>Transfer Runner</h1><p class="muted">Runs one queued parent-pull download at a time. Downloaded jobs can now be imported using the federation import runner.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="import-run.php">Import downloaded files</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Transfer Runner</h1><p class="muted">Runs one queued federation download at a time: parent pulls from children, or children download approved files from parent.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="approved-downloads.php">Approved child downloads</a> <a class="button" href="import-run.php">Import downloaded files</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     if (isset($_SESSION['fed_transfer_run_result'])) {
         echo '<div class="card"><h2>Last run</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_transfer_run_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
@@ -194,9 +218,9 @@ try {
     if (!$jobs) {
         echo '<p class="muted">No transfer jobs yet.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Remote file</th><th>Status</th><th>Bytes</th><th>Incoming</th><th>Hashes</th><th>Message</th><th>Created</th></tr>';
+        echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Remote item</th><th>Remote file</th><th>Status</th><th>Bytes</th><th>Incoming</th><th>Hashes</th><th>Message</th><th>Created</th></tr>';
         foreach ($jobs as $job) {
-            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td>' . catalog_h($job['status']) . '</td><td>' . catalog_h((int)$job['bytes_done'] . ' / ' . (int)$job['bytes_total']) . '</td><td class="mono small">' . catalog_h($job['incoming_path'] ?? '') . '</td><td class="mono small">MD5 ' . catalog_h($job['downloaded_md5'] ?? '') . '<br>SHA1 ' . catalog_h($job['downloaded_sha1'] ?? '') . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['created_at']) . '</td></tr>';
+            echo '<tr><td class="mono">' . (int)$job['id'] . '</td><td>' . catalog_h($job['peer_name']) . '</td><td>' . catalog_h($job['direction']) . '</td><td class="mono">' . catalog_h($job['remote_request_item_id']) . '</td><td class="mono">' . catalog_h($job['remote_file_id']) . '</td><td>' . catalog_h($job['status']) . '</td><td>' . catalog_h((int)$job['bytes_done'] . ' / ' . (int)$job['bytes_total']) . '</td><td class="mono small">' . catalog_h($job['incoming_path'] ?? '') . '</td><td class="mono small">MD5 ' . catalog_h($job['downloaded_md5'] ?? '') . '<br>SHA1 ' . catalog_h($job['downloaded_sha1'] ?? '') . '</td><td class="path">' . catalog_h($job['last_error']) . '</td><td>' . catalog_h($job['created_at']) . '</td></tr>';
         }
         echo '</table>';
     }
