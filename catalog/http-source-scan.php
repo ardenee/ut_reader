@@ -7,6 +7,7 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogParser.php';
 
 function http_scan_is_admin(): bool
 {
@@ -26,12 +27,10 @@ function http_scan_clean_manifest_line(string $line): string
     if ($line === '' || str_starts_with($line, '#') || str_starts_with($line, ';')) {
         return '';
     }
-
     if (str_contains($line, ',')) {
         $parts = str_getcsv($line);
         $line = trim((string)($parts[0] ?? ''));
     }
-
     return trim($line, " \t\r\n\"'");
 }
 
@@ -43,12 +42,12 @@ function http_scan_make_url(string $baseUrl, string $relative): string
     return rtrim($baseUrl, '/') . '/' . ltrim($relative, '/');
 }
 
-function http_scan_fetch_manifest(string $url, int $maxBytes = 5242880): string
+function http_scan_fetch_url(string $url, int $maxBytes, string $label): string
 {
     $context = stream_context_create([
         'http' => [
             'method' => 'GET',
-            'timeout' => 20,
+            'timeout' => 30,
             'header' => "User-Agent: UnrealFileCatalog/1.0\r\n",
         ],
         'ssl' => [
@@ -59,7 +58,7 @@ function http_scan_fetch_manifest(string $url, int $maxBytes = 5242880): string
 
     $fp = @fopen($url, 'rb', false, $context);
     if (!$fp) {
-        throw new RuntimeException('Could not open manifest URL: ' . $url);
+        throw new RuntimeException('Could not open ' . $label . ' URL: ' . $url);
     }
 
     $data = '';
@@ -69,32 +68,26 @@ function http_scan_fetch_manifest(string $url, int $maxBytes = 5242880): string
     fclose($fp);
 
     if (strlen($data) > $maxBytes) {
-        throw new RuntimeException('Manifest too large; limit is ' . $maxBytes . ' bytes.');
+        throw new RuntimeException(ucfirst($label) . ' too large; limit is ' . $maxBytes . ' bytes.');
     }
 
     return $data;
+}
+
+function http_scan_fetch_manifest(string $url, int $maxBytes = 5242880): string
+{
+    return http_scan_fetch_url($url, $maxBytes, 'manifest');
 }
 
 function http_scan_extract_manifest_paths(string $manifestText, array $config): array
 {
     $paths = [];
     $trimmed = trim($manifestText);
-
     $json = json_decode($trimmed, true);
     if (is_array($json)) {
-        $items = [];
-        if (array_is_list($json)) {
-            $items = $json;
-        } elseif (isset($json['files']) && is_array($json['files'])) {
-            $items = $json['files'];
-        }
-
+        $items = array_is_list($json) ? $json : (is_array($json['files'] ?? null) ? $json['files'] : []);
         foreach ($items as $item) {
-            if (is_array($item)) {
-                $path = (string)($item['path'] ?? $item['file'] ?? $item['name'] ?? $item['url'] ?? '');
-            } else {
-                $path = (string)$item;
-            }
+            $path = is_array($item) ? (string)($item['path'] ?? $item['file'] ?? $item['name'] ?? $item['url'] ?? '') : (string)$item;
             $path = http_scan_clean_manifest_line($path);
             if ($path !== '' && http_scan_allowed_extension($path, $config)) {
                 $paths[$path] = true;
@@ -109,7 +102,6 @@ function http_scan_extract_manifest_paths(string $manifestText, array $config): 
             $paths[$path] = true;
         }
     }
-
     return array_keys($paths);
 }
 
@@ -119,30 +111,31 @@ function http_scan_head_size(string $url): ?int
     if (!$headers || !is_array($headers)) {
         return null;
     }
-
     $length = $headers['Content-Length'] ?? $headers['content-length'] ?? null;
     if (is_array($length)) {
         $length = end($length);
     }
-    if ($length !== null && is_numeric($length)) {
-        return (int)$length;
-    }
-    return null;
+    return ($length !== null && is_numeric($length)) ? (int)$length : null;
 }
 
 function http_scan_match_file(PDO $db, array $source, string $relativePath, ?int $remoteSize): ?array
 {
     $basename = basename(parse_url($relativePath, PHP_URL_PATH) ?: $relativePath);
-
     $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND original_name=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $basename]);
     if (count($matches) === 1) {
         return ['status' => 'matched_name', 'file' => $matches[0]];
+    }
+    if (count($matches) > 1 && $remoteSize === null) {
+        return ['status' => 'ambiguous', 'file' => null];
     }
 
     if ($remoteSize !== null) {
         $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND original_name=? AND file_size=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $basename, $remoteSize]);
         if (count($matches) === 1) {
             return ['status' => 'matched_name_size', 'file' => $matches[0]];
+        }
+        if (count($matches) > 1) {
+            return ['status' => 'ambiguous', 'file' => null];
         }
     }
 
@@ -152,18 +145,44 @@ function http_scan_match_file(PDO $db, array $source, string $relativePath, ?int
         if (count($matches) === 1) {
             return ['status' => 'matched_package_name', 'file' => $matches[0]];
         }
+        if (count($matches) > 1) {
+            return ['status' => 'ambiguous', 'file' => null];
+        }
     }
-
-    if (count($matches ?? []) > 1) {
-        return ['status' => 'ambiguous', 'file' => null];
-    }
-
     return null;
 }
 
-function http_scan_source(PDO $db, array $config, int $sourceId, string $manifestName, bool $checkRemoteSize): array
+function http_scan_deep_guid_match(PDO $db, array $config, array $source, string $url, int $maxBytes): ?array
 {
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
+    $data = http_scan_fetch_url($url, $maxBytes, 'package');
+    $tmp = tempnam(sys_get_temp_dir(), 'ue_http_scan_');
+    if (!$tmp) {
+        throw new RuntimeException('Could not create temp file for deep scan.');
+    }
+    try {
+        file_put_contents($tmp, $data);
+        unset($data);
+        $header = catalog_try_read_package_header($config, (string)$source['engine_key'], $tmp);
+        $guid = catalog_header_guid($header);
+        if ($guid === '') {
+            return ['status' => 'no_guid', 'file' => null, 'guid' => ''];
+        }
+        $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND package_guid=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $guid]);
+        if (count($matches) === 1) {
+            return ['status' => 'matched_guid', 'file' => $matches[0], 'guid' => $guid];
+        }
+        if (count($matches) > 1) {
+            return ['status' => 'ambiguous_guid', 'file' => null, 'guid' => $guid];
+        }
+        return ['status' => 'unknown_guid', 'file' => null, 'guid' => $guid];
+    } finally {
+        @unlink($tmp);
+    }
+}
+
+function http_scan_source(PDO $db, array $config, int $sourceId, string $manifestName, bool $checkRemoteSize, bool $deepScan, int $maxDeepBytes): array
+{
+    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.engine_key FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
     if (!$source) {
         throw new RuntimeException('Source not found');
     }
@@ -172,37 +191,55 @@ function http_scan_source(PDO $db, array $config, int $sourceId, string $manifes
     }
 
     $manifestUrl = http_scan_make_url((string)$source['base_path'], $manifestName);
-    $manifest = http_scan_fetch_manifest($manifestUrl);
-    $paths = http_scan_extract_manifest_paths($manifest, $config);
-
+    $paths = http_scan_extract_manifest_paths(http_scan_fetch_manifest($manifestUrl), $config);
     $upsert = $db->prepare('INSERT INTO ue_file_locations(file_id,source_id,source_relative_path,exists_in_source,last_seen_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE exists_in_source=VALUES(exists_in_source), last_seen_at=NOW()');
 
     $matched = 0;
+    $matchedGuid = 0;
     $unknown = 0;
     $ambiguous = 0;
+    $deepFailed = 0;
     $samples = [];
 
     foreach ($paths as $relativePath) {
         $url = http_scan_make_url((string)$source['base_path'], $relativePath);
         $remoteSize = $checkRemoteSize ? http_scan_head_size($url) : null;
         $match = http_scan_match_file($db, $source, $relativePath, $remoteSize);
+
+        if (!$match && $deepScan) {
+            try {
+                $match = http_scan_deep_guid_match($db, $config, $source, $url, $maxDeepBytes);
+            } catch (Throwable $e) {
+                $deepFailed++;
+                if (count($samples) < 50) {
+                    $samples[] = $relativePath . ' - deep scan failed: ' . $e->getMessage();
+                }
+                continue;
+            }
+        }
+
         if ($match && isset($match['file']) && is_array($match['file'])) {
             $upsert->execute([(int)$match['file']['id'], $sourceId, $relativePath, 1]);
-            $matched++;
+            if (($match['status'] ?? '') === 'matched_guid') {
+                $matchedGuid++;
+            } else {
+                $matched++;
+            }
             continue;
         }
 
-        if ($match && $match['status'] === 'ambiguous') {
+        if ($match && in_array($match['status'] ?? '', ['ambiguous', 'ambiguous_guid'], true)) {
             $ambiguous++;
             if (count($samples) < 50) {
-                $samples[] = $relativePath . ' - ambiguous match';
+                $samples[] = $relativePath . ' - ' . $match['status'] . (!empty($match['guid']) ? ': ' . $match['guid'] : '');
             }
             continue;
         }
 
         $unknown++;
         if (count($samples) < 50) {
-            $samples[] = $relativePath . ($remoteSize !== null ? ' - size ' . $remoteSize : '');
+            $reason = $match['status'] ?? 'unknown';
+            $samples[] = $relativePath . ' - ' . $reason . ($remoteSize !== null ? ' - size ' . $remoteSize : '') . (!empty($match['guid']) ? ' - GUID ' . $match['guid'] : '');
         }
     }
 
@@ -211,8 +248,10 @@ function http_scan_source(PDO $db, array $config, int $sourceId, string $manifes
         'manifest_url' => $manifestUrl,
         'path_count' => count($paths),
         'matched' => $matched,
+        'matched_guid' => $matchedGuid,
         'unknown' => $unknown,
         'ambiguous' => $ambiguous,
+        'deep_failed' => $deepFailed,
         'samples' => $samples,
     ];
 }
@@ -220,7 +259,6 @@ function http_scan_source(PDO $db, array $config, int $sourceId, string $manifes
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-
     catalog_head('HTTP source scan');
 
     if (!http_scan_is_admin()) {
@@ -229,29 +267,32 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>HTTP mirror / redirect source scanner</h1><p class="muted">Scans a manifest file from an HTTP mirror or redirect server. Real base URLs remain admin-only and are not shown on public download pages.</p><p><a class="button" href="sources.php">Sources</a> <a class="button" href="source-scan.php">Local source scanner</a> <a class="button" href="games.php">Games</a></p></div>';
+    echo '<div class="card"><h1>HTTP mirror / redirect source scanner</h1><p class="muted">Scans a manifest file from an HTTP mirror or redirect server. Optional deep scan temporarily downloads unknown files, reads their package GUID, links them, then discards the temp file.</p><p><a class="button" href="sources.php">Sources</a> <a class="button" href="source-scan.php">Local source scanner</a> <a class="button" href="games.php">Games</a></p></div>';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sourceId = (int)($_POST['source_id'] ?? 0);
         $manifestName = trim((string)($_POST['manifest_name'] ?? 'files.txt'));
         $checkRemoteSize = isset($_POST['check_remote_size']);
+        $deepScan = isset($_POST['deep_scan']);
+        $maxDeepBytes = max(1024 * 1024, min(1024 * 1024 * 1024, (int)($_POST['max_deep_mb'] ?? 128) * 1024 * 1024));
         if ($manifestName === '') {
             throw new RuntimeException('Manifest name/path is required.');
         }
 
-        $result = http_scan_source($db, $config, $sourceId, $manifestName, $checkRemoteSize);
+        $result = http_scan_source($db, $config, $sourceId, $manifestName, $checkRemoteSize, $deepScan, $maxDeepBytes);
         echo '<div class="card"><h2>Scan result</h2><table>';
         echo '<tr><th>Source</th><td>' . catalog_h($result['source']['name']) . '</td></tr>';
         echo '<tr><th>Game</th><td>' . catalog_h($result['source']['game_name']) . '</td></tr>';
         echo '<tr><th>Manifest URL</th><td class="mono path">' . catalog_h($result['manifest_url']) . '</td></tr>';
         echo '<tr><th>Package-like paths found</th><td>' . (int)$result['path_count'] . '</td></tr>';
-        echo '<tr><th>Matched</th><td>' . (int)$result['matched'] . '</td></tr>';
+        echo '<tr><th>Matched by name/size/package</th><td>' . (int)$result['matched'] . '</td></tr>';
+        echo '<tr><th>Matched by deep GUID scan</th><td>' . (int)$result['matched_guid'] . '</td></tr>';
         echo '<tr><th>Unknown</th><td>' . (int)$result['unknown'] . '</td></tr>';
         echo '<tr><th>Ambiguous</th><td>' . (int)$result['ambiguous'] . '</td></tr>';
+        echo '<tr><th>Deep scan failures</th><td>' . (int)$result['deep_failed'] . '</td></tr>';
         echo '</table></div>';
-
         if ($result['samples']) {
-            echo '<div class="card"><h2>Unknown / ambiguous samples</h2><table><tr><th>Path / reason</th></tr>';
+            echo '<div class="card"><h2>Unknown / ambiguous / failed samples</h2><table><tr><th>Path / reason</th></tr>';
             foreach ($result['samples'] as $sample) {
                 echo '<tr><td class="mono path">' . catalog_h($sample) . '</td></tr>';
             }
@@ -269,7 +310,7 @@ try {
             $label = $source['game_name'] . ' - ' . $source['name'] . ' (' . $source['source_type'] . ')';
             echo '<option value="' . (int)$source['id'] . '">' . catalog_h($label) . '</option>';
         }
-        echo '</select></label></p><p><label>Manifest path/name<br><input name="manifest_name" value="files.txt" style="min-width:360px"></label></p><p><label><input type="checkbox" name="check_remote_size" value="1"> Use HEAD requests to compare remote file sizes where possible</label></p><button>Scan manifest</button></form>';
+        echo '</select></label></p><p><label>Manifest path/name<br><input name="manifest_name" value="files.txt" style="min-width:360px"></label></p><p><label><input type="checkbox" name="check_remote_size" value="1"> Use HEAD requests to compare remote file sizes where possible</label></p><p><label><input type="checkbox" name="deep_scan" value="1"> Deep scan unknown files by temporary download + GUID parse</label></p><p><label>Max deep download per file MB<br><input name="max_deep_mb" value="128" style="width:120px"></label></p><button>Scan manifest</button></form>';
     }
     echo '</div>';
 
