@@ -90,8 +90,7 @@ final class CatalogLzoDecoder
 
             if ($t >= 64) {
                 $distance = 1 + (($t >> 2) & 7) + ($readByte() << 3);
-                $count = ($t >> 5) + 1;
-                $copyMatch($distance, $count + 1);
+                $copyMatch($distance, ($t >> 5) + 1);
                 $copyLiteral($t & 3);
             } elseif ($t >= 32) {
                 $count = $t & 31;
