@@ -31,12 +31,13 @@ try {
         'active_peers' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peers WHERE is_active=1')['c'] ?? 0),
         'peer_files' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files')['c'] ?? 0),
         'requests' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_requests')['c'] ?? 0),
+        'join_pending' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_join_requests WHERE status="pending"')['c'] ?? 0),
         'queued_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"')['c'] ?? 0),
         'downloaded_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded"')['c'] ?? 0),
         'failed_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"')['c'] ?? 0),
     ];
 
-    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, conflicts, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="conflicts.php">Conflicts</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="docs.php">Docs</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, join requests, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, conflicts, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="join-requests.php">Join Requests</a> <a class="button" href="join.php" target="_blank">Public Join Page</a> <a class="button" href="claim-parent.php">Claim Parent</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="conflicts.php">Conflicts</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="docs.php">Docs</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<div class="card"><h2>Local site identity</h2><table>';
     echo '<tr><th>Site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
@@ -50,14 +51,18 @@ try {
     echo '<div class="stat"><h2>' . $stats['peers'] . '</h2><p>Total peers</p></div>';
     echo '<div class="stat"><h2>' . $stats['active_peers'] . '</h2><p>Active peers</p></div>';
     echo '<div class="stat"><h2>' . $stats['peer_files'] . '</h2><p>Peer inventory rows</p></div>';
-    echo '<div class="stat"><h2>' . $stats['requests'] . '</h2><p>Requests</p></div>';
+    echo '<div class="stat"><h2>' . $stats['requests'] . '</h2><p>File requests</p></div>';
+    echo '<div class="stat"><h2>' . $stats['join_pending'] . '</h2><p>Pending join requests</p></div>';
     echo '<div class="stat"><h2>' . $stats['queued_jobs'] . '</h2><p>Queued transfer jobs</p></div>';
     echo '<div class="stat"><h2>' . $stats['downloaded_jobs'] . '</h2><p>Waiting import</p></div>';
     echo '<div class="stat"><h2>' . $stats['failed_jobs'] . '</h2><p>Failed jobs</p></div>';
     echo '</div>';
 
     echo '<div class="card"><h2>Core tools</h2><div class="grid">';
-    echo '<a class="stat" href="settings.php"><h2>Federation settings</h2><p>Set site role, URL, identity, speed limits, delays, transfer defaults, and cron worker token.</p></a>';
+    echo '<a class="stat" href="settings.php"><h2>Federation settings</h2><p>Set site role, URL, identity, speed limits, delays, transfer defaults, join request toggle, and cron worker token.</p></a>';
+    echo '<a class="stat" href="join-requests.php"><h2>Join requests</h2><p>Parent admin approval page for public child-site pairing requests.</p></a>';
+    echo '<a class="stat" href="join.php"><h2>Public join page</h2><p>Share this URL so new deployments can request access to the master parent.</p></a>';
+    echo '<a class="stat" href="claim-parent.php"><h2>Claim parent</h2><p>Child-side tool to claim an approved one-time parent pairing URL.</p></a>';
     echo '<a class="stat" href="peers.php"><h2>Peers</h2><p>Add/manage parent or child sites and shared secrets.</p></a>';
     echo '<a class="stat" href="queue.php"><h2>Queue overview</h2><p>Review queued/running/downloaded/imported/failed transfer jobs.</p></a>';
     echo '<a class="stat" href="conflicts.php"><h2>Conflict report</h2><p>Review same-name, same-GUID, and hash mismatch conflicts between local and peer files.</p></a>';
@@ -69,7 +74,7 @@ try {
     echo '<div class="card"><h2>Parent/master tools</h2><div class="grid">';
     echo '<a class="stat" href="peer-inventory.php"><h2>Peer inventory</h2><p>View each child inventory separately.</p></a>';
     echo '<a class="stat" href="parent-pull.php"><h2>Parent pull from children</h2><p>Pull missing dependencies first, then other files the parent does not have.</p></a>';
-    echo '<a class="stat" href="requests.php"><h2>Child requests</h2><p>Approve or deny child missing-dependency requests, including selected items.</p></a>';
+    echo '<a class="stat" href="requests.php"><h2>Child file requests</h2><p>Approve or deny child missing-dependency requests, including selected items.</p></a>';
     echo '</div></div>';
 
     echo '<div class="card"><h2>Child tools</h2><div class="grid">';
