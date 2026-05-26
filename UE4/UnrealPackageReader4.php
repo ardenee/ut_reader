@@ -92,7 +92,7 @@ final class UnrealPackageReader4
     private const VER_COOKED_ASSETS_IN_EDITOR_SUPPORT = 482;
     private const VER_64BIT_EXPORTMAP_SERIALSIZES = 511;
     private const VER_NAME_HASHES_SERIALIZED = 504;
-    private const ASSUMED_UNVERSIONED_UE4_VERSION = 508;
+    private const ASSUMED_UNVERSIONED_UE4_VERSION = 511;
 
     public function __construct(string $path)
     {
