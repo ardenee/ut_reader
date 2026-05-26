@@ -27,6 +27,24 @@ function requests_check_csrf(): void
     }
 }
 
+function requests_update_header(PDO $db, int $requestId): void
+{
+    $c = catalog_one($db, 'SELECT COUNT(*) total, SUM(status="approved") approved, SUM(status="denied") denied, SUM(status="requested") requested FROM ue_federation_request_items WHERE request_id=?', [$requestId]);
+    if (!$c || (int)$c['total'] === 0) {
+        return;
+    }
+    if ((int)$c['approved'] > 0 && (int)$c['denied'] > 0) {
+        $status = 'part_approved';
+    } elseif ((int)$c['approved'] > 0 && (int)$c['requested'] === 0) {
+        $status = 'approved';
+    } elseif ((int)$c['denied'] >= (int)$c['total']) {
+        $status = 'denied';
+    } else {
+        $status = 'submitted';
+    }
+    $db->prepare('UPDATE ue_federation_requests SET status=?, approved_at=IF(? IN ("approved","part_approved"), NOW(), approved_at), approved_by=? WHERE id=?')->execute([$status, $status, $_SESSION['user']['id'] ?? null, $requestId]);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -46,12 +64,25 @@ try {
         if ($action === 'approve_all') {
             $db->prepare('UPDATE ue_federation_request_items SET status="approved" WHERE request_id=? AND local_file_id IS NOT NULL AND status="requested"')->execute([$requestId]);
             $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message="Parent does not have matching file." WHERE request_id=? AND local_file_id IS NULL AND status="requested"')->execute([$requestId]);
-            $db->prepare('UPDATE ue_federation_requests SET status="approved", approved_at=NOW(), approved_by=? WHERE id=?')->execute([$_SESSION['user']['id'] ?? null, $requestId]);
-            fed_log($db, (int)$request['peer_id'], null, 'INFO', 'REQUEST_APPROVE_ALL', 'Request ' . $requestId . ' approved.');
+            requests_update_header($db, $requestId);
+            fed_log($db, (int)$request['peer_id'], null, 'INFO', 'REQUEST_APPROVE_ALL', 'Request ' . $requestId . ' available items approved.');
         } elseif ($action === 'deny_all') {
             $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message="Denied by parent admin." WHERE request_id=? AND status IN ("requested","approved")')->execute([$requestId]);
             $db->prepare('UPDATE ue_federation_requests SET status="denied", approved_at=NULL, approved_by=? WHERE id=?')->execute([$_SESSION['user']['id'] ?? null, $requestId]);
             fed_log($db, (int)$request['peer_id'], null, 'INFO', 'REQUEST_DENY_ALL', 'Request ' . $requestId . ' denied.');
+        } elseif ($action === 'approve_selected' || $action === 'deny_selected') {
+            $ids = array_values(array_unique(array_map('intval', $_POST['item_ids'] ?? [])));
+            if (!$ids) {
+                throw new RuntimeException('Select at least one item.');
+            }
+            $newStatus = $action === 'approve_selected' ? 'approved' : 'denied';
+            $message = $action === 'approve_selected' ? 'Approved by parent admin.' : 'Denied by parent admin.';
+            $stmt = $db->prepare('UPDATE ue_federation_request_items SET status=?, status_message=? WHERE request_id=? AND id=? AND status IN ("requested","approved","denied")' . ($newStatus === 'approved' ? ' AND local_file_id IS NOT NULL' : ''));
+            foreach ($ids as $id) {
+                $stmt->execute([$newStatus, $message, $requestId, $id]);
+            }
+            requests_update_header($db, $requestId);
+            fed_log($db, (int)$request['peer_id'], null, 'INFO', strtoupper($action), 'Request ' . $requestId . ' item count=' . count($ids));
         }
 
         header('Location: requests.php?request_id=' . $requestId);
@@ -67,7 +98,7 @@ try {
     }
 
     $requestId = (int)($_GET['request_id'] ?? 0);
-    echo '<div class="card"><h1>Child File Requests</h1><p class="muted">Parent-side approval page. Requests are kept per child. Regenerated child requests mark old submitted/approved requests as updated.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Child File Requests</h1><p class="muted">Parent-side approval page. Requests are kept per child. Regenerated child requests mark old submitted/approved requests as updated.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="conflicts.php">Conflicts</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     $requests = catalog_all($db, 'SELECT r.*, p.site_name peer_name FROM ue_federation_requests r JOIN ue_federation_peers p ON p.id=r.peer_id WHERE r.direction="child_to_parent" ORDER BY r.created_at DESC LIMIT 200');
     echo '<div class="card"><h2>Requests</h2>';
@@ -94,19 +125,22 @@ try {
         echo '<tr><th>Hash</th><td class="mono">' . catalog_h($request['request_hash']) . '</td></tr>';
         echo '<tr><th>Notes</th><td>' . catalog_h($request['notes']) . '</td></tr>';
         echo '</table>';
-        if (in_array((string)$request['status'], ['submitted','part_approved'], true)) {
+        if (in_array((string)$request['status'], ['submitted','part_approved','approved'], true)) {
             echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(requests_csrf()) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="approve_all"><button>Approve available items</button></form> ';
             echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(requests_csrf()) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="deny_all"><button>Deny all</button></form>';
         }
         echo '</div>';
 
         $items = catalog_all($db, 'SELECT i.*, f.package_name local_package, f.original_name local_file FROM ue_federation_request_items i LEFT JOIN ue_files f ON f.id=i.local_file_id WHERE i.request_id=? ORDER BY FIELD(i.status,"requested","approved","denied","imported","failed"), i.required_package, i.required_object_path', [$requestId]);
-        echo '<div class="card"><h2>Request items</h2><table><tr><th>Status</th><th>Required package</th><th>Required object</th><th>Parent match</th><th>Message</th></tr>';
+        echo '<div class="card"><h2>Request items</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(requests_csrf()) . '"><input type="hidden" name="request_id" value="' . (int)$requestId . '">';
+        echo '<p><button name="action" value="approve_selected">Approve selected</button> <button name="action" value="deny_selected">Deny selected</button></p>';
+        echo '<table><tr><th>Select</th><th>Status</th><th>Required package</th><th>Required object</th><th>Parent match</th><th>Message</th></tr>';
         foreach ($items as $item) {
+            $canSelect = in_array((string)$item['status'], ['requested','approved','denied'], true);
             $match = $item['local_file_id'] ? '<a href="../file-info.php?id=' . (int)$item['local_file_id'] . '" target="_blank">' . catalog_h($item['local_package'] ?: $item['local_file']) . '</a>' : '<span class="muted">not available</span>';
-            echo '<tr><td>' . catalog_h($item['status']) . '</td><td class="mono">' . catalog_h($item['required_package']) . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . $match . '</td><td>' . catalog_h($item['status_message']) . '</td></tr>';
+            echo '<tr><td>' . ($canSelect ? '<input type="checkbox" name="item_ids[]" value="' . (int)$item['id'] . '">' : '') . '</td><td>' . catalog_h($item['status']) . '</td><td class="mono">' . catalog_h($item['required_package']) . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . $match . '</td><td>' . catalog_h($item['status_message']) . '</td></tr>';
         }
-        echo '</table></div>';
+        echo '</table></form></div>';
     }
 
     catalog_foot();
