@@ -7,6 +7,7 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/ExternalMirrors.php';
 
 function bundle_safe_name(string $name): string
 {
@@ -32,6 +33,15 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
+    $mode = external_public_download_mode($db);
+
+    if ($mode === 'disabled') {
+        throw new RuntimeException('Public downloads are disabled.');
+    }
+    if ($mode === 'external_mirror') {
+        throw new RuntimeException('Bundle ZIP downloads are not available when public download mode is external mirror only. Download individual mirrored files instead.');
+    }
+
     $id = (int)($_GET['id'] ?? 0);
     $main = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status<>"failed"', [$id]);
     if (!$main) {
@@ -85,6 +95,7 @@ try {
         'generated_at' => date('c'),
         'selected_file_id' => $id,
         'selected_package' => (string)$main['package_name'],
+        'public_download_mode' => $mode,
         'file_count' => count($manifest),
         'files' => $manifest,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
