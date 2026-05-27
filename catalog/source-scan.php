@@ -8,10 +8,24 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogParser.php';
+require_once __DIR__ . '/lib/CatalogScanner.php';
 
 function is_admin_user(): bool
 {
     return ($_SESSION['user']['role'] ?? '') === 'admin';
+}
+
+function source_scan_csrf(): string
+{
+    $_SESSION['source_scan_csrf'] ??= bin2hex(random_bytes(16));
+    return $_SESSION['source_scan_csrf'];
+}
+
+function source_scan_check_csrf(): void
+{
+    if (($_POST['csrf'] ?? '') !== ($_SESSION['source_scan_csrf'] ?? '')) {
+        throw new RuntimeException('Bad CSRF token');
+    }
 }
 
 function clean_relative_path(string $base, string $path): string
@@ -35,9 +49,22 @@ function record_file_location(PDO $db, PDOStatement $upsert, int $fileId, int $s
     $upsert->execute([$fileId, $sourceId, $relativePath, 1]);
 }
 
-function scan_local_source(PDO $db, array $config, int $sourceId): array
+function source_scan_tmp_copy(string $path): string
 {
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.engine_key FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
+    $tmp = tempnam(sys_get_temp_dir(), 'ue_src_scan_');
+    if (!$tmp) {
+        throw new RuntimeException('Could not create temporary file for profiled source import.');
+    }
+    if (!copy($path, $tmp)) {
+        @unlink($tmp);
+        throw new RuntimeException('Could not copy source file to temporary scan file.');
+    }
+    return $tmp;
+}
+
+function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUnknown, bool $strictProfile): array
+{
+    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.engine_key, g.slug game_slug FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
     if (!$source) {
         throw new RuntimeException('Source not found');
     }
@@ -57,8 +84,12 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
     $parseFailed = 0;
     $unknown = 0;
     $locations = 0;
+    $imported = 0;
+    $duplicates = 0;
+    $importFailed = 0;
     $unknownSamples = [];
     $parseFailedSamples = [];
+    $importSamples = [];
 
     $iterator = new RecursiveIteratorIterator(
         new RecursiveDirectoryIterator($basePath, FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS),
@@ -100,6 +131,37 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
             $header = catalog_try_read_package_header($config, (string)$source['engine_key'], $path);
             $guid = catalog_header_guid($header);
         } catch (Throwable $e) {
+            if ($importUnknown) {
+                try {
+                    $tmp = source_scan_tmp_copy($path);
+                    $result = scanner_scan_uploaded_file($db, $config, (int)$source['game_id'], $tmp, basename($path), $_SESSION['user']['id'] ?? null, $strictProfile);
+                    if ($result[0] === 'duplicate') {
+                        $duplicates++;
+                        if (!empty($result[1])) {
+                            record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+                            $locations++;
+                        }
+                    } else {
+                        $imported++;
+                        record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+                        $locations++;
+                    }
+                    if (count($importSamples) < 50) {
+                        $importSamples[] = $path . ' - ' . $result[2];
+                    }
+                    continue;
+                } catch (Throwable $scanError) {
+                    $importFailed++;
+                    if (isset($tmp) && is_file($tmp)) {
+                        @unlink($tmp);
+                    }
+                    if (count($parseFailedSamples) < 50) {
+                        $parseFailedSamples[] = $path . ' - profiled import failed: ' . $scanError->getMessage();
+                    }
+                    continue;
+                }
+            }
+
             $parseFailed++;
             if (count($parseFailedSamples) < 50) {
                 $parseFailedSamples[] = $path . ' - ' . $e->getMessage();
@@ -108,6 +170,37 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
         }
 
         if ($guid === '') {
+            if ($importUnknown) {
+                try {
+                    $tmp = source_scan_tmp_copy($path);
+                    $result = scanner_scan_uploaded_file($db, $config, (int)$source['game_id'], $tmp, basename($path), $_SESSION['user']['id'] ?? null, $strictProfile);
+                    if ($result[0] === 'duplicate') {
+                        $duplicates++;
+                        if (!empty($result[1])) {
+                            record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+                            $locations++;
+                        }
+                    } else {
+                        $imported++;
+                        record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+                        $locations++;
+                    }
+                    if (count($importSamples) < 50) {
+                        $importSamples[] = $path . ' - ' . $result[2];
+                    }
+                    continue;
+                } catch (Throwable $scanError) {
+                    $importFailed++;
+                    if (isset($tmp) && is_file($tmp)) {
+                        @unlink($tmp);
+                    }
+                    if (count($unknownSamples) < 50) {
+                        $unknownSamples[] = $path . ' - no GUID; profiled import failed: ' . $scanError->getMessage();
+                    }
+                    continue;
+                }
+            }
+
             $unknown++;
             if (count($unknownSamples) < 50) {
                 $unknownSamples[] = $path . ' - no GUID found';
@@ -131,6 +224,37 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
             continue;
         }
 
+        if ($importUnknown) {
+            try {
+                $tmp = source_scan_tmp_copy($path);
+                $result = scanner_scan_uploaded_file($db, $config, (int)$source['game_id'], $tmp, basename($path), $_SESSION['user']['id'] ?? null, $strictProfile);
+                if ($result[0] === 'duplicate') {
+                    $duplicates++;
+                    if (!empty($result[1])) {
+                        record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+                        $locations++;
+                    }
+                } else {
+                    $imported++;
+                    record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+                    $locations++;
+                }
+                if (count($importSamples) < 50) {
+                    $importSamples[] = $path . ' - ' . $result[2];
+                }
+                continue;
+            } catch (Throwable $scanError) {
+                $importFailed++;
+                if (isset($tmp) && is_file($tmp)) {
+                    @unlink($tmp);
+                }
+                if (count($unknownSamples) < 50) {
+                    $unknownSamples[] = $path . ' - GUID not in catalog: ' . $guid . '; profiled import failed: ' . $scanError->getMessage();
+                }
+                continue;
+            }
+        }
+
         $unknown++;
         if (count($unknownSamples) < 50) {
             $unknownSamples[] = $path . ' - GUID not in catalog: ' . $guid;
@@ -146,8 +270,12 @@ function scan_local_source(PDO $db, array $config, int $sourceId): array
         'parse_failed' => $parseFailed,
         'unknown' => $unknown,
         'locations' => $locations,
+        'imported' => $imported,
+        'duplicates' => $duplicates,
+        'import_failed' => $importFailed,
         'unknown_samples' => $unknownSamples,
         'parse_failed_samples' => $parseFailedSamples,
+        'import_samples' => $importSamples,
     ];
 }
 
@@ -163,11 +291,14 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>Source scanner</h1><p class="muted">Scans configured local source folders and records where known catalog files exist. Public users do not see the real source base path.</p></div>';
+    echo '<div class="card hero"><h1>Source scanner</h1><p class="muted">Scans configured local source folders and records where known catalog files exist. It can now optionally import unknown files through the profiled scanner, using game profile version/extension checks.</p></div>';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        source_scan_check_csrf();
         $sourceId = (int)($_POST['source_id'] ?? 0);
-        $result = scan_local_source($db, $config, $sourceId);
+        $importUnknown = (string)($_POST['import_unknown'] ?? '0') === '1';
+        $strictProfile = (string)($_POST['strict_profile'] ?? '1') === '1';
+        $result = scan_local_source($db, $config, $sourceId, $importUnknown, $strictProfile);
         echo '<div class="card"><h2>Scan result</h2>';
         echo '<table><tr><th>Source</th><td>' . catalog_h($result['source']['name']) . '</td></tr>';
         echo '<tr><th>Game</th><td>' . catalog_h($result['source']['game_name']) . '</td></tr>';
@@ -177,8 +308,19 @@ try {
         echo '<tr><th>Ambiguous GUID matches</th><td>' . (int)$result['guid_ambiguous'] . '</td></tr>';
         echo '<tr><th>Parse failed</th><td>' . (int)$result['parse_failed'] . '</td></tr>';
         echo '<tr><th>Unknown / not cataloged</th><td>' . (int)$result['unknown'] . '</td></tr>';
+        echo '<tr><th>Imported by profiled scanner</th><td>' . (int)$result['imported'] . '</td></tr>';
+        echo '<tr><th>Duplicate imports</th><td>' . (int)$result['duplicates'] . '</td></tr>';
+        echo '<tr><th>Profiled import failed</th><td>' . (int)$result['import_failed'] . '</td></tr>';
         echo '<tr><th>Locations recorded</th><td>' . (int)$result['locations'] . '</td></tr></table>';
         echo '</div>';
+
+        if ($result['import_samples']) {
+            echo '<div class="card"><h2>Profiled import samples</h2><table><tr><th>Path / result</th></tr>';
+            foreach ($result['import_samples'] as $sample) {
+                echo '<tr><td class="mono path">' . catalog_h($sample) . '</td></tr>';
+            }
+            echo '</table></div>';
+        }
 
         if ($result['unknown_samples']) {
             echo '<div class="card"><h2>Unknown / ambiguous samples</h2><p class="muted">These files were found in the source but were not linked automatically.</p><table><tr><th>Path / reason</th></tr>';
@@ -202,12 +344,16 @@ try {
     if (!$sources) {
         echo '<p class="muted">No sources configured. Add one in <a href="sources.php">Sources</a>.</p>';
     } else {
-        echo '<form method="post"><p><label>Source<br><select name="source_id">';
+        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(source_scan_csrf()) . '"><p><label>Source<br><select name="source_id">';
         foreach ($sources as $source) {
             $label = $source['game_name'] . ' - ' . $source['name'] . ' (' . $source['source_type'] . ')';
             echo '<option value="' . (int)$source['id'] . '">' . catalog_h($label) . '</option>';
         }
-        echo '</select></label></p><button>Scan selected source</button></form>';
+        echo '</select></label></p>';
+        echo '<p><label><input type="checkbox" name="import_unknown" value="1"> Import unknown files into catalog using profiled scanner</label></p>';
+        echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject mismatches</option><option value="0">Loose: try parser anyway</option></select></label></p>';
+        echo '<p class="muted">Without import enabled, the scan only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned through CatalogScanner.php before being stored as verified.</p>';
+        echo '<button>Scan selected source</button></form>';
     }
     echo '</div>';
 
