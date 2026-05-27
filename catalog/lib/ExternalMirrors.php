@@ -79,6 +79,29 @@ function external_expire_old_links(PDO $db): int
     return $stmt->rowCount();
 }
 
+function external_fail_stale_uploading_jobs(PDO $db): int
+{
+    $stmt = $db->prepare('UPDATE ue_external_mirror_jobs SET status="failed", finished_at=NOW(), last_error="Mirror job was uploading for more than 24 hours and was marked stale." WHERE status="uploading" AND started_at IS NOT NULL AND started_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)');
+    $stmt->execute();
+    return $stmt->rowCount();
+}
+
+function external_mark_manual_jobs_waiting(PDO $db): int
+{
+    $stmt = $db->prepare('UPDATE ue_external_mirror_jobs j JOIN ue_external_download_providers p ON p.id=j.provider_id SET j.status="waiting_admin", j.last_error="Manual provider requires admin fulfilment." WHERE j.status="queued" AND p.provider_class="ManualProvider"');
+    $stmt->execute();
+    return $stmt->rowCount();
+}
+
+function external_mirror_maintenance(PDO $db): array
+{
+    return [
+        'expired_links' => external_expire_old_links($db),
+        'manual_jobs_waiting_admin' => external_mark_manual_jobs_waiting($db),
+        'stale_uploading_jobs_failed' => external_fail_stale_uploading_jobs($db),
+    ];
+}
+
 function external_create_manual_link(PDO $db, int $fileId, int $providerId, string $url, ?int $userId = null, ?int $expiryDays = null): int
 {
     $provider = catalog_one($db, 'SELECT * FROM ue_external_download_providers WHERE id=?', [$providerId]);
@@ -86,7 +109,7 @@ function external_create_manual_link(PDO $db, int $fileId, int $providerId, stri
         throw new RuntimeException('Provider not found.');
     }
     $days = $expiryDays ?? (int)($provider['expiry_days'] ?: fed_setting($db, 'external_mirror_expiry_days', '7'));
-    $stmt = $db->prepare('INSERT INTO ue_external_download_links(file_id, provider_id, status, external_url, uploaded_at, expires_at, created_by) VALUES(?,?,"active",?,NOW(),DATE_ADD(NOW(), INTERVAL ? DAY),?)');
+    $stmt = $db->prepare('INSERT INTO ue_external_download_links(file_id, provider_id, status, external_url, uploaded_at, expires_at, created_by) VALUES(?, ?, "active", ?, NOW(), DATE_ADD(NOW(), INTERVAL ? DAY), ?)');
     $stmt->execute([$fileId, $providerId, $url, max(1, $days), $userId]);
     return (int)$db->lastInsertId();
 }
