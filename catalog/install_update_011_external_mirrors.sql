@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS ue_external_download_providers (
 
 CREATE TABLE IF NOT EXISTS ue_external_download_links (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  file_id INT UNSIGNED NOT NULL,
+  file_id BIGINT UNSIGNED NOT NULL,
   provider_id INT UNSIGNED NOT NULL,
   status ENUM('queued','uploading','active','expired','delete_queued','deleted','failed','broken') NOT NULL DEFAULT 'queued',
   external_url TEXT NULL,
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS ue_external_download_links (
 
 CREATE TABLE IF NOT EXISTS ue_external_mirror_jobs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  file_id INT UNSIGNED NOT NULL,
+  file_id BIGINT UNSIGNED NOT NULL,
   provider_id INT UNSIGNED NULL,
   link_id BIGINT UNSIGNED NULL,
   status ENUM('queued','waiting_admin','uploading','active','failed','cancelled','expired') NOT NULL DEFAULT 'queued',
