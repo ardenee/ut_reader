@@ -42,9 +42,11 @@ try {
         'fed_queue' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"')['c'] ?? 0),
         'fed_downloaded' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded"')['c'] ?? 0),
         'fed_failed' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"')['c'] ?? 0),
+        'mirror_active' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="active"')['c'] ?? 0),
+        'mirror_queue' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin","uploading")')['c'] ?? 0),
     ];
 
-    echo '<div class="card"><h1>Catalog Admin</h1><p class="muted">Central admin dashboard for catalog browsing, upload/scanning, dependency checks, source locations, duplicate cleanup, download testing, and federation.</p><p><a class="button" href="index.php?page=admin">Old admin page</a> <a class="button" href="games.php">Public/catalog view</a> <a class="button" href="federation/admin.php">Federation Admin</a> <a class="button" href="index.php?page=logout">Logout</a></p></div>';
+    echo '<div class="card"><h1>Catalog Admin</h1><p class="muted">Central admin dashboard for catalog browsing, upload/scanning, dependency checks, source locations, duplicate cleanup, public mirror downloads, and federation.</p><p><a class="button" href="index.php?page=admin">Old admin page</a> <a class="button" href="games.php">Public/catalog view</a> <a class="button" href="federation/admin.php">Federation Admin</a> <a class="button" href="mirror-providers.php">Mirror Settings</a> <a class="button" href="index.php?page=logout">Logout</a></p></div>';
 
     echo '<div class="grid">';
     echo '<div class="stat"><h2>' . $stats['games'] . '</h2><p>Games</p></div>';
@@ -54,6 +56,8 @@ try {
     echo '<div class="stat"><h2>' . $stats['sources'] . '</h2><p>Sources</p></div>';
     echo '<div class="stat"><h2>' . $stats['source_links'] . '</h2><p>Source links</p></div>';
     echo '<div class="stat"><h2>' . $stats['missing_deps'] . '</h2><p>Missing dependency rows</p></div>';
+    echo '<div class="stat"><h2>' . $stats['mirror_active'] . '</h2><p>Active mirror links</p></div>';
+    echo '<div class="stat"><h2>' . $stats['mirror_queue'] . '</h2><p>Mirror jobs waiting</p></div>';
     echo '<div class="stat"><h2>' . $stats['fed_peers'] . '</h2><p>Federation peers</p></div>';
     echo '<div class="stat"><h2>' . $stats['fed_queue'] . '</h2><p>Fed queued jobs</p></div>';
     echo '<div class="stat"><h2>' . $stats['fed_downloaded'] . '</h2><p>Fed waiting import</p></div>';
@@ -65,6 +69,12 @@ try {
     admin_tool_card('Upload / game admin', 'index.php?page=admin', 'Open the original admin page for game upload and game management.');
     admin_tool_card('Search catalog', 'index.php?page=search', 'Search by MD5, SHA1, GUID, package name, filename, import, or export.');
     admin_tool_card('GUID duplicate manager', 'duplicates.php', 'Find duplicate Unreal package GUIDs and retire duplicate rows into a canonical file.');
+    echo '</div></div>';
+
+    echo '<div class="card"><h2>Public downloads / external mirrors</h2><div class="grid">';
+    admin_tool_card('Mirror providers/settings', 'mirror-providers.php', 'Set public download mode, provider settings, stale days and mirror limits.');
+    admin_tool_card('Mirror links', 'mirror-links.php', 'View active/expired/broken mirror links and add manual hosted links.');
+    admin_tool_card('Mirror queue', 'mirror-queue.php', 'Review queued/waiting mirror upload jobs and expire old links.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Federation</h2><div class="grid">';
