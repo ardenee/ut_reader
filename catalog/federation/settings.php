@@ -45,7 +45,9 @@ try {
             'max_files_per_transfer_run', 'max_transfer_file_size_mb',
             'auto_import_downloads', 'require_https_for_remote_sites',
             'api_nonce_ttl_seconds', 'transfer_token_ttl_seconds', 'log_retention_days',
-            'cron_worker_enabled', 'cron_worker_token'
+            'cron_worker_enabled', 'cron_worker_token',
+            'public_download_mode', 'external_mirror_auto_queue', 'external_mirror_expiry_days',
+            'external_mirror_require_admin_approval', 'external_mirror_max_file_size_mb'
         ];
 
         foreach ($allowed as $key) {
@@ -54,8 +56,8 @@ try {
         }
 
         fed_ensure_identity($db, trim((string)$_POST['site_url']), trim((string)$_POST['site_name']));
-        fed_log($db, null, null, 'INFO', 'SETTINGS_SAVE', 'Federation settings updated.');
-        $_SESSION['fed_settings_flash'] = 'Federation settings saved.';
+        fed_log($db, null, null, 'INFO', 'SETTINGS_SAVE', 'Federation/settings updated.');
+        $_SESSION['fed_settings_flash'] = 'Settings saved.';
         header('Location: settings.php');
         exit;
     }
@@ -76,7 +78,7 @@ try {
         unset($_SESSION['fed_settings_flash']);
     }
 
-    echo '<div class="card"><h1>Federation Settings</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Settings</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="../mirror-providers.php">Mirror Providers</a> <a class="button" href="../mirror-links.php">Mirror Links</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(settings_csrf()) . '">';
     echo '<div class="card"><h2>Site identity</h2><table>';
@@ -106,6 +108,26 @@ try {
     }
     echo '</table></div>';
 
+    echo '<div class="card"><h2>Public downloads / shared provider links</h2><p class="muted">These settings only affect normal public/user downloads. Federation parent/child transfers bypass this and keep using the controlled federation API.</p><table>';
+    $downloadMode = (string)($settings['public_download_mode'] ?? 'local_direct');
+    echo '<tr><th>Public download mode</th><td><select name="public_download_mode">';
+    foreach ([
+        'local_direct' => 'Use own site / direct download',
+        'external_mirror' => 'External provider links only',
+        'external_mirror_preferred' => 'Prefer external provider links, fallback to own site',
+        'disabled' => 'Disable public downloads'
+    ] as $mode => $label) {
+        echo '<option value="' . catalog_h($mode) . '"' . ($downloadMode === $mode ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
+    }
+    echo '</select></td></tr>';
+    $autoQueue = (string)($settings['external_mirror_auto_queue'] ?? '1');
+    echo '<tr><th>Auto-queue external mirror job when no active link exists</th><td><select name="external_mirror_auto_queue"><option value="0"' . ($autoQueue === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($autoQueue === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
+    $adminApproval = (string)($settings['external_mirror_require_admin_approval'] ?? '0');
+    echo '<tr><th>Require admin approval before external mirror job runs</th><td><select name="external_mirror_require_admin_approval"><option value="0"' . ($adminApproval === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($adminApproval === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
+    echo '<tr><th>Shared provider link stale/expiry days</th><td><input name="external_mirror_expiry_days" value="' . catalog_h($settings['external_mirror_expiry_days'] ?? '7') . '" style="width:90px"> <span class="muted">Default is 7. Active external links older than this are treated as stale/expired and new requests can queue a fresh upload/link.</span></td></tr>';
+    echo '<tr><th>Max external mirror file size, MB</th><td><input name="external_mirror_max_file_size_mb" value="' . catalog_h($settings['external_mirror_max_file_size_mb'] ?? '1024') . '" style="width:120px"></td></tr>';
+    echo '</table></div>';
+
     echo '<div class="card"><h2>Transfer limits</h2><p class="muted">0 means unlimited where applicable. These values apply to controlled parent/child upload/download jobs.</p><table>';
     foreach ([
         'max_download_kbps' => 'Max download KB/s',
@@ -126,7 +148,7 @@ try {
     $cronEnabled = (string)($settings['cron_worker_enabled'] ?? '0');
     echo '<tr><th>Cron worker enabled</th><td><select name="cron_worker_enabled"><option value="0"' . ($cronEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($cronEnabled === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
     echo '<tr><th>Cron worker token</th><td><input name="cron_worker_token" value="' . catalog_h($settings['cron_worker_token'] ?? '') . '" style="min-width:520px" placeholder="long-random-token"></td></tr>';
-    echo '</table></div><p><button>Save federation settings</button></p></form>';
+    echo '</table></div><p><button>Save settings</button></p></form>';
 
     catalog_foot();
 } catch (Throwable $e) {
