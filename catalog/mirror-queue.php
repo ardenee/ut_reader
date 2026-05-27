@@ -67,7 +67,7 @@ try {
         unset($_SESSION['mirror_queue_flash']);
     }
 
-    echo '<div class="card"><h1>External Mirror Queue</h1><p class="muted">Queued/pending mirror uploads. Manual provider jobs need an admin to paste the external link on Mirror Links.</p><p><a class="button" href="admin.php">Catalog Admin</a> <a class="button" href="mirror-providers.php">Providers</a> <a class="button" href="mirror-links.php">Mirror Links</a></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(mq_csrf()) . '"><button name="action" value="expire_old">Expire old active links</button></form></div>';
+    echo '<div class="card"><h1>External Mirror Queue</h1><p class="muted">Queued/pending mirror uploads. Manual provider jobs can be fulfilled by opening the job and pasting the external shared-provider link.</p><p><a class="button" href="admin.php">Catalog Admin</a> <a class="button" href="mirror-providers.php">Providers</a> <a class="button" href="mirror-links.php">Mirror Links</a></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(mq_csrf()) . '"><button name="action" value="expire_old">Expire old active links</button></form></div>';
 
     $jobs = catalog_all($db, 'SELECT j.*, p.provider_name, p.provider_class, f.package_name, f.original_name, f.file_size, f.md5 FROM ue_external_mirror_jobs j LEFT JOIN ue_external_download_providers p ON p.id=j.provider_id JOIN ue_files f ON f.id=j.file_id ORDER BY FIELD(j.status,"waiting_admin","queued","uploading","failed","active","cancelled","expired"), j.created_at DESC LIMIT 500');
     echo '<div class="card"><h2>Jobs</h2>';
@@ -76,7 +76,7 @@ try {
     } else {
         echo '<table><tr><th>ID</th><th>File</th><th>Provider</th><th>Status</th><th>Attempts</th><th>Error</th><th>Created</th><th>Action</th></tr>';
         foreach ($jobs as $j) {
-            $actions = [];
+            $actions = ['<a class="button" href="mirror-job.php?id=' . (int)$j['id'] . '">Open/Fulfil</a>'];
             if ((string)$j['status'] === 'waiting_admin') {
                 $actions[] = '<button name="action" value="approve">Approve</button>';
             }
@@ -86,7 +86,12 @@ try {
             if (in_array((string)$j['status'], ['failed','cancelled'], true)) {
                 $actions[] = '<button name="action" value="retry">Retry</button>';
             }
-            $form = $actions ? '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(mq_csrf()) . '"><input type="hidden" name="id" value="' . (int)$j['id'] . '">' . implode(' ', $actions) . '</form>' : '';
+            $formButtons = array_filter($actions, static fn($a) => str_starts_with($a, '<button'));
+            $links = array_filter($actions, static fn($a) => !str_starts_with($a, '<button'));
+            $form = implode(' ', $links);
+            if ($formButtons) {
+                $form .= ' <form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(mq_csrf()) . '"><input type="hidden" name="id" value="' . (int)$j['id'] . '">' . implode(' ', $formButtons) . '</form>';
+            }
             echo '<tr><td class="mono">' . (int)$j['id'] . '</td><td><a href="file-info.php?id=' . (int)$j['file_id'] . '" target="_blank">' . catalog_h($j['package_name'] . ' / ' . $j['original_name']) . '</a><br><span class="small">' . catalog_h(catalog_bytes((int)$j['file_size'])) . '</span></td><td>' . catalog_h(($j['provider_name'] ?? '') . ' / ' . ($j['provider_class'] ?? '')) . '</td><td>' . catalog_h($j['status']) . '</td><td>' . (int)$j['attempts'] . '</td><td class="path">' . catalog_h($j['last_error']) . '</td><td>' . catalog_h($j['created_at']) . '</td><td>' . $form . '</td></tr>';
         }
         echo '</table>';
