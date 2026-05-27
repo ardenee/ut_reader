@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/ExternalMirrors.php';
 
 function render_availability(PDO $db, int $fileId): string
 {
@@ -17,6 +18,25 @@ function render_availability(PDO $db, int $fileId): string
     return implode('<br>', $out);
 }
 
+function render_public_download_status(PDO $db, int $fileId): string
+{
+    $mode = external_public_download_mode($db);
+    if ($mode === 'local_direct') {
+        return '<span class="dep resolved">direct local</span>';
+    }
+    if ($mode === 'disabled') {
+        return '<span class="dep missing">disabled</span>';
+    }
+    $link = external_active_link_for_file($db, $fileId);
+    if ($link) {
+        return '<span class="dep resolved">external ready</span><br><span class="small">' . catalog_h($link['provider_name']) . '</span>';
+    }
+    if (external_queue_exists($db, $fileId)) {
+        return '<span class="dep package_only">mirror queued</span>';
+    }
+    return $mode === 'external_mirror_preferred' ? '<span class="dep package_only">external preferred</span>' : '<span class="dep missing">external missing</span>';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -30,21 +50,22 @@ try {
 
     catalog_head('Download');
     echo '<div class="card"><h1>Download</h1><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h($file['original_name']) . '</p>';
-    echo '<p class="muted">The real catalog storage location is hidden. Downloads are served through the catalog controller.</p>';
-    echo '<p><a class="button" href="index.php?page=download&id=' . (int)$file['id'] . '">Download selected file</a> <a class="button" href="download-bundle.php?id=' . (int)$file['id'] . '">Download selected + dependencies ZIP (' . (1 + $depCount) . ' files)</a></p></div>';
+    echo '<p class="muted">The real catalog storage location is hidden. Public downloads are served through the download controller and obey the site-wide public download mode.</p>';
+    echo '<p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span></p>';
+    echo '<p><a class="button" href="download.php?id=' . (int)$file['id'] . '">Download selected file</a> <a class="button" href="download-bundle.php?id=' . (int)$file['id'] . '">Download selected + dependencies ZIP (' . (1 + $depCount) . ' files)</a></p></div>';
 
-    echo '<div class="card"><h2>Selected file availability</h2><table><tr><th>Package</th><th>File</th><th>Availability</th></tr>';
-    echo '<tr><td class="mono">' . catalog_h($file['package_name']) . '</td><td>' . catalog_h($file['original_name']) . '</td><td>' . render_availability($db, (int)$file['id']) . '</td></tr></table></div>';
+    echo '<div class="card"><h2>Selected file availability</h2><table><tr><th>Package</th><th>File</th><th>Public download</th><th>Availability</th></tr>';
+    echo '<tr><td class="mono">' . catalog_h($file['package_name']) . '</td><td>' . catalog_h($file['original_name']) . '</td><td>' . render_public_download_status($db, (int)$file['id']) . '</td><td>' . render_availability($db, (int)$file['id']) . '</td></tr></table></div>';
 
     $deps = catalog_all($db, 'SELECT DISTINCT rf.id, rf.package_name, rf.original_name, rf.file_size, rf.md5, rf.is_compressed FROM ue_dependencies d JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? AND d.status="resolved" ORDER BY rf.package_name, rf.original_name', [$id]);
     echo '<div class="card"><h2>Resolved dependency files</h2>';
     if (!$deps) {
         echo '<p class="muted">No resolved dependency files are available for this package yet.</p>';
     } else {
-        echo '<table><tr><th>Package</th><th>File</th><th>Size</th><th>Type</th><th>Availability</th><th>Download</th></tr>';
+        echo '<table><tr><th>Package</th><th>File</th><th>Size</th><th>Type</th><th>Public download</th><th>Availability</th><th>Download</th></tr>';
         foreach ($deps as $dep) {
             $compressed = (int)($dep['is_compressed'] ?? 0) === 1;
-            echo '<tr><td class="mono">' . catalog_h($dep['package_name']) . '</td><td>' . catalog_h($dep['original_name']) . '<br><span class="mono small">' . catalog_h($dep['md5']) . '</span></td><td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td><td><span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span></td><td>' . render_availability($db, (int)$dep['id']) . '</td><td><a class="button" href="index.php?page=download&id=' . (int)$dep['id'] . '">download</a></td></tr>';
+            echo '<tr><td class="mono">' . catalog_h($dep['package_name']) . '</td><td>' . catalog_h($dep['original_name']) . '<br><span class="mono small">' . catalog_h($dep['md5']) . '</span></td><td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td><td><span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span></td><td>' . render_public_download_status($db, (int)$dep['id']) . '</td><td>' . render_availability($db, (int)$dep['id']) . '</td><td><a class="button" href="download.php?id=' . (int)$dep['id'] . '">download</a></td></tr>';
         }
         echo '</table>';
     }
