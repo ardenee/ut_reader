@@ -85,6 +85,8 @@ function catalog_admin_nav(): void
         echo '<a href="' . catalog_h($fed . 'worker-run.php') . '">Fed Worker</a>';
         echo '<a href="' . catalog_h($fed . 'requests.php') . '">Fed Requests</a>';
         echo '<a href="' . catalog_h($fed . 'conflicts.php') . '">Fed Conflicts</a>';
+        echo '<a href="' . catalog_h($root . 'mirror-providers.php') . '">Mirrors</a>';
+        echo '<a href="' . catalog_h($root . 'mirror-queue.php') . '">Mirror Queue</a>';
         echo '<a href="' . catalog_h($root . 'index.php?page=logout') . '">Logout ' . catalog_h($_SESSION['user']['username'] ?? '') . '</a>';
     } else {
         echo '<a href="' . catalog_h($root . 'index.php?page=login') . '">Admin Login</a>';
