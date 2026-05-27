@@ -8,6 +8,7 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
 function fm_is_admin(): bool
 {
@@ -65,8 +66,13 @@ try {
             $nonceStmt->execute([$nonceTtl]);
             $logStmt = $db->prepare('DELETE FROM ue_federation_transfer_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)');
             $logStmt->execute([$logDays]);
-            $_SESSION['fed_maintenance_flash'] = 'Pruned ' . $nonceStmt->rowCount() . ' nonce(s) and ' . $logStmt->rowCount() . ' log row(s).';
+            $mirror = external_mirror_maintenance($db);
+            $_SESSION['fed_maintenance_flash'] = 'Pruned ' . $nonceStmt->rowCount() . ' nonce(s), ' . $logStmt->rowCount() . ' log row(s). Mirror maintenance: ' . json_encode($mirror, JSON_UNESCAPED_SLASHES);
             fed_log($db, null, null, 'INFO', 'MAINTENANCE_PRUNE', $_SESSION['fed_maintenance_flash']);
+        } elseif ($action === 'mirror_only') {
+            $mirror = external_mirror_maintenance($db);
+            $_SESSION['fed_maintenance_flash'] = 'Mirror maintenance: ' . json_encode($mirror, JSON_UNESCAPED_SLASHES);
+            fed_log($db, null, null, 'INFO', 'MIRROR_MAINTENANCE', $_SESSION['fed_maintenance_flash']);
         }
         header('Location: maintenance.php');
         exit;
@@ -87,6 +93,9 @@ try {
 
     $nonceCount = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_nonces')['c'] ?? 0);
     $logCount = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_logs')['c'] ?? 0);
+    $mirrorActive = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="active"')['c'] ?? 0);
+    $mirrorExpired = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="expired"')['c'] ?? 0);
+    $mirrorJobs = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin","uploading")')['c'] ?? 0);
     $incomingDir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/federation/incoming';
     $incoming = fm_dir_size($incomingDir);
     $waiting = catalog_all($db, 'SELECT incoming_path FROM ue_federation_transfer_jobs WHERE incoming_path IS NOT NULL AND incoming_path<>"" AND status IN ("downloaded","running")');
@@ -95,15 +104,19 @@ try {
         $known[basename((string)$row['incoming_path'])] = true;
     }
 
-    echo '<div class="card"><h1>Federation Maintenance</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Maintenance</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="../mirror-queue.php">Mirror queue</a> <a class="button" href="../mirror-links.php">Mirror links</a> <a class="button" href="logs.php">Logs</a></p></div>';
     echo '<div class="grid">';
     echo '<div class="stat"><h2>' . $nonceCount . '</h2><p>Stored API nonces</p></div>';
     echo '<div class="stat"><h2>' . $logCount . '</h2><p>Federation log rows</p></div>';
+    echo '<div class="stat"><h2>' . $mirrorActive . '</h2><p>Active mirror links</p></div>';
+    echo '<div class="stat"><h2>' . $mirrorExpired . '</h2><p>Expired mirror links</p></div>';
+    echo '<div class="stat"><h2>' . $mirrorJobs . '</h2><p>Mirror jobs active/waiting</p></div>';
     echo '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)$incoming['bytes'])) . '</h2><p>Incoming folder usage</p></div>';
     echo '<div class="stat"><h2>' . (int)$incoming['count'] . '</h2><p>Incoming files</p></div>';
     echo '</div>';
 
-    echo '<div class="card"><h2>Prune old API/log rows</h2><p class="muted">Uses api_nonce_ttl_seconds and log_retention_days from federation settings.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fm_csrf()) . '"><input type="hidden" name="action" value="prune"><button>Prune old nonces/logs</button></form></div>';
+    echo '<div class="card"><h2>Prune old API/log rows + mirror maintenance</h2><p class="muted">Uses api_nonce_ttl_seconds, log_retention_days, and external mirror expiry settings.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fm_csrf()) . '"><input type="hidden" name="action" value="prune"><button>Prune old nonces/logs and run mirror maintenance</button></form></div>';
+    echo '<div class="card"><h2>Mirror maintenance only</h2><p class="muted">Expires stale active mirror links, moves ManualProvider queued jobs to waiting_admin, and fails stale uploading jobs.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fm_csrf()) . '"><input type="hidden" name="action" value="mirror_only"><button>Run mirror maintenance only</button></form></div>';
 
     echo '<div class="card"><h2>Incoming folder</h2><p class="mono path">' . catalog_h($incomingDir) . '</p>';
     if (!$incoming['files']) {
