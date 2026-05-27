@@ -47,7 +47,8 @@ try {
             'api_nonce_ttl_seconds', 'transfer_token_ttl_seconds', 'log_retention_days',
             'cron_worker_enabled', 'cron_worker_token',
             'public_download_mode', 'external_mirror_auto_queue', 'external_mirror_expiry_days',
-            'external_mirror_require_admin_approval', 'external_mirror_max_file_size_mb'
+            'external_mirror_require_admin_approval', 'external_mirror_max_file_size_mb',
+            'join_requests_enabled', 'join_claim_token_ttl_seconds', 'main_parent_url'
         ];
 
         foreach ($allowed as $key) {
@@ -78,7 +79,7 @@ try {
         unset($_SESSION['fed_settings_flash']);
     }
 
-    echo '<div class="card"><h1>Federation Settings</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="../mirror-providers.php">Mirror Providers</a> <a class="button" href="../mirror-links.php">Mirror Links</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    echo '<div class="card"><h1>Federation Settings</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="join-main-parent.php">Join Main Parent</a> <a class="button" href="join-requests.php">Join Requests</a> <a class="button" href="../mirror-providers.php">Mirror Providers</a> <a class="button" href="../mirror-links.php">Mirror Links</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
 
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(settings_csrf()) . '">';
     echo '<div class="card"><h2>Site identity</h2><table>';
@@ -92,6 +93,13 @@ try {
     echo '</select></td></tr>';
     echo '<tr><th>Site name</th><td><input name="site_name" value="' . catalog_h($settings['site_name'] ?? '') . '" style="min-width:420px"></td></tr>';
     echo '<tr><th>Site URL</th><td><input name="site_url" value="' . catalog_h($settings['site_url'] ?? '') . '" style="min-width:640px" placeholder="https://example.com/catalog"></td></tr>';
+    echo '</table></div>';
+
+    echo '<div class="card"><h2>Join / pairing</h2><p class="muted">Public join requests are for parent sites accepting child deployments. Main parent URL is for child sites using the easy Join Main Parent workflow.</p><table>';
+    $joinEnabled = (string)($settings['join_requests_enabled'] ?? '1');
+    echo '<tr><th>Accept public child join requests on this parent</th><td><select name="join_requests_enabled"><option value="0"' . ($joinEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($joinEnabled === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
+    echo '<tr><th>Join claim token TTL, seconds</th><td><input name="join_claim_token_ttl_seconds" value="' . catalog_h($settings['join_claim_token_ttl_seconds'] ?? '86400') . '" style="width:160px"></td></tr>';
+    echo '<tr><th>Main parent URL</th><td><input name="main_parent_url" value="' . catalog_h($settings['main_parent_url'] ?? '') . '" style="min-width:640px" placeholder="https://main-parent.example.com/catalog"></td></tr>';
     echo '</table></div>';
 
     echo '<div class="card"><h2>Role permissions</h2><table>';
@@ -144,7 +152,7 @@ try {
     }
     echo '</table></div>';
 
-    echo '<div class="card"><h2>Cron / DSM Task Scheduler worker</h2><p class="muted">Use a long random token. The cron endpoint runs the same controlled bulk worker as worker-run.php.</p><table>';
+    echo '<div class="card"><h2>Cron / DSM Task Scheduler worker</h2><p class="muted">Use a long random token. The cron endpoint runs federation worker maintenance plus mirror maintenance.</p><table>';
     $cronEnabled = (string)($settings['cron_worker_enabled'] ?? '0');
     echo '<tr><th>Cron worker enabled</th><td><select name="cron_worker_enabled"><option value="0"' . ($cronEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($cronEnabled === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
     echo '<tr><th>Cron worker token</th><td><input name="cron_worker_token" value="' . catalog_h($settings['cron_worker_token'] ?? '') . '" style="min-width:520px" placeholder="long-random-token"></td></tr>';
