@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS ue_game_profiles (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  game_id BIGINT UNSIGNED NOT NULL,
+  game_id INT UNSIGNED NOT NULL,
   engine_key VARCHAR(32) NOT NULL,
   allowed_extensions_json JSON NOT NULL,
   package_version_min INT NULL,
