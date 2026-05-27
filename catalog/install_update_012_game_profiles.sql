@@ -18,12 +18,52 @@ CREATE TABLE IF NOT EXISTS ue_game_profiles (
   CONSTRAINT fk_ue_game_profiles_game FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-ALTER TABLE ue_files
-  ADD COLUMN IF NOT EXISTS detected_engine_key VARCHAR(32) NULL AFTER extension,
-  ADD COLUMN IF NOT EXISTS detected_package_version INT NULL AFTER detected_engine_key,
-  ADD COLUMN IF NOT EXISTS detected_licensee_version INT NULL AFTER detected_package_version,
-  ADD COLUMN IF NOT EXISTS detection_confidence ENUM('high','medium','low','mismatch','unknown') NOT NULL DEFAULT 'unknown' AFTER detected_licensee_version,
-  ADD COLUMN IF NOT EXISTS detection_notes TEXT NULL AFTER detection_confidence;
+SET @db_name := DATABASE();
+
+SET @sql := IF(
+  EXISTS(SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=@db_name AND TABLE_NAME='ue_files' AND COLUMN_NAME='detected_engine_key'),
+  'SELECT 1',
+  'ALTER TABLE ue_files ADD COLUMN detected_engine_key VARCHAR(32) NULL AFTER extension'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+  EXISTS(SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=@db_name AND TABLE_NAME='ue_files' AND COLUMN_NAME='detected_package_version'),
+  'SELECT 1',
+  'ALTER TABLE ue_files ADD COLUMN detected_package_version INT NULL AFTER detected_engine_key'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+  EXISTS(SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=@db_name AND TABLE_NAME='ue_files' AND COLUMN_NAME='detected_licensee_version'),
+  'SELECT 1',
+  'ALTER TABLE ue_files ADD COLUMN detected_licensee_version INT NULL AFTER detected_package_version'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+  EXISTS(SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=@db_name AND TABLE_NAME='ue_files' AND COLUMN_NAME='detection_confidence'),
+  'SELECT 1',
+  'ALTER TABLE ue_files ADD COLUMN detection_confidence ENUM(''high'',''medium'',''low'',''mismatch'',''unknown'') NOT NULL DEFAULT ''unknown'' AFTER detected_licensee_version'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @sql := IF(
+  EXISTS(SELECT 1 FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=@db_name AND TABLE_NAME='ue_files' AND COLUMN_NAME='detection_notes'),
+  'SELECT 1',
+  'ALTER TABLE ue_files ADD COLUMN detection_notes TEXT NULL AFTER detection_confidence'
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 INSERT INTO ue_game_profiles(game_id, engine_key, allowed_extensions_json, package_version_min, package_version_max, confidence_policy, notes)
 SELECT id, 'UE1', JSON_ARRAY('u','unr','utx','umx','uax'), 60, 69, 'normal', 'UE1 era package profile. Exact version ranges can be refined from known-good samples.'
