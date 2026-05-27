@@ -289,22 +289,6 @@ When adding scanner support for more games:
 4. Test with the profiled upload scanner.
 5. Keep mismatches in unverified/review rather than force-importing them.
 
-## Security and Privacy Notes
-
-Before committing files to this repository, check that no private data is included.
-
-Avoid committing:
-
-- uploaded package files,
-- personal data,
-- credentials,
-- API keys,
-- local configuration files,
-- native binary libraries such as `.dll` or `.so` files,
-- large generated output files,
-- temporary test data,
-- logs containing private paths or usernames.
-
 ## License
 
 No license has been specified yet. Add a license before publishing a stable release or accepting external contributions.
