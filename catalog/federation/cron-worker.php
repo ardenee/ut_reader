@@ -8,6 +8,7 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
+require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
 function cron_json(array $data, int $status = 200): void
 {
@@ -42,6 +43,7 @@ try {
         'started_at' => date('c'),
         'transfer_limit' => $limit,
         'import_limit' => $limit,
+        'mirror_maintenance' => external_mirror_maintenance($db),
         'transfers' => [],
         'imports' => [],
         'auto_inventory_push' => null,
@@ -77,7 +79,7 @@ try {
     }
 
     $results['finished_at'] = date('c');
-    fed_log($db, null, null, 'INFO', 'CRON_WORKER_RUN', json_encode(['transfers' => count($results['transfers']), 'imports' => count($results['imports'])], JSON_UNESCAPED_SLASHES));
+    fed_log($db, null, null, 'INFO', 'CRON_WORKER_RUN', json_encode(['transfers' => count($results['transfers']), 'imports' => count($results['imports']), 'mirror' => $results['mirror_maintenance']], JSON_UNESCAPED_SLASHES));
     cron_json($results);
 } catch (Throwable $e) {
     cron_json(['ok' => false, 'error' => $e->getMessage()], 500);
