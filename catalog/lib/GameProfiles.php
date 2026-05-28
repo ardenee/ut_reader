@@ -10,7 +10,34 @@ function gp_all_profiles(PDO $db): array
 
 function gp_profile_for_game(PDO $db, int $gameId): ?array
 {
-    return catalog_one($db, 'SELECT p.*, g.name game_name, g.slug game_slug FROM ue_game_profiles p JOIN ue_games g ON g.id=p.game_id WHERE p.game_id=? AND p.is_active=1', [$gameId]);
+    return catalog_one($db, 'SELECT p.*, g.name game_name, g.slug game_slug FROM ue_game_profiles p JOIN ue_games g ON g.id=p.game_id WHERE p.game_id=? AND p.is_active=1 ORDER BY p.id DESC LIMIT 1', [$gameId]);
+}
+
+function gp_required_profile_for_game(PDO $db, int $gameId): array
+{
+    $profile = gp_profile_for_game($db, $gameId);
+    if (!$profile) {
+        $game = catalog_one($db, 'SELECT name FROM ue_games WHERE id=?', [$gameId]);
+        $name = $game ? (string)$game['name'] : ('game #' . $gameId);
+        throw new RuntimeException('No active scanner profile is assigned to ' . $name . '. Add one in Game Admin before scanning files.');
+    }
+    return $profile;
+}
+
+function gp_engine_for_game(PDO $db, int $gameId): string
+{
+    $profile = gp_required_profile_for_game($db, $gameId);
+    return strtoupper((string)$profile['engine_key']);
+}
+
+function gp_games_missing_profiles(PDO $db): array
+{
+    return catalog_all($db, 'SELECT g.* FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE p.id IS NULL ORDER BY g.name');
+}
+
+function gp_games_with_profile_counts(PDO $db): array
+{
+    return catalog_all($db, 'SELECT g.id, g.name, g.slug, COUNT(p.id) active_profiles FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 GROUP BY g.id ORDER BY g.name');
 }
 
 function gp_extensions(array $profile): array
@@ -135,16 +162,16 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     $versionOk = true;
     if ($version !== null && $min !== null && $version < $min) {
         $versionOk = false;
-        $notes[] = 'Package version is below selected game profile range.';
+        $notes[] = 'Package version is below the active game profile range.';
     }
     if ($version !== null && $max !== null && $version > $max) {
         $versionOk = false;
-        $notes[] = 'Package version is above selected game profile range.';
+        $notes[] = 'Package version is above the active game profile range.';
     }
 
     $engineOk = $selectedEngine === '' || strtoupper((string)$detectedEngine) === $selectedEngine;
     if (!$engineOk) {
-        $notes[] = 'Detected engine ' . $detectedEngine . ' does not match selected game engine ' . $selectedEngine . '.';
+        $notes[] = 'Detected engine ' . $detectedEngine . ' does not match active game profile engine ' . $selectedEngine . '.';
     }
 
     if ($engineOk && $extOk && $versionOk && $legacy['ok']) {
