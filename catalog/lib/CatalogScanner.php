@@ -37,6 +37,7 @@ function scanner_store_failed_upload(array $config, string $tmp, string $origina
 
 function scanner_load_reader_class(array $config, string $engineKey): string
 {
+    $engineKey = strtoupper(trim($engineKey));
     $readerConfig = $config['engine_readers'][$engineKey] ?? [];
 
     if ($engineKey === 'UE3') {
@@ -52,7 +53,7 @@ function scanner_load_reader_class(array $config, string $engineKey): string
     $rel = $readerConfig['reader'] ?? '';
     $path = realpath(__DIR__ . '/../' . $rel);
     if (!$path || !is_file($path)) {
-        throw new RuntimeException('Reader not found for ' . $engineKey . ': ' . $rel);
+        throw new RuntimeException('Reader not found for profile engine ' . $engineKey . ': ' . $rel);
     }
 
     require_once $path;
@@ -62,7 +63,7 @@ function scanner_load_reader_class(array $config, string $engineKey): string
         $candidates[] = (string)$readerConfig['class'];
     }
     $candidates[] = match ($engineKey) {
-        'UE4' => 'UnrealPackageReader4',
+        'UE4', 'UE5' => 'UnrealPackageReader4',
         default => 'UnrealPackageReader',
     };
     $candidates[] = 'UnrealPackageReader';
@@ -74,7 +75,7 @@ function scanner_load_reader_class(array $config, string $engineKey): string
         }
     }
 
-    throw new RuntimeException('Reader file loaded for ' . $engineKey . ', but no supported reader class was found.');
+    throw new RuntimeException('Reader file loaded for profile engine ' . $engineKey . ', but no supported reader class was found.');
 }
 
 function scanner_split_reader_issues(array $issues): array
@@ -173,6 +174,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     if (!$game) {
         throw new RuntimeException('Game not found');
     }
+    $profile = gp_required_profile_for_game($db, $gameId);
+    $profileEngine = strtoupper((string)$profile['engine_key']);
 
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
     if (!in_array($ext, $config['allowed_extensions'], true)) {
@@ -190,7 +193,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         foreach ($classification['suggested_games'] as $s) {
             $suggested[] = $s['game_name'] . ' (' . $s['engine_key'] . ')';
         }
-        throw new RuntimeException('Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown') . ', selected=' . ($classification['selected_engine'] ?? 'unknown') . '. ' . implode(' ', $classification['notes']) . ($suggested ? ' Suggested: ' . implode(', ', $suggested) : ''));
+        throw new RuntimeException('Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown') . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '. ' . implode(' ', $classification['notes']) . ($suggested ? ' Suggested: ' . implode(', ', $suggested) : ''));
     }
 
     $md5 = md5_file($tmp);
@@ -204,7 +207,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         return ['duplicate', (int)$duplicate['id'], 'Duplicate MD5: ' . $duplicate['original_name'], $classification];
     }
 
-    $readerClass = scanner_load_reader_class($config, (string)$game['engine_key']);
+    $readerClass = scanner_load_reader_class($config, $profileEngine);
     $pkg = new $readerClass($tmp);
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     [$fatalIssues, $scanNotes] = scanner_split_reader_issues($issues);
@@ -223,7 +226,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $imports = $pkg->getImports();
     $exports = $pkg->getExports();
     $packageName = scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
-    $scanNotesAll = array_merge($scanNotes, ['Detection confidence=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
+    $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
     $scanNotesText = $scanNotesAll ? implode("\n", $scanNotesAll) : null;
 
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . scanner_slug_text((string)$game['slug']) . '/verified';
@@ -276,7 +279,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         scanner_rebuild_dependencies($db, $config, $fileId);
         $db->commit();
         scanner_rebuild_game($db, $config, $gameId);
-        return ['verified', $fileId, 'Uploaded and scanned. Detection=' . $classification['confidence'] . ' / ' . $classification['detected_engine'], $classification];
+        return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', detection=' . $classification['confidence'], $classification];
     } catch (Throwable $e) {
         $db->rollBack();
         @unlink($dest);

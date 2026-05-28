@@ -73,29 +73,29 @@ function catalog_support_root_prefix(): string
 function catalog_admin_nav(): void
 {
     $root = catalog_support_root_prefix();
-    echo '<header><strong><a href="' . catalog_h($root . 'dashboard.php') . '">Unreal File Catalog</a></strong><nav>';
+    echo '<header><div class="brand"><a href="' . catalog_h($root . 'dashboard.php') . '"><span class="brand-mark">U</span><span><strong>UnrealDB</strong><small>package catalog</small></span></a></div><nav>';
+    echo '<a href="' . catalog_h($root . 'games.php') . '">Games</a>';
+    echo '<a href="' . catalog_h($root . 'index.php?page=search') . '">Search</a>';
     if (catalog_support_is_admin()) {
-        echo '<a class="primary" href="' . catalog_h($root . 'dashboard.php') . '">Dashboard</a>';
-        echo '<a class="primary" href="' . catalog_h($root . 'library.php') . '">Library</a>';
-        echo '<a class="primary" href="' . catalog_h($root . 'setup.php') . '">Setup</a>';
-        echo '<a class="primary" href="' . catalog_h($root . 'missing.php') . '">Missing Files</a>';
-        echo '<a class="primary" href="' . catalog_h($root . 'federation/admin.php') . '">Federation</a>';
-        echo '<a class="primary" href="' . catalog_h($root . 'transfers.php') . '">Transfers</a>';
-        echo '<a class="primary" href="' . catalog_h($root . 'download-admin.php') . '">Downloads</a>';
-        echo '<a class="secondary" href="' . catalog_h($root . 'federation/settings.php') . '">Settings</a>';
-        echo '<a class="secondary" href="' . catalog_h($root . 'federation/docs.php') . '">Docs</a>';
-        echo '<a class="secondary" href="' . catalog_h($root . 'index.php?page=logout') . '">Logout ' . catalog_h($_SESSION['user']['username'] ?? '') . '</a>';
+        echo '<span class="nav-sep"></span>';
+        echo '<a href="' . catalog_h($root . 'dashboard.php') . '">Dashboard</a>';
+        echo '<a href="' . catalog_h($root . 'library.php') . '">Library</a>';
+        echo '<a href="' . catalog_h($root . 'game-manager.php') . '">Game Admin</a>';
+        echo '<a href="' . catalog_h($root . 'federation/admin.php') . '">Federation</a>';
+        echo '<a href="' . catalog_h($root . 'transfers.php') . '">Transfers</a>';
+        echo '<a href="' . catalog_h($root . 'download-admin.php') . '">Downloads</a>';
+        echo '<a href="' . catalog_h($root . 'source-scan.php') . '">Uploads</a>';
+        echo '<a href="' . catalog_h($root . 'federation/settings.php') . '">Settings</a>';
+        echo '<a class="logout" href="' . catalog_h($root . 'index.php?page=logout') . '">Logout</a>';
     } else {
-        echo '<a class="primary" href="' . catalog_h($root . 'games.php') . '">Games</a>';
-        echo '<a class="primary" href="' . catalog_h($root . 'index.php?page=search') . '">Search</a>';
-        echo '<a class="secondary" href="' . catalog_h($root . 'index.php?page=login') . '">Admin Login</a>';
+        echo '<span class="nav-sep"></span><a href="' . catalog_h($root . 'index.php?page=login') . '">Admin Login</a>';
     }
     echo '</nav></header>';
 }
 
 function catalog_tool_card(string $title, string $href, string $description, string $badge = ''): void
 {
-    $badgeHtml = $badge !== '' ? '<span class="dep package_only">' . catalog_h($badge) . '</span>' : '';
+    $badgeHtml = $badge !== '' ? '<span class="pill amber">' . catalog_h($badge) . '</span>' : '';
     echo '<a class="stat tool-card" href="' . catalog_h($href) . '"><h2>' . catalog_h($title) . ' ' . $badgeHtml . '</h2><p>' . catalog_h($description) . '</p></a>';
 }
 
@@ -120,7 +120,7 @@ function catalog_page_links(array $links): void
 function catalog_head(string $title): void
 {
     echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . catalog_h($title) . '</title>';
-    echo '<style>body{margin:0;background:#0b1020;color:#eef3ff;font:14px system-ui,Segoe UI,Arial}a{color:#8ab4ff;text-decoration:none}a:hover{text-decoration:underline}header{background:#090d19;border-bottom:1px solid #2a375f;padding:14px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}header strong a{color:#eef3ff}nav a{background:#17213d;padding:7px 10px;border-radius:8px;margin-right:6px;display:inline-block;margin-bottom:4px}.primary{border:1px solid #3b5599}.secondary{opacity:.82}main{padding:16px}.card{background:#121a31;border:1px solid #2a375f;border-radius:14px;padding:14px;margin-bottom:14px}.hero{border-color:#3b5599;background:#141f3b}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.stat{display:block;background:#17213d;border:1px solid #2a375f;border-radius:12px;padding:12px}.tool-card h2{font-size:18px}.tool-card p{min-height:38px}.warning{border-color:#a63b43}.good{border-color:#1d8f54}.attention{border-color:#b48a2a}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #2a375f;padding:7px;text-align:left;vertical-align:top}th{background:#17213d}.muted{color:#9fb0d0}.mono{font-family:Consolas,monospace}.button,button{display:inline-block;background:#23325f;border:1px solid #3b5599;color:#eef3ff;padding:7px 10px;border-radius:8px;cursor:pointer;margin-bottom:4px}.page-links .button{margin-right:6px}.dep{display:inline-block;font-size:12px;padding:2px 7px;border-radius:999px;border:1px solid #2a375f;background:#17213d;margin:2px}.resolved{border-color:#1d8f54}.missing{border-color:#a63b43}.common{border-color:#5c6688}.package_only{border-color:#b48a2a}.compressed{border-color:#b48a2a}.uncompressed{border-color:#1d8f54}.path{word-break:break-all}.small{font-size:12px}.two-col{display:grid;grid-template-columns:2fr 1fr;gap:12px}@media(max-width:850px){.two-col{grid-template-columns:1fr}}</style>';
+    echo '<style>:root{--bg:#080d19;--panel:#101827;--panel2:#121d31;--line:#263651;--line2:#38517a;--text:#eef5ff;--muted:#9fb0c8;--blue:#76a9ff;--green:#32d583;--red:#ff6b7a;--amber:#f6c453;--shadow:0 18px 60px rgba(0,0,0,.28)}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top left,#17284a 0,#080d19 380px),var(--bg);color:var(--text);font:14px/1.45 system-ui,Segoe UI,Arial,sans-serif}a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}header{position:sticky;top:0;z-index:10;background:rgba(8,13,25,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:12px 18px;display:flex;gap:18px;align-items:center;justify-content:space-between;flex-wrap:wrap}.brand a{display:flex;gap:10px;align-items:center;color:var(--text)}.brand-mark{width:34px;height:34px;border-radius:12px;display:inline-grid;place-items:center;background:linear-gradient(135deg,#4169e1,#8b5cf6);font-weight:800;box-shadow:var(--shadow)}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:-2px}nav{display:flex;gap:6px;align-items:center;flex-wrap:wrap}nav a{color:#dbeafe;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);padding:7px 10px;border-radius:999px}nav a:hover{background:rgba(118,169,255,.15);text-decoration:none}.nav-sep{width:1px;height:24px;background:var(--line);margin:0 4px}.logout{opacity:.8}main{width:min(1440px,100%);margin:0 auto;padding:20px}.card{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.025));border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}.hero{border-color:var(--line2);background:linear-gradient(135deg,rgba(65,105,225,.20),rgba(139,92,246,.10))}.hero h1,.card h1{margin:0 0 6px;font-size:28px}.card h2{margin:0 0 10px;font-size:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}.stat{display:block;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:16px;padding:14px}.stat h2{font-size:22px;margin:0 0 4px}.stat p{margin:0;color:var(--muted)}.tool-card{transition:transform .12s ease,border-color .12s ease,background .12s ease}.tool-card:hover{transform:translateY(-1px);text-decoration:none;border-color:var(--blue);background:rgba(118,169,255,.10)}.warning{border-color:rgba(255,107,122,.65)}.good{border-color:rgba(50,213,131,.65)}.attention{border-color:rgba(246,196,83,.7)}table{width:100%;border-collapse:separate;border-spacing:0}th,td{border-bottom:1px solid var(--line);padding:9px;text-align:left;vertical-align:top}th{color:#cfe1ff;background:rgba(255,255,255,.04);font-weight:650}.muted{color:var(--muted)}.mono{font-family:Consolas,ui-monospace,monospace}.button,button{display:inline-block;background:linear-gradient(180deg,#2c4270,#23365e);border:1px solid var(--line2);color:var(--text);padding:8px 11px;border-radius:10px;cursor:pointer;margin:0 4px 6px 0}.button:hover,button:hover{text-decoration:none;filter:brightness(1.1)}input,select,textarea{background:#0b1220;color:var(--text);border:1px solid var(--line2);border-radius:10px;padding:8px;max-width:100%}.page-links{margin:12px 0 0}.pill,.dep{display:inline-block;font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);margin:2px}.amber,.package_only{border-color:rgba(246,196,83,.75);color:#ffe29a}.resolved,.good-pill{border-color:rgba(50,213,131,.75);color:#a7f3d0}.missing,.bad-pill{border-color:rgba(255,107,122,.75);color:#fecdd3}.common{border-color:#5c6688}.compressed{border-color:rgba(246,196,83,.75)}.uncompressed{border-color:rgba(50,213,131,.75)}.path{word-break:break-all}.small{font-size:12px}.two-col{display:grid;grid-template-columns:2fr 1fr;gap:14px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.subtle{font-size:13px;color:var(--muted)}@media(max-width:850px){.two-col{grid-template-columns:1fr}header{align-items:flex-start}nav{width:100%}}</style>';
     echo '</head><body>';
     catalog_admin_nav();
     echo '<main>';
