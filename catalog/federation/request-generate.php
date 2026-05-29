@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function reqgen_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function reqgen_csrf(): string
 {
     $_SESSION['fed_reqgen_csrf'] ??= bin2hex(random_bytes(16));
@@ -48,7 +43,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!reqgen_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         reqgen_check_csrf();
@@ -57,9 +52,9 @@ try {
         if (!$parent) {
             throw new RuntimeException('Active parent peer not found.');
         }
-        $secret = (string)($parent['shared_secret_plain'] ?? '');
-        if ($secret === '') {
-            throw new RuntimeException('Parent peer has no stored API secret.');
+        $apiKey = (string)($parent['shared_secret_plain'] ?? '');
+        if ($apiKey === '') {
+            throw new RuntimeException('Parent peer has no stored API key.');
         }
 
         $items = reqgen_items($db);
@@ -75,22 +70,19 @@ try {
         ];
 
         $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/request-submit.php';
-        $result = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), $secret, $payload);
+        $result = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), $apiKey, $payload);
         fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'REQUEST_SUBMIT_SEND', json_encode($result, JSON_UNESCAPED_SLASHES));
         $_SESSION['fed_reqgen_result'] = $result;
         header('Location: request-generate.php');
         exit;
     }
 
-    catalog_head('Generate Missing Dependency Request');
-
-    if (!reqgen_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Generate Missing Dependency Request')) {
         exit;
     }
 
-    echo '<div class="card"><h1>Generate Missing Dependency Request</h1><p class="muted">Child-side tool. Builds a request from local missing dependency rows and submits it to the configured parent. If parent has an older submitted/approved request from this child, it is marked updated on the parent.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_head('Generate Missing Dependency Request');
+    catalog_page_header('Generate Missing Dependency Request', 'Child-side tool. Builds a request from local missing dependency rows and submits it to the configured parent. If the parent has an older submitted/approved request from this child, it is marked updated on the parent.', catalog_federation_links() + ['Peers' => 'peers.php', 'Request Status' => 'request-status.php', 'Approved Downloads' => 'approved-downloads.php']);
 
     if (isset($_SESSION['fed_reqgen_result'])) {
         echo '<div class="card"><h2>Last submit result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_reqgen_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';

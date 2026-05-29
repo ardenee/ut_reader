@@ -8,24 +8,18 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
-function peerinv_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Peer Inventory');
 
-    if (!peerinv_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Peer Inventory')) {
         exit;
     }
 
+    catalog_head('Peer Inventory');
+
     $peerId = (int)($_GET['peer_id'] ?? 0);
-    echo '<div class="card"><h1>Peer Inventory</h1><p class="muted">Parent-side view of child inventories. Each child remains separate.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="inventory-push.php">Push inventory</a></p></div>';
+    catalog_page_header('Peer Inventory', 'Parent-side view of child inventories. Each child remains separate so you can compare missing, shared, compressed, and duplicate packages per peer.', catalog_federation_links() + ['Push Inventory' => 'inventory-push.php', 'Parent Pull' => 'parent-pull.php']);
 
     $peers = catalog_all($db, 'SELECT * FROM ue_federation_peers ORDER BY peer_role, site_name');
     echo '<div class="card"><h2>Select peer</h2><form><select name="peer_id">';
