@@ -117,7 +117,7 @@ try {
                     trim((string)($_POST['notes'] ?? ''))
                 );
                 $_SESSION['game_profiles_flash'] = $action === 'add' ? 'Game profile added.' : 'Game profile updated.';
-                header('Location: game-profiles.php?profile_id=' . $savedId . '&mode=edit');
+                header('Location: ' . ($action === 'add' ? 'game-profiles.php' : 'game-profiles.php?profile_id=' . $savedId . '&mode=edit'));
                 exit;
             }
         } catch (Throwable $e) {
