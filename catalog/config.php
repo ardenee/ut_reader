@@ -11,7 +11,7 @@ return [
         'password' => '71MM317pplp1019=',
         'charset' => 'utf8mb4',
     ],
-    'site_name' => 'Unreal File Catalog',
+    'site_name' => 'UnrealDB',
     'storage_path' => __DIR__ . '/storage',
     'max_upload_bytes' => 256 * 1024 * 1024,
     'allowed_extensions' => ['u','unr','utx','umx','uax','ut2','ut3','upk','uasset','umap'],

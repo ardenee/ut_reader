@@ -14,7 +14,7 @@ try {
     catalog_head('Dashboard');
 
     if (!catalog_support_is_admin()) {
-        catalog_page_header('Unreal File Catalog', 'Browse Unreal package files and dependency information.', ['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Admin Login' => 'index.php?page=login']);
+        catalog_page_header('UnrealDB', 'Browse Unreal package files and dependency information.', ['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Admin Login' => 'index.php?page=login']);
         catalog_foot();
         exit;
     }

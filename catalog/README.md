@@ -1,4 +1,4 @@
-# Unreal File Catalog
+# UnrealDB
 
 This folder adds a database-backed catalog on top of the existing `UE1/`, `UE2/`, `UE3/`, and `UE4/` readers.
 
