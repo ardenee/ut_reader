@@ -16,7 +16,7 @@ function gm_profile_label(array $profile): string
     $exts = json_decode((string)($profile['allowed_extensions_json'] ?? '[]'), true);
     $extText = is_array($exts) && $exts ? ' / .' . implode(' .', $exts) : '';
     $range = ($profile['package_version_min'] !== null || $profile['package_version_max'] !== null) ? ' / version ' . ($profile['package_version_min'] ?? '?') . '-' . ($profile['package_version_max'] ?? '?') : '';
-    return (string)$profile['profile_game_name'] . ' profile / ' . (string)$profile['engine_key'] . $extText . $range;
+    return (string)$profile['profile_game_name'] . ' / ' . (string)$profile['engine_key'] . $extText . $range;
 }
 
 function gm_copy_profile_to_game(PDO $db, int $gameId, int $profileId): void
