@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function settings_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function settings_csrf(): string
 {
     $_SESSION['fed_settings_csrf'] ??= bin2hex(random_bytes(16));
@@ -32,7 +27,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!settings_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         settings_check_csrf();
@@ -63,23 +58,18 @@ try {
         exit;
     }
 
-    catalog_head('Federation Settings');
-
-    if (!settings_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Settings')) {
         exit;
     }
+
+    catalog_head('Federation Settings');
+    catalog_flash($_SESSION['fed_settings_flash'] ?? null);
+    unset($_SESSION['fed_settings_flash']);
 
     $identity = fed_ensure_identity($db);
     $settings = fed_all_settings($db);
 
-    if (isset($_SESSION['fed_settings_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_settings_flash']) . '</strong></div>';
-        unset($_SESSION['fed_settings_flash']);
-    }
-
-    echo '<div class="card"><h1>Federation Settings</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="join-main-parent.php">Join Main Parent</a> <a class="button" href="join-requests.php">Join Requests</a> <a class="button" href="../mirror-providers.php">Mirror Providers</a> <a class="button" href="../mirror-links.php">Mirror Links</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_page_header('Federation Settings', 'Configure site identity, parent/child permissions, transfer limits, public download handling, and DSM cron worker settings.', catalog_federation_links() + ['Join Main Parent' => 'join-main-parent.php', 'Join Requests' => 'join-requests.php', 'Mirror Providers' => '../mirror-providers.php', 'Mirror Links' => '../mirror-links.php']);
 
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(settings_csrf()) . '">';
     echo '<div class="card"><h2>Site identity</h2><table>';
