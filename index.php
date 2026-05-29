@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
@@ -9,10 +10,26 @@ $catalogUrl = 'catalog/index.php';
 $dashboardUrl = 'catalog/dashboard.php';
 $gamesUrl = 'catalog/games.php';
 $searchUrl = 'catalog/index.php?page=search';
+$isAdmin = ($_SESSION['user']['role'] ?? '') === 'admin';
+$username = (string)($_SESSION['user']['username'] ?? '');
 
 function h(string $value): string
 {
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function nav_link(string $label, string $href): void
+{
+    echo '<a href="' . h($href) . '">' . h($label) . '</a>';
+}
+
+function nav_menu(string $label, array $links): void
+{
+    echo '<details><summary>' . h($label) . '</summary><div class="nav-menu">';
+    foreach ($links as $text => $href) {
+        nav_link((string)$text, (string)$href);
+    }
+    echo '</div></details>';
 }
 
 ?><!doctype html>
@@ -21,22 +38,62 @@ function h(string $value): string
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>UnrealDB - Unreal File Catalog</title>
-<style>
-body{margin:0;background:#0b1020;color:#eef3ff;font:15px system-ui,Segoe UI,Arial;line-height:1.5}
-a{color:#8ab4ff;text-decoration:none}a:hover{text-decoration:underline}
-.wrap{max-width:1100px;margin:0 auto;padding:28px 18px}
-.hero{background:#121a31;border:1px solid #2a375f;border-radius:18px;padding:26px;margin-bottom:18px}
-h1{font-size:34px;margin:0 0 8px}h2{margin-top:0}.muted{color:#9fb0d0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}.card{background:#121a31;border:1px solid #2a375f;border-radius:14px;padding:16px}.button{display:inline-block;background:#23325f;border:1px solid #3b5599;color:#eef3ff;padding:10px 14px;border-radius:10px;margin:4px 6px 4px 0}.primary{background:#2a3f78}.mono{font-family:Consolas,monospace}.small{font-size:13px}
-</style>
+<link rel="stylesheet" href="catalog/assets/catalog.css">
 </head>
 <body>
-<div class="wrap">
-  <section class="hero">
+<header class="site-header">
+  <div class="brand">
+    <a href="<?= h($isAdmin ? $dashboardUrl : $catalogUrl) ?>">
+      <span class="brand-mark">U</span>
+      <span><strong>UnrealDB</strong><small>package catalog</small></span>
+    </a>
+  </div>
+  <nav class="primary-nav">
+    <?php nav_link('Games', $gamesUrl); ?>
+    <?php nav_link('Search', $searchUrl); ?>
+    <?php if ($isAdmin): ?>
+      <span class="nav-sep"></span>
+      <?php
+      nav_menu('Admin', [
+          'Dashboard' => 'catalog/dashboard.php',
+          'Library' => 'catalog/library.php',
+          'Game Admin' => 'catalog/game-manager.php',
+          'Game Profiles' => 'catalog/game-profiles.php',
+      ]);
+      nav_menu('Sources', [
+          'Game Sources' => 'catalog/sources.php',
+          'Local Source Scan' => 'catalog/source-scan.php',
+          'HTTP Source Scan' => 'catalog/http-source-scan.php',
+          'Upload Files' => 'catalog/profiled-upload.php',
+      ]);
+      nav_menu('Federation', [
+          'Federation Admin' => 'catalog/federation/admin.php',
+          'Transfers' => 'catalog/transfers.php',
+          'Downloads' => 'catalog/download-admin.php',
+          'Settings' => 'catalog/federation/settings.php',
+      ]);
+      nav_link('Logout ' . $username, 'catalog/index.php?page=logout');
+      ?>
+    <?php else: ?>
+      <span class="nav-sep"></span>
+      <?php nav_link('Admin Login', 'catalog/index.php?page=login'); ?>
+    <?php endif; ?>
+  </nav>
+</header>
+
+<main>
+  <section class="card hero">
     <h1>UnrealDB</h1>
     <p class="muted">A catalog for Unreal Engine package files, built to gather Unreal/Unreal Tournament files, inspect imports and exports, and help complete libraries by finding missing dependencies.</p>
-    <p>
-      <a class="button primary" href="<?= h($catalogUrl) ?>">Open Catalog</a>
-      <a class="button" href="<?= h($dashboardUrl) ?>">Admin Dashboard</a>
+    <p class="hero-actions">
+      <a class="button" href="<?= h($catalogUrl) ?>">Open Catalog</a>
+      <?php if ($isAdmin): ?>
+        <a class="button" href="<?= h($dashboardUrl) ?>">Admin Dashboard</a>
+        <a class="button" href="catalog/game-manager.php">Manage Games</a>
+        <a class="button" href="catalog/game-profiles.php">Game Profiles</a>
+      <?php else: ?>
+        <a class="button" href="catalog/index.php?page=login">Admin Login</a>
+      <?php endif; ?>
       <a class="button" href="<?= h($gamesUrl) ?>">Browse Games</a>
       <a class="button" href="<?= h($searchUrl) ?>">Search</a>
     </p>
@@ -61,11 +118,11 @@ h1{font-size:34px;margin:0 0 8px}h2{margin-top:0}.muted{color:#9fb0d0}.grid{disp
     </div>
   </section>
 
-  <section class="card" style="margin-top:18px">
+  <section class="card">
     <h2>Supported catalog goals</h2>
     <p class="muted">UnrealDB is intended for Unreal file preservation, verification, dependency tracking, and library repair across Unreal Engine game packages.</p>
     <p class="small mono">Main app path: /catalog/</p>
   </section>
-</div>
+</main>
 </body>
 </html>
