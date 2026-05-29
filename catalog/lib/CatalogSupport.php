@@ -64,6 +64,28 @@ function catalog_support_is_admin(): bool
     return ($_SESSION['user']['role'] ?? '') === 'admin';
 }
 
+function catalog_csrf_key(string $key): string
+{
+    $safe = preg_replace('/[^A-Za-z0-9_]+/', '_', $key) ?? 'default';
+    $safe = trim($safe, '_');
+    return 'catalog_csrf_' . ($safe !== '' ? $safe : 'default');
+}
+
+function catalog_csrf(string $key): string
+{
+    $sessionKey = catalog_csrf_key($key);
+    $_SESSION[$sessionKey] ??= bin2hex(random_bytes(16));
+    return (string)$_SESSION[$sessionKey];
+}
+
+function catalog_check_csrf(string $key): void
+{
+    $sessionKey = catalog_csrf_key($key);
+    if (($_POST['csrf'] ?? '') !== ($_SESSION[$sessionKey] ?? '')) {
+        throw new RuntimeException('Bad CSRF token');
+    }
+}
+
 function catalog_support_root_prefix(): string
 {
     $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
