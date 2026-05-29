@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function sources_csrf(): string
-{
-    $_SESSION['sources_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['sources_csrf'];
-}
-
-function sources_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['sources_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -31,7 +18,7 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        sources_check_csrf();
+        catalog_check_csrf('sources');
         $gameId = (int)($_POST['game_id'] ?? 0);
         $name = trim((string)($_POST['name'] ?? ''));
         $type = (string)($_POST['source_type'] ?? 'local_path');
@@ -78,7 +65,7 @@ try {
     if (!$games) {
         echo '<p class="muted">No games with active profiles exist yet. Add a game/profile first in <a href="game-manager.php">Game Admin</a>.</p>';
     } else {
-        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(sources_csrf()) . '"><p><label>Game<br><select name="game_id">';
+        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('sources')) . '"><p><label>Game<br><select name="game_id">';
         foreach ($games as $game) {
             $sel = (int)$game['id'] === $selectedGameId ? ' selected' : '';
             echo '<option value="' . (int)$game['id'] . '"' . $sel . '>' . catalog_h($game['name'] . ' / ' . $game['profile_engine']) . '</option>';
