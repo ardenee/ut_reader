@@ -9,8 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function gm_csrf(): string { $_SESSION['game_manager_csrf'] ??= bin2hex(random_bytes(16)); return $_SESSION['game_manager_csrf']; }
-function gm_check_csrf(): void { if (($_POST['csrf'] ?? '') !== ($_SESSION['game_manager_csrf'] ?? '')) { throw new RuntimeException('Bad CSRF token'); } }
 function gm_slug(string $text): string { $text = strtolower(trim($text)); $text = preg_replace('/[^a-z0-9]+/', '-', $text) ?? ''; return trim($text, '-') ?: 'game'; }
 function gm_json_extensions(string $text): string
 {
@@ -28,7 +26,7 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        gm_check_csrf();
+        catalog_check_csrf('game_manager');
         $action = (string)($_POST['action'] ?? 'save_game');
 
         if ($action === 'save_game') {
@@ -106,7 +104,7 @@ try {
         }
     }
 
-    echo '<div class="card"><h2>' . ($edit ? 'Edit ' . catalog_h($edit['name']) : 'Add new game') . '</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(gm_csrf()) . '"><input type="hidden" name="action" value="save_game"><input type="hidden" name="id" value="' . (int)($edit['id'] ?? 0) . '"><table>';
+    echo '<div class="card"><h2>' . ($edit ? 'Edit ' . catalog_h($edit['name']) : 'Add new game') . '</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_manager')) . '"><input type="hidden" name="action" value="save_game"><input type="hidden" name="id" value="' . (int)($edit['id'] ?? 0) . '"><table>';
     echo '<tr><th>Game name</th><td><input name="name" required value="' . catalog_h($edit['name'] ?? '') . '" style="min-width:420px"></td></tr>';
     echo '<tr><th>Slug</th><td><input name="slug" value="' . catalog_h($edit['slug'] ?? '') . '" style="min-width:260px"> <span class="muted">Used in URLs and storage paths.</span></td></tr>';
     echo '<tr><th>Description</th><td><textarea name="description" rows="3" style="width:100%">' . catalog_h($edit['description'] ?? '') . '</textarea></td></tr>';

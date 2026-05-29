@@ -9,24 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 
-function mj_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
-function mj_csrf(): string
-{
-    $_SESSION['mirror_job_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['mirror_job_csrf'];
-}
-
-function mj_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['mirror_job_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function mj_storage_path(array $config, array $file): string
 {
     $path = realpath(__DIR__ . '/' . (string)$file['relative_path']);
@@ -41,10 +23,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    if (!mj_is_admin()) {
-        catalog_head('Admin required');
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Fulfil Mirror Job')) {
         exit;
     }
 
@@ -55,7 +34,7 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        mj_check_csrf();
+        catalog_check_csrf('mirror_job');
         $url = trim((string)($_POST['external_url'] ?? ''));
         $expiryDays = (int)($_POST['expiry_days'] ?? 0);
         if ($url === '' || !preg_match('/^https?:\/\//i', $url)) {
@@ -85,11 +64,8 @@ try {
     }
 
     catalog_head('Fulfil Mirror Job');
-
-    if (isset($_SESSION['mirror_job_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['mirror_job_flash']) . '</strong></div>';
-        unset($_SESSION['mirror_job_flash']);
-    }
+    catalog_flash($_SESSION['mirror_job_flash'] ?? null);
+    unset($_SESSION['mirror_job_flash']);
 
     $path = '';
     try {
@@ -98,7 +74,7 @@ try {
         $path = 'missing: ' . $e->getMessage();
     }
 
-    echo '<div class="card"><h1>Fulfil Mirror Job #' . (int)$job['id'] . '</h1><p class="muted">Upload this file to your chosen shared hosting provider, then paste the public URL below. This creates an active cached mirror link for public downloads.</p><p><a class="button" href="mirror-queue.php">Mirror Queue</a> <a class="button" href="mirror-links.php?file_id=' . (int)$job['file_id'] . '">Mirror Links</a> <a class="button" href="download.php?id=' . (int)$job['file_id'] . '">Test public download</a></p></div>';
+    catalog_page_header('Fulfil Mirror Job #' . (string)(int)$job['id'], 'Upload this file to your chosen shared hosting provider, then paste the public URL below. This creates an active cached mirror link for public downloads.', ['Mirror Queue' => 'mirror-queue.php', 'Mirror Links' => 'mirror-links.php?file_id=' . (int)$job['file_id'], 'Test Public Download' => 'download.php?id=' . (int)$job['file_id']]);
 
     echo '<div class="card"><h2>File details</h2><table>';
     echo '<tr><th>Status</th><td>' . catalog_h($job['status']) . '</td></tr>';
@@ -114,7 +90,7 @@ try {
 
     if (in_array((string)$job['status'], ['queued','waiting_admin','failed','uploading'], true)) {
         $defaultDays = (int)($job['provider_expiry_days'] ?: fed_setting($db, 'external_mirror_expiry_days', '7'));
-        echo '<div class="card"><h2>Complete mirror job</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(mj_csrf()) . '"><input type="hidden" name="id" value="' . (int)$job['id'] . '">';
+        echo '<div class="card"><h2>Complete mirror job</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_job')) . '"><input type="hidden" name="id" value="' . (int)$job['id'] . '">';
         echo '<p><label>External shared-provider URL<br><input name="external_url" required style="min-width:760px" placeholder="https://..."></label></p>';
         echo '<p><label>Expiry/stale days<br><input name="expiry_days" value="' . $defaultDays . '" style="width:90px"></label> <span class="muted">Default comes from provider/settings. After this, the link is treated as stale/expired.</span></p>';
         echo '<p><button>Save external link and fulfil job</button></p></form></div>';

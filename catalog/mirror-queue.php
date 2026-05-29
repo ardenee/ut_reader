@@ -9,33 +9,15 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 
-function mq_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
-function mq_csrf(): string
-{
-    $_SESSION['mirror_queue_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['mirror_queue_csrf'];
-}
-
-function mq_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['mirror_queue_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!mq_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        mq_check_csrf();
+        catalog_check_csrf('mirror_queue');
         $action = (string)($_POST['action'] ?? '');
         $id = (int)($_POST['id'] ?? 0);
         if ($action === 'approve') {
@@ -54,20 +36,15 @@ try {
         exit;
     }
 
-    catalog_head('External Mirror Queue');
-
-    if (!mq_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('External Mirror Queue')) {
         exit;
     }
 
-    if (isset($_SESSION['mirror_queue_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['mirror_queue_flash']) . '</strong></div>';
-        unset($_SESSION['mirror_queue_flash']);
-    }
+    catalog_head('External Mirror Queue');
+    catalog_flash($_SESSION['mirror_queue_flash'] ?? null);
+    unset($_SESSION['mirror_queue_flash']);
 
-    echo '<div class="card"><h1>External Mirror Queue</h1><p class="muted">Queued/pending mirror uploads. Manual provider jobs can be fulfilled by opening the job and pasting the external shared-provider link.</p><p><a class="button" href="admin.php">Catalog Admin</a> <a class="button" href="mirror-providers.php">Providers</a> <a class="button" href="mirror-links.php">Mirror Links</a></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(mq_csrf()) . '"><button name="action" value="expire_old">Expire old active links</button></form></div>';
+    echo '<div class="card hero"><h1>External Mirror Queue</h1><p class="muted">Queued/pending mirror uploads. Manual provider jobs can be fulfilled by opening the job and pasting the external shared-provider link.</p><p><a class="button" href="dashboard.php">Catalog Admin</a> <a class="button" href="mirror-providers.php">Providers</a> <a class="button" href="mirror-links.php">Mirror Links</a></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_queue')) . '"><button name="action" value="expire_old">Expire old active links</button></form></div>';
 
     $jobs = catalog_all($db, 'SELECT j.*, p.provider_name, p.provider_class, f.package_name, f.original_name, f.file_size, f.md5 FROM ue_external_mirror_jobs j LEFT JOIN ue_external_download_providers p ON p.id=j.provider_id JOIN ue_files f ON f.id=j.file_id ORDER BY FIELD(j.status,"waiting_admin","queued","uploading","failed","active","cancelled","expired"), j.created_at DESC LIMIT 500');
     echo '<div class="card"><h2>Jobs</h2>';
@@ -90,7 +67,7 @@ try {
             $links = array_filter($actions, static fn($a) => !str_starts_with($a, '<button'));
             $form = implode(' ', $links);
             if ($formButtons) {
-                $form .= ' <form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(mq_csrf()) . '"><input type="hidden" name="id" value="' . (int)$j['id'] . '">' . implode(' ', $formButtons) . '</form>';
+                $form .= ' <form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_queue')) . '"><input type="hidden" name="id" value="' . (int)$j['id'] . '">' . implode(' ', $formButtons) . '</form>';
             }
             echo '<tr><td class="mono">' . (int)$j['id'] . '</td><td><a href="file-info.php?id=' . (int)$j['file_id'] . '" target="_blank">' . catalog_h($j['package_name'] . ' / ' . $j['original_name']) . '</a><br><span class="small">' . catalog_h(catalog_bytes((int)$j['file_size'])) . '</span></td><td>' . catalog_h(($j['provider_name'] ?? '') . ' / ' . ($j['provider_class'] ?? '')) . '</td><td>' . catalog_h($j['status']) . '</td><td>' . (int)$j['attempts'] . '</td><td class="path">' . catalog_h($j['last_error']) . '</td><td>' . catalog_h($j['created_at']) . '</td><td>' . $form . '</td></tr>';
         }

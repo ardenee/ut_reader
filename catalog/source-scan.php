@@ -11,19 +11,6 @@ require_once __DIR__ . '/lib/CatalogParser.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function source_scan_csrf(): string
-{
-    $_SESSION['source_scan_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['source_scan_csrf'];
-}
-
-function source_scan_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['source_scan_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function clean_relative_path(string $base, string $path): string
 {
     $base = rtrim(str_replace('\\', '/', realpath($base) ?: $base), '/') . '/';
@@ -284,7 +271,7 @@ try {
     catalog_page_header('Source scanner', 'Scan game-owned folders and record where catalog files exist. Unknown files can be imported through the active game profile.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        source_scan_check_csrf();
+        catalog_check_csrf('source_scan');
         $sourceId = (int)($_POST['source_id'] ?? 0);
         $importUnknown = (string)($_POST['import_unknown'] ?? '0') === '1';
         $strictProfile = (string)($_POST['strict_profile'] ?? '1') === '1';
@@ -335,7 +322,7 @@ try {
     if (!$sources) {
         echo '<p class="muted">No sources configured. Add one in <a href="sources.php">Game Sources</a>.</p>';
     } else {
-        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(source_scan_csrf()) . '"><p><label>Source<br><select name="source_id">';
+        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('source_scan')) . '"><p><label>Source<br><select name="source_id">';
         foreach ($sources as $source) {
             $label = $source['game_name'] . ' / ' . ($source['profile_engine'] ?: 'no profile') . ' - ' . $source['name'] . ' (' . $source['source_type'] . ')';
             echo '<option value="' . (int)$source['id'] . '">' . catalog_h($label) . '</option>';
