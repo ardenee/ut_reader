@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
 
-function fw_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function fw_csrf(): string
 {
     $_SESSION['fed_worker_run_csrf'] ??= bin2hex(random_bytes(16));
@@ -75,7 +70,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!fw_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         fw_check_csrf();
@@ -84,19 +79,17 @@ try {
         exit;
     }
 
-    catalog_head('Federation Bulk Worker');
-
-    if (!fw_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Bulk Worker')) {
         exit;
     }
+
+    catalog_head('Federation Bulk Worker');
 
     $limit = max(1, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1));
     $queued = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"')['c'] ?? 0);
     $downloaded = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded"')['c'] ?? 0);
 
-    echo '<div class="card"><h1>Federation Bulk Worker</h1><p class="muted">Runs multiple controlled worker steps in one click. It runs up to the configured max files per run for transfers, then up to the same limit for imports. Transfers still run sequentially and respect throttling/delay settings.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="queue.php">Queue overview</a> <a class="button" href="transfer-run.php">Run one transfer</a> <a class="button" href="import-run.php">Import one download</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_page_header('Federation Bulk Worker', 'Runs multiple controlled worker steps in one click. It runs up to the configured max files per run for transfers, then up to the same limit for imports. Transfers still run sequentially and respect throttling/delay settings.', catalog_federation_links() + ['Run One Transfer' => 'transfer-run.php', 'Import One Download' => 'import-run.php']);
 
     if (isset($_SESSION['fed_worker_result'])) {
         echo '<div class="card"><h2>Last worker result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_worker_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</pre></div>';
