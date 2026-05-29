@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function join_csrf(): string
-{
-    $_SESSION['fed_join_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_join_csrf'];
-}
-
-function join_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_join_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -34,7 +21,7 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        join_check_csrf();
+        catalog_check_csrf('fed_join');
         $siteName = trim((string)($_POST['site_name'] ?? ''));
         $siteUrl = rtrim(trim((string)($_POST['site_url'] ?? '')), '/');
         $siteId = trim((string)($_POST['site_id'] ?? ''));
@@ -85,7 +72,7 @@ try {
 
     echo '<div class="card"><h2>How to get your child site identity</h2><p>On the child site, log in as admin and open:</p><pre class="mono">/catalog/federation/settings.php</pre><p>Copy the site URL, site ID, and fingerprint from there.</p></div>';
 
-    echo '<div class="card"><h2>Submit join request</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(join_csrf()) . '">';
+    echo '<div class="card"><h2>Submit join request</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join')) . '">';
     echo '<p><label>Child site name<br><input name="site_name" required style="min-width:420px"></label></p>';
     echo '<p><label>Child site URL<br><input name="site_url" required style="min-width:640px" placeholder="https://child.example.com/catalog"></label></p>';
     echo '<p><label>Child site ID<br><input name="site_id" required style="min-width:420px"></label></p>';

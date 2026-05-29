@@ -8,19 +8,6 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function duplicates_csrf(): string
-{
-    $_SESSION['duplicates_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['duplicates_csrf'];
-}
-
-function duplicates_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['duplicates_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function duplicate_same_group(PDO $db, int $canonicalId, int $duplicateId): bool
 {
     $rows = catalog_all($db, 'SELECT id, game_id, package_guid FROM ue_files WHERE id IN (?,?)', [$canonicalId, $duplicateId]);
@@ -65,7 +52,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        duplicates_check_csrf();
+        catalog_check_csrf('duplicates');
         $canonicalId = (int)($_POST['canonical_id'] ?? 0);
         $duplicateIds = array_map('intval', $_POST['duplicate_ids'] ?? []);
         $duplicateIds = array_values(array_filter(array_unique($duplicateIds), static fn($v) => $v > 0 && $v !== $canonicalId));
@@ -140,7 +127,7 @@ try {
         echo '<div class="card"><h2>' . catalog_h($group['game_name']) . ' / <span class="mono">' . catalog_h($group['package_guid']) . '</span></h2>';
         echo '<p class="muted">Choose one canonical file, tick duplicate rows to retire, then apply. Source locations and incoming dependency links are moved to the canonical file. Retired rows remain in the database for audit.</p>';
         echo '<form method="post" onsubmit="return confirm(\'Retire selected duplicates into the canonical file?\')">';
-        echo '<input type="hidden" name="csrf" value="' . catalog_h(duplicates_csrf()) . '">';
+        echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('duplicates')) . '">';
         echo '<table><tr><th>Canonical</th><th>Retire</th><th>ID</th><th>Package</th><th>File</th><th>MD5</th><th>Size</th><th>Type</th><th>Deps</th><th>Sources</th><th>Uploaded</th><th>Open</th></tr>';
         foreach ($files as $file) {
             $compressed = (int)($file['is_compressed'] ?? 0) === 1;
