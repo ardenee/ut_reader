@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function tr_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function tr_csrf(): string
 {
     $_SESSION['fed_transfer_run_csrf'] ??= bin2hex(random_bytes(16));
@@ -44,9 +39,9 @@ function tr_safe_name(string $name): string
 
 function tr_signed_download_context(PDO $db, array $job, string $url, array $payload): array
 {
-    $secret = (string)$job['shared_secret_plain'];
-    if ($secret === '') {
-        throw new RuntimeException('Peer has no stored API secret.');
+    $shared = (string)$job['shared_secret_plain'];
+    if ($shared === '') {
+        throw new RuntimeException('Peer has no stored API key.');
     }
 
     $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -57,7 +52,7 @@ function tr_signed_download_context(PDO $db, array $job, string $url, array $pay
     $timestamp = date('c');
     $nonce = fed_random_secret();
     $path = parse_url($url, PHP_URL_PATH) ?: '/';
-    $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
+    $signature = fed_sign_request($shared, 'POST', $path, $timestamp, $nonce, $body);
     $headers = [
         'Content-Type: application/json',
         'User-Agent: UnrealFileCatalogFederation/1.0',
@@ -186,7 +181,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!tr_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         tr_check_csrf();
@@ -195,15 +190,12 @@ try {
         exit;
     }
 
-    catalog_head('Transfer Runner');
-
-    if (!tr_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Transfer Runner')) {
         exit;
     }
 
-    echo '<div class="card"><h1>Transfer Runner</h1><p class="muted">Runs one queued federation download at a time: parent pulls from children, or children download approved files from parent.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="approved-downloads.php">Approved child downloads</a> <a class="button" href="import-run.php">Import downloaded files</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_head('Transfer Runner');
+    catalog_page_header('Transfer Runner', 'Runs one queued federation download at a time: parent pulls from children, or children download approved files from parent.', catalog_federation_links() + ['Parent Pull Queue' => 'parent-pull.php', 'Approved Downloads' => 'approved-downloads.php', 'Import Downloaded Files' => 'import-run.php']);
 
     if (isset($_SESSION['fed_transfer_run_result'])) {
         echo '<div class="card"><h2>Last run</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_transfer_run_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
