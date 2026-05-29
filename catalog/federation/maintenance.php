@@ -10,11 +10,6 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
-function fm_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function fm_csrf(): string
 {
     $_SESSION['fed_maintenance_csrf'] ??= bin2hex(random_bytes(16));
@@ -54,7 +49,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!fm_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         fm_check_csrf();
@@ -78,18 +73,13 @@ try {
         exit;
     }
 
-    catalog_head('Federation Maintenance');
-
-    if (!fm_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Maintenance')) {
         exit;
     }
 
-    if (isset($_SESSION['fed_maintenance_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_maintenance_flash']) . '</strong></div>';
-        unset($_SESSION['fed_maintenance_flash']);
-    }
+    catalog_head('Federation Maintenance');
+    catalog_flash($_SESSION['fed_maintenance_flash'] ?? null);
+    unset($_SESSION['fed_maintenance_flash']);
 
     $nonceCount = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_nonces')['c'] ?? 0);
     $logCount = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_logs')['c'] ?? 0);
@@ -104,15 +94,16 @@ try {
         $known[basename((string)$row['incoming_path'])] = true;
     }
 
-    echo '<div class="card"><h1>Federation Maintenance</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="../mirror-queue.php">Mirror queue</a> <a class="button" href="../mirror-links.php">Mirror links</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_page_header('Federation Maintenance', 'Prune old nonces/logs, run mirror maintenance, and review incoming federation storage.', catalog_federation_links() + ['Mirror Queue' => '../mirror-queue.php', 'Mirror Links' => '../mirror-links.php']);
+
     echo '<div class="grid">';
-    echo '<div class="stat"><h2>' . $nonceCount . '</h2><p>Stored API nonces</p></div>';
-    echo '<div class="stat"><h2>' . $logCount . '</h2><p>Federation log rows</p></div>';
-    echo '<div class="stat"><h2>' . $mirrorActive . '</h2><p>Active mirror links</p></div>';
-    echo '<div class="stat"><h2>' . $mirrorExpired . '</h2><p>Expired mirror links</p></div>';
-    echo '<div class="stat"><h2>' . $mirrorJobs . '</h2><p>Mirror jobs active/waiting</p></div>';
-    echo '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)$incoming['bytes'])) . '</h2><p>Incoming folder usage</p></div>';
-    echo '<div class="stat"><h2>' . (int)$incoming['count'] . '</h2><p>Incoming files</p></div>';
+    catalog_stat_card('Stored API nonces', $nonceCount);
+    catalog_stat_card('Federation log rows', $logCount);
+    catalog_stat_card('Active mirror links', $mirrorActive, '', $mirrorActive > 0 ? 'good' : '');
+    catalog_stat_card('Expired mirror links', $mirrorExpired);
+    catalog_stat_card('Mirror jobs active/waiting', $mirrorJobs, '', $mirrorJobs > 0 ? 'attention' : '');
+    catalog_stat_card('Incoming folder usage', catalog_bytes((int)$incoming['bytes']));
+    catalog_stat_card('Incoming files', (int)$incoming['count']);
     echo '</div>';
 
     echo '<div class="card"><h2>Prune old API/log rows + mirror maintenance</h2><p class="muted">Uses api_nonce_ttl_seconds, log_retention_days, and external mirror expiry settings.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fm_csrf()) . '"><input type="hidden" name="action" value="prune"><button>Prune old nonces/logs and run mirror maintenance</button></form></div>';
