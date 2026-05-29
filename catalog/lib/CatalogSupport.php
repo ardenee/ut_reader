@@ -89,12 +89,18 @@ function catalog_check_csrf(string $key): void
 function catalog_support_root_prefix(): string
 {
     $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
-    return str_contains($script, '/catalog/federation/') ? '../' : '';
+    if (str_contains($script, '/catalog/federation/')) {
+        return '../';
+    }
+    if (str_contains($script, '/catalog/')) {
+        return '';
+    }
+    return 'catalog/';
 }
 
-function catalog_nav_link(string $label, string $href): void
+function catalog_nav_link(string $label, string $href, string $class = ''): void
 {
-    echo '<a href="' . catalog_h($href) . '">' . catalog_h($label) . '</a>';
+    echo '<a' . ($class !== '' ? ' class="' . catalog_h($class) . '"' : '') . ' href="' . catalog_h($href) . '">' . catalog_h($label) . '</a>';
 }
 
 function catalog_nav_menu(string $label, array $links): void
@@ -106,10 +112,16 @@ function catalog_nav_menu(string $label, array $links): void
     echo '</div></details>';
 }
 
+function catalog_brand_mark(string $root): string
+{
+    return '<span class="brand-mark"><img src="' . catalog_h($root . 'assets/unreal-file-catalog-icon-32x32.png') . '" alt="" width="32" height="32"></span>';
+}
+
 function catalog_admin_nav(): void
 {
     $root = catalog_support_root_prefix();
-    echo '<header class="site-header"><div class="brand"><a href="' . catalog_h($root . 'dashboard.php') . '"><span class="brand-mark">U</span><span><strong>UnrealDB</strong><small>package catalog</small></span></a></div><nav class="primary-nav">';
+    $brandHref = catalog_support_is_admin() ? $root . 'dashboard.php' : $root . 'index.php';
+    echo '<header class="site-header"><div class="brand"><a href="' . catalog_h($brandHref) . '">' . catalog_brand_mark($root) . '<span><strong>UnrealDB</strong><small>package catalog</small></span></a></div><nav class="primary-nav">';
     catalog_nav_link('Games', $root . 'games.php');
     catalog_nav_link('Search', $root . 'index.php?page=search');
 
@@ -133,7 +145,7 @@ function catalog_admin_nav(): void
             'Downloads' => $root . 'download-admin.php',
             'Settings' => $root . 'federation/settings.php',
         ]);
-        catalog_nav_link('Logout', $root . 'index.php?page=logout');
+        catalog_nav_link('Logout', $root . 'index.php?page=logout', 'logout');
     } else {
         echo '<span class="nav-sep"></span>';
         catalog_nav_link('Admin Login', $root . 'index.php?page=login');
@@ -179,7 +191,7 @@ function catalog_federation_links(): array
         'Bulk Worker' => 'worker-run.php',
         'Conflicts' => 'conflicts.php',
         'Maintenance' => 'maintenance.php',
-        'Logs' => 'logs.php',
+        'Logs' => 'logs.php'
     ];
 }
 
@@ -216,6 +228,10 @@ function catalog_head(string $title): void
 {
     $root = catalog_support_root_prefix();
     echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . catalog_h($title) . '</title>';
+    echo '<link rel="icon" href="' . catalog_h($root . 'assets/favicon.ico') . '">';
+    echo '<link rel="apple-touch-icon" sizes="180x180" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-180x180.png') . '">';
+    echo '<link rel="icon" type="image/png" sizes="32x32" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-32x32.png') . '">';
+    echo '<link rel="icon" type="image/png" sizes="16x16" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-16x16.png') . '">';
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog.css') . '">';
     echo '</head><body>';
     catalog_admin_nav();
