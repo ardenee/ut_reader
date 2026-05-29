@@ -8,21 +8,15 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function missing_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Missing Files');
 
-    if (!missing_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Missing Files')) {
         exit;
     }
+
+    catalog_head('Missing Files');
 
     $missingObjects = catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing"');
     $missingPackages = catalog_count($db, 'SELECT COUNT(DISTINCT required_package) c FROM ue_dependencies WHERE status="missing" AND required_package IS NOT NULL AND required_package<>""');
@@ -30,9 +24,7 @@ try {
     $approved = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_request_items WHERE status="approved"');
     $imported = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_request_items WHERE status="imported"');
 
-    echo '<div class="card hero"><h1>Missing Files</h1><p class="muted">Find what your library needs, check what the parent has, request missing files, and track approved downloads.</p>';
-    catalog_page_links(['Generate Request' => 'federation/request-generate.php', 'Request Status' => 'federation/request-status.php', 'Approved Downloads' => 'federation/approved-downloads.php', 'Parent Inventory' => 'federation/peer-inventory.php', 'Conflicts' => 'federation/conflicts.php']);
-    echo '</div>';
+    catalog_page_header('Missing Files', 'Find what your library needs, check what the parent has, request missing files, and track approved downloads.', ['Generate Request' => 'federation/request-generate.php', 'Request Status' => 'federation/request-status.php', 'Approved Downloads' => 'federation/approved-downloads.php', 'Parent Inventory' => 'federation/peer-inventory.php', 'Conflicts' => 'federation/conflicts.php']);
 
     echo '<div class="grid">';
     catalog_stat_card('Missing dependency objects', $missingObjects, '', $missingObjects > 0 ? 'attention' : 'good');

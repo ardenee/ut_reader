@@ -8,21 +8,15 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function transfers_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Transfers');
 
-    if (!transfers_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Transfers')) {
         exit;
     }
+
+    catalog_head('Transfers');
 
     $queued = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"');
     $running = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="running"');
@@ -31,9 +25,7 @@ try {
     $mirrorWaiting = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin","uploading")');
     $mirrorFailed = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status="failed"');
 
-    echo '<div class="card hero"><h1>Transfers</h1><p class="muted">Monitor background jobs: federation downloads/uploads/imports, mirror jobs, failures, and maintenance.</p>';
-    catalog_page_links(['Queue' => 'federation/queue.php', 'Bulk Worker' => 'federation/worker-run.php', 'Import Downloaded' => 'federation/import-run.php', 'Mirror Queue' => 'mirror-queue.php', 'Maintenance' => 'federation/maintenance.php']);
-    echo '</div>';
+    catalog_page_header('Transfers', 'Monitor background jobs: federation downloads/uploads/imports, mirror jobs, failures, and maintenance.', ['Queue' => 'federation/queue.php', 'Bulk Worker' => 'federation/worker-run.php', 'Import Downloaded' => 'federation/import-run.php', 'Mirror Queue' => 'mirror-queue.php', 'Maintenance' => 'federation/maintenance.php']);
 
     echo '<div class="grid">';
     catalog_stat_card('Queued federation jobs', $queued, '', $queued > 0 ? 'attention' : '');
