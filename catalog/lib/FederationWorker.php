@@ -243,6 +243,16 @@ function federation_worker_original_name(PDO $db, array $job): string
     return basename((string)$job['incoming_path']);
 }
 
+function federation_worker_game_id_for_profile_engine(PDO $db, string $engineKey): ?int
+{
+    $engineKey = strtoupper(trim($engineKey));
+    if ($engineKey === '') {
+        return null;
+    }
+    $game = catalog_one($db, 'SELECT g.id FROM ue_games g JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE UPPER(p.engine_key)=? ORDER BY g.id LIMIT 1', [$engineKey]);
+    return $game ? (int)$game['id'] : null;
+}
+
 function federation_worker_preferred_game_id(PDO $db, array $job): ?int
 {
     $pf = catalog_one($db, 'SELECT game_id, remote_engine_key FROM ue_federation_peer_files WHERE peer_id=? AND remote_file_id=? ORDER BY id DESC LIMIT 1', [(int)$job['peer_id'], (int)$job['remote_file_id']]);
@@ -250,10 +260,7 @@ function federation_worker_preferred_game_id(PDO $db, array $job): ?int
         return (int)$pf['game_id'];
     }
     if ($pf && !empty($pf['remote_engine_key'])) {
-        $game = catalog_one($db, 'SELECT id FROM ue_games WHERE engine_key=? ORDER BY id LIMIT 1', [(string)$pf['remote_engine_key']]);
-        if ($game) {
-            return (int)$game['id'];
-        }
+        return federation_worker_game_id_for_profile_engine($db, (string)$pf['remote_engine_key']);
     }
     return null;
 }
