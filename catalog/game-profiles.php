@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function gprof_csrf(): string
-{
-    $_SESSION['game_profiles_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['game_profiles_csrf'];
-}
-
-function gprof_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['game_profiles_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function gprof_json_extensions(string $text): string
 {
     $parts = preg_split('/[,\s]+/', strtolower(trim($text))) ?: [];
@@ -38,7 +25,7 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        gprof_check_csrf();
+        catalog_check_csrf('game_profiles');
         $gameId = (int)($_POST['game_id'] ?? 0);
         $engine = strtoupper(trim((string)($_POST['engine_key'] ?? '')));
         $exts = gprof_json_extensions((string)($_POST['extensions'] ?? ''));
@@ -87,7 +74,7 @@ try {
     }
     if ($edit) {
         $exts = json_decode((string)($edit['allowed_extensions_json'] ?? '[]'), true);
-        echo '<div class="card"><h2>Edit profile: ' . catalog_h($edit['name']) . '</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(gprof_csrf()) . '"><input type="hidden" name="game_id" value="' . (int)$edit['id'] . '"><table>';
+        echo '<div class="card"><h2>Edit profile: ' . catalog_h($edit['name']) . '</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_profiles')) . '"><input type="hidden" name="game_id" value="' . (int)$edit['id'] . '"><table>';
         echo '<tr><th>Engine key</th><td><input name="engine_key" value="' . catalog_h($edit['profile_engine'] ?? 'UE1') . '" style="width:120px"> <span class="muted">Examples: UE1, UE2, UE3, UE4, UE5</span></td></tr>';
         echo '<tr><th>Extensions</th><td><input name="extensions" value="' . catalog_h(is_array($exts) ? implode(', ', $exts) : '') . '" style="min-width:520px"></td></tr>';
         echo '<tr><th>Package version min/max</th><td><input name="package_version_min" value="' . catalog_h((string)($edit['package_version_min'] ?? '')) . '" style="width:90px"> <input name="package_version_max" value="' . catalog_h((string)($edit['package_version_max'] ?? '')) . '" style="width:90px"></td></tr>';
