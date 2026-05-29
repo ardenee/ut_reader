@@ -13,13 +13,13 @@ try {
     $db = catalog_db($config);
     catalog_head('Library');
 
-    $games = catalog_all($db, 'SELECT g.*, COUNT(f.id) file_count, SUM(f.scan_status="verified") verified_count, SUM(f.scan_status="failed") failed_count FROM ue_games g LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id ORDER BY g.name');
+    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, COUNT(DISTINCT f.id) file_count, SUM(f.scan_status="verified") verified_count, SUM(f.scan_status="failed") failed_count FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
     $totalFiles = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files');
     $verified = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="verified"');
     $duplicates = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="duplicate"');
 
-    echo '<div class="card hero"><h1>Library</h1><p class="muted">Browse games, inspect files, search imports/exports, and review duplicate/stability status.</p>';
-    catalog_page_links(['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Duplicates' => 'duplicates.php', 'Setup' => 'setup.php']);
+    echo '<div class="card hero"><h1>Library</h1><p class="muted">Browse local games and files, review duplicates, and check missing dependency status.</p>';
+    catalog_page_links(['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Duplicates' => 'duplicates.php', 'Missing Files' => 'missing.php']);
     echo '</div>';
 
     echo '<div class="grid">';
@@ -30,19 +30,21 @@ try {
     echo '</div>';
 
     echo '<div class="card"><h2>Library tools</h2><div class="grid">';
-    catalog_tool_card('Game browser', 'games.php', 'Browse all configured games and open each game file list.', 'primary');
-    catalog_tool_card('Search catalog', 'index.php?page=search', 'Search package names, file names, MD5, SHA1, GUID, imports, and exports.');
-    catalog_tool_card('Duplicate manager', 'duplicates.php', 'Review duplicate Unreal package GUIDs and retire duplicate rows.');
-    catalog_tool_card('Download/mirror view', 'download-admin.php', 'Review how public users get downloads and external mirror links.');
+    catalog_tool_card('Game browser', 'games.php', 'Browse the public game catalog and open file lists.', 'primary');
+    catalog_tool_card('Search catalog', 'index.php?page=search', 'Search package names, filenames, hashes, GUIDs, imports, and exports.');
+    catalog_tool_card('Duplicate files', 'duplicates.php', 'Review duplicate files and package GUID collisions.');
+    catalog_tool_card('Missing files', 'missing.php', 'Review dependency gaps and request files from a parent site.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Games</h2>';
     if (!$games) {
-        echo '<p class="muted">No games configured yet. Start in <a href="setup.php">Setup</a>.</p>';
+        echo '<p class="muted">No games configured yet. Start in <a href="game-manager.php">Game Admin</a>.</p>';
     } else {
-        echo '<table><tr><th>Game</th><th>Engine</th><th>Files</th><th>Verified</th><th>Failed</th><th>Open</th></tr>';
+        echo '<table><tr><th>Game</th><th>Profile engine</th><th>Files</th><th>Verified</th><th>Failed</th><th>Open</th></tr>';
         foreach ($games as $game) {
-            echo '<tr><td>' . catalog_h($game['name']) . '</td><td class="mono">' . catalog_h($game['engine_key']) . '</td><td>' . (int)$game['file_count'] . '</td><td>' . (int)$game['verified_count'] . '</td><td>' . (int)$game['failed_count'] . '</td><td><a class="button" href="game-files.php?id=' . (int)$game['id'] . '">Files</a> <a class="button" href="index.php?page=game&id=' . (int)$game['id'] . '">Upload/Admin</a></td></tr>';
+            $engine = $game['profile_engine'] ?: 'missing profile';
+            $engineClass = $game['profile_engine'] ? 'good-pill' : 'bad-pill';
+            echo '<tr><td><strong>' . catalog_h($game['name']) . '</strong><br><span class="muted small">' . catalog_h($game['slug']) . '</span></td><td><span class="pill ' . $engineClass . '">' . catalog_h($engine) . '</span></td><td>' . (int)$game['file_count'] . '</td><td>' . (int)$game['verified_count'] . '</td><td>' . (int)$game['failed_count'] . '</td><td><a class="button" href="game-files.php?id=' . (int)$game['id'] . '">Files</a> <a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">Upload</a> <a class="button" href="game-manager.php?game_id=' . (int)$game['id'] . '">Edit</a></td></tr>';
         }
         echo '</table>';
     }
