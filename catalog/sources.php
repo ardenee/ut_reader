@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function local_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function sources_csrf(): string
 {
     $_SESSION['sources_csrf'] ??= bin2hex(random_bytes(16));
@@ -31,10 +26,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    if (!local_admin()) {
-        catalog_head('Sources');
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Sources')) {
         exit;
     }
 
@@ -62,16 +54,11 @@ try {
     }
 
     catalog_head('Game Sources');
-
-    if (isset($_SESSION['sources_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['sources_flash']) . '</strong></div>';
-        unset($_SESSION['sources_flash']);
-    }
+    catalog_flash($_SESSION['sources_flash'] ?? null);
+    unset($_SESSION['sources_flash']);
 
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
-    echo '<div class="card hero"><h1>Game Sources</h1><p class="muted">Add folders, redirect servers, or HTTP mirrors for a specific game. Sources belong to games so scans and downloads stay tied to the correct library.</p>';
-    catalog_page_links(['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Scan Sources' => 'source-scan.php', 'Setup' => 'setup.php']);
-    echo '</div>';
+    catalog_page_header('Game Sources', 'Add local folders, redirect servers, or HTTP mirrors for a specific game. Sources belong to games so scans and downloads stay tied to the correct library.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Scan Sources' => 'source-scan.php', 'HTTP Source Scan' => 'http-source-scan.php']);
 
     $sources = catalog_all($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name, s.name');
     echo '<div class="card"><h2>Configured sources</h2>';
@@ -102,7 +89,9 @@ try {
 
     catalog_foot();
 } catch (Throwable $e) {
-    catalog_head('Sources error');
+    if (!headers_sent()) {
+        catalog_head('Sources error');
+    }
     echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
     catalog_foot();
 }
