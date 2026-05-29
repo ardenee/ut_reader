@@ -10,11 +10,34 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
 function gm_slug(string $text): string { $text = strtolower(trim($text)); $text = preg_replace('/[^a-z0-9]+/', '-', $text) ?? ''; return trim($text, '-') ?: 'game'; }
-function gm_json_extensions(string $text): string
+
+function gm_profile_label(array $profile): string
 {
-    $parts = preg_split('/[,\s]+/', strtolower(trim($text))) ?: [];
-    $parts = array_values(array_unique(array_filter(array_map(static fn($v) => trim($v, '. '), $parts), static fn($v) => $v !== '')));
-    return json_encode($parts, JSON_UNESCAPED_SLASHES);
+    $exts = json_decode((string)($profile['allowed_extensions_json'] ?? '[]'), true);
+    $extText = is_array($exts) && $exts ? ' / .' . implode(' .', $exts) : '';
+    $range = ($profile['package_version_min'] !== null || $profile['package_version_max'] !== null) ? ' / version ' . ($profile['package_version_min'] ?? '?') . '-' . ($profile['package_version_max'] ?? '?') : '';
+    return (string)$profile['profile_game_name'] . ' profile / ' . (string)$profile['engine_key'] . $extText . $range;
+}
+
+function gm_copy_profile_to_game(PDO $db, int $gameId, int $profileId): void
+{
+    $profile = catalog_one($db, 'SELECT * FROM ue_game_profiles WHERE id=? AND is_active=1', [$profileId]);
+    if (!$profile) {
+        throw new RuntimeException('Selected active game profile not found.');
+    }
+
+    $stmt = $db->prepare('INSERT INTO ue_game_profiles(game_id,engine_key,allowed_extensions_json,package_version_min,package_version_max,licensee_version_min,licensee_version_max,confidence_policy,notes,is_active) VALUES(?,?,?,?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE engine_key=VALUES(engine_key), allowed_extensions_json=VALUES(allowed_extensions_json), package_version_min=VALUES(package_version_min), package_version_max=VALUES(package_version_max), licensee_version_min=VALUES(licensee_version_min), licensee_version_max=VALUES(licensee_version_max), confidence_policy=VALUES(confidence_policy), notes=VALUES(notes), is_active=1');
+    $stmt->execute([
+        $gameId,
+        (string)$profile['engine_key'],
+        (string)$profile['allowed_extensions_json'],
+        $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null,
+        $profile['package_version_max'] !== null ? (int)$profile['package_version_max'] : null,
+        $profile['licensee_version_min'] !== null ? (int)$profile['licensee_version_min'] : null,
+        $profile['licensee_version_max'] !== null ? (int)$profile['licensee_version_max'] : null,
+        (string)$profile['confidence_policy'],
+        $profile['notes'] !== null ? (string)$profile['notes'] : null,
+    ]);
 }
 
 try {
@@ -33,10 +56,10 @@ try {
             $id = (int)($_POST['id'] ?? 0);
             $name = trim((string)($_POST['name'] ?? ''));
             $slug = gm_slug((string)($_POST['slug'] ?? $name));
-            $engine = strtoupper(trim((string)($_POST['engine_key'] ?? '')));
+            $profileId = (int)($_POST['profile_id'] ?? 0);
             $description = trim((string)($_POST['description'] ?? ''));
-            if ($name === '' || $engine === '') {
-                throw new RuntimeException('Game name and profile engine are required.');
+            if ($name === '' || $profileId <= 0) {
+                throw new RuntimeException('Game name and game profile are required.');
             }
 
             if ($id > 0) {
@@ -48,17 +71,9 @@ try {
                 $gameId = (int)$db->lastInsertId();
             }
 
-            $exts = gm_json_extensions((string)($_POST['extensions'] ?? ''));
-            $vmin = trim((string)($_POST['package_version_min'] ?? ''));
-            $vmax = trim((string)($_POST['package_version_max'] ?? ''));
-            $lmin = trim((string)($_POST['licensee_version_min'] ?? ''));
-            $lmax = trim((string)($_POST['licensee_version_max'] ?? ''));
-            $policy = in_array((string)($_POST['confidence_policy'] ?? 'normal'), ['strict','normal','loose'], true) ? (string)$_POST['confidence_policy'] : 'normal';
-            $notes = trim((string)($_POST['profile_notes'] ?? ''));
-            $stmt = $db->prepare('INSERT INTO ue_game_profiles(game_id,engine_key,allowed_extensions_json,package_version_min,package_version_max,licensee_version_min,licensee_version_max,confidence_policy,notes,is_active) VALUES(?,?,?,?,?,?,?,?,?,1) ON DUPLICATE KEY UPDATE engine_key=VALUES(engine_key), allowed_extensions_json=VALUES(allowed_extensions_json), package_version_min=VALUES(package_version_min), package_version_max=VALUES(package_version_max), licensee_version_min=VALUES(licensee_version_min), licensee_version_max=VALUES(licensee_version_max), confidence_policy=VALUES(confidence_policy), notes=VALUES(notes), is_active=1');
-            $stmt->execute([$gameId, $engine, $exts, $vmin === '' ? null : (int)$vmin, $vmax === '' ? null : (int)$vmax, $lmin === '' ? null : (int)$lmin, $lmax === '' ? null : (int)$lmax, $policy, $notes ?: null]);
+            gm_copy_profile_to_game($db, $gameId, $profileId);
 
-            $_SESSION['game_manager_flash'] = 'Game and scanner profile saved.';
+            $_SESSION['game_manager_flash'] = 'Game saved and profile assigned.';
             header('Location: game-manager.php?game_id=' . $gameId);
             exit;
         }
@@ -68,6 +83,7 @@ try {
     catalog_flash($_SESSION['game_manager_flash'] ?? null);
     unset($_SESSION['game_manager_flash']);
 
+    $profileChoices = catalog_all($db, 'SELECT p.*, g.name profile_game_name, g.slug profile_game_slug FROM ue_game_profiles p JOIN ue_games g ON g.id=p.game_id WHERE p.is_active=1 ORDER BY g.name, p.engine_key, p.id');
     $games = catalog_all($db, 'SELECT g.*, p.id profile_id, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max, p.licensee_version_min, p.licensee_version_max, p.confidence_policy, p.notes profile_notes, p.is_active profile_active, COUNT(DISTINCT f.id) file_count, COUNT(DISTINCT s.id) source_count FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id LEFT JOIN ue_sources s ON s.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
     $editId = (int)($_GET['game_id'] ?? 0);
     $edit = null;
@@ -78,7 +94,7 @@ try {
         }
     }
 
-    catalog_page_header('Game Admin', 'Add games, assign the scanner profile, and attach folders or download sources to that game.', ['Upload Files' => 'profiled-upload.php' . ($editId ? '?game_id=' . $editId : ''), 'Add Game Source' => 'sources.php' . ($editId ? '?game_id=' . $editId : ''), 'Scan Sources' => 'source-scan.php', 'Library' => 'library.php']);
+    catalog_page_header('Game Admin', 'Add games, assign an existing scanner profile, and attach folders or download sources to that game. Create or edit profile rules in Game Profiles.', ['Game Profiles' => 'game-profiles.php', 'Upload Files' => 'profiled-upload.php' . ($editId ? '?game_id=' . $editId : ''), 'Add Game Source' => 'sources.php' . ($editId ? '?game_id=' . $editId : ''), 'Scan Sources' => 'source-scan.php', 'Library' => 'library.php']);
 
     echo '<div class="card"><h2>Games</h2>';
     if (!$games) {
@@ -96,30 +112,24 @@ try {
     }
     echo '</div>';
 
-    $exts = [];
-    if ($edit) {
-        $exts = json_decode((string)($edit['allowed_extensions_json'] ?? '[]'), true);
-        if (!is_array($exts)) {
-            $exts = [];
-        }
-    }
-
     echo '<div class="card"><h2>' . ($edit ? 'Edit ' . catalog_h($edit['name']) : 'Add new game') . '</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_manager')) . '"><input type="hidden" name="action" value="save_game"><input type="hidden" name="id" value="' . (int)($edit['id'] ?? 0) . '"><table>';
     echo '<tr><th>Game name</th><td><input name="name" required value="' . catalog_h($edit['name'] ?? '') . '" style="min-width:420px"></td></tr>';
     echo '<tr><th>Slug</th><td><input name="slug" value="' . catalog_h($edit['slug'] ?? '') . '" style="min-width:260px"> <span class="muted">Used in URLs and storage paths.</span></td></tr>';
     echo '<tr><th>Description</th><td><textarea name="description" rows="3" style="width:100%">' . catalog_h($edit['description'] ?? '') . '</textarea></td></tr>';
-    echo '<tr><th colspan="2">Scanner profile</th></tr>';
-    echo '<tr><th>Engine key</th><td><input name="engine_key" required value="' . catalog_h($edit['profile_engine'] ?? 'UE1') . '" style="width:120px"> <span class="muted">UE1, UE2, UE3, UE4, UE5, etc. This comes from the game profile.</span></td></tr>';
-    echo '<tr><th>Allowed extensions</th><td><input name="extensions" value="' . catalog_h(implode(', ', $exts)) . '" style="min-width:520px" placeholder="u, unr, utx, umx, uax"></td></tr>';
-    echo '<tr><th>Package version min/max</th><td><input name="package_version_min" value="' . catalog_h((string)($edit['package_version_min'] ?? '')) . '" style="width:90px"> <input name="package_version_max" value="' . catalog_h((string)($edit['package_version_max'] ?? '')) . '" style="width:90px"> <span class="muted">Leave blank if unknown or unversioned.</span></td></tr>';
-    echo '<tr><th>Licensee version min/max</th><td><input name="licensee_version_min" value="' . catalog_h((string)($edit['licensee_version_min'] ?? '')) . '" style="width:90px"> <input name="licensee_version_max" value="' . catalog_h((string)($edit['licensee_version_max'] ?? '')) . '" style="width:90px"></td></tr>';
-    echo '<tr><th>Confidence policy</th><td><select name="confidence_policy">';
-    foreach (['strict','normal','loose'] as $p) {
-        echo '<option value="' . catalog_h($p) . '"' . (($edit['confidence_policy'] ?? 'normal') === $p ? ' selected' : '') . '>' . catalog_h($p) . '</option>';
+    echo '<tr><th>Game profile</th><td>';
+    if (!$profileChoices) {
+        echo '<p class="muted">No active game profiles exist yet. Create one in <a href="game-profiles.php">Game Profiles</a> first.</p>';
+    } else {
+        echo '<select name="profile_id" required style="min-width:620px">';
+        echo '<option value="">Select a game profile...</option>';
+        foreach ($profileChoices as $profile) {
+            $selected = $edit && (int)$edit['profile_id'] === (int)$profile['id'] ? ' selected' : '';
+            echo '<option value="' . (int)$profile['id'] . '"' . $selected . '>' . catalog_h(gm_profile_label($profile)) . '</option>';
+        }
+        echo '</select><p class="muted small">Profiles are managed in Game Profiles. Selecting one here assigns a copy of that profile to this game.</p>';
     }
-    echo '</select></td></tr>';
-    echo '<tr><th>Profile notes</th><td><textarea name="profile_notes" rows="4" style="width:100%">' . catalog_h($edit['profile_notes'] ?? '') . '</textarea></td></tr>';
-    echo '</table><p><button>Save game and profile</button> <a class="button" href="game-manager.php">Add blank game</a></p></form></div>';
+    echo '</td></tr>';
+    echo '</table><p><button' . (!$profileChoices ? ' disabled' : '') . '>Save game</button> <a class="button" href="game-manager.php">Add blank game</a> <a class="button" href="game-profiles.php">Manage profiles</a></p></form></div>';
 
     if ($edit) {
         $sources = catalog_all($db, 'SELECT * FROM ue_sources WHERE game_id=? ORDER BY name', [(int)$edit['id']]);
