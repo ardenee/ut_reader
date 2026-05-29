@@ -9,24 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function requests_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
-function requests_csrf(): string
-{
-    $_SESSION['fed_requests_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_requests_csrf'];
-}
-
-function requests_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_requests_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function requests_update_header(PDO $db, int $requestId): void
 {
     $c = catalog_one($db, 'SELECT COUNT(*) total, SUM(status="approved") approved, SUM(status="denied") denied, SUM(status="requested") requested FROM ue_federation_request_items WHERE request_id=?', [$requestId]);
@@ -50,10 +32,10 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!requests_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        requests_check_csrf();
+        catalog_check_csrf('fed_requests');
         $requestId = (int)($_POST['request_id'] ?? 0);
         $action = (string)($_POST['action'] ?? '');
         $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=?', [$requestId]);
@@ -89,17 +71,15 @@ try {
         exit;
     }
 
-    catalog_head('Federation Requests');
-
-    if (!requests_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Requests')) {
         exit;
     }
 
-    $requestId = (int)($_GET['request_id'] ?? 0);
-    echo '<div class="card"><h1>Child File Requests</h1><p class="muted">Parent-side approval page. Requests are kept per child. Regenerated child requests mark old submitted/approved requests as updated.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="conflicts.php">Conflicts</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_head('Federation Requests');
 
+    $requestId = (int)($_GET['request_id'] ?? 0);
+    catalog_page_header('Child File Requests', 'Parent-side approval page. Requests are kept per child. Regenerated child requests mark old submitted/approved requests as updated.', catalog_federation_links() + ['Conflicts' => 'conflicts.php']);
+	
     $requests = catalog_all($db, 'SELECT r.*, p.site_name peer_name FROM ue_federation_requests r JOIN ue_federation_peers p ON p.id=r.peer_id WHERE r.direction="child_to_parent" ORDER BY r.created_at DESC LIMIT 200');
     echo '<div class="card"><h2>Requests</h2>';
     if (!$requests) {
@@ -126,13 +106,13 @@ try {
         echo '<tr><th>Notes</th><td>' . catalog_h($request['notes']) . '</td></tr>';
         echo '</table>';
         if (in_array((string)$request['status'], ['submitted','part_approved','approved'], true)) {
-            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(requests_csrf()) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="approve_all"><button>Approve available items</button></form> ';
-            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(requests_csrf()) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="deny_all"><button>Deny all</button></form>';
+            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="approve_all"><button>Approve available items</button></form> ';
+            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="deny_all"><button>Deny all</button></form>';
         }
         echo '</div>';
 
         $items = catalog_all($db, 'SELECT i.*, f.package_name local_package, f.original_name local_file FROM ue_federation_request_items i LEFT JOIN ue_files f ON f.id=i.local_file_id WHERE i.request_id=? ORDER BY FIELD(i.status,"requested","approved","denied","imported","failed"), i.required_package, i.required_object_path', [$requestId]);
-        echo '<div class="card"><h2>Request items</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(requests_csrf()) . '"><input type="hidden" name="request_id" value="' . (int)$requestId . '">';
+        echo '<div class="card"><h2>Request items</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$requestId . '">';
         echo '<p><button name="action" value="approve_selected">Approve selected</button> <button name="action" value="deny_selected">Deny selected</button></p>';
         echo '<table><tr><th>Select</th><th>Status</th><th>Required package</th><th>Required object</th><th>Parent match</th><th>Message</th></tr>';
         foreach ($items as $item) {

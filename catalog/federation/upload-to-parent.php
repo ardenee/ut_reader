@@ -9,33 +9,15 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function utp_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
-function utp_csrf(): string
-{
-    $_SESSION['fed_upload_parent_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_upload_parent_csrf'];
-}
-
-function utp_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_upload_parent_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!utp_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        utp_check_csrf();
+        catalog_check_csrf('fed_upload_parent');
         $peerId = (int)($_POST['peer_id'] ?? 0);
         $fileIds = array_values(array_unique(array_map('intval', $_POST['file_ids'] ?? [])));
         $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$peerId]);
@@ -66,21 +48,16 @@ try {
         exit;
     }
 
-    catalog_head('Upload to Parent');
-
-    if (!utp_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Upload to Parent')) {
         exit;
     }
 
-    if (isset($_SESSION['fed_upload_parent_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_upload_parent_flash']) . '</strong></div>';
-        unset($_SESSION['fed_upload_parent_flash']);
-    }
+    catalog_head('Upload to Parent');
+    catalog_flash($_SESSION['fed_upload_parent_flash'] ?? null);
+    unset($_SESSION['fed_upload_parent_flash']);
 
-    echo '<div class="card"><h1>Upload Files to Parent</h1><p class="muted">Child-side page. Queue verified local files for controlled upload to the parent. Parent receives uploads into federation incoming, then imports them with the normal import runner.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="logs.php">Logs</a></p></div>';
-
+    catalog_page_header('Upload Files to Parent', 'Child-side page. Queue verified local files for controlled upload to the parent. Parent receives uploads into federation incoming, then imports them with the normal import runner.', catalog_federation_links() + ['Bulk Worker' => 'worker-run.php', 'Queue' => 'queue.php']);
+	
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     if (!$parents) {
         echo '<div class="card"><p class="muted">No active parent peer configured.</p></div>';
@@ -89,7 +66,7 @@ try {
     }
 
     $files = catalog_all($db, 'SELECT f.*, g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.scan_status="verified" ORDER BY g.name, f.package_name, f.original_name LIMIT 1000');
-    echo '<div class="card"><h2>Queue uploads</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(utp_csrf()) . '">';
+    echo '<div class="card"><h2>Queue uploads</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_upload_parent')) . '">';
     echo '<p><label>Parent<br><select name="peer_id">';
     foreach ($parents as $parent) {
         echo '<option value="' . (int)$parent['id'] . '">' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';

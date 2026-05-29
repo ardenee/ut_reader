@@ -9,24 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function cp_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
-function cp_csrf(): string
-{
-    $_SESSION['fed_claim_parent_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_claim_parent_csrf'];
-}
-
-function cp_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_claim_parent_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function cp_fetch_json(string $url): array
 {
     $context = stream_context_create([
@@ -49,10 +31,10 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!cp_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        cp_check_csrf();
+        catalog_check_csrf('fed_claim_parent');
         $claimUrl = trim((string)($_POST['claim_url'] ?? ''));
         if ($claimUrl === '') {
             throw new RuntimeException('Claim URL is required.');
@@ -104,22 +86,17 @@ try {
         exit;
     }
 
-    catalog_head('Claim Parent Pairing');
-
-    if (!cp_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Claim Parent Pairing')) {
         exit;
     }
 
-    if (isset($_SESSION['fed_claim_parent_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_claim_parent_flash']) . '</strong></div>';
-        unset($_SESSION['fed_claim_parent_flash']);
-    }
+    catalog_head('Claim Parent Pairing');
+    catalog_flash($_SESSION['fed_claim_parent_flash'] ?? null);
+    unset($_SESSION['fed_claim_parent_flash']);
 
-    echo '<div class="card"><h1>Claim Parent Pairing</h1><p class="muted">Use the one-time claim URL provided by the master/parent admin after approving your join request.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="settings.php">Settings</a></p></div>';
-    echo '<div class="card"><h2>Claim approved parent</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(cp_csrf()) . '"><p><label>One-time claim URL<br><input name="claim_url" required style="min-width:760px" placeholder="https://parent.example.com/catalog/api/federation/join-claim.php?token=..."></label></p><p><button>Claim parent and create pairing</button></p></form></div>';
-
+    catalog_page_header('Claim Parent Pairing', 'Use the one-time claim URL provided by the master/parent admin after approving your join request.', catalog_federation_links() + ['Peers' => 'peers.php', 'Settings' => 'settings.php']);
+    echo '<div class="card"><h2>Claim approved parent</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_claim_parent')) . '"><p><label>One-time claim URL<br><input name="claim_url" required style="min-width:760px" placeholder="https://parent.example.com/catalog/api/federation/join-claim.php?token=..."></label></p><p><button>Claim parent and create pairing</button></p></form></div>';
+	
     catalog_foot();
 } catch (Throwable $e) {
     if (!headers_sent()) {

@@ -9,24 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function jmp_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
-function jmp_csrf(): string
-{
-    $_SESSION['fed_join_main_parent_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_join_main_parent_csrf'];
-}
-
-function jmp_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_join_main_parent_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function jmp_parent_url(PDO $db): string
 {
     $url = rtrim((string)fed_setting($db, 'main_parent_url', ''), '/');
@@ -96,10 +78,10 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!jmp_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        jmp_check_csrf();
+        catalog_check_csrf('fed_join_main_parent');
         $action = (string)($_POST['action'] ?? 'submit');
         $parentUrl = jmp_parent_url($db);
         $identity = fed_ensure_identity($db);
@@ -160,13 +142,11 @@ try {
         }
     }
 
-    catalog_head('Join Main Federation Parent');
-
-    if (!jmp_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Join Main Federation Parent')) {
         exit;
     }
+
+    catalog_head('Join Main Federation Parent');
 
     if (isset($_SESSION['fed_join_main_result'])) {
         echo '<div class="card"><h2>Last result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_join_main_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</pre></div>';
@@ -178,8 +158,8 @@ try {
     $joinStatus = (string)fed_setting($db, 'main_parent_join_status', 'none');
     $requestId = (string)fed_setting($db, 'main_parent_join_request_id', '');
 
-    echo '<div class="card"><h1>Join Main Federation Parent</h1><p class="muted">Easy child setup for the hardcoded/main parent. This auto-submits your local identity, polls for approval, and configures the parent peer when approved.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a></p></div>';
-    echo '<div class="card"><h2>Local identity sent to parent</h2><table>';
+    catalog_page_header('Join Main Federation Parent', 'Easy child setup for the hardcoded/main parent. This auto-submits your local identity, polls for approval, and configures the parent peer when approved.', catalog_federation_links() + ['Settings' => 'settings.php', 'Peers' => 'peers.php']);
+	echo '<div class="card"><h2>Local identity sent to parent</h2><table>';
     echo '<tr><th>Main parent URL</th><td class="mono path">' . catalog_h($parentUrl) . '</td></tr>';
     echo '<tr><th>Local site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
     echo '<tr><th>Local site URL</th><td class="mono path">' . catalog_h($identity['site_url']) . '</td></tr>';
@@ -189,8 +169,8 @@ try {
     echo '<tr><th>Stored status</th><td>' . catalog_h($joinStatus) . '</td></tr>';
     echo '</table></div>';
 
-    echo '<div class="card"><h2>Step 1: submit to main parent</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(jmp_csrf()) . '"><input type="hidden" name="action" value="submit"><p><label>Contact name<br><input name="contact_name" style="min-width:420px"></label></p><p><label>Contact email<br><input name="contact_email" style="min-width:420px"></label></p><p><label>Notes<br><textarea name="notes" rows="4" style="width:100%">Automatic request to join main federation parent.</textarea></label></p><p><button>Submit / resubmit join request to main parent</button></p></form></div>';
-    echo '<div class="card"><h2>Step 2: poll approval and auto-claim</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(jmp_csrf()) . '"><input type="hidden" name="action" value="poll"><p><button>Poll parent and auto-connect if approved</button></p></form></div>';
+    echo '<div class="card"><h2>Step 1: submit to main parent</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="submit"><p><label>Contact name<br><input name="contact_name" style="min-width:420px"></label></p><p><label>Contact email<br><input name="contact_email" style="min-width:420px"></label></p><p><label>Notes<br><textarea name="notes" rows="4" style="width:100%">Automatic request to join main federation parent.</textarea></label></p><p><button>Submit / resubmit join request to main parent</button></p></form></div>';
+    echo '<div class="card"><h2>Step 2: poll approval and auto-claim</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="poll"><p><button>Poll parent and auto-connect if approved</button></p></form></div>';
 
     catalog_foot();
 } catch (Throwable $e) {

@@ -9,33 +9,15 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 
-function ml_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
-function ml_csrf(): string
-{
-    $_SESSION['mirror_links_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['mirror_links_csrf'];
-}
-
-function ml_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['mirror_links_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!ml_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        ml_check_csrf();
+        catalog_check_csrf('mirror_links');
         $action = (string)($_POST['action'] ?? 'add_manual');
         if ($action === 'add_manual') {
             $fileId = (int)($_POST['file_id'] ?? 0);
@@ -60,24 +42,19 @@ try {
         exit;
     }
 
-    catalog_head('External Mirror Links');
-
-    if (!ml_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('External Mirror Links')) {
         exit;
     }
 
-    if (isset($_SESSION['mirror_links_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['mirror_links_flash']) . '</strong></div>';
-        unset($_SESSION['mirror_links_flash']);
-    }
+    catalog_head('External Mirror Links');
+    catalog_flash($_SESSION['mirror_links_flash'] ?? null);
+    unset($_SESSION['mirror_links_flash']);
 
     $fileId = (int)($_GET['file_id'] ?? 0);
-    echo '<div class="card"><h1>External Mirror Links</h1><p class="muted">Admin-managed external download cache. Active links are reused until expiry.</p><p><a class="button" href="admin.php">Catalog Admin</a> <a class="button" href="mirror-providers.php">Providers</a> <a class="button" href="mirror-queue.php">Mirror Queue</a></p></div>';
-
+    catalog_page_header('External Mirror Links', 'Admin-managed external download cache. Active links are reused until expiry.', ['Catalog Admin' => 'dashboard.php', 'Providers' => 'mirror-providers.php', 'Mirror Queue' => 'mirror-queue.php', 'Downloads' => 'download-admin.php']);
+	
     $providers = catalog_all($db, 'SELECT * FROM ue_external_download_providers WHERE is_active=1 ORDER BY priority, provider_name');
-    echo '<div class="card"><h2>Add manual external link</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(ml_csrf()) . '"><input type="hidden" name="action" value="add_manual">';
+    echo '<div class="card"><h2>Add manual external link</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_links')) . '"><input type="hidden" name="action" value="add_manual">';
     echo '<p><label>File ID<br><input name="file_id" value="' . ($fileId ?: '') . '" required style="width:120px"></label></p>';
     echo '<p><label>Provider<br><select name="provider_id">';
     foreach ($providers as $p) {
@@ -101,7 +78,7 @@ try {
             echo '<td>' . catalog_h($l['provider_name']) . '</td><td>' . catalog_h($l['status']) . '</td>';
             echo '<td class="path"><a href="' . catalog_h($l['external_url']) . '" target="_blank" rel="noopener">' . catalog_h($l['external_url']) . '</a></td>';
             echo '<td>' . catalog_h($l['expires_at']) . '</td><td>' . (int)$l['requested_count'] . '</td><td class="path">' . catalog_h($l['error_message']) . '</td>';
-            echo '<td><form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(ml_csrf()) . '"><input type="hidden" name="id" value="' . (int)$l['id'] . '"><button name="action" value="expire">Expire</button> <button name="action" value="mark_broken">Broken</button></form></td>';
+            echo '<td><form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_links')) . '"><input type="hidden" name="id" value="' . (int)$l['id'] . '"><button name="action" value="expire">Expire</button> <button name="action" value="mark_broken">Broken</button></form></td>';
             echo '</tr>';
         }
         echo '</table>';
