@@ -9,7 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function gm_is_admin(): bool { return ($_SESSION['user']['role'] ?? '') === 'admin'; }
 function gm_csrf(): string { $_SESSION['game_manager_csrf'] ??= bin2hex(random_bytes(16)); return $_SESSION['game_manager_csrf']; }
 function gm_check_csrf(): void { if (($_POST['csrf'] ?? '') !== ($_SESSION['game_manager_csrf'] ?? '')) { throw new RuntimeException('Bad CSRF token'); } }
 function gm_slug(string $text): string { $text = strtolower(trim($text)); $text = preg_replace('/[^a-z0-9]+/', '-', $text) ?? ''; return trim($text, '-') ?: 'game'; }
@@ -24,10 +23,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    if (!gm_is_admin()) {
-        catalog_head('Admin required');
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page()) {
         exit;
     }
 
@@ -71,11 +67,8 @@ try {
     }
 
     catalog_head('Game Admin');
-
-    if (isset($_SESSION['game_manager_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['game_manager_flash']) . '</strong></div>';
-        unset($_SESSION['game_manager_flash']);
-    }
+    catalog_flash($_SESSION['game_manager_flash'] ?? null);
+    unset($_SESSION['game_manager_flash']);
 
     $games = catalog_all($db, 'SELECT g.*, p.id profile_id, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max, p.licensee_version_min, p.licensee_version_max, p.confidence_policy, p.notes profile_notes, p.is_active profile_active, COUNT(DISTINCT f.id) file_count, COUNT(DISTINCT s.id) source_count FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id LEFT JOIN ue_sources s ON s.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
     $editId = (int)($_GET['game_id'] ?? 0);
@@ -87,9 +80,7 @@ try {
         }
     }
 
-    echo '<div class="card hero"><h1>Game Admin</h1><p class="muted">Add games, assign the scanner profile, and attach folders or download sources to that game.</p>';
-    catalog_page_links(['Upload Files' => 'profiled-upload.php' . ($editId ? '?game_id=' . $editId : ''), 'Add Game Source' => 'sources.php' . ($editId ? '?game_id=' . $editId : ''), 'Scan Sources' => 'source-scan.php', 'Library' => 'library.php']);
-    echo '</div>';
+    catalog_page_header('Game Admin', 'Add games, assign the scanner profile, and attach folders or download sources to that game.', ['Upload Files' => 'profiled-upload.php' . ($editId ? '?game_id=' . $editId : ''), 'Add Game Source' => 'sources.php' . ($editId ? '?game_id=' . $editId : ''), 'Scan Sources' => 'source-scan.php', 'Library' => 'library.php']);
 
     echo '<div class="card"><h2>Games</h2>';
     if (!$games) {

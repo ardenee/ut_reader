@@ -18,9 +18,7 @@ try {
     $verified = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="verified"');
     $duplicates = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="duplicate"');
 
-    echo '<div class="card hero"><h1>Library</h1><p class="muted">Browse local games and files, review duplicates, and check missing dependency status.</p>';
-    catalog_page_links(['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Duplicates' => 'duplicates.php', 'Missing Files' => 'missing.php']);
-    echo '</div>';
+    catalog_page_header('Library', 'Browse local games and files, review duplicates, and check missing dependency status.', ['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Duplicates' => 'duplicates.php', 'Missing Files' => 'missing.php']);
 
     echo '<div class="grid">';
     catalog_stat_card('Total files', $totalFiles);
@@ -52,7 +50,9 @@ try {
 
     catalog_foot();
 } catch (Throwable $e) {
-    if (!headers_sent()) catalog_head('Library error');
+    if (!headers_sent()) {
+        catalog_head('Library error');
+    }
     echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
     catalog_foot();
 }

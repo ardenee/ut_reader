@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
 
-function pu_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function pu_csrf(): string
 {
     $_SESSION['profiled_upload_csrf'] ??= bin2hex(random_bytes(16));
@@ -31,10 +26,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    if (!pu_is_admin()) {
-        catalog_head('Admin required');
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Upload Files')) {
         exit;
     }
 
@@ -80,18 +72,13 @@ try {
     }
 
     catalog_head('Upload Files');
-
-    if (isset($_SESSION['profiled_upload_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['profiled_upload_flash']) . '</strong></div>';
-        unset($_SESSION['profiled_upload_flash']);
-    }
+    catalog_flash($_SESSION['profiled_upload_flash'] ?? null);
+    unset($_SESSION['profiled_upload_flash']);
 
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
     $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
 
-    echo '<div class="card hero"><h1>Upload Files</h1><p class="muted">Import packages into the selected game using its active scanner profile. Mismatches are rejected in strict mode and moved to unverified storage.</p>';
-    catalog_page_links(['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
-    echo '</div>';
+    catalog_page_header('Upload Files', 'Import packages into the selected game using its active scanner profile. Mismatches are rejected in strict mode and moved to unverified storage.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
 
     echo '<div class="card"><h2>Upload and scan</h2><form method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(pu_csrf()) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';

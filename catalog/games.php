@@ -9,7 +9,7 @@ try {
     $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
 
     catalog_head('Games');
-    echo '<div class="card hero"><h1>Games</h1><p class="muted">Browse the public catalog by game.</p></div>';
+    catalog_page_header('Games', 'Browse the public catalog by game.', ['Search' => 'index.php?page=search', 'Library' => 'library.php']);
     echo '<div class="card"><table><tr><th>Game</th><th>Profile engine</th><th>Files</th><th>Total size</th><th>Open</th></tr>';
     foreach ($games as $game) {
         $engine = $game['profile_engine'] ?: 'no profile';
