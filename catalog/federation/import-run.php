@@ -10,11 +10,6 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/CatalogImport.php';
 
-function fir_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function fir_csrf(): string
 {
     $_SESSION['fed_import_run_csrf'] ??= bin2hex(random_bytes(16));
@@ -147,7 +142,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!fir_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         fir_check_csrf();
@@ -156,15 +151,12 @@ try {
         exit;
     }
 
-    catalog_head('Federation Import Runner');
-
-    if (!fir_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Import Runner')) {
         exit;
     }
 
-    echo '<div class="card"><h1>Federation Import Runner</h1><p class="muted">Imports one downloaded federation file into the normal catalog storage/DB, rebuilds dependencies, marks the transfer job imported, and reports approved child-download imports back to the parent.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="transfer-run.php">Transfer runner</a> <a class="button" href="parent-pull.php">Parent pull queue</a> <a class="button" href="approved-downloads.php">Approved downloads</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_head('Federation Import Runner');
+    catalog_page_header('Federation Import Runner', 'Imports one downloaded federation file into normal catalog storage/DB, rebuilds dependencies, marks the transfer job imported, and reports approved child-download imports back to the parent.', catalog_federation_links() + ['Transfer Runner' => 'transfer-run.php', 'Parent Pull Queue' => 'parent-pull.php', 'Approved Downloads' => 'approved-downloads.php']);
 
     if (isset($_SESSION['fed_import_result'])) {
         echo '<div class="card"><h2>Last import</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_import_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
