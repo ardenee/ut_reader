@@ -2,7 +2,6 @@ CREATE TABLE IF NOT EXISTS ue_games (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(120) NOT NULL,
   slug VARCHAR(80) NOT NULL,
-  engine_key VARCHAR(10) NOT NULL,
   description TEXT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -118,8 +117,8 @@ CREATE TABLE IF NOT EXISTS ue_dependencies (
   CONSTRAINT fk_ue_deps_resolved_export FOREIGN KEY (resolved_export_id) REFERENCES ue_exports(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT IGNORE INTO ue_games (name, slug, engine_key, description) VALUES
-('Unreal / Unreal Tournament', 'ut99', 'UE1', 'UE1-era packages such as .u, .unr, .utx, .umx and .uax'),
-('Unreal Tournament 2003/2004', 'ut2004', 'UE2', 'UE2/UE2.5 package catalog'),
-('Unreal Tournament 3', 'ut3', 'UE3', 'UE3 packages such as .ut3 and .upk'),
-('Unreal Engine 4', 'ue4', 'UE4', 'UE4 .uasset and .umap packages');
+INSERT IGNORE INTO ue_games (name, slug, description) VALUES
+('Unreal / Unreal Tournament', 'ut99', 'UE1-era packages such as .u, .unr, .utx, .umx and .uax'),
+('Unreal Tournament 2003/2004', 'ut2004', 'UE2/UE2.5 package catalog'),
+('Unreal Tournament 3', 'ut3', 'UE3 packages such as .ut3 and .upk'),
+('Unreal Engine 4', 'ue4', 'UE4 .uasset and .umap packages');
