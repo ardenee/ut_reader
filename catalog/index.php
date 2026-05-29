@@ -427,7 +427,7 @@ try {
         exit;
     }
 
-    page_head($config['site_name'] ?? 'Unreal File Catalog', $config);
+    page_head($config['site_name'] ?? 'UnrealDB', $config);
 
     if ($page === 'home') {
         $games = allq($db, 'SELECT g.*, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.engine_key ORDER BY g.name');
