@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function ad_csrf(): string
-{
-    $_SESSION['fed_approved_downloads_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_approved_downloads_csrf'];
-}
-
-function ad_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_approved_downloads_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function ad_parent(PDO $db, int $peerId): array
 {
     $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$peerId]);
@@ -48,7 +35,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        ad_check_csrf();
+        catalog_check_csrf('fed_approved_downloads');
         $action = (string)($_POST['action'] ?? 'poll');
         $peerId = (int)($_POST['peer_id'] ?? 0);
         $parent = ad_parent($db, $peerId);
@@ -111,7 +98,7 @@ try {
         echo '<option value="' . (int)$parent['id'] . '"' . $sel . '>' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';
     }
     echo '</select> <button>Open</button></form>';
-    echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(ad_csrf()) . '"><input type="hidden" name="action" value="poll"><input type="hidden" name="peer_id" value="' . $peerId . '"><button>Poll latest request status</button></form></div>';
+    echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_approved_downloads')) . '"><input type="hidden" name="action" value="poll"><input type="hidden" name="peer_id" value="' . $peerId . '"><button>Poll latest request status</button></form></div>';
 
     if ($peerId > 0) {
         $parent = ad_parent($db, $peerId);
@@ -130,7 +117,7 @@ try {
                 echo '<p class="muted">No request found on parent.</p></div>';
             } else {
                 echo '<table><tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr><tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr><tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr></table></div>';
-                echo '<div class="card"><h2>Approved items</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(ad_csrf()) . '"><input type="hidden" name="action" value="queue"><input type="hidden" name="peer_id" value="' . $peerId . '">';
+                echo '<div class="card"><h2>Approved items</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_approved_downloads')) . '"><input type="hidden" name="action" value="queue"><input type="hidden" name="peer_id" value="' . $peerId . '">';
                 echo '<table><tr><th>Queue</th><th>Status</th><th>Required package</th><th>Parent file</th><th>Size</th><th>MD5</th><th>Message</th></tr>';
                 foreach (($status['items'] ?? []) as $item) {
                     $canQueue = ($item['status'] ?? '') === 'approved' && !empty($item['local_file_id']);
