@@ -3,23 +3,33 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 
+function gp_profile_display_name(array $profile): string
+{
+    $name = trim((string)($profile['profile_name'] ?? ''));
+    if ($name !== '') {
+        return $name;
+    }
+    $game = trim((string)($profile['game_name'] ?? ''));
+    return $game !== '' ? ($game . ' Profile') : ('Profile #' . (int)($profile['id'] ?? 0));
+}
+
 function gp_all_profiles(PDO $db): array
 {
-    return catalog_all($db, 'SELECT p.*, g.name game_name, g.slug game_slug FROM ue_game_profiles p JOIN ue_games g ON g.id=p.game_id WHERE p.is_active=1 ORDER BY g.name');
+    return catalog_all($db, 'SELECT p.*, g.name legacy_game_name, g.slug legacy_game_slug FROM ue_game_profiles p LEFT JOIN ue_games g ON g.id=p.game_id WHERE p.is_active=1 ORDER BY COALESCE(p.profile_name, g.name), p.engine_key, p.id');
 }
 
 function gp_profile_for_game(PDO $db, int $gameId): ?array
 {
-    return catalog_one($db, 'SELECT p.*, g.name game_name, g.slug game_slug FROM ue_game_profiles p JOIN ue_games g ON g.id=p.game_id WHERE p.game_id=? AND p.is_active=1 ORDER BY p.id DESC LIMIT 1', [$gameId]);
+    return catalog_one($db, 'SELECT p.*, g.name game_name, g.slug game_slug FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=? LIMIT 1', [$gameId]);
 }
 
 function gp_required_profile_for_game(PDO $db, int $gameId): array
 {
     $profile = gp_profile_for_game($db, $gameId);
-    if (!$profile) {
+    if (!$profile || empty($profile['id'])) {
         $game = catalog_one($db, 'SELECT name FROM ue_games WHERE id=?', [$gameId]);
         $name = $game ? (string)$game['name'] : ('game #' . $gameId);
-        throw new RuntimeException('No active scanner profile is assigned to ' . $name . '. Add one in Game Admin before scanning files.');
+        throw new RuntimeException('No active scanner profile is assigned to ' . $name . '. Assign one in Game Admin before scanning files.');
     }
     return $profile;
 }
@@ -32,12 +42,12 @@ function gp_engine_for_game(PDO $db, int $gameId): string
 
 function gp_games_missing_profiles(PDO $db): array
 {
-    return catalog_all($db, 'SELECT g.* FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE p.id IS NULL ORDER BY g.name');
+    return catalog_all($db, 'SELECT g.* FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE p.id IS NULL ORDER BY g.name');
 }
 
 function gp_games_with_profile_counts(PDO $db): array
 {
-    return catalog_all($db, 'SELECT g.id, g.name, g.slug, COUNT(p.id) active_profiles FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 GROUP BY g.id ORDER BY g.name');
+    return catalog_all($db, 'SELECT g.id, g.name, g.slug, CASE WHEN p.id IS NULL THEN 0 ELSE 1 END active_profiles FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name');
 }
 
 function gp_extensions(array $profile): array
@@ -131,8 +141,8 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     $detectedEngine = $engineByVersion ?: $engineByExt ?: ($selectedEngine ?: 'UNKNOWN');
     $notes = [];
 
-    if (!$profile) {
-        $notes[] = 'No active game profile exists for selected game.';
+    if (!$profile || empty($profile['id'])) {
+        $notes[] = 'No active game profile is assigned to selected game.';
         return [
             'selected_engine' => $selectedEngine ?: null,
             'detected_engine' => $detectedEngine,
@@ -148,7 +158,7 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     $allowedExts = gp_extensions($profile);
     $extOk = !$allowedExts || in_array($ext, $allowedExts, true);
     if (!$extOk) {
-        $notes[] = 'Extension .' . $ext . ' is not listed for ' . $profile['game_name'] . '. Allowed: ' . implode(', ', $allowedExts);
+        $notes[] = 'Extension .' . $ext . ' is not listed for ' . gp_profile_display_name($profile) . '. Allowed: ' . implode(', ', $allowedExts);
     }
 
     if (!$legacy['ok']) {
@@ -192,8 +202,11 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
             }
             $candidateExts = gp_extensions($candidate);
             $candidateExtOk = !$candidateExts || in_array($ext, $candidateExts, true);
-            if ($candidateExtOk) {
-                $suggested[] = ['game_id' => (int)$candidate['game_id'], 'game_name' => (string)$candidate['game_name'], 'engine_key' => (string)$candidate['engine_key']];
+            if (!$candidateExtOk) {
+                continue;
+            }
+            foreach (catalog_all($db, 'SELECT id, name FROM ue_games WHERE profile_id=? ORDER BY name', [(int)$candidate['id']]) as $game) {
+                $suggested[] = ['game_id' => (int)$game['id'], 'game_name' => (string)$game['name'], 'engine_key' => (string)$candidate['engine_key']];
             }
         }
     }
