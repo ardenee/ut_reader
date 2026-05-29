@@ -28,7 +28,7 @@ try {
 
     if ((string)fed_setting($db, 'join_requests_enabled', '1') !== '1') {
         catalog_head('Join Requests Disabled');
-        echo '<div class="card"><h1>Join requests disabled</h1><p class="muted">This federation parent is not accepting public join requests right now.</p></div>';
+        catalog_page_header('Join requests disabled', 'This federation parent is not accepting public join requests right now.');
         catalog_foot();
         exit;
     }
@@ -78,13 +78,10 @@ try {
     }
 
     catalog_head('Request Federation Access');
+    catalog_flash($_SESSION['fed_join_submitted'] ?? null);
+    unset($_SESSION['fed_join_submitted']);
 
-    if (isset($_SESSION['fed_join_submitted'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_join_submitted']) . '</strong></div>';
-        unset($_SESSION['fed_join_submitted']);
-    }
-
-    echo '<div class="card"><h1>Request Federation Access</h1><p class="muted">Submit this deployment to be paired as a child of this master/parent catalog. The parent admin must approve the request before a shared key is created.</p></div>';
+    catalog_page_header('Request Federation Access', 'Submit this deployment to be paired as a child of this master/parent catalog. The parent admin must approve the request before a pairing key is created.');
 
     echo '<div class="card"><h2>How to get your child site identity</h2><p>On the child site, log in as admin and open:</p><pre class="mono">/catalog/federation/settings.php</pre><p>Copy the site URL, site ID, and fingerprint from there.</p></div>';
 
