@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function fq_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function fq_csrf(): string
 {
     $_SESSION['fed_queue_csrf'] ??= bin2hex(random_bytes(16));
@@ -74,7 +69,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!fq_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         fq_check_csrf();
@@ -83,20 +78,15 @@ try {
         exit;
     }
 
-    catalog_head('Federation Queue');
-
-    if (!fq_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Queue')) {
         exit;
     }
 
-    if (isset($_SESSION['fed_queue_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_queue_flash']) . '</strong></div>';
-        unset($_SESSION['fed_queue_flash']);
-    }
+    catalog_head('Federation Queue');
+    catalog_flash($_SESSION['fed_queue_flash'] ?? null);
+    unset($_SESSION['fed_queue_flash']);
 
-    echo '<div class="card"><h1>Federation Queue Overview</h1><p class="muted">One place to review parent pulls, child downloads, downloaded files waiting for import, completed imports, failures, retries, and cancellations.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="transfer-run.php">Run one transfer</a> <a class="button" href="import-run.php">Import one download</a> <a class="button" href="parent-pull.php">Parent pull</a> <a class="button" href="approved-downloads.php">Approved downloads</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_page_header('Federation Queue Overview', 'Review parent pulls, child downloads, downloaded files waiting for import, completed imports, failures, retries, and cancellations.', catalog_federation_links() + ['Run One Transfer' => 'transfer-run.php', 'Import One Download' => 'import-run.php', 'Parent Pull' => 'parent-pull.php', 'Approved Downloads' => 'approved-downloads.php']);
 
     echo '<div class="card"><h2>Queue counts</h2><div class="grid">';
     fq_status_card($db, 'parent_pull_from_child', 'Parent pulls from children');

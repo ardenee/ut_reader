@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function peers_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function peers_csrf(): string
 {
     $_SESSION['fed_peers_csrf'] ??= bin2hex(random_bytes(16));
@@ -32,7 +27,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!peers_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         peers_check_csrf();
@@ -86,15 +81,12 @@ try {
         exit;
     }
 
-    catalog_head('Federation Peers');
-
-    if (!peers_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Peers')) {
         exit;
     }
 
-    echo '<div class="card"><h1>Federation Peers</h1><p class="muted">Add parent or child sites. A child site should only have one parent. For Phase 2, the shared secret is stored so HMAC signed API calls can be verified. Keep catalog/admin access restricted.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_head('Federation Peers');
+    catalog_page_header('Federation Peers', 'Add parent or child sites. A child site should only have one parent. Shared secrets are used for HMAC signed API calls, so keep catalog/admin access restricted.', catalog_federation_links());
 
     if (isset($_SESSION['fed_peer_secret_once'])) {
         echo '<div class="card"><h2>Shared secret for ' . catalog_h($_SESSION['fed_peer_secret_peer'] ?? 'peer') . '</h2><p class="muted">Copy this to the matching peer site.</p><pre class="mono">' . catalog_h($_SESSION['fed_peer_secret_once']) . '</pre></div>';
