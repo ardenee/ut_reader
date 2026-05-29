@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
 
-function fw_csrf(): string
-{
-    $_SESSION['fed_worker_run_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_worker_run_csrf'];
-}
-
-function fw_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_worker_run_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function fw_run_bulk(PDO $db, array $config): array
 {
     $limit = max(1, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1));
@@ -73,7 +60,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        fw_check_csrf();
+        catalog_check_csrf('fed_worker_run');
         $_SESSION['fed_worker_result'] = fw_run_bulk($db, $config);
         header('Location: worker-run.php');
         exit;
@@ -101,7 +88,7 @@ try {
     echo '<tr><th>Queued transfers</th><td>' . $queued . '</td></tr>';
     echo '<tr><th>Downloaded files waiting import</th><td>' . $downloaded . '</td></tr>';
     echo '<tr><th>Child auto inventory push after import</th><td>' . ((string)fed_setting($db, 'site_role', 'standalone') === 'child' ? 'yes' : 'not child site') . '</td></tr>';
-    echo '</table><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fw_csrf()) . '"><button>Run bulk worker now</button></form></div>';
+    echo '</table><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_worker_run')) . '"><button>Run bulk worker now</button></form></div>';
 
     catalog_foot();
 } catch (Throwable $e) {
