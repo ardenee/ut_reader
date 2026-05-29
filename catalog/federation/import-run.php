@@ -10,19 +10,6 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/CatalogImport.php';
 
-function fir_csrf(): string
-{
-    $_SESSION['fed_import_run_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_import_run_csrf'];
-}
-
-function fir_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_import_run_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function fir_resolve_incoming_path(array $config, string $relativePath): string
 {
     $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
@@ -145,7 +132,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        fir_check_csrf();
+        catalog_check_csrf('fed_import_run');
         $_SESSION['fed_import_result'] = run_one_import($db, $config);
         header('Location: import-run.php');
         exit;
@@ -164,7 +151,7 @@ try {
     }
 
     $waiting = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded" AND incoming_path IS NOT NULL AND incoming_path<>""')['c'] ?? 0);
-    echo '<div class="card"><h2>Run import</h2><p>Downloaded jobs waiting for import: <strong>' . $waiting . '</strong></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fir_csrf()) . '"><button>Import one downloaded job</button></form></div>';
+    echo '<div class="card"><h2>Run import</h2><p>Downloaded jobs waiting for import: <strong>' . $waiting . '</strong></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_import_run')) . '"><button>Import one downloaded job</button></form></div>';
 
     $jobs = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status IN ("downloaded","imported","failed") ORDER BY j.finished_at DESC, j.id DESC LIMIT 100');
     echo '<div class="card"><h2>Recent downloaded/import jobs</h2>';

@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function tr_csrf(): string
-{
-    $_SESSION['fed_transfer_run_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_transfer_run_csrf'];
-}
-
-function tr_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_transfer_run_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function tr_incoming_dir(array $config): string
 {
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/federation/incoming';
@@ -184,7 +171,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        tr_check_csrf();
+        catalog_check_csrf('fed_transfer_run');
         $_SESSION['fed_transfer_run_result'] = run_one_transfer($db, $config);
         header('Location: transfer-run.php');
         exit;
@@ -203,7 +190,7 @@ try {
     }
 
     $queued = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"')['c'] ?? 0);
-    echo '<div class="card"><h2>Run queue</h2><p>Queued jobs: <strong>' . $queued . '</strong></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(tr_csrf()) . '"><button>Run one queued job</button></form></div>';
+    echo '<div class="card"><h2>Run queue</h2><p>Queued jobs: <strong>' . $queued . '</strong></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_transfer_run')) . '"><button>Run one queued job</button></form></div>';
 
     $jobs = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id ORDER BY j.created_at DESC LIMIT 100');
     echo '<div class="card"><h2>Recent jobs</h2>';

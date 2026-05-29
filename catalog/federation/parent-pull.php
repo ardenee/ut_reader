@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function pp_csrf(): string
-{
-    $_SESSION['fed_parent_pull_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_parent_pull_csrf'];
-}
-
-function pp_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_parent_pull_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function pp_queue_form(PDO $db, array $rows, string $buttonText, string $emptyText): void
 {
     if (!$rows) {
@@ -29,7 +16,7 @@ function pp_queue_form(PDO $db, array $rows, string $buttonText, string $emptyTe
         return;
     }
 
-    echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(pp_csrf()) . '">';
+    echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_parent_pull')) . '">';
     echo '<table><tr><th>Queue</th><th>Game</th><th>Package</th><th>File</th><th>GUID</th><th>MD5</th><th>Size</th><th>Reason</th></tr>';
     foreach ($rows as $row) {
         echo '<tr>';
@@ -92,7 +79,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        pp_check_csrf();
+        catalog_check_csrf('fed_parent_pull');
         $peerFileIds = array_values(array_unique(array_map('intval', $_POST['peer_file_ids'] ?? [])));
         if (!$peerFileIds) {
             throw new RuntimeException('Select at least one child file to queue.');
