@@ -8,11 +8,6 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function duplicates_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function duplicates_csrf(): string
 {
     $_SESSION['duplicates_csrf'] ??= bin2hex(random_bytes(16));
@@ -67,7 +62,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!duplicates_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         duplicates_check_csrf();
@@ -94,20 +89,15 @@ try {
         exit;
     }
 
-    catalog_head('GUID duplicates');
-
-    if (!duplicates_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through the main catalog admin page first.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('GUID duplicates')) {
         exit;
     }
 
-    if (isset($_SESSION['flash_duplicates'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['flash_duplicates']) . '</strong></div>';
-        unset($_SESSION['flash_duplicates']);
-    }
+    catalog_head('GUID duplicates');
+    catalog_flash($_SESSION['flash_duplicates'] ?? null);
+    unset($_SESSION['flash_duplicates']);
 
-    echo '<div class="card"><h1>GUID duplicate manager</h1><p class="muted">Shows active verified packages with the same Unreal package GUID in the same game. This catches compressed/uncompressed duplicates that have different MD5 hashes.</p><p><a class="button" href="games.php">Games</a> <a class="button" href="source-scan.php">Source scanner</a> <a class="button" href="sources.php">Sources</a></p></div>';
+    catalog_page_header('GUID duplicate manager', 'Shows active verified packages with the same Unreal package GUID in the same game. This catches compressed/uncompressed duplicates that have different MD5 hashes.', ['Games' => 'games.php', 'Source Scanner' => 'source-scan.php', 'Sources' => 'sources.php']);
 
     $groups = catalog_all($db, '
         SELECT f.game_id, g.name AS game_name, f.package_guid, COUNT(*) AS duplicate_count
