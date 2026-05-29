@@ -10,19 +10,6 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
-function fm_csrf(): string
-{
-    $_SESSION['fed_maintenance_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_maintenance_csrf'];
-}
-
-function fm_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_maintenance_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function fm_dir_size(string $dir): array
 {
     $count = 0;
@@ -52,7 +39,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        fm_check_csrf();
+        catalog_check_csrf('fed_maintenance');
         $action = (string)($_POST['action'] ?? '');
         if ($action === 'prune') {
             $nonceTtl = max(300, (int)(fed_setting($db, 'api_nonce_ttl_seconds', '300') ?: 300));
@@ -106,8 +93,8 @@ try {
     catalog_stat_card('Incoming files', (int)$incoming['count']);
     echo '</div>';
 
-    echo '<div class="card"><h2>Prune old API/log rows + mirror maintenance</h2><p class="muted">Uses api_nonce_ttl_seconds, log_retention_days, and external mirror expiry settings.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fm_csrf()) . '"><input type="hidden" name="action" value="prune"><button>Prune old nonces/logs and run mirror maintenance</button></form></div>';
-    echo '<div class="card"><h2>Mirror maintenance only</h2><p class="muted">Expires stale active mirror links, moves ManualProvider queued jobs to waiting_admin, and fails stale uploading jobs.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(fm_csrf()) . '"><input type="hidden" name="action" value="mirror_only"><button>Run mirror maintenance only</button></form></div>';
+    echo '<div class="card"><h2>Prune old API/log rows + mirror maintenance</h2><p class="muted">Uses api_nonce_ttl_seconds, log_retention_days, and external mirror expiry settings.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_maintenance')) . '"><input type="hidden" name="action" value="prune"><button>Prune old nonces/logs and run mirror maintenance</button></form></div>';
+    echo '<div class="card"><h2>Mirror maintenance only</h2><p class="muted">Expires stale active mirror links, moves ManualProvider queued jobs to waiting_admin, and fails stale uploading jobs.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_maintenance')) . '"><input type="hidden" name="action" value="mirror_only"><button>Run mirror maintenance only</button></form></div>';
 
     echo '<div class="card"><h2>Incoming folder</h2><p class="mono path">' . catalog_h($incomingDir) . '</p>';
     if (!$incoming['files']) {

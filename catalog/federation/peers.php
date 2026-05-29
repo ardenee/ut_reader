@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function peers_csrf(): string
-{
-    $_SESSION['fed_peers_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_peers_csrf'];
-}
-
-function peers_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_peers_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -30,7 +17,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        peers_check_csrf();
+        catalog_check_csrf('fed_peers');
         $action = (string)($_POST['action'] ?? 'add');
 
         if ($action === 'toggle') {
@@ -101,13 +88,13 @@ try {
         echo '<table><tr><th>ID</th><th>Role</th><th>Name</th><th>URL</th><th>Site ID</th><th>Fingerprint</th><th>Secret</th><th>Active</th><th>Last seen</th><th>Action</th></tr>';
         foreach ($peers as $peer) {
             $hasSecret = !empty($peer['shared_secret_plain']) ? 'stored' : 'missing';
-            echo '<tr><td class="mono">' . (int)$peer['id'] . '</td><td>' . catalog_h($peer['peer_role']) . '</td><td>' . catalog_h($peer['site_name']) . '</td><td class="mono path">' . catalog_h($peer['site_url']) . '</td><td class="mono small">' . catalog_h($peer['peer_site_id']) . '</td><td class="mono small">' . catalog_h($peer['peer_fingerprint']) . '</td><td>' . catalog_h($hasSecret) . '</td><td>' . ((int)$peer['is_active'] ? 'yes' : 'no') . '</td><td>' . catalog_h($peer['last_seen_at']) . '</td><td><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(peers_csrf()) . '"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="' . (int)$peer['id'] . '"><button>' . ((int)$peer['is_active'] ? 'Disable' : 'Enable') . '</button></form></td></tr>';
+            echo '<tr><td class="mono">' . (int)$peer['id'] . '</td><td>' . catalog_h($peer['peer_role']) . '</td><td>' . catalog_h($peer['site_name']) . '</td><td class="mono path">' . catalog_h($peer['site_url']) . '</td><td class="mono small">' . catalog_h($peer['peer_site_id']) . '</td><td class="mono small">' . catalog_h($peer['peer_fingerprint']) . '</td><td>' . catalog_h($hasSecret) . '</td><td>' . ((int)$peer['is_active'] ? 'yes' : 'no') . '</td><td>' . catalog_h($peer['last_seen_at']) . '</td><td><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_peers')) . '"><input type="hidden" name="action" value="toggle"><input type="hidden" name="id" value="' . (int)$peer['id'] . '"><button>' . ((int)$peer['is_active'] ? 'Disable' : 'Enable') . '</button></form></td></tr>';
         }
         echo '</table>';
     }
     echo '</div>';
 
-    echo '<div class="card"><h2>Add peer</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(peers_csrf()) . '"><input type="hidden" name="action" value="add">';
+    echo '<div class="card"><h2>Add peer</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_peers')) . '"><input type="hidden" name="action" value="add">';
     echo '<p><label>Peer role<br><select name="peer_role"><option value="parent">parent</option><option value="child" selected>child</option></select></label></p>';
     echo '<p><label>Site name<br><input name="site_name" required style="min-width:420px"></label></p>';
     echo '<p><label>Site URL<br><input name="site_url" required style="min-width:640px" placeholder="https://example.com/catalog"></label></p>';
