@@ -9,27 +9,21 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function docs_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Federation Docs');
 
-    if (!docs_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Docs')) {
         exit;
     }
+
+    catalog_head('Federation Docs');
 
     $siteUrl = rtrim((string)fed_setting($db, 'site_url', ''), '/');
     $token = (string)fed_setting($db, 'cron_worker_token', '');
     $cronUrl = ($siteUrl !== '' ? $siteUrl : 'https://YOUR-SITE/catalog') . '/federation/cron-worker.php?token=' . ($token !== '' ? $token : 'YOUR-LONG-RANDOM-TOKEN');
 
-    echo '<div class="card"><h1>Federation / Mirror Docs</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="../mirror-providers.php">Mirror settings</a> <a class="button" href="../mirror-queue.php">Mirror queue</a></p></div>';
+    catalog_page_header('Federation / Mirror Docs', 'DSM cron, worker, federation transfer, external mirror, and parent/child join workflow notes.', catalog_federation_links() + ['Mirror Settings' => '../mirror-providers.php', 'Mirror Queue' => '../mirror-queue.php']);
 
     echo '<div class="card"><h2>1. Enable the cron worker</h2><p>Open <a href="settings.php">Federation Settings</a> and set:</p><pre class="mono">cron_worker_enabled = 1
 cron_worker_token = a long random value

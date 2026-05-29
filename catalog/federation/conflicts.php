@@ -8,11 +8,6 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
-function fc_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function fc_rows(PDO $db, string $type, int $peerId): array
 {
     $peerSql = $peerId > 0 ? ' AND pf.peer_id=' . $peerId . ' ' : '';
@@ -28,17 +23,17 @@ function fc_rows(PDO $db, string $type, int $peerId): array
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Federation Conflicts');
 
-    if (!fc_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Conflicts')) {
         exit;
     }
 
+    catalog_head('Federation Conflicts');
+
     $peerId = (int)($_GET['peer_id'] ?? 0);
     $peers = catalog_all($db, 'SELECT id, site_name, peer_role FROM ue_federation_peers ORDER BY peer_role, site_name');
-    echo '<div class="card"><h1>Federation Conflict Report</h1><p class="muted">Shows package identity mismatches between local verified files and peer inventories. These should be reviewed before pulling/importing blindly.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peer-inventory.php">Peer inventory</a> <a class="button" href="parent-pull.php">Parent pull</a></p></div>';
+    catalog_page_header('Federation Conflict Report', 'Shows package identity mismatches between local verified files and peer inventories. Review these before pulling/importing blindly.', catalog_federation_links() + ['Peer Inventory' => 'peer-inventory.php', 'Parent Pull' => 'parent-pull.php']);
+
     echo '<div class="card"><form><label>Peer filter<br><select name="peer_id"><option value="0">All peers</option>';
     foreach ($peers as $peer) {
         $sel = (int)$peer['id'] === $peerId ? ' selected' : '';
