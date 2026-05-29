@@ -40,7 +40,7 @@ function brand_mark(): string
 
 function page_head(string $title, array $config = []): void
 {
-    $siteName = $config['site_name'] ?? 'Unreal File Catalog';
+    $siteName = $config['site_name'] ?? 'UnrealDB;
     echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . h($title) . '</title>';
     echo '<link rel="icon" href="assets/favicon.ico">';
     echo '<link rel="apple-touch-icon" sizes="180x180" href="assets/unreal-file-catalog-icon-180x180.png">';
