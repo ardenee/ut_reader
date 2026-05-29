@@ -65,6 +65,16 @@ function one(PDO $db, string $sql, array $args = []): ?array { $s = $db->prepare
 function allq(PDO $db, string $sql, array $args = []): array { $s = $db->prepare($sql); $s->execute($args); return $s->fetchAll(); }
 function runq(PDO $db, string $sql, array $args = []): int { $s = $db->prepare($sql); $s->execute($args); return $s->rowCount(); }
 
+function active_game_engine(PDO $db, int $gameId): string
+{
+    $profile = one($db, 'SELECT engine_key FROM ue_game_profiles WHERE game_id=? AND is_active=1 ORDER BY id DESC LIMIT 1', [$gameId]);
+    $engine = strtoupper(trim((string)($profile['engine_key'] ?? '')));
+    if ($engine === '') {
+        throw new RuntimeException('Game has no active scanner profile.');
+    }
+    return $engine;
+}
+
 function load_reader_class(array $config, string $engineKey): string
 {
     $readerConfig = $config['engine_readers'][$engineKey] ?? [];
@@ -184,8 +194,9 @@ function store_failed_upload(array $config, string $tmp, string $originalName, s
 
 function scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId): array
 {
-    $game = one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
+    $game = one($db, 'SELECT g.*, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE g.id=?', [$gameId]);
     if (!$game) { throw new RuntimeException('Game not found'); }
+    if (empty($game['profile_engine'])) { throw new RuntimeException('Game has no active scanner profile.'); }
 
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
     if (!in_array($ext, $config['allowed_extensions'], true)) { throw new RuntimeException('Extension not allowed: ' . $ext); }
@@ -200,7 +211,7 @@ function scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, st
     $duplicate = one($db, 'SELECT id, original_name FROM ue_files WHERE md5=?', [$md5]);
     if ($duplicate) { return ['duplicate', (int)$duplicate['id'], 'Duplicate MD5: ' . $duplicate['original_name']]; }
 
-    $readerClass = load_reader_class($config, $game['engine_key']);
+    $readerClass = load_reader_class($config, (string)$game['profile_engine']);
     $pkg = new $readerClass($tmp);
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     [$fatalIssues, $scanNotes] = split_reader_issues($issues);
@@ -318,7 +329,15 @@ try {
     if ($page === 'save_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         need_admin();
         check_csrf();
-        runq($db, 'INSERT INTO ue_games(name,slug,engine_key,description) VALUES(?,?,?,?)', [trim((string)$_POST['name']), slug_text((string)$_POST['slug']), (string)$_POST['engine_key'], trim((string)$_POST['description'])]);
+        $name = trim((string)$_POST['name']);
+        $slug = slug_text((string)$_POST['slug']);
+        $engineKey = strtoupper(trim((string)$_POST['engine_key']));
+        $description = trim((string)$_POST['description']);
+
+        runq($db, 'INSERT INTO ue_games(name,slug,description) VALUES(?,?,?)', [$name, $slug, $description]);
+        $gameId = (int)$db->lastInsertId();
+
+        runq($db, 'INSERT INTO ue_game_profiles(game_id,engine_key,allowed_extensions_json,confidence_policy,is_active) VALUES(?,?,?,?,1)', [$gameId, $engineKey, json_encode($config['allowed_extensions'] ?? [], JSON_UNESCAPED_SLASHES), 'normal']);
         flash(u(['page' => 'admin']), 'Game saved');
     }
 
@@ -363,10 +382,10 @@ try {
     page_head($config['site_name'] ?? 'Unreal File Catalog', $config);
 
     if ($page === 'home') {
-        $games = allq($db, 'SELECT g.*, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id ORDER BY g.name');
+        $games = allq($db, 'SELECT g.*, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.engine_key ORDER BY g.name');
         echo '<div class="card"><h1>Unreal Games</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and MD5 hashes.</p></div><div class="grid">';
         foreach ($games as $game) {
-            echo '<a class="stat" href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '"><h2>' . h($game['name']) . '</h2><p>' . h($game['engine_key']) . '</p><p>' . (int)$game['file_count'] . ' files / ' . h(bytes_fmt((int)$game['total_size'])) . '</p></a>';
+            echo '<a class="stat" href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '"><h2>' . h($game['name']) . '</h2><p>' . h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . h(bytes_fmt((int)$game['total_size'])) . '</p></a>';
         }
         echo '</div>';
     } elseif ($page === 'game') {
@@ -406,9 +425,10 @@ try {
         }
     } elseif ($page === 'examine') {
         $id = (int)($_GET['id'] ?? 0);
-        $file = one($db, 'SELECT f.*, g.engine_key FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$id]);
+        $file = one($db, 'SELECT f.*, p.engine_key profile_engine FROM ue_files f JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE f.id=?', [$id]);
         if (!$file) { throw new RuntimeException('File not found'); }
-        $readerClass = load_reader_class($config, $file['engine_key']);
+        if (empty($file['profile_engine'])) { throw new RuntimeException('Game has no active scanner profile.'); }
+        $readerClass = load_reader_class($config, (string)$file['profile_engine']);
         $pkg = new $readerClass(__DIR__ . '/' . $file['relative_path']);
         echo '<div class="card"><h1>Examine: ' . h($file['original_name']) . '</h1><p><a href="' . h(u(['page' => 'file', 'id' => $id])) . '">Back</a></p></div>';
         foreach (['Header' => $pkg->getHeader(), 'Names' => $pkg->getNames(), 'Imports' => $pkg->getImports(), 'Exports' => $pkg->getExports()] as $label => $data) {
@@ -429,10 +449,10 @@ try {
         echo '<div class="card"><h1>' . ($count ? 'Admin Login' : 'Create first admin user') . '</h1><form method="post"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><p><input name="username" required placeholder="Username"></p><p><input type="password" name="password" required placeholder="Password"></p><button>' . ($count ? 'Login' : 'Create admin') . '</button></form></div>';
     } elseif ($page === 'admin') {
         need_admin();
-        $games = allq($db, 'SELECT * FROM ue_games ORDER BY name');
+                $games = allq($db, 'SELECT g.*, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
         echo '<div class="card"><h1>Admin</h1></div><div class="card"><h2>Games</h2><table><tr><th>Name</th><th>Slug</th><th>Engine</th><th>Open</th></tr>';
-        foreach ($games as $game) { echo '<tr><td>' . h($game['name']) . '</td><td>' . h($game['slug']) . '</td><td>' . h($game['engine_key']) . '</td><td><a href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '">open</a></td></tr>'; }
-        echo '</table></div><div class="card"><h2>Add game</h2><form method="post" action="' . h(u(['page' => 'save_game'])) . '"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input name="name" required placeholder="Game name"> <input name="slug" required placeholder="slug"> <select name="engine_key">';
+        foreach ($games as $game) { echo '<tr><td>' . h($game['name']) . '</td><td>' . h($game['slug']) . '</td><td>' . h($game['profile_engine'] ?? 'no active profile') . '</td><td><a href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '">open</a></td></tr>'; }
+		echo '</table></div><div class="card"><h2>Add game</h2><form method="post" action="' . h(u(['page' => 'save_game'])) . '"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input name="name" required placeholder="Game name"> <input name="slug" required placeholder="slug"> <select name="engine_key">';
         foreach ($config['engine_readers'] as $key => $reader) { echo '<option value="' . h($key) . '">' . h($key . ' - ' . $reader['label']) . '</option>'; }
         echo '</select><p><textarea name="description" rows="3" style="width:100%" placeholder="Description"></textarea></p><button>Save game</button></form></div>';
     } else {
