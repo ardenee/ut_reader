@@ -46,11 +46,11 @@ try {
             }
 
             if ($id > 0) {
-                $db->prepare('UPDATE ue_games SET name=?, slug=?, engine_key=?, description=? WHERE id=?')->execute([$name, $slug, $engine, $description ?: null, $id]);
+                $db->prepare('UPDATE ue_games SET name=?, slug=?, description=? WHERE id=?')->execute([$name, $slug, $description ?: null, $id]);
                 $gameId = $id;
             } else {
-                $stmt = $db->prepare('INSERT INTO ue_games(name, slug, engine_key, description) VALUES(?,?,?,?)');
-                $stmt->execute([$name, $slug, $engine, $description ?: null]);
+                $stmt = $db->prepare('INSERT INTO ue_games(name, slug, description) VALUES(?,?,?)');
+                $stmt->execute([$name, $slug, $description ?: null]);
                 $gameId = (int)$db->lastInsertId();
             }
 
@@ -120,7 +120,7 @@ try {
     echo '<tr><th>Slug</th><td><input name="slug" value="' . catalog_h($edit['slug'] ?? '') . '" style="min-width:260px"> <span class="muted">Used in URLs and storage paths.</span></td></tr>';
     echo '<tr><th>Description</th><td><textarea name="description" rows="3" style="width:100%">' . catalog_h($edit['description'] ?? '') . '</textarea></td></tr>';
     echo '<tr><th colspan="2">Scanner profile</th></tr>';
-    echo '<tr><th>Engine key</th><td><input name="engine_key" required value="' . catalog_h($edit['profile_engine'] ?? $edit['engine_key'] ?? 'UE1') . '" style="width:120px"> <span class="muted">The scanner uses this profile engine, not the game row.</span></td></tr>';
+    echo '<tr><th>Engine key</th><td><input name="engine_key" required value="' . catalog_h($edit['profile_engine'] ?? 'UE1') . '" style="width:120px"> <span class="muted">UE1, UE2, UE3, UE4, UE5, etc. This comes from the game profile.</span></td></tr>';
     echo '<tr><th>Allowed extensions</th><td><input name="extensions" value="' . catalog_h(implode(', ', $exts)) . '" style="min-width:520px" placeholder="u, unr, utx, umx, uax"></td></tr>';
     echo '<tr><th>Package version min/max</th><td><input name="package_version_min" value="' . catalog_h((string)($edit['package_version_min'] ?? '')) . '" style="width:90px"> <input name="package_version_max" value="' . catalog_h((string)($edit['package_version_max'] ?? '')) . '" style="width:90px"> <span class="muted">Leave blank if unknown or unversioned.</span></td></tr>';
     echo '<tr><th>Licensee version min/max</th><td><input name="licensee_version_min" value="' . catalog_h((string)($edit['licensee_version_min'] ?? '')) . '" style="width:90px"> <input name="licensee_version_max" value="' . catalog_h((string)($edit['licensee_version_max'] ?? '')) . '" style="width:90px"></td></tr>';

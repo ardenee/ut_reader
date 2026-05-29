@@ -6,13 +6,15 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    $games = catalog_all($db, 'SELECT g.*, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id ORDER BY g.name');
+    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
 
     catalog_head('Games');
-    echo '<div class="card"><h1>Unreal Games</h1><p class="muted">Popup-enabled catalog view. Use this page while the old router is being split into smaller files.</p><p><a class="button" href="index.php">Old catalog home</a> <a class="button" href="sources.php">Sources</a> <a class="button" href="source-scan.php">Source scanner</a></p></div>';
-    echo '<div class="card"><table><tr><th>Game</th><th>Engine</th><th>Files</th><th>Total size</th><th>Open</th></tr>';
+    echo '<div class="card hero"><h1>Games</h1><p class="muted">Browse the public catalog by game.</p></div>';
+    echo '<div class="card"><table><tr><th>Game</th><th>Profile engine</th><th>Files</th><th>Total size</th><th>Open</th></tr>';
     foreach ($games as $game) {
-        echo '<tr><td>' . catalog_h($game['name']) . '</td><td class="mono">' . catalog_h($game['engine_key']) . '</td><td>' . (int)$game['file_count'] . '</td><td>' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</td><td><a class="button" href="game-files.php?id=' . (int)$game['id'] . '">open files</a></td></tr>';
+        $engine = $game['profile_engine'] ?: 'no profile';
+        $class = $game['profile_engine'] ? 'good-pill' : 'bad-pill';
+        echo '<tr><td><strong>' . catalog_h($game['name']) . '</strong><br><span class="muted small">' . catalog_h($game['slug']) . '</span></td><td><span class="pill ' . $class . '">' . catalog_h($engine) . '</span></td><td>' . (int)$game['file_count'] . '</td><td>' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</td><td><a class="button" href="game-files.php?id=' . (int)$game['id'] . '">Open files</a></td></tr>';
     }
     echo '</table></div>';
     catalog_foot();
