@@ -147,6 +147,20 @@ function catalog_page_links(array $links): void
     echo '</p>';
 }
 
+function catalog_federation_links(): array
+{
+    return [
+        'Federation Admin' => 'admin.php',
+        'Settings' => 'settings.php',
+        'Peers' => 'peers.php',
+        'Queue' => 'queue.php',
+        'Bulk Worker' => 'worker-run.php',
+        'Conflicts' => 'conflicts.php',
+        'Maintenance' => 'maintenance.php',
+        'Logs' => 'logs.php',
+    ];
+}
+
 function catalog_page_header(string $title, string $description = '', array $links = []): void
 {
     echo '<div class="card hero"><h1>' . catalog_h($title) . '</h1>';
