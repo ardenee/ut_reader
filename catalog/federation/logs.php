@@ -8,23 +8,16 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
-function logs_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Federation Logs');
 
-    if (!logs_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Logs')) {
         exit;
     }
 
-    echo '<div class="card"><h1>Federation Logs</h1><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="peers.php">Peers</a></p></div>';
+    catalog_head('Federation Logs');
+    catalog_page_header('Federation Logs', 'Recent federation API, pairing, upload, download, import, and worker events.', catalog_federation_links());
 
     $rows = catalog_all($db, 'SELECT l.*, p.site_name peer_name FROM ue_federation_transfer_logs l LEFT JOIN ue_federation_peers p ON p.id=l.peer_id ORDER BY l.created_at DESC, l.id DESC LIMIT 500');
     echo '<div class="card"><h2>Recent logs</h2>';
