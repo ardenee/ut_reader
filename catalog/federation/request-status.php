@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function crs_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function crs_csrf(): string
 {
     $_SESSION['fed_child_request_status_csrf'] ??= bin2hex(random_bytes(16));
@@ -34,7 +29,7 @@ function crs_parent(PDO $db, int $peerId): array
         throw new RuntimeException('Active parent peer not found.');
     }
     if (empty($parent['shared_secret_plain'])) {
-        throw new RuntimeException('Parent peer has no stored API secret.');
+        throw new RuntimeException('Parent peer has no stored API key.');
     }
     return $parent;
 }
@@ -60,7 +55,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!crs_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         crs_check_csrf();
@@ -81,19 +76,17 @@ try {
         exit;
     }
 
-    catalog_head('Child Request Status');
-
-    if (!crs_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Child Request Status')) {
         exit;
     }
+
+    catalog_head('Child Request Status');
 
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $peerId = (int)($_GET['peer_id'] ?? ($parents[0]['id'] ?? 0));
     $requestId = (int)($_GET['request_id'] ?? 0);
 
-    echo '<div class="card"><h1>Child Request Status</h1><p class="muted">Child-side status page. Poll the parent for latest request status or cancel an active request.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="request-generate.php">Generate request</a> <a class="button" href="approved-downloads.php">Approved downloads</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_page_header('Child Request Status', 'Child-side status page. Poll the parent for latest request status or cancel an active request.', catalog_federation_links() + ['Generate Request' => 'request-generate.php', 'Approved Downloads' => 'approved-downloads.php']);
 
     if (isset($_SESSION['fed_child_request_status_result'])) {
         echo '<div class="card"><h2>Last action result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_child_request_status_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
