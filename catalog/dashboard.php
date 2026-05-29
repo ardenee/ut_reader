@@ -8,20 +8,13 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function dash_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
     catalog_head('Dashboard');
 
-    if (!dash_is_admin()) {
-        echo '<div class="card hero"><h1>Unreal File Catalog</h1><p class="muted">Browse Unreal package files and dependency information.</p>';
-        catalog_page_links(['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Admin Login' => 'index.php?page=login']);
-        echo '</div>';
+    if (!catalog_support_is_admin()) {
+        catalog_page_header('Unreal File Catalog', 'Browse Unreal package files and dependency information.', ['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Admin Login' => 'index.php?page=login']);
         catalog_foot();
         exit;
     }
@@ -41,9 +34,7 @@ try {
         'joinPending' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_join_requests WHERE status="pending"'),
     ];
 
-    echo '<div class="card hero"><h1>Dashboard</h1><p class="muted">Start here: setup files, identify missing packages, connect to a parent, request downloads, and monitor background work.</p>';
-    catalog_page_links(['Setup' => 'setup.php', 'Missing Files' => 'missing.php', 'Join Main Parent' => 'federation/join-main-parent.php', 'Run Worker' => 'transfers.php']);
-    echo '</div>';
+    catalog_page_header('Dashboard', 'Start here: setup files, identify missing packages, connect to a parent, request downloads, and monitor background work.', ['Setup' => 'setup.php', 'Missing Files' => 'missing.php', 'Join Main Parent' => 'federation/join-main-parent.php', 'Run Worker' => 'transfers.php']);
 
     echo '<div class="grid">';
     catalog_stat_card('Games', $stats['games']);

@@ -11,11 +11,6 @@ require_once __DIR__ . '/lib/CatalogParser.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function is_admin_user(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function source_scan_csrf(): string
 {
     $_SESSION['source_scan_csrf'] ??= bin2hex(random_bytes(16));
@@ -281,15 +276,12 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    catalog_head('Source scan');
-
-    if (!is_admin_user()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through the main catalog admin page first.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Source scan')) {
         exit;
     }
 
-    echo '<div class="card hero"><h1>Source scanner</h1><p class="muted">Scan game-owned folders and record where catalog files exist. Unknown files can be imported through the active game profile.</p></div>';
+    catalog_head('Source scan');
+    catalog_page_header('Source scanner', 'Scan game-owned folders and record where catalog files exist. Unknown files can be imported through the active game profile.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         source_scan_check_csrf();
@@ -371,7 +363,9 @@ try {
 
     catalog_foot();
 } catch (Throwable $e) {
-    catalog_head('Source scan error');
+    if (!headers_sent()) {
+        catalog_head('Source scan error');
+    }
     echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
     catalog_foot();
 }

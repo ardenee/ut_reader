@@ -10,11 +10,6 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogParser.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
-function http_scan_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function http_scan_allowed_extension(string $path, array $config): bool
 {
     $path = parse_url($path, PHP_URL_PATH) ?: $path;
@@ -262,15 +257,13 @@ function http_scan_source(PDO $db, array $config, int $sourceId, string $manifes
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('HTTP source scan');
 
-    if (!http_scan_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through the main catalog admin page first.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('HTTP source scan')) {
         exit;
     }
 
-    echo '<div class="card hero"><h1>HTTP source scanner</h1><p class="muted">Scan a manifest from a game-owned HTTP mirror or redirect server. Optional deep scan downloads unknown files temporarily, reads their package GUID, then deletes the temp file.</p><p><a class="button" href="sources.php">Sources</a> <a class="button" href="source-scan.php">Local source scanner</a> <a class="button" href="games.php">Games</a></p></div>';
+    catalog_head('HTTP source scan');
+    catalog_page_header('HTTP source scanner', 'Scan a manifest from a game-owned HTTP mirror or redirect server. Optional deep scan downloads unknown files temporarily, reads their package GUID, then deletes the temp file.', ['Sources' => 'sources.php', 'Local Source Scan' => 'source-scan.php', 'Games' => 'games.php']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sourceId = (int)($_POST['source_id'] ?? 0);
