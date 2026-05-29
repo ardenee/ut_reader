@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function crs_csrf(): string
-{
-    $_SESSION['fed_child_request_status_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_child_request_status_csrf'];
-}
-
-function crs_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_child_request_status_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function crs_parent(PDO $db, int $peerId): array
 {
     $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$peerId]);
@@ -58,7 +45,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        crs_check_csrf();
+        catalog_check_csrf('fed_child_request_status');
         $peerId = (int)($_POST['peer_id'] ?? 0);
         $requestId = (int)($_POST['request_id'] ?? 0);
         $action = (string)($_POST['action'] ?? 'poll');
@@ -125,7 +112,7 @@ try {
                 $active = in_array((string)$request['status'], ['submitted','approved','part_approved','downloading'], true);
                 echo '<table><tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr><tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr><tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr><tr><th>Submitted</th><td>' . catalog_h($request['submitted_at']) . '</td></tr><tr><th>Approved</th><td>' . catalog_h($request['approved_at']) . '</td></tr></table>';
                 if ($active) {
-                    echo '<form method="post" onsubmit="return confirm(\'Cancel this request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(crs_csrf()) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><button>Cancel request</button></form>';
+                    echo '<form method="post" onsubmit="return confirm(\'Cancel this request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><button>Cancel request</button></form>';
                 }
                 echo '</div>';
 
