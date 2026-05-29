@@ -9,21 +9,15 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function fed_admin_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Federation Admin');
 
-    if (!fed_admin_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Federation Admin')) {
         exit;
     }
+
+    catalog_head('Federation Admin');
 
     $identity = fed_ensure_identity($db);
     $stats = [
@@ -37,7 +31,7 @@ try {
         'failed_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"')['c'] ?? 0),
     ];
 
-    echo '<div class="card"><h1>Federation Admin</h1><p class="muted">Parent/child federation dashboard for identity, join requests, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, conflicts, and logs.</p><p><a class="button" href="../admin.php">Catalog admin</a> <a class="button" href="settings.php">Settings</a> <a class="button" href="join-requests.php">Join Requests</a> <a class="button" href="join.php" target="_blank">Public Join Page</a> <a class="button" href="claim-parent.php">Claim Parent</a> <a class="button" href="peers.php">Peers</a> <a class="button" href="queue.php">Queue</a> <a class="button" href="worker-run.php">Bulk worker</a> <a class="button" href="conflicts.php">Conflicts</a> <a class="button" href="maintenance.php">Maintenance</a> <a class="button" href="docs.php">Docs</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_page_header('Federation Admin', 'Parent/child federation dashboard for identity, join requests, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, conflicts, and logs.', catalog_federation_links() + ['Docs' => 'docs.php', 'Public Join Page' => 'join.php', 'Claim Parent' => 'claim-parent.php']);
 
     echo '<div class="card"><h2>Local site identity</h2><table>';
     echo '<tr><th>Site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
@@ -48,49 +42,49 @@ try {
     echo '</table></div>';
 
     echo '<div class="grid">';
-    echo '<div class="stat"><h2>' . $stats['peers'] . '</h2><p>Total peers</p></div>';
-    echo '<div class="stat"><h2>' . $stats['active_peers'] . '</h2><p>Active peers</p></div>';
-    echo '<div class="stat"><h2>' . $stats['peer_files'] . '</h2><p>Peer inventory rows</p></div>';
-    echo '<div class="stat"><h2>' . $stats['requests'] . '</h2><p>File requests</p></div>';
-    echo '<div class="stat"><h2>' . $stats['join_pending'] . '</h2><p>Pending join requests</p></div>';
-    echo '<div class="stat"><h2>' . $stats['queued_jobs'] . '</h2><p>Queued transfer jobs</p></div>';
-    echo '<div class="stat"><h2>' . $stats['downloaded_jobs'] . '</h2><p>Waiting import</p></div>';
-    echo '<div class="stat"><h2>' . $stats['failed_jobs'] . '</h2><p>Failed jobs</p></div>';
+    catalog_stat_card('Total peers', $stats['peers']);
+    catalog_stat_card('Active peers', $stats['active_peers']);
+    catalog_stat_card('Peer inventory rows', $stats['peer_files']);
+    catalog_stat_card('File requests', $stats['requests']);
+    catalog_stat_card('Pending join requests', $stats['join_pending'], '', $stats['join_pending'] > 0 ? 'attention' : '');
+    catalog_stat_card('Queued transfer jobs', $stats['queued_jobs'], '', $stats['queued_jobs'] > 0 ? 'attention' : '');
+    catalog_stat_card('Waiting import', $stats['downloaded_jobs'], '', $stats['downloaded_jobs'] > 0 ? 'attention' : '');
+    catalog_stat_card('Failed jobs', $stats['failed_jobs'], '', $stats['failed_jobs'] > 0 ? 'warning' : '');
     echo '</div>';
 
     echo '<div class="card"><h2>Core tools</h2><div class="grid">';
-    echo '<a class="stat" href="settings.php"><h2>Federation settings</h2><p>Set site role, URL, identity, speed limits, delays, transfer defaults, join request toggle, and cron worker token.</p></a>';
-    echo '<a class="stat" href="join-requests.php"><h2>Join requests</h2><p>Parent admin approval page for public child-site pairing requests.</p></a>';
-    echo '<a class="stat" href="join.php"><h2>Public join page</h2><p>Share this URL so new deployments can request access to the master parent.</p></a>';
-    echo '<a class="stat" href="claim-parent.php"><h2>Claim parent</h2><p>Child-side tool to claim an approved one-time parent pairing URL.</p></a>';
-    echo '<a class="stat" href="peers.php"><h2>Peers</h2><p>Add/manage parent or child sites and shared secrets.</p></a>';
-    echo '<a class="stat" href="queue.php"><h2>Queue overview</h2><p>Review queued/running/downloaded/imported/failed transfer jobs.</p></a>';
-    echo '<a class="stat" href="conflicts.php"><h2>Conflict report</h2><p>Review same-name, same-GUID, and hash mismatch conflicts between local and peer files.</p></a>';
-    echo '<a class="stat" href="maintenance.php"><h2>Maintenance</h2><p>Prune old nonces/logs and review federation incoming storage usage.</p></a>';
-    echo '<a class="stat" href="docs.php"><h2>DSM/cron docs</h2><p>Setup notes and curl examples for scheduled federation workers.</p></a>';
-    echo '<a class="stat" href="logs.php"><h2>Federation logs</h2><p>View API, pairing, upload/download and transfer logs.</p></a>';
+    catalog_tool_card('Federation settings', 'settings.php', 'Set site role, URL, identity, speed limits, delays, transfer defaults, join request toggle, and cron worker token.', 'primary');
+    catalog_tool_card('Join requests', 'join-requests.php', 'Parent admin approval page for public child-site pairing requests.', $stats['join_pending'] > 0 ? (string)$stats['join_pending'] : '');
+    catalog_tool_card('Public join page', 'join.php', 'Share this URL so new deployments can request access to the master parent.');
+    catalog_tool_card('Claim parent', 'claim-parent.php', 'Child-side tool to claim an approved one-time parent pairing URL.');
+    catalog_tool_card('Peers', 'peers.php', 'Add/manage parent or child sites and shared secrets.');
+    catalog_tool_card('Queue overview', 'queue.php', 'Review queued/running/downloaded/imported/failed transfer jobs.', $stats['queued_jobs'] + $stats['downloaded_jobs'] + $stats['failed_jobs'] > 0 ? (string)($stats['queued_jobs'] + $stats['downloaded_jobs'] + $stats['failed_jobs']) : '');
+    catalog_tool_card('Conflict report', 'conflicts.php', 'Review same-name, same-GUID, and hash mismatch conflicts between local and peer files.');
+    catalog_tool_card('Maintenance', 'maintenance.php', 'Prune old nonces/logs and review federation incoming storage usage.');
+    catalog_tool_card('DSM/cron docs', 'docs.php', 'Setup notes and curl examples for scheduled federation workers.');
+    catalog_tool_card('Federation logs', 'logs.php', 'View API, pairing, upload/download and transfer logs.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Parent/master tools</h2><div class="grid">';
-    echo '<a class="stat" href="peer-inventory.php"><h2>Peer inventory</h2><p>View each child inventory separately.</p></a>';
-    echo '<a class="stat" href="parent-pull.php"><h2>Parent pull from children</h2><p>Pull missing dependencies first, then other files the parent does not have.</p></a>';
-    echo '<a class="stat" href="requests.php"><h2>Child file requests</h2><p>Approve or deny child missing-dependency requests, including selected items.</p></a>';
+    catalog_tool_card('Peer inventory', 'peer-inventory.php', 'View each child inventory separately.');
+    catalog_tool_card('Parent pull from children', 'parent-pull.php', 'Pull missing dependencies first, then other files the parent does not have.');
+    catalog_tool_card('Child file requests', 'requests.php', 'Approve or deny child missing-dependency requests, including selected items.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Child tools</h2><div class="grid">';
-    echo '<a class="stat" href="inventory-push.php"><h2>Push inventory to parent</h2><p>Send verified local file metadata to the parent.</p></a>';
-    echo '<a class="stat" href="upload-to-parent.php"><h2>Upload files to parent</h2><p>Queue selected verified local files for controlled upload to parent.</p></a>';
-    echo '<a class="stat" href="request-generate.php"><h2>Generate missing dependency request</h2><p>Submit local missing dependency list to the parent.</p></a>';
-    echo '<a class="stat" href="request-status.php"><h2>Request status/cancel</h2><p>Poll parent status and cancel active requests.</p></a>';
-    echo '<a class="stat" href="approved-downloads.php"><h2>Approved downloads</h2><p>Queue parent-approved files for controlled download.</p></a>';
+    catalog_tool_card('Push inventory to parent', 'inventory-push.php', 'Send verified local file metadata to the parent.');
+    catalog_tool_card('Upload files to parent', 'upload-to-parent.php', 'Queue selected verified local files for controlled upload to parent.');
+    catalog_tool_card('Generate missing dependency request', 'request-generate.php', 'Submit local missing dependency list to the parent.');
+    catalog_tool_card('Request status/cancel', 'request-status.php', 'Poll parent status and cancel active requests.');
+    catalog_tool_card('Approved downloads', 'approved-downloads.php', 'Queue parent-approved files for controlled download.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Workers</h2><div class="grid">';
-    echo '<a class="stat" href="worker-run.php"><h2>Bulk worker</h2><p>Run multiple sequential transfers/imports up to the configured per-run limit.</p></a>';
-    echo '<a class="stat" href="transfer-run.php"><h2>Run one transfer</h2><p>Download or upload one queued federation job.</p></a>';
-    echo '<a class="stat" href="import-run.php"><h2>Import one downloaded file</h2><p>Import one downloaded federation file into the local catalog.</p></a>';
-    echo '<a class="stat" href="cron-worker.php" target="_blank"><h2>Cron worker endpoint</h2><p>Token-protected worker endpoint for DSM Task Scheduler.</p></a>';
-    echo '<a class="stat" href="../api/federation/hello.php" target="_blank"><h2>Hello endpoint</h2><p>Public identity/status endpoint used for connection testing.</p></a>';
+    catalog_tool_card('Bulk worker', 'worker-run.php', 'Run multiple sequential transfers/imports up to the configured per-run limit.', 'primary');
+    catalog_tool_card('Run one transfer', 'transfer-run.php', 'Download or upload one queued federation job.');
+    catalog_tool_card('Import one downloaded file', 'import-run.php', 'Import one downloaded federation file into the local catalog.');
+    catalog_tool_card('Cron worker endpoint', 'cron-worker.php', 'Token-protected worker endpoint for DSM Task Scheduler.');
+    catalog_tool_card('Hello endpoint', '../api/federation/hello.php', 'Public identity/status endpoint used for connection testing.');
     echo '</div></div>';
 
     catalog_foot();
