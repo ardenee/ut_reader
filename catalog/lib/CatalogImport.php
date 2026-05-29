@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/CatalogParser.php';
+require_once __DIR__ . '/GameProfiles.php';
 
 function catalog_import_clean_name(string $s): string
 {
@@ -114,19 +115,10 @@ function catalog_import_rebuild_game(PDO $db, array $config, int $gameId): void
 function catalog_import_detect_game(PDO $db, string $extension): ?array
 {
     $extension = strtolower($extension);
-    $rows = catalog_all($db, 'SELECT * FROM ue_games ORDER BY id');
+    $rows = catalog_all($db, 'SELECT g.*, p.engine_key profile_engine, p.allowed_extensions_json FROM ue_games g JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.id');
     foreach ($rows as $row) {
-        $engine = strtoupper((string)$row['engine_key']);
-        if ($engine === 'UE3' && in_array($extension, ['ut3','upk'], true)) {
-            return $row;
-        }
-        if ($engine === 'UE4' && in_array($extension, ['uasset','umap'], true)) {
-            return $row;
-        }
-        if ($engine === 'UE2' && in_array($extension, ['ut2','ukx','usx','uax','utx'], true)) {
-            return $row;
-        }
-        if ($engine === 'UE1' && in_array($extension, ['unr','u','utx','uax','umx'], true)) {
+        $exts = gp_extensions($row);
+        if (!$exts || in_array($extension, $exts, true)) {
             return $row;
         }
     }
@@ -164,8 +156,9 @@ function catalog_import_file(PDO $db, array $config, string $sourcePath, string 
     if (!$game) {
         throw new RuntimeException('Could not detect target game for extension: ' . $ext);
     }
+    $profileEngine = gp_engine_for_game($db, (int)$game['id']);
 
-    $readerClass = catalog_load_reader_class($config, (string)$game['engine_key']);
+    $readerClass = catalog_load_reader_class($config, $profileEngine);
     $pkg = new $readerClass($sourcePath);
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     [$fatalIssues, $scanNotes] = catalog_import_split_reader_issues($issues);
@@ -192,6 +185,7 @@ function catalog_import_file(PDO $db, array $config, string $sourcePath, string 
     $imports = $pkg->getImports();
     $exports = $pkg->getExports();
     $packageName = catalog_import_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
+    $scanNotes[] = 'Profile engine=' . $profileEngine;
     $scanNotesText = $scanNotes ? implode("\n", $scanNotes) : null;
 
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . catalog_import_slug_text((string)$game['slug']) . '/verified';
