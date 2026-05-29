@@ -9,19 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function reqgen_csrf(): string
-{
-    $_SESSION['fed_reqgen_csrf'] ??= bin2hex(random_bytes(16));
-    return $_SESSION['fed_reqgen_csrf'];
-}
-
-function reqgen_check_csrf(): void
-{
-    if (($_POST['csrf'] ?? '') !== ($_SESSION['fed_reqgen_csrf'] ?? '')) {
-        throw new RuntimeException('Bad CSRF token');
-    }
-}
-
 function reqgen_items(PDO $db): array
 {
     $rows = catalog_all($db, 'SELECT d.required_package, d.required_object_path, COUNT(*) use_count FROM ue_dependencies d JOIN ue_files f ON f.id=d.file_id WHERE d.status="missing" AND f.scan_status="verified" GROUP BY d.required_package, d.required_object_path ORDER BY use_count DESC, d.required_package, d.required_object_path');
@@ -46,7 +33,7 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
-        reqgen_check_csrf();
+        catalog_check_csrf('fed_reqgen');
         $parentId = (int)($_POST['peer_id'] ?? 0);
         $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$parentId]);
         if (!$parent) {
@@ -110,7 +97,7 @@ try {
     } elseif (!$items) {
         echo '<p class="muted">No missing dependencies to request.</p>';
     } else {
-        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(reqgen_csrf()) . '"><p><label>Parent<br><select name="peer_id">';
+        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_reqgen')) . '"><p><label>Parent<br><select name="peer_id">';
         foreach ($parents as $parent) {
             echo '<option value="' . (int)$parent['id'] . '">' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';
         }
