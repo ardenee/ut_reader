@@ -19,19 +19,67 @@ function csrf(): string { $_SESSION['csrf'] ??= bin2hex(random_bytes(16)); retur
 function check_csrf(): void { if (($_POST['csrf'] ?? '') !== ($_SESSION['csrf'] ?? '')) { throw new RuntimeException('Bad CSRF token'); } }
 function join_path_parts(array $parts): string { return implode('.', array_values(array_filter(array_map('clean_name', $parts), static fn($v) => $v !== ''))); }
 
+function nav_link(string $label, string $href, string $class = ''): void
+{
+    echo '<a' . ($class !== '' ? ' class="' . h($class) . '"' : '') . ' href="' . h($href) . '">' . h($label) . '</a>';
+}
+
+function nav_menu(string $label, array $links): void
+{
+    echo '<details><summary>' . h($label) . '</summary><div class="nav-menu">';
+    foreach ($links as $text => $href) {
+        nav_link((string)$text, (string)$href);
+    }
+    echo '</div></details>';
+}
+
+function brand_mark(): string
+{
+    return '<span class="brand-mark"><img src="assets/unreal-file-catalog-icon-32x32.png" alt="" width="32" height="32"></span>';
+}
+
 function page_head(string $title, array $config = []): void
 {
     $siteName = $config['site_name'] ?? 'Unreal File Catalog';
     echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . h($title) . '</title>';
-    echo '<style>body{margin:0;background:#0b1020;color:#eef3ff;font:14px system-ui,Segoe UI,Arial}a{color:#8ab4ff;text-decoration:none}a:hover{text-decoration:underline}header{background:#090d19;border-bottom:1px solid #2a375f;padding:14px 18px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}nav a{background:#17213d;padding:6px 9px;border-radius:8px;margin-right:6px}main{max-width:1280px;margin:auto;padding:18px}.card{background:#121a31;border:1px solid #2a375f;border-radius:14px;padding:16px;margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.stat{background:#17213d;border:1px solid #2a375f;border-radius:12px;padding:12px}table{width:100%;border-collapse:collapse}th,td{border-bottom:1px solid #2a375f;padding:8px;text-align:left;vertical-align:top}th{background:#17213d}.muted{color:#9fb0d0}.mono{font-family:Consolas,monospace}.button,button{background:#23325f;border:1px solid #3b5599;color:#eef3ff;padding:8px 11px;border-radius:8px;cursor:pointer}.danger{background:#4a1b25;border-color:#8c2e3e}input,select,textarea{background:#0d1428;color:#eef3ff;border:1px solid #2a375f;border-radius:8px;padding:8px}.msg{padding:10px 12px;border-radius:10px;margin-bottom:14px;background:#102744;border:1px solid #275a92}.err{background:#3b121b;border-color:#863040}.dep{display:inline-block;font-size:12px;padding:2px 7px;border-radius:999px;border:1px solid #2a375f;background:#17213d;margin:2px}.resolved{border-color:#1d8f54}.missing{border-color:#a63b43}.common{border-color:#5c6688}.package_only{border-color:#b48a2a}.scroll{overflow:auto;max-height:560px}.path{word-break:break-all}.small{font-size:12px}</style>';
-    echo '</head><body><header><strong>' . h($siteName) . '</strong><nav><a href="' . h(u()) . '">Games</a><a href="' . h(u(['page' => 'search'])) . '">Search</a>';
+    echo '<link rel="icon" href="assets/favicon.ico">';
+    echo '<link rel="apple-touch-icon" sizes="180x180" href="assets/unreal-file-catalog-icon-180x180.png">';
+    echo '<link rel="icon" type="image/png" sizes="32x32" href="assets/unreal-file-catalog-icon-32x32.png">';
+    echo '<link rel="icon" type="image/png" sizes="16x16" href="assets/unreal-file-catalog-icon-16x16.png">';
+    echo '<link rel="stylesheet" href="assets/catalog.css">';
+    echo '</head><body>';
+    echo '<header class="site-header"><div class="brand"><a href="' . h(admin() ? 'dashboard.php' : u()) . '">' . brand_mark() . '<span><strong>' . h($siteName) . '</strong><small>package catalog</small></span></a></div><nav class="primary-nav">';
+    nav_link('Games', 'games.php');
+    nav_link('Search', u(['page' => 'search']));
+
     if (admin()) {
-        echo '<a href="' . h(u(['page' => 'admin'])) . '">Admin</a><a href="' . h(u(['page' => 'logout'])) . '">Logout ' . h($_SESSION['user']['username'] ?? '') . '</a>';
+        echo '<span class="nav-sep"></span>';
+        nav_menu('Admin', [
+            'Dashboard' => 'dashboard.php',
+            'Library' => 'library.php',
+            'Game Admin' => 'game-manager.php',
+            'Game Profiles' => 'game-profiles.php',
+        ]);
+        nav_menu('Sources', [
+            'Game Sources' => 'sources.php',
+            'Local Source Scan' => 'source-scan.php',
+            'HTTP Source Scan' => 'http-source-scan.php',
+            'Upload Files' => 'profiled-upload.php',
+        ]);
+        nav_menu('Federation', [
+            'Federation Admin' => 'federation/admin.php',
+            'Transfers' => 'transfers.php',
+            'Downloads' => 'download-admin.php',
+            'Settings' => 'federation/settings.php',
+        ]);
+        nav_link('Logout ' . (string)($_SESSION['user']['username'] ?? ''), u(['page' => 'logout']), 'logout');
     } else {
-        echo '<a href="' . h(u(['page' => 'login'])) . '">Admin Login</a>';
+        echo '<span class="nav-sep"></span>';
+        nav_link('Admin Login', u(['page' => 'login']));
     }
+
     echo '</nav></header><main>';
-    if (isset($_SESSION['flash'])) { echo '<div class="msg">' . h($_SESSION['flash']) . '</div>'; unset($_SESSION['flash']); }
+    if (isset($_SESSION['flash'])) { echo '<div class="card flash"><strong>' . h($_SESSION['flash']) . '</strong></div>'; unset($_SESSION['flash']); }
 }
 
 function page_foot(): void { echo '</main></body></html>'; }
@@ -298,7 +346,7 @@ try {
         $user = one($db, 'SELECT * FROM ue_users WHERE username=?', [trim((string)$_POST['username'])]);
         if (!$user || !password_verify((string)$_POST['password'], $user['password_hash'])) { throw new RuntimeException('Invalid login'); }
         $_SESSION['user'] = ['id' => (int)$user['id'], 'username' => $user['username'], 'role' => $user['role']];
-        flash(u(['page' => 'admin']), 'Logged in');
+        flash('dashboard.php', 'Logged in');
     }
 
     if ($page === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -383,16 +431,16 @@ try {
 
     if ($page === 'home') {
         $games = allq($db, 'SELECT g.*, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.engine_key ORDER BY g.name');
-        echo '<div class="card"><h1>Unreal Games</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and MD5 hashes.</p></div><div class="grid">';
+        echo '<div class="card hero"><h1>Unreal Games</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and MD5 hashes.</p></div><div class="grid">';
         foreach ($games as $game) {
-            echo '<a class="stat" href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '"><h2>' . h($game['name']) . '</h2><p>' . h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . h(bytes_fmt((int)$game['total_size'])) . '</p></a>';
+            echo '<a class="stat tool-card" href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '"><h2>' . h($game['name']) . '</h2><p>' . h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . h(bytes_fmt((int)$game['total_size'])) . '</p></a>';
         }
         echo '</div>';
     } elseif ($page === 'game') {
         $gameId = (int)($_GET['id'] ?? 0);
         $game = one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
         if (!$game) { throw new RuntimeException('Game not found'); }
-        echo '<div class="card"><h1>' . h($game['name']) . '</h1><p class="muted">' . h($game['description']) . '</p></div>';
+        echo '<div class="card hero"><h1>' . h($game['name']) . '</h1><p class="muted">' . h($game['description']) . '</p></div>';
         $files = allq($db, "SELECT f.*, SUM(d.status='resolved') resolved_count, SUM(d.status='missing') missing_count, SUM(d.status='package_only') package_only_count, SUM(d.status='common') common_count FROM ue_files f LEFT JOIN ue_dependencies d ON d.file_id=f.id WHERE f.game_id=? GROUP BY f.id ORDER BY f.package_name,f.original_name", [$gameId]);
         echo '<div class="card"><h2>Files</h2><div class="scroll"><table><tr><th>Package</th><th>File</th><th>MD5</th><th>Size</th><th>Dependencies</th><th>Actions</th></tr>';
         foreach ($files as $file) {
@@ -412,7 +460,7 @@ try {
         $id = (int)($_GET['id'] ?? 0);
         $file = one($db, 'SELECT f.*, g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$id]);
         if (!$file) { throw new RuntimeException('File not found'); }
-        echo '<div class="card"><h1>' . h($file['package_name']) . '</h1><p>' . h($file['original_name']) . ' / ' . h($file['game_name']) . '</p><p><a class="button" href="' . h(u(['page' => 'download', 'id' => $id])) . '">Download</a> <a class="button" href="' . h(u(['page' => 'examine', 'id' => $id])) . '">Examine full parse</a></p><div class="grid"><div class="stat">MD5<br><span class="mono small">' . h($file['md5']) . '</span></div><div class="stat">SHA1<br><span class="mono small">' . h($file['sha1']) . '</span></div><div class="stat">GUID<br><span class="mono small">' . h($file['package_guid']) . '</span></div><div class="stat">Tables<br>' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</div></div></div>';
+        echo '<div class="card hero"><h1>' . h($file['package_name']) . '</h1><p>' . h($file['original_name']) . ' / ' . h($file['game_name']) . '</p><p><a class="button" href="' . h(u(['page' => 'download', 'id' => $id])) . '">Download</a> <a class="button" href="' . h(u(['page' => 'examine', 'id' => $id])) . '">Examine full parse</a></p><div class="grid"><div class="stat">MD5<br><span class="mono small">' . h($file['md5']) . '</span></div><div class="stat">SHA1<br><span class="mono small">' . h($file['sha1']) . '</span></div><div class="stat">GUID<br><span class="mono small">' . h($file['package_guid']) . '</span></div><div class="stat">Tables<br>' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</div></div></div>';
         if (!empty($file['scan_notes'])) { echo '<div class="card"><h2>Scan notes</h2><pre class="mono">' . h($file['scan_notes']) . '</pre></div>'; }
         $deps = allq($db, 'SELECT d.*, rf.original_name resolved_file FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.required_package, d.required_object_path', [$id]);
         echo '<div class="card"><h2>Dependencies</h2><table><tr><th>Status</th><th>Required object</th><th>Resolved by</th></tr>';
@@ -430,13 +478,13 @@ try {
         if (empty($file['profile_engine'])) { throw new RuntimeException('Game has no active scanner profile.'); }
         $readerClass = load_reader_class($config, (string)$file['profile_engine']);
         $pkg = new $readerClass(__DIR__ . '/' . $file['relative_path']);
-        echo '<div class="card"><h1>Examine: ' . h($file['original_name']) . '</h1><p><a href="' . h(u(['page' => 'file', 'id' => $id])) . '">Back</a></p></div>';
+        echo '<div class="card hero"><h1>Examine: ' . h($file['original_name']) . '</h1><p><a class="button" href="' . h(u(['page' => 'file', 'id' => $id])) . '">Back</a></p></div>';
         foreach (['Header' => $pkg->getHeader(), 'Names' => $pkg->getNames(), 'Imports' => $pkg->getImports(), 'Exports' => $pkg->getExports()] as $label => $data) {
             echo '<div class="card"><h2>' . h($label) . '</h2><div class="scroll"><pre class="mono">' . h(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</pre></div></div>';
         }
     } elseif ($page === 'search') {
         $q = trim((string)($_GET['q'] ?? ''));
-        echo '<div class="card"><h1>Search</h1><form><input type="hidden" name="page" value="search"><input name="q" value="' . h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name" style="min-width:420px"> <button>Search</button></form></div>';
+        echo '<div class="card hero"><h1>Search</h1><form><input type="hidden" name="page" value="search"><input name="q" value="' . h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name" style="min-width:420px"> <button>Search</button></form></div>';
         if ($q !== '') {
             $like = '%' . $q . '%';
             $rows = allq($db, 'SELECT DISTINCT f.* FROM ue_files f LEFT JOIN ue_imports i ON i.file_id=f.id LEFT JOIN ue_exports e ON e.file_id=f.id WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR i.full_path LIKE ? OR e.full_path LIKE ? ORDER BY f.package_name LIMIT 200', [$q, $q, $like, $like, $like, $like, $like]);
@@ -446,13 +494,13 @@ try {
         }
     } elseif ($page === 'login') {
         $count = (int)(one($db, 'SELECT COUNT(*) c FROM ue_users')['c'] ?? 0);
-        echo '<div class="card"><h1>' . ($count ? 'Admin Login' : 'Create first admin user') . '</h1><form method="post"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><p><input name="username" required placeholder="Username"></p><p><input type="password" name="password" required placeholder="Password"></p><button>' . ($count ? 'Login' : 'Create admin') . '</button></form></div>';
+        echo '<div class="card hero"><h1>' . ($count ? 'Admin Login' : 'Create first admin user') . '</h1><form method="post"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><p><input name="username" required placeholder="Username"></p><p><input type="password" name="password" required placeholder="Password"></p><button>' . ($count ? 'Login' : 'Create admin') . '</button></form></div>';
     } elseif ($page === 'admin') {
         need_admin();
-                $games = allq($db, 'SELECT g.*, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
-        echo '<div class="card"><h1>Admin</h1></div><div class="card"><h2>Games</h2><table><tr><th>Name</th><th>Slug</th><th>Engine</th><th>Open</th></tr>';
+        $games = allq($db, 'SELECT g.*, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
+        echo '<div class="card hero"><h1>Admin</h1><p class="muted">Quick legacy admin view. The main admin tools are also available from the header menus.</p></div><div class="card"><h2>Games</h2><table><tr><th>Name</th><th>Slug</th><th>Engine</th><th>Open</th></tr>';
         foreach ($games as $game) { echo '<tr><td>' . h($game['name']) . '</td><td>' . h($game['slug']) . '</td><td>' . h($game['profile_engine'] ?? 'no active profile') . '</td><td><a href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '">open</a></td></tr>'; }
-		echo '</table></div><div class="card"><h2>Add game</h2><form method="post" action="' . h(u(['page' => 'save_game'])) . '"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input name="name" required placeholder="Game name"> <input name="slug" required placeholder="slug"> <select name="engine_key">';
+        echo '</table></div><div class="card"><h2>Add game</h2><form method="post" action="' . h(u(['page' => 'save_game'])) . '"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input name="name" required placeholder="Game name"> <input name="slug" required placeholder="slug"> <select name="engine_key">';
         foreach ($config['engine_readers'] as $key => $reader) { echo '<option value="' . h($key) . '">' . h($key . ' - ' . $reader['label']) . '</option>'; }
         echo '</select><p><textarea name="description" rows="3" style="width:100%" placeholder="Description"></textarea></p><button>Save game</button></form></div>';
     } else {
