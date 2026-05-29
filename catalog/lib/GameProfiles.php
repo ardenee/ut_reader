@@ -10,7 +10,7 @@ function gp_profile_display_name(array $profile): string
         return $name;
     }
     $game = trim((string)($profile['game_name'] ?? ''));
-    return $game !== '' ? ($game . ' Profile') : ('Profile #' . (int)($profile['id'] ?? 0));
+    return $game !== '' ? ($game) : ('Profile #' . (int)($profile['id'] ?? 0));
 }
 
 function gp_all_profiles(PDO $db): array
