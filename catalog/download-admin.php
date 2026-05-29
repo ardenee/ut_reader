@@ -9,21 +9,15 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/FederationAuth.php';
 
-function dladmin_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_head('Downloads');
 
-    if (!dladmin_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Downloads')) {
         exit;
     }
+
+    catalog_head('Downloads');
 
     $settings = fed_all_settings($db);
     $activeLinks = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="active"');
@@ -32,9 +26,7 @@ try {
     $failedJobs = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status="failed"');
     $providers = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_download_providers WHERE is_active=1');
 
-    echo '<div class="card hero"><h1>Downloads</h1><p class="muted">Control public/random user downloads. Federation parent/child transfers bypass this section and use controlled API transfers.</p>';
-    catalog_page_links(['Mirror Settings' => 'mirror-providers.php', 'Mirror Links' => 'mirror-links.php', 'Mirror Queue' => 'mirror-queue.php', 'Federation Settings' => 'federation/settings.php']);
-    echo '</div>';
+    catalog_page_header('Downloads', 'Control public/random user downloads. Federation parent/child transfers bypass this section and use controlled API transfers.', ['Mirror Settings' => 'mirror-providers.php', 'Mirror Links' => 'mirror-links.php', 'Mirror Queue' => 'mirror-queue.php', 'Federation Settings' => 'federation/settings.php']);
 
     echo '<div class="grid">';
     catalog_stat_card('Public download mode', $settings['public_download_mode'] ?? 'local_direct');
