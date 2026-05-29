@@ -9,6 +9,7 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogParser.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
+require_once __DIR__ . '/lib/GameProfiles.php';
 
 function is_admin_user(): bool
 {
@@ -64,13 +65,14 @@ function source_scan_tmp_copy(string $path): string
 
 function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUnknown, bool $strictProfile): array
 {
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.engine_key, g.slug game_slug FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
+    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.slug game_slug, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
     if (!$source) {
         throw new RuntimeException('Source not found');
     }
     if ($source['source_type'] !== 'local_path') {
-        throw new RuntimeException('Only local_path sources can be scanned by this page right now.');
+        throw new RuntimeException('Only local folder sources can be scanned by this page.');
     }
+    $profileEngine = gp_engine_for_game($db, (int)$source['game_id']);
 
     $basePath = rtrim((string)$source['base_path'], DIRECTORY_SEPARATOR);
     if (!is_dir($basePath) || !is_readable($basePath)) {
@@ -91,11 +93,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
     $parseFailedSamples = [];
     $importSamples = [];
 
-    $iterator = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($basePath, FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS),
-        RecursiveIteratorIterator::SELF_FIRST
-    );
-
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($basePath, FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS), RecursiveIteratorIterator::SELF_FIRST);
     $upsert = $db->prepare('INSERT INTO ue_file_locations(file_id,source_id,source_relative_path,exists_in_source,last_seen_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE exists_in_source=VALUES(exists_in_source), last_seen_at=NOW()');
 
     foreach ($iterator as $item) {
@@ -128,7 +126,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
         }
 
         try {
-            $header = catalog_try_read_package_header($config, (string)$source['engine_key'], $path);
+            $header = catalog_try_read_package_header($config, $profileEngine, $path);
             $guid = catalog_header_guid($header);
         } catch (Throwable $e) {
             if ($importUnknown) {
@@ -291,7 +289,7 @@ try {
         exit;
     }
 
-    echo '<div class="card hero"><h1>Source scanner</h1><p class="muted">Scans configured local source folders and records where known catalog files exist. It can now optionally import unknown files through the profiled scanner, using game profile version/extension checks.</p></div>';
+    echo '<div class="card hero"><h1>Source scanner</h1><p class="muted">Scan game-owned folders and record where catalog files exist. Unknown files can be imported through the active game profile.</p></div>';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         source_scan_check_csrf();
@@ -302,6 +300,7 @@ try {
         echo '<div class="card"><h2>Scan result</h2>';
         echo '<table><tr><th>Source</th><td>' . catalog_h($result['source']['name']) . '</td></tr>';
         echo '<tr><th>Game</th><td>' . catalog_h($result['source']['game_name']) . '</td></tr>';
+        echo '<tr><th>Profile engine</th><td>' . catalog_h($result['source']['profile_engine'] ?? '') . '</td></tr>';
         echo '<tr><th>Package-like files found</th><td>' . (int)$result['found'] . '</td></tr>';
         echo '<tr><th>Matched by MD5</th><td>' . (int)$result['matched_md5'] . '</td></tr>';
         echo '<tr><th>Matched by GUID</th><td>' . (int)$result['matched_guid'] . '</td></tr>';
@@ -339,20 +338,20 @@ try {
         }
     }
 
-    $sources = catalog_all($db, 'SELECT s.*, g.name game_name FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.is_active=1 ORDER BY g.name, s.name');
+    $sources = catalog_all($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE s.is_active=1 ORDER BY g.name, s.name');
     echo '<div class="card"><h2>Run scan</h2>';
     if (!$sources) {
-        echo '<p class="muted">No sources configured. Add one in <a href="sources.php">Sources</a>.</p>';
+        echo '<p class="muted">No sources configured. Add one in <a href="sources.php">Game Sources</a>.</p>';
     } else {
         echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(source_scan_csrf()) . '"><p><label>Source<br><select name="source_id">';
         foreach ($sources as $source) {
-            $label = $source['game_name'] . ' - ' . $source['name'] . ' (' . $source['source_type'] . ')';
+            $label = $source['game_name'] . ' / ' . ($source['profile_engine'] ?: 'no profile') . ' - ' . $source['name'] . ' (' . $source['source_type'] . ')';
             echo '<option value="' . (int)$source['id'] . '">' . catalog_h($label) . '</option>';
         }
         echo '</select></label></p>';
-        echo '<p><label><input type="checkbox" name="import_unknown" value="1"> Import unknown files into catalog using profiled scanner</label></p>';
+        echo '<p><label><input type="checkbox" name="import_unknown" value="1"> Import unknown files into this game using its active profile</label></p>';
         echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject mismatches</option><option value="0">Loose: try parser anyway</option></select></label></p>';
-        echo '<p class="muted">Without import enabled, the scan only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned through CatalogScanner.php before being stored as verified.</p>';
+        echo '<p class="muted">Without import enabled, the scan only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned before being stored.</p>';
         echo '<button>Scan selected source</button></form>';
     }
     echo '</div>';

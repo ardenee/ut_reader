@@ -8,6 +8,7 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogParser.php';
+require_once __DIR__ . '/lib/GameProfiles.php';
 
 function http_scan_is_admin(): bool
 {
@@ -48,7 +49,7 @@ function http_scan_fetch_url(string $url, int $maxBytes, string $label): string
         'http' => [
             'method' => 'GET',
             'timeout' => 30,
-            'header' => "User-Agent: UnrealFileCatalog/1.0\r\n",
+            'header' => "User-Agent: UnrealDB/1.0\r\n",
         ],
         'ssl' => [
             'verify_peer' => true,
@@ -162,7 +163,8 @@ function http_scan_deep_guid_match(PDO $db, array $config, array $source, string
     try {
         file_put_contents($tmp, $data);
         unset($data);
-        $header = catalog_try_read_package_header($config, (string)$source['engine_key'], $tmp);
+        $engine = gp_engine_for_game($db, (int)$source['game_id']);
+        $header = catalog_try_read_package_header($config, $engine, $tmp);
         $guid = catalog_header_guid($header);
         if ($guid === '') {
             return ['status' => 'no_guid', 'file' => null, 'guid' => ''];
@@ -182,13 +184,14 @@ function http_scan_deep_guid_match(PDO $db, array $config, array $source, string
 
 function http_scan_source(PDO $db, array $config, int $sourceId, string $manifestName, bool $checkRemoteSize, bool $deepScan, int $maxDeepBytes): array
 {
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.engine_key FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.id=?', [$sourceId]);
+    $source = catalog_one($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
     if (!$source) {
         throw new RuntimeException('Source not found');
     }
     if (!in_array($source['source_type'], ['http_mirror', 'redirect_server'], true)) {
-        throw new RuntimeException('This scanner only handles http_mirror and redirect_server sources.');
+        throw new RuntimeException('This scanner only handles HTTP mirror and redirect-server sources.');
     }
+    gp_required_profile_for_game($db, (int)$source['game_id']);
 
     $manifestUrl = http_scan_make_url((string)$source['base_path'], $manifestName);
     $paths = http_scan_extract_manifest_paths(http_scan_fetch_manifest($manifestUrl), $config);
@@ -267,7 +270,7 @@ try {
         exit;
     }
 
-    echo '<div class="card"><h1>HTTP mirror / redirect source scanner</h1><p class="muted">Scans a manifest file from an HTTP mirror or redirect server. Optional deep scan temporarily downloads unknown files, reads their package GUID, links them, then discards the temp file.</p><p><a class="button" href="sources.php">Sources</a> <a class="button" href="source-scan.php">Local source scanner</a> <a class="button" href="games.php">Games</a></p></div>';
+    echo '<div class="card hero"><h1>HTTP source scanner</h1><p class="muted">Scan a manifest from a game-owned HTTP mirror or redirect server. Optional deep scan downloads unknown files temporarily, reads their package GUID, then deletes the temp file.</p><p><a class="button" href="sources.php">Sources</a> <a class="button" href="source-scan.php">Local source scanner</a> <a class="button" href="games.php">Games</a></p></div>';
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sourceId = (int)($_POST['source_id'] ?? 0);
@@ -283,6 +286,7 @@ try {
         echo '<div class="card"><h2>Scan result</h2><table>';
         echo '<tr><th>Source</th><td>' . catalog_h($result['source']['name']) . '</td></tr>';
         echo '<tr><th>Game</th><td>' . catalog_h($result['source']['game_name']) . '</td></tr>';
+        echo '<tr><th>Profile engine</th><td>' . catalog_h($result['source']['profile_engine'] ?? '') . '</td></tr>';
         echo '<tr><th>Manifest URL</th><td class="mono path">' . catalog_h($result['manifest_url']) . '</td></tr>';
         echo '<tr><th>Package-like paths found</th><td>' . (int)$result['path_count'] . '</td></tr>';
         echo '<tr><th>Matched by name/size/package</th><td>' . (int)$result['matched'] . '</td></tr>';
@@ -300,14 +304,14 @@ try {
         }
     }
 
-    $sources = catalog_all($db, 'SELECT s.*, g.name game_name FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.is_active=1 AND s.source_type IN ("http_mirror","redirect_server") ORDER BY g.name, s.name');
+    $sources = catalog_all($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE s.is_active=1 AND s.source_type IN ("http_mirror","redirect_server") ORDER BY g.name, s.name');
     echo '<div class="card"><h2>Run HTTP manifest scan</h2>';
     if (!$sources) {
         echo '<p class="muted">No HTTP mirror or redirect sources configured. Add one in <a href="sources.php">Sources</a>.</p>';
     } else {
         echo '<form method="post"><p><label>Source<br><select name="source_id">';
         foreach ($sources as $source) {
-            $label = $source['game_name'] . ' - ' . $source['name'] . ' (' . $source['source_type'] . ')';
+            $label = $source['game_name'] . ' / ' . ($source['profile_engine'] ?: 'no profile') . ' - ' . $source['name'] . ' (' . $source['source_type'] . ')';
             echo '<option value="' . (int)$source['id'] . '">' . catalog_h($label) . '</option>';
         }
         echo '</select></label></p><p><label>Manifest path/name<br><input name="manifest_name" value="files.txt" style="min-width:360px"></label></p><p><label><input type="checkbox" name="check_remote_size" value="1"> Use HEAD requests to compare remote file sizes where possible</label></p><p><label><input type="checkbox" name="deep_scan" value="1"> Deep scan unknown files by temporary download + GUID parse</label></p><p><label>Max deep download per file MB<br><input name="max_deep_mb" value="128" style="width:120px"></label></p><button>Scan manifest</button></form>';

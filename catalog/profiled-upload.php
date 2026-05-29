@@ -79,7 +79,7 @@ try {
         exit;
     }
 
-    catalog_head('Profiled Upload Scanner');
+    catalog_head('Upload Files');
 
     if (isset($_SESSION['profiled_upload_flash'])) {
         echo '<div class="card"><strong>' . catalog_h($_SESSION['profiled_upload_flash']) . '</strong></div>';
@@ -87,41 +87,38 @@ try {
     }
 
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
-    $games = catalog_all($db, 'SELECT g.*, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id ORDER BY g.name');
+    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
 
-    echo '<div class="card hero"><h1>Profiled Upload Scanner</h1><p class="muted">Uploads are checked against the selected game profile before import. Mismatched files are moved to the unverified folder instead of being verified into the wrong game.</p>';
-    catalog_page_links(['Setup' => 'setup.php', 'Game Profiles' => 'game-profiles.php', 'Library' => 'library.php']);
+    echo '<div class="card hero"><h1>Upload Files</h1><p class="muted">Import packages into the selected game using its active scanner profile. Mismatches are rejected in strict mode and moved to unverified storage.</p>';
+    catalog_page_links(['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
     echo '</div>';
 
     echo '<div class="card"><h2>Upload and scan</h2><form method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(pu_csrf()) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';
     foreach ($games as $game) {
         $sel = ((int)$game['id'] === $selectedGameId) ? ' selected' : '';
-        $label = $game['name'] . ' / ' . $game['engine_key'];
-        if (!empty($game['profile_engine'])) {
-            $label .= ' / profile ' . $game['profile_engine'];
-        } else {
-            $label .= ' / no active profile';
-        }
+        $label = $game['name'] . ' / ' . (!empty($game['profile_engine']) ? $game['profile_engine'] : 'no active profile');
         echo '<option value="' . (int)$game['id'] . '"' . $sel . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label></p>';
     echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject/move mismatches to unverified</option><option value="0">Loose: allow scanner/parser to try anyway</option></select></label></p>';
-    echo '<p><input type="file" name="files[]" multiple required> <button>Upload and profiled-scan</button></p>';
+    echo '<p><input type="file" name="files[]" multiple required> <button>Upload and scan</button></p>';
     echo '<p class="muted">Max per file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '.</p></form></div>';
 
-    echo '<div class="card"><h2>Configured game profiles</h2><table><tr><th>Game</th><th>Engine</th><th>Extensions</th><th>Version range</th><th>Open</th></tr>';
+    echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Extensions</th><th>Version range</th><th>Open</th></tr>';
     foreach ($games as $game) {
         $exts = json_decode((string)($game['allowed_extensions_json'] ?? '[]'), true);
         $range = ($game['package_version_min'] !== null || $game['package_version_max'] !== null) ? (($game['package_version_min'] ?? '?') . ' - ' . ($game['package_version_max'] ?? '?')) : 'not fixed';
-        echo '<tr><td>' . catalog_h($game['name']) . '</td><td class="mono">' . catalog_h($game['engine_key']) . '</td><td class="mono">' . catalog_h(is_array($exts) ? implode(', ', $exts) : '') . '</td><td class="mono">' . catalog_h($range) . '</td><td><a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">select</a></td></tr>';
+        $engine = $game['profile_engine'] ?: 'missing profile';
+        $engineClass = $game['profile_engine'] ? 'good-pill' : 'bad-pill';
+        echo '<tr><td>' . catalog_h($game['name']) . '</td><td><span class="pill ' . $engineClass . '">' . catalog_h($engine) . '</span></td><td class="mono">' . catalog_h(is_array($exts) ? implode(', ', $exts) : '') . '</td><td class="mono">' . catalog_h($range) . '</td><td><a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">select</a></td></tr>';
     }
     echo '</table></div>';
 
     catalog_foot();
 } catch (Throwable $e) {
     if (!headers_sent()) {
-        catalog_head('Profiled upload error');
+        catalog_head('Upload error');
     }
     echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
     catalog_foot();
