@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function pp_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function pp_csrf(): string
 {
     $_SESSION['fed_parent_pull_csrf'] ??= bin2hex(random_bytes(16));
@@ -94,7 +89,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!pp_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         pp_check_csrf();
@@ -123,20 +118,15 @@ try {
         exit;
     }
 
-    catalog_head('Parent Pull');
-
-    if (!pp_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Parent Pull')) {
         exit;
     }
 
-    if (isset($_SESSION['fed_parent_pull_flash'])) {
-        echo '<div class="card"><strong>' . catalog_h($_SESSION['fed_parent_pull_flash']) . '</strong></div>';
-        unset($_SESSION['fed_parent_pull_flash']);
-    }
+    catalog_head('Parent Pull');
+    catalog_flash($_SESSION['fed_parent_pull_flash'] ?? null);
+    unset($_SESSION['fed_parent_pull_flash']);
 
-    echo '<div class="card"><h1>Parent Pull From Children</h1><p class="muted">Parent/master view. Each child is handled separately. Default priority is missing dependency files first, then other files the parent does not have, then files both sites already have for review.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="peer-inventory.php">Peer inventory</a> <a class="button" href="transfer-run.php">Run transfer queue</a> <a class="button" href="import-run.php">Import downloaded files</a> <a class="button" href="logs.php">Logs</a></p></div>';
+    catalog_page_header('Parent Pull From Children', 'Parent/master view. Each child is handled separately. Default priority is missing dependency files first, then other files the parent does not have, then files both sites already have for review.', catalog_federation_links() + ['Peer Inventory' => 'peer-inventory.php', 'Run Transfer Queue' => 'transfer-run.php', 'Import Downloaded Files' => 'import-run.php']);
 
     $peers = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="child" AND is_active=1 ORDER BY site_name');
     if (!$peers) {
