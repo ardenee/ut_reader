@@ -50,6 +50,16 @@ function fir_original_name(PDO $db, array $job): string
     return basename((string)$job['incoming_path']);
 }
 
+function fir_game_id_for_profile_engine(PDO $db, string $engineKey): ?int
+{
+    $engineKey = strtoupper(trim($engineKey));
+    if ($engineKey === '') {
+        return null;
+    }
+    $game = catalog_one($db, 'SELECT g.id FROM ue_games g JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE UPPER(p.engine_key)=? ORDER BY g.id LIMIT 1', [$engineKey]);
+    return $game ? (int)$game['id'] : null;
+}
+
 function fir_preferred_game_id(PDO $db, array $job): ?int
 {
     if ((string)$job['direction'] === 'download_from_parent') {
@@ -63,10 +73,7 @@ function fir_preferred_game_id(PDO $db, array $job): ?int
         }
     }
     if ($pf && !empty($pf['remote_engine_key'])) {
-        $game = catalog_one($db, 'SELECT id FROM ue_games WHERE engine_key=? ORDER BY id LIMIT 1', [(string)$pf['remote_engine_key']]);
-        if ($game) {
-            return (int)$game['id'];
-        }
+        return fir_game_id_for_profile_engine($db, (string)$pf['remote_engine_key']);
     }
     return null;
 }
