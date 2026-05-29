@@ -9,11 +9,6 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function ad_is_admin(): bool
-{
-    return ($_SESSION['user']['role'] ?? '') === 'admin';
-}
-
 function ad_csrf(): string
 {
     $_SESSION['fed_approved_downloads_csrf'] ??= bin2hex(random_bytes(16));
@@ -34,7 +29,7 @@ function ad_parent(PDO $db, int $peerId): array
         throw new RuntimeException('Active parent peer not found.');
     }
     if (empty($parent['shared_secret_plain'])) {
-        throw new RuntimeException('Parent peer has no stored API secret.');
+        throw new RuntimeException('Parent peer has no stored API key.');
     }
     return $parent;
 }
@@ -50,7 +45,7 @@ try {
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!ad_is_admin()) {
+        if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         ad_check_csrf();
@@ -88,18 +83,16 @@ try {
         exit;
     }
 
-    catalog_head('Approved Downloads');
-
-    if (!ad_is_admin()) {
-        echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="../index.php?page=login">Admin Login</a>.</p></div>';
-        catalog_foot();
+    if (!catalog_require_admin_page('Approved Downloads')) {
         exit;
     }
+
+    catalog_head('Approved Downloads');
 
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $peerId = (int)($_GET['peer_id'] ?? ($parents[0]['id'] ?? 0));
 
-    echo '<div class="card"><h1>Approved Downloads From Parent</h1><p class="muted">Child-side page. Poll parent request status, queue approved items, then use transfer-run.php and import-run.php to download/import one file at a time.</p><p><a class="button" href="admin.php">Federation admin</a> <a class="button" href="request-generate.php">Generate request</a> <a class="button" href="transfer-run.php">Transfer runner</a> <a class="button" href="import-run.php">Import runner</a></p></div>';
+    catalog_page_header('Approved Downloads From Parent', 'Child-side page. Poll parent request status, queue approved items, then use the transfer and import runners to download/import one file at a time.', catalog_federation_links() + ['Generate Request' => 'request-generate.php', 'Transfer Runner' => 'transfer-run.php', 'Import Runner' => 'import-run.php']);
 
     if (isset($_SESSION['fed_approved_result'])) {
         echo '<div class="card"><h2>Last result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_approved_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
