@@ -202,9 +202,9 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Could not hash file');
     }
 
-    $duplicate = catalog_one($db, 'SELECT id, original_name FROM ue_files WHERE md5=?', [$md5]);
+    $duplicate = catalog_one($db, 'SELECT id, original_name FROM ue_files WHERE game_id=? AND md5=?', [$gameId, $md5]);
     if ($duplicate) {
-        return ['duplicate', (int)$duplicate['id'], 'Duplicate MD5: ' . $duplicate['original_name'], $classification];
+        return ['duplicate', (int)$duplicate['id'], 'Duplicate in selected game: ' . $duplicate['original_name'], $classification];
     }
 
     $readerClass = scanner_load_reader_class($config, $profileEngine);
