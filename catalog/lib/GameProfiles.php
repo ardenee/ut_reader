@@ -68,7 +68,7 @@ function gp_detect_from_extension(string $ext): ?string
     if (in_array($ext, ['ut3','upk'], true)) {
         return 'UE3';
     }
-    if (in_array($ext, ['ut2','un2','usx','ukx'], true)) {
+    if (in_array($ext, ['ut2','un2','usx','ukx','upx','ugx','con'], true)) {
         return 'UE2';
     }
     if (in_array($ext, ['unr','umx'], true)) {
@@ -104,6 +104,31 @@ function gp_engine_rank(string $engine): int
         'UE5' => 5,
         default => 0,
     };
+}
+
+function gp_is_unreal2_legacy_package(array $profile, string $ext, ?int $version, ?int $licensee, ?string $detectedEngine): bool
+{
+    $selectedEngine = strtoupper((string)($profile['engine_key'] ?? ''));
+    $gameSlug = strtolower((string)($profile['game_slug'] ?? $profile['legacy_game_slug'] ?? ''));
+    $profileName = strtolower((string)($profile['profile_name'] ?? $profile['game_name'] ?? $profile['legacy_game_name'] ?? ''));
+
+    if ($selectedEngine !== 'UE2') {
+        return false;
+    }
+    if ($gameSlug !== 'unreal2' && !str_contains($profileName, 'unreal ii') && !str_contains($profileName, 'unreal 2')) {
+        return false;
+    }
+    if (!in_array(strtolower($ext), ['upx'], true)) {
+        return false;
+    }
+    if ($version !== 83) {
+        return false;
+    }
+    if ($licensee !== null && !in_array($licensee, [635, 763], true)) {
+        return false;
+    }
+
+    return strtoupper((string)$detectedEngine) === 'UE1';
 }
 
 function gp_read_legacy_summary(string $path): array
@@ -167,25 +192,30 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
         $notes[] = 'Legacy package header version=' . $version . ' licensee=' . $licensee . '.';
     }
 
+    $legacyCompatible = gp_is_unreal2_legacy_package($profile, $ext, $version, $licensee, $detectedEngine);
+    if ($legacyCompatible) {
+        $notes[] = 'Accepted as Unreal II legacy package: .upx version 83 assets can use a UE1-style package header.';
+    }
+
     $min = $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null;
     $max = $profile['package_version_max'] !== null ? (int)$profile['package_version_max'] : null;
     $versionOk = true;
-    if ($version !== null && $min !== null && $version < $min) {
+    if (!$legacyCompatible && $version !== null && $min !== null && $version < $min) {
         $versionOk = false;
         $notes[] = 'Package version is below the active game profile range.';
     }
-    if ($version !== null && $max !== null && $version > $max) {
+    if (!$legacyCompatible && $version !== null && $max !== null && $version > $max) {
         $versionOk = false;
         $notes[] = 'Package version is above the active game profile range.';
     }
 
-    $engineOk = $selectedEngine === '' || strtoupper((string)$detectedEngine) === $selectedEngine;
+    $engineOk = $selectedEngine === '' || strtoupper((string)$detectedEngine) === $selectedEngine || $legacyCompatible;
     if (!$engineOk) {
         $notes[] = 'Detected engine ' . $detectedEngine . ' does not match active game profile engine ' . $selectedEngine . '.';
     }
 
     if ($engineOk && $extOk && $versionOk && $legacy['ok']) {
-        $confidence = 'high';
+        $confidence = $legacyCompatible ? 'medium' : 'high';
     } elseif ($engineOk && $extOk) {
         $confidence = 'medium';
     } elseif (!$engineOk) {
@@ -213,7 +243,7 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
 
     return [
         'selected_engine' => $selectedEngine,
-        'detected_engine' => $detectedEngine,
+        'detected_engine' => $legacyCompatible ? $selectedEngine : $detectedEngine,
         'package_version' => $version,
         'licensee_version' => $licensee,
         'confidence' => $confidence,
