@@ -16,6 +16,12 @@ function upload_handle_request(PDO $db, array $config): array
     $gameId = (int)($_POST['game_id'] ?? 0);
     $strict = ($_POST['strict_profile'] ?? '1') === '1';
     $progressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
+    $userId = $_SESSION['user']['id'] ?? null;
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
     if (!$game) {
         throw new RuntimeException('Game not found');
@@ -44,7 +50,7 @@ function upload_handle_request(PDO $db, array $config): array
             continue;
         }
         try {
-            $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $_SESSION['user']['id'] ?? null, $strict, $progress);
+            $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $userId !== null ? (int)$userId : null, $strict, $progress);
             if ($result[0] === 'duplicate') {
                 $dup++;
             } else {
@@ -69,7 +75,11 @@ try {
     $db = catalog_db($config);
 
     if (($_GET['progress'] ?? '') !== '') {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
         header('Content-Type: application/json');
+        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
         echo json_encode(upload_progress_read((string)$_GET['progress']));
         exit;
     }
@@ -92,6 +102,7 @@ try {
             echo json_encode(['ok' => true] + $result);
             exit;
         }
+        session_start();
         $_SESSION['profiled_upload_flash'] = 'Upload complete. Verified=' . $result['ok'] . ' Duplicate=' . $result['duplicate'] . ' Failed=' . $result['failed'] . '. ' . implode(' | ', array_slice($result['messages'], 0, 12));
         header('Location: profiled-upload.php?game_id=' . (int)($_POST['game_id'] ?? 0));
         exit;
