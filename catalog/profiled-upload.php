@@ -9,52 +9,70 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
 
+function upload_handle_request(PDO $db, array $config): array
+{
+    catalog_check_csrf('profiled_upload');
+    $gameId = (int)($_POST['game_id'] ?? 0);
+    $strict = ($_POST['strict_profile'] ?? '1') === '1';
+    $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
+    if (!$game) {
+        throw new RuntimeException('Game not found');
+    }
+
+    $ok = 0;
+    $dup = 0;
+    $bad = 0;
+    $messages = [];
+    foreach ($_FILES['files']['tmp_name'] ?? [] as $i => $tmp) {
+        $name = (string)($_FILES['files']['name'][$i] ?? 'upload.bin');
+        $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+        if ($err !== UPLOAD_ERR_OK) {
+            $bad++;
+            $messages[] = $name . ': upload error ' . $err;
+            continue;
+        }
+        try {
+            $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $_SESSION['user']['id'] ?? null, $strict);
+            if ($result[0] === 'duplicate') {
+                $dup++;
+            } else {
+                $ok++;
+            }
+            $messages[] = $name . ': ' . $result[2];
+        } catch (Throwable $e) {
+            $bad++;
+            scanner_store_failed_upload($config, $tmp, $name, (string)$game['slug'], $e->getMessage());
+            $messages[] = $name . ': failed - ' . $e->getMessage();
+        }
+    }
+
+    return ['ok' => $ok, 'duplicate' => $dup, 'failed' => $bad, 'messages' => $messages];
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    if (!catalog_require_admin_page('Upload Files')) {
-        exit;
+    if (!catalog_support_is_admin()) {
+        if (($_POST['ajax'] ?? '') === '1') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => 'Admin required']);
+            exit;
+        }
+        if (!catalog_require_admin_page('Upload Files')) {
+            exit;
+        }
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        catalog_check_csrf('profiled_upload');
-        $gameId = (int)($_POST['game_id'] ?? 0);
-        $strict = ($_POST['strict_profile'] ?? '1') === '1';
-        $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
-        if (!$game) {
-            throw new RuntimeException('Game not found');
+        $result = upload_handle_request($db, $config);
+        if (($_POST['ajax'] ?? '') === '1') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => true] + $result);
+            exit;
         }
-
-        $ok = 0;
-        $dup = 0;
-        $bad = 0;
-        $messages = [];
-        foreach ($_FILES['files']['tmp_name'] ?? [] as $i => $tmp) {
-            $name = (string)($_FILES['files']['name'][$i] ?? 'upload.bin');
-            $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
-            if ($err !== UPLOAD_ERR_OK) {
-                $bad++;
-                $messages[] = $name . ': upload error ' . $err;
-                continue;
-            }
-            try {
-                $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $_SESSION['user']['id'] ?? null, $strict);
-                if ($result[0] === 'duplicate') {
-                    $dup++;
-                } else {
-                    $ok++;
-                }
-                $messages[] = $name . ': ' . $result[2];
-            } catch (Throwable $e) {
-                $bad++;
-                scanner_store_failed_upload($config, $tmp, $name, (string)$game['slug'], $e->getMessage());
-                $messages[] = $name . ': failed - ' . $e->getMessage();
-            }
-        }
-
-        $_SESSION['profiled_upload_flash'] = 'Upload complete. Verified=' . $ok . ' Duplicate=' . $dup . ' Failed=' . $bad . '. ' . implode(' | ', array_slice($messages, 0, 12));
-        header('Location: profiled-upload.php?game_id=' . $gameId);
+        $_SESSION['profiled_upload_flash'] = 'Upload complete. Verified=' . $result['ok'] . ' Duplicate=' . $result['duplicate'] . ' Failed=' . $result['failed'] . '. ' . implode(' | ', array_slice($result['messages'], 0, 12));
+        header('Location: profiled-upload.php?game_id=' . (int)($_POST['game_id'] ?? 0));
         exit;
     }
 
@@ -63,11 +81,11 @@ try {
     unset($_SESSION['profiled_upload_flash']);
 
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
-    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
+    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name');
 
-    catalog_page_header('Upload Files', 'Import packages into the selected game using its active scanner profile. Mismatches are rejected in strict mode and moved to unverified storage.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
+    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. Mismatches are rejected in strict mode and moved to unverified storage.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
 
-    echo '<div class="card"><h2>Upload and scan</h2><form method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
+    echo '<div class="card"><h2>Upload and scan</h2><form id="profiled-upload-form" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';
     foreach ($games as $game) {
         $sel = ((int)$game['id'] === $selectedGameId) ? ' selected' : '';
@@ -76,8 +94,10 @@ try {
     }
     echo '</select></label></p>';
     echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject/move mismatches to unverified</option><option value="0">Loose: allow scanner/parser to try anyway</option></select></label></p>';
-    echo '<p><input type="file" name="files[]" multiple required> <button>Upload and scan</button></p>';
-    echo '<p class="muted">Max per file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '.</p></form></div>';
+    echo '<p><input id="profiled-upload-files" type="file" name="files[]" multiple required> <button id="profiled-upload-button">Upload and scan</button></p>';
+    echo '<p class="muted">Max per file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches.</p>';
+    echo '<div id="upload-progress" class="upload-progress" hidden><div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress><div id="upload-progress-log" class="upload-progress-log"></div></div>';
+    echo '</form></div>';
 
     echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Extensions</th><th>Version range</th><th>Open</th></tr>';
     foreach ($games as $game) {
@@ -89,8 +109,106 @@ try {
     }
     echo '</table></div>';
 
+    echo <<<'HTML'
+<script>
+(function () {
+    const form = document.getElementById('profiled-upload-form');
+    const fileInput = document.getElementById('profiled-upload-files');
+    const button = document.getElementById('profiled-upload-button');
+    const progressBox = document.getElementById('upload-progress');
+    const progressBar = document.getElementById('upload-progress-bar');
+    const label = document.getElementById('upload-progress-label');
+    const speed = document.getElementById('upload-progress-speed');
+    const log = document.getElementById('upload-progress-log');
+    if (!form || !fileInput || !window.XMLHttpRequest) return;
+
+    function fmtBytes(bytes) {
+        const units = ['B', 'KB', 'MB', 'GB'];
+        let v = bytes;
+        let i = 0;
+        while (v >= 1024 && i < units.length - 1) {
+            v /= 1024;
+            i++;
+        }
+        return (i ? v.toFixed(2) : String(v)) + ' ' + units[i];
+    }
+
+    function addLog(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight;
+    }
+
+    function uploadOne(file, index, total) {
+        return new Promise(function (resolve) {
+            const data = new FormData();
+            data.append('ajax', '1');
+            data.append('csrf', form.querySelector('[name="csrf"]').value);
+            data.append('game_id', form.querySelector('[name="game_id"]').value);
+            data.append('strict_profile', form.querySelector('[name="strict_profile"]').value);
+            data.append('files[]', file, file.name);
+
+            const xhr = new XMLHttpRequest();
+            const start = Date.now();
+            xhr.open('POST', form.action || window.location.href, true);
+            xhr.upload.onprogress = function (e) {
+                if (!e.lengthComputable) return;
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.value = percent;
+                const elapsed = Math.max(0.1, (Date.now() - start) / 1000);
+                speed.textContent = fmtBytes(e.loaded / elapsed) + '/s';
+                label.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name + ' (' + percent + '%)';
+            };
+            xhr.onload = function () {
+                progressBar.value = 100;
+                try {
+                    const res = JSON.parse(xhr.responseText || '{}');
+                    if (!res.ok) {
+                        addLog(file.name + ': failed - ' + (res.error || 'server error'));
+                    } else if (res.messages && res.messages.length) {
+                        res.messages.forEach(addLog);
+                    } else {
+                        addLog(file.name + ': complete');
+                    }
+                } catch (e) {
+                    addLog(file.name + ': failed - invalid server response');
+                }
+                resolve();
+            };
+            xhr.onerror = function () {
+                addLog(file.name + ': failed - upload connection error');
+                resolve();
+            };
+            xhr.send(data);
+        });
+    }
+
+    form.addEventListener('submit', async function (e) {
+        const files = Array.from(fileInput.files || []);
+        if (!files.length) return;
+        e.preventDefault();
+        button.disabled = true;
+        progressBox.hidden = false;
+        log.textContent = '';
+        for (let i = 0; i < files.length; i++) {
+            await uploadOne(files[i], i + 1, files.length);
+        }
+        label.textContent = 'Upload batch complete.';
+        speed.textContent = '';
+        button.disabled = false;
+    });
+})();
+</script>
+HTML;
+
     catalog_foot();
 } catch (Throwable $e) {
+    if (($_POST['ajax'] ?? '') === '1') {
+        header('Content-Type: application/json');
+        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        exit;
+    }
     if (!headers_sent()) {
         catalog_head('Upload error');
     }
