@@ -6,511 +6,131 @@ error_reporting(E_ALL);
 ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
-$configFile = __DIR__ . '/config.php';
+require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function h($v): string { return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
-function u(array $p = []): string { return 'index.php' . ($p ? '?' . http_build_query($p) : ''); }
-function clean_name(string $s): string { return trim(str_replace(["\0", '/', "\\"], ['', '.', '.'], $s)); }
-function slug_text(string $s): string { $s = strtolower(trim($s)); $s = preg_replace('/[^a-z0-9]+/', '-', $s) ?? ''; return trim($s, '-') ?: 'item'; }
-function bytes_fmt(int $b): string { $u = ['B','KB','MB','GB','TB']; $n = $b; $i = 0; while ($n >= 1024 && $i < count($u) - 1) { $n /= 1024; $i++; } return ($i ? number_format($n, 2) : (string)$b) . ' ' . $u[$i]; }
-function admin(): bool { return ($_SESSION['user']['role'] ?? '') === 'admin'; }
-function need_admin(): void { if (!admin()) { header('Location: ' . u(['page' => 'login'])); exit; } }
-function csrf(): string { $_SESSION['csrf'] ??= bin2hex(random_bytes(16)); return $_SESSION['csrf']; }
-function check_csrf(): void { if (($_POST['csrf'] ?? '') !== ($_SESSION['csrf'] ?? '')) { throw new RuntimeException('Bad CSRF token'); } }
-function join_path_parts(array $parts): string { return implode('.', array_values(array_filter(array_map('clean_name', $parts), static fn($v) => $v !== ''))); }
-
-function nav_link(string $label, string $href, string $class = ''): void
+function csrf(): string
 {
-    echo '<a' . ($class !== '' ? ' class="' . h($class) . '"' : '') . ' href="' . h($href) . '">' . h($label) . '</a>';
+    $_SESSION['csrf'] ??= bin2hex(random_bytes(16));
+    return (string)$_SESSION['csrf'];
 }
 
-function nav_menu(string $label, array $links): void
+function check_csrf(): void
 {
-    echo '<details><summary>' . h($label) . '</summary><div class="nav-menu">';
-    foreach ($links as $text => $href) {
-        nav_link((string)$text, (string)$href);
+    if (($_POST['csrf'] ?? '') !== ($_SESSION['csrf'] ?? '')) {
+        throw new RuntimeException('Bad CSRF token');
     }
-    echo '</div></details>';
 }
 
-function brand_mark(): string
+function redirect_to(string $url): void
 {
-    return '<span class="brand-mark"><img src="assets/unreal-file-catalog-icon-32x32.png" alt="" width="32" height="32"></span>';
-}
-
-function page_head(string $title, array $config = []): void
-{
-    $siteName = $config['site_name'] ?? 'UnrealDB';
-    echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . h($title) . '</title>';
-    echo '<link rel="icon" href="assets/favicon.ico">';
-    echo '<link rel="apple-touch-icon" sizes="180x180" href="assets/unreal-file-catalog-icon-180x180.png">';
-    echo '<link rel="icon" type="image/png" sizes="32x32" href="assets/unreal-file-catalog-icon-32x32.png">';
-    echo '<link rel="icon" type="image/png" sizes="16x16" href="assets/unreal-file-catalog-icon-16x16.png">';
-    echo '<link rel="stylesheet" href="assets/catalog.css">';
-    echo '</head><body>';
-    echo '<header class="site-header"><div class="brand"><a href="' . h(admin() ? 'dashboard.php' : u()) . '">' . brand_mark() . '<span><strong>' . h($siteName) . '</strong><small>package catalog</small></span></a></div><nav class="primary-nav">';
-    nav_link('Games', 'games.php');
-    nav_link('Search', u(['page' => 'search']));
-
-    if (admin()) {
-        echo '<span class="nav-sep"></span>';
-        nav_menu('Admin', [
-            'Dashboard' => 'dashboard.php',
-            'Library' => 'library.php',
-            'Game Admin' => 'game-manager.php',
-            'Game Profiles' => 'game-profiles.php',
-        ]);
-        nav_menu('Sources', [
-            'Game Sources' => 'sources.php',
-            'Local Source Scan' => 'source-scan.php',
-            'HTTP Source Scan' => 'http-source-scan.php',
-            'Upload Files' => 'profiled-upload.php',
-        ]);
-        nav_menu('Federation', [
-            'Federation Admin' => 'federation/admin.php',
-            'Transfers' => 'transfers.php',
-            'Downloads' => 'download-admin.php',
-            'Settings' => 'federation/settings.php',
-        ]);
-        nav_link('Logout ' . (string)($_SESSION['user']['username'] ?? ''), u(['page' => 'logout']), 'logout');
-    } else {
-        echo '<span class="nav-sep"></span>';
-        nav_link('Admin Login', u(['page' => 'login']));
-    }
-
-    echo '</nav></header><main>';
-    if (isset($_SESSION['flash'])) { echo '<div class="card flash"><strong>' . h($_SESSION['flash']) . '</strong></div>'; unset($_SESSION['flash']); }
-}
-
-function page_foot(): void { echo '</main></body></html>'; }
-function flash(string $url, string $message): void { $_SESSION['flash'] = $message; header('Location: ' . $url); exit; }
-
-if (!is_file($configFile)) {
-    page_head('Setup Required');
-    echo '<div class="card"><h1>Setup required</h1><p>The catalog config file does not exist yet.</p><p>Copy:</p><pre class="mono">catalog/config.example.php</pre><p>to:</p><pre class="mono">catalog/config.php</pre><p>Then edit the DB settings and import <code>catalog/install.sql</code>.</p></div>';
-    page_foot();
+    header('Location: ' . $url);
     exit;
 }
 
-$config = require $configFile;
-
-function db(array $config): PDO
-{
-    static $pdo = null;
-    if ($pdo instanceof PDO) { return $pdo; }
-    if (!class_exists('PDO')) { throw new RuntimeException('PHP PDO is not available.'); }
-    if (!extension_loaded('pdo_mysql')) { throw new RuntimeException('Missing PHP extension: pdo_mysql. Loaded PDO drivers: ' . implode(', ', PDO::getAvailableDrivers())); }
-    $d = $config['db'] ?? [];
-    foreach (['host','port','database','username','password'] as $k) {
-        if (!array_key_exists($k, $d)) { throw new RuntimeException('Missing DB config value: db.' . $k); }
-    }
-    $dsn = 'mysql:host=' . $d['host'] . ';port=' . (int)$d['port'] . ';dbname=' . $d['database'] . ';charset=' . ($d['charset'] ?? 'utf8mb4');
-    $pdo = new PDO($dsn, $d['username'], $d['password'], [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC, PDO::ATTR_EMULATE_PREPARES => false]);
-    return $pdo;
-}
-
-function one(PDO $db, string $sql, array $args = []): ?array { $s = $db->prepare($sql); $s->execute($args); $r = $s->fetch(); return $r ?: null; }
-function allq(PDO $db, string $sql, array $args = []): array { $s = $db->prepare($sql); $s->execute($args); return $s->fetchAll(); }
-function runq(PDO $db, string $sql, array $args = []): int { $s = $db->prepare($sql); $s->execute($args); return $s->rowCount(); }
-
-function active_game_engine(PDO $db, int $gameId): string
-{
-    $profile = one($db, 'SELECT engine_key FROM ue_game_profiles WHERE game_id=? AND is_active=1 ORDER BY id DESC LIMIT 1', [$gameId]);
-    $engine = strtoupper(trim((string)($profile['engine_key'] ?? '')));
-    if ($engine === '') {
-        throw new RuntimeException('Game has no active scanner profile.');
-    }
-    return $engine;
-}
-
-function load_reader_class(array $config, string $engineKey): string
-{
-    $readerConfig = $config['engine_readers'][$engineKey] ?? [];
-
-    if ($engineKey === 'UE3') {
-        $catalogReader = realpath(__DIR__ . '/parsers/UE3CatalogReader.php');
-        if ($catalogReader && is_file($catalogReader)) {
-            require_once $catalogReader;
-            if (class_exists('CatalogUE3PackageReader', false)) {
-                return 'CatalogUE3PackageReader';
-            }
-        }
-    }
-
-    $rel = $readerConfig['reader'] ?? '';
-    $path = realpath(__DIR__ . '/' . $rel);
-    if (!$path || !is_file($path)) { throw new RuntimeException('Reader not found for ' . $engineKey . ': ' . $rel); }
-
-    require_once $path;
-
-    $candidates = [];
-    if (!empty($readerConfig['class'])) { $candidates[] = (string)$readerConfig['class']; }
-    $candidates[] = match ($engineKey) {
-        'UE4' => 'UnrealPackageReader4',
-        default => 'UnrealPackageReader',
-    };
-    $candidates[] = 'UnrealPackageReader';
-    $candidates[] = 'UnrealPackageReader4';
-
-    foreach (array_unique($candidates) as $class) {
-        if ($class !== '' && class_exists($class, false)) { return $class; }
-    }
-
-    throw new RuntimeException('Reader file loaded for ' . $engineKey . ', but no supported reader class was found. Tried: ' . implode(', ', array_unique($candidates)));
-}
-
-function split_reader_issues(array $issues): array
-{
-    $fatal = [];
-    $notes = [];
-
-    foreach ($issues as $issue) {
-        $text = trim((string)$issue);
-        if ($text === '') { continue; }
-
-        if (str_starts_with($text, 'Package is unversioned; using assumed UE4 version ')) {
-            $notes[] = $text;
-            continue;
-        }
-
-        $fatal[] = $text;
-    }
-
-    return [$fatal, $notes];
-}
-
-function ref_path(int $ref, array $imports, array $exports, array &$cache, array $seen = []): string
-{
-    if ($ref === 0) { return ''; }
-    if (isset($cache[$ref])) { return $cache[$ref]; }
-    if (isset($seen[$ref])) { return ''; }
-    $seen[$ref] = true;
-
-    if ($ref < 0) {
-        $row = $imports[-$ref - 1] ?? null;
-        if (!$row) { return ''; }
-        $outer = (int)($row['outerIndex'] ?? $row['OuterIndex'] ?? $row['outer'] ?? 0);
-        $name = (string)($row['objectNameText'] ?? ($row['ObjectName']['text'] ?? ''));
-        return $cache[$ref] = join_path_parts([ref_path($outer, $imports, $exports, $cache, $seen), $name]);
-    }
-
-    $row = $exports[$ref - 1] ?? null;
-    if (!$row) { return ''; }
-    $outer = (int)($row['outerIndex'] ?? $row['packageIndex'] ?? $row['outer'] ?? 0);
-    $name = (string)($row['objectNameText'] ?? '');
-    return $cache[$ref] = join_path_parts([ref_path($outer, $imports, $exports, $cache, $seen), $name]);
-}
-
-function rebuild_dependencies(PDO $db, array $config, int $fileId): void
-{
-    runq($db, 'DELETE FROM ue_dependencies WHERE file_id=?', [$fileId]);
-    $file = one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
-    if (!$file) { return; }
-
-    $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status) VALUES(?,?,?,?,?,?,?)');
-    foreach (allq($db, 'SELECT * FROM ue_imports WHERE file_id=?', [$fileId]) as $imp) {
-        $status = 'missing';
-        $resolvedFile = null;
-        $resolvedExport = null;
-        if ((int)$imp['is_common'] === 1) {
-            $status = 'common';
-        } elseif ($imp['relative_object_path'] === '') {
-            $match = one($db, 'SELECT id FROM ue_files WHERE game_id=? AND package_name=? AND id<>? ORDER BY uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['root_package'], $fileId]);
-            if ($match) { $status = 'package_only'; $resolvedFile = (int)$match['id']; }
-        } else {
-            $match = one($db, 'SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND e.full_path=? AND f.id<>? ORDER BY f.uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['full_path'], $fileId]);
-            if ($match) { $status = 'resolved'; $resolvedFile = (int)$match['file_id']; $resolvedExport = (int)$match['export_id']; }
-        }
-        $insert->execute([$fileId, $imp['id'], $imp['root_package'], $imp['full_path'], $resolvedFile, $resolvedExport, $status]);
-    }
-}
-
-function rebuild_game(PDO $db, array $config, int $gameId): void
-{
-    foreach (allq($db, 'SELECT id FROM ue_files WHERE game_id=?', [$gameId]) as $file) { rebuild_dependencies($db, $config, (int)$file['id']); }
-}
-
-function store_failed_upload(array $config, string $tmp, string $originalName, string $gameSlug, string $reason): void
-{
-    if (!is_file($tmp)) { return; }
-    $dir = rtrim($config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . slug_text($gameSlug) . '/unverified';
-    if (!is_dir($dir)) { @mkdir($dir, 0775, true); }
-    $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._-]+/', '_', basename($originalName));
-    @rename($tmp, $dir . '/' . $name);
-    @file_put_contents($dir . '/' . $name . '.txt', $reason);
-}
-
-function scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId): array
-{
-    $game = one($db, 'SELECT g.*, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE g.id=?', [$gameId]);
-    if (!$game) { throw new RuntimeException('Game not found'); }
-    if (empty($game['profile_engine'])) { throw new RuntimeException('Game has no active scanner profile.'); }
-
-    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-    if (!in_array($ext, $config['allowed_extensions'], true)) { throw new RuntimeException('Extension not allowed: ' . $ext); }
-
-    $size = filesize($tmp) ?: 0;
-    if ($size <= 0 || $size > (int)$config['max_upload_bytes']) { throw new RuntimeException('Bad file size: ' . bytes_fmt((int)$size)); }
-
-    $md5 = md5_file($tmp);
-    $sha1 = sha1_file($tmp);
-    if (!$md5 || !$sha1) { throw new RuntimeException('Could not hash file'); }
-
-    $duplicate = one($db, 'SELECT id, original_name FROM ue_files WHERE md5=?', [$md5]);
-    if ($duplicate) { return ['duplicate', (int)$duplicate['id'], 'Duplicate MD5: ' . $duplicate['original_name']]; }
-
-    $readerClass = load_reader_class($config, (string)$game['profile_engine']);
-    $pkg = new $readerClass($tmp);
-    $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
-    [$fatalIssues, $scanNotes] = split_reader_issues($issues);
-    if ($fatalIssues) { throw new RuntimeException(implode("\n", $fatalIssues)); }
-
-    foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
-        if (!method_exists($pkg, $method)) { throw new RuntimeException('Reader is missing method: ' . $method); }
-    }
-
-    $header = $pkg->getHeader();
-    $names = $pkg->getNames();
-    $imports = $pkg->getImports();
-    $exports = $pkg->getExports();
-    $packageName = clean_name(pathinfo($originalName, PATHINFO_FILENAME));
-    $scanNotesText = $scanNotes ? implode("\n", $scanNotes) : null;
-
-    $dir = rtrim($config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . slug_text($game['slug']) . '/verified';
-    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) { throw new RuntimeException('Could not create storage folder: ' . $dir); }
-
-    $storedName = $md5 . '.' . $ext;
-    $dest = $dir . '/' . $storedName;
-    if (!rename($tmp, $dest)) { throw new RuntimeException('Could not store upload'); }
-    $relativePath = 'storage/games/' . slug_text($game['slug']) . '/verified/' . $storedName;
-
-    $db->beginTransaction();
-    try {
-        $stmt = $db->prepare('INSERT INTO ue_files(game_id,package_name,original_name,stored_name,relative_path,extension,file_size,md5,sha1,package_guid,package_version,licensee_version,name_count,import_count,export_count,scan_status,scan_notes,uploaded_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $size, $md5, $sha1, (string)($header['guid'] ?? ''), (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), count($names), count($imports), count($exports), 'verified', $scanNotesText, $userId]);
-        $fileId = (int)$db->lastInsertId();
-
-        $stmt = $db->prepare('INSERT INTO ue_names(file_id,name_index,name_text,flags) VALUES(?,?,?,?)');
-        foreach ($names as $i => $name) { $stmt->execute([$fileId, $i, (string)($name['name'] ?? $name['text'] ?? ''), isset($name['flags']) ? (int)$name['flags'] : null]); }
-
-        $cache = [];
-        $common = array_map('strtolower', $config['common_packages'] ?? []);
-        $stmt = $db->prepare('INSERT INTO ue_imports(file_id,import_index,class_package,class_name,object_name,outer_index,full_path,root_package,relative_object_path,is_common) VALUES(?,?,?,?,?,?,?,?,?,?)');
-        foreach ($imports as $i => $imp) {
-            $full = ref_path(-($i + 1), $imports, $exports, $cache);
-            $parts = $full !== '' ? explode('.', $full) : [];
-            $root = $parts[0] ?? '';
-            $relative = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
-            $object = (string)($imp['objectNameText'] ?? ($imp['ObjectName']['text'] ?? ''));
-            $classPackage = (string)($imp['classPackageText'] ?? ($imp['ClassPackage']['text'] ?? ''));
-            $className = (string)($imp['classNameText'] ?? ($imp['ClassName']['text'] ?? ''));
-            $outer = (int)($imp['outerIndex'] ?? $imp['OuterIndex'] ?? $imp['outer'] ?? 0);
-            $stmt->execute([$fileId, $i, $classPackage, $className, $object, $outer, $full, $root, $relative, in_array(strtolower($root), $common, true) ? 1 : 0]);
-        }
-
-        $stmt = $db->prepare('INSERT INTO ue_exports(file_id,export_index,class_name,object_name,outer_index,local_path,full_path,object_flags,serial_size,serial_offset) VALUES(?,?,?,?,?,?,?,?,?,?)');
-        foreach ($exports as $i => $exp) {
-            $local = ref_path($i + 1, $imports, $exports, $cache);
-            $classRef = (int)($exp['classIndex'] ?? $exp['class'] ?? 0);
-            $className = $classRef ? ref_path($classRef, $imports, $exports, $cache) : '';
-            $outer = (int)($exp['outerIndex'] ?? $exp['packageIndex'] ?? $exp['outer'] ?? 0);
-            $stmt->execute([$fileId, $i, $className, (string)($exp['objectNameText'] ?? ''), $outer, $local, join_path_parts([$packageName, $local]), isset($exp['objectFlags']) ? (int)$exp['objectFlags'] : null, isset($exp['serialSize']) ? (int)$exp['serialSize'] : null, isset($exp['serialOffset']) ? (int)$exp['serialOffset'] : null]);
-        }
-
-        rebuild_dependencies($db, $config, $fileId);
-        $db->commit();
-        rebuild_game($db, $config, $gameId);
-        return ['verified', $fileId, 'Uploaded and scanned'];
-    } catch (Throwable $e) {
-        $db->rollBack();
-        @unlink($dest);
-        throw $e;
-    }
-}
-
 try {
-    $db = db($config);
-    $page = $_GET['page'] ?? 'home';
+    $config = catalog_config();
+    $db = catalog_db($config);
+    $page = (string)($_GET['page'] ?? 'home');
 
-    if ($page === 'logout') { session_destroy(); header('Location: ' . u()); exit; }
-
-    if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        check_csrf();
-        $count = (int)(one($db, 'SELECT COUNT(*) c FROM ue_users')['c'] ?? 0);
-        if ($count === 0) {
-            $username = trim((string)$_POST['username']);
-            $password = (string)$_POST['password'];
-            if ($username === '' || strlen($password) < 8) { throw new RuntimeException('Username required and password must be at least 8 characters'); }
-            runq($db, 'INSERT INTO ue_users(username,password_hash,role) VALUES(?,?,?)', [$username, password_hash($password, PASSWORD_DEFAULT), 'admin']);
-        }
-        $user = one($db, 'SELECT * FROM ue_users WHERE username=?', [trim((string)$_POST['username'])]);
-        if (!$user || !password_verify((string)$_POST['password'], $user['password_hash'])) { throw new RuntimeException('Invalid login'); }
-        $_SESSION['user'] = ['id' => (int)$user['id'], 'username' => $user['username'], 'role' => $user['role']];
-        flash('dashboard.php', 'Logged in');
+    if ($page === 'game') {
+        redirect_to('game-files.php?id=' . (int)($_GET['id'] ?? 0));
     }
 
-    if ($page === 'upload' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        need_admin();
-        check_csrf();
-        $gameId = (int)$_POST['game_id'];
-        $game = one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
-        if (!$game) { throw new RuntimeException('Game not found'); }
-        $ok = $dup = $bad = 0;
-        $messages = [];
-        foreach ($_FILES['files']['tmp_name'] ?? [] as $i => $tmp) {
-            $name = (string)($_FILES['files']['name'][$i] ?? 'upload.bin');
-            $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
-            if ($err !== UPLOAD_ERR_OK) { $bad++; $messages[] = $name . ': upload error ' . $err; continue; }
-            try {
-                $result = scan_uploaded_file($db, $config, $gameId, $tmp, $name, $_SESSION['user']['id'] ?? null);
-                if ($result[0] === 'duplicate') { $dup++; } else { $ok++; }
-                $messages[] = $name . ': ' . $result[2];
-            } catch (Throwable $e) {
-                $bad++;
-                store_failed_upload($config, $tmp, $name, $game['slug'], $e->getMessage());
-                $messages[] = $name . ': failed - ' . $e->getMessage();
-            }
-        }
-        flash(u(['page' => 'game', 'id' => $gameId]), 'Upload complete. Verified=' . $ok . ' Duplicate=' . $dup . ' Failed=' . $bad . '. ' . implode(' | ', array_slice($messages, 0, 5)));
+    if ($page === 'file') {
+        redirect_to('file-info.php?id=' . (int)($_GET['id'] ?? 0));
     }
 
-    if ($page === 'save_game' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        need_admin();
-        check_csrf();
-        $name = trim((string)$_POST['name']);
-        $slug = slug_text((string)$_POST['slug']);
-        $engineKey = strtoupper(trim((string)$_POST['engine_key']));
-        $description = trim((string)$_POST['description']);
-
-        runq($db, 'INSERT INTO ue_games(name,slug,description) VALUES(?,?,?)', [$name, $slug, $description]);
-        $gameId = (int)$db->lastInsertId();
-
-        runq($db, 'INSERT INTO ue_game_profiles(game_id,engine_key,allowed_extensions_json,confidence_policy,is_active) VALUES(?,?,?,?,1)', [$gameId, $engineKey, json_encode($config['allowed_extensions'] ?? [], JSON_UNESCAPED_SLASHES), 'normal']);
-        flash(u(['page' => 'admin']), 'Game saved');
-    }
-
-    if ($page === 'save_file' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        need_admin();
-        check_csrf();
-        $id = (int)$_POST['id'];
-        runq($db, 'UPDATE ue_files SET package_name=? WHERE id=?', [clean_name((string)$_POST['package_name']), $id]);
-        $file = one($db, 'SELECT game_id FROM ue_files WHERE id=?', [$id]);
-        if ($file) { rebuild_game($db, $config, (int)$file['game_id']); }
-        flash(u(['page' => 'file', 'id' => $id]), 'Package name saved and links rebuilt');
-    }
-
-    if ($page === 'delete_file' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-        need_admin();
-        check_csrf();
-        $id = (int)$_POST['id'];
-        $file = one($db, 'SELECT * FROM ue_files WHERE id=?', [$id]);
-        if ($file) {
-            runq($db, 'DELETE FROM ue_files WHERE id=?', [$id]);
-            $path = __DIR__ . '/' . $file['relative_path'];
-            if (is_file($path)) { @unlink($path); }
-            rebuild_game($db, $config, (int)$file['game_id']);
-        }
-        flash(u(['page' => 'admin']), 'File deleted');
+    if ($page === 'upload') {
+        redirect_to('profiled-upload.php');
     }
 
     if ($page === 'download') {
         $id = (int)($_GET['id'] ?? 0);
-        $file = one($db, 'SELECT * FROM ue_files WHERE id=?', [$id]);
-        if (!$file) { throw new RuntimeException('File not found'); }
+        $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$id]);
+        if (!$file) {
+            throw new RuntimeException('File not found');
+        }
+
         $path = realpath(__DIR__ . '/' . $file['relative_path']);
         $root = realpath(rtrim($config['storage_path'], DIRECTORY_SEPARATOR));
-        if (!$path || !$root || !str_starts_with($path, $root) || !is_file($path)) { throw new RuntimeException('Stored file missing'); }
+        if (!$path || !$root || !str_starts_with($path, $root) || !is_file($path)) {
+            throw new RuntimeException('Stored file missing');
+        }
+
         header('Content-Type: application/octet-stream');
         header('Content-Length: ' . filesize($path));
-        header('Content-Disposition: attachment; filename="' . addslashes($file['original_name']) . '"');
+        header('Content-Disposition: attachment; filename="' . addslashes((string)$file['original_name']) . '"');
         readfile($path);
         exit;
     }
 
-    page_head($config['site_name'] ?? 'UnrealDB', $config);
+    if ($page === 'logout') {
+        session_destroy();
+        redirect_to('index.php');
+    }
+
+    if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        check_csrf();
+        $count = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_users')['c'] ?? 0);
+        if ($count === 0) {
+            $username = trim((string)$_POST['username']);
+            $password = (string)$_POST['password'];
+            if ($username === '' || strlen($password) < 8) {
+                throw new RuntimeException('Username required and password must be at least 8 characters');
+            }
+            $stmt = $db->prepare('INSERT INTO ue_users(username,password_hash,role) VALUES(?,?,?)');
+            $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), 'admin']);
+        }
+
+        $user = catalog_one($db, 'SELECT * FROM ue_users WHERE username=?', [trim((string)$_POST['username'])]);
+        if (!$user || !password_verify((string)$_POST['password'], (string)$user['password_hash'])) {
+            throw new RuntimeException('Invalid login');
+        }
+        $_SESSION['user'] = ['id' => (int)$user['id'], 'username' => $user['username'], 'role' => $user['role']];
+        redirect_to('dashboard.php');
+    }
+
+    catalog_head($config['site_name'] ?? 'UnrealDB');
 
     if ($page === 'home') {
-        $games = allq($db, 'SELECT g.*, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.engine_key ORDER BY g.name');
+        $games = catalog_all($db, 'SELECT g.*, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.engine_key ORDER BY g.name');
         echo '<div class="card hero"><h1>Unreal Games</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and MD5 hashes.</p></div><div class="grid">';
         foreach ($games as $game) {
-            echo '<a class="stat tool-card" href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '"><h2>' . h($game['name']) . '</h2><p>' . h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . h(bytes_fmt((int)$game['total_size'])) . '</p></a>';
+            echo '<a class="stat tool-card" href="game-files.php?id=' . (int)$game['id'] . '"><h2>' . catalog_h($game['name']) . '</h2><p>' . catalog_h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</p></a>';
         }
         echo '</div>';
-    } elseif ($page === 'game') {
-        $gameId = (int)($_GET['id'] ?? 0);
-        $game = one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
-        if (!$game) { throw new RuntimeException('Game not found'); }
-        echo '<div class="card hero"><h1>' . h($game['name']) . '</h1><p class="muted">' . h($game['description']) . '</p></div>';
-        $files = allq($db, "SELECT f.*, SUM(d.status='resolved') resolved_count, SUM(d.status='missing') missing_count, SUM(d.status='package_only') package_only_count, SUM(d.status='common') common_count FROM ue_files f LEFT JOIN ue_dependencies d ON d.file_id=f.id WHERE f.game_id=? GROUP BY f.id ORDER BY f.package_name,f.original_name", [$gameId]);
-        echo '<div class="card"><h2>Files</h2><div class="scroll"><table><tr><th>Package</th><th>File</th><th>MD5</th><th>Size</th><th>Dependencies</th><th>Actions</th></tr>';
-        foreach ($files as $file) {
-            $deps = '';
-            foreach (['resolved','missing','package_only','common'] as $key) {
-                $count = (int)($file[$key . '_count'] ?? 0);
-                if ($count) { $deps .= '<span class="dep ' . $key . '">' . $key . ': ' . $count . '</span>'; }
-            }
-            $deps = $deps ?: '<span class="muted">none</span>';
-            echo '<tr><td class="mono">' . h($file['package_name']) . '</td><td>' . h($file['original_name']) . '<br><span class="muted small">GUID ' . h($file['package_guid']) . '</span></td><td class="mono small">' . h($file['md5']) . '</td><td>' . h(bytes_fmt((int)$file['file_size'])) . '</td><td>' . $deps . '</td><td><a href="' . h(u(['page' => 'file', 'id' => $file['id']])) . '">details</a> | <a href="' . h(u(['page' => 'examine', 'id' => $file['id']])) . '">examine</a> | <a href="' . h(u(['page' => 'download', 'id' => $file['id']])) . '">download</a></td></tr>';
-        }
-        echo '</table></div></div>';
-        if (admin()) {
-            echo '<div class="card"><h2>Upload files</h2><form method="post" enctype="multipart/form-data" action="' . h(u(['page' => 'upload'])) . '"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input type="hidden" name="game_id" value="' . $gameId . '"><p class="muted">Max per file: ' . h(bytes_fmt((int)$config['max_upload_bytes'])) . '. Failed scans move to the admin-only unverified folder.</p><input type="file" name="files[]" multiple required> <button>Upload and scan</button></form></div>';
-        }
-    } elseif ($page === 'file') {
-        $id = (int)($_GET['id'] ?? 0);
-        $file = one($db, 'SELECT f.*, g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$id]);
-        if (!$file) { throw new RuntimeException('File not found'); }
-        echo '<div class="card hero"><h1>' . h($file['package_name']) . '</h1><p>' . h($file['original_name']) . ' / ' . h($file['game_name']) . '</p><p><a class="button" href="' . h(u(['page' => 'download', 'id' => $id])) . '">Download</a> <a class="button" href="' . h(u(['page' => 'examine', 'id' => $id])) . '">Examine full parse</a></p><div class="grid"><div class="stat">MD5<br><span class="mono small">' . h($file['md5']) . '</span></div><div class="stat">SHA1<br><span class="mono small">' . h($file['sha1']) . '</span></div><div class="stat">GUID<br><span class="mono small">' . h($file['package_guid']) . '</span></div><div class="stat">Tables<br>' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</div></div></div>';
-        if (!empty($file['scan_notes'])) { echo '<div class="card"><h2>Scan notes</h2><pre class="mono">' . h($file['scan_notes']) . '</pre></div>'; }
-        $deps = allq($db, 'SELECT d.*, rf.original_name resolved_file FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.required_package, d.required_object_path', [$id]);
-        echo '<div class="card"><h2>Dependencies</h2><table><tr><th>Status</th><th>Required object</th><th>Resolved by</th></tr>';
-        foreach ($deps as $dep) {
-            echo '<tr><td><span class="dep ' . h($dep['status']) . '">' . h($dep['status']) . '</span></td><td class="mono path">' . h($dep['required_object_path']) . '</td><td>' . ($dep['resolved_file_id'] ? '<a href="' . h(u(['page' => 'file', 'id' => $dep['resolved_file_id']])) . '">' . h($dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>') . '</td></tr>';
-        }
-        echo '</table></div>';
-        if (admin()) {
-            echo '<div class="card"><h2>Admin</h2><form method="post" action="' . h(u(['page' => 'save_file'])) . '"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input type="hidden" name="id" value="' . $id . '">Package name <input name="package_name" value="' . h($file['package_name']) . '"> <button>Save and rebuild links</button></form><form method="post" action="' . h(u(['page' => 'delete_file'])) . '" onsubmit="return confirm(\'Delete this file and DB rows?\')"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input type="hidden" name="id" value="' . $id . '"><button class="danger">Delete file</button></form></div>';
-        }
-    } elseif ($page === 'examine') {
-        $id = (int)($_GET['id'] ?? 0);
-        $file = one($db, 'SELECT f.*, p.engine_key profile_engine FROM ue_files f JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE f.id=?', [$id]);
-        if (!$file) { throw new RuntimeException('File not found'); }
-        if (empty($file['profile_engine'])) { throw new RuntimeException('Game has no active scanner profile.'); }
-        $readerClass = load_reader_class($config, (string)$file['profile_engine']);
-        $pkg = new $readerClass(__DIR__ . '/' . $file['relative_path']);
-        echo '<div class="card hero"><h1>Examine: ' . h($file['original_name']) . '</h1><p><a class="button" href="' . h(u(['page' => 'file', 'id' => $id])) . '">Back</a></p></div>';
-        foreach (['Header' => $pkg->getHeader(), 'Names' => $pkg->getNames(), 'Imports' => $pkg->getImports(), 'Exports' => $pkg->getExports()] as $label => $data) {
-            echo '<div class="card"><h2>' . h($label) . '</h2><div class="scroll"><pre class="mono">' . h(json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</pre></div></div>';
-        }
     } elseif ($page === 'search') {
         $q = trim((string)($_GET['q'] ?? ''));
-        echo '<div class="card hero"><h1>Search</h1><form><input type="hidden" name="page" value="search"><input name="q" value="' . h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name" style="min-width:420px"> <button>Search</button></form></div>';
+        echo '<div class="card hero"><h1>Search</h1><form><input type="hidden" name="page" value="search"><input name="q" value="' . catalog_h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name" style="min-width:420px"> <button>Search</button></form></div>';
         if ($q !== '') {
             $like = '%' . $q . '%';
-            $rows = allq($db, 'SELECT DISTINCT f.* FROM ue_files f LEFT JOIN ue_imports i ON i.file_id=f.id LEFT JOIN ue_exports e ON e.file_id=f.id WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR i.full_path LIKE ? OR e.full_path LIKE ? ORDER BY f.package_name LIMIT 200', [$q, $q, $like, $like, $like, $like, $like]);
+            $rows = catalog_all($db, 'SELECT DISTINCT f.* FROM ue_files f LEFT JOIN ue_imports i ON i.file_id=f.id LEFT JOIN ue_exports e ON e.file_id=f.id WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR i.full_path LIKE ? OR e.full_path LIKE ? ORDER BY f.package_name LIMIT 200', [$q, $q, $like, $like, $like, $like, $like]);
             echo '<div class="card"><h2>Results</h2><table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
-            foreach ($rows as $row) { echo '<tr><td class="mono">' . h($row['package_name']) . '</td><td>' . h($row['original_name']) . '</td><td class="mono small">' . h($row['md5']) . '</td><td><a href="' . h(u(['page' => 'file', 'id' => $row['id']])) . '">details</a></td></tr>'; }
+            foreach ($rows as $row) {
+                echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a></td></tr>';
+            }
             echo '</table></div>';
         }
     } elseif ($page === 'login') {
-        $count = (int)(one($db, 'SELECT COUNT(*) c FROM ue_users')['c'] ?? 0);
-        echo '<div class="card hero"><h1>' . ($count ? 'Admin Login' : 'Create first admin user') . '</h1><form method="post"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><p><input name="username" required placeholder="Username"></p><p><input type="password" name="password" required placeholder="Password"></p><button>' . ($count ? 'Login' : 'Create admin') . '</button></form></div>';
+        $count = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_users')['c'] ?? 0);
+        echo '<div class="card hero"><h1>' . ($count ? 'Admin Login' : 'Create first admin user') . '</h1><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(csrf()) . '"><p><input name="username" required placeholder="Username"></p><p><input type="password" name="password" required placeholder="Password"></p><button>' . ($count ? 'Login' : 'Create admin') . '</button></form></div>';
     } elseif ($page === 'admin') {
-        need_admin();
-        $games = allq($db, 'SELECT g.*, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
-        echo '<div class="card hero"><h1>Admin</h1><p class="muted">Quick legacy admin view. The main admin tools are also available from the header menus.</p></div><div class="card"><h2>Games</h2><table><tr><th>Name</th><th>Slug</th><th>Engine</th><th>Open</th></tr>';
-        foreach ($games as $game) { echo '<tr><td>' . h($game['name']) . '</td><td>' . h($game['slug']) . '</td><td>' . h($game['profile_engine'] ?? 'no active profile') . '</td><td><a href="' . h(u(['page' => 'game', 'id' => $game['id']])) . '">open</a></td></tr>'; }
-        echo '</table></div><div class="card"><h2>Add game</h2><form method="post" action="' . h(u(['page' => 'save_game'])) . '"><input type="hidden" name="csrf" value="' . h(csrf()) . '"><input name="name" required placeholder="Game name"> <input name="slug" required placeholder="slug"> <select name="engine_key">';
-        foreach ($config['engine_readers'] as $key => $reader) { echo '<option value="' . h($key) . '">' . h($key . ' - ' . $reader['label']) . '</option>'; }
-        echo '</select><p><textarea name="description" rows="3" style="width:100%" placeholder="Description"></textarea></p><button>Save game</button></form></div>';
+        if (!catalog_support_is_admin()) {
+            redirect_to('index.php?page=login');
+        }
+        redirect_to('dashboard.php');
+    } elseif ($page === 'examine') {
+        redirect_to('file-info.php?id=' . (int)($_GET['id'] ?? 0));
     } else {
         throw new RuntimeException('Unknown page');
     }
 
-    page_foot();
+    catalog_foot();
 } catch (Throwable $e) {
-    if (!headers_sent()) { page_head('Catalog Error', $config ?? []); }
-    echo '<div class="msg err"><strong>Error:</strong> ' . h($e->getMessage()) . '</div>';
+    if (!headers_sent()) {
+        catalog_head('Catalog Error');
+    }
+    echo '<div class="msg err"><strong>Error:</strong> ' . catalog_h($e->getMessage()) . '</div>';
     echo '<div class="card"><h2>Setup checklist</h2><ol><li>Copy <code>catalog/config.example.php</code> to <code>catalog/config.php</code>.</li><li>Edit the database settings.</li><li>Import <code>catalog/install.sql</code>.</li><li>Make <code>catalog/storage/</code> writable by PHP.</li></ol></div>';
-    page_foot();
+    catalog_foot();
 }
