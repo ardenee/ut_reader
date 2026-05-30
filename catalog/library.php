@@ -13,7 +13,7 @@ try {
     $db = catalog_db($config);
     catalog_head('Library');
 
-    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, COUNT(DISTINCT f.id) file_count, SUM(f.scan_status="verified") verified_count, SUM(f.scan_status="failed") failed_count FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
+    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, COUNT(DISTINCT f.id) file_count, COALESCE(SUM(f.scan_status="verified"),0) verified_count, COALESCE(SUM(f.scan_status="failed"),0) failed_count FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
     $totalFiles = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files');
     $verified = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="verified"');
     $duplicates = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="duplicate"');
