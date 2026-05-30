@@ -17,9 +17,15 @@
     box-sizing: border-box;
 }
 
+html {
+    min-height: 100%;
+    background: var(--bg);
+}
+
 body {
+    min-height: 100vh;
     margin: 0;
-    background: radial-gradient(circle at top left, #17284a 0, #080d19 380px), var(--bg);
+    background: radial-gradient(circle at top left, #17284a 0, #080d19 380px) no-repeat fixed, var(--bg);
     color: var(--text);
     font: 14px/1.45 system-ui, Segoe UI, Arial, sans-serif;
 }
@@ -64,6 +70,13 @@ header.site-header {
     background: linear-gradient(135deg, #4169e1, #8b5cf6);
     font-weight: 800;
     box-shadow: var(--shadow);
+}
+
+.brand-mark img {
+    display: block;
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
 }
 
 .brand small {
@@ -233,6 +246,15 @@ th {
     font-weight: 650;
 }
 
+.reorderable-table th[draggable="true"] {
+    cursor: grab;
+}
+
+.reorderable-table th.dragging {
+    opacity: .65;
+    cursor: grabbing;
+}
+
 .muted {
     color: var(--muted);
 }
@@ -268,6 +290,14 @@ textarea {
     border-radius: 10px;
     padding: 8px;
     max-width: 100%;
+}
+
+.table-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0 0 12px;
 }
 
 .page-links,
