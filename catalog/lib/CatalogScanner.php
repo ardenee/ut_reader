@@ -51,6 +51,18 @@ function scanner_emit_progress(?callable $progress, string $stage, int $done, in
     ]);
 }
 
+function scanner_emit_percent(?callable $progress, string $stage, int $percent, string $message): void
+{
+    scanner_emit_progress($progress, $stage, max(0, min(100, $percent)), 100, $message);
+}
+
+function scanner_range_percent(int $start, int $end, int $done, int $total): int
+{
+    $total = max(1, $total);
+    $done = max(0, min($done, $total));
+    return $start + (int)floor((($end - $start) * $done) / $total);
+}
+
 function scanner_load_reader_class(array $config, string $engineKey): string
 {
     $engineKey = strtoupper(trim($engineKey));
@@ -144,16 +156,20 @@ function scanner_ref_path(int $ref, array $imports, array $exports, array &$cach
     return $cache[$ref] = scanner_join_path_parts([scanner_ref_path($outer, $imports, $exports, $cache, $seen), $name]);
 }
 
-function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId): void
+function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?callable $progress = null, int $startPercent = 0, int $endPercent = 100, string $prefix = 'Rebuilding dependencies'): void
 {
+    scanner_emit_percent($progress, 'dependencies', $startPercent, $prefix . ': clearing old links');
     $db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
     if (!$file) {
+        scanner_emit_percent($progress, 'dependencies', $endPercent, $prefix . ': skipped missing file');
         return;
     }
 
+    $imports = catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index', [$fileId]);
+    $total = max(1, count($imports));
     $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status) VALUES(?,?,?,?,?,?,?)');
-    foreach (catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=?', [$fileId]) as $imp) {
+    foreach ($imports as $i => $imp) {
         $status = 'missing';
         $resolvedFile = null;
         $resolvedExport = null;
@@ -174,19 +190,33 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId): void
             }
         }
         $insert->execute([$fileId, $imp['id'], $imp['root_package'], $imp['full_path'], $resolvedFile, $resolvedExport, $status]);
+
+        $done = $i + 1;
+        if (($done % 10) === 0 || $done === $total) {
+            scanner_emit_percent($progress, 'dependencies', scanner_range_percent($startPercent, $endPercent, $done, $total), $prefix . ': import ' . $done . '/' . $total);
+        }
     }
 }
 
-function scanner_rebuild_game(PDO $db, array $config, int $gameId): void
+function scanner_rebuild_game(PDO $db, array $config, int $gameId, ?callable $progress = null, int $startPercent = 90, int $endPercent = 99): void
 {
-    foreach (catalog_all($db, 'SELECT id FROM ue_files WHERE game_id=?', [$gameId]) as $file) {
-        scanner_rebuild_dependencies($db, $config, (int)$file['id']);
+    $files = catalog_all($db, 'SELECT id, package_name FROM ue_files WHERE game_id=? ORDER BY package_name, id', [$gameId]);
+    $total = max(1, count($files));
+    if (!$files) {
+        scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing game dependency links: no files');
+        return;
+    }
+
+    foreach ($files as $i => $file) {
+        $fileStart = scanner_range_percent($startPercent, $endPercent, $i, $total);
+        $fileEnd = scanner_range_percent($startPercent, $endPercent, $i + 1, $total);
+        scanner_rebuild_dependencies($db, $config, (int)$file['id'], $progress, $fileStart, $fileEnd, 'Refreshing game dependency links ' . ($i + 1) . '/' . $total . ' (' . (string)$file['package_name'] . ')');
     }
 }
 
 function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId, bool $strictProfile = true, ?callable $progress = null): array
 {
-    scanner_emit_progress($progress, 'start', 0, 100, 'Preparing ' . $originalName);
+    scanner_emit_percent($progress, 'start', 0, 'Preparing ' . $originalName);
 
     $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
     if (!$game) {
@@ -205,7 +235,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Bad file size: ' . catalog_bytes((int)$size));
     }
 
-    scanner_emit_progress($progress, 'scan', 5, 100, 'Reading package header');
+    scanner_emit_percent($progress, 'scan', 4, 'Reading package header');
     $classification = gp_classify_file($db, $gameId, $tmp, $originalName);
     if ($strictProfile && empty($classification['ok_for_selected_game'])) {
         $suggested = [];
@@ -215,7 +245,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown') . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '. ' . implode(' ', $classification['notes']) . ($suggested ? ' Suggested: ' . implode(', ', $suggested) : ''));
     }
 
-    scanner_emit_progress($progress, 'scan', 10, 100, 'Hashing file');
+    scanner_emit_percent($progress, 'scan', 8, 'Hashing file');
     $md5 = md5_file($tmp);
     $sha1 = sha1_file($tmp);
     if (!$md5 || !$sha1) {
@@ -224,15 +254,15 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 
     $duplicate = catalog_one($db, 'SELECT id, original_name FROM ue_files WHERE game_id=? AND md5=?', [$gameId, $md5]);
     if ($duplicate) {
-        scanner_emit_progress($progress, 'done', 100, 100, 'Duplicate in selected game');
+        scanner_emit_percent($progress, 'done', 100, 'Duplicate in selected game');
         return ['duplicate', (int)$duplicate['id'], 'Duplicate in selected game: ' . $duplicate['original_name'], $classification];
     }
 
-    scanner_emit_progress($progress, 'scan', 15, 100, 'Opening reader');
+    scanner_emit_percent($progress, 'scan', 12, 'Opening reader');
     $readerClass = scanner_load_reader_class($config, $profileEngine);
     $pkg = new $readerClass($tmp);
 
-    scanner_emit_progress($progress, 'scan', 22, 100, 'Validating package');
+    scanner_emit_percent($progress, 'scan', 16, 'Validating package');
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     [$fatalIssues, $scanNotes] = scanner_split_reader_issues($issues);
     if ($fatalIssues) {
@@ -245,13 +275,13 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         }
     }
 
-    scanner_emit_progress($progress, 'scan', 30, 100, 'Reading header');
+    scanner_emit_percent($progress, 'scan', 20, 'Reading header');
     $header = $pkg->getHeader();
-    scanner_emit_progress($progress, 'scan', 40, 100, 'Reading names table');
+    scanner_emit_percent($progress, 'scan', 26, 'Reading names table');
     $names = $pkg->getNames();
-    scanner_emit_progress($progress, 'scan', 55, 100, 'Reading imports table');
+    scanner_emit_percent($progress, 'scan', 34, 'Reading imports table');
     $imports = $pkg->getImports();
-    scanner_emit_progress($progress, 'scan', 70, 100, 'Reading exports table');
+    scanner_emit_percent($progress, 'scan', 44, 'Reading exports table');
     $exports = $pkg->getExports();
 
     $nameCount = count($names);
@@ -261,7 +291,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
     $scanNotesText = $scanNotesAll ? implode("\n", $scanNotesAll) : null;
 
-    scanner_emit_progress($progress, 'scan', 78, 100, 'Storing file');
+    scanner_emit_percent($progress, 'scan', 52, 'Storing file');
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . scanner_slug_text((string)$game['slug']) . '/verified';
     if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
         throw new RuntimeException('Could not create storage folder: ' . $dir);
@@ -274,12 +304,11 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     }
     $relativePath = 'storage/games/' . scanner_slug_text((string)$game['slug']) . '/verified/' . $storedName;
 
-    $totalRows = max(1, $nameCount + $importCount + $exportCount + 4);
+    $totalRows = max(1, $nameCount + $importCount + $exportCount + 1);
     $writtenRows = 0;
-    $progressDb = static function (string $message) use ($progress, &$writtenRows, $totalRows): void {
-        $writtenRows++;
-        $percent = 80 + (int)floor(($writtenRows / $totalRows) * 18);
-        scanner_emit_progress($progress, 'database', $percent, 100, $message);
+    $progressDb = static function (string $message, int $rowsDone = 1) use ($progress, &$writtenRows, $totalRows): void {
+        $writtenRows = min($totalRows, $writtenRows + max(1, $rowsDone));
+        scanner_emit_percent($progress, 'database', scanner_range_percent(54, 76, $writtenRows, $totalRows), $message);
     };
 
     $db->beginTransaction();
@@ -292,8 +321,9 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         $stmt = $db->prepare('INSERT INTO ue_names(file_id,name_index,name_text,flags) VALUES(?,?,?,?)');
         foreach ($names as $i => $name) {
             $stmt->execute([$fileId, $i, (string)($name['name'] ?? $name['text'] ?? ''), isset($name['flags']) ? (int)$name['flags'] : null]);
-            if (($i % 25) === 0 || $i + 1 === $nameCount) {
-                $progressDb('Writing names table ' . ($i + 1) . '/' . $nameCount);
+            $done = $i + 1;
+            if (($done % 10) === 0 || $done === $nameCount) {
+                $progressDb('Writing names table ' . $done . '/' . $nameCount, 10);
             }
         }
 
@@ -310,8 +340,9 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             $className = (string)($imp['classNameText'] ?? ($imp['ClassName']['text'] ?? ''));
             $outer = (int)($imp['outerIndex'] ?? $imp['OuterIndex'] ?? $imp['outer'] ?? 0);
             $stmt->execute([$fileId, $i, $classPackage, $className, $object, $outer, $full, $root, $relative, in_array(strtolower($root), $common, true) ? 1 : 0]);
-            if (($i % 25) === 0 || $i + 1 === $importCount) {
-                $progressDb('Writing imports table ' . ($i + 1) . '/' . $importCount);
+            $done = $i + 1;
+            if (($done % 10) === 0 || $done === $importCount) {
+                $progressDb('Writing imports table ' . $done . '/' . $importCount, 10);
             }
         }
 
@@ -322,16 +353,17 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             $className = $classRef ? scanner_ref_path($classRef, $imports, $exports, $cache) : '';
             $outer = (int)($exp['outerIndex'] ?? $exp['packageIndex'] ?? $exp['outer'] ?? 0);
             $stmt->execute([$fileId, $i, $className, (string)($exp['objectNameText'] ?? ''), $outer, $local, scanner_join_path_parts([$packageName, $local]), isset($exp['objectFlags']) ? (int)$exp['objectFlags'] : null, isset($exp['serialSize']) ? (int)$exp['serialSize'] : null, isset($exp['serialOffset']) ? (int)$exp['serialOffset'] : null]);
-            if (($i % 25) === 0 || $i + 1 === $exportCount) {
-                $progressDb('Writing exports table ' . ($i + 1) . '/' . $exportCount);
+            $done = $i + 1;
+            if (($done % 10) === 0 || $done === $exportCount) {
+                $progressDb('Writing exports table ' . $done . '/' . $exportCount, 10);
             }
         }
 
-        scanner_emit_progress($progress, 'database', 98, 100, 'Rebuilding dependencies');
-        scanner_rebuild_dependencies($db, $config, $fileId);
+        scanner_emit_percent($progress, 'dependencies', 76, 'Rebuilding dependencies for imported file');
+        scanner_rebuild_dependencies($db, $config, $fileId, $progress, 76, 88, 'Imported file dependency links');
         $db->commit();
-        scanner_rebuild_game($db, $config, $gameId);
-        scanner_emit_progress($progress, 'done', 100, 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
+        scanner_rebuild_game($db, $config, $gameId, $progress, 88, 99);
+        scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
         return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', detection=' . $classification['confidence'] . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount, $classification];
     } catch (Throwable $e) {
         $db->rollBack();
