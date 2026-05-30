@@ -198,7 +198,7 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?call
     }
 }
 
-function scanner_rebuild_game(PDO $db, array $config, int $gameId, ?callable $progress = null, int $startPercent = 90, int $endPercent = 99): void
+function scanner_rebuild_game(PDO $db, array $config, int $gameId, ?callable $progress = null, int $startPercent = 56, int $endPercent = 99): void
 {
     $files = catalog_all($db, 'SELECT id, package_name FROM ue_files WHERE game_id=? ORDER BY package_name, id', [$gameId]);
     $total = max(1, count($files));
@@ -235,7 +235,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Bad file size: ' . catalog_bytes((int)$size));
     }
 
-    scanner_emit_percent($progress, 'scan', 4, 'Reading package header');
+    scanner_emit_percent($progress, 'scan', 2, 'Reading package header');
     $classification = gp_classify_file($db, $gameId, $tmp, $originalName);
     if ($strictProfile && empty($classification['ok_for_selected_game'])) {
         $suggested = [];
@@ -245,7 +245,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown') . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '. ' . implode(' ', $classification['notes']) . ($suggested ? ' Suggested: ' . implode(', ', $suggested) : ''));
     }
 
-    scanner_emit_percent($progress, 'scan', 8, 'Hashing file');
+    scanner_emit_percent($progress, 'scan', 4, 'Hashing file');
     $md5 = md5_file($tmp);
     $sha1 = sha1_file($tmp);
     if (!$md5 || !$sha1) {
@@ -258,11 +258,11 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         return ['duplicate', (int)$duplicate['id'], 'Duplicate in selected game: ' . $duplicate['original_name'], $classification];
     }
 
-    scanner_emit_percent($progress, 'scan', 12, 'Opening reader');
+    scanner_emit_percent($progress, 'scan', 7, 'Opening reader');
     $readerClass = scanner_load_reader_class($config, $profileEngine);
     $pkg = new $readerClass($tmp);
 
-    scanner_emit_percent($progress, 'scan', 16, 'Validating package');
+    scanner_emit_percent($progress, 'scan', 9, 'Validating package');
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     [$fatalIssues, $scanNotes] = scanner_split_reader_issues($issues);
     if ($fatalIssues) {
@@ -275,23 +275,24 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         }
     }
 
-    scanner_emit_percent($progress, 'scan', 20, 'Reading header');
+    scanner_emit_percent($progress, 'scan', 11, 'Reading header');
     $header = $pkg->getHeader();
-    scanner_emit_percent($progress, 'scan', 26, 'Reading names table');
+    scanner_emit_percent($progress, 'scan', 14, 'Reading names table');
     $names = $pkg->getNames();
-    scanner_emit_percent($progress, 'scan', 34, 'Reading imports table');
+    scanner_emit_percent($progress, 'scan', 17, 'Reading imports table');
     $imports = $pkg->getImports();
-    scanner_emit_percent($progress, 'scan', 44, 'Reading exports table');
+    scanner_emit_percent($progress, 'scan', 20, 'Reading exports table');
     $exports = $pkg->getExports();
 
     $nameCount = count($names);
     $importCount = count($imports);
     $exportCount = count($exports);
+    scanner_emit_percent($progress, 'scan', 22, 'Read ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
     $packageName = scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
     $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
     $scanNotesText = $scanNotesAll ? implode("\n", $scanNotesAll) : null;
 
-    scanner_emit_percent($progress, 'scan', 52, 'Storing file');
+    scanner_emit_percent($progress, 'database', 23, 'Storing file');
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . scanner_slug_text((string)$game['slug']) . '/verified';
     if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
         throw new RuntimeException('Could not create storage folder: ' . $dir);
@@ -308,7 +309,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $writtenRows = 0;
     $progressDb = static function (string $message, int $rowsDone = 1) use ($progress, &$writtenRows, $totalRows): void {
         $writtenRows = min($totalRows, $writtenRows + max(1, $rowsDone));
-        scanner_emit_percent($progress, 'database', scanner_range_percent(54, 76, $writtenRows, $totalRows), $message);
+        scanner_emit_percent($progress, 'database', scanner_range_percent(23, 35, $writtenRows, $totalRows), $message);
     };
 
     $db->beginTransaction();
@@ -359,10 +360,10 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             }
         }
 
-        scanner_emit_percent($progress, 'dependencies', 76, 'Rebuilding dependencies for imported file');
-        scanner_rebuild_dependencies($db, $config, $fileId, $progress, 76, 88, 'Imported file dependency links');
+        scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
+        scanner_rebuild_dependencies($db, $config, $fileId, $progress, 36, 55, 'Imported file dependency links');
         $db->commit();
-        scanner_rebuild_game($db, $config, $gameId, $progress, 88, 99);
+        scanner_rebuild_game($db, $config, $gameId, $progress, 56, 99);
         scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
         return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', detection=' . $classification['confidence'] . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount, $classification];
     } catch (Throwable $e) {
