@@ -43,7 +43,8 @@ try {
             'cron_worker_enabled', 'cron_worker_token',
             'public_download_mode', 'external_mirror_auto_queue', 'external_mirror_expiry_days',
             'external_mirror_require_admin_approval', 'external_mirror_max_file_size_mb',
-            'join_requests_enabled', 'join_claim_token_ttl_seconds', 'main_parent_url'
+            'join_requests_enabled', 'join_claim_token_ttl_seconds', 'main_parent_url',
+            'game_file_display_limit'
         ];
 
         foreach ($allowed as $key) {
@@ -69,7 +70,7 @@ try {
     $identity = fed_ensure_identity($db);
     $settings = fed_all_settings($db);
 
-    catalog_page_header('Federation Settings', 'Configure site identity, parent/child permissions, transfer limits, public download handling, and DSM cron worker settings.', catalog_federation_links() + ['Join Main Parent' => 'join-main-parent.php', 'Join Requests' => 'join-requests.php', 'Mirror Providers' => '../mirror-providers.php', 'Mirror Links' => '../mirror-links.php']);
+    catalog_page_header('Federation Settings', 'Configure site identity, catalog UI defaults, parent/child permissions, transfer limits, public download handling, and DSM cron worker settings.', catalog_federation_links() + ['Join Main Parent' => 'join-main-parent.php', 'Join Requests' => 'join-requests.php', 'Mirror Providers' => '../mirror-providers.php', 'Mirror Links' => '../mirror-links.php']);
 
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(settings_csrf()) . '">';
     echo '<div class="card"><h2>Site identity</h2><table>';
@@ -83,6 +84,10 @@ try {
     echo '</select></td></tr>';
     echo '<tr><th>Site name</th><td><input name="site_name" value="' . catalog_h($settings['site_name'] ?? '') . '" style="min-width:420px"></td></tr>';
     echo '<tr><th>Site URL</th><td><input name="site_url" value="' . catalog_h($settings['site_url'] ?? '') . '" style="min-width:640px" placeholder="https://example.com/catalog"></td></tr>';
+    echo '</table></div>';
+
+    echo '<div class="card"><h2>Catalog UI</h2><p class="muted">Display defaults used by public catalog pages.</p><table>';
+    echo '<tr><th>Game files per page</th><td><input name="game_file_display_limit" type="number" min="1" max="500" value="' . catalog_h($settings['game_file_display_limit'] ?? '100') . '" style="width:120px"> <span class="muted">Default is 100. Users can still choose 25, 50, 100, 200, or 500 on the file list page.</span></td></tr>';
     echo '</table></div>';
 
     echo '<div class="card"><h2>Join / pairing</h2><p class="muted">Public join requests are for parent sites accepting child deployments. Main parent URL is for child sites using the easy Join Main Parent workflow.</p><table>';
