@@ -35,6 +35,25 @@ function scanner_store_failed_upload(array $config, string $tmp, string $origina
     @file_put_contents($dir . '/' . $name . '.txt', $reason);
 }
 
+function scanner_profile_extensions(array $profile, array $config): array
+{
+    $profileExts = json_decode((string)($profile['allowed_extensions_json'] ?? '[]'), true);
+    if (!is_array($profileExts) || !$profileExts) {
+        $profileExts = $config['allowed_extensions'] ?? [];
+    }
+
+    $out = [];
+    foreach ($profileExts as $ext) {
+        $ext = strtolower(trim((string)$ext));
+        $ext = ltrim($ext, '.');
+        if ($ext !== '') {
+            $out[] = $ext;
+        }
+    }
+
+    return array_values(array_unique($out));
+}
+
 function scanner_emit_progress(?callable $progress, string $stage, int $done, int $total, string $message): void
 {
     if (!$progress) {
@@ -226,8 +245,9 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $profileEngine = strtoupper((string)$profile['engine_key']);
 
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-    if (!in_array($ext, $config['allowed_extensions'], true)) {
-        throw new RuntimeException('Extension not allowed globally: ' . $ext);
+    $profileExtensions = scanner_profile_extensions($profile, $config);
+    if (!in_array($ext, $profileExtensions, true)) {
+        throw new RuntimeException('Extension not allowed by assigned profile: ' . $ext . '. Allowed: ' . implode(', ', $profileExtensions));
     }
 
     $size = filesize($tmp) ?: 0;
