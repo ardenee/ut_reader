@@ -40,12 +40,7 @@ try {
     }
 
     $configuredLimit = (int)(fed_setting($db, 'game_file_display_limit', '100') ?: 100);
-    $defaultLimit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
-    $allowedLimits = [25, 50, 100, 200, 500];
-    $limit = game_files_int('limit', $defaultLimit, 1, 500);
-    if (!in_array($limit, $allowedLimits, true)) {
-        $limit = $defaultLimit;
-    }
+    $limit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
 
     $pageNo = game_files_int('file_page', 1, 1, PHP_INT_MAX);
     $filter = trim((string)($_GET['file_filter'] ?? ''));
@@ -78,19 +73,17 @@ try {
 
     catalog_head((string)$game['name']);
     echo '<script src="assets/catalog-popups.js"></script>';
-    echo '<div class="card hero"><h1>' . catalog_h($game['name']) . '</h1><p class="muted">Files, dependency status, hidden-path downloads and popup details.</p><p><a class="button" href="games.php">Back to games</a> <a class="button" href="index.php?page=game&id=' . (int)$gameId . '">Upload/admin view</a></p></div>';
+    echo '<div class="card hero"><h1>' . catalog_h($game['name']) . '</h1><p class="muted">Files, dependency status, hidden-path downloads and popup details.</p><p><a class="button" href="games.php">Back to games</a></p></div>';
 
     echo '<div class="card">';
-    echo '<div class="section-title"><div><h2>Files</h2><p class="muted small">Showing ' . count($files) . ' of ' . $totalRows . ' files. Default page size is controlled in Federation Settings &gt; Catalog UI.</p></div></div>';
+    echo '<div class="section-title"><h2>Files</h2></div>';
     echo '<form class="table-controls" method="get">';
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
-    echo '<label>Server filter <input name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label> ';
-    echo '<label>Rows <select name="limit">';
-    foreach ($allowedLimits as $option) {
-        echo '<option value="' . $option . '"' . ($option === $limit ? ' selected' : '') . '>' . $option . '</option>';
+    echo '<label>Search files <input name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label> ';
+    echo '<button>Search</button> ';
+    if ($filter !== '') {
+        echo '<a class="button" href="game-files.php?id=' . (int)$gameId . '">Clear</a>';
     }
-    echo '</select></label> <button>Apply</button> ';
-    echo '<input type="search" id="displayed-file-filter" placeholder="Filter displayed page" autocomplete="off">';
     echo '</form>';
 
     echo '<div class="page-links">';
@@ -106,14 +99,14 @@ try {
     echo '</div>';
 
     echo '<div class="scroll"><table id="game-files-table" class="reorderable-table"><thead><tr>';
-    echo '<th draggable="true" data-col="package">Package</th>';
-    echo '<th draggable="true" data-col="file">File</th>';
-    echo '<th draggable="true" data-col="identity">Identity</th>';
-    echo '<th draggable="true" data-col="size">Size</th>';
-    echo '<th draggable="true" data-col="type">Type</th>';
-    echo '<th draggable="true" data-col="deps">Dependencies</th>';
-    echo '<th draggable="true" data-col="sources">Sources</th>';
-    echo '<th draggable="true" data-col="actions">Actions</th>';
+    echo '<th draggable="true" data-col="package" title="Drag to rearrange columns">Package</th>';
+    echo '<th draggable="true" data-col="file" title="Drag to rearrange columns">File</th>';
+    echo '<th draggable="true" data-col="identity" title="Drag to rearrange columns">Identity</th>';
+    echo '<th draggable="true" data-col="size" title="Drag to rearrange columns">Size</th>';
+    echo '<th draggable="true" data-col="type" title="Drag to rearrange columns">Type</th>';
+    echo '<th draggable="true" data-col="deps" title="Drag to rearrange columns">Dependencies</th>';
+    echo '<th draggable="true" data-col="sources" title="Drag to rearrange columns">Sources</th>';
+    echo '<th draggable="true" data-col="actions" title="Drag to rearrange columns">Actions</th>';
     echo '</tr></thead><tbody>';
 
     foreach ($files as $file) {
@@ -146,18 +139,8 @@ try {
     echo <<<'HTML'
 <script>
 (function () {
-    const filter = document.getElementById('displayed-file-filter');
     const table = document.getElementById('game-files-table');
     if (!table) return;
-
-    if (filter) {
-        filter.addEventListener('input', function () {
-            const q = filter.value.trim().toLowerCase();
-            table.querySelectorAll('tbody tr').forEach(function (row) {
-                row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-            });
-        });
-    }
 
     const storageKey = 'unrealdb.gameFiles.columnOrder';
     function orderedColumns() {
