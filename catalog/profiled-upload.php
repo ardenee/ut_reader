@@ -8,15 +8,24 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
+require_once __DIR__ . '/lib/UploadProgress.php';
 
 function upload_handle_request(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
     $gameId = (int)($_POST['game_id'] ?? 0);
     $strict = ($_POST['strict_profile'] ?? '1') === '1';
+    $progressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
     $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
     if (!$game) {
         throw new RuntimeException('Game not found');
+    }
+
+    $progress = null;
+    if ($progressToken !== '') {
+        $progress = static function (array $state) use ($progressToken): void {
+            upload_progress_write($progressToken, $state);
+        };
     }
 
     $ok = 0;
@@ -29,10 +38,13 @@ function upload_handle_request(PDO $db, array $config): array
         if ($err !== UPLOAD_ERR_OK) {
             $bad++;
             $messages[] = $name . ': upload error ' . $err;
+            if ($progress) {
+                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': upload error ' . $err]);
+            }
             continue;
         }
         try {
-            $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $_SESSION['user']['id'] ?? null, $strict);
+            $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $_SESSION['user']['id'] ?? null, $strict, $progress);
             if ($result[0] === 'duplicate') {
                 $dup++;
             } else {
@@ -43,6 +55,9 @@ function upload_handle_request(PDO $db, array $config): array
             $bad++;
             scanner_store_failed_upload($config, $tmp, $name, (string)$game['slug'], $e->getMessage());
             $messages[] = $name . ': failed - ' . $e->getMessage();
+            if ($progress) {
+                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': failed - ' . $e->getMessage()]);
+            }
         }
     }
 
@@ -52,6 +67,12 @@ function upload_handle_request(PDO $db, array $config): array
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+
+    if (($_GET['progress'] ?? '') !== '') {
+        header('Content-Type: application/json');
+        echo json_encode(upload_progress_read((string)$_GET['progress']));
+        exit;
+    }
 
     if (!catalog_support_is_admin()) {
         if (($_POST['ajax'] ?? '') === '1') {
@@ -96,7 +117,10 @@ try {
     echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject/move mismatches to unverified</option><option value="0">Loose: allow scanner/parser to try anyway</option></select></label></p>';
     echo '<p><input id="profiled-upload-files" type="file" name="files[]" multiple required> <button id="profiled-upload-button">Upload and scan</button></p>';
     echo '<p class="muted">Max per file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches.</p>';
-    echo '<div id="upload-progress" class="upload-progress" hidden><div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress><div id="upload-progress-log" class="upload-progress-log"></div></div>';
+    echo '<div id="upload-progress" class="upload-progress" hidden>';
+    echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
+    echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
+    echo '<div id="upload-progress-log" class="upload-progress-log"></div></div>';
     echo '</form></div>';
 
     echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Extensions</th><th>Version range</th><th>Open</th></tr>';
@@ -116,8 +140,11 @@ try {
     const fileInput = document.getElementById('profiled-upload-files');
     const button = document.getElementById('profiled-upload-button');
     const progressBox = document.getElementById('upload-progress');
-    const progressBar = document.getElementById('upload-progress-bar');
-    const label = document.getElementById('upload-progress-label');
+    const currentBar = document.getElementById('upload-progress-bar');
+    const overallBar = document.getElementById('overall-progress-bar');
+    const currentLabel = document.getElementById('upload-progress-label');
+    const overallLabel = document.getElementById('overall-progress-label');
+    const overallCount = document.getElementById('overall-progress-count');
     const speed = document.getElementById('upload-progress-speed');
     const log = document.getElementById('upload-progress-log');
     if (!form || !fileInput || !window.XMLHttpRequest) return;
@@ -133,6 +160,10 @@ try {
         return (i ? v.toFixed(2) : String(v)) + ' ' + units[i];
     }
 
+    function makeToken() {
+        return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+    }
+
     function addLog(text) {
         const div = document.createElement('div');
         div.textContent = text;
@@ -140,10 +171,35 @@ try {
         log.scrollTop = log.scrollHeight;
     }
 
+    function setOverall(doneFiles, totalFiles, currentPercent) {
+        const percent = Math.round(((doneFiles + (currentPercent / 100)) / Math.max(1, totalFiles)) * 100);
+        overallBar.value = percent;
+        overallLabel.textContent = 'Overall batch progress (' + percent + '%)';
+        overallCount.textContent = doneFiles + ' of ' + totalFiles + ' complete';
+    }
+
+    function pollScanProgress(token, index, total, fileName, stopFlag) {
+        return window.setInterval(function () {
+            fetch('profiled-upload.php?progress=' + encodeURIComponent(token), {cache: 'no-store'})
+                .then(function (r) { return r.json(); })
+                .then(function (state) {
+                    if (stopFlag.done) return;
+                    const percent = Math.max(0, Math.min(100, parseInt(state.percent || 0, 10)));
+                    currentBar.value = percent;
+                    currentLabel.textContent = 'Reading/scanning ' + index + ' of ' + total + ': ' + fileName + ' (' + percent + '%) - ' + (state.message || 'working');
+                    speed.textContent = '';
+                    setOverall(index - 1, total, percent);
+                })
+                .catch(function () {});
+        }, 650);
+    }
+
     function uploadOne(file, index, total) {
         return new Promise(function (resolve) {
+            const token = makeToken();
             const data = new FormData();
             data.append('ajax', '1');
+            data.append('progress_token', token);
             data.append('csrf', form.querySelector('[name="csrf"]').value);
             data.append('game_id', form.querySelector('[name="game_id"]').value);
             data.append('strict_profile', form.querySelector('[name="strict_profile"]').value);
@@ -151,17 +207,34 @@ try {
 
             const xhr = new XMLHttpRequest();
             const start = Date.now();
+            const stopFlag = {done: false};
+            let poller = null;
+            currentBar.value = 0;
+            speed.textContent = '';
+            currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name + ' (0%)';
+            setOverall(index - 1, total, 0);
+
             xhr.open('POST', form.action || window.location.href, true);
             xhr.upload.onprogress = function (e) {
                 if (!e.lengthComputable) return;
                 const percent = Math.round((e.loaded / e.total) * 100);
-                progressBar.value = percent;
+                currentBar.value = percent;
                 const elapsed = Math.max(0.1, (Date.now() - start) / 1000);
                 speed.textContent = fmtBytes(e.loaded / elapsed) + '/s';
-                label.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name + ' (' + percent + '%)';
+                currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name + ' (' + percent + '%)';
+                setOverall(index - 1, total, Math.min(50, percent / 2));
+            };
+            xhr.upload.onload = function () {
+                currentBar.value = 0;
+                speed.textContent = '';
+                currentLabel.textContent = 'Reading/scanning ' + index + ' of ' + total + ': ' + file.name + ' (0%)';
+                poller = pollScanProgress(token, index, total, file.name, stopFlag);
             };
             xhr.onload = function () {
-                progressBar.value = 100;
+                stopFlag.done = true;
+                if (poller) window.clearInterval(poller);
+                currentBar.value = 100;
+                setOverall(index, total, 0);
                 try {
                     const res = JSON.parse(xhr.responseText || '{}');
                     if (!res.ok) {
@@ -177,7 +250,10 @@ try {
                 resolve();
             };
             xhr.onerror = function () {
+                stopFlag.done = true;
+                if (poller) window.clearInterval(poller);
                 addLog(file.name + ': failed - upload connection error');
+                setOverall(index, total, 0);
                 resolve();
             };
             xhr.send(data);
@@ -191,11 +267,17 @@ try {
         button.disabled = true;
         progressBox.hidden = false;
         log.textContent = '';
+        overallBar.value = 0;
+        currentBar.value = 0;
+        setOverall(0, files.length, 0);
         for (let i = 0; i < files.length; i++) {
             await uploadOne(files[i], i + 1, files.length);
         }
-        label.textContent = 'Upload batch complete.';
+        currentLabel.textContent = 'Upload and scan batch complete.';
         speed.textContent = '';
+        overallBar.value = 100;
+        overallLabel.textContent = 'Overall batch complete (100%)';
+        overallCount.textContent = files.length + ' of ' + files.length + ' complete';
         button.disabled = false;
     });
 })();
