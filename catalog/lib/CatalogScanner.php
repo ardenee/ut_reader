@@ -35,6 +35,22 @@ function scanner_store_failed_upload(array $config, string $tmp, string $origina
     @file_put_contents($dir . '/' . $name . '.txt', $reason);
 }
 
+function scanner_emit_progress(?callable $progress, string $stage, int $done, int $total, string $message): void
+{
+    if (!$progress) {
+        return;
+    }
+    $total = max(1, $total);
+    $done = max(0, min($done, $total));
+    $progress([
+        'stage' => $stage,
+        'done' => $done,
+        'total' => $total,
+        'percent' => (int)round(($done / $total) * 100),
+        'message' => $message,
+    ]);
+}
+
 function scanner_load_reader_class(array $config, string $engineKey): string
 {
     $engineKey = strtoupper(trim($engineKey));
@@ -168,8 +184,10 @@ function scanner_rebuild_game(PDO $db, array $config, int $gameId): void
     }
 }
 
-function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId, bool $strictProfile = true): array
+function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId, bool $strictProfile = true, ?callable $progress = null): array
 {
+    scanner_emit_progress($progress, 'start', 0, 100, 'Preparing ' . $originalName);
+
     $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
     if (!$game) {
         throw new RuntimeException('Game not found');
@@ -187,6 +205,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Bad file size: ' . catalog_bytes((int)$size));
     }
 
+    scanner_emit_progress($progress, 'scan', 5, 100, 'Reading package header');
     $classification = gp_classify_file($db, $gameId, $tmp, $originalName);
     if ($strictProfile && empty($classification['ok_for_selected_game'])) {
         $suggested = [];
@@ -196,6 +215,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown') . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '. ' . implode(' ', $classification['notes']) . ($suggested ? ' Suggested: ' . implode(', ', $suggested) : ''));
     }
 
+    scanner_emit_progress($progress, 'scan', 10, 100, 'Hashing file');
     $md5 = md5_file($tmp);
     $sha1 = sha1_file($tmp);
     if (!$md5 || !$sha1) {
@@ -204,11 +224,15 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 
     $duplicate = catalog_one($db, 'SELECT id, original_name FROM ue_files WHERE game_id=? AND md5=?', [$gameId, $md5]);
     if ($duplicate) {
+        scanner_emit_progress($progress, 'done', 100, 100, 'Duplicate in selected game');
         return ['duplicate', (int)$duplicate['id'], 'Duplicate in selected game: ' . $duplicate['original_name'], $classification];
     }
 
+    scanner_emit_progress($progress, 'scan', 15, 100, 'Opening reader');
     $readerClass = scanner_load_reader_class($config, $profileEngine);
     $pkg = new $readerClass($tmp);
+
+    scanner_emit_progress($progress, 'scan', 22, 100, 'Validating package');
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     [$fatalIssues, $scanNotes] = scanner_split_reader_issues($issues);
     if ($fatalIssues) {
@@ -221,14 +245,23 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         }
     }
 
+    scanner_emit_progress($progress, 'scan', 30, 100, 'Reading header');
     $header = $pkg->getHeader();
+    scanner_emit_progress($progress, 'scan', 40, 100, 'Reading names table');
     $names = $pkg->getNames();
+    scanner_emit_progress($progress, 'scan', 55, 100, 'Reading imports table');
     $imports = $pkg->getImports();
+    scanner_emit_progress($progress, 'scan', 70, 100, 'Reading exports table');
     $exports = $pkg->getExports();
+
+    $nameCount = count($names);
+    $importCount = count($imports);
+    $exportCount = count($exports);
     $packageName = scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
     $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
     $scanNotesText = $scanNotesAll ? implode("\n", $scanNotesAll) : null;
 
+    scanner_emit_progress($progress, 'scan', 78, 100, 'Storing file');
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . scanner_slug_text((string)$game['slug']) . '/verified';
     if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
         throw new RuntimeException('Could not create storage folder: ' . $dir);
@@ -241,15 +274,27 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     }
     $relativePath = 'storage/games/' . scanner_slug_text((string)$game['slug']) . '/verified/' . $storedName;
 
+    $totalRows = max(1, $nameCount + $importCount + $exportCount + 4);
+    $writtenRows = 0;
+    $progressDb = static function (string $message) use ($progress, &$writtenRows, $totalRows): void {
+        $writtenRows++;
+        $percent = 80 + (int)floor(($writtenRows / $totalRows) * 18);
+        scanner_emit_progress($progress, 'database', $percent, 100, $message);
+    };
+
     $db->beginTransaction();
     try {
         $stmt = $db->prepare('INSERT INTO ue_files(game_id,package_name,original_name,stored_name,relative_path,extension,detected_engine_key,detected_package_version,detected_licensee_version,detection_confidence,detection_notes,file_size,md5,sha1,package_guid,package_version,licensee_version,name_count,import_count,export_count,scan_status,scan_notes,uploaded_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $classification['detected_engine'], $classification['package_version'], $classification['licensee_version'], $classification['confidence'], implode("\n", $classification['notes']), $size, $md5, $sha1, (string)($header['guid'] ?? ''), (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), count($names), count($imports), count($exports), 'verified', $scanNotesText, $userId]);
+        $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $classification['detected_engine'], $classification['package_version'], $classification['licensee_version'], $classification['confidence'], implode("\n", $classification['notes']), $size, $md5, $sha1, (string)($header['guid'] ?? ''), (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), $nameCount, $importCount, $exportCount, 'verified', $scanNotesText, $userId]);
         $fileId = (int)$db->lastInsertId();
+        $progressDb('Writing file row');
 
         $stmt = $db->prepare('INSERT INTO ue_names(file_id,name_index,name_text,flags) VALUES(?,?,?,?)');
         foreach ($names as $i => $name) {
             $stmt->execute([$fileId, $i, (string)($name['name'] ?? $name['text'] ?? ''), isset($name['flags']) ? (int)$name['flags'] : null]);
+            if (($i % 25) === 0 || $i + 1 === $nameCount) {
+                $progressDb('Writing names table ' . ($i + 1) . '/' . $nameCount);
+            }
         }
 
         $cache = [];
@@ -265,6 +310,9 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             $className = (string)($imp['classNameText'] ?? ($imp['ClassName']['text'] ?? ''));
             $outer = (int)($imp['outerIndex'] ?? $imp['OuterIndex'] ?? $imp['outer'] ?? 0);
             $stmt->execute([$fileId, $i, $classPackage, $className, $object, $outer, $full, $root, $relative, in_array(strtolower($root), $common, true) ? 1 : 0]);
+            if (($i % 25) === 0 || $i + 1 === $importCount) {
+                $progressDb('Writing imports table ' . ($i + 1) . '/' . $importCount);
+            }
         }
 
         $stmt = $db->prepare('INSERT INTO ue_exports(file_id,export_index,class_name,object_name,outer_index,local_path,full_path,object_flags,serial_size,serial_offset) VALUES(?,?,?,?,?,?,?,?,?,?)');
@@ -274,12 +322,17 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             $className = $classRef ? scanner_ref_path($classRef, $imports, $exports, $cache) : '';
             $outer = (int)($exp['outerIndex'] ?? $exp['packageIndex'] ?? $exp['outer'] ?? 0);
             $stmt->execute([$fileId, $i, $className, (string)($exp['objectNameText'] ?? ''), $outer, $local, scanner_join_path_parts([$packageName, $local]), isset($exp['objectFlags']) ? (int)$exp['objectFlags'] : null, isset($exp['serialSize']) ? (int)$exp['serialSize'] : null, isset($exp['serialOffset']) ? (int)$exp['serialOffset'] : null]);
+            if (($i % 25) === 0 || $i + 1 === $exportCount) {
+                $progressDb('Writing exports table ' . ($i + 1) . '/' . $exportCount);
+            }
         }
 
+        scanner_emit_progress($progress, 'database', 98, 100, 'Rebuilding dependencies');
         scanner_rebuild_dependencies($db, $config, $fileId);
         $db->commit();
         scanner_rebuild_game($db, $config, $gameId);
-        return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', detection=' . $classification['confidence'], $classification];
+        scanner_emit_progress($progress, 'done', 100, 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
+        return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', detection=' . $classification['confidence'] . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount, $classification];
     } catch (Throwable $e) {
         $db->rollBack();
         @unlink($dest);
