@@ -246,6 +246,33 @@ th {
     font-weight: 650;
 }
 
+tr[id] {
+    scroll-margin-top: 86px;
+}
+
+tr:target td,
+tr:target th {
+    background: rgba(246, 196, 83, .18);
+    box-shadow: inset 4px 0 0 var(--amber);
+    border-top: 1px solid rgba(246, 196, 83, .55);
+    border-bottom: 1px solid rgba(246, 196, 83, .55);
+}
+
+tr:target td:first-child,
+tr:target th:first-child {
+    border-left: 1px solid rgba(246, 196, 83, .55);
+}
+
+tr:target td:last-child,
+tr:target th:last-child {
+    border-right: 1px solid rgba(246, 196, 83, .55);
+}
+
+.xref:target,
+.xref:hover {
+    text-decoration: underline;
+}
+
 .reorderable-table th[draggable="true"] {
     cursor: grab;
 }
