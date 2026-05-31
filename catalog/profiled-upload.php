@@ -9,6 +9,44 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
+require_once __DIR__ . '/lib/FederationAuth.php';
+
+function upload_short_error(Throwable $e): string
+{
+    $message = trim($e->getMessage());
+
+    if (preg_match('/Bad package tag 0x[0-9A-Fa-f]+/', $message, $m)) {
+        return $m[0];
+    }
+
+    $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
+    $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
+    $message = trim($message);
+
+    return $message !== '' ? $message : 'Unknown error';
+}
+
+function upload_log_exception(PDO $db, string $filename, Throwable $e): void
+{
+    $details = $filename . ': ' . get_class($e) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString();
+    error_log('[UnrealDB upload] ' . $details);
+
+    try {
+        fed_log($db, null, null, 'ERROR', 'UPLOAD_SCAN_FAIL', $details);
+    } catch (Throwable) {
+        // Keep upload handling alive even if the optional app log table is unavailable.
+    }
+}
+
+function upload_result(string $status, string $file, string $message): array
+{
+    return ['status' => $status, 'file' => $file, 'message' => $message];
+}
+
+function upload_result_text(array $entry): string
+{
+    return (string)$entry['file'] . ': ' . (string)$entry['status'] . ' - ' . (string)$entry['message'];
+}
 
 function upload_handle_request(PDO $db, array $config): array
 {
@@ -43,9 +81,10 @@ function upload_handle_request(PDO $db, array $config): array
         $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
         if ($err !== UPLOAD_ERR_OK) {
             $bad++;
-            $messages[] = $name . ': upload error ' . $err;
+            $text = 'Upload error ' . $err;
+            $messages[] = upload_result('failed', $name, $text);
             if ($progress) {
-                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': upload error ' . $err]);
+                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': failed - ' . $text]);
             }
             continue;
         }
@@ -53,16 +92,19 @@ function upload_handle_request(PDO $db, array $config): array
             $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $userId !== null ? (int)$userId : null, $strict, $progress);
             if ($result[0] === 'duplicate') {
                 $dup++;
+                $messages[] = upload_result('duplicate', $name, (string)$result[2]);
             } else {
                 $ok++;
+                $messages[] = upload_result('imported', $name, (string)$result[2]);
             }
-            $messages[] = $name . ': ' . $result[2];
         } catch (Throwable $e) {
             $bad++;
+            $short = upload_short_error($e);
+            upload_log_exception($db, $name, $e);
             scanner_store_failed_upload($config, $tmp, $name, (string)$game['slug'], $e->getMessage());
-            $messages[] = $name . ': failed - ' . $e->getMessage();
+            $messages[] = upload_result('failed', $name, $short);
             if ($progress) {
-                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': failed - ' . $e->getMessage()]);
+                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': failed - ' . $short]);
             }
         }
     }
@@ -103,7 +145,8 @@ try {
             exit;
         }
         session_start();
-        $_SESSION['profiled_upload_flash'] = 'Upload complete. Verified=' . $result['ok'] . ' Duplicate=' . $result['duplicate'] . ' Failed=' . $result['failed'] . '. ' . implode(' | ', array_slice($result['messages'], 0, 12));
+        $messageText = array_map('upload_result_text', array_slice($result['messages'], 0, 12));
+        $_SESSION['profiled_upload_flash'] = 'Upload complete. Imported=' . $result['ok'] . ' Duplicate=' . $result['duplicate'] . ' Failed=' . $result['failed'] . '. ' . implode(' | ', $messageText);
         header('Location: profiled-upload.php?game_id=' . (int)($_POST['game_id'] ?? 0));
         exit;
     }
@@ -175,9 +218,31 @@ try {
         return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
     }
 
-    function addLog(text) {
+    function addLog(entry) {
+        if (typeof entry === 'string') {
+            entry = {status: 'info', file: '', message: entry};
+        }
+        const status = String(entry.status || 'info').toLowerCase();
         const div = document.createElement('div');
-        div.textContent = text;
+        div.className = 'upload-result upload-result-' + status;
+
+        const badge = document.createElement('span');
+        badge.className = 'upload-result-badge';
+        badge.textContent = status;
+        div.appendChild(badge);
+
+        if (entry.file) {
+            const file = document.createElement('span');
+            file.className = 'upload-result-file';
+            file.textContent = entry.file;
+            div.appendChild(file);
+        }
+
+        const message = document.createElement('span');
+        message.className = 'upload-result-message';
+        message.textContent = entry.message || '';
+        div.appendChild(message);
+
         log.appendChild(div);
         log.scrollTop = log.scrollHeight;
     }
@@ -249,21 +314,21 @@ try {
                 try {
                     const res = JSON.parse(xhr.responseText || '{}');
                     if (!res.ok) {
-                        addLog(file.name + ': failed - ' + (res.error || 'server error'));
+                        addLog({status: 'failed', file: file.name, message: res.error || 'server error'});
                     } else if (res.messages && res.messages.length) {
                         res.messages.forEach(addLog);
                     } else {
-                        addLog(file.name + ': complete');
+                        addLog({status: 'imported', file: file.name, message: 'complete'});
                     }
                 } catch (e) {
-                    addLog(file.name + ': failed - invalid server response');
+                    addLog({status: 'failed', file: file.name, message: 'invalid server response'});
                 }
                 resolve();
             };
             xhr.onerror = function () {
                 stopFlag.done = true;
                 if (poller) window.clearInterval(poller);
-                addLog(file.name + ': failed - upload connection error');
+                addLog({status: 'failed', file: file.name, message: 'upload connection error'});
                 setOverall(index, total, 0);
                 resolve();
             };
@@ -298,13 +363,18 @@ HTML;
     catalog_foot();
 } catch (Throwable $e) {
     if (($_POST['ajax'] ?? '') === '1') {
+        if (isset($db) && $db instanceof PDO) {
+            upload_log_exception($db, 'upload request', $e);
+        } else {
+            error_log('[UnrealDB upload] upload request: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+        }
         header('Content-Type: application/json');
-        echo json_encode(['ok' => false, 'error' => $e->getMessage()]);
+        echo json_encode(['ok' => false, 'error' => upload_short_error($e)]);
         exit;
     }
     if (!headers_sent()) {
         catalog_head('Upload error');
     }
-    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
+    echo '<div class="card"><h1>Error</h1><p>' . catalog_h(upload_short_error($e)) . '</p></div>';
     catalog_foot();
 }
