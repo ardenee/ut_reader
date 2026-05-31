@@ -40,6 +40,10 @@ try {
         redirect_to('file-info.php?id=' . (int)($_GET['id'] ?? 0));
     }
 
+    if ($page === 'examine') {
+        redirect_to('file-examine.php?id=' . (int)($_GET['id'] ?? 0));
+    }
+
     if ($page === 'upload') {
         redirect_to('profiled-upload.php');
     }
@@ -93,7 +97,7 @@ try {
     catalog_head($config['site_name'] ?? 'UnrealDB');
 
     if ($page === 'home') {
-        $games = catalog_all($db, 'SELECT g.*, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.engine_key ORDER BY g.name');
+        $games = catalog_all($db, 'SELECT g.*, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
         echo '<div class="card hero"><h1>Unreal Games</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and MD5 hashes.</p></div><div class="grid">';
         foreach ($games as $game) {
             echo '<a class="stat tool-card" href="game-files.php?id=' . (int)$game['id'] . '"><h2>' . catalog_h($game['name']) . '</h2><p>' . catalog_h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</p></a>';
@@ -119,8 +123,6 @@ try {
             redirect_to('index.php?page=login');
         }
         redirect_to('dashboard.php');
-    } elseif ($page === 'examine') {
-        redirect_to('file-info.php?id=' . (int)($_GET['id'] ?? 0));
     } else {
         throw new RuntimeException('Unknown page');
     }
