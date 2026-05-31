@@ -39,21 +39,21 @@ function game_files_sort_link(string $label, string $key, string $activeSort, st
     return '<a class="sort-link" href="' . catalog_h(game_files_url(['sort' => $key, 'dir' => $nextDir, 'file_page' => 1])) . '">' . catalog_h($label . $marker) . '</a>';
 }
 
-function game_files_type_from_extension(string $ext): string
+function game_files_type_from_extension(string $ext): array
 {
     $ext = strtolower(trim($ext, '. '));
     return match ($ext) {
-        'unr', 'ut2', 'ut3', 'umap' => 'map',
-        'umx' => 'music',
-        'uax' => 'sound',
-        'utx' => 'texture',
-        'usx' => 'static mesh',
-        'ukx' => 'animation',
-        'upx' => 'particle/effect',
-        'ugx' => 'gui',
-        'con' => 'content',
-        'u', 'un2', 'upk', 'uasset' => 'package',
-        default => $ext !== '' ? $ext : 'unknown',
+        'unr', 'ut2', 'ut3', 'umap' => ['map', 'type-map'],
+        'umx' => ['music', 'type-music'],
+        'uax' => ['sound', 'type-sound'],
+        'utx' => ['texture', 'type-texture'],
+        'usx' => ['static mesh', 'type-static-mesh'],
+        'ukx' => ['animation', 'type-animation'],
+        'upx' => ['particle/effect', 'type-particle-effect'],
+        'ugx' => ['gui', 'type-gui'],
+        'con' => ['content', 'type-content'],
+        'u', 'un2', 'upk', 'uasset' => ['package', 'type-package'],
+        default => [$ext !== '' ? $ext : 'unknown', 'type-unknown'],
     };
 }
 
@@ -166,7 +166,7 @@ try {
     echo '<div class="section-title"><h2>Files</h2></div>';
     echo '<form class="table-controls" method="get">';
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
-    echo '<label>Search files <input name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label> ';
+    echo '<label>Search files <input class="wide-search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label> ';
     echo '<label>Dependencies <select name="dep_filter">';
     foreach (['' => 'All', 'any' => 'Has dependencies', 'missing' => 'Missing', 'resolved' => 'Resolved', 'package_only' => 'Package only', 'common' => 'Common'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
@@ -222,7 +222,7 @@ try {
         $deps = $deps ?: '<span class="muted">none</span>';
         $compressed = (int)($file['is_compressed'] ?? 0) === 1;
         $compression = '<span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span>';
-        $fileType = game_files_type_from_extension((string)($file['extension'] ?? ''));
+        [$fileType, $fileTypeClass] = game_files_type_from_extension((string)($file['extension'] ?? ''));
         $id = (int)$file['id'];
         $packageVersion = (int)($file['package_version'] ?? 0);
         $licenseeVersion = (int)($file['licensee_version'] ?? 0);
@@ -230,13 +230,13 @@ try {
 
         echo '<tr>';
         echo '<td class="mono">' . catalog_h($file['package_name']) . '</td>';
-        echo '<td>' . catalog_h($file['original_name']) . '<br><span class="dep common">' . catalog_h($fileType) . '</span></td>';
-        echo '<td><span class="mono small">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h($file['md5']) . '</span></td>';
+        echo '<td>' . catalog_h($file['original_name']) . '<br><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
+        echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h($file['md5']) . '</span></td>';
         echo '<td class="mono">' . catalog_h($versionText) . '</td>';
         echo '<td>' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
         echo '<td>' . $compression . '</td>';
         echo '<td>' . $deps . '</td>';
-        echo '<td><a href="file-info.php?id=' . $id . '">details</a> | <a href="download-info.php?id=' . $id . '">download</a> | <a href="file-info.php?id=' . $id . '">examine</a></td>';
+        echo '<td><a href="file-info.php?id=' . $id . '">details</a> | <a href="download-info.php?id=' . $id . '">download</a> | <a href="file-examine.php?id=' . $id . '">examine</a></td>';
         echo '</tr>';
     }
     echo '</tbody></table></div></div>';
