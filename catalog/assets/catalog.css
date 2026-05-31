@@ -292,6 +292,10 @@ textarea {
     max-width: 100%;
 }
 
+.wide-search {
+    width: min(520px, 90vw);
+}
+
 .table-controls {
     display: flex;
     gap: 8px;
@@ -344,6 +348,31 @@ textarea {
 
 .uncompressed {
     border-color: rgba(50, 213, 131, .75);
+}
+
+.file-type-pill {
+    font-weight: 650;
+}
+
+.type-map { border-color: #60a5fa; color: #bfdbfe; }
+.type-music { border-color: #c084fc; color: #e9d5ff; }
+.type-sound { border-color: #f472b6; color: #fbcfe8; }
+.type-texture { border-color: #fb923c; color: #fed7aa; }
+.type-static-mesh { border-color: #94a3b8; color: #e2e8f0; }
+.type-animation { border-color: #22d3ee; color: #cffafe; }
+.type-particle-effect { border-color: #facc15; color: #fef08a; }
+.type-gui { border-color: #a78bfa; color: #ddd6fe; }
+.type-content { border-color: #34d399; color: #d1fae5; }
+.type-package { border-color: #818cf8; color: #c7d2fe; }
+.type-unknown { border-color: #64748b; color: #cbd5e1; }
+
+.identity-cell {
+    min-width: 360px;
+}
+
+.guid-value {
+    white-space: nowrap;
+    display: inline-block;
 }
 
 .path {
