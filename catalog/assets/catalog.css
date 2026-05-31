@@ -405,7 +405,40 @@ textarea {
     font-family: Consolas, ui-monospace, monospace;
     font-size: 12px;
     color: var(--muted);
-    white-space: pre-wrap;
+    white-space: normal;
+}
+
+.upload-result {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding: 3px 0;
+}
+
+.upload-result-badge {
+    min-width: 70px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.upload-result-file {
+    color: var(--text);
+}
+
+.upload-result-message {
+    color: var(--muted);
+}
+
+.upload-result-imported .upload-result-badge {
+    color: #a7f3d0;
+}
+
+.upload-result-duplicate .upload-result-badge {
+    color: #93c5fd;
+}
+
+.upload-result-failed .upload-result-badge {
+    color: #fecdd3;
 }
 
 @media (max-width: 850px) {
