@@ -29,6 +29,51 @@ function game_files_url(array $params): string
     return 'game-files.php?' . http_build_query($query);
 }
 
+function game_files_sort_link(string $label, string $key, string $activeSort, string $activeDir): string
+{
+    $nextDir = ($activeSort === $key && $activeDir === 'asc') ? 'desc' : 'asc';
+    $marker = '';
+    if ($activeSort === $key) {
+        $marker = $activeDir === 'asc' ? ' ▲' : ' ▼';
+    }
+    return '<a class="sort-link" href="' . catalog_h(game_files_url(['sort' => $key, 'dir' => $nextDir, 'file_page' => 1])) . '">' . catalog_h($label . $marker) . '</a>';
+}
+
+function game_files_type_from_extension(string $ext): string
+{
+    $ext = strtolower(trim($ext, '. '));
+    return match ($ext) {
+        'unr', 'ut2', 'ut3', 'umap' => 'map',
+        'umx' => 'music',
+        'uax' => 'sound',
+        'utx' => 'texture',
+        'usx' => 'static mesh',
+        'ukx' => 'animation',
+        'upx' => 'particle/effect',
+        'ugx' => 'gui',
+        'con' => 'content',
+        'u', 'un2', 'upk', 'uasset' => 'package',
+        default => $ext !== '' ? $ext : 'unknown',
+    };
+}
+
+function game_files_type_filter_sql(string $type): array
+{
+    $map = [
+        'map' => ['unr', 'ut2', 'ut3', 'umap'],
+        'music' => ['umx'],
+        'sound' => ['uax'],
+        'texture' => ['utx'],
+        'static_mesh' => ['usx'],
+        'animation' => ['ukx'],
+        'particle_effect' => ['upx'],
+        'gui' => ['ugx'],
+        'content' => ['con'],
+        'package' => ['u', 'un2', 'upk', 'uasset'],
+    ];
+    return $map[$type] ?? [];
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -44,13 +89,57 @@ try {
 
     $pageNo = game_files_int('file_page', 1, 1, PHP_INT_MAX);
     $filter = trim((string)($_GET['file_filter'] ?? ''));
+    $depFilter = trim((string)($_GET['dep_filter'] ?? ''));
+    $typeFilter = trim((string)($_GET['type_filter'] ?? ''));
+    $compressionFilter = trim((string)($_GET['compression_filter'] ?? ''));
+    $sort = trim((string)($_GET['sort'] ?? 'package'));
+    $dir = strtolower(trim((string)($_GET['dir'] ?? 'asc')));
+    $dir = $dir === 'desc' ? 'desc' : 'asc';
+
+    $sortMap = [
+        'package' => 'f.package_name',
+        'file' => 'f.original_name',
+        'version' => 'f.package_version',
+        'size' => 'f.file_size',
+        'compression' => 'f.is_compressed',
+        'deps' => 'missing_count',
+        'uploaded' => 'f.uploaded_at',
+    ];
+    if (!isset($sortMap[$sort])) {
+        $sort = 'package';
+    }
+    $orderSql = $sortMap[$sort] . ' ' . strtoupper($dir) . ', f.package_name ASC, f.original_name ASC';
 
     $where = 'WHERE f.game_id=?';
     $args = [$gameId];
+
     if ($filter !== '') {
         $where .= ' AND (f.package_name LIKE ? OR f.original_name LIKE ? OR f.md5 LIKE ? OR f.sha1 LIKE ? OR f.package_guid LIKE ?)';
         $like = '%' . $filter . '%';
         array_push($args, $like, $like, $like, $like, $like);
+    }
+
+    if (in_array($depFilter, ['resolved', 'missing', 'package_only', 'common', 'any'], true)) {
+        if ($depFilter === 'any') {
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependencies dx WHERE dx.file_id=f.id)';
+        } else {
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependencies dx WHERE dx.file_id=f.id AND dx.status=?)';
+            $args[] = $depFilter;
+        }
+    }
+
+    $typeExts = game_files_type_filter_sql($typeFilter);
+    if ($typeExts) {
+        $where .= ' AND f.extension IN (' . implode(',', array_fill(0, count($typeExts), '?')) . ')';
+        foreach ($typeExts as $ext) {
+            $args[] = $ext;
+        }
+    }
+
+    if ($compressionFilter === 'compressed') {
+        $where .= ' AND f.is_compressed=1';
+    } elseif ($compressionFilter === 'uncompressed') {
+        $where .= ' AND f.is_compressed=0';
     }
 
     $totalRows = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_files f ' . $where, $args)['c'] ?? 0);
@@ -60,28 +149,41 @@ try {
 
     $files = catalog_all(
         $db,
-        "SELECT f.*, SUM(d.status='resolved') resolved_count, SUM(d.status='missing') missing_count, SUM(d.status='package_only') package_only_count, SUM(d.status='common') common_count, COUNT(DISTINCT l.id) source_location_count
+        "SELECT f.*, COALESCE(SUM(d.status='resolved'),0) resolved_count, COALESCE(SUM(d.status='missing'),0) missing_count, COALESCE(SUM(d.status='package_only'),0) package_only_count, COALESCE(SUM(d.status='common'),0) common_count
          FROM ue_files f
          LEFT JOIN ue_dependencies d ON d.file_id=f.id
-         LEFT JOIN ue_file_locations l ON l.file_id=f.id AND l.exists_in_source=1
          $where
          GROUP BY f.id
-         ORDER BY f.package_name, f.original_name
+         ORDER BY $orderSql
          LIMIT $limit OFFSET $offset",
         $args
     );
 
     catalog_head((string)$game['name']);
-    echo '<script src="assets/catalog-popups.js"></script>';
-    echo '<div class="card hero"><h1>' . catalog_h($game['name']) . '</h1><p class="muted">Files, dependency status, hidden-path downloads and popup details.</p><p><a class="button" href="games.php">Back to games</a></p></div>';
+    echo '<div class="card hero"><h1>' . catalog_h($game['name']) . '</h1><p class="muted">Files, versions, dependency status and downloads.</p><p><a class="button" href="games.php">Back to games</a></p></div>';
 
     echo '<div class="card">';
     echo '<div class="section-title"><h2>Files</h2></div>';
     echo '<form class="table-controls" method="get">';
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
     echo '<label>Search files <input name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label> ';
-    echo '<button>Search</button> ';
-    if ($filter !== '') {
+    echo '<label>Dependencies <select name="dep_filter">';
+    foreach (['' => 'All', 'any' => 'Has dependencies', 'missing' => 'Missing', 'resolved' => 'Resolved', 'package_only' => 'Package only', 'common' => 'Common'] as $value => $label) {
+        echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
+    }
+    echo '</select></label> ';
+    echo '<label>File type <select name="type_filter">';
+    foreach (['' => 'All', 'map' => 'Maps', 'music' => 'Music', 'sound' => 'Sounds', 'texture' => 'Textures', 'static_mesh' => 'Static meshes', 'animation' => 'Animations', 'particle_effect' => 'Particles/effects', 'gui' => 'GUI', 'content' => 'Content', 'package' => 'Packages'] as $value => $label) {
+        echo '<option value="' . catalog_h($value) . '"' . ($typeFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
+    }
+    echo '</select></label> ';
+    echo '<label>Compression <select name="compression_filter">';
+    foreach (['' => 'All', 'compressed' => 'Compressed', 'uncompressed' => 'Uncompressed'] as $value => $label) {
+        echo '<option value="' . catalog_h($value) . '"' . ($compressionFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
+    }
+    echo '</select></label> ';
+    echo '<button>Apply</button> ';
+    if ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || $compressionFilter !== '') {
         echo '<a class="button" href="game-files.php?id=' . (int)$gameId . '">Clear</a>';
     }
     echo '</form>';
@@ -98,20 +200,20 @@ try {
     }
     echo '</div>';
 
-    echo '<div class="scroll"><table id="game-files-table" class="reorderable-table"><thead><tr>';
-    echo '<th draggable="true" data-col="package" title="Drag to rearrange columns">Package</th>';
-    echo '<th draggable="true" data-col="file" title="Drag to rearrange columns">File</th>';
-    echo '<th draggable="true" data-col="identity" title="Drag to rearrange columns">Identity</th>';
-    echo '<th draggable="true" data-col="size" title="Drag to rearrange columns">Size</th>';
-    echo '<th draggable="true" data-col="type" title="Drag to rearrange columns">Type</th>';
-    echo '<th draggable="true" data-col="deps" title="Drag to rearrange columns">Dependencies</th>';
-    echo '<th draggable="true" data-col="sources" title="Drag to rearrange columns">Sources</th>';
-    echo '<th draggable="true" data-col="actions" title="Drag to rearrange columns">Actions</th>';
+    echo '<div class="scroll"><table id="game-files-table"><thead><tr>';
+    echo '<th>' . game_files_sort_link('Package', 'package', $sort, $dir) . '</th>';
+    echo '<th>' . game_files_sort_link('File', 'file', $sort, $dir) . '</th>';
+    echo '<th>Identity</th>';
+    echo '<th>' . game_files_sort_link('Version', 'version', $sort, $dir) . '</th>';
+    echo '<th>' . game_files_sort_link('Size', 'size', $sort, $dir) . '</th>';
+    echo '<th>' . game_files_sort_link('Compression', 'compression', $sort, $dir) . '</th>';
+    echo '<th>' . game_files_sort_link('Dependencies', 'deps', $sort, $dir) . '</th>';
+    echo '<th>Actions</th>';
     echo '</tr></thead><tbody>';
 
     foreach ($files as $file) {
         $deps = '';
-        foreach (['resolved','missing','package_only','common'] as $key) {
+        foreach (['resolved', 'missing', 'package_only', 'common'] as $key) {
             $count = (int)($file[$key . '_count'] ?? 0);
             if ($count) {
                 $deps .= '<span class="dep ' . $key . '">' . $key . ': ' . $count . '</span>';
@@ -119,71 +221,25 @@ try {
         }
         $deps = $deps ?: '<span class="muted">none</span>';
         $compressed = (int)($file['is_compressed'] ?? 0) === 1;
-        $type = '<span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span>';
-        $sources = (int)($file['source_location_count'] ?? 0);
-        $sourceText = $sources ? '<span class="dep resolved">locations: ' . $sources . '</span>' : '<span class="muted">none</span>';
+        $compression = '<span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span>';
+        $fileType = game_files_type_from_extension((string)($file['extension'] ?? ''));
         $id = (int)$file['id'];
+        $packageVersion = (int)($file['package_version'] ?? 0);
+        $licenseeVersion = (int)($file['licensee_version'] ?? 0);
+        $versionText = $packageVersion . ($licenseeVersion ? ' / ' . $licenseeVersion : '');
+
         echo '<tr>';
-        echo '<td class="mono" data-col="package">' . catalog_h($file['package_name']) . '</td>';
-        echo '<td data-col="file">' . catalog_h($file['original_name']) . '</td>';
-        echo '<td data-col="identity"><span class="mono small">GUID ' . catalog_h($file['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h($file['md5']) . '</span></td>';
-        echo '<td data-col="size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
-        echo '<td data-col="type">' . $type . '</td>';
-        echo '<td data-col="deps">' . $deps . '</td>';
-        echo '<td data-col="sources">' . $sourceText . '</td>';
-        echo '<td data-col="actions"><a href="file-info.php?id=' . $id . '" onclick="return catalogPopup(this.href,\'fileInfo' . $id . '\',1100,780)">details</a> | <a href="download-info.php?id=' . $id . '" onclick="return catalogPopup(this.href,\'downloadInfo' . $id . '\',1000,760)">download</a> | <a href="index.php?page=examine&id=' . $id . '">examine</a></td>';
+        echo '<td class="mono">' . catalog_h($file['package_name']) . '</td>';
+        echo '<td>' . catalog_h($file['original_name']) . '<br><span class="dep common">' . catalog_h($fileType) . '</span></td>';
+        echo '<td><span class="mono small">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h($file['md5']) . '</span></td>';
+        echo '<td class="mono">' . catalog_h($versionText) . '</td>';
+        echo '<td>' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
+        echo '<td>' . $compression . '</td>';
+        echo '<td>' . $deps . '</td>';
+        echo '<td><a href="file-info.php?id=' . $id . '">details</a> | <a href="download-info.php?id=' . $id . '">download</a> | <a href="file-info.php?id=' . $id . '">examine</a></td>';
         echo '</tr>';
     }
     echo '</tbody></table></div></div>';
-
-    echo <<<'HTML'
-<script>
-(function () {
-    const table = document.getElementById('game-files-table');
-    if (!table) return;
-
-    const storageKey = 'unrealdb.gameFiles.columnOrder';
-    function orderedColumns() {
-        return Array.from(table.querySelectorAll('thead th')).map(function (th) { return th.dataset.col; });
-    }
-    function applyOrder(order) {
-        if (!order || !order.length) return;
-        table.querySelectorAll('tr').forEach(function (row) {
-            order.forEach(function (col) {
-                const cell = row.querySelector('[data-col="' + col + '"]');
-                if (cell) row.appendChild(cell);
-            });
-        });
-    }
-    try {
-        applyOrder(JSON.parse(localStorage.getItem(storageKey) || '[]'));
-    } catch (e) {}
-
-    let dragged = null;
-    table.querySelectorAll('thead th').forEach(function (th) {
-        th.addEventListener('dragstart', function () {
-            dragged = th;
-            th.classList.add('dragging');
-        });
-        th.addEventListener('dragend', function () {
-            th.classList.remove('dragging');
-            dragged = null;
-            localStorage.setItem(storageKey, JSON.stringify(orderedColumns()));
-        });
-        th.addEventListener('dragover', function (e) {
-            e.preventDefault();
-            if (!dragged || dragged === th) return;
-            const cols = orderedColumns();
-            const from = cols.indexOf(dragged.dataset.col);
-            const to = cols.indexOf(th.dataset.col);
-            if (from < 0 || to < 0) return;
-            cols.splice(to, 0, cols.splice(from, 1)[0]);
-            applyOrder(cols);
-        });
-    });
-})();
-</script>
-HTML;
 
     catalog_foot();
 } catch (Throwable $e) {
