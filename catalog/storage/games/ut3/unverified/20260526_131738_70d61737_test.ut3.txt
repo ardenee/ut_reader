@@ -1,0 +1,8 @@
+RuntimeException: LZO package requires PHP FFI + liblzo2. Enable ffi.enable=true and install liblzo2 on Synology. File: /volume1/web/ut_reader/UE3/UnrealPackageReader.php:261 PHP: 8.2.28 Package: /volume1/@tmp/php9YBPw3 Trace: #0 /volume1/web/ut_reader/UE3/UnrealPackageReader.php(248): UnrealPackageReader->decompressBlock('\x03\x02\x00\x00\x00A\x00`\x00\x00\x08\x10\x00\x07\x00...', 131072)
+#1 /volume1/web/ut_reader/UE3/UnrealPackageReader.php(228): UnrealPackageReader->decompressUE3ChunkPayload('\xC1\x83*\x9E\x00\x00\x02\x00bH\x03\x00\xC6\xFE\x0F...', 1048262)
+#2 /volume1/web/ut_reader/UE3/UnrealPackageReader.php(206): UnrealPackageReader->materializeCompressedUE3()
+#3 /volume1/web/ut_reader/UE3/UnrealPackageReader.php(134): UnrealPackageReader->parseUE3(Object(UEFolderBinaryReader), 2653586369, 512, 512, 0)
+#4 /volume1/web/ut_reader/UE3/UnrealPackageReader.php(111): UnrealPackageReader->parse()
+#5 /volume1/web/ut_reader/catalog/index.php(193): UnrealPackageReader->__construct('/volume1/@tmp/p...')
+#6 /volume1/web/ut_reader/catalog/index.php(295): scan_uploaded_file(Object(PDO), Array, 3, '/volume1/@tmp/p...', 'test.ut3', 1)
+#7 {main}
