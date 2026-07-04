@@ -5,6 +5,7 @@ require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/GameProfiles.php';
 require_once __DIR__ . '/CatalogReaderResolver.php';
 require_once __DIR__ . '/CatalogDependencyResolver.php';
+require_once __DIR__ . '/CatalogAffectedDependencyRefreshService.php';
 
 function scanner_clean_name(string $s): string
 {
@@ -149,7 +150,7 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?call
 {
     scanner_emit_percent($progress, 'dependencies', $startPercent, $prefix . ': clearing old links');
     $db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
-    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
+    $file = catalog_one($db, 'SELECT game_id FROM ue_files WHERE id=?', [$fileId]);
     if (!$file) {
         scanner_emit_percent($progress, 'dependencies', $endPercent, $prefix . ': skipped missing file');
         return;
@@ -195,6 +196,41 @@ function scanner_rebuild_game(PDO $db, array $config, int $gameId, ?callable $pr
         $fileStart = scanner_range_percent($startPercent, $endPercent, $i, $total);
         $fileEnd = scanner_range_percent($startPercent, $endPercent, $i + 1, $total);
         scanner_rebuild_dependencies($db, $config, (int)$file['id'], $progress, $fileStart, $fileEnd, 'Refreshing game dependency links ' . ($i + 1) . '/' . (string)$total . ' (' . (string)$file['package_name'] . ')');
+    }
+}
+
+function scanner_rebuild_affected_dependencies(PDO $db, array $config, int $newFileId, ?callable $progress = null, int $startPercent = 56, int $endPercent = 99): void
+{
+    $file = catalog_one($db, 'SELECT game_id, package_name FROM ue_files WHERE id=?', [$newFileId]);
+    if (!$file) {
+        scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing affected dependency links: imported file missing');
+        return;
+    }
+
+    $affectedFileIds = CatalogAffectedDependencyRefreshService::findAffectedFileIds(
+        $db,
+        (int)$file['game_id'],
+        $newFileId,
+        (string)$file['package_name']
+    );
+    $total = count($affectedFileIds);
+    if ($total === 0) {
+        scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing affected dependency links: no existing files affected');
+        return;
+    }
+
+    foreach ($affectedFileIds as $index => $fileId) {
+        $fileStart = scanner_range_percent($startPercent, $endPercent, $index, $total);
+        $fileEnd = scanner_range_percent($startPercent, $endPercent, $index + 1, $total);
+        scanner_rebuild_dependencies(
+            $db,
+            $config,
+            $fileId,
+            $progress,
+            $fileStart,
+            $fileEnd,
+            'Refreshing affected dependency links ' . ($index + 1) . '/' . $total
+        );
     }
 }
 
@@ -302,8 +338,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         scanner_emit_percent($progress, 'database', scanner_range_percent(23, 35, $writtenRows, $totalRows), $message);
     };
 
-    $db->beginTransaction();
     try {
+        $db->beginTransaction();
         $stmt = $db->prepare('INSERT INTO ue_files(game_id,package_name,original_name,stored_name,relative_path,extension,detected_engine_key,detected_package_version,detected_licensee_version,detection_confidence,compatibility_status,compatibility_label,detection_notes,file_size,md5,sha1,package_guid,package_version,licensee_version,name_count,import_count,export_count,scan_status,scan_notes,uploaded_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $classification['detected_engine'], $classification['package_version'], $classification['licensee_version'], $classification['confidence'], $classification['compatibility_status'] ?? 'native', $classification['compatibility_label'] ?? null, implode("\n", $classification['notes']), $size, $md5, $sha1, (string)($header['guid'] ?? ''), (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), $nameCount, $importCount, $exportCount, 'verified', $scanNotesText, $userId]);
         $fileId = (int)$db->lastInsertId();
@@ -353,13 +389,23 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
         scanner_rebuild_dependencies($db, $config, $fileId, $progress, 36, 55, 'Imported file dependency links');
         $db->commit();
-        scanner_rebuild_game($db, $config, $gameId, $progress, 56, 99);
-        scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
-        $resultLabel = ($classification['compatibility_status'] ?? 'native') === 'legacy_compatible' ? ('; ' . (string)($classification['compatibility_label'] ?? 'legacy-compatible')) : '';
-        return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', reader=' . $readerEngine . ', detection=' . $classification['confidence'] . $resultLabel . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount, $classification];
     } catch (Throwable $e) {
-        $db->rollBack();
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
         @unlink($dest);
         throw $e;
     }
+
+    $refreshWarning = '';
+    try {
+        scanner_rebuild_affected_dependencies($db, $config, $fileId, $progress, 56, 99);
+    } catch (Throwable $refreshError) {
+        error_log('[UnrealDB dependency refresh] imported_file_id=' . $fileId . ' error=' . $refreshError->getMessage());
+        $refreshWarning = '; dependency refresh warning logged for maintenance';
+    }
+
+    scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
+    $resultLabel = ($classification['compatibility_status'] ?? 'native') === 'legacy_compatible' ? ('; ' . (string)($classification['compatibility_label'] ?? 'legacy-compatible')) : '';
+    return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', reader=' . $readerEngine . ', detection=' . $classification['confidence'] . $resultLabel . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount . $refreshWarning, $classification];
 }
