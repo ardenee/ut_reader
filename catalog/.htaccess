@@ -1,3 +1,19 @@
+Options -Indexes
 RewriteEngine On
+
+# Preserve the legacy public game-page redirect.
 RewriteCond %{QUERY_STRING} (^|&)page=game(&|$)
 RewriteRule ^index\.php$ game-page.php [L,QSA]
+
+# Runtime code, configuration and catalog content must not be directly served.
+RewriteRule ^(?:bin|lib|src|storage)(?:/|$) - [F,L]
+RewriteRule ^(?:config\.php|config\.example\.php)$ - [F,L]
+
+<FilesMatch "\.(?:log|sql|bak|tmp|ini)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>
