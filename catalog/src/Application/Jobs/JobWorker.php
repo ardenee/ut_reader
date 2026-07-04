@@ -39,7 +39,9 @@ final class JobWorker
         }
 
         try {
-            $result = $handler->handle($job);
+            $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds);
+            $context->heartbeat();
+            $result = $handler->handle($job, $context);
             $this->queue->complete($job, $result);
             return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
         } catch (\Throwable $exception) {
