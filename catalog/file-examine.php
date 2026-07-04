@@ -72,7 +72,7 @@ function examine_remote_url(int $fileId, string $backToFilesUrl, string $anchor 
 }
 
 /**
- * FPackageIndex rule for legacy UE packages:
+ * FPackageIndex rule for legacy Unreal packages:
  *   0  = null
  *   <0 = import at (-index - 1)
  *   >0 = export at ( index - 1)
@@ -92,6 +92,36 @@ function examine_ref_link(int $ref): string
     return '<a class="xref mono" href="#export-' . $index . '" title="Export index ' . $index . '">' . $ref . '</a>';
 }
 
+function examine_normalize_reference_text(string $value): string
+{
+    return strtolower(trim($value));
+}
+
+function examine_add_reference_target(array &$targets, string $value, string $targetId): void
+{
+    $key = examine_normalize_reference_text($value);
+    if ($key === '') {
+        return;
+    }
+    $targets[$key] ??= [];
+    $targets[$key][] = $targetId;
+}
+
+function examine_local_reference_link(string $value, array $referenceTargets): string
+{
+    $text = trim($value);
+    if ($text === '') {
+        return '<span class="muted">none</span>';
+    }
+
+    $targets = array_values(array_unique($referenceTargets[examine_normalize_reference_text($text)] ?? []));
+    if ($targets === []) {
+        return '<span class="mono path">' . catalog_h($text) . '</span>';
+    }
+
+    return '<a class="xref mono path" href="#' . catalog_h($targets[0]) . '" data-reference-targets="' . catalog_h((string)json_encode($targets, JSON_THROW_ON_ERROR)) . '">' . catalog_h($text) . '</a>';
+}
+
 function examine_name_link(string $value, array $nameLookup): string
 {
     $text = trim($value);
@@ -99,7 +129,7 @@ function examine_name_link(string $value, array $nameLookup): string
         return '';
     }
 
-    $key = strtolower($text);
+    $key = examine_normalize_reference_text($text);
     if (isset($nameLookup[$key])) {
         return '<a class="xref mono path" href="#name-' . (int)$nameLookup[$key] . '">' . catalog_h($text) . '</a>';
     }
@@ -120,31 +150,33 @@ function examine_resolved_file_link(?int $fileId, string $label, ?int $exportInd
     return '<a class="xref" href="file-info.php?id=' . (int)$fileId . '">' . catalog_h($label) . '</a>';
 }
 
-function examine_root_package_link(string $rootPackage, ?array $dependency, int $gameId, string $backToFilesUrl): string
+function examine_dependency_html(?array $dependency, string $backToFilesUrl): string
 {
-    $rootPackage = trim($rootPackage);
-    if ($rootPackage === '') {
-        return '<span class="muted">none</span>';
+    if (!$dependency) {
+        return '<span class="muted">not built</span>';
     }
 
-    if ($dependency && !empty($dependency['resolved_file_id'])) {
-        $fileId = (int)$dependency['resolved_file_id'];
-        $exportIndex = array_key_exists('resolved_export_index', $dependency) && $dependency['resolved_export_index'] !== null
-            ? (int)$dependency['resolved_export_index']
-            : null;
-        return examine_resolved_file_link($fileId, $rootPackage, $exportIndex, $backToFilesUrl);
+    $status = (string)$dependency['status'];
+    $detail = '<strong>' . catalog_h($status) . '</strong>';
+    $resolvedFileId = !empty($dependency['resolved_file_id']) ? (int)$dependency['resolved_file_id'] : null;
+    $resolvedExportIndex = array_key_exists('resolved_export_index', $dependency) && $dependency['resolved_export_index'] !== null
+        ? (int)$dependency['resolved_export_index']
+        : null;
+
+    if ($resolvedFileId) {
+        $label = (string)($dependency['resolved_package'] ?: $dependency['resolved_file'] ?: ('file #' . $resolvedFileId));
+        $detail .= '<span>→ ' . examine_resolved_file_link($resolvedFileId, $label, $resolvedExportIndex, $backToFilesUrl) . '</span>';
+    }
+    if ($resolvedFileId && $resolvedExportIndex !== null && !empty($dependency['resolved_export_path'])) {
+        $detail .= '<span class="mono path">' . examine_resolved_file_link($resolvedFileId, (string)$dependency['resolved_export_path'], $resolvedExportIndex, $backToFilesUrl) . '</span>';
     }
 
-    $url = 'game-files.php?' . http_build_query([
-        'id' => $gameId,
-        'file_filter' => $rootPackage,
-    ]);
-    return '<a class="xref mono path" href="' . catalog_h($url) . '" title="Search this game for package ' . catalog_h($rootPackage) . '">' . catalog_h($rootPackage) . '</a>';
+    return '<div class="examine-dependency-entry"><span class="dep ' . catalog_h($status) . ' examine-dependency-pill">' . $detail . '</span></div>';
 }
 
 function examine_add_name_usage(array &$usageMap, string $name, string $tab, string $targetId): void
 {
-    $key = strtolower(trim($name));
+    $key = examine_normalize_reference_text($name);
     if ($key === '') {
         return;
     }
@@ -155,13 +187,12 @@ function examine_add_name_usage(array &$usageMap, string $name, string $tab, str
 
 function examine_usage_link(string $label, array $targets): string
 {
+    $targets = array_values(array_unique($targets));
     if ($targets === []) {
         return '';
     }
 
-    $targets = array_values(array_unique($targets));
-    $firstTarget = $targets[0];
-    return '<a class="xref name-usage-link" href="#' . catalog_h($firstTarget) . '" data-reference-targets="' . catalog_h((string)json_encode($targets, JSON_THROW_ON_ERROR)) . '">' . catalog_h($label) . '</a>';
+    return '<a class="xref name-usage-link" href="#' . catalog_h($targets[0]) . '" data-reference-targets="' . catalog_h((string)json_encode($targets, JSON_THROW_ON_ERROR)) . '">' . catalog_h($label) . '</a>';
 }
 
 function examine_hex_bytes(string $bytes): string
@@ -351,11 +382,14 @@ try {
     $dependencies = catalog_all($db, 'SELECT d.*, rf.package_name resolved_package, rf.original_name resolved_file, re.full_path resolved_export_path, re.export_index resolved_export_index FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id LEFT JOIN ue_exports re ON re.id=d.resolved_export_id WHERE d.file_id=? ORDER BY d.id', [$id]);
 
     $nameLookup = [];
+    $localReferenceTargets = [];
     foreach ($names as $name) {
-        $text = strtolower(trim((string)$name['name_text']));
-        if ($text !== '' && !isset($nameLookup[$text])) {
-            $nameLookup[$text] = (int)$name['name_index'];
+        $text = (string)$name['name_text'];
+        $key = examine_normalize_reference_text($text);
+        if ($key !== '' && !isset($nameLookup[$key])) {
+            $nameLookup[$key] = (int)$name['name_index'];
         }
+        examine_add_reference_target($localReferenceTargets, $text, 'name-' . (int)$name['name_index']);
     }
 
     $dependencyByImportId = [];
@@ -366,26 +400,34 @@ try {
     $nameUsage = [];
     foreach ($imports as $import) {
         $targetId = 'import-' . (int)$import['import_index'];
-        examine_add_name_usage($nameUsage, (string)$import['class_package'], 'imports', $targetId);
-        examine_add_name_usage($nameUsage, (string)$import['class_name'], 'imports', $targetId);
-        examine_add_name_usage($nameUsage, (string)$import['object_name'], 'imports', $targetId);
+        foreach (['class_package', 'class_name', 'object_name'] as $field) {
+            $value = (string)$import[$field];
+            examine_add_name_usage($nameUsage, $value, 'imports', $targetId);
+            examine_add_reference_target($localReferenceTargets, $value, $targetId);
+        }
     }
     foreach ($exports as $export) {
         $targetId = 'export-' . (int)$export['export_index'];
-        examine_add_name_usage($nameUsage, (string)$export['class_name'], 'exports', $targetId);
-        examine_add_name_usage($nameUsage, (string)$export['object_name'], 'exports', $targetId);
+        foreach (['class_name', 'object_name'] as $field) {
+            $value = (string)$export[$field];
+            examine_add_name_usage($nameUsage, $value, 'exports', $targetId);
+            examine_add_reference_target($localReferenceTargets, $value, $targetId);
+        }
     }
     foreach ($nameUsage as &$usage) {
         $usage['imports'] = array_values(array_unique($usage['imports']));
         $usage['exports'] = array_values(array_unique($usage['exports']));
     }
     unset($usage);
+    foreach ($localReferenceTargets as &$targets) {
+        $targets = array_values(array_unique($targets));
+    }
+    unset($targets);
 
     catalog_head('Examine ' . (string)$file['package_name']);
     echo <<<'CSS'
 <style>
 html { scroll-behavior: smooth; }
-
 #examine-top { scroll-margin-top: 86px; }
 
 .examine-tabs {
@@ -396,7 +438,6 @@ html { scroll-behavior: smooth; }
     border-bottom: 1px solid var(--line);
     padding-bottom: 10px;
 }
-
 .examine-tab {
     display: inline-flex;
     align-items: center;
@@ -410,49 +451,32 @@ html { scroll-behavior: smooth; }
     font-weight: 650;
     text-decoration: none;
 }
-
-.examine-tab:hover {
-    background: rgba(118, 169, 255, .14);
-    text-decoration: none;
-}
-
-.examine-tab.is-active {
-    color: #07111f;
-    background: linear-gradient(180deg, #9dc2ff, #76a9ff);
-    border-color: #a9c9ff;
-}
-
-.examine-tab__count {
-    color: inherit;
-    font-size: 12px;
-    opacity: .85;
-}
-
+.examine-tab:hover { background: rgba(118, 169, 255, .14); text-decoration: none; }
+.examine-tab.is-active { color: #07111f; background: linear-gradient(180deg, #9dc2ff, #76a9ff); border-color: #a9c9ff; }
+.examine-tab__count { color: inherit; font-size: 12px; opacity: .85; }
 .examine-tab-panel[hidden] { display: none; }
 
-.examine-table-region {
-    overflow-x: auto;
-    border: 1px solid var(--line);
-    border-radius: 12px;
-}
-
+.examine-table-region { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; }
 .examine-table-region > table { min-width: 760px; }
-.examine-table-region > .examine-imports-table { min-width: 1500px; }
+.examine-table-region > .examine-imports-table { min-width: 1420px; }
 .examine-table-region > .examine-exports-table { min-width: 1320px; }
+.examine-reference-note { margin: 0 0 12px; }
 
-.examine-reference-note {
-    margin: 0 0 12px;
-}
+.name-usage-links { display: flex; flex-wrap: wrap; gap: 6px; }
+.name-usage-links .muted { margin-right: 2px; }
 
-.name-usage-links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+.examine-dependency-entry { display: block; margin: 0 0 3px; }
+.examine-dependency-pill {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    max-width: 100%;
+    margin: 0;
+    white-space: normal;
+    line-height: 1.28;
 }
-
-.name-usage-links .muted {
-    margin-right: 2px;
-}
+.examine-dependency-pill > span { display: block; }
 
 .is-reference-target td {
     background: rgba(246, 196, 83, .18) !important;
@@ -461,31 +485,10 @@ html { scroll-behavior: smooth; }
     border-bottom: 1px solid rgba(246, 196, 83, .55);
 }
 
-[data-sortable-table] th {
-    cursor: pointer;
-    user-select: none;
-}
-
-[data-sortable-table] th::after {
-    content: '↕';
-    display: inline-block;
-    margin-left: 7px;
-    color: var(--muted);
-    font-size: 11px;
-    opacity: .7;
-}
-
-[data-sortable-table] th.is-sort-ascending::after {
-    content: '▲';
-    color: var(--blue);
-    opacity: 1;
-}
-
-[data-sortable-table] th.is-sort-descending::after {
-    content: '▼';
-    color: var(--blue);
-    opacity: 1;
-}
+[data-sortable-table] th { cursor: pointer; user-select: none; }
+[data-sortable-table] th::after { content: '↕'; display: inline-block; margin-left: 7px; color: var(--muted); font-size: 11px; opacity: .7; }
+[data-sortable-table] th.is-sort-ascending::after { content: '▲'; color: var(--blue); opacity: 1; }
+[data-sortable-table] th.is-sort-descending::after { content: '▼'; color: var(--blue); opacity: 1; }
 
 .examine-to-top {
     position: fixed;
@@ -504,17 +507,11 @@ html { scroll-behavior: smooth; }
     font-size: 22px;
     font-weight: 800;
 }
-
-.examine-to-top:hover {
-    background: rgba(44, 66, 112, .98);
-    text-decoration: none;
-}
-
-@media (max-width: 700px) {
-    .examine-to-top { right: 14px; bottom: 14px; }
-}
+.examine-to-top:hover { background: rgba(44, 66, 112, .98); text-decoration: none; }
+@media (max-width: 700px) { .examine-to-top { right: 14px; bottom: 14px; } }
 </style>
 CSS;
+
     echo '<span id="examine-top" aria-hidden="true"></span>';
     echo '<div class="card hero"><h1>Examine ' . catalog_h($file['package_name']) . '</h1><p class="muted">Database-backed package names, imports, exports and dependency links, with header data parsed from the stored package file.</p><p><a class="button" href="' . catalog_h($backToFilesUrl) . '">Back to files</a> <a class="button" href="file-info.php?id=' . $id . '">Details</a></p></div>';
 
@@ -572,14 +569,13 @@ CSS;
     foreach ($names as $name) {
         $nameIndex = (int)$name['name_index'];
         $nameText = (string)$name['name_text'];
-        $nameKey = strtolower(trim($nameText));
+        $nameKey = examine_normalize_reference_text($nameText);
         $importTargets = $nameUsage[$nameKey]['imports'] ?? [];
         $exportTargets = $nameUsage[$nameKey]['exports'] ?? [];
-        $allTargets = array_values(array_unique(array_merge($importTargets, $exportTargets)));
-        $nameHtml = '<span class="mono path">' . catalog_h($nameText) . '</span>';
-        if ($allTargets !== []) {
-            $nameHtml = '<a class="xref mono path name-usage-link" href="#' . catalog_h($allTargets[0]) . '" data-reference-targets="' . catalog_h((string)json_encode($allTargets, JSON_THROW_ON_ERROR)) . '">' . catalog_h($nameText) . '</a>';
-        }
+        $allUsageTargets = array_values(array_unique(array_merge($importTargets, $exportTargets)));
+        $nameHtml = $allUsageTargets === []
+            ? '<span class="mono path">' . catalog_h($nameText) . '</span>'
+            : '<a class="xref mono path name-usage-link" href="#' . catalog_h($allUsageTargets[0]) . '" data-reference-targets="' . catalog_h((string)json_encode($allUsageTargets, JSON_THROW_ON_ERROR)) . '">' . catalog_h($nameText) . '</a>';
         $usedBy = [];
         if ($importTargets !== []) {
             $usedBy[] = examine_usage_link('Imports: ' . count($importTargets), $importTargets);
@@ -593,31 +589,14 @@ CSS;
     echo '</tbody></table></div></section>';
 
     echo '<section id="tab-imports" class="examine-tab-panel" data-examine-panel="imports" role="tabpanel" aria-labelledby="examine-tab-imports" hidden>';
-    echo '<h2>Imports</h2><p class="muted examine-reference-note">Object references: <span class="mono">0</span> = null; <span class="mono">&lt; 0</span> = Import at <span class="mono">(-index - 1)</span>; <span class="mono">&gt; 0</span> = Export at <span class="mono">(index - 1)</span>.</p><div class="examine-table-region"><table class="examine-imports-table" data-sortable-table><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th><th>Dependency</th><th>Common</th></tr></thead><tbody>';
+    echo '<h2>Imports</h2><p class="muted examine-reference-note">Object references: <span class="mono">0</span> = null; <span class="mono">&lt; 0</span> = Import at <span class="mono">(-index - 1)</span>; <span class="mono">&gt; 0</span> = Export at <span class="mono">(index - 1)</span>.</p><div class="examine-table-region"><table class="examine-imports-table" data-sortable-table><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th><th>Dependency</th></tr></thead><tbody>';
     foreach ($imports as $import) {
         $importIndex = (int)$import['import_index'];
         $packageRef = -($importIndex + 1);
         $dependency = $dependencyByImportId[(int)$import['id']] ?? null;
-        $dependencyHtml = '<span class="muted">not built</span>';
         $fullPathHtml = '<span class="mono path">' . catalog_h($import['full_path']) . '</span>';
-        $rootHtml = examine_root_package_link((string)$import['root_package'], $dependency, (int)$file['game_id'], $backToFilesUrl);
-        if ($dependency) {
-            $status = (string)$dependency['status'];
-            $dependencyHtml = '<span class="dep ' . catalog_h($status) . '">' . catalog_h($status) . '</span>';
-            $resolvedFileId = !empty($dependency['resolved_file_id']) ? (int)$dependency['resolved_file_id'] : null;
-            $resolvedExportIndex = array_key_exists('resolved_export_index', $dependency) && $dependency['resolved_export_index'] !== null
-                ? (int)$dependency['resolved_export_index']
-                : null;
-            if ($resolvedFileId) {
-                $packageLabel = (string)($dependency['resolved_package'] ?: $dependency['resolved_file'] ?: ('file #' . $resolvedFileId));
-                $dependencyHtml .= ' ' . examine_resolved_file_link($resolvedFileId, $packageLabel, $resolvedExportIndex, $backToFilesUrl);
-                if ($resolvedExportIndex !== null) {
-                    $fullPathHtml = examine_resolved_file_link($resolvedFileId, (string)$import['full_path'], $resolvedExportIndex, $backToFilesUrl);
-                }
-            }
-            if ($resolvedFileId && $resolvedExportIndex !== null && !empty($dependency['resolved_export_path'])) {
-                $dependencyHtml .= '<br><span class="mono small path">' . examine_resolved_file_link($resolvedFileId, (string)$dependency['resolved_export_path'], $resolvedExportIndex, $backToFilesUrl) . '</span>';
-            }
+        if ($dependency && !empty($dependency['resolved_file_id']) && $dependency['resolved_export_index'] !== null) {
+            $fullPathHtml = examine_resolved_file_link((int)$dependency['resolved_file_id'], (string)$import['full_path'], (int)$dependency['resolved_export_index'], $backToFilesUrl);
         }
 
         echo '<tr id="import-' . $importIndex . '">';
@@ -628,9 +607,8 @@ CSS;
         echo '<td>' . examine_name_link((string)$import['object_name'], $nameLookup) . '</td>';
         echo '<td>' . examine_ref_link((int)$import['outer_index']) . '</td>';
         echo '<td>' . $fullPathHtml . '</td>';
-        echo '<td>' . $rootHtml . '</td>';
-        echo '<td>' . $dependencyHtml . '</td>';
-        echo '<td data-sort-value="' . ((int)$import['is_common'] ? 1 : 0) . '">' . ((int)$import['is_common'] ? 'yes' : 'no') . '</td>';
+        echo '<td>' . examine_local_reference_link((string)$import['root_package'], $localReferenceTargets) . '</td>';
+        echo '<td>' . examine_dependency_html($dependency, $backToFilesUrl) . '</td>';
         echo '</tr>';
     }
     echo '</tbody></table></div></section>';
@@ -656,7 +634,7 @@ CSS;
     echo '</tbody></table></div></section>';
     echo '</div>';
 
-    echo '<a class="examine-to-top" href="#examine-top" title="To Top" aria-label="To Top">↑</a>';
+    echo '<a class="examine-to-top" href="#examine-top" data-to-top title="To Top" aria-label="To Top">↑</a>';
     echo <<<'HTML'
 <script>
 (function () {
@@ -696,7 +674,6 @@ CSS;
             return document.getElementById(targetId);
         }).filter(Boolean);
         if (!targets.length) {
-            activateTab('names');
             return;
         }
 
@@ -723,6 +700,7 @@ CSS;
             return;
         }
         if (hash.indexOf('tab-') === 0) {
+            clearReferenceHighlights();
             activateTab(hash.slice(4));
             return;
         }
@@ -741,6 +719,13 @@ CSS;
     });
 
     document.addEventListener('click', function (event) {
+        var toTop = event.target.closest('[data-to-top]');
+        if (toTop) {
+            event.preventDefault();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
         var usageLink = event.target.closest('[data-reference-targets]');
         if (usageLink) {
             event.preventDefault();
