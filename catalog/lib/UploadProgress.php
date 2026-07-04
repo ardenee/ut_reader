@@ -38,19 +38,17 @@ function upload_progress_write(string $token, array $state): void
     $state['updated_at'] = microtime(true);
     $path = upload_progress_path($token);
     $tmpPath = $path . '.tmp';
-    file_put_contents($tmpPath, json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-    rename($tmpPath, $path);
+    if (@file_put_contents($tmpPath, json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) === false) {
+        return;
+    }
+    if (!@rename($tmpPath, $path)) {
+        @unlink($tmpPath);
+        return;
+    }
 
     $lastWriteAtByToken[$safeToken] = $now;
     $lastStageByToken[$safeToken] = $stage;
     $lastPercentByToken[$safeToken] = $percent;
-}
-
-function upload_progress_reporter(string $token, int $minimumIntervalMs = 200): callable
-{
-    return static function (array $state) use ($token): void {
-        upload_progress_write($token, $state);
-    };
 }
 
 function upload_progress_read(string $token): array
@@ -59,7 +57,7 @@ function upload_progress_read(string $token): array
     if (!is_file($path)) {
         return ['stage' => 'waiting', 'done' => 0, 'total' => 100, 'percent' => 0, 'message' => 'Waiting for server...'];
     }
-    $json = file_get_contents($path);
+    $json = @file_get_contents($path);
     $data = json_decode((string)$json, true);
     return is_array($data) ? $data : ['stage' => 'unknown', 'done' => 0, 'total' => 100, 'percent' => 0, 'message' => 'Progress unavailable.'];
 }
@@ -68,7 +66,7 @@ function upload_progress_clear(string $token): void
 {
     $path = upload_progress_path($token);
     if (is_file($path)) {
-        unlink($path);
+        @unlink($path);
     }
 }
 
@@ -83,9 +81,9 @@ function upload_progress_cleanup(int $maxAgeSeconds = 86400): void
     $cutoff = time() - max(60, $maxAgeSeconds);
     $pattern = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'unrealdb-upload-progress-*.json*';
     foreach (glob($pattern) ?: [] as $path) {
-        $modifiedAt = filemtime($path);
+        $modifiedAt = @filemtime($path);
         if ($modifiedAt !== false && $modifiedAt < $cutoff) {
-            unlink($path);
+            @unlink($path);
         }
     }
 }
