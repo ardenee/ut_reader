@@ -83,17 +83,20 @@ final class CatalogDependencyResolver
                 continue;
             }
 
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            [$valuesSql, $valueArgs] = self::valuesTableSql($chunk);
             $rows = catalog_all(
                 $db,
-                'SELECT id, package_name FROM ue_files WHERE game_id=? AND id<>? AND package_name IN (' . $placeholders . ') ORDER BY uploaded_at DESC',
-                array_merge([$gameId, $fileId], $chunk)
+                'SELECT requested.lookup_value, f.id'
+                . ' FROM (' . $valuesSql . ') requested'
+                . ' JOIN ue_files f ON f.game_id=? AND f.id<>? AND f.package_name=requested.lookup_value'
+                . ' ORDER BY requested.lookup_value, f.uploaded_at DESC',
+                array_merge($valueArgs, [$gameId, $fileId])
             );
 
             foreach ($rows as $row) {
-                $packageName = (string)$row['package_name'];
-                if (!isset($matches[$packageName])) {
-                    $matches[$packageName] = (int)$row['id'];
+                $lookupValue = (string)$row['lookup_value'];
+                if (!isset($matches[$lookupValue])) {
+                    $matches[$lookupValue] = (int)$row['id'];
                 }
             }
         }
@@ -113,17 +116,21 @@ final class CatalogDependencyResolver
                 continue;
             }
 
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            [$valuesSql, $valueArgs] = self::valuesTableSql($chunk);
             $rows = catalog_all(
                 $db,
-                'SELECT e.id export_id, e.full_path, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND f.id<>? AND e.full_path IN (' . $placeholders . ') ORDER BY f.uploaded_at DESC',
-                array_merge([$gameId, $fileId], $chunk)
+                'SELECT requested.lookup_value, e.id export_id, f.id file_id'
+                . ' FROM (' . $valuesSql . ') requested'
+                . ' JOIN ue_exports e ON e.full_path=requested.lookup_value'
+                . ' JOIN ue_files f ON f.id=e.file_id AND f.game_id=? AND f.id<>?'
+                . ' ORDER BY requested.lookup_value, f.uploaded_at DESC',
+                array_merge($valueArgs, [$gameId, $fileId])
             );
 
             foreach ($rows as $row) {
-                $fullPath = (string)$row['full_path'];
-                if (!isset($matches[$fullPath])) {
-                    $matches[$fullPath] = [
+                $lookupValue = (string)$row['lookup_value'];
+                if (!isset($matches[$lookupValue])) {
+                    $matches[$lookupValue] = [
                         'file_id' => (int)$row['file_id'],
                         'export_id' => (int)$row['export_id'],
                     ];
@@ -132,5 +139,24 @@ final class CatalogDependencyResolver
         }
 
         return $matches;
+    }
+
+    /**
+     * Builds a parameterized derived table so MySQL performs each comparison.
+     * This deliberately preserves the column collation used by the legacy
+     * `package_name=?` and `full_path=?` queries; PHP array key comparison
+     * must not decide whether two package/object names are equivalent.
+     *
+     * @param list<string> $values
+     * @return array{0:string,1:list<string>}
+     */
+    private static function valuesTableSql(array $values): array
+    {
+        $parts = [];
+        foreach ($values as $index => $value) {
+            $parts[] = $index === 0 ? 'SELECT ? AS lookup_value' : 'SELECT ?';
+        }
+
+        return [implode(' UNION ALL ', $parts), $values];
     }
 }
