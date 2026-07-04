@@ -1,202 +1,300 @@
 # UnrealDB / UT Reader
 
-UnrealDB is a PHP/MySQL-MariaDB web application for cataloging Unreal Engine package files, inspecting their package data, and helping complete game libraries by finding missing dependencies.
+UnrealDB is a PHP and MySQL/MariaDB application for cataloging Unreal Engine package files. It reads package metadata, stores package tables, resolves dependencies from imports and exports, and helps build complete game-file libraries.
 
-The project started as standalone UE package viewers for UE1, UE2, UE3, and UE4 files. It now also includes a catalog/database application under `catalog/` for managing Unreal game libraries, scanning files, recording imports/exports, resolving dependencies, and optionally sharing inventory between deployments through a parent/child federation system.
+The repository contains two related areas:
 
-> **Status:** Active development. The package viewers are useful for inspection and parser debugging. The catalog app is usable for testing, but schema/features are still changing and should be treated as pre-release.
+- **`catalog/`** is the main UnrealDB catalog application: games, profiles, imports, exports, dependencies, uploads, sources, federation, downloads, jobs, and administration.
+- **`UE1/` through `UE5/` and `new/`** contain standalone reader/viewer experiments and parser references. They are useful for local parser inspection and development, but are not the production catalog interface.
 
-## Main Goals
+> **Project status:** active development. The catalog is the supported application path, but package parsing support and the database schema continue to evolve. Test upgrades on a copy of the database and storage before production deployment.
 
-- Build a searchable database of Unreal package files.
-- Store MD5/SHA1 hashes and package GUIDs to avoid duplicate storage.
-- Parse package headers, names, imports, exports, and selected metadata.
-- Use imports/exports to identify missing dependency packages and objects.
-- Keep dependency matching based on real package/object data, not filenames alone.
-- Group files needed by maps/mods so a library can be completed without missing objects.
-- Support multiple Unreal games and engine generations through editable game profiles.
-- Allow deployments to connect to a parent/master catalog for inventory comparison and controlled missing-file transfers.
-- Provide optional public download control and external mirror/shared-provider link handling.
+## What UnrealDB Does
 
-## Project Areas
+- Catalogs Unreal package files per game.
+- Stores package headers, names, imports, exports, hashes, GUIDs, versions, and scan metadata.
+- Detects duplicate files within the selected game by MD5.
+- Resolves imported package/object references into dependency rows.
+- Distinguishes `resolved`, `missing`, `package_only`, and `common` dependency states.
+- Uses editable game profiles rather than a hard-coded game/engine list.
+- Supports local source scans, HTTP manifest scans, controlled uploads, and optional parent/child federation.
+- Separates public download delivery from federation transfers.
+- Provides a MySQL-backed maintenance-job foundation and CLI worker for long-running catalog work.
 
-### `catalog/` — UnrealDB Catalog App
+## Main Application Areas
 
-The catalog app is the main application for building and managing a database of Unreal files.
+### `catalog/` — UnrealDB Catalog
 
-Current catalog features include:
+The catalog application is the main entry point:
 
-- Game manager and game profile system.
-- Profiled upload scanner with engine/version/extension checks.
-- Local source scanner that can link known files by MD5/GUID and optionally import unknown files through the profiled scanner.
-- Search by file name, package name, MD5, SHA1, GUID, imports, and exports.
-- Game/file browsing with dependency summaries.
-- Import/export/name table storage in MySQL/MariaDB.
-- Missing dependency tracking.
-- Duplicate detection by MD5 and package GUID.
-- File storage under `catalog/storage/`.
-- Admin dashboard grouped by workflow: Dashboard, Library, Setup, Missing Files, Federation, Transfers, Downloads, Settings.
-- Parent/child federation tables and pages for comparing inventory and transferring approved/missing files.
-- Public download mode controls and external mirror link queue/fulfilment.
+```text
+/catalog/index.php
+/catalog/dashboard.php
+```
 
-### `UE1/`, `UE2/`, `UE3/`, `UE4/` — Package Viewers
+Key areas include:
 
-The version-specific viewers remain useful for direct parser debugging and package inspection.
+| Area | Purpose |
+|---|---|
+| Games | Public game browser and searchable game libraries. |
+| Global Search | Searches files, package names, hashes, GUIDs, imports, and exports. |
+| Dashboard | Operational summary for games, files, dependencies, federation, and transfers. |
+| Library | Browse and filter cataloged files. |
+| Game Manager | Add/edit games and assign a reusable game profile. |
+| Game Profiles | Define engine family, extensions, version ranges, and scanner policy. |
+| Profiled Upload | Validate, parse, store, and link package files to a selected game. |
+| Sources | Register local folders, HTTP mirrors, or redirect-server sources per game. |
+| Source Scan | Link known local files by MD5/GUID and optionally import unknown files. |
+| HTTP Source Scan | Compare a remote manifest against the catalog, with optional deep GUID inspection. |
+| Missing Files | Review unresolved dependencies and repair candidates. |
+| Federation | Pair parent/child catalogs, exchange inventory, request files, and run transfers. |
+| Downloads | Control public local downloads and external mirror links. |
 
-| Folder | Viewer | Current purpose |
-|---|---|---|
-| `UE1/` | `UE1.php` | UE1 / Unreal Tournament era package inspection |
-| `UE2/` | `UE2.php` | UE2 / UE2.5 package inspection |
-| `UE3/` | `UE3.php` | UE3 / UT3 package inspection, including compressed package handling where supported |
-| `UE4/` | `UE4.php` | UE4 `.uasset` / `.umap` package summary, table, and export map inspection |
+## Catalog Data Model
 
-These viewer folders should be treated as parser/viewer references. The catalog app can reuse parsing logic but should not require destructive edits to the working version-specific viewers.
+The catalog stores the package data needed for dependency-aware library management:
 
-## Catalog Workflow
+```text
+ue_games
+  └── ue_game_profiles
 
-A normal setup/use flow is:
+ue_files
+  ├── ue_names
+  ├── ue_imports
+  ├── ue_exports
+  ├── ue_dependencies
+  ├── ue_file_locations
+  └── public-download / external-mirror metadata
+```
 
-1. Install the catalog database.
-2. Add or edit games in **Setup → Game Manager**.
-3. Configure scanner profiles with engine key, file extensions, and known package version ranges.
-4. Upload files using **Setup → Profiled Upload Scanner**.
-5. Add local/HTTP source locations where required.
-6. Run source scans to link known files or import unknown files through the profiled scanner.
-7. Review the library in **Library**.
-8. Review missing packages/objects in **Missing Files**.
-9. Optionally connect to a parent/master catalog through **Federation**.
-10. Request/download/import missing files through controlled transfer queues.
-11. Configure public download behaviour under **Downloads** if the site is public-facing.
+Each imported file records, where available:
 
-## Game Profiles and Scanner Rules
+- original filename and normalized package name;
+- stored path and file size;
+- MD5 and SHA1;
+- package GUID;
+- detected engine, package version, licensee version, and detection confidence;
+- names, imports, and exports;
+- compression metadata;
+- import-derived dependency rows;
+- scan notes and failure information.
 
-Game profiles make the scanner data-driven so additional Unreal games can be added later without rewriting scanner logic.
+## Game Profiles and Package Detection
 
-Each profile stores:
+Games select a **game profile**. The profile owns the package-reading rules, so adding a game does not require adding a new hard-coded engine record.
 
-- game ID,
-- engine key, such as `UE1`, `UE2`, `UE3`, `UE4`, `UE5`,
-- allowed file extensions,
-- package version min/max,
-- licensee version min/max,
-- confidence policy,
-- notes.
+A profile can define:
 
-Seeded profile examples currently include:
+- engine key, such as `UE1`, `UE2`, `UE3`, `UE4`, or `UE5`;
+- allowed file extensions;
+- package and licensee version ranges;
+- compatibility/detection policy;
+- profile notes.
 
-| Engine | Example games | Extensions | Starting package version rule |
-|---|---|---|---|
-| UE1 | Unreal, Unreal Tournament | `u`, `unr`, `utx`, `umx`, `uax` | 60-69 |
-| UE2 / UE2.5 | Unreal II, UT2003, UT2004 | `u`, `un2`, `ut2`, `utx`, `usx`, `ukx`, `uax` | 100-130 |
-| UE3 | Unreal Tournament 3 | `ut3`, `upk`, `u` | 512 |
-| UE4 | Unreal Tournament Alpha / UT4-style packages | `uasset`, `umap` | not fixed / may be unversioned |
+The scanner validates the selected profile, reads package metadata, and may classify a file as native, legacy-compatible, mismatched, or uncertain. Exact same-engine game routing is not always possible from package headers alone, so the administrator selects the target game before import.
 
-These ranges are starting rules, not final proof for every custom/licensee build. Exact same-engine game routing can be ambiguous; for example, header data may identify UE2 but not always prove UT2003 versus UT2004. High-confidence auto-routing should therefore be limited to engine/profile matches, with admin review where needed.
+Typical target extensions include:
 
-## Dependency Matching
+| Engine family | Common package extensions |
+|---|---|
+| UE1 | `.u`, `.unr`, `.utx`, `.umx`, `.uax` |
+| UE2 / UE2.5 | `.u`, `.un2`, `.ut2`, `.utx`, `.usx`, `.ukx`, `.uax`, `.umx` |
+| UE3 | `.u`, `.ut3`, `.upk` |
+| UE4 | `.uasset`, `.umap` |
 
-The catalog is intended to resolve dependencies using package/object references rather than filenames alone.
+Reader support remains package- and version-dependent. Successfully opening a file does not mean every export payload or property type is decoded.
 
-For each scanned file, the catalog stores:
+## Upload and Import Flow
 
-- name table entries,
-- import table entries,
-- export table entries,
-- package GUID,
-- package version/licensee version,
-- MD5 and SHA1,
-- dependency rows derived from imports,
-- resolved/missing/common/package-only status.
+The profiled upload scanner is the recommended import route.
 
-The goal is to determine which packages are actually required by a map/package and which files in the database can satisfy those references.
+```text
+Upload package
+  → validate file size and profile extension
+  → classify engine/profile compatibility
+  → hash file and check same-game duplicate MD5
+  → parse header, names, imports, exports
+  → store verified package and metadata
+  → build dependencies for the imported file
+  → refresh only existing files potentially affected by that package
+```
 
-## Federation / Parent-Child Catalogs
+This targeted refresh avoids rebuilding every dependency row for the game after every package upload.
 
-Federation is intended for multiple catalog deployments.
+Files that fail validation or parsing can be retained under unverified storage for review. A failed import rolls back database rows and removes the partially stored verified package.
 
-A parent/master site can collect inventory from child sites and pull files it needs. Child sites can request missing dependency files from the parent. Transfers are managed through queues and worker pages so large libraries are not transferred all at once.
+## Dependency Resolution
 
-Current federation concepts include:
+UnrealDB resolves dependencies from package imports rather than relying only on filenames.
 
-- site identity and fingerprint,
-- parent/child peer records,
-- join request workflow,
-- inventory push/pull,
-- missing dependency request generation,
-- approval/denial of child requests,
-- controlled transfer jobs,
-- download/import workers,
-- queue and log pages,
-- configurable speed/delay/file-count limits,
-- cron/DSM Task Scheduler worker endpoint.
+For each import, the catalog derives:
 
-Child sites can request missing dependency files. Parent sites are intended to have broader access so they can build a more complete master catalog.
+```text
+required package
+required object path
+resolved catalog file, where available
+resolved export, where available
+resolution status
+```
+
+Dependency states:
+
+| Status | Meaning |
+|---|---|
+| `resolved` | A matching catalog package/export satisfies the import. |
+| `missing` | No suitable catalog package was found. |
+| `package_only` | A package match exists, but the required exported object was not confirmed. |
+| `common` | The reference is configured as a common engine package and is not treated as a normal missing dependency. |
+
+The resolver uses batched database lookups so an import-heavy package does not produce one database query per import.
+
+## Search and File Browsing
+
+Global search supports:
+
+- exact MD5 and SHA1 lookups;
+- package GUID lookup;
+- package and original filename matching;
+- import and export object matching;
+- result limiting and stage-level failure handling.
+
+Game file lists provide filters for dependency status, type, compression, and text search. They use a paginated query path designed to avoid loading full file rows before page selection for normal sorts.
+
+## Sources and Library Reconciliation
+
+A source belongs to a game and can represent:
+
+- a local server/game folder;
+- an HTTP mirror;
+- a redirect-server source.
+
+Local scans can:
+
+1. hash files and match known catalog files by MD5;
+2. inspect package GUIDs for secondary matching;
+3. record source locations for matched files;
+4. optionally copy unknown files into the profiled import flow.
+
+HTTP scans can compare manifests against catalog records and can optionally download unknown files temporarily to inspect package GUIDs.
+
+## Federation
+
+Federation connects multiple UnrealDB deployments in a parent/child model.
+
+Current federation capabilities include:
+
+- site identity and fingerprint records;
+- join-request workflow;
+- parent/child peer management;
+- signed peer API requests using timestamp, nonce, body hash, and HMAC signature;
+- inventory exchange;
+- missing dependency request generation;
+- approval, denial, and cancellation workflows;
+- controlled upload/download/import transfer jobs;
+- configurable speed limits, delays, and transfer-file limits;
+- transfer logs, queue, and maintenance pages.
+
+Federation transfers and public downloads are separate paths. Parent/child transfers should be run through controlled worker operations rather than exposed as unrestricted public downloads.
 
 ## Public Downloads and External Mirrors
 
-Public/user downloads are separate from federation transfers.
+Public downloads can be configured independently of federation.
 
-Public download modes currently include:
-
-| Mode | Meaning |
+| Mode | Behaviour |
 |---|---|
-| `local_direct` | Users download directly from this site. |
-| `external_mirror` | Users only receive active external/shared-provider links. If no link exists, a mirror job can be queued. |
-| `external_mirror_preferred` | Use an active external link if available; otherwise fall back to local direct download and queue a mirror job. |
-| `disabled` | Disable public downloads. Federation transfers still use the federation API. |
+| `local_direct` | Serve the file from local catalog storage. |
+| `external_mirror` | Return only an active external/shared-provider link. |
+| `external_mirror_preferred` | Use an active external link when available; otherwise allow local download and queue mirror work. |
+| `disabled` | Disable public download delivery. |
 
-External mirror support currently includes a manual provider workflow:
+External mirror links are currently administered through a manual provider workflow. The application can queue mirror work and reuse active links, but provider-specific upload automation is not yet a core feature.
 
-1. A public user requests a file.
-2. The site queues a mirror job if no active link exists.
-3. An admin uploads the file to a shared hosting provider manually.
-4. The admin pastes the external URL into the mirror job page.
-5. The link is reused until its stale/expiry days pass.
+## Background Jobs and Worker
 
-Provider-specific upload APIs can be added later.
+The catalog includes a durable MySQL-backed job queue for maintenance work.
 
-## Current Package Viewer Features
+Current job types include:
 
-The UE viewer pages can display:
+```text
+catalog.rebuild_game_dependencies
+catalog.rebuild_affected_dependencies
+catalog.prune_upload_progress
+```
 
-- package summary fields,
-- GUIDs,
-- package flags where supported,
-- name/import/export/generation tables,
-- linked object/name references,
-- export tree/details where supported,
-- selected property/export data where supported,
-- raw header data from bytes actually read from the file,
-- unparsed header bytes as raw hex when a known header section has not yet been fully decoded.
+Run a worker only through CLI:
 
-Raw export/import grids and raw header data are generally collapsed by default so the normal package summary remains readable.
+```bash
+php catalog/bin/catalog-worker.php --max-jobs=25 --sleep-ms=250
+```
 
-## Supported / Target File Types
+The worker is deliberately blocked from HTTP execution. On shared hosting, use cron or the host scheduler to invoke it. Start with one worker for long dependency rebuilds until lease renewal is connected to scanner progress callbacks.
 
-Current target package types include:
+## HTTP API Foundation
 
-- UE1-style packages: `.u`, `.utx`, `.umx`, `.uax`, `.unr`.
-- UE2/UE2.5 packages: `.u`, `.ut2`, `.un2`, `.utx`, `.usx`, `.ukx`, `.uax`, `.umx`.
-- UE3 packages: `.ut3`, `.upk`, `.u`.
-- UE4 packages: `.uasset`, `.umap`.
+The catalog includes a small versioned API foundation:
 
-Support is parser-dependent and still expanding. A file opening successfully does not mean every export payload or property type is fully decoded.
+```text
+/catalog/api/v1/health.php
+/catalog/api/v1/job-status.php
+```
 
-## Runtime Requirements
+- `health.php` checks database reachability and returns a JSON status response.
+- `job-status.php` requires an authenticated administrator session and returns recent background-job status.
 
-Recommended runtime:
+Federation endpoints live separately under:
+
+```text
+/catalog/api/federation/
+```
+
+## UI System
+
+The catalog remains server-rendered PHP. It does not require a JavaScript framework.
+
+Reusable UI primitives live in:
+
+```text
+catalog/src/Presentation/Ui/CatalogUi.php
+catalog/assets/catalog-ui.css
+catalog/assets/catalog-ui.js
+```
+
+The component layer provides reusable page headers, buttons, alerts, badges, loading states, empty states, sections, responsive tables, focus styles, and reduced-motion support. JavaScript only progressively enhances dismissible notices and opted-in form submission states.
+
+## Installation
+
+### Requirements
 
 - PHP 8.2 or newer.
-- MySQL or MariaDB.
-- PHP extensions: `pdo_mysql`; `zip` recommended for bundle downloads.
-- A PHP-capable web server, such as Synology Web Station, Apache, nginx + PHP-FPM, or a local PHP development server.
-- Writable `catalog/storage/` folder for catalog-managed files.
-- Writable `UE1/uploads/`, `UE2/uploads/`, `UE3/uploads/`, `UE4/uploads/` folders if using the standalone viewers.
-- Optional LZO support for UE3 compressed packages that use LZO compression.
+- MySQL or MariaDB with InnoDB support.
+- PHP extension: `pdo_mysql`.
+- A PHP-capable web server, such as Apache, nginx with PHP-FPM, Synology Web Station, or a local PHP server.
+- Writable catalog storage for the PHP/web-server account.
+- CLI PHP access for the worker is recommended.
+- Optional LZO support for compressed UE3 packages where required.
 
-On Synology/Linux, make sure the web server user can write to the relevant storage/upload folders.
+### Setup
 
-Example:
+1. Clone the repository to the web server.
+2. Copy `catalog/config.example.php` to `catalog/config.php`.
+3. Set database credentials, storage location, package limits, and reader configuration.
+4. Import `catalog/install.sql` into an empty database.
+5. Apply every `catalog/install_update_*.sql` migration in numeric order that is newer than the schema currently installed.
+6. For a fresh installation, that includes the current migrations through:
+
+   ```text
+   catalog/install_update_018_dependency_resolution_indexes.sql
+   catalog/install_update_019_global_hash_lookup_indexes.sql
+   catalog/install_update_020_file_list_dependency_index.sql
+   catalog/install_update_021_background_jobs.sql
+   ```
+
+7. Ensure the configured storage location is writable by PHP.
+8. Open `/catalog/index.php`.
+9. Create the initial administrator only from a trusted private setup session, before exposing the site publicly.
+10. Add games and profiles, then import a small known package set before bulk ingestion.
+
+Example development storage setup on Synology/Linux:
 
 ```bash
 cd /volume1/web/ut_reader
@@ -205,50 +303,34 @@ chown -R http:http catalog/storage
 chmod -R 775 catalog/storage
 ```
 
-Adjust the user/group for your web server environment.
+Adjust the web-server account for the host environment.
 
-## Catalog Installation
+### Production deployment notes
 
-1. Clone or pull the repository onto a PHP-capable web server.
-2. Copy `catalog/config.example.php` to `catalog/config.php`.
-3. Edit database settings in `catalog/config.php`.
-4. Import `catalog/install.sql`.
-5. Import update SQL files in order, where applicable:
+The default example configuration keeps storage below `catalog/` for convenience. For a public deployment, place both runtime configuration and storage outside the web root:
 
 ```text
-catalog/install_update_011_external_mirrors.sql
-catalog/install_update_012_game_profiles.sql
+/private/unrealdb/config.php
+/private/unrealdb/storage/
 ```
 
-6. Make `catalog/storage/` writable by PHP.
-7. Open `/catalog/index.php` or `/catalog/dashboard.php`.
-8. Create the first admin user on the login page.
-9. Use **Setup → Game Manager** and **Setup → Profiled Upload Scanner**.
+Then expose only the application code through the web server. Do not commit `catalog/config.php`, package storage, upload folders, logs, or local native libraries.
 
-The root `/index.php` page is a simple UnrealDB landing page that links into the catalog.
+The standalone viewer directories are intended for local development and parser debugging. Do not expose their upload scripts publicly on a production host.
 
-## Standalone Viewer Usage
+## Standalone Reader/Viewer Notes
 
-1. Ensure the relevant `uploads/` folder exists and is writable.
-2. Open the correct viewer:
-   - `/UE1/UE1.php`
-   - `/UE2/UE2.php`
-   - `/UE3/UE3.php`
-   - `/UE4/UE4.php`
-3. Upload or select a package file.
-4. Review the Package tab first.
-5. Use the Tables tab to inspect names, imports, exports, and generations.
-6. Expand Raw Header Data only when comparing header layouts or debugging parser offsets.
+The repository still includes UE1–UE5 reader/viewer code for parser inspection. These tools can display package summaries, names, imports, exports, GUIDs, flags, selected properties, and raw header data depending on engine support.
 
-## UE3 Compression / LZO Notes
+They are not a replacement for the catalog import workflow. Keep them restricted to local development or an authenticated internal environment.
 
-Some UE3 packages use compression. LZO-compressed packages require LZO support.
+## UE3 Compression and LZO
 
-The project may use native LZO through PHP FFI when available, with fallback code where supported. Native LZO is preferred because it is faster and more reliable.
+Some UE3 packages use compression. LZO-compressed packages require an available LZO implementation.
 
-Do not commit local native LZO binaries to GitHub. They are platform-specific.
+The project can use native LZO through PHP FFI where the environment permits it, with fallback handling where supported. Native LZO is preferred for performance and compatibility.
 
-Common local library names that should stay ignored include:
+Do not commit local native libraries to Git:
 
 ```text
 liblzo2.so
@@ -259,35 +341,44 @@ lzo2.dll
 
 ## Current Limitations
 
-- This is active development, not a stable release.
-- The catalog schema is still changing; update SQL files may be added over time.
+- This is not a stable release; schema migrations and parser improvements continue.
 - Not every export payload or property type is decoded.
-- Some version-gated package header fields still need refinement.
-- UE4 unversioned package parsing may rely on assumed versions for table parsing.
-- `.uexp` handling is currently limited.
-- Exact same-engine game identification is not always safe from package headers alone.
-- Federation transfer handling is still being tested.
-- External provider upload automation is not implemented yet; manual mirror links are supported.
-- Large/chunked federation uploads may need future improvement.
+- UE4 unversioned package parsing can require an assumed version.
+- `.uexp` pairing/support remains limited in some paths.
+- Exact same-engine game identification cannot always be proven from package headers alone.
+- Federation transfers require controlled operational testing before use with large libraries.
+- The initial background-job worker does not yet renew leases during long scanner operations; run one worker for those jobs.
+- External mirror provider upload automation is not implemented as a general built-in feature.
+- HTTP source scanning should only target trusted game-owned sources.
 
-## Development Notes
+## Architecture and Operational Documentation
 
-When adding parser fields, prefer this rule:
+Additional documentation:
 
-```text
-Raw Header Data = bytes actually read from the file header/summary.
-Normal Package Summary = interpreted, derived, or user-friendly display values.
-```
+- [`docs/catalog-architecture.md`](docs/catalog-architecture.md) — current catalog architecture and ownership.
+- [`docs/catalog-clean-architecture.md`](docs/catalog-clean-architecture.md) — namespace and compatibility-shim approach.
+- [`docs/catalog-performance.md`](docs/catalog-performance.md) — query and dependency-refresh performance work.
+- [`docs/catalog-system-architecture.md`](docs/catalog-system-architecture.md) — job, API, cache, and operational architecture.
+- [`docs/catalog-ui-system.md`](docs/catalog-ui-system.md) — reusable server-rendered UI system.
 
-Do not silently skip unknown header bytes. If a header byte range is valid but not decoded yet, show it with offset, size, and raw hex until it can be named correctly.
+## Development Guidelines
 
-When adding scanner support for more games:
+When adding reader/parser support:
 
-1. Add the game in **Game Manager**.
-2. Add/edit the profile engine key and file extensions.
-3. Add version ranges only when known from real samples.
-4. Test with the profiled upload scanner.
-5. Keep mismatches in unverified/review rather than force-importing them.
+1. Preserve known working readers unless there is a tested reason to change them.
+2. Add scanner behavior through game profiles and reader resolution rather than hard-coding a game list.
+3. Use real package samples and record version/compatibility observations.
+4. Keep profile mismatches in unverified/review storage rather than force-importing them.
+5. Add regression fixtures before moving package-reading logic.
+
+When adding catalog behavior:
+
+1. Keep page controllers focused on request/response handling.
+2. Put reusable application behavior in `catalog/src/`.
+3. Keep legacy `catalog/lib/` compatibility files thin where practical.
+4. Use prepared SQL and allow-list dynamic sorting/identifiers.
+5. Prefer targeted dependency refresh over full-game rebuilds after a normal import.
+6. Keep long-running maintenance work in jobs/workers, not public HTTP requests.
 
 ## License
 
