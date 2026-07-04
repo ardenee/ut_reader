@@ -18,7 +18,7 @@ final class CatalogApplication
 
     public static function boot(): self
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
+        if (PHP_SAPI !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
 
