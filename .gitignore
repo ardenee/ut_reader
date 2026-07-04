@@ -4,9 +4,21 @@
 .env
 .env.*
 config.local.*
+
+# Runtime configuration and generated catalog content.
+/catalog/config.php
+/catalog/storage/
+/UE1/uploads/
+/UE2/uploads/
+/UE3/uploads/
+/UE4/uploads/
+/UE5/uploads/
+/new/uploads/
+
 /output/
 /tmp/
 /cache/
+
 # Local native libraries
 liblzo2.so
 liblzo2.so.*
