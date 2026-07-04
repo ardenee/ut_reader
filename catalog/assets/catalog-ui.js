@@ -29,11 +29,14 @@
 
         var style = document.createElement('style');
         style.textContent = [
-            '#package-tables .examine-dependency-entry { display: block !important; margin: 0 0 4px !important; }',
-            '#package-tables .examine-dependency-entry .examine-dependency-flag { display: inline-block !important; margin: 0 5px 0 0 !important; vertical-align: top; }',
-            '#package-tables .examine-dependency-detail { display: inline !important; flex: none !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; }',
-            '#package-tables .examine-dependency-detail > span { display: inline !important; margin: 0 !important; }',
-            '#package-tables tr.is-reference-target > td.examine-reference-target-cell, #package-tables tr.is-reference-target > th.examine-reference-target-cell { background: rgba(246, 196, 83, .48) !important; color: #fff6d0; box-shadow: inset 0 0 0 2px rgba(246, 196, 83, .95), inset 5px 0 0 var(--amber) !important; }'
+            '#package-tables .examine-imports-table { min-width: 1750px !important; }',
+            '#package-tables .examine-imports-table td:last-child { min-width: 330px !important; }',
+            '#package-tables .examine-dependency-entry { display: block !important; margin: 0 0 4px !important; padding: 0 !important; white-space: nowrap !important; }',
+            '#package-tables .examine-dependency-entry .examine-dependency-flag { display: inline-block !important; margin: 0 5px 0 0 !important; padding: 2px 8px !important; vertical-align: baseline !important; }',
+            '#package-tables .examine-dependency-detail { display: inline !important; flex: none !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; }',
+            '#package-tables .examine-dependency-detail > span { display: inline !important; margin: 0 !important; padding: 0 !important; }',
+            '#package-tables tr.is-reference-target > td.examine-reference-target-cell, #package-tables tr.is-reference-target > th.examine-reference-target-cell { background: #66511b !important; color: #fff6d0 !important; box-shadow: inset 0 0 0 2px #f6c453, inset 5px 0 0 #f6c453 !important; }',
+            '#package-tables tr.is-reference-target > td.examine-reference-target-cell a { color: #ffffff !important; text-decoration: underline; }'
         ].join('\n');
         document.head.appendChild(style);
 
