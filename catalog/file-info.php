@@ -99,6 +99,25 @@ try {
 .used-by-identity span {
     display: block;
 }
+
+[data-reorderable-columns] th {
+    cursor: pointer;
+    user-select: none;
+}
+
+[data-reorderable-columns] th::after {
+    content: '↔';
+    display: inline-block;
+    margin-left: 7px;
+    color: var(--muted);
+    font-size: 11px;
+    opacity: .7;
+}
+
+[data-reorderable-columns] th.is-column-selected {
+    background: rgba(118, 169, 255, .18);
+    box-shadow: inset 0 -3px 0 var(--blue);
+}
 </style>
 CSS;
 
@@ -109,7 +128,7 @@ CSS;
     $tableHref = 'file-examine.php?id=' . $id;
 
     echo '<div class="card">';
-    echo '<div class="file-info-title"><h1><a href="' . $packageHref . '" title="Examine this file">' . catalog_h($file['package_name']) . '</a></h1><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></div>';
+    echo '<div class="file-info-title"><h1>' . catalog_h($file['package_name']) . '</h1><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></div>';
     echo '<p class="file-info-context"><a href="' . $packageHref . '" title="Examine this file">' . catalog_h($file['original_name']) . '</a> / <a href="' . $gameHref . '" title="Open game files">' . catalog_h($file['game_name']) . '</a></p>';
     echo '<p><span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span> <span class="mono small">flags 0x' . strtoupper(str_pad(dechex((int)($file['compression_flags'] ?? 0)), 8, '0', STR_PAD_LEFT)) . '</span></p>';
     echo '<table><tr><th>MD5</th><td class="mono">' . catalog_h($file['md5']) . '</td></tr><tr><th>SHA1</th><td class="mono">' . catalog_h($file['sha1']) . '</td></tr><tr><th>GUID</th><td class="mono">' . catalog_h($file['package_guid']) . '</td></tr><tr><th>Status</th><td>' . catalog_h($file['scan_status']) . '</td></tr><tr><th>Tables</th><td><a href="' . $tableHref . '" title="Examine names, imports and exports">' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</a></td></tr></table>';
@@ -121,7 +140,7 @@ CSS;
         echo '<p class="muted">No configured source currently records this file.</p>';
     } else {
         echo '<p class="muted">Only the source name/type and relative path are shown. Real source base paths are hidden.</p>';
-        echo '<table><tr><th>Source</th><th>Type</th><th>Relative path</th><th>Last seen</th></tr>';
+        echo '<table data-reorderable-columns data-table-key="file-info-source-availability"><tr><th>Source</th><th>Type</th><th>Relative path</th><th>Last seen</th></tr>';
         foreach ($locations as $loc) {
             echo '<tr><td>' . catalog_h($loc['source_name']) . '</td><td class="mono">' . catalog_h($loc['source_type']) . '</td><td class="mono path">' . catalog_h($loc['source_relative_path']) . '</td><td>' . catalog_h($loc['last_seen_at']) . '</td></tr>';
         }
@@ -182,7 +201,7 @@ CSS;
             ? 'All dependencies'
             : $dependencyStatuses[$selectedDependencyStatus];
         echo '<p class="muted dependency-status-summary">Showing ' . catalog_h($selectedLabel) . ': ' . count($shownDependencies) . '.</p>';
-        echo '<table><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr>';
+        echo '<table data-reorderable-columns data-table-key="file-info-dependencies"><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr>';
         foreach ($shownDependencies as $dep) {
             $resolved = $dep['resolved_id'] ? '<a href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>';
             echo '<tr><td><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td><td class="mono path">' . catalog_h($dep['required_object_path']) . '</td><td>' . $resolved . '</td></tr>';
@@ -196,15 +215,144 @@ CSS;
     if (!$usedBy) {
         echo '<p class="muted">No resolved reverse links yet.</p>';
     } else {
-        echo '<table><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr>';
+        echo '<table data-reorderable-columns data-table-key="file-info-used-by"><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr>';
         foreach ($usedBy as $row) {
             $sourceId = (int)$row['id'];
             $fileInfoHref = 'file-info.php?id=' . $sourceId;
-            echo '<tr><td class="mono"><a href="' . $fileInfoHref . '">' . catalog_h($row['package_name']) . '</a></td><td><a href="' . $fileInfoHref . '">' . catalog_h($row['original_name']) . '</a></td><td class="mono small used-by-identity"><span>' . catalog_h($row['package_guid']) . '</span><span>MD5 ' . catalog_h($row['md5']) . '</span></td><td>' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
+            echo '<tr><td class="mono"><a href="' . $fileInfoHref . '">' . catalog_h($row['package_name']) . '</a></td><td><a href="' . $fileInfoHref . '">' . catalog_h($row['original_name']) . '</a></td><td class="mono small used-by-identity"><span>GUID: ' . catalog_h($row['package_guid']) . '</span><span>MD5: ' . catalog_h($row['md5']) . '</span></td><td>' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
         }
         echo '</table>';
     }
     echo '</div>';
+
+    echo <<<'HTML'
+<script>
+(function () {
+    'use strict';
+
+    document.querySelectorAll('table[data-reorderable-columns]').forEach(function (table) {
+        var headerRow = table.querySelector('tr');
+        if (!headerRow) {
+            return;
+        }
+
+        var tableKey = table.dataset.tableKey || 'default';
+        var storageKey = 'unrealdb.fileInfo.columnOrder.' + tableKey;
+        var selectedHeader = null;
+
+        Array.from(table.rows).forEach(function (row) {
+            Array.from(row.cells).forEach(function (cell, index) {
+                cell.dataset.columnKey = String(index);
+            });
+        });
+
+        function getHeaders() {
+            return Array.from(headerRow.cells);
+        }
+
+        function currentOrder() {
+            return getHeaders().map(function (header) {
+                return header.dataset.columnKey;
+            });
+        }
+
+        function applyOrder(order) {
+            Array.from(table.rows).forEach(function (row) {
+                order.forEach(function (columnKey) {
+                    var cell = Array.from(row.cells).find(function (candidate) {
+                        return candidate.dataset.columnKey === columnKey;
+                    });
+                    if (cell) {
+                        row.appendChild(cell);
+                    }
+                });
+            });
+        }
+
+        function clearSelection() {
+            getHeaders().forEach(function (header) {
+                header.classList.remove('is-column-selected');
+                header.removeAttribute('aria-pressed');
+            });
+            selectedHeader = null;
+        }
+
+        function prepareHeaders() {
+            getHeaders().forEach(function (header) {
+                header.tabIndex = 0;
+                header.setAttribute('role', 'button');
+                header.setAttribute('title', 'Click this column, then click another column to move it before that column.');
+                header.setAttribute('aria-label', header.textContent.trim() + '. Click to select this column for reordering.');
+            });
+        }
+
+        try {
+            var savedOrder = JSON.parse(localStorage.getItem(storageKey) || '[]');
+            if (Array.isArray(savedOrder) && savedOrder.length === getHeaders().length) {
+                applyOrder(savedOrder);
+            }
+        } catch (error) {
+            // Ignore unavailable or invalid browser storage.
+        }
+
+        prepareHeaders();
+
+        function selectOrMove(header) {
+            if (!selectedHeader) {
+                selectedHeader = header;
+                header.classList.add('is-column-selected');
+                header.setAttribute('aria-pressed', 'true');
+                return;
+            }
+
+            if (selectedHeader === header) {
+                clearSelection();
+                return;
+            }
+
+            var sourceKey = selectedHeader.dataset.columnKey;
+            var targetKey = header.dataset.columnKey;
+            var order = currentOrder().filter(function (columnKey) {
+                return columnKey !== sourceKey;
+            });
+            var targetIndex = order.indexOf(targetKey);
+            order.splice(targetIndex, 0, sourceKey);
+            applyOrder(order);
+
+            try {
+                localStorage.setItem(storageKey, JSON.stringify(order));
+            } catch (error) {
+                // The table remains reordered for this page even if storage is unavailable.
+            }
+
+            clearSelection();
+            prepareHeaders();
+        }
+
+        headerRow.addEventListener('click', function (event) {
+            var header = event.target.closest('th');
+            if (header && header.parentElement === headerRow) {
+                selectOrMove(header);
+            }
+        });
+
+        headerRow.addEventListener('keydown', function (event) {
+            var header = event.target.closest('th');
+            if (!header || header.parentElement !== headerRow) {
+                return;
+            }
+
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                selectOrMove(header);
+            } else if (event.key === 'Escape') {
+                clearSelection();
+            }
+        });
+    });
+})();
+</script>
+HTML;
 
     catalog_foot();
 } catch (Throwable $e) {
