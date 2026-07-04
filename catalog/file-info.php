@@ -100,13 +100,13 @@ try {
     display: block;
 }
 
-[data-reorderable-columns] th {
+[data-sortable-table] th {
     cursor: pointer;
     user-select: none;
 }
 
-[data-reorderable-columns] th::after {
-    content: '↔';
+[data-sortable-table] th::after {
+    content: '↕';
     display: inline-block;
     margin-left: 7px;
     color: var(--muted);
@@ -114,9 +114,16 @@ try {
     opacity: .7;
 }
 
-[data-reorderable-columns] th.is-column-selected {
-    background: rgba(118, 169, 255, .18);
-    box-shadow: inset 0 -3px 0 var(--blue);
+[data-sortable-table] th.is-sort-ascending::after {
+    content: '▲';
+    color: var(--blue);
+    opacity: 1;
+}
+
+[data-sortable-table] th.is-sort-descending::after {
+    content: '▼';
+    color: var(--blue);
+    opacity: 1;
 }
 </style>
 CSS;
@@ -140,11 +147,11 @@ CSS;
         echo '<p class="muted">No configured source currently records this file.</p>';
     } else {
         echo '<p class="muted">Only the source name/type and relative path are shown. Real source base paths are hidden.</p>';
-        echo '<table data-reorderable-columns data-table-key="file-info-source-availability"><tr><th>Source</th><th>Type</th><th>Relative path</th><th>Last seen</th></tr>';
+        echo '<table data-sortable-table><thead><tr><th>Source</th><th>Type</th><th>Relative path</th><th>Last seen</th></tr></thead><tbody>';
         foreach ($locations as $loc) {
-            echo '<tr><td>' . catalog_h($loc['source_name']) . '</td><td class="mono">' . catalog_h($loc['source_type']) . '</td><td class="mono path">' . catalog_h($loc['source_relative_path']) . '</td><td>' . catalog_h($loc['last_seen_at']) . '</td></tr>';
+            echo '<tr><td>' . catalog_h($loc['source_name']) . '</td><td class="mono">' . catalog_h($loc['source_type']) . '</td><td class="mono path">' . catalog_h($loc['source_relative_path']) . '</td><td data-sort-value="' . catalog_h((string)$loc['last_seen_at']) . '">' . catalog_h($loc['last_seen_at']) . '</td></tr>';
         }
-        echo '</table>';
+        echo '</tbody></table>';
     }
     echo '</div>';
 
@@ -201,12 +208,12 @@ CSS;
             ? 'All dependencies'
             : $dependencyStatuses[$selectedDependencyStatus];
         echo '<p class="muted dependency-status-summary">Showing ' . catalog_h($selectedLabel) . ': ' . count($shownDependencies) . '.</p>';
-        echo '<table data-reorderable-columns data-table-key="file-info-dependencies"><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr>';
+        echo '<table data-sortable-table><thead><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr></thead><tbody>';
         foreach ($shownDependencies as $dep) {
             $resolved = $dep['resolved_id'] ? '<a href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>';
-            echo '<tr><td><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td><td class="mono path">' . catalog_h($dep['required_object_path']) . '</td><td>' . $resolved . '</td></tr>';
+            echo '<tr><td data-sort-value="' . catalog_h((string)$dep['status']) . '"><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td><td class="mono path">' . catalog_h($dep['required_object_path']) . '</td><td data-sort-value="' . catalog_h((string)($dep['resolved_package'] ?: $dep['resolved_file'])) . '">' . $resolved . '</td></tr>';
         }
-        echo '</table>';
+        echo '</tbody></table>';
     }
     echo '</div>';
 
@@ -215,13 +222,14 @@ CSS;
     if (!$usedBy) {
         echo '<p class="muted">No resolved reverse links yet.</p>';
     } else {
-        echo '<table data-reorderable-columns data-table-key="file-info-used-by"><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr>';
+        echo '<table data-sortable-table><thead><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr></thead><tbody>';
         foreach ($usedBy as $row) {
             $sourceId = (int)$row['id'];
             $fileInfoHref = 'file-info.php?id=' . $sourceId;
-            echo '<tr><td class="mono"><a href="' . $fileInfoHref . '">' . catalog_h($row['package_name']) . '</a></td><td><a href="' . $fileInfoHref . '">' . catalog_h($row['original_name']) . '</a></td><td class="mono small used-by-identity"><span>GUID: ' . catalog_h($row['package_guid']) . '</span><span>MD5: ' . catalog_h($row['md5']) . '</span></td><td>' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
+            $identitySortValue = (string)$row['package_guid'] . ' ' . (string)$row['md5'];
+            echo '<tr><td class="mono"><a href="' . $fileInfoHref . '">' . catalog_h($row['package_name']) . '</a></td><td><a href="' . $fileInfoHref . '">' . catalog_h($row['original_name']) . '</a></td><td class="mono small used-by-identity" data-sort-value="' . catalog_h($identitySortValue) . '"><span>GUID: ' . catalog_h($row['package_guid']) . '</span><span>MD5: ' . catalog_h($row['md5']) . '</span></td><td data-sort-value="' . (int)$row['file_size'] . '">' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
         }
-        echo '</table>';
+        echo '</tbody></table>';
     }
     echo '</div>';
 
@@ -230,124 +238,85 @@ CSS;
 (function () {
     'use strict';
 
-    document.querySelectorAll('table[data-reorderable-columns]').forEach(function (table) {
-        var headerRow = table.querySelector('tr');
-        if (!headerRow) {
+    document.querySelectorAll('table[data-sortable-table]').forEach(function (table) {
+        var headerRow = table.tHead && table.tHead.rows.length ? table.tHead.rows[0] : null;
+        var body = table.tBodies.length ? table.tBodies[0] : null;
+        if (!headerRow || !body) {
             return;
         }
 
-        var tableKey = table.dataset.tableKey || 'default';
-        var storageKey = 'unrealdb.fileInfo.columnOrder.' + tableKey;
-        var selectedHeader = null;
+        var activeIndex = -1;
+        var ascending = true;
 
-        Array.from(table.rows).forEach(function (row) {
-            Array.from(row.cells).forEach(function (cell, index) {
-                cell.dataset.columnKey = String(index);
-            });
-        });
-
-        function getHeaders() {
+        function headers() {
             return Array.from(headerRow.cells);
         }
 
-        function currentOrder() {
-            return getHeaders().map(function (header) {
-                return header.dataset.columnKey;
+        function cellValue(row, index) {
+            var cell = row.cells[index];
+            if (!cell) {
+                return '';
+            }
+
+            return (cell.dataset.sortValue || cell.textContent || '').trim();
+        }
+
+        function compareValues(left, right) {
+            var numberPattern = /^-?\d+(?:\.\d+)?$/;
+            if (numberPattern.test(left) && numberPattern.test(right)) {
+                return Number(left) - Number(right);
+            }
+
+            return left.localeCompare(right, undefined, {
+                numeric: true,
+                sensitivity: 'base'
             });
         }
 
-        function applyOrder(order) {
-            Array.from(table.rows).forEach(function (row) {
-                order.forEach(function (columnKey) {
-                    var cell = Array.from(row.cells).find(function (candidate) {
-                        return candidate.dataset.columnKey === columnKey;
-                    });
-                    if (cell) {
-                        row.appendChild(cell);
-                    }
-                });
+        function updateHeaderState(index) {
+            headers().forEach(function (header, headerIndex) {
+                header.classList.remove('is-sort-ascending', 'is-sort-descending');
+                header.removeAttribute('aria-sort');
+                if (headerIndex === index) {
+                    header.classList.add(ascending ? 'is-sort-ascending' : 'is-sort-descending');
+                    header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
+                }
             });
         }
 
-        function clearSelection() {
-            getHeaders().forEach(function (header) {
-                header.classList.remove('is-column-selected');
-                header.removeAttribute('aria-pressed');
+        function sortBy(index) {
+            if (activeIndex === index) {
+                ascending = !ascending;
+            } else {
+                activeIndex = index;
+                ascending = true;
+            }
+
+            var rows = Array.from(body.rows);
+            rows.sort(function (leftRow, rightRow) {
+                var comparison = compareValues(cellValue(leftRow, index), cellValue(rightRow, index));
+                return ascending ? comparison : -comparison;
             });
-            selectedHeader = null;
-        }
-
-        function prepareHeaders() {
-            getHeaders().forEach(function (header) {
-                header.tabIndex = 0;
-                header.setAttribute('role', 'button');
-                header.setAttribute('title', 'Click this column, then click another column to move it before that column.');
-                header.setAttribute('aria-label', header.textContent.trim() + '. Click to select this column for reordering.');
+            rows.forEach(function (row) {
+                body.appendChild(row);
             });
+            updateHeaderState(index);
         }
 
-        try {
-            var savedOrder = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            if (Array.isArray(savedOrder) && savedOrder.length === getHeaders().length) {
-                applyOrder(savedOrder);
-            }
-        } catch (error) {
-            // Ignore unavailable or invalid browser storage.
-        }
-
-        prepareHeaders();
-
-        function selectOrMove(header) {
-            if (!selectedHeader) {
-                selectedHeader = header;
-                header.classList.add('is-column-selected');
-                header.setAttribute('aria-pressed', 'true');
-                return;
-            }
-
-            if (selectedHeader === header) {
-                clearSelection();
-                return;
-            }
-
-            var sourceKey = selectedHeader.dataset.columnKey;
-            var targetKey = header.dataset.columnKey;
-            var order = currentOrder().filter(function (columnKey) {
-                return columnKey !== sourceKey;
+        headers().forEach(function (header, index) {
+            header.tabIndex = 0;
+            header.setAttribute('role', 'button');
+            header.setAttribute('title', 'Click to sort ascending. Click again to sort descending.');
+            header.setAttribute('aria-label', header.textContent.trim() + '. Click to sort this table.');
+            header.addEventListener('click', function () {
+                sortBy(index);
             });
-            var targetIndex = order.indexOf(targetKey);
-            order.splice(targetIndex, 0, sourceKey);
-            applyOrder(order);
-
-            try {
-                localStorage.setItem(storageKey, JSON.stringify(order));
-            } catch (error) {
-                // The table remains reordered for this page even if storage is unavailable.
-            }
-
-            clearSelection();
-            prepareHeaders();
-        }
-
-        headerRow.addEventListener('click', function (event) {
-            var header = event.target.closest('th');
-            if (header && header.parentElement === headerRow) {
-                selectOrMove(header);
-            }
-        });
-
-        headerRow.addEventListener('keydown', function (event) {
-            var header = event.target.closest('th');
-            if (!header || header.parentElement !== headerRow) {
-                return;
-            }
-
-            if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                selectOrMove(header);
-            } else if (event.key === 'Escape') {
-                clearSelection();
-            }
+            header.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    sortBy(index);
+                }
+            });
         });
     });
 })();
