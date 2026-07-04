@@ -75,6 +75,17 @@ function game_files_type_filter_sql(string $type): array
     return $map[$type] ?? [];
 }
 
+function game_files_status_badge(string $status, int $count): string
+{
+    $tone = match ($status) {
+        'resolved' => 'success',
+        'missing' => 'danger',
+        'package_only' => 'warning',
+        default => 'neutral',
+    };
+    return CatalogUi::badge($status . ': ' . $count, $tone);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -150,90 +161,107 @@ try {
     $files = CatalogGameFileListService::fetchPage($db, $where, $args, $sort, $dir, $limit, $offset);
 
     catalog_head((string)$game['name']);
-    echo '<div class="card hero"><h1>' . catalog_h($game['name']) . '</h1><p class="muted">Files, versions, dependency status and downloads.</p><p><a class="button" href="games.php">Back to games</a></p></div>';
+    echo CatalogUi::pageHeader(
+        (string)$game['name'],
+        'Files, versions, dependency status and downloads.',
+        ['Back to games' => 'games.php']
+    );
 
-    echo '<div class="card">';
-    echo '<div class="section-title"><h2>Files</h2></div>';
-    echo '<form class="table-controls" method="get">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files</h2><p>' . catalog_h((string)$totalRows) . ' matching files.</p></div></div><div class="ui-section__body">';
+    echo '<form class="table-controls" method="get" data-ui-loading-form aria-describedby="file-filter-help">';
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
-    echo '<label>Search files <input class="wide-search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label> ';
-    echo '<label>Dependencies <select name="dep_filter">';
+    echo '<label for="file-filter">Search files <input id="file-filter" class="wide-search" type="search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label> ';
+    echo '<label for="dependency-filter">Dependencies <select id="dependency-filter" name="dep_filter">';
     foreach (['' => 'All', 'any' => 'Has dependencies', 'missing' => 'Missing', 'resolved' => 'Resolved', 'package_only' => 'Package only', 'common' => 'Common'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($depFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label> ';
-    echo '<label>File type <select name="type_filter">';
+    echo '<label for="type-filter">File type <select id="type-filter" name="type_filter">';
     foreach (['' => 'All', 'map' => 'Maps', 'music' => 'Music', 'sound' => 'Sounds', 'texture' => 'Textures', 'static_mesh' => 'Static meshes', 'animation' => 'Animations', 'particle_effect' => 'Particles/effects', 'gui' => 'GUI', 'content' => 'Content', 'package' => 'Packages'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($typeFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label> ';
-    echo '<label>Compression <select name="compression_filter">';
+    echo '<label for="compression-filter">Compression <select id="compression-filter" name="compression_filter">';
     foreach (['' => 'All', 'compressed' => 'Compressed', 'uncompressed' => 'Uncompressed'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($compressionFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label> ';
-    echo '<button>Apply</button> ';
+    echo CatalogUi::button('Apply filters', ['type' => 'submit']);
+    echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Applying filters…', true) . '</span>';
     if ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || $compressionFilter !== '') {
-        echo '<a class="button" href="game-files.php?id=' . (int)$gameId . '">Clear</a>';
+        echo CatalogUi::button('Clear filters', ['href' => 'game-files.php?id=' . (int)$gameId, 'variant' => 'quiet']);
     }
+    echo '<span id="file-filter-help" class="ui-sr-only">Changing filters reloads this file list.</span>';
     echo '</form>';
 
-    echo '<div class="page-links">';
+    echo '<nav class="page-links" aria-label="File pagination">';
     if ($pageNo > 1) {
-        echo '<a class="button" href="' . catalog_h(game_files_url(['file_page' => 1])) . '">First</a> ';
-        echo '<a class="button" href="' . catalog_h(game_files_url(['file_page' => $pageNo - 1])) . '">Previous</a> ';
+        echo CatalogUi::button('First', ['href' => game_files_url(['file_page' => 1]), 'variant' => 'secondary', 'size' => 'sm']);
+        echo CatalogUi::button('Previous', ['href' => game_files_url(['file_page' => $pageNo - 1]), 'variant' => 'secondary', 'size' => 'sm']);
     }
-    echo '<span class="subtle">Page ' . $pageNo . ' of ' . $totalPages . '</span> ';
+    echo '<span class="subtle" aria-current="page">Page ' . $pageNo . ' of ' . $totalPages . '</span> ';
     if ($pageNo < $totalPages) {
-        echo '<a class="button" href="' . catalog_h(game_files_url(['file_page' => $pageNo + 1])) . '">Next</a> ';
-        echo '<a class="button" href="' . catalog_h(game_files_url(['file_page' => $totalPages])) . '">Last</a> ';
+        echo CatalogUi::button('Next', ['href' => game_files_url(['file_page' => $pageNo + 1]), 'variant' => 'secondary', 'size' => 'sm']);
+        echo CatalogUi::button('Last', ['href' => game_files_url(['file_page' => $totalPages]), 'variant' => 'secondary', 'size' => 'sm']);
     }
-    echo '</div>';
+    echo '</nav>';
 
-    echo '<div class="scroll"><table id="game-files-table"><thead><tr>';
-    echo '<th>' . game_files_sort_link('Package', 'package', $sort, $dir) . '</th>';
-    echo '<th>' . game_files_sort_link('File', 'file', $sort, $dir) . '</th>';
-    echo '<th>Identity</th>';
-    echo '<th>' . game_files_sort_link('Version', 'version', $sort, $dir) . '</th>';
-    echo '<th>' . game_files_sort_link('Size', 'size', $sort, $dir) . '</th>';
-    echo '<th>' . game_files_sort_link('Compression', 'compression', $sort, $dir) . '</th>';
-    echo '<th>' . game_files_sort_link('Dependencies', 'deps', $sort, $dir) . '</th>';
-    echo '<th>Actions</th>';
-    echo '</tr></thead><tbody>';
+    if ($files === []) {
+        $action = ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || $compressionFilter !== '')
+            ? ['label' => 'Clear filters', 'href' => 'game-files.php?id=' . (int)$gameId]
+            : ['label' => 'Back to games', 'href' => 'games.php'];
+        echo CatalogUi::emptyState('No files found', 'No catalog files match the selected filters.', $action, '⌕');
+    } else {
+        echo '<div class="ui-table-region"><table id="game-files-table"><caption class="ui-sr-only">Files for ' . catalog_h((string)$game['name']) . '</caption><thead><tr>';
+        echo '<th scope="col">' . game_files_sort_link('Package', 'package', $sort, $dir) . '</th>';
+        echo '<th scope="col">' . game_files_sort_link('File', 'file', $sort, $dir) . '</th>';
+        echo '<th scope="col">Identity</th>';
+        echo '<th scope="col">' . game_files_sort_link('Version', 'version', $sort, $dir) . '</th>';
+        echo '<th scope="col">' . game_files_sort_link('Size', 'size', $sort, $dir) . '</th>';
+        echo '<th scope="col">' . game_files_sort_link('Compression', 'compression', $sort, $dir) . '</th>';
+        echo '<th scope="col">' . game_files_sort_link('Dependencies', 'deps', $sort, $dir) . '</th>';
+        echo '<th scope="col">Actions</th>';
+        echo '</tr></thead><tbody>';
 
-    foreach ($files as $file) {
-        $deps = '';
-        foreach (['resolved', 'missing', 'package_only', 'common'] as $key) {
-            $count = (int)($file[$key . '_count'] ?? 0);
-            if ($count) {
-                $deps .= '<span class="dep ' . $key . '">' . $key . ': ' . $count . '</span>';
+        foreach ($files as $file) {
+            $deps = '';
+            foreach (['resolved', 'missing', 'package_only', 'common'] as $key) {
+                $count = (int)($file[$key . '_count'] ?? 0);
+                if ($count) {
+                    $deps .= game_files_status_badge($key, $count);
+                }
             }
+            $deps = $deps ?: '<span class="muted">none</span>';
+            $compressed = (int)($file['is_compressed'] ?? 0) === 1;
+            $compression = CatalogUi::badge($compressed ? 'compressed' : 'uncompressed', $compressed ? 'warning' : 'success');
+            [$fileType, $fileTypeClass] = game_files_type_from_extension((string)($file['extension'] ?? ''));
+            $id = (int)$file['id'];
+            $packageVersion = (int)($file['package_version'] ?? 0);
+            $licenseeVersion = (int)($file['licensee_version'] ?? 0);
+            $versionText = $packageVersion . ($licenseeVersion ? ' / ' . $licenseeVersion : '');
+
+            echo '<tr>';
+            echo '<td class="mono">' . catalog_h($file['package_name']) . '</td>';
+            echo '<td>' . catalog_h($file['original_name']) . '<br><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
+            echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h($file['md5']) . '</span></td>';
+            echo '<td class="mono">' . catalog_h($versionText) . '</td>';
+            echo '<td>' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
+            echo '<td>' . $compression . '</td>';
+            echo '<td>' . $deps . '</td>';
+            echo '<td><div class="ui-action-group">'
+                . CatalogUi::button('Details', ['href' => 'file-info.php?id=' . $id, 'variant' => 'quiet', 'size' => 'sm'])
+                . CatalogUi::button('Download', ['href' => 'download-info.php?id=' . $id, 'variant' => 'quiet', 'size' => 'sm'])
+                . CatalogUi::button('Examine', ['href' => 'file-examine.php?id=' . $id, 'variant' => 'quiet', 'size' => 'sm'])
+                . '</div></td>';
+            echo '</tr>';
         }
-        $deps = $deps ?: '<span class="muted">none</span>';
-        $compressed = (int)($file['is_compressed'] ?? 0) === 1;
-        $compression = '<span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span>';
-        [$fileType, $fileTypeClass] = game_files_type_from_extension((string)($file['extension'] ?? ''));
-        $id = (int)$file['id'];
-        $packageVersion = (int)($file['package_version'] ?? 0);
-        $licenseeVersion = (int)($file['licensee_version'] ?? 0);
-        $versionText = $packageVersion . ($licenseeVersion ? ' / ' . $licenseeVersion : '');
-
-        echo '<tr>';
-        echo '<td class="mono">' . catalog_h($file['package_name']) . '</td>';
-        echo '<td>' . catalog_h($file['original_name']) . '<br><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
-        echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h($file['md5']) . '</span></td>';
-        echo '<td class="mono">' . catalog_h($versionText) . '</td>';
-        echo '<td>' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
-        echo '<td>' . $compression . '</td>';
-        echo '<td>' . $deps . '</td>';
-        echo '<td><a href="file-info.php?id=' . $id . '">details</a> | <a href="download-info.php?id=' . $id . '">download</a> | <a href="file-examine.php?id=' . $id . '">examine</a></td>';
-        echo '</tr>';
+        echo '</tbody></table></div>';
     }
-    echo '</tbody></table></div></div>';
 
+    echo '</div></section>';
     catalog_foot();
 } catch (Throwable $e) {
     catalog_head('Error');
-    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
+    echo CatalogUi::alert('danger', $e->getMessage(), 'This page could not be loaded.');
     catalog_foot();
 }
