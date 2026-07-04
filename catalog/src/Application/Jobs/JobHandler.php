@@ -10,7 +10,8 @@ interface JobHandler
     public function supports(string $jobType): bool;
 
     /**
+     * @param callable():bool $heartbeat
      * @return array<string, mixed>
      */
-    public function handle(ClaimedJob $job): array;
+    public function handle(ClaimedJob $job, callable $heartbeat): array;
 }
