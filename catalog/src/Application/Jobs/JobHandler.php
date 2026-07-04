@@ -12,5 +12,5 @@ interface JobHandler
     /**
      * @return array<string, mixed>
      */
-    public function handle(ClaimedJob $job): array;
+    public function handle(ClaimedJob $job, JobExecutionContext $context): array;
 }
