@@ -23,14 +23,26 @@
         });
     });
 
+    function installSortableHeaderStyle() {
+        var style = document.createElement('style');
+        style.textContent = [
+            '[data-sortable-table] th::after { content: none !important; display: none !important; }',
+            '[data-sortable-table] th.is-sort-ascending::after { content: "▲" !important; display: inline-block !important; margin-left: 7px !important; color: var(--blue) !important; font-size: 11px !important; opacity: 1 !important; }',
+            '[data-sortable-table] th.is-sort-descending::after { content: "▼" !important; display: inline-block !important; margin-left: 7px !important; color: var(--blue) !important; font-size: 11px !important; opacity: 1 !important; }'
+        ].join('\n');
+        document.head.appendChild(style);
+    }
+
     function initExamineReferenceEmphasis() {
         var packageTables = document.getElementById('package-tables');
         if (!packageTables) return;
 
         var style = document.createElement('style');
         style.textContent = [
-            '#package-tables .examine-imports-table { min-width: 1750px !important; }',
-            '#package-tables .examine-imports-table td:last-child { min-width: 430px !important; }',
+            '#package-tables .examine-table-region > table { width: max-content !important; min-width: 0 !important; }',
+            '#package-tables .examine-imports-table { width: max-content !important; min-width: 0 !important; }',
+            '#package-tables .examine-imports-table th, #package-tables .examine-imports-table td { width: auto !important; }',
+            '#package-tables .examine-imports-table td:nth-child(3), #package-tables .examine-imports-table td:nth-child(4), #package-tables .examine-imports-table td:nth-child(5), #package-tables .examine-imports-table td:nth-child(6), #package-tables .examine-imports-table td:nth-child(7), #package-tables .examine-imports-table td:nth-child(8), #package-tables .examine-imports-table td:nth-child(9), #package-tables .examine-imports-table td:nth-child(3) *, #package-tables .examine-imports-table td:nth-child(4) *, #package-tables .examine-imports-table td:nth-child(5) *, #package-tables .examine-imports-table td:nth-child(6) *, #package-tables .examine-imports-table td:nth-child(7) *, #package-tables .examine-imports-table td:nth-child(8) *, #package-tables .examine-imports-table td:nth-child(9) * { white-space: nowrap !important; word-break: normal !important; overflow-wrap: normal !important; }',
             '#package-tables .examine-dependency-entry { display: flex !important; align-items: flex-start !important; gap: 6px !important; margin: 0 0 5px !important; padding: 0 !important; white-space: nowrap !important; }',
             '#package-tables .examine-dependency-entry .examine-dependency-flag { display: inline-block !important; flex: 0 0 auto !important; margin: 0 !important; padding: 2px 8px !important; }',
             '#package-tables .examine-dependency-detail { display: inline-block !important; flex: 0 1 auto !important; min-width: 0 !important; margin: 0 !important; padding: 0 !important; white-space: nowrap !important; }',
@@ -216,5 +228,6 @@
         }
     }
 
+    installSortableHeaderStyle();
     initExamineReferenceEmphasis();
 })();
