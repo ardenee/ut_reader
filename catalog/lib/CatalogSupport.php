@@ -1,7 +1,10 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/CatalogSecurity.php';
 require_once __DIR__ . '/CatalogUi.php';
+
+catalog_apply_runtime_safeguards();
 
 function catalog_h($value): string
 {
@@ -63,6 +66,7 @@ function catalog_bytes(int $bytes): string
 
 function catalog_support_is_admin(): bool
 {
+    catalog_start_session();
     return ($_SESSION['user']['role'] ?? '') === 'admin';
 }
 
@@ -75,15 +79,19 @@ function catalog_csrf_key(string $key): string
 
 function catalog_csrf(string $key): string
 {
+    catalog_start_session();
     $sessionKey = catalog_csrf_key($key);
-    $_SESSION[$sessionKey] ??= bin2hex(random_bytes(16));
+    $_SESSION[$sessionKey] ??= bin2hex(random_bytes(32));
     return (string)$_SESSION[$sessionKey];
 }
 
 function catalog_check_csrf(string $key): void
 {
+    catalog_start_session();
     $sessionKey = catalog_csrf_key($key);
-    if (($_POST['csrf'] ?? '') !== ($_SESSION[$sessionKey] ?? '')) {
+    $actual = (string)($_POST['csrf'] ?? '');
+    $expected = (string)($_SESSION[$sessionKey] ?? '');
+    if ($actual === '' || $expected === '' || !hash_equals($expected, $actual)) {
         throw new RuntimeException('Bad CSRF token');
     }
 }
@@ -147,7 +155,9 @@ function catalog_admin_nav(): void
             'Downloads' => $root . 'download-admin.php',
             'Settings' => $root . 'federation/settings.php',
         ]);
-        catalog_nav_link('Logout', $root . 'index.php?page=logout', 'logout');
+        echo '<form method="post" action="' . catalog_h($root . 'index.php?page=logout') . '" class="nav-logout">';
+        echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('logout')) . '">';
+        echo '<button type="submit" class="logout">Logout</button></form>';
     } else {
         echo '<span class="nav-sep"></span>';
         catalog_nav_link('Admin Login', $root . 'index.php?page=login');
@@ -248,9 +258,16 @@ function catalog_foot(): void
 
 function catalog_config(): array
 {
-    $file = __DIR__ . '/../config.php';
+    $configuredPath = trim((string)(getenv('UNREALDB_CATALOG_CONFIG') ?: ''));
+    $file = $configuredPath !== '' ? $configuredPath : __DIR__ . '/../config.php';
     if (!is_file($file)) {
-        throw new RuntimeException('Missing catalog/config.php');
+        throw new RuntimeException('Catalog configuration file is missing.');
     }
-    return require $file;
+
+    $config = require $file;
+    if (!is_array($config)) {
+        throw new RuntimeException('Catalog configuration must return an array.');
+    }
+
+    return $config;
 }
