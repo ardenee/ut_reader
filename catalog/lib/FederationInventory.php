@@ -7,7 +7,7 @@ require_once __DIR__ . '/FederationAuth.php';
 function federation_build_inventory_payload(PDO $db): array
 {
     $identity = fed_ensure_identity($db);
-    $files = catalog_all($db, 'SELECT f.*, g.name game_name, p.engine_key profile_engine FROM ue_files f JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE f.scan_status="verified" ORDER BY f.id');
+    $files = catalog_all($db, 'SELECT f.*, g.name game_name, p.engine_key profile_engine FROM ue_files f JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE f.scan_status="verified" ORDER BY f.id');
     $out = [];
     foreach ($files as $file) {
         $out[] = [
