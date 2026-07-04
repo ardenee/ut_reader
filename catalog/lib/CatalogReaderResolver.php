@@ -7,7 +7,7 @@ declare(strict_types=1);
  * This keeps the legacy reader configuration format and global reader class
  * names intact while providing one audited place for path validation and
  * selection order. Callers can retain their existing error wording and
- * versioned-reader fallback rules through explicit arguments.
+ * engine-key normalization rules through explicit arguments.
  */
 final class CatalogReaderResolver
 {
@@ -20,9 +20,12 @@ final class CatalogReaderResolver
         string $engineKey,
         string $notFoundMessagePrefix,
         string $missingClassMessagePrefix,
-        array $versionedReaderEngines
+        array $versionedReaderEngines,
+        bool $normalizeEngineKey = true
     ): string {
-        $engineKey = strtoupper(trim($engineKey));
+        if ($normalizeEngineKey) {
+            $engineKey = strtoupper(trim($engineKey));
+        }
         $readerConfig = $config['engine_readers'][$engineKey] ?? [];
 
         if ($engineKey === 'UE3') {
