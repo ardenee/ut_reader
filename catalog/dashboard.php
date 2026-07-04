@@ -7,6 +7,7 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogDashboardStats.php';
 
 try {
     $config = catalog_config();
@@ -19,20 +20,7 @@ try {
         exit;
     }
 
-    $stats = [
-        'games' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_games'),
-        'files' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_files'),
-        'verified' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="verified"'),
-        'failed' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="failed"'),
-        'missing' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing"'),
-        'resolved' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="resolved"'),
-        'fedQueued' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"'),
-        'fedDownloaded' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded"'),
-        'fedFailed' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"'),
-        'mirrorWaiting' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin","uploading")'),
-        'mirrorActive' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="active"'),
-        'joinPending' => catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_join_requests WHERE status="pending"'),
-    ];
+    $stats = CatalogDashboardStats::load($db);
 
     catalog_page_header('Dashboard', 'Start here: setup files, identify missing packages, connect to a parent, request downloads, and monitor background work.', ['Setup' => 'setup.php', 'Missing Files' => 'missing.php', 'Join Main Parent' => 'federation/join-main-parent.php', 'Run Worker' => 'transfers.php']);
 
