@@ -3,14 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function file_info_dependency_tab_url(int $fileId, string $status): string
-{
-    return 'file-info.php?' . http_build_query([
-        'id' => $fileId,
-        'dep_status' => $status,
-    ]);
-}
-
 function file_info_type_from_extension(string $ext): array
 {
     $ext = strtolower(trim($ext, '. '));
@@ -30,6 +22,25 @@ function file_info_type_from_extension(string $ext): array
     };
 }
 
+function file_info_dependency_table(array $dependencies): string
+{
+    if ($dependencies === []) {
+        return '<p class="muted">No dependencies in this status.</p>';
+    }
+
+    $html = '<table data-sortable-table><thead><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr></thead><tbody>';
+    foreach ($dependencies as $dep) {
+        $resolved = $dep['resolved_id']
+            ? '<a href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>'
+            : '<span class="muted">not resolved</span>';
+        $resolvedSort = (string)($dep['resolved_package'] ?: $dep['resolved_file'] ?: '');
+        $html .= '<tr><td data-sort-value="' . catalog_h((string)$dep['status']) . '"><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td>'
+            . '<td class="mono path">' . catalog_h($dep['required_object_path']) . '</td>'
+            . '<td data-sort-value="' . catalog_h($resolvedSort) . '">' . $resolved . '</td></tr>';
+    }
+    return $html . '</tbody></table>';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -37,6 +48,33 @@ try {
     $file = catalog_one($db, 'SELECT f.*, g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$id]);
     if (!$file) {
         throw new RuntimeException('File not found');
+    }
+
+    $deps = catalog_all($db, 'SELECT d.*, rf.package_name resolved_package, rf.original_name resolved_file, rf.id resolved_id FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.required_package, d.required_object_path', [$id]);
+    $dependencyStatuses = [
+        'missing' => 'Missing',
+        'package_only' => 'Package only',
+        'resolved' => 'Resolved',
+        'common' => 'Common',
+    ];
+    $dependencyGroups = array_fill_keys(array_keys($dependencyStatuses), []);
+    foreach ($deps as $dep) {
+        $status = (string)($dep['status'] ?? '');
+        if (isset($dependencyGroups[$status])) {
+            $dependencyGroups[$status][] = $dep;
+        }
+    }
+
+    $requestedDependencyStatus = strtolower(trim((string)($_GET['dep_status'] ?? '')));
+    $initialDependencyStatus = $requestedDependencyStatus;
+    if ($initialDependencyStatus !== 'all' && !isset($dependencyStatuses[$initialDependencyStatus])) {
+        $initialDependencyStatus = 'all';
+        foreach (array_keys($dependencyStatuses) as $status) {
+            if ($dependencyGroups[$status] !== []) {
+                $initialDependencyStatus = $status;
+                break;
+            }
+        }
     }
 
     catalog_head('File info');
@@ -86,6 +124,10 @@ try {
 
 .dependency-tab.is-empty {
     opacity: .62;
+}
+
+.dependency-tab-panel[hidden] {
+    display: none;
 }
 
 .dependency-status-summary {
@@ -159,61 +201,26 @@ CSS;
         echo '<div class="card"><h2>Scan notes</h2><pre class="mono">' . catalog_h($file['scan_notes']) . '</pre></div>';
     }
 
-    $deps = catalog_all($db, 'SELECT d.*, rf.package_name resolved_package, rf.original_name resolved_file, rf.id resolved_id FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.required_package, d.required_object_path', [$id]);
-    $dependencyStatuses = [
-        'missing' => 'Missing',
-        'package_only' => 'Package only',
-        'resolved' => 'Resolved',
-        'common' => 'Common',
-    ];
-    $dependencyGroups = array_fill_keys(array_keys($dependencyStatuses), []);
-    foreach ($deps as $dep) {
-        $status = (string)($dep['status'] ?? '');
-        if (isset($dependencyGroups[$status])) {
-            $dependencyGroups[$status][] = $dep;
-        }
-    }
-
-    $requestedDependencyStatus = strtolower(trim((string)($_GET['dep_status'] ?? '')));
-    $selectedDependencyStatus = $requestedDependencyStatus;
-    if ($selectedDependencyStatus !== 'all' && !isset($dependencyStatuses[$selectedDependencyStatus])) {
-        $selectedDependencyStatus = 'all';
-        foreach (array_keys($dependencyStatuses) as $status) {
-            if ($dependencyGroups[$status] !== []) {
-                $selectedDependencyStatus = $status;
-                break;
-            }
-        }
-    }
-    $shownDependencies = $selectedDependencyStatus === 'all'
-        ? $deps
-        : $dependencyGroups[$selectedDependencyStatus];
-
-    echo '<div class="card"><h2>Dependencies</h2>';
+    echo '<div class="card" id="dependencies"><h2>Dependencies</h2>';
     if (!$deps) {
         echo '<p class="muted">No dependencies were recorded for this package.</p>';
     } else {
-        echo '<nav class="dependency-tabs" aria-label="Dependency status tabs">';
-        $allCount = count($deps);
-        $allActive = $selectedDependencyStatus === 'all';
-        echo '<a class="dep dependency-tab' . ($allActive ? ' is-active' : '') . '" href="' . catalog_h(file_info_dependency_tab_url($id, 'all')) . '"' . ($allActive ? ' aria-current="page"' : '') . '>All: ' . $allCount . '</a>';
+        echo '<nav class="dependency-tabs" aria-label="Dependency status tabs" role="tablist" data-dependency-default="' . catalog_h($initialDependencyStatus) . '">';
+        $allActive = $initialDependencyStatus === 'all';
+        echo '<a id="dependency-tab-all" class="dep dependency-tab' . ($allActive ? ' is-active' : '') . '" href="#dependency-all" data-dependency-tab="all" role="tab" aria-controls="dependency-all" aria-selected="' . ($allActive ? 'true' : 'false') . '">All: ' . count($deps) . '</a>';
         foreach ($dependencyStatuses as $status => $label) {
             $count = count($dependencyGroups[$status]);
-            $active = $selectedDependencyStatus === $status;
-            echo '<a class="dep ' . catalog_h($status) . ' dependency-tab' . ($active ? ' is-active' : '') . ($count === 0 ? ' is-empty' : '') . '" href="' . catalog_h(file_info_dependency_tab_url($id, $status)) . '"' . ($active ? ' aria-current="page"' : '') . '>' . catalog_h($label) . ': ' . $count . '</a>';
+            $active = $initialDependencyStatus === $status;
+            echo '<a id="dependency-tab-' . catalog_h($status) . '" class="dep ' . catalog_h($status) . ' dependency-tab' . ($active ? ' is-active' : '') . ($count === 0 ? ' is-empty' : '') . '" href="#dependency-' . catalog_h($status) . '" data-dependency-tab="' . catalog_h($status) . '" role="tab" aria-controls="dependency-' . catalog_h($status) . '" aria-selected="' . ($active ? 'true' : 'false') . '">' . catalog_h($label) . ': ' . $count . '</a>';
         }
         echo '</nav>';
 
-        $selectedLabel = $selectedDependencyStatus === 'all'
-            ? 'All dependencies'
-            : $dependencyStatuses[$selectedDependencyStatus];
-        echo '<p class="muted dependency-status-summary">Showing ' . catalog_h($selectedLabel) . ': ' . count($shownDependencies) . '.</p>';
-        echo '<table data-sortable-table><thead><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr></thead><tbody>';
-        foreach ($shownDependencies as $dep) {
-            $resolved = $dep['resolved_id'] ? '<a href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>';
-            echo '<tr><td data-sort-value="' . catalog_h((string)$dep['status']) . '"><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td><td class="mono path">' . catalog_h($dep['required_object_path']) . '</td><td data-sort-value="' . catalog_h((string)($dep['resolved_package'] ?: $dep['resolved_file'])) . '">' . $resolved . '</td></tr>';
+        $allHidden = $initialDependencyStatus !== 'all' ? ' hidden' : '';
+        echo '<section id="dependency-all" class="dependency-tab-panel" data-dependency-panel="all" role="tabpanel" aria-labelledby="dependency-tab-all"' . $allHidden . '><p class="muted dependency-status-summary">Showing all dependencies: ' . count($deps) . '.</p>' . file_info_dependency_table($deps) . '</section>';
+        foreach ($dependencyStatuses as $status => $label) {
+            $hidden = $initialDependencyStatus !== $status ? ' hidden' : '';
+            echo '<section id="dependency-' . catalog_h($status) . '" class="dependency-tab-panel" data-dependency-panel="' . catalog_h($status) . '" role="tabpanel" aria-labelledby="dependency-tab-' . catalog_h($status) . '"' . $hidden . '><p class="muted dependency-status-summary">Showing ' . catalog_h($label) . ': ' . count($dependencyGroups[$status]) . '.</p>' . file_info_dependency_table($dependencyGroups[$status]) . '</section>';
         }
-        echo '</tbody></table>';
     }
     echo '</div>';
 
@@ -238,6 +245,47 @@ CSS;
 (function () {
     'use strict';
 
+    var dependencyTabs = Array.from(document.querySelectorAll('[data-dependency-tab]'));
+    var dependencyPanels = Array.from(document.querySelectorAll('[data-dependency-panel]'));
+    var dependencyNav = document.querySelector('[data-dependency-default]');
+
+    function dependencyTabFromHash() {
+        var hash = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+        if (hash.indexOf('dependency-') === 0) {
+            return hash.slice('dependency-'.length);
+        }
+        return dependencyNav ? dependencyNav.dataset.dependencyDefault : 'all';
+    }
+
+    function activateDependencyTab(tabName) {
+        if (!dependencyPanels.some(function (panel) { return panel.dataset.dependencyPanel === tabName; })) {
+            tabName = dependencyNav ? dependencyNav.dataset.dependencyDefault : 'all';
+        }
+        dependencyPanels.forEach(function (panel) {
+            panel.hidden = panel.dataset.dependencyPanel !== tabName;
+        });
+        dependencyTabs.forEach(function (tab) {
+            var active = tab.dataset.dependencyTab === tabName;
+            tab.classList.toggle('is-active', active);
+            tab.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+    }
+
+    if (dependencyTabs.length) {
+        dependencyTabs.forEach(function (tab) {
+            tab.addEventListener('click', function (event) {
+                event.preventDefault();
+                var tabName = tab.dataset.dependencyTab;
+                window.history.pushState(null, '', '#dependency-' + tabName);
+                activateDependencyTab(tabName);
+            });
+        });
+        window.addEventListener('hashchange', function () {
+            activateDependencyTab(dependencyTabFromHash());
+        });
+        activateDependencyTab(dependencyTabFromHash());
+    }
+
     document.querySelectorAll('table[data-sortable-table]').forEach(function (table) {
         var headerRow = table.tHead && table.tHead.rows.length ? table.tHead.rows[0] : null;
         var body = table.tBodies.length ? table.tBodies[0] : null;
@@ -248,33 +296,21 @@ CSS;
         var activeIndex = -1;
         var ascending = true;
 
-        function headers() {
-            return Array.from(headerRow.cells);
-        }
-
         function cellValue(row, index) {
             var cell = row.cells[index];
-            if (!cell) {
-                return '';
-            }
-
-            return (cell.dataset.sortValue || cell.textContent || '').trim();
+            return cell ? (cell.dataset.sortValue || cell.textContent || '').trim() : '';
         }
 
         function compareValues(left, right) {
-            var numberPattern = /^-?\d+(?:\.\d+)?$/;
-            if (numberPattern.test(left) && numberPattern.test(right)) {
+            var numeric = /^-?\d+(?:\.\d+)?$/;
+            if (numeric.test(left) && numeric.test(right)) {
                 return Number(left) - Number(right);
             }
-
-            return left.localeCompare(right, undefined, {
-                numeric: true,
-                sensitivity: 'base'
-            });
+            return left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
         }
 
-        function updateHeaderState(index) {
-            headers().forEach(function (header, headerIndex) {
+        function updateHeaders(index) {
+            Array.from(headerRow.cells).forEach(function (header, headerIndex) {
                 header.classList.remove('is-sort-ascending', 'is-sort-descending');
                 header.removeAttribute('aria-sort');
                 if (headerIndex === index) {
@@ -292,25 +328,21 @@ CSS;
                 ascending = true;
             }
 
-            var rows = Array.from(body.rows);
-            rows.sort(function (leftRow, rightRow) {
+            Array.from(body.rows).sort(function (leftRow, rightRow) {
                 var comparison = compareValues(cellValue(leftRow, index), cellValue(rightRow, index));
                 return ascending ? comparison : -comparison;
-            });
-            rows.forEach(function (row) {
+            }).forEach(function (row) {
                 body.appendChild(row);
             });
-            updateHeaderState(index);
+            updateHeaders(index);
         }
 
-        headers().forEach(function (header, index) {
+        Array.from(headerRow.cells).forEach(function (header, index) {
             header.tabIndex = 0;
             header.setAttribute('role', 'button');
             header.setAttribute('title', 'Click to sort ascending. Click again to sort descending.');
             header.setAttribute('aria-label', header.textContent.trim() + '. Click to sort this table.');
-            header.addEventListener('click', function () {
-                sortBy(index);
-            });
+            header.addEventListener('click', function () { sortBy(index); });
             header.addEventListener('keydown', function (event) {
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
