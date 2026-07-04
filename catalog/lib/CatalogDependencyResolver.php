@@ -27,15 +27,25 @@ final class CatalogDependencyResolver
             }
 
             if ((string)($import['relative_object_path'] ?? '') === '') {
-                $packageNames[(string)($import['root_package'] ?? '')] = true;
+                $packageNames[] = (string)($import['root_package'] ?? '');
                 continue;
             }
 
-            $objectPaths[(string)($import['full_path'] ?? '')] = true;
+            $objectPaths[] = (string)($import['full_path'] ?? '');
         }
 
-        $packageMatches = self::loadPackageMatches($db, $gameId, $fileId, array_keys($packageNames));
-        $exportMatches = self::loadExportMatches($db, $gameId, $fileId, array_keys($objectPaths));
+        $packageMatches = self::loadPackageMatches(
+            $db,
+            $gameId,
+            $fileId,
+            array_values(array_unique($packageNames, SORT_STRING))
+        );
+        $exportMatches = self::loadExportMatches(
+            $db,
+            $gameId,
+            $fileId,
+            array_values(array_unique($objectPaths, SORT_STRING))
+        );
 
         $resolved = [];
         foreach ($imports as $import) {
