@@ -10,7 +10,8 @@ function catalog_load_reader_class(array $config, string $engineKey): string
         $engineKey,
         'Reader not found for',
         'Reader file loaded for ',
-        ['UE4']
+        ['UE4'],
+        false
     );
 }
 
