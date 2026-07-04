@@ -59,6 +59,12 @@ jobs:
               -Nse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='unrealdb_test' AND table_name='$table'" \
               | grep -qx '1'
           done
+      - name: Verify reusable profile assignments
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
+            -Nse "SELECT COUNT(*) FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id WHERE p.game_id IS NULL AND p.profile_name <> ''" \
+            | awk '$1 >= 4 { ok=1 } END { exit ok ? 0 : 1 }'
+
       - name: Verify clean install seed data
         run: |
           mysql -h 127.0.0.1 -uroot -proot unrealdb_test \

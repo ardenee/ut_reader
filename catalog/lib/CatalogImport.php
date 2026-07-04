@@ -24,31 +24,21 @@ function catalog_import_join_path_parts(array $parts): string
 
 function catalog_import_ref_path(int $ref, array $imports, array $exports, array &$cache, array $seen = []): string
 {
-    if ($ref === 0) {
-        return '';
-    }
-    if (isset($cache[$ref])) {
-        return $cache[$ref];
-    }
-    if (isset($seen[$ref])) {
-        return '';
-    }
+    if ($ref === 0) return '';
+    if (isset($cache[$ref])) return $cache[$ref];
+    if (isset($seen[$ref])) return '';
     $seen[$ref] = true;
 
     if ($ref < 0) {
         $row = $imports[-$ref - 1] ?? null;
-        if (!$row) {
-            return '';
-        }
+        if (!$row) return '';
         $outer = (int)($row['outerIndex'] ?? $row['OuterIndex'] ?? $row['outer'] ?? 0);
         $name = (string)($row['objectNameText'] ?? ($row['ObjectName']['text'] ?? ''));
         return $cache[$ref] = catalog_import_join_path_parts([catalog_import_ref_path($outer, $imports, $exports, $cache, $seen), $name]);
     }
 
     $row = $exports[$ref - 1] ?? null;
-    if (!$row) {
-        return '';
-    }
+    if (!$row) return '';
     $outer = (int)($row['outerIndex'] ?? $row['packageIndex'] ?? $row['outer'] ?? 0);
     $name = (string)($row['objectNameText'] ?? '');
     return $cache[$ref] = catalog_import_join_path_parts([catalog_import_ref_path($outer, $imports, $exports, $cache, $seen), $name]);
@@ -60,9 +50,7 @@ function catalog_import_split_reader_issues(array $issues): array
     $notes = [];
     foreach ($issues as $issue) {
         $text = trim((string)$issue);
-        if ($text === '') {
-            continue;
-        }
+        if ($text === '') continue;
         if (str_starts_with($text, 'Package is unversioned; using assumed UE4 version ')) {
             $notes[] = $text;
             continue;
@@ -76,9 +64,7 @@ function catalog_import_rebuild_dependencies(PDO $db, array $config, int $fileId
 {
     $db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
-    if (!$file) {
-        return;
-    }
+    if (!$file) return;
 
     $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status) VALUES(?,?,?,?,?,?,?)');
     foreach (catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=?', [$fileId]) as $imp) {
@@ -115,70 +101,50 @@ function catalog_import_rebuild_game(PDO $db, array $config, int $gameId): void
 function catalog_import_detect_game(PDO $db, string $extension): ?array
 {
     $extension = strtolower($extension);
-    $rows = catalog_all($db, 'SELECT g.*, p.engine_key profile_engine, p.allowed_extensions_json FROM ue_games g JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.id');
+    $rows = catalog_all($db, 'SELECT g.*, p.engine_key profile_engine, p.allowed_extensions_json FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.id');
     foreach ($rows as $row) {
         $exts = gp_extensions($row);
-        if (!$exts || in_array($extension, $exts, true)) {
-            return $row;
-        }
+        if (!$exts || in_array($extension, $exts, true)) return $row;
     }
     return $rows[0] ?? null;
 }
 
 function catalog_import_file(PDO $db, array $config, string $sourcePath, string $originalName, ?int $preferredGameId = null, ?int $uploadedBy = null): array
 {
-    if (!is_file($sourcePath)) {
-        throw new RuntimeException('Import source file missing: ' . $sourcePath);
-    }
+    if (!is_file($sourcePath)) throw new RuntimeException('Import source file missing: ' . $sourcePath);
 
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-    if (!in_array($ext, $config['allowed_extensions'] ?? [], true)) {
-        throw new RuntimeException('Extension not allowed: ' . $ext);
-    }
+    if (!in_array($ext, $config['allowed_extensions'] ?? [], true)) throw new RuntimeException('Extension not allowed: ' . $ext);
 
     $size = filesize($sourcePath) ?: 0;
-    if ($size <= 0 || $size > (int)($config['max_upload_bytes'] ?? PHP_INT_MAX)) {
-        throw new RuntimeException('Bad file size: ' . catalog_bytes((int)$size));
-    }
+    if ($size <= 0 || $size > (int)($config['max_upload_bytes'] ?? PHP_INT_MAX)) throw new RuntimeException('Bad file size: ' . catalog_bytes((int)$size));
 
     $md5 = md5_file($sourcePath);
     $sha1 = sha1_file($sourcePath);
-    if (!$md5 || !$sha1) {
-        throw new RuntimeException('Could not hash import source file.');
-    }
+    if (!$md5 || !$sha1) throw new RuntimeException('Could not hash import source file.');
 
     $duplicate = catalog_one($db, 'SELECT id, original_name FROM ue_files WHERE md5=?', [$md5]);
-    if ($duplicate) {
-        return ['status' => 'duplicate_md5', 'file_id' => (int)$duplicate['id'], 'message' => 'Duplicate MD5: ' . $duplicate['original_name']];
-    }
+    if ($duplicate) return ['status' => 'duplicate_md5', 'file_id' => (int)$duplicate['id'], 'message' => 'Duplicate MD5: ' . $duplicate['original_name']];
 
     $game = $preferredGameId ? catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$preferredGameId]) : catalog_import_detect_game($db, $ext);
-    if (!$game) {
-        throw new RuntimeException('Could not detect target game for extension: ' . $ext);
-    }
+    if (!$game) throw new RuntimeException('Could not detect target game for extension: ' . $ext);
     $profileEngine = gp_engine_for_game($db, (int)$game['id']);
 
     $readerClass = catalog_load_reader_class($config, $profileEngine);
     $pkg = new $readerClass($sourcePath);
     $issues = method_exists($pkg, 'validatePackage') ? $pkg->validatePackage() : (method_exists($pkg, 'getDebugErrors') ? $pkg->getDebugErrors() : []);
     [$fatalIssues, $scanNotes] = catalog_import_split_reader_issues($issues);
-    if ($fatalIssues) {
-        throw new RuntimeException(implode("\n", $fatalIssues));
-    }
+    if ($fatalIssues) throw new RuntimeException(implode("\n", $fatalIssues));
 
     foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
-        if (!method_exists($pkg, $method)) {
-            throw new RuntimeException('Reader is missing method: ' . $method);
-        }
+        if (!method_exists($pkg, $method)) throw new RuntimeException('Reader is missing method: ' . $method);
     }
 
     $header = $pkg->getHeader();
     $guid = (string)($header['guid'] ?? '');
     if ($guid !== '') {
         $guidDuplicate = catalog_one($db, 'SELECT id, original_name FROM ue_files WHERE game_id=? AND package_guid=? AND scan_status="verified" LIMIT 1', [(int)$game['id'], $guid]);
-        if ($guidDuplicate) {
-            return ['status' => 'duplicate_guid', 'file_id' => (int)$guidDuplicate['id'], 'message' => 'Duplicate package GUID: ' . $guidDuplicate['original_name']];
-        }
+        if ($guidDuplicate) return ['status' => 'duplicate_guid', 'file_id' => (int)$guidDuplicate['id'], 'message' => 'Duplicate package GUID: ' . $guidDuplicate['original_name']];
     }
 
     $names = $pkg->getNames();
@@ -189,15 +155,11 @@ function catalog_import_file(PDO $db, array $config, string $sourcePath, string 
     $scanNotesText = $scanNotes ? implode("\n", $scanNotes) : null;
 
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . catalog_import_slug_text((string)$game['slug']) . '/verified';
-    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) {
-        throw new RuntimeException('Could not create storage folder: ' . $dir);
-    }
+    if (!is_dir($dir) && !mkdir($dir, 0775, true) && !is_dir($dir)) throw new RuntimeException('Could not create storage folder: ' . $dir);
 
     $storedName = $md5 . '.' . $ext;
     $dest = $dir . '/' . $storedName;
-    if (!rename($sourcePath, $dest)) {
-        throw new RuntimeException('Could not move imported file into verified storage.');
-    }
+    if (!rename($sourcePath, $dest)) throw new RuntimeException('Could not move imported file into verified storage.');
     $relativePath = 'storage/games/' . catalog_import_slug_text((string)$game['slug']) . '/verified/' . $storedName;
 
     $db->beginTransaction();
