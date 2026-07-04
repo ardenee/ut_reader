@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
+require_once __DIR__ . '/CompatibilityRules.php';
 
 function gp_profile_display_name(array $profile): string
 {
@@ -131,6 +132,26 @@ function gp_is_unreal2_legacy_package(array $profile, string $ext, ?int $version
     return strtoupper((string)$detectedEngine) === 'UE1';
 }
 
+function gp_compatibility_for_file(array $profile, string $ext, ?int $version, ?int $licensee, ?string $detectedEngine): ?array
+{
+    $rule = compat_rule_match($profile, $ext, $version, $licensee, $detectedEngine);
+    if ($rule) {
+        return $rule;
+    }
+
+    // Preserve the previously accepted Unreal II special case until its profile
+    // is explicitly migrated to a JSON rule.
+    if (gp_is_unreal2_legacy_package($profile, $ext, $version, $licensee, $detectedEngine)) {
+        return [
+            'label' => 'Unreal II legacy UPX package',
+            'reader_engine' => 'UE1',
+            'rule' => ['builtin' => 'unreal2_upx_83'],
+        ];
+    }
+
+    return null;
+}
+
 function gp_read_legacy_summary(string $path): array
 {
     $fh = @fopen($path, 'rb');
@@ -171,9 +192,12 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
         return [
             'selected_engine' => $selectedEngine ?: null,
             'detected_engine' => $detectedEngine,
+            'reader_engine' => $detectedEngine,
             'package_version' => $version,
             'licensee_version' => $licensee,
             'confidence' => 'unknown',
+            'compatibility_status' => 'mismatch',
+            'compatibility_label' => null,
             'ok_for_selected_game' => false,
             'notes' => $notes,
             'suggested_games' => [],
@@ -192,9 +216,10 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
         $notes[] = 'Legacy package header version=' . $version . ' licensee=' . $licensee . '.';
     }
 
-    $legacyCompatible = gp_is_unreal2_legacy_package($profile, $ext, $version, $licensee, $detectedEngine);
+    $compatibility = gp_compatibility_for_file($profile, $ext, $version, $licensee, $detectedEngine);
+    $legacyCompatible = $compatibility !== null;
     if ($legacyCompatible) {
-        $notes[] = 'Accepted as Unreal II legacy package: .upx version 83 assets can use a UE1-style package header.';
+        $notes[] = 'Accepted by profile compatibility rule: ' . $compatibility['label'] . '. Parsed with ' . $compatibility['reader_engine'] . ' reader.';
     }
 
     $min = $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null;
@@ -243,10 +268,13 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
 
     return [
         'selected_engine' => $selectedEngine,
-        'detected_engine' => $legacyCompatible ? $selectedEngine : $detectedEngine,
+        'detected_engine' => $detectedEngine,
+        'reader_engine' => $legacyCompatible ? (string)$compatibility['reader_engine'] : $selectedEngine,
         'package_version' => $version,
         'licensee_version' => $licensee,
         'confidence' => $confidence,
+        'compatibility_status' => $legacyCompatible ? 'legacy_compatible' : 'native',
+        'compatibility_label' => $legacyCompatible ? (string)$compatibility['label'] : null,
         'ok_for_selected_game' => in_array($confidence, ['high','medium'], true),
         'notes' => $notes,
         'suggested_games' => $suggested,
