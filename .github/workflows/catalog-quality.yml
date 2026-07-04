@@ -1,0 +1,70 @@
+name: Catalog quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  php-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, curl, mbstring
+          coverage: none
+      - name: Reject tracked runtime configuration
+        run: |
+          if git ls-files --error-unmatch catalog/config.php >/dev/null 2>&1; then
+            echo 'catalog/config.php must not be tracked.'
+            exit 1
+          fi
+      - name: Syntax lint PHP files
+        run: |
+          find . -type f -name '*.php' \
+            -not -path './vendor/*' \
+            -print0 | xargs -0 -n1 php -l
+
+  fresh-schema:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: unrealdb_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Import canonical schema
+        run: mysql -h 127.0.0.1 -uroot -proot unrealdb_test < catalog/install.sql
+      - name: Verify required catalog tables
+        run: |
+          for table in \
+            ue_games ue_users ue_files ue_names ue_imports ue_exports ue_dependencies \
+            ue_sources ue_file_locations ue_game_profiles ue_federation_settings \
+            ue_federation_peers ue_federation_transfer_jobs ue_app_logs ue_background_jobs; do
+            mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
+              -Nse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='unrealdb_test' AND table_name='$table'" \
+              | grep -qx '1'
+          done
+      - name: Verify reusable profile assignments
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
+            -Nse "SELECT COUNT(*) FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id WHERE p.game_id IS NULL AND p.profile_name <> ''" \
+            | awk '$1 >= 4 { ok=1 } END { exit ok ? 0 : 1 }'
+      - name: Verify clean install seed data
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
+            -Nse "SELECT COUNT(*) FROM ue_games" | awk '$1 >= 4 { ok=1 } END { exit ok ? 0 : 1 }'
