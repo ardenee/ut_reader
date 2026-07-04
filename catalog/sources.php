@@ -47,7 +47,7 @@ try {
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
     catalog_page_header('Game Sources', 'Add local folders, redirect servers, or HTTP mirrors for a specific game. Sources belong to games so scans and downloads stay tied to the correct library.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Scan Sources' => 'source-scan.php', 'HTTP Source Scan' => 'http-source-scan.php']);
 
-    $sources = catalog_all($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name, s.name');
+    $sources = catalog_all($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name, s.name');
     echo '<div class="card"><h2>Configured sources</h2>';
     if (!$sources) {
         echo '<p class="muted">No sources configured yet.</p>';
@@ -60,7 +60,7 @@ try {
     }
     echo '</div>';
 
-    $games = catalog_all($db, 'SELECT g.id,g.name,p.engine_key profile_engine FROM ue_games g JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 ORDER BY g.name');
+    $games = catalog_all($db, 'SELECT g.id,g.name,p.engine_key profile_engine FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name');
     echo '<div class="card"><h2>Add source to game</h2>';
     if (!$games) {
         echo '<p class="muted">No games with active profiles exist yet. Add a game/profile first in <a href="game-manager.php">Game Admin</a>.</p>';
