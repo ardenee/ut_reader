@@ -18,10 +18,37 @@ function upload_progress_path(string $token): string
 
 function upload_progress_write(string $token, array $state): void
 {
+    upload_progress_cleanup();
     $state['updated_at'] = microtime(true);
     $path = upload_progress_path($token);
-    @file_put_contents($path . '.tmp', json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-    @rename($path . '.tmp', $path);
+    $tmpPath = $path . '.tmp';
+    file_put_contents($tmpPath, json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    rename($tmpPath, $path);
+}
+
+function upload_progress_reporter(string $token, int $minimumIntervalMs = 200): callable
+{
+    $minimumIntervalNs = max(0, $minimumIntervalMs) * 1000000;
+    $lastWriteAt = 0;
+    $lastStage = '';
+    $lastPercent = -1;
+
+    return static function (array $state) use ($token, $minimumIntervalNs, &$lastWriteAt, &$lastStage, &$lastPercent): void {
+        $now = hrtime(true);
+        $stage = (string)($state['stage'] ?? '');
+        $percent = max(0, min(100, (int)($state['percent'] ?? 0)));
+        $terminal = $percent >= 100 || $stage === 'done' || $stage === 'failed';
+        $changed = $stage !== $lastStage || $percent !== $lastPercent;
+
+        if (!$terminal && (!$changed || ($lastWriteAt !== 0 && ($now - $lastWriteAt) < $minimumIntervalNs))) {
+            return;
+        }
+
+        upload_progress_write($token, $state);
+        $lastWriteAt = $now;
+        $lastStage = $stage;
+        $lastPercent = $percent;
+    };
 }
 
 function upload_progress_read(string $token): array
@@ -30,7 +57,7 @@ function upload_progress_read(string $token): array
     if (!is_file($path)) {
         return ['stage' => 'waiting', 'done' => 0, 'total' => 100, 'percent' => 0, 'message' => 'Waiting for server...'];
     }
-    $json = @file_get_contents($path);
+    $json = file_get_contents($path);
     $data = json_decode((string)$json, true);
     return is_array($data) ? $data : ['stage' => 'unknown', 'done' => 0, 'total' => 100, 'percent' => 0, 'message' => 'Progress unavailable.'];
 }
@@ -39,6 +66,24 @@ function upload_progress_clear(string $token): void
 {
     $path = upload_progress_path($token);
     if (is_file($path)) {
-        @unlink($path);
+        unlink($path);
+    }
+}
+
+function upload_progress_cleanup(int $maxAgeSeconds = 86400): void
+{
+    static $checked = false;
+    if ($checked || mt_rand(1, 100) !== 1) {
+        return;
+    }
+    $checked = true;
+
+    $cutoff = time() - max(60, $maxAgeSeconds);
+    $pattern = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'unrealdb-upload-progress-*.json*';
+    foreach (glob($pattern) ?: [] as $path) {
+        $modifiedAt = filemtime($path);
+        if ($modifiedAt !== false && $modifiedAt < $cutoff) {
+            unlink($path);
+        }
     }
 }
