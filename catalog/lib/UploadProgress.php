@@ -18,36 +18,38 @@ function upload_progress_path(string $token): string
 
 function upload_progress_write(string $token, array $state): void
 {
+    static $lastWriteAtByToken = [];
+    static $lastStageByToken = [];
+    static $lastPercentByToken = [];
+
+    $safeToken = upload_progress_token($token);
+    $now = hrtime(true);
+    $stage = (string)($state['stage'] ?? '');
+    $percent = max(0, min(100, (int)($state['percent'] ?? 0)));
+    $terminal = $percent >= 100 || $stage === 'done' || $stage === 'failed';
+    $lastWriteAt = (int)($lastWriteAtByToken[$safeToken] ?? 0);
+    $changed = $stage !== ($lastStageByToken[$safeToken] ?? '') || $percent !== ($lastPercentByToken[$safeToken] ?? -1);
+
+    if (!$terminal && (!$changed || ($lastWriteAt !== 0 && ($now - $lastWriteAt) < 200000000))) {
+        return;
+    }
+
     upload_progress_cleanup();
     $state['updated_at'] = microtime(true);
     $path = upload_progress_path($token);
     $tmpPath = $path . '.tmp';
     file_put_contents($tmpPath, json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     rename($tmpPath, $path);
+
+    $lastWriteAtByToken[$safeToken] = $now;
+    $lastStageByToken[$safeToken] = $stage;
+    $lastPercentByToken[$safeToken] = $percent;
 }
 
 function upload_progress_reporter(string $token, int $minimumIntervalMs = 200): callable
 {
-    $minimumIntervalNs = max(0, $minimumIntervalMs) * 1000000;
-    $lastWriteAt = 0;
-    $lastStage = '';
-    $lastPercent = -1;
-
-    return static function (array $state) use ($token, $minimumIntervalNs, &$lastWriteAt, &$lastStage, &$lastPercent): void {
-        $now = hrtime(true);
-        $stage = (string)($state['stage'] ?? '');
-        $percent = max(0, min(100, (int)($state['percent'] ?? 0)));
-        $terminal = $percent >= 100 || $stage === 'done' || $stage === 'failed';
-        $changed = $stage !== $lastStage || $percent !== $lastPercent;
-
-        if (!$terminal && (!$changed || ($lastWriteAt !== 0 && ($now - $lastWriteAt) < $minimumIntervalNs))) {
-            return;
-        }
-
+    return static function (array $state) use ($token): void {
         upload_progress_write($token, $state);
-        $lastWriteAt = $now;
-        $lastStage = $stage;
-        $lastPercent = $percent;
     };
 }
 
