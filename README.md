@@ -16,10 +16,12 @@ The repository contains two related areas:
 - Detects same-game duplicates by MD5 while allowing the same package hash to exist in separate game libraries.
 - Resolves imported package/object references into dependency rows.
 - Distinguishes `resolved`, `missing`, `package_only`, and `common` dependency states.
-- Uses editable game profiles instead of a hard-coded game/engine list.
-- Supports local source scans, HTTP manifest scans, controlled uploads, and optional parent/child federation.
+- Uses editable, reusable game profiles instead of a hard-coded game/engine list.
+- Supports local source scans, bounded trusted HTTP manifest scans, controlled uploads, and optional parent/child federation.
 - Separates public download delivery from federation transfers.
-- Provides a MySQL-backed maintenance-job foundation and CLI worker for long-running catalog work.
+- Provides a MySQL-backed maintenance-job queue, lease renewal during scanner progress, and a CLI-only worker.
+- Provides bounded-memory federation upload/download paths with authenticated transfer metadata and upload SHA-256 verification.
+- Includes GitHub Actions checks for PHP syntax and a clean canonical-schema import.
 
 ## Main Application Areas
 
@@ -41,18 +43,18 @@ The catalog application is the main entry point:
 | Game Manager | Add/edit games and assign a reusable game profile. |
 | Game Profiles | Define engine family, extensions, version ranges, compatibility, and scanner policy. |
 | Profiled Upload | Validate, parse, store, and link package files to a selected game. |
-| Sources | Register local folders, HTTP mirrors, or redirect-server sources per game. |
+| Sources | Register local folders, trusted HTTPS mirrors, or redirect-server sources per game. |
 | Source Scan | Link known local files by MD5/GUID and optionally import unknown files. |
-| HTTP Source Scan | Compare a remote manifest against the catalog, with optional deep GUID inspection. |
+| HTTP Source Scan | Compare a trusted HTTPS manifest against the catalog, with optional bounded deep GUID inspection. |
 | Missing Files | Review unresolved dependencies and repair candidates. |
-| Federation | Pair parent/child catalogs, exchange inventory, request files, and run transfers. |
+| Federation | Pair parent/child catalogs, exchange inventory, request files, and run controlled transfers. |
 | Downloads | Control public local downloads and external mirror links. |
 
 ## Catalog Data Model
 
 ```text
 ue_games
-  └── ue_game_profiles
+  └── profile_id → ue_game_profiles
 
 ue_files
   ├── ue_names
@@ -81,7 +83,7 @@ Each imported file records, where available:
 
 ## Game Profiles and Package Detection
 
-Games select a **game profile**. The profile owns the package-reading rules, so adding a game does not require adding a new hard-coded engine record.
+Games select a **game profile** through `ue_games.profile_id`. A profile owns the package-reading rules, so adding a game does not require adding a new hard-coded engine record. Profiles are reusable where games share the same package rules.
 
 A profile can define:
 
@@ -161,12 +163,14 @@ Game file lists provide filters for dependency status, type, compression, and te
 A source belongs to a game and can represent:
 
 - a local server/game folder;
-- an HTTP mirror;
+- an HTTPS mirror;
 - a redirect-server source.
 
 Local scans can hash files, match catalog files by MD5/GUID, record source locations, and optionally copy unknown files into the profiled import flow.
 
-HTTP scans compare trusted manifests against catalog records and can optionally download unknown files temporarily to inspect package GUIDs.
+HTTP scans use a bounded cURL client and accept only trusted HTTPS sources on port 443. The scanner rejects source URLs with credentials, redirects, private or reserved network targets, and manifest entries that contain an absolute URL or path traversal. Manifest and deep-inspection downloads have entry-count and byte limits.
+
+HTTP source scanning is an administrator operation. Use only mirrors controlled by the game/operator and validate them before enabling a deep scan.
 
 ## Federation
 
@@ -182,10 +186,22 @@ Current federation capabilities include:
 - missing dependency request generation;
 - approval, denial, and cancellation workflows;
 - controlled upload/download/import transfer jobs;
+- bounded cURL streaming upload/download paths;
+- upload SHA-256 and byte-count verification before a received file is finalized;
+- temporary `.part` file cleanup after failed transfer writes or verification;
 - configurable speed limits, delays, and transfer-file limits;
 - transfer logs, queue, and maintenance pages.
 
 Federation transfers and public downloads are separate paths. Parent/child transfers should be run through controlled worker operations rather than exposed as unrestricted public downloads.
+
+Use the streaming worker path for new deployments:
+
+```text
+/catalog/federation/worker-run.php
+/catalog/federation/cron-worker-streaming.php
+```
+
+The older `cron-worker.php` remains as a rollback path while paired parent/child deployments complete their transfer validation. Switch scheduled work to `cron-worker-streaming.php` only after both peers are deployed and a successful transfer, interruption, oversize, and integrity-mismatch test has been completed.
 
 ## Public Downloads and External Mirrors
 
@@ -216,7 +232,22 @@ Run a worker only through CLI:
 php catalog/bin/catalog-worker.php --max-jobs=25 --sleep-ms=250
 ```
 
-The worker is deliberately blocked from HTTP execution. On shared hosting, invoke it with cron or the host scheduler. Start with one worker for long dependency rebuilds until lease renewal is connected to scanner progress callbacks.
+The worker is deliberately blocked from HTTP execution. On shared hosting, invoke it with cron or the host scheduler. During scanner-driven maintenance jobs, the execution context renews the database lease at bounded intervals and aborts if lease ownership is lost.
+
+Validate a multi-worker deployment before increasing worker count: run a deliberately slow rebuild with a short lease, confirm that only one worker processes it, then confirm that another worker can recover work after an interrupted worker lease expires.
+
+## Automated Checks and Package Fixtures
+
+GitHub Actions runs the `Catalog quality` workflow on pull requests and pushes to `main`.
+
+Current automated checks:
+
+- PHP 8.3 syntax lint for tracked PHP files;
+- failure when `catalog/config.php` is tracked;
+- import of `catalog/install.sql` into a clean MySQL 8.4 database;
+- verification of core tables, seed data, and reusable game-profile assignments.
+
+The workflow does not yet prove package-reader correctness. Package regression fixtures are documented in `tests/fixtures/README.md`; keep retail game assets outside the public repository and provide them through a private/local fixture root.
 
 ## HTTP API Foundation
 
@@ -254,7 +285,7 @@ For a fresh installation:
 mysql -u YOUR_USER -p YOUR_DATABASE < catalog/install.sql
 ```
 
-Do **not** run `catalog/install_update_*.sql` after importing `catalog/install.sql` for a new database. The numbered files are retained only as legacy migration history for older installations created before this consolidated baseline.
+Do **not** run `catalog/install_update_*.sql` after importing `catalog/install.sql` for a new database. The canonical installer is the only schema input for a fresh database.
 
 ### Existing databases
 
@@ -273,21 +304,27 @@ Before making future schema changes:
 - PHP 8.2 or newer.
 - MySQL or MariaDB with InnoDB support and JSON support.
 - PHP extension: `pdo_mysql`.
+- PHP extension: `curl` for HTTP source scans and streaming federation transfers.
 - A PHP-capable web server, such as Apache, nginx with PHP-FPM, Synology Web Station, or a local PHP server.
 - Writable catalog storage for the PHP/web-server account.
-- CLI PHP access for the worker is recommended.
+- CLI PHP access for administrator bootstrap and the worker.
 - Optional LZO support for compressed UE3 packages where required.
 
 ### Fresh setup
 
 1. Clone the repository to the web server.
-2. Copy `catalog/config.example.php` to `catalog/config.php`.
+2. For local development, copy `catalog/config.example.php` to `catalog/config.php`.
 3. Set database credentials, storage location, package limits, and reader configuration.
 4. Create an empty MySQL/MariaDB database.
 5. Import **only** `catalog/install.sql`.
 6. Ensure the configured storage location is writable by PHP.
-7. Open `/catalog/index.php`.
-8. Create the initial administrator only from a trusted private setup session, before exposing the site publicly.
+7. Create the initial administrator from a trusted shell:
+
+   ```bash
+   php catalog/bin/create-admin.php --username=admin
+   ```
+
+8. Open `/catalog/index.php` and sign in.
 9. Add games and profiles, then import a small known package set before bulk ingestion.
 
 Example development storage setup on Synology/Linux:
@@ -303,16 +340,30 @@ Adjust the web-server account for the host environment.
 
 ### Production deployment notes
 
-The example configuration keeps storage below `catalog/` for convenience. For a public deployment, place both runtime configuration and storage outside the web root:
+For a public deployment, place both runtime configuration and storage outside the web root:
 
 ```text
 /private/unrealdb/config.php
 /private/unrealdb/storage/
 ```
 
-Expose only application code through the web server. Do not commit `catalog/config.php`, package storage, upload folders, logs, or local native libraries.
+Point the application at the private configuration file through its environment:
 
-The standalone viewer directories are intended for local development and parser debugging. Do not expose their upload scripts publicly on a production host.
+```text
+UNREALDB_CATALOG_CONFIG=/private/unrealdb/config.php
+```
+
+Production requirements:
+
+- serve the catalog over HTTPS;
+- keep runtime configuration, storage, uploads, and logs outside the public web root where possible;
+- do not commit `catalog/config.php`, package storage, upload folders, logs, provider credentials, federation secrets, or local native libraries;
+- run the CLI bootstrap command before exposing the catalog publicly;
+- keep `display_errors` disabled in PHP production configuration;
+- enable Apache `.htaccess` handling, or configure equivalent nginx/web-server deny rules, for `new/`, `UE1/` through `UE5/`, and catalog runtime directories;
+- do not expose standalone reader/viewer upload scripts publicly;
+- run maintenance and federation workers through CLI/cron, never through a public browser route;
+- test login/logout, CLI admin bootstrap, HTTP-source controls, and federation transfer recovery before production use.
 
 ## Standalone Reader/Viewer Notes
 
@@ -337,18 +388,15 @@ lzo2.dll
 
 ## Current Limitations / Next Engineering Backlog
 
-These items are intentionally ordered so they can be addressed one at a time with regression coverage.
+These items remain after the merged security, lease-renewal, streaming-transfer, and clean-schema work. They are ordered for fixture-backed implementation and validation.
 
 1. **Parser coverage:** not every export payload or property type is decoded across every engine generation.
-2. **UE4 package completeness:** unversioned packages can require assumed versions, and `.uexp` pairing remains limited in some paths.
-3. **Exact game identification:** package headers can identify an engine family but cannot always prove the exact game within the same engine generation.
-4. **Upload/import regression suite:** parser fixtures and automated import/dependency checks are not yet comprehensive across UE1–UE5.
-5. **Long-running job leases:** the background worker does not yet renew a lease during a long scanner/rebuild operation; run one worker for those jobs.
-6. **Federation scale testing:** transfer paths need controlled large-library and failure-recovery testing before broad production use.
-7. **Streaming federation transfers:** large transfer bodies still need a fully streamed request/response path with bounded memory use.
-8. **External mirror automation:** provider-specific upload/delete APIs are not implemented as a general built-in feature.
-9. **HTTP source hardening:** HTTP scans should target only trusted game-owned sources; stronger SSRF controls and operational guardrails remain required before general public-facing use.
-10. **Production security hardening:** legacy viewer/upload routes must remain disabled on public hosts, runtime secrets must remain outside Git, and public deployment controls need continuous verification.
+2. **UE4 package completeness:** unversioned packages can require assumed versions, and `.uexp`/bulk sidecars are not yet modeled as first-class package artifacts in every import path.
+3. **Exact game identification:** package headers can identify an engine family but cannot always prove the exact game within the same engine generation. The catalog needs verified fingerprints and an evidence/confidence assignment model.
+4. **Package regression fixtures:** CI verifies PHP syntax and a clean schema, but parser fixtures and automated import/dependency checks are not yet comprehensive across UE1–UE5.
+5. **Federation scale and recovery testing:** streaming transport exists, but controlled large-library, interruption, retry, and paired-site recovery tests are still required before broad production use.
+6. **External mirror automation:** provider-specific upload, verification, expiry, and delete APIs are not implemented as a general built-in feature.
+7. **Production rollout verification:** the application contains deployment safeguards, but every public host still needs HTTPS, private runtime storage, web-server deny rules, secret rotation, and operational validation.
 
 ## Architecture and Operational Documentation
 
@@ -376,6 +424,8 @@ When adding catalog behavior:
 4. Use prepared SQL and allow-list dynamic sorting/identifiers.
 5. Prefer targeted dependency refresh over full-game rebuilds after a normal import.
 6. Keep long-running maintenance work in jobs/workers, not public HTTP requests.
+7. Update `catalog/install.sql` for every fresh-schema change and add a tested upgrade procedure only where existing deployments are supported.
+8. Do not claim a transfer, parser, or source path is production-ready until its fixture or failure-recovery test exists.
 
 ## License
 
