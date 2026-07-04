@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/GameProfiles.php';
 require_once __DIR__ . '/CatalogReaderResolver.php';
+require_once __DIR__ . '/CatalogDependencyResolver.php';
 
 function scanner_clean_name(string $s): string
 {
@@ -155,29 +156,24 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?call
     }
 
     $imports = catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index', [$fileId]);
+    $resolutions = CatalogDependencyResolver::resolve($db, (int)$file['game_id'], $fileId, $imports);
     $total = max(1, count($imports));
     $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status) VALUES(?,?,?,?,?,?,?)');
     foreach ($imports as $i => $imp) {
-        $status = 'missing';
-        $resolvedFile = null;
-        $resolvedExport = null;
-        if ((int)$imp['is_common'] === 1) {
-            $status = 'common';
-        } elseif ((string)$imp['relative_object_path'] === '') {
-            $match = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND package_name=? AND id<>? ORDER BY uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['root_package'], $fileId]);
-            if ($match) {
-                $status = 'package_only';
-                $resolvedFile = (int)$match['id'];
-            }
-        } else {
-            $match = catalog_one($db, 'SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND e.full_path=? AND f.id<>? ORDER BY f.uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['full_path'], $fileId]);
-            if ($match) {
-                $status = 'resolved';
-                $resolvedFile = (int)$match['file_id'];
-                $resolvedExport = (int)$match['export_id'];
-            }
-        }
-        $insert->execute([$fileId, $imp['id'], $imp['root_package'], $imp['full_path'], $resolvedFile, $resolvedExport, $status]);
+        $resolution = $resolutions[(int)$imp['id']] ?? [
+            'status' => 'missing',
+            'resolved_file_id' => null,
+            'resolved_export_id' => null,
+        ];
+        $insert->execute([
+            $fileId,
+            $imp['id'],
+            $imp['root_package'],
+            $imp['full_path'],
+            $resolution['resolved_file_id'],
+            $resolution['resolved_export_id'],
+            $resolution['status'],
+        ]);
 
         $done = $i + 1;
         if (($done % 10) === 0 || $done === $total) {
