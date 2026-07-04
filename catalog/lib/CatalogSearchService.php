@@ -9,8 +9,9 @@ require_once __DIR__ . '/CatalogSupport.php';
  * The legacy query combined broad file predicates with correlated EXISTS
  * subqueries. This service executes each matching domain independently,
  * bounds it to the visible result limit, de-duplicates IDs, then performs one
- * final ordered file lookup. The import/export candidate queries group by file
- * so a single package containing many matching objects cannot consume the
+ * final ordered file lookup. Exact hash candidates are isolated so MySQL can
+ * use their dedicated global indexes. The import/export candidate queries group
+ * by file so one package containing many matching objects cannot consume the
  * entire candidate limit.
  */
 final class CatalogSearchService
@@ -26,8 +27,20 @@ final class CatalogSearchService
 
         self::collectIds(
             $db,
-            'SELECT f.id FROM ue_files f WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$query, $query, $like],
+            'SELECT f.id FROM ue_files f WHERE f.md5=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            [$query],
+            $candidateIds
+        );
+        self::collectIds(
+            $db,
+            'SELECT f.id FROM ue_files f WHERE f.sha1=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            [$query],
+            $candidateIds
+        );
+        self::collectIds(
+            $db,
+            'SELECT f.id FROM ue_files f WHERE f.package_guid LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            [$like],
             $candidateIds
         );
         self::collectIds(
