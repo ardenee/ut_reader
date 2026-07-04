@@ -8,6 +8,7 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/FederationAuth.php';
+require_once __DIR__ . '/lib/CatalogGameFileListService.php';
 
 function game_files_int(string $key, int $default, int $min, int $max): int
 {
@@ -97,18 +98,17 @@ try {
     $dir = $dir === 'desc' ? 'desc' : 'asc';
 
     $sortMap = [
-        'package' => 'f.package_name',
-        'file' => 'f.original_name',
-        'version' => 'f.package_version',
-        'size' => 'f.file_size',
-        'compression' => 'f.is_compressed',
-        'deps' => 'missing_count',
-        'uploaded' => 'f.uploaded_at',
+        'package' => true,
+        'file' => true,
+        'version' => true,
+        'size' => true,
+        'compression' => true,
+        'deps' => true,
+        'uploaded' => true,
     ];
     if (!isset($sortMap[$sort])) {
         $sort = 'package';
     }
-    $orderSql = $sortMap[$sort] . ' ' . strtoupper($dir) . ', f.package_name ASC, f.original_name ASC';
 
     $where = 'WHERE f.game_id=?';
     $args = [$gameId];
@@ -147,17 +147,7 @@ try {
     $pageNo = min($pageNo, $totalPages);
     $offset = ($pageNo - 1) * $limit;
 
-    $files = catalog_all(
-        $db,
-        "SELECT f.*, COALESCE(SUM(d.status='resolved'),0) resolved_count, COALESCE(SUM(d.status='missing'),0) missing_count, COALESCE(SUM(d.status='package_only'),0) package_only_count, COALESCE(SUM(d.status='common'),0) common_count
-         FROM ue_files f
-         LEFT JOIN ue_dependencies d ON d.file_id=f.id
-         $where
-         GROUP BY f.id
-         ORDER BY $orderSql
-         LIMIT $limit OFFSET $offset",
-        $args
-    );
+    $files = CatalogGameFileListService::fetchPage($db, $where, $args, $sort, $dir, $limit, $offset);
 
     catalog_head((string)$game['name']);
     echo '<div class="card hero"><h1>' . catalog_h($game['name']) . '</h1><p class="muted">Files, versions, dependency status and downloads.</p><p><a class="button" href="games.php">Back to games</a></p></div>';
