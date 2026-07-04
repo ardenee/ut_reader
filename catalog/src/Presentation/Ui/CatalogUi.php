@@ -87,9 +87,11 @@ final class CatalogUi
      */
     public static function emptyState(string $title, string $description, ?array $action = null, string $icon = '○'): string
     {
-        $html = '<section class="ui-empty-state" aria-labelledby="empty-state-title">';
+        static $sequence = 0;
+        $headingId = 'ui-empty-state-title-' . (++$sequence);
+        $html = '<section class="ui-empty-state" aria-labelledby="' . $headingId . '">';
         $html .= '<div class="ui-empty-state__icon" aria-hidden="true">' . self::escape($icon) . '</div>';
-        $html .= '<h2 id="empty-state-title">' . self::escape($title) . '</h2>';
+        $html .= '<h2 id="' . $headingId . '">' . self::escape($title) . '</h2>';
         $html .= '<p>' . self::escape($description) . '</p>';
         if ($action !== null && ($action['href'] ?? '') !== '') {
             $html .= '<div class="ui-empty-state__action">' . self::button((string)$action['label'], [
