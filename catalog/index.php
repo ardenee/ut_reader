@@ -7,6 +7,7 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogSearchService.php';
 
 function csrf(): string
 {
@@ -101,12 +102,7 @@ try {
             if (strlen($q) < 2) {
                 echo '<div class="card"><p class="muted">Enter at least two characters.</p></div>';
             } else {
-                $like = '%' . $q . '%';
-                $rows = catalog_all(
-                    $db,
-                    'SELECT f.* FROM ue_files f WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR EXISTS (SELECT 1 FROM ue_imports i WHERE i.file_id=f.id AND (i.full_path LIKE ? OR i.object_name LIKE ?)) OR EXISTS (SELECT 1 FROM ue_exports e WHERE e.file_id=f.id AND (e.full_path LIKE ? OR e.object_name LIKE ?)) ORDER BY f.package_name, f.original_name LIMIT 200',
-                    [$q, $q, $like, $like, $like, $like, $like, $like, $like]
-                );
+                $rows = CatalogSearchService::findFiles($db, $q, 200);
                 echo '<div class="card"><h2>Results</h2>';
                 if (!$rows) {
                     echo '<p class="muted">No matching files found.</p>';
