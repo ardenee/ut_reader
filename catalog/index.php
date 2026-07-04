@@ -35,44 +35,36 @@ try {
     if ($page === 'game') {
         redirect_to('game-files.php?id=' . (int)($_GET['id'] ?? 0));
     }
-
     if ($page === 'file') {
         redirect_to('file-info.php?id=' . (int)($_GET['id'] ?? 0));
     }
-
     if ($page === 'examine') {
         redirect_to('file-examine.php?id=' . (int)($_GET['id'] ?? 0));
     }
-
     if ($page === 'upload') {
         redirect_to('profiled-upload.php');
     }
-
     if ($page === 'download') {
         $id = (int)($_GET['id'] ?? 0);
         $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$id]);
         if (!$file) {
             throw new RuntimeException('File not found');
         }
-
         $path = realpath(__DIR__ . '/' . $file['relative_path']);
         $root = realpath(rtrim($config['storage_path'], DIRECTORY_SEPARATOR));
         if (!$path || !$root || !str_starts_with($path, $root) || !is_file($path)) {
             throw new RuntimeException('Stored file missing');
         }
-
         header('Content-Type: application/octet-stream');
         header('Content-Length: ' . filesize($path));
         header('Content-Disposition: attachment; filename="' . addslashes((string)$file['original_name']) . '"');
         readfile($path);
         exit;
     }
-
     if ($page === 'logout') {
         session_destroy();
         redirect_to('index.php');
     }
-
     if ($page === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         check_csrf();
         $count = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_users')['c'] ?? 0);
@@ -85,7 +77,6 @@ try {
             $stmt = $db->prepare('INSERT INTO ue_users(username,password_hash,role) VALUES(?,?,?)');
             $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), 'admin']);
         }
-
         $user = catalog_one($db, 'SELECT * FROM ue_users WHERE username=?', [trim((string)$_POST['username'])]);
         if (!$user || !password_verify((string)$_POST['password'], (string)$user['password_hash'])) {
             throw new RuntimeException('Invalid login');
@@ -105,15 +96,29 @@ try {
         echo '</div>';
     } elseif ($page === 'search') {
         $q = trim((string)($_GET['q'] ?? ''));
-        echo '<div class="card hero"><h1>Search</h1><form><input type="hidden" name="page" value="search"><input name="q" value="' . catalog_h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name" style="min-width:420px"> <button>Search</button></form></div>';
+        echo '<div class="card hero"><h1>Search</h1><form><input type="hidden" name="page" value="search"><input name="q" value="' . catalog_h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name" style="min-width:420px"> <button>Search</button></form><p class="muted small">Searches files, package names, imports and exports. Results are limited to 200 files.</p></div>';
         if ($q !== '') {
-            $like = '%' . $q . '%';
-            $rows = catalog_all($db, 'SELECT DISTINCT f.* FROM ue_files f LEFT JOIN ue_imports i ON i.file_id=f.id LEFT JOIN ue_exports e ON e.file_id=f.id WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR i.full_path LIKE ? OR e.full_path LIKE ? ORDER BY f.package_name LIMIT 200', [$q, $q, $like, $like, $like, $like, $like]);
-            echo '<div class="card"><h2>Results</h2><table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
-            foreach ($rows as $row) {
-                echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a></td></tr>';
+            if (strlen($q) < 2) {
+                echo '<div class="card"><p class="muted">Enter at least two characters.</p></div>';
+            } else {
+                $like = '%' . $q . '%';
+                $rows = catalog_all(
+                    $db,
+                    'SELECT f.* FROM ue_files f WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR EXISTS (SELECT 1 FROM ue_imports i WHERE i.file_id=f.id AND (i.full_path LIKE ? OR i.object_name LIKE ?)) OR EXISTS (SELECT 1 FROM ue_exports e WHERE e.file_id=f.id AND (e.full_path LIKE ? OR e.object_name LIKE ?)) ORDER BY f.package_name, f.original_name LIMIT 200',
+                    [$q, $q, $like, $like, $like, $like, $like, $like, $like]
+                );
+                echo '<div class="card"><h2>Results</h2>';
+                if (!$rows) {
+                    echo '<p class="muted">No matching files found.</p>';
+                } else {
+                    echo '<table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
+                    foreach ($rows as $row) {
+                        echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
+                    }
+                    echo '</table>';
+                }
+                echo '</div>';
             }
-            echo '</table></div>';
         }
     } elseif ($page === 'login') {
         $count = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_users')['c'] ?? 0);
@@ -133,6 +138,6 @@ try {
         catalog_head('Catalog Error');
     }
     echo '<div class="msg err"><strong>Error:</strong> ' . catalog_h($e->getMessage()) . '</div>';
-    echo '<div class="card"><h2>Setup checklist</h2><ol><li>Copy <code>catalog/config.example.php</code> to <code>catalog/config.php</code>.</li><li>Edit the database settings.</li><li>Import <code>catalog/install.sql</code>.</li><li>Make <code>catalog/storage/</code> writable by PHP.</li></ol></div>';
+    echo '<div class="card"><h2>Request failed</h2><p class="muted">Retry with a more specific search term.</p></div>';
     catalog_foot();
 }
