@@ -20,16 +20,8 @@ if (!defined('UNREALDB_CATALOG_AUTOLOAD_REGISTERED')) {
     });
 }
 
-use UnrealDb\Catalog\Presentation\Http\CatalogApplication;
-
-/**
- * Compatibility bootstrap for legacy page controllers.
- *
- * Existing pages retain their current request/response code. New controllers
- * receive configuration and a PDO connection through a single application
- * context instead of repeating session, error, config, and connection setup.
- */
-function catalog_bootstrap(): CatalogApplication
+function catalog_bootstrap()
 {
-    return CatalogApplication::boot();
+    $class = 'UnrealDb\\Catalog\\Presentation\\Http\\CatalogApplication';
+    return $class::boot();
 }
