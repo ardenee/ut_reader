@@ -102,18 +102,26 @@ try {
             if (strlen($q) < 2) {
                 echo '<div class="card"><p class="muted">Enter at least two characters.</p></div>';
             } else {
-                $rows = CatalogSearchService::findFiles($db, $q, 200);
-                echo '<div class="card"><h2>Results</h2>';
-                if (!$rows) {
-                    echo '<p class="muted">No matching files found.</p>';
-                } else {
-                    echo '<table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
-                    foreach ($rows as $row) {
-                        echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
-                    }
-                    echo '</table>';
+                try {
+                    $rows = CatalogSearchService::findFiles($db, $q, 200);
+                } catch (CatalogSearchUnavailableException) {
+                    echo '<div class="card"><h2>Search temporarily unavailable</h2><p class="muted">The catalog database did not complete this search. Please retry with a more specific term.</p></div>';
+                    $rows = null;
                 }
-                echo '</div>';
+
+                if ($rows !== null) {
+                    echo '<div class="card"><h2>Results</h2>';
+                    if (!$rows) {
+                        echo '<p class="muted">No matching files found.</p>';
+                    } else {
+                        echo '<table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
+                        foreach ($rows as $row) {
+                            echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
+                        }
+                        echo '</table>';
+                    }
+                    echo '</div>';
+                }
             }
         }
     } elseif ($page === 'login') {
