@@ -3,6 +3,14 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+function file_info_dependency_tab_url(int $fileId, string $status): string
+{
+    return 'file-info.php?' . http_build_query([
+        'id' => $fileId,
+        'dep_status' => $status,
+    ]);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -13,6 +21,41 @@ try {
     }
 
     catalog_head('File info');
+    echo <<<'CSS'
+<style>
+.dependency-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+
+.dependency-tab {
+    margin: 0;
+    text-decoration: none;
+}
+
+.dependency-tab:hover {
+    text-decoration: none;
+    filter: brightness(1.13);
+}
+
+.dependency-tab.is-active {
+    outline: 2px solid var(--blue);
+    outline-offset: 2px;
+    background: rgba(118, 169, 255, .13);
+}
+
+.dependency-tab.is-empty {
+    opacity: .62;
+}
+
+.dependency-status-summary {
+    margin: 0 0 10px;
+}
+</style>
+CSS;
+
     $compressed = (int)($file['is_compressed'] ?? 0) === 1;
     echo '<div class="card"><h1>' . catalog_h($file['package_name']) . '</h1>';
     echo '<p>' . catalog_h($file['original_name']) . ' / ' . catalog_h($file['game_name']) . '</p>';
@@ -39,12 +82,62 @@ try {
     }
 
     $deps = catalog_all($db, 'SELECT d.*, rf.package_name resolved_package, rf.original_name resolved_file, rf.id resolved_id FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.required_package, d.required_object_path', [$id]);
-    echo '<div class="card"><h2>Dependencies</h2><table><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr>';
+    $dependencyStatuses = [
+        'missing' => 'Missing',
+        'package_only' => 'Package only',
+        'resolved' => 'Resolved',
+        'common' => 'Common',
+    ];
+    $dependencyGroups = array_fill_keys(array_keys($dependencyStatuses), []);
     foreach ($deps as $dep) {
-        $resolved = $dep['resolved_id'] ? '<a target="_blank" href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>';
-        echo '<tr><td><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td><td class="mono path">' . catalog_h($dep['required_object_path']) . '</td><td>' . $resolved . '</td></tr>';
+        $status = (string)($dep['status'] ?? '');
+        if (isset($dependencyGroups[$status])) {
+            $dependencyGroups[$status][] = $dep;
+        }
     }
-    echo '</table></div>';
+
+    $requestedDependencyStatus = strtolower(trim((string)($_GET['dep_status'] ?? '')));
+    $selectedDependencyStatus = $requestedDependencyStatus;
+    if ($selectedDependencyStatus !== 'all' && !isset($dependencyStatuses[$selectedDependencyStatus])) {
+        $selectedDependencyStatus = 'all';
+        foreach (array_keys($dependencyStatuses) as $status) {
+            if ($dependencyGroups[$status] !== []) {
+                $selectedDependencyStatus = $status;
+                break;
+            }
+        }
+    }
+    $shownDependencies = $selectedDependencyStatus === 'all'
+        ? $deps
+        : $dependencyGroups[$selectedDependencyStatus];
+
+    echo '<div class="card"><h2>Dependencies</h2>';
+    if (!$deps) {
+        echo '<p class="muted">No dependencies were recorded for this package.</p>';
+    } else {
+        echo '<nav class="dependency-tabs" aria-label="Dependency status tabs">';
+        $allCount = count($deps);
+        $allActive = $selectedDependencyStatus === 'all';
+        echo '<a class="dep dependency-tab' . ($allActive ? ' is-active' : '') . '" href="' . catalog_h(file_info_dependency_tab_url($id, 'all')) . '"' . ($allActive ? ' aria-current="page"' : '') . '>All: ' . $allCount . '</a>';
+        foreach ($dependencyStatuses as $status => $label) {
+            $count = count($dependencyGroups[$status]);
+            $active = $selectedDependencyStatus === $status;
+            echo '<a class="dep ' . catalog_h($status) . ' dependency-tab' . ($active ? ' is-active' : '') . ($count === 0 ? ' is-empty' : '') . '" href="' . catalog_h(file_info_dependency_tab_url($id, $status)) . '"' . ($active ? ' aria-current="page"' : '') . '>' . catalog_h($label) . ': ' . $count . '</a>';
+        }
+        echo '</nav>';
+
+        $selectedLabel = $selectedDependencyStatus === 'all'
+            ? 'All dependencies'
+            : $dependencyStatuses[$selectedDependencyStatus];
+        echo '<p class="muted dependency-status-summary">Showing ' . catalog_h($selectedLabel) . ': ' . count($shownDependencies) . '.</p>';
+        echo '<table><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr>';
+        foreach ($shownDependencies as $dep) {
+            $resolved = $dep['resolved_id'] ? '<a target="_blank" href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>';
+            echo '<tr><td><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td><td class="mono path">' . catalog_h($dep['required_object_path']) . '</td><td>' . $resolved . '</td></tr>';
+        }
+        echo '</table>';
+    }
+    echo '</div>';
 
     $usedBy = catalog_all($db, 'SELECT DISTINCT src.id, src.package_name, src.original_name FROM ue_dependencies d JOIN ue_files src ON src.id=d.file_id WHERE d.resolved_file_id=? ORDER BY src.package_name, src.original_name LIMIT 200', [$id]);
     echo '<div class="card"><h2>Used by</h2>';
@@ -53,7 +146,8 @@ try {
     } else {
         echo '<table><tr><th>Package</th><th>File</th></tr>';
         foreach ($usedBy as $row) {
-            echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td><a target="_blank" href="file-info.php?id=' . (int)$row['id'] . '">' . catalog_h($row['original_name']) . '</a></td></tr>';
+            $sourceId = (int)$row['id'];
+            echo '<tr><td class="mono"><a target="_blank" href="file-info.php?id=' . $sourceId . '">' . catalog_h($row['package_name']) . '</a></td><td><a target="_blank" href="file-info.php?id=' . $sourceId . '">' . catalog_h($row['original_name']) . '</a></td></tr>';
         }
         echo '</table>';
     }
