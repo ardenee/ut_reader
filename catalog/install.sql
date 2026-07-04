@@ -1,31 +1,27 @@
 -- UnrealDB catalog schema
--- Consolidated baseline schema for fresh installs.
---
--- This file supersedes catalog/install_update_*.sql. It represents the
--- complete catalog schema after all changes merged through this baseline.
---
--- Target: MySQL 8+ or MariaDB with InnoDB and JSON support.
--- Run against an empty database. Back up populated installations before any
--- manual schema work; this baseline is not a replacement for tested restores.
+-- Canonical baseline for a new, empty MySQL 8+ or MariaDB database.
+-- Do not import this over a populated catalog. Test a dedicated upgrade path first.
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- =====================================================================
--- Core catalog tables
+-- Core catalog
 -- =====================================================================
 
-CREATE TABLE IF NOT EXISTS ue_games (
+CREATE TABLE ue_games (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   name VARCHAR(120) NOT NULL,
   slug VARCHAR(80) NOT NULL,
   description TEXT NULL,
+  profile_id BIGINT UNSIGNED NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_games_slug (slug)
+  UNIQUE KEY uq_ue_games_slug (slug),
+  KEY idx_ue_games_profile (profile_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_users (
+CREATE TABLE ue_users (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   username VARCHAR(80) NOT NULL,
   password_hash VARCHAR(255) NOT NULL,
@@ -35,7 +31,33 @@ CREATE TABLE IF NOT EXISTS ue_users (
   UNIQUE KEY uq_ue_users_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_files (
+CREATE TABLE ue_game_profiles (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  profile_name VARCHAR(160) NOT NULL,
+  game_id INT UNSIGNED NULL,
+  engine_key VARCHAR(32) NOT NULL,
+  allowed_extensions_json JSON NOT NULL,
+  compatibility_rules_json JSON NULL,
+  package_version_min INT NULL,
+  package_version_max INT NULL,
+  licensee_version_min INT NULL,
+  licensee_version_max INT NULL,
+  confidence_policy ENUM('strict','normal','loose') NOT NULL DEFAULT 'normal',
+  notes TEXT NULL,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_ue_game_profiles_name (profile_name),
+  KEY idx_ue_game_profiles_engine (engine_key),
+  KEY idx_ue_game_profiles_legacy_game (game_id),
+  CONSTRAINT fk_ue_game_profiles_legacy_game FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE ue_games
+  ADD CONSTRAINT fk_ue_games_profile FOREIGN KEY (profile_id) REFERENCES ue_game_profiles(id) ON DELETE SET NULL;
+
+CREATE TABLE ue_files (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   game_id INT UNSIGNED NOT NULL,
   package_name VARCHAR(255) NOT NULL,
@@ -78,7 +100,7 @@ CREATE TABLE IF NOT EXISTS ue_files (
   CONSTRAINT fk_ue_files_user FOREIGN KEY (uploaded_by) REFERENCES ue_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_names (
+CREATE TABLE ue_names (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
   name_index INT NOT NULL,
@@ -90,7 +112,7 @@ CREATE TABLE IF NOT EXISTS ue_names (
   CONSTRAINT fk_ue_names_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_imports (
+CREATE TABLE ue_imports (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
   import_index INT NOT NULL,
@@ -109,7 +131,7 @@ CREATE TABLE IF NOT EXISTS ue_imports (
   CONSTRAINT fk_ue_imports_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_exports (
+CREATE TABLE ue_exports (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
   export_index INT NOT NULL,
@@ -129,7 +151,7 @@ CREATE TABLE IF NOT EXISTS ue_exports (
   CONSTRAINT fk_ue_exports_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_dependencies (
+CREATE TABLE ue_dependencies (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
   import_id BIGINT UNSIGNED NOT NULL,
@@ -150,7 +172,7 @@ CREATE TABLE IF NOT EXISTS ue_dependencies (
   CONSTRAINT fk_ue_deps_resolved_export FOREIGN KEY (resolved_export_id) REFERENCES ue_exports(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_sources (
+CREATE TABLE ue_sources (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   game_id INT UNSIGNED NOT NULL,
   name VARCHAR(160) NOT NULL,
@@ -165,7 +187,7 @@ CREATE TABLE IF NOT EXISTS ue_sources (
   CONSTRAINT fk_ue_sources_game FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_file_locations (
+CREATE TABLE ue_file_locations (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
   source_id INT UNSIGNED NOT NULL,
@@ -179,39 +201,18 @@ CREATE TABLE IF NOT EXISTS ue_file_locations (
   CONSTRAINT fk_ue_file_locations_source FOREIGN KEY (source_id) REFERENCES ue_sources(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_game_profiles (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  game_id INT UNSIGNED NOT NULL,
-  engine_key VARCHAR(32) NOT NULL,
-  allowed_extensions_json JSON NOT NULL,
-  compatibility_rules_json JSON NULL,
-  package_version_min INT NULL,
-  package_version_max INT NULL,
-  licensee_version_min INT NULL,
-  licensee_version_max INT NULL,
-  confidence_policy ENUM('strict','normal','loose') NOT NULL DEFAULT 'normal',
-  notes TEXT NULL,
-  is_active TINYINT(1) NOT NULL DEFAULT 1,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_game_profiles_game (game_id),
-  KEY idx_ue_game_profiles_engine (engine_key),
-  CONSTRAINT fk_ue_game_profiles_game FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 -- =====================================================================
 -- Federation
 -- =====================================================================
 
-CREATE TABLE IF NOT EXISTS ue_federation_settings (
+CREATE TABLE ue_federation_settings (
   setting_name VARCHAR(120) NOT NULL,
   setting_value TEXT NULL,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (setting_name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_peers (
+CREATE TABLE ue_federation_peers (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   peer_role ENUM('parent','child') NOT NULL,
   site_name VARCHAR(160) NOT NULL,
@@ -231,7 +232,7 @@ CREATE TABLE IF NOT EXISTS ue_federation_peers (
   KEY idx_ue_federation_peers_active (is_active)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_nonces (
+CREATE TABLE ue_federation_nonces (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   peer_id INT UNSIGNED NULL,
   nonce VARCHAR(128) NOT NULL,
@@ -243,7 +244,7 @@ CREATE TABLE IF NOT EXISTS ue_federation_nonces (
   CONSTRAINT fk_ue_federation_nonces_peer FOREIGN KEY (peer_id) REFERENCES ue_federation_peers(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_peer_files (
+CREATE TABLE ue_federation_peer_files (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   peer_id INT UNSIGNED NOT NULL,
   game_id INT UNSIGNED NULL,
@@ -275,7 +276,7 @@ CREATE TABLE IF NOT EXISTS ue_federation_peer_files (
   CONSTRAINT fk_ue_federation_peer_files_game FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_requests (
+CREATE TABLE ue_federation_requests (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   peer_id INT UNSIGNED NOT NULL,
   direction ENUM('child_to_parent','parent_to_child') NOT NULL,
@@ -295,7 +296,7 @@ CREATE TABLE IF NOT EXISTS ue_federation_requests (
   CONSTRAINT fk_ue_federation_requests_peer FOREIGN KEY (peer_id) REFERENCES ue_federation_peers(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_request_items (
+CREATE TABLE ue_federation_request_items (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   request_id BIGINT UNSIGNED NOT NULL,
   required_package VARCHAR(255) NOT NULL,
@@ -316,7 +317,7 @@ CREATE TABLE IF NOT EXISTS ue_federation_request_items (
   CONSTRAINT fk_ue_federation_request_items_peer_file FOREIGN KEY (peer_file_id) REFERENCES ue_federation_peer_files(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_transfer_jobs (
+CREATE TABLE ue_federation_transfer_jobs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   peer_id INT UNSIGNED NOT NULL,
   request_item_id BIGINT UNSIGNED NULL,
@@ -347,7 +348,7 @@ CREATE TABLE IF NOT EXISTS ue_federation_transfer_jobs (
   CONSTRAINT fk_ue_federation_transfer_file FOREIGN KEY (local_file_id) REFERENCES ue_files(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_transfer_logs (
+CREATE TABLE ue_federation_transfer_logs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   peer_id INT UNSIGNED NULL,
   transfer_job_id BIGINT UNSIGNED NULL,
@@ -363,7 +364,7 @@ CREATE TABLE IF NOT EXISTS ue_federation_transfer_logs (
   CONSTRAINT fk_ue_federation_logs_job FOREIGN KEY (transfer_job_id) REFERENCES ue_federation_transfer_jobs(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_federation_join_requests (
+CREATE TABLE ue_federation_join_requests (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   status ENUM('pending','approved','denied','claimed','expired') NOT NULL DEFAULT 'pending',
   requested_role ENUM('child') NOT NULL DEFAULT 'child',
@@ -394,10 +395,10 @@ CREATE TABLE IF NOT EXISTS ue_federation_join_requests (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================================
--- Public download / external mirror workflow
+-- External downloads
 -- =====================================================================
 
-CREATE TABLE IF NOT EXISTS ue_external_download_providers (
+CREATE TABLE ue_external_download_providers (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
   provider_key VARCHAR(80) NOT NULL,
   provider_name VARCHAR(160) NOT NULL,
@@ -415,7 +416,7 @@ CREATE TABLE IF NOT EXISTS ue_external_download_providers (
   KEY idx_ue_external_provider_active (is_active, priority)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_external_download_links (
+CREATE TABLE ue_external_download_links (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
   provider_id INT UNSIGNED NOT NULL,
@@ -441,7 +442,7 @@ CREATE TABLE IF NOT EXISTS ue_external_download_links (
   CONSTRAINT fk_ue_external_links_user FOREIGN KEY (created_by) REFERENCES ue_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_external_mirror_jobs (
+CREATE TABLE ue_external_mirror_jobs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
   provider_id INT UNSIGNED NULL,
@@ -466,10 +467,10 @@ CREATE TABLE IF NOT EXISTS ue_external_mirror_jobs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =====================================================================
--- Application diagnostics and maintenance jobs
+-- Diagnostics and maintenance
 -- =====================================================================
 
-CREATE TABLE IF NOT EXISTS ue_app_logs (
+CREATE TABLE ue_app_logs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   level ENUM('DEBUG','INFO','WARN','ERROR') NOT NULL DEFAULT 'INFO',
   event VARCHAR(120) NOT NULL,
@@ -487,7 +488,7 @@ CREATE TABLE IF NOT EXISTS ue_app_logs (
   CONSTRAINT fk_ue_app_logs_user FOREIGN KEY (user_id) REFERENCES ue_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE IF NOT EXISTS ue_background_jobs (
+CREATE TABLE ue_background_jobs (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   queue_name VARCHAR(80) NOT NULL DEFAULT 'catalog',
   job_type VARCHAR(120) NOT NULL,
@@ -520,97 +521,46 @@ CREATE TABLE IF NOT EXISTS ue_background_jobs (
 -- Seed data
 -- =====================================================================
 
-INSERT IGNORE INTO ue_games (name, slug, description) VALUES
+INSERT INTO ue_games(name, slug, description) VALUES
 ('Unreal / Unreal Tournament', 'ut99', 'UE1-era packages such as .u, .unr, .utx, .umx and .uax'),
 ('Unreal Tournament 2003/2004', 'ut2004', 'UE2/UE2.5 package catalog'),
 ('Unreal Tournament 3', 'ut3', 'UE3 packages such as .ut3 and .upk'),
 ('Unreal Engine 4', 'ue4', 'UE4 .uasset and .umap packages');
 
-INSERT IGNORE INTO ue_game_profiles(
-  game_id, engine_key, allowed_extensions_json, package_version_min,
-  package_version_max, confidence_policy, notes
-)
-SELECT id, 'UE1', JSON_ARRAY('u','unr','utx','umx','uax'), 60, 69, 'normal',
-       'UE1 era package profile. Exact version ranges can be refined from known-good samples.'
-FROM ue_games WHERE slug IN ('unreal','ut99');
+INSERT INTO ue_game_profiles(profile_name, engine_key, allowed_extensions_json, package_version_min, package_version_max, confidence_policy, notes) VALUES
+('UE1 standard package profile', 'UE1', JSON_ARRAY('u','unr','utx','umx','uax'), 60, 69, 'normal', 'UE1 era package profile. Exact ranges can be refined from known-good samples.'),
+('UE2 / UE2.5 standard package profile', 'UE2', JSON_ARRAY('u','un2','ut2','utx','usx','ukx','uax','umx'), 100, 130, 'normal', 'UE2/UE2.5 profile. The header identifies family but does not always prove the exact game.'),
+('UE3 standard package profile', 'UE3', JSON_ARRAY('ut3','upk','u'), 512, 512, 'loose', 'UE3/UT3 package profile. Compressed packages may need LZO support.'),
+('UE4 standard package profile', 'UE4', JSON_ARRAY('uasset','umap'), NULL, NULL, 'loose', 'UE4 package profile. Versioned and unversioned packages require profile-aware parsing.');
 
-INSERT IGNORE INTO ue_game_profiles(
-  game_id, engine_key, allowed_extensions_json, package_version_min,
-  package_version_max, confidence_policy, notes
-)
-SELECT id, 'UE2', JSON_ARRAY('u','un2','ut2','utx','usx','ukx','uax'), 100, 130, 'normal',
-       'UE2/UE2.5 package profile. Shared across Unreal II, UT2003 and UT2004; header can identify engine family but not always exact game.'
-FROM ue_games WHERE slug IN ('unreal2','ut2003','ut2004');
-
-INSERT IGNORE INTO ue_game_profiles(
-  game_id, engine_key, allowed_extensions_json, package_version_min,
-  package_version_max, confidence_policy, notes
-)
-SELECT id, 'UE3', JSON_ARRAY('ut3','upk','u'), 512, 512, 'loose',
-       'UE3/UT3 package profile. Compressed packages may need LZO support.'
-FROM ue_games WHERE slug IN ('ut3');
-
-INSERT IGNORE INTO ue_game_profiles(
-  game_id, engine_key, allowed_extensions_json, package_version_min,
-  package_version_max, confidence_policy, notes
-)
-SELECT id, 'UE4', JSON_ARRAY('uasset','umap'), NULL, NULL, 'loose',
-       'UE4/UT Alpha package profile. UE4 packages may be versioned or unversioned/custom-version based.'
-FROM ue_games WHERE slug IN ('ut4','ue4');
+UPDATE ue_games g JOIN ue_game_profiles p ON p.profile_name='UE1 standard package profile' SET g.profile_id=p.id WHERE g.slug='ut99';
+UPDATE ue_games g JOIN ue_game_profiles p ON p.profile_name='UE2 / UE2.5 standard package profile' SET g.profile_id=p.id WHERE g.slug='ut2004';
+UPDATE ue_games g JOIN ue_game_profiles p ON p.profile_name='UE3 standard package profile' SET g.profile_id=p.id WHERE g.slug='ut3';
+UPDATE ue_games g JOIN ue_game_profiles p ON p.profile_name='UE4 standard package profile' SET g.profile_id=p.id WHERE g.slug='ue4';
 
 UPDATE ue_game_profiles
-SET compatibility_rules_json = JSON_ARRAY(
-  JSON_OBJECT(
-    'detected_engine', 'UE1',
-    'reader_engine', 'UE1',
-    'extensions', JSON_ARRAY('utx'),
-    'package_version_min', 40,
-    'package_version_max', 99,
-    'label', 'Legacy UE1 texture package'
-  )
-)
-WHERE engine_key='UE2'
-  AND (compatibility_rules_json IS NULL OR JSON_LENGTH(compatibility_rules_json)=0);
+SET compatibility_rules_json = JSON_ARRAY(JSON_OBJECT(
+  'detected_engine', 'UE1',
+  'reader_engine', 'UE1',
+  'extensions', JSON_ARRAY('utx'),
+  'package_version_min', 40,
+  'package_version_max', 99,
+  'label', 'Legacy UE1 texture package'
+))
+WHERE profile_name='UE2 / UE2.5 standard package profile';
 
-INSERT IGNORE INTO ue_federation_settings(setting_name, setting_value) VALUES
-('site_role', 'standalone'),
-('site_name', ''),
-('site_url', ''),
-('site_id', ''),
-('site_fingerprint', ''),
-('parent_enabled', '0'),
-('child_enabled', '0'),
-('allow_parent_pull_from_child', '1'),
-('allow_child_request_from_parent', '1'),
-('max_download_kbps', '0'),
-('max_upload_kbps', '0'),
-('delay_between_downloads_seconds', '5'),
-('delay_between_uploads_seconds', '5'),
-('max_files_per_transfer_run', '1'),
-('max_transfer_file_size_mb', '1024'),
-('auto_import_downloads', '1'),
-('require_https_for_remote_sites', '1'),
-('api_nonce_ttl_seconds', '300'),
-('transfer_token_ttl_seconds', '600'),
-('log_retention_days', '90'),
-('join_requests_enabled', '1'),
-('join_claim_token_ttl_seconds', '86400'),
-('main_parent_url', 'https://utreader/catalog'),
-('main_parent_join_request_id', ''),
-('main_parent_join_request_token', ''),
-('main_parent_join_status', 'none'),
-('public_download_mode', 'local_direct'),
-('external_mirror_auto_queue', '1'),
-('external_mirror_expiry_days', '7'),
-('external_mirror_require_admin_approval', '0'),
-('external_mirror_max_file_size_mb', '1024');
+INSERT INTO ue_federation_settings(setting_name, setting_value) VALUES
+('site_role', 'standalone'), ('site_name', ''), ('site_url', ''), ('site_id', ''), ('site_fingerprint', ''),
+('parent_enabled', '0'), ('child_enabled', '0'), ('allow_parent_pull_from_child', '1'), ('allow_child_request_from_parent', '1'),
+('max_download_kbps', '0'), ('max_upload_kbps', '0'), ('delay_between_downloads_seconds', '5'), ('delay_between_uploads_seconds', '5'),
+('max_files_per_transfer_run', '1'), ('max_transfer_file_size_mb', '1024'), ('auto_import_downloads', '1'),
+('require_https_for_remote_sites', '1'), ('api_nonce_ttl_seconds', '300'), ('transfer_token_ttl_seconds', '600'),
+('log_retention_days', '90'), ('join_requests_enabled', '1'), ('join_claim_token_ttl_seconds', '86400'),
+('main_parent_url', 'https://utreader/catalog'), ('main_parent_join_request_id', ''), ('main_parent_join_request_token', ''),
+('main_parent_join_status', 'none'), ('public_download_mode', 'local_direct'), ('external_mirror_auto_queue', '1'),
+('external_mirror_expiry_days', '7'), ('external_mirror_require_admin_approval', '0'), ('external_mirror_max_file_size_mb', '1024');
 
-INSERT IGNORE INTO ue_external_download_providers(
-  provider_key, provider_name, provider_class, is_active, config_json,
-  max_file_size_mb, expiry_days, priority, notes
-) VALUES (
-  'manual', 'Manual external link', 'ManualProvider', 1, JSON_OBJECT(),
-  1024, 7, 10, 'Admin manually pastes externally hosted links.'
-);
+INSERT INTO ue_external_download_providers(provider_key, provider_name, provider_class, is_active, config_json, max_file_size_mb, expiry_days, priority, notes)
+VALUES ('manual', 'Manual external link', 'ManualProvider', 1, JSON_OBJECT(), 1024, 7, 10, 'Admin manually pastes externally hosted links.');
 
 SET FOREIGN_KEY_CHECKS = 1;
