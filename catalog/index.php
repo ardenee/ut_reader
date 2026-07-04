@@ -7,6 +7,7 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogSearchService.php';
 
 function csrf(): string
 {
@@ -101,23 +102,26 @@ try {
             if (strlen($q) < 2) {
                 echo '<div class="card"><p class="muted">Enter at least two characters.</p></div>';
             } else {
-                $like = '%' . $q . '%';
-                $rows = catalog_all(
-                    $db,
-                    'SELECT f.* FROM ue_files f WHERE f.md5=? OR f.sha1=? OR f.package_guid LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR EXISTS (SELECT 1 FROM ue_imports i WHERE i.file_id=f.id AND (i.full_path LIKE ? OR i.object_name LIKE ?)) OR EXISTS (SELECT 1 FROM ue_exports e WHERE e.file_id=f.id AND (e.full_path LIKE ? OR e.object_name LIKE ?)) ORDER BY f.package_name, f.original_name LIMIT 200',
-                    [$q, $q, $like, $like, $like, $like, $like, $like, $like]
-                );
-                echo '<div class="card"><h2>Results</h2>';
-                if (!$rows) {
-                    echo '<p class="muted">No matching files found.</p>';
-                } else {
-                    echo '<table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
-                    foreach ($rows as $row) {
-                        echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
-                    }
-                    echo '</table>';
+                try {
+                    $rows = CatalogSearchService::findFiles($db, $q, 200);
+                } catch (CatalogSearchUnavailableException) {
+                    echo '<div class="card"><h2>Search temporarily unavailable</h2><p class="muted">The catalog database did not complete this search. Please retry with a more specific term.</p></div>';
+                    $rows = null;
                 }
-                echo '</div>';
+
+                if ($rows !== null) {
+                    echo '<div class="card"><h2>Results</h2>';
+                    if (!$rows) {
+                        echo '<p class="muted">No matching files found.</p>';
+                    } else {
+                        echo '<table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
+                        foreach ($rows as $row) {
+                            echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
+                        }
+                        echo '</table>';
+                    }
+                    echo '</div>';
+                }
             }
         }
     } elseif ($page === 'login') {

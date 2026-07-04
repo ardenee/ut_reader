@@ -18,10 +18,37 @@ function upload_progress_path(string $token): string
 
 function upload_progress_write(string $token, array $state): void
 {
+    static $lastWriteAtByToken = [];
+    static $lastStageByToken = [];
+    static $lastPercentByToken = [];
+
+    $safeToken = upload_progress_token($token);
+    $now = hrtime(true);
+    $stage = (string)($state['stage'] ?? '');
+    $percent = max(0, min(100, (int)($state['percent'] ?? 0)));
+    $terminal = $percent >= 100 || $stage === 'done' || $stage === 'failed';
+    $lastWriteAt = (int)($lastWriteAtByToken[$safeToken] ?? 0);
+    $changed = $stage !== ($lastStageByToken[$safeToken] ?? '') || $percent !== ($lastPercentByToken[$safeToken] ?? -1);
+
+    if (!$terminal && (!$changed || ($lastWriteAt !== 0 && ($now - $lastWriteAt) < 200000000))) {
+        return;
+    }
+
+    upload_progress_cleanup();
     $state['updated_at'] = microtime(true);
     $path = upload_progress_path($token);
-    @file_put_contents($path . '.tmp', json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-    @rename($path . '.tmp', $path);
+    $tmpPath = $path . '.tmp';
+    if (@file_put_contents($tmpPath, json_encode($state, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) === false) {
+        return;
+    }
+    if (!@rename($tmpPath, $path)) {
+        @unlink($tmpPath);
+        return;
+    }
+
+    $lastWriteAtByToken[$safeToken] = $now;
+    $lastStageByToken[$safeToken] = $stage;
+    $lastPercentByToken[$safeToken] = $percent;
 }
 
 function upload_progress_read(string $token): array
@@ -40,5 +67,23 @@ function upload_progress_clear(string $token): void
     $path = upload_progress_path($token);
     if (is_file($path)) {
         @unlink($path);
+    }
+}
+
+function upload_progress_cleanup(int $maxAgeSeconds = 86400): void
+{
+    static $checked = false;
+    if ($checked || mt_rand(1, 100) !== 1) {
+        return;
+    }
+    $checked = true;
+
+    $cutoff = time() - max(60, $maxAgeSeconds);
+    $pattern = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'unrealdb-upload-progress-*.json*';
+    foreach (glob($pattern) ?: [] as $path) {
+        $modifiedAt = @filemtime($path);
+        if ($modifiedAt !== false && $modifiedAt < $cutoff) {
+            @unlink($path);
+        }
     }
 }

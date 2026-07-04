@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/CatalogUi.php';
+
 function catalog_h($value): string
 {
     return htmlspecialchars((string)$value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
@@ -197,12 +199,7 @@ function catalog_federation_links(): array
 
 function catalog_page_header(string $title, string $description = '', array $links = []): void
 {
-    echo '<div class="card hero"><h1>' . catalog_h($title) . '</h1>';
-    if ($description !== '') {
-        echo '<p class="muted">' . catalog_h($description) . '</p>';
-    }
-    catalog_page_links($links);
-    echo '</div>';
+    echo CatalogUi::pageHeader($title, $description, $links);
 }
 
 function catalog_flash(?string $message): void
@@ -210,7 +207,7 @@ function catalog_flash(?string $message): void
     if ($message === null || $message === '') {
         return;
     }
-    echo '<div class="card flash"><strong>' . catalog_h($message) . '</strong></div>';
+    echo CatalogUi::alert('info', $message, '', ['dismissible' => true]);
 }
 
 function catalog_require_admin_page(string $title = 'Admin required'): bool
@@ -219,7 +216,11 @@ function catalog_require_admin_page(string $title = 'Admin required'): bool
         return true;
     }
     catalog_head($title);
-    echo '<div class="card"><h1>Admin required</h1><p>Log in through <a href="' . catalog_h(catalog_support_root_prefix() . 'index.php?page=login') . '">Admin Login</a>.</p></div>';
+    echo CatalogUi::emptyState(
+        'Admin required',
+        'Log in with an administrator account to access this page.',
+        ['label' => 'Admin Login', 'href' => catalog_support_root_prefix() . 'index.php?page=login']
+    );
     catalog_foot();
     return false;
 }
@@ -233,6 +234,8 @@ function catalog_head(string $title): void
     echo '<link rel="icon" type="image/png" sizes="32x32" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-32x32.png') . '">';
     echo '<link rel="icon" type="image/png" sizes="16x16" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-16x16.png') . '">';
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog.css') . '">';
+    echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog-ui.css') . '">';
+    echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js') . '" defer></script>';
     echo '</head><body>';
     catalog_admin_nav();
     echo '<main>';

@@ -14,6 +14,19 @@ return [
     'site_name' => 'Unreal File Catalog',
     'storage_path' => __DIR__ . '/storage',
     'max_upload_bytes' => 256 * 1024 * 1024,
+    'queue' => [
+        // Current deployment: MySQL-backed durable jobs run by catalog/bin/catalog-worker.php.
+        'name' => 'catalog',
+        'lease_seconds' => 120,
+    ],
+    'cache' => [
+        // File cache works on one shared filesystem. Bind CacheStore to Redis
+        // before running multiple independent web nodes.
+        'driver' => 'file',
+        'path' => __DIR__ . '/storage/cache',
+        // Keep zero until a page explicitly opts into bounded staleness.
+        'dashboard_ttl_seconds' => 0,
+    ],
     'allowed_extensions' => ['u','unr','utx','umx','uax','ut2','ut3','upk','uasset','umap'],
     'common_packages' => ['Core','Engine','Editor','Fire','IpDrv','UWindow','Botpack','UnrealShare','UnrealI','Gameplay','UnrealEd'],
     'engine_readers' => [
