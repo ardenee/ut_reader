@@ -9,8 +9,9 @@ require_once __DIR__ . '/CatalogSupport.php';
  * The legacy query combined broad file predicates with correlated EXISTS
  * subqueries. This service executes each matching domain independently,
  * bounds it to the visible result limit, de-duplicates IDs, then performs one
- * final ordered file lookup. With the same ordering in every candidate query,
- * the final top-N set is equivalent to the legacy top-N set.
+ * final ordered file lookup. The import/export candidate queries group by file
+ * so a single package containing many matching objects cannot consume the
+ * entire candidate limit.
  */
 final class CatalogSearchService
 {
@@ -37,13 +38,21 @@ final class CatalogSearchService
         );
         self::collectIds(
             $db,
-            'SELECT f.id FROM ue_imports i JOIN ue_files f ON f.id=i.file_id WHERE i.full_path LIKE ? OR i.object_name LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            'SELECT f.id, f.package_name, f.original_name'
+            . ' FROM ue_imports i JOIN ue_files f ON f.id=i.file_id'
+            . ' WHERE i.full_path LIKE ? OR i.object_name LIKE ?'
+            . ' GROUP BY f.id, f.package_name, f.original_name'
+            . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
             [$like, $like],
             $candidateIds
         );
         self::collectIds(
             $db,
-            'SELECT f.id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE e.full_path LIKE ? OR e.object_name LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            'SELECT f.id, f.package_name, f.original_name'
+            . ' FROM ue_exports e JOIN ue_files f ON f.id=e.file_id'
+            . ' WHERE e.full_path LIKE ? OR e.object_name LIKE ?'
+            . ' GROUP BY f.id, f.package_name, f.original_name'
+            . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
             [$like, $like],
             $candidateIds
         );
