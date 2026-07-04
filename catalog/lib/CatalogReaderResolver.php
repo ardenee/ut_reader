@@ -7,7 +7,7 @@ declare(strict_types=1);
  * This keeps the legacy reader configuration format and global reader class
  * names intact while providing one audited place for path validation and
  * selection order. Callers can retain their existing error wording and
- * versioned-reader fallback rules through the explicit arguments.
+ * versioned-reader fallback rules through explicit arguments.
  */
 final class CatalogReaderResolver
 {
@@ -19,6 +19,7 @@ final class CatalogReaderResolver
         array $config,
         string $engineKey,
         string $notFoundMessagePrefix,
+        string $missingClassMessagePrefix,
         array $versionedReaderEngines
     ): string {
         $engineKey = strtoupper(trim($engineKey));
@@ -58,6 +59,6 @@ final class CatalogReaderResolver
             }
         }
 
-        throw new RuntimeException('Reader file loaded for package engine ' . $engineKey . ', but no supported reader class was found.');
+        throw new RuntimeException($missingClassMessagePrefix . $engineKey . ', but no supported reader class was found.');
     }
 }
