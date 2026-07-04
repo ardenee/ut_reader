@@ -157,7 +157,7 @@ function examine_dependency_html(?array $dependency, string $backToFilesUrl): st
     }
 
     $status = (string)$dependency['status'];
-    $detail = '<strong>' . catalog_h($status) . '</strong>';
+    $details = [];
     $resolvedFileId = !empty($dependency['resolved_file_id']) ? (int)$dependency['resolved_file_id'] : null;
     $resolvedExportIndex = array_key_exists('resolved_export_index', $dependency) && $dependency['resolved_export_index'] !== null
         ? (int)$dependency['resolved_export_index']
@@ -165,13 +165,14 @@ function examine_dependency_html(?array $dependency, string $backToFilesUrl): st
 
     if ($resolvedFileId) {
         $label = (string)($dependency['resolved_package'] ?: $dependency['resolved_file'] ?: ('file #' . $resolvedFileId));
-        $detail .= '<span>→ ' . examine_resolved_file_link($resolvedFileId, $label, $resolvedExportIndex, $backToFilesUrl) . '</span>';
+        $details[] = '→ ' . examine_resolved_file_link($resolvedFileId, $label, $resolvedExportIndex, $backToFilesUrl);
     }
     if ($resolvedFileId && $resolvedExportIndex !== null && !empty($dependency['resolved_export_path'])) {
-        $detail .= '<span class="mono path">' . examine_resolved_file_link($resolvedFileId, (string)$dependency['resolved_export_path'], $resolvedExportIndex, $backToFilesUrl) . '</span>';
+        $details[] = '<span class="mono path">' . examine_resolved_file_link($resolvedFileId, (string)$dependency['resolved_export_path'], $resolvedExportIndex, $backToFilesUrl) . '</span>';
     }
 
-    return '<div class="examine-dependency-entry"><span class="dep ' . catalog_h($status) . ' examine-dependency-pill">' . $detail . '</span></div>';
+    $detailHtml = $details === [] ? '' : '<span class="examine-dependency-detail">' . implode('', $details) . '</span>';
+    return '<div class="examine-dependency-entry"><span class="dep ' . catalog_h($status) . ' examine-dependency-flag">' . catalog_h($status) . '</span>' . $detailHtml . '</div>';
 }
 
 function examine_add_name_usage(array &$usageMap, string $name, string $tab, string $targetId): void
@@ -465,24 +466,35 @@ html { scroll-behavior: smooth; }
 .name-usage-links { display: flex; flex-wrap: wrap; gap: 6px; }
 .name-usage-links .muted { margin-right: 2px; }
 
-.examine-dependency-entry { display: block; margin: 0 0 3px; }
-.examine-dependency-pill {
-    display: inline-flex;
-    flex-direction: column;
+.examine-dependency-entry {
+    display: flex;
     align-items: flex-start;
-    gap: 2px;
-    max-width: 100%;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0 0 4px;
+}
+.examine-dependency-entry .examine-dependency-flag {
+    flex: 0 0 auto;
     margin: 0;
-    white-space: normal;
+}
+.examine-dependency-detail {
+    display: flex;
+    flex: 1 1 140px;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
     line-height: 1.28;
 }
-.examine-dependency-pill > span { display: block; }
 
 .is-reference-target td {
     background: rgba(246, 196, 83, .18) !important;
     box-shadow: inset 4px 0 0 var(--amber);
     border-top: 1px solid rgba(246, 196, 83, .55);
     border-bottom: 1px solid rgba(246, 196, 83, .55);
+}
+.is-reference-source {
+    background: rgba(246, 196, 83, .36) !important;
+    box-shadow: inset 0 0 0 1px rgba(246, 196, 83, .8), inset 4px 0 0 var(--amber);
 }
 
 [data-sortable-table] th { cursor: pointer; user-select: none; }
@@ -643,6 +655,7 @@ CSS;
     var tabs = Array.from(document.querySelectorAll('[data-examine-tab]'));
     var panels = Array.from(document.querySelectorAll('[data-examine-panel]'));
     var referenceHighlightClass = 'is-reference-target';
+    var referenceSourceClass = 'is-reference-source';
 
     function tabFromTarget(target) {
         var panel = target ? target.closest('[data-examine-panel]') : null;
@@ -664,12 +677,19 @@ CSS;
     }
 
     function clearReferenceHighlights() {
-        document.querySelectorAll('.' + referenceHighlightClass).forEach(function (row) {
-            row.classList.remove(referenceHighlightClass);
+        document.querySelectorAll('.' + referenceHighlightClass + ', .' + referenceSourceClass).forEach(function (element) {
+            element.classList.remove(referenceHighlightClass, referenceSourceClass);
         });
     }
 
-    function revealTargets(targetIds, scroll) {
+    function markReferenceSource(source) {
+        var cell = source ? source.closest('td, th') : null;
+        if (cell) {
+            cell.classList.add(referenceSourceClass);
+        }
+    }
+
+    function revealTargets(targetIds, scroll, source) {
         var targets = targetIds.map(function (targetId) {
             return document.getElementById(targetId);
         }).filter(Boolean);
@@ -678,6 +698,7 @@ CSS;
         }
 
         clearReferenceHighlights();
+        markReferenceSource(source);
         targets.forEach(function (target) {
             var row = target.closest('tr');
             if (row) {
@@ -704,7 +725,7 @@ CSS;
             activateTab(hash.slice(4));
             return;
         }
-        revealTargets([hash], scroll);
+        revealTargets([hash], scroll, null);
     }
 
     tabs.forEach(function (tab) {
@@ -737,7 +758,7 @@ CSS;
             }
             if (targets.length) {
                 window.history.pushState(null, '', '#' + targets[0]);
-                revealTargets(targets, true);
+                revealTargets(targets, true, usageLink);
             }
             return;
         }
@@ -748,7 +769,7 @@ CSS;
             if (document.getElementById(targetId)) {
                 event.preventDefault();
                 window.history.pushState(null, '', '#' + targetId);
-                revealTargets([targetId], true);
+                revealTargets([targetId], true, localReference);
             }
         }
     });
