@@ -7,6 +7,7 @@ use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Storage\UploadProgressPruner;
 
 /**
  * Bridges durable maintenance jobs to existing scanner/progress implementations.
@@ -71,10 +72,13 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         $maxAge = isset($job->payload['max_age_seconds'])
             ? max(60, min((int)$job->payload['max_age_seconds'], 604800))
             : 86400;
-        require_once __DIR__ . '/../../../lib/UploadProgress.php';
-        \upload_progress_cleanup($maxAge, true);
+        $removed = (new UploadProgressPruner())->prune($maxAge);
 
-        return ['max_age_seconds' => $maxAge, 'operation' => 'prune_upload_progress'];
+        return [
+            'max_age_seconds' => $maxAge,
+            'removed_files' => $removed,
+            'operation' => 'prune_upload_progress',
+        ];
     }
 
     /**
