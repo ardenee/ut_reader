@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/GameProfiles.php';
+require_once __DIR__ . '/CatalogReaderResolver.php';
 
 function scanner_clean_name(string $s): string
 {
@@ -84,45 +85,13 @@ function scanner_range_percent(int $start, int $end, int $done, int $total): int
 
 function scanner_load_reader_class(array $config, string $engineKey): string
 {
-    $engineKey = strtoupper(trim($engineKey));
-    $readerConfig = $config['engine_readers'][$engineKey] ?? [];
-
-    if ($engineKey === 'UE3') {
-        $catalogReader = realpath(__DIR__ . '/../parsers/UE3CatalogReader.php');
-        if ($catalogReader && is_file($catalogReader)) {
-            require_once $catalogReader;
-            if (class_exists('CatalogUE3PackageReader', false)) {
-                return 'CatalogUE3PackageReader';
-            }
-        }
-    }
-
-    $rel = $readerConfig['reader'] ?? '';
-    $path = realpath(__DIR__ . '/../' . $rel);
-    if (!$path || !is_file($path)) {
-        throw new RuntimeException('Reader not found for package engine ' . $engineKey . ': ' . $rel);
-    }
-
-    require_once $path;
-
-    $candidates = [];
-    if (!empty($readerConfig['class'])) {
-        $candidates[] = (string)$readerConfig['class'];
-    }
-    $candidates[] = match ($engineKey) {
-        'UE4', 'UE5' => 'UnrealPackageReader4',
-        default => 'UnrealPackageReader',
-    };
-    $candidates[] = 'UnrealPackageReader';
-    $candidates[] = 'UnrealPackageReader4';
-
-    foreach (array_unique($candidates) as $class) {
-        if ($class !== '' && class_exists($class, false)) {
-            return $class;
-        }
-    }
-
-    throw new RuntimeException('Reader file loaded for package engine ' . $engineKey . ', but no supported reader class was found.');
+    return CatalogReaderResolver::resolve(
+        $config,
+        $engineKey,
+        'Reader not found for package engine',
+        'Reader file loaded for package engine ',
+        ['UE4', 'UE5']
+    );
 }
 
 function scanner_split_reader_issues(array $issues): array
@@ -229,7 +198,7 @@ function scanner_rebuild_game(PDO $db, array $config, int $gameId, ?callable $pr
     foreach ($files as $i => $file) {
         $fileStart = scanner_range_percent($startPercent, $endPercent, $i, $total);
         $fileEnd = scanner_range_percent($startPercent, $endPercent, $i + 1, $total);
-        scanner_rebuild_dependencies($db, $config, (int)$file['id'], $progress, $fileStart, $fileEnd, 'Refreshing game dependency links ' . ($i + 1) . '/' . $total . ' (' . (string)$file['package_name'] . ')');
+        scanner_rebuild_dependencies($db, $config, (int)$file['id'], $progress, $fileStart, $fileEnd, 'Refreshing game dependency links ' . ($i + 1) . '/' . (string)$total . ' (' . (string)$file['package_name'] . ')');
     }
 }
 
