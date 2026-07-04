@@ -11,6 +11,25 @@ function file_info_dependency_tab_url(int $fileId, string $status): string
     ]);
 }
 
+function file_info_type_from_extension(string $ext): array
+{
+    $ext = strtolower(trim($ext, '. '));
+
+    return match ($ext) {
+        'unr', 'ut2', 'ut3', 'umap' => ['map', 'type-map'],
+        'umx' => ['music', 'type-music'],
+        'uax' => ['sound', 'type-sound'],
+        'utx' => ['texture', 'type-texture'],
+        'usx' => ['static mesh', 'type-static-mesh'],
+        'ukx' => ['animation', 'type-animation'],
+        'upx' => ['particle/effect', 'type-particle-effect'],
+        'ugx' => ['gui', 'type-gui'],
+        'con' => ['content', 'type-content'],
+        'u', 'un2', 'upk', 'uasset' => ['package', 'type-package'],
+        default => [$ext !== '' ? $ext : 'unknown', 'type-unknown'],
+    };
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -23,6 +42,25 @@ try {
     catalog_head('File info');
     echo <<<'CSS'
 <style>
+.file-info-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.file-info-title h1 {
+    margin: 0;
+}
+
+.file-info-title .dep {
+    margin: 0;
+}
+
+.file-info-context {
+    margin: 8px 0;
+}
+
 .dependency-tabs {
     display: flex;
     flex-wrap: wrap;
@@ -53,14 +91,28 @@ try {
 .dependency-status-summary {
     margin: 0 0 10px;
 }
+
+.used-by-identity {
+    min-width: 355px;
+}
+
+.used-by-identity span {
+    display: block;
+}
 </style>
 CSS;
 
     $compressed = (int)($file['is_compressed'] ?? 0) === 1;
-    echo '<div class="card"><h1>' . catalog_h($file['package_name']) . '</h1>';
-    echo '<p>' . catalog_h($file['original_name']) . ' / ' . catalog_h($file['game_name']) . '</p>';
+    [$fileType, $fileTypeClass] = file_info_type_from_extension((string)($file['extension'] ?? ''));
+    $packageHref = 'file-examine.php?id=' . $id;
+    $gameHref = 'game-files.php?id=' . (int)$file['game_id'];
+    $tableHref = 'file-examine.php?id=' . $id;
+
+    echo '<div class="card">';
+    echo '<div class="file-info-title"><h1><a href="' . $packageHref . '" title="Examine this file">' . catalog_h($file['package_name']) . '</a></h1><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></div>';
+    echo '<p class="file-info-context"><a href="' . $packageHref . '" title="Examine this file">' . catalog_h($file['original_name']) . '</a> / <a href="' . $gameHref . '" title="Open game files">' . catalog_h($file['game_name']) . '</a></p>';
     echo '<p><span class="dep ' . ($compressed ? 'compressed' : 'uncompressed') . '">' . ($compressed ? 'compressed' : 'uncompressed') . '</span> <span class="mono small">flags 0x' . strtoupper(str_pad(dechex((int)($file['compression_flags'] ?? 0)), 8, '0', STR_PAD_LEFT)) . '</span></p>';
-    echo '<table><tr><th>MD5</th><td class="mono">' . catalog_h($file['md5']) . '</td></tr><tr><th>SHA1</th><td class="mono">' . catalog_h($file['sha1']) . '</td></tr><tr><th>GUID</th><td class="mono">' . catalog_h($file['package_guid']) . '</td></tr><tr><th>Status</th><td>' . catalog_h($file['scan_status']) . '</td></tr><tr><th>Tables</th><td>' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</td></tr></table>';
+    echo '<table><tr><th>MD5</th><td class="mono">' . catalog_h($file['md5']) . '</td></tr><tr><th>SHA1</th><td class="mono">' . catalog_h($file['sha1']) . '</td></tr><tr><th>GUID</th><td class="mono">' . catalog_h($file['package_guid']) . '</td></tr><tr><th>Status</th><td>' . catalog_h($file['scan_status']) . '</td></tr><tr><th>Tables</th><td><a href="' . $tableHref . '" title="Examine names, imports and exports">' . (int)$file['name_count'] . ' names / ' . (int)$file['import_count'] . ' imports / ' . (int)$file['export_count'] . ' exports</a></td></tr></table>';
     echo '</div>';
 
     $locations = catalog_all($db, 'SELECT s.name source_name, s.source_type, l.source_relative_path, l.last_seen_at FROM ue_file_locations l JOIN ue_sources s ON s.id=l.source_id WHERE l.file_id=? AND l.exists_in_source=1 ORDER BY s.name, l.source_relative_path', [$id]);
@@ -132,22 +184,23 @@ CSS;
         echo '<p class="muted dependency-status-summary">Showing ' . catalog_h($selectedLabel) . ': ' . count($shownDependencies) . '.</p>';
         echo '<table><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr>';
         foreach ($shownDependencies as $dep) {
-            $resolved = $dep['resolved_id'] ? '<a target="_blank" href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>';
+            $resolved = $dep['resolved_id'] ? '<a href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>' : '<span class="muted">not resolved</span>';
             echo '<tr><td><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td><td class="mono path">' . catalog_h($dep['required_object_path']) . '</td><td>' . $resolved . '</td></tr>';
         }
         echo '</table>';
     }
     echo '</div>';
 
-    $usedBy = catalog_all($db, 'SELECT DISTINCT src.id, src.package_name, src.original_name FROM ue_dependencies d JOIN ue_files src ON src.id=d.file_id WHERE d.resolved_file_id=? ORDER BY src.package_name, src.original_name LIMIT 200', [$id]);
+    $usedBy = catalog_all($db, 'SELECT DISTINCT src.id, src.package_name, src.original_name, src.package_guid, src.md5, src.file_size FROM ue_dependencies d JOIN ue_files src ON src.id=d.file_id WHERE d.resolved_file_id=? ORDER BY src.package_name, src.original_name LIMIT 200', [$id]);
     echo '<div class="card"><h2>Used by</h2>';
     if (!$usedBy) {
         echo '<p class="muted">No resolved reverse links yet.</p>';
     } else {
-        echo '<table><tr><th>Package</th><th>File</th></tr>';
+        echo '<table><tr><th>Package</th><th>File</th><th>GUID / MD5</th><th>Size</th></tr>';
         foreach ($usedBy as $row) {
             $sourceId = (int)$row['id'];
-            echo '<tr><td class="mono"><a target="_blank" href="file-info.php?id=' . $sourceId . '">' . catalog_h($row['package_name']) . '</a></td><td><a target="_blank" href="file-info.php?id=' . $sourceId . '">' . catalog_h($row['original_name']) . '</a></td></tr>';
+            $fileInfoHref = 'file-info.php?id=' . $sourceId;
+            echo '<tr><td class="mono"><a href="' . $fileInfoHref . '">' . catalog_h($row['package_name']) . '</a></td><td><a href="' . $fileInfoHref . '">' . catalog_h($row['original_name']) . '</a></td><td class="mono small used-by-identity"><span>' . catalog_h($row['package_guid']) . '</span><span>MD5 ' . catalog_h($row['md5']) . '</span></td><td>' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
         }
         echo '</table>';
     }
