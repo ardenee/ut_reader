@@ -240,6 +240,7 @@ function catalog_head(string $title): void
     $root = catalog_support_root_prefix();
     $uiScriptPath = __DIR__ . '/../assets/catalog-ui.js';
     $uiScriptVersion = is_file($uiScriptPath) ? (string)filemtime($uiScriptPath) : '1';
+    $scriptName = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
     echo '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>' . catalog_h($title) . '</title>';
     echo '<link rel="icon" href="' . catalog_h($root . 'assets/favicon.ico') . '">';
     echo '<link rel="apple-touch-icon" sizes="180x180" href="' . catalog_h($root . 'assets/unreal-file-catalog-icon-180x180.png') . '">';
@@ -248,6 +249,11 @@ function catalog_head(string $title): void
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog.css') . '">';
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog-ui.css') . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
+    if ($scriptName === 'game-files.php' && catalog_support_is_admin()) {
+        $maintenanceScriptPath = __DIR__ . '/../assets/game-file-maintenance.js.php';
+        $maintenanceScriptVersion = is_file($maintenanceScriptPath) ? (string)filemtime($maintenanceScriptPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/game-file-maintenance.js.php?v=' . $maintenanceScriptVersion) . '" defer></script>';
+    }
     echo '</head><body>';
     catalog_admin_nav();
     echo '<main>';
