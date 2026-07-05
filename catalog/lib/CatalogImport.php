@@ -67,27 +67,44 @@ function catalog_import_rebuild_dependencies(PDO $db, array $config, int $fileId
     if (!$file) return;
 
     $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status) VALUES(?,?,?,?,?,?,?)');
+    $packageMatch = $db->prepare('SELECT id FROM ue_files WHERE game_id=? AND package_name=? AND scan_status="verified" ORDER BY (id=?) DESC, uploaded_at DESC LIMIT 1');
+    $exportMatch = $db->prepare('SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND f.scan_status="verified" AND (e.full_path=? OR (f.package_name=? AND e.local_path=?)) ORDER BY (f.id=?) DESC, f.uploaded_at DESC LIMIT 1');
+
     foreach (catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=?', [$fileId]) as $imp) {
         $status = 'missing';
         $resolvedFile = null;
         $resolvedExport = null;
+        $rootPackage = (string)$imp['root_package'];
+        $relativeObjectPath = (string)$imp['relative_object_path'];
+
         if ((int)$imp['is_common'] === 1) {
             $status = 'common';
-        } elseif ((string)$imp['relative_object_path'] === '') {
-            $match = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND package_name=? AND scan_status="verified" ORDER BY (id=?) DESC, uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['root_package'], $fileId]);
+        } elseif ($relativeObjectPath === '') {
+            $packageMatch->execute([$file['game_id'], $rootPackage, $fileId]);
+            $match = $packageMatch->fetch();
             if ($match) {
                 $status = 'package_only';
                 $resolvedFile = (int)$match['id'];
             }
         } else {
-            $match = catalog_one($db, 'SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND e.full_path=? AND f.scan_status="verified" ORDER BY (f.id=?) DESC, f.uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['full_path'], $fileId]);
+            $exportMatch->execute([$file['game_id'], (string)$imp['full_path'], $rootPackage, $relativeObjectPath, $fileId]);
+            $match = $exportMatch->fetch();
             if ($match) {
                 $status = 'resolved';
                 $resolvedFile = (int)$match['file_id'];
                 $resolvedExport = (int)$match['export_id'];
+            } else {
+                /* The package exists, but this catalogued copy does not export the requested object. */
+                $packageMatch->execute([$file['game_id'], $rootPackage, $fileId]);
+                $packageOnly = $packageMatch->fetch();
+                if ($packageOnly) {
+                    $status = 'package_only';
+                    $resolvedFile = (int)$packageOnly['id'];
+                }
             }
         }
-        $insert->execute([$fileId, $imp['id'], $imp['root_package'], $imp['full_path'], $resolvedFile, $resolvedExport, $status]);
+
+        $insert->execute([$fileId, $imp['id'], $rootPackage, (string)$imp['full_path'], $resolvedFile, $resolvedExport, $status]);
     }
 }
 
