@@ -54,6 +54,7 @@ header('Cache-Control: no-store, private');
 
     document.querySelectorAll('.game-files-admin-actions form').forEach(function (form) {
         form.addEventListener('submit', function (event) {
+            if (event.defaultPrevented) return;
             event.preventDefault();
             var row = form.closest('tr');
             var label = row && row.cells[1] ? row.cells[1].textContent.trim().replace(/\s+/g, ' ') : 'Selected package';
