@@ -71,11 +71,15 @@ try {
         $result = catalog_file_maintenance_sync_game($db, $config, (int)$gameId, $userId, $progress);
         $message = 'Full sync completed for ' . $result['game_name'] . ': ' . $result['synced'] . '/' . $result['total'] . ' files re-imported.';
         if ($result['failed'] > 0) {
-            $message .= ' ' . $result['failed'] . ' file(s) failed; see the full sync page for details.';
+            $message .= ' ' . $result['failed'] . ' file(s) failed.';
         }
         catalog_maintenance_reply([
             'ok' => true,
             'message' => $message,
+            'synced' => $result['synced'],
+            'total' => $result['total'],
+            'failed' => $result['failed'],
+            'failures' => $result['failures'],
             'return_url' => 'full-sync.php?' . http_build_query([
                 'game_id' => $result['game_id'],
                 'synced' => $result['synced'],
