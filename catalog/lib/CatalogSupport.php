@@ -142,6 +142,7 @@ function catalog_admin_nav(): void
             'Library' => $root . 'library.php',
             'Game Admin' => $root . 'game-manager.php',
             'Game Profiles' => $root . 'game-profiles.php',
+            'Full Sync' => $root . 'full-sync.php',
         ]);
         catalog_nav_menu('Sources', [
             'Game Sources' => $root . 'sources.php',
