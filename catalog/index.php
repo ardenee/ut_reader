@@ -108,13 +108,27 @@ try {
                 }
 
                 if ($rows !== null) {
+                    echo '<style>.search-match { margin: 0 0 3px; overflow-wrap: anywhere; }.search-match:last-child { margin-bottom: 0; }.search-match strong { color: var(--muted); }</style>';
                     echo '<div class="card"><h2>Results</h2>';
                     if (!$rows) {
                         echo '<p class="muted">No matching files found.</p>';
                     } else {
-                        echo '<table><tr><th>Package</th><th>File</th><th>MD5</th><th>Open</th></tr>';
+                        echo '<table><tr><th>Package</th><th>File</th><th>Matched Field</th><th>MD5</th><th>Open</th></tr>';
                         foreach ($rows as $row) {
-                            echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
+                            $matches = is_array($row['matched_fields'] ?? null) ? $row['matched_fields'] : [];
+                            $matchedHtml = '';
+                            foreach ($matches as $match) {
+                                $field = trim((string)($match['field'] ?? 'Match'));
+                                $value = trim((string)($match['value'] ?? ''));
+                                if ($value === '') {
+                                    continue;
+                                }
+                                $matchedHtml .= '<div class="search-match mono small"><strong>' . catalog_h($field) . ':</strong> ' . catalog_h($value) . '</div>';
+                            }
+                            if ($matchedHtml === '') {
+                                $matchedHtml = '<span class="muted">match details unavailable</span>';
+                            }
+                            echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td>' . $matchedHtml . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
                         }
                         echo '</table>';
                     }
