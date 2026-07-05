@@ -150,11 +150,20 @@ CSS;
         var percent = Math.max(0, Math.min(100, Number(state.percent || 0)));
         var done = Number(state.done || 0);
         var total = Number(state.total || 0);
+        var message = state.message || 'Working…';
+        var fileMatch = message.match(/(?:Syncing|Synced|Skipped) file (\d+)\/(\d+)/);
         overlay.querySelector('.full-sync-progress > span').style.width = percent + '%';
-        overlay.querySelector('.full-sync-message').textContent = state.message || 'Working…';
-        overlay.querySelector('.full-sync-count').textContent = total > 0
-            ? done + ' of ' + total + ' packages (' + Math.round(percent) + '%)'
-            : Math.round(percent) + '%';
+        overlay.querySelector('.full-sync-message').textContent = message;
+
+        if (state.stage === 'final_dependencies' && total > 0) {
+            overlay.querySelector('.full-sync-count').textContent = total + ' of ' + total + ' packages synced; final dependency refresh (' + Math.round(percent) + '%)';
+        } else if (fileMatch) {
+            overlay.querySelector('.full-sync-count').textContent = fileMatch[1] + ' of ' + fileMatch[2] + ' packages (' + Math.round(percent) + '%)';
+        } else {
+            overlay.querySelector('.full-sync-count').textContent = total > 0
+                ? done + ' of ' + total + ' packages (' + Math.round(percent) + '%)'
+                : Math.round(percent) + '%';
+        }
     }
 
     function poll(progressToken, overlay) {
