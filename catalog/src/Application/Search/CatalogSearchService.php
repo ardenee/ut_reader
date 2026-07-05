@@ -13,12 +13,13 @@ final class CatalogSearchUnavailableException extends \RuntimeException
 /**
  * Read-only catalog search use case.
  *
- * The application layer owns search orchestration and failure boundaries. The
- * existing PDO helper remains the current persistence adapter; controllers and
- * legacy callers retain the original global class through class_alias.
+ * Search stages retain the matched catalog field/value so result pages can
+ * explain why a package was returned instead of exposing only its file ID.
  */
 final class CatalogSearchService
 {
+    private const MAX_MATCHES_PER_FILE = 12;
+
     /**
      * @return list<array<string, mixed>>
      */
@@ -26,82 +27,130 @@ final class CatalogSearchService
     {
         $limit = max(1, min($limit, 500));
         $like = '%' . $query . '%';
-        $candidateIds = [];
+        $candidateMatches = [];
 
-        self::collectIds(
+        self::collectMatches(
             $db,
             'hash_md5',
-            'SELECT f.id FROM ue_files f WHERE f.md5=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            'SELECT f.id, f.md5 match_value FROM ue_files f WHERE f.md5=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
             [$query],
-            $candidateIds
+            'MD5',
+            $candidateMatches
         );
-        self::collectIds(
+        self::collectMatches(
             $db,
             'hash_sha1',
-            'SELECT f.id FROM ue_files f WHERE f.sha1=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            'SELECT f.id, f.sha1 match_value FROM ue_files f WHERE f.sha1=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
             [$query],
-            $candidateIds
+            'SHA1',
+            $candidateMatches
         );
-        self::collectIds(
+        self::collectMatches(
             $db,
             'guid',
-            'SELECT f.id FROM ue_files f WHERE f.package_guid LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            'SELECT f.id, f.package_guid match_value FROM ue_files f WHERE f.package_guid LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
             [$like],
-            $candidateIds
+            'GUID',
+            $candidateMatches
         );
-        self::collectIds(
+        self::collectMatches(
             $db,
-            'file_metadata',
-            'SELECT f.id FROM ue_files f WHERE f.package_name LIKE ? OR f.original_name LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$like, $like],
-            $candidateIds
+            'package_name',
+            'SELECT f.id, f.package_name match_value FROM ue_files f WHERE f.package_name LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            [$like],
+            'Package',
+            $candidateMatches
         );
-        self::collectIds(
+        self::collectMatches(
             $db,
-            'imports',
-            'SELECT f.id, f.package_name, f.original_name'
-            . ' FROM ue_imports i JOIN ue_files f ON f.id=i.file_id'
-            . ' WHERE i.full_path LIKE ? OR i.object_name LIKE ?'
-            . ' GROUP BY f.id, f.package_name, f.original_name'
-            . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$like, $like],
-            $candidateIds
+            'file_name',
+            'SELECT f.id, f.original_name match_value FROM ue_files f WHERE f.original_name LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            [$like],
+            'File',
+            $candidateMatches
         );
-        self::collectIds(
+        self::collectMatches(
             $db,
-            'exports',
-            'SELECT f.id, f.package_name, f.original_name'
-            . ' FROM ue_exports e JOIN ue_files f ON f.id=e.file_id'
-            . ' WHERE e.full_path LIKE ? OR e.object_name LIKE ?'
-            . ' GROUP BY f.id, f.package_name, f.original_name'
-            . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$like, $like],
-            $candidateIds
+            'import_path',
+            'SELECT i.file_id id, i.full_path match_value FROM ue_imports i WHERE i.full_path LIKE ? ORDER BY i.file_id, i.import_index LIMIT ' . $limit,
+            [$like],
+            'Import path',
+            $candidateMatches
+        );
+        self::collectMatches(
+            $db,
+            'import_object',
+            'SELECT i.file_id id, i.object_name match_value FROM ue_imports i WHERE i.object_name LIKE ? ORDER BY i.file_id, i.import_index LIMIT ' . $limit,
+            [$like],
+            'Import object',
+            $candidateMatches
+        );
+        self::collectMatches(
+            $db,
+            'export_path',
+            'SELECT e.file_id id, e.full_path match_value FROM ue_exports e WHERE e.full_path LIKE ? ORDER BY e.file_id, e.export_index LIMIT ' . $limit,
+            [$like],
+            'Export path',
+            $candidateMatches
+        );
+        self::collectMatches(
+            $db,
+            'export_object',
+            'SELECT e.file_id id, e.object_name match_value FROM ue_exports e WHERE e.object_name LIKE ? ORDER BY e.file_id, e.export_index LIMIT ' . $limit,
+            [$like],
+            'Export object',
+            $candidateMatches
         );
 
-        if ($candidateIds === []) {
+        if ($candidateMatches === []) {
             return [];
         }
 
-        $ids = array_keys($candidateIds);
+        $ids = array_keys($candidateMatches);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-
-        return self::queryRows(
+        $rows = self::queryRows(
             $db,
             'final_file_lookup',
             'SELECT f.* FROM ue_files f WHERE f.id IN (' . $placeholders . ') ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
             $ids
         );
+
+        foreach ($rows as &$row) {
+            $row['matched_fields'] = $candidateMatches[(int)$row['id']] ?? [];
+        }
+        unset($row);
+
+        return $rows;
     }
 
     /**
      * @param list<mixed> $args
-     * @param array<int, true> $candidateIds
+     * @param array<int, list<array{field:string,value:string}>> $candidateMatches
      */
-    private static function collectIds(PDO $db, string $stage, string $sql, array $args, array &$candidateIds): void
+    private static function collectMatches(PDO $db, string $stage, string $sql, array $args, string $field, array &$candidateMatches): void
     {
         foreach (self::queryRows($db, $stage, $sql, $args) as $row) {
-            $candidateIds[(int)$row['id']] = true;
+            $fileId = (int)$row['id'];
+            $value = trim((string)($row['match_value'] ?? ''));
+            if ($fileId < 1 || $value === '') {
+                continue;
+            }
+
+            $candidateMatches[$fileId] ??= [];
+            if (count($candidateMatches[$fileId]) >= self::MAX_MATCHES_PER_FILE) {
+                continue;
+            }
+
+            foreach ($candidateMatches[$fileId] as $match) {
+                if ($match['field'] === $field && $match['value'] === $value) {
+                    continue 2;
+                }
+            }
+
+            $candidateMatches[$fileId][] = [
+                'field' => $field,
+                'value' => $value,
+            ];
         }
     }
 
