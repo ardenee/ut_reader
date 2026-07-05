@@ -33,10 +33,7 @@ function game_files_url(array $params): string
 function game_files_sort_link(string $label, string $key, string $activeSort, string $activeDir): string
 {
     $nextDir = ($activeSort === $key && $activeDir === 'asc') ? 'desc' : 'asc';
-    $marker = '';
-    if ($activeSort === $key) {
-        $marker = $activeDir === 'asc' ? ' ▲' : ' ▼';
-    }
+    $marker = $activeSort === $key ? ($activeDir === 'asc' ? ' ▲' : ' ▼') : '';
     return '<a class="sort-link" href="' . catalog_h(game_files_url(['sort' => $key, 'dir' => $nextDir, 'file_page' => 1])) . '">' . catalog_h($label . $marker) . '</a>';
 }
 
@@ -107,12 +104,30 @@ function game_files_pagination(int $pageNo, int $totalPages): string
         . '</nav>';
 }
 
+function game_files_admin_actions(int $fileId, string $originalName, string $csrf): string
+{
+    $confirm = 'Remove ' . $originalName . ' from storage and the catalog? This cannot be undone. Dependency links for the game will then be rebuilt.';
+    $html = '<div class="game-files-admin-actions">';
+    $html .= '<form method="post" action="file-maintenance.php" title="Rebuild dependency links for this game">';
+    $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+    $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+    $html .= '<input type="hidden" name="operation" value="rebuild">';
+    $html .= '<button type="submit" class="game-files-admin-button" aria-label="Rebuild dependency links" title="Rebuild dependency links for this game">↻</button>';
+    $html .= '</form>';
+    $html .= '<form method="post" action="file-maintenance.php" onsubmit="return confirm(\'' . catalog_h($confirm) . '\');" title="Delete this package from storage and the catalog">';
+    $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+    $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+    $html .= '<input type="hidden" name="operation" value="remove">';
+    $html .= '<button type="submit" class="game-files-admin-button game-files-admin-button--remove" aria-label="Delete package" title="Delete this package from storage and the catalog">×</button>';
+    $html .= '</form></div>';
+    return $html;
+}
+
 function game_files_page_styles(): string
 {
     return <<<'CSS'
 <style>
 html { scroll-behavior: smooth; }
-
 #game-files-top { scroll-margin-top: 86px; }
 
 .game-files-controls {
@@ -121,147 +136,69 @@ html { scroll-behavior: smooth; }
     align-items: center;
     gap: 10px;
 }
-
-.game-files-controls label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0;
-    white-space: nowrap;
-}
-
-.game-files-controls .wide-search {
-    width: 100%;
-    min-width: 0;
-}
-
-.game-files-filter-actions {
-    display: flex;
-    align-items: center;
-    justify-self: end;
-    gap: 6px;
-    white-space: nowrap;
-}
-
+.game-files-controls label { display: flex; align-items: center; gap: 6px; margin: 0; white-space: nowrap; }
+.game-files-controls .wide-search { width: 100%; min-width: 0; }
+.game-files-filter-actions { display: flex; align-items: center; justify-self: end; gap: 6px; white-space: nowrap; }
 .game-files-filter-actions .ui-button { margin: 0; }
 
-.game-files-pagination {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    align-items: center;
-    gap: 12px;
-    margin: 12px 0;
-}
-
-.game-files-pagination__start,
-.game-files-pagination__end {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
+.game-files-pagination { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; margin: 12px 0; }
+.game-files-pagination__start, .game-files-pagination__end { display: flex; align-items: center; gap: 6px; }
 .game-files-pagination__start { justify-self: start; }
 .game-files-pagination__end { justify-self: end; }
 .game-files-pagination__current { justify-self: center; white-space: nowrap; }
 
-#game-files-table { min-width: 1320px; }
-
-#game-files-table th:nth-child(1),
-#game-files-table td:nth-child(1),
-#game-files-table th:nth-child(2),
-#game-files-table td:nth-child(2),
-#game-files-table th:nth-child(3),
-#game-files-table td:nth-child(3),
-#game-files-table th:nth-child(4),
-#game-files-table td:nth-child(4),
-#game-files-table th:nth-child(5),
-#game-files-table td:nth-child(5) {
-    white-space: nowrap;
-}
-
-#game-files-table .game-files-package,
-#game-files-table .game-files-version,
-#game-files-table .game-files-size,
-#game-files-table .game-files-download {
-    width: 1%;
-}
-
-.game-files-file-link,
-.game-files-package-link { font-weight: 650; }
-
-.game-files-dependencies {
-    min-width: 130px;
-    white-space: normal;
-}
-
-.game-files-dependency-list {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    row-gap: 1px;
-}
-
+#game-files-table { min-width: 1400px; }
+#game-files-table th:nth-child(1), #game-files-table td:nth-child(1),
+#game-files-table th:nth-child(2), #game-files-table td:nth-child(2),
+#game-files-table th:nth-child(3), #game-files-table td:nth-child(3),
+#game-files-table th:nth-child(4), #game-files-table td:nth-child(4),
+#game-files-table th:nth-child(5), #game-files-table td:nth-child(5) { white-space: nowrap; }
+#game-files-table .game-files-package, #game-files-table .game-files-version, #game-files-table .game-files-size, #game-files-table .game-files-download, #game-files-table .game-files-admin { width: 1%; }
+.game-files-file-link, .game-files-package-link { font-weight: 650; }
+.game-files-dependencies { min-width: 130px; white-space: normal; }
+.game-files-dependency-list { display: flex; flex-direction: column; align-items: flex-start; row-gap: 1px; }
 .game-files-dependency-list .ui-badge { white-space: nowrap; }
+.game-files-download, .game-files-admin { text-align: center; }
 
-.game-files-download { text-align: center; }
-
-.game-files-download-link {
+.game-files-download-link, .game-files-admin-button {
     display: inline-grid;
     place-items: center;
     width: 34px;
     height: 34px;
+    margin: 0;
     border: 1px solid var(--line2);
     border-radius: 9px;
     color: var(--blue);
     background: rgba(118, 169, 255, .08);
+    font: inherit;
     font-size: 20px;
     font-weight: 800;
     line-height: 1;
+    cursor: pointer;
 }
-
-.game-files-download-link:hover {
-    background: rgba(118, 169, 255, .18);
-    text-decoration: none;
-}
+.game-files-download-link:hover, .game-files-admin-button:hover { background: rgba(118, 169, 255, .18); text-decoration: none; }
+.game-files-admin-button--remove { color: #ffabb4; background: rgba(255, 107, 122, .08); }
+.game-files-admin-button--remove:hover { background: rgba(255, 107, 122, .18); }
+.game-files-admin-actions { display: flex; justify-content: center; gap: 4px; }
+.game-files-admin-actions form { margin: 0; }
 
 .game-files-to-top {
-    position: fixed;
-    right: 20px;
-    bottom: 20px;
-    z-index: 9;
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    border: 1px solid var(--line2);
-    border-radius: 50%;
-    color: var(--text);
-    background: rgba(16, 24, 39, .94);
-    box-shadow: var(--shadow);
-    font-size: 22px;
-    font-weight: 800;
+    position: fixed; right: 20px; bottom: 20px; z-index: 9; display: grid; place-items: center;
+    width: 42px; height: 42px; border: 1px solid var(--line2); border-radius: 50%; color: var(--text);
+    background: rgba(16, 24, 39, .94); box-shadow: var(--shadow); font-size: 22px; font-weight: 800;
 }
-
-.game-files-to-top:hover {
-    background: rgba(44, 66, 112, .98);
-    text-decoration: none;
-}
+.game-files-to-top:hover { background: rgba(44, 66, 112, .98); text-decoration: none; }
 
 @media (max-width: 1100px) {
-    .game-files-controls {
-        grid-template-columns: minmax(280px, 1fr) max-content max-content max-content;
-    }
-
+    .game-files-controls { grid-template-columns: minmax(280px, 1fr) max-content max-content max-content; }
     .game-files-filter-actions { grid-column: 1 / -1; }
 }
-
 @media (max-width: 700px) {
     .game-files-controls { grid-template-columns: 1fr; }
     .game-files-controls label { justify-content: space-between; }
     .game-files-filter-actions { justify-self: start; }
     .game-files-pagination { gap: 8px; }
-    .game-files-pagination__start,
-    .game-files-pagination__end { gap: 4px; }
+    .game-files-pagination__start, .game-files-pagination__end { gap: 4px; }
     .game-files-to-top { right: 14px; bottom: 14px; }
 }
 </style>
@@ -271,7 +208,6 @@ CSS;
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-
     $gameId = game_files_int('id', 0, 1, PHP_INT_MAX);
     $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
     if (!$game) {
@@ -280,7 +216,6 @@ try {
 
     $configuredLimit = (int)(fed_setting($db, 'game_file_display_limit', '100') ?: 100);
     $limit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
-
     $pageNo = game_files_int('file_page', 1, 1, PHP_INT_MAX);
     $filter = trim((string)($_GET['file_filter'] ?? ''));
     $depFilter = trim((string)($_GET['dep_filter'] ?? ''));
@@ -290,28 +225,18 @@ try {
     $dir = strtolower(trim((string)($_GET['dir'] ?? 'asc')));
     $dir = $dir === 'desc' ? 'desc' : 'asc';
 
-    $sortMap = [
-        'package' => true,
-        'file' => true,
-        'version' => true,
-        'size' => true,
-        'compression' => true,
-        'deps' => true,
-        'uploaded' => true,
-    ];
+    $sortMap = ['package' => true, 'file' => true, 'version' => true, 'size' => true, 'compression' => true, 'deps' => true, 'uploaded' => true];
     if (!isset($sortMap[$sort])) {
         $sort = 'package';
     }
 
     $where = 'WHERE f.game_id=?';
     $args = [$gameId];
-
     if ($filter !== '') {
         $where .= ' AND (f.package_name LIKE ? OR f.original_name LIKE ? OR f.md5 LIKE ? OR f.sha1 LIKE ? OR f.package_guid LIKE ?)';
         $like = '%' . $filter . '%';
         array_push($args, $like, $like, $like, $like, $like);
     }
-
     if (in_array($depFilter, ['resolved', 'missing', 'package_only', 'common', 'any'], true)) {
         if ($depFilter === 'any') {
             $where .= ' AND EXISTS (SELECT 1 FROM ue_dependencies dx WHERE dx.file_id=f.id)';
@@ -320,7 +245,6 @@ try {
             $args[] = $depFilter;
         }
     }
-
     $typeExts = game_files_type_filter_sql($typeFilter);
     if ($typeExts) {
         $where .= ' AND f.extension IN (' . implode(',', array_fill(0, count($typeExts), '?')) . ')';
@@ -328,7 +252,6 @@ try {
             $args[] = $ext;
         }
     }
-
     if ($compressionFilter === 'compressed') {
         $where .= ' AND f.is_compressed=1';
     } elseif ($compressionFilter === 'uncompressed') {
@@ -339,17 +262,14 @@ try {
     $totalPages = max(1, (int)ceil($totalRows / $limit));
     $pageNo = min($pageNo, $totalPages);
     $offset = ($pageNo - 1) * $limit;
-
     $files = CatalogGameFileListService::fetchPage($db, $where, $args, $sort, $dir, $limit, $offset);
+    $isAdmin = catalog_support_is_admin();
+    $maintenanceCsrf = $isAdmin ? catalog_csrf('catalog-maintenance') : '';
 
     catalog_head((string)$game['name']);
     echo game_files_page_styles();
     echo '<span id="game-files-top" aria-hidden="true"></span>';
-    echo CatalogUi::pageHeader(
-        (string)$game['name'],
-        'Files, versions, dependency status and downloads.',
-        ['Back to games' => 'games.php']
-    );
+    echo CatalogUi::pageHeader((string)$game['name'], 'Files, versions, dependency status and downloads.', ['Back to games' => 'games.php']);
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files</h2><p>' . catalog_h((string)$totalRows) . ' matching files.</p></div></div><div class="ui-section__body">';
     echo '<form class="table-controls game-files-controls" method="get" data-ui-loading-form aria-describedby="file-filter-help">';
@@ -375,13 +295,10 @@ try {
     if ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || $compressionFilter !== '') {
         echo CatalogUi::button('Clear filters', ['href' => 'game-files.php?id=' . (int)$gameId, 'variant' => 'quiet']);
     }
-    echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Applying filters…', true) . '</span>';
-    echo '</span>';
-    echo '<span id="file-filter-help" class="ui-sr-only">Changing filters reloads this file list.</span>';
-    echo '</form>';
+    echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Applying filters…', true) . '</span></span>';
+    echo '<span id="file-filter-help" class="ui-sr-only">Changing filters reloads this file list.</span></form>';
 
     echo game_files_pagination($pageNo, $totalPages);
-
     if ($files === []) {
         $action = ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || $compressionFilter !== '')
             ? ['label' => 'Clear filters', 'href' => 'game-files.php?id=' . (int)$gameId]
@@ -397,6 +314,9 @@ try {
         echo '<th scope="col">' . game_files_sort_link('Compression', 'compression', $sort, $dir) . '</th>';
         echo '<th scope="col">' . game_files_sort_link('Dependencies', 'deps', $sort, $dir) . '</th>';
         echo '<th scope="col"><span class="ui-sr-only">Download</span>↓</th>';
+        if ($isAdmin) {
+            echo '<th scope="col">Admin</th>';
+        }
         echo '</tr></thead><tbody>';
 
         foreach ($files as $file) {
@@ -407,9 +327,7 @@ try {
                     $dependencyBadges[] = '<div>' . game_files_status_badge($key, $count) . '</div>';
                 }
             }
-            $deps = $dependencyBadges !== []
-                ? '<div class="game-files-dependency-list">' . implode('', $dependencyBadges) . '</div>'
-                : '<span class="muted">none</span>';
+            $deps = $dependencyBadges !== [] ? '<div class="game-files-dependency-list">' . implode('', $dependencyBadges) . '</div>' : '<span class="muted">none</span>';
             $compressed = (int)($file['is_compressed'] ?? 0) === 1;
             $compression = CatalogUi::badge($compressed ? 'compressed' : 'uncompressed', $compressed ? 'warning' : 'success');
             [$fileType, $fileTypeClass] = game_files_type_from_extension((string)($file['extension'] ?? ''));
@@ -429,14 +347,16 @@ try {
             echo '<td>' . $compression . '</td>';
             echo '<td class="game-files-dependencies">' . $deps . '</td>';
             echo '<td class="game-files-download"><a class="game-files-download-link" href="download-info.php?id=' . $id . '" title="Download" aria-label="Download ' . catalog_h($originalName) . '">⇩</a></td>';
+            if ($isAdmin) {
+                echo '<td class="game-files-admin">' . game_files_admin_actions($id, $originalName, $maintenanceCsrf) . '</td>';
+            }
             echo '</tr>';
         }
         echo '</tbody></table></div>';
         echo game_files_pagination($pageNo, $totalPages);
     }
 
-    echo '</div></section>';
-    echo '<a class="game-files-to-top" href="#game-files-top" title="To Top" aria-label="To Top">↑</a>';
+    echo '</div></section><a class="game-files-to-top" href="#game-files-top" title="To Top" aria-label="To Top">↑</a>';
     catalog_foot();
 } catch (Throwable $e) {
     catalog_head('Error');
