@@ -74,13 +74,13 @@ function catalog_import_rebuild_dependencies(PDO $db, array $config, int $fileId
         if ((int)$imp['is_common'] === 1) {
             $status = 'common';
         } elseif ((string)$imp['relative_object_path'] === '') {
-            $match = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND package_name=? AND id<>? AND scan_status="verified" ORDER BY uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['root_package'], $fileId]);
+            $match = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND package_name=? AND scan_status="verified" ORDER BY (id=?) DESC, uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['root_package'], $fileId]);
             if ($match) {
                 $status = 'package_only';
                 $resolvedFile = (int)$match['id'];
             }
         } else {
-            $match = catalog_one($db, 'SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND e.full_path=? AND f.id<>? AND f.scan_status="verified" ORDER BY f.uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['full_path'], $fileId]);
+            $match = catalog_one($db, 'SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND e.full_path=? AND f.scan_status="verified" ORDER BY (f.id=?) DESC, f.uploaded_at DESC LIMIT 1', [$file['game_id'], $imp['full_path'], $fileId]);
             if ($match) {
                 $status = 'resolved';
                 $resolvedFile = (int)$match['file_id'];
