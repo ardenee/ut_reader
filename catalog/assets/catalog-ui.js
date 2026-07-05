@@ -330,6 +330,65 @@
         }, 0);
     }
 
+    function initSearchHighlights() {
+        var query = new URLSearchParams(window.location.search).get('q') || '';
+        query = query.trim();
+        if (query.length < 2) return;
+
+        var resultHeading = Array.from(document.querySelectorAll('.card h2')).find(function (heading) {
+            return heading.textContent.trim() === 'Results';
+        });
+        var resultTable = resultHeading && resultHeading.closest('.card').querySelector('table');
+        if (!resultTable || resultTable.dataset.searchHighlightApplied === '1') return;
+        resultTable.dataset.searchHighlightApplied = '1';
+
+        var expression;
+        try {
+            expression = new RegExp('(' + query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        } catch (error) {
+            return;
+        }
+
+        addStyle([
+            '.catalog-search-highlight { padding: 0 2px; border-radius: 3px; color: #1a1300; background: #f6c453; font-weight: 800; }'
+        ]);
+
+        Array.from(resultTable.querySelectorAll('tbody td:nth-child(-n+4)')).forEach(function (cell) {
+            var walker = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT, {
+                acceptNode: function (node) {
+                    return node.parentElement && node.parentElement.closest('mark')
+                        ? NodeFilter.FILTER_REJECT
+                        : NodeFilter.FILTER_ACCEPT;
+                }
+            });
+            var textNodes = [];
+            while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+            textNodes.forEach(function (node) {
+                var value = node.nodeValue || '';
+                expression.lastIndex = 0;
+                if (!expression.test(value)) return;
+                expression.lastIndex = 0;
+
+                var parts = value.split(expression);
+                var fragment = document.createDocumentFragment();
+                parts.forEach(function (part, index) {
+                    if (part === '') return;
+                    if (index % 2 === 1) {
+                        var mark = document.createElement('mark');
+                        mark.className = 'catalog-search-highlight';
+                        mark.textContent = part;
+                        fragment.appendChild(mark);
+                    } else {
+                        fragment.appendChild(document.createTextNode(part));
+                    }
+                });
+                node.parentNode.replaceChild(fragment, node);
+            });
+        });
+    }
+
     installSortableHeaderStyle();
     initExaminePage();
+    initSearchHighlights();
 })();
