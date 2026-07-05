@@ -7,101 +7,77 @@ header('Cache-Control: no-store, private');
 (function () {
     'use strict';
 
-    function injectStyle() {
-        var style = document.createElement('style');
-        style.textContent = [
-            '.catalog-maintenance-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(3, 8, 18, .72); backdrop-filter: blur(3px); }',
-            '.catalog-maintenance-dialog { width: min(520px, 100%); padding: 24px; border: 1px solid var(--line2); border-radius: 14px; background: #111b2d; box-shadow: 0 24px 70px rgba(0,0,0,.5); }',
-            '.catalog-maintenance-dialog h2 { margin: 0 0 8px; }',
-            '.catalog-maintenance-dialog p { margin: 0 0 16px; }',
-            '.catalog-maintenance-progress { height: 12px; overflow: hidden; border: 1px solid var(--line2); border-radius: 999px; background: rgba(255,255,255,.05); }',
-            '.catalog-maintenance-progress > span { display: block; width: 42%; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #76a9ff, #9dc2ff, #76a9ff); animation: catalog-maintenance-progress 1.25s ease-in-out infinite; }',
-            '.catalog-maintenance-steps { margin: 16px 0 0; padding: 0; list-style: none; }',
-            '.catalog-maintenance-steps li { margin: 7px 0; color: var(--muted); }',
-            '.catalog-maintenance-steps li.is-active { color: var(--text); font-weight: 700; }',
-            '.catalog-maintenance-steps li.is-active::before { content: "› "; color: var(--blue); }',
-            '.catalog-maintenance-notice { margin: 0 0 14px; padding: 12px 14px; border: 1px solid rgba(50,213,131,.55); border-radius: 10px; color: #dcffea; background: rgba(50,213,131,.12); }',
-            '@keyframes catalog-maintenance-progress { 0% { transform: translateX(-110%); } 55% { transform: translateX(150%); } 100% { transform: translateX(150%); } }'
-        ].join('\n');
-        document.head.appendChild(style);
+    function token() {
+        var data = new Uint8Array(18);
+        if (window.crypto && window.crypto.getRandomValues) {
+            window.crypto.getRandomValues(data);
+            return Array.from(data).map(function (v) { return v.toString(16).padStart(2, '0'); }).join('');
+        }
+        return Date.now().toString(36) + Math.random().toString(36).slice(2);
     }
 
-    function stagesFor(operation) {
-        return operation === 'remove'
-            ? ['Preparing removal', 'Staging stored package', 'Removing catalog records', 'Rebuilding dependency links', 'Finalising cleanup']
-            : ['Preparing dependency rebuild', 'Scanning verified packages', 'Resolving import and export links', 'Saving dependency results', 'Refreshing file list'];
+    function overlay(label) {
+        var node = document.createElement('div');
+        node.id = 'catalog-maintenance-live-overlay';
+        node.style.cssText = 'position:fixed;inset:0;z-index:1000;display:grid;place-items:center;padding:20px;background:rgba(3,8,18,.72)';
+        node.innerHTML = '<div style="width:min(520px,100%);padding:24px;border:1px solid #3a4c6d;border-radius:14px;background:#111b2d;box-shadow:0 24px 70px rgba(0,0,0,.5)"><h2 style="margin:0 0 8px">Catalog maintenance</h2><p id="catalog-maintenance-live-message" style="margin:0 0 16px">' + label + '</p><progress id="catalog-maintenance-live-bar" value="0" max="100" style="width:100%;height:16px"></progress><p id="catalog-maintenance-live-count" style="margin:9px 0 0;color:#b6c6e4">Waiting for server…</p></div>';
+        document.body.appendChild(node);
+        return node;
     }
 
-    function showOverlay(operation, label) {
-        if (document.querySelector('.catalog-maintenance-overlay')) return;
-        var stages = stagesFor(operation);
-        var overlay = document.createElement('div');
-        overlay.className = 'catalog-maintenance-overlay';
-        overlay.setAttribute('role', 'status');
-        overlay.setAttribute('aria-live', 'assertive');
-
-        var stepsHtml = stages.map(function (stage, index) {
-            return '<li' + (index === 0 ? ' class="is-active"' : '') + '>' + stage + '</li>';
-        }).join('');
-        overlay.innerHTML = '<div class="catalog-maintenance-dialog">'
-            + '<h2>' + (operation === 'remove' ? 'Removing package' : 'Rebuilding dependencies') + '</h2>'
-            + '<p>' + label + '</p>'
-            + '<div class="catalog-maintenance-progress"><span></span></div>'
-            + '<ul class="catalog-maintenance-steps">' + stepsHtml + '</ul>'
-            + '</div>';
-        document.body.appendChild(overlay);
-
-        var stepItems = Array.from(overlay.querySelectorAll('.catalog-maintenance-steps li'));
-        var active = 0;
-        window.setInterval(function () {
-            if (active < stepItems.length - 1) {
-                stepItems[active].classList.remove('is-active');
-                active += 1;
-                stepItems[active].classList.add('is-active');
-            }
-        }, 1250);
+    function update(node, state) {
+        var bar = node.querySelector('#catalog-maintenance-live-bar');
+        var message = node.querySelector('#catalog-maintenance-live-message');
+        var count = node.querySelector('#catalog-maintenance-live-count');
+        var done = Number(state.done || 0);
+        var total = Number(state.total || 0);
+        var percent = Math.max(0, Math.min(100, Number(state.percent || 0)));
+        bar.value = percent;
+        message.textContent = state.message || 'Working…';
+        count.textContent = total > 0 ? done + ' of ' + total + ' imports processed (' + Math.round(percent) + '%)' : 'Waiting for server…';
     }
 
-    function showCompletionNotice() {
-        var params = new URLSearchParams(window.location.search);
-        var state = params.get('maintenance');
-        if (!state) return;
-
-        var message = state === 'removed'
-            ? 'Package removal completed. The game dependency links were rebuilt.'
-            : 'Dependency rebuild completed for this game.';
-        var section = document.querySelector('.ui-section');
-        if (!section) return;
-        var notice = document.createElement('div');
-        notice.className = 'catalog-maintenance-notice';
-        notice.textContent = message;
-        section.insertBefore(notice, section.firstChild);
-
-        params.delete('maintenance');
-        var query = params.toString();
-        window.history.replaceState(null, '', window.location.pathname + (query ? '?' + query : '') + window.location.hash);
+    function monitor(id, node) {
+        var active = true;
+        var timer;
+        function tick() {
+            if (!active) return;
+            fetch('file-maintenance.php?progress=' + encodeURIComponent(id), {credentials:'same-origin', cache:'no-store'})
+                .then(function (response) { return response.json(); })
+                .then(function (response) { if (response.ok && response.progress) update(node, response.progress); })
+                .catch(function () {})
+                .finally(function () { if (active) timer = setTimeout(tick, 450); });
+        }
+        tick();
+        return function () { active = false; if (timer) clearTimeout(timer); };
     }
 
-    function bindForms() {
-        document.querySelectorAll('.game-files-admin-actions form').forEach(function (form) {
-            var operationInput = form.querySelector('input[name="operation"]');
-            if (!operationInput) return;
-            var operation = operationInput.value;
+    document.querySelectorAll('.game-files-admin-actions form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
             var row = form.closest('tr');
-            var fileName = row && row.cells.length > 1 ? row.cells[1].textContent.trim().replace(/\s+/g, ' ') : 'Selected package';
-            form.removeAttribute('onsubmit');
-
-            form.addEventListener('submit', function (event) {
-                if (operation === 'remove' && !window.confirm('Remove ' + fileName + ' from storage and the catalog? This cannot be undone. Dependency links will be rebuilt afterwards.')) {
-                    event.preventDefault();
-                    return;
-                }
-                showOverlay(operation, fileName);
-            });
+            var label = row && row.cells[1] ? row.cells[1].textContent.trim().replace(/\s+/g, ' ') : 'Selected package';
+            var id = token();
+            var node = overlay(label);
+            var stop = monitor(id, node);
+            var data = new FormData(form);
+            data.set('progress_token', id);
+            document.querySelectorAll('.game-files-admin-actions button').forEach(function (button) { button.disabled = true; });
+            fetch(form.action, {method:'POST', credentials:'same-origin', headers:{Accept:'application/json'}, body:data})
+                .then(function (response) { return response.json(); })
+                .then(function (response) {
+                    stop();
+                    if (!response.ok) throw new Error(response.error || 'Maintenance failed.');
+                    update(node, {done:1,total:1,percent:100,message:response.message || 'Maintenance complete.'});
+                    node.querySelector('#catalog-maintenance-live-count').textContent = 'Maintenance complete. Loading updated file list…';
+                    setTimeout(function () { window.location.assign(response.return_url || window.location.href); }, 80);
+                })
+                .catch(function (error) {
+                    stop();
+                    node.remove();
+                    document.querySelectorAll('.game-files-admin-actions button').forEach(function (button) { button.disabled = false; });
+                    window.alert(error.message || 'Maintenance failed.');
+                });
         });
-    }
-
-    injectStyle();
-    showCompletionNotice();
-    bindForms();
+    });
 })();
