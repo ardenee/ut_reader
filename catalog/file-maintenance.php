@@ -13,6 +13,12 @@ function catalog_maintenance_reply(array $payload, int $status = 200): void
     exit;
 }
 
+function catalog_maintenance_return(int $gameId): void
+{
+    header('Location: game-files.php?id=' . $gameId, true, 303);
+    exit;
+}
+
 try {
     catalog_start_session();
     if (!catalog_support_is_admin()) {
@@ -38,13 +44,13 @@ try {
 
     $operation = (string)($_POST['operation'] ?? '');
     if ($operation === 'rebuild') {
-        $count = catalog_file_maintenance_rebuild_game($db, $config, (int)$file['game_id']);
-        catalog_maintenance_reply(['ok' => true, 'message' => 'Rebuilt dependency links for ' . $count . ' verified package(s) in this game.']);
+        catalog_file_maintenance_rebuild_game($db, $config, (int)$file['game_id']);
+        catalog_maintenance_return((int)$file['game_id']);
     }
 
     if ($operation === 'remove') {
-        $result = catalog_file_maintenance_remove($db, $config, (int)$fileId);
-        catalog_maintenance_reply(['ok' => true, 'message' => 'Removed ' . $result['original_name'] . ' from the catalog.' . $result['warning']]);
+        catalog_file_maintenance_remove($db, $config, (int)$fileId);
+        catalog_maintenance_return((int)$file['game_id']);
     }
 
     throw new RuntimeException('Unknown maintenance operation.');
