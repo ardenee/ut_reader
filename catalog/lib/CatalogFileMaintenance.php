@@ -96,3 +96,8 @@ function catalog_file_maintenance_delete(PDO $db, array $config, int $fileId): a
         'warning' => $warning,
     ];
 }
+
+function catalog_file_maintenance_remove(PDO $db, array $config, int $fileId): array
+{
+    return catalog_file_maintenance_delete($db, $config, $fileId);
+}
