@@ -29,12 +29,15 @@ final class CatalogDependencyResolver
                 continue;
             }
 
-            if ((string)($import['relative_object_path'] ?? '') === '') {
-                $packageNames[] = (string)($import['root_package'] ?? '');
-                continue;
+            $rootPackage = (string)($import['root_package'] ?? '');
+            if ($rootPackage !== '') {
+                /* A present package is still useful when an imported object is not exported. */
+                $packageNames[] = $rootPackage;
             }
 
-            $objectPaths[] = (string)($import['full_path'] ?? '');
+            if ((string)($import['relative_object_path'] ?? '') !== '') {
+                $objectPaths[] = (string)($import['full_path'] ?? '');
+            }
         }
 
         $packageMatches = self::loadPackageMatches(
@@ -53,6 +56,7 @@ final class CatalogDependencyResolver
         $resolved = [];
         foreach ($imports as $import) {
             $importId = (int)$import['id'];
+            $rootPackage = (string)($import['root_package'] ?? '');
             $status = 'missing';
             $resolvedFileId = null;
             $resolvedExportId = null;
@@ -60,7 +64,7 @@ final class CatalogDependencyResolver
             if ((int)($import['is_common'] ?? 0) === 1) {
                 $status = 'common';
             } elseif ((string)($import['relative_object_path'] ?? '') === '') {
-                $match = $packageMatches[(string)($import['root_package'] ?? '')] ?? null;
+                $match = $packageMatches[$rootPackage] ?? null;
                 if ($match !== null) {
                     $status = 'package_only';
                     $resolvedFileId = $match;
@@ -71,6 +75,12 @@ final class CatalogDependencyResolver
                     $status = 'resolved';
                     $resolvedFileId = $match['file_id'];
                     $resolvedExportId = $match['export_id'];
+                } else {
+                    $packageMatch = $packageMatches[$rootPackage] ?? null;
+                    if ($packageMatch !== null) {
+                        $status = 'package_only';
+                        $resolvedFileId = $packageMatch;
+                    }
                 }
             }
 
@@ -101,8 +111,8 @@ final class CatalogDependencyResolver
                 $db,
                 'SELECT requested.lookup_value, f.id'
                 . ' FROM (' . $valuesSql . ') requested'
-                . ' JOIN ue_files f ON f.game_id=? AND f.id<>? AND f.package_name=requested.lookup_value'
-                . ' ORDER BY requested.lookup_value, f.uploaded_at DESC',
+                . ' JOIN ue_files f ON f.game_id=? AND f.package_name=requested.lookup_value AND f.scan_status="verified"'
+                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, f.uploaded_at DESC',
                 array_merge($valueArgs, [$gameId, $fileId])
             );
 
@@ -135,8 +145,8 @@ final class CatalogDependencyResolver
                 'SELECT requested.lookup_value, e.id export_id, f.id file_id'
                 . ' FROM (' . $valuesSql . ') requested'
                 . ' JOIN ue_exports e ON e.full_path=requested.lookup_value'
-                . ' JOIN ue_files f ON f.id=e.file_id AND f.game_id=? AND f.id<>?'
-                . ' ORDER BY requested.lookup_value, f.uploaded_at DESC',
+                . ' JOIN ue_files f ON f.id=e.file_id AND f.game_id=? AND f.scan_status="verified"'
+                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, f.uploaded_at DESC',
                 array_merge($valueArgs, [$gameId, $fileId])
             );
 
