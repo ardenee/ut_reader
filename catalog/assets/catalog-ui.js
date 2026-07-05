@@ -23,24 +23,28 @@
         });
     });
 
-    function installSortableHeaderStyle() {
+    function addStyle(cssRules) {
         var style = document.createElement('style');
-        style.textContent = [
+        style.textContent = cssRules.join('\n');
+        document.head.appendChild(style);
+    }
+
+    function installSortableHeaderStyle() {
+        addStyle([
             '[data-sortable-table] th::after { content: none !important; display: none !important; }',
             '[data-sortable-table] th.is-sort-ascending::after { content: "▲" !important; display: inline-block !important; margin-left: 7px !important; color: var(--blue) !important; font-size: 11px !important; opacity: 1 !important; }',
             '[data-sortable-table] th.is-sort-descending::after { content: "▼" !important; display: inline-block !important; margin-left: 7px !important; color: var(--blue) !important; font-size: 11px !important; opacity: 1 !important; }'
-        ].join('\n');
-        document.head.appendChild(style);
+        ]);
     }
 
     function initExaminePage() {
         var packageTables = document.getElementById('package-tables');
         if (!packageTables) return;
 
-        var style = document.createElement('style');
-        style.textContent = [
-            '#package-tables .examine-table-region > table { width: 100% !important; min-width: max-content !important; table-layout: auto !important; }',
-            '#package-tables .examine-imports-table, #package-tables .examine-exports-table { width: 100% !important; min-width: max-content !important; }',
+        addStyle([
+            '#package-tables .examine-table-region { width: 100% !important; }',
+            '#package-tables .examine-table-region > table { width: 100% !important; min-width: 100% !important; max-width: none !important; table-layout: auto !important; }',
+            '#package-tables .examine-imports-table, #package-tables .examine-exports-table { width: 100% !important; min-width: 100% !important; max-width: none !important; }',
             '#package-tables .examine-imports-table th, #package-tables .examine-imports-table td, #package-tables .examine-exports-table th, #package-tables .examine-exports-table td { width: auto !important; }',
             '#package-tables .examine-imports-table th:nth-child(n+2), #package-tables .examine-imports-table td:nth-child(n+2), #package-tables .examine-imports-table th:nth-child(n+2) *, #package-tables .examine-imports-table td:nth-child(n+2) * { white-space: nowrap !important; word-break: normal !important; overflow-wrap: normal !important; }',
             '#package-tables .examine-dependency-entry { display: flex !important; align-items: flex-start !important; gap: 6px !important; margin: 0 0 5px !important; padding: 0 !important; white-space: nowrap !important; }',
@@ -51,20 +55,10 @@
             '#package-tables tr.is-reference-target > td { background: rgba(246, 196, 83, .18) !important; box-shadow: inset 4px 0 0 var(--amber); border-top: 1px solid rgba(246, 196, 83, .55); border-bottom: 1px solid rgba(246, 196, 83, .55); }',
             '#package-tables tr.is-reference-target > td.examine-reference-target-cell { background: #6e5616 !important; color: #fff9d8 !important; box-shadow: inset 0 0 0 2px #f6c453, inset 5px 0 0 #f6c453 !important; }',
             '#package-tables tr.is-reference-target > td.examine-reference-target-cell a { color: #fff9d8 !important; text-decoration: underline; }'
-        ].join('\n');
-        document.head.appendChild(style);
+        ]);
 
-        function valueForSort(row, index) {
-            var cell = row.cells[index];
-            return cell ? (cell.dataset.sortValue || cell.textContent || '').trim() : '';
-        }
-
-        function compareSortValues(left, right) {
-            var numeric = /^-?\d+(?:\.\d+)?$/;
-            if (numeric.test(left) && numeric.test(right)) {
-                return Number(left) - Number(right);
-            }
-            return left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
+        function normalize(value) {
+            return (value || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
         }
 
         function bindSorting(table) {
@@ -89,7 +83,12 @@
                     }
 
                     Array.from(body.rows).sort(function (leftRow, rightRow) {
-                        var comparison = compareSortValues(valueForSort(leftRow, index), valueForSort(rightRow, index));
+                        var left = leftRow.cells[index] ? (leftRow.cells[index].dataset.sortValue || leftRow.cells[index].textContent || '').trim() : '';
+                        var right = rightRow.cells[index] ? (rightRow.cells[index].dataset.sortValue || rightRow.cells[index].textContent || '').trim() : '';
+                        var numeric = /^-?\d+(?:\.\d+)?$/;
+                        var comparison = numeric.test(left) && numeric.test(right)
+                            ? Number(left) - Number(right)
+                            : left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
                         return ascending ? comparison : -comparison;
                     }).forEach(function (row) {
                         body.appendChild(row);
@@ -122,31 +121,26 @@
 
                 Array.from(table.rows).forEach(function (row, rowIndex) {
                     if (row.cells.length < 2) return;
-
                     if (rowIndex === 0) {
                         row.deleteCell(1);
                         return;
                     }
 
                     var indexCell = row.cells[0];
-                    var packageRefCell = row.cells[1];
-                    var packageRef = (packageRefCell.textContent || '').trim();
+                    var packageRef = (row.cells[1].textContent || '').trim();
                     var tooltip = 'Package ref: ' + packageRef;
                     indexCell.setAttribute('title', tooltip);
-
                     var indexLink = indexCell.querySelector('a');
                     if (indexLink) {
                         indexLink.setAttribute('title', tooltip);
                         indexLink.setAttribute('aria-label', (indexLink.textContent || '').trim() + '. ' + tooltip);
                     }
-
                     row.deleteCell(1);
                 });
 
                 var oldHead = table.tHead;
                 if (oldHead) {
-                    var newHead = oldHead.cloneNode(true);
-                    table.replaceChild(newHead, oldHead);
+                    table.replaceChild(oldHead.cloneNode(true), oldHead);
                 }
                 table.dataset.packageRefMoved = '1';
                 bindSorting(table);
@@ -177,7 +171,6 @@
 
                 var parent = entry.parentNode;
                 if (!parent) return;
-
                 var entries = [];
                 if (!parts.length) {
                     var noTargetEntry = document.createElement('div');
@@ -191,7 +184,6 @@
                         line.className = entry.className;
                         line.dataset.dependencySplit = '1';
                         line.appendChild(flag.cloneNode(true));
-
                         var lineDetail = document.createElement('span');
                         lineDetail.className = 'examine-dependency-detail';
                         lineDetail.appendChild(document.createTextNode(part.prefix + ' '));
@@ -200,9 +192,26 @@
                         entries.push(line);
                     });
                 }
-
                 entries.forEach(function (line) { parent.insertBefore(line, entry); });
                 entry.remove();
+            });
+        }
+
+        function panels() {
+            return Array.from(packageTables.querySelectorAll('[data-examine-panel]'));
+        }
+
+        function showPanelForTarget(target) {
+            var panel = target ? target.closest('[data-examine-panel]') : null;
+            if (!panel) return;
+            var tabName = panel.dataset.examinePanel;
+            panels().forEach(function (candidate) {
+                candidate.hidden = candidate !== panel;
+            });
+            packageTables.querySelectorAll('[data-examine-tab]').forEach(function (tab) {
+                var active = tab.dataset.examineTab === tabName;
+                tab.classList.toggle('is-active', active);
+                tab.setAttribute('aria-selected', active ? 'true' : 'false');
             });
         }
 
@@ -215,10 +224,6 @@
             });
         }
 
-        function normalize(value) {
-            return (value || '').replace(/\s+/g, ' ').trim().toLocaleLowerCase();
-        }
-
         function targetIdsFor(link) {
             if (link.dataset.referenceTargets) {
                 try {
@@ -228,17 +233,17 @@
                     return [];
                 }
             }
-
             var href = link.getAttribute('href') || '';
             return href.charAt(0) === '#' ? [decodeURIComponent(href.slice(1))] : [];
         }
 
-        function isSignedObjectReference(link) {
-            return /^-?\d+$/.test((link.textContent || '').trim())
-                && /^#(?:import|export)-\d+$/.test(link.getAttribute('href') || '');
+        function signedPackageRef(link) {
+            var href = link.getAttribute('href') || '';
+            var value = (link.textContent || '').trim();
+            return /^-?\d+$/.test(value) && /^#(?:import|export)-\d+$/.test(href);
         }
 
-        function referenceValueFor(link) {
+        function sourceValue(link) {
             if (link.classList.contains('name-usage-link')) {
                 var nameRow = link.closest('tr');
                 return nameRow && nameRow.cells.length > 1 ? (nameRow.cells[1].textContent || '') : '';
@@ -246,12 +251,11 @@
             return link.textContent || '';
         }
 
-        function targetCell(row, targetId, referenceValue, signedObjectReference) {
+        function destinationCell(row, targetId, referenceValue, isSignedReference) {
             var cells = Array.from(row.cells || []);
-            if (signedObjectReference || targetId.indexOf('import-') === 0 || targetId.indexOf('export-') === 0 && !referenceValue) {
+            if (isSignedReference || targetId.indexOf('import-') === 0 || targetId.indexOf('export-') === 0 && !referenceValue) {
                 return cells[0] || null;
             }
-
             var expected = normalize(referenceValue);
             if (expected) {
                 var exact = cells.find(function (cell) {
@@ -262,37 +266,62 @@
             return targetId.indexOf('name-') === 0 ? (cells[1] || cells[0] || null) : (cells[0] || null);
         }
 
-        function emphasizeReference(link) {
+        function followLocalReference(link) {
             var targetIds = targetIdsFor(link);
             if (!targetIds.length) return;
 
-            var signedObjectReference = isSignedObjectReference(link);
-            var referenceValue = signedObjectReference ? '' : referenceValueFor(link);
+            var signed = signedPackageRef(link);
+            var referenceValue = signed ? '' : sourceValue(link);
+            var targetRows = targetIds.map(function (targetId) {
+                var target = document.getElementById(targetId);
+                return target && { id: targetId, target: target, row: target.matches('tr') ? target : target.closest('tr') };
+            }).filter(function (item) { return item && item.row; });
+            if (!targetRows.length) return;
 
+            clearReferenceHighlights();
+            showPanelForTarget(targetRows[0].target);
+            targetRows.forEach(function (item) {
+                item.row.classList.add('is-reference-target');
+                var cell = destinationCell(item.row, item.id, referenceValue, signed);
+                if (cell) cell.classList.add('examine-reference-target-cell');
+            });
+
+            window.history.pushState(null, '', '#' + targetRows[0].id);
             window.setTimeout(function () {
-                clearReferenceHighlights();
-                targetIds.forEach(function (targetId) {
-                    var target = document.getElementById(targetId);
-                    var row = target && (target.matches('tr') ? target : target.closest('tr'));
-                    if (!row) return;
-                    row.classList.add('is-reference-target');
-                    var cell = targetCell(row, targetId, referenceValue, signedObjectReference);
-                    if (cell) cell.classList.add('examine-reference-target-cell');
-                });
-            }, 40);
+                targetRows[0].target.scrollIntoView({ block: 'center' });
+            }, 0);
         }
 
         document.addEventListener('click', function (event) {
-            var tab = event.target.closest('[data-examine-tab]');
-            if (tab) {
-                clearReferenceHighlights();
-                return;
-            }
-
             var reference = event.target.closest('#package-tables a.xref[href^="#"], #package-tables a[data-reference-targets]');
-            if (reference) emphasizeReference(reference);
+            if (!reference) return;
+
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            followLocalReference(reference);
         }, true);
 
+        document.addEventListener('click', function (event) {
+            var tab = event.target.closest('#package-tables [data-examine-tab]');
+            if (tab) clearReferenceHighlights();
+        }, true);
+
+        window.addEventListener('hashchange', function () {
+            var id = decodeURIComponent(window.location.hash.replace(/^#/, ''));
+            if (!id || id.indexOf('tab-') === 0) return;
+            var target = document.getElementById(id);
+            if (!target) return;
+            clearReferenceHighlights();
+            showPanelForTarget(target);
+            var row = target.matches('tr') ? target : target.closest('tr');
+            if (row) {
+                row.classList.add('is-reference-target');
+                var indexCell = row.cells && row.cells[0];
+                if (indexCell) indexCell.classList.add('examine-reference-target-cell');
+            }
+        });
+
+        packageTables.querySelectorAll('table[data-sortable-table]').forEach(bindSorting);
         movePackageRefsToIndexTooltips();
         splitDependencyEntries();
         window.setTimeout(function () {
