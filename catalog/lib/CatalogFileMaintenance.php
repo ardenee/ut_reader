@@ -143,6 +143,98 @@ function catalog_file_maintenance_reimport(PDO $db, array $config, int $fileId, 
     }
 }
 
+/**
+ * Re-import every verified stored package for one game through the ordinary
+ * scanner pipeline, then perform a final game-wide dependency pass.
+ *
+ * @return array{game_id:int,game_name:string,total:int,synced:int,failed:int,failures:list<string>}
+ */
+function catalog_file_maintenance_sync_game(PDO $db, array $config, int $gameId, ?int $userId, ?callable $progress = null): array
+{
+    $game = catalog_one($db, 'SELECT id, name FROM ue_games WHERE id=?', [$gameId]);
+    if (!$game) {
+        throw new RuntimeException('Game not found.');
+    }
+
+    /* Take the list before IDs change during the individual re-imports. */
+    $files = catalog_all(
+        $db,
+        'SELECT id, original_name FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY package_name, original_name, id',
+        [$gameId]
+    );
+    $total = count($files);
+    $synced = 0;
+    $failures = [];
+
+    if ($total === 0) {
+        catalog_file_maintenance_emit($progress, 'full_sync', 100, 'No verified files to sync for ' . $game['name']);
+        return [
+            'game_id' => (int)$game['id'],
+            'game_name' => (string)$game['name'],
+            'total' => 0,
+            'synced' => 0,
+            'failed' => 0,
+            'failures' => [],
+        ];
+    }
+
+    foreach ($files as $index => $file) {
+        $fileStart = scanner_range_percent(0, 90, $index, $total);
+        $fileEnd = scanner_range_percent(0, 90, $index + 1, $total);
+        $fileNumber = $index + 1;
+        $originalName = (string)$file['original_name'];
+
+        $fileProgress = static function (array $state) use ($progress, $fileStart, $fileEnd, $fileNumber, $total, $originalName): void {
+            if ($progress === null) {
+                return;
+            }
+            $innerPercent = max(0, min(100, (int)($state['percent'] ?? 0)));
+            $overallPercent = $fileStart + (int)floor((($fileEnd - $fileStart) * $innerPercent) / 100);
+            $progress([
+                'stage' => 'full_sync',
+                'done' => $fileNumber - 1,
+                'total' => $total,
+                'percent' => $overallPercent,
+                'message' => 'Syncing file ' . $fileNumber . '/' . $total . ' (' . $originalName . '): ' . (string)($state['message'] ?? 'working'),
+            ]);
+        };
+
+        try {
+            catalog_file_maintenance_reimport($db, $config, (int)$file['id'], $userId, $fileProgress);
+            $synced++;
+            catalog_file_maintenance_emit($progress, 'full_sync', $fileEnd, 'Synced file ' . $fileNumber . '/' . $total . ': ' . $originalName);
+        } catch (Throwable $e) {
+            $failures[] = $originalName . ': ' . $e->getMessage();
+            catalog_file_maintenance_emit($progress, 'full_sync', $fileEnd, 'Skipped file ' . $fileNumber . '/' . $total . ': ' . $originalName . ' (' . $e->getMessage() . ')');
+        }
+    }
+
+    $finalProgress = static function (array $state) use ($progress, $total): void {
+        if ($progress === null) {
+            return;
+        }
+        $innerPercent = max(0, min(100, (int)($state['percent'] ?? 0)));
+        $progress([
+            'stage' => 'final_dependencies',
+            'done' => $total,
+            'total' => $total,
+            'percent' => 90 + (int)floor($innerPercent / 10),
+            'message' => 'Final dependency refresh: ' . (string)($state['message'] ?? 'working'),
+        ]);
+    };
+    scanner_rebuild_game($db, $config, $gameId, $finalProgress, 0, 100);
+    catalog_file_maintenance_emit($progress, 'full_sync_complete', 100, 'Full sync complete for ' . $game['name'] . ': ' . $synced . '/' . $total . ' files re-imported');
+
+    return [
+        'game_id' => (int)$game['id'],
+        'game_name' => (string)$game['name'],
+        'total' => $total,
+        'synced' => $synced,
+        'failed' => count($failures),
+        'failures' => $failures,
+    ];
+}
+
 function catalog_file_maintenance_delete(PDO $db, array $config, int $fileId, ?callable $progress = null): array
 {
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
