@@ -60,17 +60,42 @@ function catalog_import_split_reader_issues(array $issues): array
     return [$fatal, $notes];
 }
 
-function catalog_import_rebuild_dependencies(PDO $db, array $config, int $fileId): void
+function catalog_import_progress_state(?callable $progress, int $done, int $total, string $packageName, string $stage = 'rebuilding_dependencies'): void
+{
+    if ($progress === null) {
+        return;
+    }
+
+    $percent = $total > 0 ? (int)floor(($done / $total) * 100) : 100;
+    $progress([
+        'stage' => $stage,
+        'done' => $done,
+        'total' => $total,
+        'percent' => max(0, min(100, $percent)),
+        'package_name' => $packageName,
+        'message' => $total > 0
+            ? 'Rebuilding dependencies for ' . $packageName . ' (' . $done . ' of ' . $total . ' imports)'
+            : 'No imports to rebuild.',
+    ]);
+}
+
+function catalog_import_rebuild_dependencies(PDO $db, array $config, int $fileId, ?callable $progress = null, ?int &$completedImports = null, ?int $totalImports = null): void
 {
     $db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
     if (!$file) return;
 
+    $imports = catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=?', [$fileId]);
+    $completedImports ??= 0;
+    $totalImports ??= count($imports);
+    $packageName = (string)$file['package_name'];
+
     $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status) VALUES(?,?,?,?,?,?,?)');
     $packageMatch = $db->prepare('SELECT id FROM ue_files WHERE game_id=? AND package_name=? AND scan_status="verified" ORDER BY (id=?) DESC, uploaded_at DESC LIMIT 1');
     $exportMatch = $db->prepare('SELECT e.id export_id, f.id file_id FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE f.game_id=? AND f.scan_status="verified" AND (e.full_path=? OR (f.package_name=? AND e.local_path=?)) ORDER BY (f.id=?) DESC, f.uploaded_at DESC LIMIT 1');
 
-    foreach (catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=?', [$fileId]) as $imp) {
+    catalog_import_progress_state($progress, $completedImports, $totalImports, $packageName);
+    foreach ($imports as $imp) {
         $status = 'missing';
         $resolvedFile = null;
         $resolvedExport = null;
@@ -105,13 +130,39 @@ function catalog_import_rebuild_dependencies(PDO $db, array $config, int $fileId
         }
 
         $insert->execute([$fileId, $imp['id'], $rootPackage, (string)$imp['full_path'], $resolvedFile, $resolvedExport, $status]);
+        $completedImports++;
+        catalog_import_progress_state($progress, $completedImports, $totalImports, $packageName);
     }
 }
 
-function catalog_import_rebuild_game(PDO $db, array $config, int $gameId): void
+function catalog_import_rebuild_game(PDO $db, array $config, int $gameId, ?callable $progress = null): void
 {
-    foreach (catalog_all($db, 'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified"', [$gameId]) as $file) {
-        catalog_import_rebuild_dependencies($db, $config, (int)$file['id']);
+    $files = catalog_all($db, 'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY id', [$gameId]);
+    $totalImports = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_imports i JOIN ue_files f ON f.id=i.file_id WHERE f.game_id=? AND f.scan_status="verified"', [$gameId])['c'] ?? 0);
+    $completedImports = 0;
+
+    if ($progress !== null) {
+        $progress([
+            'stage' => 'rebuilding_dependencies',
+            'done' => 0,
+            'total' => $totalImports,
+            'percent' => 0,
+            'message' => $totalImports > 0 ? 'Preparing dependency rebuild for ' . $totalImports . ' imports.' : 'No imports to rebuild.',
+        ]);
+    }
+
+    foreach ($files as $file) {
+        catalog_import_rebuild_dependencies($db, $config, (int)$file['id'], $progress, $completedImports, $totalImports);
+    }
+
+    if ($progress !== null) {
+        $progress([
+            'stage' => 'rebuild_complete',
+            'done' => $totalImports,
+            'total' => $totalImports,
+            'percent' => 100,
+            'message' => 'Dependency rebuild complete.',
+        ]);
     }
 }
 
