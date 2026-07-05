@@ -43,6 +43,7 @@ try {
     $postProgressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
     $progress = $postProgressToken !== '' ? catalog_maintenance_progress_callback($postProgressToken) : null;
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+    $operation = (string)($_POST['operation'] ?? '');
 
     if ($progress !== null) {
         $progress([
@@ -60,12 +61,35 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
+
+    if ($operation === 'sync_game') {
+        $gameId = filter_input(INPUT_POST, 'game_id', FILTER_VALIDATE_INT);
+        if ($gameId === false || $gameId === null || $gameId < 1) {
+            throw new RuntimeException('A valid game is required.');
+        }
+
+        $result = catalog_file_maintenance_sync_game($db, $config, (int)$gameId, $userId, $progress);
+        $message = 'Full sync completed for ' . $result['game_name'] . ': ' . $result['synced'] . '/' . $result['total'] . ' files re-imported.';
+        if ($result['failed'] > 0) {
+            $message .= ' ' . $result['failed'] . ' file(s) failed; see the full sync page for details.';
+        }
+        catalog_maintenance_reply([
+            'ok' => true,
+            'message' => $message,
+            'return_url' => 'full-sync.php?' . http_build_query([
+                'game_id' => $result['game_id'],
+                'synced' => $result['synced'],
+                'total' => $result['total'],
+                'failed' => $result['failed'],
+            ]),
+        ]);
+    }
+
     $fileId = filter_input(INPUT_POST, 'file_id', FILTER_VALIDATE_INT);
     if ($fileId === false || $fileId === null || $fileId < 1) {
         throw new RuntimeException('A valid file ID is required.');
     }
 
-    $operation = (string)($_POST['operation'] ?? '');
     if ($operation === 'reimport' || $operation === 'rebuild') {
         $result = catalog_file_maintenance_reimport($db, $config, (int)$fileId, $userId, $progress);
         catalog_maintenance_reply([
