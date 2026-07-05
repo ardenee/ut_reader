@@ -39,6 +39,80 @@ function catalog_file_maintenance_emit(?callable $progress, string $stage, int $
     scanner_emit_percent($progress, $stage, $percent, $message);
 }
 
+/**
+ * @return array{file:array<string,mixed>,names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>,dependencies:list<array<string,mixed>>,locations:list<array<string,mixed>>}
+ */
+function catalog_file_maintenance_snapshot(PDO $db, int $fileId): array
+{
+    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
+    if (!$file) {
+        throw new RuntimeException('File no longer exists in the catalog.');
+    }
+
+    return [
+        'file' => $file,
+        'names' => catalog_all($db, 'SELECT * FROM ue_names WHERE file_id=? ORDER BY id', [$fileId]),
+        'imports' => catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY id', [$fileId]),
+        'exports' => catalog_all($db, 'SELECT * FROM ue_exports WHERE file_id=? ORDER BY id', [$fileId]),
+        'dependencies' => catalog_all($db, 'SELECT * FROM ue_dependencies WHERE file_id=? ORDER BY id', [$fileId]),
+        'locations' => catalog_all($db, 'SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id', [$fileId]),
+    ];
+}
+
+function catalog_file_maintenance_restore_row(PDO $db, string $table, array $row): void
+{
+    $allowedTables = ['ue_files', 'ue_names', 'ue_imports', 'ue_exports', 'ue_dependencies', 'ue_file_locations'];
+    if (!in_array($table, $allowedTables, true) || $row === []) {
+        throw new RuntimeException('Invalid catalog snapshot restore row.');
+    }
+
+    $columns = array_keys($row);
+    $quotedColumns = implode(',', array_map(static fn(string $column): string => '`' . str_replace('`', '', $column) . '`', $columns));
+    $placeholders = implode(',', array_fill(0, count($columns), '?'));
+    $stmt = $db->prepare('INSERT INTO `' . $table . '` (' . $quotedColumns . ') VALUES (' . $placeholders . ')');
+    $stmt->execute(array_values($row));
+}
+
+/**
+ * Restore the package and its dependent catalog rows after a failed scanner run.
+ * Foreign references from other packages are rebuilt afterwards by the caller.
+ */
+function catalog_file_maintenance_restore_snapshot(PDO $db, array $snapshot): void
+{
+    $ownsTransaction = !$db->inTransaction();
+    if ($ownsTransaction) {
+        $db->beginTransaction();
+    }
+
+    try {
+        catalog_file_maintenance_restore_row($db, 'ue_files', $snapshot['file']);
+        foreach ($snapshot['names'] as $row) {
+            catalog_file_maintenance_restore_row($db, 'ue_names', $row);
+        }
+        foreach ($snapshot['imports'] as $row) {
+            catalog_file_maintenance_restore_row($db, 'ue_imports', $row);
+        }
+        foreach ($snapshot['exports'] as $row) {
+            catalog_file_maintenance_restore_row($db, 'ue_exports', $row);
+        }
+        foreach ($snapshot['dependencies'] as $row) {
+            catalog_file_maintenance_restore_row($db, 'ue_dependencies', $row);
+        }
+        foreach ($snapshot['locations'] as $row) {
+            catalog_file_maintenance_restore_row($db, 'ue_file_locations', $row);
+        }
+
+        if ($ownsTransaction) {
+            $db->commit();
+        }
+    } catch (Throwable $e) {
+        if ($ownsTransaction && $db->inTransaction()) {
+            $db->rollBack();
+        }
+        throw $e;
+    }
+}
+
 function catalog_file_maintenance_affected_ids(PDO $db, int $gameId, int $removedFileId, string $packageName): array
 {
     $rows = catalog_all(
@@ -79,11 +153,8 @@ function catalog_file_maintenance_refresh_ids(PDO $db, array $config, array $fil
 
 function catalog_file_maintenance_reimport(PDO $db, array $config, int $fileId, ?int $userId, ?callable $progress = null): array
 {
-    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
-    if (!$file) {
-        throw new RuntimeException('File no longer exists in the catalog.');
-    }
-
+    $snapshot = catalog_file_maintenance_snapshot($db, $fileId);
+    $file = $snapshot['file'];
     $storedPath = catalog_file_maintenance_storage_path($config, $file);
     if ($storedPath === null || !is_file($storedPath)) {
         throw new RuntimeException('The stored package file is missing, so it cannot be re-imported.');
@@ -92,6 +163,7 @@ function catalog_file_maintenance_reimport(PDO $db, array $config, int $fileId, 
     $suffix = '.reimport-' . bin2hex(random_bytes(8));
     $backupPath = $storedPath . $suffix . '.backup';
     $inputPath = $storedPath . $suffix . '.input';
+    $replacementFileId = 0;
     catalog_file_maintenance_emit($progress, 'reimport', 0, 'Verifying stored package ' . $file['original_name']);
 
     if (!@rename($storedPath, $backupPath)) {
@@ -123,21 +195,35 @@ function catalog_file_maintenance_reimport(PDO $db, array $config, int $fileId, 
             throw new RuntimeException((string)($result[2] ?? 'Stored package was not re-imported.'));
         }
 
-        $newFileId = (int)$result[1];
+        $replacementFileId = (int)$result[1];
         catalog_file_maintenance_emit($progress, 'dependencies', 99, 'Refreshing references to the re-imported package');
         catalog_file_maintenance_refresh_ids($db, $config, $affectedFileIds, $progress, 99, 100, 'Refreshing affected dependency links');
 
         @unlink($backupPath);
         return [
             'game_id' => (int)$file['game_id'],
-            'file_id' => $newFileId,
+            'file_id' => $replacementFileId,
             'original_name' => (string)$file['original_name'],
             'message' => (string)$result[2],
         ];
     } catch (Throwable $e) {
         @unlink($inputPath);
+        if ($replacementFileId > 0) {
+            $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$replacementFileId]);
+        }
+        if (!catalog_one($db, 'SELECT id FROM ue_files WHERE id=?', [$fileId])) {
+            catalog_file_maintenance_restore_snapshot($db, $snapshot);
+        }
+        if (is_file($storedPath)) {
+            @unlink($storedPath);
+        }
         if (is_file($backupPath)) {
             @rename($backupPath, $storedPath);
+        }
+        try {
+            scanner_rebuild_game($db, $config, (int)$file['game_id']);
+        } catch (Throwable $refreshError) {
+            error_log('[UnrealDB reimport rollback] file_id=' . $fileId . ' dependency refresh failed: ' . $refreshError->getMessage());
         }
         throw $e;
     }
@@ -202,10 +288,26 @@ function catalog_file_maintenance_sync_game(PDO $db, array $config, int $gameId,
         try {
             catalog_file_maintenance_reimport($db, $config, (int)$file['id'], $userId, $fileProgress);
             $synced++;
-            catalog_file_maintenance_emit($progress, 'full_sync', $fileEnd, 'Synced file ' . $fileNumber . '/' . $total . ': ' . $originalName);
+            if ($progress !== null) {
+                $progress([
+                    'stage' => 'full_sync',
+                    'done' => $fileNumber,
+                    'total' => $total,
+                    'percent' => $fileEnd,
+                    'message' => 'Synced file ' . $fileNumber . '/' . $total . ': ' . $originalName,
+                ]);
+            }
         } catch (Throwable $e) {
             $failures[] = $originalName . ': ' . $e->getMessage();
-            catalog_file_maintenance_emit($progress, 'full_sync', $fileEnd, 'Skipped file ' . $fileNumber . '/' . $total . ': ' . $originalName . ' (' . $e->getMessage() . ')');
+            if ($progress !== null) {
+                $progress([
+                    'stage' => 'full_sync',
+                    'done' => $fileNumber,
+                    'total' => $total,
+                    'percent' => $fileEnd,
+                    'message' => 'Skipped file ' . $fileNumber . '/' . $total . ': ' . $originalName . ' (' . $e->getMessage() . ')',
+                ]);
+            }
         }
     }
 
@@ -223,7 +325,15 @@ function catalog_file_maintenance_sync_game(PDO $db, array $config, int $gameId,
         ]);
     };
     scanner_rebuild_game($db, $config, $gameId, $finalProgress, 0, 100);
-    catalog_file_maintenance_emit($progress, 'full_sync_complete', 100, 'Full sync complete for ' . $game['name'] . ': ' . $synced . '/' . $total . ' files re-imported');
+    if ($progress !== null) {
+        $progress([
+            'stage' => 'full_sync_complete',
+            'done' => $total,
+            'total' => $total,
+            'percent' => 100,
+            'message' => 'Full sync complete for ' . $game['name'] . ': ' . $synced . '/' . $total . ' files re-imported',
+        ]);
+    }
 
     return [
         'game_id' => (int)$game['id'],
