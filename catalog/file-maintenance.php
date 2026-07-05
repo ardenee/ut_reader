@@ -32,7 +32,7 @@ try {
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
-        catalog_maintenance_reply(['ok' => true, 'progress' => upload_progress_read($progressToken)]);
+        catalog_maintenance_reply(upload_progress_read($progressToken));
     }
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -42,13 +42,15 @@ try {
     catalog_check_csrf('catalog-maintenance');
     $postProgressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
     $progress = $postProgressToken !== '' ? catalog_maintenance_progress_callback($postProgressToken) : null;
+    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+
     if ($progress !== null) {
         $progress([
-            'stage' => 'starting',
+            'stage' => 'start',
             'done' => 0,
-            'total' => 0,
+            'total' => 100,
             'percent' => 0,
-            'message' => 'Starting maintenance request.',
+            'message' => 'Preparing maintenance request.',
         ]);
     }
 
@@ -63,54 +65,21 @@ try {
         throw new RuntimeException('A valid file ID is required.');
     }
 
-    $file = catalog_one($db, 'SELECT id, game_id, original_name FROM ue_files WHERE id=?', [(int)$fileId]);
-    if (!$file) {
-        throw new RuntimeException('File no longer exists in the catalog.');
-    }
-
     $operation = (string)($_POST['operation'] ?? '');
-    if ($operation === 'rebuild') {
-        $db->beginTransaction();
-        try {
-            catalog_import_rebuild_game($db, $config, (int)$file['game_id'], $progress);
-            $db->commit();
-        } catch (Throwable $e) {
-            if ($db->inTransaction()) {
-                $db->rollBack();
-            }
-            throw $e;
-        }
-
-        if ($progress !== null) {
-            $progress([
-                'stage' => 'complete',
-                'done' => 1,
-                'total' => 1,
-                'percent' => 100,
-                'message' => 'Dependency rebuild complete.',
-            ]);
-        }
+    if ($operation === 'reimport') {
+        $result = catalog_file_maintenance_reimport($db, $config, (int)$fileId, $userId, $progress);
         catalog_maintenance_reply([
             'ok' => true,
-            'message' => 'Dependency rebuild complete.',
-            'return_url' => 'game-files.php?id=' . (int)$file['game_id'],
+            'message' => 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
+            'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
         ]);
     }
 
     if ($operation === 'remove') {
-        $result = catalog_file_maintenance_remove($db, $config, (int)$fileId);
-        if ($progress !== null) {
-            $progress([
-                'stage' => 'complete',
-                'done' => 1,
-                'total' => 1,
-                'percent' => 100,
-                'message' => 'Package removal complete.',
-            ]);
-        }
+        $result = catalog_file_maintenance_remove($db, $config, (int)$fileId, $progress);
         catalog_maintenance_reply([
             'ok' => true,
-            'message' => 'Package removal complete.' . $result['warning'],
+            'message' => 'Removed ' . $result['original_name'] . ' from storage and the catalog.' . $result['warning'],
             'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
         ]);
     }
@@ -121,7 +90,7 @@ try {
         upload_progress_write($postProgressToken, [
             'stage' => 'failed',
             'done' => 0,
-            'total' => 0,
+            'total' => 100,
             'percent' => 0,
             'message' => $e->getMessage(),
         ]);
