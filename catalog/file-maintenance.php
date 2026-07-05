@@ -21,6 +21,15 @@ function catalog_maintenance_progress_callback(string $token): callable
     };
 }
 
+function catalog_maintenance_file_id(): int
+{
+    $fileId = filter_input(INPUT_POST, 'file_id', FILTER_VALIDATE_INT);
+    if ($fileId === false || $fileId === null || $fileId < 1) {
+        throw new RuntimeException('A valid file ID is required.');
+    }
+    return (int)$fileId;
+}
+
 try {
     catalog_start_session();
     if (!catalog_support_is_admin()) {
@@ -62,40 +71,46 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    if ($operation === 'sync_game') {
-        $gameId = filter_input(INPUT_POST, 'game_id', FILTER_VALIDATE_INT);
-        if ($gameId === false || $gameId === null || $gameId < 1) {
-            throw new RuntimeException('A valid game is required.');
-        }
-
-        $result = catalog_file_maintenance_sync_game($db, $config, (int)$gameId, $userId, $progress);
-        $message = 'Full sync completed for ' . $result['game_name'] . ': ' . $result['synced'] . '/' . $result['total'] . ' files re-imported.';
-        if ($result['failed'] > 0) {
-            $message .= ' ' . $result['failed'] . ' file(s) failed.';
-        }
+    /*
+     * Full Sync deliberately calls these short operations one package at a
+     * time. This prevents a shared-host PHP request timeout from aborting a
+     * long game-wide maintenance run.
+     */
+    if ($operation === 'sync_reimport') {
+        $result = catalog_file_maintenance_reimport($db, $config, catalog_maintenance_file_id(), $userId, $progress);
         catalog_maintenance_reply([
             'ok' => true,
-            'message' => $message,
-            'synced' => $result['synced'],
-            'total' => $result['total'],
-            'failed' => $result['failed'],
-            'failures' => $result['failures'],
-            'return_url' => 'full-sync.php?' . http_build_query([
-                'game_id' => $result['game_id'],
-                'synced' => $result['synced'],
-                'total' => $result['total'],
-                'failed' => $result['failed'],
-            ]),
+            'file_id' => $result['file_id'],
+            'game_id' => $result['game_id'],
+            'original_name' => $result['original_name'],
+            'message' => 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
         ]);
     }
 
-    $fileId = filter_input(INPUT_POST, 'file_id', FILTER_VALIDATE_INT);
-    if ($fileId === false || $fileId === null || $fileId < 1) {
-        throw new RuntimeException('A valid file ID is required.');
+    if ($operation === 'sync_refresh_dependencies') {
+        $fileId = catalog_maintenance_file_id();
+        $file = catalog_one($db, 'SELECT id, game_id, original_name FROM ue_files WHERE id=?', [$fileId]);
+        if (!$file) {
+            throw new RuntimeException('The re-imported package is no longer present in the catalog.');
+        }
+        scanner_rebuild_dependencies($db, $config, $fileId, $progress, 0, 100, 'Final dependency refresh for ' . $file['original_name']);
+        catalog_maintenance_reply([
+            'ok' => true,
+            'file_id' => $fileId,
+            'game_id' => (int)$file['game_id'],
+            'original_name' => (string)$file['original_name'],
+            'message' => 'Refreshed dependencies for ' . $file['original_name'] . '.',
+        ]);
     }
 
+    if ($operation === 'sync_game') {
+        throw new RuntimeException('Full Sync now runs in short package-by-package requests. Refresh the Full Sync page and start it again.');
+    }
+
+    $fileId = catalog_maintenance_file_id();
+
     if ($operation === 'reimport' || $operation === 'rebuild') {
-        $result = catalog_file_maintenance_reimport($db, $config, (int)$fileId, $userId, $progress);
+        $result = catalog_file_maintenance_reimport($db, $config, $fileId, $userId, $progress);
         catalog_maintenance_reply([
             'ok' => true,
             'message' => 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
@@ -104,7 +119,7 @@ try {
     }
 
     if ($operation === 'remove') {
-        $result = catalog_file_maintenance_remove($db, $config, (int)$fileId, $progress);
+        $result = catalog_file_maintenance_remove($db, $config, $fileId, $progress);
         catalog_maintenance_reply([
             'ok' => true,
             'message' => 'Removed ' . $result['original_name'] . ' from storage and the catalog.' . $result['warning'],
