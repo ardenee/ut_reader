@@ -66,7 +66,7 @@ try {
     }
 
     $operation = (string)($_POST['operation'] ?? '');
-    if ($operation === 'reimport') {
+    if ($operation === 'reimport' || $operation === 'rebuild') {
         $result = catalog_file_maintenance_reimport($db, $config, (int)$fileId, $userId, $progress);
         catalog_maintenance_reply([
             'ok' => true,
