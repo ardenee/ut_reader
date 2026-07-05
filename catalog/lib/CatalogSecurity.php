@@ -48,7 +48,11 @@ function catalog_start_session(): void
         return;
     }
 
-    session_name('unrealdb_session');
+    /*
+     * Several catalog pages predate CatalogSecurity and still call raw
+     * session_start(). Keep the default PHPSESSID name so their session and
+     * the login session are the same cookie.
+     */
     session_set_cookie_params([
         'lifetime' => 0,
         'path' => '/',
