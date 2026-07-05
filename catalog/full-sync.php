@@ -34,6 +34,11 @@ try {
             break;
         }
     }
+    $syncFiles = $selectedGame === null ? [] : catalog_all(
+        $db,
+        'SELECT id, original_name FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY package_name, original_name, id',
+        [$selectedGameId]
+    );
 
     catalog_head('Full Sync');
     echo <<<'CSS'
@@ -45,7 +50,7 @@ try {
 .full-sync-warning { border-left: 4px solid #f6c453; padding-left: 12px; }
 .full-sync-start { margin-top: 16px; }
 .full-sync-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(3,8,18,.72); backdrop-filter: blur(3px); }
-.full-sync-dialog { width: min(600px, 100%); padding: 24px; border: 1px solid var(--line2); border-radius: 14px; background: #111b2d; box-shadow: 0 24px 70px rgba(0,0,0,.5); }
+.full-sync-dialog { width: min(630px,100%); padding: 24px; border: 1px solid var(--line2); border-radius: 14px; background: #111b2d; box-shadow: 0 24px 70px rgba(0,0,0,.5); }
 .full-sync-dialog h2 { margin: 0 0 8px; }
 .full-sync-dialog p { margin: 0 0 16px; }
 .full-sync-progress { height: 14px; overflow: hidden; border: 1px solid var(--line2); border-radius: 999px; background: rgba(255,255,255,.05); }
@@ -53,14 +58,14 @@ try {
 .full-sync-count { margin-top: 9px; color: var(--muted); font-size: 13px; }
 .full-sync-loading { display: none; align-items: center; gap: 10px; margin-top: 16px; color: var(--text); }
 .full-sync-loading.is-visible { display: flex; }
-.full-sync-spinner { width: 17px; height: 17px; border: 3px solid rgba(157,194,255,.25); border-top-color: #9dc2ff; border-radius: 50%; animation: full-sync-spin .8s linear infinite; }
-.full-sync-failures { max-height: 190px; overflow: auto; margin: 14px 0 0; padding: 10px 14px; border: 1px solid rgba(255,107,122,.55); border-radius: 8px; color: #ffd9de; background: rgba(255,107,122,.1); white-space: pre-wrap; }
+.full-sync-spinner { width: 17px; height: 17px; border: 3px solid rgba(157,194,255,.25); border-top-color:#9dc2ff; border-radius: 50%; animation: full-sync-spin .8s linear infinite; }
+.full-sync-failures { max-height: 220px; overflow: auto; margin: 14px 0 0; padding: 10px 14px; border: 1px solid rgba(255,107,122,.55); border-radius: 8px; color: #ffd9de; background: rgba(255,107,122,.1); white-space: pre-wrap; }
 .full-sync-result-actions { display: flex; gap: 8px; margin-top: 16px; }
 @keyframes full-sync-spin { to { transform: rotate(360deg); } }
 @media (max-width: 700px) { .full-sync-scope { grid-template-columns: 1fr; } }
 </style>
 CSS;
-    echo CatalogUi::pageHeader('Full Sync', 'Re-import every stored verified package in one game through the normal Upload Files scanner.', ['Back to dashboard' => 'dashboard.php']);
+    echo CatalogUi::pageHeader('Full Sync', 'Refresh every stored verified package in one game through short, scanner-based requests.', ['Back to dashboard' => 'dashboard.php']);
 
     $synced = full_sync_int('synced');
     $total = full_sync_int('total');
@@ -68,8 +73,8 @@ CSS;
     if ($total > 0) {
         $message = 'Last full sync: ' . $synced . '/' . $total . ' packages re-imported.';
         if ($failed > 0) {
-            $message .= ' ' . $failed . ' package(s) failed.';
-            echo CatalogUi::alert('warning', $message, 'Review any failure details shown during the sync before running it again.');
+            $message .= ' ' . $failed . ' package(s) reported an issue.';
+            echo CatalogUi::alert('warning', $message, 'The page shows individual failures at the end of a run.');
         } else {
             echo CatalogUi::alert('success', $message);
         }
@@ -91,23 +96,23 @@ CSS;
     echo '</div></section>';
 
     if ($selectedGame !== null) {
-        $count = (int)$selectedGame['verified_file_count'];
-        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>' . catalog_h($selectedGame['name']) . '</h2><p>Full scanner-based refresh scope.</p></div></div><div class="ui-section__body">';
+        $count = count($syncFiles);
+        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>' . catalog_h($selectedGame['name']) . '</h2><p>Scanner-based full refresh scope.</p></div></div><div class="ui-section__body">';
         echo '<div class="full-sync-scope">';
         echo '<div class="stat"><h2>' . $count . '</h2><p>Verified packages</p></div>';
         echo '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)$selectedGame['total_size'])) . '</h2><p>Stored size</p></div>';
-        echo '<div class="stat"><h2>100%</h2><p>Final dependency refresh</p></div>';
+        echo '<div class="stat"><h2>2 passes</h2><p>Re-import, then dependencies</p></div>';
         echo '</div>';
-        echo '<p class="full-sync-warning">Each package is re-imported using the same reader, validation, table-writing, and dependency logic as <strong>Upload Files</strong>. The original stored file is checked first, then the package record is refreshed. A final dependency pass runs after all packages have been processed.</p>';
+        echo '<p class="full-sync-warning">The sync runs <strong>one package per request</strong>: first each package is re-imported using the normal Upload Files scanner, then each package receives a final dependency refresh. This avoids the shared-host request timeout that stopped the earlier single-request sync.</p>';
         if ($count === 0) {
             echo '<p class="muted">This game has no verified packages to sync.</p>';
         } else {
             echo '<form id="full-sync-form" class="full-sync-start" method="post" action="file-maintenance.php">';
             echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('catalog-maintenance')) . '">';
-            echo '<input type="hidden" name="operation" value="sync_game">';
             echo '<input type="hidden" name="game_id" value="' . (int)$selectedGame['id'] . '">';
             echo CatalogUi::button('Start full sync for ' . $selectedGame['name'], ['type' => 'submit', 'variant' => 'danger']);
             echo '</form>';
+            echo '<script id="full-sync-files" type="application/json">' . json_encode($syncFiles, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) . '</script>';
         }
         echo '</div></section>';
     }
@@ -116,8 +121,19 @@ CSS;
 <script>
 (function () {
     'use strict';
+
     var form = document.getElementById('full-sync-form');
-    if (!form) return;
+    var fileList = document.getElementById('full-sync-files');
+    if (!form || !fileList) return;
+
+    var files;
+    try {
+        files = JSON.parse(fileList.textContent || '[]');
+    } catch (error) {
+        window.alert('The full sync file list could not be loaded. Refresh this page and try again.');
+        return;
+    }
+    if (!Array.isArray(files) || files.length === 0) return;
 
     function makeToken() {
         var bytes = new Uint8Array(18);
@@ -128,10 +144,18 @@ CSS;
         return Date.now().toString(36) + Math.random().toString(36).slice(2);
     }
 
+    function shortServerText(text) {
+        return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 260);
+    }
+
     function parseJson(response) {
         return response.text().then(function (text) {
-            try { return JSON.parse(text); }
-            catch (error) { throw new Error('Server returned an invalid maintenance response (HTTP ' + response.status + ').'); }
+            try {
+                return JSON.parse(text);
+            } catch (error) {
+                var detail = shortServerText(text);
+                throw new Error('Server returned a non-JSON maintenance response (HTTP ' + response.status + ')' + (detail ? ': ' + detail : '.'));
+            }
         });
     }
 
@@ -146,44 +170,85 @@ CSS;
         return overlay;
     }
 
-    function showState(overlay, state) {
-        var percent = Math.max(0, Math.min(100, Number(state.percent || 0)));
-        var done = Number(state.done || 0);
-        var total = Number(state.total || 0);
+    function updateOverlay(overlay, phase, completedBefore, phaseTotal, state, fileName) {
+        var localPercent = Math.max(0, Math.min(100, Number(state.percent || 0)));
+        var phaseStart = phase === 'reimport' ? 0 : 80;
+        var phaseEnd = phase === 'reimport' ? 80 : 100;
+        var overall = phaseStart + (((completedBefore + (localPercent / 100)) / Math.max(1, phaseTotal)) * (phaseEnd - phaseStart));
+        var label = phase === 'reimport' ? 'Re-importing' : 'Refreshing dependencies';
         var message = state.message || 'Working…';
-        var fileMatch = message.match(/(?:Syncing|Synced|Skipped) file (\d+)\/(\d+)/);
-        overlay.querySelector('.full-sync-progress > span').style.width = percent + '%';
-        overlay.querySelector('.full-sync-message').textContent = message;
-
-        if (state.stage === 'final_dependencies' && total > 0) {
-            overlay.querySelector('.full-sync-count').textContent = total + ' of ' + total + ' packages synced; final dependency refresh (' + Math.round(percent) + '%)';
-        } else if (fileMatch) {
-            overlay.querySelector('.full-sync-count').textContent = fileMatch[1] + ' of ' + fileMatch[2] + ' packages (' + Math.round(percent) + '%)';
-        } else {
-            overlay.querySelector('.full-sync-count').textContent = total > 0
-                ? done + ' of ' + total + ' packages (' + Math.round(percent) + '%)'
-                : Math.round(percent) + '%';
-        }
+        overlay.querySelector('.full-sync-progress > span').style.width = Math.max(0, Math.min(100, overall)) + '%';
+        overlay.querySelector('.full-sync-message').textContent = label + ' package ' + (completedBefore + 1) + '/' + phaseTotal + ' (' + fileName + '): ' + message;
+        overlay.querySelector('.full-sync-count').textContent = phase === 'reimport'
+            ? completedBefore + ' of ' + phaseTotal + ' packages re-imported (' + Math.round(overall) + '% overall)'
+            : completedBefore + ' of ' + phaseTotal + ' packages dependency-refreshed (' + Math.round(overall) + '% overall)';
     }
 
-    function poll(progressToken, overlay) {
+    function completeOverlayStep(overlay, phase, completed, phaseTotal, fileName, message) {
+        var phaseStart = phase === 'reimport' ? 0 : 80;
+        var phaseEnd = phase === 'reimport' ? 80 : 100;
+        var overall = phaseStart + ((completed / Math.max(1, phaseTotal)) * (phaseEnd - phaseStart));
+        var label = phase === 'reimport' ? 'Re-imported' : 'Refreshed dependencies for';
+        overlay.querySelector('.full-sync-progress > span').style.width = Math.max(0, Math.min(100, overall)) + '%';
+        overlay.querySelector('.full-sync-message').textContent = label + ' package ' + completed + '/' + phaseTotal + ' (' + fileName + '): ' + message;
+        overlay.querySelector('.full-sync-count').textContent = phase === 'reimport'
+            ? completed + ' of ' + phaseTotal + ' packages re-imported (' + Math.round(overall) + '% overall)'
+            : completed + ' of ' + phaseTotal + ' packages dependency-refreshed (' + Math.round(overall) + '% overall)';
+    }
+
+    function pollProgress(token, onState) {
         var active = true;
         var timer = null;
         function tick() {
             if (!active) return;
-            fetch('file-maintenance.php?progress=' + encodeURIComponent(progressToken), { credentials: 'same-origin', cache: 'no-store' })
-                .then(parseJson)
-                .then(function (state) { if (active) showState(overlay, state); })
-                .catch(function () {})
-                .finally(function () { if (active) timer = window.setTimeout(tick, 500); });
+            fetch('file-maintenance.php?progress=' + encodeURIComponent(token), {
+                credentials: 'same-origin',
+                cache: 'no-store'
+            }).then(parseJson).then(function (state) {
+                if (active) onState(state);
+            }).catch(function () {
+                /* The active package POST is authoritative. Keep its last real stage visible. */
+            }).finally(function () {
+                if (active) timer = window.setTimeout(tick, 450);
+            });
         }
         tick();
-        return function () { active = false; if (timer !== null) window.clearTimeout(timer); };
+        return function () {
+            active = false;
+            if (timer !== null) window.clearTimeout(timer);
+        };
     }
 
-    function showFailures(overlay, result) {
-        var failures = Array.isArray(result.failures) ? result.failures : [];
+    function runPackageRequest(overlay, operation, file, phase, completedBefore, phaseTotal) {
+        var token = makeToken();
+        var data = new FormData(form);
+        data.set('operation', operation);
+        data.set('file_id', String(file.id));
+        data.set('progress_token', token);
+        var stopPolling = pollProgress(token, function (state) {
+            updateOverlay(overlay, phase, completedBefore, phaseTotal, state, file.original_name || 'package');
+        });
+
+        return fetch(form.action, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' },
+            body: data
+        }).then(parseJson).then(function (result) {
+            stopPolling();
+            if (!result.ok) {
+                throw new Error(result.error || 'Package maintenance failed.');
+            }
+            return result;
+        }).catch(function (error) {
+            stopPolling();
+            throw error;
+        });
+    }
+
+    function showFailures(overlay, failures, returnUrl) {
         if (failures.length === 0) return false;
+        overlay.querySelector('.full-sync-message').textContent = 'Full sync finished with ' + failures.length + ' issue(s). The unaffected packages continued.';
         var details = document.createElement('div');
         details.className = 'full-sync-failures';
         details.textContent = failures.join('\n');
@@ -192,42 +257,71 @@ CSS;
         actions.className = 'full-sync-result-actions';
         var back = document.createElement('a');
         back.className = 'button';
-        back.href = result.return_url || window.location.href;
+        back.href = returnUrl;
         back.textContent = 'Return to full sync';
         actions.appendChild(back);
         overlay.querySelector('.full-sync-dialog').appendChild(actions);
         return true;
     }
 
+    async function runFullSync(overlay) {
+        var failures = [];
+        var refreshFiles = [];
+        var reimported = 0;
+        var total = files.length;
+
+        for (var index = 0; index < total; index++) {
+            var file = files[index];
+            try {
+                var result = await runPackageRequest(overlay, 'sync_reimport', file, 'reimport', index, total);
+                reimported++;
+                refreshFiles.push({ id: result.file_id, original_name: result.original_name || file.original_name });
+                completeOverlayStep(overlay, 'reimport', index + 1, total, file.original_name, result.message || 'Scanner re-import complete.');
+            } catch (error) {
+                failures.push('Re-import failed — ' + file.original_name + ': ' + (error.message || 'Unknown error'));
+                /* A failed re-import restores its original catalog record, so include it in the final dependency pass. */
+                refreshFiles.push(file);
+                completeOverlayStep(overlay, 'reimport', index + 1, total, file.original_name, 'Skipped after error; continuing with the next package.');
+            }
+        }
+
+        for (var refreshIndex = 0; refreshIndex < refreshFiles.length; refreshIndex++) {
+            var refreshFile = refreshFiles[refreshIndex];
+            try {
+                var refreshResult = await runPackageRequest(overlay, 'sync_refresh_dependencies', refreshFile, 'dependencies', refreshIndex, refreshFiles.length);
+                completeOverlayStep(overlay, 'dependencies', refreshIndex + 1, refreshFiles.length, refreshFile.original_name, refreshResult.message || 'Dependency refresh complete.');
+            } catch (error) {
+                failures.push('Dependency refresh failed — ' + refreshFile.original_name + ': ' + (error.message || 'Unknown error'));
+                completeOverlayStep(overlay, 'dependencies', refreshIndex + 1, refreshFiles.length, refreshFile.original_name, 'Skipped after error; continuing with the next package.');
+            }
+        }
+
+        overlay.querySelector('.full-sync-progress > span').style.width = '100%';
+        overlay.querySelector('.full-sync-count').textContent = reimported + ' of ' + total + ' packages re-imported; final dependency pass completed.';
+        var returnUrl = 'full-sync.php?game_id=' + encodeURIComponent(form.querySelector('[name="game_id"]').value)
+            + '&synced=' + encodeURIComponent(reimported)
+            + '&total=' + encodeURIComponent(total)
+            + '&failed=' + encodeURIComponent(failures.length);
+        if (showFailures(overlay, failures, returnUrl)) return;
+
+        overlay.querySelector('.full-sync-message').textContent = 'Full sync complete.';
+        overlay.querySelector('.full-sync-loading').classList.add('is-visible');
+        window.setTimeout(function () { window.location.assign(returnUrl); }, 120);
+    }
+
     form.addEventListener('submit', function (event) {
         event.preventDefault();
         var gameSelect = document.getElementById('full-sync-game');
         var gameName = gameSelect ? gameSelect.options[gameSelect.selectedIndex].text : 'this game';
-        if (!window.confirm('Run a full scanner sync for ' + gameName + '? Every verified stored package in this game will be re-imported.')) return;
+        if (!window.confirm('Run a full scanner sync for ' + gameName + '? It will re-import and refresh each verified package one at a time.')) return;
 
         var overlay = createOverlay();
-        var token = makeToken();
-        var stopPolling = poll(token, overlay);
-        var data = new FormData(form);
-        data.set('progress_token', token);
         form.querySelectorAll('button').forEach(function (button) { button.disabled = true; });
-
-        fetch(form.action, { method: 'POST', credentials: 'same-origin', headers: { 'Accept': 'application/json' }, body: data })
-            .then(parseJson)
-            .then(function (result) {
-                stopPolling();
-                if (!result.ok) throw new Error(result.error || 'Full sync failed.');
-                showState(overlay, { percent: 100, done: result.synced || 0, total: result.total || 0, message: result.message || 'Full sync complete.' });
-                if (showFailures(overlay, result)) return;
-                overlay.querySelector('.full-sync-loading').classList.add('is-visible');
-                window.setTimeout(function () { window.location.assign(result.return_url || window.location.href); }, 100);
-            })
-            .catch(function (error) {
-                stopPolling();
-                overlay.remove();
-                form.querySelectorAll('button').forEach(function (button) { button.disabled = false; });
-                window.alert(error.message || 'Full sync failed.');
-            });
+        runFullSync(overlay).catch(function (error) {
+            overlay.remove();
+            form.querySelectorAll('button').forEach(function (button) { button.disabled = false; });
+            window.alert(error.message || 'Full sync failed.');
+        });
     });
 })();
 </script>
