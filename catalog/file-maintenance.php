@@ -31,17 +31,23 @@ try {
         throw new RuntimeException('A valid file ID is required.');
     }
 
-    $file = catalog_one($db, 'SELECT id, game_id FROM ue_files WHERE id=?', [(int)$fileId]);
+    $file = catalog_one($db, 'SELECT id, game_id, original_name FROM ue_files WHERE id=?', [(int)$fileId]);
     if (!$file) {
         throw new RuntimeException('File no longer exists in the catalog.');
     }
 
-    if ((string)($_POST['operation'] ?? '') !== 'rebuild') {
-        throw new RuntimeException('Unknown maintenance operation.');
+    $operation = (string)($_POST['operation'] ?? '');
+    if ($operation === 'rebuild') {
+        $count = catalog_file_maintenance_rebuild_game($db, $config, (int)$file['game_id']);
+        catalog_maintenance_reply(['ok' => true, 'message' => 'Rebuilt dependency links for ' . $count . ' verified package(s) in this game.']);
     }
 
-    $count = catalog_file_maintenance_rebuild_game($db, $config, (int)$file['game_id']);
-    catalog_maintenance_reply(['ok' => true, 'message' => 'Rebuilt dependency links for ' . $count . ' verified package(s) in this game.']);
+    if ($operation === 'remove') {
+        $result = catalog_file_maintenance_remove($db, $config, (int)$fileId);
+        catalog_maintenance_reply(['ok' => true, 'message' => 'Removed ' . $result['original_name'] . ' from the catalog.' . $result['warning']]);
+    }
+
+    throw new RuntimeException('Unknown maintenance operation.');
 } catch (Throwable $e) {
     error_log('[UnrealDB][' . catalog_request_id() . '] catalog maintenance failed: ' . $e->getMessage());
     catalog_maintenance_reply(['ok' => false, 'error' => $e->getMessage()], 400);
