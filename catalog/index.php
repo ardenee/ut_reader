@@ -163,12 +163,13 @@ try {
 
                 if ($rows !== null) {
                     echo '<style>'
-                        . '.search-match { margin: 0 0 3px; overflow-wrap: anywhere; }'
+                        . '.search-match { margin: 0 0 3px; white-space: nowrap; overflow-wrap: normal; word-break: normal; }'
                         . '.search-match:last-child { margin-bottom: 0; }'
                         . '.search-match strong { color: var(--muted); }'
                         . '.search-match-highlight { padding: 0 2px; border-radius: 3px; color: #1a1300; background: #f6c453; font-weight: 800; }'
                         . '#catalog-search-results th { cursor: pointer; user-select: none; }'
                         . '#catalog-search-results th:focus { outline: 2px solid var(--blue); outline-offset: -2px; }'
+                        . '#catalog-search-results td:nth-child(4), #catalog-search-results td:nth-child(4) * { white-space: nowrap; overflow-wrap: normal; word-break: normal; }'
                         . '#catalog-search-results .search-guid-md5 { min-width: 310px; }'
                         . '#catalog-search-results .search-guid-md5 span { display: block; }'
                         . '#catalog-search-results .search-tables, #catalog-search-results .search-size { white-space: nowrap; }'
@@ -178,7 +179,7 @@ try {
                         echo '<p class="muted">No matching files found.</p>';
                     } else {
                         echo '<table id="catalog-search-results" data-sortable-table><thead><tr>';
-                        echo '<th scope="col">Game</th><th scope="col">Package</th><th scope="col">File</th><th scope="col">Matched Field</th><th scope="col">Tables</th><th scope="col">Size</th><th scope="col">GUID / MD5</th>';
+                        echo '<th scope="col">Game</th><th scope="col">Package</th><th scope="col">File</th><th scope="col">Matched Field</th><th scope="col">Tables (N/I/E)</th><th scope="col">Size</th><th scope="col">GUID / MD5</th>';
                         echo '</tr></thead><tbody>';
                         foreach ($rows as $row) {
                             $fileId = (int)$row['id'];
@@ -208,7 +209,7 @@ try {
                                 $matchedHtml = '<span class="muted">match details unavailable</span>';
                             }
                             $matchedSort = implode(' | ', $matchedSortValues);
-                            $tablesText = $nameCount . ' names / ' . $importCount . ' imports / ' . $exportCount . ' exports';
+                            $tablesText = $nameCount . ' / ' . $importCount . ' / ' . $exportCount;
                             $tablesSort = str_pad((string)$nameCount, 10, '0', STR_PAD_LEFT) . '-' . str_pad((string)$importCount, 10, '0', STR_PAD_LEFT) . '-' . str_pad((string)$exportCount, 10, '0', STR_PAD_LEFT);
                             $identitySort = $guid . ' ' . $md5;
 
