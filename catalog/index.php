@@ -12,6 +12,31 @@ function redirect_to(string $url): void
     exit;
 }
 
+function catalog_search_highlight(string $value, string $query): string
+{
+    $query = trim($query);
+    if ($query === '') {
+        return catalog_h($value);
+    }
+
+    $parts = preg_split('/(' . preg_quote($query, '/') . ')/iu', $value, -1, PREG_SPLIT_DELIM_CAPTURE);
+    if ($parts === false) {
+        return catalog_h($value);
+    }
+
+    $html = '';
+    foreach ($parts as $index => $part) {
+        if ($part === '') {
+            continue;
+        }
+        $html .= $index % 2 === 1
+            ? '<mark class="search-match-highlight">' . catalog_h($part) . '</mark>'
+            : catalog_h($part);
+    }
+
+    return $html;
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -108,29 +133,115 @@ try {
                 }
 
                 if ($rows !== null) {
-                    echo '<style>.search-match { margin: 0 0 3px; overflow-wrap: anywhere; }.search-match:last-child { margin-bottom: 0; }.search-match strong { color: var(--muted); }</style>';
+                    echo '<style>'
+                        . '.search-match { margin: 0 0 3px; overflow-wrap: anywhere; }'
+                        . '.search-match:last-child { margin-bottom: 0; }'
+                        . '.search-match strong { color: var(--muted); }'
+                        . '.search-match-highlight { padding: 0 2px; border-radius: 3px; color: #1a1300; background: #f6c453; font-weight: 800; }'
+                        . '#catalog-search-results th { cursor: pointer; user-select: none; }'
+                        . '#catalog-search-results th:focus { outline: 2px solid var(--blue); outline-offset: -2px; }'
+                        . '#catalog-search-results .search-guid-md5 { min-width: 310px; }'
+                        . '#catalog-search-results .search-guid-md5 span { display: block; }'
+                        . '</style>';
                     echo '<div class="card"><h2>Results</h2>';
                     if (!$rows) {
                         echo '<p class="muted">No matching files found.</p>';
                     } else {
-                        echo '<table><tr><th>Package</th><th>File</th><th>Matched Field</th><th>MD5</th><th>Open</th></tr>';
+                        echo '<table id="catalog-search-results" data-sortable-table><thead><tr>';
+                        echo '<th scope="col">Game</th><th scope="col">Package</th><th scope="col">File</th><th scope="col">Matched Field</th><th scope="col">GUID / MD5</th>';
+                        echo '</tr></thead><tbody>';
                         foreach ($rows as $row) {
+                            $fileId = (int)$row['id'];
+                            $gameId = (int)$row['game_id'];
+                            $gameName = (string)($row['game_name'] ?? 'Unknown game');
+                            $packageName = (string)$row['package_name'];
+                            $originalName = (string)$row['original_name'];
+                            $guid = trim((string)($row['package_guid'] ?? ''));
+                            $md5 = trim((string)($row['md5'] ?? ''));
                             $matches = is_array($row['matched_fields'] ?? null) ? $row['matched_fields'] : [];
                             $matchedHtml = '';
+                            $matchedSortValues = [];
                             foreach ($matches as $match) {
                                 $field = trim((string)($match['field'] ?? 'Match'));
                                 $value = trim((string)($match['value'] ?? ''));
                                 if ($value === '') {
                                     continue;
                                 }
-                                $matchedHtml .= '<div class="search-match mono small"><strong>' . catalog_h($field) . ':</strong> ' . catalog_h($value) . '</div>';
+                                $matchedSortValues[] = $field . ': ' . $value;
+                                $matchedHtml .= '<div class="search-match mono small"><strong>' . catalog_h($field) . ':</strong> ' . catalog_search_highlight($value, $q) . '</div>';
                             }
                             if ($matchedHtml === '') {
                                 $matchedHtml = '<span class="muted">match details unavailable</span>';
                             }
-                            echo '<tr><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td>' . $matchedHtml . '</td><td class="mono small">' . catalog_h($row['md5']) . '</td><td><a href="file-info.php?id=' . (int)$row['id'] . '">details</a> | <a href="file-examine.php?id=' . (int)$row['id'] . '">examine</a></td></tr>';
+                            $matchedSort = implode(' | ', $matchedSortValues);
+                            $identitySort = $guid . ' ' . $md5;
+
+                            echo '<tr>';
+                            echo '<td data-sort-value="' . catalog_h($gameName) . '"><a href="game-files.php?id=' . $gameId . '" title="Open game files">' . catalog_search_highlight($gameName, $q) . '</a></td>';
+                            echo '<td class="mono" data-sort-value="' . catalog_h($packageName) . '"><a href="file-info.php?id=' . $fileId . '" title="View package details">' . catalog_search_highlight($packageName, $q) . '</a></td>';
+                            echo '<td data-sort-value="' . catalog_h($originalName) . '"><a href="file-examine.php?id=' . $fileId . '" title="Examine file">' . catalog_search_highlight($originalName, $q) . '</a></td>';
+                            echo '<td data-sort-value="' . catalog_h($matchedSort) . '">' . $matchedHtml . '</td>';
+                            echo '<td class="mono small search-guid-md5" data-sort-value="' . catalog_h($identitySort) . '"><span>GUID: ' . ($guid !== '' ? catalog_search_highlight($guid, $q) : '<span class="muted">—</span>') . '</span><span>MD5: ' . ($md5 !== '' ? catalog_search_highlight($md5, $q) : '<span class="muted">—</span>') . '</span></td>';
+                            echo '</tr>';
                         }
-                        echo '</table>';
+                        echo '</tbody></table>';
+                        echo <<<'JS'
+<script>
+(function () {
+    'use strict';
+    var table = document.getElementById('catalog-search-results');
+    if (!table || !table.tHead || !table.tBodies.length) return;
+
+    var headerRow = table.tHead.rows[0];
+    var body = table.tBodies[0];
+    var activeIndex = -1;
+    var ascending = true;
+
+    Array.from(headerRow.cells).forEach(function (header, index) {
+        header.tabIndex = 0;
+        header.setAttribute('role', 'button');
+        header.setAttribute('title', 'Click to sort ascending. Click again to sort descending.');
+
+        function sortByColumn() {
+            if (activeIndex === index) {
+                ascending = !ascending;
+            } else {
+                activeIndex = index;
+                ascending = true;
+            }
+
+            Array.from(body.rows).sort(function (leftRow, rightRow) {
+                var leftCell = leftRow.cells[index];
+                var rightCell = rightRow.cells[index];
+                var left = (leftCell.dataset.sortValue || leftCell.textContent || '').trim();
+                var right = (rightCell.dataset.sortValue || rightCell.textContent || '').trim();
+                var comparison = left.localeCompare(right, undefined, { numeric: true, sensitivity: 'base' });
+                return ascending ? comparison : -comparison;
+            }).forEach(function (row) {
+                body.appendChild(row);
+            });
+
+            Array.from(headerRow.cells).forEach(function (otherHeader, otherIndex) {
+                otherHeader.classList.remove('is-sort-ascending', 'is-sort-descending');
+                otherHeader.removeAttribute('aria-sort');
+                if (otherIndex === index) {
+                    otherHeader.classList.add(ascending ? 'is-sort-ascending' : 'is-sort-descending');
+                    otherHeader.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
+                }
+            });
+        }
+
+        header.addEventListener('click', sortByColumn);
+        header.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                sortByColumn();
+            }
+        });
+    });
+})();
+</script>
+JS;
                     }
                     echo '</div>';
                 }
