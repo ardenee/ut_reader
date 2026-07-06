@@ -23,6 +23,12 @@ function missing_selected_package(): string
     return substr($value, 0, 255);
 }
 
+function missing_selected_view(): string
+{
+    $view = strtolower(trim((string)($_GET['view'] ?? 'objects')));
+    return in_array($view, ['objects', 'files'], true) ? $view : 'objects';
+}
+
 function missing_page_url(array $params = []): string
 {
     $query = [];
@@ -34,10 +40,16 @@ function missing_page_url(array $params = []): string
     return 'missing.php' . ($query === [] ? '' : '?' . http_build_query($query));
 }
 
-function missing_file_links(int $fileId): string
+function missing_file_reference_html(int $fileId, string $packageName, string $originalName): string
 {
-    return '<a class="button secondary" href="file-info.php?id=' . $fileId . '">Info</a>'
-        . ' <a class="button secondary" href="file-examine.php?id=' . $fileId . '">Examine</a>';
+    return '<strong class="mono"><a href="file-info.php?id=' . $fileId . '">' . catalog_h($packageName) . '</a></strong>'
+        . '<br><span class="muted small"><a href="file-examine.php?id=' . $fileId . '">' . catalog_h($originalName) . '</a></span>';
+}
+
+function missing_import_class(string $classPackage, string $className): string
+{
+    $parts = array_values(array_filter([$classPackage, $className], static fn(string $part): bool => $part !== ''));
+    return implode('.', $parts);
 }
 
 try {
@@ -49,6 +61,8 @@ try {
     }
 
     $selectedPackage = missing_selected_package();
+    $selectedFileId = missing_page_int('file_id');
+    $selectedView = missing_selected_view();
     $perPage = 200;
     $filesWithMissing = catalog_count(
         $db,
@@ -68,7 +82,7 @@ try {
 
     catalog_page_header(
         'Missing Files',
-        'See which catalog files require each missing package or object, then use those links to inspect the owning file before requesting a dependency.',
+        'See which catalog files require each missing package or object, then inspect the owning file before requesting a dependency.',
         [
             'Generate Request' => 'federation/request-generate.php',
             'Request Status' => 'federation/request-status.php',
@@ -80,15 +94,15 @@ try {
 
     echo <<<'CSS'
 <style>
-.missing-file-table { min-width:1240px; }
-.missing-package-table { min-width:860px; }
-.missing-detail-table { min-width:1280px; }
+.missing-file-table { min-width:1120px; }
+.missing-package-table { min-width:700px; }
+.missing-detail-table { min-width:1080px; }
 .missing-file-name { min-width:225px; }
 .missing-package-list { min-width:260px; max-width:460px; overflow-wrap:anywhere; }
 .missing-object-path { min-width:310px; max-width:560px; overflow-wrap:anywhere; }
-.missing-actions { white-space:nowrap; min-width:132px; }
 .missing-pagination { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:12px 0 0; }
 .missing-pagination .muted { margin-right:4px; }
+.missing-detail-links { display:flex; gap:7px; flex-wrap:wrap; margin:0 0 12px; }
 </style>
 CSS;
 
@@ -110,43 +124,111 @@ CSS;
     catalog_tool_card('6. Review conflicts', 'federation/conflicts.php', 'Check GUID/package/hash mismatches before trusting matches.');
     echo '</div></div>';
 
-    if ($selectedPackage !== '') {
-        $detailRows = catalog_all(
+    if ($selectedFileId > 0) {
+        $fileDetailRows = catalog_all(
             $db,
-            'SELECT d.id dependency_id, d.required_object_path, d.required_package, '
+            'SELECT d.required_package, d.required_object_path, '
             . 'f.id file_id, f.package_name owner_package_name, f.original_name owner_original_name, '
             . 'g.id game_id, g.name game_name, '
-            . 'i.class_package, i.class_name, i.object_name import_object_name, i.full_path import_full_path '
+            . 'i.class_package, i.class_name, i.full_path import_full_path '
             . 'FROM ue_dependencies d '
             . 'JOIN ue_files f ON f.id=d.file_id '
             . 'JOIN ue_games g ON g.id=f.game_id '
             . 'LEFT JOIN ue_imports i ON i.id=d.import_id '
-            . 'WHERE d.status="missing" AND d.required_package=? '
-            . 'ORDER BY g.name, f.package_name, f.original_name, d.required_object_path',
-            [$selectedPackage]
+            . 'WHERE d.status="missing" AND d.file_id=? '
+            . 'ORDER BY d.required_package, d.required_object_path',
+            [$selectedFileId]
         );
 
-        echo '<div class="card"><h2>Files requiring package: <span class="mono">' . catalog_h($selectedPackage) . '</span></h2>';
-        echo '<p class="muted">Each row is a missing dependency owned by the file in the Requiring File column. Inspect that file to see its full Imports/Exports tables.</p>';
-        echo '<p><a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage])) . '">Clear package detail</a></p>';
-        if ($detailRows === []) {
-            echo '<p class="muted">No missing dependency rows currently match this package name.</p>';
+        echo '<div class="card"><h2>Missing dependency objects for file</h2>';
+        echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage])) . '">Clear object list</a></p>';
+        if ($fileDetailRows === []) {
+            echo '<p class="muted">No missing dependency rows currently match this file.</p>';
         } else {
-            echo '<div class="table-wrap"><table class="missing-detail-table"><thead><tr><th>Game</th><th>Requiring File</th><th>Required Object Path</th><th>Import Class</th><th>Import Path</th><th>Actions</th></tr></thead><tbody>';
-            foreach ($detailRows as $row) {
-                $importClass = trim((string)$row['class_package'] . '.' . (string)$row['class_name']);
+            $owner = $fileDetailRows[0];
+            echo '<p>Requiring file: ' . missing_file_reference_html((int)$owner['file_id'], (string)$owner['owner_package_name'], (string)$owner['owner_original_name']) . ' · <a href="game-files.php?id=' . (int)$owner['game_id'] . '">' . catalog_h((string)$owner['game_name']) . '</a></p>';
+            echo '<div class="table-wrap"><table class="missing-detail-table"><thead><tr><th>Missing Package</th><th>Required Object Path</th><th>Import Class</th><th>Import Path</th></tr></thead><tbody>';
+            foreach ($fileDetailRows as $row) {
+                $importClass = missing_import_class((string)$row['class_package'], (string)$row['class_name']);
                 echo '<tr>';
-                echo '<td><a href="game-files.php?id=' . (int)$row['game_id'] . '">' . catalog_h((string)$row['game_name']) . '</a></td>';
-                echo '<td class="missing-file-name"><strong class="mono">' . catalog_h((string)$row['owner_package_name']) . '</strong><br><span class="muted small">' . catalog_h((string)$row['owner_original_name']) . '</span></td>';
+                echo '<td class="mono"><a href="' . catalog_h(missing_page_url(['package' => (string)$row['required_package'], 'view' => 'objects'])) . '">' . catalog_h((string)$row['required_package']) . '</a></td>';
                 echo '<td class="mono missing-object-path">' . catalog_h((string)$row['required_object_path']) . '</td>';
-                echo '<td class="mono">' . catalog_h($importClass !== '.' ? $importClass : '') . '</td>';
-                echo '<td class="mono missing-object-path">' . catalog_h((string)$row['import_full_path']) . '</td>';
-                echo '<td class="missing-actions">' . missing_file_links((int)$row['file_id']) . '</td>';
+                echo '<td class="mono">' . ($importClass !== '' ? catalog_h($importClass) : '<span class="muted">—</span>') . '</td>';
+                echo '<td class="mono missing-object-path">' . (trim((string)$row['import_full_path']) !== '' ? catalog_h((string)$row['import_full_path']) : '<span class="muted">—</span>') . '</td>';
                 echo '</tr>';
             }
             echo '</tbody></table></div>';
         }
         echo '</div>';
+    } elseif ($selectedPackage !== '') {
+        if ($selectedView === 'files') {
+            $detailRows = catalog_all(
+                $db,
+                'SELECT f.id file_id, f.package_name owner_package_name, f.original_name owner_original_name, '
+                . 'g.id game_id, g.name game_name, COUNT(d.id) missing_object_rows '
+                . 'FROM ue_dependencies d '
+                . 'JOIN ue_files f ON f.id=d.file_id '
+                . 'JOIN ue_games g ON g.id=f.game_id '
+                . 'WHERE d.status="missing" AND d.required_package=? '
+                . 'GROUP BY f.id, f.package_name, f.original_name, g.id, g.name '
+                . 'ORDER BY missing_object_rows DESC, g.name, f.package_name, f.original_name',
+                [$selectedPackage]
+            );
+
+            echo '<div class="card"><h2>Files requiring package: <span class="mono">' . catalog_h($selectedPackage) . '</span></h2>';
+            echo '<p class="muted">Each file below has one or more missing Import rows requiring this package.</p>';
+            echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['package' => $selectedPackage, 'view' => 'objects'])) . '">View missing object rows</a> <a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage])) . '">Clear package detail</a></p>';
+            if ($detailRows === []) {
+                echo '<p class="muted">No missing dependency rows currently match this package name.</p>';
+            } else {
+                echo '<div class="table-wrap"><table class="missing-detail-table"><thead><tr><th>Game</th><th>Requiring File</th><th>Missing Object Rows</th></tr></thead><tbody>';
+                foreach ($detailRows as $row) {
+                    echo '<tr>';
+                    echo '<td><a href="game-files.php?id=' . (int)$row['game_id'] . '">' . catalog_h((string)$row['game_name']) . '</a></td>';
+                    echo '<td class="missing-file-name">' . missing_file_reference_html((int)$row['file_id'], (string)$row['owner_package_name'], (string)$row['owner_original_name']) . '</td>';
+                    echo '<td><a href="' . catalog_h(missing_page_url(['file_id' => (int)$row['file_id']])) . '">' . (int)$row['missing_object_rows'] . '</a></td>';
+                    echo '</tr>';
+                }
+                echo '</tbody></table></div>';
+            }
+            echo '</div>';
+        } else {
+            $detailRows = catalog_all(
+                $db,
+                'SELECT d.required_object_path, d.required_package, '
+                . 'f.id file_id, f.package_name owner_package_name, f.original_name owner_original_name, '
+                . 'g.id game_id, g.name game_name, '
+                . 'i.class_package, i.class_name, i.full_path import_full_path '
+                . 'FROM ue_dependencies d '
+                . 'JOIN ue_files f ON f.id=d.file_id '
+                . 'JOIN ue_games g ON g.id=f.game_id '
+                . 'LEFT JOIN ue_imports i ON i.id=d.import_id '
+                . 'WHERE d.status="missing" AND d.required_package=? '
+                . 'ORDER BY g.name, f.package_name, f.original_name, d.required_object_path',
+                [$selectedPackage]
+            );
+
+            echo '<div class="card"><h2>Missing objects for package: <span class="mono">' . catalog_h($selectedPackage) . '</span></h2>';
+            echo '<p class="muted">Each row is a missing Import dependency. The Requiring File links directly to File Info and Examine.</p>';
+            echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['package' => $selectedPackage, 'view' => 'files'])) . '">View requiring files</a> <a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage])) . '">Clear package detail</a></p>';
+            if ($detailRows === []) {
+                echo '<p class="muted">No missing dependency rows currently match this package name.</p>';
+            } else {
+                echo '<div class="table-wrap"><table class="missing-detail-table"><thead><tr><th>Game</th><th>Requiring File</th><th>Required Object Path</th><th>Import Class</th><th>Import Path</th></tr></thead><tbody>';
+                foreach ($detailRows as $row) {
+                    $importClass = missing_import_class((string)$row['class_package'], (string)$row['class_name']);
+                    echo '<tr>';
+                    echo '<td><a href="game-files.php?id=' . (int)$row['game_id'] . '">' . catalog_h((string)$row['game_name']) . '</a></td>';
+                    echo '<td class="missing-file-name">' . missing_file_reference_html((int)$row['file_id'], (string)$row['owner_package_name'], (string)$row['owner_original_name']) . '</td>';
+                    echo '<td class="mono missing-object-path">' . catalog_h((string)$row['required_object_path']) . '</td>';
+                    echo '<td class="mono">' . ($importClass !== '' ? catalog_h($importClass) : '<span class="muted">—</span>') . '</td>';
+                    echo '<td class="mono missing-object-path">' . (trim((string)$row['import_full_path']) !== '' ? catalog_h((string)$row['import_full_path']) : '<span class="muted">—</span>') . '</td>';
+                    echo '</tr>';
+                }
+                echo '</tbody></table></div>';
+            }
+            echo '</div>';
+        }
     }
 
     $affectedFiles = catalog_all(
@@ -164,18 +246,18 @@ CSS;
     );
 
     echo '<div class="card"><h2>Files with missing dependencies</h2>';
-    echo '<p class="muted">These are the actual catalog files whose Import tables contain missing dependency rows. Use Info or Examine to inspect the owner file, or open a missing package to see every required object path.</p>';
+    echo '<p class="muted">Package names link to File Info. Filenames link to Examine. Missing Object Rows opens the exact missing object list for that requiring file.</p>';
     if ($affectedFiles === []) {
         echo '<p class="muted">No catalog files currently have missing dependencies.</p>';
     } else {
-        echo '<div class="table-wrap"><table class="missing-file-table"><thead><tr><th>Game</th><th>Requiring File</th><th>Missing Packages</th><th>Missing Object Rows</th><th>Package Names</th><th>Actions</th></tr></thead><tbody>';
+        echo '<div class="table-wrap"><table class="missing-file-table"><thead><tr><th>Game</th><th>Requiring File</th><th>Missing Packages</th><th>Missing Object Rows</th><th>Package Names</th></tr></thead><tbody>';
         foreach ($affectedFiles as $row) {
             $packageNames = trim((string)($row['missing_package_names'] ?? ''));
             echo '<tr>';
             echo '<td><a href="game-files.php?id=' . (int)$row['game_id'] . '">' . catalog_h((string)$row['game_name']) . '</a></td>';
-            echo '<td class="missing-file-name"><strong class="mono">' . catalog_h((string)$row['package_name']) . '</strong><br><span class="muted small">' . catalog_h((string)$row['original_name']) . '</span></td>';
+            echo '<td class="missing-file-name">' . missing_file_reference_html((int)$row['file_id'], (string)$row['package_name'], (string)$row['original_name']) . '</td>';
             echo '<td>' . (int)$row['missing_package_count'] . '</td>';
-            echo '<td>' . (int)$row['missing_object_rows'] . '</td>';
+            echo '<td><a href="' . catalog_h(missing_page_url(['file_id' => (int)$row['file_id']])) . '">' . (int)$row['missing_object_rows'] . '</a></td>';
             echo '<td class="mono missing-package-list">';
             if ($packageNames === '') {
                 echo '<span class="muted">—</span>';
@@ -185,11 +267,10 @@ CSS;
                     if ($index > 0) {
                         echo '<br>';
                     }
-                    echo '<a href="' . catalog_h(missing_page_url(['package' => $name, 'files_page' => $filePage])) . '">' . catalog_h($name) . '</a>';
+                    echo '<a href="' . catalog_h(missing_page_url(['package' => $name, 'view' => 'objects'])) . '">' . catalog_h($name) . '</a>';
                 }
             }
             echo '</td>';
-            echo '<td class="missing-actions">' . missing_file_links((int)$row['file_id']) . '</td>';
             echo '</tr>';
         }
         echo '</tbody></table></div>';
@@ -213,19 +294,23 @@ CSS;
         . 'FROM ue_dependencies '
         . 'WHERE status="missing" AND required_package IS NOT NULL AND required_package<>"" '
         . 'GROUP BY required_package '
-        . 'ORDER BY missing_object_rows DESC, requiring_file_count DESC, required_package '
-        . 'LIMIT 100'
+        . 'ORDER BY missing_object_rows DESC, requiring_file_count DESC, required_package'
     );
-    echo '<div class="card"><h2>Top missing packages</h2>';
-    echo '<p class="muted">Open a package to see every file and required object path that depends on it.</p>';
+    echo '<div class="card"><h2>Missing packages</h2>';
+    echo '<p class="muted">All missing packages are shown. Missing Object Rows opens individual dependency rows; Requiring Files opens the affected owner-file list.</p>';
     if (!$rows) {
         echo '<p class="muted">No missing packages currently recorded.</p>';
     } else {
-        echo '<div class="table-wrap"><table class="missing-package-table"><thead><tr><th>Package</th><th>Missing Object Rows</th><th>Requiring Files</th><th>Details</th></tr></thead><tbody>';
+        echo '<div class="table-wrap"><table class="missing-package-table"><thead><tr><th>Package</th><th>Missing Object Rows</th><th>Requiring Files</th></tr></thead><tbody>';
         foreach ($rows as $row) {
             $package = (string)$row['required_package'];
-            $detailUrl = missing_page_url(['package' => $package, 'files_page' => $filePage]);
-            echo '<tr><td class="mono"><a href="' . catalog_h($detailUrl) . '">' . catalog_h($package) . '</a></td><td>' . (int)$row['missing_object_rows'] . '</td><td>' . (int)$row['requiring_file_count'] . '</td><td><a class="button secondary" href="' . catalog_h($detailUrl) . '">View requiring files</a></td></tr>';
+            $objectUrl = missing_page_url(['package' => $package, 'view' => 'objects']);
+            $filesUrl = missing_page_url(['package' => $package, 'view' => 'files']);
+            echo '<tr>';
+            echo '<td class="mono"><a href="' . catalog_h($objectUrl) . '">' . catalog_h($package) . '</a></td>';
+            echo '<td><a href="' . catalog_h($objectUrl) . '">' . (int)$row['missing_object_rows'] . '</a></td>';
+            echo '<td><a href="' . catalog_h($filesUrl) . '">' . (int)$row['requiring_file_count'] . '</a></td>';
+            echo '</tr>';
         }
         echo '</tbody></table></div>';
     }
