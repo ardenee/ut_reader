@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogScanner.php';
+require_once __DIR__ . '/CatalogParser.php';
 require_once __DIR__ . '/GameProfiles.php';
 
 /**
@@ -84,7 +85,35 @@ function uvf_token(int $gameId, string $queueName): string
 }
 
 /**
- * @return array{token:string,game:array<string,mixed>,queue_name:string,original_name:string,path:string,reason_path:string,reason:string,size:int,modified_at:int,extension:string,package_name:string,header:array<string,mixed>}
+ * Extract metadata which is useful before a queue item has a ue_files row.
+ * The package reader is chosen from the header/extension detection, never from
+ * the source queue game, because queued files are commonly misplaced.
+ *
+ * @return array{md5:string,package_guid:string}
+ */
+function uvf_identity(array $config, string $path, string $originalName, array $legacy): array
+{
+    $md5 = @md5_file($path);
+    $packageGuid = '';
+    $engine = strtoupper((string)($legacy['engine_hint'] ?? gp_detect_from_extension(pathinfo($originalName, PATHINFO_EXTENSION)) ?? ''));
+
+    if (in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+        try {
+            $header = catalog_try_read_package_header($config, $engine, $path);
+            $packageGuid = trim(catalog_header_guid($header));
+        } catch (Throwable) {
+            // The table still shows the MD5 and legacy header data for unreadable packages.
+        }
+    }
+
+    return [
+        'md5' => is_string($md5) ? strtolower($md5) : '',
+        'package_guid' => $packageGuid,
+    ];
+}
+
+/**
+ * @return array{token:string,game:array<string,mixed>,queue_name:string,original_name:string,path:string,reason_path:string,reason:string,size:int,modified_at:int,extension:string,package_name:string,md5:string,package_guid:string,header:array<string,mixed>}
  */
 function uvf_resolve(PDO $db, array $config, string $token): array
 {
@@ -126,6 +155,7 @@ function uvf_resolve(PDO $db, array $config, string $token): array
         'licensee' => $legacy['ok'] ? (int)($legacy['licensee'] ?? 0) : null,
         'note' => $legacy['ok'] ? '' : (string)($legacy['reason'] ?? ''),
     ];
+    $identity = uvf_identity($config, $path, $originalName, $legacy);
 
     return [
         'token' => $token,
@@ -139,6 +169,8 @@ function uvf_resolve(PDO $db, array $config, string $token): array
         'modified_at' => (int)(filemtime($path) ?: 0),
         'extension' => strtolower(pathinfo($originalName, PATHINFO_EXTENSION)),
         'package_name' => scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME)),
+        'md5' => $identity['md5'],
+        'package_guid' => $identity['package_guid'],
         'header' => $header,
     ];
 }
@@ -318,12 +350,6 @@ function uvf_import(PDO $db, array $config, string $token, int $targetGameId, ?i
     }
 
     try {
-        /*
-         * Queue import is intentionally loose: the selected game is a catalog
-         * choice, while the scanner uses the detected package reader. The
-         * explicit override additionally permits extensions absent from the
-         * target profile, for legacy/mixed game installations.
-         */
         $result = scanner_scan_uploaded_file(
             $db,
             $config,
@@ -331,7 +357,7 @@ function uvf_import(PDO $db, array $config, string $token, int $targetGameId, ?i
             $tmp,
             (string)$source['original_name'],
             $userId,
-            false,
+            !$allowProfileOverride,
             null,
             $allowProfileOverride
         );
