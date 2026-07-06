@@ -111,7 +111,7 @@ final class CatalogSearchService
         $rows = self::queryRows(
             $db,
             'final_file_lookup',
-            'SELECT f.* FROM ue_files f WHERE f.id IN (' . $placeholders . ') ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            'SELECT f.*, g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id IN (' . $placeholders . ') ORDER BY g.name, f.package_name, f.original_name LIMIT ' . $limit,
             $ids
         );
 
