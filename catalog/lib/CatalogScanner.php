@@ -234,7 +234,14 @@ function scanner_rebuild_affected_dependencies(PDO $db, array $config, int $newF
     }
 }
 
-function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId, bool $strictProfile = true, ?callable $progress = null): array
+/**
+ * $strictProfile enforces the target profile's engine/version compatibility.
+ * $allowProfileOverride is reserved for explicit administrator reassignment of
+ * files from the unverified queue: it permits an otherwise unsupported target
+ * extension and uses the detected package reader while preserving target-game
+ * catalog ownership.
+ */
+function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId, bool $strictProfile = true, ?callable $progress = null, bool $allowProfileOverride = false): array
 {
     scanner_emit_percent($progress, 'start', 0, 'Preparing ' . $originalName);
 
@@ -247,7 +254,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 
     $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
     $profileExtensions = scanner_profile_extensions($profile, $config);
-    if (!in_array($ext, $profileExtensions, true)) {
+    $extensionOutsideProfile = !in_array($ext, $profileExtensions, true);
+    if ($extensionOutsideProfile && !$allowProfileOverride) {
         throw new RuntimeException('Extension not allowed by assigned profile: ' . $ext . '. Allowed: ' . implode(', ', $profileExtensions));
     }
 
@@ -267,6 +275,10 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     }
 
     $readerEngine = strtoupper((string)($classification['reader_engine'] ?? $profileEngine));
+    $detectedEngine = strtoupper((string)($classification['detected_engine'] ?? ''));
+    if ((!$strictProfile || $allowProfileOverride) && in_array($detectedEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+        $readerEngine = $detectedEngine;
+    }
     if ($readerEngine === '') {
         $readerEngine = $profileEngine;
     }
@@ -316,6 +328,12 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     scanner_emit_percent($progress, 'scan', 22, 'Read ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
     $packageName = scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
     $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; package reader=' . $readerEngine . '; compatibility=' . ($classification['compatibility_status'] ?? 'native') . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
+    if ($extensionOutsideProfile) {
+        $scanNotesAll[] = 'Administrator override: extension .' . $ext . ' is outside the assigned profile extension list.';
+    }
+    if (!$strictProfile && ($detectedEngine !== '' && $detectedEngine !== $profileEngine)) {
+        $scanNotesAll[] = 'Administrator compatibility override: catalogued under ' . $profileEngine . ' game using detected ' . $detectedEngine . ' reader.';
+    }
     $scanNotesText = $scanNotesAll ? implode("\n", $scanNotesAll) : null;
 
     scanner_emit_percent($progress, 'database', 23, 'Storing file');
