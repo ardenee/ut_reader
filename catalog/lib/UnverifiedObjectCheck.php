@@ -9,6 +9,42 @@ require_once __DIR__ . '/UnverifiedFileManager.php';
  * from that package match object paths currently requested by catalog imports.
  */
 
+/**
+ * @return array{valid:bool,found_tag:string,found_hex:string,found_text:string,expected_tag:string}
+ */
+function uvoc_package_signature(string $path): array
+{
+    $bytes = @file_get_contents($path, false, null, 0, 16);
+    if (!is_string($bytes) || strlen($bytes) < 4) {
+        return [
+            'valid' => false,
+            'found_tag' => 'unavailable',
+            'found_hex' => strtoupper(bin2hex((string)$bytes)),
+            'found_text' => '',
+            'expected_tag' => '0x9E2A83C1',
+        ];
+    }
+
+    $tag = (int)unpack('V', substr($bytes, 0, 4))[1];
+    $text = preg_replace('/[^\x20-\x7E]/', '.', substr($bytes, 0, 4)) ?? '';
+    return [
+        'valid' => $tag === 0x9E2A83C1,
+        'found_tag' => sprintf('0x%08X', $tag),
+        'found_hex' => strtoupper(bin2hex(substr($bytes, 0, 4))),
+        'found_text' => $text,
+        'expected_tag' => '0x9E2A83C1',
+    ];
+}
+
+function uvoc_public_reader_error(Throwable $error): string
+{
+    $message = trim(preg_replace('/\s+/', ' ', $error->getMessage()) ?? '');
+    if ($message === '') {
+        return 'The detected package reader could not read the package tables.';
+    }
+    return strlen($message) > 300 ? substr($message, 0, 297) . '...' : $message;
+}
+
 function uvoc_reader_engine(array $item): string
 {
     $engine = strtoupper(trim((string)($item['header']['engine'] ?? '')));
@@ -71,15 +107,53 @@ function uvoc_read_exports(array $config, array $item): array
 }
 
 /**
- * @return array{item:array<string,mixed>,reader:array<string,mixed>,candidates:list<array<string,mixed>>}
+ * @return array{item:array<string,mixed>,reader:array<string,mixed>|null,candidates:list<array<string,mixed>>,analysis_error:?array<string,mixed>}
  */
 function uvoc_check(PDO $db, array $config, string $token): array
 {
     $item = uvf_resolve($db, $config, $token);
-    $reader = uvoc_read_exports($config, $item);
+    $signature = uvoc_package_signature((string)$item['path']);
+    if (!$signature['valid']) {
+        return [
+            'item' => $item,
+            'reader' => null,
+            'candidates' => [],
+            'analysis_error' => [
+                'code' => 'invalid_package_signature',
+                'message' => 'This file does not begin with the Unreal package signature, so Names, Imports, and Exports cannot be read.',
+                'signature' => $signature,
+            ],
+        ];
+    }
+
+    try {
+        $reader = uvoc_read_exports($config, $item);
+    } catch (Throwable $error) {
+        error_log('[UnrealDB object check] package=' . (string)$item['path'] . ' error=' . $error->getMessage());
+        return [
+            'item' => $item,
+            'reader' => null,
+            'candidates' => [],
+            'analysis_error' => [
+                'code' => 'reader_failed',
+                'message' => uvoc_public_reader_error($error),
+                'signature' => $signature,
+            ],
+        ];
+    }
+
     $packageKey = strtolower(trim((string)$item['package_name']));
     if ($packageKey === '') {
-        throw new RuntimeException('Queued file has no usable package name.');
+        return [
+            'item' => $item,
+            'reader' => $reader,
+            'candidates' => [],
+            'analysis_error' => [
+                'code' => 'missing_package_name',
+                'message' => 'The queued filename does not provide a usable package name for dependency comparison.',
+                'signature' => $signature,
+            ],
+        ];
     }
 
     $rows = catalog_all(
@@ -132,5 +206,6 @@ function uvoc_check(PDO $db, array $config, string $token): array
         'item' => $item,
         'reader' => $reader,
         'candidates' => $candidates,
+        'analysis_error' => null,
     ];
 }
