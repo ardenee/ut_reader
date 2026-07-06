@@ -5,11 +5,70 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 
 /**
  * Infrastructure adapter that maps a configured engine profile to the existing
- * reader implementation. Legacy reader classes remain global by design; this
- * resolver contains that compatibility constraint in one place.
+ * reader implementation. UE1 and UE2 legacy readers both declare a global
+ * UnrealPackageReader class, so catalog pages that inspect mixed-engine files
+ * must load them into separate runtime namespaces.
  */
 final class CatalogReaderResolver
 {
+    /**
+     * Load a legacy UE1/UE2 source reader into an internal namespace instead
+     * of including it globally. This leaves the standalone reader pages
+     * unchanged while allowing one catalog request to analyse both engines.
+     *
+     * @param array<string, mixed> $config
+     */
+    private static function loadIsolatedLegacyReader(array $config, string $engineKey, string $notFoundMessagePrefix): string
+    {
+        $readerConfig = $config['engine_readers'][$engineKey] ?? [];
+        $relativePath = (string)($readerConfig['reader'] ?? '');
+        $readerPath = realpath(__DIR__ . '/../../../' . $relativePath);
+        if ($readerPath === false || !is_file($readerPath)) {
+            throw new \RuntimeException($notFoundMessagePrefix . ' ' . $engineKey . ': ' . $relativePath);
+        }
+
+        $runtimeNamespace = __NAMESPACE__ . '\\RuntimeLegacy\\' . $engineKey;
+        $runtimeClass = $runtimeNamespace . '\\UnrealPackageReader';
+        if (class_exists($runtimeClass, false)) {
+            return $runtimeClass;
+        }
+
+        $source = @file_get_contents($readerPath);
+        if (!is_string($source) || $source === '') {
+            throw new \RuntimeException('Could not read legacy package reader for ' . $engineKey . '.');
+        }
+
+        $source = preg_replace('/^\xEF\xBB\xBF?\s*<\?php\s*/', '', $source, 1) ?? $source;
+        $source = preg_replace('/^\s*declare\s*\(\s*strict_types\s*=\s*1\s*\)\s*;\s*/', '', $source, 1) ?? $source;
+        $source = preg_replace('/\?>\s*$/', '', $source) ?? $source;
+
+        /*
+         * Legacy reader files use unqualified RuntimeException and
+         * OutOfBoundsException. Imports keep those references pointing to PHP's
+         * global exception classes after the source is evaluated in a namespace.
+         */
+        $isolatedSource = 'namespace ' . $runtimeNamespace . ';'
+            . 'use \\RuntimeException;'
+            . 'use \\OutOfBoundsException;'
+            . 'use \\InvalidArgumentException;'
+            . 'use \\LogicException;'
+            . 'use \\Throwable;'
+            . "\n"
+            . $source;
+
+        try {
+            eval($isolatedSource);
+        } catch (\ParseError $error) {
+            throw new \RuntimeException('Could not isolate legacy package reader for ' . $engineKey . ': ' . $error->getMessage(), 0, $error);
+        }
+
+        if (!class_exists($runtimeClass, false)) {
+            throw new \RuntimeException('Isolated legacy package reader did not define UnrealPackageReader for ' . $engineKey . '.');
+        }
+
+        return $runtimeClass;
+    }
+
     /**
      * @param array<string, mixed> $config
      * @param list<string> $versionedReaderEngines
@@ -26,6 +85,10 @@ final class CatalogReaderResolver
             $engineKey = strtoupper(trim($engineKey));
         }
         $readerConfig = $config['engine_readers'][$engineKey] ?? [];
+
+        if (in_array($engineKey, ['UE1', 'UE2'], true)) {
+            return self::loadIsolatedLegacyReader($config, $engineKey, $notFoundMessagePrefix);
+        }
 
         if ($engineKey === 'UE3') {
             $catalogReader = realpath(__DIR__ . '/../../../parsers/UE3CatalogReader.php');
