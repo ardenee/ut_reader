@@ -11,7 +11,14 @@ catalog_start_session();
 function http_scan_allowed_extension(string $path, array $profile, array $config): bool
 {
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    return in_array($ext, scanner_profile_extensions($profile, $config), true);
+    $extensions = gp_extensions($profile);
+    if ($extensions === []) {
+        $extensions = array_values(array_filter(array_map(
+            static fn($value): string => strtolower(trim((string)$value, '. ')),
+            (array)($config['allowed_extensions'] ?? [])
+        ), static fn(string $value): bool => $value !== ''));
+    }
+    return in_array($ext, $extensions, true);
 }
 
 function http_scan_clean_manifest_line(string $line): string
