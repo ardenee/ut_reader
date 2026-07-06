@@ -123,15 +123,15 @@ try {
 .unverified-filter label { display:grid; gap:5px; }
 .unverified-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
 .unverified-note { border-left:4px solid #f6c453; padding-left:12px; }
-.unverified-table { min-width:1770px; }
+.unverified-table { min-width:1860px; }
 .unverified-table th, .unverified-table td { vertical-align:top; }
 .unverified-name { min-width:210px; }
 .unverified-identity { min-width:350px; white-space:nowrap; }
 .unverified-identity span { display:block; }
 .unverified-references { min-width:255px; }
 .unverified-reference-list { display:flex; flex-wrap:wrap; gap:5px; }
-.unverified-actions { min-width:360px; }
-.unverified-actions form { display:grid; grid-template-columns:minmax(130px,1fr) auto auto; gap:6px; align-items:center; margin:0; }
+.unverified-actions { min-width:455px; }
+.unverified-actions form { display:grid; grid-template-columns:minmax(130px,1fr) auto auto auto; gap:6px; align-items:center; margin:0; }
 .unverified-actions select { width:100%; min-width:0; }
 .unverified-actions .unverified-override,
 .unverified-actions .unverified-action-hint { grid-column:1 / -1; margin:0; font-size:12px; color:var(--muted); }
@@ -147,7 +147,7 @@ CSS;
     echo CatalogUi::pageHeader(
         'Unverified Files',
         'Review rejected packages, identify games that require their package names, then move or import them deliberately.',
-        ['Upload Files' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Sources' => 'sources.php']
+        ['Upload Files' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Sources' => 'sources.php', 'Storage Audit' => 'storage-audit.php']
     );
 
     if (is_array($flash) && !empty($flash['message'])) {
@@ -170,15 +170,15 @@ CSS;
     echo '<div class="unverified-summary">';
     echo '<div class="stat"><h2>' . count($items) . '</h2><p>Queued unverified files</p></div>';
     echo '<div class="stat"><h2>' . catalog_h(catalog_bytes($totalBytes)) . '</h2><p>Queued storage</p></div>';
-    echo '<div class="stat"><h2>' . $referenceCandidateCount . '</h2><p>Package-name reference candidates</p></div>';
+    echo '<div class="stat"><h2>' . $referenceCandidateCount . '</h2><p>Filename package candidates</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Unverified package queues</h2><p class="unverified-note">A Reference Candidate means one or more catalogued files in the listed game have Imports requiring this queued package name. The queued file itself has no database references yet, and its source game can also appear. <strong>Move queue</strong> only changes its unverified folder. <strong>Import selected</strong> catalogs it directly under the currently selected target game; you do not need to move it first. <strong>Discard queued file</strong> permanently deletes the physical package and its rejection text.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Unverified package queues</h2><p class="unverified-note">A Reference Candidate is a <strong>filename package-name match</strong>: one or more catalogued files in the listed game have Imports requiring this queued file’s package name. The queued file itself has no database references yet. Use <strong>Object check</strong> to read this queued file’s actual Export table and compare it to those requested object paths. <strong>Move queue</strong> only changes its unverified folder. <strong>Import selected</strong> catalogs it directly under the currently selected target game; you do not need to move it first. <strong>Discard queued file</strong> permanently deletes the physical package and its rejection text.</p></div></div><div class="ui-section__body">';
     if ($items === []) {
         echo CatalogUi::emptyState('No unverified files found', 'There are no physical files in the selected unverified queue folders.');
     } else {
         echo '<div class="table-wrap"><table class="unverified-table"><thead><tr>';
-        echo '<th>Source Queue</th><th>File</th><th class="unverified-identity">MD5 / GUID</th><th>Detected Header</th><th>Size</th><th class="unverified-references" title="Catalogued files in the listed game import or require this queued package name.">Reference Candidates</th><th class="unverified-actions">Manage</th>';
+        echo '<th>Source Queue</th><th>File</th><th class="unverified-identity">MD5 / GUID</th><th>Detected Header</th><th>Size</th><th class="unverified-references" title="Filename package-name candidates. Run Object check for an actual exported-object comparison.">Reference Candidates</th><th class="unverified-actions">Manage</th>';
         echo '</tr></thead><tbody>';
         foreach ($items as $item) {
             $packageKey = strtolower((string)$item['package_name']);
@@ -192,8 +192,10 @@ CSS;
             if ($reason === '') {
                 $reason = 'No rejection reason file was found.';
             }
+            $rowId = 'unverified-file-' . (string)$item['token'];
+            $objectCheckUrl = 'unverified-object-check.php?token=' . rawurlencode((string)$item['token']);
 
-            echo '<tr>';
+            echo '<tr id="' . catalog_h($rowId) . '">';
             echo '<td><strong>' . catalog_h((string)$item['game']['name']) . '</strong><span class="muted small unverified-meta">' . catalog_h((string)$item['game']['slug']) . '/unverified</span></td>';
             echo '<td class="unverified-name"><strong class="mono">' . catalog_h((string)$item['original_name']) . '</strong><span class="muted small unverified-meta">Package: ' . catalog_h((string)$item['package_name']) . ' · .' . catalog_h((string)$item['extension']) . '<br>Queued: ' . catalog_h(date('Y-m-d H:i', (int)$item['modified_at'])) . '</span></td>';
             echo '<td class="mono small unverified-identity">' . unverified_files_identity_html($item) . '</td>';
@@ -217,7 +219,8 @@ CSS;
             echo '</select>';
             echo '<button type="submit" name="action" value="move" class="button secondary" title="Move only to the selected game unverified queue">Move queue</button>';
             echo '<button type="submit" name="action" value="import" class="button" title="Catalog this package under the selected target game">Import selected</button>';
-            echo '<p class="unverified-action-hint">Move only reorganises the queue. Import selected catalogs directly into the selected game.</p>';
+            echo '<a class="button secondary" href="' . catalog_h($objectCheckUrl) . '" title="Read actual package exports and compare them to candidate dependency objects">Object check</a>';
+            echo '<p class="unverified-action-hint">Move only reorganises the queue. Import selected catalogs directly into the selected game. Object check does not import.</p>';
             echo '<label class="unverified-override"><input type="checkbox" name="allow_profile_override" value="1" checked> Allow profile/version/extension override for this deliberate reassignment.</label>';
             echo '<button type="submit" name="action" value="discard" class="button danger unverified-discard" onclick="return confirm(\'Discard this queued file and its rejection text permanently?\');">Discard queued file</button>';
             echo '</form></td>';
