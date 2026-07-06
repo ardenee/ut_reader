@@ -38,7 +38,7 @@ final class CatalogReaderResolver
             throw new \RuntimeException('Could not read legacy package reader for ' . $engineKey . '.');
         }
 
-        $source = preg_replace('/^\xEF\xBB\xBF?\s*<\?php\s*/', '', $source, 1) ?? $source;
+        $source = preg_replace('/^(?:\xEF\xBB\xBF)?\s*<\?php\s*/', '', $source, 1) ?? $source;
         $source = preg_replace('/^\s*declare\s*\(\s*strict_types\s*=\s*1\s*\)\s*;\s*/', '', $source, 1) ?? $source;
         $source = preg_replace('/\?>\s*$/', '', $source) ?? $source;
 
