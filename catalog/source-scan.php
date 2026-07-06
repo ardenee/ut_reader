@@ -21,10 +21,15 @@ function clean_relative_path(string $base, string $path): string
     return basename($path);
 }
 
-function allowed_source_extension(string $path, array $config): bool
+/**
+ * Local sources belong to one game, therefore their extension allowance comes
+ * from that game’s active profile. The global config list is only a legacy
+ * fallback when a profile has no explicit extension list.
+ */
+function allowed_source_extension(string $path, array $profile, array $config): bool
 {
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    return in_array($ext, $config['allowed_extensions'] ?? [], true);
+    return in_array($ext, scanner_profile_extensions($profile, $config), true);
 }
 
 function record_file_location(PDO $db, PDOStatement $upsert, int $fileId, int $sourceId, string $relativePath): void
@@ -47,14 +52,15 @@ function source_scan_tmp_copy(string $path): string
 
 function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUnknown, bool $strictProfile): array
 {
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.slug game_slug, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
+    $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.slug game_slug, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
     if (!$source) {
         throw new RuntimeException('Source not found');
     }
     if ($source['source_type'] !== 'local_path') {
         throw new RuntimeException('Only local folder sources can be scanned by this page.');
     }
-    $profileEngine = gp_engine_for_game($db, (int)$source['game_id']);
+    $profile = gp_required_profile_for_game($db, (int)$source['game_id']);
+    $profileEngine = strtoupper((string)$profile['engine_key']);
 
     $basePath = rtrim((string)$source['base_path'], DIRECTORY_SEPARATOR);
     if (!is_dir($basePath) || !is_readable($basePath)) {
@@ -84,7 +90,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
         }
 
         $path = $item->getPathname();
-        if (!allowed_source_extension($path, $config)) {
+        if (!allowed_source_extension($path, $profile, $config)) {
             continue;
         }
 
@@ -268,7 +274,7 @@ try {
     }
 
     catalog_head('Source scan');
-    catalog_page_header('Source scanner', 'Scan game-owned folders and record where catalog files exist. Unknown files can be imported through the active game profile.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php']);
+    catalog_page_header('Source scanner', 'Scan game-owned folders and record where catalog files exist. Unknown files can be imported through the active game profile.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('source_scan');
@@ -317,7 +323,7 @@ try {
         }
     }
 
-    $sources = catalog_all($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE s.is_active=1 ORDER BY g.name, s.name');
+    $sources = catalog_all($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE s.is_active=1 ORDER BY g.name, s.name');
     echo '<div class="card"><h2>Run scan</h2>';
     if (!$sources) {
         echo '<p class="muted">No sources configured. Add one in <a href="sources.php">Game Sources</a>.</p>';
@@ -329,8 +335,8 @@ try {
         }
         echo '</select></label></p>';
         echo '<p><label><input type="checkbox" name="import_unknown" value="1"> Import unknown files into this game using its active profile</label></p>';
-        echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject mismatches</option><option value="0">Loose: try parser anyway</option></select></label></p>';
-        echo '<p class="muted">Without import enabled, the scan only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned before being stored.</p>';
+        echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject mismatches</option><option value="0">Loose: use detected reader where possible</option></select></label></p>';
+        echo '<p class="muted">The scan uses the selected source game’s profile extension list, including .un2 where its profile allows it. Without import enabled, it only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned before being stored.</p>';
         echo '<button>Scan selected source</button></form>';
     }
     echo '</div>';
