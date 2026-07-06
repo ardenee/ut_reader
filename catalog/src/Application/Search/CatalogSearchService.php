@@ -23,81 +23,89 @@ final class CatalogSearchService
     /**
      * @return list<array<string, mixed>>
      */
-    public static function findFiles(PDO $db, string $query, int $limit = 200): array
+    public static function findFiles(PDO $db, string $query, int $limit = 200, ?int $gameId = null): array
     {
         $limit = max(1, min($limit, 500));
+        $gameId = $gameId !== null && $gameId > 0 ? $gameId : null;
         $like = '%' . $query . '%';
         $candidateMatches = [];
+
+        $fileGameSql = $gameId === null ? '' : ' AND f.game_id=?';
+        $fileGameArgs = $gameId === null ? [] : [$gameId];
+        $importGameSql = $gameId === null ? '' : ' AND f.game_id=?';
+        $importGameArgs = $gameId === null ? [] : [$gameId];
+        $exportGameSql = $gameId === null ? '' : ' AND f.game_id=?';
+        $exportGameArgs = $gameId === null ? [] : [$gameId];
 
         self::collectMatches(
             $db,
             'hash_md5',
-            'SELECT f.id, f.md5 match_value FROM ue_files f WHERE f.md5=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$query],
+            'SELECT f.id, f.md5 match_value FROM ue_files f WHERE f.md5=?' . $fileGameSql . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            array_merge([$query], $fileGameArgs),
             'MD5',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'hash_sha1',
-            'SELECT f.id, f.sha1 match_value FROM ue_files f WHERE f.sha1=? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$query],
+            'SELECT f.id, f.sha1 match_value FROM ue_files f WHERE f.sha1=?' . $fileGameSql . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            array_merge([$query], $fileGameArgs),
             'SHA1',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'guid',
-            'SELECT f.id, f.package_guid match_value FROM ue_files f WHERE f.package_guid LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$like],
+            'SELECT f.id, f.package_guid match_value FROM ue_files f WHERE f.package_guid LIKE ?' . $fileGameSql . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            array_merge([$like], $fileGameArgs),
             'GUID',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'package_name',
-            'SELECT f.id, f.package_name match_value FROM ue_files f WHERE f.package_name LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$like],
+            'SELECT f.id, f.package_name match_value FROM ue_files f WHERE f.package_name LIKE ?' . $fileGameSql . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            array_merge([$like], $fileGameArgs),
             'Package',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'file_name',
-            'SELECT f.id, f.original_name match_value FROM ue_files f WHERE f.original_name LIKE ? ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
-            [$like],
+            'SELECT f.id, f.original_name match_value FROM ue_files f WHERE f.original_name LIKE ?' . $fileGameSql . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
+            array_merge([$like], $fileGameArgs),
             'File',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'import_path',
-            'SELECT i.file_id id, i.full_path match_value FROM ue_imports i WHERE i.full_path LIKE ? ORDER BY i.file_id, i.import_index LIMIT ' . $limit,
-            [$like],
+            'SELECT i.file_id id, i.full_path match_value FROM ue_imports i JOIN ue_files f ON f.id=i.file_id WHERE i.full_path LIKE ?' . $importGameSql . ' ORDER BY i.file_id, i.import_index LIMIT ' . $limit,
+            array_merge([$like], $importGameArgs),
             'Import path',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'import_object',
-            'SELECT i.file_id id, i.object_name match_value FROM ue_imports i WHERE i.object_name LIKE ? ORDER BY i.file_id, i.import_index LIMIT ' . $limit,
-            [$like],
+            'SELECT i.file_id id, i.object_name match_value FROM ue_imports i JOIN ue_files f ON f.id=i.file_id WHERE i.object_name LIKE ?' . $importGameSql . ' ORDER BY i.file_id, i.import_index LIMIT ' . $limit,
+            array_merge([$like], $importGameArgs),
             'Import object',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'export_path',
-            'SELECT e.file_id id, e.full_path match_value FROM ue_exports e WHERE e.full_path LIKE ? ORDER BY e.file_id, e.export_index LIMIT ' . $limit,
-            [$like],
+            'SELECT e.file_id id, e.full_path match_value FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE e.full_path LIKE ?' . $exportGameSql . ' ORDER BY e.file_id, e.export_index LIMIT ' . $limit,
+            array_merge([$like], $exportGameArgs),
             'Export path',
             $candidateMatches
         );
         self::collectMatches(
             $db,
             'export_object',
-            'SELECT e.file_id id, e.object_name match_value FROM ue_exports e WHERE e.object_name LIKE ? ORDER BY e.file_id, e.export_index LIMIT ' . $limit,
-            [$like],
+            'SELECT e.file_id id, e.object_name match_value FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE e.object_name LIKE ?' . $exportGameSql . ' ORDER BY e.file_id, e.export_index LIMIT ' . $limit,
+            array_merge([$like], $exportGameArgs),
             'Export object',
             $candidateMatches
         );
