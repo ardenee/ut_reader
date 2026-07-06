@@ -2,10 +2,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/UnverifiedFileManager.php';
-require_once __DIR__ . '/RiffConAsset.php';
 
 /**
- * Reads one queued package without storing it. The result strengthens the
+ * Reads one queued Unreal package without storing it. The result strengthens the
  * filename/package-name reference hint by testing whether the actual exports
  * from that package match object paths currently requested by catalog imports.
  */
@@ -108,22 +107,11 @@ function uvoc_read_exports(array $config, array $item): array
 }
 
 /**
- * @return array{item:array<string,mixed>,reader:array<string,mixed>|null,candidates:list<array<string,mixed>>,analysis_error:?array<string,mixed>,asset:?array<string,mixed>}
+ * @return array{item:array<string,mixed>,reader:array<string,mixed>|null,candidates:list<array<string,mixed>>,analysis_error:?array<string,mixed>}
  */
 function uvoc_check(PDO $db, array $config, string $token): array
 {
     $item = uvf_resolve($db, $config, $token);
-    $riffCon = riff_con_parse((string)$item['path'], (string)$item['original_name']);
-    if ($riffCon !== null) {
-        return [
-            'item' => $item,
-            'reader' => null,
-            'candidates' => [],
-            'analysis_error' => null,
-            'asset' => $riffCon,
-        ];
-    }
-
     $signature = uvoc_package_signature((string)$item['path']);
     if (!$signature['valid']) {
         return [
@@ -132,10 +120,9 @@ function uvoc_check(PDO $db, array $config, string $token): array
             'candidates' => [],
             'analysis_error' => [
                 'code' => 'invalid_package_signature',
-                'message' => 'This file does not begin with the Unreal package signature, so Names, Imports, and Exports cannot be read.',
+                'message' => 'This file does not begin with the official Unreal package signature, so it is not processed as a catalog package.',
                 'signature' => $signature,
             ],
-            'asset' => null,
         ];
     }
 
@@ -152,7 +139,6 @@ function uvoc_check(PDO $db, array $config, string $token): array
                 'message' => uvoc_public_reader_error($error),
                 'signature' => $signature,
             ],
-            'asset' => null,
         ];
     }
 
@@ -167,7 +153,6 @@ function uvoc_check(PDO $db, array $config, string $token): array
                 'message' => 'The queued filename does not provide a usable package name for dependency comparison.',
                 'signature' => $signature,
             ],
-            'asset' => null,
         ];
     }
 
@@ -222,6 +207,5 @@ function uvoc_check(PDO $db, array $config, string $token): array
         'reader' => $reader,
         'candidates' => $candidates,
         'analysis_error' => null,
-        'asset' => null,
     ];
 }
