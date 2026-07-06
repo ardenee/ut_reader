@@ -61,7 +61,68 @@ function uvoc_reader_engine(array $item): string
 }
 
 /**
- * @return array{engine:string,name_count:int,import_count:int,export_count:int,exports:array<string,string>}
+ * @param array<int, mixed> $names
+ * @param array<int, mixed> $imports
+ * @param array<int, mixed> $exports
+ * @return array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>}
+ */
+function uvoc_build_tables(array $names, array $imports, array $exports, string $packageName): array
+{
+    $nameRows = [];
+    foreach ($names as $index => $name) {
+        $nameRows[] = [
+            'name_index' => (int)$index,
+            'name_text' => (string)($name['name'] ?? $name['text'] ?? ''),
+            'flags' => isset($name['flags']) ? (int)$name['flags'] : null,
+        ];
+    }
+
+    $cache = [];
+    $importRows = [];
+    foreach ($imports as $index => $import) {
+        $fullPath = scanner_ref_path(-((int)$index + 1), $imports, $exports, $cache);
+        $parts = $fullPath !== '' ? explode('.', $fullPath) : [];
+        $rootPackage = (string)($parts[0] ?? '');
+        $relativePath = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
+        $importRows[] = [
+            'import_index' => (int)$index,
+            'class_package' => (string)($import['classPackageText'] ?? ($import['ClassPackage']['text'] ?? '')),
+            'class_name' => (string)($import['classNameText'] ?? ($import['ClassName']['text'] ?? '')),
+            'object_name' => (string)($import['objectNameText'] ?? ($import['ObjectName']['text'] ?? '')),
+            'outer_index' => (int)($import['outerIndex'] ?? $import['OuterIndex'] ?? $import['outer'] ?? 0),
+            'root_package' => $rootPackage,
+            'relative_object_path' => $relativePath,
+            'full_path' => $fullPath,
+        ];
+    }
+
+    $exportRows = [];
+    foreach ($exports as $index => $export) {
+        $localPath = scanner_ref_path((int)$index + 1, $imports, $exports, $cache);
+        $classRef = (int)($export['classIndex'] ?? $export['class'] ?? 0);
+        $className = $classRef !== 0 ? scanner_ref_path($classRef, $imports, $exports, $cache) : '';
+        $exportRows[] = [
+            'export_index' => (int)$index,
+            'class_name' => $className,
+            'object_name' => (string)($export['objectNameText'] ?? ''),
+            'outer_index' => (int)($export['outerIndex'] ?? $export['packageIndex'] ?? $export['outer'] ?? 0),
+            'local_path' => $localPath,
+            'full_path' => scanner_join_path_parts([$packageName, $localPath]),
+            'object_flags' => isset($export['objectFlags']) ? (int)$export['objectFlags'] : null,
+            'serial_size' => isset($export['serialSize']) ? (int)$export['serialSize'] : null,
+            'serial_offset' => isset($export['serialOffset']) ? (int)$export['serialOffset'] : null,
+        ];
+    }
+
+    return [
+        'names' => $nameRows,
+        'imports' => $importRows,
+        'exports' => $exportRows,
+    ];
+}
+
+/**
+ * @return array{engine:string,name_count:int,import_count:int,export_count:int,exports:array<string,string>,tables:array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>}}
  */
 function uvoc_read_exports(array $config, array $item): array
 {
@@ -86,12 +147,11 @@ function uvoc_read_exports(array $config, array $item): array
         throw new RuntimeException('Reader returned an invalid package table.');
     }
 
-    $paths = [];
-    $cache = [];
     $packageName = scanner_clean_name((string)$item['package_name']);
-    foreach ($exports as $index => $export) {
-        $localPath = scanner_ref_path((int)$index + 1, $imports, $exports, $cache);
-        $fullPath = scanner_join_path_parts([$packageName, $localPath]);
+    $tables = uvoc_build_tables($names, $imports, $exports, $packageName);
+    $paths = [];
+    foreach ($tables['exports'] as $export) {
+        $fullPath = (string)$export['full_path'];
         if ($fullPath !== '') {
             $paths[strtolower($fullPath)] = $fullPath;
         }
@@ -103,6 +163,7 @@ function uvoc_read_exports(array $config, array $item): array
         'import_count' => count($imports),
         'export_count' => count($exports),
         'exports' => $paths,
+        'tables' => $tables,
     ];
 }
 
