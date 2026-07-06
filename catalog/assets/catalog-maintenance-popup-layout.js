@@ -17,8 +17,12 @@
         document.head.appendChild(style);
     }
 
+    function isSplit(message) {
+        return !!message.querySelector(':scope > .catalog-maintenance-message__label');
+    }
+
     function splitMessage(message) {
-        if (!message || message.dataset.maintenanceMessageSplit === '1') {
+        if (!message || isSplit(message)) {
             return;
         }
 
@@ -37,13 +41,12 @@
         detailElement.className = 'catalog-maintenance-message__detail';
         detailElement.textContent = detail || ' ';
         message.appendChild(detailElement);
-        message.dataset.maintenanceMessageSplit = '1';
     }
 
     function prepareMessage(message) {
-        if (!message) return;
-        if (message.dataset.maintenanceMessageSplit === '1') return;
-        splitMessage(message);
+        if (message) {
+            splitMessage(message);
+        }
     }
 
     function processNode(node) {
