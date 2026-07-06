@@ -34,6 +34,54 @@ function catalog_maintenance_file_id(): int
     return (int)$fileId;
 }
 
+/**
+ * Full Sync and the individual re-import action share one lifecycle:
+ *
+ * 1. Check that the stored package still exists.
+ * 2. If it is gone, delete its catalog record and all dependent records.
+ * 3. Otherwise remove the old record and run the normal upload scanner.
+ *
+ * @return array{status:string,file_id:?int,game_id:int,original_name:string,message:string}
+ */
+function catalog_maintenance_reimport_or_remove_missing(PDO $db, array $config, int $fileId, ?int $userId, ?callable $progress): array
+{
+    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
+    if (!$file) {
+        throw new RuntimeException('File no longer exists in the catalog. Refresh the file list before retrying.');
+    }
+
+    $storedPath = catalog_file_maintenance_storage_path($config, $file);
+    if ($storedPath === null || !is_file($storedPath)) {
+        if ($progress !== null) {
+            $progress([
+                'stage' => 'missing_storage',
+                'done' => 0,
+                'total' => 100,
+                'percent' => 0,
+                'message' => 'Stored package is missing. Removing its catalog record and references.',
+            ]);
+        }
+
+        $removed = catalog_file_maintenance_remove($db, $config, $fileId, $progress);
+        return [
+            'status' => 'removed_missing',
+            'file_id' => null,
+            'game_id' => (int)$removed['game_id'],
+            'original_name' => (string)$removed['original_name'],
+            'message' => 'Stored package was missing; removed its catalog record, tables, locations, and dependency references.',
+        ];
+    }
+
+    $result = catalog_file_maintenance_reimport($db, $config, $fileId, $userId, $progress);
+    return [
+        'status' => 'reimported',
+        'file_id' => (int)$result['file_id'],
+        'game_id' => (int)$result['game_id'],
+        'original_name' => (string)$result['original_name'],
+        'message' => (string)$result['message'],
+    ];
+}
+
 function catalog_maintenance_is_deadlock(Throwable $error): bool
 {
     $code = (string)$error->getCode();
@@ -170,17 +218,21 @@ try {
      * catalog tables concurrently while retaining the short-request design.
      */
     if ($operation === 'sync_reimport') {
+        $fileId = catalog_maintenance_file_id();
         $result = catalog_maintenance_with_write_lock(
             $db,
             $progress,
-            static fn() => catalog_file_maintenance_reimport($db, $config, catalog_maintenance_file_id(), $userId, $progress)
+            static fn() => catalog_maintenance_reimport_or_remove_missing($db, $config, $fileId, $userId, $progress)
         );
         catalog_maintenance_reply([
             'ok' => true,
+            'status' => $result['status'],
             'file_id' => $result['file_id'],
             'game_id' => $result['game_id'],
             'original_name' => $result['original_name'],
-            'message' => 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
+            'message' => $result['status'] === 'removed_missing'
+                ? $result['message']
+                : 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
         ]);
     }
 
@@ -217,11 +269,15 @@ try {
         $result = catalog_maintenance_with_write_lock(
             $db,
             $progress,
-            static fn() => catalog_file_maintenance_reimport($db, $config, $fileId, $userId, $progress)
+            static fn() => catalog_maintenance_reimport_or_remove_missing($db, $config, $fileId, $userId, $progress)
         );
+        $message = $result['status'] === 'removed_missing'
+            ? $result['message']
+            : 'Re-imported ' . $result['original_name'] . ' using the normal scanner.';
         catalog_maintenance_reply([
             'ok' => true,
-            'message' => 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
+            'status' => $result['status'],
+            'message' => $message,
             'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
         ]);
     }
