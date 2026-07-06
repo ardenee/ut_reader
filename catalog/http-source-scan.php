@@ -8,10 +8,10 @@ require_once __DIR__ . '/lib/TrustedHttpSourceClient.php';
 
 catalog_start_session();
 
-function http_scan_allowed_extension(string $path, array $config): bool
+function http_scan_allowed_extension(string $path, array $profile, array $config): bool
 {
     $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-    return in_array($ext, $config['allowed_extensions'] ?? [], true);
+    return in_array($ext, scanner_profile_extensions($profile, $config), true);
 }
 
 function http_scan_clean_manifest_line(string $line): string
@@ -27,7 +27,7 @@ function http_scan_clean_manifest_line(string $line): string
     return trim($line, " \t\r\n\"'");
 }
 
-function http_scan_extract_manifest_paths(string $manifestText, array $config): array
+function http_scan_extract_manifest_paths(string $manifestText, array $profile, array $config): array
 {
     $paths = [];
     $trimmed = trim($manifestText);
@@ -39,7 +39,7 @@ function http_scan_extract_manifest_paths(string $manifestText, array $config): 
     foreach ($items ?: [] as $item) {
         $path = is_array($item) ? (string)($item['path'] ?? $item['file'] ?? $item['name'] ?? '') : (string)$item;
         $path = http_scan_clean_manifest_line($path);
-        if ($path !== '' && http_scan_allowed_extension($path, $config)) {
+        if ($path !== '' && http_scan_allowed_extension($path, $profile, $config)) {
             $paths[$path] = true;
         }
     }
@@ -113,19 +113,19 @@ function http_scan_deep_guid_match(PDO $db, array $config, array $source, array 
 
 function http_scan_source(PDO $db, array $config, int $sourceId, string $manifestName, bool $checkRemoteSize, bool $deepScan, int $maxDeepBytes): array
 {
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.game_id=g.id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
+    $source = catalog_one($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
     if (!$source) {
         throw new RuntimeException('Source not found.');
     }
     if (!in_array($source['source_type'], ['http_mirror', 'redirect_server'], true)) {
         throw new RuntimeException('This scanner only accepts HTTP mirror and redirect-server sources.');
     }
-    gp_required_profile_for_game($db, (int)$source['game_id']);
+    $profile = gp_required_profile_for_game($db, (int)$source['game_id']);
 
     $target = TrustedHttpSourceClient::source((string)$source['base_path']);
     $manifestUrl = TrustedHttpSourceClient::relativeUrl($target, $manifestName);
     $manifest = TrustedHttpSourceClient::bytes($target, $manifestUrl, 5 * 1024 * 1024, 'manifest');
-    $paths = http_scan_extract_manifest_paths($manifest, $config);
+    $paths = http_scan_extract_manifest_paths($manifest, $profile, $config);
     if (count($paths) > 50000) {
         throw new RuntimeException('Manifest contains more than the 50,000 allowed package entries.');
     }
@@ -207,7 +207,7 @@ try {
 
     $sources = catalog_all($db, 'SELECT s.id, s.name, s.source_type, s.base_path, g.name game_name FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.is_active=1 AND s.source_type IN ("http_mirror","redirect_server") ORDER BY g.name, s.name');
     catalog_head('HTTP source scan');
-    catalog_page_header('HTTP source scanner', 'Scans a trusted HTTPS mirror manifest. The scanner only accepts relative paths, blocks private-network targets and redirects, and enforces byte and deep-scan limits.', ['Sources' => 'sources.php', 'Local Source Scan' => 'source-scan.php', 'Games' => 'games.php']);
+    catalog_page_header('HTTP source scanner', 'Scans a trusted HTTPS mirror manifest using the selected game profile extension list. The scanner only accepts relative paths, blocks private-network targets and redirects, and enforces byte and deep-scan limits.', ['Sources' => 'sources.php', 'Local Source Scan' => 'source-scan.php', 'Unverified Files' => 'unverified-files.php', 'Games' => 'games.php']);
 
     if ($result !== null) {
         echo '<div class="card"><h2>Scan result</h2><table>';
