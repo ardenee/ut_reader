@@ -5,6 +5,10 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogFileMaintenance.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 
+const CATALOG_MAINTENANCE_WRITE_LOCK = 'unrealdb_catalog_maintenance_write_v1';
+const CATALOG_MAINTENANCE_LOCK_WAIT_SECONDS = 45;
+const CATALOG_MAINTENANCE_DEADLOCK_RETRIES = 3;
+
 function catalog_maintenance_reply(array $payload, int $status = 200): never
 {
     http_response_code($status);
@@ -28,6 +32,95 @@ function catalog_maintenance_file_id(): int
         throw new RuntimeException('A valid file ID is required.');
     }
     return (int)$fileId;
+}
+
+function catalog_maintenance_is_deadlock(Throwable $error): bool
+{
+    $code = (string)$error->getCode();
+    $message = strtolower($error->getMessage());
+
+    return $code === '40001'
+        || str_contains($message, 'deadlock found')
+        || str_contains($message, 'serialization failure')
+        || str_contains($message, 'error: 1213');
+}
+
+/**
+ * Retry only transient InnoDB deadlocks. Individual re-imports restore their
+ * own snapshot before throwing, so a retry starts from the original package.
+ */
+function catalog_maintenance_retry_deadlock(?callable $progress, callable $operation): mixed
+{
+    for ($attempt = 1; $attempt <= CATALOG_MAINTENANCE_DEADLOCK_RETRIES; $attempt++) {
+        try {
+            return $operation();
+        } catch (Throwable $error) {
+            if (!catalog_maintenance_is_deadlock($error) || $attempt === CATALOG_MAINTENANCE_DEADLOCK_RETRIES) {
+                throw $error;
+            }
+
+            if ($progress !== null) {
+                $progress([
+                    'stage' => 'retrying_database_write',
+                    'done' => 0,
+                    'total' => 100,
+                    'percent' => 0,
+                    'message' => 'Database write conflict detected; retrying maintenance request (' . $attempt . '/' . CATALOG_MAINTENANCE_DEADLOCK_RETRIES . ').',
+                ]);
+            }
+            usleep(250000 * $attempt);
+        }
+    }
+
+    throw new RuntimeException('Maintenance retry limit reached.');
+}
+
+/**
+ * MySQL advisory locks are connection-scoped and automatically release if a
+ * request dies. This serializes scanner-based catalog mutations from full sync,
+ * manual re-import, and delete actions without keeping a long-running lock
+ * between browser requests.
+ */
+function catalog_maintenance_with_write_lock(PDO $db, ?callable $progress, callable $operation): mixed
+{
+    if ($progress !== null) {
+        $progress([
+            'stage' => 'waiting_for_catalog_lock',
+            'done' => 0,
+            'total' => 100,
+            'percent' => 0,
+            'message' => 'Waiting for another catalog maintenance write to finish.',
+        ]);
+    }
+
+    $lock = catalog_one(
+        $db,
+        'SELECT GET_LOCK(?, ?) acquired',
+        [CATALOG_MAINTENANCE_WRITE_LOCK, CATALOG_MAINTENANCE_LOCK_WAIT_SECONDS]
+    );
+    if ((int)($lock['acquired'] ?? 0) !== 1) {
+        throw new RuntimeException('Another catalog maintenance task is still running. Please retry this package shortly.');
+    }
+
+    try {
+        if ($progress !== null) {
+            $progress([
+                'stage' => 'catalog_lock_acquired',
+                'done' => 0,
+                'total' => 100,
+                'percent' => 0,
+                'message' => 'Catalog write lock acquired. Starting maintenance.',
+            ]);
+        }
+        return catalog_maintenance_retry_deadlock($progress, $operation);
+    } finally {
+        try {
+            $release = $db->prepare('SELECT RELEASE_LOCK(?)');
+            $release->execute([CATALOG_MAINTENANCE_WRITE_LOCK]);
+        } catch (Throwable $releaseError) {
+            error_log('[UnrealDB][' . catalog_request_id() . '] could not release catalog maintenance lock: ' . $releaseError->getMessage());
+        }
+    }
 }
 
 try {
@@ -73,11 +166,15 @@ try {
 
     /*
      * Full Sync deliberately calls these short operations one package at a
-     * time. This prevents a shared-host PHP request timeout from aborting a
-     * long game-wide maintenance run.
+     * time. The advisory lock prevents two games from mutating dependency and
+     * catalog tables concurrently while retaining the short-request design.
      */
     if ($operation === 'sync_reimport') {
-        $result = catalog_file_maintenance_reimport($db, $config, catalog_maintenance_file_id(), $userId, $progress);
+        $result = catalog_maintenance_with_write_lock(
+            $db,
+            $progress,
+            static fn() => catalog_file_maintenance_reimport($db, $config, catalog_maintenance_file_id(), $userId, $progress)
+        );
         catalog_maintenance_reply([
             'ok' => true,
             'file_id' => $result['file_id'],
@@ -89,17 +186,24 @@ try {
 
     if ($operation === 'sync_refresh_dependencies') {
         $fileId = catalog_maintenance_file_id();
-        $file = catalog_one($db, 'SELECT id, game_id, original_name FROM ue_files WHERE id=?', [$fileId]);
-        if (!$file) {
-            throw new RuntimeException('The re-imported package is no longer present in the catalog.');
-        }
-        scanner_rebuild_dependencies($db, $config, $fileId, $progress, 0, 100, 'Final dependency refresh for ' . $file['original_name']);
+        $result = catalog_maintenance_with_write_lock(
+            $db,
+            $progress,
+            static function () use ($db, $config, $fileId, $progress): array {
+                $file = catalog_one($db, 'SELECT id, game_id, original_name FROM ue_files WHERE id=?', [$fileId]);
+                if (!$file) {
+                    throw new RuntimeException('The re-imported package is no longer present in the catalog. Refresh Full Sync to rebuild its package list.');
+                }
+                scanner_rebuild_dependencies($db, $config, $fileId, $progress, 0, 100, 'Final dependency refresh for ' . $file['original_name']);
+                return $file;
+            }
+        );
         catalog_maintenance_reply([
             'ok' => true,
             'file_id' => $fileId,
-            'game_id' => (int)$file['game_id'],
-            'original_name' => (string)$file['original_name'],
-            'message' => 'Refreshed dependencies for ' . $file['original_name'] . '.',
+            'game_id' => (int)$result['game_id'],
+            'original_name' => (string)$result['original_name'],
+            'message' => 'Refreshed dependencies for ' . $result['original_name'] . '.',
         ]);
     }
 
@@ -110,7 +214,11 @@ try {
     $fileId = catalog_maintenance_file_id();
 
     if ($operation === 'reimport' || $operation === 'rebuild') {
-        $result = catalog_file_maintenance_reimport($db, $config, $fileId, $userId, $progress);
+        $result = catalog_maintenance_with_write_lock(
+            $db,
+            $progress,
+            static fn() => catalog_file_maintenance_reimport($db, $config, $fileId, $userId, $progress)
+        );
         catalog_maintenance_reply([
             'ok' => true,
             'message' => 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
@@ -119,7 +227,11 @@ try {
     }
 
     if ($operation === 'remove') {
-        $result = catalog_file_maintenance_remove($db, $config, $fileId, $progress);
+        $result = catalog_maintenance_with_write_lock(
+            $db,
+            $progress,
+            static fn() => catalog_file_maintenance_remove($db, $config, $fileId, $progress)
+        );
         catalog_maintenance_reply([
             'ok' => true,
             'message' => 'Removed ' . $result['original_name'] . ' from storage and the catalog.' . $result['warning'],
