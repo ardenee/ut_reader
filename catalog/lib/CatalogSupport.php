@@ -250,6 +250,11 @@ function catalog_head(string $title): void
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog.css') . '">';
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog-ui.css') . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
+    if (in_array($scriptName, ['game-files.php', 'full-sync.php'], true)) {
+        $popupLayoutPath = __DIR__ . '/../assets/catalog-maintenance-popup-layout.js';
+        $popupLayoutVersion = is_file($popupLayoutPath) ? (string)filemtime($popupLayoutPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/catalog-maintenance-popup-layout.js?v=' . $popupLayoutVersion) . '" defer></script>';
+    }
     if ($scriptName === 'game-files.php' && catalog_support_is_admin()) {
         $maintenanceScriptPath = __DIR__ . '/../assets/game-file-maintenance.js.php';
         $maintenanceScriptVersion = is_file($maintenanceScriptPath) ? (string)filemtime($maintenanceScriptPath) : '1';
