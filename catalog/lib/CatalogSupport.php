@@ -150,6 +150,7 @@ function catalog_admin_nav(): void
             'HTTP Source Scan' => $root . 'http-source-scan.php',
             'Upload Files' => $root . 'profiled-upload.php',
             'Unverified Files' => $root . 'unverified-files.php',
+            'Storage Audit' => $root . 'storage-audit.php',
         ]);
         catalog_nav_menu('Federation', [
             'Federation Admin' => $root . 'federation/admin.php',
