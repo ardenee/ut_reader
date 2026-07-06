@@ -37,6 +37,22 @@ function catalog_search_highlight(string $value, string $query): string
     return $html;
 }
 
+function catalog_search_game_id(array $games): int
+{
+    $requested = filter_input(INPUT_GET, 'game_id', FILTER_VALIDATE_INT);
+    if ($requested === false || $requested === null || $requested < 1) {
+        return 0;
+    }
+
+    foreach ($games as $game) {
+        if ((int)$game['id'] === (int)$requested) {
+            return (int)$requested;
+        }
+    }
+
+    return 0;
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -120,13 +136,26 @@ try {
         echo '</div>';
     } elseif ($page === 'search') {
         $q = trim((string)($_GET['q'] ?? ''));
-        echo '<div class="card hero"><h1>Search</h1><form><input type="hidden" name="page" value="search"><input name="q" value="' . catalog_h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name" style="min-width:420px"> <button>Search</button></form><p class="muted small">Searches files, package names, imports and exports. Results are limited to 200 files.</p></div>';
+        $searchGames = catalog_all($db, 'SELECT id, name FROM ue_games ORDER BY name');
+        $searchGameId = catalog_search_game_id($searchGames);
+        echo '<style>'
+            . '.catalog-search-form { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }'
+            . '.catalog-search-form label { display: flex; align-items: center; gap: 6px; }'
+            . '.catalog-search-form input { min-width: 420px; }'
+            . '@media (max-width: 700px) { .catalog-search-form input { min-width: min(100%, 420px); } }'
+            . '</style>';
+        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form"><input type="hidden" name="page" value="search"><label for="catalog-search-query">Search <input id="catalog-search-query" name="q" value="' . catalog_h($q) . '" placeholder="MD5, SHA1, GUID, package, import/export object, file name"></label><label for="catalog-search-game">Game <select id="catalog-search-game" name="game_id"><option value="">All games</option>';
+        foreach ($searchGames as $searchGame) {
+            $gameId = (int)$searchGame['id'];
+            echo '<option value="' . $gameId . '"' . ($searchGameId === $gameId ? ' selected' : '') . '>' . catalog_h($searchGame['name']) . '</option>';
+        }
+        echo '</select></label><button>Search</button></form><p class="muted small">Searches files, package names, imports and exports. Results are limited to 200 files.</p></div>';
         if ($q !== '') {
             if (strlen($q) < 2) {
                 echo '<div class="card"><p class="muted">Enter at least two characters.</p></div>';
             } else {
                 try {
-                    $rows = CatalogSearchService::findFiles($db, $q, 200);
+                    $rows = CatalogSearchService::findFiles($db, $q, 200, $searchGameId ?: null);
                 } catch (CatalogSearchUnavailableException) {
                     echo '<div class="card"><h2>Search temporarily unavailable</h2><p class="muted">The catalog database did not complete this search. Please retry with a more specific term.</p></div>';
                     $rows = null;
@@ -142,13 +171,14 @@ try {
                         . '#catalog-search-results th:focus { outline: 2px solid var(--blue); outline-offset: -2px; }'
                         . '#catalog-search-results .search-guid-md5 { min-width: 310px; }'
                         . '#catalog-search-results .search-guid-md5 span { display: block; }'
+                        . '#catalog-search-results .search-tables, #catalog-search-results .search-size { white-space: nowrap; }'
                         . '</style>';
                     echo '<div class="card"><h2>Results</h2>';
                     if (!$rows) {
                         echo '<p class="muted">No matching files found.</p>';
                     } else {
                         echo '<table id="catalog-search-results" data-sortable-table><thead><tr>';
-                        echo '<th scope="col">Game</th><th scope="col">Package</th><th scope="col">File</th><th scope="col">Matched Field</th><th scope="col">GUID / MD5</th>';
+                        echo '<th scope="col">Game</th><th scope="col">Package</th><th scope="col">File</th><th scope="col">Matched Field</th><th scope="col">Tables</th><th scope="col">Size</th><th scope="col">GUID / MD5</th>';
                         echo '</tr></thead><tbody>';
                         foreach ($rows as $row) {
                             $fileId = (int)$row['id'];
@@ -158,6 +188,10 @@ try {
                             $originalName = (string)$row['original_name'];
                             $guid = trim((string)($row['package_guid'] ?? ''));
                             $md5 = trim((string)($row['md5'] ?? ''));
+                            $nameCount = (int)($row['name_count'] ?? 0);
+                            $importCount = (int)($row['import_count'] ?? 0);
+                            $exportCount = (int)($row['export_count'] ?? 0);
+                            $fileSize = (int)($row['file_size'] ?? 0);
                             $matches = is_array($row['matched_fields'] ?? null) ? $row['matched_fields'] : [];
                             $matchedHtml = '';
                             $matchedSortValues = [];
@@ -174,6 +208,8 @@ try {
                                 $matchedHtml = '<span class="muted">match details unavailable</span>';
                             }
                             $matchedSort = implode(' | ', $matchedSortValues);
+                            $tablesText = $nameCount . ' names / ' . $importCount . ' imports / ' . $exportCount . ' exports';
+                            $tablesSort = str_pad((string)$nameCount, 10, '0', STR_PAD_LEFT) . '-' . str_pad((string)$importCount, 10, '0', STR_PAD_LEFT) . '-' . str_pad((string)$exportCount, 10, '0', STR_PAD_LEFT);
                             $identitySort = $guid . ' ' . $md5;
 
                             echo '<tr>';
@@ -181,6 +217,8 @@ try {
                             echo '<td class="mono" data-sort-value="' . catalog_h($packageName) . '"><a href="file-info.php?id=' . $fileId . '" title="View package details">' . catalog_search_highlight($packageName, $q) . '</a></td>';
                             echo '<td data-sort-value="' . catalog_h($originalName) . '"><a href="file-examine.php?id=' . $fileId . '" title="Examine file">' . catalog_search_highlight($originalName, $q) . '</a></td>';
                             echo '<td data-sort-value="' . catalog_h($matchedSort) . '">' . $matchedHtml . '</td>';
+                            echo '<td class="mono small search-tables" data-sort-value="' . catalog_h($tablesSort) . '">' . catalog_h($tablesText) . '</td>';
+                            echo '<td class="search-size" data-sort-value="' . $fileSize . '">' . catalog_h(catalog_bytes($fileSize)) . '</td>';
                             echo '<td class="mono small search-guid-md5" data-sort-value="' . catalog_h($identitySort) . '"><span>GUID: ' . ($guid !== '' ? catalog_search_highlight($guid, $q) : '<span class="muted">—</span>') . '</span><span>MD5: ' . ($md5 !== '' ? catalog_search_highlight($md5, $q) : '<span class="muted">—</span>') . '</span></td>';
                             echo '</tr>';
                         }
