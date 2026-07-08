@@ -59,6 +59,11 @@ function upload_result_text(array $entry): string
     return $text;
 }
 
+function upload_alias_already_exists(): bool
+{
+    return function_exists('catalog_package_alias_last_add_was_existing') && catalog_package_alias_last_add_was_existing();
+}
+
 function upload_handle_request(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
@@ -107,9 +112,11 @@ function upload_handle_request(PDO $db, array $config): array
         try {
             $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $userId !== null ? (int)$userId : null, $strict, $progress);
             $meta = is_array($result[4] ?? null) ? $result[4] : $uploadSizeMeta;
-            if ($result[0] === 'duplicate') {
+            $aliasAlreadyExists = ($result[0] ?? '') === 'alias' && upload_alias_already_exists();
+            if (($result[0] ?? '') === 'duplicate' || $aliasAlreadyExists) {
                 $dup++;
-                $messages[] = upload_result('duplicate', $name, (string)$result[2], $meta);
+                $message = $aliasAlreadyExists ? 'Package alias already exists for existing file identity' : (string)($result[2] ?? 'Duplicate in selected game');
+                $messages[] = upload_result('duplicate', $name, $message, $meta);
             } else {
                 $ok++;
                 $messages[] = upload_result('imported', $name, (string)$result[2], $meta);
