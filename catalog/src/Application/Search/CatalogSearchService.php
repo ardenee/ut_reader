@@ -6,6 +6,8 @@ namespace UnrealDb\Catalog\Application\Search;
 use PDO;
 use PDOException;
 
+require_once __DIR__ . '/../../../lib/CatalogPackageAliases.php';
+
 final class CatalogSearchUnavailableException extends \RuntimeException
 {
 }
@@ -25,6 +27,8 @@ final class CatalogSearchService
      */
     public static function findFiles(PDO $db, string $query, int $limit = 200, ?int $gameId = null): array
     {
+        \catalog_package_aliases_ensure($db);
+
         $limit = max(1, min($limit, 500));
         $gameId = $gameId !== null && $gameId > 0 ? $gameId : null;
         $like = '%' . $query . '%';
@@ -32,6 +36,8 @@ final class CatalogSearchService
 
         $fileGameSql = $gameId === null ? '' : ' AND f.game_id=?';
         $fileGameArgs = $gameId === null ? [] : [$gameId];
+        $aliasGameSql = $gameId === null ? '' : ' AND a.game_id=?';
+        $aliasGameArgs = $gameId === null ? [] : [$gameId];
         $importGameSql = $gameId === null ? '' : ' AND f.game_id=?';
         $importGameArgs = $gameId === null ? [] : [$gameId];
         $exportGameSql = $gameId === null ? '' : ' AND f.game_id=?';
@@ -71,10 +77,26 @@ final class CatalogSearchService
         );
         self::collectMatches(
             $db,
+            'package_alias',
+            'SELECT a.file_id id, a.package_name match_value FROM ue_file_package_aliases a JOIN ue_files f ON f.id=a.file_id WHERE a.package_name LIKE ?' . $aliasGameSql . ' ORDER BY a.package_name, a.original_name LIMIT ' . $limit,
+            array_merge([$like], $aliasGameArgs),
+            'Package alias',
+            $candidateMatches
+        );
+        self::collectMatches(
+            $db,
             'file_name',
             'SELECT f.id, f.original_name match_value FROM ue_files f WHERE f.original_name LIKE ?' . $fileGameSql . ' ORDER BY f.package_name, f.original_name LIMIT ' . $limit,
             array_merge([$like], $fileGameArgs),
             'File',
+            $candidateMatches
+        );
+        self::collectMatches(
+            $db,
+            'alias_file_name',
+            'SELECT a.file_id id, a.original_name match_value FROM ue_file_package_aliases a JOIN ue_files f ON f.id=a.file_id WHERE a.original_name LIKE ?' . $aliasGameSql . ' ORDER BY a.package_name, a.original_name LIMIT ' . $limit,
+            array_merge([$like], $aliasGameArgs),
+            'Alias file',
             $candidateMatches
         );
         self::collectMatches(
@@ -99,6 +121,14 @@ final class CatalogSearchService
             'SELECT e.file_id id, e.full_path match_value FROM ue_exports e JOIN ue_files f ON f.id=e.file_id WHERE e.full_path LIKE ?' . $exportGameSql . ' ORDER BY e.file_id, e.export_index LIMIT ' . $limit,
             array_merge([$like], $exportGameArgs),
             'Export path',
+            $candidateMatches
+        );
+        self::collectMatches(
+            $db,
+            'alias_export_path',
+            'SELECT f.id, CONCAT(a.package_name, ".", e.local_path) match_value FROM ue_file_package_aliases a JOIN ue_files f ON f.id=a.file_id JOIN ue_exports e ON e.file_id=f.id WHERE CONCAT(a.package_name, ".", e.local_path) LIKE ?' . $aliasGameSql . ' ORDER BY a.package_name, e.export_index LIMIT ' . $limit,
+            array_merge([$like], $aliasGameArgs),
+            'Alias export path',
             $candidateMatches
         );
         self::collectMatches(
