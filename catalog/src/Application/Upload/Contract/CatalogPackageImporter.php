@@ -16,7 +16,7 @@ interface CatalogPackageImporter
 {
     /**
      * @param array<string, mixed> $config
-     * @return array{0:string,1:int,2:string,3:array<string, mixed>}
+     * @return array{0:string,1:int,2:string,3:array<string, mixed>,4?:array<string, mixed>}
      */
     public function import(
         PDO $db,
