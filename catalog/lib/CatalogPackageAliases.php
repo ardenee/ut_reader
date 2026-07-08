@@ -50,19 +50,25 @@ function catalog_package_alias_exists(PDO $db, int $fileId, int $gameId, string 
 {
     /*
      * Scanner compatibility: existing aliases must still flow through the alias
-     * result path instead of being reported as a plain duplicate. The insert
-     * helper below catches the unique-key duplicate and keeps the output as an
-     * alias result with size/GUID/copy-of metadata intact.
+     * result path so the caller can return a package-alias-specific message,
+     * not a generic physical-file duplicate message.
      */
     catalog_package_aliases_ensure($db);
     return false;
 }
 
+function catalog_package_alias_last_add_was_existing(): bool
+{
+    return !empty($GLOBALS['catalog_package_alias_last_add_was_existing']);
+}
+
 function catalog_package_alias_add(PDO $db, int $fileId, int $gameId, string $packageName, string $originalName, string $packageGuid, string $md5, int $fileSize): bool
 {
     catalog_package_aliases_ensure($db);
+    $GLOBALS['catalog_package_alias_last_add_was_existing'] = false;
 
     if (catalog_package_alias_row_exists($db, $fileId, $gameId, $packageName)) {
+        $GLOBALS['catalog_package_alias_last_add_was_existing'] = true;
         return false;
     }
 
@@ -71,6 +77,7 @@ function catalog_package_alias_add(PDO $db, int $fileId, int $gameId, string $pa
         $stmt->execute([$fileId, $gameId, $packageName, $originalName, $packageGuid !== '' ? $packageGuid : null, $md5, $fileSize]);
     } catch (PDOException $exception) {
         if ($exception->getCode() === '23000') {
+            $GLOBALS['catalog_package_alias_last_add_was_existing'] = true;
             return false;
         }
         throw $exception;
