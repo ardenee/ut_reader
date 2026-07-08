@@ -24,6 +24,24 @@ function scanner_join_path_parts(array $parts): string
     return implode('.', array_values(array_filter(array_map('scanner_clean_name', $parts), static fn($v) => $v !== '')));
 }
 
+function scanner_logical_package_name(string $originalName): string
+{
+    $name = scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
+
+    /*
+     * Windows/browser duplicate suffixes are not part of Unreal package names.
+     * Export full paths must be rooted at the logical package, not at the local
+     * upload filename, otherwise "xutfx (2).utx" creates "xutfx (2).Object"
+     * exports that cannot satisfy imports for "xutfx.Object".
+     */
+    do {
+        $previous = $name;
+        $name = preg_replace('/\s+\([0-9]+\)$/', '', $name) ?? $name;
+    } while ($name !== $previous);
+
+    return scanner_clean_name($name);
+}
+
 function scanner_store_failed_upload(array $config, string $tmp, string $originalName, string $gameSlug, string $reason): void
 {
     if (!is_file($tmp)) {
@@ -326,8 +344,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $importCount = count($imports);
     $exportCount = count($exports);
     scanner_emit_percent($progress, 'scan', 22, 'Read ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
-    $packageName = scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
-    $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; package reader=' . $readerEngine . '; compatibility=' . ($classification['compatibility_status'] ?? 'native') . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
+    $packageName = scanner_logical_package_name($originalName);
+    $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; package reader=' . $readerEngine . '; package=' . $packageName . '; compatibility=' . ($classification['compatibility_status'] ?? 'native') . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
     if ($extensionOutsideProfile) {
         $scanNotesAll[] = 'Administrator override: extension .' . $ext . ' is outside the assigned profile extension list.';
     }
