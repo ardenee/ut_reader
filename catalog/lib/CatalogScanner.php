@@ -6,6 +6,7 @@ require_once __DIR__ . '/GameProfiles.php';
 require_once __DIR__ . '/CatalogReaderResolver.php';
 require_once __DIR__ . '/CatalogDependencyResolver.php';
 require_once __DIR__ . '/CatalogAffectedDependencyRefreshService.php';
+require_once __DIR__ . '/CatalogPackageAliases.php';
 
 function scanner_clean_name(string $s): string
 {
@@ -252,6 +253,38 @@ function scanner_rebuild_affected_dependencies(PDO $db, array $config, int $newF
     }
 }
 
+function scanner_rebuild_affected_dependencies_for_package(PDO $db, array $config, int $gameId, string $packageName, ?callable $progress = null, int $startPercent = 56, int $endPercent = 99): void
+{
+    $files = catalog_all(
+        $db,
+        'SELECT DISTINCT f.id, f.package_name
+         FROM ue_files f
+         JOIN ue_imports i ON i.file_id=f.id
+         WHERE f.game_id=? AND f.scan_status="verified" AND i.root_package=?
+         ORDER BY f.package_name, f.id',
+        [$gameId, $packageName]
+    );
+    $total = count($files);
+    if ($total === 0) {
+        scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing alias dependency links: no existing files affected');
+        return;
+    }
+
+    foreach ($files as $index => $file) {
+        $fileStart = scanner_range_percent($startPercent, $endPercent, $index, $total);
+        $fileEnd = scanner_range_percent($startPercent, $endPercent, $index + 1, $total);
+        scanner_rebuild_dependencies(
+            $db,
+            $config,
+            (int)$file['id'],
+            $progress,
+            $fileStart,
+            $fileEnd,
+            'Refreshing alias dependency links ' . ($index + 1) . '/' . $total . ' (' . $packageName . ')'
+        );
+    }
+}
+
 /**
  * $strictProfile enforces the target profile's engine/version compatibility.
  * $allowProfileOverride is reserved for explicit administrator reassignment of
@@ -330,6 +363,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     scanner_emit_percent($progress, 'scan', 11, 'Reading header');
     $header = $pkg->getHeader();
     $packageGuid = (string)($header['guid'] ?? '');
+    catalog_package_aliases_ensure($db);
 
     if ($packageGuid !== '') {
         $duplicate = catalog_one(
@@ -350,23 +384,42 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     }
 
     if ($duplicate) {
-        scanner_emit_percent($progress, 'done', 100, 'Duplicate in selected game');
-        return [
-            'duplicate',
-            (int)$duplicate['id'],
-            'Duplicate in selected game',
-            $classification,
-            [
-                'file_size' => (int)$size,
-                'file_size_text' => catalog_bytes((int)$size),
-                'package_guid' => $packageGuid,
-                'md5' => $md5,
-                'duplicate_file_id' => (int)$duplicate['id'],
-                'duplicate_original_name' => (string)$duplicate['original_name'],
-                'duplicate_package_name' => (string)$duplicate['package_name'],
-                'duplicate_md5' => (string)($duplicate['md5'] ?? ''),
-            ],
+        $duplicateFileId = (int)$duplicate['id'];
+        $duplicatePackageName = (string)$duplicate['package_name'];
+        $meta = [
+            'file_id' => $duplicateFileId,
+            'file_size' => (int)$size,
+            'file_size_text' => catalog_bytes((int)$size),
+            'package_name' => $packageName,
+            'package_guid' => $packageGuid,
+            'md5' => $md5,
+            'duplicate_file_id' => $duplicateFileId,
+            'duplicate_original_name' => (string)$duplicate['original_name'],
+            'duplicate_package_name' => $duplicatePackageName,
+            'duplicate_guid' => (string)($duplicate['package_guid'] ?? ''),
+            'duplicate_md5' => (string)($duplicate['md5'] ?? ''),
+            'duplicate_file_size' => (int)($duplicate['file_size'] ?? 0),
+            'duplicate_file_size_text' => catalog_bytes((int)($duplicate['file_size'] ?? 0)),
         ];
+
+        if (strcasecmp($duplicatePackageName, $packageName) === 0 || catalog_package_alias_exists($db, $duplicateFileId, $gameId, $packageName)) {
+            scanner_emit_percent($progress, 'done', 100, 'Duplicate in selected game');
+            return ['duplicate', $duplicateFileId, 'Duplicate in selected game', $classification, $meta];
+        }
+
+        catalog_package_alias_add($db, $duplicateFileId, $gameId, $packageName, $originalName, $packageGuid, $md5, (int)$size);
+        $refreshWarning = '';
+        try {
+            scanner_rebuild_affected_dependencies_for_package($db, $config, $gameId, $packageName, $progress, 56, 99);
+        } catch (Throwable $refreshError) {
+            error_log('[UnrealDB dependency refresh] alias_package=' . $packageName . ' file_id=' . $duplicateFileId . ' error=' . $refreshError->getMessage());
+            $refreshWarning = '; dependency refresh warning logged for maintenance';
+        }
+
+        scanner_emit_percent($progress, 'done', 100, 'Alias package added for existing file identity');
+        $meta['alias_package_name'] = $packageName;
+        $meta['alias_added'] = true;
+        return ['alias', $duplicateFileId, 'Package alias added for existing file identity' . $refreshWarning, $classification, $meta];
     }
 
     scanner_emit_percent($progress, 'scan', 14, 'Reading names table');
