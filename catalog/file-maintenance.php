@@ -18,6 +18,35 @@ function catalog_maintenance_reply(array $payload, int $status = 200): never
     exit;
 }
 
+function catalog_maintenance_should_redirect(string $operation, string $progressToken): bool
+{
+    if ($progressToken !== '' || str_starts_with($operation, 'sync_')) {
+        return false;
+    }
+
+    $requestedWith = strtolower((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''));
+    if ($requestedWith === 'xmlhttprequest') {
+        return false;
+    }
+
+    $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
+    if (str_contains($accept, 'application/json') && !str_contains($accept, 'text/html')) {
+        return false;
+    }
+
+    return true;
+}
+
+function catalog_maintenance_redirect_or_reply(array $payload, string $operation, string $progressToken, int $status = 200): never
+{
+    if ($status >= 200 && $status < 300 && isset($payload['return_url']) && catalog_maintenance_should_redirect($operation, $progressToken)) {
+        header('Location: ' . (string)$payload['return_url']);
+        exit;
+    }
+
+    catalog_maintenance_reply($payload, $status);
+}
+
 function catalog_maintenance_progress_callback(string $token): callable
 {
     return static function (array $state) use ($token): void {
@@ -274,12 +303,12 @@ try {
         $message = $result['status'] === 'removed_missing'
             ? $result['message']
             : 'Re-imported ' . $result['original_name'] . ' using the normal scanner.';
-        catalog_maintenance_reply([
+        catalog_maintenance_redirect_or_reply([
             'ok' => true,
             'status' => $result['status'],
             'message' => $message,
             'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
-        ]);
+        ], $operation, $postProgressToken);
     }
 
     if ($operation === 'remove') {
@@ -288,11 +317,11 @@ try {
             $progress,
             static fn() => catalog_file_maintenance_remove($db, $config, $fileId, $progress)
         );
-        catalog_maintenance_reply([
+        catalog_maintenance_redirect_or_reply([
             'ok' => true,
             'message' => 'Removed ' . $result['original_name'] . ' from storage and the catalog.' . $result['warning'],
             'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
-        ]);
+        ], $operation, $postProgressToken);
     }
 
     throw new RuntimeException('Unknown maintenance operation.');
