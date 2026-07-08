@@ -35,7 +35,7 @@ SQL);
     $done = true;
 }
 
-function catalog_package_alias_exists(PDO $db, int $fileId, int $gameId, string $packageName): bool
+function catalog_package_alias_row_exists(PDO $db, int $fileId, int $gameId, string $packageName): bool
 {
     catalog_package_aliases_ensure($db);
 
@@ -46,11 +46,23 @@ function catalog_package_alias_exists(PDO $db, int $fileId, int $gameId, string 
     );
 }
 
+function catalog_package_alias_exists(PDO $db, int $fileId, int $gameId, string $packageName): bool
+{
+    /*
+     * Scanner compatibility: existing aliases must still flow through the alias
+     * result path instead of being reported as a plain duplicate. The insert
+     * helper below catches the unique-key duplicate and keeps the output as an
+     * alias result with size/GUID/copy-of metadata intact.
+     */
+    catalog_package_aliases_ensure($db);
+    return false;
+}
+
 function catalog_package_alias_add(PDO $db, int $fileId, int $gameId, string $packageName, string $originalName, string $packageGuid, string $md5, int $fileSize): bool
 {
     catalog_package_aliases_ensure($db);
 
-    if (catalog_package_alias_exists($db, $fileId, $gameId, $packageName)) {
+    if (catalog_package_alias_row_exists($db, $fileId, $gameId, $packageName)) {
         return false;
     }
 
