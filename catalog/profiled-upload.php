@@ -40,6 +40,7 @@ function upload_log_exception(PDO $db, string $filename, Throwable $e): void
 
 function upload_result(string $status, string $file, string $message, array $meta = []): array
 {
+    unset($meta['duplicate_guid'], $meta['duplicate_file_size_text']);
     return ['status' => $status, 'file' => $file, 'message' => $message] + $meta;
 }
 
@@ -51,9 +52,6 @@ function upload_result_text(array $entry): string
     }
     if (!empty($entry['package_guid'])) {
         $text .= ' | GUID: ' . (string)$entry['package_guid'];
-    }
-    if (!empty($entry['duplicate_guid'])) {
-        $text .= ' | duplicate GUID: ' . (string)$entry['duplicate_guid'];
     }
     if (!empty($entry['duplicate_original_name'])) {
         $text .= ' | copy of: ' . (string)$entry['duplicate_original_name'];
@@ -279,8 +277,6 @@ try {
         message.textContent = entry.message || '';
         appendMetaText(message, 'size', entry.file_size_text);
         appendMetaText(message, 'GUID', entry.package_guid);
-        appendMetaText(message, 'duplicate GUID', entry.duplicate_guid);
-        appendMetaText(message, 'duplicate size', entry.duplicate_file_size_text);
 
         if (entry.duplicate_file_id) {
             message.appendChild(document.createTextNode(' | copy of: '));
