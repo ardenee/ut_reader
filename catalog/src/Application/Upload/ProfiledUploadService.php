@@ -82,9 +82,15 @@ final class ProfiledUploadService
                 );
 
                 $meta = is_array($result[4] ?? null) ? $result[4] : $uploadMeta;
-                if (($result[0] ?? '') === 'duplicate') {
+                $aliasAlreadyExists = ($result[0] ?? '') === 'alias'
+                    && function_exists('catalog_package_alias_last_add_was_existing')
+                    && \catalog_package_alias_last_add_was_existing();
+                if (($result[0] ?? '') === 'duplicate' || $aliasAlreadyExists) {
                     $duplicates++;
-                    $messages[] = self::result('duplicate', $originalName, (string)($result[2] ?? 'Duplicate in selected game'), $meta);
+                    $message = $aliasAlreadyExists
+                        ? 'Package alias already exists for existing file identity'
+                        : (string)($result[2] ?? 'Duplicate in selected game');
+                    $messages[] = self::result('duplicate', $originalName, $message, $meta);
                     continue;
                 }
 
@@ -126,9 +132,6 @@ final class ProfiledUploadService
         if (!empty($entry['package_guid'])) {
             $text .= ' | GUID: ' . (string)$entry['package_guid'];
         }
-        if (!empty($entry['duplicate_guid'])) {
-            $text .= ' | duplicate GUID: ' . (string)$entry['duplicate_guid'];
-        }
         if (!empty($entry['duplicate_original_name'])) {
             $text .= ' | copy of: ' . (string)$entry['duplicate_original_name'];
         }
@@ -138,6 +141,7 @@ final class ProfiledUploadService
 
     private static function result(string $status, string $file, string $message, array $meta = []): array
     {
+        unset($meta['duplicate_guid'], $meta['duplicate_file_size_text']);
         return ['status' => $status, 'file' => $file, 'message' => $message] + $meta;
     }
 
