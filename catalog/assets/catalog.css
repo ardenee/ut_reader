@@ -394,19 +394,24 @@ textarea {
 .type-unknown { border-color: #64748b; color: #cbd5e1; }
 
 .identity-cell {
-    width: 280px;
-    min-width: 280px;
-    max-width: 280px;
+    width: 38ch;
+    min-width: 38ch;
+    max-width: 38ch;
 }
 
 #game-files-table {
-    min-width: 1180px !important;
+    width: max-content !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    table-layout: auto !important;
 }
 
+#game-files-table th:nth-child(3),
+#game-files-table td:nth-child(3),
 #game-files-table .identity-cell {
-    width: 280px !important;
-    min-width: 280px !important;
-    max-width: 280px !important;
+    width: 38ch !important;
+    min-width: 38ch !important;
+    max-width: 38ch !important;
 }
 
 .guid-value {
