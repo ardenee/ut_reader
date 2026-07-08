@@ -29,7 +29,7 @@ final class ProfiledUploadService
 
     /**
      * @param array<string, mixed> $uploadedFiles
-     * @return array{ok:int,duplicate:int,failed:int,messages:list<array{status:string,file:string,message:string}>}
+     * @return array{ok:int,duplicate:int,failed:int,messages:list<array<string, mixed>>}
      */
     public function handle(
         int $gameId,
@@ -56,10 +56,15 @@ final class ProfiledUploadService
         foreach ($temporaryPaths as $index => $temporaryPath) {
             $originalName = (string)($uploadedFiles['name'][$index] ?? 'upload.bin');
             $uploadError = (int)($uploadedFiles['error'][$index] ?? UPLOAD_ERR_NO_FILE);
+            $uploadSize = is_string($temporaryPath) && is_file($temporaryPath) ? (int)filesize($temporaryPath) : 0;
+            $uploadMeta = [
+                'file_size' => $uploadSize,
+                'file_size_text' => \catalog_bytes($uploadSize),
+            ];
             if ($uploadError !== UPLOAD_ERR_OK) {
                 $failed++;
                 $message = 'Upload error ' . $uploadError;
-                $messages[] = self::result('failed', $originalName, $message);
+                $messages[] = self::result('failed', $originalName, $message, $uploadMeta);
                 $this->emitFailureProgress($progress, $originalName, $message);
                 continue;
             }
@@ -76,14 +81,15 @@ final class ProfiledUploadService
                     $progress
                 );
 
+                $meta = is_array($result[4] ?? null) ? $result[4] : $uploadMeta;
                 if (($result[0] ?? '') === 'duplicate') {
                     $duplicates++;
-                    $messages[] = self::result('duplicate', $originalName, (string)($result[2] ?? 'Duplicate in selected game'));
+                    $messages[] = self::result('duplicate', $originalName, (string)($result[2] ?? 'Duplicate in selected game'), $meta);
                     continue;
                 }
 
                 $imported++;
-                $messages[] = self::result('imported', $originalName, (string)($result[2] ?? 'Imported'));
+                $messages[] = self::result('imported', $originalName, (string)($result[2] ?? 'Imported'), $meta);
             } catch (Throwable $exception) {
                 $failed++;
                 $message = self::shortError($exception);
@@ -95,7 +101,7 @@ final class ProfiledUploadService
                     (string)$game['slug'],
                     $exception->getMessage()
                 );
-                $messages[] = self::result('failed', $originalName, $message);
+                $messages[] = self::result('failed', $originalName, $message, $uploadMeta);
                 $this->emitFailureProgress($progress, $originalName, $message);
             }
         }
@@ -109,16 +115,30 @@ final class ProfiledUploadService
     }
 
     /**
-     * @param array{status:string,file:string,message:string} $entry
+     * @param array<string, mixed> $entry
      */
     public static function resultText(array $entry): string
     {
-        return $entry['file'] . ': ' . $entry['status'] . ' - ' . $entry['message'];
+        $text = $entry['file'] . ': ' . $entry['status'] . ' - ' . $entry['message'];
+        if (!empty($entry['file_size_text'])) {
+            $text .= ' | size: ' . (string)$entry['file_size_text'];
+        }
+        if (!empty($entry['package_guid'])) {
+            $text .= ' | GUID: ' . (string)$entry['package_guid'];
+        }
+        if (!empty($entry['duplicate_guid'])) {
+            $text .= ' | duplicate GUID: ' . (string)$entry['duplicate_guid'];
+        }
+        if (!empty($entry['duplicate_original_name'])) {
+            $text .= ' | copy of: ' . (string)$entry['duplicate_original_name'];
+        }
+
+        return $text;
     }
 
-    private static function result(string $status, string $file, string $message): array
+    private static function result(string $status, string $file, string $message, array $meta = []): array
     {
-        return ['status' => $status, 'file' => $file, 'message' => $message];
+        return ['status' => $status, 'file' => $file, 'message' => $message] + $meta;
     }
 
     private static function shortError(Throwable $exception): string
