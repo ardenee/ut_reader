@@ -63,6 +63,56 @@ function catalog_maintenance_file_id(): int
     return (int)$fileId;
 }
 
+function catalog_maintenance_post_string(string $key): string
+{
+    return trim((string)($_POST[$key] ?? ''));
+}
+
+/**
+ * Short-request Full Sync intentionally changes file IDs as each package is
+ * re-imported. Browser-side package lists can therefore contain stale IDs by
+ * the time a later request runs. Resolve those stale IDs back to the current
+ * verified row using the original package identity posted from full-sync.php.
+ *
+ * @return array{0:array<string,mixed>,1:bool}
+ */
+function catalog_maintenance_current_file(PDO $db, int $fileId, string $notFoundMessage): array
+{
+    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
+    if ($file) {
+        return [$file, false];
+    }
+
+    $gameId = filter_input(INPUT_POST, 'game_id', FILTER_VALIDATE_INT);
+    $packageName = catalog_maintenance_post_string('package_name');
+    $md5 = catalog_maintenance_post_string('md5');
+    $packageGuid = catalog_maintenance_post_string('package_guid');
+
+    if ($gameId === false || $gameId === null || $gameId < 1 || $packageName === '' || $md5 === '') {
+        throw new RuntimeException($notFoundMessage);
+    }
+
+    $where = 'game_id=? AND package_name=? AND md5=? AND scan_status="verified"';
+    $args = [(int)$gameId, $packageName, $md5];
+    if ($packageGuid !== '') {
+        $where .= ' AND package_guid=?';
+        $args[] = $packageGuid;
+    } else {
+        $where .= ' AND (package_guid IS NULL OR package_guid="")';
+    }
+
+    $replacement = catalog_one(
+        $db,
+        'SELECT * FROM ue_files WHERE ' . $where . ' ORDER BY uploaded_at DESC, id DESC LIMIT 1',
+        $args
+    );
+    if (!$replacement) {
+        throw new RuntimeException($notFoundMessage);
+    }
+
+    return [$replacement, true];
+}
+
 /**
  * Full Sync and the individual re-import action share one lifecycle:
  *
@@ -74,9 +124,29 @@ function catalog_maintenance_file_id(): int
  */
 function catalog_maintenance_reimport_or_remove_missing(PDO $db, array $config, int $fileId, ?int $userId, ?callable $progress): array
 {
-    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
-    if (!$file) {
-        throw new RuntimeException('File no longer exists in the catalog. Refresh the file list before retrying.');
+    [$file, $resolvedFromStaleId] = catalog_maintenance_current_file(
+        $db,
+        $fileId,
+        'File no longer exists in the catalog. Refresh the file list before retrying.'
+    );
+
+    if ($resolvedFromStaleId) {
+        if ($progress !== null) {
+            $progress([
+                'stage' => 'stale_catalog_id',
+                'done' => 100,
+                'total' => 100,
+                'percent' => 100,
+                'message' => 'Package already has a current catalog record after an earlier re-import.',
+            ]);
+        }
+        return [
+            'status' => 'stale_replaced',
+            'file_id' => (int)$file['id'],
+            'game_id' => (int)$file['game_id'],
+            'original_name' => (string)$file['original_name'],
+            'message' => 'Package already has a current catalog record after an earlier re-import.',
+        ];
     }
 
     $storedPath = catalog_file_maintenance_storage_path($config, $file);
@@ -91,7 +161,7 @@ function catalog_maintenance_reimport_or_remove_missing(PDO $db, array $config, 
             ]);
         }
 
-        $removed = catalog_file_maintenance_remove($db, $config, $fileId, $progress);
+        $removed = catalog_file_maintenance_remove($db, $config, (int)$file['id'], $progress);
         return [
             'status' => 'removed_missing',
             'file_id' => null,
@@ -101,7 +171,7 @@ function catalog_maintenance_reimport_or_remove_missing(PDO $db, array $config, 
         ];
     }
 
-    $result = catalog_file_maintenance_reimport($db, $config, $fileId, $userId, $progress);
+    $result = catalog_file_maintenance_reimport($db, $config, (int)$file['id'], $userId, $progress);
     return [
         'status' => 'reimported',
         'file_id' => (int)$result['file_id'],
@@ -253,15 +323,18 @@ try {
             $progress,
             static fn() => catalog_maintenance_reimport_or_remove_missing($db, $config, $fileId, $userId, $progress)
         );
+        $message = match ($result['status']) {
+            'removed_missing' => $result['message'],
+            'stale_replaced' => $result['message'],
+            default => 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
+        };
         catalog_maintenance_reply([
             'ok' => true,
             'status' => $result['status'],
             'file_id' => $result['file_id'],
             'game_id' => $result['game_id'],
             'original_name' => $result['original_name'],
-            'message' => $result['status'] === 'removed_missing'
-                ? $result['message']
-                : 'Re-imported ' . $result['original_name'] . ' using the normal scanner.',
+            'message' => $message,
         ]);
     }
 
@@ -271,17 +344,18 @@ try {
             $db,
             $progress,
             static function () use ($db, $config, $fileId, $progress): array {
-                $file = catalog_one($db, 'SELECT id, game_id, original_name FROM ue_files WHERE id=?', [$fileId]);
-                if (!$file) {
-                    throw new RuntimeException('The re-imported package is no longer present in the catalog. Refresh Full Sync to rebuild its package list.');
-                }
-                scanner_rebuild_dependencies($db, $config, $fileId, $progress, 0, 100, 'Final dependency refresh for ' . $file['original_name']);
+                [$file] = catalog_maintenance_current_file(
+                    $db,
+                    $fileId,
+                    'The re-imported package is no longer present in the catalog. Refresh Full Sync to rebuild its package list.'
+                );
+                scanner_rebuild_dependencies($db, $config, (int)$file['id'], $progress, 0, 100, 'Final dependency refresh for ' . $file['original_name']);
                 return $file;
             }
         );
         catalog_maintenance_reply([
             'ok' => true,
-            'file_id' => $fileId,
+            'file_id' => (int)$result['id'],
             'game_id' => (int)$result['game_id'],
             'original_name' => (string)$result['original_name'],
             'message' => 'Refreshed dependencies for ' . $result['original_name'] . '.',
@@ -302,7 +376,9 @@ try {
         );
         $message = $result['status'] === 'removed_missing'
             ? $result['message']
-            : 'Re-imported ' . $result['original_name'] . ' using the normal scanner.';
+            : ($result['status'] === 'stale_replaced'
+                ? $result['message']
+                : 'Re-imported ' . $result['original_name'] . ' using the normal scanner.');
         catalog_maintenance_redirect_or_reply([
             'ok' => true,
             'status' => $result['status'],
