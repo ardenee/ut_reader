@@ -147,13 +147,14 @@ html { scroll-behavior: smooth; }
 .game-files-pagination__end { justify-self: end; }
 .game-files-pagination__current { justify-self: center; white-space: nowrap; }
 
-#game-files-table { min-width: 1400px; }
+#game-files-table { width: max-content; min-width: 0; table-layout: auto; }
 #game-files-table th:nth-child(1), #game-files-table td:nth-child(1),
 #game-files-table th:nth-child(2), #game-files-table td:nth-child(2),
 #game-files-table th:nth-child(3), #game-files-table td:nth-child(3),
 #game-files-table th:nth-child(4), #game-files-table td:nth-child(4),
 #game-files-table th:nth-child(5), #game-files-table td:nth-child(5) { white-space: nowrap; }
 #game-files-table .game-files-package, #game-files-table .game-files-version, #game-files-table .game-files-size, #game-files-table .game-files-download, #game-files-table .game-files-admin { width: 1%; }
+#game-files-table th:nth-child(3), #game-files-table td:nth-child(3), #game-files-table .identity-cell { width: 38ch; min-width: 38ch; max-width: 38ch; }
 .game-files-file-link, .game-files-package-link { font-weight: 650; }
 .game-files-dependencies { min-width: 130px; white-space: normal; }
 .game-files-dependency-list { display: flex; flex-direction: column; align-items: flex-start; row-gap: 1px; }
@@ -341,7 +342,7 @@ try {
             echo '<tr>';
             echo '<td class="mono game-files-package"><a class="game-files-package-link" href="file-info.php?id=' . $id . '" title="View package details">' . catalog_h($packageName) . '</a></td>';
             echo '<td><a class="game-files-file-link" href="file-examine.php?id=' . $id . '" title="Examine file">' . catalog_h($originalName) . '</a><br><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
-            echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h($file['md5']) . '</span></td>';
+            echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small identity-md5">MD5 ' . catalog_h($file['md5']) . '</span></td>';
             echo '<td class="mono game-files-version">' . catalog_h($versionText) . '</td>';
             echo '<td class="game-files-size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
             echo '<td>' . $compression . '</td>';
