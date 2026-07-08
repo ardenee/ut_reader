@@ -310,33 +310,6 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Could not hash file');
     }
 
-    $duplicate = catalog_one(
-        $db,
-        'SELECT id, original_name, package_name, package_guid, file_size
-         FROM ue_files
-         WHERE game_id=? AND md5=? AND LOWER(package_name)=LOWER(?)',
-        [$gameId, $md5, $packageName]
-    );
-    if ($duplicate) {
-        scanner_emit_percent($progress, 'done', 100, 'Duplicate in selected game');
-        return [
-            'duplicate',
-            (int)$duplicate['id'],
-            'Duplicate in selected game',
-            $classification,
-            [
-                'file_size' => (int)$size,
-                'file_size_text' => catalog_bytes((int)$size),
-                'duplicate_file_id' => (int)$duplicate['id'],
-                'duplicate_original_name' => (string)$duplicate['original_name'],
-                'duplicate_package_name' => (string)$duplicate['package_name'],
-                'duplicate_guid' => (string)($duplicate['package_guid'] ?? ''),
-                'duplicate_file_size' => (int)($duplicate['file_size'] ?? 0),
-                'duplicate_file_size_text' => catalog_bytes((int)($duplicate['file_size'] ?? 0)),
-            ],
-        ];
-    }
-
     scanner_emit_percent($progress, 'scan', 7, 'Opening ' . $readerEngine . ' reader');
     $readerClass = scanner_load_reader_class($config, $readerEngine);
     $pkg = new $readerClass($tmp);
@@ -356,6 +329,49 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 
     scanner_emit_percent($progress, 'scan', 11, 'Reading header');
     $header = $pkg->getHeader();
+    $packageGuid = (string)($header['guid'] ?? '');
+
+    if ($packageGuid !== '') {
+        $duplicate = catalog_one(
+            $db,
+            'SELECT id, original_name, package_name, package_guid, file_size, md5
+             FROM ue_files
+             WHERE game_id=? AND package_guid=? AND md5=?',
+            [$gameId, $packageGuid, $md5]
+        );
+    } else {
+        $duplicate = catalog_one(
+            $db,
+            'SELECT id, original_name, package_name, package_guid, file_size, md5
+             FROM ue_files
+             WHERE game_id=? AND md5=? AND (package_guid IS NULL OR package_guid="")',
+            [$gameId, $md5]
+        );
+    }
+
+    if ($duplicate) {
+        scanner_emit_percent($progress, 'done', 100, 'Duplicate in selected game');
+        return [
+            'duplicate',
+            (int)$duplicate['id'],
+            'Duplicate in selected game',
+            $classification,
+            [
+                'file_size' => (int)$size,
+                'file_size_text' => catalog_bytes((int)$size),
+                'package_guid' => $packageGuid,
+                'md5' => $md5,
+                'duplicate_file_id' => (int)$duplicate['id'],
+                'duplicate_original_name' => (string)$duplicate['original_name'],
+                'duplicate_package_name' => (string)$duplicate['package_name'],
+                'duplicate_guid' => (string)($duplicate['package_guid'] ?? ''),
+                'duplicate_md5' => (string)($duplicate['md5'] ?? ''),
+                'duplicate_file_size' => (int)($duplicate['file_size'] ?? 0),
+                'duplicate_file_size_text' => catalog_bytes((int)($duplicate['file_size'] ?? 0)),
+            ],
+        ];
+    }
+
     scanner_emit_percent($progress, 'scan', 14, 'Reading names table');
     $names = $pkg->getNames();
     scanner_emit_percent($progress, 'scan', 17, 'Reading imports table');
@@ -366,7 +382,6 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $nameCount = count($names);
     $importCount = count($imports);
     $exportCount = count($exports);
-    $packageGuid = (string)($header['guid'] ?? '');
     scanner_emit_percent($progress, 'scan', 22, 'Read ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
     $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; package reader=' . $readerEngine . '; package=' . $packageName . '; compatibility=' . ($classification['compatibility_status'] ?? 'native') . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
     if ($extensionOutsideProfile) {
