@@ -364,10 +364,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
                 'duplicate_file_id' => (int)$duplicate['id'],
                 'duplicate_original_name' => (string)$duplicate['original_name'],
                 'duplicate_package_name' => (string)$duplicate['package_name'],
-                'duplicate_guid' => (string)($duplicate['package_guid'] ?? ''),
                 'duplicate_md5' => (string)($duplicate['md5'] ?? ''),
-                'duplicate_file_size' => (int)($duplicate['file_size'] ?? 0),
-                'duplicate_file_size_text' => catalog_bytes((int)($duplicate['file_size'] ?? 0)),
             ],
         ];
     }
