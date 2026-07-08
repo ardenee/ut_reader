@@ -5,6 +5,8 @@ namespace UnrealDb\Catalog\Application\Dependency;
 
 use PDO;
 
+require_once __DIR__ . '/../../../lib/CatalogPackageAliases.php';
+
 /**
  * Resolves one file's imports against the catalog in batches.
  *
@@ -21,6 +23,8 @@ final class CatalogDependencyResolver
      */
     public static function resolve(PDO $db, int $gameId, int $fileId, array $imports): array
     {
+        \catalog_package_aliases_ensure($db);
+
         $packageNames = [];
         $objectPaths = [];
 
@@ -122,6 +126,23 @@ final class CatalogDependencyResolver
                     $matches[$lookupValue] = (int)$row['id'];
                 }
             }
+
+            $aliasRows = \catalog_all(
+                $db,
+                'SELECT requested.lookup_value, f.id'
+                . ' FROM (' . $valuesSql . ') requested'
+                . ' JOIN ue_file_package_aliases a ON a.game_id=? AND a.package_name=requested.lookup_value'
+                . ' JOIN ue_files f ON f.id=a.file_id AND f.scan_status="verified"'
+                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, a.created_at DESC, f.uploaded_at DESC',
+                array_merge($valueArgs, [$gameId, $fileId])
+            );
+
+            foreach ($aliasRows as $row) {
+                $lookupValue = (string)$row['lookup_value'];
+                if (!isset($matches[$lookupValue])) {
+                    $matches[$lookupValue] = (int)$row['id'];
+                }
+            }
         }
 
         return $matches;
@@ -159,9 +180,66 @@ final class CatalogDependencyResolver
                     ];
                 }
             }
+
+            $aliasLookups = self::aliasExportLookups($chunk);
+            if ($aliasLookups === []) {
+                continue;
+            }
+
+            [$aliasValuesSql, $aliasValueArgs] = self::pathValuesTableSql($aliasLookups);
+            $aliasRows = \catalog_all(
+                $db,
+                'SELECT requested.lookup_value, e.id export_id, f.id file_id'
+                . ' FROM (' . $aliasValuesSql . ') requested'
+                . ' JOIN ue_file_package_aliases a ON a.game_id=? AND a.package_name=requested.root_package'
+                . ' JOIN ue_files f ON f.id=a.file_id AND f.scan_status="verified"'
+                . ' JOIN ue_exports e ON e.file_id=f.id AND e.local_path=requested.local_path'
+                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, a.created_at DESC, f.uploaded_at DESC',
+                array_merge($aliasValueArgs, [$gameId, $fileId])
+            );
+
+            foreach ($aliasRows as $row) {
+                $lookupValue = (string)$row['lookup_value'];
+                if (!isset($matches[$lookupValue])) {
+                    $matches[$lookupValue] = [
+                        'file_id' => (int)$row['file_id'],
+                        'export_id' => (int)$row['export_id'],
+                    ];
+                }
+            }
         }
 
         return $matches;
+    }
+
+    /**
+     * @param list<string> $objectPaths
+     * @return list<array{lookup_value:string,root_package:string,local_path:string}>
+     */
+    private static function aliasExportLookups(array $objectPaths): array
+    {
+        $lookups = [];
+        foreach ($objectPaths as $objectPath) {
+            $objectPath = trim($objectPath);
+            $dot = strpos($objectPath, '.');
+            if ($objectPath === '' || $dot === false) {
+                continue;
+            }
+
+            $rootPackage = substr($objectPath, 0, $dot);
+            $localPath = substr($objectPath, $dot + 1);
+            if ($rootPackage === '' || $localPath === '') {
+                continue;
+            }
+
+            $lookups[] = [
+                'lookup_value' => $objectPath,
+                'root_package' => $rootPackage,
+                'local_path' => $localPath,
+            ];
+        }
+
+        return $lookups;
     }
 
     /**
@@ -179,5 +257,25 @@ final class CatalogDependencyResolver
         }
 
         return [implode(' UNION ALL ', $parts), $values];
+    }
+
+    /**
+     * @param list<array{lookup_value:string,root_package:string,local_path:string}> $values
+     * @return array{0:string,1:list<string>}
+     */
+    private static function pathValuesTableSql(array $values): array
+    {
+        $parts = [];
+        $args = [];
+        foreach ($values as $index => $value) {
+            $parts[] = $index === 0
+                ? 'SELECT ? AS lookup_value, ? AS root_package, ? AS local_path'
+                : 'SELECT ?, ?, ?';
+            $args[] = $value['lookup_value'];
+            $args[] = $value['root_package'];
+            $args[] = $value['local_path'];
+        }
+
+        return [implode(' UNION ALL ', $parts), $args];
     }
 }
