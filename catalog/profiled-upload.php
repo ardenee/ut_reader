@@ -38,14 +38,27 @@ function upload_log_exception(PDO $db, string $filename, Throwable $e): void
     }
 }
 
-function upload_result(string $status, string $file, string $message): array
+function upload_result(string $status, string $file, string $message, array $meta = []): array
 {
-    return ['status' => $status, 'file' => $file, 'message' => $message];
+    return ['status' => $status, 'file' => $file, 'message' => $message] + $meta;
 }
 
 function upload_result_text(array $entry): string
 {
-    return (string)$entry['file'] . ': ' . (string)$entry['status'] . ' - ' . (string)$entry['message'];
+    $text = (string)$entry['file'] . ': ' . (string)$entry['status'] . ' - ' . (string)$entry['message'];
+    if (!empty($entry['file_size_text'])) {
+        $text .= ' | size: ' . (string)$entry['file_size_text'];
+    }
+    if (!empty($entry['package_guid'])) {
+        $text .= ' | GUID: ' . (string)$entry['package_guid'];
+    }
+    if (!empty($entry['duplicate_guid'])) {
+        $text .= ' | duplicate GUID: ' . (string)$entry['duplicate_guid'];
+    }
+    if (!empty($entry['duplicate_original_name'])) {
+        $text .= ' | copy of: ' . (string)$entry['duplicate_original_name'];
+    }
+    return $text;
 }
 
 function upload_handle_request(PDO $db, array $config): array
@@ -79,10 +92,15 @@ function upload_handle_request(PDO $db, array $config): array
     foreach ($_FILES['files']['tmp_name'] ?? [] as $i => $tmp) {
         $name = (string)($_FILES['files']['name'][$i] ?? 'upload.bin');
         $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
+        $uploadSize = is_string($tmp) && is_file($tmp) ? (int)filesize($tmp) : 0;
+        $uploadSizeMeta = [
+            'file_size' => $uploadSize,
+            'file_size_text' => catalog_bytes($uploadSize),
+        ];
         if ($err !== UPLOAD_ERR_OK) {
             $bad++;
             $text = 'Upload error ' . $err;
-            $messages[] = upload_result('failed', $name, $text);
+            $messages[] = upload_result('failed', $name, $text, $uploadSizeMeta);
             if ($progress) {
                 $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': failed - ' . $text]);
             }
@@ -90,19 +108,20 @@ function upload_handle_request(PDO $db, array $config): array
         }
         try {
             $result = scanner_scan_uploaded_file($db, $config, $gameId, $tmp, $name, $userId !== null ? (int)$userId : null, $strict, $progress);
+            $meta = is_array($result[4] ?? null) ? $result[4] : $uploadSizeMeta;
             if ($result[0] === 'duplicate') {
                 $dup++;
-                $messages[] = upload_result('duplicate', $name, (string)$result[2]);
+                $messages[] = upload_result('duplicate', $name, (string)$result[2], $meta);
             } else {
                 $ok++;
-                $messages[] = upload_result('imported', $name, (string)$result[2]);
+                $messages[] = upload_result('imported', $name, (string)$result[2], $meta);
             }
         } catch (Throwable $e) {
             $bad++;
             $short = upload_short_error($e);
             upload_log_exception($db, $name, $e);
             scanner_store_failed_upload($config, $tmp, $name, (string)$game['slug'], $e->getMessage());
-            $messages[] = upload_result('failed', $name, $short);
+            $messages[] = upload_result('failed', $name, $short, $uploadSizeMeta);
             if ($progress) {
                 $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $name . ': failed - ' . $short]);
             }
@@ -218,6 +237,18 @@ try {
         return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
     }
 
+    function appendMetaText(container, label, value) {
+        if (value === undefined || value === null || value === '') return;
+        container.appendChild(document.createTextNode(' | ' + label + ': ' + String(value)));
+    }
+
+    function makeExamineLink(fileId, text) {
+        const link = document.createElement('a');
+        link.href = 'file-examine.php?id=' + encodeURIComponent(fileId);
+        link.textContent = text || ('file #' + fileId);
+        return link;
+    }
+
     function addLog(entry) {
         if (typeof entry === 'string') {
             entry = {status: 'info', file: '', message: entry};
@@ -232,15 +263,30 @@ try {
         div.appendChild(badge);
 
         if (entry.file) {
-            const file = document.createElement('span');
+            let file;
+            if (entry.file_id) {
+                file = makeExamineLink(entry.file_id, entry.file);
+            } else {
+                file = document.createElement('span');
+                file.textContent = entry.file;
+            }
             file.className = 'upload-result-file';
-            file.textContent = entry.file;
             div.appendChild(file);
         }
 
         const message = document.createElement('span');
         message.className = 'upload-result-message';
         message.textContent = entry.message || '';
+        appendMetaText(message, 'size', entry.file_size_text);
+        appendMetaText(message, 'GUID', entry.package_guid);
+        appendMetaText(message, 'duplicate GUID', entry.duplicate_guid);
+        appendMetaText(message, 'duplicate size', entry.duplicate_file_size_text);
+
+        if (entry.duplicate_file_id) {
+            message.appendChild(document.createTextNode(' | copy of: '));
+            message.appendChild(makeExamineLink(entry.duplicate_file_id, entry.duplicate_original_name));
+        }
+
         div.appendChild(message);
 
         log.appendChild(div);
