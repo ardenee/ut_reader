@@ -301,6 +301,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         $readerEngine = $profileEngine;
     }
 
+    $packageName = scanner_logical_package_name($originalName);
+
     scanner_emit_percent($progress, 'scan', 4, 'Hashing file');
     $md5 = md5_file($tmp);
     $sha1 = sha1_file($tmp);
@@ -308,10 +310,31 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw new RuntimeException('Could not hash file');
     }
 
-    $duplicate = catalog_one($db, 'SELECT id, original_name FROM ue_files WHERE game_id=? AND md5=?', [$gameId, $md5]);
+    $duplicate = catalog_one(
+        $db,
+        'SELECT id, original_name, package_name, package_guid, file_size
+         FROM ue_files
+         WHERE game_id=? AND md5=? AND LOWER(package_name)=LOWER(?)',
+        [$gameId, $md5, $packageName]
+    );
     if ($duplicate) {
         scanner_emit_percent($progress, 'done', 100, 'Duplicate in selected game');
-        return ['duplicate', (int)$duplicate['id'], 'Duplicate in selected game: ' . $duplicate['original_name'], $classification];
+        return [
+            'duplicate',
+            (int)$duplicate['id'],
+            'Duplicate in selected game',
+            $classification,
+            [
+                'file_size' => (int)$size,
+                'file_size_text' => catalog_bytes((int)$size),
+                'duplicate_file_id' => (int)$duplicate['id'],
+                'duplicate_original_name' => (string)$duplicate['original_name'],
+                'duplicate_package_name' => (string)$duplicate['package_name'],
+                'duplicate_guid' => (string)($duplicate['package_guid'] ?? ''),
+                'duplicate_file_size' => (int)($duplicate['file_size'] ?? 0),
+                'duplicate_file_size_text' => catalog_bytes((int)($duplicate['file_size'] ?? 0)),
+            ],
+        ];
     }
 
     scanner_emit_percent($progress, 'scan', 7, 'Opening ' . $readerEngine . ' reader');
@@ -343,8 +366,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $nameCount = count($names);
     $importCount = count($imports);
     $exportCount = count($exports);
+    $packageGuid = (string)($header['guid'] ?? '');
     scanner_emit_percent($progress, 'scan', 22, 'Read ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
-    $packageName = scanner_logical_package_name($originalName);
     $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; package reader=' . $readerEngine . '; package=' . $packageName . '; compatibility=' . ($classification['compatibility_status'] ?? 'native') . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
     if ($extensionOutsideProfile) {
         $scanNotesAll[] = 'Administrator override: extension .' . $ext . ' is outside the assigned profile extension list.';
@@ -362,8 +385,15 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 
     $storedName = $md5 . '.' . $ext;
     $dest = $dir . '/' . $storedName;
-    if (!rename($tmp, $dest)) {
+    $storedFileCreated = false;
+    if (is_file($dest)) {
+        if (is_file($tmp) && !@unlink($tmp)) {
+            throw new RuntimeException('Could not discard duplicate physical upload');
+        }
+    } elseif (!rename($tmp, $dest)) {
         throw new RuntimeException('Could not store upload');
+    } else {
+        $storedFileCreated = true;
     }
     $relativePath = 'storage/games/' . scanner_slug_text((string)$game['slug']) . '/verified/' . $storedName;
 
@@ -377,7 +407,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     try {
         $db->beginTransaction();
         $stmt = $db->prepare('INSERT INTO ue_files(game_id,package_name,original_name,stored_name,relative_path,extension,detected_engine_key,detected_package_version,detected_licensee_version,detection_confidence,compatibility_status,compatibility_label,detection_notes,file_size,md5,sha1,package_guid,package_version,licensee_version,name_count,import_count,export_count,scan_status,scan_notes,uploaded_by) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)');
-        $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $classification['detected_engine'], $classification['package_version'], $classification['licensee_version'], $classification['confidence'], $classification['compatibility_status'] ?? 'native', $classification['compatibility_label'] ?? null, implode("\n", $classification['notes']), $size, $md5, $sha1, (string)($header['guid'] ?? ''), (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), $nameCount, $importCount, $exportCount, 'verified', $scanNotesText, $userId]);
+        $stmt->execute([$gameId, $packageName, $originalName, $storedName, $relativePath, $ext, $classification['detected_engine'], $classification['package_version'], $classification['licensee_version'], $classification['confidence'], $classification['compatibility_status'] ?? 'native', $classification['compatibility_label'] ?? null, implode("\n", $classification['notes']), $size, $md5, $sha1, $packageGuid, (int)($header['version'] ?? 0), (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)), $nameCount, $importCount, $exportCount, 'verified', $scanNotesText, $userId]);
         $fileId = (int)$db->lastInsertId();
         $progressDb('Writing file row');
 
@@ -429,7 +459,9 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         if ($db->inTransaction()) {
             $db->rollBack();
         }
-        @unlink($dest);
+        if ($storedFileCreated && is_file($dest)) {
+            @unlink($dest);
+        }
         throw $e;
     }
 
@@ -443,5 +475,17 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 
     scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
     $resultLabel = ($classification['compatibility_status'] ?? 'native') === 'legacy_compatible' ? ('; ' . (string)($classification['compatibility_label'] ?? 'legacy-compatible')) : '';
-    return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', reader=' . $readerEngine . ', detection=' . $classification['confidence'] . $resultLabel . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount . $refreshWarning, $classification];
+    return [
+        'verified',
+        $fileId,
+        'Imported. Profile=' . $profileEngine . ', reader=' . $readerEngine . ', detection=' . $classification['confidence'] . $resultLabel . ', size=' . catalog_bytes((int)$size) . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount . $refreshWarning,
+        $classification,
+        [
+            'file_id' => $fileId,
+            'package_name' => $packageName,
+            'package_guid' => $packageGuid,
+            'file_size' => (int)$size,
+            'file_size_text' => catalog_bytes((int)$size),
+        ],
+    ];
 }
