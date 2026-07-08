@@ -36,7 +36,7 @@ try {
     }
     $syncFiles = $selectedGame === null ? [] : catalog_all(
         $db,
-        'SELECT id, original_name FROM ue_files WHERE game_id=? ORDER BY package_name, original_name, id',
+        'SELECT id, original_name, package_name, md5, package_guid FROM ue_files WHERE game_id=? ORDER BY package_name, original_name, id',
         [$selectedGameId]
     );
 
@@ -222,12 +222,23 @@ CSS;
         };
     }
 
+    function postIdentity(data, file) {
+        data.set('package_name', file.package_name || '');
+        data.set('md5', file.md5 || '');
+        data.set('package_guid', file.package_guid || '');
+    }
+
+    function isStaleFileError(message) {
+        return /no longer exists in the catalog|no longer present in the catalog|Refresh Full Sync/i.test(message || '');
+    }
+
     function runPackageRequest(overlay, operation, file, phase, completedBefore, phaseTotal) {
         var token = makeToken();
         var data = new FormData(form);
         data.set('operation', operation);
         data.set('file_id', String(file.id));
         data.set('progress_token', token);
+        postIdentity(data, file);
         var stopPolling = pollProgress(token, function (state) {
             setOverlayState(overlay, phase, completedBefore, phaseTotal, state, file.original_name || 'package');
         });
@@ -285,12 +296,21 @@ CSS;
                 }
 
                 reimported++;
-                refreshFiles.push({ id: result.file_id, original_name: result.original_name || file.original_name });
+                refreshFiles.push({
+                    id: result.file_id,
+                    original_name: result.original_name || file.original_name,
+                    package_name: file.package_name || '',
+                    md5: file.md5 || '',
+                    package_guid: file.package_guid || ''
+                });
                 completeOverlayStep(overlay, 'sync', index + 1, total, file.original_name, result.message || 'Scanner re-import complete.');
             } catch (error) {
-                failures.push('Re-import failed — ' + file.original_name + ': ' + (error.message || 'Unknown error'));
-                /* A genuine scanner failure rolls back the old file record, so it remains eligible for dependency refresh. */
-                refreshFiles.push(file);
+                var message = error.message || 'Unknown error';
+                failures.push('Re-import failed — ' + file.original_name + ': ' + message);
+                if (!isStaleFileError(message)) {
+                    /* A genuine scanner failure rolls back the old file record, so it remains eligible for dependency refresh. */
+                    refreshFiles.push(file);
+                }
                 completeOverlayStep(overlay, 'sync', index + 1, total, file.original_name, 'Skipped after error; continuing with the next package.');
             }
         }
