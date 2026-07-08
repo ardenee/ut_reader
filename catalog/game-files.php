@@ -104,23 +104,28 @@ function game_files_pagination(int $pageNo, int $totalPages): string
         . '</nav>';
 }
 
-function game_files_admin_actions(int $fileId, string $originalName, string $csrf): string
+function game_files_actions(int $fileId, string $originalName, string $csrf, bool $isAdmin): string
 {
     $confirm = 'Remove ' . $originalName . ' from storage and the catalog? This cannot be undone. Dependency links for the game will then be rebuilt.';
-    $html = '<div class="game-files-admin-actions">';
-    $html .= '<form method="post" action="file-maintenance.php" title="Rebuild dependency links for this game">';
-    $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
-    $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
-    $html .= '<input type="hidden" name="operation" value="rebuild">';
-    $html .= '<button type="submit" class="game-files-admin-button" aria-label="Rebuild dependency links" title="Rebuild dependency links for this game">↻</button>';
-    $html .= '</form>';
-    $html .= '<form method="post" action="file-maintenance.php" onsubmit="return confirm(\'' . catalog_h($confirm) . '\');" title="Delete this package from storage and the catalog">';
-    $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
-    $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
-    $html .= '<input type="hidden" name="operation" value="remove">';
-    $html .= '<button type="submit" class="game-files-admin-button game-files-admin-button--remove" aria-label="Delete package" title="Delete this package from storage and the catalog">×</button>';
-    $html .= '</form></div>';
-    return $html;
+    $html = '<div class="game-files-actions-list">';
+    $html .= '<a class="game-files-download-link" href="download-info.php?id=' . $fileId . '" title="Download" aria-label="Download ' . catalog_h($originalName) . '">⇩</a>';
+
+    if ($isAdmin) {
+        $html .= '<form method="post" action="file-maintenance.php" title="Rebuild dependency links for this game">';
+        $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+        $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+        $html .= '<input type="hidden" name="operation" value="rebuild">';
+        $html .= '<button type="submit" class="game-files-admin-button" aria-label="Rebuild dependency links" title="Rebuild dependency links for this game">↻</button>';
+        $html .= '</form>';
+        $html .= '<form method="post" action="file-maintenance.php" onsubmit="return confirm(\'' . catalog_h($confirm) . '\');" title="Delete this package from storage and the catalog">';
+        $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+        $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+        $html .= '<input type="hidden" name="operation" value="remove">';
+        $html .= '<button type="submit" class="game-files-admin-button game-files-admin-button--remove" aria-label="Delete package" title="Delete this package from storage and the catalog">×</button>';
+        $html .= '</form>';
+    }
+
+    return $html . '</div>';
 }
 
 function game_files_page_styles(): string
@@ -147,19 +152,21 @@ html { scroll-behavior: smooth; }
 .game-files-pagination__end { justify-self: end; }
 .game-files-pagination__current { justify-self: center; white-space: nowrap; }
 
-#game-files-table { width: max-content; min-width: 0; table-layout: auto; }
+#game-files-table { width: 100% !important; min-width: 1180px !important; table-layout: auto !important; }
 #game-files-table th:nth-child(1), #game-files-table td:nth-child(1),
 #game-files-table th:nth-child(2), #game-files-table td:nth-child(2),
 #game-files-table th:nth-child(3), #game-files-table td:nth-child(3),
 #game-files-table th:nth-child(4), #game-files-table td:nth-child(4),
 #game-files-table th:nth-child(5), #game-files-table td:nth-child(5) { white-space: nowrap; }
-#game-files-table .game-files-package, #game-files-table .game-files-version, #game-files-table .game-files-size, #game-files-table .game-files-download, #game-files-table .game-files-admin { width: 1%; }
+#game-files-table .game-files-package, #game-files-table .game-files-version, #game-files-table .game-files-size, #game-files-table .game-files-actions { width: 1%; }
 #game-files-table th:nth-child(3), #game-files-table td:nth-child(3), #game-files-table .identity-cell { width: 38ch; min-width: 38ch; max-width: 38ch; }
 .game-files-file-link, .game-files-package-link { font-weight: 650; }
 .game-files-dependencies { min-width: 130px; white-space: normal; }
 .game-files-dependency-list { display: flex; flex-direction: column; align-items: flex-start; row-gap: 1px; }
 .game-files-dependency-list .ui-badge { white-space: nowrap; }
-.game-files-download, .game-files-admin { text-align: center; }
+.game-files-actions { text-align: center; white-space: nowrap; }
+.game-files-actions-list { display: flex; justify-content: center; align-items: center; gap: 8px; }
+.game-files-actions-list form { margin: 0; }
 
 .game-files-download-link, .game-files-admin-button {
     display: inline-grid;
@@ -180,8 +187,6 @@ html { scroll-behavior: smooth; }
 .game-files-download-link:hover, .game-files-admin-button:hover { background: rgba(118, 169, 255, .18); text-decoration: none; }
 .game-files-admin-button--remove { color: #ffabb4; background: rgba(255, 107, 122, .08); }
 .game-files-admin-button--remove:hover { background: rgba(255, 107, 122, .18); }
-.game-files-admin-actions { display: flex; justify-content: center; gap: 4px; }
-.game-files-admin-actions form { margin: 0; }
 
 .game-files-to-top {
     position: fixed; right: 20px; bottom: 20px; z-index: 9; display: grid; place-items: center;
@@ -314,10 +319,7 @@ try {
         echo '<th scope="col">' . game_files_sort_link('Size', 'size', $sort, $dir) . '</th>';
         echo '<th scope="col">' . game_files_sort_link('Compression', 'compression', $sort, $dir) . '</th>';
         echo '<th scope="col">' . game_files_sort_link('Dependencies', 'deps', $sort, $dir) . '</th>';
-        echo '<th scope="col"><span class="ui-sr-only">Download</span>↓</th>';
-        if ($isAdmin) {
-            echo '<th scope="col">Admin</th>';
-        }
+        echo '<th scope="col">Actions</th>';
         echo '</tr></thead><tbody>';
 
         foreach ($files as $file) {
@@ -347,10 +349,7 @@ try {
             echo '<td class="game-files-size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
             echo '<td>' . $compression . '</td>';
             echo '<td class="game-files-dependencies">' . $deps . '</td>';
-            echo '<td class="game-files-download"><a class="game-files-download-link" href="download-info.php?id=' . $id . '" title="Download" aria-label="Download ' . catalog_h($originalName) . '">⇩</a></td>';
-            if ($isAdmin) {
-                echo '<td class="game-files-admin">' . game_files_admin_actions($id, $originalName, $maintenanceCsrf) . '</td>';
-            }
+            echo '<td class="game-files-actions">' . game_files_actions($id, $originalName, $maintenanceCsrf, $isAdmin) . '</td>';
             echo '</tr>';
         }
         echo '</tbody></table></div>';
