@@ -19,7 +19,22 @@ function catalog_security_is_https(): bool
         return true;
     }
 
+    $forwardedProto = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+    if ($forwardedProto === 'https') {
+        return true;
+    }
+
     return (string)($_SERVER['SERVER_PORT'] ?? '') === '443';
+}
+
+function catalog_session_lifetime_seconds(): int
+{
+    $configured = (int)(getenv('UNREALDB_CATALOG_SESSION_LIFETIME_SECONDS') ?: 0);
+    if ($configured > 0) {
+        return max(3600, min($configured, 365 * 86400));
+    }
+
+    return 30 * 86400;
 }
 
 function catalog_apply_runtime_safeguards(): void
@@ -48,13 +63,16 @@ function catalog_start_session(): void
         return;
     }
 
+    $lifetime = catalog_session_lifetime_seconds();
+    ini_set('session.gc_maxlifetime', (string)$lifetime);
+
     /*
      * Several catalog pages predate CatalogSecurity and still call raw
      * session_start(). Keep the default PHPSESSID name so their session and
      * the login session are the same cookie.
      */
     session_set_cookie_params([
-        'lifetime' => 0,
+        'lifetime' => $lifetime,
         'path' => '/',
         'secure' => catalog_security_is_https(),
         'httponly' => true,
