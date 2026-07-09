@@ -65,6 +65,44 @@ function catalog_bytes(int $bytes): string
     return ($i ? number_format($value, 2) : (string)$bytes) . ' ' . $units[$i];
 }
 
+function catalog_clean_unreal_package_stem(string $stem): string
+{
+    $stem = trim(str_replace(["\0", '/', '\\'], ['', '.', '.'], $stem));
+    $stem = preg_replace('/\s+/', ' ', $stem) ?? $stem;
+    $stem = trim($stem, " \t\n\r\0\x0B.");
+
+    do {
+        $previous = $stem;
+        $stem = preg_replace('/\s+\([0-9]+\)$/', '', $stem) ?? $stem;
+        $stem = preg_replace('/_(?:[2-9]|[1-9][0-9]+)$/', '', $stem) ?? $stem;
+        $stem = preg_replace('/\s+-\s+copy(?:\s*\([0-9]+\))?$/i', '', $stem) ?? $stem;
+        $stem = preg_replace('/\s+copy(?:\s*\([0-9]+\))?$/i', '', $stem) ?? $stem;
+        $stem = trim($stem, " \t\n\r\0\x0B.");
+    } while ($stem !== $previous);
+
+    $stem = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $stem) ?? $stem;
+    $stem = trim($stem, " \t\n\r\0\x0B.");
+
+    return $stem !== '' ? $stem : 'package';
+}
+
+function catalog_clean_unreal_filename(string $filename): string
+{
+    $filename = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $filename));
+    $filename = preg_replace('/\s+/', ' ', $filename) ?? $filename;
+    $filename = trim($filename);
+    if ($filename === '' || $filename === '.' || $filename === '..') {
+        return 'package';
+    }
+
+    $extension = strtolower(trim((string)pathinfo($filename, PATHINFO_EXTENSION)));
+    $stem = (string)pathinfo($filename, PATHINFO_FILENAME);
+    $stem = catalog_clean_unreal_package_stem($stem);
+    $extension = preg_replace('/[^A-Za-z0-9]+/', '', $extension) ?? '';
+
+    return $stem . ($extension !== '' ? '.' . $extension : '');
+}
+
 function catalog_support_is_admin(): bool
 {
     catalog_start_session();
