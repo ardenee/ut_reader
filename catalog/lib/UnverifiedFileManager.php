@@ -6,10 +6,10 @@ require_once __DIR__ . '/CatalogParser.php';
 require_once __DIR__ . '/GameProfiles.php';
 
 /**
- * Files rejected by the normal scanner are intentionally filesystem-only. They
- * live under storage/games/<game slug>/unverified with an adjacent .txt reason.
- * This manager inventories and reuses those files without creating a ue_files
- * row until a real import succeeds.
+ * Files rejected by the normal scanner, or placed into the upload bucket, are
+ * filesystem-only. They live under storage/games/<game slug>/unverified or
+ * storage/upload-bucket with an adjacent .txt note. This manager inventories and
+ * reuses those files without creating a ue_files row until a real import succeeds.
  */
 
 function uvf_base64url_encode(string $value): string
@@ -31,14 +31,29 @@ function uvf_base64url_decode(string $value): ?string
     return $decoded === false ? null : $decoded;
 }
 
-function uvf_storage_games_root(array $config): string
+function uvf_bucket_game(): array
+{
+    return [
+        'id' => 0,
+        'name' => 'Upload Bucket',
+        'slug' => 'upload-bucket',
+        'profile_id' => null,
+        'profile_engine' => 'bucket',
+    ];
+}
+
+function uvf_storage_root(array $config): string
 {
     $storageRoot = realpath(rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
     if ($storageRoot === false || !is_dir($storageRoot)) {
         throw new RuntimeException('Catalog storage folder is unavailable.');
     }
+    return $storageRoot;
+}
 
-    $gamesRoot = $storageRoot . DIRECTORY_SEPARATOR . 'games';
+function uvf_storage_games_root(array $config): string
+{
+    $gamesRoot = uvf_storage_root($config) . DIRECTORY_SEPARATOR . 'games';
     if (!is_dir($gamesRoot) && !@mkdir($gamesRoot, 0775, true) && !is_dir($gamesRoot)) {
         throw new RuntimeException('Could not create the catalog games storage folder.');
     }
@@ -50,8 +65,21 @@ function uvf_storage_games_root(array $config): string
     return $resolved;
 }
 
+function uvf_upload_bucket_dir(array $config, bool $create = false): string
+{
+    $dir = uvf_storage_root($config) . DIRECTORY_SEPARATOR . 'upload-bucket';
+    if ($create && !is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
+        throw new RuntimeException('Could not create upload bucket storage.');
+    }
+    return $dir;
+}
+
 function uvf_unverified_dir(array $config, array $game, bool $create = false): string
 {
+    if ((int)($game['id'] ?? -1) === 0 || (string)($game['slug'] ?? '') === 'upload-bucket') {
+        return uvf_upload_bucket_dir($config, $create);
+    }
+
     $slug = scanner_slug_text((string)($game['slug'] ?? ''));
     $dir = uvf_storage_games_root($config) . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'unverified';
     if ($create && !is_dir($dir) && !@mkdir($dir, 0775, true) && !is_dir($dir)) {
@@ -82,6 +110,46 @@ function uvf_token(int $gameId, string $queueName): string
         'game_id' => $gameId,
         'name' => basename($queueName),
     ], JSON_UNESCAPED_SLASHES));
+}
+
+function uvf_safe_queue_name(string $originalName): string
+{
+    $safeOriginal = preg_replace('/[^A-Za-z0-9._ -]+/', '_', basename($originalName)) ?? 'upload.bin';
+    $safeOriginal = trim($safeOriginal);
+    if ($safeOriginal === '' || $safeOriginal === '.' || $safeOriginal === '..') {
+        $safeOriginal = 'upload.bin';
+    }
+    return date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . $safeOriginal;
+}
+
+/** @return array{queue_name:string,original_name:string,size:int,path:string} */
+function uvf_store_bucket_upload(array $config, string $tmp, string $originalName, string $reason): array
+{
+    if (!is_file($tmp)) {
+        throw new RuntimeException('Upload temporary file is missing.');
+    }
+
+    $dir = uvf_upload_bucket_dir($config, true);
+    $queueName = uvf_safe_queue_name($originalName);
+    $destination = uvf_unique_destination($dir, $queueName);
+
+    if (is_uploaded_file($tmp)) {
+        $moved = @move_uploaded_file($tmp, $destination);
+    } else {
+        $moved = @rename($tmp, $destination);
+    }
+    if (!$moved) {
+        throw new RuntimeException('Could not move uploaded file into the upload bucket.');
+    }
+
+    @file_put_contents($destination . '.txt', $reason);
+
+    return [
+        'queue_name' => basename($destination),
+        'original_name' => $originalName,
+        'size' => (int)(filesize($destination) ?: 0),
+        'path' => $destination,
+    ];
 }
 
 /**
@@ -123,15 +191,19 @@ function uvf_resolve(PDO $db, array $config, string $token): array
         throw new RuntimeException('Invalid unverified file reference.');
     }
 
-    $gameId = (int)($payload['game_id'] ?? 0);
+    $gameId = (int)($payload['game_id'] ?? -1);
     $queueName = basename((string)($payload['name'] ?? ''));
-    if ($gameId < 1 || $queueName === '' || $queueName !== (string)($payload['name'] ?? '') || str_ends_with(strtolower($queueName), '.txt')) {
+    if ($gameId < 0 || $queueName === '' || $queueName !== (string)($payload['name'] ?? '') || str_ends_with(strtolower($queueName), '.txt')) {
         throw new RuntimeException('Invalid unverified file reference.');
     }
 
-    $game = catalog_one($db, 'SELECT id, name, slug, profile_id FROM ue_games WHERE id=?', [$gameId]);
-    if (!$game) {
-        throw new RuntimeException('The source game no longer exists.');
+    if ($gameId === 0) {
+        $game = uvf_bucket_game();
+    } else {
+        $game = catalog_one($db, 'SELECT id, name, slug, profile_id FROM ue_games WHERE id=?', [$gameId]);
+        if (!$game) {
+            throw new RuntimeException('The source game no longer exists.');
+        }
     }
 
     $dir = uvf_unverified_dir($config, $game);
@@ -168,7 +240,7 @@ function uvf_resolve(PDO $db, array $config, string $token): array
         'size' => (int)(filesize($path) ?: 0),
         'modified_at' => (int)(filemtime($path) ?: 0),
         'extension' => strtolower(pathinfo($originalName, PATHINFO_EXTENSION)),
-        'package_name' => scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME)),
+        'package_name' => scanner_logical_package_name($originalName),
         'md5' => $identity['md5'],
         'package_guid' => $identity['package_guid'],
         'header' => $header,
@@ -180,33 +252,60 @@ function uvf_resolve(PDO $db, array $config, string $token): array
  */
 function uvf_list(PDO $db, array $config, ?int $sourceGameId = null): array
 {
-    $games = catalog_all($db, 'SELECT id, name, slug, profile_id FROM ue_games ORDER BY name');
     $items = [];
-    foreach ($games as $game) {
-        if ($sourceGameId !== null && (int)$game['id'] !== $sourceGameId) {
-            continue;
-        }
-        $dir = uvf_unverified_dir($config, $game);
-        if (!is_dir($dir) || !is_readable($dir)) {
-            continue;
-        }
 
-        $entries = scandir($dir);
-        if ($entries === false) {
-            continue;
+    if ($sourceGameId === null || $sourceGameId === 0) {
+        $bucket = uvf_bucket_game();
+        $dir = uvf_unverified_dir($config, $bucket, false);
+        if (is_dir($dir) && is_readable($dir)) {
+            $entries = scandir($dir);
+            if ($entries !== false) {
+                foreach ($entries as $entry) {
+                    if ($entry === '.' || $entry === '..' || str_starts_with($entry, '.') || str_ends_with(strtolower($entry), '.txt')) {
+                        continue;
+                    }
+                    $path = $dir . DIRECTORY_SEPARATOR . $entry;
+                    if (!is_file($path) || !uvf_path_inside($path, $dir)) {
+                        continue;
+                    }
+                    try {
+                        $items[] = uvf_resolve($db, $config, uvf_token(0, $entry));
+                    } catch (Throwable $error) {
+                        error_log('[UnrealDB upload bucket] ignored unsafe queue entry ' . $entry . ': ' . $error->getMessage());
+                    }
+                }
+            }
         }
-        foreach ($entries as $entry) {
-            if ($entry === '.' || $entry === '..' || str_starts_with($entry, '.') || str_ends_with(strtolower($entry), '.txt')) {
+    }
+
+    if ($sourceGameId !== 0) {
+        $games = catalog_all($db, 'SELECT id, name, slug, profile_id FROM ue_games ORDER BY name');
+        foreach ($games as $game) {
+            if ($sourceGameId !== null && (int)$game['id'] !== $sourceGameId) {
                 continue;
             }
-            $path = $dir . DIRECTORY_SEPARATOR . $entry;
-            if (!is_file($path) || !uvf_path_inside($path, $dir)) {
+            $dir = uvf_unverified_dir($config, $game);
+            if (!is_dir($dir) || !is_readable($dir)) {
                 continue;
             }
-            try {
-                $items[] = uvf_resolve($db, $config, uvf_token((int)$game['id'], $entry));
-            } catch (Throwable $error) {
-                error_log('[UnrealDB unverified] ignored unsafe queue entry ' . $entry . ': ' . $error->getMessage());
+
+            $entries = scandir($dir);
+            if ($entries === false) {
+                continue;
+            }
+            foreach ($entries as $entry) {
+                if ($entry === '.' || $entry === '..' || str_starts_with($entry, '.') || str_ends_with(strtolower($entry), '.txt')) {
+                    continue;
+                }
+                $path = $dir . DIRECTORY_SEPARATOR . $entry;
+                if (!is_file($path) || !uvf_path_inside($path, $dir)) {
+                    continue;
+                }
+                try {
+                    $items[] = uvf_resolve($db, $config, uvf_token((int)$game['id'], $entry));
+                } catch (Throwable $error) {
+                    error_log('[UnrealDB unverified] ignored unsafe queue entry ' . $entry . ': ' . $error->getMessage());
+                }
             }
         }
     }
@@ -329,7 +428,7 @@ function uvf_discard(PDO $db, array $config, string $token): array
 
 /**
  * Re-import a queued file into a chosen game. The queue original is retained
- * until the selected scanner succeeds or finds an existing same-game MD5.
+ * until the selected scanner succeeds or finds an existing same-game MD5/GUID.
  *
  * @return array{status:string,file_id:int|null,original_name:string,target_game:string,message:string}
  */
