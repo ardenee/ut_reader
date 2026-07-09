@@ -14,6 +14,10 @@ return [
     'site_name' => 'Unreal File Catalog',
     'storage_path' => __DIR__ . '/storage',
     'max_upload_bytes' => 256 * 1024 * 1024,
+    'auth' => [
+        // How long the "Keep me logged in" token remains valid.
+        'remember_days' => 30,
+    ],
     'queue' => [
         // Current deployment: MySQL-backed durable jobs run by catalog/bin/catalog-worker.php.
         'name' => 'catalog',
