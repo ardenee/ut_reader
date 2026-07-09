@@ -198,6 +198,7 @@ function catalog_admin_nav(): void
             'Game Admin' => $root . 'game-manager.php',
             'Game Profiles' => $root . 'game-profiles.php',
             'Full Sync' => $root . 'full-sync.php',
+            'Package Normalizer' => $root . 'package-normalize.php',
         ]);
         catalog_nav_menu('Sources', [
             'Game Sources' => $root . 'sources.php',
