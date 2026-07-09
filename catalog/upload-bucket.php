@@ -7,6 +7,7 @@ ini_set('display_errors', '1');
 ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
 require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 
 function upload_bucket_short_error(Throwable $error): string
@@ -64,29 +65,54 @@ function upload_bucket_handle_request(array $config): array
             continue;
         }
 
+        $workingTmp = (string)$tmp;
+        $workingName = $cleanName;
+        $decompressed = null;
+
         try {
             if ($size <= 0 || $size > $maxBytes) {
                 throw new RuntimeException('Bad file size: ' . catalog_bytes($size));
             }
-            $ext = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
+
+            if (catalog_redirect_archive_is_supported_filename($submittedName)) {
+                $decompressed = catalog_redirect_archive_decompress_to_temp($workingTmp, $submittedName);
+                $workingTmp = $decompressed['path'];
+                $workingName = catalog_clean_unreal_filename($decompressed['filename']);
+                if (is_string($tmp) && is_file($tmp)) {
+                    @unlink($tmp);
+                }
+            }
+
+            $storedSize = is_file($workingTmp) ? (int)(filesize($workingTmp) ?: 0) : 0;
+            if ($storedSize <= 0 || $storedSize > $maxBytes) {
+                throw new RuntimeException('Bad decompressed file size: ' . catalog_bytes($storedSize));
+            }
+
+            $ext = strtolower(pathinfo($workingName, PATHINFO_EXTENSION));
             if ($allowedExtensions !== [] && !in_array($ext, $allowedExtensions, true)) {
                 throw new RuntimeException('Extension not allowed for bucket upload: ' . ($ext !== '' ? $ext : '(none)'));
             }
 
-            $cleanNote = $submittedName !== $cleanName ? ' Original browser filename was: ' . basename($submittedName) . '.' : '';
-            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.' . $cleanNote;
-            $stored = uvf_store_bucket_upload($config, (string)$tmp, $cleanName, $note);
+            $cleanNote = $submittedName !== $workingName ? ' Original browser filename was: ' . basename($submittedName) . '.' : '';
+            $redirectNote = is_array($decompressed)
+                ? ' Redirect archive .' . $decompressed['source_extension'] . ' was decompressed before storage; compressed wrapper was not retained.'
+                : '';
+            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.' . $redirectNote . $cleanNote;
+            $stored = uvf_store_bucket_upload($config, $workingTmp, $workingName, $note);
             $ok++;
-            $messages[] = upload_bucket_result('bucketed', $cleanName, 'Stored in upload bucket', [
+            $messages[] = upload_bucket_result(is_array($decompressed) ? 'decompressed' : 'bucketed', $workingName, is_array($decompressed) ? 'Decompressed redirect archive into upload bucket' : 'Stored in upload bucket', [
                 'file_size' => (int)$stored['size'],
                 'file_size_text' => catalog_bytes((int)$stored['size']),
                 'queue_name' => (string)$stored['queue_name'],
             ]);
         } catch (Throwable $error) {
             $failed++;
-            $messages[] = upload_bucket_result('failed', $cleanName, upload_bucket_short_error($error), $meta);
+            $messages[] = upload_bucket_result('failed', $workingName, upload_bucket_short_error($error), $meta);
             if (is_string($tmp) && is_file($tmp)) {
                 @unlink($tmp);
+            }
+            if ($workingTmp !== (string)$tmp && is_file($workingTmp)) {
+                @unlink($workingTmp);
             }
         }
     }
@@ -126,10 +152,10 @@ try {
 .bucket-progress progress { width:100%; height:18px; }
 .bucket-log { max-height:260px; overflow:auto; margin-top:10px; font-family:Consolas, ui-monospace, monospace; font-size:12px; color:var(--muted); }
 .bucket-result { display:flex; gap:8px; align-items:baseline; padding:3px 0; }
-.bucket-result-badge { min-width:78px; font-weight:700; text-transform:uppercase; }
+.bucket-result-badge { min-width:98px; font-weight:700; text-transform:uppercase; }
 .bucket-result-file { color:var(--text); }
 .bucket-result-message { color:var(--muted); }
-.bucket-result-bucketed .bucket-result-badge { color:#a7f3d0; }
+.bucket-result-bucketed .bucket-result-badge, .bucket-result-decompressed .bucket-result-badge { color:#a7f3d0; }
 .bucket-result-failed .bucket-result-badge { color:#fecdd3; }
 .bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 </style>
@@ -137,7 +163,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Upload unsorted Unreal package files into a neutral bucket. Files stay physical-only until you assign/import them into a game from the queue manager.',
+        'Upload unsorted Unreal package files into a neutral bucket. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and only the real package is retained.',
         ['Open Bucket Queue' => 'unverified-files.php?source_game_id=-1', 'All Queues' => 'unverified-files.php', 'Upload Files to Game' => 'profiled-upload.php']
     );
 
@@ -151,7 +177,7 @@ CSS;
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
     echo '<p><input id="upload-bucket-files" type="file" name="files[]" multiple required> <button id="upload-bucket-button" type="submit">Upload to bucket</button></p>';
-    echo '<p class="muted">Max per file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Allowed extensions use the catalog global allowed extension list.</p>';
+    echo '<p class="muted">Max per file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
     echo '<div id="bucket-progress" class="bucket-progress" hidden>';
     echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-count"></span></div><progress id="bucket-progress-bar" value="0" max="100"></progress>';
     echo '<div id="bucket-log" class="bucket-log"></div></div>';
