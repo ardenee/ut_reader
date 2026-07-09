@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogScanner.php';
+require_once __DIR__ . '/CatalogRedirectArchive.php';
 require_once __DIR__ . '/CatalogParser.php';
 require_once __DIR__ . '/GameProfiles.php';
 
@@ -114,7 +115,7 @@ function uvf_token(int $gameId, string $queueName): string
 
 function uvf_safe_queue_name(string $originalName): string
 {
-    $safeOriginal = preg_replace('/[^A-Za-z0-9._ -]+/', '_', basename($originalName)) ?? 'upload.bin';
+    $safeOriginal = preg_replace('/[^A-Za-z0-9._ -]+/', '_', basename(catalog_clean_unreal_filename($originalName))) ?? 'upload.bin';
     $safeOriginal = trim($safeOriginal);
     if ($safeOriginal === '' || $safeOriginal === '.' || $safeOriginal === '..') {
         $safeOriginal = 'upload.bin';
@@ -130,7 +131,8 @@ function uvf_store_bucket_upload(array $config, string $tmp, string $originalNam
     }
 
     $dir = uvf_upload_bucket_dir($config, true);
-    $queueName = uvf_safe_queue_name($originalName);
+    $cleanName = catalog_clean_unreal_filename($originalName);
+    $queueName = uvf_safe_queue_name($cleanName);
     $destination = uvf_unique_destination($dir, $queueName);
 
     if (is_uploaded_file($tmp)) {
@@ -146,7 +148,7 @@ function uvf_store_bucket_upload(array $config, string $tmp, string $originalNam
 
     return [
         'queue_name' => basename($destination),
-        'original_name' => $originalName,
+        'original_name' => $cleanName,
         'size' => (int)(filesize($destination) ?: 0),
         'path' => $destination,
     ];
@@ -247,9 +249,7 @@ function uvf_resolve(PDO $db, array $config, string $token): array
     ];
 }
 
-/**
- * @return list<array<string,mixed>>
- */
+/** @return list<array<string,mixed>> */
 function uvf_list(PDO $db, array $config, ?int $sourceGameId = null): array
 {
     $items = [];
@@ -440,12 +440,19 @@ function uvf_import(PDO $db, array $config, string $token, int $targetGameId, ?i
         throw new RuntimeException('Target game not found.');
     }
 
-    $tmp = tempnam(sys_get_temp_dir(), 'ue_unverified_');
-    if ($tmp === false || !@copy($source['path'], $tmp)) {
-        if (is_string($tmp)) {
-            @unlink($tmp);
+    $scannerOriginalName = (string)$source['original_name'];
+    if (catalog_redirect_archive_is_supported_filename($scannerOriginalName)) {
+        $decoded = catalog_redirect_archive_decompress_to_temp((string)$source['path'], $scannerOriginalName);
+        $tmp = $decoded['path'];
+        $scannerOriginalName = $decoded['filename'];
+    } else {
+        $tmp = tempnam(sys_get_temp_dir(), 'ue_unverified_');
+        if ($tmp === false || !@copy($source['path'], $tmp)) {
+            if (is_string($tmp)) {
+                @unlink($tmp);
+            }
+            throw new RuntimeException('Could not prepare the queued package for import.');
         }
-        throw new RuntimeException('Could not prepare the queued package for import.');
     }
 
     try {
@@ -454,7 +461,7 @@ function uvf_import(PDO $db, array $config, string $token, int $targetGameId, ?i
             $config,
             (int)$target['id'],
             $tmp,
-            (string)$source['original_name'],
+            $scannerOriginalName,
             $userId,
             !$allowProfileOverride,
             null,
@@ -465,6 +472,9 @@ function uvf_import(PDO $db, array $config, string $token, int $targetGameId, ?i
             throw new RuntimeException((string)($result[2] ?? 'Queued package was not imported.'));
         }
 
+        if (is_file($tmp)) {
+            @unlink($tmp);
+        }
         if (!@unlink($source['path'])) {
             throw new RuntimeException('Import completed, but the original unverified queue file could not be removed.');
         }
@@ -475,7 +485,7 @@ function uvf_import(PDO $db, array $config, string $token, int $targetGameId, ?i
         return [
             'status' => (string)$result[0],
             'file_id' => isset($result[1]) ? (int)$result[1] : null,
-            'original_name' => (string)$source['original_name'],
+            'original_name' => $scannerOriginalName,
             'target_game' => (string)$target['name'],
             'message' => (string)($result[2] ?? ''),
         ];
