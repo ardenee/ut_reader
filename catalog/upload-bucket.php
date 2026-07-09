@@ -52,14 +52,15 @@ function upload_bucket_handle_request(array $config): array
     }
 
     foreach ($temporaryPaths as $index => $tmp) {
-        $name = (string)($_FILES['files']['name'][$index] ?? 'upload.bin');
+        $submittedName = (string)($_FILES['files']['name'][$index] ?? 'upload.bin');
+        $cleanName = catalog_clean_unreal_filename($submittedName);
         $err = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
         $size = is_string($tmp) && is_file($tmp) ? (int)(filesize($tmp) ?: 0) : 0;
         $meta = ['file_size' => $size, 'file_size_text' => catalog_bytes($size)];
 
         if ($err !== UPLOAD_ERR_OK) {
             $failed++;
-            $messages[] = upload_bucket_result('failed', $name, 'Upload error ' . $err, $meta);
+            $messages[] = upload_bucket_result('failed', $cleanName, 'Upload error ' . $err, $meta);
             continue;
         }
 
@@ -67,22 +68,23 @@ function upload_bucket_handle_request(array $config): array
             if ($size <= 0 || $size > $maxBytes) {
                 throw new RuntimeException('Bad file size: ' . catalog_bytes($size));
             }
-            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+            $ext = strtolower(pathinfo($cleanName, PATHINFO_EXTENSION));
             if ($allowedExtensions !== [] && !in_array($ext, $allowedExtensions, true)) {
                 throw new RuntimeException('Extension not allowed for bucket upload: ' . ($ext !== '' ? $ext : '(none)'));
             }
 
-            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.';
-            $stored = uvf_store_bucket_upload($config, (string)$tmp, $name, $note);
+            $cleanNote = $submittedName !== $cleanName ? ' Original browser filename was: ' . basename($submittedName) . '.' : '';
+            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.' . $cleanNote;
+            $stored = uvf_store_bucket_upload($config, (string)$tmp, $cleanName, $note);
             $ok++;
-            $messages[] = upload_bucket_result('bucketed', $name, 'Stored in upload bucket', [
+            $messages[] = upload_bucket_result('bucketed', $cleanName, 'Stored in upload bucket', [
                 'file_size' => (int)$stored['size'],
                 'file_size_text' => catalog_bytes((int)$stored['size']),
                 'queue_name' => (string)$stored['queue_name'],
             ]);
         } catch (Throwable $error) {
             $failed++;
-            $messages[] = upload_bucket_result('failed', $name, upload_bucket_short_error($error), $meta);
+            $messages[] = upload_bucket_result('failed', $cleanName, upload_bucket_short_error($error), $meta);
             if (is_string($tmp) && is_file($tmp)) {
                 @unlink($tmp);
             }
