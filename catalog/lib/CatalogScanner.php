@@ -13,6 +13,11 @@ function scanner_clean_name(string $s): string
     return trim(str_replace(["\0", '/', "\\"], ['', '.', '.'], $s));
 }
 
+function scanner_clean_original_filename(string $originalName): string
+{
+    return catalog_clean_unreal_filename($originalName);
+}
+
 function scanner_slug_text(string $s): string
 {
     $s = strtolower(trim($s));
@@ -27,20 +32,8 @@ function scanner_join_path_parts(array $parts): string
 
 function scanner_logical_package_name(string $originalName): string
 {
-    $name = scanner_clean_name(pathinfo($originalName, PATHINFO_FILENAME));
-
-    /*
-     * Windows/browser duplicate suffixes are not part of Unreal package names.
-     * Export full paths must be rooted at the logical package, not at the local
-     * upload filename, otherwise "xutfx (2).utx" creates "xutfx (2).Object"
-     * exports that cannot satisfy imports for "xutfx.Object".
-     */
-    do {
-        $previous = $name;
-        $name = preg_replace('/\s+\([0-9]+\)$/', '', $name) ?? $name;
-    } while ($name !== $previous);
-
-    return scanner_clean_name($name);
+    $cleanName = scanner_clean_original_filename($originalName);
+    return scanner_clean_name(catalog_clean_unreal_package_stem((string)pathinfo($cleanName, PATHINFO_FILENAME)));
 }
 
 function scanner_store_failed_upload(array $config, string $tmp, string $originalName, string $gameSlug, string $reason): void
@@ -52,7 +45,8 @@ function scanner_store_failed_upload(array $config, string $tmp, string $origina
     if (!is_dir($dir)) {
         @mkdir($dir, 0775, true);
     }
-    $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._-]+/', '_', basename($originalName));
+    $cleanName = scanner_clean_original_filename($originalName);
+    $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._ -]+/', '_', basename($cleanName));
     @rename($tmp, $dir . '/' . $name);
     @file_put_contents($dir . '/' . $name . '.txt', $reason);
 }
@@ -294,6 +288,8 @@ function scanner_rebuild_affected_dependencies_for_package(PDO $db, array $confi
  */
 function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string $tmp, string $originalName, ?int $userId, bool $strictProfile = true, ?callable $progress = null, bool $allowProfileOverride = false): array
 {
+    $submittedOriginalName = $originalName;
+    $originalName = scanner_clean_original_filename($originalName);
     scanner_emit_percent($progress, 'start', 0, 'Preparing ' . $originalName);
 
     $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
@@ -385,7 +381,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 
     if ($duplicate) {
         $duplicateFileId = (int)$duplicate['id'];
-        $duplicatePackageName = (string)$duplicate['package_name'];
+        $duplicatePackageName = scanner_logical_package_name((string)$duplicate['package_name']);
         $meta = [
             'file_id' => $duplicateFileId,
             'file_size' => (int)$size,
@@ -394,12 +390,9 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             'package_guid' => $packageGuid,
             'md5' => $md5,
             'duplicate_file_id' => $duplicateFileId,
-            'duplicate_original_name' => (string)$duplicate['original_name'],
+            'duplicate_original_name' => catalog_clean_unreal_filename((string)$duplicate['original_name']),
             'duplicate_package_name' => $duplicatePackageName,
-            'duplicate_guid' => (string)($duplicate['package_guid'] ?? ''),
             'duplicate_md5' => (string)($duplicate['md5'] ?? ''),
-            'duplicate_file_size' => (int)($duplicate['file_size'] ?? 0),
-            'duplicate_file_size_text' => catalog_bytes((int)($duplicate['file_size'] ?? 0)),
         ];
 
         if (strcasecmp($duplicatePackageName, $packageName) === 0 || catalog_package_alias_exists($db, $duplicateFileId, $gameId, $packageName)) {
@@ -433,7 +426,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     $importCount = count($imports);
     $exportCount = count($exports);
     scanner_emit_percent($progress, 'scan', 22, 'Read ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
-    $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; package reader=' . $readerEngine . '; package=' . $packageName . '; compatibility=' . ($classification['compatibility_status'] ?? 'native') . '; detection=' . $classification['confidence'] . '; ' . implode(' ', $classification['notes'])]);
+    $cleanNote = $submittedOriginalName !== $originalName ? '; cleaned filename=' . $originalName . ' from upload=' . basename($submittedOriginalName) : '';
+    $scanNotesAll = array_merge($scanNotes, ['Profile engine=' . $profileEngine . '; package reader=' . $readerEngine . '; package=' . $packageName . '; compatibility=' . ($classification['compatibility_status'] ?? 'native') . '; detection=' . $classification['confidence'] . $cleanNote . '; ' . implode(' ', $classification['notes'])]);
     if ($extensionOutsideProfile) {
         $scanNotesAll[] = 'Administrator override: extension .' . $ext . ' is outside the assigned profile extension list.';
     }
