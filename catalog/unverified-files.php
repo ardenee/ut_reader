@@ -7,12 +7,12 @@ require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 function unverified_files_int(string $key): int
 {
     $value = filter_input(INPUT_GET, $key, FILTER_VALIDATE_INT);
-    return $value === false || $value === null ? 0 : max(0, (int)$value);
+    return $value === false || $value === null ? 0 : max(-1, (int)$value);
 }
 
 function unverified_files_return_url(int $sourceGameId): string
 {
-    return 'unverified-files.php' . ($sourceGameId > 0 ? '?source_game_id=' . $sourceGameId : '');
+    return 'unverified-files.php' . ($sourceGameId !== 0 ? '?source_game_id=' . $sourceGameId : '');
 }
 
 /** @return list<string> */
@@ -109,7 +109,7 @@ try {
         $targetGameId = filter_input(INPUT_POST, 'target_game_id', FILTER_VALIDATE_INT);
         $targetGameId = $targetGameId === false || $targetGameId === null ? 0 : (int)$targetGameId;
         $returnGameId = filter_input(INPUT_POST, 'return_game_id', FILTER_VALIDATE_INT);
-        $returnGameId = $returnGameId === false || $returnGameId === null ? 0 : max(0, (int)$returnGameId);
+        $returnGameId = $returnGameId === false || $returnGameId === null ? 0 : max(-1, (int)$returnGameId);
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
         try {
@@ -180,7 +180,8 @@ try {
         exit;
     }
 
-    $items = uvf_list($db, $config, $sourceGameId > 0 ? $sourceGameId : null);
+    $sourceFilter = $sourceGameId === -1 ? 0 : ($sourceGameId > 0 ? $sourceGameId : null);
+    $items = uvf_list($db, $config, $sourceFilter);
     $referencesByPackage = uvf_reference_matches($db, array_map(static fn(array $item): string => (string)$item['package_name'], $items));
     $flash = $_SESSION['unverified_files_flash'] ?? null;
     unset($_SESSION['unverified_files_flash']);
@@ -219,16 +220,17 @@ try {
 CSS;
     echo CatalogUi::pageHeader(
         'Unverified Files',
-        'Review rejected packages, identify games that require their package names, then process selected files together.',
-        ['Upload Files' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Sources' => 'sources.php', 'Storage Audit' => 'storage-audit.php']
+        'Review bucket and rejected packages, identify games that require their package names, then process selected files together.',
+        ['Upload Bucket' => 'upload-bucket.php', 'Upload Files' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Sources' => 'sources.php', 'Storage Audit' => 'storage-audit.php']
     );
 
     if (is_array($flash) && !empty($flash['message'])) {
         echo CatalogUi::alert((string)($flash['type'] ?? 'info'), (string)$flash['message'], (string)($flash['details'] ?? ''));
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue filter</h2><p>Unverified files are physical files only. They do not have a ue_files catalog record until an import succeeds.</p></div></div><div class="ui-section__body">';
-    echo '<form class="unverified-filter" method="get"><label for="unverified-source-game">Source queue<select id="unverified-source-game" name="source_game_id"><option value="">All game queues</option>';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue filter</h2><p>Queued files are physical files only. They do not have a ue_files catalog record until an import succeeds.</p></div></div><div class="ui-section__body">';
+    echo '<form class="unverified-filter" method="get"><label for="unverified-source-game">Source queue<select id="unverified-source-game" name="source_game_id"><option value="">All queues</option>';
+    echo '<option value="-1"' . ($sourceGameId === -1 ? ' selected' : '') . '>Upload Bucket / unsorted</option>';
     foreach ($games as $game) {
         echo '<option value="' . (int)$game['id'] . '"' . ($sourceGameId === (int)$game['id'] ? ' selected' : '') . '>'
             . catalog_h($game['name']) . ' / ' . catalog_h((string)($game['profile_engine'] ?: 'no profile')) . '</option>';
@@ -241,14 +243,14 @@ CSS;
         return !empty($referencesByPackage[strtolower((string)$item['package_name'])] ?? []);
     }));
     echo '<div class="unverified-summary">';
-    echo '<div class="stat"><h2>' . count($items) . '</h2><p>Queued unverified files</p></div>';
+    echo '<div class="stat"><h2>' . count($items) . '</h2><p>Queued files</p></div>';
     echo '<div class="stat"><h2>' . catalog_h(catalog_bytes($totalBytes)) . '</h2><p>Queued storage</p></div>';
     echo '<div class="stat"><h2>' . $referenceCandidateCount . '</h2><p>Filename package candidates</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Unverified package queues</h2><p class="unverified-note">A Reference Candidate is a <strong>filename package-name match</strong>: one or more catalogued files in the listed game have Imports requiring this queued file’s package name. Select files using the first column, then use the toolbar above the table. <strong>Move queue</strong> moves selected physical files to the selected game’s unverified folder. <strong>Import selected</strong> catalogs selected files under the selected game. <strong>Object check</strong> opens a popup and does not change files. <strong>Delete file</strong> permanently removes the selected physical files and their rejection text.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Package queues</h2><p class="unverified-note">A Reference Candidate is a <strong>filename package-name match</strong>: one or more catalogued files in the listed game have Imports requiring this queued file’s package name. Select files and use Object check for actual export/import matching.</p></div></div><div class="ui-section__body">';
     if ($items === []) {
-        echo CatalogUi::emptyState('No unverified files found', 'There are no physical files in the selected unverified queue folders.');
+        echo CatalogUi::emptyState('No queued files found', 'There are no physical files in the selected queue folder.');
     } else {
         echo '<form id="unverified-bulk-form" method="post">';
         echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('unverified-files')) . '">';
@@ -267,7 +269,7 @@ CSS;
         echo '<button class="button secondary" type="button" id="unverified-object-check" disabled>Object check</button>';
         echo '<button class="button danger" type="submit" name="action" value="delete" data-delete-action disabled>Delete file</button>';
         echo '</div>';
-        echo '<p class="unverified-bulk-help">Move only changes the unverified queue. Object check opens a popup and does not change files. Delete file removes the queued package and its `.txt` reason permanently.</p>';
+        echo '<p class="unverified-bulk-help">Move only changes the source queue. Object check opens a popup and compares exported objects against currently missing imports. Delete file removes the queued package and its `.txt` note permanently.</p>';
         echo '</div>';
 
         echo '<div class="table-wrap"><table class="unverified-table"><thead><tr>';
@@ -279,20 +281,22 @@ CSS;
             $references = $referencesByPackage[$packageKey] ?? [];
             $reason = trim((string)$item['reason']);
             if ($reason === '') {
-                $reason = 'No rejection reason file was found.';
+                $reason = 'No queue note was found.';
             }
             $rowId = 'unverified-file-' . (string)$item['token'];
+            $sourceIsBucket = (int)($item['game']['id'] ?? 0) === 0;
+            $sourceMeta = $sourceIsBucket ? 'storage/upload-bucket' : ((string)$item['game']['slug'] . '/unverified');
 
             echo '<tr id="' . catalog_h($rowId) . '">';
             echo '<td class="unverified-select-col"><input class="unverified-select" type="checkbox" name="tokens[]" value="' . catalog_h((string)$item['token']) . '" aria-label="Select ' . catalog_h((string)$item['original_name']) . '"></td>';
-            echo '<td><strong>' . catalog_h((string)$item['game']['name']) . '</strong><span class="muted small unverified-meta">' . catalog_h((string)$item['game']['slug']) . '/unverified</span></td>';
+            echo '<td><strong>' . catalog_h((string)$item['game']['name']) . '</strong><span class="muted small unverified-meta">' . catalog_h($sourceMeta) . '</span></td>';
             echo '<td class="unverified-name"><strong class="mono">' . catalog_h((string)$item['original_name']) . '</strong><span class="muted small unverified-meta">Package: ' . catalog_h((string)$item['package_name']) . ' · .' . catalog_h((string)$item['extension']) . '<br>Queued: ' . catalog_h(date('Y-m-d H:i', (int)$item['modified_at'])) . '</span></td>';
             echo '<td class="mono small unverified-identity">' . unverified_files_identity_html($item) . '</td>';
             echo '<td class="mono small">' . catalog_h(unverified_files_header_label($item)) . '</td>';
             echo '<td class="mono small">' . catalog_h(catalog_bytes((int)$item['size'])) . '</td>';
             echo '<td class="unverified-references">' . unverified_files_reference_html($references) . '</td>';
             echo '</tr>';
-            echo '<tr class="unverified-rejection-row"><td></td><td colspan="6"><strong>Original rejection</strong><span class="unverified-rejection-text mono small">' . catalog_h($reason) . '</span></td></tr>';
+            echo '<tr class="unverified-rejection-row"><td></td><td colspan="6"><strong>Queue note</strong><span class="unverified-rejection-text mono small">' . catalog_h($reason) . '</span></td></tr>';
         }
         echo '</tbody></table></div>';
         echo '</form>';
@@ -353,7 +357,7 @@ CSS;
             target.focus();
             return;
         }
-        if (submitter.hasAttribute('data-delete-action') && !window.confirm('Delete ' + selected.length + ' selected queued file(s) and their rejection text permanently?')) {
+        if (submitter.hasAttribute('data-delete-action') && !window.confirm('Delete ' + selected.length + ' selected queued file(s) and their queue notes permanently?')) {
             event.preventDefault();
         }
     });
