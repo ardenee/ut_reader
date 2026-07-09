@@ -11,6 +11,7 @@ require_once __DIR__ . '/lib/ExternalMirrors.php';
 
 function bundle_safe_name(string $name): string
 {
+    $name = catalog_clean_unreal_filename($name);
     $name = trim(str_replace(["\0", '/', '\\'], ['', '_', '_'], $name));
     $name = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $name) ?? 'file';
     return $name !== '' ? $name : 'file';
@@ -71,19 +72,20 @@ try {
         $path = bundle_storage_path($config, $file);
         $baseName = bundle_safe_name((string)$file['original_name']);
         $zipName = $baseName;
-        $n = 2;
-        while (isset($addedNames[strtolower($zipName)])) {
-            $ext = pathinfo($baseName, PATHINFO_EXTENSION);
-            $stem = $ext !== '' ? substr($baseName, 0, -(strlen($ext) + 1)) : $baseName;
-            $zipName = $stem . '_' . $n . ($ext !== '' ? '.' . $ext : '');
-            $n++;
+        if (isset($addedNames[strtolower($zipName)])) {
+            $folder = 'duplicate-file-' . (int)$file['id'];
+            $guid = preg_replace('/[^A-Za-z0-9-]+/', '', (string)($file['package_guid'] ?? '')) ?? '';
+            if ($guid !== '') {
+                $folder .= '-' . $guid;
+            }
+            $zipName = $folder . '/' . $baseName;
         }
         $addedNames[strtolower($zipName)] = true;
         $zip->addFile($path, $zipName);
         $manifest[] = [
             'zip_name' => $zipName,
             'package_name' => (string)$file['package_name'],
-            'original_name' => (string)$file['original_name'],
+            'original_name' => catalog_clean_unreal_filename((string)$file['original_name']),
             'md5' => (string)$file['md5'],
             'sha1' => (string)$file['sha1'],
             'package_guid' => (string)$file['package_guid'],
@@ -101,7 +103,7 @@ try {
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     $zip->close();
 
-    $downloadName = bundle_safe_name((string)$main['package_name']) . '_with_dependencies.zip';
+    $downloadName = catalog_clean_unreal_package_stem((string)$main['package_name']) . '_with_dependencies.zip';
     header('Content-Type: application/zip');
     header('Content-Length: ' . filesize($tmp));
     header('Content-Disposition: attachment; filename="' . addslashes($downloadName) . '"');
