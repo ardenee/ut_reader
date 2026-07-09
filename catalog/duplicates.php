@@ -108,6 +108,40 @@ function duplicates_retire_file(PDO $db, int $canonicalId, int $duplicateId): vo
     $db->prepare('UPDATE ue_files SET scan_status="duplicate", scan_notes=CONCAT(COALESCE(scan_notes,""), ? ) WHERE id=?')->execute(["\nRetired as duplicate of file ID " . $canonicalId . " on " . date('Y-m-d H:i:s'), $duplicateId]);
 }
 
+/** @return list<array{canonical_id:int,duplicate_ids:list<int>}> */
+function duplicates_post_groups(): array
+{
+    $groups = [];
+
+    $canonicalGroups = $_POST['canonical_ids'] ?? null;
+    $duplicateGroups = $_POST['duplicate_ids'] ?? null;
+    if (is_array($canonicalGroups) && is_array($duplicateGroups)) {
+        foreach ($duplicateGroups as $groupKey => $ids) {
+            if (!is_array($ids)) {
+                continue;
+            }
+            $canonicalId = (int)($canonicalGroups[$groupKey] ?? 0);
+            if ($canonicalId <= 0) {
+                continue;
+            }
+            $duplicateIds = array_values(array_filter(array_unique(array_map('intval', $ids)), static fn($v) => $v > 0 && $v !== $canonicalId));
+            if ($duplicateIds !== []) {
+                $groups[] = ['canonical_id' => $canonicalId, 'duplicate_ids' => $duplicateIds];
+            }
+        }
+        return $groups;
+    }
+
+    $canonicalId = (int)($_POST['canonical_id'] ?? 0);
+    $duplicateIds = array_map('intval', $_POST['duplicate_ids'] ?? []);
+    $duplicateIds = array_values(array_filter(array_unique($duplicateIds), static fn($v) => $v > 0 && $v !== $canonicalId));
+    if ($canonicalId > 0 && $duplicateIds !== []) {
+        $groups[] = ['canonical_id' => $canonicalId, 'duplicate_ids' => $duplicateIds];
+    }
+
+    return $groups;
+}
+
 function duplicates_page_styles(): string
 {
     return <<<'CSS'
@@ -116,6 +150,7 @@ function duplicates_page_styles(): string
 .duplicates-controls label { display:grid; gap:5px; }
 .duplicates-controls .wide-search { width:min(520px, 90vw); }
 .duplicates-pagination { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:12px 0; flex-wrap:wrap; }
+.duplicates-submit-bar { display:flex; justify-content:flex-end; align-items:center; gap:10px; margin:12px 0; }
 .duplicates-group-card { overflow:hidden; }
 .duplicates-table { min-width:1380px; }
 .duplicates-table th, .duplicates-table td { vertical-align:top; }
@@ -124,7 +159,7 @@ function duplicates_page_styles(): string
 .duplicates-size { white-space:nowrap; width:1%; }
 .duplicates-download { width:1%; text-align:center; white-space:nowrap; }
 .duplicates-file-link, .duplicates-package-link { font-weight:650; }
-.duplicates-md5 { max-width:28ch; overflow-wrap:anywhere; }
+.duplicates-md5 { white-space:nowrap; overflow-wrap:normal; }
 .duplicates-deps { white-space:nowrap; }
 .duplicates-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 16px; }
 .duplicates-help { border-left:4px solid var(--amber); padding-left:12px; }
@@ -142,7 +177,6 @@ function duplicates_page_styles(): string
     line-height:1;
 }
 .duplicates-download-link:hover { background:rgba(118,169,255,.18); text-decoration:none; }
-.duplicates-retired-note { margin:8px 0 0; color:var(--muted); }
 @media (max-width:760px) { .duplicates-summary { grid-template-columns:1fr; } }
 </style>
 CSS;
@@ -157,20 +191,25 @@ try {
             throw new RuntimeException('Admin required');
         }
         catalog_check_csrf('duplicates');
-        $canonicalId = (int)($_POST['canonical_id'] ?? 0);
-        $duplicateIds = array_map('intval', $_POST['duplicate_ids'] ?? []);
-        $duplicateIds = array_values(array_filter(array_unique($duplicateIds), static fn($v) => $v > 0 && $v !== $canonicalId));
-        if ($canonicalId <= 0 || !$duplicateIds) {
-            throw new RuntimeException('Choose a canonical file and at least one duplicate file to retire.');
+        $postedGroups = duplicates_post_groups();
+        if ($postedGroups === []) {
+            throw new RuntimeException('Choose at least one canonical file and at least one duplicate file to retire.');
         }
-        if (count($duplicateIds) > DUPLICATES_MAX_PAGE_LIMIT) {
+
+        $totalSelected = 0;
+        foreach ($postedGroups as $postedGroup) {
+            $totalSelected += count($postedGroup['duplicate_ids']);
+        }
+        if ($totalSelected > DUPLICATES_MAX_PAGE_LIMIT) {
             throw new RuntimeException('Too many duplicate files selected. Process at most ' . DUPLICATES_MAX_PAGE_LIMIT . ' rows at once.');
         }
 
         $db->beginTransaction();
         try {
-            foreach ($duplicateIds as $duplicateId) {
-                duplicates_retire_file($db, $canonicalId, $duplicateId);
+            foreach ($postedGroups as $postedGroup) {
+                foreach ($postedGroup['duplicate_ids'] as $duplicateId) {
+                    duplicates_retire_file($db, $postedGroup['canonical_id'], $duplicateId);
+                }
             }
             $db->commit();
         } catch (Throwable $e) {
@@ -178,7 +217,7 @@ try {
             throw $e;
         }
 
-        $_SESSION['flash_duplicates'] = 'Retired ' . count($duplicateIds) . ' duplicate file(s) into canonical file ID ' . $canonicalId . '.';
+        $_SESSION['flash_duplicates'] = 'Retired ' . $totalSelected . ' duplicate file(s) into ' . count($postedGroups) . ' canonical group(s).';
         header('Location: ' . duplicates_return_url());
         exit;
     }
@@ -288,7 +327,7 @@ try {
     catalog_page_header('GUID duplicate manager', 'Find active verified packages with the same Unreal package GUID in the same game. Use filters and pagination for long duplicate lists.', ['Games' => 'games.php', 'Source Scanner' => 'source-scan.php', 'Sources' => 'sources.php']);
 
     echo '<div class="card duplicates-help"><h2>What this page does</h2>';
-    echo '<p><strong>Canonical</strong> means the file row you want to keep as the active catalog record for this GUID group. <strong>Retire</strong> means mark the selected duplicate row as <span class="mono">scan_status=duplicate</span>, move its source locations onto the canonical file, and redirect dependency rows that previously resolved to the duplicate so they point at the canonical file where possible. The physical stored file is not presented as active after retirement; the retired DB row remains for audit.</p>';
+    echo '<p><strong>Keep</strong> means the file row you want to keep as the active catalog record for this GUID group. <strong>Retire</strong> marks the selected duplicate row as <span class="mono">scan_status=duplicate</span>, moves its source locations onto the kept file, and redirects dependency rows that previously resolved to the duplicate so they point at the kept file where possible.</p>';
     echo '<p class="muted">This is for same-game, same-package-GUID duplicates. It does not merge different packages just because their names match.</p></div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Filters</h2><p>Hard page limit is ' . DUPLICATES_MAX_PAGE_LIMIT . ' visible file rows to stay below common PHP post variable limits.</p></div></div><div class="ui-section__body">';
@@ -304,7 +343,7 @@ try {
         echo '<option value="' . catalog_h($value) . '"' . ($typeFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
-    echo '<label for="dup-compression">Internal chunks<select id="dup-compression" name="compression_filter">';
+    echo '<label for="dup-compression">Chunks<select id="dup-compression" name="compression_filter">';
     foreach (['' => 'All', 'compressed' => 'Compressed chunks', 'uncompressed' => 'No compressed chunks'] as $value => $label) {
         echo '<option value="' . catalog_h($value) . '"' . ($compressionFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
@@ -338,32 +377,35 @@ try {
     }
 
     echo $pagination;
-    foreach ($groups as $group) {
+    echo '<form method="post" id="duplicates-page-form" onsubmit="return confirm(\'Submit retire changes for all selected duplicate rows on this page?\')">';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('duplicates')) . '">';
+    echo '<input type="hidden" name="return_url" value="' . catalog_h(duplicates_url(['page' => $page])) . '">';
+    echo '<div class="duplicates-submit-bar"><span class="muted small">Selections across all visible groups are submitted together.</span><button type="submit">Submit</button></div>';
+
+    foreach ($groups as $groupKey => $group) {
         $files = $group['rows'];
         $suggestedCanonical = (int)($files[0]['id'] ?? 0);
-        echo '<div class="card duplicates-group-card"><h2>' . catalog_h((string)$group['game_name']) . ' / <span class="mono">' . catalog_h((string)$group['package_guid']) . '</span></h2>';
+        echo '<div class="card duplicates-group-card" data-duplicate-group>';
+        echo '<h2>' . catalog_h((string)$group['game_name']) . ' / <span class="mono">' . catalog_h((string)$group['package_guid']) . '</span></h2>';
         echo '<p class="muted">GUID group size: ' . (int)$group['duplicate_count'] . ' active file(s). Visible on this page/filter: ' . count($files) . '.</p>';
-        echo '<form method="post" class="duplicates-retire-form" onsubmit="return confirm(\'Retire selected duplicate rows into the selected canonical file?\')">';
-        echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('duplicates')) . '">';
-        echo '<input type="hidden" name="return_url" value="' . catalog_h(duplicates_url(['page' => $page])) . '">';
         echo '<div class="ui-table-region"><table class="duplicates-table"><thead><tr>';
-        echo '<th class="duplicates-select-col" title="The file row to keep active">Keep<br><span class="small muted">canonical</span></th>';
-        echo '<th class="duplicates-select-col" title="Rows selected here are retired into the canonical row">Retire<br><span class="small muted">duplicate</span></th>';
-        echo '<th>ID</th><th>Package</th><th>File</th><th>MD5</th><th>Size</th><th>File type</th><th>Internal chunks</th><th>Deps</th><th>Sources</th><th>Uploaded</th><th>Download</th>';
+        echo '<th class="duplicates-select-col" title="The file row to keep active">Keep</th>';
+        echo '<th class="duplicates-select-col" title="Rows selected here are retired into the kept row">Retire</th>';
+        echo '<th>ID</th><th>Package</th><th>File</th><th>MD5</th><th>Size</th><th>File type</th><th>Chunks</th><th>Deps</th><th>Sources</th><th>Uploaded</th><th>Download</th>';
         echo '</tr></thead><tbody>';
         foreach ($files as $file) {
             $compressed = (int)($file['is_compressed'] ?? 0) === 1;
-            $chunkBadge = CatalogUi::badge($compressed ? 'compressed chunks' : 'none', $compressed ? 'warning' : 'success');
+            $chunkBadge = CatalogUi::badge($compressed ? 'compressed' : 'none', $compressed ? 'warning' : 'success');
             [$fileType, $fileTypeClass] = duplicates_type_from_extension((string)$file['extension']);
             $deps = 'total ' . (int)$file['dependency_count'] . ' / resolved ' . (int)$file['resolved_count'] . ' / missing ' . (int)$file['missing_count'];
             $id = (int)$file['id'];
             $originalName = catalog_clean_unreal_filename((string)$file['original_name']);
             echo '<tr>';
-            echo '<td class="duplicates-select-col"><input type="radio" name="canonical_id" value="' . $id . '" data-canonical-radio ' . ($id === $suggestedCanonical ? 'checked' : '') . '></td>';
-            echo '<td class="duplicates-select-col"><input type="checkbox" name="duplicate_ids[]" value="' . $id . '" data-retire-checkbox></td>';
+            echo '<td class="duplicates-select-col"><input type="radio" name="canonical_ids[' . catalog_h((string)$groupKey) . ']" value="' . $id . '" data-canonical-radio ' . ($id === $suggestedCanonical ? 'checked' : '') . '></td>';
+            echo '<td class="duplicates-select-col"><input type="checkbox" name="duplicate_ids[' . catalog_h((string)$groupKey) . '][]" value="' . $id . '" data-retire-checkbox></td>';
             echo '<td class="mono duplicates-id">' . $id . '</td>';
             echo '<td class="mono"><a class="duplicates-package-link" href="file-info.php?id=' . $id . '">' . catalog_h($file['package_name']) . '</a></td>';
-            echo '<td><a class="duplicates-file-link" href="file-info.php?id=' . $id . '">' . catalog_h($originalName) . '</a></td>';
+            echo '<td><a class="duplicates-file-link" href="file-examine.php?id=' . $id . '">' . catalog_h($originalName) . '</a></td>';
             echo '<td class="mono small duplicates-md5">' . catalog_h($file['md5']) . '</td>';
             echo '<td class="duplicates-size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
             echo '<td><span class="dep file-type-pill ' . catalog_h($fileTypeClass) . '">' . catalog_h($fileType) . '</span></td>';
@@ -374,38 +416,44 @@ try {
             echo '<td class="duplicates-download"><a class="duplicates-download-link" href="download-info.php?id=' . $id . '" title="Download ' . catalog_h($originalName) . '" aria-label="Download ' . catalog_h($originalName) . '">⇩</a></td>';
             echo '</tr>';
         }
-        echo '</tbody></table></div><p><button type="submit">Retire selected duplicates into selected canonical</button></p>';
-        echo '<p class="duplicates-retired-note small">The selected canonical row stays active. Checked retire rows are hidden from active duplicate/file lists by changing their scan status to duplicate.</p>';
-        echo '</form></div>';
+        echo '</tbody></table></div></div>';
     }
+
+    echo '<div class="duplicates-submit-bar"><span class="muted small">Selections across all visible groups are submitted together.</span><button type="submit">Submit</button></div>';
+    echo '</form>';
     echo $pagination;
 
     echo <<<'JS'
 <script>
 (function () {
-    document.querySelectorAll('.duplicates-retire-form').forEach(function (form) {
-        function sync() {
-            var selected = form.querySelector('[data-canonical-radio]:checked');
-            var selectedId = selected ? selected.value : '';
-            form.querySelectorAll('[data-retire-checkbox]').forEach(function (box) {
-                if (box.value === selectedId) {
-                    box.checked = false;
-                    box.disabled = true;
-                } else {
-                    box.disabled = false;
-                }
-            });
-        }
-        form.querySelectorAll('[data-canonical-radio]').forEach(function (radio) {
-            radio.addEventListener('change', sync);
-        });
-        form.addEventListener('submit', function (event) {
-            if (!form.querySelector('[data-retire-checkbox]:checked')) {
-                event.preventDefault();
-                window.alert('Tick at least one duplicate row to retire.');
+    var pageForm = document.getElementById('duplicates-page-form');
+    if (!pageForm) return;
+
+    function syncGroup(group) {
+        var selected = group.querySelector('[data-canonical-radio]:checked');
+        var selectedId = selected ? selected.value : '';
+        group.querySelectorAll('[data-retire-checkbox]').forEach(function (box) {
+            if (box.value === selectedId) {
+                box.checked = false;
+                box.disabled = true;
+            } else {
+                box.disabled = false;
             }
         });
-        sync();
+    }
+
+    pageForm.querySelectorAll('[data-duplicate-group]').forEach(function (group) {
+        group.querySelectorAll('[data-canonical-radio]').forEach(function (radio) {
+            radio.addEventListener('change', function () { syncGroup(group); });
+        });
+        syncGroup(group);
+    });
+
+    pageForm.addEventListener('submit', function (event) {
+        if (!pageForm.querySelector('[data-retire-checkbox]:checked')) {
+            event.preventDefault();
+            window.alert('Tick at least one duplicate row to retire.');
+        }
     });
 })();
 </script>
