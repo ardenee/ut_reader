@@ -98,6 +98,7 @@ try {
             throw new RuntimeException('Logout requires a POST request.');
         }
         catalog_check_csrf('logout');
+        catalog_remember_clear($db);
         catalog_destroy_session();
         redirect_to('index.php');
     }
@@ -122,6 +123,13 @@ try {
             'username' => (string)$user['username'],
             'role' => (string)$user['role'],
         ];
+
+        if (!empty($_POST['remember_me'])) {
+            catalog_remember_set_for_user($db, $user, $config);
+        } else {
+            catalog_remember_clear($db);
+        }
+
         redirect_to('dashboard.php');
     }
 
@@ -291,7 +299,7 @@ JS;
         if ($count === 0) {
             echo '<div class="card hero"><h1>Administrator setup required</h1><p class="muted">The first administrator can only be created through the CLI command:</p><pre>php catalog/bin/create-admin.php --username=admin</pre><p class="muted">Run it from a trusted shell before making the catalog publicly reachable.</p></div>';
         } else {
-            echo '<div class="card hero"><h1>Admin Login</h1><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('login')) . '"><p><input name="username" required autocomplete="username" placeholder="Username"></p><p><input type="password" name="password" required autocomplete="current-password" placeholder="Password"></p><button>Login</button></form></div>';
+            echo '<div class="card hero"><h1>Admin Login</h1><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('login')) . '"><p><input name="username" required autocomplete="username" placeholder="Username"></p><p><input type="password" name="password" required autocomplete="current-password" placeholder="Password"></p><p><label><input type="checkbox" name="remember_me" value="1" checked> Keep me logged in</label></p><button>Login</button></form></div>';
         }
     } elseif ($page === 'admin') {
         if (!catalog_support_is_admin()) {
