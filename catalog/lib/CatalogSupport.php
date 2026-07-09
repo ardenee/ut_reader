@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSecurity.php';
+require_once __DIR__ . '/CatalogRememberMe.php';
 require_once __DIR__ . '/CatalogUi.php';
 
 catalog_apply_runtime_safeguards();
@@ -67,6 +68,22 @@ function catalog_bytes(int $bytes): string
 function catalog_support_is_admin(): bool
 {
     catalog_start_session();
+    if (($_SESSION['user']['role'] ?? '') === 'admin') {
+        return true;
+    }
+
+    if (!catalog_remember_cookie_present()) {
+        return false;
+    }
+
+    try {
+        $config = catalog_config();
+        $db = catalog_db($config);
+        catalog_remember_restore($db, $config);
+    } catch (Throwable $error) {
+        error_log('[UnrealDB][' . catalog_request_id() . '] remember login restore failed: ' . $error->getMessage());
+    }
+
     return ($_SESSION['user']['role'] ?? '') === 'admin';
 }
 
@@ -240,6 +257,7 @@ function catalog_require_admin_page(string $title = 'Admin required'): bool
 
 function catalog_head(string $title): void
 {
+    catalog_support_is_admin();
     $root = catalog_support_root_prefix();
     $uiScriptPath = __DIR__ . '/../assets/catalog-ui.js';
     $uiScriptVersion = is_file($uiScriptPath) ? (string)filemtime($uiScriptPath) : '1';
