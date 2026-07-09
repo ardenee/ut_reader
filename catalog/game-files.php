@@ -37,6 +37,14 @@ function game_files_sort_link(string $label, string $key, string $activeSort, st
     return '<a class="sort-link" href="' . catalog_h(game_files_url(['sort' => $key, 'dir' => $nextDir, 'file_page' => 1])) . '">' . catalog_h($label . $marker) . '</a>';
 }
 
+function game_files_engine_major(string $engineKey): int
+{
+    if (preg_match('/UE\s*([0-9]+)/i', $engineKey, $match)) {
+        return (int)$match[1];
+    }
+    return 0;
+}
+
 function game_files_type_from_extension(string $ext): array
 {
     $ext = strtolower(trim($ext, '. '));
@@ -153,6 +161,7 @@ html { scroll-behavior: smooth; }
 .game-files-pagination__current { justify-self: center; white-space: nowrap; }
 
 #game-files-table { width: 100% !important; min-width: 1180px !important; table-layout: auto !important; }
+#game-files-table.game-files-table--no-compression { min-width: 1060px !important; }
 #game-files-table th:nth-child(1), #game-files-table td:nth-child(1),
 #game-files-table th:nth-child(2), #game-files-table td:nth-child(2),
 #game-files-table th:nth-child(3), #game-files-table td:nth-child(3),
@@ -215,10 +224,15 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
     $gameId = game_files_int('id', 0, 1, PHP_INT_MAX);
-    $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
+    $game = catalog_one(
+        $db,
+        'SELECT g.*, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE g.id=?',
+        [$gameId]
+    );
     if (!$game) {
         throw new RuntimeException('Game not found');
     }
+    $showCompression = game_files_engine_major((string)($game['profile_engine'] ?? '')) >= 3;
 
     $configuredLimit = (int)(fed_setting($db, 'game_file_display_limit', '100') ?: 100);
     $limit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
@@ -226,12 +240,15 @@ try {
     $filter = trim((string)($_GET['file_filter'] ?? ''));
     $depFilter = trim((string)($_GET['dep_filter'] ?? ''));
     $typeFilter = trim((string)($_GET['type_filter'] ?? ''));
-    $compressionFilter = trim((string)($_GET['compression_filter'] ?? ''));
+    $compressionFilter = $showCompression ? trim((string)($_GET['compression_filter'] ?? '')) : '';
     $sort = trim((string)($_GET['sort'] ?? 'package'));
     $dir = strtolower(trim((string)($_GET['dir'] ?? 'asc')));
     $dir = $dir === 'desc' ? 'desc' : 'asc';
 
-    $sortMap = ['package' => true, 'file' => true, 'version' => true, 'size' => true, 'compression' => true, 'deps' => true, 'uploaded' => true];
+    $sortMap = ['package' => true, 'file' => true, 'version' => true, 'size' => true, 'deps' => true, 'uploaded' => true];
+    if ($showCompression) {
+        $sortMap['compression'] = true;
+    }
     if (!isset($sortMap[$sort])) {
         $sort = 'package';
     }
@@ -258,9 +275,9 @@ try {
             $args[] = $ext;
         }
     }
-    if ($compressionFilter === 'compressed') {
+    if ($showCompression && $compressionFilter === 'compressed') {
         $where .= ' AND f.is_compressed=1';
-    } elseif ($compressionFilter === 'uncompressed') {
+    } elseif ($showCompression && $compressionFilter === 'uncompressed') {
         $where .= ' AND f.is_compressed=0';
     }
 
@@ -291,14 +308,16 @@ try {
         echo '<option value="' . catalog_h($value) . '"' . ($typeFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
-    echo '<label for="compression-filter">Compression <select id="compression-filter" name="compression_filter">';
-    foreach (['' => 'All', 'compressed' => 'Compressed', 'uncompressed' => 'Uncompressed'] as $value => $label) {
-        echo '<option value="' . catalog_h($value) . '"' . ($compressionFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
+    if ($showCompression) {
+        echo '<label for="compression-filter">Internal compression <select id="compression-filter" name="compression_filter">';
+        foreach (['' => 'All', 'compressed' => 'Compressed chunks', 'uncompressed' => 'No compressed chunks'] as $value => $label) {
+            echo '<option value="' . catalog_h($value) . '"' . ($compressionFilter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
+        }
+        echo '</select></label>';
     }
-    echo '</select></label>';
     echo '<span class="game-files-filter-actions">';
     echo CatalogUi::button('Apply filters', ['type' => 'submit']);
-    if ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || $compressionFilter !== '') {
+    if ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || ($showCompression && $compressionFilter !== '')) {
         echo CatalogUi::button('Clear filters', ['href' => 'game-files.php?id=' . (int)$gameId, 'variant' => 'quiet']);
     }
     echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Applying filters…', true) . '</span></span>';
@@ -306,18 +325,20 @@ try {
 
     echo game_files_pagination($pageNo, $totalPages);
     if ($files === []) {
-        $action = ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || $compressionFilter !== '')
+        $action = ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || ($showCompression && $compressionFilter !== ''))
             ? ['label' => 'Clear filters', 'href' => 'game-files.php?id=' . (int)$gameId]
             : ['label' => 'Back to games', 'href' => 'games.php'];
         echo CatalogUi::emptyState('No files found', 'No catalog files match the selected filters.', $action, '⌕');
     } else {
-        echo '<div class="ui-table-region"><table id="game-files-table"><caption class="ui-sr-only">Files for ' . catalog_h((string)$game['name']) . '</caption><thead><tr>';
+        echo '<div class="ui-table-region"><table id="game-files-table" class="' . ($showCompression ? 'game-files-table--with-compression' : 'game-files-table--no-compression') . '"><caption class="ui-sr-only">Files for ' . catalog_h((string)$game['name']) . '</caption><thead><tr>';
         echo '<th scope="col">' . game_files_sort_link('Package', 'package', $sort, $dir) . '</th>';
         echo '<th scope="col">' . game_files_sort_link('File', 'file', $sort, $dir) . '</th>';
         echo '<th scope="col">Identity</th>';
         echo '<th scope="col">' . game_files_sort_link('Version', 'version', $sort, $dir) . '</th>';
         echo '<th scope="col">' . game_files_sort_link('Size', 'size', $sort, $dir) . '</th>';
-        echo '<th scope="col">' . game_files_sort_link('Compression', 'compression', $sort, $dir) . '</th>';
+        if ($showCompression) {
+            echo '<th scope="col">' . game_files_sort_link('Internal Compression', 'compression', $sort, $dir) . '</th>';
+        }
         echo '<th scope="col">' . game_files_sort_link('Dependencies', 'deps', $sort, $dir) . '</th>';
         echo '<th scope="col">Actions</th>';
         echo '</tr></thead><tbody>';
@@ -332,7 +353,7 @@ try {
             }
             $deps = $dependencyBadges !== [] ? '<div class="game-files-dependency-list">' . implode('', $dependencyBadges) . '</div>' : '<span class="muted">none</span>';
             $compressed = (int)($file['is_compressed'] ?? 0) === 1;
-            $compression = CatalogUi::badge($compressed ? 'compressed' : 'uncompressed', $compressed ? 'warning' : 'success');
+            $compression = CatalogUi::badge($compressed ? 'compressed chunks' : 'none', $compressed ? 'warning' : 'success');
             [$fileType, $fileTypeClass] = game_files_type_from_extension((string)($file['extension'] ?? ''));
             $id = (int)$file['id'];
             $packageVersion = (int)($file['package_version'] ?? 0);
@@ -347,7 +368,9 @@ try {
             echo '<td class="identity-cell"><span class="mono small guid-value">' . catalog_h($file['package_guid']) . '</span><br><span class="mono small identity-md5">MD5 ' . catalog_h($file['md5']) . '</span></td>';
             echo '<td class="mono game-files-version">' . catalog_h($versionText) . '</td>';
             echo '<td class="game-files-size">' . catalog_h(catalog_bytes((int)$file['file_size'])) . '</td>';
-            echo '<td>' . $compression . '</td>';
+            if ($showCompression) {
+                echo '<td>' . $compression . '</td>';
+            }
             echo '<td class="game-files-dependencies">' . $deps . '</td>';
             echo '<td class="game-files-actions">' . game_files_actions($id, $originalName, $maintenanceCsrf, $isAdmin) . '</td>';
             echo '</tr>';
