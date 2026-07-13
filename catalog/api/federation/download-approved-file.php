@@ -7,10 +7,12 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
+require_once __DIR__ . '/../../lib/BaseGameProtection.php';
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    base_game_ensure($db);
     $body = file_get_contents('php://input') ?: '';
     $peer = fed_require_signed_peer($db, $body);
 
@@ -31,6 +33,10 @@ try {
     $item = catalog_one($db, 'SELECT i.*, r.peer_id, f.* FROM ue_federation_request_items i JOIN ue_federation_requests r ON r.id=i.request_id JOIN ue_files f ON f.id=i.local_file_id WHERE i.id=? AND r.peer_id=? AND i.status IN ("approved","queued","downloading")', [$itemId, (int)$peer['id']]);
     if (!$item) {
         fed_json_response(['ok' => false, 'error' => 'Approved request item not found'], 404);
+    }
+    if (base_game_file_is_protected($db, $item)) {
+        $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message=? WHERE id=?')->execute([base_game_block_message($item), $itemId]);
+        fed_json_response(['ok' => false, 'error' => base_game_block_message($item)], 403);
     }
 
     $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
