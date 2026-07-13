@@ -7,10 +7,12 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
+require_once __DIR__ . '/../../lib/BaseGameProtection.php';
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    base_game_ensure($db);
     $body = file_get_contents('php://input') ?: '';
     $peer = fed_require_signed_peer($db, $body);
 
@@ -34,6 +36,9 @@ try {
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId]);
     if (!$file) {
         fed_json_response(['ok' => false, 'error' => 'File not found or not verified'], 404);
+    }
+    if (base_game_file_is_protected($db, $file)) {
+        fed_json_response(['ok' => false, 'error' => base_game_block_message($file)], 403);
     }
 
     $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
