@@ -9,6 +9,7 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
 require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
+require_once __DIR__ . '/lib/CatalogPakArchive.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 require_once __DIR__ . '/lib/FederationAuth.php';
 
@@ -162,6 +163,142 @@ function upload_correct_zero_guid_from_stored_file(PDO $db, array $config, array
     return $fallbackGuid;
 }
 
+/** @return array{bucket:string,entry:array<string,mixed>} */
+function upload_scan_package_file(PDO $db, array $config, int $gameId, string $scanTmp, string $scanName, string $displayName, ?int $userId, bool $strict, ?callable $progress, string $messagePrefix = ''): array
+{
+    $scanSize = is_file($scanTmp) ? (int)(filesize($scanTmp) ?: 0) : 0;
+    $scanSizeMeta = [
+        'file_size' => $scanSize,
+        'file_size_text' => catalog_bytes($scanSize),
+    ];
+
+    $result = scanner_scan_uploaded_file($db, $config, $gameId, $scanTmp, $scanName, $userId, $strict, $progress);
+    if (is_file($scanTmp)) {
+        @unlink($scanTmp);
+    }
+
+    $meta = is_array($result[4] ?? null) ? $result[4] : $scanSizeMeta;
+    $correctedGuid = upload_correct_zero_guid_from_stored_file($db, $config, $result);
+    if ($correctedGuid !== '') {
+        $meta['package_guid'] = $correctedGuid;
+    }
+    $meta['file_size'] = $meta['file_size'] ?? $scanSize;
+    $meta['file_size_text'] = $meta['file_size_text'] ?? catalog_bytes($scanSize);
+
+    $aliasAlreadyExists = ($result[0] ?? '') === 'alias' && upload_alias_already_exists();
+    if (($result[0] ?? '') === 'duplicate' || $aliasAlreadyExists) {
+        $message = $aliasAlreadyExists ? 'Package alias already exists for existing file identity' : (string)($result[2] ?? 'Duplicate in selected game');
+        return ['bucket' => 'duplicate', 'entry' => upload_result('duplicate', $displayName, $messagePrefix . $message, $meta)];
+    }
+
+    return ['bucket' => 'imported', 'entry' => upload_result('imported', $displayName, $messagePrefix . (string)$result[2], $meta)];
+}
+
+/** @return list<string> */
+function upload_profile_extensions(PDO $db, array $config, int $gameId): array
+{
+    $profile = gp_required_profile_for_game($db, $gameId);
+    return scanner_profile_extensions($profile, $config);
+}
+
+function upload_pak_inner_is_scannable(array $file, array $allowedExtensions): bool
+{
+    $cleanName = catalog_clean_unreal_filename(basename((string)$file['relative']));
+    $ext = catalog_clean_unreal_extension((string)pathinfo($cleanName, PATHINFO_EXTENSION));
+    if (in_array($ext, ['uexp', 'ubulk', 'uptnl', 'm.ubulk'], true)) {
+        return false;
+    }
+    return $ext !== '' && in_array($ext, $allowedExtensions, true);
+}
+
+function upload_pak_relative_display(array $file): string
+{
+    $relative = trim(str_replace('\\', '/', (string)$file['relative']), '/');
+    return $relative !== '' ? $relative : basename((string)$file['path']);
+}
+
+/** @return array{ok:int,duplicate:int,failed:int,skipped:int,messages:list<array<string,mixed>>} */
+function upload_scan_pak_file(PDO $db, array $config, int $gameId, string $pakTmp, string $pakName, ?int $userId, bool $strict, ?callable $progress, string $gameSlug): array
+{
+    if ($progress) {
+        $progress([
+            'stage' => 'pak_extract',
+            'done' => 0,
+            'total' => 100,
+            'percent' => 1,
+            'message' => 'Extracting PAK archive ' . basename($pakName),
+        ]);
+    }
+
+    $extracted = catalog_pak_archive_extract_to_temp($config, $pakTmp, $pakName);
+    $allowed = upload_profile_extensions($db, $config, $gameId);
+    $ok = 0;
+    $dup = 0;
+    $bad = 0;
+    $skipped = 0;
+    $messages = [];
+
+    try {
+        $files = $extracted['files'];
+        $total = max(1, count($files));
+        foreach ($files as $index => $file) {
+            $display = upload_pak_relative_display($file);
+            if (!upload_pak_inner_is_scannable($file, $allowed)) {
+                $skipped++;
+                continue;
+            }
+
+            if ($progress) {
+                $progress([
+                    'stage' => 'pak_scan',
+                    'done' => $index,
+                    'total' => $total,
+                    'percent' => max(1, min(99, (int)floor(($index / $total) * 100))),
+                    'message' => 'Scanning PAK entry ' . ($index + 1) . '/' . $total . ': ' . $display,
+                ]);
+            }
+
+            $scanName = catalog_clean_unreal_filename(basename($display));
+            $scanTmp = (string)$file['path'];
+            try {
+                $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $display, $userId, $strict, $progress, 'Extracted from ' . basename($pakName) . '; ');
+                if ($scanResult['bucket'] === 'duplicate') {
+                    $dup++;
+                } else {
+                    $ok++;
+                }
+                $messages[] = $scanResult['entry'];
+            } catch (Throwable $innerError) {
+                $bad++;
+                upload_log_exception($db, $display, $innerError);
+                if (is_file($scanTmp)) {
+                    scanner_store_failed_upload($config, $scanTmp, $scanName, $gameSlug, $innerError->getMessage());
+                }
+                $messages[] = upload_result('failed', $display, 'Extracted from ' . basename($pakName) . '; ' . upload_short_error($innerError), [
+                    'file_size' => (int)($file['bytes'] ?? 0),
+                    'file_size_text' => catalog_bytes((int)($file['bytes'] ?? 0)),
+                ]);
+            }
+        }
+
+        if ($messages === []) {
+            $messages[] = upload_result('skipped', catalog_clean_unreal_filename($pakName), 'PAK extracted, but no package files matched this game profile. Skipped entries: ' . $skipped, [
+                'file_size' => is_file($pakTmp) ? (int)filesize($pakTmp) : 0,
+                'file_size_text' => is_file($pakTmp) ? catalog_bytes((int)filesize($pakTmp)) : '',
+            ]);
+        } elseif ($skipped > 0) {
+            $messages[] = upload_result('info', catalog_clean_unreal_filename($pakName), 'Skipped ' . $skipped . ' non-package or unsupported PAK entries.');
+        }
+    } finally {
+        catalog_pak_archive_delete_tree((string)$extracted['dir']);
+        if (is_file($pakTmp)) {
+            @unlink($pakTmp);
+        }
+    }
+
+    return ['ok' => $ok, 'duplicate' => $dup, 'failed' => $bad, 'skipped' => $skipped, 'messages' => $messages];
+}
+
 function upload_handle_request(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
@@ -192,9 +329,11 @@ function upload_handle_request(PDO $db, array $config): array
     $messages = [];
     foreach ($_FILES['files']['tmp_name'] ?? [] as $i => $tmp) {
         $name = (string)($_FILES['files']['name'][$i] ?? 'upload.bin');
-        $displayName = catalog_redirect_archive_is_supported_filename($name)
-            ? catalog_redirect_archive_output_name($name)
-            : catalog_clean_unreal_filename($name);
+        $displayName = catalog_pak_archive_is_supported_filename($name)
+            ? catalog_clean_unreal_filename($name)
+            : (catalog_redirect_archive_is_supported_filename($name)
+                ? catalog_redirect_archive_output_name($name)
+                : catalog_clean_unreal_filename($name));
         $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
         $uploadSize = is_string($tmp) && is_file($tmp) ? (int)filesize($tmp) : 0;
         $uploadSizeMeta = [
@@ -211,6 +350,28 @@ function upload_handle_request(PDO $db, array $config): array
             continue;
         }
 
+        if (catalog_pak_archive_is_supported_filename($name)) {
+            try {
+                $pakResult = upload_scan_pak_file($db, $config, $gameId, (string)$tmp, $name, $userId !== null ? (int)$userId : null, $strict, $progress, (string)$game['slug']);
+                $ok += $pakResult['ok'];
+                $dup += $pakResult['duplicate'];
+                $bad += $pakResult['failed'];
+                array_push($messages, ...$pakResult['messages']);
+            } catch (Throwable $e) {
+                $bad++;
+                $short = upload_short_error($e);
+                upload_log_exception($db, $displayName, $e);
+                if (is_file((string)$tmp)) {
+                    @unlink((string)$tmp);
+                }
+                $messages[] = upload_result('failed', $displayName, $short, $uploadSizeMeta);
+                if ($progress) {
+                    $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $displayName . ': failed - ' . $short]);
+                }
+            }
+            continue;
+        }
+
         $scanTmp = (string)$tmp;
         $scanName = $displayName;
         $prepared = null;
@@ -221,37 +382,14 @@ function upload_handle_request(PDO $db, array $config): array
             $scanName = $prepared['name'];
             $displayName = $prepared['display_name'];
 
-            $scanSize = is_file($scanTmp) ? (int)(filesize($scanTmp) ?: 0) : 0;
-            $scanSizeMeta = [
-                'file_size' => $scanSize,
-                'file_size_text' => catalog_bytes($scanSize),
-            ];
-
-            $result = scanner_scan_uploaded_file($db, $config, $gameId, $scanTmp, $scanName, $userId !== null ? (int)$userId : null, $strict, $progress);
-            if (is_file($scanTmp)) {
-                @unlink($scanTmp);
-            }
-
-            $meta = is_array($result[4] ?? null) ? $result[4] : $scanSizeMeta;
-            $correctedGuid = upload_correct_zero_guid_from_stored_file($db, $config, $result);
-            if ($correctedGuid !== '') {
-                $meta['package_guid'] = $correctedGuid;
-            }
-            if (!empty($prepared['decompressed'])) {
-                $meta['file_size'] = $meta['file_size'] ?? $scanSize;
-                $meta['file_size_text'] = $meta['file_size_text'] ?? catalog_bytes($scanSize);
-            }
-
-            $aliasAlreadyExists = ($result[0] ?? '') === 'alias' && upload_alias_already_exists();
-            $redirectPrefix = !empty($prepared['decompressed']) ? 'Decompressed .' . $prepared['source_extension'] . ' redirect archive; ' : '';
-            if (($result[0] ?? '') === 'duplicate' || $aliasAlreadyExists) {
+            $prefix = !empty($prepared['decompressed']) ? 'Decompressed .' . $prepared['source_extension'] . ' redirect archive; ' : '';
+            $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $displayName, $userId !== null ? (int)$userId : null, $strict, $progress, $prefix);
+            if ($scanResult['bucket'] === 'duplicate') {
                 $dup++;
-                $message = $aliasAlreadyExists ? 'Package alias already exists for existing file identity' : (string)($result[2] ?? 'Duplicate in selected game');
-                $messages[] = upload_result('duplicate', $displayName, $redirectPrefix . $message, $meta);
             } else {
                 $ok++;
-                $messages[] = upload_result('imported', $displayName, $redirectPrefix . (string)$result[2], $meta);
             }
+            $messages[] = $scanResult['entry'];
         } catch (Throwable $e) {
             $bad++;
             $short = upload_short_error($e);
@@ -321,7 +459,7 @@ try {
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
     $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name');
 
-    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. You can select individual files or a whole folder/subfolders. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and only the real package is retained.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
+    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. You can select individual files or a whole folder/subfolders. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first; .pak archives are extracted first and only inner package files are retained.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'PAK Import' => 'pak-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
 
     echo '<div class="card"><h2>Upload and scan</h2><form id="profiled-upload-form" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';
@@ -335,7 +473,7 @@ try {
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
     echo '<p><button id="profiled-upload-button">Upload and scan</button></p>';
-    echo '<p class="muted">Max per uploaded/decompressed file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and its subfolders; the catalog still uses only the cleaned package filename and file identity, not the client folder path. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
+    echo '<p class="muted">Max per uploaded/decompressed/extracted file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and its subfolders; the catalog still uses only the cleaned package filename and file identity, not the client folder path. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches. Allowed inputs: catalog package extensions, .uz/.uz2/.uz3 redirect archives, and .pak archives. PAK wrappers are not scanned as Unreal packages; only extracted package files inside them are scanned.</p>';
     echo '<div id="upload-progress" class="upload-progress" hidden>';
     echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
