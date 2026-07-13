@@ -7,10 +7,12 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
+require_once __DIR__ . '/../../lib/BaseGameProtection.php';
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    base_game_ensure($db);
     $body = file_get_contents('php://input') ?: '';
     $peer = fed_require_signed_peer($db, $body);
 
@@ -58,20 +60,25 @@ try {
             $peerFile = null;
             $status = 'requested';
             $msg = '';
+            $match = null;
 
             if ($wantedGuid) {
-                $match = catalog_one($db, 'SELECT id FROM ue_files WHERE package_guid=? AND scan_status="verified" LIMIT 1', [$wantedGuid]);
+                $match = catalog_one($db, 'SELECT * FROM ue_files WHERE package_guid=? AND scan_status="verified" LIMIT 1', [$wantedGuid]);
                 if ($match) {
                     $localFile = (int)$match['id'];
                     $msg = 'Matched by GUID on parent.';
                 }
             }
             if (!$localFile && $requiredPackage !== '') {
-                $match = catalog_one($db, 'SELECT id FROM ue_files WHERE package_name=? AND scan_status="verified" LIMIT 1', [$requiredPackage]);
+                $match = catalog_one($db, 'SELECT * FROM ue_files WHERE package_name=? AND scan_status="verified" LIMIT 1', [$requiredPackage]);
                 if ($match) {
                     $localFile = (int)$match['id'];
                     $msg = 'Matched by package name on parent.';
                 }
+            }
+            if ($match && base_game_file_is_protected($db, $match)) {
+                $status = 'denied';
+                $msg = base_game_block_message($match);
             }
             if (!$localFile) {
                 $msg = 'Parent does not currently have a matching file.';
