@@ -115,6 +115,10 @@ function catalog_file_maintenance_restore_snapshot(PDO $db, array $snapshot): vo
 
 function catalog_file_maintenance_affected_ids(PDO $db, int $gameId, int $removedFileId, string $packageName): array
 {
+    if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
+        return [];
+    }
+
     $rows = catalog_all(
         $db,
         'SELECT DISTINCT d.file_id'
