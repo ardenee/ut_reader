@@ -5,6 +5,7 @@ require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/GameProfiles.php';
 require_once __DIR__ . '/CatalogReaderResolver.php';
 require_once __DIR__ . '/CatalogDependencyResolver.php';
+require_once __DIR__ . '/CatalogDependencySchema.php';
 require_once __DIR__ . '/CatalogAffectedDependencyRefreshService.php';
 require_once __DIR__ . '/CatalogPackageAliases.php';
 
@@ -164,7 +165,7 @@ function scanner_split_reader_issues(array $issues): array
             continue;
         }
         if (str_starts_with($text, 'Package is unversioned; using assumed UE4 version ')) {
-            $notes[] = $text;
+            $notes[] = str_replace('Package is unversioned; using assumed UE4 version ', 'Package is unversioned; using assumed UE4 parser version ', $text);
             continue;
         }
         $fatal[] = $text;
@@ -206,6 +207,7 @@ function scanner_ref_path(int $ref, array $imports, array $exports, array &$cach
 
 function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?callable $progress = null, int $startPercent = 0, int $endPercent = 100, string $prefix = 'Rebuilding dependencies'): void
 {
+    catalog_dependency_schema_ensure($db);
     scanner_emit_percent($progress, 'dependencies', $startPercent, $prefix . ': clearing old links');
     $db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
     $file = catalog_one($db, 'SELECT game_id FROM ue_files WHERE id=?', [$fileId]);
@@ -217,12 +219,14 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?call
     $imports = catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index', [$fileId]);
     $resolutions = CatalogDependencyResolver::resolve($db, (int)$file['game_id'], $fileId, $imports);
     $total = max(1, count($imports));
-    $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status) VALUES(?,?,?,?,?,?,?)');
+    $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status,resolution_source,resolution_confidence) VALUES(?,?,?,?,?,?,?,?,?)');
     foreach ($imports as $i => $imp) {
         $resolution = $resolutions[(int)$imp['id']] ?? [
             'status' => 'missing',
             'resolved_file_id' => null,
             'resolved_export_id' => null,
+            'source' => 'none',
+            'confidence' => 'missing',
         ];
         $insert->execute([
             $fileId,
@@ -232,6 +236,8 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?call
             $resolution['resolved_file_id'],
             $resolution['resolved_export_id'],
             $resolution['status'],
+            $resolution['source'] ?? 'unknown',
+            $resolution['confidence'] ?? 'unknown',
         ]);
 
         $done = $i + 1;
