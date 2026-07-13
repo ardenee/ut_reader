@@ -138,7 +138,22 @@ try {
     $totalPages = max(1, (int)ceil($totalRows / $limit));
     $page = min($page, $totalPages);
     $offset = ($page - 1) * $limit;
-    $rows = catalog_all($db, 'SELECT b.*, g.name game_name, f.id current_file_id FROM ue_base_game_files b JOIN ue_games g ON g.id=b.game_id LEFT JOIN ue_files f ON f.game_id=b.game_id AND f.package_guid=b.package_guid AND f.scan_status="verified" ' . $where . ' GROUP BY b.id ORDER BY g.name, b.package_name, b.original_name, b.id LIMIT ' . $limit . ' OFFSET ' . $offset, $args);
+    $rows = catalog_all(
+        $db,
+        'SELECT b.*, g.name game_name, f.current_file_id
+         FROM ue_base_game_files b
+         JOIN ue_games g ON g.id=b.game_id
+         LEFT JOIN (
+             SELECT game_id, package_guid, MIN(id) current_file_id
+             FROM ue_files
+             WHERE scan_status="verified"
+             GROUP BY game_id, package_guid
+         ) f ON f.game_id=b.game_id AND f.package_guid=b.package_guid
+         ' . $where . '
+         ORDER BY g.name, b.package_name, b.original_name, b.id
+         LIMIT ' . $limit . ' OFFSET ' . $offset,
+        $args
+    );
 
     catalog_head('Base game files');
     catalog_flash($_SESSION['base_game_flash'] ?? null);
