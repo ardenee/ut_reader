@@ -32,12 +32,7 @@ return [
         'dashboard_ttl_seconds' => 0,
     ],
     'pak' => [
-        // Optional: external UnrealPak executable used by pak-import.php.
-        // This project does not bundle UnrealPak/Epic code; point this at your local tool.
-        'unrealpak_path' => '', // Example: 'D:\\UnrealPakTool\\UnrealPak.exe'
-        // Optional Crypto.json for encrypted PAK indexes/assets.
-        'crypto_keys_path' => '',
-        'timeout_seconds' => 1800,
+        // Built-in PHP PAK extractor limits. No external UnrealPak.exe is required.
         'max_extracted_files' => 20000,
         'max_extracted_bytes' => 8 * 1024 * 1024 * 1024,
     ],
