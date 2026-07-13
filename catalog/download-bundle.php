@@ -8,6 +8,7 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
+require_once __DIR__ . '/lib/BaseGameProtection.php';
 
 function bundle_safe_name(string $name): string
 {
@@ -34,6 +35,7 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
+    base_game_ensure($db);
     $mode = external_public_download_mode($db);
 
     if ($mode === 'disabled') {
@@ -47,6 +49,9 @@ try {
     $main = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status<>"failed"', [$id]);
     if (!$main) {
         throw new RuntimeException('File not found');
+    }
+    if (base_game_file_is_protected($db, $main)) {
+        throw new RuntimeException(base_game_block_message($main));
     }
 
     $rows = [$main];
@@ -67,8 +72,19 @@ try {
     }
 
     $manifest = [];
+    $blocked = [];
     $addedNames = [];
     foreach ($rows as $file) {
+        if (base_game_file_is_protected($db, $file)) {
+            $blocked[] = [
+                'package_name' => (string)$file['package_name'],
+                'original_name' => catalog_clean_unreal_filename((string)$file['original_name']),
+                'package_guid' => (string)$file['package_guid'],
+                'reason' => 'Official/base game package: dependency-index-only; not bundled.',
+            ];
+            continue;
+        }
+
         $path = bundle_storage_path($config, $file);
         $baseName = bundle_safe_name((string)$file['original_name']);
         $zipName = $baseName;
@@ -93,13 +109,29 @@ try {
         ];
     }
 
+    if ($blocked) {
+        $lines = [
+            'Some dependencies were intentionally not included.',
+            '',
+            'UnrealDB indexes official/base game exports so custom packages can resolve dependencies, but original game files are not redistributed.',
+            'If you own the original game, install or copy these files from your game installation.',
+            '',
+        ];
+        foreach ($blocked as $item) {
+            $lines[] = '- ' . $item['original_name'] . ' / GUID ' . $item['package_guid'];
+        }
+        $zip->addFromString('BASE_GAME_FILES_NOT_INCLUDED.txt', implode("\n", $lines) . "\n");
+    }
+
     $zip->addFromString('catalog_manifest.json', json_encode([
         'generated_at' => date('c'),
         'selected_file_id' => $id,
         'selected_package' => (string)$main['package_name'],
         'public_download_mode' => $mode,
         'file_count' => count($manifest),
+        'base_game_files_excluded_count' => count($blocked),
         'files' => $manifest,
+        'base_game_files_excluded' => $blocked,
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     $zip->close();
 
