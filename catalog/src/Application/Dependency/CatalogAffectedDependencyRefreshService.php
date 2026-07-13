@@ -17,6 +17,10 @@ final class CatalogAffectedDependencyRefreshService
      */
     public static function findAffectedFileIds(PDO $db, int $gameId, int $newFileId, string $packageName): array
     {
+        if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
+            return [];
+        }
+
         $fileIds = [];
 
         /*
