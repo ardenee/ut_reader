@@ -26,7 +26,7 @@ try {
     $failedJobs = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status="failed"');
     $providers = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_download_providers WHERE is_active=1');
 
-    catalog_page_header('Downloads', 'Control public/random user downloads. Federation parent/child transfers bypass this section and use controlled API transfers.', ['Mirror Settings' => 'mirror-providers.php', 'Mirror Links' => 'mirror-links.php', 'Mirror Queue' => 'mirror-queue.php', 'Federation Settings' => 'federation/settings.php']);
+    catalog_page_header('Downloads', 'Control public/random user downloads. Federation parent/child transfers bypass this section and use controlled API transfers.', ['Mirror Settings' => 'mirror-providers.php', 'Mirror Links' => 'mirror-links.php', 'Mirror Queue' => 'mirror-queue.php', 'Base Game Protection' => 'base-game-files.php', 'Federation Settings' => 'federation/settings.php']);
 
     echo '<div class="grid">';
     catalog_stat_card('Public download mode', $settings['public_download_mode'] ?? 'local_direct');
@@ -49,6 +49,7 @@ try {
     catalog_tool_card('Public download settings / providers', 'mirror-providers.php', 'Set site-wide public download mode and manage external/shared providers.', 'primary');
     catalog_tool_card('Mirror links', 'mirror-links.php', 'Review active/expired/broken external links and add manual hosted links.');
     catalog_tool_card('Mirror queue', 'mirror-queue.php', 'Fulfil queued mirror jobs by pasting external shared-provider URLs.', $waitingJobs > 0 ? (string)$waitingJobs : '');
+    catalog_tool_card('Base game protection', 'base-game-files.php', 'Seed official/base game GUIDs and block those files from public downloads, federation transfers, mirrors, and bundles.');
     catalog_tool_card('Maintenance', 'federation/maintenance.php', 'Expire stale mirror links and clean old jobs/logs.');
     echo '</div></div>';
 
