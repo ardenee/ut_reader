@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/FederationAuth.php';
+require_once __DIR__ . '/BaseGameProtection.php';
 
 function external_public_download_mode(PDO $db): string
 {
@@ -25,8 +26,17 @@ function external_default_provider(PDO $db): ?array
     return catalog_one($db, 'SELECT * FROM ue_external_download_providers WHERE is_active=1 ORDER BY priority ASC, id ASC LIMIT 1');
 }
 
+function external_file_for_download(PDO $db, int $fileId): ?array
+{
+    return catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status<>"failed"', [$fileId]);
+}
+
 function external_queue_mirror_job(PDO $db, int $fileId, ?int $providerId = null, ?int $userId = null, ?string $ip = null): ?int
 {
+    $file = external_file_for_download($db, $fileId);
+    if ($file && base_game_file_is_protected($db, $file)) {
+        return null;
+    }
     if (external_queue_exists($db, $fileId)) {
         return null;
     }
@@ -45,6 +55,11 @@ function external_queue_mirror_job(PDO $db, int $fileId, ?int $providerId = null
 
 function external_public_download_decision(PDO $db, int $fileId, ?int $userId = null, ?string $ip = null): array
 {
+    $file = external_file_for_download($db, $fileId);
+    if ($file && base_game_file_is_protected($db, $file)) {
+        return ['type' => 'disabled', 'message' => base_game_block_message($file)];
+    }
+
     $mode = external_public_download_mode($db);
     if ($mode === 'disabled') {
         return ['type' => 'disabled', 'message' => 'Public downloads are disabled.'];
@@ -104,6 +119,11 @@ function external_mirror_maintenance(PDO $db): array
 
 function external_create_manual_link(PDO $db, int $fileId, int $providerId, string $url, ?int $userId = null, ?int $expiryDays = null): int
 {
+    $file = external_file_for_download($db, $fileId);
+    if ($file && base_game_file_is_protected($db, $file)) {
+        throw new RuntimeException(base_game_block_message($file));
+    }
+
     $provider = catalog_one($db, 'SELECT * FROM ue_external_download_providers WHERE id=?', [$providerId]);
     if (!$provider) {
         throw new RuntimeException('Provider not found.');
