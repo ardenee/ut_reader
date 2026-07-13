@@ -105,6 +105,63 @@ function upload_prepare_scanner_input(string $tmp, string $name, ?callable $prog
     ];
 }
 
+function upload_guid_is_zero_or_blank(string $guid): bool
+{
+    $guid = strtoupper(trim($guid));
+    return $guid === '' || $guid === '00000000-00000000-00000000-00000000';
+}
+
+function upload_guid_from_legacy_header_offset(string $path): string
+{
+    $bytes = @file_get_contents($path, false, null, 0, 64);
+    if (!is_string($bytes) || strlen($bytes) < 52) {
+        return '';
+    }
+    $tag = (int)(unpack('V', substr($bytes, 0, 4))[1] ?? 0);
+    if ($tag !== 0x9E2A83C1) {
+        return '';
+    }
+
+    $parts = [
+        (int)(unpack('V', substr($bytes, 36, 4))[1] ?? 0),
+        (int)(unpack('V', substr($bytes, 40, 4))[1] ?? 0),
+        (int)(unpack('V', substr($bytes, 44, 4))[1] ?? 0),
+        (int)(unpack('V', substr($bytes, 48, 4))[1] ?? 0),
+    ];
+    if ($parts === [0, 0, 0, 0]) {
+        return '';
+    }
+
+    return sprintf('%08X-%08X-%08X-%08X', $parts[0], $parts[1], $parts[2], $parts[3]);
+}
+
+function upload_correct_zero_guid_from_stored_file(PDO $db, array $config, array $result): string
+{
+    $fileId = (int)($result[1] ?? 0);
+    if ($fileId <= 0) {
+        return '';
+    }
+
+    $file = catalog_one($db, 'SELECT id, package_guid, relative_path FROM ue_files WHERE id=?', [$fileId]);
+    if (!$file || !upload_guid_is_zero_or_blank((string)($file['package_guid'] ?? ''))) {
+        return '';
+    }
+
+    $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+    $storedPath = realpath(__DIR__ . '/' . (string)$file['relative_path']);
+    if (!$storageRoot || !$storedPath || !str_starts_with($storedPath, $storageRoot) || !is_file($storedPath)) {
+        return '';
+    }
+
+    $fallbackGuid = upload_guid_from_legacy_header_offset($storedPath);
+    if ($fallbackGuid === '') {
+        return '';
+    }
+
+    $db->prepare('UPDATE ue_files SET package_guid=? WHERE id=?')->execute([$fallbackGuid, $fileId]);
+    return $fallbackGuid;
+}
+
 function upload_handle_request(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
@@ -176,6 +233,10 @@ function upload_handle_request(PDO $db, array $config): array
             }
 
             $meta = is_array($result[4] ?? null) ? $result[4] : $scanSizeMeta;
+            $correctedGuid = upload_correct_zero_guid_from_stored_file($db, $config, $result);
+            if ($correctedGuid !== '') {
+                $meta['package_guid'] = $correctedGuid;
+            }
             if (!empty($prepared['decompressed'])) {
                 $meta['file_size'] = $meta['file_size'] ?? $scanSize;
                 $meta['file_size_text'] = $meta['file_size_text'] ?? catalog_bytes($scanSize);
