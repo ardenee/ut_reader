@@ -210,6 +210,7 @@ function catalog_admin_nav(): void
             'Game Profiles' => $root . 'game-profiles.php',
             'Full Sync' => $root . 'full-sync.php',
             'Package Normalizer' => $root . 'package-normalize.php',
+            'Base Game Protection' => $root . 'base-game-files.php',
         ]);
         catalog_nav_menu('Sources', [
             'Game Sources' => $root . 'sources.php',
