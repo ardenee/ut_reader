@@ -98,7 +98,7 @@ function catalog_clean_unreal_filename(string $filename): string
     $extension = strtolower(trim((string)pathinfo($filename, PATHINFO_EXTENSION)));
     $stem = (string)pathinfo($filename, PATHINFO_FILENAME);
     $stem = catalog_clean_unreal_package_stem($stem);
-    $extension = preg_replace('/[^A-Za-z0-9]+/', '', $extension) ?? '';
+    $extension = preg_replace('/[^A-Za-z0-9_]+/', '', $extension) ?? '';
 
     return $stem . ($extension !== '' ? '.' . $extension : '');
 }
