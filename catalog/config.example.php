@@ -31,6 +31,16 @@ return [
         // Keep zero until a page explicitly opts into bounded staleness.
         'dashboard_ttl_seconds' => 0,
     ],
+    'pak' => [
+        // Optional: external UnrealPak executable used by pak-import.php.
+        // This project does not bundle UnrealPak/Epic code; point this at your local tool.
+        'unrealpak_path' => '', // Example: 'D:\\UnrealPakTool\\UnrealPak.exe'
+        // Optional Crypto.json for encrypted PAK indexes/assets.
+        'crypto_keys_path' => '',
+        'timeout_seconds' => 1800,
+        'max_extracted_files' => 20000,
+        'max_extracted_bytes' => 8 * 1024 * 1024 * 1024,
+    ],
     'allowed_extensions' => ['u','unr','utx','umx','uax','ut2','ut3','upk','uasset','umap'],
     'common_packages' => ['Core','Engine','Editor','Fire','IpDrv','UWindow','Botpack','UnrealShare','UnrealI','Gameplay','UnrealEd'],
     'engine_readers' => [
