@@ -60,7 +60,7 @@ function pak_import_is_scannable_inner_file(array $file, array $allowedExtension
 {
     $name = catalog_clean_unreal_filename(basename((string)$file['relative']));
     $ext = catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION));
-    if (in_array($ext, ['uexp', 'ubulk', 'uptnl', 'm.ubulk'], true)) {
+    if (in_array($ext, ['uexp', 'ubulk', 'uptnl'], true)) {
         return false;
     }
     return $ext !== '' && in_array($ext, $allowedExtensions, true);
@@ -155,6 +155,7 @@ function pak_import_handle_request(PDO $db, array $config): array
     return [
         'game' => $game,
         'source_name' => (string)$source['name'],
+        'extract_log' => (string)($extracted['log'] ?? ''),
         'found' => $found,
         'scannable' => $scannable,
         'imported' => $imported,
@@ -186,23 +187,19 @@ try {
     );
 
     $selectedGameId = (int)($_POST['game_id'] ?? $_GET['game_id'] ?? 0);
-    $pakConfig = catalog_pak_archive_config($config);
-    $toolPath = trim((string)($pakConfig['unrealpak_path'] ?? $pakConfig['tool_path'] ?? getenv('UNREALDB_UNREALPAK') ?: ''));
 
     catalog_head('PAK Import');
     catalog_page_header(
         'PAK Import',
-        'Extract a UE4 .pak with an external UnrealPak executable, then import supported package files from the extracted contents. The .pak wrapper is not retained.',
+        'Extract a UE4 .pak using the built-in PHP parser, then import supported package files from the extracted contents. The .pak wrapper is not retained.',
         ['Upload Files' => 'profiled-upload.php', 'Local Source Scan' => 'source-scan.php', 'Upload Bucket' => 'upload-bucket.php']
     );
 
-    if ($toolPath === '') {
-        echo CatalogUi::alert('warning', 'UnrealPak path is not configured.', 'Set config.php pak.unrealpak_path to your UnrealPak.exe path before importing .pak files.');
-    } elseif (!is_file($toolPath)) {
-        echo CatalogUi::alert('danger', 'Configured UnrealPak path was not found.', $toolPath);
-    } else {
-        echo CatalogUi::alert('success', 'UnrealPak extractor configured.', $toolPath);
-    }
+    echo CatalogUi::alert(
+        'info',
+        'Standalone PHP extractor enabled.',
+        'Current support is intentionally basic: unencrypted PAK indexes, unencrypted entries, uncompressed entries, and zlib-compressed blocks where PHP can decode them. Encrypted/Oodle/IOStore containers will be rejected or skipped.'
+    );
 
     if (is_array($result)) {
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Import result</h2><p class="muted">' . catalog_h((string)$result['source_name']) . ' → ' . catalog_h((string)$result['game']['name']) . '</p></div></div><div class="ui-section__body">';
@@ -212,7 +209,10 @@ try {
         echo '<tr><th>Aliases</th><td>' . (int)$result['aliases'] . '</td></tr>';
         echo '<tr><th>Duplicates</th><td>' . (int)$result['duplicates'] . '</td></tr>';
         echo '<tr><th>Failed</th><td>' . (int)$result['failed'] . '</td></tr>';
-        echo '<tr><th>Skipped non-package/sidecar files</th><td>' . (int)$result['skipped'] . '</td></tr></table>';
+        echo '<tr><th>Skipped non-package/unsupported sidecar files</th><td>' . (int)$result['skipped'] . '</td></tr></table>';
+        if ((string)$result['extract_log'] !== '') {
+            echo '<h3>Extractor log</h3><pre class="mono path">' . catalog_h((string)$result['extract_log']) . '</pre>';
+        }
         if ($result['samples']) {
             echo '<h3>Samples</h3><table><tr><th>Status</th><th>Path</th><th>Message</th></tr>';
             foreach ($result['samples'] as $sample) {
@@ -236,10 +236,10 @@ try {
     echo '<p><label>Upload .pak<br><input type="file" name="pak_file" accept=".pak"></label></p>';
     echo '<p><label>Or local .pak path on this server<br><input type="text" name="local_pak_path" placeholder="D:\\Games\\Example\\Content\\Paks\\Example-WindowsNoEditor.pak" style="width:min(100%,760px)"></label></p>';
     echo '<p><button type="submit">Extract PAK and import contents</button></p>';
-    echo '<p class="muted">Encrypted PAKs require config.php pak.crypto_keys_path pointing to Crypto.json. Sidecar files such as .uexp/.ubulk are kept beside .uasset during parsing but are not imported as standalone catalog rows.</p>';
+    echo '<p class="muted">The built-in extractor keeps extracted sidecar files beside their .uasset while scanning, but .uexp/.ubulk are not imported as standalone catalog rows. Limits are controlled by config.php pak.max_extracted_files and pak.max_extracted_bytes.</p>';
     echo '</form></div></section>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Configuration</h2></div></div><div class="ui-section__body"><pre class="mono">' . catalog_h("'pak' => [\n    'unrealpak_path' => 'D:\\\\UnrealPakTool\\\\UnrealPak.exe',\n    'crypto_keys_path' => '',\n    'timeout_seconds' => 1800,\n    'max_extracted_files' => 20000,\n    'max_extracted_bytes' => 8 * 1024 * 1024 * 1024,\n],") . '</pre></div></section>';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Optional configuration</h2></div></div><div class="ui-section__body"><pre class="mono">' . catalog_h("'pak' => [\n    'max_extracted_files' => 20000,\n    'max_extracted_bytes' => 8 * 1024 * 1024 * 1024,\n],") . '</pre></div></section>';
 
     catalog_foot();
 } catch (Throwable $error) {
