@@ -118,15 +118,15 @@ function ex_back(int $gameId): string
     }
     return 'game-files.php?id=' . $gameId;
 }
-function ex_ref(int $ref): string { if ($ref === 0) return '<span class="muted">none</span>'; $id = $ref < 0 ? 'import-' . ((-$ref) - 1) : 'export-' . ($ref - 1); return '<a class="xref mono" href="#'.$id.'">'.$ref.'</a>'; }
+function ex_ref(int $ref): string { if ($ref === 0) return '<span class="muted">none</span>'; $id = $ref < 0 ? 'import-' . ((-$ref) - 1) : 'export-' . ($ref - 1); return '<a class="xref mono" href="#'.$id.'" data-xref-target="'.$id.'">'.$ref.'</a>'; }
 function ex_key(string $v): string { return strtolower(trim($v)); }
 function ex_add_target(array &$targets, string $value, string $id): void { $k = ex_key($value); if ($k !== '') $targets[$k][] = $id; }
 function ex_link(string $v, array $lookup, array $targets): string
 {
     $t = trim($v); if ($t === '') return '<span class="muted">none</span>';
     $k = ex_key($t);
-    if (isset($lookup[$k])) return '<a class="xref mono path" href="#name-'.(int)$lookup[$k].'" title="Open name table entry">'.catalog_h($t).'</a>';
-    if (isset($targets[$k])) { $target = $targets[$k][0]; return '<a class="xref mono path" href="#'.catalog_h($target).'" title="Open referenced import/export row">'.catalog_h($t).'</a>'; }
+    if (isset($lookup[$k])) { $id = 'name-' . (int)$lookup[$k]; return '<a class="xref mono path" href="#'.$id.'" data-xref-target="'.$id.'" title="Open name table entry">'.catalog_h($t).'</a>'; }
+    if (isset($targets[$k])) { $target = $targets[$k][0]; return '<a class="xref mono path" href="#'.catalog_h($target).'" data-xref-target="'.catalog_h($target).'" title="Open referenced import/export row">'.catalog_h($t).'</a>'; }
     return '<span class="mono path">'.catalog_h($t).'</span>';
 }
 function ex_usage_links(array $usage): string
@@ -134,13 +134,19 @@ function ex_usage_links(array $usage): string
     $links = [];
     if (!empty($usage['imports'])) {
         $targets = array_values(array_unique($usage['imports']));
-        $links[] = '<a class="xref" href="#'.catalog_h($targets[0]).'">Imports: '.count($targets).'</a>';
+        $links[] = '<a class="xref" href="#'.catalog_h($targets[0]).'" data-xref-target="'.catalog_h($targets[0]).'">Imports: '.count($targets).'</a>';
     }
     if (!empty($usage['exports'])) {
         $targets = array_values(array_unique($usage['exports']));
-        $links[] = '<a class="xref" href="#'.catalog_h($targets[0]).'">Exports: '.count($targets).'</a>';
+        $links[] = '<a class="xref" href="#'.catalog_h($targets[0]).'" data-xref-target="'.catalog_h($targets[0]).'">Exports: '.count($targets).'</a>';
     }
     return $links ? implode(' <span class="muted">·</span> ', $links) : '<span class="muted">none</span>';
+}
+function ex_first_usage_target(array $usage): string
+{
+    if (!empty($usage['imports'])) return (string)array_values(array_unique($usage['imports']))[0];
+    if (!empty($usage['exports'])) return (string)array_values(array_unique($usage['exports']))[0];
+    return '';
 }
 function ex_dep(?array $d, string $back): string { if (!$d) return '<span class="muted">not built</span>'; $s = (string)$d['status']; return '<span class="dep '.catalog_h($s).'">'.catalog_h($s).'</span>'; }
 function ex_name_flags($value): string
@@ -177,7 +183,7 @@ try {
     }
 
     catalog_head('Examine ' . (string)$file['package_name']);
-    echo '<style>.examine-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}.examine-tab{display:inline-flex;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}.examine-tab.is-active{color:#07111f;background:linear-gradient(180deg,#9dc2ff,#76a9ff);border-color:#a9c9ff}.examine-tab-panel[hidden]{display:none}.examine-table-region{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.examine-imports-table{min-width:1420px}.examine-exports-table{min-width:1320px}.is-reference-target td{background:rgba(246,196,83,.18)!important}.path{white-space:normal}.to-top{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(16,24,39,.94);border:1px solid var(--line2);font-size:22px}</style>';
+    echo '<style>.examine-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}.examine-tab{display:inline-flex;gap:6px;min-height:34px;padding:6px 10px;border:1px solid var(--line2);border-radius:9px;color:var(--text);background:rgba(255,255,255,.035);font-weight:650;text-decoration:none}.examine-tab.is-active{color:#07111f;background:linear-gradient(180deg,#9dc2ff,#76a9ff);border-color:#a9c9ff}.examine-tab-panel[hidden]{display:none}.examine-table-region{overflow-x:auto;border:1px solid var(--line);border-radius:12px}.examine-imports-table{min-width:1420px}.examine-exports-table{min-width:1320px}.is-reference-target td{background:rgba(246,196,83,.18)!important;box-shadow:inset 4px 0 0 var(--amber)}.path{white-space:normal}.to-top{position:fixed;right:20px;bottom:20px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:rgba(16,24,39,.94);border:1px solid var(--line2);font-size:22px}</style>';
     echo '<div class="card hero" id="top"><h1>Examine '.catalog_h($file['package_name']).'</h1><p class="muted">Database-backed package names, imports, exports and dependency links, with header data parsed from the stored package file.</p><p><a class="button" href="'.catalog_h($back).'">Back to files</a> <a class="button" href="file-info.php?id='.$id.'">Details</a></p></div>';
     echo '<div class="card"><h2>Package header</h2>'; if (!$header['ok']) echo '<p class="muted">'.catalog_h($header['error']).'</p>'; echo '<div class="two-col"><table>';
     foreach (['GUID','Version','Licensee Version','Signature','Name Offset','Import Offset','Export Offset','Total Header Size'] as $l) if (array_key_exists($l,$header['summary'])) echo '<tr><th>'.catalog_h($l).'</th><td class="mono path">'.catalog_h((string)$header['summary'][$l]).'</td></tr>';
@@ -186,15 +192,76 @@ try {
     if (!empty($file['detection_notes']) || !empty($file['scan_notes'])) { echo '<div class="card"><h2>Scanner notes</h2>'; if (!empty($file['detection_notes'])) echo '<h3>Detection</h3><pre class="mono path">'.catalog_h((string)$file['detection_notes']).'</pre>'; if (!empty($file['scan_notes'])) echo '<h3>Scan</h3><pre class="mono path">'.catalog_h((string)$file['scan_notes']).'</pre>'; echo '</div>'; }
     echo '<div class="card" id="package-tables"><nav class="examine-tabs"><a class="examine-tab is-active" href="#tab-names" data-tab="names">Names <span>'.count($names).'</span></a><a class="examine-tab" href="#tab-imports" data-tab="imports">Imports <span>'.count($imports).'</span></a><a class="examine-tab" href="#tab-exports" data-tab="exports">Exports <span>'.count($exports).'</span></a></nav>';
     echo '<section id="tab-names" data-panel="names" class="examine-tab-panel"><h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th><th>Used by</th><th>Flags / hashes</th></tr></thead><tbody>';
-    foreach ($names as $n) { $idx=(int)$n['name_index']; $txt=(string)$n['name_text']; $u=$usage[ex_key($txt)]??[]; echo '<tr id="name-'.$idx.'"><td class="mono"><a class="xref" href="#name-'.$idx.'">'.$idx.'</a></td><td><span class="mono path">'.catalog_h($txt).'</span></td><td>'.ex_usage_links($u).'</td><td class="mono">'.ex_name_flags($n['flags'] ?? null).'</td></tr>'; }
+    foreach ($names as $n) { $idx=(int)$n['name_index']; $txt=(string)$n['name_text']; $u=$usage[ex_key($txt)]??[]; $first = ex_first_usage_target($u); $nameHtml = $first !== '' ? '<a class="xref mono path" href="#'.catalog_h($first).'" data-xref-target="'.catalog_h($first).'">'.catalog_h($txt).'</a>' : '<span class="mono path">'.catalog_h($txt).'</span>'; echo '<tr id="name-'.$idx.'"><td class="mono"><a class="xref" href="#name-'.$idx.'" data-xref-target="name-'.$idx.'">'.$idx.'</a></td><td>'.$nameHtml.'</td><td>'.ex_usage_links($u).'</td><td class="mono">'.ex_name_flags($n['flags'] ?? null).'</td></tr>'; }
     echo '</tbody></table></div></section>';
     echo '<section id="tab-imports" data-panel="imports" class="examine-tab-panel" hidden><h2>Imports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-imports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th><th>Dependency</th></tr></thead><tbody>';
-    foreach ($imports as $im) { $idx=(int)$im['import_index']; echo '<tr id="import-'.$idx.'"><td class="mono"><a class="xref" href="#import-'.$idx.'">'.$idx.'</a></td><td class="mono">'.(-($idx+1)).'</td><td>'.ex_link((string)$im['class_package'],$lookup,$targets).'</td><td>'.ex_link((string)$im['class_name'],$lookup,$targets).'</td><td>'.ex_link((string)$im['object_name'],$lookup,$targets).'</td><td>'.ex_ref((int)$im['outer_index']).'</td><td>'.ex_link((string)$im['full_path'],$lookup,$targets).'</td><td>'.ex_link((string)$im['root_package'],$lookup,$targets).'</td><td>'.ex_dep($depByImport[(int)$im['id']]??null,$back).'</td></tr>'; }
+    foreach ($imports as $im) { $idx=(int)$im['import_index']; $rowId = 'import-'.$idx; echo '<tr id="'.$rowId.'"><td class="mono"><a class="xref" href="#'.$rowId.'" data-xref-target="'.$rowId.'">'.$idx.'</a></td><td class="mono"><a class="xref" href="#'.$rowId.'" data-xref-target="'.$rowId.'">'.(-($idx+1)).'</a></td><td>'.ex_link((string)$im['class_package'],$lookup,$targets).'</td><td>'.ex_link((string)$im['class_name'],$lookup,$targets).'</td><td>'.ex_link((string)$im['object_name'],$lookup,$targets).'</td><td>'.ex_ref((int)$im['outer_index']).'</td><td>'.ex_link((string)$im['full_path'],$lookup,$targets).'</td><td>'.ex_link((string)$im['root_package'],$lookup,$targets).'</td><td>'.ex_dep($depByImport[(int)$im['id']]??null,$back).'</td></tr>'; }
     echo '</tbody></table></div></section>';
     echo '<section id="tab-exports" data-panel="exports" class="examine-tab-panel" hidden><h2>Exports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-exports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Local path</th><th>Full path</th><th>Flags</th><th>Serial size</th><th>Serial offset</th></tr></thead><tbody>';
-    foreach ($exports as $ex) { $idx=(int)$ex['export_index']; echo '<tr id="export-'.$idx.'"><td class="mono"><a class="xref" href="#export-'.$idx.'">'.$idx.'</a></td><td class="mono">'.($idx+1).'</td><td>'.ex_link((string)$ex['class_name'],$lookup,$targets).'</td><td>'.ex_link((string)$ex['object_name'],$lookup,$targets).'</td><td>'.ex_ref((int)$ex['outer_index']).'</td><td>'.ex_link((string)$ex['local_path'],$lookup,$targets).'</td><td>'.ex_link((string)$ex['full_path'],$lookup,$targets).'</td><td class="mono">'.catalog_h((string)($ex['object_flags']??'')).'</td><td class="mono">'.catalog_h((string)($ex['serial_size']??'')).'</td><td class="mono">'.catalog_h((string)($ex['serial_offset']??'')).'</td></tr>'; }
+    foreach ($exports as $ex) { $idx=(int)$ex['export_index']; $rowId = 'export-'.$idx; echo '<tr id="'.$rowId.'"><td class="mono"><a class="xref" href="#'.$rowId.'" data-xref-target="'.$rowId.'">'.$idx.'</a></td><td class="mono"><a class="xref" href="#'.$rowId.'" data-xref-target="'.$rowId.'">'.($idx+1).'</a></td><td>'.ex_link((string)$ex['class_name'],$lookup,$targets).'</td><td>'.ex_link((string)$ex['object_name'],$lookup,$targets).'</td><td>'.ex_ref((int)$ex['outer_index']).'</td><td>'.ex_link((string)$ex['local_path'],$lookup,$targets).'</td><td>'.ex_link((string)$ex['full_path'],$lookup,$targets).'</td><td class="mono">'.catalog_h((string)($ex['object_flags']??'')).'</td><td class="mono">'.catalog_h((string)($ex['serial_size']??'')).'</td><td class="mono">'.catalog_h((string)($ex['serial_offset']??'')).'</td></tr>'; }
     echo '</tbody></table></div></section></div><a class="to-top" href="#top">↑</a>';
-    echo '<script>(()=>{const tabs=[...document.querySelectorAll("[data-tab]")],panels=[...document.querySelectorAll("[data-panel]")];function show(t){panels.forEach(p=>p.hidden=p.dataset.panel!==t);tabs.forEach(a=>a.classList.toggle("is-active",a.dataset.tab===t));}tabs.forEach(a=>a.onclick=e=>{e.preventDefault();location.hash="tab-"+a.dataset.tab;show(a.dataset.tab);});function hash(){document.querySelectorAll(".is-reference-target").forEach(e=>e.classList.remove("is-reference-target"));let h=decodeURIComponent(location.hash.slice(1));if(h.startsWith("tab-")){show(h.slice(4));return}let el=h&&document.getElementById(h);if(el){let p=el.closest("[data-panel]");if(p)show(p.dataset.panel);el.classList.add("is-reference-target");el.scrollIntoView({block:"center"});}else show("names");}addEventListener("hashchange",hash);hash();})();</script>';
+    echo <<<'HTML'
+<script>
+(function () {
+    'use strict';
+    const tabs = Array.from(document.querySelectorAll('[data-tab]'));
+    const panels = Array.from(document.querySelectorAll('[data-panel]'));
+
+    function show(tab) {
+        if (!panels.some(panel => panel.dataset.panel === tab)) tab = 'names';
+        panels.forEach(panel => { panel.hidden = panel.dataset.panel !== tab; });
+        tabs.forEach(anchor => { anchor.classList.toggle('is-active', anchor.dataset.tab === tab); });
+    }
+
+    function clearHighlights() {
+        document.querySelectorAll('.is-reference-target').forEach(element => element.classList.remove('is-reference-target'));
+    }
+
+    function reveal(id, scroll) {
+        id = (id || '').replace(/^#/, '');
+        clearHighlights();
+        if (id.indexOf('tab-') === 0) {
+            show(id.slice(4));
+            return true;
+        }
+        const element = id ? document.getElementById(id) : null;
+        if (!element) {
+            show('names');
+            return false;
+        }
+        const panel = element.closest('[data-panel]');
+        if (panel) show(panel.dataset.panel);
+        const row = element.closest('tr') || element;
+        row.classList.add('is-reference-target');
+        if (scroll) window.setTimeout(() => row.scrollIntoView({ block: 'center' }), 0);
+        return true;
+    }
+
+    tabs.forEach(anchor => {
+        anchor.addEventListener('click', event => {
+            event.preventDefault();
+            const id = 'tab-' + anchor.dataset.tab;
+            history.pushState(null, '', '#' + id);
+            reveal(id, false);
+            document.getElementById('package-tables').scrollIntoView({ block: 'start' });
+        });
+    });
+
+    document.addEventListener('click', event => {
+        const link = event.target.closest('a.xref[href^="#"], a[data-xref-target]');
+        if (!link) return;
+        const id = link.dataset.xrefTarget || decodeURIComponent(link.getAttribute('href').slice(1));
+        if (!id || !document.getElementById(id)) return;
+        event.preventDefault();
+        history.pushState(null, '', '#' + id);
+        reveal(id, true);
+    });
+
+    window.addEventListener('hashchange', () => reveal(decodeURIComponent(location.hash.slice(1)), true));
+    reveal(decodeURIComponent(location.hash.slice(1)), false);
+})();
+</script>
+HTML;
     catalog_foot();
 } catch (Throwable $e) {
     if (!headers_sent()) catalog_head('Examine error');
