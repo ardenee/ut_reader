@@ -9,6 +9,7 @@ ini_set('display_startup_errors', '1');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogParser.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
+require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
 function clean_relative_path(string $base, string $path): string
@@ -24,11 +25,18 @@ function clean_relative_path(string $base, string $path): string
 /**
  * Local sources belong to one game, therefore their extension allowance comes
  * from that game’s active profile. The global config list is only a legacy
- * fallback when a profile has no explicit extension list.
+ * fallback when a profile has no explicit extension list. Redirect-compressed
+ * .uz/.uz2/.uz3 files are accepted here because they are decompressed before
+ * matching/importing.
  */
 function allowed_source_extension(string $path, array $profile, array $config): bool
 {
-    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    if (catalog_redirect_archive_is_supported_filename($path)) {
+        return true;
+    }
+
+    $cleanName = catalog_clean_unreal_filename(basename($path));
+    $ext = catalog_clean_unreal_extension((string)pathinfo($cleanName, PATHINFO_EXTENSION));
     return in_array($ext, scanner_profile_extensions($profile, $config), true);
 }
 
@@ -50,6 +58,75 @@ function source_scan_tmp_copy(string $path): string
     return $tmp;
 }
 
+/** @return array{path:string,name:string,temp:bool,redirect:bool,source_extension:string} */
+function source_scan_work_file(string $path): array
+{
+    $name = basename($path);
+    if (!catalog_redirect_archive_is_supported_filename($name)) {
+        return [
+            'path' => $path,
+            'name' => catalog_clean_unreal_filename($name),
+            'temp' => false,
+            'redirect' => false,
+            'source_extension' => '',
+        ];
+    }
+
+    $decoded = catalog_redirect_archive_decompress_to_temp($path, $name);
+    return [
+        'path' => (string)$decoded['path'],
+        'name' => catalog_clean_unreal_filename((string)$decoded['filename']),
+        'temp' => true,
+        'redirect' => true,
+        'source_extension' => (string)$decoded['source_extension'],
+    ];
+}
+
+function source_scan_cleanup_work_file(array $work): void
+{
+    if (!empty($work['temp']) && is_file((string)$work['path'])) {
+        @unlink((string)$work['path']);
+    }
+}
+
+function source_scan_import_work_file(PDO $db, array $config, array $source, array $work, bool $strictProfile): array
+{
+    $tmp = source_scan_tmp_copy((string)$work['path']);
+    return scanner_scan_uploaded_file(
+        $db,
+        $config,
+        (int)$source['game_id'],
+        $tmp,
+        (string)$work['name'],
+        $_SESSION['user']['id'] ?? null,
+        $strictProfile
+    );
+}
+
+function source_scan_result_sample(string $path, array $work, string $message): string
+{
+    if (!empty($work['redirect'])) {
+        return $path . ' → ' . (string)$work['name'] . ' - ' . $message;
+    }
+    return $path . ' - ' . $message;
+}
+
+function source_scan_record_import_result(PDO $db, PDOStatement $upsert, int $sourceId, string $relative, array $result, int &$imported, int &$duplicates, int &$locations): void
+{
+    if (($result[0] ?? '') === 'duplicate') {
+        $duplicates++;
+        if (!empty($result[1])) {
+            record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+            $locations++;
+        }
+        return;
+    }
+
+    $imported++;
+    record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
+    $locations++;
+}
+
 function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUnknown, bool $strictProfile): array
 {
     $source = catalog_one($db, 'SELECT s.*, g.name game_name, g.slug game_slug, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
@@ -68,6 +145,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
     }
 
     $found = 0;
+    $redirectArchives = 0;
     $matchedMd5 = 0;
     $matchedGuid = 0;
     $guidAmbiguous = 0;
@@ -96,92 +174,112 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
 
         $found++;
         $relative = clean_relative_path($basePath, $path);
-        $md5 = md5_file($path);
-        if (!$md5) {
-            $unknown++;
-            if (count($unknownSamples) < 50) {
-                $unknownSamples[] = $path;
-            }
-            continue;
-        }
-
-        $file = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND md5=? LIMIT 1', [(int)$source['game_id'], $md5]);
-        if ($file) {
-            record_file_location($db, $upsert, (int)$file['id'], $sourceId, $relative);
-            $matchedMd5++;
-            $locations++;
-            continue;
-        }
+        $work = null;
 
         try {
-            $header = catalog_try_read_package_header($config, $profileEngine, $path);
-            $guid = catalog_header_guid($header);
-        } catch (Throwable $e) {
-            if ($importUnknown) {
-                try {
-                    $tmp = source_scan_tmp_copy($path);
-                    $result = scanner_scan_uploaded_file($db, $config, (int)$source['game_id'], $tmp, basename($path), $_SESSION['user']['id'] ?? null, $strictProfile);
-                    if ($result[0] === 'duplicate') {
-                        $duplicates++;
-                        if (!empty($result[1])) {
-                            record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
-                            $locations++;
-                        }
-                    } else {
-                        $imported++;
-                        record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
-                        $locations++;
-                    }
-                    if (count($importSamples) < 50) {
-                        $importSamples[] = $path . ' - ' . $result[2];
-                    }
-                    continue;
-                } catch (Throwable $scanError) {
-                    $importFailed++;
-                    if (isset($tmp) && is_file($tmp)) {
-                        @unlink($tmp);
-                    }
-                    if (count($parseFailedSamples) < 50) {
-                        $parseFailedSamples[] = $path . ' - profiled import failed: ' . $scanError->getMessage();
-                    }
-                    continue;
+            $work = source_scan_work_file($path);
+            if (!empty($work['redirect'])) {
+                $redirectArchives++;
+            }
+
+            $md5 = md5_file((string)$work['path']);
+            if (!$md5) {
+                $unknown++;
+                if (count($unknownSamples) < 50) {
+                    $unknownSamples[] = source_scan_result_sample($path, $work, 'could not hash file');
                 }
+                continue;
             }
 
-            $parseFailed++;
-            if (count($parseFailedSamples) < 50) {
-                $parseFailedSamples[] = $path . ' - ' . $e->getMessage();
+            $file = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND md5=? LIMIT 1', [(int)$source['game_id'], $md5]);
+            if ($file) {
+                record_file_location($db, $upsert, (int)$file['id'], $sourceId, $relative);
+                $matchedMd5++;
+                $locations++;
+                continue;
             }
-            continue;
-        }
 
-        if ($guid === '') {
+            try {
+                $header = catalog_try_read_package_header($config, $profileEngine, (string)$work['path']);
+                $guid = catalog_header_guid($header);
+            } catch (Throwable $e) {
+                if ($importUnknown) {
+                    try {
+                        $result = source_scan_import_work_file($db, $config, $source, $work, $strictProfile);
+                        source_scan_record_import_result($db, $upsert, $sourceId, $relative, $result, $imported, $duplicates, $locations);
+                        if (count($importSamples) < 50) {
+                            $importSamples[] = source_scan_result_sample($path, $work, (string)$result[2]);
+                        }
+                        continue;
+                    } catch (Throwable $scanError) {
+                        $importFailed++;
+                        if (count($parseFailedSamples) < 50) {
+                            $parseFailedSamples[] = source_scan_result_sample($path, $work, 'profiled import failed: ' . $scanError->getMessage());
+                        }
+                        continue;
+                    }
+                }
+
+                $parseFailed++;
+                if (count($parseFailedSamples) < 50) {
+                    $parseFailedSamples[] = source_scan_result_sample($path, $work, $e->getMessage());
+                }
+                continue;
+            }
+
+            if ($guid === '') {
+                if ($importUnknown) {
+                    try {
+                        $result = source_scan_import_work_file($db, $config, $source, $work, $strictProfile);
+                        source_scan_record_import_result($db, $upsert, $sourceId, $relative, $result, $imported, $duplicates, $locations);
+                        if (count($importSamples) < 50) {
+                            $importSamples[] = source_scan_result_sample($path, $work, (string)$result[2]);
+                        }
+                        continue;
+                    } catch (Throwable $scanError) {
+                        $importFailed++;
+                        if (count($unknownSamples) < 50) {
+                            $unknownSamples[] = source_scan_result_sample($path, $work, 'no GUID; profiled import failed: ' . $scanError->getMessage());
+                        }
+                        continue;
+                    }
+                }
+
+                $unknown++;
+                if (count($unknownSamples) < 50) {
+                    $unknownSamples[] = source_scan_result_sample($path, $work, 'no GUID found');
+                }
+                continue;
+            }
+
+            $matches = catalog_all($db, 'SELECT id, original_name, md5 FROM ue_files WHERE game_id=? AND package_guid=? ORDER BY id', [(int)$source['game_id'], $guid]);
+            if (count($matches) === 1) {
+                record_file_location($db, $upsert, (int)$matches[0]['id'], $sourceId, $relative);
+                $matchedGuid++;
+                $locations++;
+                continue;
+            }
+
+            if (count($matches) > 1) {
+                $guidAmbiguous++;
+                if (count($unknownSamples) < 50) {
+                    $unknownSamples[] = source_scan_result_sample($path, $work, 'GUID matches multiple catalog files: ' . $guid);
+                }
+                continue;
+            }
+
             if ($importUnknown) {
                 try {
-                    $tmp = source_scan_tmp_copy($path);
-                    $result = scanner_scan_uploaded_file($db, $config, (int)$source['game_id'], $tmp, basename($path), $_SESSION['user']['id'] ?? null, $strictProfile);
-                    if ($result[0] === 'duplicate') {
-                        $duplicates++;
-                        if (!empty($result[1])) {
-                            record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
-                            $locations++;
-                        }
-                    } else {
-                        $imported++;
-                        record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
-                        $locations++;
-                    }
+                    $result = source_scan_import_work_file($db, $config, $source, $work, $strictProfile);
+                    source_scan_record_import_result($db, $upsert, $sourceId, $relative, $result, $imported, $duplicates, $locations);
                     if (count($importSamples) < 50) {
-                        $importSamples[] = $path . ' - ' . $result[2];
+                        $importSamples[] = source_scan_result_sample($path, $work, (string)$result[2]);
                     }
                     continue;
                 } catch (Throwable $scanError) {
                     $importFailed++;
-                    if (isset($tmp) && is_file($tmp)) {
-                        @unlink($tmp);
-                    }
                     if (count($unknownSamples) < 50) {
-                        $unknownSamples[] = $path . ' - no GUID; profiled import failed: ' . $scanError->getMessage();
+                        $unknownSamples[] = source_scan_result_sample($path, $work, 'GUID not in catalog: ' . $guid . '; profiled import failed: ' . $scanError->getMessage());
                     }
                     continue;
                 }
@@ -189,67 +287,24 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
 
             $unknown++;
             if (count($unknownSamples) < 50) {
-                $unknownSamples[] = $path . ' - no GUID found';
+                $unknownSamples[] = source_scan_result_sample($path, $work, 'GUID not in catalog: ' . $guid);
             }
-            continue;
-        }
-
-        $matches = catalog_all($db, 'SELECT id, original_name, md5 FROM ue_files WHERE game_id=? AND package_guid=? ORDER BY id', [(int)$source['game_id'], $guid]);
-        if (count($matches) === 1) {
-            record_file_location($db, $upsert, (int)$matches[0]['id'], $sourceId, $relative);
-            $matchedGuid++;
-            $locations++;
-            continue;
-        }
-
-        if (count($matches) > 1) {
-            $guidAmbiguous++;
-            if (count($unknownSamples) < 50) {
-                $unknownSamples[] = $path . ' - GUID matches multiple catalog files: ' . $guid;
+        } catch (Throwable $error) {
+            $parseFailed++;
+            if (count($parseFailedSamples) < 50) {
+                $parseFailedSamples[] = $path . ' - ' . $error->getMessage();
             }
-            continue;
-        }
-
-        if ($importUnknown) {
-            try {
-                $tmp = source_scan_tmp_copy($path);
-                $result = scanner_scan_uploaded_file($db, $config, (int)$source['game_id'], $tmp, basename($path), $_SESSION['user']['id'] ?? null, $strictProfile);
-                if ($result[0] === 'duplicate') {
-                    $duplicates++;
-                    if (!empty($result[1])) {
-                        record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
-                        $locations++;
-                    }
-                } else {
-                    $imported++;
-                    record_file_location($db, $upsert, (int)$result[1], $sourceId, $relative);
-                    $locations++;
-                }
-                if (count($importSamples) < 50) {
-                    $importSamples[] = $path . ' - ' . $result[2];
-                }
-                continue;
-            } catch (Throwable $scanError) {
-                $importFailed++;
-                if (isset($tmp) && is_file($tmp)) {
-                    @unlink($tmp);
-                }
-                if (count($unknownSamples) < 50) {
-                    $unknownSamples[] = $path . ' - GUID not in catalog: ' . $guid . '; profiled import failed: ' . $scanError->getMessage();
-                }
-                continue;
+        } finally {
+            if (is_array($work)) {
+                source_scan_cleanup_work_file($work);
             }
-        }
-
-        $unknown++;
-        if (count($unknownSamples) < 50) {
-            $unknownSamples[] = $path . ' - GUID not in catalog: ' . $guid;
         }
     }
 
     return [
         'source' => $source,
         'found' => $found,
+        'redirect_archives' => $redirectArchives,
         'matched_md5' => $matchedMd5,
         'matched_guid' => $matchedGuid,
         'guid_ambiguous' => $guidAmbiguous,
@@ -274,7 +329,7 @@ try {
     }
 
     catalog_head('Source scan');
-    catalog_page_header('Source scanner', 'Scan game-owned folders and record where catalog files exist. Unknown files can be imported through the active game profile.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']);
+    catalog_page_header('Source scanner', 'Recursively scan game-owned folders and subfolders, including redirect-compressed .uz/.uz2/.uz3 files, and record where catalog files exist. Unknown files can be imported through the active game profile.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('source_scan');
@@ -287,6 +342,7 @@ try {
         echo '<tr><th>Game</th><td>' . catalog_h($result['source']['game_name']) . '</td></tr>';
         echo '<tr><th>Profile engine</th><td>' . catalog_h($result['source']['profile_engine'] ?? '') . '</td></tr>';
         echo '<tr><th>Package-like files found</th><td>' . (int)$result['found'] . '</td></tr>';
+        echo '<tr><th>Redirect archives decompressed</th><td>' . (int)$result['redirect_archives'] . '</td></tr>';
         echo '<tr><th>Matched by MD5</th><td>' . (int)$result['matched_md5'] . '</td></tr>';
         echo '<tr><th>Matched by GUID</th><td>' . (int)$result['matched_guid'] . '</td></tr>';
         echo '<tr><th>Ambiguous GUID matches</th><td>' . (int)$result['guid_ambiguous'] . '</td></tr>';
@@ -336,7 +392,7 @@ try {
         echo '</select></label></p>';
         echo '<p><label><input type="checkbox" name="import_unknown" value="1"> Import unknown files into this game using its active profile</label></p>';
         echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject mismatches</option><option value="0">Loose: use detected reader where possible</option></select></label></p>';
-        echo '<p class="muted">The scan uses the selected source game’s profile extension list, including .un2 where its profile allows it. Without import enabled, it only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned before being stored.</p>';
+        echo '<p class="muted">The scan is recursive through the selected source folder and subfolders. It uses the selected source game’s profile extension list, plus .uz/.uz2/.uz3 redirect archives which are decompressed before matching/importing. Without import enabled, it only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned before being stored.</p>';
         echo '<button>Scan selected source</button></form>';
     }
     echo '</div>';
