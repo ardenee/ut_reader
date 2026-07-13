@@ -86,6 +86,18 @@ function catalog_clean_unreal_package_stem(string $stem): string
     return $stem !== '' ? $stem : 'package';
 }
 
+function catalog_clean_unreal_extension(string $extension): string
+{
+    $extension = strtolower(trim($extension));
+    $extension = preg_replace('/[^A-Za-z0-9_]+/', '', $extension) ?? '';
+
+    if (!str_contains($extension, '_') && preg_match('/^([a-z]{3})(uax|umx|utx|usx|ukx|upx|ugx)$/', $extension, $match)) {
+        return $match[1] . '_' . $match[2];
+    }
+
+    return $extension;
+}
+
 function catalog_clean_unreal_filename(string $filename): string
 {
     $filename = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $filename));
@@ -95,10 +107,9 @@ function catalog_clean_unreal_filename(string $filename): string
         return 'package';
     }
 
-    $extension = strtolower(trim((string)pathinfo($filename, PATHINFO_EXTENSION)));
+    $extension = catalog_clean_unreal_extension((string)pathinfo($filename, PATHINFO_EXTENSION));
     $stem = (string)pathinfo($filename, PATHINFO_FILENAME);
     $stem = catalog_clean_unreal_package_stem($stem);
-    $extension = preg_replace('/[^A-Za-z0-9_]+/', '', $extension) ?? '';
 
     return $stem . ($extension !== '' ? '.' . $extension : '');
 }
