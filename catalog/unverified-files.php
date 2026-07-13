@@ -294,7 +294,7 @@ CSS;
             echo '<tr id="' . catalog_h($rowId) . '">';
             echo '<td class="unverified-select-col"><input class="unverified-select" type="checkbox" name="tokens[]" value="' . catalog_h((string)$item['token']) . '" aria-label="Select ' . catalog_h($displayOriginalName) . '"></td>';
             echo '<td><strong>' . catalog_h((string)$item['game']['name']) . '</strong><span class="muted small unverified-meta">' . catalog_h($sourceMeta) . '</span></td>';
-            echo '<td class="unverified-name"><strong class="mono">' . catalog_h($displayOriginalName) . '</strong><span class="muted small unverified-meta">Package: ' . catalog_h($displayPackageName) . ' · .' . catalog_h($displayExtension) . '<br>Queued: ' . catalog_h(date('Y-m-d H:i', (int)$item['modified_at'])) . '</span></td>';
+            echo '<td class="unverified-name"><strong class="mono">' . catalog_h($displayOriginalName) . '</strong><span class="muted small unverified-meta">Package: ' . catalog_h($displayPackageName) . '<br>Extension: ' . catalog_h($displayExtension) . '<br>Queued: ' . catalog_h(date('Y-m-d H:i', (int)$item['modified_at'])) . '</span></td>';
             echo '<td class="mono small unverified-identity">' . unverified_files_identity_html($item) . '</td>';
             echo '<td class="mono small">' . catalog_h(unverified_files_header_label($item)) . '</td>';
             echo '<td class="mono small">' . catalog_h(catalog_bytes((int)$item['size'])) . '</td>';
