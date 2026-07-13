@@ -47,6 +47,7 @@ try {
     catalog_tool_card('4. Federation', 'federation/admin.php', 'Join the main parent, manage peers, push inventory, and handle requests.');
     catalog_tool_card('5. Transfers', 'transfers.php', 'Monitor queued downloads/uploads/imports and run the worker.');
     catalog_tool_card('6. Downloads', 'download-admin.php', 'Control public download mode and external shared-provider links.');
+    catalog_tool_card('7. Base game protection', 'base-game-files.php', 'Seed official/base game GUIDs and block them from download, federation transfer, and ZIP bundles.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Needs attention</h2>';
