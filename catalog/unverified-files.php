@@ -129,14 +129,14 @@ try {
                 try {
                     if ($action === 'move') {
                         $result = uvf_move($db, $config, $token, $targetGameId);
-                        $completed[] = $result['original_name'];
+                        $completed[] = catalog_clean_unreal_filename($result['original_name']);
                     } elseif ($action === 'import') {
                         $allowOverride = (string)($_POST['allow_profile_override'] ?? '') === '1';
                         $result = uvf_import($db, $config, $token, $targetGameId, $userId, $allowOverride);
-                        $completed[] = $result['original_name'];
+                        $completed[] = catalog_clean_unreal_filename($result['original_name']);
                     } else {
                         $result = uvf_discard($db, $config, $token);
-                        $completed[] = $result['original_name'];
+                        $completed[] = catalog_clean_unreal_filename($result['original_name']);
                     }
                 } catch (Throwable $error) {
                     $errors[] = $error->getMessage();
@@ -182,7 +182,7 @@ try {
 
     $sourceFilter = $sourceGameId === -1 ? 0 : ($sourceGameId > 0 ? $sourceGameId : null);
     $items = uvf_list($db, $config, $sourceFilter);
-    $referencesByPackage = uvf_reference_matches($db, array_map(static fn(array $item): string => (string)$item['package_name'], $items));
+    $referencesByPackage = uvf_reference_matches($db, array_map(static fn(array $item): string => catalog_clean_unreal_package_stem((string)$item['package_name']), $items));
     $flash = $_SESSION['unverified_files_flash'] ?? null;
     unset($_SESSION['unverified_files_flash']);
 
@@ -225,7 +225,7 @@ CSS;
     );
 
     if (is_array($flash) && !empty($flash['message'])) {
-        echo CatalogUi::alert((string)($flash['type'] ?? 'info'), (string)$flash['message'], (string)($flash['details'] ?? ''));
+        echo CatalogUi::alert((string)($flash['type'] ?? 'info'), (string)($flash['message']), (string)($flash['details'] ?? ''));
     }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue filter</h2><p>Queued files are physical files only. They do not have a ue_files catalog record until an import succeeds.</p></div></div><div class="ui-section__body">';
@@ -240,7 +240,8 @@ CSS;
 
     $totalBytes = array_sum(array_map(static fn(array $item): int => (int)$item['size'], $items));
     $referenceCandidateCount = count(array_filter($items, static function (array $item) use ($referencesByPackage): bool {
-        return !empty($referencesByPackage[strtolower((string)$item['package_name'])] ?? []);
+        $packageKey = strtolower(catalog_clean_unreal_package_stem((string)$item['package_name']));
+        return !empty($referencesByPackage[$packageKey] ?? []);
     }));
     echo '<div class="unverified-summary">';
     echo '<div class="stat"><h2>' . count($items) . '</h2><p>Queued files</p></div>';
@@ -277,7 +278,10 @@ CSS;
         echo '<th>Source Queue</th><th>File</th><th class="unverified-identity">MD5 / GUID</th><th>Detected Header</th><th>Size</th><th class="unverified-references" title="Filename package-name candidates. Object check performs an actual exported-object comparison.">Reference Candidates</th>';
         echo '</tr></thead><tbody>';
         foreach ($items as $item) {
-            $packageKey = strtolower((string)$item['package_name']);
+            $displayOriginalName = catalog_clean_unreal_filename((string)$item['original_name']);
+            $displayPackageName = catalog_clean_unreal_package_stem((string)$item['package_name']);
+            $displayExtension = catalog_clean_unreal_extension((string)$item['extension']);
+            $packageKey = strtolower($displayPackageName);
             $references = $referencesByPackage[$packageKey] ?? [];
             $reason = trim((string)$item['reason']);
             if ($reason === '') {
@@ -288,9 +292,9 @@ CSS;
             $sourceMeta = $sourceIsBucket ? 'storage/upload-bucket' : ((string)$item['game']['slug'] . '/unverified');
 
             echo '<tr id="' . catalog_h($rowId) . '">';
-            echo '<td class="unverified-select-col"><input class="unverified-select" type="checkbox" name="tokens[]" value="' . catalog_h((string)$item['token']) . '" aria-label="Select ' . catalog_h((string)$item['original_name']) . '"></td>';
+            echo '<td class="unverified-select-col"><input class="unverified-select" type="checkbox" name="tokens[]" value="' . catalog_h((string)$item['token']) . '" aria-label="Select ' . catalog_h($displayOriginalName) . '"></td>';
             echo '<td><strong>' . catalog_h((string)$item['game']['name']) . '</strong><span class="muted small unverified-meta">' . catalog_h($sourceMeta) . '</span></td>';
-            echo '<td class="unverified-name"><strong class="mono">' . catalog_h((string)$item['original_name']) . '</strong><span class="muted small unverified-meta">Package: ' . catalog_h((string)$item['package_name']) . ' · .' . catalog_h((string)$item['extension']) . '<br>Queued: ' . catalog_h(date('Y-m-d H:i', (int)$item['modified_at'])) . '</span></td>';
+            echo '<td class="unverified-name"><strong class="mono">' . catalog_h($displayOriginalName) . '</strong><span class="muted small unverified-meta">Package: ' . catalog_h($displayPackageName) . ' · .' . catalog_h($displayExtension) . '<br>Queued: ' . catalog_h(date('Y-m-d H:i', (int)$item['modified_at'])) . '</span></td>';
             echo '<td class="mono small unverified-identity">' . unverified_files_identity_html($item) . '</td>';
             echo '<td class="mono small">' . catalog_h(unverified_files_header_label($item)) . '</td>';
             echo '<td class="mono small">' . catalog_h(catalog_bytes((int)$item['size'])) . '</td>';
