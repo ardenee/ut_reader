@@ -57,12 +57,12 @@ function gp_extensions(array $profile): array
     if (!is_array($json)) {
         return [];
     }
-    return array_values(array_filter(array_map(static fn($v) => strtolower(trim((string)$v, '. ')), $json), static fn($v) => $v !== ''));
+    return array_values(array_filter(array_map(static fn($v) => catalog_clean_unreal_extension((string)$v), $json), static fn($v) => $v !== ''));
 }
 
 function gp_detect_from_extension(string $ext): ?string
 {
-    $ext = strtolower(trim($ext, '. '));
+    $ext = catalog_clean_unreal_extension($ext);
     if (in_array($ext, ['uasset','umap'], true)) {
         return 'UE4';
     }
@@ -72,7 +72,7 @@ function gp_detect_from_extension(string $ext): ?string
     if (in_array($ext, ['ut2','un2','usx','ukx','upx','ugx','con'], true)) {
         return 'UE2';
     }
-    if (in_array($ext, ['unr','umx'], true)) {
+    if (in_array($ext, ['u','unr','utx','umx','uax','est_uax','frt_uax','itt_uax'], true)) {
         return 'UE1';
     }
     return null;
@@ -112,6 +112,7 @@ function gp_is_unreal2_legacy_package(array $profile, string $ext, ?int $version
     $selectedEngine = strtoupper((string)($profile['engine_key'] ?? ''));
     $gameSlug = strtolower((string)($profile['game_slug'] ?? $profile['legacy_game_slug'] ?? ''));
     $profileName = strtolower((string)($profile['profile_name'] ?? $profile['game_name'] ?? $profile['legacy_game_name'] ?? ''));
+    $ext = catalog_clean_unreal_extension($ext);
 
     if ($selectedEngine !== 'UE2') {
         return false;
@@ -119,7 +120,7 @@ function gp_is_unreal2_legacy_package(array $profile, string $ext, ?int $version
     if ($gameSlug !== 'unreal2' && !str_contains($profileName, 'unreal ii') && !str_contains($profileName, 'unreal 2')) {
         return false;
     }
-    if (!in_array(strtolower($ext), ['upx'], true)) {
+    if (!in_array($ext, ['upx'], true)) {
         return false;
     }
     if ($version !== 83) {
@@ -134,6 +135,7 @@ function gp_is_unreal2_legacy_package(array $profile, string $ext, ?int $version
 
 function gp_compatibility_for_file(array $profile, string $ext, ?int $version, ?int $licensee, ?string $detectedEngine): ?array
 {
+    $ext = catalog_clean_unreal_extension($ext);
     $rule = compat_rule_match($profile, $ext, $version, $licensee, $detectedEngine);
     if ($rule) {
         return $rule;
@@ -177,7 +179,8 @@ function gp_read_legacy_summary(string $path): array
 function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $originalName): array
 {
     $profile = gp_profile_for_game($db, $selectedGameId);
-    $ext = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+    $cleanOriginalName = catalog_clean_unreal_filename($originalName);
+    $ext = catalog_clean_unreal_extension((string)pathinfo($cleanOriginalName, PATHINFO_EXTENSION));
     $legacy = gp_read_legacy_summary($path);
     $version = $legacy['ok'] ? (int)$legacy['version'] : null;
     $licensee = $legacy['ok'] ? (int)$legacy['licensee'] : null;
