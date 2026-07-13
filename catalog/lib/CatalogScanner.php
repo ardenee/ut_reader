@@ -10,7 +10,9 @@ require_once __DIR__ . '/CatalogPackageAliases.php';
 
 function scanner_clean_name(string $s): string
 {
-    return trim(str_replace(["\0", '/', "\\"], ['', '.', '.'], $s));
+    $s = str_replace(["\0", "\\"], ['', '/'], $s);
+    $s = preg_replace('#/+#', '/', $s) ?? $s;
+    return trim($s);
 }
 
 function scanner_clean_original_filename(string $originalName): string
@@ -34,6 +36,49 @@ function scanner_logical_package_name(string $originalName): string
 {
     $cleanName = scanner_clean_original_filename($originalName);
     return scanner_clean_name(catalog_clean_unreal_package_stem((string)pathinfo($cleanName, PATHINFO_FILENAME)));
+}
+
+function scanner_package_leaf(string $packageName): string
+{
+    $packageName = trim(str_replace('\\', '/', $packageName));
+    $packageName = rtrim($packageName, '/');
+    if ($packageName === '') {
+        return '';
+    }
+    $slash = strrpos($packageName, '/');
+    return $slash === false ? $packageName : substr($packageName, $slash + 1);
+}
+
+function scanner_package_name_from_reader(string $fallbackPackageName, string $readerEngine, array $names, array $header): string
+{
+    $readerEngine = strtoupper($readerEngine);
+    if (!in_array($readerEngine, ['UE4', 'UE5'], true)) {
+        return $fallbackPackageName;
+    }
+
+    $fallbackLeaf = strtolower(scanner_package_leaf($fallbackPackageName));
+    $candidates = [];
+    foreach ($names as $name) {
+        $text = scanner_clean_name((string)($name['name'] ?? $name['text'] ?? ''));
+        if ($text !== '' && str_starts_with($text, '/')) {
+            $candidates[] = $text;
+        }
+    }
+    foreach (['packageName', 'longPackageName', 'folderName'] as $key) {
+        $text = scanner_clean_name((string)($header[$key] ?? ''));
+        if ($text !== '' && str_starts_with($text, '/')) {
+            $candidates[] = $text;
+        }
+    }
+
+    foreach (array_values(array_unique($candidates)) as $candidate) {
+        $leaf = strtolower(scanner_package_leaf($candidate));
+        if ($fallbackLeaf === '' || $leaf === $fallbackLeaf) {
+            return $candidate;
+        }
+    }
+
+    return $fallbackPackageName;
 }
 
 function scanner_store_failed_upload(array $config, string $tmp, string $originalName, string $gameSlug, string $reason): void
@@ -359,6 +404,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     scanner_emit_percent($progress, 'scan', 11, 'Reading header');
     $header = $pkg->getHeader();
     $packageGuid = (string)($header['guid'] ?? '');
+    $names = $pkg->getNames();
+    $packageName = scanner_package_name_from_reader($packageName, $readerEngine, $names, $header);
     catalog_package_aliases_ensure($db);
 
     if ($packageGuid !== '') {
@@ -416,7 +463,6 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     }
 
     scanner_emit_percent($progress, 'scan', 14, 'Reading names table');
-    $names = $pkg->getNames();
     scanner_emit_percent($progress, 'scan', 17, 'Reading imports table');
     $imports = $pkg->getImports();
     scanner_emit_percent($progress, 'scan', 20, 'Reading exports table');
