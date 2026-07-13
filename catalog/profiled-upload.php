@@ -321,7 +321,7 @@ try {
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
     $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name');
 
-    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and only the real package is retained.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
+    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. You can select individual files or a whole folder/subfolders. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and only the real package is retained.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
 
     echo '<div class="card"><h2>Upload and scan</h2><form id="profiled-upload-form" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';
@@ -332,8 +332,10 @@ try {
     }
     echo '</select></label></p>';
     echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject/move mismatches to unverified</option><option value="0">Loose: allow scanner/parser to try anyway</option></select></label></p>';
-    echo '<p><input id="profiled-upload-files" type="file" name="files[]" multiple required> <button id="profiled-upload-button">Upload and scan</button></p>';
-    echo '<p class="muted">Max per uploaded/decompressed file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
+    echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
+    echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
+    echo '<p><button id="profiled-upload-button">Upload and scan</button></p>';
+    echo '<p class="muted">Max per uploaded/decompressed file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and its subfolders; the catalog still uses only the cleaned package filename and file identity, not the client folder path. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
     echo '<div id="upload-progress" class="upload-progress" hidden>';
     echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
@@ -355,6 +357,7 @@ try {
 (function () {
     const form = document.getElementById('profiled-upload-form');
     const fileInput = document.getElementById('profiled-upload-files');
+    const folderInput = document.getElementById('profiled-upload-folder');
     const button = document.getElementById('profiled-upload-button');
     const progressBox = document.getElementById('upload-progress');
     const currentBar = document.getElementById('upload-progress-bar');
@@ -365,6 +368,14 @@ try {
     const speed = document.getElementById('upload-progress-speed');
     const log = document.getElementById('upload-progress-log');
     if (!form || !fileInput || !window.XMLHttpRequest) return;
+
+    function selectedFiles() {
+        return Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []);
+    }
+
+    function displayName(file) {
+        return file.webkitRelativePath || file.name;
+    }
 
     function fmtBytes(bytes) {
         const units = ['B', 'KB', 'MB', 'GB'];
@@ -462,6 +473,7 @@ try {
         return new Promise(function (resolve) {
             const token = makeToken();
             const data = new FormData();
+            const shownName = displayName(file);
             data.append('ajax', '1');
             data.append('progress_token', token);
             data.append('csrf', form.querySelector('[name="csrf"]').value);
@@ -475,7 +487,7 @@ try {
             let poller = null;
             currentBar.value = 0;
             speed.textContent = '';
-            currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name + ' (0%)';
+            currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + shownName + ' (0%)';
             setOverall(index - 1, total, 0);
 
             xhr.open('POST', form.action || window.location.href, true);
@@ -485,14 +497,14 @@ try {
                 currentBar.value = percent;
                 const elapsed = Math.max(0.1, (Date.now() - start) / 1000);
                 speed.textContent = fmtBytes(e.loaded / elapsed) + '/s';
-                currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name + ' (' + percent + '%)';
+                currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + shownName + ' (' + percent + '%)';
                 setOverall(index - 1, total, Math.min(50, percent / 2));
             };
             xhr.upload.onload = function () {
                 currentBar.value = 0;
                 speed.textContent = '';
-                currentLabel.textContent = 'Reading/scanning ' + index + ' of ' + total + ': ' + file.name + ' (0%)';
-                poller = pollScanProgress(token, index, total, file.name, stopFlag);
+                currentLabel.textContent = 'Reading/scanning ' + index + ' of ' + total + ': ' + shownName + ' (0%)';
+                poller = pollScanProgress(token, index, total, shownName, stopFlag);
             };
             xhr.onload = function () {
                 stopFlag.done = true;
@@ -502,21 +514,21 @@ try {
                 try {
                     const res = JSON.parse(xhr.responseText || '{}');
                     if (!res.ok) {
-                        addLog({status: 'failed', file: file.name, message: res.error || 'server error'});
+                        addLog({status: 'failed', file: shownName, message: res.error || 'server error'});
                     } else if (res.messages && res.messages.length) {
                         res.messages.forEach(addLog);
                     } else {
-                        addLog({status: 'imported', file: file.name, message: 'complete'});
+                        addLog({status: 'imported', file: shownName, message: 'complete'});
                     }
                 } catch (e) {
-                    addLog({status: 'failed', file: file.name, message: 'invalid server response'});
+                    addLog({status: 'failed', file: shownName, message: 'invalid server response'});
                 }
                 resolve();
             };
             xhr.onerror = function () {
                 stopFlag.done = true;
                 if (poller) window.clearInterval(poller);
-                addLog({status: 'failed', file: file.name, message: 'upload connection error'});
+                addLog({status: 'failed', file: shownName, message: 'upload connection error'});
                 setOverall(index, total, 0);
                 resolve();
             };
@@ -525,8 +537,12 @@ try {
     }
 
     form.addEventListener('submit', async function (e) {
-        const files = Array.from(fileInput.files || []);
-        if (!files.length) return;
+        const files = selectedFiles();
+        if (!files.length) {
+            e.preventDefault();
+            window.alert('Choose one or more files, or choose a folder/subfolders first.');
+            return;
+        }
         e.preventDefault();
         button.disabled = true;
         progressBox.hidden = false;
