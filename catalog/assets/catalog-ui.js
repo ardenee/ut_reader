@@ -116,6 +116,41 @@
         element.dataset.displayPathNormalized = '1';
     }
 
+    function targetIdsFor(link) {
+        if (link.dataset.referenceTargets) {
+            try {
+                var list = JSON.parse(link.dataset.referenceTargets);
+                return Array.isArray(list) ? list.filter(function (value) { return typeof value === 'string'; }) : [];
+            } catch (error) {
+                return [];
+            }
+        }
+        if (link.dataset.xrefTarget) return [link.dataset.xrefTarget];
+        var href = link.getAttribute('href') || '';
+        if (href.charAt(0) === '#') return [decodeURIComponent(href.slice(1))];
+        var hashIndex = href.indexOf('#');
+        return hashIndex >= 0 ? [decodeURIComponent(href.slice(hashIndex + 1))] : [];
+    }
+
+    function unwrapLink(link) {
+        var span = document.createElement('span');
+        span.className = link.className.replace(/\bxref\b/g, '').trim();
+        if (span.className === '') span.className = 'mono path';
+        span.textContent = link.textContent || '';
+        link.replaceWith(span);
+    }
+
+    function removeSelfReferenceLinks(packageTables) {
+        packageTables.querySelectorAll('a.xref, a[data-reference-targets], a[data-xref-target]').forEach(function (link) {
+            var row = link.closest('tr');
+            if (!row || !row.id) return;
+            var targets = targetIdsFor(link);
+            if (targets.length === 1 && targets[0] === row.id) {
+                unwrapLink(link);
+            }
+        });
+    }
+
     function normalizeExaminePathDisplay(packageTables) {
         packageTables.querySelectorAll('.examine-imports-table tbody td, .examine-exports-table tbody td').forEach(function (cell) {
             if (cell.dataset.displayPathNormalized === '1') return;
@@ -201,22 +236,6 @@
         });
     }
 
-    function targetIdsFor(link) {
-        if (link.dataset.referenceTargets) {
-            try {
-                var list = JSON.parse(link.dataset.referenceTargets);
-                return Array.isArray(list) ? list.filter(function (value) { return typeof value === 'string'; }) : [];
-            } catch (error) {
-                return [];
-            }
-        }
-        if (link.dataset.xrefTarget) return [link.dataset.xrefTarget];
-        var href = link.getAttribute('href') || '';
-        if (href.charAt(0) === '#') return [decodeURIComponent(href.slice(1))];
-        var hashIndex = href.indexOf('#');
-        return hashIndex >= 0 ? [decodeURIComponent(href.slice(hashIndex + 1))] : [];
-    }
-
     function signedPackageRef(link) {
         var value = (link.textContent || '').trim();
         return /^-?\d+$/.test(value);
@@ -287,8 +306,10 @@
         ]);
 
         packageTables.querySelectorAll('table[data-sortable-table]').forEach(bindSorting);
+        removeSelfReferenceLinks(packageTables);
         normalizeExaminePathDisplay(packageTables);
         movePackageRefsToIndexTooltips(packageTables);
+        removeSelfReferenceLinks(packageTables);
         normalizeExaminePathDisplay(packageTables);
 
         document.addEventListener('click', function (event) {
