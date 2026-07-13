@@ -154,35 +154,6 @@ final class CatalogDependencyResolver
                     $matches[$lookupValue] = (int)$row['id'];
                 }
             }
-
-            $assetLookups = self::ueAssetLookups($chunk);
-            if ($assetLookups === []) {
-                continue;
-            }
-
-            [$assetValuesSql, $assetValueArgs] = self::assetValuesTableSql($assetLookups);
-            $assetRows = \catalog_all(
-                $db,
-                'SELECT requested.lookup_value, f.id'
-                . ' FROM (' . $assetValuesSql . ') requested'
-                . ' JOIN ue_files f ON f.game_id=? AND f.scan_status="verified"'
-                . ' JOIN ue_exports e ON e.file_id=f.id AND ' . self::ueAssetExportMatchSql()
-                . ' WHERE requested.parent_package<>"" AND ' . self::packageParentMatchesSql('f.package_name')
-                . ' ORDER BY requested.lookup_value,'
-                . ' (f.package_name=requested.package_path) DESC,'
-                . ' (' . self::packageParentSql('f.package_name') . '=requested.parent_package) DESC,'
-                . ' (e.full_path=requested.lookup_value) DESC,'
-                . ' (e.object_name=requested.object_name) DESC,'
-                . ' (f.id=?) DESC, f.uploaded_at DESC, e.export_index ASC',
-                array_merge($assetValueArgs, [$gameId, $fileId])
-            );
-
-            foreach ($assetRows as $row) {
-                $lookupValue = (string)$row['lookup_value'];
-                if (!isset($matches[$lookupValue])) {
-                    $matches[$lookupValue] = (int)$row['id'];
-                }
-            }
         }
 
         return $matches;
@@ -256,13 +227,12 @@ final class CatalogDependencyResolver
                 $db,
                 'SELECT requested.lookup_value, e.id export_id, f.id file_id'
                 . ' FROM (' . $assetValuesSql . ') requested'
-                . ' JOIN ue_files f ON f.game_id=? AND f.scan_status="verified"'
+                . ' JOIN ue_files f ON f.game_id=? AND f.scan_status="verified" AND f.package_name=requested.package_path'
                 . ' JOIN ue_exports e ON e.file_id=f.id AND ' . self::ueAssetExportMatchSql()
-                . ' WHERE requested.parent_package<>"" AND ' . self::packageParentMatchesSql('f.package_name')
                 . ' ORDER BY requested.lookup_value,'
-                . ' (f.package_name=requested.package_path) DESC,'
-                . ' (' . self::packageParentSql('f.package_name') . '=requested.parent_package) DESC,'
                 . ' (e.full_path=requested.lookup_value) DESC,'
+                . ' (e.full_path=requested.legacy_full_path) DESC,'
+                . ' (e.full_path=requested.slash_full_path) DESC,'
                 . ' (e.local_path=requested.local_path) DESC,'
                 . ' (e.object_name=requested.object_name) DESC,'
                 . ' (f.id=?) DESC, f.uploaded_at DESC, e.export_index ASC',
@@ -314,14 +284,13 @@ final class CatalogDependencyResolver
     }
 
     /**
-     * UE4 assets often import an asset as /Game/Dir/Object or
-     * /Game/Dir/Object.Object, while the export table can live in a package
-     * named /Game/Dir/Container and export Object from that same directory.
-     * These lookups let that asset export satisfy both forms after exact
-     * package/full-path matching has had first chance.
+     * UE4/UE5 object references should resolve by package identity first.
+     * A path such as /Game/Dir/Package.Asset means PackageName=/Game/Dir/Package
+     * and AssetName=Asset; it should not resolve to some other package in the
+     * same folder just because an exported object has the same asset name.
      *
      * @param list<string> $paths
-     * @return list<array{lookup_value:string,package_path:string,parent_package:string,local_path:string,object_name:string,legacy_full_path:string,slash_full_path:string}>
+     * @return list<array{lookup_value:string,package_path:string,local_path:string,object_name:string,legacy_full_path:string,slash_full_path:string}>
      */
     private static function ueAssetLookups(array $paths): array
     {
@@ -336,15 +305,13 @@ final class CatalogDependencyResolver
             $packagePath = $dot === false ? $path : substr($path, 0, $dot);
             $localPath = $dot === false ? self::pathLeaf($packagePath) : substr($path, $dot + 1);
             $objectName = self::pathLeaf(str_replace('.', '/', $localPath));
-            $parent = self::pathParent($packagePath);
-            if ($packagePath === '' || $parent === '' || $objectName === '') {
+            if ($packagePath === '' || $objectName === '') {
                 continue;
             }
 
             $lookups[] = [
                 'lookup_value' => $path,
                 'package_path' => $packagePath,
-                'parent_package' => $parent,
                 'local_path' => $localPath,
                 'object_name' => $objectName,
                 'legacy_full_path' => $packagePath . '.' . $objectName,
@@ -355,16 +322,6 @@ final class CatalogDependencyResolver
         return $lookups;
     }
 
-    private static function pathParent(string $path): string
-    {
-        $path = rtrim(str_replace('\\', '/', trim($path)), '/');
-        if ($path === '') {
-            return '';
-        }
-        $pos = strrpos($path, '/');
-        return $pos === false || $pos === 0 ? '' : substr($path, 0, $pos);
-    }
-
     private static function pathLeaf(string $path): string
     {
         $path = rtrim(str_replace('\\', '/', trim($path)), '/');
@@ -373,16 +330,6 @@ final class CatalogDependencyResolver
         }
         $pos = strrpos($path, '/');
         return $pos === false ? $path : substr($path, $pos + 1);
-    }
-
-    private static function packageParentSql(string $column): string
-    {
-        return 'CASE WHEN LOCATE("/", REVERSE(' . $column . '))>0 THEN LEFT(' . $column . ', LENGTH(' . $column . ')-LOCATE("/", REVERSE(' . $column . '))) ELSE "" END';
-    }
-
-    private static function packageParentMatchesSql(string $column): string
-    {
-        return '(' . self::packageParentSql($column) . '=requested.parent_package OR ' . $column . ' LIKE CONCAT(requested.parent_package, "/%"))';
     }
 
     private static function ueAssetExportMatchSql(): string
@@ -433,7 +380,7 @@ final class CatalogDependencyResolver
     }
 
     /**
-     * @param list<array{lookup_value:string,package_path:string,parent_package:string,local_path:string,object_name:string,legacy_full_path:string,slash_full_path:string}> $lookups
+     * @param list<array{lookup_value:string,package_path:string,local_path:string,object_name:string,legacy_full_path:string,slash_full_path:string}> $lookups
      * @return array{0:string,1:list<string>}
      */
     private static function assetValuesTableSql(array $lookups): array
@@ -442,11 +389,10 @@ final class CatalogDependencyResolver
         $args = [];
         foreach ($lookups as $index => $lookup) {
             $parts[] = $index === 0
-                ? 'SELECT ? AS lookup_value, ? AS package_path, ? AS parent_package, ? AS local_path, ? AS object_name, ? AS legacy_full_path, ? AS slash_full_path'
-                : 'SELECT ?, ?, ?, ?, ?, ?, ?';
+                ? 'SELECT ? AS lookup_value, ? AS package_path, ? AS local_path, ? AS object_name, ? AS legacy_full_path, ? AS slash_full_path'
+                : 'SELECT ?, ?, ?, ?, ?, ?';
             $args[] = $lookup['lookup_value'];
             $args[] = $lookup['package_path'];
-            $args[] = $lookup['parent_package'];
             $args[] = $lookup['local_path'];
             $args[] = $lookup['object_name'];
             $args[] = $lookup['legacy_full_path'];
