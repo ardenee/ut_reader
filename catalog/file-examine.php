@@ -125,9 +125,22 @@ function ex_link(string $v, array $lookup, array $targets): string
 {
     $t = trim($v); if ($t === '') return '<span class="muted">none</span>';
     $k = ex_key($t);
-    if (isset($targets[$k])) { $target = $targets[$k][0]; return '<a class="xref mono path" href="#'.catalog_h($target).'">'.catalog_h($t).'</a>'; }
-    if (isset($lookup[$k])) return '<a class="xref mono path" href="#name-'.(int)$lookup[$k].'">'.catalog_h($t).'</a>';
+    if (isset($lookup[$k])) return '<a class="xref mono path" href="#name-'.(int)$lookup[$k].'" title="Open name table entry">'.catalog_h($t).'</a>';
+    if (isset($targets[$k])) { $target = $targets[$k][0]; return '<a class="xref mono path" href="#'.catalog_h($target).'" title="Open referenced import/export row">'.catalog_h($t).'</a>'; }
     return '<span class="mono path">'.catalog_h($t).'</span>';
+}
+function ex_usage_links(array $usage): string
+{
+    $links = [];
+    if (!empty($usage['imports'])) {
+        $targets = array_values(array_unique($usage['imports']));
+        $links[] = '<a class="xref" href="#'.catalog_h($targets[0]).'">Imports: '.count($targets).'</a>';
+    }
+    if (!empty($usage['exports'])) {
+        $targets = array_values(array_unique($usage['exports']));
+        $links[] = '<a class="xref" href="#'.catalog_h($targets[0]).'">Exports: '.count($targets).'</a>';
+    }
+    return $links ? implode(' <span class="muted">·</span> ', $links) : '<span class="muted">none</span>';
 }
 function ex_dep(?array $d, string $back): string { if (!$d) return '<span class="muted">not built</span>'; $s = (string)$d['status']; return '<span class="dep '.catalog_h($s).'">'.catalog_h($s).'</span>'; }
 function ex_name_flags($value): string
@@ -173,7 +186,7 @@ try {
     if (!empty($file['detection_notes']) || !empty($file['scan_notes'])) { echo '<div class="card"><h2>Scanner notes</h2>'; if (!empty($file['detection_notes'])) echo '<h3>Detection</h3><pre class="mono path">'.catalog_h((string)$file['detection_notes']).'</pre>'; if (!empty($file['scan_notes'])) echo '<h3>Scan</h3><pre class="mono path">'.catalog_h((string)$file['scan_notes']).'</pre>'; echo '</div>'; }
     echo '<div class="card" id="package-tables"><nav class="examine-tabs"><a class="examine-tab is-active" href="#tab-names" data-tab="names">Names <span>'.count($names).'</span></a><a class="examine-tab" href="#tab-imports" data-tab="imports">Imports <span>'.count($imports).'</span></a><a class="examine-tab" href="#tab-exports" data-tab="exports">Exports <span>'.count($exports).'</span></a></nav>';
     echo '<section id="tab-names" data-panel="names" class="examine-tab-panel"><h2>Names</h2><div class="examine-table-region"><table><thead><tr><th>Index</th><th>Name</th><th>Used by</th><th>Flags / hashes</th></tr></thead><tbody>';
-    foreach ($names as $n) { $idx=(int)$n['name_index']; $txt=(string)$n['name_text']; $u=$usage[ex_key($txt)]??[]; $used=[]; if(!empty($u['imports']))$used[]='Imports: '.count($u['imports']); if(!empty($u['exports']))$used[]='Exports: '.count($u['exports']); echo '<tr id="name-'.$idx.'"><td class="mono"><a class="xref" href="#name-'.$idx.'">'.$idx.'</a></td><td><span class="mono path">'.catalog_h($txt).'</span></td><td>'.($used?catalog_h(implode(' · ',$used)):'<span class="muted">none</span>').'</td><td class="mono">'.ex_name_flags($n['flags'] ?? null).'</td></tr>'; }
+    foreach ($names as $n) { $idx=(int)$n['name_index']; $txt=(string)$n['name_text']; $u=$usage[ex_key($txt)]??[]; echo '<tr id="name-'.$idx.'"><td class="mono"><a class="xref" href="#name-'.$idx.'">'.$idx.'</a></td><td><span class="mono path">'.catalog_h($txt).'</span></td><td>'.ex_usage_links($u).'</td><td class="mono">'.ex_name_flags($n['flags'] ?? null).'</td></tr>'; }
     echo '</tbody></table></div></section>';
     echo '<section id="tab-imports" data-panel="imports" class="examine-tab-panel" hidden><h2>Imports</h2><p class="muted">Object references: 0 = null; &lt; 0 = import; &gt; 0 = export.</p><div class="examine-table-region"><table class="examine-imports-table"><thead><tr><th>Index</th><th>Package ref</th><th>Class package</th><th>Class</th><th>Object</th><th>Outer ref</th><th>Full path</th><th>Root</th><th>Dependency</th></tr></thead><tbody>';
     foreach ($imports as $im) { $idx=(int)$im['import_index']; echo '<tr id="import-'.$idx.'"><td class="mono"><a class="xref" href="#import-'.$idx.'">'.$idx.'</a></td><td class="mono">'.(-($idx+1)).'</td><td>'.ex_link((string)$im['class_package'],$lookup,$targets).'</td><td>'.ex_link((string)$im['class_name'],$lookup,$targets).'</td><td>'.ex_link((string)$im['object_name'],$lookup,$targets).'</td><td>'.ex_ref((int)$im['outer_index']).'</td><td>'.ex_link((string)$im['full_path'],$lookup,$targets).'</td><td>'.ex_link((string)$im['root_package'],$lookup,$targets).'</td><td>'.ex_dep($depByImport[(int)$im['id']]??null,$back).'</td></tr>'; }
