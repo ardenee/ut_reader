@@ -163,7 +163,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Upload unsorted Unreal package files into a neutral bucket. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and only the real package is retained.',
+        'Upload unsorted Unreal package files into a neutral bucket. You can select individual files or a whole folder/subfolders. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and only the real package is retained.',
         ['Open Bucket Queue' => 'unverified-files.php?source_game_id=-1', 'All Queues' => 'unverified-files.php', 'Upload Files to Game' => 'profiled-upload.php']
     );
 
@@ -176,8 +176,10 @@ CSS;
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Files are uploaded one at a time to avoid browser/PHP file-count limits. No game, ue_files row, names, imports, exports, or dependencies are created here.</p></div></div><div class="ui-section__body">';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
-    echo '<p><input id="upload-bucket-files" type="file" name="files[]" multiple required> <button id="upload-bucket-button" type="submit">Upload to bucket</button></p>';
-    echo '<p class="muted">Max per file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
+    echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
+    echo '<p><label>Choose folder / subfolders<br><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
+    echo '<p><button id="upload-bucket-button" type="submit">Upload to bucket</button></p>';
+    echo '<p class="muted">Max per uploaded/decompressed file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and its subfolders; the bucket still stores only the cleaned package filename, not the client folder path. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
     echo '<div id="bucket-progress" class="bucket-progress" hidden>';
     echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-count"></span></div><progress id="bucket-progress-bar" value="0" max="100"></progress>';
     echo '<div id="bucket-log" class="bucket-log"></div></div>';
@@ -190,6 +192,7 @@ CSS;
 (function () {
     const form = document.getElementById('upload-bucket-form');
     const fileInput = document.getElementById('upload-bucket-files');
+    const folderInput = document.getElementById('upload-bucket-folder');
     const button = document.getElementById('upload-bucket-button');
     const progressBox = document.getElementById('bucket-progress');
     const progressBar = document.getElementById('bucket-progress-bar');
@@ -197,6 +200,14 @@ CSS;
     const progressCount = document.getElementById('bucket-progress-count');
     const log = document.getElementById('bucket-log');
     if (!form || !fileInput || !window.XMLHttpRequest) return;
+
+    function selectedFiles() {
+        return Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []);
+    }
+
+    function displayName(file) {
+        return file.webkitRelativePath || file.name;
+    }
 
     function fmtBytes(bytes) {
         const units = ['B', 'KB', 'MB', 'GB'];
@@ -228,6 +239,7 @@ CSS;
 
     function uploadOne(file, index, total) {
         return new Promise(function (resolve) {
+            const shownName = displayName(file);
             const data = new FormData();
             data.append('ajax', '1');
             data.append('csrf', form.querySelector('[name="csrf"]').value);
@@ -235,7 +247,7 @@ CSS;
             const xhr = new XMLHttpRequest();
             const start = Date.now();
             progressBar.value = 0;
-            progressLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name;
+            progressLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + shownName;
             progressCount.textContent = (index - 1) + ' of ' + total + ' complete';
             xhr.open('POST', form.action || window.location.href, true);
             xhr.upload.onprogress = function (e) {
@@ -243,7 +255,7 @@ CSS;
                 const percent = Math.round((e.loaded / e.total) * 100);
                 const elapsed = Math.max(0.1, (Date.now() - start) / 1000);
                 progressBar.value = percent;
-                progressLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + file.name + ' (' + percent + '% at ' + fmtBytes(e.loaded / elapsed) + '/s)';
+                progressLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + shownName + ' (' + percent + '% at ' + fmtBytes(e.loaded / elapsed) + '/s)';
             };
             xhr.onload = function () {
                 progressBar.value = 100;
@@ -251,19 +263,19 @@ CSS;
                 try {
                     const res = JSON.parse(xhr.responseText || '{}');
                     if (!res.ok) {
-                        addLog({status: 'failed', file: file.name, message: res.error || 'server error'});
+                        addLog({status: 'failed', file: shownName, message: res.error || 'server error'});
                     } else if (res.messages && res.messages.length) {
                         res.messages.forEach(addLog);
                     } else {
-                        addLog({status: 'bucketed', file: file.name, message: 'stored in upload bucket'});
+                        addLog({status: 'bucketed', file: shownName, message: 'stored in upload bucket'});
                     }
                 } catch (e) {
-                    addLog({status: 'failed', file: file.name, message: 'invalid server response'});
+                    addLog({status: 'failed', file: shownName, message: 'invalid server response'});
                 }
                 resolve();
             };
             xhr.onerror = function () {
-                addLog({status: 'failed', file: file.name, message: 'upload connection error'});
+                addLog({status: 'failed', file: shownName, message: 'upload connection error'});
                 resolve();
             };
             xhr.send(data);
@@ -271,8 +283,12 @@ CSS;
     }
 
     form.addEventListener('submit', async function (event) {
-        const files = Array.from(fileInput.files || []);
-        if (!files.length) return;
+        const files = selectedFiles();
+        if (!files.length) {
+            event.preventDefault();
+            window.alert('Choose one or more files, or choose a folder/subfolders first.');
+            return;
+        }
         event.preventDefault();
         button.disabled = true;
         progressBox.hidden = false;
