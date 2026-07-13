@@ -95,6 +95,11 @@ function gp_engine_from_version(?int $version): ?string
     return null;
 }
 
+function gp_int32_from_uint32(int $value): int
+{
+    return $value >= 0x80000000 ? $value - 0x100000000 : $value;
+}
+
 function gp_engine_rank(string $engine): int
 {
     return match (strtoupper($engine)) {
@@ -173,7 +178,25 @@ function gp_read_legacy_summary(string $path): array
 
     $version = unpack('v', substr($bytes, 4, 2))[1];
     $licensee = unpack('v', substr($bytes, 6, 2))[1];
-    return ['ok' => true, 'magic' => sprintf('0x%08X', $magic), 'version' => $version, 'licensee' => $licensee, 'engine_hint' => gp_engine_from_version($version)];
+    $version32 = (int)(unpack('V', substr($bytes, 4, 4))[1] ?? 0);
+    $signedVersion32 = gp_int32_from_uint32($version32);
+
+    // UE4/UE5 package summaries start with the same package magic, but the next
+    // value is a signed 32-bit package file version. Early UE4 assets commonly
+    // report values such as -7, which used to be misread as legacy version
+    // 65529 / licensee 65535 and then incorrectly classified as UE3.
+    if ($signedVersion32 < 0) {
+        return [
+            'ok' => true,
+            'magic' => sprintf('0x%08X', $magic),
+            'format' => 'ue4_package',
+            'version' => $signedVersion32,
+            'licensee' => null,
+            'engine_hint' => 'UE4',
+        ];
+    }
+
+    return ['ok' => true, 'magic' => sprintf('0x%08X', $magic), 'format' => 'legacy_package', 'version' => $version, 'licensee' => $licensee, 'engine_hint' => gp_engine_from_version($version)];
 }
 
 function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $originalName): array
@@ -183,12 +206,13 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     $ext = catalog_clean_unreal_extension((string)pathinfo($cleanOriginalName, PATHINFO_EXTENSION));
     $legacy = gp_read_legacy_summary($path);
     $version = $legacy['ok'] ? (int)$legacy['version'] : null;
-    $licensee = $legacy['ok'] ? (int)$legacy['licensee'] : null;
+    $licensee = $legacy['ok'] && array_key_exists('licensee', $legacy) && $legacy['licensee'] !== null ? (int)$legacy['licensee'] : null;
     $engineByVersion = $legacy['engine_hint'] ?? null;
     $engineByExt = gp_detect_from_extension($ext);
     $selectedEngine = strtoupper((string)($profile['engine_key'] ?? ''));
     $detectedEngine = $engineByVersion ?: $engineByExt ?: ($selectedEngine ?: 'UNKNOWN');
     $notes = [];
+    $signedPackageVersion = ($legacy['format'] ?? '') === 'ue4_package';
 
     if (!$profile || empty($profile['id'])) {
         $notes[] = 'No active game profile is assigned to selected game.';
@@ -215,6 +239,8 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
 
     if (!$legacy['ok']) {
         $notes[] = (string)$legacy['reason'];
+    } elseif ($signedPackageVersion) {
+        $notes[] = 'UE4 package header signed version=' . $version . '.';
     } else {
         $notes[] = 'Legacy package header version=' . $version . ' licensee=' . $licensee . '.';
     }
@@ -228,11 +254,11 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     $min = $profile['package_version_min'] !== null ? (int)$profile['package_version_min'] : null;
     $max = $profile['package_version_max'] !== null ? (int)$profile['package_version_max'] : null;
     $versionOk = true;
-    if (!$legacyCompatible && $version !== null && $min !== null && $version < $min) {
+    if (!$signedPackageVersion && !$legacyCompatible && $version !== null && $min !== null && $version < $min) {
         $versionOk = false;
         $notes[] = 'Package version is below the active game profile range.';
     }
-    if (!$legacyCompatible && $version !== null && $max !== null && $version > $max) {
+    if (!$signedPackageVersion && !$legacyCompatible && $version !== null && $max !== null && $version > $max) {
         $versionOk = false;
         $notes[] = 'Package version is above the active game profile range.';
     }
