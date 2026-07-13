@@ -10,8 +10,10 @@ require_once __DIR__ . '/../../../lib/CatalogPackageAliases.php';
 /**
  * Resolves one file's imports against the catalog in batches.
  *
- * This is an application use case: it expresses dependency precedence while
- * delegating query execution to the current PDO persistence adapter.
+ * Matching intentionally follows Unreal package/object identity rules:
+ * exact package names, exact object paths, explicit package aliases, and UE4
+ * package/object path variants within the same package only. It does not use
+ * same-folder/same-object guesses because those can create false positives.
  */
 final class CatalogDependencyResolver
 {
@@ -19,7 +21,7 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<array<string, mixed>> $imports
-     * @return array<int, array{status:string, resolved_file_id:?int, resolved_export_id:?int}>
+     * @return array<int, array{status:string, resolved_file_id:?int, resolved_export_id:?int, source:string, confidence:string}>
      */
     public static function resolve(PDO $db, int $gameId, int $fileId, array $imports): array
     {
@@ -35,7 +37,6 @@ final class CatalogDependencyResolver
 
             $rootPackage = (string)($import['root_package'] ?? '');
             if ($rootPackage !== '') {
-                /* A present package is still useful when an imported object is not exported. */
                 $packageNames[] = $rootPackage;
             }
 
@@ -61,41 +62,67 @@ final class CatalogDependencyResolver
         foreach ($imports as $import) {
             $importId = (int)$import['id'];
             $rootPackage = (string)($import['root_package'] ?? '');
-            $status = 'missing';
-            $resolvedFileId = null;
-            $resolvedExportId = null;
+            $result = self::missing();
 
             if (self::isCommonImport($import)) {
-                $status = 'common';
+                $result = [
+                    'status' => 'common',
+                    'resolved_file_id' => null,
+                    'resolved_export_id' => null,
+                    'source' => 'common_script',
+                    'confidence' => 'common',
+                ];
             } elseif ((string)($import['relative_object_path'] ?? '') === '') {
                 $match = $packageMatches[$rootPackage] ?? null;
                 if ($match !== null) {
-                    $status = 'package_only';
-                    $resolvedFileId = $match;
+                    $result = [
+                        'status' => 'package_only',
+                        'resolved_file_id' => $match['file_id'],
+                        'resolved_export_id' => null,
+                        'source' => $match['source'],
+                        'confidence' => $match['confidence'],
+                    ];
                 }
             } else {
                 $match = $exportMatches[(string)($import['full_path'] ?? '')] ?? null;
                 if ($match !== null) {
-                    $status = 'resolved';
-                    $resolvedFileId = $match['file_id'];
-                    $resolvedExportId = $match['export_id'];
+                    $result = [
+                        'status' => 'resolved',
+                        'resolved_file_id' => $match['file_id'],
+                        'resolved_export_id' => $match['export_id'],
+                        'source' => $match['source'],
+                        'confidence' => $match['confidence'],
+                    ];
                 } else {
                     $packageMatch = $packageMatches[$rootPackage] ?? null;
                     if ($packageMatch !== null) {
-                        $status = 'package_only';
-                        $resolvedFileId = $packageMatch;
+                        $result = [
+                            'status' => 'package_only',
+                            'resolved_file_id' => $packageMatch['file_id'],
+                            'resolved_export_id' => null,
+                            'source' => $packageMatch['source'],
+                            'confidence' => $packageMatch['confidence'],
+                        ];
                     }
                 }
             }
 
-            $resolved[$importId] = [
-                'status' => $status,
-                'resolved_file_id' => $resolvedFileId,
-                'resolved_export_id' => $resolvedExportId,
-            ];
+            $resolved[$importId] = $result;
         }
 
         return $resolved;
+    }
+
+    /** @return array{status:string, resolved_file_id:?int, resolved_export_id:?int, source:string, confidence:string} */
+    private static function missing(): array
+    {
+        return [
+            'status' => 'missing',
+            'resolved_file_id' => null,
+            'resolved_export_id' => null,
+            'source' => 'none',
+            'confidence' => 'missing',
+        ];
     }
 
     /** @param array<string, mixed> $import */
@@ -111,7 +138,7 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<string> $packageNames
-     * @return array<string, int>
+     * @return array<string, array{file_id:int, source:string, confidence:string}>
      */
     private static function loadPackageMatches(PDO $db, int $gameId, int $fileId, array $packageNames): array
     {
@@ -134,7 +161,11 @@ final class CatalogDependencyResolver
             foreach ($rows as $row) {
                 $lookupValue = (string)$row['lookup_value'];
                 if (!isset($matches[$lookupValue])) {
-                    $matches[$lookupValue] = (int)$row['id'];
+                    $matches[$lookupValue] = [
+                        'file_id' => (int)$row['id'],
+                        'source' => 'exact_package',
+                        'confidence' => 'exact',
+                    ];
                 }
             }
 
@@ -151,7 +182,11 @@ final class CatalogDependencyResolver
             foreach ($aliasRows as $row) {
                 $lookupValue = (string)$row['lookup_value'];
                 if (!isset($matches[$lookupValue])) {
-                    $matches[$lookupValue] = (int)$row['id'];
+                    $matches[$lookupValue] = [
+                        'file_id' => (int)$row['id'],
+                        'source' => 'package_alias',
+                        'confidence' => 'alias',
+                    ];
                 }
             }
         }
@@ -161,7 +196,7 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<string> $objectPaths
-     * @return array<string, array{file_id:int, export_id:int}>
+     * @return array<string, array{file_id:int, export_id:int, source:string, confidence:string}>
      */
     private static function loadExportMatches(PDO $db, int $gameId, int $fileId, array $objectPaths): array
     {
@@ -188,6 +223,8 @@ final class CatalogDependencyResolver
                     $matches[$lookupValue] = [
                         'file_id' => (int)$row['file_id'],
                         'export_id' => (int)$row['export_id'],
+                        'source' => 'exact_object',
+                        'confidence' => 'exact',
                     ];
                 }
             }
@@ -212,6 +249,8 @@ final class CatalogDependencyResolver
                         $matches[$lookupValue] = [
                             'file_id' => (int)$row['file_id'],
                             'export_id' => (int)$row['export_id'],
+                            'source' => 'package_alias_object',
+                            'confidence' => 'alias',
                         ];
                     }
                 }
@@ -245,6 +284,8 @@ final class CatalogDependencyResolver
                     $matches[$lookupValue] = [
                         'file_id' => (int)$row['file_id'],
                         'export_id' => (int)$row['export_id'],
+                        'source' => 'ue_asset_object_path',
+                        'confidence' => 'exact',
                     ];
                 }
             }
@@ -284,10 +325,10 @@ final class CatalogDependencyResolver
     }
 
     /**
-     * UE4/UE5 object references should resolve by package identity first.
-     * A path such as /Game/Dir/Package.Asset means PackageName=/Game/Dir/Package
-     * and AssetName=Asset; it should not resolve to some other package in the
-     * same folder just because an exported object has the same asset name.
+     * UE4/UE5 object references resolve by package identity first. A path such
+     * as /Game/Dir/Package.Asset means PackageName=/Game/Dir/Package and
+     * AssetName=Asset. It must not resolve to a different package in the same
+     * folder just because that package exports an object named Asset.
      *
      * @param list<string> $paths
      * @return list<array{lookup_value:string,package_path:string,local_path:string,object_name:string,legacy_full_path:string,slash_full_path:string}>
@@ -345,9 +386,6 @@ final class CatalogDependencyResolver
     }
 
     /**
-     * MySQL performs the comparison so the catalog's configured collation,
-     * rather than PHP array-key behaviour, determines object equivalence.
-     *
      * @param list<string> $values
      * @return array{0:string,1:list<string>}
      */
