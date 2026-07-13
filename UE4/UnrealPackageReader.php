@@ -295,6 +295,11 @@ final class UnrealPackageReader4
         return ['index'=>$idx, 'number'=>$num, 'text'=>$this->nameByIndex($idx, $num)];
     }
 
+    private function fnameText(array $name): string
+    {
+        return (string)($name['text'] ?? '');
+    }
+
     private function readImports(): void
     {
         $count = (int)$this->header['importCount'];
@@ -307,7 +312,23 @@ final class UnrealPackageReader4
             $className = $this->readFName($r);
             $outerIndex = $r->i32();
             $objectName = $this->readFName($r);
-            $this->imports[] = ['index'=>$i, 'ref'=>-($i + 1), 'offset'=>$start, 'classPackage'=>$classPackage, 'className'=>$className, 'outerIndex'=>$outerIndex, 'outerName'=>$this->displayNameFromRef($outerIndex), 'objectName'=>$objectName];
+            $this->imports[] = [
+                'index' => $i,
+                'ref' => -($i + 1),
+                'offset' => $start,
+                'classPackage' => $classPackage,
+                'ClassPackage' => $classPackage,
+                'classPackageText' => $this->fnameText($classPackage),
+                'className' => $className,
+                'ClassName' => $className,
+                'classNameText' => $this->fnameText($className),
+                'outerIndex' => $outerIndex,
+                'OuterIndex' => $outerIndex,
+                'outerName' => $this->displayNameFromRef($outerIndex),
+                'objectName' => $objectName,
+                'ObjectName' => $objectName,
+                'objectNameText' => $this->fnameText($objectName),
+            ];
         }
     }
 
@@ -347,7 +368,33 @@ final class UnrealPackageReader4
             if ($version >= self::VER_PRELOAD_DEPENDENCIES_IN_COOKED_EXPORTS) {
                 $preload = ['firstExportDependency'=>$r->i32(), 'serializationBeforeSerializationDependencies'=>$r->i32(), 'createBeforeSerializationDependencies'=>$r->i32(), 'serializationBeforeCreateDependencies'=>$r->i32(), 'createBeforeCreateDependencies'=>$r->i32()];
             }
-            $this->exports[] = ['index'=>$i, 'ref'=>$i + 1, 'offset'=>$start, 'classIndex'=>$classIndex, 'className'=>$this->displayNameFromRef($classIndex), 'superIndex'=>$superIndex, 'superName'=>$this->displayNameFromRef($superIndex), 'templateIndex'=>$templateIndex, 'templateName'=>$this->displayNameFromRef($templateIndex), 'outerIndex'=>$outerIndex, 'outerName'=>$this->displayNameFromRef($outerIndex), 'objectName'=>$objectName, 'objectFlags'=>$objectFlags, 'serialSize'=>$serialSize, 'serialOffset'=>$serialOffset, 'forcedExport'=>$forcedExport, 'notForClient'=>$notForClient, 'notForServer'=>$notForServer, 'notForEditorGame'=>$notForEditorGame, 'isAsset'=>$isAsset, 'packageGuid'=>$packageGuid, 'packageFlags'=>$packageFlags, 'preload'=>$preload];
+            $this->exports[] = [
+                'index' => $i,
+                'ref' => $i + 1,
+                'offset' => $start,
+                'classIndex' => $classIndex,
+                'className' => $this->displayNameFromRef($classIndex),
+                'superIndex' => $superIndex,
+                'superName' => $this->displayNameFromRef($superIndex),
+                'templateIndex' => $templateIndex,
+                'templateName' => $this->displayNameFromRef($templateIndex),
+                'outerIndex' => $outerIndex,
+                'outerName' => $this->displayNameFromRef($outerIndex),
+                'objectName' => $objectName,
+                'ObjectName' => $objectName,
+                'objectNameText' => $this->fnameText($objectName),
+                'objectFlags' => $objectFlags,
+                'serialSize' => $serialSize,
+                'serialOffset' => $serialOffset,
+                'forcedExport' => $forcedExport,
+                'notForClient' => $notForClient,
+                'notForServer' => $notForServer,
+                'notForEditorGame' => $notForEditorGame,
+                'isAsset' => $isAsset,
+                'packageGuid' => $packageGuid,
+                'packageFlags' => $packageFlags,
+                'preload' => $preload,
+            ];
         }
     }
 
@@ -378,12 +425,12 @@ final class UnrealPackageReader4
         if ($ref === 0) return '';
         if ($ref > 0) {
             $ex = $this->exports[$ref - 1] ?? null;
-            return is_array($ex) ? (string)($ex['objectName']['text'] ?? '') : '';
+            return is_array($ex) ? (string)($ex['objectNameText'] ?? ($ex['objectName']['text'] ?? '')) : '';
         }
         $im = $this->imports[-$ref - 1] ?? null;
-        return is_array($im) ? (string)($im['objectName']['text'] ?? '') : '';
+        return is_array($im) ? (string)($im['objectNameText'] ?? ($im['objectName']['text'] ?? '')) : '';
     }
-	
+ 	
 	private function readHeaderFString(object $r, string $name): string
 	{
 		$offset = $r->tell();
