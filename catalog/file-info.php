@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogDependencySchema.php';
 
 function file_info_type_from_extension(string $ext): array
 {
@@ -22,19 +23,40 @@ function file_info_type_from_extension(string $ext): array
     };
 }
 
+function file_info_source_label(string $source): string
+{
+    return match ($source) {
+        'exact_package' => 'exact package',
+        'exact_object' => 'exact object',
+        'package_alias' => 'package alias',
+        'package_alias_object' => 'alias object',
+        'ue_asset_object_path' => 'UE asset path',
+        'common_script' => 'common script',
+        'asset_registry' => 'asset registry',
+        'soft_reference' => 'soft reference',
+        'redirector' => 'redirector',
+        'none' => 'none',
+        default => $source !== '' ? $source : 'unknown',
+    };
+}
+
 function file_info_dependency_table(array $dependencies): string
 {
     if ($dependencies === []) {
         return '<p class="muted">No dependencies in this status.</p>';
     }
 
-    $html = '<table data-sortable-table><thead><tr><th>Status</th><th>Required object</th><th>Resolved package</th></tr></thead><tbody>';
+    $html = '<table data-sortable-table><thead><tr><th>Status</th><th>Source</th><th>Confidence</th><th>Required object</th><th>Resolved package</th></tr></thead><tbody>';
     foreach ($dependencies as $dep) {
         $resolved = $dep['resolved_id']
             ? '<a href="file-info.php?id=' . (int)$dep['resolved_id'] . '">' . catalog_h($dep['resolved_package'] ?: $dep['resolved_file']) . '</a>'
             : '<span class="muted">not resolved</span>';
         $resolvedSort = (string)($dep['resolved_package'] ?: $dep['resolved_file'] ?: '');
+        $source = (string)($dep['resolution_source'] ?? 'unknown');
+        $confidence = (string)($dep['resolution_confidence'] ?? 'unknown');
         $html .= '<tr><td data-sort-value="' . catalog_h((string)$dep['status']) . '"><span class="dep ' . catalog_h($dep['status']) . '">' . catalog_h($dep['status']) . '</span></td>'
+            . '<td data-sort-value="' . catalog_h($source) . '"><span class="dep resolution-source">' . catalog_h(file_info_source_label($source)) . '</span></td>'
+            . '<td class="mono" data-sort-value="' . catalog_h($confidence) . '">' . catalog_h($confidence) . '</td>'
             . '<td class="mono path">' . catalog_h($dep['required_object_path']) . '</td>'
             . '<td data-sort-value="' . catalog_h($resolvedSort) . '">' . $resolved . '</td></tr>';
     }
@@ -44,13 +66,15 @@ function file_info_dependency_table(array $dependencies): string
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    catalog_dependency_schema_ensure($db);
+
     $id = (int)($_GET['id'] ?? 0);
     $file = catalog_one($db, 'SELECT f.*, g.name game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$id]);
     if (!$file) {
         throw new RuntimeException('File not found');
     }
 
-    $deps = catalog_all($db, 'SELECT d.*, rf.package_name resolved_package, rf.original_name resolved_file, rf.id resolved_id FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.required_package, d.required_object_path', [$id]);
+    $deps = catalog_all($db, 'SELECT d.*, rf.package_name resolved_package, rf.original_name resolved_file, rf.id resolved_id FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.resolution_confidence, d.resolution_source, d.required_package, d.required_object_path', [$id]);
     $dependencyStatuses = [
         'missing' => 'Missing',
         'package_only' => 'Package only',
@@ -140,6 +164,11 @@ try {
 
 .used-by-identity span {
     display: block;
+}
+
+.resolution-source {
+    background: rgba(118, 169, 255, .12);
+    border-color: rgba(118, 169, 255, .45);
 }
 
 [data-sortable-table] th {
