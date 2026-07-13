@@ -8,6 +8,7 @@ ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
+require_once __DIR__ . '/lib/BaseGameProtection.php';
 
 function public_download_storage_path(array $config, array $file): string
 {
@@ -34,10 +35,18 @@ function public_download_send_local(array $config, array $file): void
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    base_game_ensure($db);
     $id = (int)($_GET['id'] ?? 0);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status<>"failed"', [$id]);
     if (!$file) {
         throw new RuntimeException('File not found');
+    }
+
+    if (base_game_file_is_protected($db, $file)) {
+        catalog_head('Download blocked');
+        echo base_game_block_html($file);
+        catalog_foot();
+        exit;
     }
 
     $decision = external_public_download_decision($db, $id, $_SESSION['user']['id'] ?? null, $_SERVER['REMOTE_ADDR'] ?? null);
