@@ -29,7 +29,7 @@ final class CatalogDependencyResolver
         $objectPaths = [];
 
         foreach ($imports as $import) {
-            if ((int)($import['is_common'] ?? 0) === 1) {
+            if (self::isCommonImport($import)) {
                 continue;
             }
 
@@ -65,7 +65,7 @@ final class CatalogDependencyResolver
             $resolvedFileId = null;
             $resolvedExportId = null;
 
-            if ((int)($import['is_common'] ?? 0) === 1) {
+            if (self::isCommonImport($import)) {
                 $status = 'common';
             } elseif ((string)($import['relative_object_path'] ?? '') === '') {
                 $match = $packageMatches[$rootPackage] ?? null;
@@ -96,6 +96,17 @@ final class CatalogDependencyResolver
         }
 
         return $resolved;
+    }
+
+    /** @param array<string, mixed> $import */
+    private static function isCommonImport(array $import): bool
+    {
+        if ((int)($import['is_common'] ?? 0) === 1) {
+            return true;
+        }
+
+        $rootPackage = strtolower(trim((string)($import['root_package'] ?? '')));
+        return str_starts_with($rootPackage, '/script/');
     }
 
     /**
@@ -260,20 +271,18 @@ final class CatalogDependencyResolver
     }
 
     /**
-     * @param list<array{lookup_value:string,root_package:string,local_path:string}> $values
+     * @param list<array{lookup_value:string,root_package:string,local_path:string}> $lookups
      * @return array{0:string,1:list<string>}
      */
-    private static function pathValuesTableSql(array $values): array
+    private static function pathValuesTableSql(array $lookups): array
     {
         $parts = [];
         $args = [];
-        foreach ($values as $index => $value) {
-            $parts[] = $index === 0
-                ? 'SELECT ? AS lookup_value, ? AS root_package, ? AS local_path'
-                : 'SELECT ?, ?, ?';
-            $args[] = $value['lookup_value'];
-            $args[] = $value['root_package'];
-            $args[] = $value['local_path'];
+        foreach ($lookups as $index => $lookup) {
+            $parts[] = $index === 0 ? 'SELECT ? AS lookup_value, ? AS root_package, ? AS local_path' : 'SELECT ?, ?, ?';
+            $args[] = $lookup['lookup_value'];
+            $args[] = $lookup['root_package'];
+            $args[] = $lookup['local_path'];
         }
 
         return [implode(' UNION ALL ', $parts), $args];
