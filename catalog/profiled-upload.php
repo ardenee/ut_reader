@@ -16,15 +16,12 @@ require_once __DIR__ . '/lib/FederationAuth.php';
 function upload_short_error(Throwable $e): string
 {
     $message = trim($e->getMessage());
-
     if (preg_match('/Bad package tag 0x[0-9A-Fa-f]+/', $message, $m)) {
         return $m[0];
     }
-
     $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
     $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
     $message = trim($message);
-
     return $message !== '' ? $message : 'Unknown error';
 }
 
@@ -32,7 +29,6 @@ function upload_log_exception(PDO $db, string $filename, Throwable $e): void
 {
     $details = $filename . ': ' . get_class($e) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString();
     error_log('[UnrealDB upload] ' . $details);
-
     try {
         fed_log($db, null, null, 'ERROR', 'UPLOAD_SCAN_FAIL', $details);
     } catch (Throwable) {
@@ -64,6 +60,17 @@ function upload_result_text(array $entry): string
 function upload_alias_already_exists(): bool
 {
     return function_exists('catalog_package_alias_last_add_was_existing') && catalog_package_alias_last_add_was_existing();
+}
+
+function upload_prepared_relative_path(string $sourceRelativePath, array $prepared): string
+{
+    $sourceRelativePath = scanner_normalize_source_relative_path($sourceRelativePath);
+    if ($sourceRelativePath === '' || empty($prepared['decompressed'])) {
+        return $sourceRelativePath;
+    }
+    $dir = trim(str_replace('\\', '/', dirname($sourceRelativePath)), '. /');
+    $name = (string)($prepared['name'] ?? '');
+    return scanner_normalize_source_relative_path(($dir !== '' ? $dir . '/' : '') . $name);
 }
 
 /** @return array{tmp:string,name:string,display_name:string,decompressed:bool,source_extension:string,source_name:string} */
@@ -98,8 +105,8 @@ function upload_prepare_scanner_input(string $tmp, string $name, ?callable $prog
 
     return [
         'tmp' => $decoded['path'],
-        'name' => catalog_clean_unreal_filename($decoded['filename']),
-        'display_name' => catalog_clean_unreal_filename($decoded['filename']),
+        'name' => catalog_clean_unreal_filename((string)$decoded['filename']),
+        'display_name' => catalog_clean_unreal_filename((string)$decoded['filename']),
         'decompressed' => true,
         'source_extension' => (string)$decoded['source_extension'],
         'source_name' => $name,
@@ -164,7 +171,7 @@ function upload_correct_zero_guid_from_stored_file(PDO $db, array $config, array
 }
 
 /** @return array{bucket:string,entry:array<string,mixed>} */
-function upload_scan_package_file(PDO $db, array $config, int $gameId, string $scanTmp, string $scanName, string $displayName, ?int $userId, bool $strict, ?callable $progress, string $messagePrefix = ''): array
+function upload_scan_package_file(PDO $db, array $config, int $gameId, string $scanTmp, string $scanName, string $displayName, ?int $userId, bool $strict, ?callable $progress, string $messagePrefix = '', string $sourceRelativePath = ''): array
 {
     $scanSize = is_file($scanTmp) ? (int)(filesize($scanTmp) ?: 0) : 0;
     $scanSizeMeta = [
@@ -172,7 +179,18 @@ function upload_scan_package_file(PDO $db, array $config, int $gameId, string $s
         'file_size_text' => catalog_bytes($scanSize),
     ];
 
-    $result = scanner_scan_uploaded_file($db, $config, $gameId, $scanTmp, $scanName, $userId, $strict, $progress);
+    $result = scanner_scan_uploaded_file(
+        $db,
+        $config,
+        $gameId,
+        $scanTmp,
+        $scanName,
+        $userId,
+        $strict,
+        $progress,
+        false,
+        ['source_relative_path' => $sourceRelativePath]
+    );
     if (is_file($scanTmp)) {
         @unlink($scanTmp);
     }
@@ -261,7 +279,7 @@ function upload_scan_pak_file(PDO $db, array $config, int $gameId, string $pakTm
             $scanName = catalog_clean_unreal_filename(basename($display));
             $scanTmp = (string)$file['path'];
             try {
-                $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $display, $userId, $strict, $progress, 'Extracted from ' . basename($pakName) . '; ');
+                $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $display, $userId, $strict, $progress, 'Extracted from ' . basename($pakName) . '; ', $display);
                 if ($scanResult['bucket'] === 'duplicate') {
                     $dup++;
                 } else {
@@ -299,6 +317,18 @@ function upload_scan_pak_file(PDO $db, array $config, int $gameId, string $pakTm
     return ['ok' => $ok, 'duplicate' => $dup, 'failed' => $bad, 'skipped' => $skipped, 'messages' => $messages];
 }
 
+function upload_post_relative_path(int $index, string $fallbackName): string
+{
+    $relativePaths = $_POST['relative_paths'] ?? [];
+    if (is_array($relativePaths) && isset($relativePaths[$index])) {
+        $path = scanner_normalize_source_relative_path((string)$relativePaths[$index]);
+        if ($path !== '') {
+            return $path;
+        }
+    }
+    return scanner_normalize_source_relative_path($fallbackName);
+}
+
 function upload_handle_request(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
@@ -329,11 +359,12 @@ function upload_handle_request(PDO $db, array $config): array
     $messages = [];
     foreach ($_FILES['files']['tmp_name'] ?? [] as $i => $tmp) {
         $name = (string)($_FILES['files']['name'][$i] ?? 'upload.bin');
-        $displayName = catalog_pak_archive_is_supported_filename($name)
+        $sourceRelativePath = upload_post_relative_path((int)$i, $name);
+        $displayName = $sourceRelativePath !== '' ? $sourceRelativePath : (catalog_pak_archive_is_supported_filename($name)
             ? catalog_clean_unreal_filename($name)
             : (catalog_redirect_archive_is_supported_filename($name)
                 ? catalog_redirect_archive_output_name($name)
-                : catalog_clean_unreal_filename($name));
+                : catalog_clean_unreal_filename($name)));
         $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
         $uploadSize = is_string($tmp) && is_file($tmp) ? (int)filesize($tmp) : 0;
         $uploadSizeMeta = [
@@ -380,10 +411,11 @@ function upload_handle_request(PDO $db, array $config): array
             $prepared = upload_prepare_scanner_input($scanTmp, $name, $progress);
             $scanTmp = $prepared['tmp'];
             $scanName = $prepared['name'];
-            $displayName = $prepared['display_name'];
+            $scanRelativePath = upload_prepared_relative_path($sourceRelativePath, $prepared);
+            $displayName = $scanRelativePath !== '' ? $scanRelativePath : $prepared['display_name'];
 
             $prefix = !empty($prepared['decompressed']) ? 'Decompressed .' . $prepared['source_extension'] . ' redirect archive; ' : '';
-            $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $displayName, $userId !== null ? (int)$userId : null, $strict, $progress, $prefix);
+            $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $displayName, $userId !== null ? (int)$userId : null, $strict, $progress, $prefix, $scanRelativePath);
             if ($scanResult['bucket'] === 'duplicate') {
                 $dup++;
             } else {
@@ -459,7 +491,7 @@ try {
     $selectedGameId = (int)($_GET['game_id'] ?? 0);
     $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name');
 
-    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. You can select individual files or a whole folder/subfolders. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first; .pak archives are extracted first and only inner package files are retained.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'PAK Import' => 'pak-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
+    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. Folder uploads preserve relative paths for UE4 package identity and later Full Sync reimports. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first; .pak archives are extracted first and only inner package files are retained.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'PAK Import' => 'pak-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
 
     echo '<div class="card"><h2>Upload and scan</h2><form id="profiled-upload-form" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';
@@ -473,7 +505,7 @@ try {
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
     echo '<p><button id="profiled-upload-button">Upload and scan</button></p>';
-    echo '<p class="muted">Max per uploaded/decompressed/extracted file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and its subfolders; the catalog still uses only the cleaned package filename and file identity, not the client folder path. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches. Allowed inputs: catalog package extensions, .uz/.uz2/.uz3 redirect archives, and .pak archives. PAK wrappers are not scanned as Unreal packages; only extracted package files inside them are scanned.</p>';
+    echo '<p class="muted">Max per uploaded/decompressed/extracted file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and subfolders; the folder-relative path is preserved and used as UE4 package identity context. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches. Allowed inputs: catalog package extensions, .uz/.uz2/.uz3 redirect archives, and .pak archives. PAK wrappers are not scanned as Unreal packages; only extracted package files inside them are scanned.</p>';
     echo '<div id="upload-progress" class="upload-progress" hidden>';
     echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
@@ -572,6 +604,7 @@ try {
         message.textContent = entry.message || '';
         appendMetaText(message, 'size', entry.file_size_text);
         appendMetaText(message, 'GUID', entry.package_guid);
+        appendMetaText(message, 'source', entry.source_relative_path);
 
         if (entry.duplicate_file_id) {
             message.appendChild(document.createTextNode(' | copy of: '));
@@ -579,7 +612,6 @@ try {
         }
 
         div.appendChild(message);
-
         log.appendChild(div);
         log.scrollTop = log.scrollHeight;
     }
@@ -617,6 +649,7 @@ try {
             data.append('csrf', form.querySelector('[name="csrf"]').value);
             data.append('game_id', form.querySelector('[name="game_id"]').value);
             data.append('strict_profile', form.querySelector('[name="strict_profile"]').value);
+            data.append('relative_paths[]', shownName);
             data.append('files[]', file, file.name);
 
             const xhr = new XMLHttpRequest();
