@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogParser.php';
+require_once __DIR__ . '/lib/CatalogScanner.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 require_once __DIR__ . '/lib/TrustedHttpSourceClient.php';
 
@@ -10,13 +11,10 @@ catalog_start_session();
 
 function http_scan_allowed_extension(string $path, array $profile, array $config): bool
 {
-    $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+    $ext = catalog_clean_unreal_extension((string)pathinfo($path, PATHINFO_EXTENSION));
     $extensions = gp_extensions($profile);
     if ($extensions === []) {
-        $extensions = array_values(array_filter(array_map(
-            static fn($value): string => strtolower(trim((string)$value, '. ')),
-            (array)($config['allowed_extensions'] ?? [])
-        ), static fn(string $value): bool => $value !== ''));
+        $extensions = scanner_profile_extensions($profile, $config);
     }
     return in_array($ext, $extensions, true);
 }
@@ -69,6 +67,17 @@ function http_scan_match_file(PDO $db, array $source, string $relativePath, ?int
         $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND original_name=? AND file_size=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $basename, $remoteSize]);
         if (count($matches) === 1) {
             return ['status' => 'matched_name_size', 'file' => $matches[0]];
+        }
+        if (count($matches) > 1) {
+            return ['status' => 'ambiguous', 'file' => null];
+        }
+    }
+
+    $sourcePackage = scanner_ue_package_name_from_source_relative($relativePath);
+    if ($sourcePackage !== '') {
+        $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND package_name=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $sourcePackage]);
+        if (count($matches) === 1) {
+            return ['status' => 'matched_source_package', 'file' => $matches[0]];
         }
         if (count($matches) > 1) {
             return ['status' => 'ambiguous', 'file' => null];
@@ -167,6 +176,7 @@ function http_scan_source(PDO $db, array $config, int $sourceId, string $manifes
 
         if ($match && isset($match['file']) && is_array($match['file'])) {
             $upsert->execute([(int)$match['file']['id'], $sourceId, $relativePath, 1]);
+            scanner_record_source_relative_path($db, (int)$match['file']['id'], $relativePath);
             if (($match['status'] ?? '') === 'matched_guid') {
                 $result['matched_guid']++;
             } else {
@@ -214,7 +224,7 @@ try {
 
     $sources = catalog_all($db, 'SELECT s.id, s.name, s.source_type, s.base_path, g.name game_name FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.is_active=1 AND s.source_type IN ("http_mirror","redirect_server") ORDER BY g.name, s.name');
     catalog_head('HTTP source scan');
-    catalog_page_header('HTTP source scanner', 'Scans a trusted HTTPS mirror manifest using the selected game profile extension list. The scanner only accepts relative paths, blocks private-network targets and redirects, and enforces byte and deep-scan limits.', ['Sources' => 'sources.php', 'Local Source Scan' => 'source-scan.php', 'Unverified Files' => 'unverified-files.php', 'Games' => 'games.php']);
+    catalog_page_header('HTTP source scanner', 'Scans a trusted HTTPS mirror manifest using the selected game profile extension list. Matched source-relative paths are preserved for UE4 package identity and later Full Sync reimports.', ['Sources' => 'sources.php', 'Local Source Scan' => 'source-scan.php', 'Unverified Files' => 'unverified-files.php', 'Games' => 'games.php']);
 
     if ($result !== null) {
         echo '<div class="card"><h2>Scan result</h2><table>';
