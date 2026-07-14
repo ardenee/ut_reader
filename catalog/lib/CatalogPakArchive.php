@@ -477,12 +477,7 @@ function catalog_pak_archive_extract_to_temp(array $config, string $pakPath, str
     try {
         $footers = catalog_pak_footer_candidates($pakPath);
         if ($footers === []) {
-            $probe = catalog_pak_probe_bytes($pakPath);
-            throw new RuntimeException(
-                'Could not find a supported Unreal PAK footer after scanning the final ' . catalog_bytes(min(CATALOG_PAK_FOOTER_SCAN_BYTES, (int)$probe['size'])) . '. '
-                . 'This may be an encrypted/signed-newer PAK, IOStore container, non-Unreal .pak, or an incomplete/corrupt download. '
-                . 'head=' . $probe['head_hex'] . ' (' . $probe['head_text'] . '); tail=' . $probe['tail_hex'] . ' (' . $probe['tail_text'] . ').'
-            );
+            throw new RuntimeException('Unsupported PAK file: no Unreal PAK magic footer was found. UnrealDB can only extract standard Unreal Engine .pak archives.');
         }
 
         $lastError = '';
