@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupport.php';
 
 const CATALOG_PAK_MAGIC = 0x5A6F12E1;
+const CATALOG_PAK_FOOTER_SCAN_BYTES = 16777216; // 16 MB; allows signed/tacked-on data after the FPakInfo footer.
 
 function catalog_pak_archive_extension(string $filename): string
 {
@@ -160,28 +161,54 @@ function catalog_pak_read_fstring(string $data, int &$offset): string
     return is_string($text) ? $text : '';
 }
 
+function catalog_pak_probe_bytes(string $path): array
+{
+    $size = (int)(filesize($path) ?: 0);
+    $head = $size > 0 ? catalog_pak_read_bytes($path, 0, min(16, $size)) : '';
+    $tailLen = $size > 0 ? min(32, $size) : 0;
+    $tail = $tailLen > 0 ? catalog_pak_read_bytes($path, $size - $tailLen, $tailLen) : '';
+    $text = static function (string $bytes): string {
+        return preg_replace('/[^\x20-\x7E]/', '.', $bytes) ?? '';
+    };
+
+    return [
+        'size' => $size,
+        'head_hex' => strtoupper(bin2hex($head)),
+        'head_text' => $text($head),
+        'tail_hex' => strtoupper(bin2hex($tail)),
+        'tail_text' => $text($tail),
+    ];
+}
+
 function catalog_pak_footer_candidates(string $path): array
 {
     $size = filesize($path);
-    if (!$size || $size < 64) {
+    if (!$size || $size < 44) {
         throw new RuntimeException('PAK file is too small.');
     }
 
-    $tailSize = min(4096, (int)$size);
-    $tailOffset = (int)$size - $tailSize;
-    $tail = catalog_pak_read_bytes($path, $tailOffset, $tailSize);
+    $scanSize = min(CATALOG_PAK_FOOTER_SCAN_BYTES, (int)$size);
+    $scanOffset = (int)$size - $scanSize;
+    $scan = catalog_pak_read_bytes($path, $scanOffset, $scanSize);
     $magicBytes = pack('V', CATALOG_PAK_MAGIC);
     $candidates = [];
+    $seen = [];
     $pos = -1;
-    while (($pos = strpos($tail, $magicBytes, $pos + 1)) !== false) {
-        $absolute = $tailOffset + $pos;
+
+    while (($pos = strpos($scan, $magicBytes, $pos + 1)) !== false) {
+        $absolute = $scanOffset + $pos;
         foreach ([
             ['layout' => 'magic_first', 'magic' => $absolute],
             ['layout' => 'magic_last', 'magic' => $absolute],
         ] as $candidate) {
             try {
                 $footer = catalog_pak_parse_footer_candidate($path, (int)$size, $candidate['layout'], (int)$candidate['magic']);
-                if ($footer !== null) {
+                if ($footer === null) {
+                    continue;
+                }
+                $key = $footer['layout'] . ':' . $footer['version'] . ':' . $footer['index_offset'] . ':' . $footer['index_size'];
+                if (!isset($seen[$key])) {
+                    $seen[$key] = true;
                     $candidates[] = $footer;
                 }
             } catch (Throwable) {
@@ -226,6 +253,7 @@ function catalog_pak_parse_footer_candidate(string $path, int $fileSize, string 
         'index_offset' => $indexOffset,
         'index_size' => $indexSize,
         'index_hash' => bin2hex($hash),
+        'magic_offset' => $magicOffset,
     ];
 }
 
@@ -236,30 +264,44 @@ function catalog_pak_parse_entry(string $data, int &$offset, int $version): arra
     $size = catalog_pak_i64($data, $offset); $offset += 8;
     $uncompressedSize = catalog_pak_i64($data, $offset); $offset += 8;
     $compressionMethod = catalog_pak_u32($data, $offset); $offset += 4;
-    $hash = substr($data, $offset, 20); $offset += 20;
-    $blocks = [];
-    if ($compressionMethod !== 0) {
-        $blockCount = catalog_pak_i32($data, $offset); $offset += 4;
-        if ($blockCount < 0 || $blockCount > 65536) {
-            throw new RuntimeException('Invalid compressed block count in PAK index.');
-        }
-        for ($i = 0; $i < $blockCount; $i++) {
-            $blocks[] = [
-                'start' => catalog_pak_i64($data, $offset),
-                'end' => catalog_pak_i64($data, $offset + 8),
-            ];
-            $offset += 16;
-        }
+
+    $timestamp = null;
+    if ($version > 0 && $version < 2) {
+        $timestamp = catalog_pak_i64($data, $offset);
+        $offset += 8;
     }
+
+    if ($offset + 20 > strlen($data)) {
+        throw new RuntimeException('PAK entry hash read overrun.');
+    }
+    $hash = substr($data, $offset, 20); $offset += 20;
+
+    $blocks = [];
     $encrypted = false;
     $blockSize = 0;
-    if ($offset < strlen($data)) {
-        $encrypted = ord($data[$offset]) !== 0;
-        $offset += 1;
-    }
-    if ($offset + 4 <= strlen($data)) {
-        $blockSize = catalog_pak_u32($data, $offset);
-        $offset += 4;
+
+    if ($version >= 3) {
+        if ($compressionMethod !== 0) {
+            $blockCount = catalog_pak_i32($data, $offset); $offset += 4;
+            if ($blockCount < 0 || $blockCount > 65536) {
+                throw new RuntimeException('Invalid compressed block count in PAK index.');
+            }
+            for ($i = 0; $i < $blockCount; $i++) {
+                $blocks[] = [
+                    'start' => catalog_pak_i64($data, $offset),
+                    'end' => catalog_pak_i64($data, $offset + 8),
+                ];
+                $offset += 16;
+            }
+        }
+        if ($offset < strlen($data)) {
+            $encrypted = ord($data[$offset]) !== 0;
+            $offset += 1;
+        }
+        if ($offset + 4 <= strlen($data)) {
+            $blockSize = catalog_pak_u32($data, $offset);
+            $offset += 4;
+        }
     }
 
     return [
@@ -272,6 +314,8 @@ function catalog_pak_parse_entry(string $data, int &$offset, int $version): arra
         'blocks' => $blocks,
         'encrypted' => $encrypted,
         'compression_block_size' => $blockSize,
+        'timestamp' => $timestamp,
+        'version' => $version,
     ];
 }
 
@@ -317,11 +361,11 @@ function catalog_pak_entry_data_offset(string $path, array $entry): int
         return $offset;
     }
 
-    $peekSize = 512;
+    $peekSize = min(1024, max(64, (int)((filesize($path) ?: 0) - $offset)));
     $peek = catalog_pak_read_bytes($path, $offset, $peekSize);
     try {
         $cursor = 0;
-        catalog_pak_parse_entry($peek, $cursor, 0);
+        catalog_pak_parse_entry($peek, $cursor, (int)($entry['version'] ?? 3));
         return $offset + $cursor;
     } catch (Throwable) {
         return $offset;
@@ -433,7 +477,12 @@ function catalog_pak_archive_extract_to_temp(array $config, string $pakPath, str
     try {
         $footers = catalog_pak_footer_candidates($pakPath);
         if ($footers === []) {
-            throw new RuntimeException('Could not find a supported PAK footer. Encrypted or IOStore containers are not supported by the PHP extractor.');
+            $probe = catalog_pak_probe_bytes($pakPath);
+            throw new RuntimeException(
+                'Could not find a supported Unreal PAK footer after scanning the final ' . catalog_bytes(min(CATALOG_PAK_FOOTER_SCAN_BYTES, (int)$probe['size'])) . '. '
+                . 'This may be an encrypted/signed-newer PAK, IOStore container, non-Unreal .pak, or an incomplete/corrupt download. '
+                . 'head=' . $probe['head_hex'] . ' (' . $probe['head_text'] . '); tail=' . $probe['tail_hex'] . ' (' . $probe['tail_text'] . ').'
+            );
         }
 
         $lastError = '';
@@ -463,7 +512,7 @@ function catalog_pak_archive_extract_to_temp(array $config, string $pakPath, str
                 return [
                     'dir' => $workDir,
                     'files' => $files,
-                    'log' => 'PHP PAK extractor: version=' . (int)$footer['version'] . '; layout=' . $footer['layout'] . '; mount=' . ($index['mount_point'] ?? '') . '; extracted=' . $extracted . '; skipped=' . $skipped,
+                    'log' => 'PHP PAK extractor: version=' . (int)$footer['version'] . '; layout=' . $footer['layout'] . '; magic_offset=' . (int)($footer['magic_offset'] ?? -1) . '; mount=' . ($index['mount_point'] ?? '') . '; extracted=' . $extracted . '; skipped=' . $skipped,
                     'source_name' => basename($sourceName !== '' ? $sourceName : $pakPath),
                 ];
             } catch (Throwable $error) {
