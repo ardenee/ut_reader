@@ -77,7 +77,18 @@ function pak_import_scan_extracted_file(PDO $db, array $config, int $gameId, arr
     $path = (string)$file['path'];
     $display = pak_import_relative_display($file);
     $name = catalog_clean_unreal_filename(basename($display));
-    $result = scanner_scan_uploaded_file($db, $config, $gameId, $path, $name, $userId, $strictProfile);
+    $result = scanner_scan_uploaded_file(
+        $db,
+        $config,
+        $gameId,
+        $path,
+        $name,
+        $userId,
+        $strictProfile,
+        null,
+        false,
+        ['source_relative_path' => $display]
+    );
     return [$display, $result];
 }
 
@@ -191,7 +202,7 @@ try {
     catalog_head('PAK Import');
     catalog_page_header(
         'PAK Import',
-        'Extract a UE4 .pak using the built-in PHP parser, then import supported package files from the extracted contents. The .pak wrapper is not retained.',
+        'Extract a UE4 .pak using the built-in PHP parser, then import supported package files from the extracted contents. Inner PAK paths are preserved as UE4 package identity context; the .pak wrapper is not retained.',
         ['Upload Files' => 'profiled-upload.php', 'Local Source Scan' => 'source-scan.php', 'Upload Bucket' => 'upload-bucket.php']
     );
 
@@ -236,7 +247,7 @@ try {
     echo '<p><label>Upload .pak<br><input type="file" name="pak_file" accept=".pak"></label></p>';
     echo '<p><label>Or local .pak path on this server<br><input type="text" name="local_pak_path" placeholder="D:\\Games\\Example\\Content\\Paks\\Example-WindowsNoEditor.pak" style="width:min(100%,760px)"></label></p>';
     echo '<p><button type="submit">Extract PAK and import contents</button></p>';
-    echo '<p class="muted">The built-in extractor keeps extracted sidecar files beside their .uasset while scanning, but .uexp/.ubulk are not imported as standalone catalog rows. Limits are controlled by config.php pak.max_extracted_files and pak.max_extracted_bytes.</p>';
+    echo '<p class="muted">The built-in extractor keeps extracted sidecar files beside their .uasset while scanning, but .uexp/.ubulk are not imported as standalone catalog rows. Inner paths are preserved for UE4 package identity. Limits are controlled by config.php pak.max_extracted_files and pak.max_extracted_bytes.</p>';
     echo '</form></div></section>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Optional configuration</h2></div></div><div class="ui-section__body"><pre class="mono">' . catalog_h("'pak' => [\n    'max_extracted_files' => 20000,\n    'max_extracted_bytes' => 8 * 1024 * 1024 * 1024,\n],") . '</pre></div></section>';
