@@ -74,7 +74,6 @@ function catalog_clean_unreal_package_stem(string $stem): string
     do {
         $previous = $stem;
         $stem = preg_replace('/\s+\([0-9]+\)$/', '', $stem) ?? $stem;
-        $stem = preg_replace('/_(?:[2-9]|[1-9][0-9]+)$/', '', $stem) ?? $stem;
         $stem = preg_replace('/\s+-\s+copy(?:\s*\([0-9]+\))?$/i', '', $stem) ?? $stem;
         $stem = preg_replace('/\s+copy(?:\s*\([0-9]+\))?$/i', '', $stem) ?? $stem;
         $stem = trim($stem, " \t\n\r\0\x0B.");
