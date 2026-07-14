@@ -10,10 +10,11 @@ require_once __DIR__ . '/../../../lib/CatalogPackageAliases.php';
 /**
  * Resolves one file's imports against the catalog in batches.
  *
- * Matching intentionally follows Unreal package/object identity rules:
- * exact package names, exact object paths, explicit package aliases, and UE4
- * package/object path variants within the same package only. It does not use
- * same-folder/same-object guesses because those can create false positives.
+ * Matching intentionally follows Unreal package/object identity rules: exact
+ * package names, exact object paths, explicit package aliases, exact asset
+ * registry object paths, and UE4 package/object path variants within the same
+ * package only. It does not use same-folder/same-object guesses because those
+ * can create false positives.
  */
 final class CatalogDependencyResolver
 {
@@ -136,6 +137,17 @@ final class CatalogDependencyResolver
         return str_starts_with($rootPackage, '/script/');
     }
 
+    private static function tableExists(PDO $db, string $table): bool
+    {
+        $row = \catalog_one(
+            $db,
+            'SELECT COUNT(*) c FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?',
+            [$table]
+        );
+
+        return (int)($row['c'] ?? 0) > 0;
+    }
+
     /**
      * @param list<string> $packageNames
      * @return array<string, array{file_id:int, source:string, confidence:string}>
@@ -196,11 +208,13 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<string> $objectPaths
-     * @return array<string, array{file_id:int, export_id:int, source:string, confidence:string}>
+     * @return array<string, array{file_id:int, export_id:?int, source:string, confidence:string}>
      */
     private static function loadExportMatches(PDO $db, int $gameId, int $fileId, array $objectPaths): array
     {
         $matches = [];
+        $hasAssetRegistry = self::tableExists($db, 'ue_asset_registry_assets');
+
         foreach (array_chunk($objectPaths, self::MAX_VALUES_PER_QUERY) as $chunk) {
             if ($chunk === []) {
                 continue;
@@ -251,6 +265,30 @@ final class CatalogDependencyResolver
                             'export_id' => (int)$row['export_id'],
                             'source' => 'package_alias_object',
                             'confidence' => 'alias',
+                        ];
+                    }
+                }
+            }
+
+            if ($hasAssetRegistry) {
+                $assetRegistryRows = \catalog_all(
+                    $db,
+                    'SELECT requested.lookup_value, ar.id asset_id, f.id file_id'
+                    . ' FROM (' . $valuesSql . ') requested'
+                    . ' JOIN ue_asset_registry_assets ar ON ar.object_path=requested.lookup_value'
+                    . ' JOIN ue_files f ON f.id=ar.file_id AND f.game_id=? AND f.scan_status="verified"'
+                    . ' ORDER BY requested.lookup_value, (f.id=?) DESC, ar.id ASC',
+                    array_merge($valueArgs, [$gameId, $fileId])
+                );
+
+                foreach ($assetRegistryRows as $row) {
+                    $lookupValue = (string)$row['lookup_value'];
+                    if (!isset($matches[$lookupValue])) {
+                        $matches[$lookupValue] = [
+                            'file_id' => (int)$row['file_id'],
+                            'export_id' => null,
+                            'source' => 'asset_registry',
+                            'confidence' => 'exact',
                         ];
                     }
                 }
