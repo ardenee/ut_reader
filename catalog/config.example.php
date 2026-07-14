@@ -36,6 +36,15 @@ return [
         'max_extracted_files' => 20000,
         'max_extracted_bytes' => 8 * 1024 * 1024 * 1024,
     ],
+    'ue4' => [
+        // Parser profile for unversioned UE4 packages. This is a parser assumption,
+        // not a package version read from the file. Add per-game slug overrides when
+        // you know a game needs a different UE4 object-version layout.
+        'assumed_unversioned_parser_version' => 511,
+        'assumed_unversioned_parser_versions' => [
+            // 'ut4-alpha' => 511,
+        ],
+    ],
     'allowed_extensions' => ['u','unr','utx','umx','uax','ut2','ut3','upk','uasset','umap'],
     'common_packages' => ['Core','Engine','Editor','Fire','IpDrv','UWindow','Botpack','UnrealShare','UnrealI','Gameplay','UnrealEd'],
     'engine_readers' => [
