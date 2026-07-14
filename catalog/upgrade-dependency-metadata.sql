@@ -1,12 +1,71 @@
 -- UnrealDB dependency metadata upgrade
 -- Safe to run on an existing catalog before rebuilding dependencies.
+-- Uses information_schema + prepared statements instead of ADD COLUMN IF NOT EXISTS,
+-- because that syntax is not available on every MySQL/MariaDB version used by hosts.
 
-ALTER TABLE ue_dependencies
-  ADD COLUMN IF NOT EXISTS resolution_source VARCHAR(64) NOT NULL DEFAULT 'unknown' AFTER status,
-  ADD COLUMN IF NOT EXISTS resolution_confidence VARCHAR(32) NOT NULL DEFAULT 'unknown' AFTER resolution_source;
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'ue_dependencies'
+    AND COLUMN_NAME = 'resolution_source'
+);
+SET @sql = IF(
+  @column_exists = 0,
+  "ALTER TABLE ue_dependencies ADD COLUMN resolution_source VARCHAR(64) NOT NULL DEFAULT 'unknown' AFTER status",
+  "SELECT 'ue_dependencies.resolution_source already exists' AS message"
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
-CREATE INDEX IF NOT EXISTS idx_ue_deps_resolution_source ON ue_dependencies (resolution_source);
-CREATE INDEX IF NOT EXISTS idx_ue_deps_resolution_confidence ON ue_dependencies (resolution_confidence);
+SET @column_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.COLUMNS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'ue_dependencies'
+    AND COLUMN_NAME = 'resolution_confidence'
+);
+SET @sql = IF(
+  @column_exists = 0,
+  "ALTER TABLE ue_dependencies ADD COLUMN resolution_confidence VARCHAR(32) NOT NULL DEFAULT 'unknown' AFTER resolution_source",
+  "SELECT 'ue_dependencies.resolution_confidence already exists' AS message"
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.STATISTICS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'ue_dependencies'
+    AND INDEX_NAME = 'idx_ue_deps_resolution_source'
+);
+SET @sql = IF(
+  @index_exists = 0,
+  'CREATE INDEX idx_ue_deps_resolution_source ON ue_dependencies (resolution_source)',
+  "SELECT 'idx_ue_deps_resolution_source already exists' AS message"
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+SET @index_exists = (
+  SELECT COUNT(*)
+  FROM information_schema.STATISTICS
+  WHERE TABLE_SCHEMA = DATABASE()
+    AND TABLE_NAME = 'ue_dependencies'
+    AND INDEX_NAME = 'idx_ue_deps_resolution_confidence'
+);
+SET @sql = IF(
+  @index_exists = 0,
+  'CREATE INDEX idx_ue_deps_resolution_confidence ON ue_dependencies (resolution_confidence)',
+  "SELECT 'idx_ue_deps_resolution_confidence already exists' AS message"
+);
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 CREATE TABLE IF NOT EXISTS ue_asset_registry_assets (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
