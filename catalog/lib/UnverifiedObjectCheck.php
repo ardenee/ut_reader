@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/UnverifiedFileManager.php';
+require_once __DIR__ . '/CatalogUE4ParserProfile.php';
 
 /**
  * Reads one queued Unreal package without storing it. The result strengthens the
@@ -121,6 +122,28 @@ function uvoc_build_tables(array $names, array $imports, array $exports, string 
     ];
 }
 
+function uvoc_set_reader_profile(array $config, array $item, string $engine): void
+{
+    if (!in_array($engine, ['UE4', 'UE5'], true)) {
+        return;
+    }
+
+    $game = [];
+    $profile = [];
+    $gameId = (int)($item['game_id'] ?? ($item['header']['game_id'] ?? 0));
+    if ($gameId > 0) {
+        try {
+            $db = catalog_db($config);
+            $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]) ?: [];
+            $profile = gp_required_profile_for_game($db, $gameId);
+        } catch (Throwable $e) {
+            error_log('[UnrealDB object check] parser profile fallback: ' . $e->getMessage());
+        }
+    }
+
+    catalog_ue4_set_next_reader_options(catalog_ue4_reader_options($config, $game, $profile));
+}
+
 /**
  * @return array{engine:string,name_count:int,import_count:int,export_count:int,exports:array<string,string>,tables:array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>}}
  */
@@ -128,6 +151,7 @@ function uvoc_read_exports(array $config, array $item): array
 {
     $engine = uvoc_reader_engine($item);
     $readerClass = scanner_load_reader_class($config, $engine);
+    uvoc_set_reader_profile($config, $item, $engine);
     $reader = new $readerClass((string)$item['path']);
     $issues = method_exists($reader, 'validatePackage') ? $reader->validatePackage() : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);
     [$fatalIssues] = scanner_split_reader_issues(is_array($issues) ? $issues : []);
