@@ -113,6 +113,23 @@ function catalog_file_maintenance_restore_snapshot(PDO $db, array $snapshot): vo
     }
 }
 
+function catalog_file_maintenance_source_relative_path(array $snapshot): string
+{
+    $filePath = scanner_normalize_source_relative_path((string)($snapshot['file']['source_relative_path'] ?? ''));
+    if ($filePath !== '') {
+        return $filePath;
+    }
+
+    foreach ($snapshot['locations'] as $location) {
+        $path = scanner_normalize_source_relative_path((string)($location['source_relative_path'] ?? ''));
+        if ($path !== '') {
+            return $path;
+        }
+    }
+
+    return '';
+}
+
 function catalog_file_maintenance_affected_ids(PDO $db, int $gameId, int $removedFileId, string $packageName): array
 {
     if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
@@ -164,6 +181,12 @@ function catalog_file_maintenance_reimport(PDO $db, array $config, int $fileId, 
         throw new RuntimeException('The stored package file is missing, so it cannot be re-imported.');
     }
 
+    $sourceRelativePath = catalog_file_maintenance_source_relative_path($snapshot);
+    $scannerOriginalName = scanner_original_name_from_source_relative($sourceRelativePath);
+    if ($scannerOriginalName === '') {
+        $scannerOriginalName = (string)$file['original_name'];
+    }
+
     $suffix = '.reimport-' . bin2hex(random_bytes(8));
     $backupPath = $storedPath . $suffix . '.backup';
     $inputPath = $storedPath . $suffix . '.input';
@@ -183,16 +206,18 @@ function catalog_file_maintenance_reimport(PDO $db, array $config, int $fileId, 
         catalog_file_maintenance_emit($progress, 'database', 22, 'Removing the old catalog record and its references');
         $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
 
-        /* Use the exact scanner/import path used by the main Upload Files page. */
+        /* Re-scan the stored bytes, using preserved source-relative path as package identity context when available. */
         $result = scanner_scan_uploaded_file(
             $db,
             $config,
             (int)$file['game_id'],
             $inputPath,
-            (string)$file['original_name'],
+            $scannerOriginalName,
             $userId,
             true,
-            $progress
+            $progress,
+            false,
+            ['source_relative_path' => $sourceRelativePath]
         );
 
         if (($result[0] ?? '') !== 'verified') {
@@ -207,8 +232,8 @@ function catalog_file_maintenance_reimport(PDO $db, array $config, int $fileId, 
         return [
             'game_id' => (int)$file['game_id'],
             'file_id' => $replacementFileId,
-            'original_name' => (string)$file['original_name'],
-            'message' => (string)$result[2],
+            'original_name' => (string)($result[4]['source_relative_path'] ?? $scannerOriginalName),
+            'message' => (string)$result[2] . ($sourceRelativePath !== '' ? '; reimport source=' . $sourceRelativePath : '; reimport source unavailable, used stored filename metadata'),
         ];
     } catch (Throwable $e) {
         @unlink($inputPath);
