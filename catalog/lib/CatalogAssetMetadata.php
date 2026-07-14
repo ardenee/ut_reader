@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/CatalogDependencySchema.php';
+require_once __DIR__ . '/GameProfiles.php';
+require_once __DIR__ . '/CatalogReaderResolver.php';
+require_once __DIR__ . '/CatalogUE4ParserProfile.php';
 
 const CATALOG_ASSET_METADATA_MAX_SOFT_REFS = 2000;
 
@@ -87,6 +90,56 @@ function catalog_asset_meta_insert_dependency(PDO $db, int $fileId, ?int $source
     return true;
 }
 
+function catalog_asset_meta_reader_engine(array $file): string
+{
+    $engine = strtoupper(trim((string)($file['detected_engine_key'] ?? '')));
+    if (in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+        return $engine;
+    }
+
+    $fallback = strtoupper((string)(gp_detect_from_extension((string)($file['extension'] ?? '')) ?? ''));
+    return in_array($fallback, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true) ? $fallback : '';
+}
+
+function catalog_asset_meta_open_reader(PDO $db, array $config, array $file, ?string $path): ?object
+{
+    if (!$path || !is_file($path)) {
+        return null;
+    }
+
+    $engine = catalog_asset_meta_reader_engine($file);
+    if (!in_array($engine, ['UE4', 'UE5'], true)) {
+        return null;
+    }
+
+    $readerClass = CatalogReaderResolver::resolve(
+        $config,
+        $engine,
+        'Reader not found for package engine',
+        'Reader file loaded for package engine ',
+        ['UE4', 'UE5']
+    );
+
+    $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [(int)$file['game_id']]) ?: [];
+    $profile = gp_required_profile_for_game($db, (int)$file['game_id']);
+    catalog_ue4_set_next_reader_options(catalog_ue4_reader_options($config, $game, $profile));
+
+    $reader = new $readerClass($path);
+    if (method_exists($reader, 'validatePackage')) {
+        $issues = $reader->validatePackage();
+        if (is_array($issues)) {
+            foreach ($issues as $issue) {
+                $text = trim((string)$issue);
+                if ($text !== '' && !str_starts_with($text, 'Package is unversioned; using assumed UE4 parser version ')) {
+                    error_log('[UnrealDB asset metadata reader] file_id=' . (int)$file['id'] . ' issue=' . $text);
+                }
+            }
+        }
+    }
+
+    return $reader;
+}
+
 /**
  * Rebuilds explicit export-derived asset metadata plus parsed UE4 summary-level
  * reference metadata. It does not invent redirector aliases or folder/object
@@ -102,6 +155,15 @@ function catalog_asset_metadata_rebuild_file(PDO $db, array $config, int $fileId
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
     if (!$file) {
         throw new RuntimeException('File not found: ' . $fileId);
+    }
+
+    $path = catalog_asset_meta_resolve_path($config, $file);
+    if ($reader === null) {
+        try {
+            $reader = catalog_asset_meta_open_reader($db, $config, $file, $path);
+        } catch (Throwable $e) {
+            error_log('[UnrealDB asset metadata reader] file_id=' . $fileId . ' error=' . $e->getMessage());
+        }
     }
 
     $db->prepare('DELETE FROM ue_asset_registry_dependencies WHERE file_id=?')->execute([$fileId]);
@@ -127,8 +189,6 @@ function catalog_asset_metadata_rebuild_file(PDO $db, array $config, int $fileId
         $assets += $insertAsset->rowCount() > 0 ? 1 : 0;
 
         if (stripos($className, 'ObjectRedirector') !== false) {
-            // Target properties require serialized export-property decoding. Keep
-            // this visible as metadata instead of guessing an alias.
             catalog_asset_meta_insert_dependency($db, $fileId, null, $objectPath, 'object_redirector_unparsed');
             $redirectors++;
         }
@@ -139,11 +199,11 @@ function catalog_asset_metadata_rebuild_file(PDO $db, array $config, int $fileId
         $refs = $reader->getStringAssetReferences();
         if (is_array($refs)) {
             foreach ($refs as $ref) {
-                $path = is_array($ref) ? (string)($ref['path'] ?? '') : (string)$ref;
-                if ($path === $packageName || str_starts_with($path, $packageName . '.')) {
+                $refPath = is_array($ref) ? (string)($ref['path'] ?? '') : (string)$ref;
+                if ($refPath === $packageName || str_starts_with($refPath, $packageName . '.')) {
                     continue;
                 }
-                if (catalog_asset_meta_insert_dependency($db, $fileId, null, $path, 'string_asset_reference')) {
+                if (catalog_asset_meta_insert_dependency($db, $fileId, null, $refPath, 'string_asset_reference')) {
                     $stringRefs++;
                 }
             }
@@ -158,18 +218,17 @@ function catalog_asset_metadata_rebuild_file(PDO $db, array $config, int $fileId
                 if (!is_array($dep)) {
                     continue;
                 }
-                $path = (string)($dep['path'] ?? '');
-                if ($path === '' || $path === $packageName || str_starts_with($path, $packageName . '.')) {
+                $depPath = (string)($dep['path'] ?? '');
+                if ($depPath === '' || $depPath === $packageName || str_starts_with($depPath, $packageName . '.')) {
                     continue;
                 }
-                if (catalog_asset_meta_insert_dependency($db, $fileId, null, $path, 'preload_dependency')) {
+                if (catalog_asset_meta_insert_dependency($db, $fileId, null, $depPath, 'preload_dependency')) {
                     $preloadDeps++;
                 }
             }
         }
     }
 
-    $path = catalog_asset_meta_resolve_path($config, $file);
     $softRefs = $path ? catalog_asset_meta_extract_soft_reference_candidates($path) : [];
     $softCount = 0;
     foreach ($softRefs as $ref) {
