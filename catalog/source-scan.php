@@ -89,9 +89,22 @@ function source_scan_cleanup_work_file(array $work): void
     }
 }
 
-function source_scan_import_work_file(PDO $db, array $config, array $source, array $work, bool $strictProfile): array
+function source_scan_scanner_relative_path(string $relative, array $work): string
+{
+    $relative = scanner_normalize_source_relative_path($relative);
+    if ($relative === '' || empty($work['redirect'])) {
+        return $relative;
+    }
+
+    $dir = trim(str_replace('\\', '/', dirname($relative)), '. /');
+    $name = (string)($work['name'] ?? '');
+    return scanner_normalize_source_relative_path(($dir !== '' ? $dir . '/' : '') . $name);
+}
+
+function source_scan_import_work_file(PDO $db, array $config, array $source, array $work, string $relative, bool $strictProfile): array
 {
     $tmp = source_scan_tmp_copy((string)$work['path']);
+    $sourceRelativePath = source_scan_scanner_relative_path($relative, $work);
     return scanner_scan_uploaded_file(
         $db,
         $config,
@@ -99,7 +112,10 @@ function source_scan_import_work_file(PDO $db, array $config, array $source, arr
         $tmp,
         (string)$work['name'],
         $_SESSION['user']['id'] ?? null,
-        $strictProfile
+        $strictProfile,
+        null,
+        false,
+        ['source_relative_path' => $sourceRelativePath]
     );
 }
 
@@ -194,6 +210,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
             $file = catalog_one($db, 'SELECT id FROM ue_files WHERE game_id=? AND md5=? LIMIT 1', [(int)$source['game_id'], $md5]);
             if ($file) {
                 record_file_location($db, $upsert, (int)$file['id'], $sourceId, $relative);
+                scanner_record_source_relative_path($db, (int)$file['id'], source_scan_scanner_relative_path($relative, $work));
                 $matchedMd5++;
                 $locations++;
                 continue;
@@ -205,7 +222,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
             } catch (Throwable $e) {
                 if ($importUnknown) {
                     try {
-                        $result = source_scan_import_work_file($db, $config, $source, $work, $strictProfile);
+                        $result = source_scan_import_work_file($db, $config, $source, $work, $relative, $strictProfile);
                         source_scan_record_import_result($db, $upsert, $sourceId, $relative, $result, $imported, $duplicates, $locations);
                         if (count($importSamples) < 50) {
                             $importSamples[] = source_scan_result_sample($path, $work, (string)$result[2]);
@@ -230,7 +247,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
             if ($guid === '') {
                 if ($importUnknown) {
                     try {
-                        $result = source_scan_import_work_file($db, $config, $source, $work, $strictProfile);
+                        $result = source_scan_import_work_file($db, $config, $source, $work, $relative, $strictProfile);
                         source_scan_record_import_result($db, $upsert, $sourceId, $relative, $result, $imported, $duplicates, $locations);
                         if (count($importSamples) < 50) {
                             $importSamples[] = source_scan_result_sample($path, $work, (string)$result[2]);
@@ -255,6 +272,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
             $matches = catalog_all($db, 'SELECT id, original_name, md5 FROM ue_files WHERE game_id=? AND package_guid=? ORDER BY id', [(int)$source['game_id'], $guid]);
             if (count($matches) === 1) {
                 record_file_location($db, $upsert, (int)$matches[0]['id'], $sourceId, $relative);
+                scanner_record_source_relative_path($db, (int)$matches[0]['id'], source_scan_scanner_relative_path($relative, $work));
                 $matchedGuid++;
                 $locations++;
                 continue;
@@ -270,7 +288,7 @@ function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUn
 
             if ($importUnknown) {
                 try {
-                    $result = source_scan_import_work_file($db, $config, $source, $work, $strictProfile);
+                    $result = source_scan_import_work_file($db, $config, $source, $work, $relative, $strictProfile);
                     source_scan_record_import_result($db, $upsert, $sourceId, $relative, $result, $imported, $duplicates, $locations);
                     if (count($importSamples) < 50) {
                         $importSamples[] = source_scan_result_sample($path, $work, (string)$result[2]);
@@ -329,7 +347,7 @@ try {
     }
 
     catalog_head('Source scan');
-    catalog_page_header('Source scanner', 'Recursively scan game-owned folders and subfolders, including redirect-compressed .uz/.uz2/.uz3 files, and record where catalog files exist. Unknown files can be imported through the active game profile.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']);
+    catalog_page_header('Source scanner', 'Recursively scan game-owned folders and subfolders, including redirect-compressed .uz/.uz2/.uz3 files. Source-relative paths are preserved and used as UE4 package identity context during import and later Full Sync.', ['Game Sources' => 'sources.php', 'HTTP Source Scan' => 'http-source-scan.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('source_scan');
@@ -392,7 +410,7 @@ try {
         echo '</select></label></p>';
         echo '<p><label><input type="checkbox" name="import_unknown" value="1"> Import unknown files into this game using its active profile</label></p>';
         echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject mismatches</option><option value="0">Loose: use detected reader where possible</option></select></label></p>';
-        echo '<p class="muted">The scan is recursive through the selected source folder and subfolders. It uses the selected source game’s profile extension list, plus .uz/.uz2/.uz3 redirect archives which are decompressed before matching/importing. Without import enabled, it only links existing catalog files by MD5/GUID. With import enabled, unmatched files are copied to a temp file and scanned before being stored.</p>';
+        echo '<p class="muted">The scan is recursive through the selected source folder and subfolders. It uses the selected source game’s profile extension list, plus .uz/.uz2/.uz3 redirect archives which are decompressed before matching/importing. Source-relative paths are preserved for UE4 package identity and Full Sync reimports.</p>';
         echo '<button>Scan selected source</button></form>';
     }
     echo '</div>';
