@@ -19,7 +19,17 @@ function scanner_clean_name(string $s): string
 
 function scanner_clean_original_filename(string $originalName): string
 {
-    return catalog_clean_unreal_filename($originalName);
+    /*
+     * catalog_clean_unreal_filename() intentionally normalizes unusual legacy
+     * filenames, but '+' is a valid serialized UE4 package-name character.
+     * Protect it while retaining the existing filename cleanup rules.
+     */
+    $placeholder = '__UE_PACKAGE_PLUS__';
+    while (str_contains($originalName, $placeholder)) {
+        $placeholder .= '_';
+    }
+    $clean = catalog_clean_unreal_filename(str_replace('+', $placeholder, $originalName));
+    return str_replace($placeholder, '+', $clean);
 }
 
 function scanner_slug_text(string $s): string
@@ -37,7 +47,7 @@ function scanner_join_path_parts(array $parts): string
 function scanner_logical_package_name(string $originalName): string
 {
     $cleanName = scanner_clean_original_filename($originalName);
-    return scanner_clean_name(catalog_clean_unreal_package_stem((string)pathinfo($cleanName, PATHINFO_FILENAME)));
+    return scanner_clean_name((string)pathinfo($cleanName, PATHINFO_FILENAME));
 }
 
 function scanner_package_leaf(string $packageName): string
@@ -92,7 +102,7 @@ function scanner_clean_package_path_segment(string $segment): string
 {
     $segment = trim(str_replace(["\0", '/', '\\'], ['', '', ''], $segment));
     $segment = preg_replace('/\s+/', ' ', $segment) ?? $segment;
-    $segment = preg_replace('/[^A-Za-z0-9._ -]+/', '_', $segment) ?? $segment;
+    $segment = preg_replace('/[^A-Za-z0-9._ +\-]+/', '_', $segment) ?? $segment;
     return trim($segment, " \t\n\r\0\x0B.");
 }
 
@@ -113,7 +123,19 @@ function scanner_ue_package_name_from_source_relative(string $sourceRelativePath
     }
 
     if ($contentIndex >= 0) {
-        if ($contentIndex > 0 && strtolower((string)$parts[$contentIndex - 1]) === 'engine') {
+        $pluginIndex = -1;
+        for ($index = 0; $index < $contentIndex; $index++) {
+            if (strtolower((string)$parts[$index]) === 'plugins') {
+                $pluginIndex = $index;
+            }
+        }
+
+        if ($pluginIndex >= 0 && $contentIndex > $pluginIndex + 1) {
+            $pluginRoot = scanner_clean_package_path_segment((string)$parts[$contentIndex - 1]);
+            if ($pluginRoot !== '') {
+                $root = '/' . $pluginRoot;
+            }
+        } elseif ($contentIndex > 0 && strtolower((string)$parts[$contentIndex - 1]) === 'engine') {
             $root = '/Engine';
         }
         $parts = array_slice($parts, $contentIndex + 1);
@@ -210,7 +232,7 @@ function scanner_store_failed_upload(array $config, string $tmp, string $origina
         @mkdir($dir, 0775, true);
     }
     $cleanName = scanner_clean_original_filename($originalName);
-    $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._ -]+/', '_', basename($cleanName));
+    $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._ +\-]+/', '_', basename($cleanName));
     @rename($tmp, $dir . '/' . $name);
     @file_put_contents($dir . '/' . $name . '.txt', $reason);
 }
@@ -387,6 +409,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
 {
     scanner_source_path_schema_ensure($db);
     $sourceRelativePath = scanner_normalize_source_relative_path((string)($scannerOptions['source_relative_path'] ?? ''));
+    $deferDependencyRebuild = !empty($scannerOptions['defer_dependency_rebuild']) || (string)($_POST['operation'] ?? '') === 'sync_reimport';
     $submittedOriginalName = $originalName;
     $sourceOriginalName = scanner_original_name_from_source_relative($sourceRelativePath);
     if ($sourceOriginalName !== '') {
@@ -495,11 +518,15 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         }
         catalog_package_alias_add($db, $duplicateFileId, $gameId, $packageName, $originalName, $packageGuid, $md5, (int)$size);
         $refreshWarning = '';
-        try {
-            scanner_rebuild_affected_dependencies_for_package($db, $config, $gameId, $packageName, $progress, 56, 99);
-        } catch (Throwable $refreshError) {
-            error_log('[UnrealDB dependency refresh] alias_package=' . $packageName . ' file_id=' . $duplicateFileId . ' error=' . $refreshError->getMessage());
-            $refreshWarning = '; dependency refresh warning logged for maintenance';
+        if ($deferDependencyRebuild) {
+            scanner_emit_percent($progress, 'dependencies', 99, 'Alias dependency refresh deferred to the final Full Sync pass');
+        } else {
+            try {
+                scanner_rebuild_affected_dependencies_for_package($db, $config, $gameId, $packageName, $progress, 56, 99);
+            } catch (Throwable $refreshError) {
+                error_log('[UnrealDB dependency refresh] alias_package=' . $packageName . ' file_id=' . $duplicateFileId . ' error=' . $refreshError->getMessage());
+                $refreshWarning = '; dependency refresh warning logged for maintenance';
+            }
         }
         scanner_emit_percent($progress, 'done', 100, 'Alias package added for existing file identity');
         $meta['alias_package_name'] = $packageName;
@@ -611,8 +638,12 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             }
         }
 
-        scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
-        scanner_rebuild_dependencies($db, $config, $fileId, $progress, 36, 55, 'Imported file dependency links');
+        if ($deferDependencyRebuild) {
+            scanner_emit_percent($progress, 'dependencies', 55, 'Dependency rebuild deferred to the final Full Sync pass');
+        } else {
+            scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
+            scanner_rebuild_dependencies($db, $config, $fileId, $progress, 36, 55, 'Imported file dependency links');
+        }
         $db->commit();
     } catch (Throwable $e) {
         if ($db->inTransaction()) {
@@ -625,11 +656,15 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
     }
 
     $refreshWarning = '';
-    try {
-        scanner_rebuild_affected_dependencies($db, $config, $fileId, $progress, 56, 99);
-    } catch (Throwable $refreshError) {
-        error_log('[UnrealDB dependency refresh] imported_file_id=' . $fileId . ' error=' . $refreshError->getMessage());
-        $refreshWarning = '; dependency refresh warning logged for maintenance';
+    if ($deferDependencyRebuild) {
+        scanner_emit_percent($progress, 'dependencies', 99, 'Dependency refresh deferred to the final Full Sync pass');
+    } else {
+        try {
+            scanner_rebuild_affected_dependencies($db, $config, $fileId, $progress, 56, 99);
+        } catch (Throwable $refreshError) {
+            error_log('[UnrealDB dependency refresh] imported_file_id=' . $fileId . ' error=' . $refreshError->getMessage());
+            $refreshWarning = '; dependency refresh warning logged for maintenance';
+        }
     }
 
     scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
