@@ -331,7 +331,10 @@ function catalog_head(string $title): void
         $maintenanceScriptVersion = is_file($maintenanceScriptPath) ? (string)filemtime($maintenanceScriptPath) : '1';
         echo '<script src="' . catalog_h($root . 'assets/game-file-maintenance.js.php?v=' . $maintenanceScriptVersion) . '" defer></script>';
     }
-    if (in_array($scriptName, ['file-info.php', 'file-examine.php'], true)) {
+    $loadDependencyDisplay = in_array($scriptName, ['file-info.php', 'file-examine.php'], true)
+        || $title === 'File info'
+        || str_starts_with($title, 'Examine ');
+    if ($loadDependencyDisplay) {
         $dependencyDisplayPath = __DIR__ . '/../assets/file-dependency-display.js';
         $dependencyDisplayVersion = is_file($dependencyDisplayPath) ? (string)filemtime($dependencyDisplayPath) : '1';
         echo '<script src="' . catalog_h($root . 'assets/file-dependency-display.js?v=' . $dependencyDisplayVersion) . '" defer></script>';
