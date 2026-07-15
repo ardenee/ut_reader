@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/CatalogSourceIdentity.php';
+
 /**
  * Physical packages can legitimately appear under more than one logical package
  * filename in retail installs. Keep one verified file row for the GUID/hash
