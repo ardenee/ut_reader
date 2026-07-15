@@ -2,9 +2,12 @@
 declare(strict_types=1);
 
 /**
- * Canonical package identity is derived from the mounted source path. Database
- * package names, export full paths and alias rows are projections of that source
- * identity; they are never repaired in display code.
+ * UE4/UE5 canonical package identity is derived from the mounted source path.
+ * Database package names, export full paths and alias rows are projections of
+ * that source identity; they are never repaired in display code.
+ *
+ * UE1/UE2/UE3 package identity follows legacy filename/package semantics and is
+ * deliberately excluded from this mounted-path repair service.
  */
 
 function catalog_source_identity_path(string $sourceRelativePath): string
@@ -34,6 +37,20 @@ function catalog_source_identity_package_name(string $engineKey, string $sourceR
     return scanner_logical_package_name($sourceOriginalName);
 }
 
+/** @return list<string> */
+function catalog_source_identity_normalized_names(array $names): array
+{
+    $normalized = [];
+    foreach ($names as $name) {
+        $name = trim((string)$name);
+        if ($name !== '') {
+            $normalized[strtolower($name)] = $name;
+        }
+    }
+    ksort($normalized);
+    return array_values($normalized);
+}
+
 /**
  * @param list<string> $previousPackageNames
  * @return array{changed:bool,file_id:int,old_package_name:string,new_package_name:string,alias_count:int,dependency_files_refreshed:int}
@@ -51,7 +68,7 @@ function catalog_source_identity_rebuild_file(
 
     $file = catalog_one(
         $db,
-        'SELECT f.*, p.engine_key profile_engine'
+        'SELECT f.*,p.engine_key profile_engine'
         . ' FROM ue_files f'
         . ' JOIN ue_games g ON g.id=f.game_id'
         . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id'
@@ -65,6 +82,12 @@ function catalog_source_identity_rebuild_file(
     $engineKey = strtoupper(trim((string)($file['detected_engine_key'] ?? '')));
     if ($engineKey === '') {
         $engineKey = strtoupper(trim((string)($file['profile_engine'] ?? '')));
+    }
+    if (!in_array($engineKey, ['UE4', 'UE5'], true)) {
+        throw new RuntimeException(
+            'Mounted source identity repair is only valid for UE4/UE5 packages. '
+            . 'Use the read-only UE1/UE2/UE3 Data Audit for legacy packages.'
+        );
     }
 
     $locations = catalog_all($db, 'SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id', [$fileId]);
@@ -85,7 +108,10 @@ function catalog_source_identity_rebuild_file(
         (string)$file['original_name']
     );
     if ($primaryPackageName === '') {
-        throw new RuntimeException('A canonical package identity could not be derived from the mounted source path. Re-import this file from a mounted source folder.');
+        throw new RuntimeException(
+            'A canonical UE4 package identity could not be derived from the mounted source path. '
+            . 'Re-import this file from a mounted source folder.'
+        );
     }
 
     $primaryOriginalName = scanner_original_name_from_source_relative($primarySourcePath);
@@ -122,13 +148,14 @@ function catalog_source_identity_rebuild_file(
     ksort($derivedAliases);
 
     $oldAliases = catalog_all($db, 'SELECT * FROM ue_file_package_aliases WHERE file_id=? ORDER BY package_name,id', [$fileId]);
+    $oldPackageNames = $previousPackageNames;
+    $oldPackageNames[] = (string)$file['package_name'];
     $oldAliasKeys = [];
-    $oldPackageNames = array_merge($previousPackageNames, [(string)$file['package_name']]);
     foreach ($oldAliases as $alias) {
         $name = trim((string)($alias['package_name'] ?? ''));
         if ($name !== '') {
-            $oldAliasKeys[] = strtolower($name);
             $oldPackageNames[] = $name;
+            $oldAliasKeys[] = strtolower($name);
         }
     }
     sort($oldAliasKeys);
@@ -145,10 +172,7 @@ function catalog_source_identity_rebuild_file(
     foreach ($derivedAliases as $alias) {
         $newPackageNames[] = $alias['package_name'];
     }
-    $allPackageNames = array_values(array_unique(array_filter(
-        array_merge($oldPackageNames, $newPackageNames),
-        static fn($name): bool => trim((string)$name) !== ''
-    )));
+    $allPackageNames = catalog_source_identity_normalized_names(array_merge($oldPackageNames, $newPackageNames));
 
     $referringFileIds = [];
     if ($allPackageNames !== []) {
@@ -164,7 +188,7 @@ function catalog_source_identity_rebuild_file(
     }
 
     if ($changed) {
-        scanner_emit_percent($progress, 'identity', 10, 'Rebuilding canonical package identity from mounted source path');
+        scanner_emit_percent($progress, 'identity', 10, 'Rebuilding canonical UE4 package identity from mounted source path');
         $db->beginTransaction();
         try {
             $db->prepare('UPDATE ue_files SET package_name=?,original_name=?,source_relative_path=? WHERE id=?')
@@ -186,7 +210,7 @@ function catalog_source_identity_rebuild_file(
                 }
             }
 
-            /* Rebuild aliases exclusively from recorded source locations. */
+            /* Rebuild aliases exclusively from recorded mounted source locations. */
             $db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $insertAlias = $db->prepare(
                 'INSERT INTO ue_file_package_aliases(file_id,game_id,package_name,original_name,package_guid,md5,file_size) VALUES(?,?,?,?,?,?,?)'
@@ -228,7 +252,7 @@ function catalog_source_identity_rebuild_file(
                 $progress,
                 scanner_range_percent(20, 100, $index, $total),
                 scanner_range_percent(20, 100, $index + 1, $total),
-                'Refreshing dependencies after canonical identity rebuild ' . ($index + 1) . '/' . count($dependencyFileIds)
+                'Refreshing dependencies after canonical UE4 identity rebuild ' . ($index + 1) . '/' . count($dependencyFileIds)
             );
             $refreshed++;
         }
@@ -237,7 +261,7 @@ function catalog_source_identity_rebuild_file(
             $progress,
             'identity',
             100,
-            $changed ? 'Canonical package identity rebuilt' : 'Package identity already matches its mounted source path'
+            $changed ? 'Canonical UE4 package identity rebuilt' : 'Package identity already matches its mounted source path'
         );
     }
 
