@@ -67,6 +67,7 @@ final class CatalogDependencyResolver
             $importId = (int)$import['id'];
             $rootPackage = (string)($import['root_package'] ?? '');
             $fullPath = (string)($import['full_path'] ?? '');
+            $isObjectImport = (string)($import['relative_object_path'] ?? '') !== '';
             $result = self::missing();
 
             if (self::isCommonImport($import)) {
@@ -77,7 +78,7 @@ final class CatalogDependencyResolver
                     'source' => 'common_script',
                     'confidence' => 'common',
                 ];
-            } elseif ((string)($import['relative_object_path'] ?? '') === '') {
+            } elseif (!$isObjectImport) {
                 $packageMatch = $packageMatches[$rootPackage] ?? null;
                 if ($packageMatch !== null) {
                     $result = [
@@ -98,17 +99,6 @@ final class CatalogDependencyResolver
                         'source' => $exportMatch['source'],
                         'confidence' => $exportMatch['confidence'],
                     ];
-                } else {
-                    $packageMatch = $packageMatches[$rootPackage] ?? null;
-                    if ($packageMatch !== null) {
-                        $result = [
-                            'status' => 'package_only',
-                            'resolved_file_id' => $packageMatch['file_id'],
-                            'resolved_export_id' => null,
-                            'source' => $packageMatch['source'],
-                            'confidence' => $packageMatch['confidence'],
-                        ];
-                    }
                 }
             }
 
