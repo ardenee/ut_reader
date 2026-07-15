@@ -1,0 +1,397 @@
+name: One-time individual maintenance fix
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-time-individual-maintenance-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply and validate maintenance fix
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          from textwrap import dedent
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one match, found {count}")
+              return text.replace(old, new, 1)
+
+          def sub_once(text, pattern, replacement, label):
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=re.S)
+              if count != 1:
+                  raise SystemExit(f"{label}: expected one regex match, found {count}")
+              return updated
+
+          path = Path("catalog/lib/CatalogFileMaintenance.php")
+          source = path.read_text()
+
+          source = replace_once(
+              source,
+              " * @return array{file:array<string,mixed>,names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>,dependencies:list<array<string,mixed>>,locations:list<array<string,mixed>>}",
+              " * @return array{file:array<string,mixed>,names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>,dependencies:list<array<string,mixed>>,locations:list<array<string,mixed>>,aliases:list<array<string,mixed>>}",
+              "snapshot annotation",
+          )
+          source = replace_once(
+              source,
+              "    return [\n        'file' => $file,",
+              "    catalog_package_aliases_ensure($db);\n\n    return [\n        'file' => $file,",
+              "ensure aliases before snapshot",
+          )
+          source = replace_once(
+              source,
+              "        'locations' => catalog_all($db, 'SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id', [$fileId]),\n    ];",
+              "        'locations' => catalog_all($db, 'SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id', [$fileId]),\n        'aliases' => catalog_all($db, 'SELECT * FROM ue_file_package_aliases WHERE file_id=? ORDER BY id', [$fileId]),\n    ];",
+              "snapshot aliases",
+          )
+          source = replace_once(
+              source,
+              "$allowedTables = ['ue_files', 'ue_names', 'ue_imports', 'ue_exports', 'ue_dependencies', 'ue_file_locations'];",
+              "$allowedTables = ['ue_files', 'ue_names', 'ue_imports', 'ue_exports', 'ue_dependencies', 'ue_file_locations', 'ue_file_package_aliases'];",
+              "restore aliases allowlist",
+          )
+          source = replace_once(
+              source,
+              "        catalog_file_maintenance_restore_row($db, 'ue_files', $snapshot['file']);\n        foreach ($snapshot['names'] as $row) {",
+              "        catalog_file_maintenance_restore_row($db, 'ue_files', $snapshot['file']);\n        foreach ($snapshot['aliases'] as $row) {\n            catalog_file_maintenance_restore_row($db, 'ue_file_package_aliases', $row);\n        }\n        foreach ($snapshot['names'] as $row) {",
+              "restore alias rows",
+          )
+
+          helpers = dedent(r'''
+          /**
+           * @param list<string> $packageNames
+           * @return list<int>
+           */
+          function catalog_file_maintenance_affected_ids(PDO $db, int $gameId, int $removedFileId, array $packageNames): array
+          {
+              if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
+                  return [];
+              }
+
+              $packageNames = array_values(array_unique(array_filter(
+                  array_map(static fn(string $name): string => trim($name), $packageNames),
+                  static fn(string $name): bool => $name !== ''
+              )));
+              $sql = 'SELECT DISTINCT d.file_id'
+                  . ' FROM ue_dependencies d'
+                  . ' JOIN ue_files owner ON owner.id=d.file_id'
+                  . ' WHERE owner.game_id=? AND d.file_id<>?'
+                  . ' AND (d.resolved_file_id=?';
+              $args = [$gameId, $removedFileId, $removedFileId];
+              if ($packageNames !== []) {
+                  $sql .= ' OR d.required_package IN (' . implode(',', array_fill(0, count($packageNames), '?')) . ')';
+                  array_push($args, ...$packageNames);
+              }
+              $sql .= ')';
+
+              $rows = catalog_all($db, $sql, $args);
+              return array_map(static fn(array $row): int => (int)$row['file_id'], $rows);
+          }
+
+          /**
+           * @param list<array<string,mixed>> $aliases
+           * @return list<string>
+           */
+          function catalog_file_maintenance_package_names(array $file, array $aliases): array
+          {
+              $names = [(string)($file['package_name'] ?? '')];
+              foreach ($aliases as $alias) {
+                  $names[] = (string)($alias['package_name'] ?? '');
+              }
+
+              return array_values(array_unique(array_filter(
+                  array_map('trim', $names),
+                  static fn(string $name): bool => $name !== ''
+              )));
+          }
+
+          function catalog_file_maintenance_restore_identity_rows(PDO $db, array $snapshot, int $replacementFileId): void
+          {
+              $replacement = catalog_one($db, 'SELECT package_name FROM ue_files WHERE id=?', [$replacementFileId]);
+              if (!$replacement) {
+                  throw new RuntimeException('Replacement package disappeared before its aliases and source locations could be restored.');
+              }
+
+              $locationInsert = $db->prepare(
+                  'INSERT INTO ue_file_locations(file_id,source_id,source_relative_path,exists_in_source,last_seen_at)'
+                  . ' VALUES(?,?,?,?,?)'
+                  . ' ON DUPLICATE KEY UPDATE exists_in_source=VALUES(exists_in_source),last_seen_at=VALUES(last_seen_at)'
+              );
+              foreach ($snapshot['locations'] as $location) {
+                  $locationInsert->execute([
+                      $replacementFileId,
+                      (int)$location['source_id'],
+                      (string)$location['source_relative_path'],
+                      (int)$location['exists_in_source'],
+                      $location['last_seen_at'],
+                  ]);
+              }
+
+              catalog_package_aliases_ensure($db);
+              $aliasInsert = $db->prepare(
+                  'INSERT INTO ue_file_package_aliases(file_id,game_id,package_name,original_name,package_guid,md5,file_size)'
+                  . ' VALUES(?,?,?,?,?,?,?)'
+                  . ' ON DUPLICATE KEY UPDATE original_name=VALUES(original_name),package_guid=VALUES(package_guid),md5=VALUES(md5),file_size=VALUES(file_size)'
+              );
+              foreach ($snapshot['aliases'] as $alias) {
+                  $packageName = trim((string)$alias['package_name']);
+                  if ($packageName === '' || strcasecmp($packageName, (string)$replacement['package_name']) === 0) {
+                      continue;
+                  }
+                  $aliasInsert->execute([
+                      $replacementFileId,
+                      (int)$alias['game_id'],
+                      $packageName,
+                      (string)$alias['original_name'],
+                      $alias['package_guid'],
+                      (string)$alias['md5'],
+                      (int)$alias['file_size'],
+                  ]);
+              }
+          }
+
+          /**
+           * Rebuild only dependency rows: the selected package and owners that
+           * reference its exact primary or alias package identities.
+           *
+           * @return array{game_id:int,original_name:string,package_name:string,refreshed_count:int}
+           */
+          function catalog_file_maintenance_rebuild_related_dependencies(PDO $db, array $config, int $fileId, ?callable $progress = null): array
+          {
+              $snapshot = catalog_file_maintenance_snapshot($db, $fileId);
+              $file = $snapshot['file'];
+              $packageNames = catalog_file_maintenance_package_names($file, $snapshot['aliases']);
+              $fileIds = catalog_file_maintenance_affected_ids($db, (int)$file['game_id'], $fileId, $packageNames);
+              $fileIds[] = $fileId;
+              $fileIds = array_values(array_unique(array_map('intval', $fileIds)));
+
+              catalog_file_maintenance_refresh_ids(
+                  $db,
+                  $config,
+                  $fileIds,
+                  $progress,
+                  0,
+                  100,
+                  'Rebuilding exact dependency links'
+              );
+
+              return [
+                  'game_id' => (int)$file['game_id'],
+                  'original_name' => (string)$file['original_name'],
+                  'package_name' => (string)$file['package_name'],
+                  'refreshed_count' => count($fileIds),
+              ];
+          }
+          ''').strip()
+
+          source = sub_once(
+              source,
+              r"function catalog_file_maintenance_affected_ids\(PDO \$db, int \$gameId, int \$removedFileId, string \$packageName\): array\n\{.*?\n\}\n\n(?=function catalog_file_maintenance_refresh_ids)",
+              helpers + "\n\n",
+              "replace affected-id helper",
+          )
+
+          source = replace_once(
+              source,
+              "    $snapshot = catalog_file_maintenance_snapshot($db, $fileId);\n    $file = $snapshot['file'];\n    $storedPath = catalog_file_maintenance_storage_path($config, $file);",
+              "    $snapshot = catalog_file_maintenance_snapshot($db, $fileId);\n    $file = $snapshot['file'];\n    $oldPackageNames = catalog_file_maintenance_package_names($file, $snapshot['aliases']);\n    $storedPath = catalog_file_maintenance_storage_path($config, $file);",
+              "reimport package names",
+          )
+          source = replace_once(
+              source,
+              "$affectedFileIds = catalog_file_maintenance_affected_ids($db, (int)$file['game_id'], $fileId, (string)$file['package_name']);",
+              "$affectedFileIds = catalog_file_maintenance_affected_ids($db, (int)$file['game_id'], $fileId, $oldPackageNames);",
+              "reimport affected identities",
+          )
+          source = replace_once(
+              source,
+              "        $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);",
+              "        catalog_package_aliases_ensure($db);\n        $db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);\n        $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);",
+              "reimport remove aliases",
+          )
+          source = replace_once(
+              source,
+              "            false,\n            ['source_relative_path' => $sourceRelativePath]\n        );",
+              "            false,\n            [\n                'source_relative_path' => $sourceRelativePath,\n                'defer_dependency_rebuild' => true,\n            ]\n        );",
+              "defer reimport dependency work",
+          )
+
+          success = dedent(r'''
+                  $replacementFileId = (int)$result[1];
+                  catalog_file_maintenance_restore_identity_rows($db, $snapshot, $replacementFileId);
+
+                  $replacement = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$replacementFileId]);
+                  if (!$replacement) {
+                      throw new RuntimeException('Replacement package disappeared before dependency refresh.');
+                  }
+                  $replacementAliases = catalog_all($db, 'SELECT * FROM ue_file_package_aliases WHERE file_id=? ORDER BY id', [$replacementFileId]);
+                  $newPackageNames = catalog_file_maintenance_package_names($replacement, $replacementAliases);
+                  $affectedFileIds = array_merge(
+                      $affectedFileIds,
+                      catalog_file_maintenance_affected_ids($db, (int)$file['game_id'], $replacementFileId, $newPackageNames),
+                      [$replacementFileId]
+                  );
+                  $affectedFileIds = array_values(array_unique(array_map('intval', $affectedFileIds)));
+
+                  catalog_file_maintenance_emit($progress, 'dependencies', 70, 'Refreshing the re-imported package and exact referring dependencies');
+                  catalog_file_maintenance_refresh_ids($db, $config, $affectedFileIds, $progress, 70, 100, 'Refreshing reimport dependency links');
+
+                  @unlink($backupPath);
+                  return [
+                      'game_id' => (int)$file['game_id'],
+                      'file_id' => $replacementFileId,
+                      'original_name' => (string)($result[4]['source_relative_path'] ?? $scannerOriginalName),
+                      'message' => (string)$result[2]
+                          . ($sourceRelativePath !== '' ? '; reimport source=' . $sourceRelativePath : '; reimport source unavailable, used stored filename metadata')
+                          . '; dependency files refreshed=' . count($affectedFileIds),
+                  ];
+          ''').rstrip()
+          source = sub_once(
+              source,
+              r"        \$replacementFileId = \(int\)\$result\[1\];\n        catalog_file_maintenance_emit\(\$progress, 'dependencies', 99, 'Refreshing references to the re-imported package'\);.*?        \];",
+              success,
+              "replace reimport success handling",
+          )
+          source = replace_once(
+              source,
+              "        if ($replacementFileId > 0) {\n            $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$replacementFileId]);\n        }\n        if (!catalog_one($db, 'SELECT id FROM ue_files WHERE id=?', [$fileId])) {\n            catalog_file_maintenance_restore_snapshot($db, $snapshot);\n        }",
+              "        if ($replacementFileId > 0) {\n            catalog_package_aliases_ensure($db);\n            $db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$replacementFileId]);\n            $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$replacementFileId]);\n        }\n        if (!catalog_one($db, 'SELECT id FROM ue_files WHERE id=?', [$fileId])) {\n            catalog_package_aliases_ensure($db);\n            $db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);\n            catalog_file_maintenance_restore_snapshot($db, $snapshot);\n        }",
+              "rollback aliases",
+          )
+
+          source = replace_once(
+              source,
+              "    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);\n    if (!$file) {\n        throw new RuntimeException('File no longer exists in the catalog.');\n    }\n\n    $storedPath = catalog_file_maintenance_storage_path($config, $file);",
+              "    $snapshot = catalog_file_maintenance_snapshot($db, $fileId);\n    $file = $snapshot['file'];\n    $packageNames = catalog_file_maintenance_package_names($file, $snapshot['aliases']);\n\n    $storedPath = catalog_file_maintenance_storage_path($config, $file);",
+              "delete snapshot aliases",
+          )
+          source = replace_once(
+              source,
+              "$affectedFileIds = catalog_file_maintenance_affected_ids($db, (int)$file['game_id'], $fileId, (string)$file['package_name']);",
+              "$affectedFileIds = catalog_file_maintenance_affected_ids($db, (int)$file['game_id'], $fileId, $packageNames);",
+              "delete affected identities",
+          )
+          source = replace_once(
+              source,
+              "        catalog_file_maintenance_emit($progress, 'delete', 20, 'Removing catalog records and references');\n        $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);",
+              "        catalog_file_maintenance_emit($progress, 'delete', 20, 'Removing catalog records and references');\n        catalog_package_aliases_ensure($db);\n        $db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);\n        $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);",
+              "delete alias rows",
+          )
+          path.write_text(source)
+
+          path = Path("catalog/file-maintenance.php")
+          source = path.read_text()
+          source = replace_once(
+              source,
+              "    if ($status >= 200 && $status < 300 && isset($payload['return_url']) && catalog_maintenance_should_redirect($operation, $progressToken)) {\n        header('Location: ' . (string)$payload['return_url']);\n        exit;\n    }",
+              "    if ($status >= 200 && $status < 300 && isset($payload['return_url']) && catalog_maintenance_should_redirect($operation, $progressToken)) {\n        if (!empty($payload['message'])) {\n            catalog_start_session();\n            $_SESSION['catalog_maintenance_flash'] = [\n                'type' => 'success',\n                'message' => (string)$payload['message'],\n            ];\n            session_write_close();\n        }\n        header('Location: ' . (string)$payload['return_url']);\n        exit;\n    }",
+              "maintenance flash",
+          )
+
+          routes = dedent(r'''
+              if ($operation === 'rebuild') {
+                  $result = catalog_maintenance_with_write_lock(
+                      $db,
+                      $progress,
+                      static fn() => catalog_file_maintenance_rebuild_related_dependencies($db, $config, $fileId, $progress)
+                  );
+                  catalog_maintenance_redirect_or_reply([
+                      'ok' => true,
+                      'status' => 'rebuilt',
+                      'message' => 'Rebuilt exact dependency links for ' . $result['original_name']
+                          . ' and ' . max(0, (int)$result['refreshed_count'] - 1) . ' referring package(s).',
+                      'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
+                  ], $operation, $postProgressToken);
+              }
+
+              if ($operation === 'reimport') {
+                  $result = catalog_maintenance_with_write_lock(
+                      $db,
+                      $progress,
+                      static fn() => catalog_maintenance_reimport_or_remove_missing($db, $config, $fileId, $userId, $progress)
+                  );
+                  $message = $result['status'] === 'removed_missing'
+                      ? $result['message']
+                      : ($result['status'] === 'stale_replaced'
+                          ? $result['message']
+                          : 'Re-imported ' . $result['original_name'] . ' using the preserved source path. ' . $result['message']);
+                  catalog_maintenance_redirect_or_reply([
+                      'ok' => true,
+                      'status' => $result['status'],
+                      'message' => $message,
+                      'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
+                  ], $operation, $postProgressToken);
+              }
+          ''').rstrip()
+          source = sub_once(
+              source,
+              r"    if \(\$operation === 'reimport' \|\| \$operation === 'rebuild'\) \{.*?\n    \}",
+              routes,
+              "split maintenance operations",
+          )
+          path.write_text(source)
+
+          path = Path("catalog/game-files.php")
+          source = path.read_text()
+          actions = dedent(r'''
+              if ($isAdmin) {
+                  $html .= '<form method="post" action="file-maintenance.php" title="Rebuild this package dependency links and exact referring packages">';
+                  $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+                  $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+                  $html .= '<input type="hidden" name="operation" value="rebuild">';
+                  $html .= '<button type="submit" class="game-files-admin-button" aria-label="Rebuild dependency links" title="Rebuild dependency links without reparsing the package">↻</button>';
+                  $html .= '</form>';
+                  $html .= '<form method="post" action="file-maintenance.php" title="Re-import this stored package using its preserved source path">';
+                  $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+                  $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+                  $html .= '<input type="hidden" name="operation" value="reimport">';
+                  $html .= '<button type="submit" class="game-files-admin-button" aria-label="Re-import package" title="Re-import package and refresh old/new exact package identities">⟳</button>';
+                  $html .= '</form>';
+          ''').rstrip()
+          source = sub_once(
+              source,
+              r"    if \(\$isAdmin\) \{\n        \$html \.= '<form method=\"post\" action=\"file-maintenance\.php\" title=\"Rebuild dependency links for this game\">';.*?        \$html \.= '</form>';\n(?=        \$html \.= '<form method=\"post\" action=\"file-maintenance\.php\" onsubmit=\"return confirm)",
+              actions + "\n",
+              "separate rebuild/reimport buttons",
+          )
+          source = replace_once(
+              source,
+              "    echo CatalogUi::pageHeader((string)$game['name'], 'Files, versions, dependency status and downloads.', ['Back to games' => 'games.php']);\n\n    echo '<section class=\"ui-section\">",
+              "    echo CatalogUi::pageHeader((string)$game['name'], 'Files, versions, dependency status and downloads.', ['Back to games' => 'games.php']);\n    $maintenanceFlash = $_SESSION['catalog_maintenance_flash'] ?? null;\n    unset($_SESSION['catalog_maintenance_flash']);\n    if (is_array($maintenanceFlash) && !empty($maintenanceFlash['message'])) {\n        echo CatalogUi::alert((string)($maintenanceFlash['type'] ?? 'success'), (string)$maintenanceFlash['message']);\n    }\n\n    echo '<section class=\"ui-section\">",
+              "show maintenance result",
+          )
+          path.write_text(source)
+
+          print("individual maintenance patch applied")
+          PY
+
+          php -l catalog/lib/CatalogFileMaintenance.php
+          php -l catalog/file-maintenance.php
+          php -l catalog/game-files.php
+          grep -Fq "function catalog_file_maintenance_rebuild_related_dependencies" catalog/lib/CatalogFileMaintenance.php
+          grep -Fq "'defer_dependency_rebuild' => true" catalog/lib/CatalogFileMaintenance.php
+          grep -Fq 'name="operation" value="reimport"' catalog/game-files.php
+
+      - name: Commit fix and remove workflow
+        shell: bash
+        run: |
+          rm .github/workflows/one-time-individual-maintenance-fix.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add catalog/lib/CatalogFileMaintenance.php catalog/file-maintenance.php catalog/game-files.php .github/workflows/one-time-individual-maintenance-fix.yml
+          git commit -m "fix: separate file dependency rebuild from reimport"
+          git push origin HEAD:main
