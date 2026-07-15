@@ -258,6 +258,7 @@ try {
             if (session_status() === PHP_SESSION_ACTIVE) {
                 session_write_close();
             }
+
             $result = gm_reset_game_files($db, $config, $gameId, $progress);
             $message = 'Reset ' . $result['game_name'] . ': removed '
                 . $result['catalog_records'] . ' catalog file record(s), deleted '
@@ -409,6 +410,12 @@ CSS;
                 return;
             }
 
+            /*
+             * Do not read form.action here. The hidden field named "action"
+             * becomes a named form property in browsers and can replace the URL
+             * property with the input element. Use the exact current page URL.
+             */
+            var endpoint = window.location.pathname + window.location.search;
             var overlay = window.CatalogLongJob.create({
                 title: 'Resetting ' + gameName,
                 message: 'Preparing game reset…',
@@ -423,7 +430,7 @@ CSS;
                 button.disabled = true;
             });
 
-            var stopPolling = window.CatalogLongJob.poll('game-manager.php', token, function (state) {
+            var stopPolling = window.CatalogLongJob.poll(endpoint, token, function (state) {
                 var done = Number(state.done || 0);
                 var total = Number(state.total || 0);
                 var count = total > 0 ? done + ' of ' + total : 'Working…';
@@ -435,7 +442,7 @@ CSS;
                 });
             }, 450);
 
-            fetch(form.action || 'game-manager.php', {
+            fetch(endpoint, {
                 method: 'POST',
                 credentials: 'same-origin',
                 headers: {'Accept': 'application/json'},
