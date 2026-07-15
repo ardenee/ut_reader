@@ -67,7 +67,9 @@ function scanner_normalize_source_relative_path(string $path): string
             continue;
         }
         if ($part === '..') {
-            array_pop($parts);
+            if ($parts !== []) {
+                array_pop($parts);
+            }
             continue;
         }
         $parts[] = $part;
@@ -105,10 +107,11 @@ function scanner_ue_package_name_from_source_relative(string $sourceRelativePath
     $root = '/Game';
     $contentIndex = -1;
     foreach ($parts as $index => $part) {
-        if (strtolower($part) === 'content') {
+        if (strtolower((string)$part) === 'content') {
             $contentIndex = $index;
         }
     }
+
     if ($contentIndex >= 0) {
         if ($contentIndex > 0 && strtolower((string)$parts[$contentIndex - 1]) === 'engine') {
             $root = '/Engine';
@@ -146,31 +149,13 @@ function scanner_ue_package_name_from_source_relative(string $sourceRelativePath
 
 function scanner_package_name_from_reader(string $fallbackPackageName, string $readerEngine, array $names, array $header): string
 {
-    $readerEngine = strtoupper($readerEngine);
-    if (!in_array($readerEngine, ['UE4', 'UE5'], true)) {
-        return $fallbackPackageName;
-    }
-
-    $fallbackLeaf = strtolower(scanner_package_leaf($fallbackPackageName));
-    $candidates = [];
-    foreach ($names as $name) {
-        $text = scanner_clean_name((string)($name['name'] ?? $name['text'] ?? ''));
-        if ($text !== '' && str_starts_with($text, '/')) {
-            $candidates[] = $text;
-        }
-    }
-    foreach (['packageName', 'longPackageName', 'folderName'] as $key) {
-        $text = scanner_clean_name((string)($header[$key] ?? ''));
-        if ($text !== '' && str_starts_with($text, '/')) {
-            $candidates[] = $text;
-        }
-    }
-    foreach (array_values(array_unique($candidates)) as $candidate) {
-        $leaf = strtolower(scanner_package_leaf($candidate));
-        if ($fallbackLeaf === '' || $leaf === $fallbackLeaf) {
-            return $candidate;
-        }
-    }
+    /*
+     * UT4's FPackageReader derives PackageName from PackageFilename using
+     * FPackageName::FilenameToLongPackageName(). AssetRegistryData stores
+     * object/class/tag rows inside that package; it does not replace the
+     * package identity. Keep UE4/UE5 package identity on the mounted source
+     * path calculated before the reader opened the file.
+     */
     return $fallbackPackageName;
 }
 
@@ -434,13 +419,15 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         $readerEngine = $profileEngine;
     }
 
-    $packageName = scanner_logical_package_name($originalName);
     $sourcePackageName = '';
     if (in_array($readerEngine, ['UE4', 'UE5'], true)) {
         $sourcePackageName = scanner_ue_package_name_from_source_relative($sourceRelativePath);
-        if ($sourcePackageName !== '') {
-            $packageName = $sourcePackageName;
+        if ($sourcePackageName === '') {
+            throw new RuntimeException('UE4 package identity requires a mounted source-relative path, matching UT4 FPackageName::FilenameToLongPackageName behaviour. Reimport using Local Source Scan, folder upload, PAK import, or a source manifest path; single loose UE4 files cannot be catalogued safely.');
         }
+        $packageName = $sourcePackageName;
+    } else {
+        $packageName = scanner_logical_package_name($originalName);
     }
 
     scanner_emit_percent($progress, 'scan', 4, 'Hashing file');
