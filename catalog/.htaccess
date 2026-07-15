@@ -1,6 +1,16 @@
 Options -Indexes
 RewriteEngine On
 
+# Catalog pages contain session-specific admin controls and CSRF tokens. Never
+# allow browsers or intermediary caches to reuse rendered PHP responses.
+<IfModule mod_headers.c>
+    <FilesMatch "\.php$">
+        Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0, private"
+        Header always set Pragma "no-cache"
+        Header always set Expires "0"
+    </FilesMatch>
+</IfModule>
+
 # Preserve the legacy public game-page redirect.
 RewriteCond %{QUERY_STRING} (^|&)page=game(&|$)
 RewriteRule ^index\.php$ game-page.php [L,QSA]
