@@ -50,6 +50,17 @@ final class LegacyCatalogPackageImporter implements CatalogPackageImporter
         string $gameSlug,
         string $reason
     ): void {
+        if (!is_file($temporaryPath)) {
+            return;
+        }
+
+        $bytes = @file_get_contents($temporaryPath, false, null, 0, 4);
+        $tag = is_string($bytes) && strlen($bytes) === 4 ? (int)(unpack('V', $bytes)[1] ?? 0) : 0;
+        if ($tag !== 0x9E2A83C1) {
+            @unlink($temporaryPath);
+            return;
+        }
+
         \scanner_store_failed_upload($config, $temporaryPath, $originalName, $gameSlug, $reason);
     }
 }
