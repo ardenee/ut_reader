@@ -1,0 +1,233 @@
+name: One-time wire canonical source identity
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-time-wire-source-identity.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Wire source identity service
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace_once(text, old, new, label):
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected one match, found {count}')
+              return text.replace(old, new, 1)
+
+          # CatalogScanner.php
+          path = Path('catalog/lib/CatalogScanner.php')
+          text = path.read_text()
+          text = replace_once(
+              text,
+              "require_once __DIR__ . '/CatalogPackageAliases.php';\n",
+              "require_once __DIR__ . '/CatalogPackageAliases.php';\nrequire_once __DIR__ . '/CatalogSourceIdentity.php';\n",
+              'scanner require'
+          )
+          pattern = re.compile(
+              r"    \$sourcePackageName = '';\n"
+              r"    if \(in_array\(\$readerEngine, \['UE4', 'UE5'\], true\)\) \{\n"
+              r"        \$sourcePackageName = scanner_ue_package_name_from_source_relative\(\$sourceRelativePath\);\n"
+              r"        if \(\$sourcePackageName === ''\) \{\n"
+              r"            throw new RuntimeException\('UE4 package identity requires a mounted source-relative path, matching UT4 FPackageName::FilenameToLongPackageName behaviour\. Reimport using Local Source Scan, folder upload, PAK import, or a source manifest path; single loose UE4 files cannot be catalogued safely\.'\);\n"
+              r"        \}\n"
+              r"        \$packageName = \$sourcePackageName;\n"
+              r"    \} else \{\n"
+              r"        \$packageName = scanner_logical_package_name\(\$originalName\);\n"
+              r"    \}\n"
+          )
+          replacement = (
+              "    $sourcePackageName = catalog_source_identity_package_name($readerEngine, $sourceRelativePath, $originalName);\n"
+              "    if (in_array($readerEngine, ['UE4', 'UE5'], true) && $sourcePackageName === '') {\n"
+              "        throw new RuntimeException('UE4 package identity requires a mounted source-relative path, matching UT4 FPackageName::FilenameToLongPackageName behaviour. Reimport using Local Source Scan, folder upload, PAK import, or a source manifest path; single loose UE4 files cannot be catalogued safely.');\n"
+              "    }\n"
+              "    $packageName = $sourcePackageName !== '' ? $sourcePackageName : scanner_logical_package_name($originalName);\n"
+          )
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'scanner package block: expected one match, found {count}')
+          path.write_text(text)
+
+          # source-scan.php
+          path = Path('catalog/source-scan.php')
+          text = path.read_text()
+          md5_old = """            if ($file) {
+                record_file_location($db, $upsert, (int)$file['id'], $sourceId, $relative);
+                scanner_record_source_relative_path($db, (int)$file['id'], source_scan_scanner_relative_path($relative, $work));
+                $matchedMd5++;
+                $locations++;
+                continue;
+            }
+"""
+          md5_new = """            if ($file) {
+                record_file_location($db, $upsert, (int)$file['id'], $sourceId, $relative);
+                scanner_record_source_relative_path($db, (int)$file['id'], source_scan_scanner_relative_path($relative, $work));
+                catalog_source_identity_rebuild_file($db, $config, (int)$file['id']);
+                $matchedMd5++;
+                $locations++;
+                continue;
+            }
+"""
+          text = replace_once(text, md5_old, md5_new, 'source scan MD5 fast match')
+
+          guid_old = """            if (count($matches) === 1) {
+                record_file_location($db, $upsert, (int)$matches[0]['id'], $sourceId, $relative);
+                scanner_record_source_relative_path($db, (int)$matches[0]['id'], source_scan_scanner_relative_path($relative, $work));
+                $matchedGuid++;
+                $locations++;
+                continue;
+            }
+"""
+          guid_new = """            if (count($matches) === 1) {
+                record_file_location($db, $upsert, (int)$matches[0]['id'], $sourceId, $relative);
+                scanner_record_source_relative_path($db, (int)$matches[0]['id'], source_scan_scanner_relative_path($relative, $work));
+                catalog_source_identity_rebuild_file($db, $config, (int)$matches[0]['id']);
+                $matchedGuid++;
+                $locations++;
+                continue;
+            }
+"""
+          text = replace_once(text, guid_old, guid_new, 'source scan GUID fast match')
+          path.write_text(text)
+
+          # file-maintenance.php
+          path = Path('catalog/file-maintenance.php')
+          text = path.read_text()
+          pattern = re.compile(
+              r"    \$result = catalog_file_maintenance_reimport\(\$db, \$config, \$oldFileId, \$userId, \$progress\);\n"
+              r"    \$newFileId = \(int\)\$result\['file_id'\];\n"
+              r"    catalog_maintenance_restore_identity_rows\(\$db, \$oldFileId, \$newFileId, \$oldAliases, \$oldLocations\);\n\n"
+              r"    if \(\(string\)\(\$_POST\['operation'\] \?\? ''\) !== 'sync_reimport'\) \{.*?\n"
+              r"    \}\n\n"
+              r"    return \[",
+              re.S
+          )
+          replacement = (
+              "    $result = catalog_file_maintenance_reimport($db, $config, $oldFileId, $userId, $progress);\n"
+              "    $newFileId = (int)$result['file_id'];\n"
+              "    catalog_maintenance_restore_identity_rows($db, $oldFileId, $newFileId, $oldAliases, $oldLocations);\n\n"
+              "    $identity = catalog_source_identity_rebuild_file(\n"
+              "        $db,\n"
+              "        $config,\n"
+              "        $newFileId,\n"
+              "        $progress,\n"
+              "        (string)($_POST['operation'] ?? '') !== 'sync_reimport',\n"
+              "        $oldPackageNames\n"
+              "    );\n"
+              "    $result['message'] .= '; canonical package=' . $identity['new_package_name']\n"
+              "        . '; source-derived aliases=' . $identity['alias_count']\n"
+              "        . '; dependency files refreshed=' . $identity['dependency_files_refreshed'];\n\n"
+              "    return ["
+          )
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'maintenance reimport canonicalization: expected one match, found {count}')
+
+          route_pattern = re.compile(
+              r"    \$fileId = catalog_maintenance_file_id\(\);\n"
+              r"    if \(\$operation === 'reimport' \|\| \$operation === 'rebuild'\) \{.*?\n"
+              r"    \}\n\n"
+              r"    if \(\$operation === 'remove'\)",
+              re.S
+          )
+          route_replacement = """    $fileId = catalog_maintenance_file_id();
+    if ($operation === 'rebuild') {
+        [$file] = catalog_maintenance_current_file($db, $fileId, 'File no longer exists in the catalog.');
+        $identity = catalog_maintenance_with_write_lock(
+            $db,
+            $progress,
+            static fn() => catalog_source_identity_rebuild_file($db, $config, (int)$file['id'], $progress, true)
+        );
+        catalog_maintenance_redirect_or_reply([
+            'ok' => true,
+            'status' => $identity['changed'] ? 'identity_rebuilt' : 'identity_current',
+            'message' => $identity['changed']
+                ? 'Rebuilt canonical package identity from the mounted source path: ' . $identity['old_package_name'] . ' → ' . $identity['new_package_name'] . '. Aliases=' . $identity['alias_count'] . '; dependency files refreshed=' . $identity['dependency_files_refreshed'] . '.'
+                : 'Package identity already matches the mounted source path. No database identity changes were required.',
+            'return_url' => 'game-files.php?id=' . (int)$file['game_id'],
+        ], $operation, $postProgressToken);
+    }
+
+    if ($operation === 'reimport') {
+        $result = catalog_maintenance_with_write_lock(
+            $db,
+            $progress,
+            static fn() => catalog_maintenance_reimport_with_identity_refresh($db, $config, $fileId, $userId, $progress)
+        );
+        catalog_maintenance_redirect_or_reply([
+            'ok' => true,
+            'status' => $result['status'],
+            'message' => $result['status'] === 'reimported'
+                ? 'Re-imported ' . $result['original_name'] . ' through the parser. ' . $result['message']
+                : $result['message'],
+            'return_url' => 'game-files.php?id=' . (int)$result['game_id'],
+        ], $operation, $postProgressToken);
+    }
+
+    if ($operation === 'remove')"""
+          text, count = route_pattern.subn(route_replacement, text, count=1)
+          if count != 1:
+              raise SystemExit(f'maintenance routes: expected one match, found {count}')
+          path.write_text(text)
+
+          # game-files.php
+          path = Path('catalog/game-files.php')
+          text = path.read_text()
+          old = """        $html .= '<form method="post" action="file-maintenance.php" title="Rebuild dependency links for this game">';
+        $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+        $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+        $html .= '<input type="hidden" name="operation" value="rebuild">';
+        $html .= '<button type="submit" class="game-files-admin-button" aria-label="Rebuild dependency links" title="Rebuild dependency links for this game">↻</button>';
+        $html .= '</form>';
+"""
+          new = """        $html .= '<form method="post" action="file-maintenance.php" title="Rebuild canonical package identity from its mounted source path">';
+        $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+        $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+        $html .= '<input type="hidden" name="operation" value="rebuild">';
+        $html .= '<button type="submit" class="game-files-admin-button" aria-label="Rebuild package identity" title="Rebuild database package identity, export paths, source-derived aliases and affected dependencies">↻</button>';
+        $html .= '</form>';
+        $html .= '<form method="post" action="file-maintenance.php" title="Re-import this package through the parser">';
+        $html .= '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
+        $html .= '<input type="hidden" name="file_id" value="' . $fileId . '">';
+        $html .= '<input type="hidden" name="operation" value="reimport">';
+        $html .= '<button type="submit" class="game-files-admin-button" aria-label="Re-import package" title="Re-import package bytes through the parser using the preserved mounted source path">⟳</button>';
+        $html .= '</form>';
+"""
+          text = replace_once(text, old, new, 'file action buttons')
+          path.write_text(text)
+
+          assert "CatalogSourceIdentity.php" in Path('catalog/lib/CatalogScanner.php').read_text()
+          assert Path('catalog/source-scan.php').read_text().count('catalog_source_identity_rebuild_file($db, $config') == 2
+          assert "if ($operation === 'rebuild')" in Path('catalog/file-maintenance.php').read_text()
+          assert "if ($operation === 'reimport')" in Path('catalog/file-maintenance.php').read_text()
+          PY
+
+          php -l catalog/lib/CatalogSourceIdentity.php
+          php -l catalog/lib/CatalogScanner.php
+          php -l catalog/source-scan.php
+          php -l catalog/file-maintenance.php
+          php -l catalog/game-files.php
+
+      - name: Commit and remove one-time workflow
+        shell: bash
+        run: |
+          rm .github/workflows/one-time-wire-source-identity.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add catalog/lib/CatalogScanner.php catalog/source-scan.php catalog/file-maintenance.php catalog/game-files.php .github/workflows/one-time-wire-source-identity.yml
+          git commit -m "fix: derive catalog identity from mounted sources"
+          git push origin HEAD:main
