@@ -6,9 +6,9 @@ namespace UnrealDb\Catalog\Application\Dependency;
 use PDO;
 
 /**
- * Finds dependency owners whose resolution can change after a new package is
- * imported. This application service contains invalidation rules only; the
- * scanner remains responsible for rebuilding the returned files.
+ * Finds dependency owners whose exact package/object resolution can change after
+ * a package is imported. This application service contains invalidation rules
+ * only; the scanner remains responsible for rebuilding the returned files.
  */
 final class CatalogAffectedDependencyRefreshService
 {
@@ -24,10 +24,10 @@ final class CatalogAffectedDependencyRefreshService
         $fileIds = [];
 
         /*
-         * Every import rooted at this package can change state when the package
-         * becomes available: an object may resolve to an Export, or it may at
-         * least become package_only. Do not limit this to paths currently in
-         * the new file's Export table.
+         * Any import rooted at the newly available package may now resolve by
+         * exact package identity or exact object identity. This is an
+         * invalidation query only; the resolver still performs exact matching
+         * and does not use aliases, fuzzy object-name matches, or folder guesses.
          */
         self::collectFileIds(
             $db,
