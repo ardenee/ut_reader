@@ -331,6 +331,11 @@ function catalog_head(string $title): void
         $maintenanceScriptVersion = is_file($maintenanceScriptPath) ? (string)filemtime($maintenanceScriptPath) : '1';
         echo '<script src="' . catalog_h($root . 'assets/game-file-maintenance.js.php?v=' . $maintenanceScriptVersion) . '" defer></script>';
     }
+    if (in_array($scriptName, ['file-info.php', 'file-examine.php'], true)) {
+        $dependencyDisplayPath = __DIR__ . '/../assets/file-dependency-display.js';
+        $dependencyDisplayVersion = is_file($dependencyDisplayPath) ? (string)filemtime($dependencyDisplayPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/file-dependency-display.js?v=' . $dependencyDisplayVersion) . '" defer></script>';
+    }
     echo '</head><body>';
     catalog_admin_nav();
     echo '<main>';
