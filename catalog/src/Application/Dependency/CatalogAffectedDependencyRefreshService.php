@@ -25,9 +25,10 @@ final class CatalogAffectedDependencyRefreshService
 
         /*
          * Any import rooted at the newly available package may now resolve by
-         * exact package identity or exact object identity. This is an
-         * invalidation query only; the resolver still performs exact matching
-         * and does not use aliases, fuzzy object-name matches, or folder guesses.
+         * exact primary package identity, exact package-alias identity, or the
+         * corresponding exact object identity. This is an invalidation query
+         * only; the resolver does not use fuzzy object-name matches, inferred
+         * package variants, or folder guesses.
          */
         self::collectFileIds(
             $db,
