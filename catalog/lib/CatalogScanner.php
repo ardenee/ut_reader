@@ -187,9 +187,22 @@ function scanner_record_source_relative_path(PDO $db, int $fileId, string $sourc
     $db->prepare('UPDATE ue_files SET source_relative_path=CASE WHEN source_relative_path IS NULL OR source_relative_path="" THEN ? ELSE source_relative_path END WHERE id=?')->execute([$sourceRelativePath, $fileId]);
 }
 
+function scanner_file_has_unreal_package_magic(string $path): bool
+{
+    $bytes = @file_get_contents($path, false, null, 0, 4);
+    if (!is_string($bytes) || strlen($bytes) !== 4) {
+        return false;
+    }
+    return (int)(unpack('V', $bytes)[1] ?? 0) === 0x9E2A83C1;
+}
+
 function scanner_store_failed_upload(array $config, string $tmp, string $originalName, string $gameSlug, string $reason): void
 {
     if (!is_file($tmp)) {
+        return;
+    }
+    if (!scanner_file_has_unreal_package_magic($tmp)) {
+        @unlink($tmp);
         return;
     }
     $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . scanner_slug_text($gameSlug) . '/unverified';
