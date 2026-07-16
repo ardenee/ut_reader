@@ -4,6 +4,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/CatalogLegacyUz.php';
 
+const CATALOG_EPIC_UZ2_BLOCK_BYTES = 32768;
+const CATALOG_EPIC_UZ2_MAX_COMPRESSED_BYTES = 33096;
+
 function catalog_redirect_archive_extension(string $filename): string
 {
     $extension = strtolower((string)pathinfo($filename, PATHINFO_EXTENSION));
@@ -85,6 +88,91 @@ function catalog_redirect_archive_inflate(string $payload, int $limit, ?int $exp
         return ['data' => $decoded, 'consumed' => $consumed, 'encoding' => $name];
     }
     return null;
+}
+
+/** @return array{data:string,consumed:int,encoding:string}|null */
+function catalog_redirect_archive_inflate_epic_zlib(string $payload, int $limit, int $expected): ?array
+{
+    if ($payload === '' || $expected <= 0 || !function_exists('inflate_init') || !function_exists('inflate_add')) {
+        return null;
+    }
+    $context = @inflate_init(ZLIB_ENCODING_DEFLATE);
+    if ($context === false) {
+        return null;
+    }
+    $decoded = @inflate_add($context, $payload, ZLIB_FINISH);
+    if (!is_string($decoded)) {
+        return null;
+    }
+    $consumed = function_exists('inflate_get_read_len') ? (int)inflate_get_read_len($context) : strlen($payload);
+    $status = function_exists('inflate_get_status') ? (int)inflate_get_status($context) : ZLIB_STREAM_END;
+    if (
+        $status !== ZLIB_STREAM_END
+        || $consumed !== strlen($payload)
+        || strlen($decoded) !== $expected
+        || strlen($decoded) > $limit
+    ) {
+        return null;
+    }
+    return ['data' => $decoded, 'consumed' => $consumed, 'encoding' => 'zlib'];
+}
+
+/**
+ * Decode the exact UE2 redirect format implemented by Epic's
+ * FFileManagerGeneric::Copy(FILECOPY_Decompress): repeated little-endian
+ * [compressed DWORD][uncompressed DWORD][zlib payload] records.
+ *
+ * @return array{data:string,decoder:string,chunks:int,expected_bytes:int}|null
+ */
+function catalog_redirect_archive_epic_uz2(string $data, int $limit): ?array
+{
+    $position = 0;
+    $length = strlen($data);
+    $output = '';
+    $chunks = 0;
+
+    while ($position < $length) {
+        if ($position + 8 > $length) {
+            return null;
+        }
+        $compressed = catalog_redirect_archive_read_u32($data, $position, 'le');
+        $uncompressed = catalog_redirect_archive_read_u32($data, $position + 4, 'le');
+        $position += 8;
+
+        if (
+            $compressed <= 0
+            || $compressed > CATALOG_EPIC_UZ2_MAX_COMPRESSED_BYTES
+            || $uncompressed <= 0
+            || $uncompressed > CATALOG_EPIC_UZ2_BLOCK_BYTES
+            || $compressed > $length - $position
+            || $uncompressed > $limit - strlen($output)
+        ) {
+            return null;
+        }
+
+        $payload = substr($data, $position, $compressed);
+        $position += $compressed;
+        $decoded = catalog_redirect_archive_inflate_epic_zlib(
+            $payload,
+            $limit - strlen($output),
+            $uncompressed
+        );
+        if ($decoded === null) {
+            return null;
+        }
+        $output .= $decoded['data'];
+        $chunks++;
+    }
+
+    if ($chunks === 0 || $position !== $length || !catalog_redirect_archive_has_package_tag($output)) {
+        return null;
+    }
+    return [
+        'data' => $output,
+        'decoder' => 'epic-uz2-zlib',
+        'chunks' => $chunks,
+        'expected_bytes' => strlen($output),
+    ];
 }
 
 /** @return array{data:string,decoder:string,chunks:int,expected_bytes:int}|null */
@@ -287,14 +375,9 @@ function catalog_redirect_archive_decode_data(string $data, int $maxOutputBytes 
         return $legacy;
     }
 
-    /* UT2003/UT2004 UZ2 files use repeated compressed-size/uncompressed-size records. */
-    foreach (['le', 'be'] as $endian) {
-        foreach ([true, false] as $compressedFirst) {
-            $result = catalog_redirect_archive_pair_records($data, 0, $endian, $compressedFirst, $limit);
-            if ($result !== null) {
-                return $result;
-            }
-        }
+    $epicUz2 = catalog_redirect_archive_epic_uz2($data, $limit);
+    if ($epicUz2 !== null) {
+        return $epicUz2;
     }
 
     foreach ([0, 4, 8, 12, 16, 20, 32] as $offset) {
@@ -368,13 +451,18 @@ function catalog_redirect_archive_decompress_to_temp(string $sourcePath, string 
     if (!is_string($data) || $data === '') {
         throw new RuntimeException('Could not read redirect compressed file: ' . basename($sourceName));
     }
-    $decoded = catalog_redirect_archive_decode_data($data, $maxOutputBytes);
+
+    $sourceExtension = catalog_redirect_archive_extension($sourceName);
+    $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
+    $decoded = $sourceExtension === 'uz2'
+        ? catalog_redirect_archive_epic_uz2($data, $limit)
+        : catalog_redirect_archive_decode_data($data, $limit);
     if (!is_array($decoded) || !catalog_redirect_archive_has_package_tag((string)$decoded['data'])) {
         throw new RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
     }
     $output = (string)$decoded['data'];
     $outputBytes = strlen($output);
-    if ($outputBytes <= 0 || $outputBytes > catalog_redirect_archive_output_limit($maxOutputBytes)) {
+    if ($outputBytes <= 0 || $outputBytes > $limit) {
         throw new RuntimeException('Bad decompressed redirect package size: ' . catalog_bytes($outputBytes));
     }
 
@@ -399,7 +487,7 @@ function catalog_redirect_archive_decompress_to_temp(string $sourcePath, string 
         'filename' => $outputName,
         'bytes' => $outputBytes,
         'compressed_bytes' => strlen($data),
-        'source_extension' => catalog_redirect_archive_extension($sourceName),
+        'source_extension' => $sourceExtension,
         'decoder' => (string)$decoded['decoder'],
         'chunks' => (int)$decoded['chunks'],
         'expected_bytes' => (int)$decoded['expected_bytes'],
