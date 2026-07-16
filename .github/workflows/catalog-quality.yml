@@ -29,6 +29,8 @@ jobs:
           find . -type f -name '*.php' \
             -not -path './vendor/*' \
             -print0 | xargs -0 -n1 php -l
+      - name: Validate generated package formats
+        run: php catalog/tests/mod-package-format-test.php
 
   fresh-schema:
     runs-on: ubuntu-latest
