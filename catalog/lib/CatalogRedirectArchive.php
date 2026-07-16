@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
+require_once __DIR__ . '/CatalogLegacyUz.php';
 
 function catalog_redirect_archive_extension(string $filename): string
 {
@@ -273,13 +274,18 @@ function catalog_redirect_archive_chunk_table(string $data, int $offset, string 
     return ['data' => $output, 'decoder' => 'chunk-table-' . implode('+', array_keys($encodings)), 'chunks' => $count, 'expected_bytes' => $totalUncompressed];
 }
 
-/** @return array{data:string,decoder:string,chunks:int,expected_bytes:int}|null */
+/** @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename?:string}|null */
 function catalog_redirect_archive_decode_data(string $data, int $maxOutputBytes = 0): ?array
 {
     if ($data === '') {
         return null;
     }
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
+
+    $legacy = catalog_legacy_uz_decode($data, $limit);
+    if ($legacy !== null) {
+        return $legacy;
+    }
 
     /* UT2003/UT2004 UZ2 files use repeated compressed-size/uncompressed-size records. */
     foreach (['le', 'be'] as $endian) {
@@ -371,6 +377,16 @@ function catalog_redirect_archive_decompress_to_temp(string $sourcePath, string 
     if ($outputBytes <= 0 || $outputBytes > catalog_redirect_archive_output_limit($maxOutputBytes)) {
         throw new RuntimeException('Bad decompressed redirect package size: ' . catalog_bytes($outputBytes));
     }
+
+    $outputName = catalog_redirect_archive_output_name($sourceName);
+    $embeddedName = trim((string)($decoded['embedded_filename'] ?? ''));
+    if ($embeddedName !== '') {
+        $embeddedName = catalog_clean_unreal_filename(basename(str_replace('\\', '/', $embeddedName)));
+        if ($embeddedName !== '') {
+            $outputName = $embeddedName;
+        }
+    }
+
     $tmp = tempnam(sys_get_temp_dir(), 'ue_redirect_');
     if ($tmp === false || @file_put_contents($tmp, $output) !== $outputBytes) {
         if (is_string($tmp)) {
@@ -380,7 +396,7 @@ function catalog_redirect_archive_decompress_to_temp(string $sourcePath, string 
     }
     return [
         'path' => $tmp,
-        'filename' => catalog_redirect_archive_output_name($sourceName),
+        'filename' => $outputName,
         'bytes' => $outputBytes,
         'compressed_bytes' => strlen($data),
         'source_extension' => catalog_redirect_archive_extension($sourceName),
