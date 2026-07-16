@@ -16,7 +16,7 @@ $blockCount = (int)ceil($expectedBytes / $blockSize);
 $pattern = hash('sha256', 'UnrealDB redirect archive regression', true);
 $package = "\xC1\x83\x2A\x9E" . substr(str_repeat($pattern, (int)ceil(($expectedBytes - 4) / strlen($pattern))), 0, $expectedBytes - 4);
 
-/* Real UZ2 layout: repeated [compressed size, uncompressed size, zlib payload] records. */
+/* Epic UE2 layout: repeated little-endian [compressed size, uncompressed size, zlib payload] records. */
 $wrapper = '';
 foreach (str_split($package, $blockSize) as $block) {
     $compressed = gzcompress($block, 9);
@@ -27,11 +27,24 @@ foreach (str_split($package, $blockSize) as $block) {
 }
 
 $decoded = catalog_redirect_archive_decode_data($wrapper, 32 * 1024 * 1024);
-redirect_test_assert(is_array($decoded), 'pair-record wrapper was not decoded.');
-redirect_test_assert((int)$decoded['chunks'] === $blockCount, 'not every compressed record was consumed.');
+redirect_test_assert(is_array($decoded), 'Epic UZ2 wrapper was not decoded.');
+redirect_test_assert((string)$decoded['decoder'] === 'epic-uz2-zlib', 'Epic UZ2 wrapper used a compatibility decoder.');
+redirect_test_assert((int)$decoded['chunks'] === $blockCount, 'not every Epic compressed record was consumed.');
 redirect_test_assert(strlen((string)$decoded['data']) === $expectedBytes, 'decoded byte count is incorrect.');
 redirect_test_assert(hash_equals(hash('sha256', $package), hash('sha256', (string)$decoded['data'])), 'decoded package bytes differ from the source package.');
-redirect_test_assert(catalog_redirect_archive_decode_data(substr($wrapper, 0, -10), 32 * 1024 * 1024) === null, 'truncated pair-record wrapper was accepted.');
+redirect_test_assert(catalog_redirect_archive_epic_uz2(substr($wrapper, 0, -10), 32 * 1024 * 1024) === null, 'truncated Epic UZ2 wrapper was accepted.');
+
+/* Epic always invokes zlib, even when compressed and uncompressed sizes happen to be equal. */
+$equalPackage = "\xC1\x83\x2A\x9E" . str_repeat("\x9E", 9);
+$equalCompressed = hex2bin('78da3bd8ac350f0e0033be079b');
+redirect_test_assert(is_string($equalCompressed) && strlen($equalCompressed) === strlen($equalPackage), 'equal-size zlib fixture is invalid.');
+$equalWrapper = pack('V2', strlen($equalCompressed), strlen($equalPackage)) . $equalCompressed;
+$equalDecoded = catalog_redirect_archive_epic_uz2($equalWrapper, 1024);
+redirect_test_assert(is_array($equalDecoded), 'equal-size Epic zlib record was not decoded.');
+redirect_test_assert(hash_equals($equalPackage, (string)$equalDecoded['data']), 'equal-size Epic zlib record was treated as stored data.');
+
+$oversizedRecord = pack('V2', 1, CATALOG_EPIC_UZ2_BLOCK_BYTES + 1) . "\0";
+redirect_test_assert(catalog_redirect_archive_epic_uz2($oversizedRecord, 1024 * 1024) === null, 'oversized Epic UZ2 source block was accepted.');
 
 /* Preserve support for wrappers that declare total output size before concatenated members. */
 $smallPackage = substr($package, 0, $blockSize * 3 - 123);
@@ -53,6 +66,7 @@ if ($sourcePath === false || file_put_contents($sourcePath, $wrapper) !== strlen
 
 try {
     $result = catalog_redirect_archive_decompress_to_temp($sourcePath, 'outdoortxt.utx.uz2', 32 * 1024 * 1024);
+    redirect_test_assert((string)$result['decoder'] === 'epic-uz2-zlib', 'profiled UZ2 import did not use the Epic decoder.');
     redirect_test_assert((int)$result['bytes'] === $expectedBytes, 'temporary output size is incorrect.');
     redirect_test_assert((int)$result['chunks'] === $blockCount, 'temporary output metadata has the wrong record count.');
     redirect_test_assert((string)$result['filename'] === 'outdoortxt.utx', 'redirect extension was not removed from the output filename.');
