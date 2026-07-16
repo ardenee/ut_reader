@@ -102,4 +102,33 @@ try {
     @unlink($legacyPath);
 }
 
+/* Synthetic Epic UE3 .uz3 fixture: 5678 header and Huffman/RLE/MTF/BWT/RLE decode chain. */
+$uz3Wrapper = base64_decode('LhYAAA5UZXN0RXBpY1VaMy51APIAAAB/AVIa8LZvikFCOERTWeBdmpOOCT0eUnEomDfpWKhdu5dUgexGRfsgcjgB29tw1nL00j0AsDOM9oCBICP4C/IF/YJ9h3+3fiGQX6gv8zv6C/Pd9oX9bvtu/cLhv8zvBOIX6YtM+U79on3RvzO+M7+z2F/md84X94v3nf/dv1sA', true);
+redirect_test_assert(is_string($uz3Wrapper), 'Epic UZ3 fixture could not be decoded from base64.');
+$uz3Decoded = catalog_legacy_uz_decode($uz3Wrapper, 1024 * 1024, 5678);
+redirect_test_assert(is_array($uz3Decoded), 'Epic UZ3 wrapper was not decoded.');
+redirect_test_assert((string)$uz3Decoded['decoder'] === 'epic-uz3-huffman+rle+mtf+bwt+rle', 'Epic UZ3 wrapper used the wrong codec chain.');
+redirect_test_assert((int)$uz3Decoded['wrapper_signature'] === 5678, 'Epic UZ3 signature was not preserved.');
+redirect_test_assert((int)$uz3Decoded['chunks'] === 1, 'Epic UZ3 BWT block count is incorrect.');
+redirect_test_assert(strlen((string)$uz3Decoded['data']) === 500, 'Epic UZ3 output byte count is incorrect.');
+redirect_test_assert(md5((string)$uz3Decoded['data']) === 'a966f9234c05a7ea3d134fb97d08cfad', 'Epic UZ3 output bytes are incorrect.');
+redirect_test_assert((string)$uz3Decoded['embedded_filename'] === 'TestEpicUZ3.u', 'Epic UZ3 embedded filename was not read.');
+redirect_test_assert(catalog_legacy_uz_decode($uz3Wrapper, 1024 * 1024, 1234) === null, 'Epic UZ3 wrapper was accepted as a UE1 UZ archive.');
+redirect_test_assert(catalog_legacy_uz_decode(substr($uz3Wrapper, 0, -1), 1024 * 1024, 5678) === null, 'truncated Epic UZ3 wrapper was accepted.');
+
+$uz3Path = tempnam(sys_get_temp_dir(), 'ue3_redirect_test_');
+if ($uz3Path === false || file_put_contents($uz3Path, $uz3Wrapper) !== strlen($uz3Wrapper)) {
+    throw new RuntimeException('Could not create Epic UZ3 regression fixture.');
+}
+try {
+    $uz3Result = catalog_redirect_archive_decompress_to_temp($uz3Path, 'renamed.u.uz3', 1024 * 1024);
+    redirect_test_assert((string)$uz3Result['decoder'] === 'epic-uz3-huffman+rle+mtf+bwt+rle', 'profiled UZ3 import did not use the Epic decoder.');
+    redirect_test_assert((int)$uz3Result['bytes'] === 500, 'Epic UZ3 temporary output size is incorrect.');
+    redirect_test_assert((string)$uz3Result['filename'] === 'TestEpicUZ3.u', 'Epic UZ3 embedded output filename was not preserved.');
+    redirect_test_assert((string)hash_file('md5', (string)$uz3Result['path']) === 'a966f9234c05a7ea3d134fb97d08cfad', 'Epic UZ3 temporary output bytes are incorrect.');
+    @unlink((string)$uz3Result['path']);
+} finally {
+    @unlink($uz3Path);
+}
+
 echo "catalog_redirect_archive_test: OK\n";
