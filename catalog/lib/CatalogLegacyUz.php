@@ -2,10 +2,18 @@
 declare(strict_types=1);
 
 /**
- * UE1 UCC redirect archives use the native codec chain in Core/Inc/FCodec.h.
- * Compression order is RLE -> BWT -> MTF -> Huffman, therefore decoding runs
- * Huffman -> MTF -> BWT -> RLE. The outer wrapper starts with magic 1234 and
- * an Unreal-serialized embedded filename.
+ * Unreal redirect archives using Epic's native FCodec chain.
+ *
+ * Signature 1234 (UE1 .uz):
+ *   encode RLE -> BWT -> MTF -> Huffman
+ *   decode Huffman -> MTF -> BWT -> RLE
+ *
+ * Signature 5678 (UE3 .uz3):
+ *   encode RLE -> BWT -> MTF -> RLE -> Huffman
+ *   decode Huffman -> RLE -> MTF -> BWT -> RLE
+ *
+ * Both wrappers serialize the original filename immediately after the
+ * little-endian signature.
  */
 
 final class CatalogLegacyUzBitReader
@@ -21,7 +29,7 @@ final class CatalogLegacyUzBitReader
     public function readBit(): int
     {
         if ($this->position >= $this->length) {
-            throw new RuntimeException('Legacy UZ Huffman bitstream ended unexpectedly.');
+            throw new RuntimeException('Unreal redirect Huffman bitstream ended unexpectedly.');
         }
         $position = $this->position++;
         return (ord($this->data[$position >> 3]) >> ($position & 7)) & 1;
@@ -85,10 +93,14 @@ function catalog_legacy_uz_read_compact_index(string $data, int &$position): ?in
     return $negative ? -$value : $value;
 }
 
-/** @return array{offset:int,filename:string}|null */
-function catalog_legacy_uz_header(string $data): ?array
+/** @return array{offset:int,filename:string,signature:int}|null */
+function catalog_legacy_uz_header(string $data, ?int $expectedSignature = null): ?array
 {
-    if (catalog_legacy_uz_read_u32($data, 0) !== 1234) {
+    $signature = catalog_legacy_uz_read_u32($data, 0);
+    if (!in_array($signature, [1234, 5678], true)) {
+        return null;
+    }
+    if ($expectedSignature !== null && $signature !== $expectedSignature) {
         return null;
     }
 
@@ -127,7 +139,7 @@ function catalog_legacy_uz_header(string $data): ?array
     if ($filename === '' || $position + 4 > strlen($data)) {
         return null;
     }
-    return ['offset' => $position, 'filename' => $filename];
+    return ['offset' => $position, 'filename' => $filename, 'signature' => $signature];
 }
 
 function catalog_legacy_uz_huffman_tree(
@@ -137,7 +149,7 @@ function catalog_legacy_uz_huffman_tree(
     int $depth = 0
 ): int {
     if ($depth > 256 || count($left) > 255) {
-        throw new RuntimeException('Legacy UZ Huffman table is invalid.');
+        throw new RuntimeException('Unreal redirect Huffman table is invalid.');
     }
     if ($reader->readBit() === 0) {
         return -$reader->readByte() - 1;
@@ -155,7 +167,7 @@ function catalog_legacy_uz_decode_huffman(string $data, int $limit): string
 {
     $total = catalog_legacy_uz_read_i32($data, 0);
     if ($total <= 0 || $total > $limit) {
-        throw new RuntimeException('Legacy UZ Huffman output size is invalid.');
+        throw new RuntimeException('Unreal redirect Huffman output size is invalid.');
     }
 
     $reader = new CatalogLegacyUzBitReader(substr($data, 4));
@@ -174,11 +186,11 @@ function catalog_legacy_uz_decode_huffman(string $data, int $limit): string
 
     $remaining = $reader->length - $reader->position;
     if ($remaining >= 8) {
-        throw new RuntimeException('Legacy UZ Huffman stream contains trailing data.');
+        throw new RuntimeException('Unreal redirect Huffman stream contains trailing data.');
     }
     while ($reader->position < $reader->length) {
         if ($reader->readBit() !== 0) {
-            throw new RuntimeException('Legacy UZ Huffman padding is invalid.');
+            throw new RuntimeException('Unreal redirect Huffman padding is invalid.');
         }
     }
     return $output;
@@ -212,7 +224,7 @@ function catalog_legacy_uz_decode_bwt(string $data, int $limit): array
 
     while ($position < $length) {
         if ($position + 12 > $length) {
-            throw new RuntimeException('Legacy UZ BWT header is truncated.');
+            throw new RuntimeException('Unreal redirect BWT header is truncated.');
         }
         $blockLength = catalog_legacy_uz_read_i32($data, $position);
         $first = catalog_legacy_uz_read_i32($data, $position + 4);
@@ -220,7 +232,7 @@ function catalog_legacy_uz_decode_bwt(string $data, int $limit): array
         $position += 12;
 
         if ($blockLength < 0 || $blockLength > 0x40000) {
-            throw new RuntimeException('Legacy UZ BWT block size is invalid.');
+            throw new RuntimeException('Unreal redirect BWT block size is invalid.');
         }
         $encodedLength = $blockLength + 1;
         if (
@@ -228,7 +240,7 @@ function catalog_legacy_uz_decode_bwt(string $data, int $limit): array
             || $last < 0 || $last >= $encodedLength
             || $position + $encodedLength > $length
         ) {
-            throw new RuntimeException('Legacy UZ BWT block references are invalid.');
+            throw new RuntimeException('Unreal redirect BWT block references are invalid.');
         }
 
         $buffer = substr($data, $position, $encodedLength);
@@ -265,13 +277,13 @@ function catalog_legacy_uz_decode_bwt(string $data, int $limit): array
         $total += $blockLength;
         $chunks++;
         if ($total > $limit) {
-            throw new RuntimeException('Legacy UZ BWT output exceeds the configured limit.');
+            throw new RuntimeException('Unreal redirect BWT output exceeds the configured limit.');
         }
         unset($mapping, $counts, $running, $buffer, $decoded);
     }
 
     if ($chunks === 0) {
-        throw new RuntimeException('Legacy UZ BWT stream is empty.');
+        throw new RuntimeException('Unreal redirect BWT stream is empty.');
     }
     return ['data' => implode('', $parts), 'chunks' => $chunks];
 }
@@ -296,11 +308,11 @@ function catalog_legacy_uz_decode_rle(string $data, int $limit): string
             $count = 1;
         } elseif (++$count === 5) {
             if (++$position >= $length) {
-                throw new RuntimeException('Legacy UZ RLE stream is truncated.');
+                throw new RuntimeException('Unreal redirect RLE stream is truncated.');
             }
             $runLength = ord($data[$position]);
             if ($runLength < 2) {
-                throw new RuntimeException('Legacy UZ RLE run length is invalid.');
+                throw new RuntimeException('Unreal redirect RLE run length is invalid.');
             }
             if ($runLength > 5) {
                 $extra = $runLength - 5;
@@ -311,7 +323,7 @@ function catalog_legacy_uz_decode_rle(string $data, int $limit): string
         }
 
         if ($total > $limit) {
-            throw new RuntimeException('Legacy UZ output exceeds the configured limit.');
+            throw new RuntimeException('Unreal redirect output exceeds the configured limit.');
         }
         if (strlen($buffer) >= 65536) {
             $parts[] = $buffer;
@@ -325,10 +337,19 @@ function catalog_legacy_uz_decode_rle(string $data, int $limit): string
     return implode('', $parts);
 }
 
-/** @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename:string}|null */
-function catalog_legacy_uz_decode(string $data, int $maxOutputBytes): ?array
+/**
+ * @return array{
+ *   data:string,
+ *   decoder:string,
+ *   chunks:int,
+ *   expected_bytes:int,
+ *   embedded_filename:string,
+ *   wrapper_signature:int
+ * }|null
+ */
+function catalog_legacy_uz_decode(string $data, int $maxOutputBytes, ?int $expectedSignature = null): ?array
 {
-    $header = catalog_legacy_uz_header($data);
+    $header = catalog_legacy_uz_header($data, $expectedSignature);
     if ($header === null) {
         return null;
     }
@@ -337,20 +358,36 @@ function catalog_legacy_uz_decode(string $data, int $maxOutputBytes): ?array
         $limit = max(1, $maxOutputBytes);
         $stageLimit = $limit + intdiv($limit, 4) + 16 * 1024 * 1024;
         $huffman = catalog_legacy_uz_decode_huffman(substr($data, $header['offset']), $stageLimit);
-        $mtf = catalog_legacy_uz_decode_mtf($huffman);
-        unset($huffman);
+
+        if ($header['signature'] === 5678) {
+            // Epic UE3 adds a second RLE codec immediately before Huffman.
+            $rle = catalog_legacy_uz_decode_rle($huffman, $stageLimit);
+            unset($huffman);
+            $mtf = catalog_legacy_uz_decode_mtf($rle);
+            unset($rle);
+        } else {
+            $mtf = catalog_legacy_uz_decode_mtf($huffman);
+            unset($huffman);
+        }
+
         $bwt = catalog_legacy_uz_decode_bwt($mtf, $stageLimit);
         unset($mtf);
         $output = catalog_legacy_uz_decode_rle($bwt['data'], $limit);
         if (!catalog_redirect_archive_has_package_tag($output)) {
-            throw new RuntimeException('Legacy UZ output does not contain an Unreal package.');
+            throw new RuntimeException('Unreal redirect output does not contain an Unreal package.');
         }
+
+        $decoder = $header['signature'] === 5678
+            ? 'epic-uz3-huffman+rle+mtf+bwt+rle'
+            : 'legacy-uz-huffman+mtf+bwt+rle';
+
         return [
             'data' => $output,
-            'decoder' => 'legacy-uz-huffman+mtf+bwt+rle',
+            'decoder' => $decoder,
             'chunks' => (int)$bwt['chunks'],
             'expected_bytes' => strlen($output),
             'embedded_filename' => (string)$header['filename'],
+            'wrapper_signature' => (int)$header['signature'],
         ];
     } catch (Throwable) {
         return null;
