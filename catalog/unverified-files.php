@@ -55,6 +55,142 @@ function unverified_files_identity_html(array $item): string
         . '<span>GUID: ' . ($guid !== '' ? catalog_h($guid) : '<span class="muted">unavailable</span>') . '</span>';
 }
 
+function unverified_files_guid_key(string $guid): string
+{
+    $key = strtolower((string)(preg_replace('/[^a-f0-9]+/i', '', trim($guid)) ?? ''));
+    if ($key === '' || preg_match('/^0+$/', $key) === 1) {
+        return '';
+    }
+    return $key;
+}
+
+/**
+ * Find exact catalog identity matches for queued files without using package names.
+ * A catalog row is returned when either its MD5 or package GUID matches.
+ *
+ * @param list<array<string,mixed>> $items
+ * @return array<string,list<array<string,mixed>>> keyed by queue token
+ */
+function unverified_files_catalog_identity_matches(PDO $db, array $items): array
+{
+    $md5Tokens = [];
+    $guidTokens = [];
+    $guidQueries = [];
+
+    foreach ($items as $item) {
+        $token = trim((string)($item['token'] ?? ''));
+        if ($token === '') {
+            continue;
+        }
+
+        $md5 = strtolower(trim((string)($item['md5'] ?? '')));
+        if (preg_match('/^[a-f0-9]{32}$/', $md5) === 1) {
+            $md5Tokens[$md5] ??= [];
+            $md5Tokens[$md5][$token] = true;
+        }
+
+        $rawGuid = trim((string)($item['package_guid'] ?? ''));
+        $guidKey = unverified_files_guid_key($rawGuid);
+        if ($guidKey !== '') {
+            $guidTokens[$guidKey] ??= [];
+            $guidTokens[$guidKey][$token] = true;
+            $guidQueries[$rawGuid] = true;
+        }
+    }
+
+    $matches = [];
+    $select = 'SELECT f.id file_id, f.game_id, f.original_name, f.package_name, f.file_size, f.md5, f.package_guid,'
+        . ' g.name game_name, COALESCE(p.profile_name, \'\') profile_name,'
+        . ' COALESCE(p.engine_key, f.detected_engine_key, \'\') profile_engine'
+        . ' FROM ue_files f'
+        . ' JOIN ue_games g ON g.id=f.game_id'
+        . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1';
+
+    $record = static function (array $row, string $matchType, array $tokens) use (&$matches): void {
+        $fileId = (int)$row['file_id'];
+        foreach (array_keys($tokens) as $token) {
+            $matches[$token] ??= [];
+            if (!isset($matches[$token][$fileId])) {
+                $matches[$token][$fileId] = $row + ['match_md5' => false, 'match_guid' => false];
+            }
+            $matches[$token][$fileId][$matchType] = true;
+        }
+    };
+
+    foreach (array_chunk(array_keys($md5Tokens), 500) as $values) {
+        $placeholders = implode(',', array_fill(0, count($values), '?'));
+        $rows = catalog_all(
+            $db,
+            $select . ' WHERE f.md5 IN (' . $placeholders . ') ORDER BY g.name, f.original_name, f.id',
+            $values
+        );
+        foreach ($rows as $row) {
+            $key = strtolower(trim((string)$row['md5']));
+            if (isset($md5Tokens[$key])) {
+                $record($row, 'match_md5', $md5Tokens[$key]);
+            }
+        }
+    }
+
+    foreach (array_chunk(array_keys($guidQueries), 500) as $values) {
+        $placeholders = implode(',', array_fill(0, count($values), '?'));
+        $rows = catalog_all(
+            $db,
+            $select . ' WHERE f.package_guid IN (' . $placeholders . ') ORDER BY g.name, f.original_name, f.id',
+            $values
+        );
+        foreach ($rows as $row) {
+            $key = unverified_files_guid_key((string)$row['package_guid']);
+            if ($key !== '' && isset($guidTokens[$key])) {
+                $record($row, 'match_guid', $guidTokens[$key]);
+            }
+        }
+    }
+
+    foreach ($matches as $token => $rowsById) {
+        $rows = array_values($rowsById);
+        usort($rows, static function (array $left, array $right): int {
+            return strcasecmp((string)$left['game_name'], (string)$right['game_name'])
+                ?: strcasecmp((string)$left['original_name'], (string)$right['original_name'])
+                ?: ((int)$left['file_id'] <=> (int)$right['file_id']);
+        });
+        $matches[$token] = $rows;
+    }
+
+    return $matches;
+}
+
+function unverified_files_catalog_matches_html(array $matches): string
+{
+    if ($matches === []) {
+        return '<span class="muted">No exact MD5/GUID match.</span>';
+    }
+
+    $html = '<div class="unverified-catalog-match-list">';
+    foreach ($matches as $match) {
+        $matchedBy = [];
+        if (!empty($match['match_md5'])) {
+            $matchedBy[] = 'MD5';
+        }
+        if (!empty($match['match_guid'])) {
+            $matchedBy[] = 'GUID';
+        }
+
+        $profile = trim((string)($match['profile_name'] ?? ''));
+        $engine = trim((string)($match['profile_engine'] ?? ''));
+        $profileLabel = $profile !== ''
+            ? $profile . ($engine !== '' ? ' / ' . $engine : '')
+            : ($engine !== '' ? $engine : 'no profile');
+
+        $html .= '<a class="unverified-catalog-match" href="file-info.php?id=' . (int)$match['file_id'] . '" title="Open existing catalog file">'
+            . '<strong>' . catalog_h((string)$match['game_name']) . '</strong>'
+            . '<span class="mono">' . catalog_h((string)$match['original_name']) . '</span>'
+            . '<small>' . catalog_h($profileLabel) . ' · ' . catalog_h(implode(' + ', $matchedBy)) . '</small>'
+            . '</a>';
+    }
+    return $html . '</div>';
+}
+
 function unverified_files_reference_html(array $references): string
 {
     if ($references === []) {
@@ -183,6 +319,7 @@ try {
     $sourceFilter = $sourceGameId === -1 ? 0 : ($sourceGameId > 0 ? $sourceGameId : null);
     $items = uvf_list($db, $config, $sourceFilter);
     $referencesByPackage = uvf_reference_matches($db, array_map(static fn(array $item): string => catalog_clean_unreal_package_stem((string)$item['package_name']), $items));
+    $catalogMatchesByToken = unverified_files_catalog_identity_matches($db, $items);
     $flash = $_SESSION['unverified_files_flash'] ?? null;
     unset($_SESSION['unverified_files_flash']);
 
@@ -191,15 +328,20 @@ try {
 <style>
 .unverified-filter { display:flex; align-items:end; gap:10px; flex-wrap:wrap; }
 .unverified-filter label { display:grid; gap:5px; }
-.unverified-summary { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
+.unverified-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
 .unverified-note { border-left:4px solid #f6c453; padding-left:12px; }
-.unverified-table { min-width:1340px; }
+.unverified-table { min-width:1620px; }
 .unverified-table th, .unverified-table td { vertical-align:top; }
 .unverified-select-col { width:42px; text-align:center; }
 .unverified-select-col input { margin:3px 0 0; }
 .unverified-name { min-width:210px; }
 .unverified-identity { min-width:350px; white-space:nowrap; }
 .unverified-identity span { display:block; }
+.unverified-matches { min-width:290px; }
+.unverified-catalog-match-list { display:grid; gap:6px; }
+.unverified-catalog-match { display:grid; gap:2px; padding:7px 9px; border:1px solid rgba(52,211,153,.35); border-radius:8px; background:rgba(52,211,153,.08); text-decoration:none; }
+.unverified-catalog-match:hover { border-color:rgba(52,211,153,.75); }
+.unverified-catalog-match span, .unverified-catalog-match small { color:var(--muted); }
 .unverified-references { min-width:255px; }
 .unverified-reference-list { display:flex; flex-wrap:wrap; gap:5px; }
 .unverified-meta { display:block; margin-top:4px; }
@@ -215,12 +357,13 @@ try {
 .unverified-bulk-actions { display:flex; align-items:center; flex-wrap:wrap; gap:7px; }
 .unverified-bulk-toolbar [disabled] { opacity:.5; cursor:not-allowed; }
 .unverified-bulk-help { flex-basis:100%; margin:0; color:var(--muted); font-size:12px; line-height:1.35; }
+@media (max-width:900px) { .unverified-summary { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media (max-width:700px) { .unverified-summary { grid-template-columns:1fr; } .unverified-target-label { width:100%; } .unverified-target-label select { flex:1; max-width:none; } }
 </style>
 CSS;
     echo CatalogUi::pageHeader(
         'Unverified Files',
-        'Review bucket and rejected packages, identify games that require their package names, then process selected files together.',
+        'Review queued packages, see exact existing catalog identities, identify games that require their package names, then process selected files together.',
         ['Upload Bucket' => 'upload-bucket.php', 'Upload Files' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Sources' => 'sources.php', 'Storage Audit' => 'storage-audit.php']
     );
 
@@ -239,6 +382,7 @@ CSS;
     echo '</div></section>';
 
     $totalBytes = array_sum(array_map(static fn(array $item): int => (int)$item['size'], $items));
+    $identityMatchCount = count(array_filter($items, static fn(array $item): bool => !empty($catalogMatchesByToken[(string)$item['token']] ?? [])));
     $referenceCandidateCount = count(array_filter($items, static function (array $item) use ($referencesByPackage): bool {
         $packageKey = strtolower(catalog_clean_unreal_package_stem((string)$item['package_name']));
         return !empty($referencesByPackage[$packageKey] ?? []);
@@ -246,10 +390,11 @@ CSS;
     echo '<div class="unverified-summary">';
     echo '<div class="stat"><h2>' . count($items) . '</h2><p>Queued files</p></div>';
     echo '<div class="stat"><h2>' . catalog_h(catalog_bytes($totalBytes)) . '</h2><p>Queued storage</p></div>';
+    echo '<div class="stat"><h2>' . $identityMatchCount . '</h2><p>Existing MD5/GUID matches</p></div>';
     echo '<div class="stat"><h2>' . $referenceCandidateCount . '</h2><p>Filename package candidates</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Package queues</h2><p class="unverified-note">A Reference Candidate is a <strong>filename package-name match</strong>: one or more catalogued files in the listed game have Imports requiring this queued file’s package name. Select files and use Object check for actual export/import matching.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Package queues</h2><p class="unverified-note"><strong>Existing Catalog Matches</strong> are exact MD5 and/or package GUID matches across all games. A Reference Candidate is only a <strong>filename package-name match</strong>: one or more catalogued files in the listed game have Imports requiring this queued file’s package name.</p></div></div><div class="ui-section__body">';
     if ($items === []) {
         echo CatalogUi::emptyState('No queued files found', 'There are no physical files in the selected queue folder.');
     } else {
@@ -275,7 +420,7 @@ CSS;
 
         echo '<div class="table-wrap"><table class="unverified-table"><thead><tr>';
         echo '<th class="unverified-select-col"><input type="checkbox" id="unverified-select-all" aria-label="Select all queued files"></th>';
-        echo '<th>Source Queue</th><th>File</th><th class="unverified-identity">MD5 / GUID</th><th>Detected Header</th><th>Size</th><th class="unverified-references" title="Filename package-name candidates. Object check performs an actual exported-object comparison.">Reference Candidates</th>';
+        echo '<th>Source Queue</th><th>File</th><th class="unverified-identity">MD5 / GUID</th><th class="unverified-matches">Existing Catalog Matches</th><th>Detected Header</th><th>Size</th><th class="unverified-references" title="Filename package-name candidates. Object check performs an actual exported-object comparison.">Reference Candidates</th>';
         echo '</tr></thead><tbody>';
         foreach ($items as $item) {
             $displayOriginalName = catalog_clean_unreal_filename((string)$item['original_name']);
@@ -283,6 +428,7 @@ CSS;
             $displayExtension = catalog_clean_unreal_extension((string)$item['extension']);
             $packageKey = strtolower($displayPackageName);
             $references = $referencesByPackage[$packageKey] ?? [];
+            $catalogMatches = $catalogMatchesByToken[(string)$item['token']] ?? [];
             $reason = trim((string)$item['reason']);
             if ($reason === '') {
                 $reason = 'No queue note was found.';
@@ -296,11 +442,12 @@ CSS;
             echo '<td><strong>' . catalog_h((string)$item['game']['name']) . '</strong><span class="muted small unverified-meta">' . catalog_h($sourceMeta) . '</span></td>';
             echo '<td class="unverified-name"><strong class="mono">' . catalog_h($displayOriginalName) . '</strong><span class="muted small unverified-meta">Package: ' . catalog_h($displayPackageName) . '<br>Extension: ' . catalog_h($displayExtension) . '<br>Queued: ' . catalog_h(date('Y-m-d H:i', (int)$item['modified_at'])) . '</span></td>';
             echo '<td class="mono small unverified-identity">' . unverified_files_identity_html($item) . '</td>';
+            echo '<td class="unverified-matches">' . unverified_files_catalog_matches_html($catalogMatches) . '</td>';
             echo '<td class="mono small">' . catalog_h(unverified_files_header_label($item)) . '</td>';
             echo '<td class="mono small">' . catalog_h(catalog_bytes((int)$item['size'])) . '</td>';
             echo '<td class="unverified-references">' . unverified_files_reference_html($references) . '</td>';
             echo '</tr>';
-            echo '<tr class="unverified-rejection-row"><td></td><td colspan="6"><strong>Queue note</strong><span class="unverified-rejection-text mono small">' . catalog_h($reason) . '</span></td></tr>';
+            echo '<tr class="unverified-rejection-row"><td></td><td colspan="7"><strong>Queue note</strong><span class="unverified-rejection-text mono small">' . catalog_h($reason) . '</span></td></tr>';
         }
         echo '</tbody></table></div>';
         echo '</form>';
