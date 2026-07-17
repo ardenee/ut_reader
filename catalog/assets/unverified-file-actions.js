@@ -25,10 +25,12 @@
             '.unverified-action-log li { margin: 4px 0; overflow-wrap: anywhere; }',
             '.unverified-action-log li.is-success { color: #b8f3cb; }',
             '.unverified-action-log li.is-error { color: #ffb5b5; }',
+            '.unverified-action-log li.is-info { color: var(--muted); }',
             '.unverified-action-dialog__footer { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 12px 20px 18px; border-top: 1px solid var(--line2); }',
             '.unverified-action-frame { display: none; width: 100%; min-height: 0; flex: 1; border: 1px solid var(--line2); border-radius: 8px; background: #0b1020; }',
             '.unverified-action-frame.is-ready { display: block; }',
             '.unverified-action-dialog.is-object-check .unverified-action-dialog__body { overflow: hidden; }',
+            '.unverified-action-dialog.is-object-check .unverified-action-log { min-height: 96px; max-height: 180px; }',
             '@media (max-width: 700px) { .unverified-action-overlay { padding: 8px; } .unverified-action-dialog { width: 100%; max-height: 96vh; } .unverified-action-dialog.is-object-check { width: 100%; height: 96vh; } }',
             '@media (prefers-reduced-motion: reduce) { .unverified-action-progress__bar { transition: none; } .unverified-action-progress.is-indeterminate .unverified-action-progress__bar { animation-duration: 2s; } }'
         ].join('\n');
@@ -90,13 +92,14 @@
             frame: overlay.querySelector('[data-overlay-frame]'),
             closeButton: closeButton,
             stopButton: stopButton,
-            remove: remove
+            remove: remove,
+            isClosed: function () { return closed; }
         };
     }
 
-    function appendLog(overlay, message, ok) {
+    function appendLog(overlay, message, tone) {
         var item = document.createElement('li');
-        item.className = ok ? 'is-success' : 'is-error';
+        item.className = tone === 'success' ? 'is-success' : (tone === 'error' ? 'is-error' : 'is-info');
         item.textContent = message;
         overlay.log.appendChild(item);
         overlay.log.scrollTop = overlay.log.scrollHeight;
@@ -167,11 +170,11 @@
             try {
                 var result = await postAction(form, action, entry);
                 successes++;
-                appendLog(overlay, result.message || entry.name + ': complete', true);
+                appendLog(overlay, result.message || entry.name + ': complete', 'success');
                 removeCompletedRow(entry);
             } catch (error) {
                 failures++;
-                appendLog(overlay, entry.name + ': ' + (error.message || 'failed'), false);
+                appendLog(overlay, entry.name + ': ' + (error.message || 'failed'), 'error');
             }
             overlay.bar.style.width = Math.round(((index + 1) / entries.length) * 100) + '%';
         }
@@ -186,23 +189,127 @@
         overlay.closeButton.focus();
     }
 
+    function makeProgressToken() {
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID().replace(/-/g, '');
+        }
+        var random = Math.random().toString(36).slice(2);
+        return 'uvoc' + Date.now().toString(36) + random;
+    }
+
+    function objectCheckCurrentText(state, entries) {
+        var index = Number.isInteger(state.current_index) ? state.current_index : parseInt(state.current_index, 10);
+        var name = index >= 0 && index < entries.length ? entries[index].name : '';
+        var message = state.message || 'Waiting for Object Check progress…';
+        return name ? name + ' — ' + message : message;
+    }
+
+    function startObjectCheckPolling(overlay, progressToken, entries) {
+        var stopped = false;
+        var timer = null;
+        var lastKey = '';
+        var staleWarned = false;
+        var requestErrors = 0;
+
+        function stop() {
+            stopped = true;
+            if (timer !== null) window.clearTimeout(timer);
+        }
+
+        async function poll() {
+            if (stopped || overlay.isClosed()) return;
+            try {
+                var response = await fetch('unverified-object-check.php?progress=' + encodeURIComponent(progressToken) + '&_=' + Date.now(), {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store'
+                });
+                var state = await response.json();
+                if (!response.ok) throw new Error(state.message || 'Progress request failed.');
+
+                requestErrors = 0;
+                var percent = Math.max(0, Math.min(100, parseInt(state.percent, 10) || 0));
+                overlay.progress.classList.remove('is-indeterminate');
+                overlay.bar.style.width = percent + '%';
+                overlay.current.textContent = objectCheckCurrentText(state, entries);
+                overlay.summary.textContent = (parseInt(state.done, 10) || 0) + ' of ' + (parseInt(state.total, 10) || entries.length) + ' file(s) completed.';
+
+                var key = String(state.stage || '') + '|' + String(state.message || '') + '|' + String(state.current_index || 0);
+                if (key !== lastKey && state.stage !== 'waiting') {
+                    appendLog(overlay, objectCheckCurrentText(state, entries), state.stage === 'failed' || state.stage === 'file_error' ? 'error' : (state.stage === 'file_complete' || state.stage === 'done' ? 'success' : 'info'));
+                    lastKey = key;
+                }
+
+                var updatedAt = Number(state.updated_at || 0);
+                var age = updatedAt > 0 ? Math.max(0, Math.floor(Date.now() / 1000 - updatedAt)) : 0;
+                if (age >= 15) {
+                    overlay.current.textContent = objectCheckCurrentText(state, entries) + ' (no new server update for ' + age + ' seconds)';
+                    if (!staleWarned) {
+                        appendLog(overlay, 'The current package reader has not reported a new stage for 15 seconds. It may still be processing a large or damaged table.', 'error');
+                        staleWarned = true;
+                    }
+                } else {
+                    staleWarned = false;
+                }
+
+                if (state.stage === 'failed') {
+                    overlay.summary.textContent = 'Object Check failed.';
+                    overlay.closeButton.disabled = false;
+                    stop();
+                    return;
+                }
+                if (state.stage === 'done') {
+                    overlay.bar.style.width = '100%';
+                }
+            } catch (error) {
+                requestErrors++;
+                if (requestErrors === 1 || requestErrors % 10 === 0) {
+                    appendLog(overlay, 'Progress update unavailable: ' + (error.message || 'request failed'), 'error');
+                }
+            }
+            timer = window.setTimeout(poll, 750);
+        }
+
+        poll();
+        return stop;
+    }
+
     function openObjectCheck(form, entries) {
         var overlay = createOverlay('Queued Package Object Check', true);
-        overlay.summary.textContent = 'Checking ' + entries.length + ' selected file(s).';
-        overlay.current.textContent = 'Reading package tables and comparing exported objects…';
+        var progressToken = makeProgressToken();
+        var loaded = false;
+        overlay.summary.textContent = 'Starting check for ' + entries.length + ' selected file(s).';
+        overlay.current.textContent = 'Starting queued package Object Check…';
         overlay.progress.classList.add('is-indeterminate');
-        overlay.log.hidden = true;
         overlay.stopButton.hidden = true;
         overlay.closeButton.textContent = 'Close';
-        overlay.closeButton.addEventListener('click', overlay.remove);
+        overlay.closeButton.disabled = false;
+        appendLog(overlay, 'Object Check request started.', 'info');
+
+        var stopPolling = startObjectCheckPolling(overlay, progressToken, entries);
+        overlay.closeButton.addEventListener('click', function () {
+            stopPolling();
+            overlay.remove();
+        });
 
         var query = new URLSearchParams();
         entries.forEach(function (entry) { query.append('tokens[]', entry.token); });
+        query.set('progress_token', progressToken);
+
         overlay.frame.addEventListener('load', function () {
+            if (loaded) return;
+            try {
+                if (overlay.frame.contentWindow && overlay.frame.contentWindow.location.href === 'about:blank') return;
+            } catch (error) {
+                // The route is same-origin; continue if the browser temporarily hides the URL.
+            }
+            loaded = true;
+            stopPolling();
             overlay.progress.classList.remove('is-indeterminate');
             overlay.bar.style.width = '100%';
-            overlay.current.textContent = 'Object check complete.';
+            overlay.current.textContent = 'Object Check complete. Results are shown below.';
             overlay.summary.textContent = entries.length + ' selected file(s) inspected.';
+            appendLog(overlay, 'Object Check results finished loading.', 'success');
             overlay.frame.classList.add('is-ready');
             overlay.closeButton.disabled = false;
             try {
@@ -213,10 +320,10 @@
                     });
                 }
             } catch (error) {
-                // Same-origin access is expected, but the result remains usable if unavailable.
+                // The result remains usable if same-origin frame access is unavailable.
             }
             overlay.closeButton.focus();
-        }, { once: true });
+        });
         overlay.frame.src = 'unverified-object-check.php?' + query.toString();
     }
 
