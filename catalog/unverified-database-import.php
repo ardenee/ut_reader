@@ -11,6 +11,10 @@ try {
     if (!catalog_require_admin_page('Index Existing Unverified Files')) exit;
     catalog_unverified_schema_ensure($db);
 
+    // Backfill creates staging rows only. Queue ownership is recorded separately
+    // in unverified_queue_game_id; no unverified row is assigned to a game.
+    $db->exec('UPDATE ue_files SET game_id=NULL WHERE scan_status="unverified" AND game_id IS NOT NULL');
+
     $items = uvf_list($db, $config, null);
     $missing = [];
     $indexed = 0;
@@ -28,11 +32,11 @@ try {
 .uvbi-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}.uvbi-progress{padding:14px;border:1px solid var(--line2);border-radius:10px;background:rgba(255,255,255,.025)}.uvbi-progress progress{width:100%;height:18px}.uvbi-log{max-height:420px;overflow:auto;margin:10px 0 0;padding:10px 10px 10px 30px;border:1px solid var(--line2);border-radius:8px}.uvbi-log .good{color:#b8f3cb}.uvbi-log .bad{color:#ffb5b5}@media(max-width:800px){.uvbi-grid{grid-template-columns:1fr}}
 </style>
 CSS;
-    echo CatalogUi::pageHeader('Index Existing Unverified Files', 'Backfill filesystem-only queue files into ue_files with scan_status=unverified. Files remain in their current queue and are not shown in game file lists.', ['Unverified Files' => 'unverified-files.php']);
-    echo '<div class="uvbi-grid"><div class="stat"><h2>' . count($items) . '</h2><p>Physical queue files</p></div><div class="stat"><h2>' . $indexed . '</h2><p>Already indexed</p></div><div class="stat"><h2>' . count($missing) . '</h2><p>Need indexing</p></div></div>';
+    echo CatalogUi::pageHeader('Index Existing Unverified Files', 'Backfill filesystem-only queue files into ue_files with scan_status=unverified and game_id=NULL. The physical source queue is remembered separately; files are not assigned to a game until Import selected.', ['Unverified Files' => 'unverified-files.php']);
+    echo '<div class="uvbi-grid"><div class="stat"><h2>' . count($items) . '</h2><p>Physical queue files</p></div><div class="stat"><h2>' . $indexed . '</h2><p>Already indexed, no game assigned</p></div><div class="stat"><h2>' . count($missing) . '</h2><p>Need indexing</p></div></div>';
 
     if ($missing === []) {
-        echo CatalogUi::alert('success', 'Backfill complete', 'Every physical unverified file already has a staging database row.');
+        echo CatalogUi::alert('success', 'Backfill complete', 'Every physical unverified file already has a staging database row with no game assignment.');
     } else {
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Backfill queue</h2><p>Processes one file per request and records readable Names, Imports and Exports.</p></div></div><div class="ui-section__body">';
         echo '<input id="uvbi-csrf" type="hidden" value="' . catalog_h(catalog_csrf('unverified-database-import')) . '">';
