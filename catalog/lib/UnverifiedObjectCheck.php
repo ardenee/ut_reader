@@ -3,32 +3,22 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/UnverifiedFileManager.php';
 require_once __DIR__ . '/CatalogUE4ParserProfile.php';
+require_once __DIR__ . '/CatalogUnverifiedIndex.php';
+require_once __DIR__ . '/CatalogUnverifiedGameMatches.php';
 
 /**
- * Reads one queued Unreal package without storing it. The result strengthens the
- * filename/package-name reference hint by testing whether the actual exports
- * from that package match object paths currently requested by catalog imports.
+ * Object Check prefers the database-staged Names, Imports and Exports. Physical
+ * parsing remains only as a fallback for queue files that have not been backfilled.
  */
 
 function uvoc_emit_progress(?callable $progress, string $stage, string $message, int $percent): void
 {
-    if ($progress === null) {
-        return;
-    }
-    try {
-        $progress([
-            'stage' => $stage,
-            'message' => $message,
-            'percent' => max(0, min(100, $percent)),
-        ]);
-    } catch (Throwable $error) {
-        error_log('[UnrealDB object check] progress callback failed: ' . $error->getMessage());
+    if ($progress !== null) {
+        $progress(['stage' => $stage, 'message' => $message, 'percent' => max(0, min(100, $percent))]);
     }
 }
 
-/**
- * @return array{valid:bool,found_tag:string,found_hex:string,found_text:string,expected_tag:string}
- */
+/** @return array{valid:bool,found_tag:string,found_hex:string,found_text:string,expected_tag:string} */
 function uvoc_package_signature(string $path): array
 {
     $bytes = @file_get_contents($path, false, null, 0, 16);
@@ -78,9 +68,9 @@ function uvoc_reader_engine(array $item): string
 }
 
 /**
- * @param array<int, mixed> $names
- * @param array<int, mixed> $imports
- * @param array<int, mixed> $exports
+ * @param array<int,mixed> $names
+ * @param array<int,mixed> $imports
+ * @param array<int,mixed> $exports
  * @return array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>}
  */
 function uvoc_build_tables(array $names, array $imports, array $exports, string $packageName): array
@@ -131,11 +121,7 @@ function uvoc_build_tables(array $names, array $imports, array $exports, string 
         ];
     }
 
-    return [
-        'names' => $nameRows,
-        'imports' => $importRows,
-        'exports' => $exportRows,
-    ];
+    return ['names' => $nameRows, 'imports' => $importRows, 'exports' => $exportRows];
 }
 
 function uvoc_set_reader_profile(array $config, array $item, string $engine): void
@@ -152,29 +138,25 @@ function uvoc_set_reader_profile(array $config, array $item, string $engine): vo
             $db = catalog_db($config);
             $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]) ?: [];
             $profile = gp_required_profile_for_game($db, $gameId);
-        } catch (Throwable $e) {
-            error_log('[UnrealDB object check] parser profile fallback: ' . $e->getMessage());
+        } catch (Throwable $error) {
+            error_log('[UnrealDB object check] parser profile fallback: ' . $error->getMessage());
         }
     }
 
     catalog_ue4_set_next_reader_options(catalog_ue4_reader_options($config, $game, $profile));
 }
 
-/**
- * @return array{engine:string,name_count:int,import_count:int,export_count:int,exports:array<string,string>,tables:array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>}}
- */
+/** @return array<string,mixed> */
 function uvoc_read_exports(array $config, array $item, ?callable $progress = null): array
 {
     uvoc_emit_progress($progress, 'detect_reader', 'Detecting the package reader', 14);
     $engine = uvoc_reader_engine($item);
-
     uvoc_emit_progress($progress, 'load_reader', 'Loading the ' . $engine . ' package reader', 20);
     $readerClass = scanner_load_reader_class($config, $engine);
     uvoc_set_reader_profile($config, $item, $engine);
 
     uvoc_emit_progress($progress, 'open_package', 'Opening the package', 26);
     $reader = new $readerClass((string)$item['path']);
-
     uvoc_emit_progress($progress, 'validate_package', 'Validating the package structure', 32);
     $issues = method_exists($reader, 'validatePackage') ? $reader->validatePackage() : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);
     [$fatalIssues] = scanner_split_reader_issues(is_array($issues) ? $issues : []);
@@ -198,137 +180,47 @@ function uvoc_read_exports(array $config, array $item, ?callable $progress = nul
     }
 
     uvoc_emit_progress($progress, 'build_paths', 'Building object paths from package references', 76);
-    $packageName = scanner_clean_name((string)$item['package_name']);
-    $tables = uvoc_build_tables($names, $imports, $exports, $packageName);
-    $paths = [];
-    foreach ($tables['exports'] as $export) {
-        $fullPath = (string)$export['full_path'];
-        if ($fullPath !== '') {
-            $paths[strtolower($fullPath)] = $fullPath;
-        }
-    }
+    $packageName = scanner_clean_name((string)][VÉÜXÚØYÙWÛ˜[YI×JNÂˆ	X›\ÈH]›Ø×ØZ[İX›\Ê	˜[Y\Ë	[\ÜË	^ÜË	XÚØYÙS˜[YJNÂˆ	]ÈH×NÂˆ›Ü™XXÚ
+	X›\ÖÉÙ^ÜÉ×H\È	^Ü
+HÂˆ	[]H
+İš[™ÊI^ÜÉÙ[Ü]	×NÂˆYˆ
+	[]OOH	ÉÊHÂˆ	]ÖÜİÛİÙ\Š	[]
+WHH	[]ÂˆBˆB‚ˆ]›Ø×Ù[Z]Ü›ÙÜ™\ÜÊ	›ÙÜ™\ÜË	ÜXÚØYÙWİX›\×Ü™XYIË	ÔXÚØYÙHX›\È\™H™XYIËŠNÂˆ™]\›ˆÂˆ	ÜÛİ\˜ÙIÈOˆ	Ü\ÚXØ[	Ëˆ	Ù[™Ú[™IÈOˆ	[™Ú[™Kˆ	Û˜[YWØÛİ[	ÈOˆÛİ[
+	˜[Y\ÊKˆ	Ú[\ÜØÛİ[	ÈOˆÛİ[
+	[\ÜÊKˆ	Ù^ÜØÛİ[	ÈOˆÛİ[
+	^ÜÊKˆ	Ù^ÜÉÈOˆ	]Ëˆ	İX›\ÉÈOˆ	X›\ËˆNÂŸB‚‹ÊŠˆ™]\›ˆ\œ˜^Oİš[™ËZ^Yˆ
+‹Â™[˜İ[Ûˆ]›Ø×ÜİYÙYÜ™XY\ŠÈ	‹\œ˜^H	İYÙYØØ[X›H	›ÙÜ™\ÜÈH[
+Nˆ\œ˜^BÂˆ	š[RYH
+[
+IİYÙYÉÚY	×NÂˆ]›Ø×Ù[Z]Ü›ÙÜ™\ÜÊ	›ÙÜ™\ÜË	ÛØYÜİYÙYÛ˜[Y\ÉË	ÓØY[™ÈİYÙY˜[Y\Èœ›ÛHH]X˜\ÙIËÍ
+NÂˆ	˜[Y\ÈHØ][Ù×Ø[
+	‹	ÔÑSPÕ˜[YWÚ[™^˜[YWİ^›YÜÈ”“ÓHYWÛ˜[Y\ÈÒT‘Hš[WÚYOÈÔ‘Tˆ–H˜[YWÚ[™^	ËÉš[RYJNÂˆ]›Ø×Ù[Z]Ü›ÙÜ™\ÜÊ	›ÙÜ™\ÜË	ÛØYÜİYÙYÚ[\ÜÉË	ÓØY[™ÈİYÙY[\ÜÈœ›ÛHH]X˜\ÙIËL
+NÂˆ	[\ÜÈHØ][Ù×Ø[
+	‹	ÔÑSPÕ[\ÜÚ[™^Û\Ü×ÜXÚØYÙKÛ\Ü×Û˜[YKØš™XİÛ˜[YKİ]\—Ú[™^›ÛİÜXÚØYÙK™[]]™WÛØš™XİÜ][Ü]”“ÓHYWÚ[\ÜÈÒT‘Hš[WÚYOÈÔ‘Tˆ–H[\ÜÚ[™^	ËÉš[RYJNÂˆ]›Ø×Ù[Z]Ü›ÙÜ™\ÜÊ	›ÙÜ™\ÜË	ÛØYÜİYÙYÙ^ÜÉË	ÓØY[™ÈİYÙY^ÜÈœ›ÛHH]X˜\ÙIËŠNÂˆ	^ÜÈHØ][Ù×Ø[
+	‹	ÔÑSPÕ^ÜÚ[™^Û\Ü×Û˜[YKØš™XİÛ˜[YKİ]\—Ú[™^ØØ[Ü][Ü]Øš™XİÙ›YÜËÙ\šX[ÜÚ^™KÙ\šX[ÛÙ™œÙ]”“ÓHYWÙ^ÜÈÒT‘Hš[WÚYOÈÔ‘Tˆ–H^ÜÚ[™^	ËÉš[RYJNÂ‚ˆ	]ÈH×NÂˆ›Ü™XXÚ
+	^ÜÈ\È	^Ü
+HÂˆ	[]Hš[J
+İš[™ÊI^ÜÉÙ[Ü]	×JNÂˆYˆ
+	[]OOH	ÉÊHÂˆ	]ÖÜİÛİÙ\Š	[]
+WHH	[]ÂˆBˆB‚ˆ]›Ø×Ù[Z]Ü›ÙÜ™\ÜÊ	›ÙÜ™\ÜË	ÜİYÙYİX›\×Ü™XYIË	ÔİÜ™YXÚØYÙHX›\È\™H™XYIËŠNÂˆ™]\›ˆÂˆ	ÜÛİ\˜ÙIÈOˆ	Ù]X˜\ÙIËˆ	Ù[™Ú[™IÈOˆİİ\\Š
+İš[™ÊJ	İYÙYÉÙ]XİYÙ[™Ú[™WÚÙ^I×HÏÈ	ÕS’Ó“ÕÓ‰ÊJKˆ	Û˜[YWØÛİ[	ÈOˆÛİ[
+	˜[Y\ÊKˆ	Ú[\ÜØÛİ[	ÈOˆÛİ[
+	[\ÜÊKˆ	Ù^ÜØÛİ[	ÈOˆÛİ[
+	^ÜÊKˆ	Ù^ÜÉÈOˆ	]Ëˆ	İX›\ÉÈOˆÉÛ˜[Y\ÉÈOˆ	˜[Y\Ë	Ú[\ÜÉÈOˆ	[\ÜË	Ù^ÜÉÈOˆ	^Ü×KˆNÂŸB‚‹ÊŠˆ™]\›ˆ\İ\œ˜^Oİš[™ËZ^Yˆ
+‹Â™[˜İ[Ûˆ]›Ø×ÜİYÙYØØ[™Y]\ÊÈ	‹\œ˜^H	İYÙY
+Nˆ\œ˜^BÂˆ	š[RYH
+[
+IİYÙYÉÚY	×NÂˆ	XÚØYÙS˜[YHH
+İš[™ÊIİYÙYÉÜXÚØYÙWÛ˜[YI×NÂˆ	˜[šÙYHØ][Ù×İ[™\šYšYYÙØ[YWÛX]Ú\×İŒŠ	‹	š[RY
+NÂˆ	Ø[™Y]\ÈH×NÂˆ›Ü™XXÚ
+	˜[šÙY\È	›İÊHÂˆYˆ
 
-    uvoc_emit_progress($progress, 'package_tables_ready', 'Package tables are ready', 82);
-    return [
-        'engine' => $engine,
-        'name_count' => count($names),
-        'import_count' => count($imports),
-        'export_count' => count($exports),
-        'exports' => $paths,
-        'tables' => $tables,
-    ];
-}
+[
+I›İÖÉÚ[\ÜØÛİ[	×HJHÂˆÛÛ[YNÂˆBˆ	X]ÚY]ÈH×NÂˆYˆ
 
-/**
- * @return array{item:array<string,mixed>,reader:array<string,mixed>|null,candidates:list<array<string,mixed>>,analysis_error:?array<string,mixed>}
- */
-function uvoc_check(PDO $db, array $config, string $token, ?callable $progress = null): array
-{
-    uvoc_emit_progress($progress, 'resolve_queue_file', 'Opening the queued file record', 3);
-    $item = uvf_resolve($db, $config, $token);
-
-    uvoc_emit_progress($progress, 'check_signature', 'Checking the Unreal package signature', 8);
-    $signature = uvoc_package_signature((string)$item['path']);
-    if (!$signature['valid']) {
-        uvoc_emit_progress($progress, 'invalid_signature', 'The file is not a readable Unreal package', 98);
-        return [
-            'item' => $item,
-            'reader' => null,
-            'candidates' => [],
-            'analysis_error' => [
-                'code' => 'invalid_package_signature',
-                'message' => 'This file does not begin with the official Unreal package signature, so it is not processed as a catalog package.',
-                'signature' => $signature,
-            ],
-        ];
-    }
-
-    try {
-        $reader = uvoc_read_exports($config, $item, $progress);
-    } catch (Throwable $error) {
-        error_log('[UnrealDB object check] package=' . (string)$item['path'] . ' error=' . $error->getMessage());
-        uvoc_emit_progress($progress, 'reader_failed', 'The package reader reported an error', 98);
-        return [
-            'item' => $item,
-            'reader' => null,
-            'candidates' => [],
-            'analysis_error' => [
-                'code' => 'reader_failed',
-                'message' => uvoc_public_reader_error($error),
-                'signature' => $signature,
-            ],
-        ];
-    }
-
-    $packageKey = strtolower(trim((string)$item['package_name']));
-    if ($packageKey === '') {
-        uvoc_emit_progress($progress, 'missing_package_name', 'No package-name comparison key is available', 98);
-        return [
-            'item' => $item,
-            'reader' => $reader,
-            'candidates' => [],
-            'analysis_error' => [
-                'code' => 'missing_package_name',
-                'message' => 'The queued filename does not provide a usable package name for dependency comparison.',
-                'signature' => $signature,
-            ],
-        ];
-    }
-
-    uvoc_emit_progress($progress, 'load_dependencies', 'Loading catalog imports that require this package', 87);
-    $rows = catalog_all(
-        $db,
-        'SELECT g.id game_id, g.name game_name, d.file_id, d.required_object_path'
-        . ' FROM ue_dependencies d'
-        . ' JOIN ue_files f ON f.id=d.file_id'
-        . ' JOIN ue_games g ON g.id=f.game_id'
-        . ' WHERE LOWER(d.required_package)=?'
-        . ' ORDER BY g.name, d.file_id, d.id',
-        [$packageKey]
-    );
-
-    uvoc_emit_progress($progress, 'compare_exports', 'Comparing exported objects with required object paths', 92);
-    $byGame = [];
-    foreach ($rows as $row) {
-        $gameId = (int)$row['game_id'];
-        $path = trim((string)$row['required_object_path']);
-        $pathKey = strtolower($path);
-        $byGame[$gameId] ??= [
-            'game_id' => $gameId,
-            'game_name' => (string)$row['game_name'],
-            'import_count' => 0,
-            'owner_ids' => [],
-            'exact_object_matches' => 0,
-            'unmatched_object_count' => 0,
-            'matched_paths' => [],
-        ];
-        $byGame[$gameId]['import_count']++;
-        $byGame[$gameId]['owner_ids'][(int)$row['file_id']] = true;
-        if ($pathKey !== '' && isset($reader['exports'][$pathKey])) {
-            $byGame[$gameId]['exact_object_matches']++;
-            if (count($byGame[$gameId]['matched_paths']) < 12) {
-                $byGame[$gameId]['matched_paths'][$pathKey] = $reader['exports'][$pathKey];
-            }
-        } else {
-            $byGame[$gameId]['unmatched_object_count']++;
-        }
-    }
-
-    uvoc_emit_progress($progress, 'build_candidates', 'Building the game match summary', 96);
-    $candidates = [];
-    foreach ($byGame as $candidate) {
-        $candidate['owner_count'] = count($candidate['owner_ids']);
-        unset($candidate['owner_ids']);
-        $candidate['matched_paths'] = array_values($candidate['matched_paths']);
-        $candidates[] = $candidate;
-    }
-    usort($candidates, static fn(array $left, array $right): int => ($right['exact_object_matches'] <=> $left['exact_object_matches']) ?: strcmp((string)$left['game_name'], (string)$right['game_name']));
-
-    uvoc_emit_progress($progress, 'file_complete', 'Object comparison complete for this file', 98);
-    return [
-        'item' => $item,
-        'reader' => $reader,
-        'candidates' => $candidates,
-        'analysis_error' => null,
-    ];
-}
+[
+I›İÖÉÙ^XİÛØš™XİÛX]Ú\É×Hˆ
+HÂˆ	X]Ú\ÈHØ][Ù×Ø[
+ˆ	‹ˆ	ÔÑSPÕTÕSÕœ™\]Z\™YÛØš™XİÜ]	Âˆˆ	È”“ÓHYWÙ\[™[˜ÚY\È	Âˆˆ	È“ÒSˆYWÙš[\ÈİÛ™\ˆÓˆİÛ™\‹šYY™š[WÚYS‘İÛ™\‹œØØ[—Üİ]\ÏH™\šYšYY‰Âˆˆ	È“ÒSˆYWÙ^ÜÈ]Y]YYÙ^ÜÓˆ]Y]YYÙ^Ü™š[WÚYOÈS‘ÕÑTŠ]Y]YYÙ^Ü™[Ü]
+OSÕÑTŠœ™\]Z\™YÛØš™XİÜ]
+IÂˆˆ	ÈÒT‘HİÛ™\‹™Ø[YWÚYOÈS‘ÕÑTŠœ™\]Z\™YÜXÚØYÙJOSÕÑTŠÊHäCXv·ªº*Şv†ãyËijØK Â×gâ•âŠ{k£™è¥§$jjg¦j×!yÓÚ¶
