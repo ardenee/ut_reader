@@ -89,16 +89,27 @@ function catalog_unverified_register_auto_index(): void
         }
         $before = catalog_unverified_auto_index_inventory($config, $gameIdsBySlug);
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+        $uploadedNames = is_array($_FILES['packages']['name'] ?? null) ? array_values($_FILES['packages']['name']) : [];
+        $uploadedRelativePaths = is_array($_POST['relative_paths'] ?? null) ? array_values($_POST['relative_paths']) : [];
     } catch (Throwable $error) {
         error_log('[UnrealDB unverified auto-index] setup failed: ' . $error->getMessage());
         return;
     }
 
-    register_shutdown_function(static function () use ($config, $db, $gameIdsBySlug, $before, $userId): void {
+    register_shutdown_function(static function () use ($config, $db, $gameIdsBySlug, $before, $userId, $uploadedNames, $uploadedRelativePaths): void {
         try {
             require_once __DIR__ . '/UnverifiedFileManager.php';
             require_once __DIR__ . '/CatalogUnverifiedIndex.php';
             catalog_unverified_schema_ensure($db);
+
+            $sourcePathsByName = [];
+            foreach ($uploadedNames as $index => $uploadedName) {
+                $clean = strtolower(scanner_clean_original_filename((string)$uploadedName));
+                $relative = scanner_normalize_source_relative_path((string)($uploadedRelativePaths[$index] ?? ''));
+                if ($clean !== '' && $relative !== '') {
+                    $sourcePathsByName[$clean] = $relative;
+                }
+            }
 
             $after = catalog_unverified_auto_index_inventory($config, $gameIdsBySlug);
             foreach ($after as $path => $entry) {
@@ -116,6 +127,7 @@ function catalog_unverified_register_auto_index(): void
                 $reasonPath = $path . '.txt';
                 $reason = is_file($reasonPath) ? trim((string)@file_get_contents($reasonPath, false, null, 0, 65535)) : '';
                 $originalName = uvf_original_name_from_queue_name($queueName);
+                $sourceRelativePath = $sourcePathsByName[strtolower(scanner_clean_original_filename($originalName))] ?? '';
                 try {
                     catalog_unverified_index_path(
                         $db,
@@ -126,7 +138,7 @@ function catalog_unverified_register_auto_index(): void
                         $originalName,
                         $reason,
                         $userId,
-                        '',
+                        $sourceRelativePath,
                         false
                     );
                 } catch (Throwable $error) {
