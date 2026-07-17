@@ -321,6 +321,11 @@ function catalog_head(string $title): void
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog.css') . '">';
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog-ui.css') . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
+    if ($scriptName === 'unverified-files.php') {
+        $unverifiedActionsPath = __DIR__ . '/../assets/unverified-file-actions.js';
+        $unverifiedActionsVersion = is_file($unverifiedActionsPath) ? (string)filemtime($unverifiedActionsPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/unverified-file-actions.js?v=' . $unverifiedActionsVersion) . '" defer></script>';
+    }
     if (in_array($scriptName, ['game-files.php', 'full-sync.php'], true)) {
         $popupLayoutPath = __DIR__ . '/../assets/catalog-maintenance-popup-layout.js';
         $popupLayoutVersion = is_file($popupLayoutPath) ? (string)filemtime($popupLayoutPath) : '1';
