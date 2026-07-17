@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/UnverifiedObjectCheck.php';
+require_once __DIR__ . '/lib/UploadProgress.php';
 
 /** @return list<string> */
 function uvoc_requested_tokens(): array
@@ -29,6 +30,29 @@ function uvoc_requested_tokens(): array
         $tokens[$legacyToken] = true;
     }
     return array_keys($tokens);
+}
+
+function uvoc_progress_reply(string $token): never
+{
+    if (!catalog_support_is_admin()) {
+        http_response_code(403);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['stage' => 'failed', 'percent' => 0, 'message' => 'Administrator login is required.']);
+        exit;
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    try {
+        echo json_encode(upload_progress_read($token), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    } catch (Throwable $error) {
+        http_response_code(400);
+        echo json_encode(['stage' => 'failed', 'percent' => 0, 'message' => $error->getMessage()]);
+    }
+    exit;
 }
 
 function uvoc_render_signature_table(array $signature): void
@@ -143,7 +167,7 @@ function uvoc_render_table_tabs(int $fileIndex, array $reader, array $candidates
         'dependencies' => 'Dependency matches (' . count($candidates) . ')',
     ];
 
-    echo '<section class="uvoc-table-tabs" data-uvoc-tabs>'; 
+    echo '<section class="uvoc-table-tabs" data-uvoc-tabs>';
     echo '<div class="uvoc-tab-list" role="tablist" aria-label="Parsed package tables">';
     foreach ($tabs as $tab => $label) {
         $panelId = uvoc_tab_panel_id($fileIndex, $tab);
@@ -171,6 +195,11 @@ function uvoc_render_table_tabs(int $fileIndex, array $reader, array $candidates
     echo '</section>';
 }
 
+$progressToken = upload_progress_token((string)($_GET['progress_token'] ?? $_GET['progress'] ?? ''));
+if (isset($_GET['progress'])) {
+    uvoc_progress_reply($progressToken);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -183,17 +212,91 @@ try {
         throw new RuntimeException('Select queued files on Unverified Files before running Object Check.');
     }
 
+    if ($progressToken !== '') {
+        upload_progress_clear($progressToken);
+        upload_progress_write($progressToken, [
+            'stage' => 'starting',
+            'done' => 0,
+            'total' => count($tokens),
+            'percent' => 0,
+            'current_index' => 0,
+            'file_percent' => 0,
+            'message' => 'Starting queued package Object Check',
+        ]);
+    }
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     $checks = [];
-    foreach ($tokens as $token) {
+    $total = count($tokens);
+    foreach ($tokens as $index => $token) {
+        $progress = null;
+        if ($progressToken !== '') {
+            $progress = static function (array $state) use ($progressToken, $index, $total): void {
+                $filePercent = max(0, min(100, (int)($state['percent'] ?? 0)));
+                $overallPercent = min(99, (int)floor((($index + ($filePercent / 100)) / max(1, $total)) * 100));
+                upload_progress_write($progressToken, [
+                    'stage' => (string)($state['stage'] ?? 'checking'),
+                    'done' => $index,
+                    'total' => $total,
+                    'percent' => $overallPercent,
+                    'current_index' => $index,
+                    'file_percent' => $filePercent,
+                    'message' => 'File ' . ($index + 1) . ' of ' . $total . ': ' . (string)($state['message'] ?? 'Checking package'),
+                ]);
+            };
+        }
+
         try {
-            $checks[] = ['result' => uvoc_check($db, $config, $token), 'error' => null];
+            $result = uvoc_check($db, $config, $token, $progress);
+            $checks[] = ['result' => $result, 'error' => null];
+            $name = (string)($result['item']['original_name'] ?? ('selected file ' . ($index + 1)));
+            if ($progressToken !== '') {
+                upload_progress_write($progressToken, [
+                    'stage' => 'file_complete',
+                    'done' => $index + 1,
+                    'total' => $total,
+                    'percent' => min(99, (int)floor((($index + 1) / $total) * 100)),
+                    'current_index' => $index,
+                    'file_percent' => 100,
+                    'message' => 'Completed ' . ($index + 1) . ' of ' . $total . ': ' . $name,
+                ]);
+            }
         } catch (Throwable $error) {
             error_log('[UnrealDB object check popup] ' . $error->getMessage());
             $checks[] = ['result' => null, 'error' => 'The queued file could not be opened: ' . $error->getMessage()];
+            if ($progressToken !== '') {
+                upload_progress_write($progressToken, [
+                    'stage' => 'file_error',
+                    'done' => $index + 1,
+                    'total' => $total,
+                    'percent' => min(99, (int)floor((($index + 1) / $total) * 100)),
+                    'current_index' => $index,
+                    'file_percent' => 100,
+                    'message' => 'File ' . ($index + 1) . ' of ' . $total . ' could not be checked: ' . $error->getMessage(),
+                ]);
+            }
         }
     }
 
+    if ($progressToken !== '') {
+        upload_progress_write($progressToken, [
+            'stage' => 'rendering',
+            'done' => $total,
+            'total' => $total,
+            'percent' => 99,
+            'current_index' => max(0, $total - 1),
+            'file_percent' => 100,
+            'message' => 'Rendering Object Check results',
+        ]);
+    }
+
     catalog_head('Queued Package Object Check');
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
     echo <<<'CSS'
 <style>
 .uvoc-toolbar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
@@ -313,10 +416,34 @@ CSS;
 </script>
 JS;
 
+    if ($progressToken !== '') {
+        upload_progress_write($progressToken, [
+            'stage' => 'done',
+            'done' => $total,
+            'total' => $total,
+            'percent' => 100,
+            'current_index' => max(0, $total - 1),
+            'file_percent' => 100,
+            'message' => 'Object Check complete',
+        ]);
+    }
+
     catalog_foot();
 } catch (Throwable $e) {
     error_log('[UnrealDB object check popup] ' . $e->getMessage());
+    if ($progressToken !== '') {
+        upload_progress_write($progressToken, [
+            'stage' => 'failed',
+            'done' => 0,
+            'total' => 0,
+            'percent' => 100,
+            'message' => 'Object Check failed: ' . $e->getMessage(),
+        ]);
+    }
     catalog_head('Queued Package Object Check Error');
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
     echo CatalogUi::alert('danger', 'Queued package Object Check could not be opened.', 'No queued file was changed. Close this popup and retry from Unverified Files.');
     echo '<p><button type="button" class="button secondary" onclick="window.close()">Close popup</button></p>';
     catalog_foot();
