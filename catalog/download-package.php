@@ -49,6 +49,11 @@ try {
     $allowIncomplete = $settings['allow_incomplete'] && (string)($_GET['allow_incomplete'] ?? '0') === '1';
     $plan = modpkg_plan($db, $config, $id, $format, $includeDependencies, $settings);
 
+    if (in_array($format, [MODPKG_FORMAT_UMOD, MODPKG_FORMAT_UT2MOD, MODPKG_FORMAT_UT4MOD], true)
+        && (int)$plan['total_bytes'] > 2000 * 1024 * 1024) {
+        throw new RuntimeException('UMOD-family archives use 32-bit offsets and are limited to a 2000 MB payload. Reduce the selected dependency set.');
+    }
+
     if (($plan['missing'] || $plan['package_only']) && !$allowIncomplete) {
         $problems = count($plan['missing']) + count($plan['package_only']);
         throw new RuntimeException(
