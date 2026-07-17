@@ -10,9 +10,47 @@ function unverified_files_int(string $key): int
     return $value === false || $value === null ? 0 : max(-1, (int)$value);
 }
 
-function unverified_files_return_url(int $sourceGameId): string
+function unverified_files_get_string(string $key): string
 {
-    return 'unverified-files.php' . ($sourceGameId !== 0 ? '?source_game_id=' . $sourceGameId : '');
+    $value = filter_input(INPUT_GET, $key, FILTER_UNSAFE_RAW);
+    return is_string($value) ? trim($value) : '';
+}
+
+function unverified_files_post_string(string $key): string
+{
+    $value = filter_input(INPUT_POST, $key, FILTER_UNSAFE_RAW);
+    return is_string($value) ? trim($value) : '';
+}
+
+function unverified_files_normalize_choice(string $value): string
+{
+    return preg_replace('/[^A-Za-z0-9_.-]+/', '', trim($value)) ?? '';
+}
+
+function unverified_files_normalize_number_filter(string $value): string
+{
+    $value = strtolower(trim($value));
+    if ($value === 'unknown') {
+        return 'unknown';
+    }
+    return preg_match('/^-?[0-9]+$/', $value) === 1 ? (string)(int)$value : '';
+}
+
+/** @param array<string,int|string> $filters */
+function unverified_files_return_url(array $filters): string
+{
+    $query = [];
+    $sourceGameId = (int)($filters['source_game_id'] ?? 0);
+    if ($sourceGameId !== 0) {
+        $query['source_game_id'] = $sourceGameId;
+    }
+    foreach (['extension', 'engine', 'version', 'licensee', 'header_status'] as $key) {
+        $value = trim((string)($filters[$key] ?? ''));
+        if ($value !== '') {
+            $query[$key] = $value;
+        }
+    }
+    return 'unverified-files.php' . ($query !== [] ? '?' . http_build_query($query) : '');
 }
 
 /** @return list<string> */
@@ -39,12 +77,12 @@ function unverified_files_selected_tokens(): array
 function unverified_files_header_label(array $item): string
 {
     $header = $item['header'] ?? [];
-    $engine = (string)($header['engine'] ?? 'UNKNOWN');
+    $engine = strtoupper(trim((string)($header['engine'] ?? 'UNKNOWN'))) ?: 'UNKNOWN';
     if (!empty($header['ok'])) {
         return $engine . ' v' . (int)($header['version'] ?? 0) . ' / lic ' . (int)($header['licensee'] ?? 0);
     }
     $note = trim((string)($header['note'] ?? ''));
-    return $engine . ($note !== '' ? ' — ' . $note : '');
+    return $engine . ($note !== '' ? ' — ' . $note : ' — unreadable header');
 }
 
 function unverified_files_identity_html(array $item): string
@@ -65,11 +103,8 @@ function unverified_files_guid_key(string $guid): string
 }
 
 /**
- * Find exact catalog identity matches for queued files without using package names.
- * A catalog row is returned when either its MD5 or package GUID matches.
- *
  * @param list<array<string,mixed>> $items
- * @return array<string,list<array<string,mixed>>> keyed by queue token
+ * @return array<string,list<array<string,mixed>>>
  */
 function unverified_files_catalog_identity_matches(PDO $db, array $items): array
 {
@@ -82,13 +117,11 @@ function unverified_files_catalog_identity_matches(PDO $db, array $items): array
         if ($token === '') {
             continue;
         }
-
         $md5 = strtolower(trim((string)($item['md5'] ?? '')));
         if (preg_match('/^[a-f0-9]{32}$/', $md5) === 1) {
             $md5Tokens[$md5] ??= [];
             $md5Tokens[$md5][$token] = true;
         }
-
         $rawGuid = trim((string)($item['package_guid'] ?? ''));
         $guidKey = unverified_files_guid_key($rawGuid);
         if ($guidKey !== '') {
@@ -118,13 +151,11 @@ function unverified_files_catalog_identity_matches(PDO $db, array $items): array
     };
 
     foreach (array_chunk(array_keys($md5Tokens), 500) as $values) {
+        if ($values === []) {
+            continue;
+        }
         $placeholders = implode(',', array_fill(0, count($values), '?'));
-        $rows = catalog_all(
-            $db,
-            $select . ' WHERE f.md5 IN (' . $placeholders . ') ORDER BY g.name, f.original_name, f.id',
-            $values
-        );
-        foreach ($rows as $row) {
+        foreach (catalog_all($db, $select . ' WHERE f.md5 IN (' . $placeholders . ') ORDER BY g.name, f.original_name, f.id', $values) as $row) {
             $key = strtolower(trim((string)$row['md5']));
             if (isset($md5Tokens[$key])) {
                 $record($row, 'match_md5', $md5Tokens[$key]);
@@ -133,13 +164,11 @@ function unverified_files_catalog_identity_matches(PDO $db, array $items): array
     }
 
     foreach (array_chunk(array_keys($guidQueries), 500) as $values) {
+        if ($values === []) {
+            continue;
+        }
         $placeholders = implode(',', array_fill(0, count($values), '?'));
-        $rows = catalog_all(
-            $db,
-            $select . ' WHERE f.package_guid IN (' . $placeholders . ') ORDER BY g.name, f.original_name, f.id',
-            $values
-        );
-        foreach ($rows as $row) {
+        foreach (catalog_all($db, $select . ' WHERE f.package_guid IN (' . $placeholders . ') ORDER BY g.name, f.original_name, f.id', $values) as $row) {
             $key = unverified_files_guid_key((string)$row['package_guid']);
             if ($key !== '' && isset($guidTokens[$key])) {
                 $record($row, 'match_guid', $guidTokens[$key]);
@@ -156,7 +185,6 @@ function unverified_files_catalog_identity_matches(PDO $db, array $items): array
         });
         $matches[$token] = $rows;
     }
-
     return $matches;
 }
 
@@ -175,18 +203,13 @@ function unverified_files_catalog_matches_html(array $matches): string
         if (!empty($match['match_guid'])) {
             $matchedBy[] = 'GUID';
         }
-
         $profile = trim((string)($match['profile_name'] ?? ''));
         $engine = trim((string)($match['profile_engine'] ?? ''));
-        $profileLabel = $profile !== ''
-            ? $profile . ($engine !== '' ? ' / ' . $engine : '')
-            : ($engine !== '' ? $engine : 'no profile');
-
+        $profileLabel = $profile !== '' ? $profile . ($engine !== '' ? ' / ' . $engine : '') : ($engine !== '' ? $engine : 'no profile');
         $html .= '<a class="unverified-catalog-match" href="file-info.php?id=' . (int)$match['file_id'] . '" title="Open existing catalog file">'
             . '<strong>' . catalog_h((string)$match['game_name']) . '</strong>'
             . '<span class="mono">' . catalog_h((string)$match['original_name']) . '</span>'
-            . '<small>' . catalog_h($profileLabel) . ' · ' . catalog_h(implode(' + ', $matchedBy)) . '</small>'
-            . '</a>';
+            . '<small>' . catalog_h($profileLabel) . ' · ' . catalog_h(implode(' + ', $matchedBy)) . '</small></a>';
     }
     return $html . '</div>';
 }
@@ -196,7 +219,6 @@ function unverified_files_reference_html(array $references): string
     if ($references === []) {
         return '<span class="muted">No catalog imports currently require this package name.</span>';
     }
-
     $html = '<div class="unverified-reference-list">';
     foreach ($references as $reference) {
         $html .= '<a class="pill amber" href="game-files.php?id=' . (int)$reference['game_id'] . '" title="Open game files that import this package name">'
@@ -218,6 +240,92 @@ function unverified_files_bulk_action_label(string $action): string
     };
 }
 
+/** @return array{extensions:list<string>,engines:list<string>,versions:list<int>,licensees:list<int>,has_unreadable:bool} */
+function unverified_files_filter_options(array $items): array
+{
+    $extensions = [];
+    $engines = [];
+    $versions = [];
+    $licensees = [];
+    $hasUnreadable = false;
+
+    foreach ($items as $item) {
+        $extension = strtolower(trim((string)($item['extension'] ?? '')));
+        if ($extension !== '') {
+            $extensions[$extension] = true;
+        }
+        $header = is_array($item['header'] ?? null) ? $item['header'] : [];
+        $engine = strtoupper(trim((string)($header['engine'] ?? 'UNKNOWN'))) ?: 'UNKNOWN';
+        $engines[$engine] = true;
+        if (!empty($header['ok'])) {
+            $versions[(int)($header['version'] ?? 0)] = true;
+            $licensees[(int)($header['licensee'] ?? 0)] = true;
+        } else {
+            $hasUnreadable = true;
+        }
+    }
+
+    $extensionValues = array_keys($extensions);
+    natcasesort($extensionValues);
+    $engineValues = array_keys($engines);
+    natcasesort($engineValues);
+    $versionValues = array_map('intval', array_keys($versions));
+    sort($versionValues, SORT_NUMERIC);
+    $licenseeValues = array_map('intval', array_keys($licensees));
+    sort($licenseeValues, SORT_NUMERIC);
+
+    return [
+        'extensions' => array_values($extensionValues),
+        'engines' => array_values($engineValues),
+        'versions' => array_values($versionValues),
+        'licensees' => array_values($licenseeValues),
+        'has_unreadable' => $hasUnreadable,
+    ];
+}
+
+/** @param array<string,string> $filters */
+function unverified_files_filter_items(array $items, array $filters): array
+{
+    return array_values(array_filter($items, static function (array $item) use ($filters): bool {
+        $header = is_array($item['header'] ?? null) ? $item['header'] : [];
+        $headerOk = !empty($header['ok']);
+        $extension = strtolower(trim((string)($item['extension'] ?? '')));
+        $engine = strtoupper(trim((string)($header['engine'] ?? 'UNKNOWN'))) ?: 'UNKNOWN';
+
+        if ($filters['extension'] !== '' && $extension !== strtolower($filters['extension'])) {
+            return false;
+        }
+        if ($filters['engine'] !== '' && $engine !== strtoupper($filters['engine'])) {
+            return false;
+        }
+        if ($filters['header_status'] === 'readable' && !$headerOk) {
+            return false;
+        }
+        if ($filters['header_status'] === 'unreadable' && $headerOk) {
+            return false;
+        }
+        if ($filters['version'] !== '') {
+            if ($filters['version'] === 'unknown') {
+                if ($headerOk) {
+                    return false;
+                }
+            } elseif (!$headerOk || (int)($header['version'] ?? 0) !== (int)$filters['version']) {
+                return false;
+            }
+        }
+        if ($filters['licensee'] !== '') {
+            if ($filters['licensee'] === 'unknown') {
+                if ($headerOk) {
+                    return false;
+                }
+            } elseif (!$headerOk || (int)($header['licensee'] ?? 0) !== (int)$filters['licensee']) {
+                return false;
+            }
+        }
+        return true;
+    }));
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -227,16 +335,21 @@ try {
 
     $games = catalog_all(
         $db,
-        'SELECT g.id, g.name, g.slug, p.engine_key profile_engine'
-        . ' FROM ue_games g'
-        . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-        . ' ORDER BY g.name'
+        'SELECT g.id, g.name, g.slug, p.engine_key profile_engine FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name'
     );
     $sourceGameId = unverified_files_int('source_game_id');
     $knownGameIds = array_map(static fn(array $game): int => (int)$game['id'], $games);
     if ($sourceGameId > 0 && !in_array($sourceGameId, $knownGameIds, true)) {
         $sourceGameId = 0;
     }
+
+    $filters = [
+        'extension' => strtolower(unverified_files_normalize_choice(unverified_files_get_string('extension'))),
+        'engine' => strtoupper(unverified_files_normalize_choice(unverified_files_get_string('engine'))),
+        'version' => unverified_files_normalize_number_filter(unverified_files_get_string('version')),
+        'licensee' => unverified_files_normalize_number_filter(unverified_files_get_string('licensee')),
+        'header_status' => in_array(unverified_files_get_string('header_status'), ['readable', 'unreadable'], true) ? unverified_files_get_string('header_status') : '',
+    ];
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('unverified-files');
@@ -246,6 +359,14 @@ try {
         $targetGameId = $targetGameId === false || $targetGameId === null ? 0 : (int)$targetGameId;
         $returnGameId = filter_input(INPUT_POST, 'return_game_id', FILTER_VALIDATE_INT);
         $returnGameId = $returnGameId === false || $returnGameId === null ? 0 : max(-1, (int)$returnGameId);
+        $returnFilters = [
+            'source_game_id' => $returnGameId,
+            'extension' => strtolower(unverified_files_normalize_choice(unverified_files_post_string('return_extension'))),
+            'engine' => strtoupper(unverified_files_normalize_choice(unverified_files_post_string('return_engine'))),
+            'version' => unverified_files_normalize_number_filter(unverified_files_post_string('return_version')),
+            'licensee' => unverified_files_normalize_number_filter(unverified_files_post_string('return_licensee')),
+            'header_status' => in_array(unverified_files_post_string('return_header_status'), ['readable', 'unreadable'], true) ? unverified_files_post_string('return_header_status') : '',
+        ];
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
         try {
@@ -265,15 +386,13 @@ try {
                 try {
                     if ($action === 'move') {
                         $result = uvf_move($db, $config, $token, $targetGameId);
-                        $completed[] = catalog_clean_unreal_filename($result['original_name']);
                     } elseif ($action === 'import') {
                         $allowOverride = (string)($_POST['allow_profile_override'] ?? '') === '1';
                         $result = uvf_import($db, $config, $token, $targetGameId, $userId, $allowOverride);
-                        $completed[] = catalog_clean_unreal_filename($result['original_name']);
                     } else {
                         $result = uvf_discard($db, $config, $token);
-                        $completed[] = catalog_clean_unreal_filename($result['original_name']);
                     }
+                    $completed[] = catalog_clean_unreal_filename($result['original_name']);
                 } catch (Throwable $error) {
                     $errors[] = $error->getMessage();
                 }
@@ -281,16 +400,10 @@ try {
 
             $label = unverified_files_bulk_action_label($action);
             $message = $label . ': ' . count($completed) . ' of ' . count($tokens) . ' selected file(s) processed.';
-            if ($action === 'move' && $completed !== []) {
+            if (in_array($action, ['move', 'import'], true) && $completed !== []) {
                 $target = catalog_one($db, 'SELECT name FROM ue_games WHERE id=?', [$targetGameId]);
                 if ($target) {
-                    $message .= ' Moved to ' . $target['name'] . ' unverified queue.';
-                }
-            }
-            if ($action === 'import' && $completed !== []) {
-                $target = catalog_one($db, 'SELECT name FROM ue_games WHERE id=?', [$targetGameId]);
-                if ($target) {
-                    $message .= ' Imported into ' . $target['name'] . '.';
+                    $message .= $action === 'move' ? ' Moved to ' . $target['name'] . ' unverified queue.' : ' Imported into ' . $target['name'] . '.';
                 }
             }
             if ($action === 'delete' && $completed !== []) {
@@ -302,7 +415,6 @@ try {
             if ($completed === [] && $errors !== []) {
                 throw new RuntimeException($message . ' ' . implode(' | ', array_slice($errors, 0, 3)));
             }
-
             $_SESSION['unverified_files_flash'] = [
                 'type' => $errors === [] ? 'success' : 'warning',
                 'message' => $message,
@@ -312,12 +424,14 @@ try {
             $_SESSION['unverified_files_flash'] = ['type' => 'danger', 'message' => $error->getMessage(), 'details' => ''];
         }
 
-        header('Location: ' . unverified_files_return_url($returnGameId));
+        header('Location: ' . unverified_files_return_url($returnFilters));
         exit;
     }
 
     $sourceFilter = $sourceGameId === -1 ? 0 : ($sourceGameId > 0 ? $sourceGameId : null);
-    $items = uvf_list($db, $config, $sourceFilter);
+    $allSourceItems = uvf_list($db, $config, $sourceFilter);
+    $filterOptions = unverified_files_filter_options($allSourceItems);
+    $items = unverified_files_filter_items($allSourceItems, $filters);
     $referencesByPackage = uvf_reference_matches($db, array_map(static fn(array $item): string => catalog_clean_unreal_package_stem((string)$item['package_name']), $items));
     $catalogMatchesByToken = unverified_files_catalog_identity_matches($db, $items);
     $flash = $_SESSION['unverified_files_flash'] ?? null;
@@ -328,6 +442,8 @@ try {
 <style>
 .unverified-filter { display:flex; align-items:end; gap:10px; flex-wrap:wrap; }
 .unverified-filter label { display:grid; gap:5px; }
+.unverified-filter select { min-width:130px; }
+.unverified-filter-actions { display:flex; align-items:center; gap:8px; }
 .unverified-summary { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin:0 0 18px; }
 .unverified-note { border-left:4px solid #f6c453; padding-left:12px; }
 .unverified-table { min-width:1620px; }
@@ -361,9 +477,10 @@ try {
 @media (max-width:700px) { .unverified-summary { grid-template-columns:1fr; } .unverified-target-label { width:100%; } .unverified-target-label select { flex:1; max-width:none; } }
 </style>
 CSS;
+
     echo CatalogUi::pageHeader(
         'Unverified Files',
-        'Review queued packages, see exact existing catalog identities, identify games that require their package names, then process selected files together.',
+        'Review queued packages, filter by file/header metadata, see exact catalog identities, and process selected files together.',
         ['Upload Bucket' => 'upload-bucket.php', 'Upload Files' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Sources' => 'sources.php', 'Storage Audit' => 'storage-audit.php']
     );
 
@@ -371,14 +488,50 @@ CSS;
         echo CatalogUi::alert((string)($flash['type'] ?? 'info'), (string)($flash['message']), (string)($flash['details'] ?? ''));
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue filter</h2><p>Queued files are physical files only. They do not have a ue_files catalog record until an import succeeds.</p></div></div><div class="ui-section__body">';
-    echo '<form class="unverified-filter" method="get"><label for="unverified-source-game">Source queue<select id="unverified-source-game" name="source_game_id"><option value="">All queues</option>';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue filters</h2><p>Package and licensee versions come directly from readable package headers. Unknown selects files whose header could not be read.</p></div></div><div class="ui-section__body">';
+    echo '<form class="unverified-filter" method="get">';
+    echo '<label for="unverified-source-game">Source queue<select id="unverified-source-game" name="source_game_id"><option value="">All queues</option>';
     echo '<option value="-1"' . ($sourceGameId === -1 ? ' selected' : '') . '>Upload Bucket / unsorted</option>';
     foreach ($games as $game) {
         echo '<option value="' . (int)$game['id'] . '"' . ($sourceGameId === (int)$game['id'] ? ' selected' : '') . '>'
             . catalog_h($game['name']) . ' / ' . catalog_h((string)($game['profile_engine'] ?: 'no profile')) . '</option>';
     }
-    echo '</select></label>' . CatalogUi::button('Apply filter', ['type' => 'submit', 'variant' => 'secondary']) . '</form>';
+    echo '</select></label>';
+
+    echo '<label for="unverified-extension">File type<select id="unverified-extension" name="extension"><option value="">All types</option>';
+    foreach ($filterOptions['extensions'] as $extension) {
+        echo '<option value="' . catalog_h($extension) . '"' . ($filters['extension'] === $extension ? ' selected' : '') . '>.' . catalog_h($extension) . '</option>';
+    }
+    echo '</select></label>';
+
+    echo '<label for="unverified-engine">Detected engine<select id="unverified-engine" name="engine"><option value="">All engines</option>';
+    foreach ($filterOptions['engines'] as $engine) {
+        echo '<option value="' . catalog_h($engine) . '"' . ($filters['engine'] === $engine ? ' selected' : '') . '>' . catalog_h($engine) . '</option>';
+    }
+    echo '</select></label>';
+
+    echo '<label for="unverified-version">Package version<select id="unverified-version" name="version"><option value="">All versions</option>';
+    if ($filterOptions['has_unreadable']) {
+        echo '<option value="unknown"' . ($filters['version'] === 'unknown' ? ' selected' : '') . '>Unknown</option>';
+    }
+    foreach ($filterOptions['versions'] as $version) {
+        echo '<option value="' . $version . '"' . ($filters['version'] === (string)$version ? ' selected' : '') . '>' . $version . '</option>';
+    }
+    echo '</select></label>';
+
+    echo '<label for="unverified-licensee">Licensee version<select id="unverified-licensee" name="licensee"><option value="">All licensees</option>';
+    if ($filterOptions['has_unreadable']) {
+        echo '<option value="unknown"' . ($filters['licensee'] === 'unknown' ? ' selected' : '') . '>Unknown</option>';
+    }
+    foreach ($filterOptions['licensees'] as $licensee) {
+        echo '<option value="' . $licensee . '"' . ($filters['licensee'] === (string)$licensee ? ' selected' : '') . '>' . $licensee . '</option>';
+    }
+    echo '</select></label>';
+
+    echo '<label for="unverified-header-status">Header<select id="unverified-header-status" name="header_status"><option value="">Any status</option>';
+    echo '<option value="readable"' . ($filters['header_status'] === 'readable' ? ' selected' : '') . '>Readable</option>';
+    echo '<option value="unreadable"' . ($filters['header_status'] === 'unreadable' ? ' selected' : '') . '>Unreadable</option></select></label>';
+    echo '<div class="unverified-filter-actions">' . CatalogUi::button('Apply filters', ['type' => 'submit', 'variant' => 'secondary']) . '<a class="button secondary" href="unverified-files.php">Clear</a></div></form>';
     echo '</div></section>';
 
     $totalBytes = array_sum(array_map(static fn(array $item): int => (int)$item['size'], $items));
@@ -388,19 +541,25 @@ CSS;
         return !empty($referencesByPackage[$packageKey] ?? []);
     }));
     echo '<div class="unverified-summary">';
-    echo '<div class="stat"><h2>' . count($items) . '</h2><p>Queued files</p></div>';
-    echo '<div class="stat"><h2>' . catalog_h(catalog_bytes($totalBytes)) . '</h2><p>Queued storage</p></div>';
+    echo '<div class="stat"><h2>' . count($items) . '</h2><p>Shown of ' . count($allSourceItems) . ' queued files</p></div>';
+    echo '<div class="stat"><h2>' . catalog_h(catalog_bytes($totalBytes)) . '</h2><p>Shown storage</p></div>';
     echo '<div class="stat"><h2>' . $identityMatchCount . '</h2><p>Existing MD5/GUID matches</p></div>';
     echo '<div class="stat"><h2>' . $referenceCandidateCount . '</h2><p>Filename package candidates</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Package queues</h2><p class="unverified-note"><strong>Existing Catalog Matches</strong> are exact MD5 and/or package GUID matches across all games. A Reference Candidate is only a <strong>filename package-name match</strong>: one or more catalogued files in the listed game have Imports requiring this queued file’s package name.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Package queues</h2><p class="unverified-note"><strong>Existing Catalog Matches</strong> are exact MD5 and/or package GUID matches. A Reference Candidate is only a filename package-name match; Object check performs the exported-object comparison.</p></div></div><div class="ui-section__body">';
     if ($items === []) {
-        echo CatalogUi::emptyState('No queued files found', 'There are no physical files in the selected queue folder.');
+        $message = $allSourceItems === [] ? 'There are no physical files in the selected queue folder.' : 'No queued files match the selected metadata filters.';
+        echo CatalogUi::emptyState('No queued files found', $message);
     } else {
         echo '<form id="unverified-bulk-form" method="post">';
         echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('unverified-files')) . '">';
         echo '<input type="hidden" name="return_game_id" value="' . $sourceGameId . '">';
+        echo '<input type="hidden" name="return_extension" value="' . catalog_h($filters['extension']) . '">';
+        echo '<input type="hidden" name="return_engine" value="' . catalog_h($filters['engine']) . '">';
+        echo '<input type="hidden" name="return_version" value="' . catalog_h($filters['version']) . '">';
+        echo '<input type="hidden" name="return_licensee" value="' . catalog_h($filters['licensee']) . '">';
+        echo '<input type="hidden" name="return_header_status" value="' . catalog_h($filters['header_status']) . '">';
         echo '<div class="unverified-bulk-toolbar" aria-label="Selected file actions">';
         echo '<strong>Selected files</strong><span id="unverified-bulk-count" class="unverified-bulk-count">0 selected</span>';
         echo '<label class="unverified-target-label" for="unverified-target-game">Target game<select id="unverified-target-game" name="target_game_id"><option value="">Choose target game</option>';
@@ -414,13 +573,11 @@ CSS;
         echo '<button class="button" type="submit" name="action" value="import" data-requires-target disabled>Import selected</button>';
         echo '<button class="button secondary" type="button" id="unverified-object-check" disabled>Object check</button>';
         echo '<button class="button danger" type="submit" name="action" value="delete" data-delete-action disabled>Delete file</button>';
-        echo '</div>';
-        echo '<p class="unverified-bulk-help">Move only changes the source queue. Object check opens a popup and compares exported objects against currently missing imports. Delete file removes the queued package and its `.txt` note permanently.</p>';
-        echo '</div>';
+        echo '</div><p class="unverified-bulk-help">Move only changes the source queue. Delete removes the queued package and its `.txt` note permanently.</p></div>';
 
         echo '<div class="table-wrap"><table class="unverified-table"><thead><tr>';
-        echo '<th class="unverified-select-col"><input type="checkbox" id="unverified-select-all" aria-label="Select all queued files"></th>';
-        echo '<th>Source Queue</th><th>File</th><th class="unverified-identity">MD5 / GUID</th><th class="unverified-matches">Existing Catalog Matches</th><th>Detected Header</th><th>Size</th><th class="unverified-references" title="Filename package-name candidates. Object check performs an actual exported-object comparison.">Reference Candidates</th>';
+        echo '<th class="unverified-select-col"><input type="checkbox" id="unverified-select-all" aria-label="Select all shown queued files"></th>';
+        echo '<th>Source Queue</th><th>File</th><th class="unverified-identity">MD5 / GUID</th><th class="unverified-matches">Existing Catalog Matches</th><th>Detected Header</th><th>Size</th><th class="unverified-references">Reference Candidates</th>';
         echo '</tr></thead><tbody>';
         foreach ($items as $item) {
             $displayOriginalName = catalog_clean_unreal_filename((string)$item['original_name']);
@@ -429,10 +586,7 @@ CSS;
             $packageKey = strtolower($displayPackageName);
             $references = $referencesByPackage[$packageKey] ?? [];
             $catalogMatches = $catalogMatchesByToken[(string)$item['token']] ?? [];
-            $reason = trim((string)$item['reason']);
-            if ($reason === '') {
-                $reason = 'No queue note was found.';
-            }
+            $reason = trim((string)$item['reason']) ?: 'No queue note was found.';
             $rowId = 'unverified-file-' . (string)$item['token'];
             $sourceIsBucket = (int)($item['game']['id'] ?? 0) === 0;
             $sourceMeta = $sourceIsBucket ? 'storage/upload-bucket' : ((string)$item['game']['slug'] . '/unverified');
@@ -445,12 +599,10 @@ CSS;
             echo '<td class="unverified-matches">' . unverified_files_catalog_matches_html($catalogMatches) . '</td>';
             echo '<td class="mono small">' . catalog_h(unverified_files_header_label($item)) . '</td>';
             echo '<td class="mono small">' . catalog_h(catalog_bytes((int)$item['size'])) . '</td>';
-            echo '<td class="unverified-references">' . unverified_files_reference_html($references) . '</td>';
-            echo '</tr>';
+            echo '<td class="unverified-references">' . unverified_files_reference_html($references) . '</td></tr>';
             echo '<tr class="unverified-rejection-row"><td></td><td colspan="7"><strong>Queue note</strong><span class="unverified-rejection-text mono small">' . catalog_h($reason) . '</span></td></tr>';
         }
-        echo '</tbody></table></div>';
-        echo '</form>';
+        echo '</tbody></table></div></form>';
     }
     echo '</div></section>';
 
@@ -460,7 +612,6 @@ CSS;
     'use strict';
     var form = document.getElementById('unverified-bulk-form');
     if (!form) return;
-
     var selectAll = document.getElementById('unverified-select-all');
     var count = document.getElementById('unverified-bulk-count');
     var target = document.getElementById('unverified-target-game');
@@ -471,7 +622,6 @@ CSS;
     function selectedTokens() {
         return checkboxes.filter(function (box) { return box.checked; }).map(function (box) { return box.value; });
     }
-
     function updateSelection() {
         var selected = selectedTokens();
         count.textContent = selected.length + ' selected';
@@ -479,12 +629,9 @@ CSS;
             selectAll.checked = selected.length > 0 && selected.length === checkboxes.length;
             selectAll.indeterminate = selected.length > 0 && selected.length < checkboxes.length;
         }
-        actionButtons.forEach(function (button) {
-            button.disabled = selected.length === 0;
-        });
+        actionButtons.forEach(function (button) { button.disabled = selected.length === 0; });
         objectCheck.disabled = selected.length === 0;
     }
-
     if (selectAll) {
         selectAll.addEventListener('change', function () {
             checkboxes.forEach(function (box) { box.checked = selectAll.checked; });
@@ -492,7 +639,6 @@ CSS;
         });
     }
     checkboxes.forEach(function (box) { box.addEventListener('change', updateSelection); });
-
     form.addEventListener('submit', function (event) {
         var submitter = event.submitter;
         if (!submitter) return;
@@ -512,7 +658,6 @@ CSS;
             event.preventDefault();
         }
     });
-
     objectCheck.addEventListener('click', function () {
         var selected = selectedTokens();
         if (selected.length === 0) {
@@ -529,7 +674,6 @@ CSS;
         }
         popup.focus();
     });
-
     updateSelection();
 })();
 </script>
