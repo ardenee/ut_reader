@@ -10,6 +10,22 @@ require_once __DIR__ . '/CatalogUE4ParserProfile.php';
  * from that package match object paths currently requested by catalog imports.
  */
 
+function uvoc_emit_progress(?callable $progress, string $stage, string $message, int $percent): void
+{
+    if ($progress === null) {
+        return;
+    }
+    try {
+        $progress([
+            'stage' => $stage,
+            'message' => $message,
+            'percent' => max(0, min(100, $percent)),
+        ]);
+    } catch (Throwable $error) {
+        error_log('[UnrealDB object check] progress callback failed: ' . $error->getMessage());
+    }
+}
+
 /**
  * @return array{valid:bool,found_tag:string,found_hex:string,found_text:string,expected_tag:string}
  */
@@ -130,7 +146,7 @@ function uvoc_set_reader_profile(array $config, array $item, string $engine): vo
 
     $game = [];
     $profile = [];
-    $gameId = (int)($item['game_id'] ?? ($item['header']['game_id'] ?? 0));
+    $gameId = (int)($item['game']['id'] ?? $item['game_id'] ?? ($item['header']['game_id'] ?? 0));
     if ($gameId > 0) {
         try {
             $db = catalog_db($config);
@@ -147,12 +163,19 @@ function uvoc_set_reader_profile(array $config, array $item, string $engine): vo
 /**
  * @return array{engine:string,name_count:int,import_count:int,export_count:int,exports:array<string,string>,tables:array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>}}
  */
-function uvoc_read_exports(array $config, array $item): array
+function uvoc_read_exports(array $config, array $item, ?callable $progress = null): array
 {
+    uvoc_emit_progress($progress, 'detect_reader', 'Detecting the package reader', 14);
     $engine = uvoc_reader_engine($item);
+
+    uvoc_emit_progress($progress, 'load_reader', 'Loading the ' . $engine . ' package reader', 20);
     $readerClass = scanner_load_reader_class($config, $engine);
     uvoc_set_reader_profile($config, $item, $engine);
+
+    uvoc_emit_progress($progress, 'open_package', 'Opening the package', 26);
     $reader = new $readerClass((string)$item['path']);
+
+    uvoc_emit_progress($progress, 'validate_package', 'Validating the package structure', 32);
     $issues = method_exists($reader, 'validatePackage') ? $reader->validatePackage() : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);
     [$fatalIssues] = scanner_split_reader_issues(is_array($issues) ? $issues : []);
     if ($fatalIssues !== []) {
@@ -164,13 +187,17 @@ function uvoc_read_exports(array $config, array $item): array
         }
     }
 
+    uvoc_emit_progress($progress, 'read_names', 'Reading the Names table', 42);
     $names = $reader->getNames();
+    uvoc_emit_progress($progress, 'read_imports', 'Reading the Imports table', 54);
     $imports = $reader->getImports();
+    uvoc_emit_progress($progress, 'read_exports', 'Reading the Exports table', 66);
     $exports = $reader->getExports();
     if (!is_array($names) || !is_array($imports) || !is_array($exports)) {
         throw new RuntimeException('Reader returned an invalid package table.');
     }
 
+    uvoc_emit_progress($progress, 'build_paths', 'Building object paths from package references', 76);
     $packageName = scanner_clean_name((string)$item['package_name']);
     $tables = uvoc_build_tables($names, $imports, $exports, $packageName);
     $paths = [];
@@ -181,6 +208,7 @@ function uvoc_read_exports(array $config, array $item): array
         }
     }
 
+    uvoc_emit_progress($progress, 'package_tables_ready', 'Package tables are ready', 82);
     return [
         'engine' => $engine,
         'name_count' => count($names),
@@ -194,11 +222,15 @@ function uvoc_read_exports(array $config, array $item): array
 /**
  * @return array{item:array<string,mixed>,reader:array<string,mixed>|null,candidates:list<array<string,mixed>>,analysis_error:?array<string,mixed>}
  */
-function uvoc_check(PDO $db, array $config, string $token): array
+function uvoc_check(PDO $db, array $config, string $token, ?callable $progress = null): array
 {
+    uvoc_emit_progress($progress, 'resolve_queue_file', 'Opening the queued file record', 3);
     $item = uvf_resolve($db, $config, $token);
+
+    uvoc_emit_progress($progress, 'check_signature', 'Checking the Unreal package signature', 8);
     $signature = uvoc_package_signature((string)$item['path']);
     if (!$signature['valid']) {
+        uvoc_emit_progress($progress, 'invalid_signature', 'The file is not a readable Unreal package', 98);
         return [
             'item' => $item,
             'reader' => null,
@@ -212,9 +244,10 @@ function uvoc_check(PDO $db, array $config, string $token): array
     }
 
     try {
-        $reader = uvoc_read_exports($config, $item);
+        $reader = uvoc_read_exports($config, $item, $progress);
     } catch (Throwable $error) {
         error_log('[UnrealDB object check] package=' . (string)$item['path'] . ' error=' . $error->getMessage());
+        uvoc_emit_progress($progress, 'reader_failed', 'The package reader reported an error', 98);
         return [
             'item' => $item,
             'reader' => null,
@@ -229,6 +262,7 @@ function uvoc_check(PDO $db, array $config, string $token): array
 
     $packageKey = strtolower(trim((string)$item['package_name']));
     if ($packageKey === '') {
+        uvoc_emit_progress($progress, 'missing_package_name', 'No package-name comparison key is available', 98);
         return [
             'item' => $item,
             'reader' => $reader,
@@ -241,6 +275,7 @@ function uvoc_check(PDO $db, array $config, string $token): array
         ];
     }
 
+    uvoc_emit_progress($progress, 'load_dependencies', 'Loading catalog imports that require this package', 87);
     $rows = catalog_all(
         $db,
         'SELECT g.id game_id, g.name game_name, d.file_id, d.required_object_path'
@@ -252,6 +287,7 @@ function uvoc_check(PDO $db, array $config, string $token): array
         [$packageKey]
     );
 
+    uvoc_emit_progress($progress, 'compare_exports', 'Comparing exported objects with required object paths', 92);
     $byGame = [];
     foreach ($rows as $row) {
         $gameId = (int)$row['game_id'];
@@ -278,6 +314,7 @@ function uvoc_check(PDO $db, array $config, string $token): array
         }
     }
 
+    uvoc_emit_progress($progress, 'build_candidates', 'Building the game match summary', 96);
     $candidates = [];
     foreach ($byGame as $candidate) {
         $candidate['owner_count'] = count($candidate['owner_ids']);
@@ -287,6 +324,7 @@ function uvoc_check(PDO $db, array $config, string $token): array
     }
     usort($candidates, static fn(array $left, array $right): int => ($right['exact_object_matches'] <=> $left['exact_object_matches']) ?: strcmp((string)$left['game_name'], (string)$right['game_name']));
 
+    uvoc_emit_progress($progress, 'file_complete', 'Object comparison complete for this file', 98);
     return [
         'item' => $item,
         'reader' => $reader,
