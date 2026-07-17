@@ -102,7 +102,7 @@ try {
         echo '<tr><th>Package name</th><td><input name="name" value="' . catalog_h(catalog_clean_unreal_package_stem((string)$file['package_name'])) . '" style="min-width:360px"></td></tr>';
         echo '<tr><th>Version</th><td><input name="version" value="1.0" style="width:120px"></td></tr>';
         echo '<tr><th>Author</th><td><input name="author" value="' . catalog_h($settings['default_author']) . '" style="min-width:360px"></td></tr>';
-        echo '<tr><th>Dependencies</th><td><label><input type="checkbox" name="dependencies" value="1" checked> Include resolved dependencies' . ($settings['include_transitive'] ? ' transitively' : '') . '</label></td></tr>';
+        echo '<tr><th>Dependencies</th><td><input type="hidden" name="dependencies" value="0"><label><input type="checkbox" name="dependencies" value="1" checked> Include resolved dependencies' . ($settings['include_transitive'] ? ' transitively' : '') . '</label></td></tr>';
         if ($settings['allow_incomplete']) {
             echo '<tr><th>Incomplete package</th><td><label><input type="checkbox" name="allow_incomplete" value="1"> Continue when dependencies are missing or package-only</label></td></tr>';
         }
