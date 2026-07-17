@@ -8,7 +8,7 @@
         styleInstalled = true;
         var style = document.createElement('style');
         style.textContent = [
-            'body.unverified-action-overlay-open { overflow: hidden; }',
+            'body.unverified-action-overlay-open { overflow:hidden; }',
             '.unverified-action-overlay { position:fixed; inset:0; z-index:30000; display:grid; place-items:center; padding:20px; background:rgba(4,8,16,.82); backdrop-filter:blur(4px); }',
             '.unverified-action-dialog { width:min(760px,96vw); max-height:90vh; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--line2); border-radius:12px; background:var(--panel,#111827); box-shadow:0 28px 80px rgba(0,0,0,.55); }',
             '.unverified-action-dialog.is-object-check { width:min(1500px,98vw); height:94vh; }',
@@ -120,11 +120,18 @@
         if (override && override.checked) data.append('allow_profile_override', '1');
 
         var response = await fetch('unverified-files-action.php', {
-            method: 'POST', body: data, credentials: 'same-origin', headers: { 'Accept': 'application/json' }
+            method: 'POST',
+            body: data,
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
         });
         var text = await response.text();
         var payload;
-        try { payload = JSON.parse(text); } catch (error) { throw new Error('The server returned an invalid progress response.'); }
+        try {
+            payload = JSON.parse(text);
+        } catch (error) {
+            throw new Error('The server returned an invalid progress response.');
+        }
         if (!response.ok || !payload.ok) throw new Error(payload.error || 'The selected action failed.');
         return payload;
     }
@@ -161,7 +168,9 @@
         }
 
         var processed = successes + failures;
-        overlay.current.textContent = stopped ? 'Stopped after ' + processed + ' of ' + entries.length + ' file(s).' : 'Completed ' + processed + ' of ' + entries.length + ' file(s).';
+        overlay.current.textContent = stopped
+            ? 'Stopped after ' + processed + ' of ' + entries.length + ' file(s).'
+            : 'Completed ' + processed + ' of ' + entries.length + ' file(s).';
         overlay.summary.textContent = successes + ' succeeded, ' + failures + ' failed' + (stopped ? ', remaining files were not processed.' : '.');
         overlay.stop.hidden = true;
         overlay.close.disabled = false;
@@ -169,7 +178,9 @@
     }
 
     function makeProgressToken() {
-        if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID().replace(/-/g, '');
+        if (window.crypto && typeof window.crypto.randomUUID === 'function') {
+            return window.crypto.randomUUID().replace(/-/g, '');
+        }
         return 'uvoc' + Date.now().toString(36) + Math.random().toString(36).slice(2);
     }
 
@@ -196,11 +207,14 @@
             if (stopped || overlay.isClosed()) return;
             try {
                 var response = await fetch('unverified-object-check.php?progress=' + encodeURIComponent(token) + '&_=' + Date.now(), {
-                    credentials: 'same-origin', headers: { 'Accept': 'application/json' }, cache: 'no-store'
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store'
                 });
                 var state = await response.json();
                 if (!response.ok) throw new Error(state.message || 'Progress request failed.');
                 requestErrors = 0;
+
                 var percent = Math.max(0, Math.min(100, parseInt(state.percent, 10) || 0));
                 overlay.progress.classList.remove('is-indeterminate');
                 overlay.bar.style.width = percent + '%';
@@ -209,7 +223,13 @@
 
                 var key = String(state.stage || '') + '|' + String(state.message || '') + '|' + String(state.current_index || 0);
                 if (key !== lastKey && state.stage !== 'waiting') {
-                    appendLog(overlay, progressText(state, entries), state.stage === 'failed' || state.stage === 'file_error' ? 'error' : (state.stage === 'file_complete' || state.stage === 'done' ? 'success' : 'info'));
+                    appendLog(
+                        overlay,
+                        progressText(state, entries),
+                        state.stage === 'failed' || state.stage === 'file_error'
+                            ? 'error'
+                            : (state.stage === 'file_complete' || state.stage === 'done' ? 'success' : 'info')
+                    );
                     lastKey = key;
                 }
 
@@ -232,12 +252,14 @@
                     return;
                 }
                 if (state.stage === 'done') {
-                    overlay.current.textContent = 'Object Check complete; loading the compact results page…';
+                    overlay.current.textContent = 'Object Check complete; preparing the compact results…';
                     overlay.bar.style.width = '100%';
                 }
             } catch (error) {
                 requestErrors++;
-                if (requestErrors === 1 || requestErrors % 10 === 0) appendLog(overlay, 'Progress update unavailable: ' + (error.message || 'request failed'), 'error');
+                if (requestErrors === 1 || requestErrors % 10 === 0) {
+                    appendLog(overlay, 'Progress update unavailable: ' + (error.message || 'request failed'), 'error');
+                }
             }
             timer = window.setTimeout(poll, 750);
         }
@@ -246,36 +268,47 @@
         return stop;
     }
 
-    function submitObjectCheck(frame, form, entries, progressToken) {
-        var targetName = 'uvoc-results-' + progressToken;
-        frame.name = targetName;
-        var request = document.createElement('form');
-        request.method = 'post';
-        request.action = 'unverified-object-check-batch.php';
-        request.target = targetName;
-        request.hidden = true;
-
-        function add(name, value) {
-            var input = document.createElement('input');
-            input.type = 'hidden';
-            input.name = name;
-            input.value = value;
-            request.appendChild(input);
-        }
-
+    function buildObjectCheckData(form, entries, token) {
+        var data = new FormData();
         var csrf = form.querySelector('input[name="csrf"]');
-        add('csrf', csrf ? csrf.value : '');
-        add('progress_token', progressToken);
-        entries.forEach(function (entry) { add('tokens[]', entry.token); });
-        document.body.appendChild(request);
-        request.submit();
-        window.setTimeout(function () { request.remove(); }, 0);
+        data.append('csrf', csrf ? csrf.value : '');
+        data.append('progress_token', token);
+        entries.forEach(function (entry) { data.append('tokens[]', entry.token); });
+        return data;
+    }
+
+    function resultStatusFromHtml(html) {
+        var documentResult = new DOMParser().parseFromString(html, 'text/html');
+        var marker = documentResult.querySelector('[data-uvoc-result-status]');
+        return {
+            status: marker ? marker.getAttribute('data-uvoc-result-status') || '' : '',
+            message: marker ? marker.getAttribute('data-message') || '' : ''
+        };
+    }
+
+    async function requestObjectCheck(form, entries, token, signal) {
+        var response = await fetch('unverified-object-check-batch.php', {
+            method: 'POST',
+            body: buildObjectCheckData(form, entries, token),
+            credentials: 'same-origin',
+            headers: { 'Accept': 'text/html' },
+            cache: 'no-store',
+            signal: signal
+        });
+        var html = await response.text();
+        var result = resultStatusFromHtml(html);
+        if (!response.ok || result.status !== 'complete') {
+            throw new Error(result.message || 'The server did not return a valid completed Object Check results page.');
+        }
+        return html;
     }
 
     function openObjectCheck(form, entries) {
         var overlay = createOverlay('Queued Package Object Check', true);
         var token = makeProgressToken();
-        var loaded = false;
+        var controller = typeof AbortController === 'function' ? new AbortController() : null;
+        var stopPolling = startPolling(overlay, token, entries);
+
         overlay.summary.textContent = 'Starting check for ' + entries.length + ' selected file(s).';
         overlay.current.textContent = 'Starting queued package Object Check…';
         overlay.progress.classList.add('is-indeterminate');
@@ -284,42 +317,36 @@
         overlay.close.disabled = false;
         appendLog(overlay, 'Object Check request started.', 'info');
 
-        var stopPolling = startPolling(overlay, token, entries);
-        overlay.close.addEventListener('click', function () { stopPolling(); overlay.remove(); });
-
-        overlay.frame.addEventListener('load', function () {
-            if (loaded) return;
-            var doc;
-            try {
-                if (overlay.frame.contentWindow && overlay.frame.contentWindow.location.href === 'about:blank') return;
-                doc = overlay.frame.contentDocument;
-            } catch (error) {
-                doc = null;
-            }
-
-            loaded = true;
+        overlay.close.addEventListener('click', function () {
             stopPolling();
-            overlay.progress.classList.remove('is-indeterminate');
-            overlay.frame.classList.add('is-ready');
-            overlay.close.disabled = false;
-
-            var marker = doc && doc.querySelector('[data-uvoc-result-status]');
-            var status = marker ? marker.getAttribute('data-uvoc-result-status') : '';
-            if (status === 'complete') {
-                overlay.bar.style.width = '100%';
-                overlay.current.textContent = 'Object Check complete. Compact results are shown below.';
-                overlay.summary.textContent = entries.length + ' selected file(s) inspected.';
-                appendLog(overlay, 'Object Check results finished loading.', 'success');
-            } else {
-                var message = marker ? (marker.getAttribute('data-message') || 'The Object Check results page reported an error.') : 'The results frame did not return a valid UnrealDB Object Check page. The server or browser error page is shown below.';
-                overlay.current.textContent = 'Object Check results could not be displayed.';
-                overlay.summary.textContent = 'The package checks finished, but the results page failed to load.';
-                appendLog(overlay, message, 'error');
-            }
-            overlay.close.focus();
+            if (controller) controller.abort();
+            overlay.remove();
         });
 
-        submitObjectCheck(overlay.frame, form, entries, token);
+        requestObjectCheck(form, entries, token, controller ? controller.signal : undefined).then(function (html) {
+            if (overlay.isClosed()) return;
+            stopPolling();
+            overlay.progress.classList.remove('is-indeterminate');
+            overlay.bar.style.width = '100%';
+            overlay.current.textContent = 'Object Check complete. Compact results are shown below.';
+            overlay.summary.textContent = entries.length + ' selected file(s) inspected.';
+            appendLog(overlay, 'Object Check results finished loading.', 'success');
+
+            overlay.frame.addEventListener('load', function () {
+                if (!overlay.isClosed()) overlay.frame.classList.add('is-ready');
+            }, { once: true });
+            overlay.frame.srcdoc = html;
+            overlay.close.focus();
+        }).catch(function (error) {
+            if (overlay.isClosed() || (error && error.name === 'AbortError')) return;
+            stopPolling();
+            overlay.progress.classList.remove('is-indeterminate');
+            overlay.current.textContent = 'Object Check results could not be displayed.';
+            overlay.summary.textContent = 'The Object Check request failed.';
+            appendLog(overlay, error.message || 'The Object Check request failed.', 'error');
+            overlay.close.disabled = false;
+            overlay.close.focus();
+        });
     }
 
     function init() {
@@ -344,7 +371,9 @@
                 return;
             }
             if (action === 'delete' && !window.confirm('Delete ' + entries.length + ' selected queued file(s) and their queue notes permanently?')) return;
-            runBatch(form, action, entries).catch(function (error) { window.alert(error.message || 'The bulk action could not be started.'); });
+            runBatch(form, action, entries).catch(function (error) {
+                window.alert(error.message || 'The bulk action could not be started.');
+            });
         }, true);
 
         document.addEventListener('click', function (event) {
@@ -358,6 +387,9 @@
         }, true);
     }
 
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
-    else init();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+        init();
+    }
 })();
