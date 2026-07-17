@@ -24,6 +24,7 @@ try {
     if (session_status() === PHP_SESSION_ACTIVE) session_write_close();
 
     $result = catalog_unverified_index_item($db, $config, $item, $userId, false);
+    $db->prepare('UPDATE ue_files SET game_id=NULL WHERE id=? AND scan_status="unverified"')->execute([(int)$result['file_id']]);
     echo json_encode(['ok' => true, 'file' => (string)$item['original_name']] + $result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 } catch (Throwable $error) {
     error_log('[UnrealDB unverified backfill] ' . $error->getMessage());
