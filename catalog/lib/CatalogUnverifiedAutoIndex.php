@@ -2,10 +2,10 @@
 declare(strict_types=1);
 
 /**
- * Queue-producing upload routes historically wrote valid Unreal packages to the
- * filesystem before an unverified database row existed. Record files created by
- * the current request at shutdown so every new queue item is immediately usable
- * by the database-backed review tools.
+ * Queue-producing upload routes historically write a valid Unreal package to an
+ * unverified folder before a database row exists. Snapshot those folders at the
+ * beginning of an authenticated POST request, then index only files created or
+ * replaced by that request at shutdown.
  */
 function catalog_unverified_auto_index_enabled(): bool
 {
@@ -13,8 +13,7 @@ function catalog_unverified_auto_index_enabled(): bool
         return false;
     }
 
-    $script = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
-    return in_array($script, [
+    return in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), [
         'profiled-upload.php',
         'upload-bucket.php',
         'pak-import.php',
@@ -24,43 +23,115 @@ function catalog_unverified_auto_index_enabled(): bool
     ], true);
 }
 
+/** @return array<string,array{mtime:int,size:int,game_id:int,queue_name:string}> */
+function catalog_unverified_auto_index_inventory(array $config, array $gameIdsBySlug): array
+{
+    $storage = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
+    if ($storage === '' || !is_dir($storage)) {
+        return [];
+    }
+
+    $directories = [['path' => $storage . DIRECTORY_SEPARATOR . 'upload-bucket', 'game_id' => 0]];
+    foreach ($gameIdsBySlug as $slug => $gameId) {
+        $directories[] = [
+            'path' => $storage . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'unverified',
+            'game_id' => (int)$gameId,
+        ];
+    }
+
+    $inventory = [];
+    foreach ($directories as $entry) {
+        $dir = (string)$entry['path'];
+        if (!is_dir($dir) || !is_readable($dir)) {
+            continue;
+        }
+        foreach (scandir($dir) ?: [] as $name) {
+            if ($name === '.' || $name === '..' || str_starts_with($name, '.') || str_ends_with(strtolower($name), '.txt')) {
+                continue;
+            }
+            $path = $dir . DIRECTORY_SEPARATOR . $name;
+            if (!is_file($path)) {
+                continue;
+            }
+            $real = realpath($path);
+            if ($real === false) {
+                continue;
+            }
+            $inventory[$real] = [
+                'mtime' => (int)(filemtime($real) ?: 0),
+                'size' => (int)(filesize($real) ?: 0),
+                'game_id' => (int)$entry['game_id'],
+                'queue_name' => $name,
+            ];
+        }
+    }
+    return $inventory;
+}
+
 function catalog_unverified_register_auto_index(): void
 {
-    if (!catalog_unverified_auto_index_enabled()) {
+    if (!catalog_unverified_auto_index_enabled() || !catalog_support_is_admin()) {
         return;
     }
 
-    $requestStartedAt = (int)floor((float)($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true)));
-    register_shutdown_function(static function () use ($requestStartedAt): void {
-        try {
-            if (!catalog_support_is_admin()) {
-                return;
+    try {
+        $config = catalog_config();
+        $db = catalog_db($config);
+        $gameIdsBySlug = [];
+        foreach (catalog_all($db, 'SELECT id,slug FROM ue_games') as $game) {
+            $slug = strtolower(trim((string)$game['slug']));
+            $slug = preg_replace('/[^a-z0-9]+/', '-', $slug) ?? '';
+            $slug = trim($slug, '-');
+            if ($slug === '') {
+                continue;
             }
+            $gameIdsBySlug[$slug] = (int)$game['id'];
+        }
+        $before = catalog_unverified_auto_index_inventory($config, $gameIdsBySlug);
+        $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+    } catch (Throwable $error) {
+        error_log('[UnrealDB unverified auto-index] setup failed: ' . $error->getMessage());
+        return;
+    }
 
+    register_shutdown_function(static function () use ($config, $db, $gameIdsBySlug, $before, $userId): void {
+        try {
             require_once __DIR__ . '/UnverifiedFileManager.php';
             require_once __DIR__ . '/CatalogUnverifiedIndex.php';
-
-            $config = catalog_config();
-            $db = catalog_db($config);
             catalog_unverified_schema_ensure($db);
-            $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
-            foreach (uvf_list($db, $config, null) as $item) {
-                if ((int)($item['modified_at'] ?? 0) < $requestStartedAt - 3) {
-                    continue;
-                }
-                if (catalog_unverified_find($db, (int)$item['game']['id'], (string)$item['queue_name'])) {
+            $after = catalog_unverified_auto_index_inventory($config, $gameIdsBySlug);
+            foreach ($after as $path => $entry) {
+                $old = $before[$path] ?? null;
+                if ($old !== null && (int)$old['mtime'] === (int)$entry['mtime'] && (int)$old['size'] === (int)$entry['size']) {
                     continue;
                 }
 
+                $queueGameId = (int)$entry['game_id'];
+                $queueName = (string)$entry['queue_name'];
+                if (catalog_unverified_find($db, $queueGameId, $queueName)) {
+                    continue;
+                }
+
+                $reasonPath = $path . '.txt';
+                $reason = is_file($reasonPath) ? trim((string)@file_get_contents($reasonPath, false, null, 0, 65535)) : '';
+                $originalName = uvf_original_name_from_queue_name($queueName);
                 try {
-                    catalog_unverified_index_item($db, $config, $item, $userId, false);
-                } catch (Throwable $error) {
-                    error_log(
-                        '[UnrealDB unverified auto-index] '
-                        . (string)($item['original_name'] ?? $item['queue_name'] ?? 'queued file')
-                        . ': ' . $error->getMessage()
+                    catalog_unverified_index_path(
+                        $db,
+                        $config,
+                        $queueGameId,
+                        $queueName,
+                        $path,
+                        $originalName,
+                        $reason,
+                        $userId,
+                        '',
+                        false
                     );
+                } catch (Throwable $error) {
+                    error_log('[UnrealDB unverified auto-index] ' . $originalName . ': ' . $error->getMessage());
+                    @file_put_contents($reasonPath, "\nDatabase staging failed: " . $error->getMessage(), FILE_APPEND);
                 }
             }
         } catch (Throwable $error) {
