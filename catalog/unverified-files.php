@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 require_once __DIR__ . '/lib/CatalogUnverifiedIndex.php';
+require_once __DIR__ . '/lib/CatalogUnverifiedGameMatches.php';
 
 function uv_page_int(string $key, int $default = 0): int
 {
@@ -210,7 +211,7 @@ CSS;
         echo '<div class="table-wrap"><table class="uv-table"><thead><tr><th></th><th>Queue</th><th>File</th><th>Identity</th><th>Database</th><th>Detected</th><th>Size</th><th>Possible game targets</th></tr></thead><tbody>';
         foreach ($items as $item) {
             $row = $item['db_row'];
-            $matches = $row ? catalog_unverified_game_matches($db, (int)$row['id']) : [];
+            $matches = $row ? catalog_unverified_game_matches_v2($db, (int)$row['id']) : [];
             $identity = uv_page_identity_matches($db, $item);
             echo '<tr>';
             echo '<td><input class="unverified-select" type="checkbox" name="tokens[]" value="' . catalog_h((string)$item['token']) . '" aria-label="Select ' . catalog_h((string)$item['original_name']) . '"></td>';
