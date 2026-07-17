@@ -20,16 +20,16 @@ function package_normalize_int(string $key, int $default, int $min, int $max): i
     return max($min, min($max, (int)$value));
 }
 
-function package_normalize_engine_key(array $file): string
+function package_normalize_is_modern_engine(array $file): bool
 {
     $detected = strtoupper(trim((string)($file['detected_engine_key'] ?? '')));
-    return $detected !== '' ? $detected : strtoupper(trim((string)($file['profile_engine'] ?? '')));
+    $profile = strtoupper(trim((string)($file['profile_engine'] ?? '')));
+    return in_array($detected, ['UE4', 'UE5'], true) || in_array($profile, ['UE4', 'UE5'], true);
 }
 
 function package_normalize_assert_legacy_engine(array $file): void
 {
-    $engine = package_normalize_engine_key($file);
-    if (in_array($engine, ['UE4', 'UE5'], true)) {
+    if (package_normalize_is_modern_engine($file)) {
         throw new RuntimeException(
             'UE4/UE5 package identities must not be processed by the legacy package-root normalizer. '
             . 'Use Source Identity Repair so mounted paths such as /Engine/... and valid characters such as + are preserved.'
@@ -113,7 +113,8 @@ function package_normalize_dirty_rows(PDO $db, int $gameId): array
             JOIN ue_games g ON g.id=f.game_id
             LEFT JOIN ue_game_profiles p ON p.id=g.profile_id
             WHERE f.scan_status<>"failed"
-              AND UPPER(COALESCE(NULLIF(f.detected_engine_key,""), p.engine_key, "")) NOT IN ("UE4","UE5")';
+              AND UPPER(COALESCE(f.detected_engine_key,"")) NOT IN ("UE4","UE5")
+              AND UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5")';
     $args = [];
     if ($gameId > 0) {
         $sql .= ' AND f.game_id=?';
