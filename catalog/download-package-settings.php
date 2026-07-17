@@ -47,7 +47,7 @@ try {
 
         $games = catalog_all($db, 'SELECT id FROM ue_games ORDER BY id');
         $gameFormats = [];
-        $allowed = array_merge(['auto'], modpkg_supported_formats());
+        $allowed = ['auto', MODPKG_FORMAT_DEPENDENCY_ZIP, MODPKG_FORMAT_UMOD, MODPKG_FORMAT_UT2MOD, MODPKG_FORMAT_UT4MOD, MODPKG_FORMAT_UT3_ZIP, MODPKG_FORMAT_UT4_PAK];
         foreach ($games as $game) {
             $value = strtolower(trim((string)($_POST['game_format_' . (int)$game['id']] ?? 'auto')));
             $gameFormats[(string)(int)$game['id']] = in_array($value, $allowed, true) ? $value : 'auto';
@@ -68,6 +68,7 @@ try {
          ORDER BY g.name'
     );
     $labels = modpkg_format_labels();
+    unset($labels[MODPKG_FORMAT_DISABLED]);
 
     catalog_head('Package Export Settings');
     catalog_page_header(
@@ -100,11 +101,14 @@ try {
     echo '<tr><th>UT4 PAK mount point</th><td><input name="package_export_ut4_mount_point" value="' . catalog_h($settings['ut4_mount_point']) . '" style="min-width:520px"><br><span class="muted small">PAK version 3, uncompressed and unencrypted.</span></td></tr>';
     echo '</table></div>';
 
-    echo '<div class="card"><h2>Per-game default format</h2><p class="muted">Automatic selection uses the assigned engine profile and game name. Override only when a custom game entry cannot be identified reliably.</p>';
+    echo '<div class="card"><h2>Per-game default format</h2><p class="muted">Automatic selection uses the assigned engine profile and game name. Override only when a custom game entry cannot be identified reliably. Use the global format controls above to disable an exporter.</p>';
     echo '<table><tr><th>Game</th><th>Profile</th><th>Engine</th><th>Automatic result</th><th>Configured default</th></tr>';
     foreach ($games as $game) {
         $auto = modpkg_inferred_format($game);
         $selected = (string)($settings['game_formats'][(string)(int)$game['id']] ?? 'auto');
+        if (!isset($labels[$selected]) && $selected !== 'auto') {
+            $selected = 'auto';
+        }
         echo '<tr><td>' . catalog_h($game['name']) . '<br><span class="mono small">' . catalog_h($game['slug']) . '</span></td><td>' . catalog_h($game['profile_name']) . '</td><td class="mono">' . catalog_h($game['engine_key']) . '</td><td>' . catalog_h($labels[$auto] ?? $auto) . '</td><td><select name="game_format_' . (int)$game['id'] . '">';
         echo '<option value="auto"' . ($selected === 'auto' ? ' selected' : '') . '>Automatic</option>';
         foreach ($labels as $value => $label) {
