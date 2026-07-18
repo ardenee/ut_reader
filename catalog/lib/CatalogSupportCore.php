@@ -100,15 +100,40 @@ function catalog_clean_unreal_extension(string $extension): string
 function catalog_clean_unreal_filename(string $filename): string
 {
     $filename = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], $filename));
-    $filename = preg_replace('/\s+/', ' ', $filename) ?? $filename;
+    $filename = preg_replace('/[\x00-\x1F\x7F]+/u', '', $filename) ?? $filename;
+    $filename = preg_replace('/\s+/u', ' ', $filename) ?? $filename;
     $filename = trim($filename);
+    $filename = rtrim($filename, " .");
     if ($filename === '' || $filename === '.' || $filename === '..') {
         return 'package';
     }
 
-    $extension = catalog_clean_unreal_extension((string)pathinfo($filename, PATHINFO_EXTENSION));
+    // Browsers and download tools often append duplicate markers after the real
+    // package extension, e.g. Name.utx (2). Move the marker before the extension
+    // so the existing duplicate-suffix cleanup removes it without turning the
+    // extension into utx2.
+    $filename = preg_replace(
+        '/^(.*?)(\.[A-Za-z0-9_]+)\s+\(([0-9]+)\)$/u',
+        '$1 ($3)$2',
+        $filename
+    ) ?? $filename;
+
+    $rawExtension = (string)pathinfo($filename, PATHINFO_EXTENSION);
+    $extension = preg_replace('/[^A-Za-z0-9_]+/', '', $rawExtension) ?? '';
+    $normalizedExtension = catalog_clean_unreal_extension($extension);
+    if (preg_match('/^[A-Za-z]{3}(?:uax|umx|utx|usx|ukx|upx|ugx)$/i', $extension) === 1) {
+        $extension = $normalizedExtension;
+    }
+
     $stem = (string)pathinfo($filename, PATHINFO_FILENAME);
-    $stem = catalog_clean_unreal_package_stem($stem);
+    $stem = preg_replace('/[<>:"|?*]+/u', '_', $stem) ?? $stem;
+    $stem = preg_replace('/\s+\([0-9]+\)$/u', '', $stem) ?? $stem;
+    $stem = preg_replace('/\s+-\s+copy(?:\s*\([0-9]+\))?$/iu', '', $stem) ?? $stem;
+    $stem = preg_replace('/\s+copy(?:\s*\([0-9]+\))?$/iu', '', $stem) ?? $stem;
+    $stem = trim($stem, " \t\n\r\0\x0B.");
+    if ($stem === '') {
+        $stem = 'package';
+    }
 
     return $stem . ($extension !== '' ? '.' . $extension : '');
 }

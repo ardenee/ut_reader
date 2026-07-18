@@ -115,7 +115,10 @@ function uvf_token(int $gameId, string $queueName): string
 
 function uvf_safe_queue_name(string $originalName): string
 {
-    $safeOriginal = preg_replace('/[^A-Za-z0-9._ -]+/', '_', basename(catalog_clean_unreal_filename($originalName))) ?? 'upload.bin';
+    // catalog_clean_unreal_filename() already removes path separators, control
+    // bytes and Windows-reserved characters. Do not apply an ASCII-only second
+    // pass here: brackets, parentheses, Unicode and original casing are valid.
+    $safeOriginal = basename(catalog_clean_unreal_filename($originalName));
     $safeOriginal = trim($safeOriginal);
     if ($safeOriginal === '' || $safeOriginal === '.' || $safeOriginal === '..') {
         $safeOriginal = 'upload.bin';
