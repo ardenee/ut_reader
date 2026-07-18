@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 
-require_once __DIR__ . '/../lib/CatalogSupportCore.php';
+require_once __DIR__ . '/../lib/CatalogScanner.php';
 
 function staging_expect(bool $condition, string $message): void
 {
@@ -49,6 +49,14 @@ if (!mkdir($storage, 0775, true) && !is_dir($storage)) {
 }
 
 $config = [
+    'db' => [
+        'host' => '127.0.0.1',
+        'port' => 3306,
+        'database' => 'unrealdb_test',
+        'username' => $user,
+        'password' => $password,
+        'charset' => 'utf8mb4',
+    ],
     'storage_path' => $storage,
     'allowed_extensions' => ['utx'],
     'common_packages' => [],
@@ -82,8 +90,9 @@ try {
     staging_expect((string)$bucketRow['unverified_queue_name'] === (string)$bucket['queue_name'], 'Bucket queue name was not persisted.');
     staging_expect((string)$bucketRow['source_relative_path'] === 'Fixture/Content/Explicit Bucket.utx', 'Bucket source-relative path was not preserved.');
 
-    $gameId = (int)($db->query('SELECT id FROM ue_games ORDER BY id LIMIT 1')->fetchColumn() ?: 0);
-    staging_expect($gameId > 0, 'A seeded game is required for failed-upload staging.');
+    $game = $db->query('SELECT id,slug FROM ue_games ORDER BY id LIMIT 1')->fetch();
+    staging_expect(is_array($game) && (int)$game['id'] > 0, 'A seeded game is required for failed-upload staging.');
+    $gameId = (int)$game['id'];
 
     $failedTemp = tempnam(sys_get_temp_dir(), 'unrealdb-failed-');
     staging_expect(is_string($failedTemp), 'Could not create a failed-upload test file.');
@@ -108,6 +117,29 @@ try {
     staging_expect($failedRow['game_id'] === null, 'Failed-upload row unexpectedly has a verified game assignment.');
     staging_expect((int)$failedRow['unverified_queue_game_id'] === $gameId, 'Failed-upload queue game was not persisted.');
 
+    $scannerTemp = tempnam(sys_get_temp_dir(), 'unrealdb-scanner-failed-');
+    staging_expect(is_string($scannerTemp), 'Could not create a scanner failure test file.');
+    file_put_contents($scannerTemp, pack('V', 0x9E2A83C1) . str_repeat("\0", 112));
+    $scannerReason = 'Scanner primitive integration failure ' . bin2hex(random_bytes(4));
+    scanner_store_failed_upload(
+        $config,
+        $scannerTemp,
+        'Folder/Scanner Failure.utx',
+        (string)$game['slug'],
+        $scannerReason
+    );
+    staging_expect(!is_file($scannerTemp), 'Scanner staging did not move the failed package out of temporary storage.');
+
+    $scannerRow = catalog_one(
+        $db,
+        'SELECT * FROM ue_files WHERE scan_status="unverified" AND unverified_reason=? ORDER BY id DESC LIMIT 1',
+        [$scannerReason]
+    );
+    staging_expect(is_array($scannerRow), 'Scanner failure did not create an unverified database row synchronously.');
+    $fileIds[] = (int)$scannerRow['id'];
+    staging_expect((int)$scannerRow['unverified_queue_game_id'] === $gameId, 'Scanner failure used the wrong physical queue.');
+    staging_expect((string)$scannerRow['source_relative_path'] === 'Folder/Scanner Failure.utx', 'Scanner failure did not preserve source-relative context.');
+
     $unsupportedTemp = tempnam(sys_get_temp_dir(), 'unrealdb-reject-');
     staging_expect(is_string($unsupportedTemp), 'Could not create an unsupported test file.');
     file_put_contents($unsupportedTemp, 'not an Unreal package');
@@ -119,6 +151,18 @@ try {
     );
     staging_expect($unsupported === null, 'A non-Unreal failed upload was retained.');
     staging_expect(!is_file($unsupportedTemp), 'A non-Unreal failed upload was not deleted.');
+
+    $scannerUnsupported = tempnam(sys_get_temp_dir(), 'unrealdb-scanner-reject-');
+    staging_expect(is_string($scannerUnsupported), 'Could not create a scanner unsupported test file.');
+    file_put_contents($scannerUnsupported, 'not an Unreal package');
+    scanner_store_failed_upload(
+        $config,
+        $scannerUnsupported,
+        'Unsupported Scanner.txt',
+        (string)$game['slug'],
+        'Must not be retained by scanner helper.'
+    );
+    staging_expect(!is_file($scannerUnsupported), 'Scanner helper retained a non-Unreal failed upload.');
 
     echo "Explicit unverified staging integration tests passed.\n";
 } finally {
