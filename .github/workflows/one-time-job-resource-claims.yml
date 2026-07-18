@@ -1,0 +1,256 @@
+name: One-time job resource-aware claims
+
+on:
+  push:
+    paths:
+      - .github/workflows/one-time-job-resource-claims.yml
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Apply guarded transformation
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('catalog/src/Infrastructure/Persistence/PdoJobQueue.php')
+          text = path.read_text()
+          original = text
+
+          marker = 'use UnrealDb\\Catalog\\Domain\\Jobs\\ClaimedJob;\n'
+          replacement = marker + 'use UnrealDb\\Catalog\\Domain\\Jobs\\JobResourcePolicy;\n'
+          if marker not in text or 'JobResourcePolicy;' in text:
+              raise SystemExit('Unexpected PdoJobQueue import state')
+          text = text.replace(marker, replacement, 1)
+
+          marker = "        $availableAt = ($availableAt ?? self::now())->setTimezone(new DateTimeZone(self::UTC));\n"
+          replacement = marker + "        $resource = JobResourcePolicy::for($type, $payload);\n"
+          if marker not in text:
+              raise SystemExit('Could not find enqueue policy insertion point')
+          text = text.replace(marker, replacement, 1)
+
+          old = """                . '(queue_name, job_type, payload_json, priority, status, available_at, max_attempts, created_by) '
+                . 'VALUES (?, ?, ?, ?, \"queued\", ?, ?, ?)'
+"""
+          new = """                . '(queue_name, job_type, resource_class, resource_limit, concurrency_key, payload_json, priority, status, available_at, max_attempts, created_by) '
+                . 'VALUES (?, ?, ?, ?, ?, ?, ?, \"queued\", ?, ?, ?)'
+"""
+          if old not in text:
+              raise SystemExit('Could not find non-deduplicated insert')
+          text = text.replace(old, new, 1)
+
+          old = """                $queue,
+                $type,
+                $payloadJson,
+                $priority,
+"""
+          new = """                $queue,
+                $type,
+                $resource->resourceClass,
+                $resource->limit,
+                $resource->concurrencyKey,
+                $payloadJson,
+                $priority,
+"""
+          if old not in text:
+              raise SystemExit('Could not find non-deduplicated insert parameters')
+          text = text.replace(old, new, 1)
+
+          old = """            . '(queue_name, job_type, payload_json, priority, status, available_at, max_attempts, dedupe_key, created_by) '
+            . 'VALUES (?, ?, ?, ?, \"queued\", ?, ?, ?, ?) '
+"""
+          new = """            . '(queue_name, job_type, resource_class, resource_limit, concurrency_key, payload_json, priority, status, available_at, max_attempts, dedupe_key, created_by) '
+            . 'VALUES (?, ?, ?, ?, ?, ?, ?, \"queued\", ?, ?, ?, ?) '
+"""
+          if old not in text:
+              raise SystemExit('Could not find deduplicated insert')
+          text = text.replace(old, new, 1)
+
+          old = """            $queue,
+            $type,
+            $payloadJson,
+            $priority,
+"""
+          new = """            $queue,
+            $type,
+            $resource->resourceClass,
+            $resource->limit,
+            $resource->concurrencyKey,
+            $payloadJson,
+            $priority,
+"""
+          if old not in text:
+              raise SystemExit('Could not find deduplicated insert parameters')
+          text = text.replace(old, new, 1)
+
+          start = text.index('    public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob\n')
+          end = text.index('    public function complete(ClaimedJob $job, array $result = []): string\n', start)
+          claim = '''    public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob
+    {
+        $queue = self::requiredIdentifier($queue, 'queue');
+        $workerId = self::requiredIdentifier($workerId, 'worker id');
+        $leaseSeconds = max(15, min($leaseSeconds, 3600));
+        $claimLock = $this->claimLockName($queue);
+        $this->acquireClaimLock($claimLock);
+
+        try {
+            $this->recoverExpiredLeases($queue);
+            $leaseToken = bin2hex(random_bytes(16));
+            $now = self::now();
+            $leaseExpiresAt = $now->modify('+' . $leaseSeconds . ' seconds');
+
+            $this->db->beginTransaction();
+            try {
+                $statement = $this->db->prepare(
+                    'SELECT candidate.* FROM ue_background_jobs candidate '
+                    . 'WHERE candidate.queue_name=? AND candidate.status="queued" '
+                    . 'AND candidate.cancel_requested_at IS NULL AND candidate.available_at<=? '
+                    . 'AND (SELECT COUNT(*) FROM ue_background_jobs active '
+                    . 'WHERE active.queue_name=candidate.queue_name AND active.status="running" '
+                    . 'AND active.resource_class=candidate.resource_class) < candidate.resource_limit '
+                    . 'AND (candidate.concurrency_key IS NULL OR NOT EXISTS ('
+                    . 'SELECT 1 FROM ue_background_jobs keyed WHERE keyed.queue_name=candidate.queue_name '
+                    . 'AND keyed.status="running" AND keyed.concurrency_key=candidate.concurrency_key)) '
+                    . 'ORDER BY candidate.priority ASC, candidate.available_at ASC, candidate.id ASC '
+                    . 'LIMIT 1 FOR UPDATE'
+                );
+                $statement->execute([$queue, $now->format('Y-m-d H:i:s')]);
+                $row = $statement->fetch(PDO::FETCH_ASSOC);
+                if (!is_array($row)) {
+                    $this->db->commit();
+                    return null;
+                }
+
+                $update = $this->db->prepare(
+                    'UPDATE ue_background_jobs '
+                    . 'SET status="running", attempts=attempts+1, worker_id=?, lease_token=?, leased_at=?, '
+                    . 'lease_expires_at=?, last_heartbeat_at=?, progress_json=NULL, progress_updated_at=NULL, updated_at=? '
+                    . 'WHERE id=? AND status="queued" AND cancel_requested_at IS NULL'
+                );
+                $update->execute([
+                    $workerId,
+                    $leaseToken,
+                    $now->format('Y-m-d H:i:s'),
+                    $leaseExpiresAt->format('Y-m-d H:i:s'),
+                    $now->format('Y-m-d H:i:s'),
+                    $now->format('Y-m-d H:i:s'),
+                    (int)$row['id'],
+                ]);
+                if ($update->rowCount() !== 1) {
+                    throw new \\RuntimeException('Job claim lost before lease update.');
+                }
+
+                $this->db->commit();
+
+                return new ClaimedJob(
+                    (int)$row['id'],
+                    (string)$row['queue_name'],
+                    (string)$row['job_type'],
+                    self::decodePayload((string)$row['payload_json']),
+                    $leaseToken,
+                    (int)$row['attempts'] + 1,
+                    (int)$row['max_attempts'],
+                    $leaseExpiresAt,
+                    (string)$row['resource_class'],
+                    (int)$row['resource_limit'],
+                    $row['concurrency_key'] !== null ? (string)$row['concurrency_key'] : null
+                );
+            } catch (\\Throwable $exception) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                throw $exception;
+            }
+        } finally {
+            $this->releaseClaimLock($claimLock);
+        }
+    }
+
+'''
+          text = text[:start] + claim + text[end:]
+
+          marker = '    private static function encodeJson(array $payload): string\n'
+          helpers = '''    private function claimLockName(string $queue): string
+    {
+        $database = (string)($this->db->query('SELECT DATABASE()')->fetchColumn() ?: 'default');
+        return 'unrealdb:job-claim:' . substr(hash('sha256', $database . ':' . $queue), 0, 40);
+    }
+
+    private function acquireClaimLock(string $lockName): void
+    {
+        $statement = $this->db->prepare('SELECT GET_LOCK(?, 10)');
+        $statement->execute([$lockName]);
+        if ((int)$statement->fetchColumn() !== 1) {
+            throw new \\RuntimeException('Could not acquire the job claim coordination lock.');
+        }
+    }
+
+    private function releaseClaimLock(string $lockName): void
+    {
+        try {
+            $statement = $this->db->prepare('SELECT RELEASE_LOCK(?)');
+            $statement->execute([$lockName]);
+        } catch (\\Throwable $error) {
+            error_log('[UnrealDB jobs] Could not release claim lock: ' . $error->getMessage());
+        }
+    }
+
+'''
+          if marker not in text:
+              raise SystemExit('Could not find claim helper insertion point')
+          text = text.replace(marker, helpers + marker, 1)
+
+          if text == original:
+              raise SystemExit('PdoJobQueue was not changed')
+          path.write_text(text)
+
+          install = Path('catalog/install.sql')
+          sql = install.read_text()
+          old = '''  job_type VARCHAR(120) NOT NULL,
+  payload_json MEDIUMTEXT NOT NULL,
+'''
+          new = '''  job_type VARCHAR(120) NOT NULL,
+  resource_class VARCHAR(80) NOT NULL DEFAULT 'default',
+  resource_limit SMALLINT UNSIGNED NOT NULL DEFAULT 4,
+  concurrency_key VARCHAR(191) NULL,
+  payload_json MEDIUMTEXT NOT NULL,
+'''
+          if old not in sql:
+              raise SystemExit('Could not find background job columns in install.sql')
+          sql = sql.replace(old, new, 1)
+          old = '''  KEY idx_ue_background_jobs_claim (queue_name, status, available_at, priority, id),
+  KEY idx_ue_background_jobs_lease (queue_name, status, lease_expires_at),
+'''
+          new = '''  KEY idx_ue_background_jobs_claim (queue_name, status, available_at, priority, id),
+  KEY idx_ue_background_jobs_resource (queue_name, status, resource_class),
+  KEY idx_ue_background_jobs_concurrency (queue_name, status, concurrency_key),
+  KEY idx_ue_background_jobs_lease (queue_name, status, lease_expires_at),
+'''
+          if old not in sql:
+              raise SystemExit('Could not find background job indexes in install.sql')
+          install.write_text(sql.replace(old, new, 1))
+          PY
+          php -l catalog/src/Infrastructure/Persistence/PdoJobQueue.php
+          php -l catalog/src/Domain/Jobs/JobResourcePolicy.php
+          php -l catalog/src/Domain/Jobs/JobResourceProfile.php
+      - name: Commit transformation and remove workflow
+        run: |
+          rm .github/workflows/one-time-job-resource-claims.yml
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add catalog/src/Infrastructure/Persistence/PdoJobQueue.php catalog/install.sql .github/workflows/one-time-job-resource-claims.yml
+          git commit -m "jobs: enforce resource-aware claim limits"
+          git push origin HEAD:main
