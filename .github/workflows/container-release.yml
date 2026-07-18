@@ -41,8 +41,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+      - name: Validate shell entrypoints
+        run: sh -n deploy/docker/entrypoint.sh deploy/docker/worker-loop.sh
       - name: Validate Compose configuration
         run: docker compose config --quiet
+      - name: Validate Kubernetes manifests
+        run: |
+          kubectl kustomize deploy/kubernetes/base > /tmp/unrealdb-platform.yaml
+          kubectl apply --dry-run=client --validate=false -f /tmp/unrealdb-platform.yaml
+          kubectl apply --dry-run=client --validate=false -f deploy/kubernetes/optional/web-scaling.yaml
       - name: Build test image
         uses: docker/build-push-action@v6
         with:
@@ -56,8 +66,10 @@ jobs:
           cache-to: type=gha,mode=max
       - name: Verify Apache configuration
         run: docker run --rm unrealdb-ci:${{ github.sha }} apache2ctl -t
-      - name: Verify liveness endpoint syntax
-        run: docker run --rm --entrypoint php unrealdb-ci:${{ github.sha }} -l /var/www/html/catalog/api/v1/live.php
+      - name: Verify deployment PHP syntax
+        run: |
+          docker run --rm --entrypoint php unrealdb-ci:${{ github.sha }} -l /var/www/html/catalog/api/v1/live.php
+          docker run --rm --entrypoint php unrealdb-ci:${{ github.sha }} -l /var/www/html/deploy/docker/config.php
       - name: Scan image for vulnerabilities
         uses: anchore/scan-action@v6
         id: scan
