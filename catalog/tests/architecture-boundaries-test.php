@@ -80,4 +80,14 @@ architecture_expect(
     'Dependency facade no longer delegates to its schema manager.'
 );
 
+$unverifiedFacade = file_get_contents(__DIR__ . '/../lib/CatalogUnverifiedDuplicates.php');
+architecture_expect(is_string($unverifiedFacade), 'CatalogUnverifiedDuplicates.php could not be read.');
+architecture_expect(!str_contains($unverifiedFacade, 'md5_file'), 'Unverified duplicate facade regained hashing policy.');
+architecture_expect(!str_contains($unverifiedFacade, 'scandir'), 'Unverified duplicate facade regained inventory traversal.');
+architecture_expect(!str_contains($unverifiedFacade, 'unlink'), 'Unverified duplicate facade regained filesystem deletion.');
+architecture_expect(
+    str_contains($unverifiedFacade, 'CatalogServiceFactory'),
+    'Unverified duplicate facade no longer delegates through the composition root.'
+);
+
 echo "Architecture boundary tests passed.\n";
