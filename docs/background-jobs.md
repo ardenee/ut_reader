@@ -19,6 +19,33 @@ The default lease is 120 seconds and is configured with `queue.lease_seconds` or
 
 Retries and recovered leases clear all former ownership fields before returning to `queued`.
 
+## Resource classes and concurrency keys
+
+Every queued job persists three scheduling fields:
+
+- `resource_class`: the shared capacity pool
+- `resource_limit`: maximum running jobs in that class for the queue
+- `concurrency_key`: optional target lock preventing two jobs for the same game/file from running together
+
+Current defaults:
+
+| Job type | Resource class | Default limit | Target key |
+| --- | --- | ---: | --- |
+| game dependency rebuild | `dependency-heavy` | 1 | `dependency:game:<id>` |
+| affected-file dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
+| upload-progress pruning | `housekeeping` | 2 | none |
+| unknown/future type | `default` | 4 | none |
+
+Limits may be overridden before enqueueing with:
+
+```text
+UNREALDB_JOB_RESOURCE_LIMIT_DEPENDENCY_HEAVY=1
+UNREALDB_JOB_RESOURCE_LIMIT_HOUSEKEEPING=2
+UNREALDB_JOB_RESOURCE_LIMIT_DEFAULT=4
+```
+
+The resolved limit is stored on the job, so changing an environment variable affects newly queued jobs only. Claim selection skips saturated classes, allowing housekeeping work to continue while heavy dependency work is active. A short MySQL advisory lock serializes claim decisions so competing workers cannot overbook a class.
+
 ## Progress
 
 Progress callbacks from maintenance handlers are persisted in `progress_json` with `progress_updated_at`. Progress is an operational snapshot, not the durable result. A successful completion stores the final result separately in `result_json`.
@@ -44,7 +71,12 @@ php catalog/bin/job-control.php status --queue=catalog --limit=50
 php catalog/bin/job-control.php cancel --id=123 --reason="Operator requested stop"
 php catalog/bin/job-control.php retry --id=123
 php catalog/bin/job-control.php recover --queue=catalog
+php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1
+php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123
+php catalog/bin/job-control.php enqueue-prune --max-age-seconds=86400
 ```
+
+The administrator `job-action.php` API exposes equivalent CSRF-protected POST actions for supported enqueue, cancel, retry and recovery operations.
 
 The normal worker claim path also recovers expired leases before selecting new work. The explicit recovery command is useful for diagnostics and scheduled maintenance.
 
@@ -58,14 +90,16 @@ The production container uses `deploy/docker/worker-loop.sh`, gives every proces
 
 ## Scaling rules
 
-Multiple workers may claim from the same queue. Row-level locks and lease-token ownership prevent duplicate active claims and stale completion. Keep one worker replica until representative heavy jobs have passed resource and idempotency tests; queue correctness alone does not make package parsing or filesystem operations horizontally safe.
+Multiple workers may claim from the same queue. Advisory claim coordination, persisted resource limits, concurrency keys and lease-token ownership prevent overbooking, duplicate target work and stale completion.
+
+Keep one worker replica until representative scanner, filesystem and package-generation jobs pass idempotency and crash-recovery tests. Queue scheduling safety alone does not make the underlying operation horizontally safe.
 
 Before adding replicas:
 
 1. confirm every job type is idempotent or resumable
 2. confirm package storage supports concurrent access
-3. define per-job resource and concurrency limits
-4. monitor queue age, lease recovery count, dead letters and cancellation latency
+3. review persisted resource limits and target keys
+4. monitor queue age, class saturation, lease recovery count, dead letters and cancellation latency
 5. test worker termination during each major stage
 
 ## Alerts
@@ -73,8 +107,9 @@ Before adding replicas:
 Page or warn on:
 
 - oldest queued job exceeding its service target
+- a resource class remaining saturated beyond its expected duration
 - repeated lease recoveries for the same job or worker
 - any growing dead-letter count
 - running jobs with stale heartbeat timestamps
 - cancellation requests not acknowledged before lease expiry
-- worker restart loops or database lock timeouts
+- worker restart loops or database/advisory lock timeouts
