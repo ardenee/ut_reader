@@ -1,0 +1,136 @@
+name: One-time explicit failure staging
+
+on:
+  push:
+    paths:
+      - .github/workflows/one-time-explicit-failure-staging.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Replace filesystem-only failed upload storage
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          scanner_path = Path('catalog/lib/CatalogScanner.php')
+          source = scanner_path.read_text(encoding='utf-8')
+          old = '''function scanner_store_failed_upload(array $config, string $tmp, string $originalName, string $gameSlug, string $reason): void
+          {
+              if (!is_file($tmp)) {
+                  return;
+              }
+              if (!scanner_file_has_unreal_package_magic($tmp)) {
+                  @unlink($tmp);
+                  return;
+              }
+              $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . scanner_slug_text($gameSlug) . '/unverified';
+              if (!is_dir($dir)) {
+                  @mkdir($dir, 0775, true);
+              }
+              $cleanName = scanner_clean_original_filename($originalName);
+              $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._ +\\-]+/', '_', basename($cleanName));
+              @rename($tmp, $dir . '/' . $name);
+              @file_put_contents($dir . '/' . $name . '.txt', $reason);
+          }
+          '''
+          new = '''function scanner_store_failed_upload(array $config, string $tmp, string $originalName, string $gameSlug, string $reason): void
+          {
+              if (!is_file($tmp)) {
+                  return;
+              }
+              if (!scanner_file_has_unreal_package_magic($tmp)) {
+                  @unlink($tmp);
+                  return;
+              }
+
+              $normalizedSlug = scanner_slug_text($gameSlug);
+              try {
+                  require_once __DIR__ . '/UnverifiedFileManager.php';
+                  require_once __DIR__ . '/CatalogUnverifiedIndex.php';
+
+                  $db = catalog_db($config);
+                  $game = catalog_one($db, 'SELECT id,name,slug,profile_id FROM ue_games WHERE slug=? LIMIT 1', [$gameSlug]);
+                  if (!$game) {
+                      foreach (catalog_all($db, 'SELECT id,name,slug,profile_id FROM ue_games') as $candidate) {
+                          if (scanner_slug_text((string)$candidate['slug']) === $normalizedSlug) {
+                              $game = $candidate;
+                              break;
+                          }
+                      }
+                  }
+                  if (!$game) {
+                      throw new RuntimeException('Target unverified queue game was not found.');
+                  }
+
+                  $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+                  $sourceRelativePath = (str_contains($originalName, '/') || str_contains($originalName, '\\\\'))
+                      ? scanner_normalize_source_relative_path($originalName)
+                      : '';
+                  $stager = new \\UnrealDb\\Catalog\\Infrastructure\\Legacy\\LegacyUnverifiedFileStager($db, $config);
+                  $stager->stageFailedUpload(
+                      (int)$game['id'],
+                      $tmp,
+                      $originalName,
+                      $reason,
+                      $uploadedBy,
+                      $sourceRelativePath
+                  );
+                  return;
+              } catch (Throwable $error) {
+                  error_log('[UnrealDB failed upload staging] ' . $originalName . ': ' . $error->getMessage());
+                  if (!is_file($tmp)) {
+                      return;
+                  }
+              }
+
+              // Last-resort retention when database staging is unavailable before the
+              // file reaches queue storage. The queue reconciliation page can recover it.
+              $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . $normalizedSlug . '/unverified';
+              if (!is_dir($dir)) {
+                  @mkdir($dir, 0775, true);
+              }
+              $cleanName = scanner_clean_original_filename($originalName);
+              $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._ +\\-]+/', '_', basename($cleanName));
+              $destination = $dir . '/' . $name;
+              if (@rename($tmp, $destination)) {
+                  @file_put_contents($destination . '.txt', $reason . "\\nDatabase staging was unavailable; run unverified queue reconciliation.");
+              }
+          }
+          '''
+          if source.count(old) != 1:
+              raise SystemExit(f'Expected exactly one legacy failed-upload function, found {source.count(old)}')
+          scanner_path.write_text(source.replace(old, new), encoding='utf-8')
+
+          support_path = Path('catalog/lib/CatalogSupport.php')
+          support = support_path.read_text(encoding='utf-8')
+          include = "require_once __DIR__ . '/CatalogUnverifiedAutoIndex.php';\n"
+          if support.count(include) != 1:
+              raise SystemExit('Expected one shutdown auto-index include.')
+          support_path.write_text(support.replace(include, ''), encoding='utf-8')
+          PY
+          git rm catalog/lib/CatalogUnverifiedAutoIndex.php
+          php -l catalog/lib/CatalogScanner.php
+          php -l catalog/lib/CatalogSupport.php
+      - name: Commit transformed scanner
+        run: |
+          git config user.name 'UnrealDB automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/one-time-explicit-failure-staging.yml
+          git add catalog/lib/CatalogScanner.php catalog/lib/CatalogSupport.php
+          git commit -m 'ingestion: stage failed packages explicitly'
+          git push origin HEAD:main
