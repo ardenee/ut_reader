@@ -2,10 +2,10 @@
 declare(strict_types=1);
 
 /**
- * Queue-producing upload routes historically write a valid Unreal package to an
- * unverified folder before a database row exists. Snapshot those folders at the
- * beginning of an authenticated POST request, then index only files created or
- * replaced by that request at shutdown.
+ * Temporary compatibility hook for queue-producing routes that have not yet
+ * adopted the explicit UnverifiedFileStager contract. Converted writers must
+ * stage and receive their ue_files identity during the request instead of
+ * relying on a directory diff at shutdown.
  */
 function catalog_unverified_auto_index_enabled(): bool
 {
@@ -15,7 +15,6 @@ function catalog_unverified_auto_index_enabled(): bool
 
     return in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), [
         'profiled-upload.php',
-        'upload-bucket.php',
         'http-source-scan.php',
         'upload-to-parent.php',
     ], true);
