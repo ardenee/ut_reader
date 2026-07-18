@@ -56,7 +56,7 @@ federation_secret_expect(str_contains($joinReview, 'fed_prepare_peer_secret'), '
 
 $claimEndpoint = file_get_contents(__DIR__ . '/../api/federation/join-claim.php');
 federation_secret_expect(is_string($claimEndpoint), 'join-claim.php could not be read.');
-federation_secret_expect(str_contains($claimEndpoint, "REQUEST_METHOD'] ?? 'GET')) !== false, 'Join claim does not enforce an HTTP method.');
+federation_secret_expect(str_contains($claimEndpoint, "REQUEST_METHOD'] ?? 'GET'"), 'Join claim does not enforce an HTTP method.');
 federation_secret_expect(!str_contains($claimEndpoint, "_GET['token']"), 'Join claim still accepts a bearer token from the query string.');
 federation_secret_expect(str_contains($claimEndpoint, 'fed_peer_secret'), 'Join claim no longer reads pairing material from the encrypted peer store.');
 
