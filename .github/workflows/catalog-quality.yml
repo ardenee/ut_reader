@@ -33,6 +33,8 @@ jobs:
         run: php catalog/tests/architecture-boundaries-test.php
       - name: Verify security boundaries
         run: php catalog/tests/security-boundaries-test.php
+      - name: Verify explicit staging boundaries
+        run: php catalog/tests/unverified-staging-contract-test.php
       - name: Test federation secret encryption
         run: php catalog/tests/federation-secret-store-test.php
       - name: Test catalog UI components
