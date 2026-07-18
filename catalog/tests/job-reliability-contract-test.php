@@ -20,10 +20,19 @@ job_contract_expect(is_string($context), 'JobExecutionContext.php could not be r
 job_contract_expect(str_contains($context, 'JobCancellationRequested'), 'Execution checkpoints no longer surface cooperative cancellation.');
 job_contract_expect(str_contains($context, 'pendingProgress'), 'Execution checkpoints no longer persist bounded progress snapshots.');
 
+$policy = file_get_contents(__DIR__ . '/../src/Domain/Jobs/JobResourcePolicy.php');
+job_contract_expect(is_string($policy), 'JobResourcePolicy.php could not be read.');
+foreach (['dependency-heavy', 'housekeeping', 'UNREALDB_JOB_RESOURCE_LIMIT_'] as $fragment) {
+    job_contract_expect(str_contains($policy, $fragment), 'Job resource policy is missing ' . $fragment);
+}
+
 $queue = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/PdoJobQueue.php');
 job_contract_expect(is_string($queue), 'PdoJobQueue.php could not be read.');
 foreach (['status="dead_letter"', 'cancel_requested_at', 'recovery_count=recovery_count+1', 'lease_token=? FOR UPDATE'] as $fragment) {
     job_contract_expect(str_contains($queue, $fragment), 'Queue persistence is missing reliability boundary: ' . $fragment);
+}
+foreach (['resource_class', 'resource_limit', 'concurrency_key', 'GET_LOCK(', 'RELEASE_LOCK(', 'active.resource_class=candidate.resource_class'] as $fragment) {
+    job_contract_expect(str_contains($queue, $fragment), 'Queue persistence is missing resource boundary: ' . $fragment);
 }
 $heartbeatStart = strpos($queue, 'public function heartbeat(');
 $heartbeatEnd = strpos($queue, 'public function requestCancellation(', $heartbeatStart === false ? 0 : $heartbeatStart);
@@ -41,7 +50,7 @@ job_contract_expect(!str_contains($actionApi, '$_GET'), 'Job mutation endpoint a
 
 $statusApi = file_get_contents(__DIR__ . '/../api/v1/job-status.php');
 job_contract_expect(is_string($statusApi), 'job-status.php could not be read.');
-foreach (['progress_updated_at', 'last_heartbeat_at', 'recovery_count', 'cancel_requested_at', 'dead_lettered_at'] as $field) {
+foreach (['progress_updated_at', 'last_heartbeat_at', 'recovery_count', 'cancel_requested_at', 'dead_lettered_at', 'resource_class', 'resource_limit', 'concurrency_key'] as $field) {
     job_contract_expect(str_contains($statusApi, $field), 'Job status API is missing ' . $field);
 }
 
@@ -51,5 +60,6 @@ job_contract_expect(str_contains($worker, 'lease-seconds'), 'Worker CLI no longe
 
 job_contract_expect(!is_file(__DIR__ . '/../../.github/workflows/one-time-job-schema-baseline.yml'), 'Temporary schema workflow was left in the repository.');
 job_contract_expect(!is_file(__DIR__ . '/../../.github/workflows/one-time-heartbeat-rowcount.yml'), 'Temporary heartbeat workflow was left in the repository.');
+job_contract_expect(!is_file(__DIR__ . '/../../.github/workflows/one-time-job-resource-claims.yml'), 'Temporary resource-claim workflow was left in the repository.');
 
 echo "Background job reliability contract tests passed.\n";
