@@ -2,268 +2,279 @@
 
 ## Deployment position
 
-UnrealDB is currently a modular PHP monolith with MySQL-backed metadata, filesystem-backed package storage, PHP sessions, and a durable MySQL job queue. The production design keeps the monolith because package identity, parsing, storage, and dependency updates are transactionally related. Kubernetes is an optional operating platform, not a requirement.
+UnrealDB is a modular PHP monolith with MySQL metadata, durable package storage, PHP sessions, and a MySQL-backed job queue. Keep it as a modular monolith: package identity, parsing, storage, and dependency updates are transactionally related, and splitting them into network services would add operational failure modes without providing useful independence.
 
-The default manifests intentionally deploy one web replica and one worker replica. Do not enable horizontal web scaling until sessions use Redis and package storage is ReadWriteMany or object-backed. Do not scale workers horizontally until concurrent queue claiming and lease renewal have been load-tested.
+Kubernetes is optional. Docker Compose is the recommended local and single-host staging path. The Kubernetes baseline starts with one web replica and one worker replica.
 
-## Target infrastructure architecture
+## Infrastructure architecture
 
-1. CDN/WAF and managed DNS terminate abusive traffic before the cluster.
-2. A TLS load balancer or Kubernetes ingress sends requests to the web deployment.
-3. Stateless web containers serve PHP and static assets.
-4. Redis stores PHP sessions for multi-instance safety.
+1. Managed DNS, CDN, and WAF protect the public edge.
+2. A TLS load balancer or Kubernetes ingress forwards requests to the web service.
+3. Immutable web containers serve PHP and static assets on port 8080.
+4. Redis stores PHP sessions so web instances do not depend on local session files.
 5. Managed MySQL 8.4-compatible infrastructure stores catalogue and job metadata.
-6. Package storage uses a durable shared volume initially, with object storage as the long-term scaling target.
-7. A dedicated worker deployment processes background jobs independently of web requests.
-8. Platform agents ship stdout/stderr logs to the central log system.
-9. Prometheus-compatible exporters and synthetic probes feed dashboards and alerting.
-10. Database and package storage backups are managed independently and restore-tested.
+6. ReadWriteMany package storage is mounted by web and worker pods.
+7. A dedicated worker processes background jobs independently of HTTP requests.
+8. Logs are written to stdout and stderr and collected centrally.
+9. Prometheus-compatible infrastructure metrics and synthetic probes feed dashboards and alerting.
+10. MySQL and package storage are backed up independently and restore-tested.
+
+Object storage is the long-term package-storage target. The current filesystem storage interface is retained for compatibility.
 
 ## Availability boundaries
 
-- Web availability depends on ingress, web pods, Redis sessions, MySQL, and package storage.
-- Public read-only pages currently depend on MySQL.
-- Package downloads depend on package storage and configured mirror policy.
-- Background processing may be unavailable without taking public browsing offline.
-- Readiness checks include database connectivity. Liveness checks do not.
+- Public catalogue pages depend on ingress, web, MySQL, and Redis sessions.
+- Downloads also depend on package storage and the configured mirror policy.
+- Worker failure should not take public browsing offline.
+- Readiness checks include database connectivity.
+- Liveness checks only confirm that the PHP/Apache process can respond.
 
 ## Container layout
 
-The repository Dockerfile produces one immutable image for both roles:
+The repository Dockerfile produces one image for both roles:
 
-- Web role: default Apache command on port 8080.
-- Worker role: the same image with `deploy/docker/worker-loop.sh` as the command.
+- Web: default Apache command.
+- Worker: the same image with `deploy/docker/worker-loop.sh` as its command.
 
-Runtime configuration is read from environment variables through `deploy/docker/config.php`. Secrets are never baked into the image. Package data is mounted at `catalog/storage`.
+Runtime values are read from environment variables through `deploy/docker/config.php`. Secrets are not baked into the image. The production image disables displayed PHP errors, enables OPcache, writes errors to stderr, limits request size, and blocks development viewers and internal catalogue directories at Apache level.
 
-The Compose stack is suitable for local integration testing and a single-host staging environment. It is not the recommended high-availability production database deployment.
+The Compose stack includes MySQL, Redis, web, worker, persistent database data, persistent Redis data, and persistent package storage. It is intended for integration testing and single-host staging, not highly available database production.
 
 ## Kubernetes layout
 
 The base manifest creates:
 
 - Namespace `unrealdb`.
-- Non-secret runtime ConfigMap.
-- Persistent package-storage claim.
-- One rolling-update web Deployment.
+- Non-secret ConfigMap.
+- ReadWriteMany package-storage claim.
+- One zero-unavailable rolling web Deployment.
 - One recreate-strategy worker Deployment.
-- ClusterIP web Service.
+- ClusterIP Service.
 - TLS Ingress.
 
-The `unrealdb-secrets` Secret must exist before deployment. Use External Secrets, Sealed Secrets, a cloud secret manager, or another encrypted delivery system. The tracked example file must never be applied unchanged.
+The `unrealdb-secrets` Secret must be created through External Secrets, Sealed Secrets, a cloud secret manager, or another encrypted delivery mechanism. Never apply the tracked example unchanged.
 
-The base PersistentVolumeClaim is ReadWriteOnce. It is safe for the default single web replica when the web and worker can mount the same volume on the same cluster topology. Production clusters that schedule them across nodes require ReadWriteMany storage or object storage.
+The cluster storage class must support ReadWriteMany because web and worker are separate pods and web rollouts may temporarily run two pods. Clusters without RWX storage should use object storage or the single-host Compose deployment.
 
 ## Scaling policy
 
-### Stage 1: single-node or small production
+### Stage 1: initial production
 
 - One web replica.
 - One worker replica.
-- Managed MySQL or a separately backed-up MySQL host.
-- Redis session service.
-- One durable shared package volume.
+- Redis-backed sessions.
+- Managed or independently backed-up MySQL.
+- RWX package storage.
 - CDN for static assets and permitted downloads.
 
 ### Stage 2: horizontally scaled web tier
 
 Prerequisites:
 
-- Redis-backed PHP sessions.
-- ReadWriteMany package storage or object storage.
-- Load-tested database indexes and connection capacity.
-- Ingress metrics server installed.
-- Synthetic health monitoring in place.
+- Redis session service is production-ready.
+- RWX or object-backed package storage is healthy and monitored.
+- MySQL indexes and connection capacity have been load-tested.
+- Kubernetes Metrics Server is installed.
+- External synthetic monitoring is active.
 
-Apply `deploy/kubernetes/optional/web-scaling.yaml` only after those prerequisites. It maintains three to twenty web replicas and a disruption budget.
+Only then apply `deploy/kubernetes/optional/web-scaling.yaml`. It maintains three to twenty web replicas with controlled scale-down and a disruption budget.
+
+Do not scale workers horizontally until queue claiming, lease renewal, idempotency, and recovery have been concurrency-tested.
 
 ### Stage 3: high-volume catalogue
 
-- Move package blobs to S3-compatible object storage behind the storage interface.
-- Keep MySQL as the system of record for identities and dependencies.
-- Add read replicas only for measured read pressure.
-- Move substring search to a derived search index when MySQL latency exceeds the agreed budget.
-- Introduce separate bounded worker pools by job type.
-- Add per-job resource classes for package parsing, archive extraction, dependency rebuilds, and distribution.
+- Move package blobs to S3-compatible object storage.
+- Keep MySQL as the identity and dependency system of record.
+- Add read replicas only after measured read pressure.
+- Add a derived search index only after measured substring-search latency justifies it.
+- Split workers into bounded pools by job type and resource class.
 
-## CI pipeline
+## CI/CD pipeline
 
-`catalog-quality.yml` remains the application correctness gate:
+### Application quality gate
+
+`.github/workflows/catalog-quality.yml` performs:
 
 - PHP syntax checks.
 - Architecture-boundary tests.
 - UI component tests.
 - Duplicate-cleanup behavior tests.
 - Package-format tests.
-- Fresh MySQL schema import and seed checks.
+- Fresh MySQL schema import and seed validation.
 
-`container-release.yml` adds the delivery gate:
+### Container release gate
 
-1. Validate Compose configuration.
-2. Build the exact production image.
-3. Validate Apache configuration inside the image.
-4. Validate the liveness endpoint.
-5. Scan the built image and fail on high-severity findings.
-6. Publish immutable SHA and release tags to GHCR after non-PR runs.
-7. Generate build provenance attestation.
-8. Record the content digest used for deployment.
+`.github/workflows/container-release.yml` performs:
 
-Images must be deployed by digest, never by a mutable tag.
+1. Compose configuration validation.
+2. Production image build.
+3. Apache configuration validation inside the image.
+4. Liveness endpoint syntax validation.
+5. Container vulnerability scanning with failure on high-severity findings.
+6. GHCR publication for approved non-PR runs.
+7. Provenance attestation.
+8. Release digest recording.
 
-## Deployment workflow
+Images are deployed by digest, never by mutable tag.
 
-`deploy-production.yml` is manual and uses the protected GitHub `production` environment.
+### Production deployment
 
-Recommended environment rules:
+`.github/workflows/deploy-production.yml` is manually dispatched through the protected GitHub `production` environment.
+
+Configure the environment with:
 
 - Required reviewer approval.
-- Deployment branch restricted to `main` and release tags.
-- Separate production cluster credential.
-- No secret available to pull-request workflows.
-- Deployment history retained.
+- Deployment branch restrictions.
+- A production-only cluster credential.
+- No cluster secret exposure to pull-request workflows.
+- Retained deployment history.
 
-Release procedure:
+The generic workflow currently consumes `KUBE_CONFIG_B64`. Replace this with cloud OIDC or workload identity once the production platform is chosen.
+
+## Release workflow
 
 1. Confirm application quality and container release workflows passed.
-2. Review vulnerability scan results and SBOM/provenance records.
+2. Review image vulnerability results and provenance.
 3. Back up MySQL and package storage before schema changes.
-4. Apply backward-compatible schema migrations separately.
-5. Confirm `unrealdb-secrets`, TLS, Redis, database, and storage are healthy.
-6. Start the production workflow with the published image digest.
-7. Apply the rendered immutable Kubernetes manifest.
+4. Apply reviewed backward-compatible schema migrations separately.
+5. Verify MySQL, Redis, RWX storage, TLS, and `unrealdb-secrets`.
+6. Start the production workflow with the published SHA-256 digest.
+7. Apply the immutable rendered manifest.
 8. Wait for web and worker rollout completion.
 9. Run in-cluster readiness checks.
 10. Run an external HTTPS smoke test.
-11. Monitor error rate, latency, restarts, queue age, and database load.
-12. Roll back the deployments if error budgets or smoke tests fail.
+11. Review error rate, latency, restarts, queue age, and database load.
+12. Roll back if smoke tests or error budgets fail.
 
-Do not run destructive or long-locking schema migrations in the same step as the web rollout. Use expand-and-contract migrations:
+Schema changes use expand-and-contract deployment:
 
-1. Add compatible columns/tables/indexes.
-2. Deploy code that supports both schemas.
+1. Add compatible schema.
+2. Deploy code supporting old and new forms.
 3. Backfill in bounded jobs.
 4. Switch reads and writes.
 5. Remove obsolete schema in a later release.
 
+Never combine destructive or long-locking schema changes with the web rollout.
+
 ## Rollback strategy
 
-Application rollback is an image rollback, not a source checkout on the server.
-
-- Kubernetes keeps five deployment revisions.
-- Failed automated rollouts request `kubectl rollout undo` for web and worker.
-- Operators must verify the previous image remains compatible with any applied schema migration.
-- Irreversible migrations require a forward-fix plan before approval.
-- Package storage changes require snapshots or versioned object keys.
+- Kubernetes retains five web and worker revisions.
+- Failed workflow rollouts request `kubectl rollout undo`.
+- The previous image must remain compatible with the migrated database.
+- Irreversible migrations require an approved forward-fix plan.
+- Storage changes require snapshots or versioned object keys.
+- Rollback means restoring an immutable image digest, not editing files on a server.
 
 ## Monitoring strategy
 
-### Service-level objectives
+### Initial service objectives
 
-Initial objectives should be reviewed after real traffic baselines exist:
+Review these after real traffic baselines exist:
 
-- Public catalogue availability: 99.9% monthly.
-- Successful public request latency: p95 below 1 second for normal browse pages.
-- Administrative request latency: p95 below 2 seconds, excluding queued operations.
-- Background queue age: oldest normal-priority job below 5 minutes.
-- Error budget: fewer than 0.1% server errors over a rolling 30-day period.
+- Public availability: 99.9% monthly.
+- Normal public page latency: p95 below 1 second.
+- Administrative page latency: p95 below 2 seconds, excluding queued work.
+- Oldest normal-priority queued job: below 5 minutes.
+- Server-error rate: below 0.1% over 30 days.
 
 ### Metrics
 
-Collect at least:
+Collect:
 
-- Ingress request rate, p50/p95/p99 latency, 4xx, 5xx, and active connections.
-- Web and worker CPU, memory, throttling, restarts, OOM kills, and readiness failures.
-- Persistent-volume capacity, inode usage, latency, and mount errors.
-- MySQL connections, lock waits, deadlocks, slow queries, buffer-pool hit rate, disk latency, and backup age.
-- Redis availability, memory, evictions, connected clients, and command latency.
-- Queue depth by status and type, oldest queued job age, attempts, lease expirations, and failures.
-- Upload/import counts, processing duration, decompression failures, and storage growth.
-- External federation transfer failures and stale jobs when federation is enabled.
+- Ingress request rate, latency percentiles, 4xx, 5xx, and connections.
+- Web and worker CPU, memory, throttling, restarts, OOM kills, and probe failures.
+- PVC capacity, inode usage, latency, and mount errors.
+- MySQL connections, lock waits, deadlocks, slow queries, buffer-pool performance, disk latency, and backup age.
+- Redis availability, memory, evictions, clients, and command latency.
+- Queue depth by status and type, oldest job age, attempts, lease expirations, and failures.
+- Upload/import volume and duration, archive-limit failures, and storage growth.
+- Federation transfer failures and stale jobs when federation is enabled.
 
-### Logs
+### Logging
 
 - Apache access logs go to stdout.
 - Apache, PHP, and worker errors go to stderr.
-- The platform log agent must add cluster, namespace, pod, container, release digest, and environment fields.
-- Retain application logs for at least 30 days and security/audit logs according to the operational policy.
-- Redact passwords, session cookies, CSRF values, remember tokens, federation secrets, cron tokens, and claim tokens.
-- Alert on repeated authentication failures, signature failures, archive limit violations, and unexpected admin actions.
+- The log agent adds environment, cluster, namespace, pod, container, and image digest.
+- Retain operational logs for at least 30 days; retain audit/security logs according to policy.
+- Redact passwords, cookies, CSRF values, remember tokens, federation secrets, cron tokens, and claim tokens.
+- Alert on repeated login failures, signature failures, archive-limit violations, and unexpected admin actions.
 
 ### Synthetic monitoring
 
-Probe from outside the cluster:
+Probe externally:
 
-- `/catalog/api/v1/live.php` for process availability.
-- `/catalog/api/v1/health.php` for database-backed readiness.
-- A representative game list page.
-- A representative exact package/GUID search.
-- A permitted small download path.
+- `/catalog/api/v1/live.php` for process liveness.
+- `/catalog/api/v1/health.php` for database readiness.
+- A representative game-list page.
+- An exact GUID or package lookup.
+- A permitted small download.
 
-Do not use expensive package generation or wildcard searches as frequent probes.
+Do not use wildcard searches or package generation as frequent probes.
 
-### Alerting
+### Alerts
 
 Page immediately for:
 
-- Public 5xx rate above 5% for five minutes.
+- 5xx rate above 5% for five minutes.
 - No ready web pod.
-- MySQL unavailable or storage read-only.
-- PVC above 90% capacity.
-- Repeated worker crash loop.
+- MySQL unavailable.
+- Package storage read-only or above 90% capacity.
+- Repeated worker crash loops.
 - Backup or restore-verification failure.
-- Security-signature failure surge.
+- A surge in federation signature failures.
 
-Create warning alerts for:
+Warn for:
 
 - p95 latency above two seconds for fifteen minutes.
 - Queue age above ten minutes.
-- PVC above 75% capacity.
-- MySQL connection use above 75%.
+- Storage above 75% capacity.
+- MySQL connections above 75% of the configured maximum.
 - Redis memory above 75% or any eviction.
-- Growing failed-job count.
+- A growing failed-job count.
 
 ## Reliability controls
 
 - Immutable images and digest deployments.
 - Zero-unavailable rolling web updates.
-- Readiness gates based on database connectivity.
-- Separate liveness endpoint that avoids restart loops during database incidents.
-- Dedicated worker lifecycle and bounded backoff.
-- Persistent storage separated from image lifecycle.
-- Redis-backed sessions for web replica independence.
-- Managed TLS and certificate renewal.
-- Database point-in-time recovery and daily storage snapshots.
+- Database-backed readiness checks.
+- Database-independent liveness checks.
+- Worker backoff and graceful termination.
+- Persistent data separated from image lifecycle.
+- Redis-backed sessions.
+- Managed TLS renewal.
+- MySQL point-in-time recovery.
+- Daily package-storage snapshots.
 - Quarterly restore exercises.
-- Capacity alerts before storage exhaustion.
-- One active production deployment at a time through workflow concurrency.
+- Capacity alerts before exhaustion.
+- One active production deployment at a time.
 
 ## Production deployment checklist
 
 ### Before first deployment
 
-- [ ] Resolve high-severity security audit findings, especially legacy download bypass and plaintext federation secrets.
-- [ ] Choose managed MySQL or document database ownership, backups, patching, and failover.
-- [ ] Provision Redis with authentication, TLS where supported, persistence policy, and monitoring.
-- [ ] Provision package storage with sufficient capacity and a tested backup/restore path.
-- [ ] Create the Kubernetes `unrealdb-secrets` Secret through a secret manager.
-- [ ] Replace the example ingress hostname and TLS secret.
-- [ ] Confirm the ingress controller supports the configured annotations.
+- [ ] Resolve the high-severity security audit findings, especially the legacy download bypass and plaintext federation secrets.
+- [ ] Choose managed MySQL or document database ownership, patching, backups, and failover.
+- [ ] Provision Redis with authentication, persistence policy, and monitoring.
+- [ ] Provision RWX or object storage with tested backup and restore.
+- [ ] Create `unrealdb-secrets` through a secret manager.
+- [ ] Replace the example hostname and TLS secret.
+- [ ] Confirm ingress annotations are supported.
 - [ ] Configure DNS, TLS, WAF, request-size limits, and rate limiting.
 - [ ] Disable public development viewers and HTTP cron endpoints.
-- [ ] Create the first administrator through the CLI only.
-- [ ] Import the canonical schema for a new database or apply reviewed migrations for an existing database.
-- [ ] Verify the database user follows least privilege and cannot administer unrelated databases.
-- [ ] Configure central logs, metrics, dashboards, and alert routing.
-- [ ] Run a complete restore test.
+- [ ] Create the first administrator through CLI only.
+- [ ] Import the canonical schema for a new database or apply reviewed migrations.
+- [ ] Use a least-privilege database account restricted to the UnrealDB database.
+- [ ] Configure logs, dashboards, alerts, and on-call routing.
+- [ ] Complete a full restore test.
 
 ### Before every release
 
-- [ ] All quality checks passed.
-- [ ] Container image scan passed or an approved exception exists.
-- [ ] Deployment uses an immutable image digest.
-- [ ] Schema changes are backward-compatible with the current and previous image.
+- [ ] Quality checks passed.
+- [ ] Image scan passed or an approved exception exists.
+- [ ] Deployment uses an immutable digest.
+- [ ] Schema changes support the current and previous images.
 - [ ] Database and storage backups are current.
-- [ ] Capacity is sufficient for rollout surge and temporary files.
+- [ ] Capacity covers rollout surge and temporary files.
 - [ ] Rollback image and procedure are known.
 - [ ] Maintenance communication is prepared when required.
 
@@ -272,17 +283,17 @@ Create warning alerts for:
 - [ ] Web and worker rollouts completed.
 - [ ] Liveness and readiness probes are healthy.
 - [ ] External HTTPS smoke test passed.
-- [ ] Authentication, search, upload, download policy, and one background job were smoke-tested.
-- [ ] Error rate, latency, database load, Redis, queue age, and storage were reviewed.
-- [ ] Release digest and operator approval were recorded.
+- [ ] Authentication, search, upload, download policy, and one background job were tested.
+- [ ] Error rate, latency, MySQL, Redis, queue age, and storage were reviewed.
+- [ ] Release digest and approval were recorded.
 - [ ] Temporary deployment credentials and artifacts were removed.
 
 ## Remaining platform work
 
-- Add versioned database migrations and a schema-version table.
-- Replace the generic kubeconfig deployment secret with cloud OIDC/workload identity.
-- Add an application metrics endpoint or OpenTelemetry instrumentation.
+- Add numbered database migrations and a schema-version table.
+- Replace generic kubeconfig deployment with cloud OIDC/workload identity.
+- Add application metrics or OpenTelemetry instrumentation.
 - Move federation workers from HTTP-token endpoints to CLI/background jobs.
-- Replace local package storage with object storage before broad horizontal scaling.
+- Replace filesystem package storage with object storage before broad scaling.
 - Load-test concurrent queue claims before adding worker replicas.
-- Build a rootless FPM/web-server image if the operating environment requires strict non-root workloads.
+- Produce a rootless FPM/web-server image if strict non-root workloads are required.
