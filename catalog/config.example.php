@@ -17,7 +17,7 @@ return [
     'auth' => [
         // Persistent rotating remember-me token lifetime.
         'remember_days' => 30,
-        // Shared-storage login throttling. Applies to each username and client IP pair.
+        // Shared-storage login throttling. Client IP is used when available.
         'login_max_attempts' => 8,
         'login_window_seconds' => 15 * 60,
         'login_block_seconds' => 15 * 60,
