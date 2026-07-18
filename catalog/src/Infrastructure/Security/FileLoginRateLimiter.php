@@ -114,7 +114,10 @@ final class FileLoginRateLimiter
 
     private function statePath(string $username, string $clientIp): string
     {
-        $identity = strtolower(trim($username)) . '|' . trim($clientIp);
+        $clientIp = trim($clientIp);
+        $identity = $clientIp !== ''
+            ? 'ip|' . $clientIp
+            : 'account|' . strtolower(substr(trim($username), 0, 80));
         return rtrim($this->directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . hash('sha256', $identity) . '.json';
     }
 }
