@@ -27,14 +27,37 @@ function catalog_security_is_https(): bool
     return (string)($_SERVER['SERVER_PORT'] ?? '') === '443';
 }
 
+function catalog_security_env_seconds(string $name, int $default, int $minimum, int $maximum): int
+{
+    $configured = (int)(getenv($name) ?: 0);
+    return max($minimum, min($configured > 0 ? $configured : $default, $maximum));
+}
+
 function catalog_session_lifetime_seconds(): int
 {
-    $configured = (int)(getenv('UNREALDB_CATALOG_SESSION_LIFETIME_SECONDS') ?: 0);
-    if ($configured > 0) {
-        return max(3600, min($configured, 365 * 86400));
-    }
+    return catalog_session_absolute_timeout_seconds();
+}
 
-    return 30 * 86400;
+function catalog_session_idle_timeout_seconds(): int
+{
+    return catalog_security_env_seconds('UNREALDB_CATALOG_SESSION_IDLE_SECONDS', 1800, 300, 86400);
+}
+
+function catalog_session_absolute_timeout_seconds(): int
+{
+    return catalog_security_env_seconds('UNREALDB_CATALOG_SESSION_ABSOLUTE_SECONDS', 43200, 3600, 7 * 86400);
+}
+
+function catalog_session_cookie_secure(): bool
+{
+    $configured = strtolower(trim((string)(getenv('UNREALDB_SESSION_COOKIE_SECURE') ?: '')));
+    if (in_array($configured, ['1', 'true', 'yes', 'on'], true)) {
+        return true;
+    }
+    if (in_array($configured, ['0', 'false', 'no', 'off'], true)) {
+        return false;
+    }
+    return catalog_security_is_https();
 }
 
 function catalog_apply_runtime_safeguards(): void
@@ -47,6 +70,8 @@ function catalog_apply_runtime_safeguards(): void
     ini_set('display_errors', '0');
     ini_set('display_startup_errors', '0');
     ini_set('log_errors', '1');
+    ini_set('session.use_strict_mode', '1');
+    ini_set('session.use_only_cookies', '1');
 
     if (!headers_sent()) {
         header('X-Content-Type-Options: nosniff');
@@ -57,28 +82,94 @@ function catalog_apply_runtime_safeguards(): void
     }
 }
 
-function catalog_start_session(): void
+function catalog_clear_remember_cookie_after_session_expiry(): void
 {
-    if (PHP_SAPI === 'cli' || session_status() === PHP_SESSION_ACTIVE) {
+    if (headers_sent()) {
         return;
     }
 
-    $lifetime = catalog_session_lifetime_seconds();
-    ini_set('session.gc_maxlifetime', (string)$lifetime);
-
-    /*
-     * Several catalog pages predate CatalogSecurity and still call raw
-     * session_start(). Keep the default PHPSESSID name so their session and
-     * the login session are the same cookie.
-     */
-    session_set_cookie_params([
-        'lifetime' => $lifetime,
+    setcookie('UNREALDB_REMEMBER', '', [
+        'expires' => time() - 3600,
         'path' => '/',
-        'secure' => catalog_security_is_https(),
+        'secure' => catalog_session_cookie_secure(),
         'httponly' => true,
         'samesite' => 'Lax',
     ]);
-    session_start();
+    unset($_COOKIE['UNREALDB_REMEMBER']);
+}
+
+function catalog_enforce_authenticated_session_limits(): void
+{
+    if (PHP_SAPI === 'cli' || session_status() !== PHP_SESSION_ACTIVE) {
+        return;
+    }
+
+    if (($_SESSION['user']['role'] ?? '') !== 'admin') {
+        unset($_SESSION['catalog_auth_started_at'], $_SESSION['catalog_auth_last_activity_at']);
+        return;
+    }
+
+    $now = time();
+    $startedAt = (int)($_SESSION['catalog_auth_started_at'] ?? $now);
+    $lastActivityAt = (int)($_SESSION['catalog_auth_last_activity_at'] ?? $now);
+    $idleExpired = $lastActivityAt > 0 && ($now - $lastActivityAt) > catalog_session_idle_timeout_seconds();
+    $absoluteExpired = $startedAt > 0 && ($now - $startedAt) > catalog_session_absolute_timeout_seconds();
+
+    if ($idleExpired || $absoluteExpired) {
+        unset($_SESSION['user'], $_SESSION['catalog_auth_started_at'], $_SESSION['catalog_auth_last_activity_at']);
+        $_SESSION['catalog_auth_expired'] = true;
+        catalog_clear_remember_cookie_after_session_expiry();
+        session_regenerate_id(true);
+        return;
+    }
+
+    $_SESSION['catalog_auth_started_at'] = $startedAt;
+    $_SESSION['catalog_auth_last_activity_at'] = $now;
+    unset($_SESSION['catalog_auth_expired']);
+}
+
+function catalog_mark_authenticated_session(): void
+{
+    if (PHP_SAPI === 'cli') {
+        return;
+    }
+
+    catalog_start_session();
+    $now = time();
+    $_SESSION['catalog_auth_started_at'] = $now;
+    $_SESSION['catalog_auth_last_activity_at'] = $now;
+    unset($_SESSION['catalog_auth_expired']);
+}
+
+function catalog_start_session(): void
+{
+    if (PHP_SAPI === 'cli') {
+        return;
+    }
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        $lifetime = catalog_session_lifetime_seconds();
+        ini_set('session.gc_maxlifetime', (string)$lifetime);
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+
+        /*
+         * Keep the default PHPSESSID name so legacy entry points and the newer
+         * application bootstrap share the same session. The session cookie is
+         * browser-scoped; persistent login is handled by the separate rotating
+         * remember-me token.
+         */
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'secure' => catalog_session_cookie_secure(),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+        session_start();
+    }
+
+    catalog_enforce_authenticated_session_limits();
 }
 
 function catalog_destroy_session(): void
