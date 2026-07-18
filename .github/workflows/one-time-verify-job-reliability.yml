@@ -1,4 +1,4 @@
-name: One-time verify job reliability tranche
+name: One-time diagnose job reliability tranche
 
 on:
   push:
@@ -35,28 +35,67 @@ jobs:
           php-version: '8.3'
           extensions: pdo_mysql, curl, mbstring, openssl
           coverage: none
-      - name: Lint PHP
+      - name: Prepare report
+        run: mkdir -p .github/validation && : > .github/validation/job-reliability-report.txt
+      - id: lint
+        name: Lint PHP
+        continue-on-error: true
         run: |
-          find catalog -type f -name '*.php' -print0 | xargs -0 -n1 php -l
-      - name: Verify fast contracts
+          set -o pipefail
+          find catalog -type f -name '*.php' -print0 | xargs -0 -n1 php -l 2>&1 | tee /tmp/lint.log
+      - id: contracts
+        name: Verify fast contracts
+        continue-on-error: true
         run: |
-          php catalog/tests/job-reliability-contract-test.php
-          php catalog/tests/security-boundaries-test.php
-          php catalog/tests/architecture-boundaries-test.php
-      - name: Import canonical schema
-        run: mysql -h 127.0.0.1 -uroot -proot unrealdb_job_verify < catalog/install.sql
-      - name: Verify migrations and queue behavior
+          set -o pipefail
+          {
+            php catalog/tests/job-reliability-contract-test.php
+            php catalog/tests/security-boundaries-test.php
+            php catalog/tests/architecture-boundaries-test.php
+          } 2>&1 | tee /tmp/contracts.log
+      - id: schema
+        name: Import canonical schema
+        continue-on-error: true
+        run: mysql -h 127.0.0.1 -uroot -proot unrealdb_job_verify < catalog/install.sql 2>&1 | tee /tmp/schema.log
+      - id: migration
+        name: Verify migrations
+        continue-on-error: true
         env:
           UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_job_verify;charset=utf8mb4
           UNREALDB_TEST_DB_USER: root
           UNREALDB_TEST_DB_PASSWORD: root
+        run: php catalog/tests/migration-integration-test.php 2>&1 | tee /tmp/migration.log
+      - id: queue
+        name: Verify queue behavior
+        continue-on-error: true
+        env:
+          UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_job_verify;charset=utf8mb4
+          UNREALDB_TEST_DB_USER: root
+          UNREALDB_TEST_DB_PASSWORD: root
+        run: php catalog/tests/job-queue-integration-test.php 2>&1 | tee /tmp/queue.log
+      - name: Record diagnostic result
+        if: always()
+        env:
+          LINT: ${{ steps.lint.outcome }}
+          CONTRACTS: ${{ steps.contracts.outcome }}
+          SCHEMA: ${{ steps.schema.outcome }}
+          MIGRATION: ${{ steps.migration.outcome }}
+          QUEUE: ${{ steps.queue.outcome }}
         run: |
-          php catalog/tests/migration-integration-test.php
-          php catalog/tests/job-queue-integration-test.php
-      - name: Record successful validation
-        run: |
+          {
+            echo "lint=$LINT"
+            echo "contracts=$CONTRACTS"
+            echo "schema=$SCHEMA"
+            echo "migration=$MIGRATION"
+            echo "queue=$QUEUE"
+            for item in lint contracts schema migration queue; do
+              echo "--- $item ---"
+              tail -n 40 "/tmp/$item.log" 2>/dev/null || true
+            done
+          } > .github/validation/job-reliability-report.txt
           git config user.name 'UnrealDB automation'
           git config user.email 'actions@users.noreply.github.com'
           git rm .github/workflows/one-time-verify-job-reliability.yml
-          git commit -m 'ci: verify job reliability tranche'
+          git add .github/validation/job-reliability-report.txt
+          git commit -m 'ci: record job reliability validation'
           git push origin HEAD:main
