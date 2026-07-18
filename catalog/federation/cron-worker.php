@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
@@ -14,30 +10,45 @@ function cron_json(array $data, int $status = 200): void
 {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
     header('X-Content-Type-Options: nosniff');
     echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
+function cron_legacy_query_tokens_enabled(): bool
+{
+    return in_array(strtolower(trim((string)(getenv('UNREALDB_ALLOW_LEGACY_QUERY_TOKENS') ?: '0'))), ['1', 'true', 'yes', 'on'], true);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    $legacyQueryAllowed = cron_legacy_query_tokens_enabled();
+    if ($method !== 'POST' && !($legacyQueryAllowed && $method === 'GET')) {
+        header('Allow: POST');
+        cron_json(['ok' => false, 'error' => 'Cron worker requires POST.'], 405);
+    }
 
     $enabled = (string)fed_setting($db, 'cron_worker_enabled', '0');
     $storedToken = (string)fed_setting($db, 'cron_worker_token', '');
-    $givenToken = (string)($_GET['token'] ?? $_SERVER['HTTP_X_FEDERATION_CRON_TOKEN'] ?? '');
+    $givenToken = trim((string)($_SERVER['HTTP_X_FEDERATION_CRON_TOKEN'] ?? ''));
+    if ($givenToken === '' && $legacyQueryAllowed) {
+        $givenToken = trim((string)($_GET['token'] ?? ''));
+        if ($givenToken !== '') {
+            error_log('[UnrealDB][' . catalog_request_id() . '] deprecated federation cron query token used');
+        }
+    }
 
     if ($enabled !== '1') {
-        cron_json(['ok' => false, 'error' => 'Cron worker is disabled. Enable cron_worker_enabled in federation settings.'], 403);
+        cron_json(['ok' => false, 'error' => 'Cron worker is unavailable.'], 403);
     }
-    if ($storedToken === '') {
-        cron_json(['ok' => false, 'error' => 'cron_worker_token is not set in federation settings.'], 403);
-    }
-    if (!hash_equals($storedToken, $givenToken)) {
-        cron_json(['ok' => false, 'error' => 'Bad cron token.'], 403);
+    if ($storedToken === '' || $givenToken === '' || !hash_equals($storedToken, $givenToken)) {
+        cron_json(['ok' => false, 'error' => 'Cron worker is unavailable.'], 403);
     }
 
-    $limit = max(1, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1));
+    $limit = max(1, min(100, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1)));
     $results = [
         'ok' => true,
         'started_at' => date('c'),
@@ -72,15 +83,16 @@ try {
     if ($importedSomething && (string)fed_setting($db, 'site_role', 'standalone') === 'child') {
         try {
             $results['auto_inventory_push'] = federation_auto_push_inventory_to_parent($db);
-        } catch (Throwable $e) {
-            $results['auto_inventory_push'] = ['ok' => false, 'error' => $e->getMessage()];
-            fed_log($db, null, null, 'ERROR', 'CRON_AUTO_INVENTORY_PUSH_FAIL', $e->getMessage());
+        } catch (Throwable $error) {
+            $results['auto_inventory_push'] = ['ok' => false, 'error' => 'Automatic inventory push failed.'];
+            fed_log($db, null, null, 'ERROR', 'CRON_AUTO_INVENTORY_PUSH_FAIL', $error->getMessage());
         }
     }
 
     $results['finished_at'] = date('c');
     fed_log($db, null, null, 'INFO', 'CRON_WORKER_RUN', json_encode(['transfers' => count($results['transfers']), 'imports' => count($results['imports']), 'mirror' => $results['mirror_maintenance']], JSON_UNESCAPED_SLASHES));
     cron_json($results);
-} catch (Throwable $e) {
-    cron_json(['ok' => false, 'error' => $e->getMessage()], 500);
+} catch (Throwable $error) {
+    error_log('[UnrealDB][' . catalog_request_id() . '] federation cron failed: ' . get_class($error) . ': ' . $error->getMessage());
+    cron_json(['ok' => false, 'error' => 'Cron worker failed.', 'reference' => catalog_request_id()], 500);
 }
