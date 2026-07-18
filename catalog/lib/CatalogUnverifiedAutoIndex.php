@@ -16,7 +16,6 @@ function catalog_unverified_auto_index_enabled(): bool
     return in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), [
         'profiled-upload.php',
         'http-source-scan.php',
-        'upload-to-parent.php',
     ], true);
 }
 
@@ -25,7 +24,7 @@ function catalog_unverified_auto_index_inventory(array $config, array $gameIdsBy
 {
     $storage = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
     if ($storage === '' || !is_dir($storage)) return [];
-    $directories = [['path'=>$storage . DIRECTORY_SEPARATOR . 'upload-bucket','game_id'=>0]];
+    $directories=[];
     foreach($gameIdsBySlug as $slug=>$gameId)$directories[]=['path'=>$storage . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR . $slug . DIRECTORY_SEPARATOR . 'unverified','game_id'=>(int)$gameId];
     $inventory=[];
     foreach($directories as $entry){
