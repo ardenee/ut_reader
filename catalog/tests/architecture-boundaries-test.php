@@ -3,9 +3,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../bootstrap/autoload.php';
 
+use UnrealDb\Catalog\Application\PackageAlias\PackageAliasRepository;
 use UnrealDb\Catalog\Application\Upload\ProfiledUploadService;
 use UnrealDb\Catalog\Application\Upload\UploadErrorFormatter;
 use UnrealDb\Catalog\Application\Upload\UploadResult;
+use UnrealDb\Catalog\Infrastructure\Composition\CatalogServiceFactory;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageAliasRepository;
 use UnrealDb\Catalog\Presentation\Http\LegacySupportHooks;
 
 function architecture_expect(bool $condition, string $message): void
@@ -44,6 +47,9 @@ architecture_expect(
 );
 
 architecture_expect(class_exists(LegacySupportHooks::class), 'Presentation compatibility hooks are not autoloadable.');
+architecture_expect(class_exists(CatalogServiceFactory::class), 'Service composition root is not autoloadable.');
+architecture_expect(interface_exists(PackageAliasRepository::class), 'Package alias application port is not autoloadable.');
+architecture_expect(class_exists(PdoPackageAliasRepository::class), 'Package alias PDO adapter is not autoloadable.');
 
 $supportFile = file_get_contents(__DIR__ . '/../lib/CatalogSupport.php');
 architecture_expect(is_string($supportFile), 'CatalogSupport.php could not be read.');
@@ -52,6 +58,15 @@ architecture_expect(!str_contains($supportFile, 'SELECT scan_status'), 'CatalogS
 architecture_expect(
     str_contains($supportFile, 'LegacySupportHooks::register'),
     'CatalogSupport.php no longer delegates legacy presentation hooks.'
+);
+
+$aliasFacade = file_get_contents(__DIR__ . '/../lib/CatalogPackageAliases.php');
+architecture_expect(is_string($aliasFacade), 'CatalogPackageAliases.php could not be read.');
+architecture_expect(!str_contains($aliasFacade, 'CREATE TABLE'), 'Package alias facade regained schema ownership.');
+architecture_expect(!str_contains($aliasFacade, 'INSERT INTO'), 'Package alias facade regained persistence ownership.');
+architecture_expect(
+    str_contains($aliasFacade, 'PdoPackageAliasRepository'),
+    'Package alias facade no longer delegates to its repository.'
 );
 
 echo "Architecture boundary tests passed.\n";
