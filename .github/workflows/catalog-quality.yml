@@ -72,6 +72,12 @@ jobs:
           UNREALDB_TEST_DB_USER: root
           UNREALDB_TEST_DB_PASSWORD: root
         run: php catalog/tests/migration-integration-test.php
+      - name: Test explicit unverified staging
+        env:
+          UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_test;charset=utf8mb4
+          UNREALDB_TEST_DB_USER: root
+          UNREALDB_TEST_DB_PASSWORD: root
+        run: php catalog/tests/unverified-staging-integration-test.php
       - name: Verify required catalog tables
         run: |
           for table in \
