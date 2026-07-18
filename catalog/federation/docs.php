@@ -1,13 +1,10 @@
 <?php
 declare(strict_types=1);
 
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
+
+catalog_start_session();
 
 try {
     $config = catalog_config();
@@ -21,20 +18,22 @@ try {
 
     $siteUrl = rtrim((string)fed_setting($db, 'site_url', ''), '/');
     $token = (string)fed_setting($db, 'cron_worker_token', '');
-    $cronUrl = ($siteUrl !== '' ? $siteUrl : 'https://YOUR-SITE/catalog') . '/federation/cron-worker.php?token=' . ($token !== '' ? $token : 'YOUR-LONG-RANDOM-TOKEN');
+    $cronUrl = ($siteUrl !== '' ? $siteUrl : 'https://YOUR-SITE/catalog') . '/federation/cron-worker.php';
+    $cronToken = $token !== '' ? $token : 'YOUR-LONG-RANDOM-TOKEN';
+    $curlCommand = '/usr/bin/curl -fsS -X POST -H ' . escapeshellarg('X-Federation-Cron-Token: ' . $cronToken) . ' ' . escapeshellarg($cronUrl);
 
     catalog_page_header('Federation / Mirror Docs', 'DSM cron, worker, federation transfer, external mirror, and parent/child join workflow notes.', catalog_federation_links() + ['Mirror Settings' => '../mirror-providers.php', 'Mirror Queue' => '../mirror-queue.php']);
 
     echo '<div class="card"><h2>1. Enable the cron worker</h2><p>Open <a href="settings.php">Federation Settings</a> and set:</p><pre class="mono">cron_worker_enabled = 1
 cron_worker_token = a long random value
-max_files_per_transfer_run = 1 or more</pre><p class="muted">Keep the token private. Anyone with this token can run the federation worker.</p></div>';
+max_files_per_transfer_run = 1 or more</pre><p class="muted">Keep the token private. It is sent in an HTTP header and must never be placed in a URL, browser bookmark, or access log.</p></div>';
 
-    echo '<div class="card"><h2>2. Test with curl</h2><pre class="mono">curl -s ' . catalog_h(escapeshellarg($cronUrl)) . '</pre><p>Expected JSON includes:</p><pre class="mono">"ok": true
+    echo '<div class="card"><h2>2. Test with curl</h2><pre class="mono">' . catalog_h($curlCommand) . '</pre><p>Expected JSON includes:</p><pre class="mono">"ok": true
 "mirror_maintenance": {...}
 "transfers": [...]
 "imports": [...]</pre></div>';
 
-    echo '<div class="card"><h2>3. Synology DSM Task Scheduler</h2><p>DSM Control Panel → Task Scheduler → Create → Scheduled Task → User-defined script.</p><pre class="mono">/usr/bin/curl -s ' . catalog_h(escapeshellarg($cronUrl)) . ' >> /volume1/web/ut_reader/catalog/storage/federation/cron-worker.log 2>&1</pre><p class="muted">Run every few minutes if you want slow continuous federation transfers and mirror cleanup. Keep max_files_per_transfer_run low when using large files.</p></div>';
+    echo '<div class="card"><h2>3. Synology DSM Task Scheduler</h2><p>DSM Control Panel → Task Scheduler → Create → Scheduled Task → User-defined script.</p><pre class="mono">' . catalog_h($curlCommand . ' >> /volume1/web/ut_reader/catalog/storage/federation/cron-worker.log 2>&1') . '</pre><p class="muted">Run every few minutes if you want slow continuous federation transfers and mirror cleanup. Keep max_files_per_transfer_run low when using large files.</p></div>';
 
     echo '<div class="card"><h2>4. Recommended federation settings</h2><pre class="mono">max_files_per_transfer_run = 1
 max_download_kbps = 0 or a safe limit
@@ -83,10 +82,11 @@ Child site:
     echo '<div class="card"><h2>8. Current limitations</h2><p>The current upload path signs and sends the full file body in one request. For very large files, the future upgrade is chunked upload with per-chunk HMAC signatures.</p><p>External provider uploads currently support the ManualProvider workflow. Provider-specific APIs can be added later without changing the public download mode logic.</p></div>';
 
     catalog_foot();
-} catch (Throwable $e) {
+} catch (Throwable $error) {
+    error_log('[UnrealDB][' . catalog_request_id() . '] federation docs failed: ' . get_class($error) . ': ' . $error->getMessage());
     if (!headers_sent()) {
         catalog_head('Federation docs error');
     }
-    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
+    echo '<div class="card"><h1>Error</h1><p>' . catalog_h(catalog_public_error_message()) . '</p></div>';
     catalog_foot();
 }
