@@ -18,15 +18,10 @@ final class CatalogApplication
 
     public static function boot(bool $startSession = true): self
     {
-        if ($startSession && PHP_SAPI !== 'cli' && session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
+        \catalog_apply_runtime_safeguards();
+        if ($startSession) {
+            \catalog_start_session();
         }
-
-        // Preserve current controller behaviour while giving future deployment
-        // policy a single location instead of repeating these directives.
-        error_reporting(E_ALL);
-        ini_set('display_errors', '1');
-        ini_set('display_startup_errors', '1');
 
         $config = \catalog_config();
         $db = \catalog_db($config);
