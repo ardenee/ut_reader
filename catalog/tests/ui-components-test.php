@@ -87,8 +87,15 @@ ui_expect(str_contains($pagination, 'aria-current="page"'), 'Pagination does not
 ui_expect(str_contains($pagination, 'Page 2 of 4'), 'Pagination summary changed.');
 
 $table = CatalogUi::tableRegion('<table><tr><td>Row</td></tr></table>', ['label' => 'Files', 'busy' => true]);
+ui_expect(str_contains($table, 'role="region"'), 'Scrollable table does not expose region semantics.');
 ui_expect(str_contains($table, 'aria-label="Files"'), 'Table region is not labelled.');
 ui_expect(str_contains($table, 'aria-busy="true"'), 'Busy table region lacks aria-busy.');
+ui_expect(str_contains($table, 'tabindex="0"'), 'Scrollable table region is not keyboard focusable.');
+
+$skeleton = CatalogUi::skeletonTable(['File', 'Status'], 2, 'Loading files');
+ui_expect(substr_count($skeleton, 'role="status"') === 1, 'Skeleton table must announce one loading status.');
+ui_expect(str_contains($skeleton, 'aria-hidden="true"'), 'Decorative skeleton table is exposed to assistive technology.');
+ui_expect(!str_contains($skeleton, '>Loading</span></td>'), 'Skeleton cells repeat loading announcements.');
 
 $progress = CatalogUi::progress(['value' => 120, 'max' => 100, 'label' => 'Import']);
 ui_expect(str_contains($progress, 'value="100" max="100"'), 'Progress value was not clamped.');
