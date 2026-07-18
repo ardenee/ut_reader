@@ -51,33 +51,43 @@ This document turns the nine production-readiness reviews into one ordered engin
 
 ## Workstream 2 — Database schema and migrations
 
-### Current state
+### Completed
 
-The canonical clean-install schema exists, but legacy runtime DDL and separate upgrade SQL files remain.
+- Added `ue_schema_migrations` with ordered migration versions, checksums, batches and execution timing.
+- Added a CLI migration runner with status, dry-run, migrate and verify commands.
+- Added database-scoped advisory locking and checksum/orphan drift rejection.
+- Converted remember-login, package-alias, dependency-metadata/asset-registry and unverified-staging upgrades into numbered idempotent migrations.
+- Added MySQL integration coverage for preview, upgrade, rerun and checksum-drift failure.
+- Gated Docker Compose startup and Kubernetes production rollout on the immutable release image completing migrations.
+- Added a database migration runbook and deployment compatibility policy.
 
-### Plan
+### Next
 
-1. Add a schema-version table and numbered, idempotent migrations.
-2. Add a CLI migration runner with advisory locking and dry-run/status commands.
-3. Convert current upgrade SQL files into ordered migrations.
-4. Add an integration test that upgrades a representative previous schema.
-5. Remove runtime table and column creation only after supported deployments have migrated.
-6. Separate web, worker, and migration database credentials where the platform permits it.
+- Remove runtime table and column creation after all supported deployments pass `migrate verify`.
+- Treat the former `upgrade-*.sql` files as historical references and remove them after the compatibility window.
+- Separate web, worker and migration database credentials where the platform permits it.
+- Add a representative populated previous-schema fixture, not only the structural legacy baseline.
 
 ## Workstream 3 — Ingestion and unverified staging
 
-### Current state
+### Completed
 
-Upload and queue behaviour is spread across controllers, scanner helpers, shutdown indexing, and filesystem scans.
+- Added an explicit `UnverifiedFileStager` contract returning the stored queue name, physical path and unverified file ID during the writer request.
+- Added a legacy infrastructure implementation that preserves parse-failed Unreal packages, deletes non-package failures and records recoverable database-staging failures beside retained files.
+- Converted Upload Bucket to explicit staging; uploaded packages receive their database row immediately.
+- Upload Bucket folder uploads now retain browser-relative identity context for UE4/UE5 analysis.
+- Removed Upload Bucket and the non-writing federation queue page from shutdown directory scanning.
+- Restricted the temporary compatibility scanner to per-game unverified folders for Profiled Upload and HTTP source scan only.
+- Added source-contract and MySQL integration tests for explicit staging, physical retention, row identity and non-package deletion.
 
-### Plan
+### Next
 
-1. Add one explicit staging use case returning the exact stored queue identity.
-2. Convert upload bucket, profiled upload, local scan, HTTP scan, and federation receive paths one at a time.
-3. Remove converted writers from shutdown auto-indexing.
-4. Remove global before/after directory snapshots after all writers use explicit staging.
-5. Split scanner orchestration into preparation, detection, parsing, identity, storage, persistence, dependencies, and result reporting.
-6. Preserve duplicate and alias rules with fixture-backed tests.
+1. Convert Profiled Upload failures, including extracted PAK entries, to the explicit staging contract.
+2. Convert HTTP source-scan failures.
+3. Convert local scan and federation receive paths where they create unverified files.
+4. Remove the global before/after directory snapshot hook after the final writer is converted.
+5. Split scanner orchestration into preparation, detection, parsing, identity, storage, persistence, dependencies and result reporting.
+6. Preserve duplicate and alias rules with reader-backed fixtures.
 
 ## Workstream 4 — Background jobs and reliability
 
@@ -152,6 +162,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Kubernetes requires shared RWX package storage and defaults to one web and one worker replica.
 - Security runtime limits are declared in Compose and Kubernetes.
 - Kubernetes strict federation-secret policy is backed by a Secret-provided master key; Compose exposes the same controls for staged rollout.
+- Compose application startup and Kubernetes production rollout are gated on successful, drift-free database migrations.
 
 ### Next
 
@@ -160,19 +171,19 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Add application metrics or OpenTelemetry instrumentation.
 - Add dashboards and alerts for latency, errors, queue age, worker failures, database contention, and storage capacity.
 - Implement point-in-time database recovery, package snapshots, and quarterly restore tests.
-- Add a deployment migration gate and release compatibility check.
 
 ## Workstream 9 — Testing and engineering governance
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, and federation-secret checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration and explicit-staging checks are represented in CI.
 - Clean architecture boundaries and compatibility facades are documented.
+- Database integration tests exercise migration state and unverified staging identity.
 
 ### Next
 
 - Add package-reader fixtures for every supported engine and known edge case.
-- Add database integration tests for identity, aliases, dependencies, and migrations.
+- Add database integration tests for identity, aliases and dependency resolution.
 - Add HTTP contract tests for critical public and admin endpoints.
 - Add queue crash/retry/concurrency tests.
 - Add performance budgets and baseline datasets.
@@ -182,14 +193,13 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 ## Ordered delivery sequence
 
 1. Complete remaining P0 security controls and asymmetric identity planning.
-2. Establish versioned migrations and upgrade testing.
-3. Replace implicit unverified indexing with explicit staging.
-4. Route all heavy maintenance and generation work through durable jobs.
-5. Add reader and dependency fixtures before deeper scanner refactoring.
-6. Optimize search and persistence from measured profiles.
-7. Finish UI component migration and CSP work.
-8. Add production telemetry, backup automation, and restore verification.
-9. Enable horizontal scaling only after shared-state and concurrency gates pass.
+2. Finish converting unverified writers and remove shutdown directory snapshots.
+3. Route all heavy maintenance and generation work through durable jobs.
+4. Add reader and dependency fixtures before deeper scanner refactoring.
+5. Optimize search and persistence from measured profiles.
+6. Finish UI component migration and CSP work.
+7. Add production telemetry, backup automation, and restore verification.
+8. Enable horizontal scaling only after shared-state and concurrency gates pass.
 
 ## Definition of production-ready
 
