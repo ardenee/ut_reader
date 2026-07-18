@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Infrastructure\Security\FederationSecretStore;
+
 require_once __DIR__ . '/CatalogSupport.php';
 
 function fed_random_id(): string
@@ -14,6 +16,124 @@ function fed_random_id(): string
 function fed_random_secret(): string
 {
     return rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+}
+
+function fed_secret_store(): FederationSecretStore
+{
+    static $store = null;
+    if (!$store instanceof FederationSecretStore) {
+        $store = FederationSecretStore::fromEnvironment();
+    }
+    return $store;
+}
+
+function fed_require_encrypted_secrets(): bool
+{
+    return in_array(strtolower(trim((string)(getenv('UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS') ?: '0'))), ['1', 'true', 'yes', 'on'], true);
+}
+
+/** @return array{hash:string,stored:string} */
+function fed_prepare_peer_secret(string $secret): array
+{
+    if ($secret === '' || strlen($secret) > 64) {
+        throw new InvalidArgumentException('Federation shared secrets must contain between 1 and 64 bytes.');
+    }
+
+    $store = fed_secret_store();
+    if ($store->hasMasterKey()) {
+        $stored = $store->encrypt($secret);
+    } elseif (fed_require_encrypted_secrets()) {
+        throw new RuntimeException('Federation secret encryption is required, but UNREALDB_FEDERATION_MASTER_KEY is not configured.');
+    } else {
+        static $warned = false;
+        if (!$warned) {
+            error_log('[UnrealDB federation] Peer secrets are using plaintext compatibility mode. Configure UNREALDB_FEDERATION_MASTER_KEY and run encrypt-federation-secrets.php.');
+            $warned = true;
+        }
+        $stored = $secret;
+    }
+
+    return [
+        'hash' => password_hash($secret, PASSWORD_DEFAULT),
+        'stored' => $stored,
+    ];
+}
+
+function fed_secret_for_crypto(string $stored): string
+{
+    if ($stored === '') {
+        return '';
+    }
+
+    $store = fed_secret_store();
+    if ($store->isEncrypted($stored)) {
+        return $store->decrypt($stored);
+    }
+    if (fed_require_encrypted_secrets()) {
+        throw new RuntimeException('A plaintext federation peer secret remains. Run catalog/bin/encrypt-federation-secrets.php before enabling strict secret policy.');
+    }
+
+    return $stored;
+}
+
+function fed_peer_secret(PDO $db, array $peer, bool $migratePlaintext = true): string
+{
+    $stored = (string)($peer['shared_secret_plain'] ?? '');
+    if ($stored === '') {
+        return '';
+    }
+
+    $store = fed_secret_store();
+    if ($store->isEncrypted($stored)) {
+        return $store->decrypt($stored);
+    }
+
+    if ($store->hasMasterKey() && $migratePlaintext && (int)($peer['id'] ?? 0) > 0) {
+        $encrypted = $store->encrypt($stored);
+        $stmt = $db->prepare('UPDATE ue_federation_peers SET shared_secret_plain=? WHERE id=? AND shared_secret_plain=?');
+        $stmt->execute([$encrypted, (int)$peer['id'], $stored]);
+        fed_log($db, (int)$peer['id'], null, 'INFO', 'PEER_SECRET_ENCRYPTED', 'Legacy plaintext peer secret encrypted at first authenticated use.');
+        return $stored;
+    }
+
+    if (fed_require_encrypted_secrets()) {
+        throw new RuntimeException('A plaintext federation peer secret remains. Run catalog/bin/encrypt-federation-secrets.php before enabling strict secret policy.');
+    }
+
+    return $stored;
+}
+
+/** @return array{migrated:int,encrypted:int,missing:int} */
+function fed_migrate_peer_secrets(PDO $db): array
+{
+    $store = fed_secret_store();
+    if (!$store->hasMasterKey()) {
+        throw new RuntimeException('UNREALDB_FEDERATION_MASTER_KEY must be configured before migrating peer secrets.');
+    }
+
+    $counts = ['migrated' => 0, 'encrypted' => 0, 'missing' => 0];
+    $rows = catalog_all($db, 'SELECT id, shared_secret_plain FROM ue_federation_peers ORDER BY id');
+    $update = $db->prepare('UPDATE ue_federation_peers SET shared_secret_plain=? WHERE id=? AND shared_secret_plain=?');
+    foreach ($rows as $row) {
+        $stored = (string)($row['shared_secret_plain'] ?? '');
+        if ($stored === '') {
+            $counts['missing']++;
+            continue;
+        }
+        if ($store->isEncrypted($stored)) {
+            $store->decrypt($stored);
+            $counts['encrypted']++;
+            continue;
+        }
+
+        $encrypted = $store->encrypt($stored);
+        $update->execute([$encrypted, (int)$row['id'], $stored]);
+        if ($update->rowCount() === 1) {
+            $counts['migrated']++;
+        }
+    }
+
+    return $counts;
 }
 
 function fed_setting(PDO $db, string $name, ?string $default = null): ?string
@@ -146,7 +266,7 @@ function fed_signature_payload(string $method, string $path, string $timestamp, 
 
 function fed_sign_request(string $secret, string $method, string $path, string $timestamp, string $nonce, string $body): string
 {
-    return hash_hmac('sha256', fed_signature_payload($method, $path, $timestamp, $nonce, fed_body_hash($body)), $secret);
+    return hash_hmac('sha256', fed_signature_payload($method, $path, $timestamp, $nonce, fed_body_hash($body)), fed_secret_for_crypto($secret));
 }
 
 function fed_verify_signature(string $secret, string $method, string $path, string $timestamp, string $nonce, string $body, string $signature): bool
@@ -178,9 +298,9 @@ function fed_require_signed_peer(PDO $db, string $body): array
         fed_json_response(['ok' => false, 'error' => 'Unknown or inactive peer'], 403);
     }
 
-    $secret = (string)($peer['shared_secret_plain'] ?? '');
+    $secret = fed_peer_secret($db, $peer);
     if ($secret === '') {
-        fed_json_response(['ok' => false, 'error' => 'Peer has no API secret stored. Re-add or update the peer after installing update 005.'], 501);
+        fed_json_response(['ok' => false, 'error' => 'Peer has no API secret stored.'], 501);
     }
 
     $nonceTtl = (int)(fed_setting($db, 'api_nonce_ttl_seconds', '300') ?: 300);
