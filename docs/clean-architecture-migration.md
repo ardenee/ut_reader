@@ -24,7 +24,11 @@ catalog/
       Catalog/                   Catalog listing use cases
       Dependency/                Exact dependency-resolution use cases
       Jobs/                      Queue and worker contracts
+      PackageAlias/              Logical package-alias persistence port
       Search/                    Search use cases
+      Unverified/
+        Contract/                Queue inventory, record, and filesystem ports
+        UnverifiedDuplicateCleanupService.php
       Upload/
         Contract/                Importer and diagnostic ports
         ProfiledUploadService.php
@@ -34,11 +38,13 @@ catalog/
     Infrastructure/
       Cache/                     Cache adapters
       Composition/               Service factories / dependency wiring
+      Filesystem/                Native filesystem adapters
       Legacy/                    Procedural scanner compatibility adapters
       Logging/                   Operational logging adapters
-      Persistence/               PDO repositories and durable queues
+      Persistence/               PDO repositories, schema managers, job queue
       Readers/                   UE reader selection adapters
-      Storage/                   Filesystem/object-storage adapters
+      Storage/                   Package/object-storage adapters
+      Unverified/                Legacy unverified queue inventory adapter
 
     Presentation/
       Http/                      HTTP bootstrap and compatibility hooks
@@ -60,9 +66,9 @@ Legacy lib functions -> namespaced compatibility adapters
 ```
 
 Application classes must not depend on sessions, request globals, HTML, header
-emission, concrete package readers, or physical storage paths. Infrastructure
-implements those details. Presentation code validates HTTP input and renders the
-existing response contract.
+emission, concrete package readers, PDO, or physical storage paths.
+Infrastructure implements those details. Presentation code validates HTTP input
+and renders the existing response contract.
 
 ## Implemented boundaries
 
@@ -100,6 +106,34 @@ federation application log.
 `CatalogServiceFactory` is the composition root that wires application services
 to concrete infrastructure.
 
+### Package alias persistence
+
+`PackageAliasRepository` owns the application persistence contract.
+`PdoPackageAliasRepository` owns alias SQL and the temporary runtime schema
+compatibility behaviour. Existing `catalog_package_alias_*` functions are now
+thin wrappers, so scanner callers remain unchanged.
+
+### Dependency schema management
+
+`PdoDependencySchemaManager` owns dependency metadata and asset-registry schema
+inspection/upgrade operations. Existing `catalog_dependency_schema_*` functions
+remain compatibility wrappers and no longer contain DDL.
+
+### Unverified duplicate cleanup
+
+`UnverifiedDuplicateCleanupService` owns grouping, keeper selection, revalidation,
+delete ordering, and result counters.
+
+Its dependencies are ports:
+
+- `UnverifiedQueueInventory` supplies physical queue entries;
+- `UnverifiedRecordStore` owns database cleanup;
+- `UnverifiedFileSystem` owns hashing, stat, and deletion operations.
+
+The current adapters preserve the established queue layout, PDO records, and
+native filesystem behaviour. `CatalogUnverifiedDuplicates.php` remains the
+public compatibility facade used by the existing JSON endpoint.
+
 ## Compatibility policy
 
 During migration:
@@ -109,8 +143,8 @@ During migration:
 3. One canonical namespaced implementation owns each migrated rule.
 4. Result keys, status labels, message text, redirects, and HTTP status codes are
    covered by contract tests before wrappers are removed.
-5. Schema changes remain explicit deployment migrations; application services do
-   not invent alternate table definitions.
+5. Schema changes remain explicit deployment migrations; temporary runtime schema
+   compatibility is isolated in infrastructure managers.
 6. Parser behaviour is frozen behind fixtures before reader classes are renamed
    or namespaced.
 
@@ -118,12 +152,12 @@ During migration:
 
 1. Route `profiled-upload.php` through `CatalogServiceFactory` while retaining PAK
    and redirect-archive orchestration as presentation adapters.
-2. Extract unverified queue storage, indexing, and duplicate cleanup into
-   application use cases with filesystem and PDO ports.
-3. Replace global SQL helpers in namespaced application services with repository
-   interfaces.
-4. Move runtime schema mutation to versioned deployment migrations and add schema
-   contract checks.
+2. Extract unverified queue storage and indexing into application use cases; the
+   duplicate-cleanup use case is already migrated.
+3. Replace global SQL helpers in search, dependency, and listing application
+   services with repository interfaces.
+4. Consolidate runtime schema mutation into versioned deployment migrations and
+   add exact schema contract checks.
 5. Split `CatalogScanner.php` into reader, identity, storage, persistence, and
    dependency-refresh collaborators.
 6. Namespace UE reader implementations at source and retain temporary class
