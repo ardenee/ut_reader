@@ -47,7 +47,25 @@ function catalog_redirect_archive_read_u32(string $data, int $offset, string $en
 
 function catalog_redirect_archive_output_limit(int $maxOutputBytes): int
 {
-    return $maxOutputBytes > 0 ? $maxOutputBytes : 2 * 1024 * 1024 * 1024;
+    if ($maxOutputBytes > 0) {
+        return $maxOutputBytes;
+    }
+
+    $environmentLimit = (int)(getenv('UNREALDB_REDIRECT_MAX_OUTPUT_BYTES') ?: 0);
+    if ($environmentLimit > 0) {
+        return max(1024 * 1024, min($environmentLimit, 2 * 1024 * 1024 * 1024));
+    }
+
+    try {
+        $configuredLimit = (int)(catalog_config()['max_upload_bytes'] ?? 0);
+        if ($configuredLimit > 0) {
+            return $configuredLimit;
+        }
+    } catch (Throwable) {
+        // Library tests and isolated reader tools may not have a catalog config.
+    }
+
+    return 256 * 1024 * 1024;
 }
 
 function catalog_redirect_archive_is_padding(string $data, int $offset): bool
