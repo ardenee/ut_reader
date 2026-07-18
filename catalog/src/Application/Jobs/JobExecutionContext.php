@@ -9,6 +9,8 @@ final class JobExecutionContext
 {
     private int $lastHeartbeatAt;
     private readonly int $heartbeatIntervalSeconds;
+    /** @var array<string,mixed> */
+    private array $pendingProgress = [];
 
     public function __construct(
         private readonly JobQueue $queue,
@@ -19,18 +21,42 @@ final class JobExecutionContext
         $this->heartbeatIntervalSeconds = max(5, min(30, intdiv(max(15, $leaseSeconds), 3)));
     }
 
-    public function heartbeatIfDue(): void
+    /** @param array<string,mixed> $progress */
+    public function heartbeatIfDue(array $progress = []): void
     {
+        if ($progress !== []) {
+            $this->pendingProgress = $progress;
+        }
         if ((time() - $this->lastHeartbeatAt) >= $this->heartbeatIntervalSeconds) {
             $this->heartbeat();
         }
     }
 
-    public function heartbeat(): void
+    /** @param array<string,mixed> $progress */
+    public function checkpoint(array $progress = []): void
     {
-        if (!$this->queue->heartbeat($this->job, $this->leaseSeconds)) {
+        if ($progress !== []) {
+            $this->pendingProgress = $progress;
+        }
+        $this->heartbeat();
+    }
+
+    /** @param array<string,mixed> $progress */
+    public function heartbeat(array $progress = []): void
+    {
+        if ($progress !== []) {
+            $this->pendingProgress = $progress;
+        }
+
+        $state = $this->queue->heartbeat($this->job, $this->leaseSeconds, $this->pendingProgress);
+        if ($state === 'cancel_requested') {
+            throw new JobCancellationRequested('Job cancellation was requested: ' . $this->job->id);
+        }
+        if ($state !== 'active') {
             throw new \RuntimeException('Job lease is no longer owned by this worker: ' . $this->job->id);
         }
+
+        $this->pendingProgress = [];
         $this->lastHeartbeatAt = time();
     }
 }
