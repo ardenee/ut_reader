@@ -5,6 +5,7 @@ namespace UnrealDb\Catalog\Application\Jobs;
 
 use DateTimeImmutable;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
+use UnrealDb\Catalog\Domain\Jobs\JobResourceProfile;
 
 interface JobQueue
 {
@@ -19,7 +20,8 @@ interface JobQueue
         ?DateTimeImmutable $availableAt = null,
         ?string $dedupeKey = null,
         ?int $createdBy = null,
-        int $maxAttempts = 3
+        int $maxAttempts = 3,
+        ?JobResourceProfile $resourceProfile = null
     ): int;
 
     public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob;
