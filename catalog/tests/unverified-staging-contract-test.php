@@ -63,11 +63,46 @@ staging_contract_expect(
     'HTTP source scan unexpectedly creates unverified package files.'
 );
 
+$sourceScan = file_get_contents(__DIR__ . '/../source-scan.php');
+staging_contract_expect(is_string($sourceScan), 'source-scan.php could not be read.');
+staging_contract_expect(
+    str_contains($sourceScan, 'stageFailedCopy('),
+    'Local Source Scan does not use copy-preserving explicit staging.'
+);
+staging_contract_expect(
+    !str_contains($sourceScan, 'catalog_unverified_index_path(')
+        && !str_contains($sourceScan, 'uvf_unverified_dir('),
+    'Local Source Scan still duplicates queue storage or database-indexing logic.'
+);
+
+$federationWorker = file_get_contents(__DIR__ . '/../lib/FederationWorker.php');
+staging_contract_expect(is_string($federationWorker), 'FederationWorker.php could not be read.');
+staging_contract_expect(
+    str_contains($federationWorker, 'federation_worker_stage_failed_import(')
+        && str_contains($federationWorker, 'stageFailedUpload('),
+    'Failed federation imports are not routed into explicit unverified staging.'
+);
+staging_contract_expect(
+    str_contains($federationWorker, 'incoming_path=NULL')
+        && str_contains($federationWorker, "@unlink(\$incoming)"),
+    'Successful or duplicate federation imports no longer clean their incoming file reference.'
+);
+staging_contract_expect(
+    str_contains($federationWorker, 'FEDERATION_STAGE_FAIL')
+        && str_contains($federationWorker, 'Staged as unverified file #'),
+    'Federation jobs no longer record failed staging or the resulting unverified identity.'
+);
+
 $stager = file_get_contents(__DIR__ . '/../src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php');
 staging_contract_expect(is_string($stager), 'LegacyUnverifiedFileStager.php could not be read.');
 staging_contract_expect(
     str_contains($stager, 'catalog_unverified_index_path('),
     'The explicit staging service no longer creates the database row.'
+);
+staging_contract_expect(
+    str_contains($stager, 'stageFailedCopy(')
+        && str_contains($stager, 'stageFailedPath('),
+    'Move and copy staging are no longer implemented through one shared path.'
 );
 staging_contract_expect(
     str_contains($stager, 'Database staging failed:'),
