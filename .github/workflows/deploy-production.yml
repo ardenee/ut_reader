@@ -37,9 +37,11 @@ jobs:
           printf '%s' "$KUBE_CONFIG_B64" | base64 --decode > "$HOME/.kube/config"
           chmod 0600 "$HOME/.kube/config"
           kubectl auth can-i patch deployments.apps -n unrealdb | grep -qx yes
+          kubectl auth can-i create jobs.batch -n unrealdb | grep -qx yes
       - name: Validate deployment prerequisites
         run: |
           kubectl get secret unrealdb-secrets -n unrealdb >/dev/null
+          kubectl get configmap unrealdb-config -n unrealdb >/dev/null
           kubectl get pvc unrealdb-storage -n unrealdb >/dev/null 2>&1 || true
       - name: Render immutable release manifest
         env:
@@ -53,6 +55,71 @@ jobs:
           sed "s#image: ghcr.io/ardenee/ut_reader:latest#image: $image#g" \
             deploy/kubernetes/base/platform.yaml > /tmp/unrealdb-platform.yaml
           grep -q "image: $image" /tmp/unrealdb-platform.yaml
+          printf '%s' "$image" > /tmp/unrealdb-release-image
+      - name: Apply and verify database migrations
+        run: |
+          set -eu
+          image="$(cat /tmp/unrealdb-release-image)"
+          job="unrealdb-migrate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          cleanup() {
+            kubectl logs "job/$job" -n unrealdb --all-containers=true || true
+            kubectl delete job "$job" -n unrealdb --ignore-not-found=true --wait=false || true
+          }
+          trap cleanup EXIT
+          cat <<EOF | kubectl apply -f -
+          apiVersion: batch/v1
+          kind: Job
+          metadata:
+            name: $job
+            namespace: unrealdb
+            labels:
+              app.kubernetes.io/name: unrealdb
+              app.kubernetes.io/component: migration
+          spec:
+            backoffLimit: 0
+            activeDeadlineSeconds: 900
+            ttlSecondsAfterFinished: 3600
+            template:
+              metadata:
+                labels:
+                  app.kubernetes.io/name: unrealdb
+                  app.kubernetes.io/component: migration
+              spec:
+                restartPolicy: Never
+                securityContext:
+                  seccompProfile:
+                    type: RuntimeDefault
+                containers:
+                  - name: migrate
+                    image: $image
+                    imagePullPolicy: IfNotPresent
+                    args:
+                      - php
+                      - /var/www/html/catalog/bin/migrate.php
+                      - migrate
+                      - --lock-timeout=60
+                    envFrom:
+                      - configMapRef:
+                          name: unrealdb-config
+                      - secretRef:
+                          name: unrealdb-secrets
+                    resources:
+                      requests:
+                        cpu: 100m
+                        memory: 128Mi
+                      limits:
+                        cpu: "1"
+                        memory: 512Mi
+                    securityContext:
+                      allowPrivilegeEscalation: false
+                      capabilities:
+                        drop: ["ALL"]
+                        add: ["CHOWN", "DAC_OVERRIDE", "SETGID", "SETUID"]
+          EOF
+          if ! kubectl wait --for=condition=complete "job/$job" -n unrealdb --timeout=15m; then
+            kubectl describe "job/$job" -n unrealdb || true
+            exit 1
+          fi
       - name: Apply and verify rollout
         run: |
           set -eu
@@ -83,4 +150,5 @@ jobs:
       - name: Record deployed release
         run: |
           echo "Deployed ghcr.io/ardenee/ut_reader@${{ inputs.image_digest }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Database migrations completed before rollout." >> "$GITHUB_STEP_SUMMARY"
           kubectl get deployment unrealdb-web unrealdb-worker -n unrealdb -o wide >> "$GITHUB_STEP_SUMMARY"
