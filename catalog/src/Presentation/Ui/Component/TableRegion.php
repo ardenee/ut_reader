@@ -7,18 +7,23 @@ use UnrealDb\Catalog\Presentation\Ui\Support\Html;
 
 final class TableRegion
 {
-    /** @param array{label?:string,busy?:bool,class?:string,id?:string} $props */
+    /** @param array{label?:string,busy?:bool,class?:string,id?:string,focusable?:bool} $props */
     public static function render(string $tableHtml, array $props = []): string
     {
         $attributes = [];
-        if (trim((string)($props['label'] ?? '')) !== '') {
-            $attributes['aria-label'] = (string)$props['label'];
+        $label = trim((string)($props['label'] ?? ''));
+        if ($label !== '') {
+            $attributes['role'] = 'region';
+            $attributes['aria-label'] = $label;
         }
         if (!empty($props['busy'])) {
             $attributes['aria-busy'] = 'true';
         }
         if (trim((string)($props['id'] ?? '')) !== '') {
             $attributes['id'] = (string)$props['id'];
+        }
+        if (($props['focusable'] ?? true) && $label !== '') {
+            $attributes['tabindex'] = '0';
         }
         $class = Html::classes('ui-table-region', (string)($props['class'] ?? ''));
 
@@ -32,7 +37,10 @@ final class TableRegion
     {
         $rows = max(1, min($rows, 12));
         $columnCount = max(1, count($headers));
-        $html = '<table class="ui-table ui-table--skeleton"><thead><tr>';
+        $statusId = Html::uniqueId('ui-table-loading');
+        $html = '<span class="ui-sr-only" id="' . Html::escape($statusId) . '" role="status" aria-live="polite">'
+            . Html::escape($label) . '</span>';
+        $html .= '<table class="ui-table ui-table--skeleton" aria-hidden="true"><thead><tr>';
         foreach ($headers as $header) {
             $html .= '<th scope="col">' . Html::escape($header) . '</th>';
         }
@@ -40,12 +48,16 @@ final class TableRegion
         for ($row = 0; $row < $rows; $row++) {
             $html .= '<tr>';
             for ($column = 0; $column < $columnCount; $column++) {
-                $html .= '<td><span class="ui-skeleton" aria-hidden="true"></span><span class="ui-sr-only">Loading</span></td>';
+                $html .= '<td><span class="ui-skeleton"></span></td>';
             }
             $html .= '</tr>';
         }
         $html .= '</tbody></table>';
 
-        return self::render($html, ['label' => $label, 'busy' => true]);
+        return self::render($html, [
+            'label' => $label,
+            'busy' => true,
+            'focusable' => false,
+        ]);
     }
 }
