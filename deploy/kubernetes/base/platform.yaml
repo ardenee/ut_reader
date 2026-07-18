@@ -28,7 +28,7 @@ metadata:
   namespace: unrealdb
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 100Gi
