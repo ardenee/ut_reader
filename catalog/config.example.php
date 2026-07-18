@@ -15,8 +15,12 @@ return [
     'storage_path' => __DIR__ . '/storage',
     'max_upload_bytes' => 256 * 1024 * 1024,
     'auth' => [
-        // How long the "Keep me logged in" token remains valid.
+        // Persistent rotating remember-me token lifetime.
         'remember_days' => 30,
+        // Shared-storage login throttling. Applies to each username and client IP pair.
+        'login_max_attempts' => 8,
+        'login_window_seconds' => 15 * 60,
+        'login_block_seconds' => 15 * 60,
     ],
     'queue' => [
         // Current deployment: MySQL-backed durable jobs run by catalog/bin/catalog-worker.php.
