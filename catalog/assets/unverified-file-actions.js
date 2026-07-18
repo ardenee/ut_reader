@@ -26,6 +26,18 @@
             '.unverified-action-log li.is-info { color:var(--muted); }',
             '.unverified-action-dialog__footer { display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:12px 20px 18px; border-top:1px solid var(--line2); }',
             '.unverified-select-all-label { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }',
+            '.uv-table { min-width:1250px !important; }',
+            '.uv-table td:nth-child(4), .uv-table th:nth-child(4), .uv-table td:nth-child(6), .uv-table th:nth-child(6), .uv-table td:nth-child(7), .uv-table th:nth-child(7) { white-space:nowrap; }',
+            '.uv-table td:nth-child(2) small, .uv-file > small, .uv-database-counts { display:block; margin-top:3px; }',
+            '.uv-file > strong, .uv-file > strong > a { display:block; }',
+            '.uv-file .mono > a { white-space:nowrap; }',
+            '.uv-match { grid-template-columns:minmax(145px,1fr) auto !important; }',
+            '.uv-match-count { min-width:68px; white-space:nowrap; }',
+            '.uv-match-count strong, .uv-match-count small { display:block; }',
+            '.uv-note-row td { padding-top:0; }',
+            '.uv-note-details { border-left:3px solid #f6c453; padding:6px 10px; }',
+            '.uv-note-details summary { cursor:pointer; font-weight:700; color:var(--text); }',
+            '.uv-note-details__content { margin-top:8px; white-space:normal; }',
             '@media (max-width:700px) { .unverified-action-overlay { padding:8px; } .unverified-action-dialog { width:100%; max-height:96vh; } }',
             '@media (prefers-reduced-motion:reduce) { .unverified-action-progress__bar { transition:none; } }'
         ].join('\n');
@@ -86,7 +98,7 @@
         var row = entry.box.closest('tr');
         if (!row) return;
         var note = row.nextElementSibling;
-        if (note && note.classList.contains('unverified-rejection-row')) note.remove();
+        if (note && (note.classList.contains('uv-note-row') || note.classList.contains('unverified-rejection-row'))) note.remove();
         row.remove();
     }
 
@@ -189,14 +201,119 @@
         sync();
     }
 
+    function fileIdFromDatabaseCell(cell) {
+        var link = cell ? cell.querySelector('a[href*="?id="]') : null;
+        if (!link) return 0;
+        try {
+            return parseInt(new URL(link.href, window.location.href).searchParams.get('id') || '0', 10) || 0;
+        } catch (error) {
+            var match = link.getAttribute('href').match(/[?&]id=(\d+)/);
+            return match ? parseInt(match[1], 10) || 0 : 0;
+        }
+    }
+
+    function wrapElement(element, href, title, className) {
+        if (!element || element.closest('a')) return;
+        var link = document.createElement('a');
+        link.href = href;
+        link.title = title;
+        if (className) link.className = className;
+        element.parentNode.insertBefore(link, element);
+        link.appendChild(element);
+    }
+
+    function compactGameTarget(card) {
+        var columns = card.children;
+        if (columns.length < 2) return;
+        var profile = columns[0].querySelector('small');
+        if (profile) profile.remove();
+
+        var countStrong = columns[1].querySelector('strong');
+        var usedBySmall = columns[1].querySelector('small');
+        var packageReferences = 0;
+        var usedBy = 0;
+        if (countStrong) {
+            var exact = countStrong.textContent.match(/\d+\s*\/\s*(\d+)\s+exact/i);
+            var simple = countStrong.textContent.match(/(\d+)/);
+            packageReferences = exact ? parseInt(exact[1], 10) : (/no package references/i.test(countStrong.textContent) ? 0 : (simple ? parseInt(simple[1], 10) : 0));
+            countStrong.textContent = 'PF: ' + packageReferences;
+            countStrong.title = 'Package references: ' + packageReferences;
+        }
+        if (usedBySmall) {
+            var used = usedBySmall.textContent.match(/(\d+)/);
+            usedBy = used ? parseInt(used[1], 10) : 0;
+            usedBySmall.textContent = 'UB: ' + usedBy;
+            usedBySmall.title = 'Used by ' + usedBy + ' verified file(s)';
+        }
+    }
+
+    function collapseQueueNote(noteRow) {
+        if (!noteRow || noteRow.dataset.collapsedNote === '1') return;
+        var note = noteRow.querySelector('.uv-note');
+        if (!note) return;
+        noteRow.dataset.collapsedNote = '1';
+
+        var heading = note.querySelector('strong');
+        if (heading && heading.textContent.trim() === 'Queue note') heading.remove();
+        while (note.firstChild && note.firstChild.nodeType === 1 && note.firstChild.tagName === 'BR') note.firstChild.remove();
+
+        var details = document.createElement('details');
+        details.className = 'uv-note-details';
+        var summary = document.createElement('summary');
+        summary.textContent = 'Queue note';
+        var content = document.createElement('div');
+        content.className = 'uv-note-details__content';
+        while (note.firstChild) content.appendChild(note.firstChild);
+        details.appendChild(summary);
+        details.appendChild(content);
+
+        var cell = document.createElement('td');
+        cell.colSpan = 8;
+        cell.appendChild(details);
+        noteRow.innerHTML = '';
+        noteRow.appendChild(cell);
+    }
+
+    function enhanceQueueTable(form) {
+        var table = form.querySelector('.uv-table');
+        if (!table) return;
+        Array.prototype.slice.call(table.querySelectorAll('tbody > tr:not(.uv-note-row)')).forEach(function (row) {
+            if (!row.cells || row.cells.length < 8) return;
+            var fileCell = row.cells[2];
+            var databaseCell = row.cells[4];
+            var fileId = fileIdFromDatabaseCell(databaseCell);
+
+            if (fileId > 0) {
+                wrapElement(fileCell.querySelector(':scope > strong'), 'file-examine.php?id=' + fileId, 'Examine this file', 'uv-file-link');
+                wrapElement(fileCell.querySelector('.mono'), 'file-info.php?id=' + fileId, 'Open file information', 'uv-package-link');
+            }
+
+            var counts = '';
+            Array.prototype.slice.call(databaseCell.querySelectorAll('small')).some(function (small) {
+                if (/N\/I\/E/i.test(small.textContent)) {
+                    counts = small.textContent.trim();
+                    return true;
+                }
+                return false;
+            });
+            databaseCell.innerHTML = counts !== ''
+                ? '<span class="mono uv-database-counts" title="Names / Imports / Exports">' + counts + '</span>'
+                : '<span class="muted">Not indexed</span>';
+
+            Array.prototype.slice.call(row.querySelectorAll('.uv-match')).forEach(compactGameTarget);
+            var noteRow = row.nextElementSibling;
+            if (noteRow && noteRow.classList.contains('uv-note-row')) collapseQueueNote(noteRow);
+        });
+    }
+
     function init() {
         var form = document.getElementById('unverified-bulk-form');
         if (!form || form.dataset.progressOverlayBound === '1') return;
         form.dataset.progressOverlayBound = '1';
 
-        var objectCheckButton = document.getElementById('unverified-object-check');
-        if (objectCheckButton) objectCheckButton.remove();
+        installStyle();
         addSelectAll(form);
+        enhanceQueueTable(form);
 
         document.addEventListener('submit', function (event) {
             if (event.target !== form) return;
