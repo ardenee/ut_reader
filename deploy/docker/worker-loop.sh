@@ -6,6 +6,7 @@ sleep_ms="${UNREALDB_WORKER_SLEEP_MS:-250}"
 idle_seconds="${UNREALDB_WORKER_IDLE_SECONDS:-2}"
 error_seconds="${UNREALDB_WORKER_ERROR_SECONDS:-10}"
 worker_id="${UNREALDB_WORKER_ID:-$(hostname):$$}"
+lease_seconds="${UNREALDB_QUEUE_LEASE_SECONDS:-120}"
 
 term=0
 trap 'term=1' TERM INT
@@ -15,7 +16,8 @@ while [ "$term" -eq 0 ]; do
         --queue="${UNREALDB_QUEUE_NAME:-catalog}" \
         --max-jobs="$max_jobs" \
         --sleep-ms="$sleep_ms" \
-        --worker-id="$worker_id"
+        --worker-id="$worker_id" \
+        --lease-seconds="$lease_seconds"
     status=$?
 
     if [ "$term" -ne 0 ]; then
