@@ -1,0 +1,86 @@
+name: Deploy production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_digest:
+        description: Published sha256 image digest
+        required: true
+        type: string
+      public_url:
+        description: Optional public base URL for the post-deploy smoke test
+        required: false
+        type: string
+
+concurrency:
+  group: unrealdb-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: latest
+      - name: Configure cluster access
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+        run: |
+          test -n "$KUBE_CONFIG_B64"
+          mkdir -p "$HOME/.kube"
+          printf '%s' "$KUBE_CONFIG_B64" | base64 --decode > "$HOME/.kube/config"
+          chmod 0600 "$HOME/.kube/config"
+          kubectl auth can-i patch deployments.apps -n unrealdb | grep -qx yes
+      - name: Validate deployment prerequisites
+        run: |
+          kubectl get secret unrealdb-secrets -n unrealdb >/dev/null
+          kubectl get pvc unrealdb-storage -n unrealdb >/dev/null 2>&1 || true
+      - name: Render immutable release manifest
+        env:
+          IMAGE_DIGEST: ${{ inputs.image_digest }}
+        run: |
+          case "$IMAGE_DIGEST" in
+            sha256:[a-f0-9][a-f0-9]*) ;;
+            *) echo 'image_digest must be a sha256 digest.' >&2; exit 1 ;;
+          esac
+          image="ghcr.io/ardenee/ut_reader@$IMAGE_DIGEST"
+          sed "s#image: ghcr.io/ardenee/ut_reader:latest#image: $image#g" \
+            deploy/kubernetes/base/platform.yaml > /tmp/unrealdb-platform.yaml
+          grep -q "image: $image" /tmp/unrealdb-platform.yaml
+      - name: Apply and verify rollout
+        run: |
+          set -eu
+          rollback() {
+            echo 'Deployment failed; requesting rollback.' >&2
+            kubectl rollout undo deployment/unrealdb-web -n unrealdb || true
+            kubectl rollout undo deployment/unrealdb-worker -n unrealdb || true
+          }
+          trap rollback ERR
+          kubectl apply -f /tmp/unrealdb-platform.yaml
+          kubectl rollout status deployment/unrealdb-web -n unrealdb --timeout=10m
+          kubectl rollout status deployment/unrealdb-worker -n unrealdb --timeout=10m
+          trap - ERR
+      - name: In-cluster readiness smoke test
+        run: |
+          kubectl run unrealdb-release-smoke-${{ github.run_id }} \
+            --namespace unrealdb \
+            --image=curlimages/curl:8.12.1 \
+            --restart=Never \
+            --rm --attach \
+            --command -- curl --fail --silent --show-error \
+            http://unrealdb-web/catalog/api/v1/health.php
+      - name: Public smoke test
+        if: inputs.public_url != ''
+        env:
+          PUBLIC_URL: ${{ inputs.public_url }}
+        run: curl --fail --silent --show-error --retry 5 --retry-all-errors "$PUBLIC_URL/catalog/api/v1/health.php"
+      - name: Record deployed release
+        run: |
+          echo "Deployed ghcr.io/ardenee/ut_reader@${{ inputs.image_digest }}" >> "$GITHUB_STEP_SUMMARY"
+          kubectl get deployment unrealdb-web unrealdb-worker -n unrealdb -o wide >> "$GITHUB_STEP_SUMMARY"
