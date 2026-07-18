@@ -48,11 +48,55 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         ?int $uploadedBy = null,
         string $sourceRelativePath = ''
     ): ?array {
-        if (!is_file($temporaryPath)) {
+        return $this->stageFailedPath(
+            $queueGameId,
+            $temporaryPath,
+            $originalName,
+            $reason,
+            $uploadedBy,
+            $sourceRelativePath,
+            false
+        );
+    }
+
+    public function stageFailedCopy(
+        int $queueGameId,
+        string $sourcePath,
+        string $originalName,
+        string $reason,
+        ?int $uploadedBy = null,
+        string $sourceRelativePath = ''
+    ): ?array {
+        return $this->stageFailedPath(
+            $queueGameId,
+            $sourcePath,
+            $originalName,
+            $reason,
+            $uploadedBy,
+            $sourceRelativePath,
+            true
+        );
+    }
+
+    /**
+     * @return array{status:string,file_id:int,queue_name:string,original_name:string,path:string,size:int,message:string,parse_error:?string}|null
+     */
+    private function stageFailedPath(
+        int $queueGameId,
+        string $sourcePath,
+        string $originalName,
+        string $reason,
+        ?int $uploadedBy,
+        string $sourceRelativePath,
+        bool $copySource
+    ): ?array {
+        if (!is_file($sourcePath)) {
             return null;
         }
-        if (!\scanner_file_has_unreal_package_magic($temporaryPath)) {
-            @unlink($temporaryPath);
+        if (!\scanner_file_has_unreal_package_magic($sourcePath)) {
+            if (!$copySource) {
+                @unlink($sourcePath);
+            }
             return null;
         }
 
@@ -70,11 +114,19 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         $queueName = \uvf_safe_queue_name($cleanName);
         $destination = \uvf_unique_destination($directory, $queueName);
 
-        $moved = is_uploaded_file($temporaryPath)
-            ? @move_uploaded_file($temporaryPath, $destination)
-            : @rename($temporaryPath, $destination);
-        if (!$moved) {
-            throw new RuntimeException('Could not move the failed package into unverified storage.');
+        if ($copySource) {
+            $stored = @copy($sourcePath, $destination);
+        } elseif (is_uploaded_file($sourcePath)) {
+            $stored = @move_uploaded_file($sourcePath, $destination);
+        } else {
+            $stored = @rename($sourcePath, $destination);
+        }
+        if (!$stored) {
+            throw new RuntimeException(
+                $copySource
+                    ? 'Could not copy the failed package into unverified storage.'
+                    : 'Could not move the failed package into unverified storage.'
+            );
         }
 
         @file_put_contents($destination . '.txt', $reason);
