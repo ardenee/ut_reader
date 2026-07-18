@@ -11,18 +11,37 @@ function cron_stream_json(array $data, int $status = 200): void
 {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
     header('X-Content-Type-Options: nosniff');
     echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
 }
 
+function cron_stream_legacy_query_tokens_enabled(): bool
+{
+    return in_array(strtolower(trim((string)(getenv('UNREALDB_ALLOW_LEGACY_QUERY_TOKENS') ?: '0'))), ['1', 'true', 'yes', 'on'], true);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    $legacyQueryAllowed = cron_stream_legacy_query_tokens_enabled();
+    if ($method !== 'POST' && !($legacyQueryAllowed && $method === 'GET')) {
+        header('Allow: POST');
+        cron_stream_json(['ok' => false, 'error' => 'Federation cron worker requires POST.'], 405);
+    }
+
     $enabled = (string)fed_setting($db, 'cron_worker_enabled', '0');
     $expectedToken = (string)fed_setting($db, 'cron_worker_token', '');
-    $providedToken = (string)($_GET['token'] ?? $_SERVER['HTTP_X_FEDERATION_CRON_TOKEN'] ?? '');
-    if ($enabled !== '1' || $expectedToken === '' || !hash_equals($expectedToken, $providedToken)) {
+    $providedToken = trim((string)($_SERVER['HTTP_X_FEDERATION_CRON_TOKEN'] ?? ''));
+    if ($providedToken === '' && $legacyQueryAllowed) {
+        $providedToken = trim((string)($_GET['token'] ?? ''));
+        if ($providedToken !== '') {
+            error_log('[UnrealDB][' . catalog_request_id() . '] deprecated streaming cron query token used');
+        }
+    }
+    if ($enabled !== '1' || $expectedToken === '' || $providedToken === '' || !hash_equals($expectedToken, $providedToken)) {
         cron_stream_json(['ok' => false, 'error' => 'Federation cron worker is unavailable.'], 403);
     }
 
@@ -31,17 +50,21 @@ try {
     for ($i = 0; $i < $limit; $i++) {
         $transfer = federation_streaming_run_one_transfer($db, $config);
         $result['transfers'][] = $transfer;
-        if (!empty($transfer['skipped'])) break;
+        if (!empty($transfer['skipped'])) {
+            break;
+        }
     }
     for ($i = 0; $i < $limit; $i++) {
         $import = federation_worker_run_one_import($db, $config);
         $result['imports'][] = $import;
-        if (!empty($import['skipped'])) break;
+        if (!empty($import['skipped'])) {
+            break;
+        }
     }
     $result['finished_at'] = date('c');
     fed_log($db, null, null, 'INFO', 'CRON_STREAMING_WORKER_RUN', json_encode(['transfers' => count($result['transfers']), 'imports' => count($result['imports'])], JSON_UNESCAPED_SLASHES));
     cron_stream_json($result);
-} catch (Throwable $e) {
-    error_log('[UnrealDB federation streaming cron] ' . get_class($e) . ': ' . $e->getMessage());
-    cron_stream_json(['ok' => false, 'error' => 'Federation streaming worker failed.'], 500);
+} catch (Throwable $error) {
+    error_log('[UnrealDB][' . catalog_request_id() . '] federation streaming cron failed: ' . get_class($error) . ': ' . $error->getMessage());
+    cron_stream_json(['ok' => false, 'error' => 'Federation streaming worker failed.', 'reference' => catalog_request_id()], 500);
 }
