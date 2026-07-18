@@ -35,12 +35,14 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Generic JSON API and federation request bodies are size-bounded.
 - Federation inventory batches have payload, row, field, hash, and transaction limits.
 - Redirect archive output is bounded by the configured upload limit.
+- Federation peer secrets support authenticated encryption with a deployment master key and a migration CLI.
+- Pairing claims are POST-only, query-string claim tokens are removed, and the one-time transition is atomic.
+- Pairing secrets are no longer stored in administrative notes or returned by approval-status polling.
 - Security boundaries are enforced by CI tests.
 
 ### Next
 
-- Encrypt federation shared secrets at rest using a deployment master key, then migrate to Ed25519 peer identities.
-- Make pairing claims POST-only and remove all bearer credentials from query strings.
+- Migrate symmetric federation HMAC identities to Ed25519 peer identities.
 - Add administrator MFA and reauthentication for security-sensitive operations.
 - Add public search, package-generation, join-request, and download rate limits.
 - Centralize outbound federation HTTP through the existing SSRF-resistant client.
@@ -129,11 +131,14 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Replay nonces and bounded request readers exist.
 - Streaming uploads verify declared length and SHA-256.
 - Cron credentials are no longer placed in URLs by default.
+- Symmetric peer secrets are encrypted at rest with AES-256-GCM when a deployment master key is configured.
+- Existing peer rows can be migrated and verified through a CLI command before strict policy is enabled.
+- Manual and automated approval flows no longer persist pairing material in notes or expose it through status polling.
+- One-time pairing claims use a separate POST endpoint and compare-and-swap state transition.
 
 ### Next
 
-- Replace reversible peer secrets with encrypted storage and then asymmetric signatures.
-- Remove pairing secrets from administrative notes.
+- Replace symmetric peer credentials with asymmetric signatures.
 - Add peer key rotation, revocation, and audit history.
 - Route every outbound peer request through DNS-pinned, no-redirect, public-address validation.
 - Add endpoint-specific quotas, idempotency keys, and peer rate limits.
@@ -146,6 +151,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Production Docker image, Compose staging stack, Kubernetes baseline, readiness/liveness probes, worker loop, GHCR release workflow, vulnerability scan, provenance, approval-gated deployment, smoke tests, and rollback are present.
 - Kubernetes requires shared RWX package storage and defaults to one web and one worker replica.
 - Security runtime limits are declared in Compose and Kubernetes.
+- Kubernetes strict federation-secret policy is backed by a Secret-provided master key; Compose exposes the same controls for staged rollout.
 
 ### Next
 
@@ -160,7 +166,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, and security checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, and federation-secret checks are represented in CI.
 - Clean architecture boundaries and compatibility facades are documented.
 
 ### Next
@@ -175,7 +181,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ## Ordered delivery sequence
 
-1. Complete P0 security remediation and secret handling.
+1. Complete remaining P0 security controls and asymmetric identity planning.
 2. Establish versioned migrations and upgrade testing.
 3. Replace implicit unverified indexing with explicit staging.
 4. Route all heavy maintenance and generation work through durable jobs.
@@ -190,7 +196,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 The application is ready for general production deployment when:
 
 - No open P0 security findings remain.
-- Production secrets are externalized and federation secrets are not recoverable from a database-only compromise.
+- Production secrets are externalized, existing federation rows have been migrated, and strict encrypted-secret policy is enabled.
 - Every schema change is delivered through a tested migration.
 - Heavy operations are bounded or queued.
 - Backup restoration has been demonstrated.
