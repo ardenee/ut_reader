@@ -26,10 +26,30 @@ interface JobQueue
 
     /**
      * @param array<string, mixed> $result
+     * @return 'completed'|'cancelled'
      */
-    public function complete(ClaimedJob $job, array $result = []): void;
+    public function complete(ClaimedJob $job, array $result = []): string;
 
-    public function fail(ClaimedJob $job, \Throwable $exception, int $retryDelaySeconds): void;
+    /**
+     * @return 'retry_queued'|'dead_letter'|'cancelled'
+     */
+    public function fail(ClaimedJob $job, \Throwable $exception, int $retryDelaySeconds): string;
 
-    public function heartbeat(ClaimedJob $job, int $leaseSeconds): bool;
+    /**
+     * @param array<string,mixed> $progress
+     * @return 'active'|'cancel_requested'|'lost'
+     */
+    public function heartbeat(ClaimedJob $job, int $leaseSeconds, array $progress = []): string;
+
+    /**
+     * @return 'cancelled'|'cancel_requested'|'not_found'|'completed'|'failed'|'dead_letter'
+     */
+    public function requestCancellation(int $jobId, ?int $requestedBy = null, string $reason = ''): string;
+
+    public function cancelClaimed(ClaimedJob $job, string $reason = ''): void;
+
+    /** @return array{requeued:int,cancelled:int,dead_lettered:int} */
+    public function recoverExpiredLeases(string $queue): array;
+
+    public function retryDeadLetter(int $jobId, ?DateTimeImmutable $availableAt = null): bool;
 }
