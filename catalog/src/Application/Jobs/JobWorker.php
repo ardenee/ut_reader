@@ -34,21 +34,59 @@ final class JobWorker
         $handler = $this->findHandler($job->type);
         if ($handler === null) {
             $exception = new \RuntimeException('No job handler registered for type: ' . $job->type);
-            $this->queue->fail($job, $exception, 0);
-            return ['status' => 'failed', 'job_id' => $job->id, 'type' => $job->type, 'error' => $exception->getMessage()];
+            return $this->recordFailure($job, $exception, 0);
         }
 
         try {
             $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds);
-            $context->heartbeat();
+            $context->heartbeat(['stage' => 'started', 'attempt' => $job->attempt]);
             $result = $handler->handle($job, $context);
-            $this->queue->complete($job, $result);
+            $context->checkpoint(['stage' => 'finalizing']);
+            $completion = $this->queue->complete($job, $result);
+            if ($completion === 'cancelled') {
+                return ['status' => 'cancelled', 'job_id' => $job->id, 'type' => $job->type];
+            }
             return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
+        } catch (JobCancellationRequested $exception) {
+            try {
+                $this->queue->cancelClaimed($job, $exception->getMessage());
+            } catch (\Throwable $leaseError) {
+                return [
+                    'status' => 'lease_lost',
+                    'job_id' => $job->id,
+                    'type' => $job->type,
+                    'error' => $leaseError->getMessage(),
+                ];
+            }
+            return ['status' => 'cancelled', 'job_id' => $job->id, 'type' => $job->type, 'error' => $exception->getMessage()];
         } catch (\Throwable $exception) {
             $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
-            $this->queue->fail($job, $exception, $delay);
-            return ['status' => 'failed', 'job_id' => $job->id, 'type' => $job->type, 'error' => $exception->getMessage()];
+            return $this->recordFailure($job, $exception, $delay);
         }
+    }
+
+    /**
+     * @return array{status:string,job_id:int,type:string,error:string}
+     */
+    private function recordFailure(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception, int $delay): array
+    {
+        try {
+            $disposition = $this->queue->fail($job, $exception, $delay);
+        } catch (\Throwable $leaseError) {
+            return [
+                'status' => 'lease_lost',
+                'job_id' => $job->id,
+                'type' => $job->type,
+                'error' => $leaseError->getMessage(),
+            ];
+        }
+
+        return [
+            'status' => $disposition,
+            'job_id' => $job->id,
+            'type' => $job->type,
+            'error' => $exception->getMessage(),
+        ];
     }
 
     private function findHandler(string $type): ?JobHandler
