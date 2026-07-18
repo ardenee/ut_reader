@@ -72,22 +72,24 @@ This document turns the nine production-readiness reviews into one ordered engin
 
 ### Completed
 
-- Added an explicit `UnverifiedFileStager` contract returning the stored queue name, physical path and unverified file ID during the writer request.
-- Added a legacy infrastructure implementation that preserves parse-failed Unreal packages, deletes non-package failures and records recoverable database-staging failures beside retained files.
-- Converted Upload Bucket to explicit staging; uploaded packages receive their database row immediately.
-- Upload Bucket folder uploads now retain browser-relative identity context for UE4/UE5 analysis.
-- Removed Upload Bucket and the non-writing federation queue page from shutdown directory scanning.
-- Restricted the temporary compatibility scanner to per-game unverified folders for Profiled Upload and HTTP source scan only.
-- Added source-contract and MySQL integration tests for explicit staging, physical retention, row identity and non-package deletion.
+- Added one `UnverifiedFileStager` contract returning the stored queue name, physical path and unverified file ID during the writer operation.
+- Added move-based staging for temporary and incoming files and copy-preserving staging for configured source libraries.
+- Centralized safe queue naming, physical storage, notes, hashing, metadata parsing and database indexing.
+- Converted Upload Bucket files to immediate database-backed staging and retained browser-relative identity context.
+- Converted Profiled Upload failures and failed extracted PAK entries through the shared scanner staging primitive.
+- Converted Local Source Scan failures to copy-preserving staging without modifying source-library files.
+- Confirmed HTTP Source Scan is not a queue writer and removes its bounded temporary GUID-inspection downloads.
+- Converted failed federation imports from anonymous incoming files into tracked unverified rows; failed jobs retain the staged file ID and new queue path.
+- Added cleanup for successful and duplicate federation incoming files.
+- Removed and deleted the shutdown-time directory snapshot hook from the application bootstrap.
+- Added source-contract and MySQL integration tests for immediate identity, move/copy semantics, source preservation, queue retention and non-package handling.
 
 ### Next
 
-1. Convert Profiled Upload failures, including extracted PAK entries, to the explicit staging contract.
-2. Convert HTTP source-scan failures.
-3. Convert local scan and federation receive paths where they create unverified files.
-4. Remove the global before/after directory snapshot hook after the final writer is converted.
-5. Split scanner orchestration into preparation, detection, parsing, identity, storage, persistence, dependencies and result reporting.
-6. Preserve duplicate and alias rules with reader-backed fixtures.
+- Split scanner orchestration into preparation, detection, parsing, identity, storage, persistence, dependencies and result reporting.
+- Add reader-backed fixtures before changing scanner or package-identity rules.
+- Add a reconciliation job for the final filesystem fallback used only when database staging is unavailable.
+- Add metrics for staged files, parse failures, fallback retention and promotion outcomes.
 
 ## Workstream 4 — Background jobs and reliability
 
@@ -97,11 +99,12 @@ A durable MySQL queue and worker exist, but several heavy tasks still run in HTT
 
 ### Plan
 
-- Queue package imports, PAK extraction, dependency rebuilds, full sync, source repair, duplicate hashing, and package generation.
-- Make each job idempotent, resumable, lease-protected, progress-reporting, and retryable.
-- Add lease renewal, stale-job recovery, cancellation, and dead-letter handling.
-- Add job-type concurrency limits and resource classes.
-- Keep one worker replica until claim and lease behaviour passes concurrency tests.
+1. Add lease renewal, stale-job recovery, cancellation and dead-letter handling to the common queue infrastructure.
+2. Add queue crash, retry and competing-worker integration tests.
+3. Define job-type concurrency limits and resource classes.
+4. Queue package imports, PAK extraction, dependency rebuilds, full sync, source repair, duplicate hashing and package generation.
+5. Make each job idempotent, resumable, lease-protected, progress-reporting and retryable.
+6. Keep one worker replica until claim and lease behaviour passes concurrency tests.
 
 ## Workstream 5 — Search and database performance
 
@@ -111,7 +114,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Plan
 
-1. Separate exact MD5, SHA1, GUID, package, and object lookup paths.
+1. Separate exact MD5, SHA1, GUID, package and object lookup paths.
 2. Require longer terms for broad anonymous substring searches.
 3. Add request rate limits and bounded query execution time.
 4. Capture slow-query baselines and representative catalogue benchmarks.
@@ -122,7 +125,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Completed
 
-- Reusable server-rendered UI components exist for page headers, buttons, fields, alerts, empty/loading states, pagination, progress, filters, and accessible table regions.
+- Reusable server-rendered UI components exist for page headers, buttons, fields, alerts, empty/loading states, pagination, progress, filters and accessible table regions.
 - Component accessibility and escaping contracts run in CI.
 - Responsive table and filter behaviour is documented.
 
@@ -137,7 +140,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Completed
 
-- Signed requests include method, path, timestamp, nonce, and body hash.
+- Signed requests include method, path, timestamp, nonce and body hash.
 - Replay nonces and bounded request readers exist.
 - Streaming uploads verify declared length and SHA-256.
 - Cron credentials are no longer placed in URLs by default.
@@ -145,20 +148,21 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Existing peer rows can be migrated and verified through a CLI command before strict policy is enabled.
 - Manual and automated approval flows no longer persist pairing material in notes or expose it through status polling.
 - One-time pairing claims use a separate POST endpoint and compare-and-swap state transition.
+- Failed federation imports now enter the common unverified staging lifecycle instead of remaining anonymous incoming files.
 
 ### Next
 
 - Replace symmetric peer credentials with asymmetric signatures.
-- Add peer key rotation, revocation, and audit history.
+- Add peer key rotation, revocation and audit history.
 - Route every outbound peer request through DNS-pinned, no-redirect, public-address validation.
-- Add endpoint-specific quotas, idempotency keys, and peer rate limits.
+- Add endpoint-specific quotas, idempotency keys and peer rate limits.
 - Paginate inventory synchronization instead of generating one full catalogue payload.
 
-## Workstream 8 — Deployment, monitoring, and recovery
+## Workstream 8 — Deployment, monitoring and recovery
 
 ### Completed
 
-- Production Docker image, Compose staging stack, Kubernetes baseline, readiness/liveness probes, worker loop, GHCR release workflow, vulnerability scan, provenance, approval-gated deployment, smoke tests, and rollback are present.
+- Production Docker image, Compose staging stack, Kubernetes baseline, readiness/liveness probes, worker loop, GHCR release workflow, vulnerability scan, provenance, approval-gated deployment, smoke tests and rollback are present.
 - Kubernetes requires shared RWX package storage and defaults to one web and one worker replica.
 - Security runtime limits are declared in Compose and Kubernetes.
 - Kubernetes strict federation-secret policy is backed by a Secret-provided master key; Compose exposes the same controls for staged rollout.
@@ -167,10 +171,10 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 ### Next
 
 - Select the production platform and replace generic kubeconfig credentials with workload identity.
-- Provision managed MySQL, Redis, TLS, WAF, RWX or object storage, and central logs.
+- Provision managed MySQL, Redis, TLS, WAF, RWX or object storage and central logs.
 - Add application metrics or OpenTelemetry instrumentation.
-- Add dashboards and alerts for latency, errors, queue age, worker failures, database contention, and storage capacity.
-- Implement point-in-time database recovery, package snapshots, and quarterly restore tests.
+- Add dashboards and alerts for latency, errors, queue age, worker failures, database contention and storage capacity.
+- Implement point-in-time database recovery, package snapshots and quarterly restore tests.
 
 ## Workstream 9 — Testing and engineering governance
 
@@ -178,35 +182,34 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 - Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration and explicit-staging checks are represented in CI.
 - Clean architecture boundaries and compatibility facades are documented.
-- Database integration tests exercise migration state and unverified staging identity.
+- Database integration tests exercise migration state and unverified staging identity, move/copy semantics and scanner integration.
 
 ### Next
 
 - Add package-reader fixtures for every supported engine and known edge case.
 - Add database integration tests for identity, aliases and dependency resolution.
 - Add HTTP contract tests for critical public and admin endpoints.
-- Add queue crash/retry/concurrency tests.
+- Add queue crash, retry and concurrency tests.
 - Add performance budgets and baseline datasets.
 - Protect `main` with required checks once workflow stability is confirmed.
 - Track temporary compatibility wrappers with owners and removal conditions.
 
 ## Ordered delivery sequence
 
-1. Complete remaining P0 security controls and asymmetric identity planning.
-2. Finish converting unverified writers and remove shutdown directory snapshots.
-3. Route all heavy maintenance and generation work through durable jobs.
-4. Add reader and dependency fixtures before deeper scanner refactoring.
-5. Optimize search and persistence from measured profiles.
-6. Finish UI component migration and CSP work.
-7. Add production telemetry, backup automation, and restore verification.
-8. Enable horizontal scaling only after shared-state and concurrency gates pass.
+1. Strengthen the durable job queue and move heavy HTTP work behind it.
+2. Add reader and dependency fixtures before deeper scanner refactoring.
+3. Complete remaining P0 security controls and asymmetric identity planning.
+4. Optimize search and persistence from measured profiles.
+5. Finish UI component migration and CSP work.
+6. Add production telemetry, backup automation and restore verification.
+7. Enable horizontal scaling only after shared-state and concurrency gates pass.
 
 ## Definition of production-ready
 
 The application is ready for general production deployment when:
 
 - No open P0 security findings remain.
-- Production secrets are externalized, existing federation rows have been migrated, and strict encrypted-secret policy is enabled.
+- Production secrets are externalized, existing federation rows have been migrated and strict encrypted-secret policy is enabled.
 - Every schema change is delivered through a tested migration.
 - Heavy operations are bounded or queued.
 - Backup restoration has been demonstrated.
