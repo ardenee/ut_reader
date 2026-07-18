@@ -19,6 +19,49 @@ function migration_usage(): void
     fwrite(STDOUT, "  php catalog/bin/migrate.php verify\n");
 }
 
+/** @return array{command:string,dry_run:bool,lock_timeout:int} */
+function migration_parse_arguments(array $arguments): array
+{
+    $command = 'status';
+    $commandSet = false;
+    $dryRun = false;
+    $timeout = (int)(getenv('UNREALDB_MIGRATION_LOCK_TIMEOUT') ?: 30);
+
+    for ($index = 0, $count = count($arguments); $index < $count; $index++) {
+        $argument = (string)$arguments[$index];
+        if ($argument === '--dry-run') {
+            $dryRun = true;
+            continue;
+        }
+        if (str_starts_with($argument, '--lock-timeout=')) {
+            $timeout = (int)substr($argument, strlen('--lock-timeout='));
+            continue;
+        }
+        if ($argument === '--lock-timeout') {
+            $index++;
+            if ($index >= $count) {
+                throw new InvalidArgumentException('--lock-timeout requires a value.');
+            }
+            $timeout = (int)$arguments[$index];
+            continue;
+        }
+        if (str_starts_with($argument, '-')) {
+            throw new InvalidArgumentException('Unknown migration option: ' . $argument);
+        }
+        if ($commandSet) {
+            throw new InvalidArgumentException('Unexpected migration argument: ' . $argument);
+        }
+        $command = strtolower(trim($argument));
+        $commandSet = true;
+    }
+
+    return [
+        'command' => $command,
+        'dry_run' => $dryRun,
+        'lock_timeout' => max(0, min($timeout, 300)),
+    ];
+}
+
 /** @param list<array<string,mixed>> $rows */
 function migration_print_status(array $rows): void
 {
@@ -41,26 +84,20 @@ function migration_print_status(array $rows): void
     }
 }
 
-$command = strtolower(trim((string)($argv[1] ?? 'status')));
-if (in_array($command, ['help', '--help', '-h'], true)) {
-    migration_usage();
-    exit(0);
-}
-if (!in_array($command, ['status', 'migrate', 'verify'], true)) {
-    fwrite(STDERR, "Unknown migration command: {$command}\n");
-    migration_usage();
-    exit(1);
-}
-
-$options = getopt('', ['dry-run', 'lock-timeout:']);
-$dryRun = array_key_exists('dry-run', $options);
-$configuredTimeout = (int)($options['lock-timeout'] ?? (getenv('UNREALDB_MIGRATION_LOCK_TIMEOUT') ?: 30));
-$lockTimeout = max(0, min($configuredTimeout, 300));
-
 try {
+    $arguments = migration_parse_arguments(array_slice($argv, 1));
+    $command = $arguments['command'];
+    if (in_array($command, ['help', '--help', '-h'], true)) {
+        migration_usage();
+        exit(0);
+    }
+    if (!in_array($command, ['status', 'migrate', 'verify'], true)) {
+        throw new InvalidArgumentException('Unknown migration command: ' . $command);
+    }
+
     $config = catalog_config();
     $db = catalog_db($config);
-    $runner = new MigrationRunner($db, __DIR__ . '/../migrations', $lockTimeout);
+    $runner = new MigrationRunner($db, __DIR__ . '/../migrations', $arguments['lock_timeout']);
 
     if ($command === 'status') {
         migration_print_status($runner->status());
@@ -83,8 +120,8 @@ try {
         exit(0);
     }
 
-    $changed = $runner->migrate($dryRun);
-    if ($dryRun) {
+    $changed = $runner->migrate($arguments['dry_run']);
+    if ($arguments['dry_run']) {
         migration_print_status($changed);
         fwrite(STDOUT, count($changed) . " migration(s) would be applied.\n");
         exit(0);
@@ -101,5 +138,6 @@ try {
 } catch (Throwable $exception) {
     error_log('[UnrealDB migrations] ' . get_class($exception) . ': ' . $exception->getMessage());
     fwrite(STDERR, "Migration command failed: " . $exception->getMessage() . "\n");
+    migration_usage();
     exit(1);
 }
