@@ -86,6 +86,12 @@ try {
     security_expect(str_contains($security, 'catalog_session_idle_timeout_seconds'), 'Idle session timeout is missing.');
     security_expect(str_contains($security, 'catalog_session_absolute_timeout_seconds'), 'Absolute session timeout is missing.');
 
+    $redirectArchive = file_get_contents(__DIR__ . '/../lib/CatalogRedirectArchive.php');
+    security_expect(is_string($redirectArchive), 'CatalogRedirectArchive.php could not be read.');
+    security_expect(str_contains($redirectArchive, 'UNREALDB_REDIRECT_MAX_OUTPUT_BYTES'), 'Redirect decompression lacks an explicit output-limit override.');
+    security_expect(str_contains($redirectArchive, "catalog_config()['max_upload_bytes']"), 'Redirect decompression is not bounded by the configured upload limit.');
+    security_expect(!str_contains($redirectArchive, 'return $maxOutputBytes > 0 ? $maxOutputBytes : 2 * 1024 * 1024 * 1024'), 'Redirect decompression regained the unsafe two-gigabyte fallback.');
+
     $federationAuth = file_get_contents(__DIR__ . '/../lib/FederationAuth.php');
     security_expect(is_string($federationAuth), 'FederationAuth.php could not be read.');
     security_expect(str_contains($federationAuth, 'fed_read_request_body'), 'Federation JSON bodies are not read through the bounded reader.');
