@@ -65,6 +65,7 @@ $config = [
 ];
 $stager = new LegacyUnverifiedFileStager($db, $config);
 $fileIds = [];
+$externalFiles = [];
 
 try {
     $bucketTemp = tempnam(sys_get_temp_dir(), 'unrealdb-bucket-');
@@ -117,6 +118,28 @@ try {
     staging_expect($failedRow['game_id'] === null, 'Failed-upload row unexpectedly has a verified game assignment.');
     staging_expect((int)$failedRow['unverified_queue_game_id'] === $gameId, 'Failed-upload queue game was not persisted.');
 
+    $copySource = tempnam(sys_get_temp_dir(), 'unrealdb-source-copy-');
+    staging_expect(is_string($copySource), 'Could not create a source-copy test file.');
+    $externalFiles[] = $copySource;
+    file_put_contents($copySource, pack('V', 0x9E2A83C1) . str_repeat("\0", 104));
+    $copied = $stager->stageFailedCopy(
+        $gameId,
+        $copySource,
+        'Source Library Package.utx',
+        'Copy-preserving source failure.',
+        null,
+        'Maps/Source Library Package.utx'
+    );
+    staging_expect(is_array($copied), 'Copy-preserving staging did not retain a valid package.');
+    $fileIds[] = (int)$copied['file_id'];
+    staging_expect(is_file($copySource), 'Copy-preserving staging removed the configured source file.');
+    staging_expect(is_file((string)$copied['path']), 'Copy-preserving staging did not create an independent queue copy.');
+    staging_expect(realpath($copySource) !== realpath((string)$copied['path']), 'Copy-preserving staging reused the source path instead of queue storage.');
+
+    $copiedRow = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [(int)$copied['file_id']]);
+    staging_expect(is_array($copiedRow), 'Copy-preserving staging did not create a database row.');
+    staging_expect((string)$copiedRow['source_relative_path'] === 'Maps/Source Library Package.utx', 'Copy-preserving staging lost source-relative context.');
+
     $scannerTemp = tempnam(sys_get_temp_dir(), 'unrealdb-scanner-failed-');
     staging_expect(is_string($scannerTemp), 'Could not create a scanner failure test file.');
     file_put_contents($scannerTemp, pack('V', 0x9E2A83C1) . str_repeat("\0", 112));
@@ -152,6 +175,19 @@ try {
     staging_expect($unsupported === null, 'A non-Unreal failed upload was retained.');
     staging_expect(!is_file($unsupportedTemp), 'A non-Unreal failed upload was not deleted.');
 
+    $unsupportedCopy = tempnam(sys_get_temp_dir(), 'unrealdb-copy-reject-');
+    staging_expect(is_string($unsupportedCopy), 'Could not create an unsupported copy test file.');
+    $externalFiles[] = $unsupportedCopy;
+    file_put_contents($unsupportedCopy, 'not an Unreal package');
+    $ignoredCopy = $stager->stageFailedCopy(
+        $gameId,
+        $unsupportedCopy,
+        'Unsupported Source.txt',
+        'Must be ignored without deleting the source.'
+    );
+    staging_expect($ignoredCopy === null, 'Copy-preserving staging retained a non-Unreal source file.');
+    staging_expect(is_file($unsupportedCopy), 'Copy-preserving staging deleted a non-Unreal source file.');
+
     $scannerUnsupported = tempnam(sys_get_temp_dir(), 'unrealdb-scanner-reject-');
     staging_expect(is_string($scannerUnsupported), 'Could not create a scanner unsupported test file.');
     file_put_contents($scannerUnsupported, 'not an Unreal package');
@@ -170,6 +206,9 @@ try {
         if ($fileId > 0) {
             $db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
         }
+    }
+    foreach ($externalFiles as $externalFile) {
+        @unlink($externalFile);
     }
     staging_remove_tree($storage);
 }
