@@ -56,7 +56,7 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Added `ue_schema_migrations` with ordered migration versions, checksums, batches and execution timing.
 - Added a CLI migration runner with status, dry-run, migrate and verify commands.
 - Added database-scoped advisory locking and checksum/orphan drift rejection.
-- Converted remember-login, package-alias, dependency-metadata/asset-registry, unverified-staging and background-job reliability upgrades into numbered idempotent migrations.
+- Converted remember-login, package-alias, dependency-metadata/asset-registry, unverified-staging, background-job reliability and resource-limit upgrades into numbered idempotent migrations.
 - Added MySQL integration coverage for preview, upgrade, rerun and checksum-drift failure.
 - Gated Docker Compose startup and Kubernetes production rollout on the immutable release image completing migrations.
 - Added a database migration runbook and deployment compatibility policy.
@@ -104,16 +104,21 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Added a distinct `dead_letter` terminal state for exhausted failures, unsupported handlers and expired final attempts.
 - Added explicit dead-letter retry with attempt, cancellation, progress, result and lease reset.
 - Fixed retry transitions so they clear the previous worker ID and lease timestamps.
-- Added CLI status, cancel, retry and recovery operations plus an operator runbook.
-- Added MySQL integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters and simultaneous competing workers.
+- Added persisted resource classes, per-class capacity limits and target concurrency keys.
+- Added advisory claim coordination so competing workers cannot overbook a resource class.
+- Added fair claim selection that skips saturated heavy classes and admits eligible housekeeping work.
+- Added configurable limits for `dependency-heavy`, `housekeeping` and `default` jobs.
+- Added CLI and secured administrator API operations for status, enqueue, cancel, retry and recovery.
+- Added MySQL integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness and target-key exclusion.
 
 ### Next
 
-1. Define job-type concurrency limits and resource classes.
-2. Queue package imports, PAK extraction, dependency rebuilds, full sync, source repair, duplicate hashing and package generation.
-3. Make each heavy job idempotent and resumable from a durable checkpoint.
-4. Add worker termination tests during each major package and maintenance stage.
-5. Keep one production worker replica until heavy-job concurrency and storage behaviour are validated.
+1. Move selected dependency rebuild browser actions behind the durable enqueue API while preserving current progress UX.
+2. Add durable job types for source repair, duplicate hashing and package generation.
+3. Evaluate package import and PAK extraction boundaries after reader-backed fixtures exist.
+4. Make each heavy job idempotent and resumable from a durable checkpoint.
+5. Add worker termination tests during each major package and maintenance stage.
+6. Keep one production worker replica until heavy-job concurrency and storage behaviour are validated.
 
 ## Workstream 5 — Search and database performance
 
@@ -177,23 +182,24 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Kubernetes strict federation-secret policy is backed by a Secret-provided master key; Compose exposes the same controls for staged rollout.
 - Compose application startup and Kubernetes production rollout are gated on successful, drift-free database migrations.
 - Worker containers use the configured queue name and lease duration.
-- A background-job operations runbook documents cancellation, recovery, dead letters and scaling gates.
+- Resource-class capacity defaults are declared in Compose and Kubernetes configuration.
+- A background-job operations runbook documents enqueueing, cancellation, recovery, dead letters, resource saturation and scaling gates.
 
 ### Next
 
 - Select the production platform and replace generic kubeconfig credentials with workload identity.
 - Provision managed MySQL, Redis, TLS, WAF, RWX or object storage and central logs.
 - Add application metrics or OpenTelemetry instrumentation.
-- Add dashboards and alerts for latency, errors, queue age, lease recovery, dead letters, worker failures, database contention and storage capacity.
+- Add dashboards and alerts for latency, errors, queue age, class saturation, lease recovery, dead letters, worker failures, database contention and storage capacity.
 - Implement point-in-time database recovery, package snapshots and quarterly restore tests.
 
 ## Workstream 9 — Testing and engineering governance
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging and job-reliability checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability and job-resource checks are represented in CI.
 - Clean architecture boundaries and compatibility facades are documented.
-- Database integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration and competing job workers.
+- Database integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation and queue fairness.
 
 ### Next
 
@@ -207,7 +213,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ## Ordered delivery sequence
 
-1. Add job resource classes and move heavy HTTP work behind the durable queue.
+1. Move selected heavy HTTP operations behind the durable queue without regressing progress UX.
 2. Add reader and dependency fixtures before deeper scanner refactoring.
 3. Complete remaining P0 security controls and asymmetric identity planning.
 4. Optimize search and persistence from measured profiles.
