@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
+
 session_start();
 error_reporting(E_ALL);
 ini_set('display_errors', '1');
@@ -33,7 +35,18 @@ function upload_bucket_result_text(array $entry): string
     return $text;
 }
 
-function upload_bucket_handle_request(array $config): array
+function upload_bucket_source_relative_path(string $submittedPath, string $storedName): string
+{
+    $submittedPath = scanner_normalize_source_relative_path($submittedPath);
+    if ($submittedPath === '') {
+        return scanner_normalize_source_relative_path($storedName);
+    }
+
+    $directory = trim(str_replace('\\', '/', dirname($submittedPath)), '. /');
+    return scanner_normalize_source_relative_path(($directory !== '' ? $directory . '/' : '') . $storedName);
+}
+
+function upload_bucket_handle_request(PDO $db, array $config): array
 {
     catalog_check_csrf('upload-bucket');
     if (!isset($_FILES['files'])) {
@@ -43,6 +56,8 @@ function upload_bucket_handle_request(array $config): array
     $allowedExtensions = array_map(static fn($ext): string => strtolower(ltrim((string)$ext, '.')), $config['allowed_extensions'] ?? []);
     $allowedExtensions = array_values(array_filter(array_unique($allowedExtensions), static fn(string $ext): bool => $ext !== ''));
     $maxBytes = (int)($config['max_upload_bytes'] ?? PHP_INT_MAX);
+    $stager = new LegacyUnverifiedFileStager($db, $config);
+    $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
     $ok = 0;
     $failed = 0;
@@ -54,6 +69,7 @@ function upload_bucket_handle_request(array $config): array
 
     foreach ($temporaryPaths as $index => $tmp) {
         $submittedName = (string)($_FILES['files']['name'][$index] ?? 'upload.bin');
+        $submittedRelativePath = (string)($_POST['relative_path'] ?? $submittedName);
         $cleanName = catalog_clean_unreal_filename($submittedName);
         $err = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
         $size = is_string($tmp) && is_file($tmp) ? (int)(filesize($tmp) ?: 0) : 0;
@@ -98,12 +114,27 @@ function upload_bucket_handle_request(array $config): array
                 ? ' Redirect archive .' . $decompressed['source_extension'] . ' was decompressed before storage; compressed wrapper was not retained.'
                 : '';
             $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.' . $redirectNote . $cleanNote;
-            $stored = uvf_store_bucket_upload($config, $workingTmp, $workingName, $note);
+            $sourceRelativePath = upload_bucket_source_relative_path($submittedRelativePath, $workingName);
+            $staged = $stager->stageBucketUpload(
+                $workingTmp,
+                $workingName,
+                $note,
+                $uploadedBy,
+                $sourceRelativePath
+            );
+
             $ok++;
-            $messages[] = upload_bucket_result(is_array($decompressed) ? 'decompressed' : 'bucketed', $workingName, is_array($decompressed) ? 'Decompressed redirect archive into upload bucket' : 'Stored in upload bucket', [
-                'file_size' => (int)$stored['size'],
-                'file_size_text' => catalog_bytes((int)$stored['size']),
-                'queue_name' => (string)$stored['queue_name'],
+            $message = is_array($decompressed)
+                ? 'Decompressed redirect archive into upload bucket and indexed as unverified'
+                : 'Stored in upload bucket and indexed as unverified';
+            if ($staged['parse_error'] !== null) {
+                $message .= '; package tables could not be read';
+            }
+            $messages[] = upload_bucket_result(is_array($decompressed) ? 'decompressed' : 'bucketed', $workingName, $message, [
+                'file_size' => (int)$staged['size'],
+                'file_size_text' => catalog_bytes((int)$staged['size']),
+                'queue_name' => (string)$staged['queue_name'],
+                'file_id' => (int)$staged['file_id'],
             ]);
         } catch (Throwable $error) {
             $failed++;
@@ -122,12 +153,13 @@ function upload_bucket_handle_request(array $config): array
 
 try {
     $config = catalog_config();
+    $db = catalog_db($config);
     if (!catalog_require_admin_page('Upload Bucket')) {
         exit;
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $result = upload_bucket_handle_request($config);
+        $result = upload_bucket_handle_request($db, $config);
         if (($_POST['ajax'] ?? '') === '1') {
             header('Content-Type: application/json');
             echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
@@ -140,7 +172,7 @@ try {
     }
 
     $bucketDir = uvf_upload_bucket_dir($config, true);
-    $bucketItems = uvf_list(catalog_db($config), $config, 0);
+    $bucketItems = uvf_list($db, $config, 0);
 
     catalog_head('Upload Bucket');
     catalog_flash($_SESSION['upload_bucket_flash'] ?? null);
@@ -173,13 +205,13 @@ CSS;
     echo '<div class="stat"><h2 class="mono small">' . catalog_h($bucketDir) . '</h2><p>Physical bucket folder</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Files are uploaded one at a time to avoid browser/PHP file-count limits. No game, ue_files row, names, imports, exports, or dependencies are created here.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Files are uploaded one at a time to avoid browser/PHP file-count limits. Each retained package receives an unverified database row immediately, including readable names/imports/exports, but no game assignment or dependencies.</p></div></div><div class="ui-section__body">';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
     echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
     echo '<p><button id="upload-bucket-button" type="submit">Upload to bucket</button></p>';
-    echo '<p class="muted">Max per uploaded/decompressed file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and its subfolders; the bucket still stores only the cleaned package filename, not the client folder path. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
+    echo '<p class="muted">Max per uploaded/decompressed file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload records the client-relative path as package identity context while physical bucket storage still uses only a cleaned filename. Allowed inputs: catalog package extensions plus .uz/.uz2/.uz3 redirect archives.</p>';
     echo '<div id="bucket-progress" class="bucket-progress" hidden>';
     echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-count"></span></div><progress id="bucket-progress-bar" value="0" max="100"></progress>';
     echo '<div id="bucket-log" class="bucket-log"></div></div>';
@@ -243,6 +275,7 @@ CSS;
             const data = new FormData();
             data.append('ajax', '1');
             data.append('csrf', form.querySelector('[name="csrf"]').value);
+            data.append('relative_path', shownName);
             data.append('files[]', file, file.name);
             const xhr = new XMLHttpRequest();
             const start = Date.now();
@@ -267,7 +300,7 @@ CSS;
                     } else if (res.messages && res.messages.length) {
                         res.messages.forEach(addLog);
                     } else {
-                        addLog({status: 'bucketed', file: shownName, message: 'stored in upload bucket'});
+                        addLog({status: 'bucketed', file: shownName, message: 'stored and indexed in upload bucket'});
                     }
                 } catch (e) {
                     addLog({status: 'failed', file: shownName, message: 'invalid server response'});
