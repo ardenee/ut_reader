@@ -26,18 +26,53 @@ function catalog_api_require_csrf(string $scope): void
     }
 }
 
+function catalog_api_max_json_bytes(): int
+{
+    $configured = (int)(getenv('UNREALDB_API_MAX_JSON_BYTES') ?: 0);
+    return max(1024, min($configured > 0 ? $configured : 1024 * 1024, 16 * 1024 * 1024));
+}
+
+function catalog_api_raw_body(): string
+{
+    $limit = catalog_api_max_json_bytes();
+    $declaredLength = filter_var($_SERVER['CONTENT_LENGTH'] ?? null, FILTER_VALIDATE_INT);
+    if ($declaredLength !== false && $declaredLength !== null && (int)$declaredLength > $limit) {
+        JsonResponse::error('payload_too_large', 'Request body exceeds the allowed size.', 413);
+    }
+
+    $stream = fopen('php://input', 'rb');
+    if (!is_resource($stream)) {
+        JsonResponse::error('body_unavailable', 'Request body could not be read.', 400);
+    }
+
+    try {
+        $raw = stream_get_contents($stream, $limit + 1);
+    } finally {
+        fclose($stream);
+    }
+
+    if (!is_string($raw)) {
+        JsonResponse::error('body_unavailable', 'Request body could not be read.', 400);
+    }
+    if (strlen($raw) > $limit) {
+        JsonResponse::error('payload_too_large', 'Request body exceeds the allowed size.', 413);
+    }
+
+    return $raw;
+}
+
 /**
  * @return array<string, mixed>
  */
 function catalog_api_json_body(): array
 {
-    $raw = file_get_contents('php://input');
-    if ($raw === false || trim($raw) === '') {
+    $raw = catalog_api_raw_body();
+    if (trim($raw) === '') {
         return [];
     }
 
     try {
-        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($raw, true, 128, JSON_THROW_ON_ERROR);
     } catch (JsonException) {
         JsonResponse::error('invalid_json', 'Request body must be a JSON object.', 400);
     }
