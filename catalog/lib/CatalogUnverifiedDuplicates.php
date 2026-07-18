@@ -6,9 +6,7 @@ require_once __DIR__ . '/CatalogUnverifiedIndex.php';
 require_once __DIR__ . '/../bootstrap/autoload.php';
 
 use UnrealDb\Catalog\Application\Unverified\UnverifiedDuplicateCleanupService;
-use UnrealDb\Catalog\Infrastructure\Filesystem\NativeUnverifiedFileSystem;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoUnverifiedRecordStore;
-use UnrealDb\Catalog\Infrastructure\Unverified\LegacyUnverifiedQueueInventory;
+use UnrealDb\Catalog\Infrastructure\Composition\CatalogServiceFactory;
 
 /** @return list<array<string,mixed>> */
 function catalog_unverified_duplicate_queues(PDO $db): array
@@ -26,11 +24,7 @@ function catalog_unverified_duplicate_service(
 ): UnverifiedDuplicateCleanupService {
     catalog_unverified_schema_ensure($db);
 
-    return new UnverifiedDuplicateCleanupService(
-        new LegacyUnverifiedQueueInventory($db, $config),
-        new PdoUnverifiedRecordStore($db),
-        new NativeUnverifiedFileSystem()
-    );
+    return (new CatalogServiceFactory($db, $config))->unverifiedDuplicateCleanup();
 }
 
 /**
