@@ -6,11 +6,15 @@ Unverified Unreal package files are stored physically in the upload bucket or a 
 
 New queue writers use `UnverifiedFileStager`. A successful call returns the exact queue filename, physical path, unverified file ID, stored size and package-table parse status before the controller sends its response.
 
-The Upload Bucket now uses this contract directly. Folder uploads also record the browser-relative path for later UE4/UE5 package identity analysis while physical storage continues to use a safe generated queue filename.
+The Upload Bucket uses this contract directly. Folder uploads also record the browser-relative path for later UE4/UE5 package identity analysis while physical storage continues to use a safe generated queue filename.
 
-A package-table parsing failure does not discard the file. The row is retained with hashes, detected header metadata and a parse error. A database/storage failure is reported to the writer; if the file has already reached queue storage, a `Database staging failed` note is appended so the existing-queue importer can recover it without data loss.
+Profiled Upload, including extracted PAK entries, routes rejected Unreal packages through the same explicit stager via the shared scanner failure primitive. The database row is created before the request finishes. Non-package failures are deleted rather than filling unverified storage.
 
-Profiled Upload failures and HTTP source-scan failures remain on the temporary shutdown-index compatibility hook. The hook is restricted to those two routes and scans only per-game unverified folders. It no longer watches Upload Bucket or unrelated federation pages.
+HTTP source scan does not create unverified files. It reads a trusted remote manifest, optionally downloads bounded temporary files for GUID inspection, and always deletes those temporary files. Its earlier registration in the queue auto-index hook was obsolete.
+
+The former shutdown-time directory snapshot hook has been removed from the application bootstrap and deleted. Queue writers must now stage explicitly. This removes cross-request races where one request could accidentally index a file created by another request.
+
+A package-table parsing failure does not discard the file. The row is retained with hashes, detected header metadata and a parse error. If database staging fails after the file reaches queue storage, a `Database staging failed` note is appended. If the database is unavailable before queue storage is completed, the scanner uses a final filesystem fallback with a reconciliation note so the existing-queue importer can recover the package without data loss.
 
 ## Row state
 
@@ -40,7 +44,7 @@ Importing an unverified file promotes it into a verified game assignment:
 5. clear queue fields
 6. rebuild its dependencies and affected dependencies
 
-## Existing queues
+## Existing queues and recovery
 
 Run the database migrations before using database-backed staging:
 
@@ -50,5 +54,7 @@ php catalog/bin/migrate.php verify
 ```
 
 Open `unverified-database-import.php` to index physical queue files created by older application versions or files retained after an infrastructure failure. The page processes one file per request and reports progress.
+
+A queue note containing `Database staging was unavailable` indicates that the physical package was deliberately retained by the final failure fallback and still needs reconciliation.
 
 The former `catalog/upgrade-unverified-index.sql` file is retained only as historical reference. Numbered migrations are the supported upgrade path.
