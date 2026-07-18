@@ -11,8 +11,6 @@ require_once __DIR__ . '/lib/CatalogParser.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
 require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
-require_once __DIR__ . '/lib/UnverifiedFileManager.php';
-require_once __DIR__ . '/lib/CatalogUnverifiedIndex.php';
 
 function clean_relative_path(string $base, string $path): string
 {
@@ -87,22 +85,19 @@ function source_scan_record_import_result(PDO $db, PDOStatement $upsert, int $so
 function source_scan_stage_failed(PDO $db, array $config, array $source, array $work, string $relative, Throwable $error): ?array
 {
     $path = (string)$work['path'];
-    if (!is_file($path) || !scanner_file_has_unreal_package_magic($path)) return null;
-    $game = ['id'=>(int)$source['game_id'],'name'=>(string)$source['game_name'],'slug'=>(string)$source['game_slug'],'profile_id'=>null];
-    $dir = uvf_unverified_dir($config,$game,true);
-    $queueName = basename(uvf_unique_destination($dir,uvf_safe_queue_name((string)$work['name'])));
-    $destination = $dir . DIRECTORY_SEPARATOR . $queueName;
-    if (!@copy($path,$destination)) throw new RuntimeException('Could not copy failed source package into unverified storage.');
+    if (!is_file($path)) return null;
     $sourceRelativePath = source_scan_scanner_relative_path($relative,$work);
     $reason = 'Local Source Scan import failed for ' . $sourceRelativePath . ': ' . $error->getMessage();
-    @file_put_contents($destination . '.txt',$reason);
-    try {
-        $result = catalog_unverified_index_path($db,$config,(int)$source['game_id'],$queueName,$destination,(string)$work['name'],$reason,isset($_SESSION['user']['id'])?(int)$_SESSION['user']['id']:null,$sourceRelativePath,false);
-        return ['queue_name'=>$queueName,'file_id'=>(int)$result['file_id']];
-    } catch (Throwable $indexError) {
-        @file_put_contents($destination . '.txt',"\nDatabase staging failed: " . $indexError->getMessage(),FILE_APPEND);
-        throw $indexError;
-    }
+    $stager = new \UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager($db,$config);
+    $result = $stager->stageFailedCopy(
+        (int)$source['game_id'],
+        $path,
+        (string)$work['name'],
+        $reason,
+        isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null,
+        $sourceRelativePath
+    );
+    return $result === null ? null : ['queue_name'=>(string)$result['queue_name'],'file_id'=>(int)$result['file_id']];
 }
 
 function scan_local_source(PDO $db, array $config, int $sourceId, bool $importUnknown, bool $strictProfile): array

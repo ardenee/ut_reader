@@ -291,6 +291,24 @@ function federation_worker_notify_parent(PDO $db, array $job, array $result, str
     fed_log($db, (int)$peer['id'], (int)$job['id'], !empty($response['ok']) ? 'INFO' : 'ERROR', 'PARENT_STATUS_NOTIFY', json_encode($response, JSON_UNESCAPED_SLASHES));
 }
 
+function federation_worker_stage_failed_import(PDO $db, array $config, array $job, string $incoming, string $originalName, ?int $preferredGameId, Throwable $error): ?array
+{
+    if (!is_file($incoming)) {
+        return null;
+    }
+    $queueGameId = $preferredGameId ?? federation_worker_preferred_game_id($db,$job);
+    if ($queueGameId === null) {
+        $detected = catalog_import_detect_game($db,(string)pathinfo($originalName,PATHINFO_EXTENSION));
+        $queueGameId = $detected ? (int)$detected['id'] : null;
+    }
+    if ($queueGameId === null) {
+        return null;
+    }
+    $reason = 'Federation import job ' . (int)$job['id'] . ' failed for ' . $originalName . ': ' . $error->getMessage();
+    $stager = new \UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager($db,$config);
+    return $stager->stageFailedUpload($queueGameId,$incoming,$originalName,$reason,null,'');
+}
+
 function federation_worker_run_one_import(PDO $db, array $config): array
 {
     $job = catalog_one($db, 'SELECT * FROM ue_federation_transfer_jobs WHERE status="downloaded" AND incoming_path IS NOT NULL AND incoming_path<>"" ORDER BY finished_at ASC, id ASC LIMIT 1');
@@ -310,20 +328,37 @@ function federation_worker_run_one_import(PDO $db, array $config): array
     }
 
     $db->prepare('UPDATE ue_federation_transfer_jobs SET status="running", started_at=COALESCE(started_at,NOW()), last_error=NULL WHERE id=?')->execute([$jobId]);
+    $originalName = federation_worker_original_name($db,$job);
+    $preferredGameId = in_array((string)$job['direction'], ['download_from_parent','upload_to_parent'], true) ? null : federation_worker_preferred_game_id($db,$job);
 
     try {
-        $originalName = federation_worker_original_name($db, $job);
-        $preferredGameId = in_array((string)$job['direction'], ['download_from_parent','upload_to_parent'], true) ? null : federation_worker_preferred_game_id($db, $job);
-        $result = catalog_import_file($db, $config, $incoming, $originalName, $preferredGameId, $_SESSION['user']['id'] ?? null);
+        $result = catalog_import_file($db,$config,$incoming,$originalName,$preferredGameId,$_SESSION['user']['id'] ?? null);
         $status = ($result['status'] === 'verified' || str_starts_with((string)$result['status'], 'duplicate_')) ? 'imported' : 'failed';
-        $db->prepare('UPDATE ue_federation_transfer_jobs SET status=?, local_file_id=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$status, $result['file_id'] ?? null, $result['message'] ?? $result['status'], $jobId]);
-        fed_log($db, (int)$job['peer_id'], $jobId, $status === 'imported' ? 'INFO' : 'WARN', 'FEDERATION_IMPORT', json_encode($result, JSON_UNESCAPED_SLASHES));
-        federation_worker_notify_parent($db, $job, $result, $status);
-        return ['ok' => true, 'job_id' => $jobId, 'result' => $result, 'notified_parent' => (string)$job['direction'] === 'download_from_parent'];
+        if (str_starts_with((string)$result['status'],'duplicate_') && is_file($incoming)) {
+            @unlink($incoming);
+        }
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET status=?, local_file_id=?, incoming_path=NULL, finished_at=NOW(), last_error=? WHERE id=?')->execute([$status,$result['file_id'] ?? null,$result['message'] ?? $result['status'],$jobId]);
+        fed_log($db,(int)$job['peer_id'],$jobId,$status === 'imported' ? 'INFO' : 'WARN','FEDERATION_IMPORT',json_encode($result,JSON_UNESCAPED_SLASHES));
+        federation_worker_notify_parent($db,$job,$result,$status);
+        return ['ok'=>true,'job_id'=>$jobId,'result'=>$result,'notified_parent'=>(string)$job['direction'] === 'download_from_parent'];
     } catch (Throwable $e) {
-        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", finished_at=NOW(), last_error=? WHERE id=?')->execute([$e->getMessage(), $jobId]);
-        fed_log($db, (int)$job['peer_id'], $jobId, 'ERROR', 'FEDERATION_IMPORT_FAIL', $e->getMessage());
-        federation_worker_notify_parent($db, $job, ['status' => 'failed', 'message' => $e->getMessage()], 'failed');
+        $staged = null;
+        try {
+            $staged = federation_worker_stage_failed_import($db,$config,$job,$incoming,$originalName,$preferredGameId,$e);
+        } catch (Throwable $stageError) {
+            fed_log($db,(int)$job['peer_id'],$jobId,'ERROR','FEDERATION_STAGE_FAIL',$stageError->getMessage());
+        }
+        $message = $e->getMessage();
+        $stagedFileId = null;
+        $stagedPath = (string)$job['incoming_path'];
+        if (is_array($staged)) {
+            $stagedFileId = (int)$staged['file_id'];
+            $stagedPath = catalog_unverified_storage_relative($config,(string)$staged['path']);
+            $message .= ' Staged as unverified file #' . $stagedFileId . '.';
+        }
+        $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", local_file_id=?, incoming_path=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$stagedFileId,$stagedPath,$message,$jobId]);
+        fed_log($db,(int)$job['peer_id'],$jobId,'ERROR','FEDERATION_IMPORT_FAIL',$message);
+        federation_worker_notify_parent($db,$job,['status'=>'failed','message'=>$message],'failed');
         throw $e;
     }
 }
