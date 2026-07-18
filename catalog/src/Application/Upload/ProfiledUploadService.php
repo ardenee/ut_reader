@@ -6,14 +6,14 @@ namespace UnrealDb\Catalog\Application\Upload;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Upload\Contract\CatalogPackageImporter;
+use UnrealDb\Catalog\Application\Upload\Contract\UploadFailureLogger;
 
 /**
  * Application use case for a profile-targeted package upload batch.
  *
- * It owns request-independent orchestration: validation of uploaded files,
- * import outcome mapping, error presentation text, and durable failure logging.
- * HTTP/session/CSRF handling stays in the page controller; reader and storage
- * details stay behind CatalogPackageImporter.
+ * HTTP/session/CSRF handling remains in the page controller. Package parsing,
+ * physical storage, and failed-file preservation remain behind the importer port.
+ * Result formatting and concise error text are stable shared contracts.
  */
 final class ProfiledUploadService
 {
@@ -23,7 +23,8 @@ final class ProfiledUploadService
     public function __construct(
         private readonly PDO $db,
         private readonly array $config,
-        private readonly CatalogPackageImporter $importer
+        private readonly CatalogPackageImporter $importer,
+        private readonly ?UploadFailureLogger $failureLogger = null
     ) {
     }
 
@@ -56,15 +57,18 @@ final class ProfiledUploadService
         foreach ($temporaryPaths as $index => $temporaryPath) {
             $originalName = (string)($uploadedFiles['name'][$index] ?? 'upload.bin');
             $uploadError = (int)($uploadedFiles['error'][$index] ?? UPLOAD_ERR_NO_FILE);
-            $uploadSize = is_string($temporaryPath) && is_file($temporaryPath) ? (int)filesize($temporaryPath) : 0;
+            $uploadSize = is_string($temporaryPath) && is_file($temporaryPath)
+                ? (int)filesize($temporaryPath)
+                : 0;
             $uploadMeta = [
                 'file_size' => $uploadSize,
                 'file_size_text' => \catalog_bytes($uploadSize),
             ];
+
             if ($uploadError !== UPLOAD_ERR_OK) {
                 $failed++;
                 $message = 'Upload error ' . $uploadError;
-                $messages[] = self::result('failed', $originalName, $message, $uploadMeta);
+                $messages[] = UploadResult::create('failed', $originalName, $message, $uploadMeta);
                 $this->emitFailureProgress($progress, $originalName, $message);
                 continue;
             }
@@ -81,24 +85,35 @@ final class ProfiledUploadService
                     $progress
                 );
 
-                $meta = is_array($result[4] ?? null) ? $result[4] : $uploadMeta;
+                $metadata = is_array($result[4] ?? null) ? $result[4] : $uploadMeta;
                 $aliasAlreadyExists = ($result[0] ?? '') === 'alias'
                     && function_exists('catalog_package_alias_last_add_was_existing')
                     && \catalog_package_alias_last_add_was_existing();
+
                 if (($result[0] ?? '') === 'duplicate' || $aliasAlreadyExists) {
                     $duplicates++;
                     $message = $aliasAlreadyExists
                         ? 'Package alias already exists for existing file identity'
                         : (string)($result[2] ?? 'Duplicate in selected game');
-                    $messages[] = self::result('duplicate', $originalName, $message, $meta);
+                    $messages[] = UploadResult::create(
+                        'duplicate',
+                        $originalName,
+                        $message,
+                        $metadata
+                    );
                     continue;
                 }
 
                 $imported++;
-                $messages[] = self::result('imported', $originalName, (string)($result[2] ?? 'Imported'), $meta);
+                $messages[] = UploadResult::create(
+                    'imported',
+                    $originalName,
+                    (string)($result[2] ?? 'Imported'),
+                    $metadata
+                );
             } catch (Throwable $exception) {
                 $failed++;
-                $message = self::shortError($exception);
+                $message = UploadErrorFormatter::concise($exception);
                 $this->logFailure($originalName, $exception);
                 $this->importer->preserveFailedUpload(
                     $this->config,
@@ -107,7 +122,12 @@ final class ProfiledUploadService
                     (string)$game['slug'],
                     $exception->getMessage()
                 );
-                $messages[] = self::result('failed', $originalName, $message, $uploadMeta);
+                $messages[] = UploadResult::create(
+                    'failed',
+                    $originalName,
+                    $message,
+                    $uploadMeta
+                );
                 $this->emitFailureProgress($progress, $originalName, $message);
             }
         }
@@ -125,42 +145,14 @@ final class ProfiledUploadService
      */
     public static function resultText(array $entry): string
     {
-        $text = $entry['file'] . ': ' . $entry['status'] . ' - ' . $entry['message'];
-        if (!empty($entry['file_size_text'])) {
-            $text .= ' | size: ' . (string)$entry['file_size_text'];
-        }
-        if (!empty($entry['package_guid'])) {
-            $text .= ' | GUID: ' . (string)$entry['package_guid'];
-        }
-        if (!empty($entry['duplicate_original_name'])) {
-            $text .= ' | copy of: ' . (string)$entry['duplicate_original_name'];
-        }
-
-        return $text;
+        return UploadResult::text($entry);
     }
 
-    private static function result(string $status, string $file, string $message, array $meta = []): array
-    {
-        unset($meta['duplicate_guid'], $meta['duplicate_file_size_text']);
-        return ['status' => $status, 'file' => $file, 'message' => $message] + $meta;
-    }
-
-    private static function shortError(Throwable $exception): string
-    {
-        $message = trim($exception->getMessage());
-        if (preg_match('/Bad package tag 0x[0-9A-Fa-f]+/', $message, $matches)) {
-            return $matches[0];
-        }
-
-        $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
-        $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
-        $message = trim($message);
-
-        return $message !== '' ? $message : 'Unknown error';
-    }
-
-    private function emitFailureProgress(?callable $progress, string $fileName, string $message): void
-    {
+    private function emitFailureProgress(
+        ?callable $progress,
+        string $fileName,
+        string $message
+    ): void {
         if ($progress === null) {
             return;
         }
@@ -176,7 +168,19 @@ final class ProfiledUploadService
 
     private function logFailure(string $filename, Throwable $exception): void
     {
-        $details = $filename . ': ' . get_class($exception) . ': ' . $exception->getMessage() . "\n" . $exception->getTraceAsString();
+        if ($this->failureLogger !== null) {
+            $this->failureLogger->log($filename, $exception);
+            return;
+        }
+
+        // Compatibility fallback for callers not yet composed through a factory.
+        $details = $filename
+            . ': '
+            . get_class($exception)
+            . ': '
+            . $exception->getMessage()
+            . "\n"
+            . $exception->getTraceAsString();
         error_log('[UnrealDB upload] ' . $details);
 
         if (!function_exists('fed_log')) {
