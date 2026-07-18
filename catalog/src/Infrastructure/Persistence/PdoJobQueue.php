@@ -275,10 +275,6 @@ final class PdoJobQueue implements JobQueue
             ]);
         }
 
-        if ($statement->rowCount() !== 1) {
-            return 'lost';
-        }
-
         $check = $this->db->prepare(
             'SELECT cancel_requested_at FROM ue_background_jobs WHERE id=? AND status="running" AND lease_token=?'
         );
