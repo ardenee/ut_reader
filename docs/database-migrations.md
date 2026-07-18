@@ -22,7 +22,10 @@ Migration files live in `catalog/migrations/` and use an immutable numeric versi
 202607180002_package_aliases.php
 202607180003_dependency_metadata.php
 202607180004_unverified_staging.php
+202607180005_job_reliability.php
 ```
+
+The fifth migration adds durable background-job progress, heartbeat, cancellation, lease-recovery and dead-letter metadata. Existing queued and running jobs retain their payload and attempt data while the status enum is widened.
 
 Each migration is idempotent because MySQL and MariaDB DDL can commit implicitly. A failed migration is not recorded in `ue_schema_migrations`; rerunning it must safely continue from any structure already created before the failure.
 
@@ -37,13 +40,14 @@ The status and dry-run commands do not create the migration table or change sche
 ## Existing deployment upgrade
 
 1. Stop or pause maintenance operations that write large batches.
-2. Back up MySQL and package storage.
-3. Deploy code that supports both the current and upgraded schema.
-4. Run `migrate --dry-run` and review the pending versions.
-5. Run `migrate --lock-timeout=60` from a trusted CLI.
-6. Run `verify`.
-7. Start or roll out web and worker processes.
-8. Test login, search, upload, dependency display, and one queued job.
+2. Allow active workers to finish or request cancellation at a safe checkpoint.
+3. Back up MySQL and package storage.
+4. Deploy code that supports both the current and upgraded schema.
+5. Run `migrate --dry-run` and review the pending versions.
+6. Run `migrate --lock-timeout=60` from a trusted CLI.
+7. Run `verify`.
+8. Start or roll out web and worker processes.
+9. Test login, search, upload, dependency display, one queued job, cancellation and dead-letter retry.
 
 The current migrations are additive or widen existing columns. Destructive changes require a separate expand-and-contract release sequence.
 
@@ -63,7 +67,7 @@ The Kubernetes production workflow runs a one-shot Job using the immutable relea
 
 ## Rollback policy
 
-Application rollback is allowed only while the previous image remains compatible with the migrated schema. Migrations in a production release must therefore be backward compatible with the currently deployed image.
+Application rollback is allowed only while the previous image remains compatible with the migrated schema. Migration `202607180005` is additive apart from widening the job-status enum, so older code can continue reading existing pre-dead-letter states; do not roll back to an image that writes terminal failures without understanding the new `dead_letter` rows.
 
 Do not automatically run down migrations. Data-removing changes require a reviewed forward-fix or a separately tested restore procedure.
 
