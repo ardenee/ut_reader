@@ -4,6 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogSearchService.php';
 
+use UnrealDb\Catalog\Infrastructure\Security\FileLoginRateLimiter;
+
 catalog_start_session();
 
 function redirect_to(string $url): void
@@ -53,6 +55,17 @@ function catalog_search_game_id(array $games): int
     return 0;
 }
 
+function catalog_login_rate_limiter(array $config): FileLoginRateLimiter
+{
+    $auth = is_array($config['auth'] ?? null) ? $config['auth'] : [];
+    return new FileLoginRateLimiter(
+        rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'security' . DIRECTORY_SEPARATOR . 'login',
+        max(3, min((int)($auth['login_max_attempts'] ?? 8), 50)),
+        max(60, min((int)($auth['login_window_seconds'] ?? 900), 86400)),
+        max(60, min((int)($auth['login_block_seconds'] ?? 900), 86400))
+    );
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -71,26 +84,7 @@ try {
         redirect_to('profiled-upload.php');
     }
     if ($page === 'download') {
-        $id = (int)($_GET['id'] ?? 0);
-        $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$id]);
-        if (!$file) {
-            throw new RuntimeException('File not found');
-        }
-        $path = realpath(__DIR__ . '/' . $file['relative_path']);
-        $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-        if (!$path || !$root || !str_starts_with($path, $root) || !is_file($path)) {
-            throw new RuntimeException('Stored file missing');
-        }
-        $downloadName = basename(str_replace(["\r", "\n", "\0"], '', (string)$file['original_name']));
-        if ($downloadName === '') {
-            $downloadName = 'download.bin';
-        }
-        header('Content-Type: application/octet-stream');
-        header('Content-Length: ' . filesize($path));
-        header('Content-Disposition: attachment; filename="' . addcslashes($downloadName, "\\\"") . '"');
-        header("Content-Disposition: attachment; filename*=UTF-8''" . rawurlencode($downloadName), false);
-        readfile($path);
-        exit;
+        redirect_to('download.php?id=' . (int)($_GET['id'] ?? 0));
     }
     if ($page === 'logout') {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -111,18 +105,30 @@ try {
 
         $username = trim((string)($_POST['username'] ?? ''));
         $password = (string)($_POST['password'] ?? '');
-        $user = $username === '' ? null : catalog_one($db, 'SELECT * FROM ue_users WHERE username=?', [$username]);
-        if (!$user || !password_verify($password, (string)$user['password_hash'])) {
-            usleep(250000);
-            throw new RuntimeException('Invalid username or password.');
+        $clientIp = catalog_client_ip();
+        $rateLimiter = catalog_login_rate_limiter($config);
+        $retryAfter = $rateLimiter->retryAfterSeconds($username, $clientIp);
+        if ($retryAfter > 0) {
+            usleep(random_int(200000, 350000));
+            throw new RuntimeException('Too many login attempts. Try again later.');
         }
 
+        $user = $username === '' ? null : catalog_one($db, 'SELECT * FROM ue_users WHERE username=?', [$username]);
+        if (!$user || !password_verify($password, (string)$user['password_hash'])) {
+            $retryAfter = $rateLimiter->recordFailure($username, $clientIp);
+            error_log('[UnrealDB][' . catalog_request_id() . '] admin login failed ip=' . ($clientIp !== '' ? $clientIp : 'unknown') . ' blocked=' . ($retryAfter > 0 ? 'yes' : 'no'));
+            usleep(random_int(200000, 350000));
+            throw new RuntimeException($retryAfter > 0 ? 'Too many login attempts. Try again later.' : 'Invalid username or password.');
+        }
+
+        $rateLimiter->clear($username, $clientIp);
         session_regenerate_id(true);
         $_SESSION['user'] = [
             'id' => (int)$user['id'],
             'username' => (string)$user['username'],
             'role' => (string)$user['role'],
         ];
+        catalog_mark_authenticated_session();
 
         if (!empty($_POST['remember_me'])) {
             catalog_remember_set_for_user($db, $user, $config);
