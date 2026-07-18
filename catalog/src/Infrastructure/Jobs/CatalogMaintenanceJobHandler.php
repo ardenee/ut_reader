@@ -39,9 +39,6 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         };
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function rebuildGame(ClaimedJob $job, JobExecutionContext $context): array
     {
         $gameId = $this->requiredPositiveInt($job->payload, 'game_id');
@@ -51,16 +48,13 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             $this->config,
             $gameId,
             static function (array $progress) use ($context): void {
-                $context->heartbeatIfDue();
+                $context->heartbeatIfDue($progress);
             }
         );
 
         return ['game_id' => $gameId, 'operation' => 'rebuild_game_dependencies'];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function rebuildAffected(ClaimedJob $job, JobExecutionContext $context): array
     {
         $fileId = $this->requiredPositiveInt($job->payload, 'file_id');
@@ -70,24 +64,21 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             $this->config,
             $fileId,
             static function (array $progress) use ($context): void {
-                $context->heartbeatIfDue();
+                $context->heartbeatIfDue($progress);
             }
         );
 
         return ['file_id' => $fileId, 'operation' => 'rebuild_affected_dependencies'];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
     private function pruneUploadProgress(ClaimedJob $job, JobExecutionContext $context): array
     {
-        $context->heartbeatIfDue();
         $maxAge = isset($job->payload['max_age_seconds'])
             ? max(60, min((int)$job->payload['max_age_seconds'], 604800))
             : 86400;
+        $context->checkpoint(['stage' => 'pruning_upload_progress', 'max_age_seconds' => $maxAge]);
         $removed = (new UploadProgressPruner())->prune($maxAge);
-        $context->heartbeatIfDue();
+        $context->checkpoint(['stage' => 'pruned_upload_progress', 'removed_files' => $removed]);
 
         return [
             'max_age_seconds' => $maxAge,
@@ -96,9 +87,7 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         ];
     }
 
-    /**
-     * @param array<string, mixed> $payload
-     */
+    /** @param array<string, mixed> $payload */
     private function requiredPositiveInt(array $payload, string $field): int
     {
         $value = (int)($payload[$field] ?? 0);
