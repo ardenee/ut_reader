@@ -6,20 +6,68 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
+    $games = catalog_all(
+        $db,
+        'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, '
+        . 'COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size '
+        . 'FROM ue_games g '
+        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+        . 'LEFT JOIN ue_files f ON f.game_id=g.id '
+        . 'GROUP BY g.id, p.id ORDER BY g.name'
+    );
 
     catalog_head('Games');
-    catalog_page_header('Games', 'Browse the public catalog by game.', ['Search' => 'index.php?page=search', 'Library' => 'library.php']);
-    echo '<div class="card"><table><tr><th>Game</th><th>Profile engine</th><th>Files</th><th>Total size</th><th>Open</th></tr>';
-    foreach ($games as $game) {
-        $engine = $game['profile_engine'] ?: 'no profile';
-        $class = $game['profile_engine'] ? 'good-pill' : 'bad-pill';
-        echo '<tr><td><strong>' . catalog_h($game['name']) . '</strong><br><span class="muted small">' . catalog_h($game['slug']) . '</span></td><td><span class="pill ' . $class . '">' . catalog_h($engine) . '</span></td><td>' . (int)$game['file_count'] . '</td><td>' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</td><td><a class="button" href="game-files.php?id=' . (int)$game['id'] . '">Open files</a></td></tr>';
+    echo CatalogUi::pageHeader(
+        'Games',
+        'Browse the public catalog by game.',
+        ['Search' => 'index.php?page=search', 'Library' => 'library.php']
+    );
+
+    if ($games === []) {
+        echo CatalogUi::section(
+            CatalogUi::emptyState(
+                'No games available',
+                'The catalog does not currently contain any configured games.',
+                ['label' => 'Search catalog', 'href' => 'index.php?page=search'],
+                '○'
+            ),
+            ['title' => 'Catalog games']
+        );
+        catalog_foot();
+        return;
     }
-    echo '</table></div>';
+
+    $rows = '';
+    foreach ($games as $game) {
+        $engine = trim((string)($game['profile_engine'] ?? ''));
+        $engineBadge = CatalogUi::badge($engine !== '' ? $engine : 'no profile', $engine !== '' ? 'success' : 'warning');
+        $rows .= '<tr>';
+        $rows .= '<td><strong>' . catalog_h($game['name']) . '</strong><br><span class="muted small">' . catalog_h($game['slug']) . '</span></td>';
+        $rows .= '<td>' . $engineBadge . '</td>';
+        $rows .= '<td data-sort-value="' . (int)$game['file_count'] . '">' . number_format((int)$game['file_count']) . '</td>';
+        $rows .= '<td data-sort-value="' . (int)$game['total_size'] . '">' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</td>';
+        $rows .= '<td>' . CatalogUi::button('Open files', [
+            'href' => 'game-files.php?id=' . (int)$game['id'],
+            'variant' => 'secondary',
+            'size' => 'sm',
+        ]) . '</td>';
+        $rows .= '</tr>';
+    }
+
+    $table = '<table data-sortable-table><caption class="ui-sr-only">Configured games in the UnrealDB catalog</caption>'
+        . '<thead><tr><th scope="col">Game</th><th scope="col">Profile engine</th><th scope="col">Files</th><th scope="col">Total size</th><th scope="col">Open</th></tr></thead>'
+        . '<tbody>' . $rows . '</tbody></table>';
+
+    echo CatalogUi::section(
+        CatalogUi::tableRegion($table, ['label' => 'Catalog games']),
+        [
+            'title' => 'Catalog games',
+            'description' => number_format(count($games)) . ' configured game' . (count($games) === 1 ? '' : 's') . '.',
+        ]
+    );
     catalog_foot();
-} catch (Throwable $e) {
+} catch (Throwable $error) {
     catalog_head('Error');
-    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
+    echo CatalogUi::alert('danger', $error->getMessage(), 'The games page could not be loaded.');
     catalog_foot();
 }
