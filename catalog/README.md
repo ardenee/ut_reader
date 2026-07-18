@@ -13,12 +13,16 @@ It is intended to answer questions such as:
 ## Install
 
 1. Create a MariaDB/MySQL database.
-2. Import `catalog/install.sql`.
+2. Import `catalog/install.sql` into the new empty database.
 3. Copy `catalog/config.example.php` to `catalog/config.php`.
 4. Edit the DB credentials and upload limit in `catalog/config.php`.
-5. Make `catalog/storage/` writable by PHP.
-6. Open `catalog/index.php` in the browser.
-7. Click **Admin Login**. If no user exists, the login page creates the first admin user.
+5. Run `php catalog/bin/migrate.php migrate` from a trusted shell.
+6. Run `php catalog/bin/migrate.php verify`.
+7. Make `catalog/storage/` writable by PHP.
+8. Create the initial administrator with `php catalog/bin/create-admin.php --username=admin`.
+9. Open `catalog/index.php` and sign in.
+
+For an existing database, do not re-import `install.sql`. Back up the database and storage, then use the same migration command. See `docs/database-migrations.md`.
 
 ## Dependency policy
 
@@ -35,8 +39,9 @@ Common engine packages can be marked `common`, but they are still stored in the 
 Uploads are scanned immediately through the existing version-specific reader for the selected game.
 
 - Verified files are stored under `catalog/storage/games/<game>/verified/`.
-- Failed uploads are moved to `catalog/storage/games/<game>/unverified/` with a text file containing the failure reason.
-- Duplicate MD5 files are not stored again.
+- Failed valid Unreal packages are retained in database-backed unverified staging for review.
+- Unsupported files are rejected rather than retained as catalogue entries.
+- Duplicate physical files are not stored again; logical package aliases may point to an existing identity.
 
 ## Important limitation
 
