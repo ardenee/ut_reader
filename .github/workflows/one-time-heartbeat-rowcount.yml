@@ -1,0 +1,50 @@
+name: One-time heartbeat ownership check
+
+on:
+  push:
+    paths:
+      - .github/workflows/one-time-heartbeat-rowcount.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Remove affected-row heartbeat assumption
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('catalog/src/Infrastructure/Persistence/PdoJobQueue.php')
+          text = path.read_text(encoding='utf-8')
+          old = '''        if ($statement->rowCount() !== 1) {
+              return 'lost';
+          }
+
+          $check = $this->db->prepare(
+          '''
+          new = '''        $check = $this->db->prepare(
+          '''
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one heartbeat row-count guard, found {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+          php -l catalog/src/Infrastructure/Persistence/PdoJobQueue.php
+      - name: Commit heartbeat fix
+        run: |
+          git config user.name 'UnrealDB automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/one-time-heartbeat-rowcount.yml
+          git add catalog/src/Infrastructure/Persistence/PdoJobQueue.php
+          git commit -m 'jobs: verify heartbeat ownership by lease token'
+          git push origin HEAD:main
