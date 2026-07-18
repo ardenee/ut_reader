@@ -53,7 +53,17 @@ function catalog_unverified_duplicate_scan(PDO $db, array $config): array
 function catalog_unverified_delete_duplicates(PDO $db, array $config): array
 {
     $result = catalog_unverified_duplicate_service($db, $config)->deleteDuplicates();
-    $result['deleted_bytes_text'] = catalog_bytes((int)$result['deleted_bytes']);
 
-    return $result;
+    return [
+        'physical_files' => (int)$result['physical_files'],
+        'hashed_files' => (int)$result['hashed_files'],
+        'duplicate_groups' => (int)$result['duplicate_groups'],
+        'duplicate_files_found' => (int)$result['duplicate_files_found'],
+        'deleted_files' => (int)$result['deleted_files'],
+        'deleted_bytes' => (int)$result['deleted_bytes'],
+        'deleted_bytes_text' => catalog_bytes((int)$result['deleted_bytes']),
+        'deleted' => (array)$result['deleted'],
+        'deleted_list_truncated' => !empty($result['deleted_list_truncated']),
+        'errors' => (array)$result['errors'],
+    ];
 }
