@@ -59,14 +59,27 @@ jobs:
           --health-retries=10
     steps:
       - uses: actions/checkout@v4
-      - name: Import canonical schema
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Import legacy canonical baseline
         run: mysql -h 127.0.0.1 -uroot -proot unrealdb_test < catalog/install.sql
+      - name: Test ordered schema upgrade
+        env:
+          UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_test;charset=utf8mb4
+          UNREALDB_TEST_DB_USER: root
+          UNREALDB_TEST_DB_PASSWORD: root
+        run: php catalog/tests/migration-integration-test.php
       - name: Verify required catalog tables
         run: |
           for table in \
             ue_games ue_users ue_files ue_names ue_imports ue_exports ue_dependencies \
             ue_sources ue_file_locations ue_game_profiles ue_federation_settings \
-            ue_federation_peers ue_federation_transfer_jobs ue_app_logs ue_background_jobs; do
+            ue_federation_peers ue_federation_transfer_jobs ue_app_logs ue_background_jobs \
+            ue_schema_migrations ue_remember_tokens ue_file_package_aliases \
+            ue_asset_registry_assets ue_asset_registry_tags ue_asset_registry_dependencies; do
             mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
               -Nse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='unrealdb_test' AND table_name='$table'" \
               | grep -qx '1'
