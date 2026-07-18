@@ -16,7 +16,6 @@ final class LegacySupportHooks
 {
     public static function register(): void
     {
-        self::registerComponentAssets();
         self::registerUnverifiedQueueAssets();
         self::redirectStagedFileInformation();
     }
@@ -24,23 +23,6 @@ final class LegacySupportHooks
     private static function currentScript(): string
     {
         return basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
-    }
-
-    private static function registerComponentAssets(): void
-    {
-        $path = dirname(__DIR__, 3) . '/assets/catalog-ui-components.css';
-        $version = is_file($path) ? (string)filemtime($path) : '1';
-        $root = function_exists('catalog_support_root_prefix') ? \catalog_support_root_prefix() : '';
-        $href = $root . 'assets/catalog-ui-components.css?v=' . rawurlencode($version);
-
-        ob_start(static function (string $output) use ($href): string {
-            if (!str_contains($output, '</head>') || str_contains($output, 'catalog-ui-components.css')) {
-                return $output;
-            }
-
-            $link = '<link rel="stylesheet" href="' . \catalog_h($href) . '">';
-            return preg_replace('/<\/head>/', $link . '</head>', $output, 1) ?? $output;
-        });
     }
 
     private static function registerUnverifiedQueueAssets(): void
