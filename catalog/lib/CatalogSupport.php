@@ -4,6 +4,22 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupportCore.php';
 require_once __DIR__ . '/CatalogUnverifiedAutoIndex.php';
 
+// Load the unverified queue's compact presentation after its action script.
+if (basename((string)($_SERVER['SCRIPT_NAME'] ?? '')) === 'unverified-files.php') {
+    $unverifiedLayoutPath = __DIR__ . '/../assets/unverified-files-layout.js';
+    $unverifiedLayoutVersion = is_file($unverifiedLayoutPath) ? (string)filemtime($unverifiedLayoutPath) : '1';
+    ob_start(static function (string $output) use ($unverifiedLayoutVersion): string {
+        if (!str_contains($output, '</head>') || str_contains($output, 'assets/unverified-files-layout.js')) {
+            return $output;
+        }
+
+        $script = '<script src="assets/unverified-files-layout.js?v='
+            . rawurlencode($unverifiedLayoutVersion)
+            . '" defer></script>';
+        return preg_replace('/<\/head>/', $script . '</head>', $output, 1) ?? $output;
+    });
+}
+
 // Keep the normal file-info.php URL usable for database-staged files.
 if (basename((string)($_SERVER['SCRIPT_NAME'] ?? '')) === 'file-info.php') {
     $stagedFileId = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
