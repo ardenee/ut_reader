@@ -31,6 +31,8 @@ jobs:
             -print0 | xargs -0 -n1 php -l
       - name: Verify architecture boundaries
         run: php catalog/tests/architecture-boundaries-test.php
+      - name: Test catalog UI components
+        run: php catalog/tests/ui-components-test.php
       - name: Test unverified duplicate cleanup
         run: php catalog/tests/unverified-duplicate-service-test.php
       - name: Validate generated package formats
