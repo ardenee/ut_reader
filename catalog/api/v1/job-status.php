@@ -35,9 +35,10 @@ try {
         $params[] = $status;
     }
 
-    $sql = 'SELECT id,queue_name,job_type,priority,status,available_at,attempts,max_attempts,worker_id,leased_at,'
-        . 'lease_expires_at,last_heartbeat_at,recovery_count,cancel_requested_at,cancel_requested_by,cancel_reason,'
-        . 'progress_json,progress_updated_at,last_error,created_by,created_at,updated_at,completed_at,dead_lettered_at '
+    $sql = 'SELECT id,queue_name,job_type,resource_class,resource_limit,concurrency_key,priority,status,available_at,'
+        . 'attempts,max_attempts,worker_id,leased_at,lease_expires_at,last_heartbeat_at,recovery_count,'
+        . 'cancel_requested_at,cancel_requested_by,cancel_reason,progress_json,progress_updated_at,last_error,'
+        . 'created_by,created_at,updated_at,completed_at,dead_lettered_at '
         . 'FROM ue_background_jobs'
         . ($where !== [] ? ' WHERE ' . implode(' AND ', $where) : '')
         . ' ORDER BY id DESC LIMIT ' . $limit;
