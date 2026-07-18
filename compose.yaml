@@ -1,5 +1,29 @@
 name: unrealdb
 
+x-unrealdb-environment: &unrealdb-environment
+  UNREALDB_DB_HOST: mysql
+  UNREALDB_DB_PORT: 3306
+  UNREALDB_DB_NAME: unrealdb
+  UNREALDB_DB_USER: unrealdb
+  UNREALDB_DB_PASSWORD: ${UNREALDB_DB_PASSWORD:-change-this-database-password}
+  UNREALDB_SITE_NAME: ${UNREALDB_SITE_NAME:-Unreal File Catalog}
+  UNREALDB_STORAGE_PATH: /var/www/html/catalog/storage
+  UNREALDB_SESSION_COOKIE_SECURE: ${UNREALDB_SESSION_COOKIE_SECURE:-0}
+  UNREALDB_SESSION_REDIS_DSN: tcp://redis:6379?database=1&timeout=2.5&read_timeout=2.5
+  UNREALDB_CATALOG_SESSION_IDLE_SECONDS: ${UNREALDB_CATALOG_SESSION_IDLE_SECONDS:-1800}
+  UNREALDB_CATALOG_SESSION_ABSOLUTE_SECONDS: ${UNREALDB_CATALOG_SESSION_ABSOLUTE_SECONDS:-43200}
+  UNREALDB_LOGIN_MAX_ATTEMPTS: ${UNREALDB_LOGIN_MAX_ATTEMPTS:-8}
+  UNREALDB_LOGIN_WINDOW_SECONDS: ${UNREALDB_LOGIN_WINDOW_SECONDS:-900}
+  UNREALDB_LOGIN_BLOCK_SECONDS: ${UNREALDB_LOGIN_BLOCK_SECONDS:-900}
+  UNREALDB_API_MAX_JSON_BYTES: ${UNREALDB_API_MAX_JSON_BYTES:-1048576}
+  UNREALDB_FEDERATION_MAX_JSON_BYTES: ${UNREALDB_FEDERATION_MAX_JSON_BYTES:-8388608}
+  UNREALDB_REDIRECT_MAX_OUTPUT_BYTES: ${UNREALDB_REDIRECT_MAX_OUTPUT_BYTES:-268435456}
+  UNREALDB_ALLOW_LEGACY_QUERY_TOKENS: ${UNREALDB_ALLOW_LEGACY_QUERY_TOKENS:-0}
+  UNREALDB_FEDERATION_MASTER_KEY: ${UNREALDB_FEDERATION_MASTER_KEY:-}
+  UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS: ${UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS:-0}
+  UNREALDB_QUEUE_NAME: catalog
+  UNREALDB_QUEUE_LEASE_SECONDS: 120
+
 services:
   mysql:
     image: mysql:8.4
@@ -36,6 +60,19 @@ services:
     volumes:
       - redis-data:/data
 
+  migrate:
+    image: unrealdb:${APP_VERSION:-local}
+    restart: "no"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment: *unrealdb-environment
+    command:
+      - php
+      - /var/www/html/catalog/bin/migrate.php
+      - migrate
+      - --lock-timeout=60
+
   web:
     build:
       context: .
@@ -48,29 +85,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    environment: &unrealdb-environment
-      UNREALDB_DB_HOST: mysql
-      UNREALDB_DB_PORT: 3306
-      UNREALDB_DB_NAME: unrealdb
-      UNREALDB_DB_USER: unrealdb
-      UNREALDB_DB_PASSWORD: ${UNREALDB_DB_PASSWORD:-change-this-database-password}
-      UNREALDB_SITE_NAME: ${UNREALDB_SITE_NAME:-Unreal File Catalog}
-      UNREALDB_STORAGE_PATH: /var/www/html/catalog/storage
-      UNREALDB_SESSION_COOKIE_SECURE: ${UNREALDB_SESSION_COOKIE_SECURE:-0}
-      UNREALDB_SESSION_REDIS_DSN: tcp://redis:6379?database=1&timeout=2.5&read_timeout=2.5
-      UNREALDB_CATALOG_SESSION_IDLE_SECONDS: ${UNREALDB_CATALOG_SESSION_IDLE_SECONDS:-1800}
-      UNREALDB_CATALOG_SESSION_ABSOLUTE_SECONDS: ${UNREALDB_CATALOG_SESSION_ABSOLUTE_SECONDS:-43200}
-      UNREALDB_LOGIN_MAX_ATTEMPTS: ${UNREALDB_LOGIN_MAX_ATTEMPTS:-8}
-      UNREALDB_LOGIN_WINDOW_SECONDS: ${UNREALDB_LOGIN_WINDOW_SECONDS:-900}
-      UNREALDB_LOGIN_BLOCK_SECONDS: ${UNREALDB_LOGIN_BLOCK_SECONDS:-900}
-      UNREALDB_API_MAX_JSON_BYTES: ${UNREALDB_API_MAX_JSON_BYTES:-1048576}
-      UNREALDB_FEDERATION_MAX_JSON_BYTES: ${UNREALDB_FEDERATION_MAX_JSON_BYTES:-8388608}
-      UNREALDB_REDIRECT_MAX_OUTPUT_BYTES: ${UNREALDB_REDIRECT_MAX_OUTPUT_BYTES:-268435456}
-      UNREALDB_ALLOW_LEGACY_QUERY_TOKENS: ${UNREALDB_ALLOW_LEGACY_QUERY_TOKENS:-0}
-      UNREALDB_FEDERATION_MASTER_KEY: ${UNREALDB_FEDERATION_MASTER_KEY:-}
-      UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS: ${UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS:-0}
-      UNREALDB_QUEUE_NAME: catalog
-      UNREALDB_QUEUE_LEASE_SECONDS: 120
+      migrate:
+        condition: service_completed_successfully
+    environment: *unrealdb-environment
     ports:
       - "${UNREALDB_HTTP_PORT:-8080}:8080"
     volumes:
@@ -90,6 +107,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       web:
         condition: service_started
     environment:
