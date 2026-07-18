@@ -8,13 +8,11 @@ use DateTimeZone;
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobQueue;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
+use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
 
 /**
- * Durable MySQL queue for deployments that do not yet run Redis or SQS.
- *
- * Claims use short transactions and row-level locking. Completion, failure,
- * heartbeat and cancellation transitions require the same lease token so an
- * expired worker cannot overwrite a newer claim.
+ * Durable MySQL queue with lease ownership, cooperative cancellation,
+ * dead-letter recovery and persisted resource-class limits.
  */
 final class PdoJobQueue implements JobQueue
 {
@@ -41,35 +39,41 @@ final class PdoJobQueue implements JobQueue
         $maxAttempts = max(1, min($maxAttempts, 20));
         $payloadJson = self::encodeJson($payload);
         $availableAt = ($availableAt ?? self::now())->setTimezone(new DateTimeZone(self::UTC));
+        $resource = JobResourcePolicy::for($type, $payload);
 
         if ($dedupeKey === null) {
             $statement = $this->db->prepare(
                 'INSERT INTO ue_background_jobs '
-                . '(queue_name, job_type, payload_json, priority, status, available_at, max_attempts, created_by) '
-                . 'VALUES (?, ?, ?, ?, "queued", ?, ?, ?)'
+                . '(queue_name, job_type, resource_class, resource_limit, concurrency_key, payload_json, priority, status, available_at, max_attempts, created_by) '
+                . 'VALUES (?, ?, ?, ?, ?, ?, ?, "queued", ?, ?, ?)'
             );
             $statement->execute([
                 $queue,
                 $type,
+                $resource->resourceClass,
+                $resource->limit,
+                $resource->concurrencyKey,
                 $payloadJson,
                 $priority,
                 $availableAt->format('Y-m-d H:i:s'),
                 $maxAttempts,
                 $createdBy,
             ]);
-
             return (int)$this->db->lastInsertId();
         }
 
         $statement = $this->db->prepare(
             'INSERT INTO ue_background_jobs '
-            . '(queue_name, job_type, payload_json, priority, status, available_at, max_attempts, dedupe_key, created_by) '
-            . 'VALUES (?, ?, ?, ?, "queued", ?, ?, ?, ?) '
+            . '(queue_name, job_type, resource_class, resource_limit, concurrency_key, payload_json, priority, status, available_at, max_attempts, dedupe_key, created_by) '
+            . 'VALUES (?, ?, ?, ?, ?, ?, ?, "queued", ?, ?, ?, ?) '
             . 'ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id), updated_at=updated_at'
         );
         $statement->execute([
             $queue,
             $type,
+            $resource->resourceClass,
+            $resource->limit,
+            $resource->concurrencyKey,
             $payloadJson,
             $priority,
             $availableAt->format('Y-m-d H:i:s'),
@@ -77,7 +81,6 @@ final class PdoJobQueue implements JobQueue
             $dedupeKey,
             $createdBy,
         ]);
-
         return (int)$this->db->lastInsertId();
     }
 
@@ -86,63 +89,78 @@ final class PdoJobQueue implements JobQueue
         $queue = self::requiredIdentifier($queue, 'queue');
         $workerId = self::requiredIdentifier($workerId, 'worker id');
         $leaseSeconds = max(15, min($leaseSeconds, 3600));
-        $this->recoverExpiredLeases($queue);
+        $claimLock = $this->claimLockName($queue);
+        $this->acquireClaimLock($claimLock);
 
-        $leaseToken = bin2hex(random_bytes(16));
-        $now = self::now();
-        $leaseExpiresAt = $now->modify('+' . $leaseSeconds . ' seconds');
-
-        $this->db->beginTransaction();
         try {
-            $statement = $this->db->prepare(
-                'SELECT * FROM ue_background_jobs '
-                . 'WHERE queue_name=? AND status="queued" AND cancel_requested_at IS NULL AND available_at<=? '
-                . 'ORDER BY priority ASC, available_at ASC, id ASC '
-                . 'LIMIT 1 FOR UPDATE'
-            );
-            $statement->execute([$queue, $now->format('Y-m-d H:i:s')]);
-            $row = $statement->fetch(PDO::FETCH_ASSOC);
-            if (!is_array($row)) {
+            $this->recoverExpiredLeases($queue);
+            $leaseToken = bin2hex(random_bytes(16));
+            $now = self::now();
+            $leaseExpiresAt = $now->modify('+' . $leaseSeconds . ' seconds');
+
+            $this->db->beginTransaction();
+            try {
+                $statement = $this->db->prepare(
+                    'SELECT candidate.* FROM ue_background_jobs candidate '
+                    . 'WHERE candidate.queue_name=? AND candidate.status="queued" '
+                    . 'AND candidate.cancel_requested_at IS NULL AND candidate.available_at<=? '
+                    . 'AND (SELECT COUNT(*) FROM ue_background_jobs active '
+                    . 'WHERE active.queue_name=candidate.queue_name AND active.status="running" '
+                    . 'AND active.resource_class=candidate.resource_class) < candidate.resource_limit '
+                    . 'AND (candidate.concurrency_key IS NULL OR NOT EXISTS ('
+                    . 'SELECT 1 FROM ue_background_jobs keyed WHERE keyed.queue_name=candidate.queue_name '
+                    . 'AND keyed.status="running" AND keyed.concurrency_key=candidate.concurrency_key)) '
+                    . 'ORDER BY candidate.priority ASC, candidate.available_at ASC, candidate.id ASC '
+                    . 'LIMIT 1 FOR UPDATE'
+                );
+                $statement->execute([$queue, $now->format('Y-m-d H:i:s')]);
+                $row = $statement->fetch(PDO::FETCH_ASSOC);
+                if (!is_array($row)) {
+                    $this->db->commit();
+                    return null;
+                }
+
+                $update = $this->db->prepare(
+                    'UPDATE ue_background_jobs '
+                    . 'SET status="running", attempts=attempts+1, worker_id=?, lease_token=?, leased_at=?, '
+                    . 'lease_expires_at=?, last_heartbeat_at=?, progress_json=NULL, progress_updated_at=NULL, updated_at=? '
+                    . 'WHERE id=? AND status="queued" AND cancel_requested_at IS NULL'
+                );
+                $update->execute([
+                    $workerId,
+                    $leaseToken,
+                    $now->format('Y-m-d H:i:s'),
+                    $leaseExpiresAt->format('Y-m-d H:i:s'),
+                    $now->format('Y-m-d H:i:s'),
+                    $now->format('Y-m-d H:i:s'),
+                    (int)$row['id'],
+                ]);
+                if ($update->rowCount() !== 1) {
+                    throw new \RuntimeException('Job claim lost before lease update.');
+                }
+
                 $this->db->commit();
-                return null;
+                return new ClaimedJob(
+                    (int)$row['id'],
+                    (string)$row['queue_name'],
+                    (string)$row['job_type'],
+                    self::decodePayload((string)$row['payload_json']),
+                    $leaseToken,
+                    (int)$row['attempts'] + 1,
+                    (int)$row['max_attempts'],
+                    $leaseExpiresAt,
+                    (string)$row['resource_class'],
+                    (int)$row['resource_limit'],
+                    $row['concurrency_key'] !== null ? (string)$row['concurrency_key'] : null
+                );
+            } catch (\Throwable $exception) {
+                if ($this->db->inTransaction()) {
+                    $this->db->rollBack();
+                }
+                throw $exception;
             }
-
-            $update = $this->db->prepare(
-                'UPDATE ue_background_jobs '
-                . 'SET status="running", attempts=attempts+1, worker_id=?, lease_token=?, leased_at=?, '
-                . 'lease_expires_at=?, last_heartbeat_at=?, progress_json=NULL, progress_updated_at=NULL, updated_at=? '
-                . 'WHERE id=? AND status="queued" AND cancel_requested_at IS NULL'
-            );
-            $update->execute([
-                $workerId,
-                $leaseToken,
-                $now->format('Y-m-d H:i:s'),
-                $leaseExpiresAt->format('Y-m-d H:i:s'),
-                $now->format('Y-m-d H:i:s'),
-                $now->format('Y-m-d H:i:s'),
-                (int)$row['id'],
-            ]);
-            if ($update->rowCount() !== 1) {
-                throw new \RuntimeException('Job claim lost before lease update.');
-            }
-
-            $this->db->commit();
-
-            return new ClaimedJob(
-                (int)$row['id'],
-                (string)$row['queue_name'],
-                (string)$row['job_type'],
-                self::decodePayload((string)$row['payload_json']),
-                $leaseToken,
-                (int)$row['attempts'] + 1,
-                (int)$row['max_attempts'],
-                $leaseExpiresAt
-            );
-        } catch (\Throwable $exception) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            throw $exception;
+        } finally {
+            $this->releaseClaimLock($claimLock);
         }
     }
 
@@ -159,8 +177,7 @@ final class PdoJobQueue implements JobQueue
             }
 
             $statement = $this->db->prepare(
-                'UPDATE ue_background_jobs '
-                . 'SET status="completed", result_json=?, dedupe_key=NULL, worker_id=NULL, lease_token=NULL, '
+                'UPDATE ue_background_jobs SET status="completed", result_json=?, dedupe_key=NULL, worker_id=NULL, lease_token=NULL, '
                 . 'leased_at=NULL, lease_expires_at=NULL, progress_json=?, progress_updated_at=?, completed_at=?, updated_at=? '
                 . 'WHERE id=? AND status="running" AND lease_token=?'
             );
@@ -200,12 +217,10 @@ final class PdoJobQueue implements JobQueue
                 return 'cancelled';
             }
 
-            $retry = $job->attempt < $job->maxAttempts && $retryDelaySeconds > 0;
-            if ($retry) {
+            if ($job->attempt < $job->maxAttempts && $retryDelaySeconds > 0) {
                 $availableAt = $now->modify('+' . min(3600, $retryDelaySeconds) . ' seconds');
                 $statement = $this->db->prepare(
-                    'UPDATE ue_background_jobs '
-                    . 'SET status="queued", available_at=?, worker_id=NULL, lease_token=NULL, leased_at=NULL, '
+                    'UPDATE ue_background_jobs SET status="queued", available_at=?, worker_id=NULL, lease_token=NULL, leased_at=NULL, '
                     . 'lease_expires_at=NULL, last_heartbeat_at=NULL, last_error=?, progress_json=NULL, progress_updated_at=NULL, updated_at=? '
                     . 'WHERE id=? AND status="running" AND lease_token=?'
                 );
@@ -222,8 +237,7 @@ final class PdoJobQueue implements JobQueue
             }
 
             $statement = $this->db->prepare(
-                'UPDATE ue_background_jobs '
-                . 'SET status="dead_letter", dedupe_key=NULL, worker_id=NULL, lease_token=NULL, leased_at=NULL, '
+                'UPDATE ue_background_jobs SET status="dead_letter", dedupe_key=NULL, worker_id=NULL, lease_token=NULL, leased_at=NULL, '
                 . 'lease_expires_at=NULL, last_heartbeat_at=NULL, last_error=?, dead_lettered_at=?, completed_at=?, updated_at=? '
                 . 'WHERE id=? AND status="running" AND lease_token=?'
             );
@@ -283,7 +297,6 @@ final class PdoJobQueue implements JobQueue
         if (!is_array($row)) {
             return 'lost';
         }
-
         return empty($row['cancel_requested_at']) ? 'active' : 'cancel_requested';
     }
 
@@ -318,7 +331,8 @@ final class PdoJobQueue implements JobQueue
             if ($status === 'running') {
                 $statement = $this->db->prepare(
                     'UPDATE ue_background_jobs SET cancel_requested_at=COALESCE(cancel_requested_at,?), '
-                    . 'cancel_requested_by=COALESCE(cancel_requested_by,?), cancel_reason=CASE WHEN cancel_reason IS NULL OR cancel_reason="" THEN ? ELSE cancel_reason END, updated_at=? '
+                    . 'cancel_requested_by=COALESCE(cancel_requested_by,?), '
+                    . 'cancel_reason=CASE WHEN cancel_reason IS NULL OR cancel_reason="" THEN ? ELSE cancel_reason END, updated_at=? '
                     . 'WHERE id=? AND status="running"'
                 );
                 $statement->execute([$now, $requestedBy, $reason, $now, $jobId]);
@@ -353,7 +367,6 @@ final class PdoJobQueue implements JobQueue
     {
         $queue = self::requiredIdentifier($queue, 'queue');
         $timestamp = self::now()->format('Y-m-d H:i:s');
-
         $this->db->beginTransaction();
         try {
             $cancel = $this->db->prepare(
@@ -366,16 +379,20 @@ final class PdoJobQueue implements JobQueue
             $retry = $this->db->prepare(
                 'UPDATE ue_background_jobs SET status="queued", worker_id=NULL, lease_token=NULL, leased_at=NULL, '
                 . 'lease_expires_at=NULL, last_heartbeat_at=NULL, available_at=?, recovery_count=recovery_count+1, '
-                . 'last_error=COALESCE(last_error,"Worker lease expired; recovered for retry."), progress_json=NULL, progress_updated_at=NULL, updated_at=? '
-                . 'WHERE queue_name=? AND status="running" AND cancel_requested_at IS NULL AND lease_expires_at<? AND attempts<max_attempts'
+                . 'last_error=COALESCE(last_error,"Worker lease expired; recovered for retry."), '
+                . 'progress_json=NULL, progress_updated_at=NULL, updated_at=? '
+                . 'WHERE queue_name=? AND status="running" AND cancel_requested_at IS NULL '
+                . 'AND lease_expires_at<? AND attempts<max_attempts'
             );
             $retry->execute([$timestamp, $timestamp, $queue, $timestamp]);
 
             $dead = $this->db->prepare(
                 'UPDATE ue_background_jobs SET status="dead_letter", dedupe_key=NULL, worker_id=NULL, lease_token=NULL, '
                 . 'leased_at=NULL, lease_expires_at=NULL, last_heartbeat_at=NULL, recovery_count=recovery_count+1, '
-                . 'last_error=COALESCE(last_error,"Worker lease expired after maximum attempts."), dead_lettered_at=?, completed_at=?, updated_at=? '
-                . 'WHERE queue_name=? AND status="running" AND cancel_requested_at IS NULL AND lease_expires_at<? AND attempts>=max_attempts'
+                . 'last_error=COALESCE(last_error,"Worker lease expired after maximum attempts."), '
+                . 'dead_lettered_at=?, completed_at=?, updated_at=? '
+                . 'WHERE queue_name=? AND status="running" AND cancel_requested_at IS NULL '
+                . 'AND lease_expires_at<? AND attempts>=max_attempts'
             );
             $dead->execute([$timestamp, $timestamp, $timestamp, $queue, $timestamp]);
 
@@ -437,6 +454,31 @@ final class PdoJobQueue implements JobQueue
         $this->assertLeaseUpdate($statement->rowCount(), $job);
     }
 
+    private function claimLockName(string $queue): string
+    {
+        $database = (string)($this->db->query('SELECT DATABASE()')->fetchColumn() ?: 'default');
+        return 'unrealdb:job-claim:' . substr(hash('sha256', $database . ':' . $queue), 0, 40);
+    }
+
+    private function acquireClaimLock(string $lockName): void
+    {
+        $statement = $this->db->prepare('SELECT GET_LOCK(?, 10)');
+        $statement->execute([$lockName]);
+        if ((int)$statement->fetchColumn() !== 1) {
+            throw new \RuntimeException('Could not acquire the job claim coordination lock.');
+        }
+    }
+
+    private function releaseClaimLock(string $lockName): void
+    {
+        try {
+            $statement = $this->db->prepare('SELECT RELEASE_LOCK(?)');
+            $statement->execute([$lockName]);
+        } catch (\Throwable $error) {
+            error_log('[UnrealDB jobs] Could not release claim lock: ' . $error->getMessage());
+        }
+    }
+
     private function assertLeaseUpdate(int $affectedRows, ClaimedJob $job): void
     {
         if ($affectedRows !== 1) {
@@ -449,7 +491,7 @@ final class PdoJobQueue implements JobQueue
         return json_encode($payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 
-    /** @return array<string, mixed> */
+    /** @return array<string,mixed> */
     private static function decodePayload(string $payload): array
     {
         $decoded = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
@@ -461,8 +503,7 @@ final class PdoJobQueue implements JobQueue
 
     private static function trimError(\Throwable $exception): string
     {
-        $text = get_class($exception) . ': ' . $exception->getMessage();
-        return substr($text, 0, 60000);
+        return substr(get_class($exception) . ': ' . $exception->getMessage(), 0, 60000);
     }
 
     private static function trimReason(string $reason): string
