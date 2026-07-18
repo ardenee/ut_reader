@@ -19,6 +19,8 @@ RUN apt-get update \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && a2enmod expires headers reqtimeout rewrite \
+    && printf '%s\n' 'ServerTokens Prod' 'ServerSignature Off' 'TraceEnable Off' > /etc/apache2/conf-available/unrealdb-security.conf \
+    && a2enconf unrealdb-security \
     && sed -ri 's!Listen 80!Listen 8080!' /etc/apache2/ports.conf \
     && rm -rf /var/lib/apt/lists/* /tmp/pear
 
