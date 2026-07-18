@@ -6,6 +6,7 @@
     function installStyle() {
         if (styleInstalled) return;
         styleInstalled = true;
+
         var style = document.createElement('style');
         style.textContent = [
             'body.unverified-action-overlay-open { overflow:hidden; }',
@@ -31,6 +32,10 @@
             '.uv-table td:nth-child(2) small, .uv-file > small, .uv-database-counts { display:block; margin-top:3px; }',
             '.uv-file > strong, .uv-file > a.uv-file-link { display:block; }',
             '.uv-file a.uv-package-link { white-space:nowrap; }',
+            '.uv-id-list a { display:grid !important; grid-template-columns:minmax(0,1fr) auto; column-gap:10px; align-items:baseline; }',
+            '.uv-id-list a strong { grid-column:1; grid-row:1; min-width:0; }',
+            '.uv-id-list a small { grid-column:2; grid-row:1; margin:0; text-align:right; white-space:nowrap; font-size:11px; }',
+            '.uv-id-list a span { grid-column:1 / -1; grid-row:2; }',
             '.uv-match { grid-template-columns:minmax(145px,1fr) auto !important; }',
             '.uv-match-count { min-width:68px; white-space:nowrap; }',
             '.uv-match-count strong, .uv-match-count small { display:block; }',
@@ -277,6 +282,7 @@
     function enhanceQueueTable(form) {
         var table = form.querySelector('.uv-table');
         if (!table) return;
+
         Array.prototype.slice.call(table.querySelectorAll('tbody > tr:not(.uv-note-row)')).forEach(function (row) {
             if (!row.cells || row.cells.length < 8) return;
             var fileCell = row.cells[2];
@@ -291,7 +297,7 @@
             var counts = '';
             Array.prototype.slice.call(databaseCell.querySelectorAll('small')).some(function (small) {
                 if (/N\/I\/E/i.test(small.textContent)) {
-                    counts = small.textContent.trim();
+                    counts = small.textContent.trim().replace(/\s*N\/I\/E\s*$/i, '');
                     return true;
                 }
                 return false;
