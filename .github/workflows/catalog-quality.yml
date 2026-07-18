@@ -66,7 +66,7 @@ jobs:
           php-version: '8.3'
           extensions: pdo_mysql
           coverage: none
-      - name: Import legacy canonical baseline
+      - name: Import canonical baseline
         run: mysql -h 127.0.0.1 -uroot -proot unrealdb_test < catalog/install.sql
       - name: Test ordered schema upgrade
         env:
@@ -80,6 +80,12 @@ jobs:
           UNREALDB_TEST_DB_USER: root
           UNREALDB_TEST_DB_PASSWORD: root
         run: php catalog/tests/unverified-staging-integration-test.php
+      - name: Test background job leases and concurrency
+        env:
+          UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_test;charset=utf8mb4
+          UNREALDB_TEST_DB_USER: root
+          UNREALDB_TEST_DB_PASSWORD: root
+        run: php catalog/tests/job-queue-integration-test.php
       - name: Verify required catalog tables
         run: |
           for table in \
