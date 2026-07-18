@@ -13,7 +13,7 @@ function jmp_parent_url(PDO $db): string
 {
     $url = rtrim((string)fed_setting($db, 'main_parent_url', ''), '/');
     if ($url === '') {
-        throw new RuntimeException('main_parent_url is not set. Set it in federation settings or install the update SQL.');
+        throw new RuntimeException('main_parent_url is not set. Set it in federation settings first.');
     }
     return $url;
 }
@@ -43,34 +43,6 @@ function jmp_post_json(string $url, array $payload): array
         throw new RuntimeException('Invalid JSON response: ' . substr($response, 0, 300));
     }
     return $json;
-}
-
-function jmp_configure_parent(PDO $db, array $parent): int
-{
-    $siteName = trim((string)($parent['site_name'] ?? ''));
-    $siteUrl = rtrim(trim((string)($parent['site_url'] ?? '')), '/');
-    $siteId = trim((string)($parent['site_id'] ?? ''));
-    $fingerprint = strtoupper(trim((string)($parent['site_fingerprint'] ?? '')));
-    $secret = trim((string)($parent['shared_secret'] ?? ''));
-
-    if ($siteName === '' || $siteUrl === '' || $siteId === '' || $fingerprint === '' || $secret === '') {
-        throw new RuntimeException('Approved parent response is missing pairing values.');
-    }
-    $expected = fed_site_fingerprint($siteUrl, $siteId);
-    if (!hash_equals($expected, $fingerprint)) {
-        throw new RuntimeException('Parent fingerprint does not match parent URL/site ID.');
-    }
-
-    $existing = catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE peer_site_id=? LIMIT 1', [$siteId]);
-    if ($existing) {
-        $db->prepare('UPDATE ue_federation_peers SET peer_role="parent", site_name=?, site_url=?, peer_fingerprint=?, shared_secret_hash=?, shared_secret_plain=?, is_active=1 WHERE peer_site_id=?')->execute([$siteName, $siteUrl, $fingerprint, password_hash($secret, PASSWORD_DEFAULT), $secret, $siteId]);
-        return (int)$existing['id'];
-    }
-
-    $permissions = ['allow_parent_pull_from_child' => true, 'allow_child_request_from_parent' => true, 'created_by_main_parent_auto_join' => true];
-    $stmt = $db->prepare('INSERT INTO ue_federation_peers(peer_role, site_name, site_url, peer_site_id, peer_fingerprint, shared_secret_hash, shared_secret_plain, permissions_json, is_active) VALUES("parent",?,?,?,?,?,?,?,1)');
-    $stmt->execute([$siteName, $siteUrl, $siteId, $fingerprint, password_hash($secret, PASSWORD_DEFAULT), $secret, json_encode($permissions, JSON_UNESCAPED_SLASHES)]);
-    return (int)$db->lastInsertId();
 }
 
 try {
@@ -125,15 +97,9 @@ try {
                 'site_id' => (string)$identity['site_id'],
                 'request_token' => $requestToken,
             ]);
-            if (!empty($result['parent']) && is_array($result['parent'])) {
-                $peerId = jmp_configure_parent($db, $result['parent']);
-                fed_set_setting($db, 'site_role', 'child');
-                fed_set_setting($db, 'child_enabled', '1');
-                fed_set_setting($db, 'main_parent_join_status', 'claimed');
+            fed_set_setting($db, 'main_parent_join_status', (string)($result['status'] ?? 'unknown'));
+            if (($result['status'] ?? '') === 'claimed') {
                 fed_set_setting($db, 'main_parent_join_request_token', '');
-                $result['local_parent_peer_id'] = $peerId;
-            } else {
-                fed_set_setting($db, 'main_parent_join_status', (string)($result['status'] ?? 'unknown'));
             }
             fed_log($db, null, null, 'INFO', 'MAIN_PARENT_JOIN_POLL', json_encode($result, JSON_UNESCAPED_SLASHES));
             $_SESSION['fed_join_main_result'] = $result;
@@ -158,8 +124,8 @@ try {
     $joinStatus = (string)fed_setting($db, 'main_parent_join_status', 'none');
     $requestId = (string)fed_setting($db, 'main_parent_join_request_id', '');
 
-    catalog_page_header('Join Main Federation Parent', 'Easy child setup for the hardcoded/main parent. This auto-submits your local identity, polls for approval, and configures the parent peer when approved.', catalog_federation_links() + ['Settings' => 'settings.php', 'Peers' => 'peers.php']);
-	echo '<div class="card"><h2>Local identity sent to parent</h2><table>';
+    catalog_page_header('Join Main Federation Parent', 'Submit local identity and poll the main parent for approval. Pairing credentials are never returned by status polling; after approval, enter the separately supplied POST endpoint and one-time token on Claim Parent.', catalog_federation_links() + ['Settings' => 'settings.php', 'Peers' => 'peers.php', 'Claim Parent' => 'claim-parent.php']);
+    echo '<div class="card"><h2>Local identity sent to parent</h2><table>';
     echo '<tr><th>Main parent URL</th><td class="mono path">' . catalog_h($parentUrl) . '</td></tr>';
     echo '<tr><th>Local site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
     echo '<tr><th>Local site URL</th><td class="mono path">' . catalog_h($identity['site_url']) . '</td></tr>';
@@ -170,7 +136,7 @@ try {
     echo '</table></div>';
 
     echo '<div class="card"><h2>Step 1: submit to main parent</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="submit"><p><label>Contact name<br><input name="contact_name" style="min-width:420px"></label></p><p><label>Contact email<br><input name="contact_email" style="min-width:420px"></label></p><p><label>Notes<br><textarea name="notes" rows="4" style="width:100%">Automatic request to join main federation parent.</textarea></label></p><p><button>Submit / resubmit join request to main parent</button></p></form></div>';
-    echo '<div class="card"><h2>Step 2: poll approval and auto-claim</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="poll"><p><button>Poll parent and auto-connect if approved</button></p></form></div>';
+    echo '<div class="card"><h2>Step 2: poll approval status</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="poll"><p><button>Poll parent approval status</button></p></form><p class="muted">When approved, obtain the one-time claim endpoint and token from the parent administrator and open <a href="claim-parent.php">Claim Parent</a>.</p></div>';
 
     catalog_foot();
 } catch (Throwable $e) {
