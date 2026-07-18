@@ -24,20 +24,21 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
+$expectedMigrations = 5;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
-migration_test_expect(count($status) === 4, 'Unexpected migration count.');
-migration_test_expect(count(array_filter($status, static fn(array $row): bool => $row['state'] === 'pending')) === 4, 'Legacy baseline did not report all migrations pending.');
+migration_test_expect(count($status) === $expectedMigrations, 'Unexpected migration count.');
+migration_test_expect(count(array_filter($status, static fn(array $row): bool => $row['state'] === 'pending')) === $expectedMigrations, 'Legacy baseline did not report all migrations pending.');
 
 $preview = $runner->migrate(true);
-migration_test_expect(count($preview) === 4, 'Dry-run did not report all pending migrations.');
+migration_test_expect(count($preview) === $expectedMigrations, 'Dry-run did not report all pending migrations.');
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Dry-run mutated the database.');
 
 $applied = $runner->migrate();
-migration_test_expect(count($applied) === 4, 'Migration runner did not apply every pending migration.');
+migration_test_expect(count($applied) === $expectedMigrations, 'Migration runner did not apply every pending migration.');
 migration_test_expect($schema->tableExists('ue_schema_migrations'), 'Migration metadata table was not created.');
-migration_test_expect((int)$db->query('SELECT COUNT(*) FROM ue_schema_migrations')->fetchColumn() === 4, 'Applied migrations were not recorded.');
+migration_test_expect((int)$db->query('SELECT COUNT(*) FROM ue_schema_migrations')->fetchColumn() === $expectedMigrations, 'Applied migrations were not recorded.');
 
 migration_test_expect($schema->tableExists('ue_remember_tokens'), 'Remember-token migration is missing.');
 migration_test_expect($schema->tableExists('ue_file_package_aliases'), 'Package-alias migration is missing.');
@@ -60,10 +61,19 @@ foreach (['uq_ue_files_unverified_queue_key', 'idx_ue_files_scan_status', 'idx_u
     migration_test_expect($schema->indexExists('ue_files', $index), 'Missing unverified staging index: ' . $index);
 }
 
+$jobStatus = $schema->column('ue_background_jobs', 'status');
+migration_test_expect(is_array($jobStatus) && str_contains(strtolower((string)$jobStatus['COLUMN_TYPE']), "'dead_letter'"), 'Background job status does not support dead letters.');
+foreach (['progress_json', 'progress_updated_at', 'last_heartbeat_at', 'recovery_count', 'cancel_requested_at', 'cancel_requested_by', 'cancel_reason', 'dead_lettered_at'] as $column) {
+    migration_test_expect($schema->columnExists('ue_background_jobs', $column), 'Missing background-job reliability column: ' . $column);
+}
+foreach (['idx_ue_background_jobs_cancel', 'idx_ue_background_jobs_dead_letter', 'idx_ue_background_jobs_heartbeat'] as $index) {
+    migration_test_expect($schema->indexExists('ue_background_jobs', $index), 'Missing background-job reliability index: ' . $index);
+}
+
 migration_test_expect($runner->migrate() === [], 'Second migration run was not idempotent.');
 $verified = $runner->status();
 $runner->assertNoDrift($verified);
-migration_test_expect(count(array_filter($verified, static fn(array $row): bool => $row['state'] === 'applied')) === 4, 'Migration status did not report every migration applied.');
+migration_test_expect(count(array_filter($verified, static fn(array $row): bool => $row['state'] === 'applied')) === $expectedMigrations, 'Migration status did not report every migration applied.');
 
 $first = $db->query('SELECT version, checksum FROM ue_schema_migrations ORDER BY version LIMIT 1')->fetch();
 migration_test_expect(is_array($first), 'Could not read an applied migration row.');
