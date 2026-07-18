@@ -1,232 +1,286 @@
 # UnrealDB Catalog UI system
 
-## Goal
+## Purpose
 
-The catalog uses server-rendered PHP. The UI system therefore provides reusable **PHP component primitives**, CSS tokens, and optional progressive JavaScript instead of introducing a separate client framework.
+UnrealDB uses server-rendered PHP as its source of truth. The UI system therefore provides reusable PHP components, shared CSS, and optional progressive JavaScript rather than introducing a separate browser application framework.
 
-It preserves:
+The system preserves:
 
-- existing routes and query strings;
-- server-rendered HTML as the source of truth;
-- usable forms and navigation with JavaScript disabled;
-- current dark UnrealDB visual language.
+- existing routes, query strings, forms, and response behavior;
+- usable navigation and forms when JavaScript is unavailable;
+- the current dark UnrealDB visual language;
+- server-side authorization and validation;
+- compatibility through the existing `CatalogUi` facade.
 
 ## Component architecture
 
 ```text
 catalog/
-├── src/Presentation/Ui/CatalogUi.php   # Safe server-rendered component API
-├── lib/CatalogUi.php                   # Legacy global-class facade
-├── assets/catalog-ui.css               # Tokens, responsive styles, a11y helpers
-├── assets/catalog-ui.js                # Optional progressive enhancement
-└── lib/CatalogSupport.php              # Shared asset loading and legacy adapters
+├── bootstrap/autoload.php
+├── src/Presentation/Ui/
+│   ├── CatalogUi.php                 Compatibility facade
+│   ├── Component/
+│   │   ├── Alert.php
+│   │   ├── Badge.php
+│   │   ├── Button.php
+│   │   ├── EmptyState.php
+│   │   ├── FilterBar.php
+│   │   ├── IconButton.php
+│   │   ├── LoadingState.php
+│   │   ├── PageHeader.php
+│   │   ├── Pagination.php
+│   │   ├── Progress.php
+│   │   ├── Section.php
+│   │   ├── SelectField.php
+│   │   ├── TableRegion.php
+│   │   └── TextField.php
+│   └── Support/Html.php              Escaping, attributes, classes, IDs
+├── lib/CatalogUi.php                 Legacy global class alias
+├── assets/catalog-ui.css             Existing base component styles
+├── assets/catalog-ui-components.css  Extended component styles and tokens
+├── assets/catalog-ui.js              Progressive enhancement
+└── tests/ui-components-test.php      Rendering and accessibility contracts
 ```
 
 Dependency direction:
 
 ```text
 Page controller
-  → CatalogUi component
-  → HTML/CSS/optional JS
+    -> CatalogUi facade
+        -> Individual presentation component
+            -> HTML support utilities
 ```
 
-Components do not query MySQL, read request globals, start sessions, or construct URLs from untrusted input. Controllers continue to own data loading, permission checks, and route decisions.
+Components never query MySQL, inspect request globals, start sessions, perform authorization, or infer application URLs. Controllers provide already-authorized data and explicit destinations.
 
-## Available components
+## API design principles
 
-### `CatalogUi::pageHeader()`
+1. **Escaped by default.** Text, labels, values, URLs, and supported attributes are escaped by the component.
+2. **Raw HTML is explicit.** Only composition parameters such as section content, table HTML, filter fields, and filter actions accept trusted server-rendered HTML.
+3. **Accessible names are required.** Icon-only actions reject an empty accessible label.
+4. **Navigation remains anchors.** Actions with `href` render links; state-changing operations render buttons.
+5. **Finite variants.** Tones, sizes, button variants, input types, and methods are validated against supported values.
+6. **Progressive enhancement.** Loading behavior improves submissions but does not replace native forms.
+7. **Compatibility first.** Existing pages may continue using `CatalogUi`; component implementations remain independently testable.
 
-```php
-CatalogUi::pageHeader(
-    'Unreal Tournament 2004',
-    'Files, versions, dependency status and downloads.',
-    ['Back to games' => 'games.php']
-);
-```
+## Component APIs
 
-| Parameter | Type | Purpose |
-|---|---|---|
-| `$title` | string | Required visible H1 |
-| `$description` | string | Optional concise page explanation |
-| `$actions` | `array<label, href>` | Optional safe navigation actions |
+### Page header
 
-### `CatalogUi::button()`
+`CatalogUi::pageHeader(title, description, actions)`
 
-```php
-CatalogUi::button('Save profile', [
-    'type' => 'submit',
-    'variant' => 'primary',
-    'size' => 'md',
-]);
+Actions may use the legacy `label => href` map or descriptor objects containing `label`, `href`, and an optional `variant`.
 
-CatalogUi::button('Cancel', [
-    'href' => 'game-profiles.php',
-    'variant' => 'quiet',
-    'size' => 'sm',
-]);
-```
+The component creates a unique heading ID and connects the section with `aria-labelledby`. It is safe to render more than one page-style header in tests or embedded tools without duplicate IDs.
 
-Options:
+### Button
 
-```text
-href        renders an anchor when provided
-type        button, submit, reset
-variant     primary, secondary, danger, quiet
-size        sm, md
-disabled    bool
-class       additional trusted class string
-attributes  restricted id/name/value/title/aria-*/data-* attributes
-```
+`CatalogUi::button(label, props)`
 
-### `CatalogUi::alert()`
+Supported props:
 
-```php
-CatalogUi::alert(
-    'warning',
-    'The dependency rebuild is still running.',
-    'Maintenance in progress',
-    ['dismissible' => true]
-);
-```
+- `href`: renders a navigation anchor when present;
+- `type`: `button`, `submit`, or `reset`;
+- `variant`: `primary`, `secondary`, `danger`, or `quiet`;
+- `size`: `sm` or `md`;
+- `disabled`: prevents button interaction; disabled links render as non-clickable spans;
+- `class`: trusted additional class tokens;
+- `attributes`: restricted `aria-*`, `data-*`, and safe element attributes.
 
-Tones: `info`, `success`, `warning`, `danger`.
+### Icon action
 
-Warning and danger alerts use `role="alert"`; info and success messages use `role="status"` with polite live announcements.
+`CatalogUi::iconButton(props)`
 
-### `CatalogUi::emptyState()`
+Required props:
 
-```php
-CatalogUi::emptyState(
-    'No files found',
-    'No catalog files match the selected filters.',
-    ['label' => 'Clear filters', 'href' => 'game-files.php?id=4'],
-    '⌕'
-);
-```
+- `label`: full accessible action name;
+- `icon`: visible symbol, hidden from assistive technology.
 
-Use this instead of an empty table or a bare “No results” string.
+Optional props match the button API. Use this for compact download, refresh, delete, and row actions. Do not create icon-only links manually.
 
-### `CatalogUi::loadingState()`
+### Alert
 
-```php
-CatalogUi::loadingState('Loading dependency information…');
-CatalogUi::loadingState('Applying filters…', true);
-```
+`CatalogUi::alert(tone, message, title, props)`
 
-The component is accessible through `role="status"` and a visible spinner marked `aria-hidden`.
+Tones are `info`, `success`, `warning`, and `danger`.
 
-### `CatalogUi::badge()`
+Warning and danger messages use assertive alert semantics. Informational and success messages use polite status semantics. `dismissible` adds an accessible close action through progressive JavaScript.
 
-```php
-CatalogUi::badge('missing: 12', 'danger');
-CatalogUi::badge('compressed', 'warning');
-```
+### Empty state
 
-Tones: `neutral`, `info`, `success`, `warning`, `danger`.
+`CatalogUi::emptyState(title, description, action, icon)`
 
-### `CatalogUi::section()`
+Use this whenever a query or collection returns no rows. The description must explain whether the state is normal, filter-related, permission-related, or an initial setup state. Provide one recovery action when a clear next step exists.
 
-```php
-$body = '<p>Trusted server-rendered component output.</p>';
-echo CatalogUi::section($body, [
-    'title' => 'Dependency repair',
-    'description' => 'Review missing package references.',
-    'actions' => ['Open missing files' => 'missing.php'],
-]);
-```
+### Loading state
 
-`$content` is intentionally raw HTML for server-side composition. Never pass request input to it without escaping first.
+`CatalogUi::loadingState(label, compact)`
 
-### `CatalogUi::skeletonTable()`
+Use only for genuine work in progress. Synchronous server-rendered pages should not render pretend skeletons after data is already available.
 
-```php
-CatalogUi::skeletonTable(
-    ['Package', 'File', 'Dependencies'],
-    5,
-    'Loading game file list'
-);
-```
+### Badge
 
-Use only while a client-side interaction is actually loading; do not render a fake loading state for synchronous page requests.
+`CatalogUi::badge(label, tone)`
 
-## Loading-state convention
+Tones are `neutral`, `info`, `success`, `warning`, and `danger`. Labels must remain meaningful without color.
 
-Forms that should show a submission state opt in explicitly:
+### Section
 
-```html
-<form method="post" data-ui-loading-form>
-    <button type="submit">Save</button>
-    <span data-ui-loading-indicator>...</span>
-</form>
-```
+`CatalogUi::section(content, props)`
 
-The enhancement script:
+Supported props:
 
-1. marks the form `aria-busy="true"`;
-2. disables submit controls to prevent duplicate submission;
-3. reveals the opt-in loading indicator.
+- `title`;
+- `description`;
+- `actions`;
+- `class`;
+- `id`.
 
-The form still works without JavaScript. Do not apply this attribute to AJAX forms that already manage their own lifecycle, such as the profiled upload page.
+`content` is trusted server-rendered HTML. Never pass request or database text directly without escaping or another safe component.
 
-## Accessibility rules
+### Text field
 
-The UI system enforces or provides:
+`CatalogUi::textField(props)`
 
-- one visible `h1` in a page header;
-- labelled form controls in production examples;
-- table captions for screen-reader context;
-- focus-visible indicators across all controls;
-- responsive horizontal table containment rather than unreadable column collapse;
-- `aria-live` only for genuine status changes;
-- reduced-motion support through `prefers-reduced-motion`;
-- minimum 40px default interactive target height;
-- semantic anchors for navigation and buttons for actions.
+Required props are `id`, `name`, and `label`.
 
-### Required controller behaviour
+Supported optional props include `value`, `type`, `placeholder`, `help`, `error`, wrapper/input classes, and safe attributes. Help and error content receive stable IDs and are connected through `aria-describedby`. Error states set `aria-invalid`.
 
-Controllers still need to:
+### Select field
 
-- escape all database/request values with `catalog_h()` unless a component owns the escaping;
-- provide action labels that explain the destination or operation;
-- return a meaningful empty state when a list has no rows;
-- avoid color-only status meaning; component labels always contain text;
-- keep error text safe for users and log technical exceptions separately.
+`CatalogUi::selectField(props)`
 
-## Responsive behaviour
+Required props are `id`, `name`, `label`, and an `options` map. The selected value, help text, error text, and additional attributes follow the text-field conventions.
 
-```text
-Desktop
-  Page headers align content and actions horizontally.
-  Tables retain full column density.
+### Filter bar
 
-Small screens
-  Page header actions wrap and grow to usable width.
-  Tables scroll within a bordered region rather than overflowing the page.
-  Section padding decreases.
-  Navigation retains its existing mobile wrapping behaviour.
-```
+`CatalogUi::filterBar(fields, actions, props)`
 
-## Example: filterable table page
+`fields` and `actions` are trusted component output. Supported props include:
 
-`catalog/game-files.php` is the reference implementation. It demonstrates:
+- `method` and `action`;
+- `id` and `class`;
+- `hidden` name/value fields;
+- `loading_label`;
+- `described_by`;
+- safe additional attributes.
+
+The form opts into submission-state management, prevents accidental duplicate submissions, announces its loading state, and remains functional without JavaScript.
+
+### Pagination
+
+`CatalogUi::pagination(currentPage, totalPages, links)`
+
+The links object may contain `first`, `previous`, `next`, `last`, `label`, and `class`. Missing or inapplicable controls are not rendered. The current page is exposed through `aria-current`.
+
+### Table region
+
+`CatalogUi::tableRegion(tableHtml, props)`
+
+The wrapper supplies responsive horizontal containment. Props may provide an accessible `label`, `busy` state, class, and ID. Every table still requires proper headers and a caption; visually hidden captions are acceptable.
+
+`CatalogUi::skeletonTable(headers, rows, label)` is available for real client-side loading transitions.
+
+### Progress
+
+`CatalogUi::progress(props)`
+
+Supported props include `value`, `max`, `label`, `description`, class, and ID. Values are clamped to valid limits and rendered through the native progress element.
+
+## Loading-state lifecycle
+
+Forms opt in through the filter-bar component or the `data-ui-loading-form` attribute.
+
+The progressive enhancement layer:
+
+1. detects a native form submission;
+2. marks the form `aria-busy="true"`;
+3. prevents a second submission;
+4. disables submit controls;
+5. reveals the component loading indicator.
+
+AJAX pages that already manage progress must not opt into this generic lifecycle unless they also reset the busy state after completion.
+
+## Empty, error, and edge states
+
+Every collection page must define:
+
+- initial empty state;
+- filtered empty state with a clear-filters action;
+- permission state where applicable;
+- loading state for actual asynchronous work;
+- safe user-facing error state;
+- technical exception logging outside the rendered component.
+
+Large strings must remain escaped. Long tables stay horizontally scrollable instead of collapsing columns into unreadable layouts. Disabled navigation must not remain clickable. Icon actions always contain a text alternative.
+
+## Responsive behavior
+
+Desktop layouts use horizontal page actions, multi-column filter bars, full-density tables, and three-column pagination.
+
+At tablet widths, filter actions move beneath the fields and field grids reduce columns.
+
+At phone widths:
+
+- filters become one field per row;
+- action groups wrap to full usable widths;
+- pagination moves its page summary above navigation controls;
+- tables remain inside bounded horizontal scroll regions;
+- interactive controls retain minimum target sizes.
+
+No information is removed solely because the viewport is narrow.
+
+## Accessibility requirements
+
+- One primary visible page heading.
+- Unique IDs for component-generated headings and progress controls.
+- Associated labels for every input and select.
+- `aria-describedby` for field guidance and validation.
+- `aria-invalid` for invalid controls.
+- Accessible names for every icon-only action.
+- Semantic links for navigation and buttons for commands.
+- Captions and scoped headers for data tables.
+- Focus-visible outlines across keyboard controls.
+- No color-only status communication.
+- Reduced-motion behavior through `prefers-reduced-motion`.
+- Live regions only for genuine status changes.
+
+## Reference implementation
+
+`catalog/games.php` is the compact public reference. It demonstrates:
 
 - page header actions;
-- labelled search and select controls;
-- opt-in submission loading state;
+- empty and error states;
 - status badges;
-- empty-state recovery action;
-- table caption;
-- responsive scroll container;
-- pagination navigation labels;
-- compact row action buttons.
+- responsive table containment;
+- table caption and scoped headers;
+- sortable numeric values;
+- compact navigation actions.
+
+`catalog/game-files.php` remains the high-density reference for filtering, pagination, loading indicators, row actions, large identities, and responsive table scrolling. Its remaining page-specific patterns should migrate to the shared filter, pagination, and icon-action components incrementally.
+
+## Usage examples
+
+Production examples are maintained in the component test and the Games page rather than copied into every controller. New pages should compose fields, buttons, filter bars, sections, empty states, table regions, and pagination through `CatalogUi`.
+
+When a new visual pattern is needed:
+
+1. confirm it appears on at least two pages or fills an accessibility gap;
+2. add an isolated component under `Presentation/Ui/Component`;
+3. expose it through `CatalogUi` only when broad compatibility is useful;
+4. add escaping, semantics, disabled-state, and edge-state tests;
+5. add shared responsive styling;
+6. migrate one reference page before broad adoption.
 
 ## Best practices
 
-1. Use a component before adding a one-off variation.
-2. Keep components presentational; data retrieval belongs in application services/controllers.
-3. Use `CatalogUi::button()` for visual actions and preserve anchors for navigation.
-4. Prefer explicit empty states to blank cards/tables.
-5. Only show loading UI for a real in-progress client interaction.
-6. Treat raw component body content as trusted server-rendered HTML only.
-7. Test narrow mobile widths, keyboard-only use, and JavaScript-disabled form submission for every new page.
-8. Add a new component only after a pattern appears on at least two pages or fills a proven accessibility gap.
+1. Reuse a component before adding page-specific HTML or CSS.
+2. Keep database access, authorization, and route decisions in controllers or application services.
+3. Prefer explicit prop descriptors over positional booleans for new APIs.
+4. Preserve server-rendered content as the baseline experience.
+5. Use loading UI only during real work.
+6. Always provide a recovery path for filtered empty states.
+7. Test keyboard navigation, narrow viewports, long values, zero rows, one page, last page, and JavaScript-disabled submission.
+8. Keep component output deterministic so it can be protected with lightweight contract tests.
+9. Do not expose technical exception traces in alerts.
+10. Migrate incrementally; do not rewrite working pages solely to adopt newer markup.
