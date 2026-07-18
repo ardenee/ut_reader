@@ -4,19 +4,29 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupportCore.php';
 require_once __DIR__ . '/CatalogUnverifiedAutoIndex.php';
 
-// Load the unverified queue's compact presentation after its action script.
+// Load the unverified queue presentation and queue-only maintenance controls.
 if (basename((string)($_SERVER['SCRIPT_NAME'] ?? '')) === 'unverified-files.php') {
-    $unverifiedLayoutPath = __DIR__ . '/../assets/unverified-files-layout.js';
-    $unverifiedLayoutVersion = is_file($unverifiedLayoutPath) ? (string)filemtime($unverifiedLayoutPath) : '1';
-    ob_start(static function (string $output) use ($unverifiedLayoutVersion): string {
-        if (!str_contains($output, '</head>') || str_contains($output, 'assets/unverified-files-layout.js')) {
+    $unverifiedScripts = [
+        'assets/unverified-files-layout.js' => __DIR__ . '/../assets/unverified-files-layout.js',
+        'assets/unverified-duplicate-cleanup.js' => __DIR__ . '/../assets/unverified-duplicate-cleanup.js',
+    ];
+    $unverifiedVersions = [];
+    foreach ($unverifiedScripts as $src => $path) {
+        $unverifiedVersions[$src] = is_file($path) ? (string)filemtime($path) : '1';
+    }
+
+    ob_start(static function (string $output) use ($unverifiedVersions): string {
+        if (!str_contains($output, '</head>')) {
             return $output;
         }
 
-        $script = '<script src="assets/unverified-files-layout.js?v='
-            . rawurlencode($unverifiedLayoutVersion)
-            . '" defer></script>';
-        return preg_replace('/<\/head>/', $script . '</head>', $output, 1) ?? $output;
+        $scripts = '';
+        foreach ($unverifiedVersions as $src => $version) {
+            if (!str_contains($output, $src)) {
+                $scripts .= '<script src="' . catalog_h($src . '?v=' . rawurlencode($version)) . '" defer></script>';
+            }
+        }
+        return $scripts === '' ? $output : (preg_replace('/<\/head>/', $scripts . '</head>', $output, 1) ?? $output);
     });
 }
 
