@@ -1,0 +1,104 @@
+name: One-time job reliability schema baseline
+
+on:
+  push:
+    paths:
+      - .github/workflows/one-time-job-schema-baseline.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Update clean-install job schema
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path('catalog/install.sql')
+          text = path.read_text(encoding='utf-8')
+          old = '''CREATE TABLE ue_background_jobs (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            queue_name VARCHAR(80) NOT NULL DEFAULT 'catalog',
+            job_type VARCHAR(120) NOT NULL,
+            payload_json MEDIUMTEXT NOT NULL,
+            result_json MEDIUMTEXT NULL,
+            priority SMALLINT UNSIGNED NOT NULL DEFAULT 100,
+            status ENUM('queued','running','completed','failed','cancelled') NOT NULL DEFAULT 'queued',
+            available_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+            max_attempts SMALLINT UNSIGNED NOT NULL DEFAULT 3,
+            dedupe_key VARCHAR(191) NULL,
+            worker_id VARCHAR(120) NULL,
+            lease_token VARCHAR(64) NULL,
+            leased_at DATETIME NULL,
+            lease_expires_at DATETIME NULL,
+            last_error TEXT NULL,
+            created_by INT UNSIGNED NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            completed_at DATETIME NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY uq_ue_background_jobs_active_dedupe (queue_name, dedupe_key),
+            KEY idx_ue_background_jobs_claim (queue_name, status, available_at, priority, id),
+            KEY idx_ue_background_jobs_lease (queue_name, status, lease_expires_at),
+            KEY idx_ue_background_jobs_created (created_at),
+            CONSTRAINT fk_ue_background_jobs_user FOREIGN KEY (created_by) REFERENCES ue_users(id) ON DELETE SET NULL
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;'''
+          new = '''CREATE TABLE ue_background_jobs (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            queue_name VARCHAR(80) NOT NULL DEFAULT 'catalog',
+            job_type VARCHAR(120) NOT NULL,
+            payload_json MEDIUMTEXT NOT NULL,
+            result_json MEDIUMTEXT NULL,
+            progress_json MEDIUMTEXT NULL,
+            progress_updated_at DATETIME NULL,
+            priority SMALLINT UNSIGNED NOT NULL DEFAULT 100,
+            status ENUM('queued','running','completed','failed','dead_letter','cancelled') NOT NULL DEFAULT 'queued',
+            available_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            attempts SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+            max_attempts SMALLINT UNSIGNED NOT NULL DEFAULT 3,
+            dedupe_key VARCHAR(191) NULL,
+            worker_id VARCHAR(120) NULL,
+            lease_token VARCHAR(64) NULL,
+            leased_at DATETIME NULL,
+            lease_expires_at DATETIME NULL,
+            last_heartbeat_at DATETIME NULL,
+            recovery_count SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+            cancel_requested_at DATETIME NULL,
+            cancel_requested_by INT UNSIGNED NULL,
+            cancel_reason VARCHAR(1000) NULL,
+            last_error TEXT NULL,
+            created_by INT UNSIGNED NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            completed_at DATETIME NULL,
+            dead_lettered_at DATETIME NULL,
+            PRIMARY KEY (id),
+            UNIQUE KEY uq_ue_background_jobs_active_dedupe (queue_name, dedupe_key),
+            KEY idx_ue_background_jobs_claim (queue_name, status, available_at, priority, id),
+            KEY idx_ue_background_jobs_lease (queue_name, status, lease_expires_at),
+            KEY idx_ue_background_jobs_cancel (status, cancel_requested_at),
+            KEY idx_ue_background_jobs_dead_letter (queue_name, status, dead_lettered_at),
+            KEY idx_ue_background_jobs_heartbeat (queue_name, status, last_heartbeat_at),
+            KEY idx_ue_background_jobs_created (created_at),
+            CONSTRAINT fk_ue_background_jobs_user FOREIGN KEY (created_by) REFERENCES ue_users(id) ON DELETE SET NULL
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;'''
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one background job table block, found {text.count(old)}')
+          path.write_text(text.replace(old, new), encoding='utf-8')
+          PY
+      - name: Commit schema baseline
+        run: |
+          git config user.name 'UnrealDB automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/one-time-job-schema-baseline.yml
+          git add catalog/install.sql
+          git commit -m 'db: align clean schema with job reliability'
+          git push origin HEAD:main
