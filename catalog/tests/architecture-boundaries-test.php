@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Application\Upload\ProfiledUploadService;
 use UnrealDb\Catalog\Application\Upload\UploadErrorFormatter;
 use UnrealDb\Catalog\Application\Upload\UploadResult;
 use UnrealDb\Catalog\Infrastructure\Composition\CatalogServiceFactory;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencySchemaManager;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageAliasRepository;
 use UnrealDb\Catalog\Presentation\Http\LegacySupportHooks;
 
@@ -50,6 +51,7 @@ architecture_expect(class_exists(LegacySupportHooks::class), 'Presentation compa
 architecture_expect(class_exists(CatalogServiceFactory::class), 'Service composition root is not autoloadable.');
 architecture_expect(interface_exists(PackageAliasRepository::class), 'Package alias application port is not autoloadable.');
 architecture_expect(class_exists(PdoPackageAliasRepository::class), 'Package alias PDO adapter is not autoloadable.');
+architecture_expect(class_exists(PdoDependencySchemaManager::class), 'Dependency schema manager is not autoloadable.');
 
 $supportFile = file_get_contents(__DIR__ . '/../lib/CatalogSupport.php');
 architecture_expect(is_string($supportFile), 'CatalogSupport.php could not be read.');
@@ -67,6 +69,15 @@ architecture_expect(!str_contains($aliasFacade, 'INSERT INTO'), 'Package alias f
 architecture_expect(
     str_contains($aliasFacade, 'PdoPackageAliasRepository'),
     'Package alias facade no longer delegates to its repository.'
+);
+
+$dependencyFacade = file_get_contents(__DIR__ . '/../lib/CatalogDependencySchema.php');
+architecture_expect(is_string($dependencyFacade), 'CatalogDependencySchema.php could not be read.');
+architecture_expect(!str_contains($dependencyFacade, 'ALTER TABLE'), 'Dependency facade regained DDL ownership.');
+architecture_expect(!str_contains($dependencyFacade, 'CREATE TABLE'), 'Dependency facade regained table ownership.');
+architecture_expect(
+    str_contains($dependencyFacade, 'PdoDependencySchemaManager'),
+    'Dependency facade no longer delegates to its schema manager.'
 );
 
 echo "Architecture boundary tests passed.\n";
