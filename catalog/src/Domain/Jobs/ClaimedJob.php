@@ -21,7 +21,10 @@ final class ClaimedJob
         public readonly string $leaseToken,
         public readonly int $attempt,
         public readonly int $maxAttempts,
-        public readonly DateTimeImmutable $leaseExpiresAt
+        public readonly DateTimeImmutable $leaseExpiresAt,
+        public readonly string $resourceClass = 'default',
+        public readonly int $resourceLimit = 1,
+        public readonly ?string $concurrencyKey = null
     ) {
     }
 }
