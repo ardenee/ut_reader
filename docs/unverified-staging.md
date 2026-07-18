@@ -4,15 +4,42 @@ Unverified Unreal package files are stored physically in the upload bucket or a 
 
 ## Explicit staging contract
 
-New queue writers use `UnverifiedFileStager`. A successful call returns the exact queue filename, physical path, unverified file ID, stored size and package-table parse status before the controller sends its response.
+Queue writers use `UnverifiedFileStager`. A successful call returns the exact queue filename, physical path, unverified file ID, stored size and package-table parse status before the writer finishes.
 
-The Upload Bucket uses this contract directly. Folder uploads also record the browser-relative path for later UE4/UE5 package identity analysis while physical storage continues to use a safe generated queue filename.
+The service supports two failure-storage modes:
 
-Profiled Upload, including extracted PAK entries, routes rejected Unreal packages through the same explicit stager via the shared scanner failure primitive. The database row is created before the request finishes. Non-package failures are deleted rather than filling unverified storage.
+- move temporary or incoming files into unverified storage;
+- copy configured source-library files into unverified storage while preserving the source.
 
-HTTP source scan does not create unverified files. It reads a trusted remote manifest, optionally downloads bounded temporary files for GUID inspection, and always deletes those temporary files. Its earlier registration in the queue auto-index hook was obsolete.
+Both modes use the same safe queue naming, metadata parsing, hashing and database persistence.
 
-The former shutdown-time directory snapshot hook has been removed from the application bootstrap and deleted. Queue writers must now stage explicitly. This removes cross-request races where one request could accidentally index a file created by another request.
+## Writer behaviour
+
+### Upload Bucket
+
+The Upload Bucket stages files directly. Folder uploads record the browser-relative path for later UE4/UE5 package identity analysis while physical storage uses a safe generated queue filename.
+
+### Profiled Upload and PAK entries
+
+Profiled Upload routes rejected Unreal packages through the shared scanner failure primitive, including failed extracted PAK entries. The database row is created before the request finishes. Non-package failures are deleted rather than filling unverified storage.
+
+### Local Source Scan
+
+Local Source Scan uses copy-preserving staging. A failed valid package is copied into the selected game's unverified queue and indexed, while the configured source-library file remains untouched. Source-relative identity context is retained on the staged row.
+
+### HTTP Source Scan
+
+HTTP Source Scan does not create unverified files. It reads a trusted remote manifest, optionally downloads bounded temporary files for GUID inspection and always deletes those temporary files.
+
+### Federation receive and import
+
+A successfully imported federation download clears the transfer job's incoming path. A duplicate download removes the redundant incoming file and records the existing file identity.
+
+When federation import fails for a valid package, the incoming file is moved into the selected or detected game's unverified queue. The failed transfer job records the staged unverified file ID and its new queue path. If staging itself fails, the job remains linked to the original incoming path and a separate staging failure is logged.
+
+## Removed shutdown indexing
+
+The former shutdown-time directory snapshot hook has been removed from the application bootstrap and deleted. Writers must stage explicitly. This removes cross-request races where one request could accidentally index a file created by another request.
 
 A package-table parsing failure does not discard the file. The row is retained with hashes, detected header metadata and a parse error. If database staging fails after the file reaches queue storage, a `Database staging failed` note is appended. If the database is unavailable before queue storage is completed, the scanner uses a final filesystem fallback with a reconciliation note so the existing-queue importer can recover the package without data loss.
 
@@ -37,12 +64,12 @@ Using a null `game_id` keeps staging rows outside normal game lists even if an o
 
 Importing an unverified file promotes it into a verified game assignment:
 
-1. validate the chosen game profile
-2. check verified duplicate/alias identity
-3. move the physical package to verified storage
-4. set the verified game and status
-5. clear queue fields
-6. rebuild its dependencies and affected dependencies
+1. validate the chosen game profile;
+2. check verified duplicate or alias identity;
+3. move the physical package to verified storage;
+4. set the verified game and status;
+5. clear queue fields;
+6. rebuild its dependencies and affected dependencies.
 
 ## Existing queues and recovery
 
