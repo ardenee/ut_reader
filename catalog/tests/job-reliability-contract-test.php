@@ -25,7 +25,12 @@ job_contract_expect(is_string($queue), 'PdoJobQueue.php could not be read.');
 foreach (['status="dead_letter"', 'cancel_requested_at', 'recovery_count=recovery_count+1', 'lease_token=? FOR UPDATE'] as $fragment) {
     job_contract_expect(str_contains($queue, $fragment), 'Queue persistence is missing reliability boundary: ' . $fragment);
 }
-job_contract_expect(!str_contains($queue, 'if ($statement->rowCount() !== 1) {\n            return \'lost\';'), 'Heartbeat still treats unchanged affected-row count as lease loss.');
+$heartbeatStart = strpos($queue, 'public function heartbeat(');
+$heartbeatEnd = strpos($queue, 'public function requestCancellation(', $heartbeatStart === false ? 0 : $heartbeatStart);
+job_contract_expect($heartbeatStart !== false && $heartbeatEnd !== false, 'Heartbeat method boundary could not be inspected.');
+$heartbeatBody = substr($queue, $heartbeatStart, $heartbeatEnd - $heartbeatStart);
+job_contract_expect(!str_contains($heartbeatBody, 'rowCount()'), 'Heartbeat still treats MySQL affected-row count as lease ownership.');
+job_contract_expect(str_contains($heartbeatBody, 'status="running" AND lease_token=?'), 'Heartbeat no longer verifies the active lease token.');
 job_contract_expect(str_contains($queue, 'worker_id=NULL, lease_token=NULL, leased_at=NULL'), 'Retry or recovery no longer clears former lease ownership.');
 
 $actionApi = file_get_contents(__DIR__ . '/../api/v1/job-action.php');
