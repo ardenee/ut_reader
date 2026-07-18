@@ -227,14 +227,59 @@ function scanner_store_failed_upload(array $config, string $tmp, string $origina
         @unlink($tmp);
         return;
     }
-    $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . scanner_slug_text($gameSlug) . '/unverified';
+
+    $normalizedSlug = scanner_slug_text($gameSlug);
+    try {
+        require_once __DIR__ . '/UnverifiedFileManager.php';
+        require_once __DIR__ . '/CatalogUnverifiedIndex.php';
+
+        $db = catalog_db($config);
+        $game = catalog_one($db, 'SELECT id,name,slug,profile_id FROM ue_games WHERE slug=? LIMIT 1', [$gameSlug]);
+        if (!$game) {
+            foreach (catalog_all($db, 'SELECT id,name,slug,profile_id FROM ue_games') as $candidate) {
+                if (scanner_slug_text((string)$candidate['slug']) === $normalizedSlug) {
+                    $game = $candidate;
+                    break;
+                }
+            }
+        }
+        if (!$game) {
+            throw new RuntimeException('Target unverified queue game was not found.');
+        }
+
+        $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+        $sourceRelativePath = (str_contains($originalName, '/') || str_contains($originalName, '\\'))
+            ? scanner_normalize_source_relative_path($originalName)
+            : '';
+        $stager = new \UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager($db, $config);
+        $stager->stageFailedUpload(
+            (int)$game['id'],
+            $tmp,
+            $originalName,
+            $reason,
+            $uploadedBy,
+            $sourceRelativePath
+        );
+        return;
+    } catch (Throwable $error) {
+        error_log('[UnrealDB failed upload staging] ' . $originalName . ': ' . $error->getMessage());
+        if (!is_file($tmp)) {
+            return;
+        }
+    }
+
+    // Last-resort retention when database staging is unavailable before the
+    // file reaches queue storage. The queue reconciliation page can recover it.
+    $dir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/games/' . $normalizedSlug . '/unverified';
     if (!is_dir($dir)) {
         @mkdir($dir, 0775, true);
     }
     $cleanName = scanner_clean_original_filename($originalName);
     $name = date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '_' . preg_replace('/[^A-Za-z0-9._ +\-]+/', '_', basename($cleanName));
-    @rename($tmp, $dir . '/' . $name);
-    @file_put_contents($dir . '/' . $name . '.txt', $reason);
+    $destination = $dir . '/' . $name;
+    if (@rename($tmp, $destination)) {
+        @file_put_contents($destination . '.txt', $reason . "\nDatabase staging was unavailable; run unverified queue reconciliation.");
+    }
 }
 
 function scanner_profile_extensions(array $profile, array $config): array
