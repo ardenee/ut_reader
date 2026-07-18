@@ -82,6 +82,58 @@ function fed_log(PDO $db, ?int $peerId, ?int $jobId, string $level, string $even
     $stmt->execute([$peerId, $jobId, $level, $event, $details]);
 }
 
+function fed_request_body_limit_bytes(int $default = 1048576): int
+{
+    $configured = (int)(getenv('UNREALDB_FEDERATION_MAX_JSON_BYTES') ?: 0);
+    return max(1024, min($configured > 0 ? $configured : $default, 64 * 1024 * 1024));
+}
+
+function fed_read_request_body(?int $maxBytes = null): string
+{
+    $limit = $maxBytes ?? fed_request_body_limit_bytes();
+    $limit = max(1024, min($limit, 64 * 1024 * 1024));
+    $declaredLength = filter_var($_SERVER['CONTENT_LENGTH'] ?? null, FILTER_VALIDATE_INT);
+    if ($declaredLength !== false && $declaredLength !== null && (int)$declaredLength > $limit) {
+        fed_json_response(['ok' => false, 'error' => 'Request body exceeds the allowed size.'], 413);
+    }
+
+    $stream = fopen('php://input', 'rb');
+    if (!is_resource($stream)) {
+        fed_json_response(['ok' => false, 'error' => 'Request body could not be read.'], 400);
+    }
+
+    try {
+        $body = stream_get_contents($stream, $limit + 1);
+    } finally {
+        fclose($stream);
+    }
+
+    if (!is_string($body)) {
+        fed_json_response(['ok' => false, 'error' => 'Request body could not be read.'], 400);
+    }
+    if (strlen($body) > $limit) {
+        fed_json_response(['ok' => false, 'error' => 'Request body exceeds the allowed size.'], 413);
+    }
+
+    return $body;
+}
+
+/** @return array<string,mixed> */
+function fed_decode_json_object(string $body): array
+{
+    try {
+        $payload = json_decode($body, true, 128, JSON_THROW_ON_ERROR);
+    } catch (JsonException) {
+        fed_json_response(['ok' => false, 'error' => 'Invalid JSON payload.'], 400);
+    }
+
+    if (!is_array($payload)) {
+        fed_json_response(['ok' => false, 'error' => 'JSON payload must be an object.'], 400);
+    }
+
+    return $payload;
+}
+
 function fed_body_hash(string $body): string
 {
     return hash('sha256', $body);
@@ -223,6 +275,7 @@ function fed_json_response(array $data, int $status = 200): void
 {
     http_response_code($status);
     header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store');
     header('X-Content-Type-Options: nosniff');
     echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     exit;
