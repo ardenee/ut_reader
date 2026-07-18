@@ -6,7 +6,7 @@ require_once __DIR__ . '/FederationAuth.php';
 function fed_transfer_signature(string $secret, string $method, string $path, string $timestamp, string $nonce, string $sha256, int $bytes, int $remoteId, string $name): string
 {
     $payload = strtoupper($method) . "\n" . $path . "\n" . $timestamp . "\n" . $nonce . "\n" . strtolower($sha256) . "\n" . $bytes . "\n" . $remoteId . "\n" . $name;
-    return hash_hmac('sha256', $payload, $secret);
+    return hash_hmac('sha256', $payload, fed_secret_for_crypto($secret));
 }
 
 /** @return array{0:array,1:array{sha256:string,bytes:int,remote_id:int,name:string}} */
@@ -27,8 +27,11 @@ function fed_require_streaming_upload_peer(PDO $db): array
     }
 
     $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE peer_site_id=? AND is_active=1', [$siteId]);
-    $secret = (string)($peer['shared_secret_plain'] ?? '');
-    if (!$peer || $secret === '') {
+    if (!$peer) {
+        fed_json_response(['ok' => false, 'error' => 'Unknown or inactive peer'], 403);
+    }
+    $secret = fed_peer_secret($db, $peer);
+    if ($secret === '') {
         fed_json_response(['ok' => false, 'error' => 'Unknown or inactive peer'], 403);
     }
     $ts = strtotime($timestamp);
