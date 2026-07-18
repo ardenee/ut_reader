@@ -1,0 +1,201 @@
+name: One-time unified staging writers
+
+on:
+  push:
+    paths:
+      - .github/workflows/one-time-unified-staging-writers.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql
+          coverage: none
+      - name: Unify local and federation staging writers
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          source_scan = Path('catalog/source-scan.php')
+          text = source_scan.read_text(encoding='utf-8')
+          text = text.replace("require_once __DIR__ . '/lib/UnverifiedFileManager.php';\n", '')
+          text = text.replace("require_once __DIR__ . '/lib/CatalogUnverifiedIndex.php';\n", '')
+          old = '''function source_scan_stage_failed(PDO $db, array $config, array $source, array $work, string $relative, Throwable $error): ?array
+          {
+              $path = (string)$work['path'];
+              if (!is_file($path) || !scanner_file_has_unreal_package_magic($path)) return null;
+              $game = ['id'=>(int)$source['game_id'],'name'=>(string)$source['game_name'],'slug'=>(string)$source['game_slug'],'profile_id'=>null];
+              $dir = uvf_unverified_dir($config,$game,true);
+              $queueName = basename(uvf_unique_destination($dir,uvf_safe_queue_name((string)$work['name'])));
+              $destination = $dir . DIRECTORY_SEPARATOR . $queueName;
+              if (!@copy($path,$destination)) throw new RuntimeException('Could not copy failed source package into unverified storage.');
+              $sourceRelativePath = source_scan_scanner_relative_path($relative,$work);
+              $reason = 'Local Source Scan import failed for ' . $sourceRelativePath . ': ' . $error->getMessage();
+              @file_put_contents($destination . '.txt',$reason);
+              try {
+                  $result = catalog_unverified_index_path($db,$config,(int)$source['game_id'],$queueName,$destination,(string)$work['name'],$reason,isset($_SESSION['user']['id'])?(int)$_SESSION['user']['id']:null,$sourceRelativePath,false);
+                  return ['queue_name'=>$queueName,'file_id'=>(int)$result['file_id']];
+              } catch (Throwable $indexError) {
+                  @file_put_contents($destination . '.txt',"\nDatabase staging failed: " . $indexError->getMessage(),FILE_APPEND);
+                  throw $indexError;
+              }
+          }
+          '''
+          new = '''function source_scan_stage_failed(PDO $db, array $config, array $source, array $work, string $relative, Throwable $error): ?array
+          {
+              $path = (string)$work['path'];
+              if (!is_file($path)) return null;
+              $sourceRelativePath = source_scan_scanner_relative_path($relative,$work);
+              $reason = 'Local Source Scan import failed for ' . $sourceRelativePath . ': ' . $error->getMessage();
+              $stager = new \\UnrealDb\\Catalog\\Infrastructure\\Legacy\\LegacyUnverifiedFileStager($db,$config);
+              $result = $stager->stageFailedCopy(
+                  (int)$source['game_id'],
+                  $path,
+                  (string)$work['name'],
+                  $reason,
+                  isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null,
+                  $sourceRelativePath
+              );
+              return $result === null ? null : ['queue_name'=>(string)$result['queue_name'],'file_id'=>(int)$result['file_id']];
+          }
+          '''
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one local source staging function, found {text.count(old)}')
+          source_scan.write_text(text.replace(old, new), encoding='utf-8')
+
+          worker = Path('catalog/lib/FederationWorker.php')
+          text = worker.read_text(encoding='utf-8')
+          old = '''function federation_worker_run_one_import(PDO $db, array $config): array
+          {
+              $job = catalog_one($db, 'SELECT * FROM ue_federation_transfer_jobs WHERE status="downloaded" AND incoming_path IS NOT NULL AND incoming_path<>"" ORDER BY finished_at ASC, id ASC LIMIT 1');
+              if (!$job) {
+                  return ['ok' => true, 'skipped' => true, 'message' => 'No downloaded jobs waiting for import.'];
+              }
+
+              $jobId = (int)$job['id'];
+              $incoming = federation_worker_resolve_incoming_path($config, (string)$job['incoming_path']);
+              $md5 = md5_file($incoming) ?: '';
+              $sha1 = sha1_file($incoming) ?: '';
+              if (!empty($job['downloaded_md5']) && !hash_equals((string)$job['downloaded_md5'], $md5)) {
+                  throw new RuntimeException('MD5 mismatch before import for job ' . $jobId);
+              }
+              if (!empty($job['downloaded_sha1']) && !hash_equals((string)$job['downloaded_sha1'], $sha1)) {
+                  throw new RuntimeException('SHA1 mismatch before import for job ' . $jobId);
+              }
+
+              $db->prepare('UPDATE ue_federation_transfer_jobs SET status="running", started_at=COALESCE(started_at,NOW()), last_error=NULL WHERE id=?')->execute([$jobId]);
+
+              try {
+                  $originalName = federation_worker_original_name($db, $job);
+                  $preferredGameId = in_array((string)$job['direction'], ['download_from_parent','upload_to_parent'], true) ? null : federation_worker_preferred_game_id($db, $job);
+                  $result = catalog_import_file($db, $config, $incoming, $originalName, $preferredGameId, $_SESSION['user']['id'] ?? null);
+                  $status = ($result['status'] === 'verified' || str_starts_with((string)$result['status'], 'duplicate_')) ? 'imported' : 'failed';
+                  $db->prepare('UPDATE ue_federation_transfer_jobs SET status=?, local_file_id=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$status, $result['file_id'] ?? null, $result['message'] ?? $result['status'], $jobId]);
+                  fed_log($db, (int)$job['peer_id'], $jobId, $status === 'imported' ? 'INFO' : 'WARN', 'FEDERATION_IMPORT', json_encode($result, JSON_UNESCAPED_SLASHES));
+                  federation_worker_notify_parent($db, $job, $result, $status);
+                  return ['ok' => true, 'job_id' => $jobId, 'result' => $result, 'notified_parent' => (string)$job['direction'] === 'download_from_parent'];
+              } catch (Throwable $e) {
+                  $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", finished_at=NOW(), last_error=? WHERE id=?')->execute([$e->getMessage(), $jobId]);
+                  fed_log($db, (int)$job['peer_id'], $jobId, 'ERROR', 'FEDERATION_IMPORT_FAIL', $e->getMessage());
+                  federation_worker_notify_parent($db, $job, ['status' => 'failed', 'message' => $e->getMessage()], 'failed');
+                  throw $e;
+              }
+          }
+          '''
+          new = '''function federation_worker_stage_failed_import(PDO $db, array $config, array $job, string $incoming, string $originalName, ?int $preferredGameId, Throwable $error): ?array
+          {
+              if (!is_file($incoming)) {
+                  return null;
+              }
+              $queueGameId = $preferredGameId ?? federation_worker_preferred_game_id($db,$job);
+              if ($queueGameId === null) {
+                  $detected = catalog_import_detect_game($db,(string)pathinfo($originalName,PATHINFO_EXTENSION));
+                  $queueGameId = $detected ? (int)$detected['id'] : null;
+              }
+              if ($queueGameId === null) {
+                  return null;
+              }
+              $reason = 'Federation import job ' . (int)$job['id'] . ' failed for ' . $originalName . ': ' . $error->getMessage();
+              $stager = new \\UnrealDb\\Catalog\\Infrastructure\\Legacy\\LegacyUnverifiedFileStager($db,$config);
+              return $stager->stageFailedUpload($queueGameId,$incoming,$originalName,$reason,null,'');
+          }
+
+          function federation_worker_run_one_import(PDO $db, array $config): array
+          {
+              $job = catalog_one($db, 'SELECT * FROM ue_federation_transfer_jobs WHERE status="downloaded" AND incoming_path IS NOT NULL AND incoming_path<>"" ORDER BY finished_at ASC, id ASC LIMIT 1');
+              if (!$job) {
+                  return ['ok' => true, 'skipped' => true, 'message' => 'No downloaded jobs waiting for import.'];
+              }
+
+              $jobId = (int)$job['id'];
+              $incoming = federation_worker_resolve_incoming_path($config, (string)$job['incoming_path']);
+              $md5 = md5_file($incoming) ?: '';
+              $sha1 = sha1_file($incoming) ?: '';
+              if (!empty($job['downloaded_md5']) && !hash_equals((string)$job['downloaded_md5'], $md5)) {
+                  throw new RuntimeException('MD5 mismatch before import for job ' . $jobId);
+              }
+              if (!empty($job['downloaded_sha1']) && !hash_equals((string)$job['downloaded_sha1'], $sha1)) {
+                  throw new RuntimeException('SHA1 mismatch before import for job ' . $jobId);
+              }
+
+              $db->prepare('UPDATE ue_federation_transfer_jobs SET status="running", started_at=COALESCE(started_at,NOW()), last_error=NULL WHERE id=?')->execute([$jobId]);
+              $originalName = federation_worker_original_name($db,$job);
+              $preferredGameId = in_array((string)$job['direction'], ['download_from_parent','upload_to_parent'], true) ? null : federation_worker_preferred_game_id($db,$job);
+
+              try {
+                  $result = catalog_import_file($db,$config,$incoming,$originalName,$preferredGameId,$_SESSION['user']['id'] ?? null);
+                  $status = ($result['status'] === 'verified' || str_starts_with((string)$result['status'], 'duplicate_')) ? 'imported' : 'failed';
+                  if (str_starts_with((string)$result['status'],'duplicate_') && is_file($incoming)) {
+                      @unlink($incoming);
+                  }
+                  $db->prepare('UPDATE ue_federation_transfer_jobs SET status=?, local_file_id=?, incoming_path=NULL, finished_at=NOW(), last_error=? WHERE id=?')->execute([$status,$result['file_id'] ?? null,$result['message'] ?? $result['status'],$jobId]);
+                  fed_log($db,(int)$job['peer_id'],$jobId,$status === 'imported' ? 'INFO' : 'WARN','FEDERATION_IMPORT',json_encode($result,JSON_UNESCAPED_SLASHES));
+                  federation_worker_notify_parent($db,$job,$result,$status);
+                  return ['ok'=>true,'job_id'=>$jobId,'result'=>$result,'notified_parent'=>(string)$job['direction'] === 'download_from_parent'];
+              } catch (Throwable $e) {
+                  $staged = null;
+                  try {
+                      $staged = federation_worker_stage_failed_import($db,$config,$job,$incoming,$originalName,$preferredGameId,$e);
+                  } catch (Throwable $stageError) {
+                      fed_log($db,(int)$job['peer_id'],$jobId,'ERROR','FEDERATION_STAGE_FAIL',$stageError->getMessage());
+                  }
+                  $message = $e->getMessage();
+                  $stagedFileId = null;
+                  $stagedPath = (string)$job['incoming_path'];
+                  if (is_array($staged)) {
+                      $stagedFileId = (int)$staged['file_id'];
+                      $stagedPath = catalog_unverified_storage_relative($config,(string)$staged['path']);
+                      $message .= ' Staged as unverified file #' . $stagedFileId . '.';
+                  }
+                  $db->prepare('UPDATE ue_federation_transfer_jobs SET status="failed", local_file_id=?, incoming_path=?, finished_at=NOW(), last_error=? WHERE id=?')->execute([$stagedFileId,$stagedPath,$message,$jobId]);
+                  fed_log($db,(int)$job['peer_id'],$jobId,'ERROR','FEDERATION_IMPORT_FAIL',$message);
+                  federation_worker_notify_parent($db,$job,['status'=>'failed','message'=>$message],'failed');
+                  throw $e;
+              }
+          }
+          '''
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one federation import worker, found {text.count(old)}')
+          worker.write_text(text.replace(old,new),encoding='utf-8')
+          PY
+          php -l catalog/source-scan.php
+          php -l catalog/lib/FederationWorker.php
+      - name: Commit unified writers
+        run: |
+          git config user.name 'UnrealDB automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/one-time-unified-staging-writers.yml
+          git add catalog/source-scan.php catalog/lib/FederationWorker.php
+          git commit -m 'ingestion: unify source and federation staging'
+          git push origin HEAD:main
