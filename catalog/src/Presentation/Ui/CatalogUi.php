@@ -103,7 +103,7 @@ final class CatalogUi
         return Pagination::render($currentPage, $totalPages, $links);
     }
 
-    /** @param array{label?:string,busy?:bool,class?:string,id?:string} $props */
+    /** @param array{label?:string,busy?:bool,class?:string,id?:string,focusable?:bool} $props */
     public static function tableRegion(string $tableHtml, array $props = []): string
     {
         return TableRegion::render($tableHtml, $props);
