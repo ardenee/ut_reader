@@ -36,7 +36,7 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Join request is not claimable from status: ' . (string)$req['status']], 409);
     }
     if (!empty($req['claim_expires_at']) && strtotime((string)$req['claim_expires_at']) < time()) {
-        $db->prepare('UPDATE ue_federation_join_requests SET status="expired", claim_token_hash=NULL WHERE id=?')->execute([(int)$req['id']]);
+        $db->prepare('UPDATE ue_federation_join_requests SET status="expired", claim_token_hash=NULL WHERE id=? AND claim_token_hash=?')->execute([(int)$req['id'], $hash]);
         fed_json_response(['ok' => false, 'error' => 'Claim token expired'], 410);
     }
 
@@ -49,8 +49,13 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Pairing secret is unavailable. Parent admin must recreate this request.'], 500);
     }
 
+    $claim = $db->prepare('UPDATE ue_federation_join_requests SET status="claimed", claimed_at=NOW(), claim_token_hash=NULL WHERE id=? AND status="approved" AND claim_token_hash=?');
+    $claim->execute([(int)$req['id'], $hash]);
+    if ($claim->rowCount() !== 1) {
+        fed_json_response(['ok' => false, 'error' => 'Join request was already claimed.'], 409);
+    }
+
     $identity = fed_ensure_identity($db);
-    $db->prepare('UPDATE ue_federation_join_requests SET status="claimed", claimed_at=NOW(), claim_token_hash=NULL WHERE id=? AND status="approved"')->execute([(int)$req['id']]);
     fed_log($db, (int)$peer['id'], null, 'INFO', 'JOIN_CLAIMED', 'Join request #' . (int)$req['id'] . ' claimed by child.');
 
     fed_json_response([
