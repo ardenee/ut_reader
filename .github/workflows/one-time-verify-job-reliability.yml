@@ -1,0 +1,62 @@
+name: One-time verify job reliability tranche
+
+on:
+  push:
+    paths:
+      - .github/workflows/one-time-verify-job-reliability.yml
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: unrealdb_job_verify
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, curl, mbstring, openssl
+          coverage: none
+      - name: Lint PHP
+        run: |
+          find catalog -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+      - name: Verify fast contracts
+        run: |
+          php catalog/tests/job-reliability-contract-test.php
+          php catalog/tests/security-boundaries-test.php
+          php catalog/tests/architecture-boundaries-test.php
+      - name: Import canonical schema
+        run: mysql -h 127.0.0.1 -uroot -proot unrealdb_job_verify < catalog/install.sql
+      - name: Verify migrations and queue behavior
+        env:
+          UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_job_verify;charset=utf8mb4
+          UNREALDB_TEST_DB_USER: root
+          UNREALDB_TEST_DB_PASSWORD: root
+        run: |
+          php catalog/tests/migration-integration-test.php
+          php catalog/tests/job-queue-integration-test.php
+      - name: Record successful validation
+        run: |
+          git config user.name 'UnrealDB automation'
+          git config user.email 'actions@users.noreply.github.com'
+          git rm .github/workflows/one-time-verify-job-reliability.yml
+          git commit -m 'ci: verify job reliability tranche'
+          git push origin HEAD:main
