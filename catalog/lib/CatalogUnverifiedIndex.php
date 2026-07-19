@@ -16,48 +16,41 @@ require_once __DIR__ . '/CatalogPackageAliases.php';
 
 function catalog_unverified_schema_ensure(PDO $db): void
 {
-    static $done = false;
-    if ($done) {
+    static $verified = false;
+    if ($verified) {
         return;
     }
 
+    $missing = [];
     $gameId = catalog_one($db, 'SELECT IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="game_id"');
-    if ($gameId && strtoupper((string)$gameId['IS_NULLABLE']) !== 'YES') {
-        $db->exec('ALTER TABLE ue_files MODIFY game_id INT UNSIGNED NULL');
+    if (!$gameId || strtoupper((string)$gameId['IS_NULLABLE']) !== 'YES') {
+        $missing[] = 'ue_files.game_id nullable';
     }
-
     $status = catalog_one($db, 'SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="scan_status"');
-    if ($status && !str_contains(strtolower((string)$status['COLUMN_TYPE']), "'unverified'")) {
-        $db->exec("ALTER TABLE ue_files MODIFY scan_status ENUM('verified','unverified','duplicate','failed') NOT NULL DEFAULT 'verified'");
+    if (!$status || !str_contains(strtolower((string)$status['COLUMN_TYPE']), "'unverified'")) {
+        $missing[] = 'ue_files.scan_status unverified value';
     }
-
-    $columns = [
-        'unverified_queue_key' => 'ALTER TABLE ue_files ADD COLUMN unverified_queue_key CHAR(64) NULL AFTER scan_status',
-        'unverified_queue_game_id' => 'ALTER TABLE ue_files ADD COLUMN unverified_queue_game_id INT UNSIGNED NULL AFTER unverified_queue_key',
-        'unverified_queue_name' => 'ALTER TABLE ue_files ADD COLUMN unverified_queue_name VARCHAR(255) NULL AFTER unverified_queue_game_id',
-        'unverified_reason' => 'ALTER TABLE ue_files ADD COLUMN unverified_reason TEXT NULL AFTER unverified_queue_name',
-    ];
-    foreach ($columns as $name => $sql) {
-        $exists = catalog_one($db, 'SELECT COUNT(*) c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME=?', [$name]);
+    foreach (['source_relative_path', 'unverified_queue_key', 'unverified_queue_game_id', 'unverified_queue_name', 'unverified_reason'] as $column) {
+        $exists = catalog_one($db, 'SELECT COUNT(*) c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME=?', [$column]);
         if ((int)($exists['c'] ?? 0) === 0) {
-            $db->exec($sql);
+            $missing[] = 'ue_files.' . $column;
         }
     }
-
-    $indexes = [
-        'uq_ue_files_unverified_queue_key' => 'ALTER TABLE ue_files ADD UNIQUE KEY uq_ue_files_unverified_queue_key (unverified_queue_key)',
-        'idx_ue_files_scan_status' => 'ALTER TABLE ue_files ADD KEY idx_ue_files_scan_status (scan_status)',
-        'idx_ue_files_unverified_queue' => 'ALTER TABLE ue_files ADD KEY idx_ue_files_unverified_queue (unverified_queue_game_id, unverified_queue_name)',
-    ];
-    foreach ($indexes as $name => $sql) {
-        $exists = catalog_one($db, 'SELECT COUNT(*) c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND INDEX_NAME=?', [$name]);
+    foreach (['uq_ue_files_unverified_queue_key', 'idx_ue_files_scan_status', 'idx_ue_files_unverified_queue'] as $index) {
+        $exists = catalog_one($db, 'SELECT COUNT(*) c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND INDEX_NAME=?', [$index]);
         if ((int)($exists['c'] ?? 0) === 0) {
-            $db->exec($sql);
+            $missing[] = 'index ' . $index;
         }
+    }
+    if ($missing !== []) {
+        throw new RuntimeException(
+            'The database schema is not migrated. Missing: ' . implode(', ', $missing)
+            . '. Run php catalog/bin/migrate.php migrate followed by verify.'
+        );
     }
 
     scanner_source_path_schema_ensure($db);
-    $done = true;
+    $verified = true;
 }
 
 function catalog_unverified_queue_key(int $queueGameId, string $queueName): string

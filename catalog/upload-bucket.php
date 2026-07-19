@@ -3,12 +3,10 @@ declare(strict_types=1);
 
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+
+catalog_start_session();
 require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
 require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 

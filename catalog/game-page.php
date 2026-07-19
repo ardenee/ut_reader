@@ -1,12 +1,10 @@
 <?php
 declare(strict_types=1);
 
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+
+catalog_start_session();
 
 function game_page_int(string $key, int $default, int $min, int $max): int
 {

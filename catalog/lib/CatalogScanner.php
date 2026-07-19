@@ -183,8 +183,8 @@ function scanner_package_name_from_reader(string $fallbackPackageName, string $r
 
 function scanner_source_path_schema_ensure(PDO $db): void
 {
-    static $done = false;
-    if ($done) {
+    static $verified = false;
+    if ($verified) {
         return;
     }
 
@@ -193,10 +193,13 @@ function scanner_source_path_schema_ensure(PDO $db): void
         'SELECT COUNT(*) c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="source_relative_path"'
     );
     if ((int)($exists['c'] ?? 0) === 0) {
-        $db->exec('ALTER TABLE ue_files ADD COLUMN source_relative_path VARCHAR(1024) NULL DEFAULT NULL AFTER original_name');
+        throw new RuntimeException(
+            'The database schema is not migrated. Missing: ue_files.source_relative_path. '
+            . 'Run php catalog/bin/migrate.php migrate followed by verify.'
+        );
     }
 
-    $done = true;
+    $verified = true;
 }
 
 function scanner_record_source_relative_path(PDO $db, int $fileId, string $sourceRelativePath): void
