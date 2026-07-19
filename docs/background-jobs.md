@@ -34,6 +34,8 @@ Current defaults:
 | game dependency rebuild | `dependency-heavy` | 1 | `dependency:game:<id>` |
 | exact file dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
 | affected-dependants dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
+| file source-identity repair | `dependency-heavy` | 1 | `source-identity:file:<id>` |
+| game source-identity repair | `dependency-heavy` | 1 | `source-identity:game:<id>` |
 | upload-progress pruning | `housekeeping` | 2 | none |
 | unknown/future type | `default` | 4 | none |
 
@@ -45,11 +47,11 @@ UNREALDB_JOB_RESOURCE_LIMIT_HOUSEKEEPING=2
 UNREALDB_JOB_RESOURCE_LIMIT_DEFAULT=4
 ```
 
-The resolved limit is stored on the job, so changing an environment variable affects newly queued jobs only. Claim selection skips saturated classes, allowing housekeeping work to continue while heavy dependency work is active. A short MySQL advisory lock serializes claim decisions so competing workers cannot overbook a class.
+The resolved limit is stored on the job, so changing an environment variable affects newly queued work only. Claim selection skips saturated classes, allowing housekeeping work to continue while heavy dependency or identity work is active. A short MySQL advisory lock serializes claim decisions so competing workers cannot overbook a class.
 
 ## Dependency refresh jobs
 
-The administrator Dependency Refresh page now enqueues one durable job instead of rebuilding each file through a separate browser request.
+The administrator Dependency Refresh page enqueues one durable job instead of rebuilding each file through a separate browser request.
 
 - A **single file** refresh rebuilds only that file's own `ue_dependencies` rows.
 - A **full game** refresh processes verified files in package order and retains the optional start offset.
@@ -57,17 +59,31 @@ The administrator Dependency Refresh page now enqueues one durable job instead o
 
 The page polls `job-status.php` by job ID, displays persisted worker progress and final dependency totals, supports cooperative cancellation, and stores the active job ID in the page URL. Reloading or reopening that URL resumes the progress dialog. Closing the page does not stop the worker.
 
+## Source identity repair jobs
+
+The administrator Source Identity Repair page keeps its mismatch audit synchronous because the audit is read-only. Mutating repair operations are durable jobs.
+
+- A **file repair** derives the canonical UE4/UE5 package identity from the primary mounted source path, updates the original filename and source path, rewrites export full paths, rebuilds source-derived aliases, and refreshes the file plus referring dependency rows.
+- A **game repair** processes every verified file in package order without rebuilding dependencies per file, collects bounded failure details, and performs one game-wide dependency pass after all successful identity changes.
+- UE1/UE2/UE3 remain audit-only. The enqueue API rejects legacy-engine repair targets.
+
+Both repair types share the exclusive `dependency-heavy` class with dependency rebuilds. The source-identity worker also retains the legacy database advisory lock so older maintenance code cannot overlap the same write boundary during a staged deployment.
+
+The page stores the active job ID in the URL, resumes polling after reload, reports changed identities, retained aliases and failures, and supports cooperative cancellation. Closing the page does not interrupt repair work.
+
+The former `source-identity-repair-api.php` endpoint remains only as a compatibility enqueue adapter. It no longer writes progress files or executes identity/dependency mutation inside HTTP requests.
+
 ## Progress
 
 Progress callbacks from maintenance handlers are persisted in `progress_json` with `progress_updated_at`. Progress is an operational snapshot, not the durable result. A successful completion stores the final result separately in `result_json`.
 
-The job status API supports a positive `job_id` filter and decodes both progress and result objects for authenticated administrators.
+The job status API supports a positive `job_id` filter and decodes both progress and result objects for authenticated administrators. General multi-job listings omit result payloads so operator pages remain bounded.
 
 ## Cancellation
 
 Queued jobs are cancelled immediately. Running jobs receive `cancel_requested_at`, `cancel_requested_by` and `cancel_reason`. The current lease owner observes the request at its next checkpoint and transitions the job to `cancelled`.
 
-A cancelled request does not forcibly terminate PHP in the middle of a database or filesystem operation. Handlers must call the execution context at safe boundaries. If a worker disappears after cancellation is requested, expired-lease recovery finalizes the job as cancelled.
+A cancelled request does not forcibly terminate PHP in the middle of a database or filesystem operation. Handlers call the execution context at safe boundaries. If a worker disappears after cancellation is requested, expired-lease recovery finalizes the job as cancelled.
 
 ## Dead letters and retries
 
@@ -87,6 +103,8 @@ php catalog/bin/job-control.php recover --queue=catalog
 php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1 --offset=0
 php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123
 php catalog/bin/job-control.php enqueue-rebuild-affected --file-id=123
+php catalog/bin/job-control.php enqueue-source-identity-file --file-id=123
+php catalog/bin/job-control.php enqueue-source-identity-game --game-id=1
 php catalog/bin/job-control.php enqueue-prune --max-age-seconds=86400
 ```
 
