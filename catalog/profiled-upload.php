@@ -1,468 +1,143 @@
 <?php
 declare(strict_types=1);
 
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogScanner.php';
-require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
 require_once __DIR__ . '/lib/CatalogPakArchive.php';
-require_once __DIR__ . '/lib/UploadProgress.php';
-require_once __DIR__ . '/lib/FederationAuth.php';
 
-function upload_short_error(Throwable $e): string
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+
+function profiled_upload_error(Throwable $error): string
 {
-    $message = trim($e->getMessage());
-    if (preg_match('/Bad package tag 0x[0-9A-Fa-f]+/', $message, $m)) {
-        return $m[0];
-    }
+    $message = trim($error->getMessage());
     $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
     $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
-    $message = trim($message);
-    return $message !== '' ? $message : 'Unknown error';
+    return trim($message) !== '' ? trim($message) : 'Unknown upload error.';
 }
 
-function upload_log_exception(PDO $db, string $filename, Throwable $e): void
+function profiled_upload_relative_path(int $index, string $fallback): string
 {
-    $details = $filename . ': ' . get_class($e) . ': ' . $e->getMessage() . "\n" . $e->getTraceAsString();
-    error_log('[UnrealDB upload] ' . $details);
-    try {
-        fed_log($db, null, null, 'ERROR', 'UPLOAD_SCAN_FAIL', $details);
-    } catch (Throwable) {
-        // Keep upload handling alive even if the optional app log table is unavailable.
-    }
-}
-
-function upload_result(string $status, string $file, string $message, array $meta = []): array
-{
-    unset($meta['duplicate_guid'], $meta['duplicate_file_size_text']);
-    return ['status' => $status, 'file' => $file, 'message' => $message] + $meta;
-}
-
-function upload_result_text(array $entry): string
-{
-    $text = (string)$entry['file'] . ': ' . (string)$entry['status'] . ' - ' . (string)$entry['message'];
-    if (!empty($entry['file_size_text'])) {
-        $text .= ' | size: ' . (string)$entry['file_size_text'];
-    }
-    if (!empty($entry['package_guid'])) {
-        $text .= ' | GUID: ' . (string)$entry['package_guid'];
-    }
-    if (!empty($entry['duplicate_original_name'])) {
-        $text .= ' | copy of: ' . (string)$entry['duplicate_original_name'];
-    }
-    return $text;
-}
-
-function upload_alias_already_exists(): bool
-{
-    return function_exists('catalog_package_alias_last_add_was_existing') && catalog_package_alias_last_add_was_existing();
-}
-
-function upload_prepared_relative_path(string $sourceRelativePath, array $prepared): string
-{
-    $sourceRelativePath = scanner_normalize_source_relative_path($sourceRelativePath);
-    if ($sourceRelativePath === '' || empty($prepared['decompressed'])) {
-        return $sourceRelativePath;
-    }
-    $dir = trim(str_replace('\\', '/', dirname($sourceRelativePath)), '. /');
-    $name = (string)($prepared['name'] ?? '');
-    return scanner_normalize_source_relative_path(($dir !== '' ? $dir . '/' : '') . $name);
-}
-
-/** @return array{tmp:string,name:string,display_name:string,decompressed:bool,source_extension:string,source_name:string} */
-function upload_prepare_scanner_input(string $tmp, string $name, ?callable $progress = null): array
-{
-    $cleanName = catalog_clean_unreal_filename($name);
-    if (!catalog_redirect_archive_is_supported_filename($name)) {
-        return [
-            'tmp' => $tmp,
-            'name' => $cleanName,
-            'display_name' => $cleanName,
-            'decompressed' => false,
-            'source_extension' => '',
-            'source_name' => $name,
-        ];
-    }
-
-    if ($progress) {
-        $progress([
-            'stage' => 'decompress',
-            'done' => 1,
-            'total' => 100,
-            'percent' => 1,
-            'message' => 'Decompressing redirect archive ' . basename($name),
-        ]);
-    }
-
-    $decoded = catalog_redirect_archive_decompress_to_temp($tmp, $name);
-    if (is_file($tmp)) {
-        @unlink($tmp);
-    }
-
-    return [
-        'tmp' => $decoded['path'],
-        'name' => catalog_clean_unreal_filename((string)$decoded['filename']),
-        'display_name' => catalog_clean_unreal_filename((string)$decoded['filename']),
-        'decompressed' => true,
-        'source_extension' => (string)$decoded['source_extension'],
-        'source_name' => $name,
-    ];
-}
-
-function upload_guid_is_zero_or_blank(string $guid): bool
-{
-    $guid = strtoupper(trim($guid));
-    return $guid === '' || $guid === '00000000-00000000-00000000-00000000';
-}
-
-function upload_guid_from_legacy_header_offset(string $path): string
-{
-    $bytes = @file_get_contents($path, false, null, 0, 64);
-    if (!is_string($bytes) || strlen($bytes) < 52) {
-        return '';
-    }
-    $tag = (int)(unpack('V', substr($bytes, 0, 4))[1] ?? 0);
-    if ($tag !== 0x9E2A83C1) {
-        return '';
-    }
-
-    $parts = [
-        (int)(unpack('V', substr($bytes, 36, 4))[1] ?? 0),
-        (int)(unpack('V', substr($bytes, 40, 4))[1] ?? 0),
-        (int)(unpack('V', substr($bytes, 44, 4))[1] ?? 0),
-        (int)(unpack('V', substr($bytes, 48, 4))[1] ?? 0),
-    ];
-    if ($parts === [0, 0, 0, 0]) {
-        return '';
-    }
-
-    return sprintf('%08X-%08X-%08X-%08X', $parts[0], $parts[1], $parts[2], $parts[3]);
-}
-
-function upload_correct_zero_guid_from_stored_file(PDO $db, array $config, array $result): string
-{
-    $fileId = (int)($result[1] ?? 0);
-    if ($fileId <= 0) {
-        return '';
-    }
-
-    $file = catalog_one($db, 'SELECT id, package_guid, relative_path FROM ue_files WHERE id=?', [$fileId]);
-    if (!$file || !upload_guid_is_zero_or_blank((string)($file['package_guid'] ?? ''))) {
-        return '';
-    }
-
-    $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-    $storedPath = realpath(__DIR__ . '/' . (string)$file['relative_path']);
-    if (!$storageRoot || !$storedPath || !str_starts_with($storedPath, $storageRoot) || !is_file($storedPath)) {
-        return '';
-    }
-
-    $fallbackGuid = upload_guid_from_legacy_header_offset($storedPath);
-    if ($fallbackGuid === '') {
-        return '';
-    }
-
-    $db->prepare('UPDATE ue_files SET package_guid=? WHERE id=?')->execute([$fallbackGuid, $fileId]);
-    return $fallbackGuid;
-}
-
-/** @return array{bucket:string,entry:array<string,mixed>} */
-function upload_scan_package_file(PDO $db, array $config, int $gameId, string $scanTmp, string $scanName, string $displayName, ?int $userId, bool $strict, ?callable $progress, string $messagePrefix = '', string $sourceRelativePath = ''): array
-{
-    $scanSize = is_file($scanTmp) ? (int)(filesize($scanTmp) ?: 0) : 0;
-    $scanSizeMeta = [
-        'file_size' => $scanSize,
-        'file_size_text' => catalog_bytes($scanSize),
-    ];
-
-    $result = scanner_scan_uploaded_file(
-        $db,
-        $config,
-        $gameId,
-        $scanTmp,
-        $scanName,
-        $userId,
-        $strict,
-        $progress,
-        false,
-        ['source_relative_path' => $sourceRelativePath]
-    );
-    if (is_file($scanTmp)) {
-        @unlink($scanTmp);
-    }
-
-    $meta = is_array($result[4] ?? null) ? $result[4] : $scanSizeMeta;
-    $correctedGuid = upload_correct_zero_guid_from_stored_file($db, $config, $result);
-    if ($correctedGuid !== '') {
-        $meta['package_guid'] = $correctedGuid;
-    }
-    $meta['file_size'] = $meta['file_size'] ?? $scanSize;
-    $meta['file_size_text'] = $meta['file_size_text'] ?? catalog_bytes($scanSize);
-
-    $aliasAlreadyExists = ($result[0] ?? '') === 'alias' && upload_alias_already_exists();
-    if (($result[0] ?? '') === 'duplicate' || $aliasAlreadyExists) {
-        $message = $aliasAlreadyExists ? 'Package alias already exists for existing file identity' : (string)($result[2] ?? 'Duplicate in selected game');
-        return ['bucket' => 'duplicate', 'entry' => upload_result('duplicate', $displayName, $messagePrefix . $message, $meta)];
-    }
-
-    return ['bucket' => 'imported', 'entry' => upload_result('imported', $displayName, $messagePrefix . (string)$result[2], $meta)];
-}
-
-/** @return list<string> */
-function upload_profile_extensions(PDO $db, array $config, int $gameId): array
-{
-    $profile = gp_required_profile_for_game($db, $gameId);
-    return scanner_profile_extensions($profile, $config);
-}
-
-function upload_pak_inner_is_scannable(array $file, array $allowedExtensions): bool
-{
-    $cleanName = catalog_clean_unreal_filename(basename((string)$file['relative']));
-    $ext = catalog_clean_unreal_extension((string)pathinfo($cleanName, PATHINFO_EXTENSION));
-    if (in_array($ext, ['uexp', 'ubulk', 'uptnl', 'm.ubulk'], true)) {
-        return false;
-    }
-    return $ext !== '' && in_array($ext, $allowedExtensions, true);
-}
-
-function upload_pak_relative_display(array $file): string
-{
-    $relative = trim(str_replace('\\', '/', (string)$file['relative']), '/');
-    return $relative !== '' ? $relative : basename((string)$file['path']);
-}
-
-/** @return array{ok:int,duplicate:int,failed:int,skipped:int,messages:list<array<string,mixed>>} */
-function upload_scan_pak_file(PDO $db, array $config, int $gameId, string $pakTmp, string $pakName, ?int $userId, bool $strict, ?callable $progress, string $gameSlug): array
-{
-    if ($progress) {
-        $progress([
-            'stage' => 'pak_extract',
-            'done' => 0,
-            'total' => 100,
-            'percent' => 1,
-            'message' => 'Extracting PAK archive ' . basename($pakName),
-        ]);
-    }
-
-    $extracted = catalog_pak_archive_extract_to_temp($config, $pakTmp, $pakName);
-    $allowed = upload_profile_extensions($db, $config, $gameId);
-    $ok = 0;
-    $dup = 0;
-    $bad = 0;
-    $skipped = 0;
-    $messages = [];
-
-    try {
-        $files = $extracted['files'];
-        $total = max(1, count($files));
-        foreach ($files as $index => $file) {
-            $display = upload_pak_relative_display($file);
-            if (!upload_pak_inner_is_scannable($file, $allowed)) {
-                $skipped++;
-                continue;
+    $paths = $_POST['relative_paths'] ?? [];
+    $value = is_array($paths) && isset($paths[$index]) ? (string)$paths[$index] : $fallback;
+    $value = trim(str_replace(["\0", '\\'], ['', '/'], $value), '/');
+    $parts = [];
+    foreach (explode('/', $value) as $part) {
+        if ($part === '' || $part === '.') {
+            continue;
+        }
+        if ($part === '..') {
+            if ($parts !== []) {
+                array_pop($parts);
             }
-
-            if ($progress) {
-                $progress([
-                    'stage' => 'pak_scan',
-                    'done' => $index,
-                    'total' => $total,
-                    'percent' => max(1, min(99, (int)floor(($index / $total) * 100))),
-                    'message' => 'Scanning PAK entry ' . ($index + 1) . '/' . $total . ': ' . $display,
-                ]);
-            }
-
-            $scanName = catalog_clean_unreal_filename(basename($display));
-            $scanTmp = (string)$file['path'];
-            try {
-                $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $display, $userId, $strict, $progress, 'Extracted from ' . basename($pakName) . '; ', $display);
-                if ($scanResult['bucket'] === 'duplicate') {
-                    $dup++;
-                } else {
-                    $ok++;
-                }
-                $messages[] = $scanResult['entry'];
-            } catch (Throwable $innerError) {
-                $bad++;
-                upload_log_exception($db, $display, $innerError);
-                if (is_file($scanTmp)) {
-                    scanner_store_failed_upload($config, $scanTmp, $scanName, $gameSlug, $innerError->getMessage());
-                }
-                $messages[] = upload_result('failed', $display, 'Extracted from ' . basename($pakName) . '; ' . upload_short_error($innerError), [
-                    'file_size' => (int)($file['bytes'] ?? 0),
-                    'file_size_text' => catalog_bytes((int)($file['bytes'] ?? 0)),
-                ]);
-            }
+            continue;
         }
-
-        if ($messages === []) {
-            $messages[] = upload_result('skipped', catalog_clean_unreal_filename($pakName), 'PAK extracted, but no package files matched this game profile. Skipped entries: ' . $skipped, [
-                'file_size' => is_file($pakTmp) ? (int)filesize($pakTmp) : 0,
-                'file_size_text' => is_file($pakTmp) ? catalog_bytes((int)filesize($pakTmp)) : '',
-            ]);
-        } elseif ($skipped > 0) {
-            $messages[] = upload_result('info', catalog_clean_unreal_filename($pakName), 'Skipped ' . $skipped . ' non-package or unsupported PAK entries.');
-        }
-    } finally {
-        catalog_pak_archive_delete_tree((string)$extracted['dir']);
-        if (is_file($pakTmp)) {
-            @unlink($pakTmp);
-        }
+        $parts[] = $part;
     }
-
-    return ['ok' => $ok, 'duplicate' => $dup, 'failed' => $bad, 'skipped' => $skipped, 'messages' => $messages];
+    return implode('/', $parts);
 }
 
-function upload_post_relative_path(int $index, string $fallbackName): string
-{
-    $relativePaths = $_POST['relative_paths'] ?? [];
-    if (is_array($relativePaths) && isset($relativePaths[$index])) {
-        $path = scanner_normalize_source_relative_path((string)$relativePaths[$index]);
-        if ($path !== '') {
-            return $path;
-        }
-    }
-    return scanner_normalize_source_relative_path($fallbackName);
-}
-
-function upload_handle_request(PDO $db, array $config): array
+/** @return array{jobs:list<array<string,mixed>>,messages:list<array<string,mixed>>} */
+function profiled_upload_enqueue(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
     $gameId = (int)($_POST['game_id'] ?? 0);
-    $strict = ($_POST['strict_profile'] ?? '1') === '1';
-    $progressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
-    $userId = $_SESSION['user']['id'] ?? null;
-
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_write_close();
-    }
-
-    $game = catalog_one($db, 'SELECT * FROM ue_games WHERE id=?', [$gameId]);
+    $strict = (string)($_POST['strict_profile'] ?? '1') === '1';
+    $game = $gameId > 0 ? catalog_one($db, 'SELECT id,name,slug FROM ue_games WHERE id=?', [$gameId]) : null;
     if (!$game) {
-        throw new RuntimeException('Game not found');
+        throw new RuntimeException('Choose a valid target game.');
     }
 
-    $progress = null;
-    if ($progressToken !== '') {
-        $progress = static function (array $state) use ($progressToken): void {
-            upload_progress_write($progressToken, $state);
-        };
+    $temporaryFiles = $_FILES['files']['tmp_name'] ?? [];
+    if (!is_array($temporaryFiles) || $temporaryFiles === []) {
+        throw new RuntimeException('Choose one or more files or a folder to upload.');
     }
 
-    $ok = 0;
-    $dup = 0;
-    $bad = 0;
+    $store = new CatalogIncomingFileStore($config);
+    $queue = new PdoJobQueue($db);
+    $queueName = (string)($config['queue']['name'] ?? 'catalog');
+    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+    $jobs = [];
     $messages = [];
-    foreach ($_FILES['files']['tmp_name'] ?? [] as $i => $tmp) {
-        $name = (string)($_FILES['files']['name'][$i] ?? 'upload.bin');
-        $sourceRelativePath = upload_post_relative_path((int)$i, $name);
-        $displayName = $sourceRelativePath !== '' ? $sourceRelativePath : (catalog_pak_archive_is_supported_filename($name)
-            ? catalog_clean_unreal_filename($name)
-            : (catalog_redirect_archive_is_supported_filename($name)
-                ? catalog_redirect_archive_output_name($name)
-                : catalog_clean_unreal_filename($name)));
-        $err = (int)($_FILES['files']['error'][$i] ?? UPLOAD_ERR_NO_FILE);
-        $uploadSize = is_string($tmp) && is_file($tmp) ? (int)filesize($tmp) : 0;
-        $uploadSizeMeta = [
-            'file_size' => $uploadSize,
-            'file_size_text' => catalog_bytes($uploadSize),
-        ];
-        if ($err !== UPLOAD_ERR_OK) {
-            $bad++;
-            $text = 'Upload error ' . $err;
-            $messages[] = upload_result('failed', $displayName, $text, $uploadSizeMeta);
-            if ($progress) {
-                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $displayName . ': failed - ' . $text]);
-            }
+
+    foreach ($temporaryFiles as $index => $temporaryPath) {
+        $originalName = (string)($_FILES['files']['name'][$index] ?? 'upload.bin');
+        $displayName = profiled_upload_relative_path((int)$index, $originalName);
+        $errorCode = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
+        if ($errorCode !== UPLOAD_ERR_OK) {
+            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'Upload error ' . $errorCode];
+            continue;
+        }
+        if (!is_string($temporaryPath) || !is_file($temporaryPath)) {
+            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'Uploaded temporary file is missing.'];
+            continue;
+        }
+        $size = filesize($temporaryPath);
+        if ($size === false || $size <= 0 || $size > (int)$config['max_upload_bytes']) {
+            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'Bad file size: ' . catalog_bytes((int)($size ?: 0))];
+            @unlink($temporaryPath);
             continue;
         }
 
-        if (catalog_pak_archive_is_supported_filename($name)) {
-            try {
-                $pakResult = upload_scan_pak_file($db, $config, $gameId, (string)$tmp, $name, $userId !== null ? (int)$userId : null, $strict, $progress, (string)$game['slug']);
-                $ok += $pakResult['ok'];
-                $dup += $pakResult['duplicate'];
-                $bad += $pakResult['failed'];
-                array_push($messages, ...$pakResult['messages']);
-            } catch (Throwable $e) {
-                $bad++;
-                $short = upload_short_error($e);
-                upload_log_exception($db, $displayName, $e);
-                if (is_file((string)$tmp)) {
-                    @unlink((string)$tmp);
-                }
-                $messages[] = upload_result('failed', $displayName, $short, $uploadSizeMeta);
-                if ($progress) {
-                    $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $displayName . ': failed - ' . $short]);
-                }
-            }
-            continue;
-        }
-
-        $scanTmp = (string)$tmp;
-        $scanName = $displayName;
-        $prepared = null;
-
+        $staged = $store->stageUploadedFile($temporaryPath, $originalName);
+        $jobType = catalog_pak_archive_is_supported_filename($originalName)
+            ? JobType::IMPORT_STAGED_PAK
+            : JobType::IMPORT_STAGED_PACKAGE;
         try {
-            $prepared = upload_prepare_scanner_input($scanTmp, $name, $progress);
-            $scanTmp = $prepared['tmp'];
-            $scanName = $prepared['name'];
-            $scanRelativePath = upload_prepared_relative_path($sourceRelativePath, $prepared);
-            $displayName = $scanRelativePath !== '' ? $scanRelativePath : $prepared['display_name'];
-
-            $prefix = !empty($prepared['decompressed']) ? 'Decompressed .' . $prepared['source_extension'] . ' redirect archive; ' : '';
-            $scanResult = upload_scan_package_file($db, $config, $gameId, $scanTmp, $scanName, $displayName, $userId !== null ? (int)$userId : null, $strict, $progress, $prefix, $scanRelativePath);
-            if ($scanResult['bucket'] === 'duplicate') {
-                $dup++;
-            } else {
-                $ok++;
-            }
-            $messages[] = $scanResult['entry'];
-        } catch (Throwable $e) {
-            $bad++;
-            $short = upload_short_error($e);
-            upload_log_exception($db, $displayName, $e);
-
-            if (isset($prepared) && is_array($prepared) && is_file($scanTmp)) {
-                scanner_store_failed_upload($config, $scanTmp, $scanName, (string)$game['slug'], $e->getMessage());
-            } elseif (is_file((string)$tmp) && !catalog_redirect_archive_is_supported_filename($name)) {
-                scanner_store_failed_upload($config, (string)$tmp, $displayName, (string)$game['slug'], $e->getMessage());
-            } elseif (is_file((string)$tmp)) {
-                @unlink((string)$tmp);
-            }
-
-            $messages[] = upload_result('failed', $displayName, $short, $uploadSizeMeta);
-            if ($progress) {
-                $progress(['stage' => 'failed', 'done' => 100, 'total' => 100, 'percent' => 100, 'message' => $displayName . ': failed - ' . $short]);
-            }
+            $jobId = $queue->enqueue(
+                $queueName,
+                $jobType,
+                [
+                    'game_id' => $gameId,
+                    'staged_path' => $staged['relative_path'],
+                    'original_name' => $originalName,
+                    'source_relative_path' => $displayName,
+                    'strict_profile' => $strict,
+                    'user_id' => $userId,
+                    'size' => $staged['size'],
+                    'sha256' => $staged['sha256'],
+                ],
+                5,
+                null,
+                null,
+                $userId,
+                3
+            );
+        } catch (Throwable $error) {
+            $store->remove($staged['relative_path']);
+            throw $error;
         }
+
+        $jobs[] = [
+            'job_id' => $jobId,
+            'type' => $jobType,
+            'file' => $displayName,
+            'size' => $staged['size'],
+        ];
+        $messages[] = [
+            'status' => 'queued',
+            'file' => $displayName,
+            'message' => 'Upload staged for background import as job #' . $jobId . '.',
+            'file_size_text' => catalog_bytes($staged['size']),
+            'job_id' => $jobId,
+        ];
     }
 
-    return ['ok' => $ok, 'duplicate' => $dup, 'failed' => $bad, 'messages' => $messages];
+    if ($jobs === [] && $messages === []) {
+        throw new RuntimeException('No upload files were received.');
+    }
+    return ['jobs' => $jobs, 'messages' => $messages];
 }
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-
-    if (($_GET['progress'] ?? '') !== '') {
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            session_write_close();
-        }
-        header('Content-Type: application/json');
-        header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-        echo json_encode(upload_progress_read((string)$_GET['progress']));
-        exit;
-    }
+    catalog_start_session();
 
     if (!catalog_support_is_admin()) {
-        if (($_POST['ajax'] ?? '') === '1') {
+        if ((string)($_POST['ajax'] ?? '') === '1') {
             header('Content-Type: application/json');
-            echo json_encode(['ok' => false, 'error' => 'Admin required']);
+            echo json_encode(['ok' => false, 'error' => 'Administrator authentication is required.']);
             exit;
         }
         if (!catalog_require_admin_page('Upload Files')) {
@@ -471,42 +146,58 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $result = upload_handle_request($db, $config);
-        if (($_POST['ajax'] ?? '') === '1') {
+        $result = profiled_upload_enqueue($db, $config);
+        if ((string)($_POST['ajax'] ?? '') === '1') {
             header('Content-Type: application/json');
-            echo json_encode(['ok' => true] + $result);
+            header('Cache-Control: no-store');
+            echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             exit;
         }
-        session_start();
-        $messageText = array_map('upload_result_text', array_slice($result['messages'], 0, 12));
-        $_SESSION['profiled_upload_flash'] = 'Upload complete. Imported=' . $result['ok'] . ' Duplicate=' . $result['duplicate'] . ' Failed=' . $result['failed'] . '. ' . implode(' | ', $messageText);
+        $_SESSION['profiled_upload_flash'] = 'Queued ' . count($result['jobs']) . ' background import job(s).';
         header('Location: profiled-upload.php?game_id=' . (int)($_POST['game_id'] ?? 0));
         exit;
     }
 
+    $selectedGameId = (int)($_GET['game_id'] ?? 0);
+    $games = catalog_all(
+        $db,
+        'SELECT g.id,g.name,g.slug,p.engine_key profile_engine,p.allowed_extensions_json,p.package_version_min,p.package_version_max '
+        . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name'
+    );
+
     catalog_head('Upload Files');
     catalog_flash($_SESSION['profiled_upload_flash'] ?? null);
     unset($_SESSION['profiled_upload_flash']);
+    catalog_page_header(
+        'Upload Files',
+        'Uploads are copied into controlled staging and imported by the background worker. Closing this page does not interrupt scanning, redirect decompression, PAK extraction, database persistence, or dependency refresh.',
+        [
+            'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
+            'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
+            'PAK Import' => 'pak-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
+            'Library' => 'library.php',
+        ]
+    );
 
-    $selectedGameId = (int)($_GET['game_id'] ?? 0);
-    $games = catalog_all($db, 'SELECT g.id, g.name, g.slug, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name');
-
-    catalog_page_header('Upload Files', 'Import packages into the selected game using its assigned scanner profile. Folder uploads preserve relative paths for UE4 package identity and later Full Sync reimports. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first; .pak archives are extracted first and only inner package files are retained.', ['Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'PAK Import' => 'pak-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''), 'Library' => 'library.php']);
-
-    echo '<div class="card"><h2>Upload and scan</h2><form id="profiled-upload-form" method="post" enctype="multipart/form-data"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
+    echo '<div class="card"><h2>Upload and queue</h2>';
+    echo '<form id="profiled-upload-form" method="post" enctype="multipart/form-data">';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';
     foreach ($games as $game) {
-        $sel = ((int)$game['id'] === $selectedGameId) ? ' selected' : '';
-        $label = $game['name'] . ' / ' . (!empty($game['profile_engine']) ? $game['profile_engine'] : 'no active profile');
-        echo '<option value="' . (int)$game['id'] . '"' . $sel . '>' . catalog_h($label) . '</option>';
+        $selected = (int)$game['id'] === $selectedGameId ? ' selected' : '';
+        echo '<option value="' . (int)$game['id'] . '"' . $selected . '>'
+            . catalog_h((string)$game['name'] . ' / ' . ((string)($game['profile_engine'] ?: 'no active profile'))) . '</option>';
     }
     echo '</select></label></p>';
-    echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: reject/move mismatches to unverified</option><option value="0">Loose: allow scanner/parser to try anyway</option></select></label></p>';
+    echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
-    echo '<p><button id="profiled-upload-button">Upload and scan</button></p>';
-    echo '<p class="muted">Max per uploaded/decompressed/extracted file: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '. Browser folder upload includes files from the selected folder and subfolders; the folder-relative path is preserved and used as UE4 package identity context. Files are uploaded one at a time so browser/PHP file-count limits do not stop large batches. Allowed inputs: catalog package extensions, .uz/.uz2/.uz3 redirect archives, and .pak archives. PAK wrappers are not scanned as Unreal packages; only extracted package files inside them are scanned.</p>';
-    echo '<div id="upload-progress" class="upload-progress" hidden>';
+    echo '<p><button id="profiled-upload-button" type="submit">Upload and queue</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current job</button></p>';
+    echo '<p class="muted">Each browser file is uploaded and queued separately. Folder-relative paths are preserved for UE4/UE5 package identity. Redirect archives and PAK files are processed by the worker. Maximum staged file size: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '.</p>';
+    echo '<div id="profiled-upload-progress" class="upload-progress" hidden '
+        . 'data-status-url="api/v1/job-status.php" '
+        . 'data-action-url="api/v1/job-action.php" '
+        . 'data-action-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
     echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
     echo '<div id="upload-progress-log" class="upload-progress-log"></div></div>';
@@ -514,242 +205,28 @@ try {
 
     echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Extensions</th><th>Version range</th><th>Open</th></tr>';
     foreach ($games as $game) {
-        $exts = json_decode((string)($game['allowed_extensions_json'] ?? '[]'), true);
-        $range = ($game['package_version_min'] !== null || $game['package_version_max'] !== null) ? (($game['package_version_min'] ?? '?') . ' - ' . ($game['package_version_max'] ?? '?')) : 'not fixed';
-        $engine = $game['profile_engine'] ?: 'missing profile';
-        $engineClass = $game['profile_engine'] ? 'good-pill' : 'bad-pill';
-        echo '<tr><td>' . catalog_h($game['name']) . '</td><td><span class="pill ' . $engineClass . '">' . catalog_h($engine) . '</span></td><td class="mono">' . catalog_h(is_array($exts) ? implode(', ', $exts) : '') . '</td><td class="mono">' . catalog_h($range) . '</td><td><a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">select</a></td></tr>';
+        $extensions = json_decode((string)($game['allowed_extensions_json'] ?? '[]'), true);
+        $range = ($game['package_version_min'] !== null || $game['package_version_max'] !== null)
+            ? (($game['package_version_min'] ?? '?') . ' - ' . ($game['package_version_max'] ?? '?'))
+            : 'not fixed';
+        $engine = (string)($game['profile_engine'] ?: 'missing profile');
+        echo '<tr><td>' . catalog_h($game['name']) . '</td><td>' . catalog_h($engine) . '</td><td class="mono">'
+            . catalog_h(is_array($extensions) ? implode(', ', $extensions) : '') . '</td><td class="mono">' . catalog_h($range)
+            . '</td><td><a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">select</a></td></tr>';
     }
     echo '</table></div>';
-
-    echo <<<'HTML'
-<script>
-(function () {
-    const form = document.getElementById('profiled-upload-form');
-    const fileInput = document.getElementById('profiled-upload-files');
-    const folderInput = document.getElementById('profiled-upload-folder');
-    const button = document.getElementById('profiled-upload-button');
-    const progressBox = document.getElementById('upload-progress');
-    const currentBar = document.getElementById('upload-progress-bar');
-    const overallBar = document.getElementById('overall-progress-bar');
-    const currentLabel = document.getElementById('upload-progress-label');
-    const overallLabel = document.getElementById('overall-progress-label');
-    const overallCount = document.getElementById('overall-progress-count');
-    const speed = document.getElementById('upload-progress-speed');
-    const log = document.getElementById('upload-progress-log');
-    if (!form || !fileInput || !window.XMLHttpRequest) return;
-
-    function selectedFiles() {
-        return Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []);
-    }
-
-    function displayName(file) {
-        return file.webkitRelativePath || file.name;
-    }
-
-    function fmtBytes(bytes) {
-        const units = ['B', 'KB', 'MB', 'GB'];
-        let v = bytes;
-        let i = 0;
-        while (v >= 1024 && i < units.length - 1) {
-            v /= 1024;
-            i++;
-        }
-        return (i ? v.toFixed(2) : String(v)) + ' ' + units[i];
-    }
-
-    function makeToken() {
-        return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
-    }
-
-    function appendMetaText(container, label, value) {
-        if (value === undefined || value === null || value === '') return;
-        container.appendChild(document.createTextNode(' | ' + label + ': ' + String(value)));
-    }
-
-    function makeExamineLink(fileId, text) {
-        const link = document.createElement('a');
-        link.href = 'file-examine.php?id=' + encodeURIComponent(fileId);
-        link.textContent = text || ('file #' + fileId);
-        return link;
-    }
-
-    function addLog(entry) {
-        if (typeof entry === 'string') {
-            entry = {status: 'info', file: '', message: entry};
-        }
-        const status = String(entry.status || 'info').toLowerCase();
-        const div = document.createElement('div');
-        div.className = 'upload-result upload-result-' + status;
-
-        const badge = document.createElement('span');
-        badge.className = 'upload-result-badge';
-        badge.textContent = status;
-        div.appendChild(badge);
-
-        if (entry.file) {
-            let file;
-            if (entry.file_id) {
-                file = makeExamineLink(entry.file_id, entry.file);
-            } else {
-                file = document.createElement('span');
-                file.textContent = entry.file;
-            }
-            file.className = 'upload-result-file';
-            div.appendChild(file);
-        }
-
-        const message = document.createElement('span');
-        message.className = 'upload-result-message';
-        message.textContent = entry.message || '';
-        appendMetaText(message, 'size', entry.file_size_text);
-        appendMetaText(message, 'GUID', entry.package_guid);
-        appendMetaText(message, 'source', entry.source_relative_path);
-
-        if (entry.duplicate_file_id) {
-            message.appendChild(document.createTextNode(' | copy of: '));
-            message.appendChild(makeExamineLink(entry.duplicate_file_id, entry.duplicate_original_name));
-        }
-
-        div.appendChild(message);
-        log.appendChild(div);
-        log.scrollTop = log.scrollHeight;
-    }
-
-    function setOverall(doneFiles, totalFiles, currentPercent) {
-        const percent = Math.round(((doneFiles + (currentPercent / 100)) / Math.max(1, totalFiles)) * 100);
-        overallBar.value = percent;
-        overallLabel.textContent = 'Overall batch progress (' + percent + '%)';
-        overallCount.textContent = doneFiles + ' of ' + totalFiles + ' complete';
-    }
-
-    function pollScanProgress(token, index, total, fileName, stopFlag) {
-        return window.setInterval(function () {
-            fetch('profiled-upload.php?progress=' + encodeURIComponent(token), {cache: 'no-store'})
-                .then(function (r) { return r.json(); })
-                .then(function (state) {
-                    if (stopFlag.done) return;
-                    const percent = Math.max(0, Math.min(100, parseInt(state.percent || 0, 10)));
-                    currentBar.value = percent;
-                    currentLabel.textContent = 'Reading/scanning ' + index + ' of ' + total + ': ' + fileName + ' (' + percent + '%) - ' + (state.message || 'working');
-                    speed.textContent = '';
-                    setOverall(index - 1, total, percent);
-                })
-                .catch(function () {});
-        }, 650);
-    }
-
-    function uploadOne(file, index, total) {
-        return new Promise(function (resolve) {
-            const token = makeToken();
-            const data = new FormData();
-            const shownName = displayName(file);
-            data.append('ajax', '1');
-            data.append('progress_token', token);
-            data.append('csrf', form.querySelector('[name="csrf"]').value);
-            data.append('game_id', form.querySelector('[name="game_id"]').value);
-            data.append('strict_profile', form.querySelector('[name="strict_profile"]').value);
-            data.append('relative_paths[]', shownName);
-            data.append('files[]', file, file.name);
-
-            const xhr = new XMLHttpRequest();
-            const start = Date.now();
-            const stopFlag = {done: false};
-            let poller = null;
-            currentBar.value = 0;
-            speed.textContent = '';
-            currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + shownName + ' (0%)';
-            setOverall(index - 1, total, 0);
-
-            xhr.open('POST', form.action || window.location.href, true);
-            xhr.upload.onprogress = function (e) {
-                if (!e.lengthComputable) return;
-                const percent = Math.round((e.loaded / e.total) * 100);
-                currentBar.value = percent;
-                const elapsed = Math.max(0.1, (Date.now() - start) / 1000);
-                speed.textContent = fmtBytes(e.loaded / elapsed) + '/s';
-                currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + shownName + ' (' + percent + '%)';
-                setOverall(index - 1, total, Math.min(50, percent / 2));
-            };
-            xhr.upload.onload = function () {
-                currentBar.value = 0;
-                speed.textContent = '';
-                currentLabel.textContent = 'Reading/scanning ' + index + ' of ' + total + ': ' + shownName + ' (0%)';
-                poller = pollScanProgress(token, index, total, shownName, stopFlag);
-            };
-            xhr.onload = function () {
-                stopFlag.done = true;
-                if (poller) window.clearInterval(poller);
-                currentBar.value = 100;
-                setOverall(index, total, 0);
-                try {
-                    const res = JSON.parse(xhr.responseText || '{}');
-                    if (!res.ok) {
-                        addLog({status: 'failed', file: shownName, message: res.error || 'server error'});
-                    } else if (res.messages && res.messages.length) {
-                        res.messages.forEach(addLog);
-                    } else {
-                        addLog({status: 'imported', file: shownName, message: 'complete'});
-                    }
-                } catch (e) {
-                    addLog({status: 'failed', file: shownName, message: 'invalid server response'});
-                }
-                resolve();
-            };
-            xhr.onerror = function () {
-                stopFlag.done = true;
-                if (poller) window.clearInterval(poller);
-                addLog({status: 'failed', file: shownName, message: 'upload connection error'});
-                setOverall(index, total, 0);
-                resolve();
-            };
-            xhr.send(data);
-        });
-    }
-
-    form.addEventListener('submit', async function (e) {
-        const files = selectedFiles();
-        if (!files.length) {
-            e.preventDefault();
-            window.alert('Choose one or more files, or choose a folder/subfolders first.');
-            return;
-        }
-        e.preventDefault();
-        button.disabled = true;
-        progressBox.hidden = false;
-        log.textContent = '';
-        overallBar.value = 0;
-        currentBar.value = 0;
-        setOverall(0, files.length, 0);
-        for (let i = 0; i < files.length; i++) {
-            await uploadOne(files[i], i + 1, files.length);
-        }
-        currentLabel.textContent = 'Upload and scan batch complete.';
-        speed.textContent = '';
-        overallBar.value = 100;
-        overallLabel.textContent = 'Overall batch complete (100%)';
-        overallCount.textContent = files.length + ' of ' + files.length + ' complete';
-        button.disabled = false;
-    });
-})();
-</script>
-HTML;
-
+    echo '<script src="assets/profiled-upload-jobs.js"></script>';
     catalog_foot();
-} catch (Throwable $e) {
-    if (($_POST['ajax'] ?? '') === '1') {
-        if (isset($db) && $db instanceof PDO) {
-            upload_log_exception($db, 'upload request', $e);
-        } else {
-            error_log('[UnrealDB upload] upload request: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
-        }
+} catch (Throwable $error) {
+    error_log('[UnrealDB profiled upload][' . catalog_request_id() . '] ' . $error->getMessage());
+    if ((string)($_POST['ajax'] ?? '') === '1') {
         header('Content-Type: application/json');
-        echo json_encode(['ok' => false, 'error' => upload_short_error($e)]);
+        echo json_encode(['ok' => false, 'error' => profiled_upload_error($error)]);
         exit;
     }
     if (!headers_sent()) {
         catalog_head('Upload error');
     }
-    echo '<div class="card"><h1>Error</h1><p>' . catalog_h(upload_short_error($e)) . '</p></div>';
+    echo CatalogUi::alert('danger', profiled_upload_error($error), 'Upload request failed.');
     catalog_foot();
 }
