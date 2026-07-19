@@ -16,7 +16,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo_mysql, curl, mbstring, openssl, zip
+          extensions: pdo_mysql, curl, mbstring, openssl, sodium, zip
           coverage: none
       - name: Reject tracked runtime configuration
         run: |
@@ -29,6 +29,12 @@ jobs:
           find . -type f -name '*.php' \
             -not -path './vendor/*' \
             -print0 | xargs -0 -n1 php -l
+      - name: Syntax check shell commands
+        run: |
+          sh -n deploy/docker/worker-loop.sh
+          sh -n deploy/docker/maintenance-loop.sh
+          sh -n deploy/backup/unrealdb-backup.sh
+          sh -n deploy/backup/unrealdb-restore.sh
       - name: Syntax check dependency refresh client
         run: node --check catalog/assets/dependency-refresh-jobs.js
       - name: Syntax check source identity repair client
@@ -37,10 +43,18 @@ jobs:
         run: node --check catalog/assets/unverified-duplicate-cleanup.js
       - name: Syntax check generated package client
         run: node --check catalog/assets/generated-package-jobs.js
+      - name: Syntax check profiled upload client
+        run: node --check catalog/assets/profiled-upload-jobs.js
+      - name: Syntax check pak import client
+        run: node --check catalog/assets/pak-import-jobs.js
       - name: Verify architecture boundaries
         run: php catalog/tests/architecture-boundaries-test.php
       - name: Verify security boundaries
         run: php catalog/tests/security-boundaries-test.php
+      - name: Verify full review completion boundaries
+        run: php catalog/tests/review-completion-contract-test.php
+      - name: Test MFA and application secret services
+        run: php catalog/tests/security-services-test.php
       - name: Verify explicit staging boundaries
         run: php catalog/tests/unverified-staging-contract-test.php
       - name: Verify background job reliability boundaries
@@ -82,7 +96,7 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
-          extensions: pdo_mysql, zip
+          extensions: pdo_mysql, sodium, zip
           coverage: none
       - name: Import canonical baseline
         run: mysql -h 127.0.0.1 -uroot -proot unrealdb_test < catalog/install.sql
@@ -140,12 +154,23 @@ jobs:
               -Nse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='unrealdb_test' AND table_name='$table'" \
               | grep -qx '1'
           done
+      - name: Verify federation and MFA migration columns
+        run: |
+          for column in signature_algorithm signing_public_key signing_key_id signing_rotated_at signing_revoked_at; do
+            mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
+              -Nse "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='unrealdb_test' AND table_name='ue_federation_peers' AND column_name='$column'" \
+              | grep -qx '1'
+          done
+          for column in mfa_totp_secret mfa_recovery_codes_json mfa_enabled_at mfa_last_used_step; do
+            mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
+              -Nse "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='unrealdb_test' AND table_name='ue_users' AND column_name='$column'" \
+              | grep -qx '1'
+          done
       - name: Verify reusable profile assignments
         run: |
           mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
             -Nse "SELECT COUNT(*) FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id WHERE p.game_id IS NULL AND p.profile_name <> ''" \
             | awk '$1 >= 4 { ok=1 } END { exit ok ? 0 : 1 }'
-
       - name: Verify clean install seed data
         run: |
           mysql -h 127.0.0.1 -uroot -proot unrealdb_test \
