@@ -10,7 +10,8 @@ interface UnverifiedFileSystem
 
     public function size(string $path): int;
 
-    public function md5(string $path): ?string;
+    /** @param null|callable(int,int):void $progress Receives bytes read and total size. */
+    public function md5(string $path, ?callable $progress = null): ?string;
 
     public function delete(string $path): bool;
 }
