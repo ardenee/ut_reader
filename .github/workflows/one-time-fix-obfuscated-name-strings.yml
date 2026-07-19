@@ -20,14 +20,15 @@ jobs:
           php-version: '8.3'
           extensions: mbstring
           coverage: none
-      - name: Fix legacy FString name termination
+
+      - name: Correct legacy serialized-name termination
         run: |
           python3 - <<'PY'
           from pathlib import Path
           import re
 
-          replacements = {
-              Path('UE1/UnrealPackageReader.php'): r'''    private function stringByLength(int $length): string
+          functions = {
+              Path('UE1/UnrealPackageReader.php'): '''    private function stringByLength(int $length): string
           {
               if ($length === 0) {
                   return '';
@@ -42,14 +43,18 @@ jobs:
               }
 
               $chars = -$length;
-              $raw = self::trimWideTerminator($this->bytes($chars * 2));
+              $bytes = $chars * 2;
+              if ($chars > 32768 || $bytes > $this->remaining()) {
+                  throw new OutOfBoundsException("bad wide string length=$length pos={$this->pos} remaining={$this->remaining()}");
+              }
+              $raw = self::trimWideTerminator($this->bytes($bytes));
               $out = @mb_convert_encoding($raw, 'UTF-8', 'UTF-16LE');
               return $out === false ? '' : self::escapeNameControls($out);
           }
 
           private static function trimAnsiTerminator(string $raw): string
           {
-              $terminator = strpos($raw, "\0");
+              $terminator = strpos($raw, "\\0");
               return $terminator === false ? $raw : substr($raw, 0, $terminator);
           }
 
@@ -57,7 +62,7 @@ jobs:
           {
               $length = strlen($raw);
               for ($offset = 0; $offset + 1 < $length; $offset += 2) {
-                  if ($raw[$offset] === "\0" && $raw[$offset + 1] === "\0") {
+                  if ($raw[$offset] === "\\0" && $raw[$offset + 1] === "\\0") {
                       return substr($raw, 0, $offset);
                   }
               }
@@ -67,14 +72,14 @@ jobs:
           private static function escapeNameControls(string $text): string
           {
               return preg_replace_callback(
-                  '/[\x00-\x1F\x7F]/',
+                  '/[\\x00-\\x1F\\x7F]/',
                   static fn(array $match): string => sprintf('%%%02X', ord($match[0])),
                   $text
               ) ?? $text;
           }
 
           public static function toUtf8''',
-              Path('UE2/UnrealPackageReader.php'): r'''    private function stringByLength(int $length): string
+              Path('UE2/UnrealPackageReader.php'): '''    private function stringByLength(int $length): string
           {
               if ($length === 0) {
                   return '';
@@ -98,7 +103,7 @@ jobs:
 
           private static function trimAnsiTerminator(string $raw): string
           {
-              $terminator = strpos($raw, "\0");
+              $terminator = strpos($raw, "\\0");
               return $terminator === false ? $raw : substr($raw, 0, $terminator);
           }
 
@@ -106,7 +111,7 @@ jobs:
           {
               $length = strlen($raw);
               for ($offset = 0; $offset + 1 < $length; $offset += 2) {
-                  if ($raw[$offset] === "\0" && $raw[$offset + 1] === "\0") {
+                  if ($raw[$offset] === "\\0" && $raw[$offset + 1] === "\\0") {
                       return substr($raw, 0, $offset);
                   }
               }
@@ -116,14 +121,14 @@ jobs:
           private static function escapeNameControls(string $text): string
           {
               return preg_replace_callback(
-                  '/[\x00-\x1F\x7F]/',
+                  '/[\\x00-\\x1F\\x7F]/',
                   static fn(array $match): string => sprintf('%%%02X', ord($match[0])),
                   $text
               ) ?? $text;
           }
 
           public static function toUtf8''',
-              Path('UE3/UnrealPackageReader.php'): r'''    private function stringByLength(int $length): string
+              Path('UE3/UnrealPackageReader.php'): '''    private function stringByLength(int $length): string
           {
               if ($length === 0) return '';
               if ($length > 0) {
@@ -141,7 +146,7 @@ jobs:
 
           private static function trimAnsiTerminator(string $raw): string
           {
-              $terminator = strpos($raw, "\0");
+              $terminator = strpos($raw, "\\0");
               return $terminator === false ? $raw : substr($raw, 0, $terminator);
           }
 
@@ -149,7 +154,7 @@ jobs:
           {
               $length = strlen($raw);
               for ($offset = 0; $offset + 1 < $length; $offset += 2) {
-                  if ($raw[$offset] === "\0" && $raw[$offset + 1] === "\0") {
+                  if ($raw[$offset] === "\\0" && $raw[$offset + 1] === "\\0") {
                       return substr($raw, 0, $offset);
                   }
               }
@@ -159,7 +164,7 @@ jobs:
           private static function escapeNameControls(string $text): string
           {
               return preg_replace_callback(
-                  '/[\x00-\x1F\x7F]/',
+                  '/[\\x00-\\x1F\\x7F]/',
                   static fn(array $match): string => sprintf('%%%02X', ord($match[0])),
                   $text
               ) ?? $text;
@@ -168,23 +173,28 @@ jobs:
           public static function toUtf8''',
           }
 
-          block = re.compile(
-              r'    private function stringByLength\(int \$length\): string\n    \{.*?\n    \}\n(?:\n)?    public static function toUtf8',
+          pattern = re.compile(
+              r'    private function stringByLength\(int \$length\): string\n    \{.*?\n    \}\n\n    public static function toUtf8',
               re.S,
           )
-          for path, replacement in replacements.items():
-              text = path.read_text()
-              text, count = block.subn(replacement, text, count=1)
+
+          for path, replacement in functions.items():
+              source = path.read_text()
+              updated, count = pattern.subn(replacement, source, count=1)
               if count != 1:
-                  raise SystemExit(f'{path}: FString block drifted')
-              old = 'return self::toUtf8($out);'
-              new = 'return self::escapeNameControls(self::toUtf8($out));'
-              if old not in text:
+                  raise SystemExit(f'{path}: stringByLength block drifted')
+              old_cstring = 'return self::toUtf8($out);'
+              if old_cstring not in updated:
                   raise SystemExit(f'{path}: cstring return drifted')
-              text = text.replace(old, new, 1)
-              path.write_text(text)
+              updated = updated.replace(
+                  old_cstring,
+                  'return self::escapeNameControls(self::toUtf8($out));',
+                  1,
+              )
+              path.write_text(updated)
           PY
-      - name: Add regression coverage
+
+      - name: Add explicit regression test
         run: |
           cat > catalog/tests/reader-name-sanitization-test.php <<'PHP'
           <?php
@@ -192,14 +202,14 @@ jobs:
 
           require_once __DIR__ . '/../lib/CatalogParser.php';
 
-          function reader_name_expect(bool $condition, string $message): void
+          function name_test_expect(bool $condition, string $message): void
           {
               if (!$condition) {
                   throw new RuntimeException($message);
               }
           }
 
-          function reader_name_compact(int $value): string
+          function name_test_compact(int $value): string
           {
               $negative = $value < 0;
               $magnitude = abs($value);
@@ -217,15 +227,9 @@ jobs:
               return $result;
           }
 
-          function reader_name_i32(int $value): string
+          function name_test_i32(int $value): string
           {
               return pack('V', $value & 0xFFFFFFFF);
-          }
-
-          function reader_name_assert_values(object $ansiReader, string $ansiMethod, object $wideReader, string $wideMethod): void
-          {
-              reader_name_expect($ansiReader->{$ansiMethod}() === 'SafeName', 'Embedded ANSI null suffix was not discarded.');
-              reader_name_expect($wideReader->{$wideMethod}() === 'Safe', 'Embedded UTF-16 null suffix was not discarded.');
           }
 
           $config = [
@@ -235,61 +239,63 @@ jobs:
                   'UE3' => ['reader' => '../UE3/UnrealPackageReader.php'],
               ],
           ];
-
-          $ansiRaw = "SafeName\0\x1F\x20\0";
-          $controlRaw = "\x10\0";
-          $wideRaw = "S\0a\0f\0e\0\0\0X\0\0\0";
-          $wideChars = intdiv(strlen($wideRaw), 2);
+          $ansi = "SafeName\0\x1F\x20\0";
+          $control = "\x10\0";
+          $wide = "S\0a\0f\0e\0\0\0X\0\0\0";
+          $wideChars = intdiv(strlen($wide), 2);
 
           catalog_load_reader_class($config, 'UE1');
-          $ue1Binary = 'UnrealDb\\Catalog\\Infrastructure\\Readers\\RuntimeLegacy\\UE1\\UE1BinaryReader';
-          reader_name_expect(class_exists($ue1Binary, false), 'UE1 binary reader was not isolated.');
-          reader_name_assert_values(
-              new $ue1Binary(reader_name_compact(strlen($ansiRaw)) . $ansiRaw),
-              'fstringCompact',
-              new $ue1Binary(reader_name_compact(-$wideChars) . $wideRaw),
-              'fstringCompact'
-          );
-          $ue1Control = new $ue1Binary(reader_name_compact(strlen($controlRaw)) . $controlRaw);
-          reader_name_expect($ue1Control->fstringCompact(69) === '%10', 'UE1 control-only name was not escaped.');
+          $ue1Class = 'UnrealDb\\Catalog\\Infrastructure\\Readers\\RuntimeLegacy\\UE1\\UE1BinaryReader';
+          name_test_expect(class_exists($ue1Class, false), 'UE1 binary reader was not loaded.');
+          $reader = new $ue1Class(name_test_compact(strlen($ansi)) . $ansi);
+          name_test_expect($reader->fstringCompact(69) === 'SafeName', 'UE1 retained bytes after the first ANSI terminator.');
+          $reader = new $ue1Class(name_test_compact(-$wideChars) . $wide);
+          name_test_expect($reader->fstringCompact(69) === 'Safe', 'UE1 retained characters after the first wide terminator.');
+          $reader = new $ue1Class(name_test_compact(strlen($control)) . $control);
+          name_test_expect($reader->fstringCompact(69) === '%10', 'UE1 did not escape a control-only name.');
+          $reader = new $ue1Class($control);
+          name_test_expect($reader->cstring() === '%10', 'UE1 C-string control byte was not escaped.');
 
           catalog_load_reader_class($config, 'UE2');
-          $ue2Binary = 'UnrealDb\\Catalog\\Infrastructure\\Readers\\RuntimeLegacy\\UE2\\UEFolderBinaryReader';
-          reader_name_expect(class_exists($ue2Binary, false), 'UE2 binary reader was not isolated.');
-          reader_name_assert_values(
-              new $ue2Binary(reader_name_compact(strlen($ansiRaw)) . $ansiRaw),
-              'fstringIndex',
-              new $ue2Binary(reader_name_i32(-$wideChars) . $wideRaw),
-              'fstring32'
-          );
-          $ue2Control = new $ue2Binary(reader_name_compact(strlen($controlRaw)) . $controlRaw);
-          reader_name_expect($ue2Control->fstringIndex(128) === '%10', 'UE2 control-only name was not escaped.');
+          $ue2Class = 'UnrealDb\\Catalog\\Infrastructure\\Readers\\RuntimeLegacy\\UE2\\UEFolderBinaryReader';
+          name_test_expect(class_exists($ue2Class, false), 'UE2 binary reader was not loaded.');
+          $reader = new $ue2Class(name_test_compact(strlen($ansi)) . $ansi);
+          name_test_expect($reader->fstringIndex(128) === 'SafeName', 'UE2 retained bytes after the first ANSI terminator.');
+          $reader = new $ue2Class(name_test_compact(-$wideChars) . $wide);
+          name_test_expect($reader->fstringIndex(128) === 'Safe', 'UE2 retained characters after the first wide terminator.');
+          $reader = new $ue2Class(name_test_compact(strlen($control)) . $control);
+          name_test_expect($reader->fstringIndex(128) === '%10', 'UE2 did not escape a control-only name.');
+          $reader = new $ue2Class($control);
+          name_test_expect($reader->cstring() === '%10', 'UE2 C-string control byte was not escaped.');
 
           catalog_load_reader_class($config, 'UE3');
-          reader_name_expect(class_exists('UEFolderBinaryReader', false), 'UE3 binary reader was not loaded.');
-          reader_name_assert_values(
-              new UEFolderBinaryReader(reader_name_i32(strlen($ansiRaw)) . $ansiRaw),
-              'fstring32',
-              new UEFolderBinaryReader(reader_name_i32(-$wideChars) . $wideRaw),
-              'fstring32'
-          );
-          $ue3Control = new UEFolderBinaryReader(reader_name_i32(strlen($controlRaw)) . $controlRaw);
-          reader_name_expect($ue3Control->fstring32() === '%10', 'UE3 control-only name was not escaped.');
+          name_test_expect(class_exists('UEFolderBinaryReader', false), 'UE3 binary reader was not loaded.');
+          $reader = new UEFolderBinaryReader(name_test_i32(strlen($ansi)) . $ansi);
+          name_test_expect($reader->fstring32() === 'SafeName', 'UE3 retained bytes after the first ANSI terminator.');
+          $reader = new UEFolderBinaryReader(name_test_i32(-$wideChars) . $wide);
+          name_test_expect($reader->fstring32() === 'Safe', 'UE3 retained characters after the first wide terminator.');
+          $reader = new UEFolderBinaryReader(name_test_i32(strlen($control)) . $control);
+          name_test_expect($reader->fstring32() === '%10', 'UE3 did not escape a control-only name.');
+          $reader = new UEFolderBinaryReader($control);
+          name_test_expect($reader->cstring() === '%10', 'UE3 C-string control byte was not escaped.');
 
           fwrite(STDOUT, "Obfuscated package name sanitization tests passed.\n");
           PHP
 
           python3 - <<'PY'
           from pathlib import Path
-          path = Path('.github/workflows/catalog-quality.yml')
-          text = path.read_text()
-          needle = "      - name: Test synthetic UE1-UE4 reader fixtures\n        run: php catalog/tests/reader-fixtures-test.php\n"
-          addition = needle + "      - name: Test obfuscated package name handling\n        run: php catalog/tests/reader-name-sanitization-test.php\n"
-          if needle not in text:
-              raise SystemExit('Catalog quality reader test step drifted')
-          path.write_text(text.replace(needle, addition, 1))
+          workflow = Path('.github/workflows/catalog-quality.yml')
+          source = workflow.read_text()
+          test_step = "      - name: Test obfuscated package name handling\n        run: php catalog/tests/reader-name-sanitization-test.php\n"
+          if test_step not in source:
+              anchor = "      - name: Test synthetic UE1-UE4 reader fixtures\n        run: php catalog/tests/reader-fixtures-test.php\n"
+              if anchor not in source:
+                  raise SystemExit('Catalog quality reader fixture step drifted')
+              source = source.replace(anchor, anchor + test_step, 1)
+              workflow.write_text(source)
           PY
-      - name: Validate
+
+      - name: Validate readers
         run: |
           php -l UE1/UnrealPackageReader.php
           php -l UE2/UnrealPackageReader.php
@@ -297,6 +303,7 @@ jobs:
           php -l catalog/tests/reader-name-sanitization-test.php
           php catalog/tests/reader-name-sanitization-test.php
           php catalog/tests/reader-fixtures-test.php
+
       - name: Commit fix and remove workflow
         run: |
           git config user.name github-actions[bot]
