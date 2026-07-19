@@ -38,13 +38,14 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Federation peer secrets support authenticated encryption with a deployment master key and a migration CLI.
 - Pairing claims are POST-only, query-string claim tokens are removed, and the one-time transition is atomic.
 - Pairing secrets are no longer stored in administrative notes or returned by approval-status polling.
+- Public generated-package requests have an application-side observed-IP rate limit and session-bound artifact authorization.
 - Security boundaries are enforced by CI tests.
 
 ### Next
 
 - Migrate symmetric federation HMAC identities to Ed25519 peer identities.
 - Add administrator MFA and reauthentication for security-sensitive operations.
-- Add public search, package-generation, join-request, and download rate limits.
+- Add public search, join-request and individual-download rate limits; retain WAF limits around package generation.
 - Centralize outbound federation HTTP through the existing SSRF-resistant client.
 - Remove every controller-level `display_errors` override and raw session bootstrap.
 - Add Content Security Policy and security event alerting.
@@ -106,8 +107,8 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Fixed retry transitions so they clear the previous worker ID and lease timestamps.
 - Added persisted resource classes, per-class capacity limits and target concurrency keys.
 - Added advisory claim coordination so competing workers cannot overbook a resource class.
-- Added fair claim selection that skips saturated heavy classes and admits eligible housekeeping work.
-- Added configurable limits for `dependency-heavy`, `housekeeping` and `default` jobs.
+- Added fair claim selection that skips saturated classes and admits eligible work from another class.
+- Added configurable limits for `dependency-heavy`, `storage-heavy`, `package-heavy`, `housekeeping` and `default` jobs.
 - Split exact-file dependency refresh from affected-dependants refresh so job names match scanner behaviour.
 - Moved the standalone Dependency Refresh page behind one durable game/file job instead of repeated browser requests.
 - Preserved full-game start offsets, persisted progress and final dependency totals, cooperative cancellation and URL-based job resume.
@@ -115,17 +116,22 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Preserved canonical package, original filename, export-path, source-derived alias and dependency-refresh behaviour through the existing repair library.
 - Kept one game-wide dependency pass after all identity updates, bounded stored failure details, and retained the legacy maintenance advisory lock during staged deployment.
 - Converted the former source-identity step API into an enqueue-only compatibility adapter; it no longer writes progress files or mutates catalog data in HTTP requests.
+- Moved exact size+MD5 unverified duplicate cleanup behind a `storage-heavy` worker job while preserving keeper selection and immediate pre-delete revalidation.
+- Added hash/delete progress, cooperative cancellation and bounded durable deletion/error details for duplicate cleanup.
+- Moved ZIP, UMOD-family and PAK generation out of Apache into `package-heavy` jobs using the existing package plan, format writers and validators.
+- Added unique `.part` output, validation-before-publication, atomic artifact rename, post-publication lease/cancellation cleanup, retention pruning and session-authorized download.
+- Added public package request throttling, random per-job browser access tokens stored only as SHA-256 in job payloads, and bounded artifact lifetimes.
 - Added bounded job-status polling by ID; completed results are omitted from general multi-job listings.
 - Added CLI and secured administrator API operations for status, enqueue, cancel, retry and recovery.
-- Added MySQL integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness, target-key exclusion, exact-file dependency execution and canonical source-identity repair.
+- Added MySQL/filesystem integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness, target-key exclusion, dependency execution, source-identity repair, duplicate cleanup and generated package publication.
 
 ### Next
 
-1. Add durable job types for duplicate hashing and package generation.
-2. Evaluate package import and PAK extraction boundaries after reader-backed fixtures exist.
-3. Make each remaining heavy job idempotent and resumable from a durable checkpoint.
-4. Add worker termination tests during each major package and maintenance stage.
-5. Keep one production worker replica until heavy-job concurrency and storage behaviour are validated.
+1. Add reader-backed fixtures for every supported engine before moving package import and PAK extraction into jobs.
+2. Define durable checkpoints for package preparation, decompression/extraction, parsing, storage and persistence.
+3. Add worker termination/retry tests for archive writing, scanner parsing and filesystem-to-database transition boundaries.
+4. Add scheduled generated-artifact pruning rather than relying only on subsequent builds and expired downloads.
+5. Keep one production worker replica until heavy-job concurrency and shared-storage behaviour are validated.
 
 ## Workstream 5 — Search and database performance
 
@@ -149,12 +155,13 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Reusable server-rendered UI components exist for page headers, buttons, fields, alerts, empty/loading states, pagination, progress, filters and accessible table regions.
 - Component accessibility and escaping contracts run in CI.
 - Responsive table and filter behaviour is documented.
+- Dependency refresh, source identity repair, duplicate cleanup and generated package progress clients use external JavaScript assets rather than embedding their orchestration logic in page controllers.
 
 ### Next
 
 - Migrate remaining high-use admin pages to shared components.
 - Remove duplicated inline CSS and JavaScript where shared behaviours exist.
-- Add CSP-compatible asset loading and eliminate inline script dependencies incrementally.
+- Add CSP-compatible asset loading and eliminate remaining inline script dependencies incrementally.
 - Add visual regression checks for critical pages after stable fixtures exist.
 
 ## Workstream 7 — Federation and API trust
@@ -189,24 +196,26 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Kubernetes strict federation-secret policy is backed by a Secret-provided master key; Compose exposes the same controls for staged rollout.
 - Compose application startup and Kubernetes production rollout are gated on successful, drift-free database migrations.
 - Worker containers use the configured queue name and lease duration.
-- Resource-class capacity defaults are declared in Compose and Kubernetes configuration.
-- A background-job operations runbook documents dependency and source-identity enqueueing, cancellation, recovery, dead letters, resource saturation and scaling gates.
+- Dependency, storage-cleanup, package-generation, housekeeping and default capacity values are declared in Compose and Kubernetes.
+- The production image includes PHP ZipArchive for worker-generated ZIP output.
+- Generated artifact retention and public package request limits are declared in supported deployment examples.
+- A background-job operations runbook documents dependency/source repair, duplicate cleanup, package generation, cancellation, recovery, dead letters, resource saturation, artifact lifecycle and scaling gates.
 
 ### Next
 
 - Select the production platform and replace generic kubeconfig credentials with workload identity.
 - Provision managed MySQL, Redis, TLS, WAF, RWX or object storage and central logs.
 - Add application metrics or OpenTelemetry instrumentation.
-- Add dashboards and alerts for latency, errors, queue age, class saturation, lease recovery, dead letters, worker failures, database contention and storage capacity.
+- Add dashboards and alerts for latency, errors, queue age, class saturation, lease recovery, dead letters, worker failures, database contention, artifact storage and overall storage capacity.
 - Implement point-in-time database recovery, package snapshots and quarterly restore tests.
 
 ## Workstream 9 — Testing and engineering governance
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource, queued-dependency and queued-source-identity checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource, queued-dependency, queued-source-identity and durable storage/package checks are represented in CI.
 - Clean architecture boundaries and compatibility facades are documented.
-- Database integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation, queue fairness, exact-file dependency job semantics, canonical source-path identity, export rewrites, source-derived aliases and referring dependency refresh.
+- Database/filesystem integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation, queue fairness, dependency semantics, canonical source-path identity, export rewrites, aliases, duplicate keeper/deletion behavior and validated generated artifact publication.
 
 ### Next
 
@@ -220,8 +229,8 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ## Ordered delivery sequence
 
-1. Move duplicate hashing and package generation behind durable jobs without regressing progress UX.
-2. Add reader and dependency fixtures before deeper scanner refactoring.
+1. Add reader and dependency fixtures before deeper scanner/import refactoring.
+2. Define and test durable package-import and PAK-extraction checkpoints.
 3. Complete remaining P0 security controls and asymmetric identity planning.
 4. Optimize search and persistence from measured profiles.
 5. Finish UI component migration and CSP work.
