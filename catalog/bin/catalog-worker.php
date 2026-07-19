@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogMaintenanceJobHandler;
+use UnrealDb\Catalog\Infrastructure\Jobs\GeneratedPackageJobHandler;
 use UnrealDb\Catalog\Infrastructure\Jobs\UnverifiedDuplicateCleanupJobHandler;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
@@ -27,6 +28,7 @@ $worker = new JobWorker(
     [
         new CatalogMaintenanceJobHandler($application->db, $application->config),
         new UnverifiedDuplicateCleanupJobHandler($application->db, $application->config),
+        new GeneratedPackageJobHandler($application->db, $application->config),
     ],
     $queueName,
     $workerId,
