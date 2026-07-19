@@ -165,6 +165,50 @@ try {
         JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => JobType::REPAIR_SOURCE_IDENTITY_GAME]], 202);
     }
 
+    if ($action === 'enqueue_reconcile_unverified') {
+        $maxFiles = max(1, min((int)($payload['max_files'] ?? 1000), 10000));
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::RECONCILE_UNVERIFIED_STORAGE,
+            ['max_files' => $maxFiles],
+            25,
+            null,
+            'reconcile-unverified-storage',
+            $userId,
+            3
+        );
+        JsonResponse::send([
+            'data' => [
+                'job_id' => $jobId,
+                'status' => 'queued',
+                'type' => JobType::RECONCILE_UNVERIFIED_STORAGE,
+                'max_files' => $maxFiles,
+            ],
+        ], 202);
+    }
+
+    if ($action === 'enqueue_prune_artifacts') {
+        $maxAge = max(3600, min((int)($payload['incoming_max_age_seconds'] ?? 172800), 30 * 86400));
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::PRUNE_STALE_ARTIFACTS,
+            ['incoming_max_age_seconds' => $maxAge],
+            200,
+            null,
+            'prune-stale-artifacts',
+            $userId,
+            2
+        );
+        JsonResponse::send([
+            'data' => [
+                'job_id' => $jobId,
+                'status' => 'queued',
+                'type' => JobType::PRUNE_STALE_ARTIFACTS,
+                'incoming_max_age_seconds' => $maxAge,
+            ],
+        ], 202);
+    }
+
     if ($action === 'enqueue_prune') {
         $maxAge = max(60, min((int)($payload['max_age_seconds'] ?? 86400), 604800));
         $jobId = $queue->enqueue(
@@ -182,7 +226,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game and enqueue_prune.',
+        'Supported actions are cancel, retry, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {
