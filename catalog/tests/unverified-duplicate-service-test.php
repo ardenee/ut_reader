@@ -97,6 +97,8 @@ final class TestFileSystem implements UnverifiedFileSystem
     /** @var list<string> */
     public array $deleted = [];
 
+    public int $hashProgressCalls = 0;
+
     public function exists(string $path): bool
     {
         return !empty($this->existing[$path]);
@@ -107,8 +109,12 @@ final class TestFileSystem implements UnverifiedFileSystem
         return $path === '/queue/unique.uax' ? 200 : 100;
     }
 
-    public function md5(string $path): ?string
+    public function md5(string $path, ?callable $progress = null): ?string
     {
+        if ($progress !== null) {
+            $this->hashProgressCalls++;
+            $progress($this->size($path), $this->size($path));
+        }
         return $path === '/queue/unique.uax'
             ? 'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb'
             : 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
@@ -127,18 +133,26 @@ final class TestFileSystem implements UnverifiedFileSystem
 
 $records = new TestRecordStore();
 $files = new TestFileSystem();
+$progress = [];
 $service = new UnverifiedDuplicateCleanupService(
     new TestQueueInventory(),
     $records,
     $files
 );
 
-$scan = $service->scan();
+$scan = $service->scan(static function (array $state) use (&$progress): void {
+    $progress[] = $state;
+});
 duplicate_expect($scan['physical_files'] === 4, 'Physical queue count changed.');
 duplicate_expect($scan['hashed_files'] === 3, 'Only same-size candidates should be hashed.');
 duplicate_expect($scan['duplicate_groups'] === 1, 'Expected one exact duplicate group.');
 duplicate_expect($scan['duplicate_files'] === 2, 'Expected two removable duplicate files.');
 duplicate_expect($scan['duplicate_bytes'] === 200, 'Duplicate byte total changed.');
+duplicate_expect($files->hashProgressCalls === 3, 'Hash progress did not run for each same-size candidate.');
+duplicate_expect(
+    count(array_filter($progress, static fn(array $state): bool => ($state['stage'] ?? '') === 'hashing')) >= 3,
+    'Chunked hash progress was not forwarded by the cleanup service.'
+);
 duplicate_expect(
     $scan['groups'][0]['keeper']['queue_name'] === 'indexed.utx',
     'An indexed queue copy must be retained before age ordering.'
