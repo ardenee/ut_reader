@@ -10,6 +10,8 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogMaintenanceJobHandler;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogStagedImportJobHandler;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogStorageMaintenanceJobHandler;
 use UnrealDb\Catalog\Infrastructure\Jobs\GeneratedPackageJobHandler;
 use UnrealDb\Catalog\Infrastructure\Jobs\UnverifiedDuplicateCleanupJobHandler;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
@@ -26,7 +28,9 @@ $queue = new PdoJobQueue($application->db);
 $worker = new JobWorker(
     $queue,
     [
+        new CatalogStagedImportJobHandler($application->db, $application->config),
         new CatalogMaintenanceJobHandler($application->db, $application->config),
+        new CatalogStorageMaintenanceJobHandler($application->db, $application->config),
         new UnverifiedDuplicateCleanupJobHandler($application->db, $application->config),
         new GeneratedPackageJobHandler($application->db, $application->config),
     ],
