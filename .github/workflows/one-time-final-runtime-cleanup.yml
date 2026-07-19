@@ -28,25 +28,11 @@ jobs:
 
           scanner = Path('catalog/lib/CatalogScanner.php')
           text = scanner.read_text()
-          old = '''function scanner_source_path_schema_ensure(PDO $db): void
-          {
-              static $done = false;
-              if ($done) {
-                  return;
-              }
-
-              $exists = catalog_one(
-                  $db,
-                  'SELECT COUNT(*) c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="source_relative_path"'
-              );
-              if ((int)($exists['c'] ?? 0) === 0) {
-                  $db->exec('ALTER TABLE ue_files ADD COLUMN source_relative_path VARCHAR(1024) NULL DEFAULT NULL AFTER original_name');
-              }
-
-              $done = true;
-          }
-          '''
-          new = '''function scanner_source_path_schema_ensure(PDO $db): void
+          pattern = re.compile(
+              r'function scanner_source_path_schema_ensure\(PDO \$db\): void\n\{.*?\n\}\n\nfunction scanner_record_source_relative_path',
+              re.S,
+          )
+          replacement = '''function scanner_source_path_schema_ensure(PDO $db): void
           {
               static $verified = false;
               if ($verified) {
@@ -66,15 +52,19 @@ jobs:
 
               $verified = true;
           }
-          '''
-          if old not in text:
-              raise SystemExit('CatalogScanner source path schema block drifted')
-          scanner.write_text(text.replace(old, new, 1))
 
-          path = Path('catalog/lib/CatalogUnverifiedIndex.php')
-          text = path.read_text()
-          start = text.index('function catalog_unverified_schema_ensure(PDO $db): void')
-          end = text.index('\nfunction catalog_unverified_queue_key', start)
+          function scanner_record_source_relative_path'''
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('CatalogScanner source path schema block drifted')
+          scanner.write_text(text)
+
+          unverified = Path('catalog/lib/CatalogUnverifiedIndex.php')
+          text = unverified.read_text()
+          pattern = re.compile(
+              r'function catalog_unverified_schema_ensure\(PDO \$db\): void\n\{.*?\n\}\n\nfunction catalog_unverified_queue_key',
+              re.S,
+          )
           replacement = '''function catalog_unverified_schema_ensure(PDO $db): void
           {
               static $verified = false;
@@ -113,8 +103,12 @@ jobs:
               scanner_source_path_schema_ensure($db);
               $verified = true;
           }
-          '''
-          path.write_text(text[:start] + replacement + text[end:])
+
+          function catalog_unverified_queue_key'''
+          text, count = pattern.subn(replacement, text, count=1)
+          if count != 1:
+              raise SystemExit('CatalogUnverifiedIndex schema block drifted')
+          unverified.write_text(text)
 
           raw = re.compile(r'(?m)^session_start\(\);\s*\n(?:error_reporting\(E_ALL\);\s*\n)?(?:ini_set\([\'\"]display_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?(?:ini_set\([\'\"]display_startup_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?')
           display = re.compile(r'(?m)^(?:error_reporting\(E_ALL\);|ini_set\([\'\"]display_(?:startup_)?errors[\'\"],\s*[\'\"]1[\'\"]\);)\s*\n')
