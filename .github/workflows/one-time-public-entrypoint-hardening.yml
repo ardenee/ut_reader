@@ -1,0 +1,81 @@
+name: One-time public entrypoint hardening
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Remove public error display and raw root session bootstrap
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          targets = [Path('index.php')]
+          for directory in ['UE1', 'UE2', 'UE3', 'new']:
+              root = Path(directory)
+              if root.is_dir():
+                  targets.extend(sorted(root.rglob('*.php')))
+
+          error_lines = re.compile(
+              r'(?m)^[ \t]*(?:error_reporting\(E_ALL\);|ini_set\([\'\"]display_(?:startup_)?errors[\'\"],\s*(?:[\'\"]1[\'\"]|1)\);)[ \t]*\n'
+          )
+          raw_session = re.compile(r'(?m)^[ \t]*session_start\(\);[ \t]*\n')
+          support = re.compile(r'(?m)^require_once\s+[^;]*CatalogSupport\.php[^;]*;[ \t]*$')
+
+          changed = []
+          for file in targets:
+              if not file.is_file():
+                  continue
+              original = file.read_text()
+              updated = error_lines.sub('', original)
+
+              if file.as_posix() == 'index.php':
+                  updated = raw_session.sub('', updated)
+                  match = support.search(updated)
+                  if match is None:
+                      raise SystemExit('index.php no longer has the expected CatalogSupport bootstrap')
+                  if 'catalog_start_session();' not in updated[:1600]:
+                      updated = updated[:match.end()] + '\n\ncatalog_start_session();' + updated[match.end():]
+
+              if updated != original:
+                  file.write_text(updated)
+                  changed.append(file.as_posix())
+
+          if not changed:
+              raise SystemExit('No remaining public entrypoint hardening changes were found')
+          print('Updated files:', len(changed))
+          for rel in changed:
+              print('UPDATED', rel)
+          PY
+      - name: Validate changed PHP
+        run: |
+          changed_php="$(git diff --name-only -- '*.php')"
+          while IFS= read -r file; do
+            [ -z "$file" ] || php -l "$file"
+          done <<< "$changed_php"
+          ! grep -R -n -E "error_reporting\(E_ALL\)|ini_set\(['\"]display_(startup_)?errors['\"],[[:space:]]*(['\"]1['\"]|1)\)" index.php UE1 UE2 UE3 new --include='*.php'
+          ! grep -n '^session_start();' index.php
+      - name: Commit hardening and remove workflow
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm .github/workflows/one-time-public-entrypoint-hardening.yml
+          git add index.php UE1 UE2 UE3 new
+          git commit -m 'security: harden remaining public entrypoints'
+          git pull --rebase origin main
+          git push origin HEAD:main
