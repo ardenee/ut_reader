@@ -36,11 +36,11 @@ $action = file_get_contents(__DIR__ . '/../api/v1/job-action.php');
 dependency_refresh_contract_expect(is_string($action), 'job-action.php could not be read.');
 dependency_refresh_contract_expect(str_contains($action, 'JobType::REBUILD_FILE_DEPENDENCIES'), 'enqueue_rebuild_file does not use the exact file job type.');
 dependency_refresh_contract_expect(str_contains($action, 'enqueue_rebuild_affected'), 'The affected-dependants job is no longer explicitly available.');
-dependency_refresh_contract_expect(str_contains($action, "'offset' => $offset"), 'Game refresh offsets are not persisted in the job payload.');
+dependency_refresh_contract_expect(str_contains($action, "'offset' => \$offset"), 'Game refresh offsets are not persisted in the job payload.');
 
 $status = file_get_contents(__DIR__ . '/../api/v1/job-status.php');
 dependency_refresh_contract_expect(is_string($status), 'job-status.php could not be read.');
-dependency_refresh_contract_expect(str_contains($status, "$_GET['job_id']"), 'Job status cannot poll one durable job by ID.');
+dependency_refresh_contract_expect(str_contains($status, "\$_GET['job_id']"), 'Job status cannot poll one durable job by ID.');
 dependency_refresh_contract_expect(str_contains($status, 'result_json'), 'Job status no longer exposes completed result data.');
 
 echo "Dependency refresh durable-job contract tests passed.\n";
