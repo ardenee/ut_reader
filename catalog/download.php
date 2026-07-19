@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogPublicRateLimit.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
 
@@ -41,6 +42,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
     base_game_ensure($db);
+    catalog_public_download_rate_limit();
     $id = (int)($_GET['id'] ?? 0);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [$id]);
     if (!$file) {
