@@ -48,6 +48,8 @@ $manifestPath = dirname(__DIR__, 2) . '/tests/fixtures/synthetic-readers.json';
 $manifest = json_decode((string)file_get_contents($manifestPath), true, 512, JSON_THROW_ON_ERROR);
 $fixtures = is_array($manifest['fixtures'] ?? null) ? $manifest['fixtures'] : [];
 reader_fixture_expect(count($fixtures) === 6, 'Synthetic reader fixture manifest is incomplete.');
+$manifestIds = array_map(static fn(array $fixture): string => (string)($fixture['id'] ?? ''), $fixtures);
+reader_fixture_expect($manifestIds === SyntheticReaderFixtures::ids(), 'Synthetic reader fixture manifest and generator IDs differ.');
 
 $config = [
     'engine_readers' => [
