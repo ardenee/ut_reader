@@ -19,7 +19,8 @@ Game profiles define the active reader family, allowed package extensions, packa
 - MySQL 8 or a compatible MariaDB release
 - PDO MySQL
 - PHP cURL for federation streaming and trusted HTTP source scans
-- A writable catalogue storage directory
+- PHP ZipArchive for ZIP package exports
+- A writable catalogue storage directory shared by web and worker processes
 - Apache, another compatible web server, or the supplied container deployment
 
 ## Installation
@@ -66,6 +67,8 @@ Identity matching does not depend on a cleaned browser filename. The catalogue u
 
 A byte-identical package with another valid package name may be recorded as an alias of the existing file identity. Physical verified storage uses hash-based names; the original package name remains metadata and is used for controlled download naming.
 
+The unverified duplicate cleanup is a durable `storage-heavy` job. It inventories every physical unverified queue, groups by size, calculates MD5 only for size collisions, retains one exact size+MD5 copy and revalidates a duplicate immediately before deletion.
+
 For UE4 and UE5-style packages, source-relative paths are required to derive mounted package identity consistently with Unreal package naming rules. Folder uploads, local sources, PAK entries and source manifests provide that context.
 
 ## Dependency resolution
@@ -97,11 +100,19 @@ All public delivery must pass through the canonical download controller. Files m
 
 External mirror links are administered through a provider workflow. The application can queue mirror work and reuse active links, but provider-specific upload automation is not yet a core feature.
 
+Generated dependency ZIP, UMOD-family, UT3 ZIP and UT4 PAK output is built by the background worker. A completed artifact is authorized to the initiating browser session, stored under controlled generated-package storage and expires after a bounded retention period.
+
 ## Background jobs and worker
 
-The catalogue includes a durable MySQL-backed job queue for maintenance work. Current job types include exact/file/game dependency rebuilds, affected-dependants refreshes, UE4/UE5 source-identity repair and upload-progress pruning.
+The catalogue includes a durable MySQL-backed job queue for maintenance and generation work. Current job types include:
 
-The Dependency Refresh and Source Identity Repair pages enqueue durable work, poll persisted progress, support cooperative cancellation and retain the active job ID in the URL so progress can resume after reload. Closing either page does not stop the worker.
+- exact file, full game and affected-dependants dependency rebuilds
+- UE4/UE5 file and game source-identity repair
+- exact unverified size+MD5 duplicate cleanup
+- generated mod/dependency package builds
+- upload-progress pruning
+
+The Dependency Refresh, Source Identity Repair, duplicate cleanup and generated-package pages enqueue durable work, poll persisted progress and support cooperative cancellation. Closing a page does not stop its worker job. Dependency, identity and generated-package pages retain the active job ID in the URL so status can resume after reload in the authorized session.
 
 Run workers only through CLI:
 
@@ -113,7 +124,7 @@ Worker leases use an opaque token. Completion, failure, progress, cancellation a
 
 Queued jobs may be cancelled immediately. Running jobs stop cooperatively at safe handler checkpoints. Expired leases are either requeued, finalized as cancelled, or moved to `dead_letter` after the final permitted attempt. Retried and recovered jobs clear the previous worker identity and lease timestamps.
 
-Resource classes and target concurrency keys prevent heavy dependency and source-identity jobs from overlapping while allowing eligible housekeeping jobs to continue.
+Persisted resource classes and target concurrency keys prevent conflicting heavy jobs from overlapping while allowing eligible work in other classes to continue. Dependency/identity, storage cleanup and package generation each default to one concurrent slot.
 
 Operator controls are available through the trusted CLI or the authenticated, CSRF-protected administrator API:
 
@@ -126,9 +137,12 @@ php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1 --offset=0
 php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123
 php catalog/bin/job-control.php enqueue-source-identity-file --file-id=123
 php catalog/bin/job-control.php enqueue-source-identity-game --game-id=1
+php catalog/bin/job-control.php enqueue-clean-unverified-duplicates
 ```
 
-See `docs/background-jobs.md` for state transitions, cancellation semantics, source-identity repair behavior, dead-letter handling, alerts and scaling gates. Keep one production worker replica until the resource and idempotency behaviour of each heavy job type has been validated.
+Public package generation is deliberately initiated through its browser-session endpoint rather than CLI, because the completed artifact is bound to the requesting browser's random access token.
+
+See `docs/background-jobs.md` for state transitions, cancellation semantics, artifact retention, source-identity repair behavior, dead-letter handling, alerts and scaling gates. Keep one production worker replica until the resource and idempotency behaviour of each heavy job type has been validated.
 
 ## Federation
 
@@ -151,6 +165,7 @@ Current automated checks include:
 - explicit unverified-staging integration tests
 - background-job lease, retry, cancellation, dead-letter, resource-limit and competing-worker tests
 - queued dependency and source-identity execution tests
+- durable duplicate-cleanup and generated-package execution tests
 - UI, duplicate-cleanup and generated package-format contracts
 - clean MySQL schema and seed verification
 
@@ -170,6 +185,7 @@ The workflow does not yet prove package-reader correctness for every supported e
 - `health.php` checks database-backed readiness.
 - `job-status.php` requires an administrator session and reports queue, progress, result, heartbeat, cancellation, recovery and dead-letter metadata. General lists omit result payloads; a specific `job_id` includes the durable result.
 - `job-action.php` requires an administrator session, POST and a valid CSRF header for supported enqueue, cancel, retry and recovery actions.
+- Public generated-package status and download use separate session-bound controllers; arbitrary job records and artifact names are not public credentials.
 - Federation endpoints live under `catalog/api/federation/`.
 
 ## UI system
@@ -194,7 +210,7 @@ Do not run historical `upgrade-*.sql` files as a release sequence. They remain o
 
 Production assets are included for:
 
-- Docker image construction
+- Docker image construction with PHP ZipArchive support
 - Docker Compose integration and single-host staging
 - Kubernetes web and worker deployments
 - readiness, liveness and startup probes
@@ -215,10 +231,10 @@ Production deployments should use managed or separately protected MySQL, Redis-b
 Major planned work includes:
 
 - complete reader fixtures for all supported engines and known edge cases
-- moving duplicate hashing, package generation and selected remaining heavy maintenance operations into resumable jobs
 - evaluating package import and PAK extraction job boundaries after reader fixtures exist
+- adding crash/retry fixtures for partially completed scanner and archive stages
 - asymmetric federation identities and hardened outbound peer networking
-- public endpoint rate limits and administrator MFA
+- broader public endpoint rate limits and administrator MFA
 - measured search optimization and production telemetry
 
 The ordered implementation status is maintained in `docs/production-remediation-program.md`.
