@@ -31,7 +31,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 
 RUN rm -f /var/www/html/catalog/config.php \
-    && chmod 0755 /var/www/html/deploy/docker/entrypoint.sh /var/www/html/deploy/docker/worker-loop.sh \
+    && chmod 0755 /var/www/html/deploy/docker/entrypoint.sh /var/www/html/deploy/docker/worker-loop.sh /var/www/html/deploy/docker/maintenance-loop.sh \
     && mkdir -p \
         /var/www/html/catalog/storage/cache \
         /var/www/html/catalog/storage/federation/incoming \
