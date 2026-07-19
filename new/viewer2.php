@@ -1,7 +1,5 @@
 <?php
 // viewer2.php — Unreal package loader & explorer
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
 
 require_once __DIR__ . '/UnrealPackageReader5a.php';
 
