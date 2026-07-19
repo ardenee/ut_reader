@@ -1,0 +1,158 @@
+name: One-time final runtime cleanup
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, curl, mbstring, openssl, zip
+          coverage: none
+      - name: Remove runtime DDL and raw controller bootstrap
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          scanner = Path('catalog/lib/CatalogScanner.php')
+          text = scanner.read_text()
+          old = '''function scanner_source_path_schema_ensure(PDO $db): void
+          {
+              static $done = false;
+              if ($done) {
+                  return;
+              }
+
+              $exists = catalog_one(
+                  $db,
+                  'SELECT COUNT(*) c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="source_relative_path"'
+              );
+              if ((int)($exists['c'] ?? 0) === 0) {
+                  $db->exec('ALTER TABLE ue_files ADD COLUMN source_relative_path VARCHAR(1024) NULL DEFAULT NULL AFTER original_name');
+              }
+
+              $done = true;
+          }
+          '''
+          new = '''function scanner_source_path_schema_ensure(PDO $db): void
+          {
+              static $verified = false;
+              if ($verified) {
+                  return;
+              }
+
+              $exists = catalog_one(
+                  $db,
+                  'SELECT COUNT(*) c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="source_relative_path"'
+              );
+              if ((int)($exists['c'] ?? 0) === 0) {
+                  throw new RuntimeException(
+                      'The database schema is not migrated. Missing: ue_files.source_relative_path. '
+                      . 'Run php catalog/bin/migrate.php migrate followed by verify.'
+                  );
+              }
+
+              $verified = true;
+          }
+          '''
+          if old not in text:
+              raise SystemExit('CatalogScanner source path schema block drifted')
+          scanner.write_text(text.replace(old, new, 1))
+
+          path = Path('catalog/lib/CatalogUnverifiedIndex.php')
+          text = path.read_text()
+          start = text.index('function catalog_unverified_schema_ensure(PDO $db): void')
+          end = text.index('\nfunction catalog_unverified_queue_key', start)
+          replacement = '''function catalog_unverified_schema_ensure(PDO $db): void
+          {
+              static $verified = false;
+              if ($verified) {
+                  return;
+              }
+
+              $missing = [];
+              $gameId = catalog_one($db, 'SELECT IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="game_id"');
+              if (!$gameId || strtoupper((string)$gameId['IS_NULLABLE']) !== 'YES') {
+                  $missing[] = 'ue_files.game_id nullable';
+              }
+              $status = catalog_one($db, 'SELECT COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME="scan_status"');
+              if (!$status || !str_contains(strtolower((string)$status['COLUMN_TYPE']), "'unverified'")) {
+                  $missing[] = 'ue_files.scan_status unverified value';
+              }
+              foreach (['source_relative_path', 'unverified_queue_key', 'unverified_queue_game_id', 'unverified_queue_name', 'unverified_reason'] as $column) {
+                  $exists = catalog_one($db, 'SELECT COUNT(*) c FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND COLUMN_NAME=?', [$column]);
+                  if ((int)($exists['c'] ?? 0) === 0) {
+                      $missing[] = 'ue_files.' . $column;
+                  }
+              }
+              foreach (['uq_ue_files_unverified_queue_key', 'idx_ue_files_scan_status', 'idx_ue_files_unverified_queue'] as $index) {
+                  $exists = catalog_one($db, 'SELECT COUNT(*) c FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" AND INDEX_NAME=?', [$index]);
+                  if ((int)($exists['c'] ?? 0) === 0) {
+                      $missing[] = 'index ' . $index;
+                  }
+              }
+              if ($missing !== []) {
+                  throw new RuntimeException(
+                      'The database schema is not migrated. Missing: ' . implode(', ', $missing)
+                      . '. Run php catalog/bin/migrate.php migrate followed by verify.'
+                  );
+              }
+
+              scanner_source_path_schema_ensure($db);
+              $verified = true;
+          }
+          '''
+          path.write_text(text[:start] + replacement + text[end:])
+
+          raw = re.compile(r'(?m)^session_start\(\);\s*\n(?:error_reporting\(E_ALL\);\s*\n)?(?:ini_set\([\'\"]display_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?(?:ini_set\([\'\"]display_startup_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?')
+          display = re.compile(r'(?m)^(?:error_reporting\(E_ALL\);|ini_set\([\'\"]display_(?:startup_)?errors[\'\"],\s*[\'\"]1[\'\"]\);)\s*\n')
+          changed = []
+          for file in sorted(Path('catalog').rglob('*.php')):
+              rel = file.as_posix()
+              if any(part in rel for part in ['/tests/', '/migrations/', '/src/', '/lib/', '/parsers/', '/bin/']):
+                  continue
+              original = file.read_text()
+              head = original[:1400]
+              if 'session_start();' not in head and 'display_errors' not in head and 'display_startup_errors' not in head:
+                  continue
+              updated = raw.sub('', original, count=1)
+              updated = display.sub('', updated)
+              if 'session_start();' in head and 'catalog_start_session();' not in updated[:2000]:
+                  match = re.search(r'(?m)^require_once\s+[^;]*CatalogSupport\.php[^;]*;\s*$', updated)
+                  if not match:
+                      raise SystemExit('Cannot place catalog_start_session in ' + rel)
+                  updated = updated[:match.end()] + '\n\ncatalog_start_session();' + updated[match.end():]
+              if updated != original:
+                  file.write_text(updated)
+                  changed.append(rel)
+          print('Updated controllers:', len(changed))
+          for rel in changed:
+              print(rel)
+          PY
+      - name: Validate
+        run: |
+          find catalog -type f -name '*.php' -not -path 'catalog/vendor/*' -print0 | xargs -0 -n1 php -l
+          php catalog/tests/review-completion-contract-test.php
+          php catalog/tests/security-boundaries-test.php
+          php catalog/tests/architecture-boundaries-test.php
+          ! grep -R --include='*.php' -n "exec('ALTER TABLE ue_files" catalog/lib/CatalogScanner.php catalog/lib/CatalogUnverifiedIndex.php
+      - name: Commit and remove workflow
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm .github/workflows/one-time-final-runtime-cleanup.yml
+          git add catalog
+          git commit -m 'security: remove runtime ddl and raw controller sessions'
+          git push origin HEAD:main
