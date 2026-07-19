@@ -3,41 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogScanner.php';
-
-const SOURCE_IDENTITY_REPAIR_LOCK = 'unrealdb_catalog_maintenance_write_v1';
-const SOURCE_IDENTITY_REPAIR_LOCK_WAIT = 45;
-
-/** @return mixed */
-function source_identity_repair_with_lock(PDO $db, callable $operation): mixed
-{
-    $row = catalog_one(
-        $db,
-        'SELECT GET_LOCK(?, ?) acquired',
-        [SOURCE_IDENTITY_REPAIR_LOCK, SOURCE_IDENTITY_REPAIR_LOCK_WAIT]
-    );
-    if ((int)($row['acquired'] ?? 0) !== 1) {
-        throw new RuntimeException('Another catalog maintenance task is running. Try again after it finishes.');
-    }
-
-    try {
-        return $operation();
-    } finally {
-        try {
-            $db->prepare('SELECT RELEASE_LOCK(?)')->execute([SOURCE_IDENTITY_REPAIR_LOCK]);
-        } catch (Throwable $releaseError) {
-            error_log('[UnrealDB source identity repair] lock release failed: ' . $releaseError->getMessage());
-        }
-    }
-}
-
-function source_identity_repair_post_int(string $name): int
-{
-    $value = filter_input(INPUT_POST, $name, FILTER_VALIDATE_INT);
-    if ($value === false || $value === null || $value < 1) {
-        throw new RuntimeException('A valid ' . str_replace('_', ' ', $name) . ' is required.');
-    }
-    return (int)$value;
-}
+require_once __DIR__ . '/lib/CatalogSourceIdentity.php';
 
 function source_identity_repair_get_int(string $name): int
 {
@@ -105,125 +71,86 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
-    $message = '';
-    $messageType = 'success';
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        catalog_check_csrf('source-identity-repair');
-        $operation = trim((string)($_POST['operation'] ?? ''));
-
-        if ($operation === 'repair_file') {
-            $fileId = source_identity_repair_post_int('file_id');
-            $result = source_identity_repair_with_lock(
-                $db,
-                static fn(): array => catalog_source_identity_rebuild_file($db, $config, $fileId, null, true)
-            );
-            $message = $result['changed']
-                ? 'Canonical database identity repaired: ' . $result['old_package_name'] . ' → ' . $result['new_package_name']
-                    . '. Source-derived aliases: ' . $result['alias_count']
-                    . '; dependency files refreshed: ' . $result['dependency_files_refreshed'] . '.'
-                : 'This file already matches its mounted source path. No canonical database fields changed.';
-        } elseif ($operation === 'repair_game') {
-            $gameId = source_identity_repair_post_int('game_id');
-            $summary = source_identity_repair_with_lock(
-                $db,
-                static function () use ($db, $config, $gameId): array {
-                    $files = catalog_all(
-                        $db,
-                        'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY package_name,id',
-                        [$gameId]
-                    );
-                    $changed = 0;
-                    $aliases = 0;
-                    $failures = [];
-                    foreach ($files as $file) {
-                        try {
-                            $result = catalog_source_identity_rebuild_file(
-                                $db,
-                                $config,
-                                (int)$file['id'],
-                                null,
-                                false
-                            );
-                            if ($result['changed']) {
-                                $changed++;
-                            }
-                            $aliases += (int)$result['alias_count'];
-                        } catch (Throwable $error) {
-                            $failures[] = (string)$file['package_name'] . ': ' . $error->getMessage();
-                        }
-                    }
-
-                    /* One dependency pass after all canonical identities are committed. */
-                    scanner_rebuild_game($db, $config, $gameId, null, 0, 100);
-                    return [
-                        'total' => count($files),
-                        'changed' => $changed,
-                        'aliases' => $aliases,
-                        'failures' => $failures,
-                    ];
-                }
-            );
-            $message = 'Canonical identity repair completed: ' . $summary['changed'] . '/' . $summary['total']
-                . ' files changed; ' . $summary['aliases'] . ' source-derived aliases retained; dependencies rebuilt once.';
-            if ($summary['failures'] !== []) {
-                $messageType = 'warning';
-                $message .= ' Failures: ' . implode(' | ', array_slice($summary['failures'], 0, 10));
-            }
-        } else {
-            throw new RuntimeException('Unknown source identity repair operation.');
-        }
-    }
-
-    $games = catalog_all($db, 'SELECT id,name FROM ue_games ORDER BY name');
+    $games = catalog_all(
+        $db,
+        'SELECT g.id,g.name,UPPER(COALESCE(p.engine_key,"")) engine_key '
+        . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id ORDER BY g.name'
+    );
     $selectedGameId = source_identity_repair_get_int('game_id');
     if ($selectedGameId === 0 && $games !== []) {
         $selectedGameId = (int)$games[0]['id'];
     }
+    $selectedGame = null;
+    foreach ($games as $game) {
+        if ((int)$game['id'] === $selectedGameId) {
+            $selectedGame = $game;
+            break;
+        }
+    }
+    $repairSupported = $selectedGame !== null
+        && in_array((string)$selectedGame['engine_key'], ['UE4', 'UE5'], true);
     $mismatches = $selectedGameId > 0 ? source_identity_repair_audit($db, $selectedGameId) : [];
-    $csrf = catalog_csrf('source-identity-repair');
 
     catalog_head('Source Identity Repair');
+    echo <<<'CSS'
+<style>
+.source-identity-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+.source-identity-actions label { display:grid; gap:6px; }
+.source-identity-actions input[type="number"] { width:190px; }
+.source-identity-overlay { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:rgba(3,8,18,.72); backdrop-filter:blur(3px); }
+.source-identity-dialog { width:min(780px,100%); padding:24px; border:1px solid var(--line2); border-radius:14px; background:#111b2d; box-shadow:0 24px 70px rgba(0,0,0,.5); }
+.source-identity-dialog h2 { margin:0 0 8px; }
+.source-identity-message { margin:0 0 16px; }
+.source-identity-progress { height:14px; overflow:hidden; border:1px solid var(--line2); border-radius:999px; background:rgba(255,255,255,.05); }
+.source-identity-progress > span { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#76a9ff,#9dc2ff); transition:width .18s linear; }
+.source-identity-count,.source-identity-summary { margin-top:10px; color:var(--muted); font-size:13px; white-space:pre-wrap; }
+.source-identity-failures { max-height:240px; overflow:auto; margin-top:14px; padding:10px 14px; border:1px solid rgba(255,107,122,.55); border-radius:8px; color:#ffd9de; background:rgba(255,107,122,.1); white-space:pre-wrap; }
+.source-identity-dialog-actions { display:flex; gap:8px; margin-top:16px; }
+</style>
+CSS;
+
     echo CatalogUi::pageHeader(
         'Source Identity Repair',
-        'Recalculate canonical database package identities from mounted source paths. This does not alter display output or guess package names.',
+        'Audit canonical package identities immediately and queue UE4/UE5 repairs through the durable worker. Repair jobs continue if this page closes and can be cancelled at safe checkpoints.',
         ['Back to games' => 'games.php']
     );
 
-    if ($message !== '') {
-        echo CatalogUi::alert($messageType, $message, 'Repair result');
-    }
+    echo '<div id="source-identity-job-root"'
+        . ' data-action-url="api/v1/job-action.php"'
+        . ' data-status-url="api/v1/job-status.php"'
+        . ' data-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Repair one file</h2>'
-        . '<p>Use the numeric file ID from file-info.php or file-examine.php.</p></div></div><div class="ui-section__body">';
-    echo '<form method="post" class="form-grid" data-ui-loading-form>';
-    echo '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
-    echo '<input type="hidden" name="operation" value="repair_file">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Repair one UE4/UE5 file</h2>'
+        . '<p>Use the numeric file ID from file-info.php or file-examine.php. The worker repairs canonical identity, aliases and affected dependency rows.</p></div></div><div class="ui-section__body">';
+    echo '<form id="source-identity-file-form" class="source-identity-actions">';
     echo '<label>File ID <input type="number" min="1" name="file_id" required></label>';
-    echo CatalogUi::button('Repair canonical identity', ['type' => 'submit']);
-    echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Repairing database identity…', true) . '</span>';
+    echo CatalogUi::button('Queue canonical identity repair', ['type' => 'submit']);
     echo '</form></div></section>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Audit or repair a game</h2>'
-        . '<p>The game repair rewrites derived identity fields, then performs one dependency-only pass. It does not reparse package bytes.</p></div></div><div class="ui-section__body">';
-    echo '<form method="get" class="form-grid">';
+        . '<p>Audit is read-only. A supported game repair rewrites derived identity fields for each verified package, then performs one dependency-only pass.</p></div></div><div class="ui-section__body">';
+    echo '<form method="get" class="source-identity-actions">';
     echo '<label>Game <select name="game_id">';
     foreach ($games as $game) {
         $id = (int)$game['id'];
-        echo '<option value="' . $id . '"' . ($id === $selectedGameId ? ' selected' : '') . '>' . catalog_h((string)$game['name']) . '</option>';
+        $label = (string)$game['name'] . ((string)$game['engine_key'] !== '' ? ' (' . (string)$game['engine_key'] . ')' : '');
+        echo '<option value="' . $id . '"' . ($id === $selectedGameId ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label>';
     echo CatalogUi::button('Audit canonical identities', ['type' => 'submit', 'variant' => 'secondary']);
     echo '</form>';
 
-    if ($selectedGameId > 0) {
-        echo '<form method="post" style="margin-top:12px" onsubmit="return confirm(\'Rewrite canonical identity fields for every verified file in this game and rebuild dependencies once?\');" data-ui-loading-form>';
-        echo '<input type="hidden" name="csrf" value="' . catalog_h($csrf) . '">';
-        echo '<input type="hidden" name="operation" value="repair_game">';
+    if ($selectedGameId > 0 && $repairSupported) {
+        echo '<form id="source-identity-game-form" class="source-identity-actions" style="margin-top:12px">';
         echo '<input type="hidden" name="game_id" value="' . $selectedGameId . '">';
-        echo CatalogUi::button('Repair this game from source paths', ['type' => 'submit']);
-        echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Repairing canonical database identities…', true) . '</span>';
+        echo CatalogUi::button('Queue repair for this game', ['type' => 'submit']);
         echo '</form>';
+    } elseif ($selectedGameId > 0) {
+        echo CatalogUi::alert(
+            'info',
+            'Mounted source identity repair is intentionally limited to UE4/UE5. Use the read-only audit for legacy UE1/UE2/UE3 packages.',
+            'Repair unavailable for this engine'
+        );
     }
     echo '</div></section>';
 
@@ -246,7 +173,9 @@ try {
         echo '</tbody></table></div>';
     }
     echo '</div></section>';
+    echo '</div>';
 
+    echo '<script src="assets/source-identity-repair-jobs.js"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     catalog_head('Source Identity Repair Error');
