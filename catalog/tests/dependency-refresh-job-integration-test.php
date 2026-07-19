@@ -66,7 +66,7 @@ try {
 
     $insertImport = $db->prepare(
         'INSERT INTO ue_imports(file_id,import_index,class_package,class_name,object_name,outer_index,full_path,root_package,relative_object_path,is_common) '
-        . 'VALUES(?,0,"Core","Class",?,0,?,?,0)'
+        . 'VALUES(?,0,"Core","Class",?,0,?,?,?,0)'
     );
     $insertImport->execute([
         $exactFileId,
