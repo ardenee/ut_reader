@@ -26,13 +26,22 @@ jobs:
           from pathlib import Path
           import re
 
-          scanner = Path('catalog/lib/CatalogScanner.php')
-          text = scanner.read_text()
-          pattern = re.compile(
-              r'function scanner_source_path_schema_ensure\(PDO \$db\): void\n\{.*?\n\}\n\nfunction scanner_record_source_relative_path',
-              re.S,
-          )
-          replacement = '''function scanner_source_path_schema_ensure(PDO $db): void
+          def replace_function_block(path: Path, name: str, next_name: str, replacement: str) -> None:
+              text = path.read_text()
+              pattern = re.compile(
+                  rf'function {re.escape(name)}\(PDO \$db\): void\n\{{.*?\n\}}\n\nfunction {re.escape(next_name)}',
+                  re.S,
+              )
+              updated, count = pattern.subn(replacement + '\n\nfunction ' + next_name, text, count=1)
+              if count != 1:
+                  raise SystemExit(f'{path}: schema function block drifted')
+              path.write_text(updated)
+
+          replace_function_block(
+              Path('catalog/lib/CatalogScanner.php'),
+              'scanner_source_path_schema_ensure',
+              'scanner_record_source_relative_path',
+              '''function scanner_source_path_schema_ensure(PDO $db): void
           {
               static $verified = false;
               if ($verified) {
@@ -51,21 +60,14 @@ jobs:
               }
 
               $verified = true;
-          }
-
-          function scanner_record_source_relative_path'''
-          text, count = pattern.subn(replacement, text, count=1)
-          if count != 1:
-              raise SystemExit('CatalogScanner source path schema block drifted')
-          scanner.write_text(text)
-
-          unverified = Path('catalog/lib/CatalogUnverifiedIndex.php')
-          text = unverified.read_text()
-          pattern = re.compile(
-              r'function catalog_unverified_schema_ensure\(PDO \$db\): void\n\{.*?\n\}\n\nfunction catalog_unverified_queue_key',
-              re.S,
+          }''',
           )
-          replacement = '''function catalog_unverified_schema_ensure(PDO $db): void
+
+          replace_function_block(
+              Path('catalog/lib/CatalogUnverifiedIndex.php'),
+              'catalog_unverified_schema_ensure',
+              'catalog_unverified_queue_key',
+              '''function catalog_unverified_schema_ensure(PDO $db): void
           {
               static $verified = false;
               if ($verified) {
@@ -102,57 +104,63 @@ jobs:
 
               scanner_source_path_schema_ensure($db);
               $verified = true;
-          }
+          }''',
+          )
 
-          function catalog_unverified_queue_key'''
-          text, count = pattern.subn(replacement, text, count=1)
-          if count != 1:
-              raise SystemExit('CatalogUnverifiedIndex schema block drifted')
-          unverified.write_text(text)
+          display = re.compile(
+              r'(?m)^[ \t]*(?:error_reporting\(E_ALL\);|ini_set\([\'\"]display_(?:startup_)?errors[\'\"],\s*[\'\"]1[\'\"]\);)[ \t]*\n'
+          )
+          raw_session = re.compile(r'(?m)^[ \t]*session_start\(\);[ \t]*\n')
+          support = re.compile(r'(?m)^require_once\s+[^;]*CatalogSupport\.php[^;]*;[ \t]*$')
 
-          raw = re.compile(r'(?m)^session_start\(\);\s*\n(?:error_reporting\(E_ALL\);\s*\n)?(?:ini_set\([\'\"]display_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?(?:ini_set\([\'\"]display_startup_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?')
-          display = re.compile(r'(?m)^(?:error_reporting\(E_ALL\);|ini_set\([\'\"]display_(?:startup_)?errors[\'\"],\s*[\'\"]1[\'\"]\);)\s*\n')
-          changed, skipped = [], []
+          changed = []
+          skipped = []
           for file in sorted(Path('catalog').rglob('*.php')):
               rel = file.as_posix()
-              if any(part in rel for part in ['/tests/', '/migrations/', '/src/', '/lib/', '/parsers/', '/bin/']):
+              if any(part in rel for part in ['/tests/', '/migrations/', '/src/', '/lib/', '/parsers/', '/bin/', '/bootstrap/']):
                   continue
               original = file.read_text()
-              head = original[:1400]
-              if 'session_start();' not in head and 'display_errors' not in head and 'display_startup_errors' not in head:
+              head = original[:1800]
+              if 'session_start();' not in head and 'display_errors' not in head and 'display_startup_errors' not in head and 'error_reporting(E_ALL);' not in head:
                   continue
+
               updated = display.sub('', original)
               if 'session_start();' in head:
-                  match = re.search(r'(?m)^require_once\s+[^;]*CatalogSupport\.php[^;]*;\s*$', updated)
-                  if match:
-                      updated = raw.sub('', updated, count=1)
-                      if 'catalog_start_session();' not in updated[:2200]:
-                          match = re.search(r'(?m)^require_once\s+[^;]*CatalogSupport\.php[^;]*;\s*$', updated)
-                          updated = updated[:match.end()] + '\n\ncatalog_start_session();' + updated[match.end():]
-                  else:
+                  match = support.search(updated)
+                  if match is None:
                       skipped.append(rel)
+                      continue
+                  updated = raw_session.sub('', updated)
+                  if 'catalog_start_session();' not in updated[:2400]:
+                      match = support.search(updated)
+                      updated = updated[:match.end()] + '\n\ncatalog_start_session();' + updated[match.end():]
+
               if updated != original:
                   file.write_text(updated)
                   changed.append(rel)
+
           print('Updated controllers:', len(changed))
           for rel in changed:
               print('UPDATED', rel)
           for rel in skipped:
               print('SKIPPED_NONSTANDARD_BOOTSTRAP', rel)
           PY
-      - name: Validate
+      - name: Validate changed PHP and completion contracts
         run: |
-          find catalog -type f -name '*.php' -not -path 'catalog/vendor/*' -print0 | xargs -0 -n1 php -l
+          changed_php="$(git diff --name-only -- '*.php')"
+          if [ -n "$changed_php" ]; then
+            while IFS= read -r file; do php -l "$file"; done <<< "$changed_php"
+          fi
           php catalog/tests/review-completion-contract-test.php
           php catalog/tests/security-boundaries-test.php
           php catalog/tests/architecture-boundaries-test.php
-          ! grep -n "exec('ALTER TABLE ue_files" catalog/lib/CatalogScanner.php catalog/lib/CatalogUnverifiedIndex.php
-      - name: Commit and remove workflow
+          ! grep -n 'ALTER TABLE' catalog/lib/CatalogScanner.php catalog/lib/CatalogUnverifiedIndex.php
+      - name: Commit completed cleanup and remove workflow
         run: |
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git rm .github/workflows/one-time-final-runtime-cleanup.yml
           git add catalog
-          git commit -m 'security: remove runtime ddl and raw controller sessions'
+          git commit -m 'security: finish runtime bootstrap cleanup'
           git pull --rebase origin main
           git push origin HEAD:main
