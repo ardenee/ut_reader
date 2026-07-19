@@ -99,7 +99,9 @@ External mirror links are administered through a provider workflow. The applicat
 
 ## Background jobs and worker
 
-The catalogue includes a durable MySQL-backed job queue for maintenance work. Current job types include dependency rebuilds and upload-progress pruning. More heavy browser operations will move behind this queue incrementally.
+The catalogue includes a durable MySQL-backed job queue for maintenance work. Current job types include exact/file/game dependency rebuilds, affected-dependants refreshes, UE4/UE5 source-identity repair and upload-progress pruning.
+
+The Dependency Refresh and Source Identity Repair pages enqueue durable work, poll persisted progress, support cooperative cancellation and retain the active job ID in the URL so progress can resume after reload. Closing either page does not stop the worker.
 
 Run workers only through CLI:
 
@@ -111,16 +113,22 @@ Worker leases use an opaque token. Completion, failure, progress, cancellation a
 
 Queued jobs may be cancelled immediately. Running jobs stop cooperatively at safe handler checkpoints. Expired leases are either requeued, finalized as cancelled, or moved to `dead_letter` after the final permitted attempt. Retried and recovered jobs clear the previous worker identity and lease timestamps.
 
-Operator controls are CLI-only unless the authenticated, CSRF-protected administrator API is used:
+Resource classes and target concurrency keys prevent heavy dependency and source-identity jobs from overlapping while allowing eligible housekeeping jobs to continue.
+
+Operator controls are available through the trusted CLI or the authenticated, CSRF-protected administrator API:
 
 ```bash
 php catalog/bin/job-control.php status --queue=catalog --limit=50
 php catalog/bin/job-control.php cancel --id=123 --reason="Operator requested stop"
 php catalog/bin/job-control.php retry --id=123
 php catalog/bin/job-control.php recover --queue=catalog
+php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1 --offset=0
+php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123
+php catalog/bin/job-control.php enqueue-source-identity-file --file-id=123
+php catalog/bin/job-control.php enqueue-source-identity-game --game-id=1
 ```
 
-See `docs/background-jobs.md` for state transitions, cancellation semantics, dead-letter handling, alerts and scaling gates. Keep one production worker replica until the resource and idempotency behaviour of each heavy job type has been validated.
+See `docs/background-jobs.md` for state transitions, cancellation semantics, source-identity repair behavior, dead-letter handling, alerts and scaling gates. Keep one production worker replica until the resource and idempotency behaviour of each heavy job type has been validated.
 
 ## Federation
 
@@ -136,12 +144,13 @@ GitHub Actions runs the `Catalog quality` workflow on pull requests and pushes t
 
 Current automated checks include:
 
-- PHP 8.3 syntax lint
+- PHP 8.3 syntax lint and JavaScript client syntax checks
 - rejection of tracked runtime configuration
 - architecture and security boundary tests
 - database migration lifecycle tests
 - explicit unverified-staging integration tests
-- background-job lease, retry, cancellation, dead-letter and competing-worker tests
+- background-job lease, retry, cancellation, dead-letter, resource-limit and competing-worker tests
+- queued dependency and source-identity execution tests
 - UI, duplicate-cleanup and generated package-format contracts
 - clean MySQL schema and seed verification
 
@@ -159,8 +168,8 @@ The workflow does not yet prove package-reader correctness for every supported e
 
 - `live.php` confirms the application process responds.
 - `health.php` checks database-backed readiness.
-- `job-status.php` requires an administrator session and reports queue, progress, heartbeat, cancellation, recovery and dead-letter metadata.
-- `job-action.php` requires an administrator session, POST and a valid CSRF header for cancel, retry and recovery actions.
+- `job-status.php` requires an administrator session and reports queue, progress, result, heartbeat, cancellation, recovery and dead-letter metadata. General lists omit result payloads; a specific `job_id` includes the durable result.
+- `job-action.php` requires an administrator session, POST and a valid CSRF header for supported enqueue, cancel, retry and recovery actions.
 - Federation endpoints live under `catalog/api/federation/`.
 
 ## UI system
@@ -177,7 +186,7 @@ The component layer provides page headers, buttons, alerts, badges, loading and 
 
 ## Database schema
 
-`catalog/install.sql` is the canonical schema for a new empty database. Existing deployments must also run the ordered migration command. Applied migration versions and checksums are stored in `ue_schema_migrations`; changed or missing applied migrations block deployment verification.
+`catalog/install.sql` is the canonical baseline for a new empty database. Existing deployments and fresh installs must also run the ordered migration command. Applied migration versions and checksums are stored in `ue_schema_migrations`; changed or missing applied migrations block deployment verification.
 
 Do not run historical `upgrade-*.sql` files as a release sequence. They remain only as compatibility references while numbered migrations are the supported upgrade path.
 
@@ -206,8 +215,8 @@ Production deployments should use managed or separately protected MySQL, Redis-b
 Major planned work includes:
 
 - complete reader fixtures for all supported engines and known edge cases
-- durable resource classes and concurrency controls for heavy jobs
-- moving package generation, full sync, repair and other heavy browser operations into resumable jobs
+- moving duplicate hashing, package generation and selected remaining heavy maintenance operations into resumable jobs
+- evaluating package import and PAK extraction job boundaries after reader fixtures exist
 - asymmetric federation identities and hardened outbound peer networking
 - public endpoint rate limits and administrator MFA
 - measured search optimization and production telemetry
