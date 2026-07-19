@@ -43,28 +43,57 @@ final class CatalogMaintenanceJobHandler implements JobHandler
     private function rebuildGame(ClaimedJob $job, JobExecutionContext $context): array
     {
         $gameId = $this->requiredPositiveInt($job->payload, 'game_id');
+        $offset = max(0, (int)($job->payload['offset'] ?? 0));
         $game = $this->fetchOne('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
         if ($game === null) {
             throw new \RuntimeException('Game no longer exists: ' . $gameId);
         }
 
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
-        \scanner_rebuild_game(
-            $this->db,
-            $this->config,
-            $gameId,
-            static function (array $progress) use ($context): void {
-                $context->heartbeatIfDue($progress);
-            },
-            0,
-            100
+        $statement = $this->db->prepare(
+            'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" '
+            . 'ORDER BY package_name,id LIMIT 18446744073709551615 OFFSET ' . $offset
         );
+        $statement->execute([$gameId]);
+        $files = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $total = count($files);
+        $processedIds = [];
+
+        if ($total === 0) {
+            $context->checkpoint([
+                'stage' => 'dependencies',
+                'done' => 1,
+                'total' => 1,
+                'percent' => 100,
+                'message' => 'No verified files were found for the selected game and offset.',
+            ]);
+        }
+
+        foreach ($files as $index => $file) {
+            $fileId = (int)$file['id'];
+            $processedIds[] = $fileId;
+            $start = (int)floor(($index * 100) / max(1, $total));
+            $end = (int)floor((($index + 1) * 100) / max(1, $total));
+            \scanner_rebuild_dependencies(
+                $this->db,
+                $this->config,
+                $fileId,
+                static function (array $progress) use ($context): void {
+                    $context->heartbeatIfDue($progress);
+                },
+                $start,
+                $end,
+                'Refreshing game dependency links ' . ($index + 1) . '/' . $total . ' (' . (string)$file['package_name'] . ')'
+            );
+        }
 
         return [
             'game_id' => $gameId,
             'game_name' => (string)$game['name'],
+            'offset' => $offset,
+            'processed_files' => $total,
             'operation' => 'rebuild_game_dependencies',
-            'stats' => $this->dependencyStats('JOIN ue_files f ON f.id=d.file_id WHERE f.game_id=?', [$gameId]),
+            'stats' => $this->dependencyStatsForFileIds($processedIds),
         ];
     }
 
@@ -98,7 +127,7 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             'original_name' => (string)$file['original_name'],
             'package_name' => (string)$file['package_name'],
             'operation' => 'rebuild_file_dependencies',
-            'stats' => $this->dependencyStats('WHERE d.file_id=?', [$fileId]),
+            'stats' => $this->dependencyStatsForFileIds([$fileId]),
         ];
     }
 
@@ -136,8 +165,10 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         ];
     }
 
-    /** @return array{total:int,resolved:int,missing:int,package_only:int,common:int} */
-    private function dependencyStats(string $scopeSql, array $params): array
+    /** @param list<int> $fileIds
+     *  @return array{total:int,resolved:int,missing:int,package_only:int,common:int}
+     */
+    private function dependencyStatsForFileIds(array $fileIds): array
     {
         $stats = [
             'total' => 0,
@@ -146,8 +177,17 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             'package_only' => 0,
             'common' => 0,
         ];
-        $statement = $this->db->prepare('SELECT d.status,COUNT(*) c FROM ue_dependencies d ' . $scopeSql . ' GROUP BY d.status');
-        $statement->execute($params);
+        $fileIds = array_values(array_unique(array_filter(array_map('intval', $fileIds), static fn(int $id): bool => $id > 0)));
+        if ($fileIds === []) {
+            return $stats;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT status,COUNT(*) c FROM ue_dependencies WHERE file_id IN ('
+            . implode(',', array_fill(0, count($fileIds), '?'))
+            . ') GROUP BY status'
+        );
+        $statement->execute($fileIds);
         while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
             $status = (string)($row['status'] ?? '');
             $count = (int)($row['c'] ?? 0);
