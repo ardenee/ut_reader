@@ -84,11 +84,16 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Added cleanup for successful and duplicate federation incoming files.
 - Removed and deleted the shutdown-time directory snapshot hook from the application bootstrap.
 - Added source-contract and MySQL integration tests for immediate identity, move/copy semantics, source preservation, queue retention and non-package handling.
+- Added original synthetic UE1, UE2, UE3 and UE4 packages that exercise production summary, name, import and export readers without redistributing retail data.
+- Added fixed size/SHA-256 manifests, UE2 version 83/licensee 635 compatibility coverage, UE4 versioned/unversioned parser-profile coverage and malformed packages that must fail closed without partial tables.
+- Added a hardened `UNREALDB_FIXTURE_ROOT` runner for private real-world UE1–UE5 packages and optional companion files, with containment, symlink, size, hash, parser-profile and table-expectation checks.
 
 ### Next
 
+- Add externally validated UE1–UE5 fixtures for real game-specific summaries, serialized properties and redirectors.
+- Add UE3 zlib/LZO compressed fixtures and UE4 `.uasset`/`.uexp` pairs.
+- Add dependency-pair, alias and duplicate-identity fixture manifests before changing package identity or dependency rules.
 - Split scanner orchestration into preparation, detection, parsing, identity, storage, persistence, dependencies and result reporting.
-- Add reader-backed fixtures before changing scanner or package-identity rules.
 - Add a reconciliation job for the final filesystem fallback used only when database staging is unavailable.
 - Add metrics for staged files, parse failures, fallback retention and promotion outcomes.
 
@@ -127,11 +132,12 @@ This document turns the nine production-readiness reviews into one ordered engin
 
 ### Next
 
-1. Add reader-backed fixtures for every supported engine before moving package import and PAK extraction into jobs.
-2. Define durable checkpoints for package preparation, decompression/extraction, parsing, storage and persistence.
-3. Add worker termination/retry tests for archive writing, scanner parsing and filesystem-to-database transition boundaries.
-4. Add scheduled generated-artifact pruning rather than relying only on subsequent builds and expired downloads.
-5. Keep one production worker replica until heavy-job concurrency and shared-storage behaviour are validated.
+1. Define durable package-import and PAK-extraction stage records now that the structural reader baseline exists.
+2. Add checkpoints for intake, decompression/extraction, parser selection, table parsing, physical storage, database persistence and dependency refresh.
+3. Add worker termination/retry tests at every filesystem-to-database transition.
+4. Use externally validated compressed and companion-file fixtures before changing UE3/UE4 archive or payload handling.
+5. Add scheduled generated-artifact pruning rather than relying only on subsequent builds and expired downloads.
+6. Keep one production worker replica until heavy-job concurrency and shared-storage behaviour are validated.
 
 ## Workstream 5 — Search and database performance
 
@@ -213,13 +219,16 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource, queued-dependency, queued-source-identity and durable storage/package checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, synthetic-reader, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource, queued-dependency, queued-source-identity and durable storage/package checks are represented in CI.
+- The production resolver and readers are exercised with deterministic UE1–UE4 package bytes, fixed SHA-256 expectations, legacy UE2 compatibility, UE4 parser profiles and malformed fail-closed behavior.
+- A private fixture runner supports real UE1–UE5 packages and companion files without adding copyrighted assets to the repository.
 - Clean architecture boundaries and compatibility facades are documented.
 - Database/filesystem integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation, queue fairness, dependency semantics, canonical source-path identity, export rewrites, aliases, duplicate keeper/deletion behavior and validated generated artifact publication.
 
 ### Next
 
-- Add package-reader fixtures for every supported engine and known edge case.
+- Validate external real-package manifests for every engine, compressed UE3, UE4 companion payloads, serialized properties and known game-specific edge cases.
+- Add dependency-pair, package-alias, redirector and duplicate-identity fixture manifests.
 - Add database integration tests for additional identity, alias and dependency-resolution edge cases.
 - Add HTTP contract tests for critical public and admin endpoints.
 - Add heavy-job crash and resume tests.
@@ -229,7 +238,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ## Ordered delivery sequence
 
-1. Add reader and dependency fixtures before deeper scanner/import refactoring.
+1. Add external compressed/paired/property fixtures and dependency-pair/alias manifests.
 2. Define and test durable package-import and PAK-extraction checkpoints.
 3. Complete remaining P0 security controls and asymmetric identity planning.
 4. Optimize search and persistence from measured profiles.
