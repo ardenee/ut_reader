@@ -32,7 +32,8 @@ Current defaults:
 | Job type | Resource class | Default limit | Target key |
 | --- | --- | ---: | --- |
 | game dependency rebuild | `dependency-heavy` | 1 | `dependency:game:<id>` |
-| affected-file dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
+| exact file dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
+| affected-dependants dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
 | upload-progress pruning | `housekeeping` | 2 | none |
 | unknown/future type | `default` | 4 | none |
 
@@ -46,9 +47,21 @@ UNREALDB_JOB_RESOURCE_LIMIT_DEFAULT=4
 
 The resolved limit is stored on the job, so changing an environment variable affects newly queued jobs only. Claim selection skips saturated classes, allowing housekeeping work to continue while heavy dependency work is active. A short MySQL advisory lock serializes claim decisions so competing workers cannot overbook a class.
 
+## Dependency refresh jobs
+
+The administrator Dependency Refresh page now enqueues one durable job instead of rebuilding each file through a separate browser request.
+
+- A **single file** refresh rebuilds only that file's own `ue_dependencies` rows.
+- A **full game** refresh processes verified files in package order and retains the optional start offset.
+- An **affected-dependants** refresh remains a separate internal/operator action for files whose package identity may resolve imports in other files.
+
+The page polls `job-status.php` by job ID, displays persisted worker progress and final dependency totals, supports cooperative cancellation, and stores the active job ID in the page URL. Reloading or reopening that URL resumes the progress dialog. Closing the page does not stop the worker.
+
 ## Progress
 
 Progress callbacks from maintenance handlers are persisted in `progress_json` with `progress_updated_at`. Progress is an operational snapshot, not the durable result. A successful completion stores the final result separately in `result_json`.
+
+The job status API supports a positive `job_id` filter and decodes both progress and result objects for authenticated administrators.
 
 ## Cancellation
 
@@ -71,8 +84,9 @@ php catalog/bin/job-control.php status --queue=catalog --limit=50
 php catalog/bin/job-control.php cancel --id=123 --reason="Operator requested stop"
 php catalog/bin/job-control.php retry --id=123
 php catalog/bin/job-control.php recover --queue=catalog
-php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1
+php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1 --offset=0
 php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123
+php catalog/bin/job-control.php enqueue-rebuild-affected --file-id=123
 php catalog/bin/job-control.php enqueue-prune --max-age-seconds=86400
 ```
 
