@@ -71,7 +71,7 @@ try {
         JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => JobType::REBUILD_GAME_DEPENDENCIES]], 202);
     }
 
-    if ($action === 'enqueue_rebuild_file') {
+    if ($action === 'enqueue_rebuild_file' || $action === 'enqueue_rebuild_affected') {
         $fileId = (int)($payload['file_id'] ?? 0);
         $file = $fileId > 0
             ? catalog_one($application->db, 'SELECT id FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId])
@@ -79,17 +79,21 @@ try {
         if (!$file) {
             JsonResponse::error('invalid_file', 'A valid verified file_id is required.', 400);
         }
+
+        $affected = $action === 'enqueue_rebuild_affected';
+        $type = $affected ? JobType::REBUILD_AFFECTED_DEPENDENCIES : JobType::REBUILD_FILE_DEPENDENCIES;
+        $dedupeKey = ($affected ? 'rebuild-affected-file:' : 'rebuild-file:') . $fileId;
         $jobId = $queue->enqueue(
             $queueName,
-            JobType::REBUILD_AFFECTED_DEPENDENCIES,
+            $type,
             ['file_id' => $fileId],
             40,
             null,
-            'rebuild-file:' . $fileId,
+            $dedupeKey,
             $userId,
             3
         );
-        JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => JobType::REBUILD_AFFECTED_DEPENDENCIES]], 202);
+        JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => $type]], 202);
     }
 
     if ($action === 'enqueue_prune') {
@@ -109,7 +113,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, recover, enqueue_rebuild_game, enqueue_rebuild_file and enqueue_prune.',
+        'Supported actions are cancel, retry, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {
