@@ -18,10 +18,36 @@ final class NativeUnverifiedFileSystem implements UnverifiedFileSystem
         return (int)(filesize($path) ?: 0);
     }
 
-    public function md5(string $path): ?string
+    public function md5(string $path, ?callable $progress = null): ?string
     {
-        $hash = @md5_file($path);
-        return is_string($hash) ? strtolower($hash) : null;
+        $handle = @fopen($path, 'rb');
+        if (!is_resource($handle)) {
+            return null;
+        }
+
+        $context = hash_init('md5');
+        $total = max(0, (int)(filesize($path) ?: 0));
+        $read = 0;
+        try {
+            while (!feof($handle)) {
+                $chunk = fread($handle, 1024 * 1024);
+                if ($chunk === false) {
+                    return null;
+                }
+                if ($chunk === '') {
+                    break;
+                }
+                hash_update($context, $chunk);
+                $read += strlen($chunk);
+                if ($progress !== null) {
+                    $progress($read, $total);
+                }
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        return strtolower(hash_final($context));
     }
 
     public function delete(string $path): bool
