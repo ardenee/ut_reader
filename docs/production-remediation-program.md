@@ -108,15 +108,19 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Added advisory claim coordination so competing workers cannot overbook a resource class.
 - Added fair claim selection that skips saturated heavy classes and admits eligible housekeeping work.
 - Added configurable limits for `dependency-heavy`, `housekeeping` and `default` jobs.
+- Split exact-file dependency refresh from affected-dependants refresh so job names match scanner behaviour.
+- Moved the standalone Dependency Refresh page behind one durable game/file job instead of repeated browser requests.
+- Preserved full-game start offsets, persisted progress and final dependency totals, cooperative cancellation and URL-based job resume.
+- Added bounded job-status polling by ID; completed results are omitted from general multi-job listings.
 - Added CLI and secured administrator API operations for status, enqueue, cancel, retry and recovery.
-- Added MySQL integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness and target-key exclusion.
+- Added MySQL integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness, target-key exclusion and exact-file dependency execution.
 
 ### Next
 
-1. Move selected dependency rebuild browser actions behind the durable enqueue API while preserving current progress UX.
-2. Add durable job types for source repair, duplicate hashing and package generation.
+1. Move source-identity repair behind durable jobs while preserving its progress and repair summary.
+2. Add durable job types for duplicate hashing and package generation.
 3. Evaluate package import and PAK extraction boundaries after reader-backed fixtures exist.
-4. Make each heavy job idempotent and resumable from a durable checkpoint.
+4. Make each remaining heavy job idempotent and resumable from a durable checkpoint.
 5. Add worker termination tests during each major package and maintenance stage.
 6. Keep one production worker replica until heavy-job concurrency and storage behaviour are validated.
 
@@ -197,9 +201,9 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability and job-resource checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource and queued-dependency checks are represented in CI.
 - Clean architecture boundaries and compatibility facades are documented.
-- Database integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation and queue fairness.
+- Database integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation, queue fairness and exact-file dependency job semantics.
 
 ### Next
 
@@ -213,7 +217,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ## Ordered delivery sequence
 
-1. Move selected heavy HTTP operations behind the durable queue without regressing progress UX.
+1. Move source repair and the next heavy maintenance operations behind durable jobs without regressing progress UX.
 2. Add reader and dependency fixtures before deeper scanner refactoring.
 3. Complete remaining P0 security controls and asymmetric identity planning.
 4. Optimize search and persistence from measured profiles.
