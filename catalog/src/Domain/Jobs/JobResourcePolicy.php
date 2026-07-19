@@ -18,6 +18,7 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('dependency:game:', $payload['game_id'] ?? null)
             ),
+            JobType::REBUILD_FILE_DEPENDENCIES,
             JobType::REBUILD_AFFECTED_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
