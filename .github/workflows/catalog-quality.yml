@@ -31,6 +31,8 @@ jobs:
             -print0 | xargs -0 -n1 php -l
       - name: Syntax check dependency refresh client
         run: node --check catalog/assets/dependency-refresh-jobs.js
+      - name: Syntax check source identity repair client
+        run: node --check catalog/assets/source-identity-repair-jobs.js
       - name: Verify architecture boundaries
         run: php catalog/tests/architecture-boundaries-test.php
       - name: Verify security boundaries
@@ -41,6 +43,8 @@ jobs:
         run: php catalog/tests/job-reliability-contract-test.php
       - name: Verify queued dependency refresh boundaries
         run: php catalog/tests/dependency-refresh-job-contract-test.php
+      - name: Verify queued source identity repair boundaries
+        run: php catalog/tests/source-identity-job-contract-test.php
       - name: Test federation secret encryption
         run: php catalog/tests/federation-secret-store-test.php
       - name: Test catalog UI components
@@ -104,6 +108,12 @@ jobs:
           UNREALDB_TEST_DB_USER: root
           UNREALDB_TEST_DB_PASSWORD: root
         run: php catalog/tests/dependency-refresh-job-integration-test.php
+      - name: Test queued source identity repair execution
+        env:
+          UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_test;charset=utf8mb4
+          UNREALDB_TEST_DB_USER: root
+          UNREALDB_TEST_DB_PASSWORD: root
+        run: php catalog/tests/source-identity-job-integration-test.php
       - name: Verify required catalog tables
         run: |
           for table in \
