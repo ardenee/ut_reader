@@ -35,18 +35,19 @@ final class CatalogSearchService
         $fileGameSql = ' AND f.scan_status="verified"' . ($gameId === null ? '' : ' AND f.game_id=?');
         $fileGameArgs = $gameId === null ? [] : [$gameId];
 
-        $identity = self::identityQuery($query);
-        if ($identity !== null) {
-            [$stage, $column, $value, $label] = $identity;
-            self::collectMatches(
-                $db,
-                $stage,
-                'SELECT f.id,f.' . $column . ' match_value FROM ue_files f WHERE f.' . $column . '=?'
-                    . $fileGameSql . ' ORDER BY f.package_name,f.original_name LIMIT ' . $limit,
-                array_merge([$value], $fileGameArgs),
-                $label,
-                $candidateMatches
-            );
+        $identityQueries = self::identityQueries($query);
+        if ($identityQueries !== []) {
+            foreach ($identityQueries as [$stage, $column, $value, $label]) {
+                self::collectMatches(
+                    $db,
+                    $stage,
+                    'SELECT f.id,f.' . $column . ' match_value FROM ue_files f WHERE f.' . $column . '=?'
+                        . $fileGameSql . ' ORDER BY f.package_name,f.original_name LIMIT ' . $limit,
+                    array_merge([$value], $fileGameArgs),
+                    $label,
+                    $candidateMatches
+                );
+            }
             return self::hydrate($db, $candidateMatches, $limit);
         }
 
@@ -80,28 +81,22 @@ final class CatalogSearchService
         return self::hydrate($db, $candidateMatches, $limit);
     }
 
-    /** @return array{string,string,string,string}|null */
-    private static function identityQuery(string $query): ?array
+    /** @return list<array{string,string,string,string}> */
+    private static function identityQueries(string $query): array
     {
-        $compact = preg_replace('/[^A-Fa-f0-9]+/', '', $query) ?? '';
-        if (preg_match('/^[A-Fa-f0-9]{32}$/', $compact) === 1) {
-            if (preg_match('/^[A-Fa-f0-9]{32}$/', $query) === 1 && !str_contains($query, '-')) {
-                $guid = strtoupper(implode('-', str_split($compact, 8)));
-                return ['guid_exact', 'package_guid', $guid, 'GUID'];
-            }
-            $guid = strtoupper(implode('-', str_split($compact, 8)));
-            if (preg_match('/^[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{8}){3}$/', $query) === 1) {
-                return ['guid_exact', 'package_guid', $guid, 'GUID'];
-            }
-            return ['hash_md5', 'md5', strtolower($compact), 'MD5'];
-        }
         if (preg_match('/^[A-Fa-f0-9]{40}$/', $query) === 1) {
-            return ['hash_sha1', 'sha1', strtolower($query), 'SHA1'];
+            return [['hash_sha1', 'sha1', strtolower($query), 'SHA1']];
         }
         if (preg_match('/^[A-Fa-f0-9]{8}(?:-[A-Fa-f0-9]{8}){3}$/', $query) === 1) {
-            return ['guid_exact', 'package_guid', strtoupper($query), 'GUID'];
+            return [['guid_exact', 'package_guid', strtoupper($query), 'GUID']];
         }
-        return null;
+        if (preg_match('/^[A-Fa-f0-9]{32}$/', $query) === 1) {
+            return [
+                ['hash_md5', 'md5', strtolower($query), 'MD5'],
+                ['guid_compact', 'package_guid', strtoupper(implode('-', str_split($query, 8))), 'GUID'],
+            ];
+        }
+        return [];
     }
 
     /** @param array<int,list<array{field:string,value:string}>> $candidateMatches
