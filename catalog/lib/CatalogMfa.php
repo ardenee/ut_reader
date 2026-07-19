@@ -67,11 +67,11 @@ function catalog_mfa_verify(PDO $db, array $user, string $code): bool
     }
     $step = intdiv(time(), 30);
     $last = (int)($user['mfa_last_used_step'] ?? 0);
-    if ($last >= $step - 1) {
+    if ($last >= $step) {
         return false;
     }
     $statement = $db->prepare('UPDATE ue_users SET mfa_last_used_step=? WHERE id=? AND (mfa_last_used_step IS NULL OR mfa_last_used_step<?)');
-    $statement->execute([$step, (int)$user['id'], $step - 1]);
+    $statement->execute([$step, (int)$user['id'], $step]);
     return $statement->rowCount() === 1;
 }
 
