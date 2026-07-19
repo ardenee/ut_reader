@@ -72,7 +72,7 @@ try {
     echo '<p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span>. Base-game protection and the configured download mode are enforced by the download controller.</p>';
     echo '<p><a class="button primary" href="download.php?id=' . (int)$file['id'] . '">Download selected file</a>';
     if ($settings['enabled'] && $settings['dependency_zip_enabled'] && external_public_download_mode($db) !== 'external_mirror') {
-        echo ' <a class="button" href="download-package.php?id=' . (int)$file['id'] . '&amp;format=dependency_zip&amp;dependencies=1">Quick dependency ZIP</a>';
+        echo ' <a class="button" href="download-package.php?id=' . (int)$file['id'] . '&amp;format=dependency_zip&amp;dependencies=1">Queue dependency ZIP</a>';
     }
     echo '</p></div>';
 
@@ -106,7 +106,8 @@ try {
         if ($settings['allow_incomplete']) {
             echo '<tr><th>Incomplete package</th><td><label><input type="checkbox" name="allow_incomplete" value="1"> Continue when dependencies are missing or package-only</label></td></tr>';
         }
-        echo '</table><p><button class="primary">Build and download package</button></p></form>';
+        echo '</table><p><button class="primary">Queue package build</button></p></form>';
+        echo '<p class="muted small">The package is built and validated by the background worker. The progress page can be closed and reopened; completed artifacts are available to the initiating browser session for a limited time.</p>';
 
         if ($preview !== null) {
             echo '<div class="grid">';
