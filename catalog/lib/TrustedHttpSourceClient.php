@@ -6,7 +6,7 @@ final class TrustedHttpSourceClient
     public static function source(string $baseUrl): array
     {
         if (!extension_loaded('curl')) {
-            throw new RuntimeException('Secure HTTP source scanning requires PHP cURL.');
+            throw new RuntimeException('Secure HTTP requests require PHP cURL.');
         }
         $p = parse_url(trim($baseUrl));
         $scheme = strtolower((string)($p['scheme'] ?? ''));
@@ -77,6 +77,37 @@ final class TrustedHttpSourceClient
         }
     }
 
+    /** @param list<string> $headers @return array<string,mixed> */
+    public static function postJson(string $url, array $headers, string $body, int $maxResponseBytes = 8388608, int $timeout = 60): array
+    {
+        $source = self::source($url);
+        $maxResponseBytes = max(1024, min($maxResponseBytes, 64 * 1024 * 1024));
+        $response = '';
+        $curl = self::curl($source, $url, max(5, min($timeout, 300)));
+        curl_setopt_array($curl, [
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_WRITEFUNCTION => static function ($handle, string $chunk) use (&$response, $maxResponseBytes): int {
+                if (strlen($response) + strlen($chunk) > $maxResponseBytes) {
+                    return 0;
+                }
+                $response .= $chunk;
+                return strlen($chunk);
+            },
+        ]);
+        self::finish($curl, 'federation POST', [200, 201, 202]);
+        try {
+            $decoded = json_decode($response, true, 128, JSON_THROW_ON_ERROR);
+        } catch (JsonException $error) {
+            throw new RuntimeException('Federation POST returned invalid JSON.', 0, $error);
+        }
+        if (!is_array($decoded)) {
+            throw new RuntimeException('Federation POST returned a non-object response.');
+        }
+        return $decoded;
+    }
+
     public static function headSize(array $source, string $url): ?int
     {
         $length = null;
@@ -136,7 +167,7 @@ final class TrustedHttpSourceClient
             CURLOPT_MAXREDIRS => 0,
             CURLOPT_CONNECTTIMEOUT => min(15, $timeout),
             CURLOPT_TIMEOUT => $timeout,
-            CURLOPT_USERAGENT => 'UnrealDB/1.0 secure-source-scan',
+            CURLOPT_USERAGENT => 'UnrealDB/1.0 secure-http-client',
             CURLOPT_SSL_VERIFYPEER => true,
             CURLOPT_SSL_VERIFYHOST => 2,
             CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
