@@ -108,6 +108,13 @@
             appendLog(overlay, 'The deletion list is truncated; all matching duplicates were still processed.', 'info');
         }
         (result.errors || []).forEach(function (message) { appendLog(overlay, message, 'error'); });
+        if (result.errors_truncated) {
+            appendLog(
+                overlay,
+                'Only the first 200 of ' + formatNumber(result.error_count) + ' errors are shown; all candidates were still processed.',
+                'info'
+            );
+        }
     }
 
     function poll(form, button, overlay) {
