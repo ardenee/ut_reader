@@ -97,15 +97,93 @@ final class TrustedHttpSourceClient
             },
         ]);
         self::finish($curl, 'federation POST', [200, 201, 202]);
+        return self::decodeJson($response, 'Federation POST');
+    }
+
+    /** @param list<string> $headers */
+    public static function postBodyToFile(string $url, array $headers, string $body, string $destination, int $maxBytes, int $timeout = 300, ?callable $progress = null): int
+    {
+        $source = self::source($url);
+        $maxBytes = max(1, $maxBytes);
+        $out = @fopen($destination, 'xb');
+        if ($out === false) {
+            throw new RuntimeException('Could not create federation download file.');
+        }
+        $written = 0;
+        $curl = self::curl($source, $url, max(5, min($timeout, 3600)));
+        curl_setopt_array($curl, [
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_POSTFIELDS => $body,
+            CURLOPT_WRITEFUNCTION => static function ($handle, string $chunk) use ($out, &$written, $maxBytes): int {
+                $length = strlen($chunk);
+                if ($written + $length > $maxBytes || fwrite($out, $chunk) !== $length) {
+                    return 0;
+                }
+                $written += $length;
+                return $length;
+            },
+        ]);
+        if ($progress !== null) {
+            curl_setopt($curl, CURLOPT_NOPROGRESS, false);
+            curl_setopt($curl, CURLOPT_XFERINFOFUNCTION, static function ($handle, float $downloadTotal, float $downloadNow) use ($progress): int {
+                $progress((int)$downloadNow, (int)$downloadTotal);
+                return 0;
+            });
+        }
         try {
-            $decoded = json_decode($response, true, 128, JSON_THROW_ON_ERROR);
-        } catch (JsonException $error) {
-            throw new RuntimeException('Federation POST returned invalid JSON.', 0, $error);
+            self::finish($curl, 'federation download', [200]);
+            return $written;
+        } catch (Throwable $error) {
+            @unlink($destination);
+            throw $error;
+        } finally {
+            fclose($out);
         }
-        if (!is_array($decoded)) {
-            throw new RuntimeException('Federation POST returned a non-object response.');
+    }
+
+    /** @param list<string> $headers @return array<string,mixed> */
+    public static function putFileJson(string $url, array $headers, string $sourceFile, int $maxResponseBytes = 1048576, int $timeout = 3600, ?callable $progress = null): array
+    {
+        $source = self::source($url);
+        $size = filesize($sourceFile);
+        if ($size === false || $size < 1 || !is_file($sourceFile) || !is_readable($sourceFile) || is_link($sourceFile)) {
+            throw new RuntimeException('Federation upload source is unavailable.');
         }
-        return $decoded;
+        $in = @fopen($sourceFile, 'rb');
+        if ($in === false) {
+            throw new RuntimeException('Could not open federation upload source.');
+        }
+        $response = '';
+        $maxResponseBytes = max(1024, min($maxResponseBytes, 16 * 1024 * 1024));
+        $curl = self::curl($source, $url, max(5, min($timeout, 7200)));
+        curl_setopt_array($curl, [
+            CURLOPT_CUSTOMREQUEST => 'PUT',
+            CURLOPT_UPLOAD => true,
+            CURLOPT_INFILE => $in,
+            CURLOPT_INFILESIZE => (int)$size,
+            CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_WRITEFUNCTION => static function ($handle, string $chunk) use (&$response, $maxResponseBytes): int {
+                if (strlen($response) + strlen($chunk) > $maxResponseBytes) {
+                    return 0;
+                }
+                $response .= $chunk;
+                return strlen($chunk);
+            },
+        ]);
+        if ($progress !== null) {
+            curl_setopt($curl, CURLOPT_NOPROGRESS, false);
+            curl_setopt($curl, CURLOPT_XFERINFOFUNCTION, static function ($handle, float $downloadTotal, float $downloadNow, float $uploadTotal, float $uploadNow) use ($progress): int {
+                $progress((int)$uploadNow, (int)$uploadTotal);
+                return 0;
+            });
+        }
+        try {
+            self::finish($curl, 'federation upload', [200, 201, 202]);
+        } finally {
+            fclose($in);
+        }
+        return self::decodeJson($response, 'Federation upload');
     }
 
     public static function headSize(array $source, string $url): ?int
@@ -189,6 +267,20 @@ final class TrustedHttpSourceClient
         } finally {
             curl_close($curl);
         }
+    }
+
+    /** @return array<string,mixed> */
+    private static function decodeJson(string $response, string $label): array
+    {
+        try {
+            $decoded = json_decode($response, true, 128, JSON_THROW_ON_ERROR);
+        } catch (JsonException $error) {
+            throw new RuntimeException($label . ' returned invalid JSON.', 0, $error);
+        }
+        if (!is_array($decoded)) {
+            throw new RuntimeException($label . ' returned a non-object response.');
+        }
+        return $decoded;
     }
 
     private static function publicIp(string $host): string
