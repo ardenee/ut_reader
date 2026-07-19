@@ -16,6 +16,8 @@ final class JobType
     public const REBUILD_AFFECTED_DEPENDENCIES = 'catalog.rebuild_affected_dependencies';
     public const REPAIR_SOURCE_IDENTITY_FILE = 'catalog.repair_source_identity_file';
     public const REPAIR_SOURCE_IDENTITY_GAME = 'catalog.repair_source_identity_game';
+    public const CLEAN_UNVERIFIED_DUPLICATES = 'catalog.clean_unverified_duplicates';
+    public const GENERATE_MOD_PACKAGE = 'catalog.generate_mod_package';
     public const PRUNE_UPLOAD_PROGRESS = 'catalog.prune_upload_progress';
 
     /**
@@ -29,6 +31,8 @@ final class JobType
             self::REBUILD_AFFECTED_DEPENDENCIES,
             self::REPAIR_SOURCE_IDENTITY_FILE,
             self::REPAIR_SOURCE_IDENTITY_GAME,
+            self::CLEAN_UNVERIFIED_DUPLICATES,
+            self::GENERATE_MOD_PACKAGE,
             self::PRUNE_UPLOAD_PROGRESS,
         ];
     }
