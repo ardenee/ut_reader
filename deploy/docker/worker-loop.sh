@@ -7,11 +7,22 @@ idle_seconds="${UNREALDB_WORKER_IDLE_SECONDS:-2}"
 error_seconds="${UNREALDB_WORKER_ERROR_SECONDS:-10}"
 worker_id="${UNREALDB_WORKER_ID:-$(hostname):$$}"
 lease_seconds="${UNREALDB_QUEUE_LEASE_SECONDS:-120}"
+maintenance_seconds="${UNREALDB_MAINTENANCE_SCHEDULE_SECONDS:-300}"
+last_maintenance=0
 
 term=0
 trap 'term=1' TERM INT
 
 while [ "$term" -eq 0 ]; do
+    now="$(date +%s)"
+    if [ $((now - last_maintenance)) -ge "$maintenance_seconds" ]; then
+        if php /var/www/html/catalog/bin/schedule-maintenance.php --queue="${UNREALDB_QUEUE_NAME:-catalog}"; then
+            last_maintenance="$now"
+        else
+            echo "UnrealDB maintenance scheduling failed; worker processing will continue." >&2
+        fi
+    fi
+
     php /var/www/html/catalog/bin/catalog-worker.php \
         --queue="${UNREALDB_QUEUE_NAME:-catalog}" \
         --max-jobs="$max_jobs" \
