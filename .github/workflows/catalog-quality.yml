@@ -29,6 +29,8 @@ jobs:
           find . -type f -name '*.php' \
             -not -path './vendor/*' \
             -print0 | xargs -0 -n1 php -l
+      - name: Syntax check dependency refresh client
+        run: node --check catalog/assets/dependency-refresh-jobs.js
       - name: Verify architecture boundaries
         run: php catalog/tests/architecture-boundaries-test.php
       - name: Verify security boundaries
