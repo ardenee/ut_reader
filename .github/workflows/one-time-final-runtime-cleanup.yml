@@ -118,7 +118,7 @@ jobs:
 
           raw = re.compile(r'(?m)^session_start\(\);\s*\n(?:error_reporting\(E_ALL\);\s*\n)?(?:ini_set\([\'\"]display_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?(?:ini_set\([\'\"]display_startup_errors[\'\"],\s*[\'\"]1[\'\"]\);\s*\n)?')
           display = re.compile(r'(?m)^(?:error_reporting\(E_ALL\);|ini_set\([\'\"]display_(?:startup_)?errors[\'\"],\s*[\'\"]1[\'\"]\);)\s*\n')
-          changed = []
+          changed, skipped = [], []
           for file in sorted(Path('catalog').rglob('*.php')):
               rel = file.as_posix()
               if any(part in rel for part in ['/tests/', '/migrations/', '/src/', '/lib/', '/parsers/', '/bin/']):
@@ -127,19 +127,24 @@ jobs:
               head = original[:1400]
               if 'session_start();' not in head and 'display_errors' not in head and 'display_startup_errors' not in head:
                   continue
-              updated = raw.sub('', original, count=1)
-              updated = display.sub('', updated)
-              if 'session_start();' in head and 'catalog_start_session();' not in updated[:2000]:
+              updated = display.sub('', original)
+              if 'session_start();' in head:
                   match = re.search(r'(?m)^require_once\s+[^;]*CatalogSupport\.php[^;]*;\s*$', updated)
-                  if not match:
-                      raise SystemExit('Cannot place catalog_start_session in ' + rel)
-                  updated = updated[:match.end()] + '\n\ncatalog_start_session();' + updated[match.end():]
+                  if match:
+                      updated = raw.sub('', updated, count=1)
+                      if 'catalog_start_session();' not in updated[:2200]:
+                          match = re.search(r'(?m)^require_once\s+[^;]*CatalogSupport\.php[^;]*;\s*$', updated)
+                          updated = updated[:match.end()] + '\n\ncatalog_start_session();' + updated[match.end():]
+                  else:
+                      skipped.append(rel)
               if updated != original:
                   file.write_text(updated)
                   changed.append(rel)
           print('Updated controllers:', len(changed))
           for rel in changed:
-              print(rel)
+              print('UPDATED', rel)
+          for rel in skipped:
+              print('SKIPPED_NONSTANDARD_BOOTSTRAP', rel)
           PY
       - name: Validate
         run: |
@@ -147,7 +152,7 @@ jobs:
           php catalog/tests/review-completion-contract-test.php
           php catalog/tests/security-boundaries-test.php
           php catalog/tests/architecture-boundaries-test.php
-          ! grep -R --include='*.php' -n "exec('ALTER TABLE ue_files" catalog/lib/CatalogScanner.php catalog/lib/CatalogUnverifiedIndex.php
+          ! grep -n "exec('ALTER TABLE ue_files" catalog/lib/CatalogScanner.php catalog/lib/CatalogUnverifiedIndex.php
       - name: Commit and remove workflow
         run: |
           git config user.name github-actions[bot]
@@ -155,4 +160,5 @@ jobs:
           git rm .github/workflows/one-time-final-runtime-cleanup.yml
           git add catalog
           git commit -m 'security: remove runtime ddl and raw controller sessions'
+          git pull --rebase origin main
           git push origin HEAD:main
