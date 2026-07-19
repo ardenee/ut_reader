@@ -4,6 +4,7 @@ declare(strict_types=1);
 use UnrealDb\Catalog\Infrastructure\Security\FederationSecretStore;
 
 require_once __DIR__ . '/CatalogSupport.php';
+require_once __DIR__ . '/TrustedHttpSourceClient.php';
 
 function fed_random_id(): string
 {
@@ -16,6 +17,64 @@ function fed_random_id(): string
 function fed_random_secret(): string
 {
     return rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+}
+
+function fed_base64url_encode(string $bytes): string
+{
+    return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+}
+
+function fed_base64url_decode(string $value): string
+{
+    $value = trim($value);
+    if ($value === '' || preg_match('/^[A-Za-z0-9_+\/-]+={0,2}$/', $value) !== 1) {
+        throw new InvalidArgumentException('Invalid federation key encoding.');
+    }
+    $standard = strtr($value, '-_', '+/');
+    $standard .= str_repeat('=', (4 - strlen($standard) % 4) % 4);
+    $decoded = base64_decode($standard, true);
+    if ($decoded === false) {
+        throw new InvalidArgumentException('Invalid federation key encoding.');
+    }
+    return $decoded;
+}
+
+function fed_ed25519_secret_key(): string
+{
+    static $loaded = false;
+    static $secret = '';
+    if ($loaded) {
+        return $secret;
+    }
+    $loaded = true;
+    $configured = trim((string)(getenv('UNREALDB_FEDERATION_ED25519_PRIVATE_KEY') ?: ''));
+    if ($configured === '') {
+        return '';
+    }
+    if (!function_exists('sodium_crypto_sign_detached')) {
+        throw new RuntimeException('Ed25519 federation signing requires the PHP sodium extension.');
+    }
+    $decoded = fed_base64url_decode($configured);
+    if (strlen($decoded) === SODIUM_CRYPTO_SIGN_SEEDBYTES) {
+        $pair = sodium_crypto_sign_seed_keypair($decoded);
+        $secret = sodium_crypto_sign_secretkey($pair);
+    } elseif (strlen($decoded) === SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
+        $secret = $decoded;
+    } else {
+        throw new RuntimeException('UNREALDB_FEDERATION_ED25519_PRIVATE_KEY must encode a 32-byte seed or 64-byte secret key.');
+    }
+    return $secret;
+}
+
+function fed_ed25519_public_key(): string
+{
+    $secret = fed_ed25519_secret_key();
+    return $secret === '' ? '' : sodium_crypto_sign_publickey_from_secretkey($secret);
+}
+
+function fed_ed25519_key_id(string $publicKey): string
+{
+    return $publicKey === '' ? '' : strtoupper(substr(hash('sha256', $publicKey), 0, 24));
 }
 
 function fed_secret_store(): FederationSecretStore
@@ -53,10 +112,7 @@ function fed_prepare_peer_secret(string $secret): array
         $stored = $secret;
     }
 
-    return [
-        'hash' => password_hash($secret, PASSWORD_DEFAULT),
-        'stored' => $stored,
-    ];
+    return ['hash' => password_hash($secret, PASSWORD_DEFAULT), 'stored' => $stored];
 }
 
 function fed_secret_for_crypto(string $stored): string
@@ -64,7 +120,6 @@ function fed_secret_for_crypto(string $stored): string
     if ($stored === '') {
         return '';
     }
-
     $store = fed_secret_store();
     if ($store->isEncrypted($stored)) {
         return $store->decrypt($stored);
@@ -72,7 +127,6 @@ function fed_secret_for_crypto(string $stored): string
     if (fed_require_encrypted_secrets()) {
         throw new RuntimeException('A plaintext federation peer secret remains. Run catalog/bin/encrypt-federation-secrets.php before enabling strict secret policy.');
     }
-
     return $stored;
 }
 
@@ -82,12 +136,10 @@ function fed_peer_secret(PDO $db, array $peer, bool $migratePlaintext = true): s
     if ($stored === '') {
         return '';
     }
-
     $store = fed_secret_store();
     if ($store->isEncrypted($stored)) {
         return $store->decrypt($stored);
     }
-
     if ($store->hasMasterKey() && $migratePlaintext && (int)($peer['id'] ?? 0) > 0) {
         $encrypted = $store->encrypt($stored);
         $stmt = $db->prepare('UPDATE ue_federation_peers SET shared_secret_plain=? WHERE id=? AND shared_secret_plain=?');
@@ -95,11 +147,9 @@ function fed_peer_secret(PDO $db, array $peer, bool $migratePlaintext = true): s
         fed_log($db, (int)$peer['id'], null, 'INFO', 'PEER_SECRET_ENCRYPTED', 'Legacy plaintext peer secret encrypted at first authenticated use.');
         return $stored;
     }
-
     if (fed_require_encrypted_secrets()) {
         throw new RuntimeException('A plaintext federation peer secret remains. Run catalog/bin/encrypt-federation-secrets.php before enabling strict secret policy.');
     }
-
     return $stored;
 }
 
@@ -110,7 +160,6 @@ function fed_migrate_peer_secrets(PDO $db): array
     if (!$store->hasMasterKey()) {
         throw new RuntimeException('UNREALDB_FEDERATION_MASTER_KEY must be configured before migrating peer secrets.');
     }
-
     $counts = ['migrated' => 0, 'encrypted' => 0, 'missing' => 0];
     $rows = catalog_all($db, 'SELECT id, shared_secret_plain FROM ue_federation_peers ORDER BY id');
     $update = $db->prepare('UPDATE ue_federation_peers SET shared_secret_plain=? WHERE id=? AND shared_secret_plain=?');
@@ -125,14 +174,12 @@ function fed_migrate_peer_secrets(PDO $db): array
             $counts['encrypted']++;
             continue;
         }
-
         $encrypted = $store->encrypt($stored);
         $update->execute([$encrypted, (int)$row['id'], $stored]);
         if ($update->rowCount() === 1) {
             $counts['migrated']++;
         }
     }
-
     return $counts;
 }
 
@@ -170,29 +217,28 @@ function fed_ensure_identity(PDO $db, string $siteUrl = '', string $siteName = '
         $siteId = fed_random_id();
         fed_set_setting($db, 'site_id', $siteId);
     }
-
     if ($siteUrl !== '') {
         fed_set_setting($db, 'site_url', $siteUrl);
     } else {
         $siteUrl = fed_setting($db, 'site_url', '') ?: '';
     }
-
     if ($siteName !== '') {
         fed_set_setting($db, 'site_name', $siteName);
     } else {
         $siteName = fed_setting($db, 'site_name', '') ?: '';
     }
-
     $fingerprint = $siteUrl !== '' ? fed_site_fingerprint($siteUrl, $siteId) : '';
     if ($fingerprint !== '') {
         fed_set_setting($db, 'site_fingerprint', $fingerprint);
     }
-
+    $publicKey = fed_ed25519_public_key();
     return [
         'site_id' => $siteId,
         'site_url' => $siteUrl,
         'site_name' => $siteName,
         'site_fingerprint' => $fingerprint,
+        'ed25519_public_key' => $publicKey !== '' ? fed_base64url_encode($publicKey) : '',
+        'ed25519_key_id' => fed_ed25519_key_id($publicKey),
     ];
 }
 
@@ -216,25 +262,21 @@ function fed_read_request_body(?int $maxBytes = null): string
     if ($declaredLength !== false && $declaredLength !== null && (int)$declaredLength > $limit) {
         fed_json_response(['ok' => false, 'error' => 'Request body exceeds the allowed size.'], 413);
     }
-
     $stream = fopen('php://input', 'rb');
     if (!is_resource($stream)) {
         fed_json_response(['ok' => false, 'error' => 'Request body could not be read.'], 400);
     }
-
     try {
         $body = stream_get_contents($stream, $limit + 1);
     } finally {
         fclose($stream);
     }
-
     if (!is_string($body)) {
         fed_json_response(['ok' => false, 'error' => 'Request body could not be read.'], 400);
     }
     if (strlen($body) > $limit) {
         fed_json_response(['ok' => false, 'error' => 'Request body exceeds the allowed size.'], 413);
     }
-
     return $body;
 }
 
@@ -246,11 +288,9 @@ function fed_decode_json_object(string $body): array
     } catch (JsonException) {
         fed_json_response(['ok' => false, 'error' => 'Invalid JSON payload.'], 400);
     }
-
     if (!is_array($payload)) {
         fed_json_response(['ok' => false, 'error' => 'JSON payload must be an object.'], 400);
     }
-
     return $payload;
 }
 
@@ -275,6 +315,34 @@ function fed_verify_signature(string $secret, string $method, string $path, stri
     return hash_equals($expected, $signature);
 }
 
+function fed_sign_request_ed25519(string $method, string $path, string $timestamp, string $nonce, string $body): string
+{
+    $secret = fed_ed25519_secret_key();
+    if ($secret === '') {
+        throw new RuntimeException('Ed25519 federation signing is not configured.');
+    }
+    $payload = fed_signature_payload($method, $path, $timestamp, $nonce, fed_body_hash($body));
+    return fed_base64url_encode(sodium_crypto_sign_detached($payload, $secret));
+}
+
+function fed_verify_signature_ed25519(string $publicKey, string $method, string $path, string $timestamp, string $nonce, string $body, string $signature): bool
+{
+    if (!function_exists('sodium_crypto_sign_verify_detached')) {
+        return false;
+    }
+    try {
+        $keyBytes = fed_base64url_decode($publicKey);
+        $signatureBytes = fed_base64url_decode($signature);
+    } catch (Throwable) {
+        return false;
+    }
+    if (strlen($keyBytes) !== SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES || strlen($signatureBytes) !== SODIUM_CRYPTO_SIGN_BYTES) {
+        return false;
+    }
+    $payload = fed_signature_payload($method, $path, $timestamp, $nonce, fed_body_hash($body));
+    return sodium_crypto_sign_verify_detached($signatureBytes, $payload, $keyBytes);
+}
+
 function fed_request_path(): string
 {
     $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
@@ -288,43 +356,61 @@ function fed_require_signed_peer(PDO $db, string $body): array
     $timestamp = (string)($_SERVER['HTTP_X_TIMESTAMP'] ?? '');
     $nonce = (string)($_SERVER['HTTP_X_NONCE'] ?? '');
     $signature = (string)($_SERVER['HTTP_X_SIGNATURE'] ?? '');
+    $algorithm = strtolower(trim((string)($_SERVER['HTTP_X_SIGNATURE_ALGORITHM'] ?? 'hmac-sha256')));
+    $keyId = trim((string)($_SERVER['HTTP_X_KEY_ID'] ?? ''));
 
     if ($siteId === '' || $timestamp === '' || $nonce === '' || $signature === '') {
         fed_json_response(['ok' => false, 'error' => 'Missing federation auth headers'], 401);
     }
-
     $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE peer_site_id=? AND is_active=1', [$siteId]);
     if (!$peer) {
         fed_json_response(['ok' => false, 'error' => 'Unknown or inactive peer'], 403);
     }
-
-    $secret = fed_peer_secret($db, $peer);
-    if ($secret === '') {
-        fed_json_response(['ok' => false, 'error' => 'Peer has no API secret stored.'], 501);
-    }
-
     $nonceTtl = (int)(fed_setting($db, 'api_nonce_ttl_seconds', '300') ?: 300);
     $ts = strtotime($timestamp);
     if ($ts === false || abs(time() - $ts) > $nonceTtl) {
         fed_json_response(['ok' => false, 'error' => 'Timestamp outside allowed window'], 401);
     }
-
-    $existingNonce = catalog_one($db, 'SELECT id FROM ue_federation_nonces WHERE nonce=?', [$nonce]);
-    if ($existingNonce) {
+    if (catalog_one($db, 'SELECT id FROM ue_federation_nonces WHERE nonce=?', [$nonce])) {
         fed_json_response(['ok' => false, 'error' => 'Nonce already used'], 401);
     }
 
-    if (!fed_verify_signature($secret, (string)($_SERVER['REQUEST_METHOD'] ?? 'GET'), fed_request_path(), $timestamp, $nonce, $body, $signature)) {
-        fed_log($db, (int)$peer['id'], null, 'WARN', 'SIGNATURE_FAIL', fed_request_path());
-        fed_json_response(['ok' => false, 'error' => 'Invalid signature'], 401);
+    $verified = false;
+    if ($algorithm === 'ed25519') {
+        $publicKey = trim((string)($peer['signing_public_key'] ?? ''));
+        $configuredKeyId = trim((string)($peer['signing_key_id'] ?? ''));
+        $revoked = !empty($peer['signing_revoked_at']);
+        if ($publicKey === '' || $revoked || ($keyId !== '' && $configuredKeyId !== '' && !hash_equals($configuredKeyId, $keyId))) {
+            fed_log($db, (int)$peer['id'], null, 'WARN', 'SIGNING_KEY_REJECTED', fed_request_path());
+            fed_json_response(['ok' => false, 'error' => 'Peer signing key is unavailable or revoked'], 401);
+        }
+        $verified = fed_verify_signature_ed25519($publicKey, (string)($_SERVER['REQUEST_METHOD'] ?? 'GET'), fed_request_path(), $timestamp, $nonce, $body, $signature);
+    } elseif ($algorithm === 'hmac-sha256' || $algorithm === 'hmac') {
+        $secret = fed_peer_secret($db, $peer);
+        if ($secret === '') {
+            fed_json_response(['ok' => false, 'error' => 'Peer has no API secret stored.'], 501);
+        }
+        $verified = fed_verify_signature($secret, (string)($_SERVER['REQUEST_METHOD'] ?? 'GET'), fed_request_path(), $timestamp, $nonce, $body, $signature);
+        $algorithm = 'hmac-sha256';
+    } else {
+        fed_json_response(['ok' => false, 'error' => 'Unsupported signature algorithm'], 401);
     }
 
+    if (!$verified) {
+        fed_log($db, (int)$peer['id'], null, 'WARN', 'SIGNATURE_FAIL', $algorithm . ' ' . fed_request_path());
+        fed_json_response(['ok' => false, 'error' => 'Invalid signature'], 401);
+    }
     $stmt = $db->prepare('INSERT INTO ue_federation_nonces(peer_id, nonce) VALUES(?,?)');
     $stmt->execute([(int)$peer['id'], $nonce]);
     $stmt = $db->prepare('UPDATE ue_federation_peers SET last_seen_at=NOW() WHERE id=?');
     $stmt->execute([(int)$peer['id']]);
-
     return $peer;
+}
+
+function fed_outgoing_signature_algorithm(): string
+{
+    $configured = strtolower(trim((string)(getenv('UNREALDB_FEDERATION_SIGNATURE_ALGORITHM') ?: 'hmac-sha256')));
+    return $configured === 'ed25519' ? 'ed25519' : 'hmac-sha256';
 }
 
 function fed_http_post_signed(string $url, string $siteId, string $secret, array $payload): array
@@ -333,46 +419,30 @@ function fed_http_post_signed(string $url, string $siteId, string $secret, array
     if ($body === false) {
         throw new RuntimeException('Could not encode federation payload.');
     }
-
     $timestamp = date('c');
     $nonce = fed_random_secret();
     $path = parse_url($url, PHP_URL_PATH) ?: '/';
-    $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
-
+    $algorithm = fed_outgoing_signature_algorithm();
     $headers = [
         'Content-Type: application/json',
-        'User-Agent: UnrealFileCatalogFederation/1.0',
+        'User-Agent: UnrealFileCatalogFederation/2.0',
         'X-Site-Id: ' . $siteId,
         'X-Timestamp: ' . $timestamp,
         'X-Nonce: ' . $nonce,
-        'X-Signature: ' . $signature,
+        'X-Signature-Algorithm: ' . $algorithm,
     ];
-
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => implode("\r\n", $headers) . "\r\n",
-            'content' => $body,
-            'timeout' => 60,
-            'ignore_errors' => true,
-        ],
-        'ssl' => [
-            'verify_peer' => true,
-            'verify_peer_name' => true,
-        ],
-    ]);
-
-    $response = @file_get_contents($url, false, $context);
-    if ($response === false) {
-        throw new RuntimeException('Federation POST failed: ' . $url);
+    if ($algorithm === 'ed25519') {
+        $publicKey = fed_ed25519_public_key();
+        if ($publicKey === '') {
+            throw new RuntimeException('Ed25519 outgoing federation signing is selected but no private key is configured.');
+        }
+        $signature = fed_sign_request_ed25519('POST', $path, $timestamp, $nonce, $body);
+        $headers[] = 'X-Key-Id: ' . fed_ed25519_key_id($publicKey);
+    } else {
+        $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
     }
-
-    $json = json_decode($response, true);
-    if (!is_array($json)) {
-        throw new RuntimeException('Federation POST returned invalid JSON: ' . substr($response, 0, 300));
-    }
-
-    return $json;
+    $headers[] = 'X-Signature: ' . $signature;
+    return TrustedHttpSourceClient::postJson($url, $headers, $body, fed_request_body_limit_bytes(8388608), 60);
 }
 
 function fed_public_status(PDO $db): array
@@ -387,6 +457,9 @@ function fed_public_status(PDO $db): array
         'site_role' => fed_setting($db, 'site_role', 'standalone'),
         'parent_enabled' => fed_setting($db, 'parent_enabled', '0'),
         'child_enabled' => fed_setting($db, 'child_enabled', '0'),
+        'signature_algorithms' => ['hmac-sha256', 'ed25519'],
+        'ed25519_public_key' => $identity['ed25519_public_key'],
+        'ed25519_key_id' => $identity['ed25519_key_id'],
         'server_time' => date('c'),
     ];
 }
