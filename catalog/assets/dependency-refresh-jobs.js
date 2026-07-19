@@ -156,7 +156,12 @@
             : 'Status: ' + status.replace('_', ' ') + '. Job #' + job.id + '.';
 
         var statsText = formatStats(result.stats);
-        if (statsText) overlay.querySelector('.dependency-refresh-totals').textContent = statsText;
+        if (statsText) {
+            if (Number(result.processed_files || 0) > 0) {
+                statsText = 'Files processed=' + Number(result.processed_files) + '\n' + statsText;
+            }
+            overlay.querySelector('.dependency-refresh-totals').textContent = statsText;
+        }
 
         if (status === 'completed') {
             overlay.querySelector('.dependency-refresh-message').textContent = 'Dependency refresh complete.';
@@ -220,6 +225,7 @@
         event.preventDefault();
         var fileId = Number(form.querySelector('[name="file_id"]').value || 0);
         var gameId = Number(form.querySelector('[name="game_id"]').value || 0);
+        var offset = Math.max(0, Number(form.querySelector('[name="offset"]').value || 0));
         if (fileId < 1 && gameId < 1) {
             window.alert('Choose a game or enter a file ID.');
             return;
@@ -230,7 +236,7 @@
         var overlay = createOverlay(title);
         var payload = fileId > 0
             ? { action: 'enqueue_rebuild_file', file_id: fileId }
-            : { action: 'enqueue_rebuild_game', game_id: gameId };
+            : { action: 'enqueue_rebuild_game', game_id: gameId, offset: offset };
 
         postAction(payload).then(function (response) {
             var data = response && response.data ? response.data : {};
