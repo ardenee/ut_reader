@@ -67,6 +67,7 @@ final class UnverifiedDuplicateCleanupService
         ]);
 
         $hashedFiles = 0;
+        $hashProcessed = 0;
         $byIdentity = [];
         foreach ($bySize as $sameSize) {
             if (count($sameSize) < 2) {
@@ -74,7 +75,34 @@ final class UnverifiedDuplicateCleanupService
             }
 
             foreach ($sameSize as $item) {
-                $md5 = $this->files->md5((string)$item['path']);
+                $candidateNumber = $hashProcessed + 1;
+                $md5 = $this->files->md5(
+                    (string)$item['path'],
+                    function (int $bytesRead, int $totalBytes) use (
+                        $progress,
+                        $physicalFiles,
+                        $hashedFiles,
+                        $hashProcessed,
+                        $hashCandidates,
+                        $candidateNumber,
+                        $item
+                    ): void {
+                        $fraction = $totalBytes > 0 ? min(1, $bytesRead / $totalBytes) : 1;
+                        $this->emit($progress, [
+                            'stage' => 'hashing',
+                            'done' => $hashProcessed,
+                            'total' => max(1, $hashCandidates),
+                            'percent' => 10 + (int)floor((($hashProcessed + $fraction) * 60) / max(1, $hashCandidates)),
+                            'message' => 'Hashing candidate ' . $candidateNumber . '/' . $hashCandidates
+                                . ': ' . (string)$item['original_name'],
+                            'physical_files' => $physicalFiles,
+                            'hashed_files' => $hashedFiles,
+                            'current_bytes' => $bytesRead,
+                            'current_size' => $totalBytes,
+                        ]);
+                    }
+                );
+                $hashProcessed++;
                 if ($md5 !== null && preg_match('/^[a-f0-9]{32}$/i', $md5) === 1) {
                     $hashedFiles++;
                     $item['md5'] = strtolower($md5);
@@ -84,10 +112,10 @@ final class UnverifiedDuplicateCleanupService
 
                 $this->emit($progress, [
                     'stage' => 'hashing',
-                    'done' => $hashedFiles,
+                    'done' => $hashProcessed,
                     'total' => max(1, $hashCandidates),
-                    'percent' => 10 + (int)floor(($hashedFiles * 60) / max(1, $hashCandidates)),
-                    'message' => 'Hashing same-size candidates ' . min($hashedFiles, $hashCandidates) . '/' . $hashCandidates . '.',
+                    'percent' => 10 + (int)floor(($hashProcessed * 60) / max(1, $hashCandidates)),
+                    'message' => 'Hashed same-size candidates ' . $hashProcessed . '/' . $hashCandidates . '.',
                     'physical_files' => $physicalFiles,
                     'hashed_files' => $hashedFiles,
                 ]);
@@ -168,6 +196,7 @@ final class UnverifiedDuplicateCleanupService
         $errors = [];
         $deletedCount = 0;
         $deletedBytes = 0;
+        $processedCount = 0;
         $deleteTotal = max(1, (int)$scan['duplicate_files']);
 
         foreach ($scan['groups'] as $group) {
@@ -180,25 +209,54 @@ final class UnverifiedDuplicateCleanupService
                 $label = (string)$duplicate['original_name'];
                 if (!$this->files->exists($path)) {
                     $errors[] = $label . ': file disappeared before it could be deleted.';
-                    $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
+                    $processedCount++;
+                    $this->emitDeleteProgress($progress, $processedCount, $deleteTotal, $scan, $deletedCount, $errors, $label);
                     continue;
                 }
 
                 $currentSize = $this->files->size($path);
-                $currentMd5 = $this->files->md5($path);
+                $currentMd5 = $this->files->md5(
+                    $path,
+                    function (int $bytesRead, int $totalBytes) use (
+                        $progress,
+                        $processedCount,
+                        $deleteTotal,
+                        $scan,
+                        $deletedCount,
+                        $errors,
+                        $label
+                    ): void {
+                        $this->emit($progress, [
+                            'stage' => 'verifying',
+                            'done' => $processedCount,
+                            'total' => $deleteTotal,
+                            'percent' => 70 + (int)floor(($processedCount * 30) / $deleteTotal),
+                            'message' => 'Rechecking size and MD5 before deleting: ' . $label,
+                            'physical_files' => (int)$scan['physical_files'],
+                            'hashed_files' => (int)$scan['hashed_files'],
+                            'duplicate_groups' => (int)$scan['duplicate_groups'],
+                            'deleted_files' => $deletedCount,
+                            'errors' => count($errors),
+                            'current_bytes' => $bytesRead,
+                            'current_size' => $totalBytes,
+                        ]);
+                    }
+                );
                 if (
                     $currentSize !== $expectedSize
                     || $currentMd5 === null
                     || strtolower($currentMd5) !== $expectedMd5
                 ) {
                     $errors[] = $label . ': file changed during duplicate checking and was not deleted.';
-                    $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
+                    $processedCount++;
+                    $this->emitDeleteProgress($progress, $processedCount, $deleteTotal, $scan, $deletedCount, $errors, $label);
                     continue;
                 }
 
                 if (!$this->files->delete($path)) {
                     $errors[] = $label . ': could not delete the duplicate queue file.';
-                    $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
+                    $processedCount++;
+                    $this->emitDeleteProgress($progress, $processedCount, $deleteTotal, $scan, $deletedCount, $errors, $label);
                     continue;
                 }
 
@@ -230,7 +288,8 @@ final class UnverifiedDuplicateCleanupService
                         'md5' => $expectedMd5,
                     ];
                 }
-                $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
+                $processedCount++;
+                $this->emitDeleteProgress($progress, $processedCount, $deleteTotal, $scan, $deletedCount, $errors, $label);
             }
         }
 
@@ -265,18 +324,19 @@ final class UnverifiedDuplicateCleanupService
     /** @param null|callable(array<string,mixed>):void $progress */
     private function emitDeleteProgress(
         ?callable $progress,
-        int $deletedCount,
+        int $processedCount,
         int $deleteTotal,
         array $scan,
+        int $deletedCount,
         array $errors,
         string $label
     ): void {
         $this->emit($progress, [
             'stage' => 'deleting',
-            'done' => min($deleteTotal, $deletedCount + count($errors)),
+            'done' => min($deleteTotal, $processedCount),
             'total' => $deleteTotal,
-            'percent' => 70 + (int)floor((min($deleteTotal, $deletedCount + count($errors)) * 30) / $deleteTotal),
-            'message' => 'Processing duplicate queue file: ' . $label,
+            'percent' => 70 + (int)floor((min($deleteTotal, $processedCount) * 30) / $deleteTotal),
+            'message' => 'Processed duplicate queue file: ' . $label,
             'physical_files' => (int)$scan['physical_files'],
             'hashed_files' => (int)$scan['hashed_files'],
             'duplicate_groups' => (int)$scan['duplicate_groups'],
