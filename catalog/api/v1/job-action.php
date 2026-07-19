@@ -104,6 +104,67 @@ try {
         JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => $type]], 202);
     }
 
+    if ($action === 'enqueue_source_identity_file') {
+        $fileId = (int)($payload['file_id'] ?? 0);
+        $file = $fileId > 0
+            ? catalog_one(
+                $application->db,
+                'SELECT f.id,UPPER(COALESCE(NULLIF(f.detected_engine_key,""),p.engine_key,"")) engine_key '
+                . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id '
+                . 'WHERE f.id=? AND f.scan_status="verified"',
+                [$fileId]
+            )
+            : null;
+        if (!$file) {
+            JsonResponse::error('invalid_file', 'A valid verified file_id is required.', 400);
+        }
+        if (!in_array((string)$file['engine_key'], ['UE4', 'UE5'], true)) {
+            JsonResponse::error('unsupported_engine', 'Mounted source identity repair is only available for UE4/UE5 files.', 409);
+        }
+
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::REPAIR_SOURCE_IDENTITY_FILE,
+            ['file_id' => $fileId],
+            10,
+            null,
+            'source-identity-file:' . $fileId,
+            $userId,
+            3
+        );
+        JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => JobType::REPAIR_SOURCE_IDENTITY_FILE]], 202);
+    }
+
+    if ($action === 'enqueue_source_identity_game') {
+        $gameId = (int)($payload['game_id'] ?? 0);
+        $game = $gameId > 0
+            ? catalog_one(
+                $application->db,
+                'SELECT g.id,UPPER(COALESCE(p.engine_key,"")) engine_key '
+                . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE g.id=?',
+                [$gameId]
+            )
+            : null;
+        if (!$game) {
+            JsonResponse::error('invalid_game', 'A valid game_id is required.', 400);
+        }
+        if (!in_array((string)$game['engine_key'], ['UE4', 'UE5'], true)) {
+            JsonResponse::error('unsupported_engine', 'Mounted source identity repair is only available for UE4/UE5 games.', 409);
+        }
+
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::REPAIR_SOURCE_IDENTITY_GAME,
+            ['game_id' => $gameId],
+            10,
+            null,
+            'source-identity-game:' . $gameId,
+            $userId,
+            3
+        );
+        JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => JobType::REPAIR_SOURCE_IDENTITY_GAME]], 202);
+    }
+
     if ($action === 'enqueue_prune') {
         $maxAge = max(60, min((int)($payload['max_age_seconds'] ?? 86400), 604800));
         $jobId = $queue->enqueue(
@@ -121,7 +182,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected and enqueue_prune.',
+        'Supported actions are cancel, retry, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {
