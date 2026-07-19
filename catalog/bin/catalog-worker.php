@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogMaintenanceJobHandler;
+use UnrealDb\Catalog\Infrastructure\Jobs\UnverifiedDuplicateCleanupJobHandler;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 $options = getopt('', ['queue::', 'max-jobs::', 'sleep-ms::', 'worker-id::', 'lease-seconds::']);
@@ -23,7 +24,10 @@ $leaseSeconds = max(15, min((int)($options['lease-seconds'] ?? ($application->co
 $queue = new PdoJobQueue($application->db);
 $worker = new JobWorker(
     $queue,
-    [new CatalogMaintenanceJobHandler($application->db, $application->config)],
+    [
+        new CatalogMaintenanceJobHandler($application->db, $application->config),
+        new UnverifiedDuplicateCleanupJobHandler($application->db, $application->config),
+    ],
     $queueName,
     $workerId,
     $leaseSeconds
