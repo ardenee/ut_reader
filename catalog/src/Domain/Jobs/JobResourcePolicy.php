@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Domain\Jobs;
 final class JobResourcePolicy
 {
     public const DEPENDENCY_HEAVY = 'dependency-heavy';
+    public const IMPORT_HEAVY = 'import-heavy';
     public const STORAGE_HEAVY = 'storage-heavy';
     public const PACKAGE_HEAVY = 'package-heavy';
     public const HOUSEKEEPING = 'housekeeping';
@@ -36,19 +37,30 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('source-identity:game:', $payload['game_id'] ?? null)
             ),
-            JobType::CLEAN_UNVERIFIED_DUPLICATES => new JobResourceProfile(
+            JobType::IMPORT_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PAK => new JobResourceProfile(
+                self::IMPORT_HEAVY,
+                self::configuredLimit(self::IMPORT_HEAVY, 1),
+                self::positiveKey('import:game:', $payload['game_id'] ?? null)
+            ),
+            JobType::CLEAN_UNVERIFIED_DUPLICATES,
+            JobType::RECONCILE_UNVERIFIED_STORAGE => new JobResourceProfile(
                 self::STORAGE_HEAVY,
                 self::configuredLimit(self::STORAGE_HEAVY, 1),
-                'unverified-duplicate-cleanup'
+                $jobType === JobType::CLEAN_UNVERIFIED_DUPLICATES
+                    ? 'unverified-duplicate-cleanup'
+                    : 'unverified-storage-reconciliation'
             ),
             JobType::GENERATE_MOD_PACKAGE => new JobResourceProfile(
                 self::PACKAGE_HEAVY,
                 self::configuredLimit(self::PACKAGE_HEAVY, 1),
                 self::positiveKey('package:file:', $payload['file_id'] ?? null)
             ),
-            JobType::PRUNE_UPLOAD_PROGRESS => new JobResourceProfile(
+            JobType::PRUNE_UPLOAD_PROGRESS,
+            JobType::PRUNE_STALE_ARTIFACTS => new JobResourceProfile(
                 self::HOUSEKEEPING,
-                self::configuredLimit(self::HOUSEKEEPING, 2)
+                self::configuredLimit(self::HOUSEKEEPING, 2),
+                $jobType === JobType::PRUNE_STALE_ARTIFACTS ? 'stale-artifact-pruning' : null
             ),
             default => new JobResourceProfile(
                 self::DEFAULT,
