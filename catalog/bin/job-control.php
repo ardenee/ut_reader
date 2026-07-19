@@ -47,6 +47,8 @@ function job_control_usage(): never
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1 [--offset=0]\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-rebuild-affected --file-id=123\n");
+    fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-source-identity-file --file-id=123\n");
+    fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-source-identity-game --game-id=1\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-prune [--max-age-seconds=86400]\n");
     exit(2);
 }
@@ -152,6 +154,44 @@ try {
             3
         );
         fwrite(STDOUT, json_encode(['job_id' => $jobId, 'queue' => $queueName, 'type' => $type], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    }
+
+    if ($command === 'enqueue-source-identity-file') {
+        $fileId = (int)($options['file-id'] ?? 0);
+        if ($fileId < 1) {
+            job_control_usage();
+        }
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::REPAIR_SOURCE_IDENTITY_FILE,
+            ['file_id' => $fileId],
+            10,
+            null,
+            'source-identity-file:' . $fileId,
+            null,
+            3
+        );
+        fwrite(STDOUT, json_encode(['job_id' => $jobId, 'queue' => $queueName, 'type' => JobType::REPAIR_SOURCE_IDENTITY_FILE], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    }
+
+    if ($command === 'enqueue-source-identity-game') {
+        $gameId = (int)($options['game-id'] ?? 0);
+        if ($gameId < 1) {
+            job_control_usage();
+        }
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::REPAIR_SOURCE_IDENTITY_GAME,
+            ['game_id' => $gameId],
+            10,
+            null,
+            'source-identity-game:' . $gameId,
+            null,
+            3
+        );
+        fwrite(STDOUT, json_encode(['job_id' => $jobId, 'queue' => $queueName, 'type' => JobType::REPAIR_SOURCE_IDENTITY_GAME], JSON_UNESCAPED_SLASHES) . PHP_EOL);
         exit(0);
     }
 
