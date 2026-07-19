@@ -5,6 +5,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -253,6 +254,8 @@ final class CatalogMaintenanceJobHandler implements JobHandler
                         $changed++;
                     }
                     $aliases += (int)($result['alias_count'] ?? 0);
+                } catch (JobCancellationRequested $error) {
+                    throw $error;
                 } catch (Throwable $error) {
                     $failureCount++;
                     if (count($failures) < 100) {
