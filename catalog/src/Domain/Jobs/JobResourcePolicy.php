@@ -24,6 +24,16 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
             ),
+            JobType::REPAIR_SOURCE_IDENTITY_FILE => new JobResourceProfile(
+                self::DEPENDENCY_HEAVY,
+                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::positiveKey('source-identity:file:', $payload['file_id'] ?? null)
+            ),
+            JobType::REPAIR_SOURCE_IDENTITY_GAME => new JobResourceProfile(
+                self::DEPENDENCY_HEAVY,
+                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::positiveKey('source-identity:game:', $payload['game_id'] ?? null)
+            ),
             JobType::PRUNE_UPLOAD_PROGRESS => new JobResourceProfile(
                 self::HOUSEKEEPING,
                 self::configuredLimit(self::HOUSEKEEPING, 2)
