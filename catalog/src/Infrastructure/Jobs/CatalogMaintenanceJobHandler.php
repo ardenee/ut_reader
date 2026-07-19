@@ -33,6 +33,7 @@ final class CatalogMaintenanceJobHandler implements JobHandler
     {
         return match ($job->type) {
             JobType::REBUILD_GAME_DEPENDENCIES => $this->rebuildGame($job, $context),
+            JobType::REBUILD_FILE_DEPENDENCIES => $this->rebuildFile($job, $context),
             JobType::REBUILD_AFFECTED_DEPENDENCIES => $this->rebuildAffected($job, $context),
             JobType::PRUNE_UPLOAD_PROGRESS => $this->pruneUploadProgress($job, $context),
             default => throw new \RuntimeException('Unsupported catalog maintenance job: ' . $job->type),
@@ -42,6 +43,11 @@ final class CatalogMaintenanceJobHandler implements JobHandler
     private function rebuildGame(ClaimedJob $job, JobExecutionContext $context): array
     {
         $gameId = $this->requiredPositiveInt($job->payload, 'game_id');
+        $game = $this->fetchOne('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
+        if ($game === null) {
+            throw new \RuntimeException('Game no longer exists: ' . $gameId);
+        }
+
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         \scanner_rebuild_game(
             $this->db,
@@ -49,10 +55,51 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             $gameId,
             static function (array $progress) use ($context): void {
                 $context->heartbeatIfDue($progress);
-            }
+            },
+            0,
+            100
         );
 
-        return ['game_id' => $gameId, 'operation' => 'rebuild_game_dependencies'];
+        return [
+            'game_id' => $gameId,
+            'game_name' => (string)$game['name'],
+            'operation' => 'rebuild_game_dependencies',
+            'stats' => $this->dependencyStats('JOIN ue_files f ON f.id=d.file_id WHERE f.game_id=?', [$gameId]),
+        ];
+    }
+
+    private function rebuildFile(ClaimedJob $job, JobExecutionContext $context): array
+    {
+        $fileId = $this->requiredPositiveInt($job->payload, 'file_id');
+        $file = $this->fetchOne(
+            'SELECT id,game_id,original_name,package_name FROM ue_files WHERE id=? AND scan_status="verified"',
+            [$fileId]
+        );
+        if ($file === null) {
+            throw new \RuntimeException('Verified file no longer exists: ' . $fileId);
+        }
+
+        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
+        \scanner_rebuild_dependencies(
+            $this->db,
+            $this->config,
+            $fileId,
+            static function (array $progress) use ($context): void {
+                $context->heartbeatIfDue($progress);
+            },
+            0,
+            100,
+            'Refreshing file dependency links'
+        );
+
+        return [
+            'file_id' => $fileId,
+            'game_id' => (int)$file['game_id'],
+            'original_name' => (string)$file['original_name'],
+            'package_name' => (string)$file['package_name'],
+            'operation' => 'rebuild_file_dependencies',
+            'stats' => $this->dependencyStats('WHERE d.file_id=?', [$fileId]),
+        ];
     }
 
     private function rebuildAffected(ClaimedJob $job, JobExecutionContext $context): array
@@ -65,7 +112,9 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             $fileId,
             static function (array $progress) use ($context): void {
                 $context->heartbeatIfDue($progress);
-            }
+            },
+            0,
+            100
         );
 
         return ['file_id' => $fileId, 'operation' => 'rebuild_affected_dependencies'];
@@ -85,6 +134,38 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             'removed_files' => $removed,
             'operation' => 'prune_upload_progress',
         ];
+    }
+
+    /** @return array{total:int,resolved:int,missing:int,package_only:int,common:int} */
+    private function dependencyStats(string $scopeSql, array $params): array
+    {
+        $stats = [
+            'total' => 0,
+            'resolved' => 0,
+            'missing' => 0,
+            'package_only' => 0,
+            'common' => 0,
+        ];
+        $statement = $this->db->prepare('SELECT d.status,COUNT(*) c FROM ue_dependencies d ' . $scopeSql . ' GROUP BY d.status');
+        $statement->execute($params);
+        while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
+            $status = (string)($row['status'] ?? '');
+            $count = (int)($row['c'] ?? 0);
+            $stats['total'] += $count;
+            if (array_key_exists($status, $stats)) {
+                $stats[$status] += $count;
+            }
+        }
+        return $stats;
+    }
+
+    /** @return array<string,mixed>|null */
+    private function fetchOne(string $sql, array $params): ?array
+    {
+        $statement = $this->db->prepare($sql);
+        $statement->execute($params);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return is_array($row) ? $row : null;
     }
 
     /** @param array<string, mixed> $payload */
