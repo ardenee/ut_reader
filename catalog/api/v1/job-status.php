@@ -40,23 +40,33 @@ try {
         $params[] = $status;
     }
 
+    $resultColumn = $jobId > 0 ? ',result_json' : '';
     $sql = 'SELECT id,queue_name,job_type,resource_class,resource_limit,concurrency_key,priority,status,available_at,'
         . 'attempts,max_attempts,worker_id,leased_at,lease_expires_at,last_heartbeat_at,recovery_count,'
-        . 'cancel_requested_at,cancel_requested_by,cancel_reason,progress_json,progress_updated_at,result_json,last_error,'
-        . 'created_by,created_at,updated_at,completed_at,dead_lettered_at '
+        . 'cancel_requested_at,cancel_requested_by,cancel_reason,progress_json,progress_updated_at'
+        . $resultColumn
+        . ',last_error,created_by,created_at,updated_at,completed_at,dead_lettered_at '
         . 'FROM ue_background_jobs'
         . ($where !== [] ? ' WHERE ' . implode(' AND ', $where) : '')
         . ' ORDER BY id DESC LIMIT ' . $limit;
     $rows = catalog_all($application->db, $sql, $params);
     foreach ($rows as &$row) {
-        foreach (['progress_json' => 'progress', 'result_json' => 'result'] as $jsonField => $outputField) {
-            $decodedValue = null;
-            if (!empty($row[$jsonField])) {
-                $decoded = json_decode((string)$row[$jsonField], true);
-                $decodedValue = is_array($decoded) ? $decoded : null;
+        $progress = null;
+        if (!empty($row['progress_json'])) {
+            $decoded = json_decode((string)$row['progress_json'], true);
+            $progress = is_array($decoded) ? $decoded : null;
+        }
+        unset($row['progress_json']);
+        $row['progress'] = $progress;
+
+        if ($jobId > 0) {
+            $result = null;
+            if (!empty($row['result_json'])) {
+                $decoded = json_decode((string)$row['result_json'], true);
+                $result = is_array($decoded) ? $decoded : null;
             }
-            unset($row[$jsonField]);
-            $row[$outputField] = $decodedValue;
+            unset($row['result_json']);
+            $row['result'] = $result;
         }
     }
     unset($row);
