@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Domain\Jobs;
 final class JobType
 {
     public const REBUILD_GAME_DEPENDENCIES = 'catalog.rebuild_game_dependencies';
+    public const REBUILD_FILE_DEPENDENCIES = 'catalog.rebuild_file_dependencies';
     public const REBUILD_AFFECTED_DEPENDENCIES = 'catalog.rebuild_affected_dependencies';
     public const PRUNE_UPLOAD_PROGRESS = 'catalog.prune_upload_progress';
 
@@ -22,6 +23,7 @@ final class JobType
     {
         return [
             self::REBUILD_GAME_DEPENDENCIES,
+            self::REBUILD_FILE_DEPENDENCIES,
             self::REBUILD_AFFECTED_DEPENDENCIES,
             self::PRUNE_UPLOAD_PROGRESS,
         ];
