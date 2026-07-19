@@ -50,11 +50,13 @@ function job_control_usage(): never
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-source-identity-file --file-id=123\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-source-identity-game --game-id=1\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-clean-unverified-duplicates\n");
+    fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-reconcile-unverified [--max-files=1000]\n");
+    fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-prune-artifacts [--incoming-max-age-seconds=172800]\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-prune [--max-age-seconds=86400]\n");
     exit(2);
 }
 
-$command = strtolower(trim((string)($argv[1] ?? '')));
+$command = strtolower(trim((string)($argv[1] ?? ''));
 if ($command === '') {
     job_control_usage();
 }
@@ -211,6 +213,48 @@ try {
             'job_id' => $jobId,
             'queue' => $queueName,
             'type' => JobType::CLEAN_UNVERIFIED_DUPLICATES,
+        ], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    }
+
+    if ($command === 'enqueue-reconcile-unverified') {
+        $maxFiles = max(1, min((int)($options['max-files'] ?? 1000), 10000));
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::RECONCILE_UNVERIFIED_STORAGE,
+            ['max_files' => $maxFiles],
+            25,
+            null,
+            'reconcile-unverified-storage',
+            null,
+            3
+        );
+        fwrite(STDOUT, json_encode([
+            'job_id' => $jobId,
+            'queue' => $queueName,
+            'type' => JobType::RECONCILE_UNVERIFIED_STORAGE,
+            'max_files' => $maxFiles,
+        ], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    }
+
+    if ($command === 'enqueue-prune-artifacts') {
+        $maxAge = max(3600, min((int)($options['incoming-max-age-seconds'] ?? 172800), 30 * 86400));
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::PRUNE_STALE_ARTIFACTS,
+            ['incoming_max_age_seconds' => $maxAge],
+            200,
+            null,
+            'prune-stale-artifacts',
+            null,
+            2
+        );
+        fwrite(STDOUT, json_encode([
+            'job_id' => $jobId,
+            'queue' => $queueName,
+            'type' => JobType::PRUNE_STALE_ARTIFACTS,
+            'incoming_max_age_seconds' => $maxAge,
         ], JSON_UNESCAPED_SLASHES) . PHP_EOL);
         exit(0);
     }
