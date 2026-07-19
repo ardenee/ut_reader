@@ -111,18 +111,21 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Split exact-file dependency refresh from affected-dependants refresh so job names match scanner behaviour.
 - Moved the standalone Dependency Refresh page behind one durable game/file job instead of repeated browser requests.
 - Preserved full-game start offsets, persisted progress and final dependency totals, cooperative cancellation and URL-based job resume.
+- Moved single-file and full-game UE4/UE5 Source Identity Repair behind durable jobs while keeping the mismatch audit read-only and immediate.
+- Preserved canonical package, original filename, export-path, source-derived alias and dependency-refresh behaviour through the existing repair library.
+- Kept one game-wide dependency pass after all identity updates, bounded stored failure details, and retained the legacy maintenance advisory lock during staged deployment.
+- Converted the former source-identity step API into an enqueue-only compatibility adapter; it no longer writes progress files or mutates catalog data in HTTP requests.
 - Added bounded job-status polling by ID; completed results are omitted from general multi-job listings.
 - Added CLI and secured administrator API operations for status, enqueue, cancel, retry and recovery.
-- Added MySQL integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness, target-key exclusion and exact-file dependency execution.
+- Added MySQL integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness, target-key exclusion, exact-file dependency execution and canonical source-identity repair.
 
 ### Next
 
-1. Move source-identity repair behind durable jobs while preserving its progress and repair summary.
-2. Add durable job types for duplicate hashing and package generation.
-3. Evaluate package import and PAK extraction boundaries after reader-backed fixtures exist.
-4. Make each remaining heavy job idempotent and resumable from a durable checkpoint.
-5. Add worker termination tests during each major package and maintenance stage.
-6. Keep one production worker replica until heavy-job concurrency and storage behaviour are validated.
+1. Add durable job types for duplicate hashing and package generation.
+2. Evaluate package import and PAK extraction boundaries after reader-backed fixtures exist.
+3. Make each remaining heavy job idempotent and resumable from a durable checkpoint.
+4. Add worker termination tests during each major package and maintenance stage.
+5. Keep one production worker replica until heavy-job concurrency and storage behaviour are validated.
 
 ## Workstream 5 — Search and database performance
 
@@ -187,7 +190,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Compose application startup and Kubernetes production rollout are gated on successful, drift-free database migrations.
 - Worker containers use the configured queue name and lease duration.
 - Resource-class capacity defaults are declared in Compose and Kubernetes configuration.
-- A background-job operations runbook documents enqueueing, cancellation, recovery, dead letters, resource saturation and scaling gates.
+- A background-job operations runbook documents dependency and source-identity enqueueing, cancellation, recovery, dead letters, resource saturation and scaling gates.
 
 ### Next
 
@@ -201,14 +204,14 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource and queued-dependency checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource, queued-dependency and queued-source-identity checks are represented in CI.
 - Clean architecture boundaries and compatibility facades are documented.
-- Database integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation, queue fairness and exact-file dependency job semantics.
+- Database integration tests exercise migration state, unverified staging identity, move/copy semantics, scanner integration, competing job workers, resource saturation, queue fairness, exact-file dependency job semantics, canonical source-path identity, export rewrites, source-derived aliases and referring dependency refresh.
 
 ### Next
 
 - Add package-reader fixtures for every supported engine and known edge case.
-- Add database integration tests for identity, aliases and dependency resolution.
+- Add database integration tests for additional identity, alias and dependency-resolution edge cases.
 - Add HTTP contract tests for critical public and admin endpoints.
 - Add heavy-job crash and resume tests.
 - Add performance budgets and baseline datasets.
@@ -217,7 +220,7 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ## Ordered delivery sequence
 
-1. Move source repair and the next heavy maintenance operations behind durable jobs without regressing progress UX.
+1. Move duplicate hashing and package generation behind durable jobs without regressing progress UX.
 2. Add reader and dependency fixtures before deeper scanner refactoring.
 3. Complete remaining P0 security controls and asymmetric identity planning.
 4. Optimize search and persistence from measured profiles.
