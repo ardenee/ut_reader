@@ -37,6 +37,18 @@ function catalog_public_rate_limit_or_throw(string $scope, int $maxRequests, int
     }
 }
 
+function catalog_public_search_rate_limit(): void
+{
+    if (catalog_support_is_admin()) {
+        return;
+    }
+    catalog_public_rate_limit_or_throw(
+        'public-search',
+        catalog_public_rate_limit_value('UNREALDB_PUBLIC_SEARCH_MAX_REQUESTS', 60, 1, 5000),
+        catalog_public_rate_limit_value('UNREALDB_PUBLIC_SEARCH_WINDOW_SECONDS', 600, 60, 86400)
+    );
+}
+
 function catalog_public_download_rate_limit(): void
 {
     catalog_public_rate_limit_or_throw(
