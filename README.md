@@ -166,10 +166,12 @@ Current automated checks include:
 - background-job lease, retry, cancellation, dead-letter, resource-limit and competing-worker tests
 - queued dependency and source-identity execution tests
 - durable duplicate-cleanup and generated-package execution tests
+- synthetic UE1, UE2, UE3 and UE4 reader summary/name/import/export fixtures
+- malformed reader fixtures that must fail closed without partial tables
 - UI, duplicate-cleanup and generated package-format contracts
 - clean MySQL schema and seed verification
 
-The workflow does not yet prove package-reader correctness for every supported engine and edge case. Package regression fixtures are documented in `tests/fixtures/README.md`; retail game assets must remain outside the public repository.
+The committed synthetic fixtures contain no retail data and have fixed size and SHA-256 expectations. A separate `UNREALDB_FIXTURE_ROOT` runner validates private real-world packages, optional `.uexp` companions, selected header fields and table counts without copying those assets into Git. Fixture formats and the remaining compressed/property/dependency matrix are documented in `tests/fixtures/README.md`.
 
 ## HTTP API foundation
 
@@ -230,9 +232,9 @@ Production deployments should use managed or separately protected MySQL, Redis-b
 
 Major planned work includes:
 
-- complete reader fixtures for all supported engines and known edge cases
-- evaluating package import and PAK extraction job boundaries after reader fixtures exist
-- adding crash/retry fixtures for partially completed scanner and archive stages
+- externally validated UE1–UE5 fixtures for compressed packages, `.uasset`/`.uexp` pairs, serialized properties and game-specific edge cases
+- dependency-pair, alias and duplicate-identity fixture manifests
+- durable, resumable package-import and PAK-extraction checkpoints with crash/retry tests
 - asymmetric federation identities and hardened outbound peer networking
 - broader public endpoint rate limits and administrator MFA
 - measured search optimization and production telemetry
