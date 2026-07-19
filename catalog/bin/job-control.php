@@ -49,6 +49,7 @@ function job_control_usage(): never
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-rebuild-affected --file-id=123\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-source-identity-file --file-id=123\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-source-identity-game --game-id=1\n");
+    fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-clean-unverified-duplicates\n");
     fwrite(STDERR, "  php catalog/bin/job-control.php enqueue-prune [--max-age-seconds=86400]\n");
     exit(2);
 }
@@ -192,6 +193,25 @@ try {
             3
         );
         fwrite(STDOUT, json_encode(['job_id' => $jobId, 'queue' => $queueName, 'type' => JobType::REPAIR_SOURCE_IDENTITY_GAME], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        exit(0);
+    }
+
+    if ($command === 'enqueue-clean-unverified-duplicates') {
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::CLEAN_UNVERIFIED_DUPLICATES,
+            [],
+            15,
+            null,
+            'unverified-duplicate-cleanup',
+            null,
+            2
+        );
+        fwrite(STDOUT, json_encode([
+            'job_id' => $jobId,
+            'queue' => $queueName,
+            'type' => JobType::CLEAN_UNVERIFIED_DUPLICATES,
+        ], JSON_UNESCAPED_SLASHES) . PHP_EOL);
         exit(0);
     }
 
