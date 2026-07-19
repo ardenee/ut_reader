@@ -55,20 +55,28 @@ try {
 
     if ($action === 'enqueue_rebuild_game') {
         $gameId = (int)($payload['game_id'] ?? 0);
+        $offset = max(0, min((int)($payload['offset'] ?? 0), 2000000000));
         if ($gameId < 1 || !catalog_one($application->db, 'SELECT id FROM ue_games WHERE id=?', [$gameId])) {
             JsonResponse::error('invalid_game', 'A valid game_id is required.', 400);
         }
         $jobId = $queue->enqueue(
             $queueName,
             JobType::REBUILD_GAME_DEPENDENCIES,
-            ['game_id' => $gameId],
+            ['game_id' => $gameId, 'offset' => $offset],
             20,
             null,
-            'rebuild-game:' . $gameId,
+            'rebuild-game:' . $gameId . ':offset:' . $offset,
             $userId,
             3
         );
-        JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued', 'type' => JobType::REBUILD_GAME_DEPENDENCIES]], 202);
+        JsonResponse::send([
+            'data' => [
+                'job_id' => $jobId,
+                'status' => 'queued',
+                'type' => JobType::REBUILD_GAME_DEPENDENCIES,
+                'offset' => $offset,
+            ],
+        ], 202);
     }
 
     if ($action === 'enqueue_rebuild_file' || $action === 'enqueue_rebuild_affected') {
