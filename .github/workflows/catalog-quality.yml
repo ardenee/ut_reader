@@ -51,6 +51,8 @@ jobs:
         run: php catalog/tests/source-identity-job-contract-test.php
       - name: Verify durable storage and package boundaries
         run: php catalog/tests/storage-package-job-contract-test.php
+      - name: Test synthetic UE1-UE4 reader fixtures
+        run: php catalog/tests/reader-fixtures-test.php
       - name: Test federation secret encryption
         run: php catalog/tests/federation-secret-store-test.php
       - name: Test catalog UI components
