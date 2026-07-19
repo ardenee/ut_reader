@@ -1,75 +1,97 @@
 <?php
 declare(strict_types=1);
 
-session_start();
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-ini_set('display_startup_errors', '1');
-@set_time_limit(0);
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/ModPackageBuilder.php';
 
-$tmp = null;
 try {
+    catalog_start_session();
     $config = catalog_config();
     $db = catalog_db($config);
     $settings = modpkg_settings($db);
     $mode = external_public_download_mode($db);
-    if ($mode === 'disabled') throw new RuntimeException('Public downloads are disabled.');
-    if ($mode === 'external_mirror') throw new RuntimeException('Generated package downloads are unavailable in external-mirror-only mode because the local catalog payload is required.');
-    if (!$settings['enabled']) throw new RuntimeException('Package exports are disabled.');
+    if ($mode === 'disabled') {
+        throw new RuntimeException('Public downloads are disabled.');
+    }
+    if ($mode === 'external_mirror') {
+        throw new RuntimeException('Generated packages are unavailable in external-mirror-only mode.');
+    }
+    if (!$settings['enabled']) {
+        throw new RuntimeException('Package exports are disabled.');
+    }
 
-    $id = (int)($_GET['id'] ?? 0);
+    $id = max(0, (int)($_GET['id'] ?? 0));
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [$id]);
-    if (!$file) throw new RuntimeException('File not found.');
+    if (!$file) {
+        throw new RuntimeException('File not found.');
+    }
     $game = modpkg_game_row($db, (int)$file['game_id']);
-    if (!$game) throw new RuntimeException('Game not found.');
+    if (!$game) {
+        throw new RuntimeException('Game not found.');
+    }
 
     $available = modpkg_available_formats($game, $settings);
     $format = strtolower(trim((string)($_GET['format'] ?? modpkg_default_format($game, $settings))));
-    if (!in_array($format, $available, true)) throw new RuntimeException('The selected package format is not available for this game.');
+    if (!in_array($format, $available, true)) {
+        throw new RuntimeException('The selected package format is not available for this game.');
+    }
 
     $includeDependencies = !isset($_GET['dependencies']) || (string)$_GET['dependencies'] !== '0';
     $allowIncomplete = $settings['allow_incomplete'] && (string)($_GET['allow_incomplete'] ?? '0') === '1';
-    $plan = modpkg_plan($db, $config, $id, $format, $includeDependencies, $settings);
+    $name = substr(trim((string)($_GET['name'] ?? catalog_clean_unreal_package_stem((string)$file['package_name']))), 0, 160);
+    $version = substr(trim((string)($_GET['version'] ?? '1.0')), 0, 80);
+    $author = substr(trim((string)($_GET['author'] ?? $settings['default_author'])), 0, 160);
+    $resumeJobId = max(0, (int)($_GET['job_id'] ?? 0));
 
-    if (in_array($format, [MODPKG_FORMAT_UMOD, MODPKG_FORMAT_UT2MOD, MODPKG_FORMAT_UT4MOD], true) && (int)$plan['total_bytes'] > 2000 * 1024 * 1024) {
-        throw new RuntimeException('UMOD-family archives use 32-bit offsets and are limited to a 2000 MB payload. Reduce the selected dependency set.');
-    }
-    if (($plan['missing'] || $plan['package_only']) && !$allowIncomplete) {
-        $problems = count($plan['missing']) + count($plan['package_only']);
-        throw new RuntimeException('Package generation stopped because ' . $problems . ' dependencies are missing or only matched at package level. Resolve them first' . ($settings['allow_incomplete'] ? ' or explicitly enable incomplete export in the download form.' : '.'));
-    }
+    catalog_head('Generate package');
+    catalog_page_header(
+        'Generate package for ' . catalog_clean_unreal_filename((string)$file['original_name']),
+        (string)$game['name'] . ' · ' . (modpkg_format_labels()[$format] ?? $format),
+        ['Download options' => 'download-info.php?id=' . $id, 'File information' => 'file-info.php?id=' . $id]
+    );
 
-    $options = modpkg_default_options($plan, $settings, ['name' => $_GET['name'] ?? null, 'version' => $_GET['version'] ?? null, 'author' => $_GET['author'] ?? null]);
-    $tmp = tempnam(sys_get_temp_dir(), 'unrealdb_pkg_');
-    if ($tmp === false) throw new RuntimeException('Could not create a temporary package file.');
+    echo <<<'CSS'
+<style>
+.package-job-card { max-width:820px; }
+.package-job-progress { height:16px; overflow:hidden; border:1px solid var(--line2); border-radius:999px; background:rgba(255,255,255,.05); }
+.package-job-progress > span { display:block; width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,#76a9ff,#9dc2ff); transition:width .2s linear; }
+.package-job-summary { margin-top:12px; white-space:pre-wrap; color:var(--muted); }
+.package-job-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+</style>
+CSS;
 
-    $validation = modpkg_build($tmp, $plan, $options, $settings);
-    if (empty($validation['ok'])) throw new RuntimeException('Generated package did not pass validation.');
+    echo '<div class="card package-job-card">';
+    echo '<h2 id="package-job-title">Preparing package job</h2>';
+    echo '<p id="package-job-message">The package will be built by the background worker. You may leave this page and return using the job URL.</p>';
+    echo '<div class="package-job-progress"><span id="package-job-bar"></span></div>';
+    echo '<div id="package-job-status" class="package-job-summary">Waiting to queue…</div>';
+    echo '<div id="package-job-summary" class="package-job-summary"></div>';
+    echo '<div class="package-job-actions">'
+        . '<button type="button" id="package-job-cancel" class="secondary">Cancel</button>'
+        . '<a id="package-job-download" class="button primary" hidden>Download generated package</a>'
+        . '<a class="button secondary" href="download-info.php?id=' . $id . '">Back to download options</a>'
+        . '</div>';
+    echo '</div>';
 
-    $downloadName = modpkg_download_name($format, $options);
-    $contentType = match (modpkg_extension($format)) {
-        'zip' => 'application/zip',
-        'pak', 'umod', 'ut2mod', 'ut4mod' => 'application/octet-stream',
-        default => 'application/octet-stream',
-    };
-    $size = filesize($tmp);
-    if ($size === false) throw new RuntimeException('Could not determine generated package size.');
-
-    header('Content-Type: ' . $contentType);
-    header('Content-Length: ' . $size);
-    header('Content-Disposition: attachment; filename="' . addcslashes($downloadName, "\\\"") . '"');
-    header('X-Content-Type-Options: nosniff');
-    header('Cache-Control: private, no-store');
-    readfile($tmp);
-    @unlink($tmp);
-    exit;
-} catch (Throwable $e) {
-    if ($tmp !== null && is_file($tmp)) @unlink($tmp);
-    if (!headers_sent()) catalog_head('Package download error');
-    echo '<div class="card"><h1>Package download error</h1><p>' . catalog_h($e->getMessage()) . '</p><p><a class="button" href="javascript:history.back()">Back</a></p></div>';
+    echo '<form id="package-job-form" hidden'
+        . ' data-endpoint="generated-package-job.php"'
+        . ' data-download-endpoint="generated-package-download.php"'
+        . ' data-resume-job-id="' . $resumeJobId . '">';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('package-generation')) . '">';
+    echo '<input type="hidden" name="file_id" value="' . $id . '">';
+    echo '<input type="hidden" name="format" value="' . catalog_h($format) . '">';
+    echo '<input type="hidden" name="dependencies" value="' . ($includeDependencies ? '1' : '0') . '">';
+    echo '<input type="hidden" name="allow_incomplete" value="' . ($allowIncomplete ? '1' : '0') . '">';
+    echo '<input type="hidden" name="name" value="' . catalog_h($name) . '">';
+    echo '<input type="hidden" name="version" value="' . catalog_h($version) . '">';
+    echo '<input type="hidden" name="author" value="' . catalog_h($author) . '">';
+    echo '</form>';
+    echo '<script src="assets/generated-package-jobs.js"></script>';
+    catalog_foot();
+} catch (Throwable $error) {
+    catalog_head('Package generation error');
+    echo CatalogUi::alert('danger', $error->getMessage(), 'Package generation unavailable');
+    echo '<p><a class="button" href="javascript:history.back()">Back</a></p>';
     catalog_foot();
 }
