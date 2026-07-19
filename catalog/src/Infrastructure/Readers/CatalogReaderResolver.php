@@ -12,6 +12,42 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 final class CatalogReaderResolver
 {
     /**
+     * Legacy UE1/UE2 FString entries occasionally contain padding or obfuscation
+     * bytes after the first null terminator while still declaring the full byte
+     * count. Unreal treats the first null as the end of the ANSI name. The old
+     * PHP readers removed only a final null byte, allowing those trailing bytes
+     * into object names and generated paths.
+     */
+    private static function normalizeLegacyReaderSource(string $source, string $engineKey): string
+    {
+        if (!in_array($engineKey, ['UE1', 'UE2'], true)) {
+            return $source;
+        }
+
+        $old = <<<'PHP'
+            $raw = $this->bytes($length);
+            if ($raw !== '' && substr($raw, -1) === "\0") {
+                $raw = substr($raw, 0, -1);
+            }
+            return self::toUtf8($raw);
+PHP;
+        $new = <<<'PHP'
+            $raw = $this->bytes($length);
+            $terminator = strpos($raw, "\0");
+            if ($terminator !== false) {
+                $raw = substr($raw, 0, $terminator);
+            }
+            return self::toUtf8($raw);
+PHP;
+
+        $updated = str_replace($old, $new, $source, $replacementCount);
+        if ($replacementCount !== 1) {
+            throw new \RuntimeException('Legacy package reader string layout changed for ' . $engineKey . '.');
+        }
+        return $updated;
+    }
+
+    /**
      * Load a legacy UE1/UE2 source reader into an internal namespace instead
      * of including it globally. This leaves the standalone reader pages
      * unchanged while allowing one catalog request to analyse both engines.
@@ -41,6 +77,7 @@ final class CatalogReaderResolver
         $source = preg_replace('/^(?:\xEF\xBB\xBF)?\s*<\?php\s*/', '', $source, 1) ?? $source;
         $source = preg_replace('/^\s*declare\s*\(\s*strict_types\s*=\s*1\s*\)\s*;\s*/', '', $source, 1) ?? $source;
         $source = preg_replace('/\?>\s*$/', '', $source) ?? $source;
+        $source = self::normalizeLegacyReaderSource($source, $engineKey);
 
         /*
          * Legacy reader files use unqualified RuntimeException and
