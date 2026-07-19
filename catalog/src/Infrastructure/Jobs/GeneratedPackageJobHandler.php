@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
+use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -84,7 +85,7 @@ final class GeneratedPackageJobHandler implements JobHandler
         $store = new GeneratedPackageStore((string)($this->config['storage_path'] ?? ''));
         $pruned = $store->prune();
         $temporaryPath = $store->temporaryPath($job->id, $extension);
-        $published = false;
+        $publishedPath = null;
 
         try {
             $context->checkpoint([
@@ -103,7 +104,7 @@ final class GeneratedPackageJobHandler implements JobHandler
                 throw new \RuntimeException('Generated package did not pass validation.');
             }
 
-            /* This checkpoint also discards output when cancellation arrived during archive writing. */
+            /* This checkpoint discards output when cancellation arrived during archive writing. */
             $context->checkpoint([
                 'stage' => 'publishing',
                 'done' => max(1, (int)$plan['file_count']),
@@ -116,16 +117,22 @@ final class GeneratedPackageJobHandler implements JobHandler
             ]);
 
             $artifact = $store->publish($temporaryPath, $job->id, $extension);
-            $published = true;
-            $context->checkpoint([
-                'stage' => 'complete',
-                'done' => max(1, (int)$plan['file_count']),
-                'total' => max(1, (int)$plan['file_count']),
-                'percent' => 100,
-                'message' => 'Generated package is ready to download.',
-                'file_count' => (int)$plan['file_count'],
-                'artifact_size' => (int)$artifact['size'],
-            ]);
+            $publishedPath = (string)$artifact['path'];
+            try {
+                $context->checkpoint([
+                    'stage' => 'complete',
+                    'done' => max(1, (int)$plan['file_count']),
+                    'total' => max(1, (int)$plan['file_count']),
+                    'percent' => 100,
+                    'message' => 'Generated package is ready to download.',
+                    'file_count' => (int)$plan['file_count'],
+                    'artifact_size' => (int)$artifact['size'],
+                ]);
+            } catch (Throwable $error) {
+                $store->delete($publishedPath);
+                $publishedPath = null;
+                throw $error;
+            }
 
             return [
                 'operation' => 'generate_mod_package',
@@ -153,7 +160,7 @@ final class GeneratedPackageJobHandler implements JobHandler
                 'pruned_before_build' => $pruned,
             ];
         } finally {
-            if (!$published) {
+            if (is_file($temporaryPath)) {
                 $store->delete($temporaryPath);
             }
         }
