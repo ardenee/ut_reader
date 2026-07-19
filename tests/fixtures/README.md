@@ -24,22 +24,56 @@ The generated hashes make accidental fixture changes visible in CI. These fixtur
 
 ## External validated fixtures
 
-Each engine family also needs redistributable or locally supplied fixtures and a JSON manifest containing the expected catalog result:
+Real or redistributable packages remain outside Git. Put each package beside a JSON manifest under one private fixture root. The runner accepts either one fixture object or a top-level `fixtures` array.
 
 ```json
 {
-  "engine": "UE3",
-  "filename": "Example.upk",
-  "scan_status": "verified",
-  "package_guid": "EXPECTED-GUID",
-  "names": 0,
-  "imports": 0,
-  "exports": 0,
-  "dependency_expectations": []
+  "engine": "UE4",
+  "filename": "Content/Example.uasset",
+  "companions": ["Content/Example.uexp"],
+  "sha256": "EXPECTED-SHA256",
+  "size": 123456,
+  "header": {
+    "version": 511,
+    "guid": "EXPECTED-GUID"
+  },
+  "names": 80,
+  "imports": 4,
+  "exports": 3,
+  "parser_profile": {
+    "profile_key": "ut4-alpha",
+    "label": "Unreal Tournament 4 Alpha UE4 parser",
+    "assumed_unversioned_parser_version": 511
+  },
+  "allow_issues": false
 }
 ```
 
-Store locally supplied fixtures outside Git and point the future integration runner at them with `UNREALDB_FIXTURE_ROOT`. The remaining validation matrix is:
+Run the private fixture set with:
+
+```text
+UNREALDB_FIXTURE_ROOT=/path/to/private/fixtures php catalog/tests/external-reader-fixtures-test.php
+```
+
+On PowerShell:
+
+```powershell
+$env:UNREALDB_FIXTURE_ROOT = 'L:\UnrealDB-fixtures'
+php catalog/tests/external-reader-fixtures-test.php
+```
+
+The runner:
+
+- discovers JSON manifests recursively
+- rejects package and companion paths escaping the configured root
+- refuses symlink package files
+- verifies optional size and SHA-256 values
+- loads the same isolated UE1/UE2 and production UE3/UE4 reader classes used by the catalogue
+- supports UE5 manifests through the currently configured UE4-family reader
+- compares selected header fields, exact or counted names, import/export counts and expected reader issues
+- naturally loads an adjacent `.uexp` when the production UE4 reader supports that package pair
+
+The remaining validation matrix is:
 
 - UE1 real valid package plus malformed/truncated edge cases
 - UE2 and UE2.5 real packages, including legacy-compatible texture/effect packages
