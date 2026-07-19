@@ -31,6 +31,14 @@ function external_fixture_inside(string $path, string $root): bool
     return str_starts_with($normalizedPath . '/', $normalizedRoot);
 }
 
+function external_fixture_relative_path_is_safe(string $path): bool
+{
+    return $path !== ''
+        && !str_starts_with($path, '/')
+        && preg_match('/^[A-Za-z]:\//', $path) !== 1
+        && preg_match('#(^|/)\.\.(/|$)#', $path) !== 1;
+}
+
 /** @return list<array<string,mixed>> */
 function external_fixture_manifests(string $root): array
 {
@@ -87,16 +95,22 @@ foreach ($fixtures as $fixture) {
     external_fixture_expect(in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true), basename($manifestPath) . ': unsupported engine ' . $engine);
 
     $relative = str_replace('\\', '/', trim((string)$fixture['filename']));
-    external_fixture_expect($relative !== '' && !str_starts_with($relative, '/') && preg_match('#(^|/)\.\.(/|$)#', $relative) !== 1, basename($manifestPath) . ': unsafe fixture filename.');
+    external_fixture_expect(external_fixture_relative_path_is_safe($relative), basename($manifestPath) . ': unsafe fixture filename.');
     $path = realpath($manifestDirectory . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
-    external_fixture_expect($path !== false && is_file($path) && !is_link($path), basename($manifestPath) . ': fixture file is missing.');
+    external_fixture_expect($path !== false && is_file($path) && !is_link($path), basename($manifestPath) . ': fixture file is missing or is a symlink.');
     external_fixture_expect(external_fixture_inside($path, $root), basename($manifestPath) . ': fixture escapes UNREALDB_FIXTURE_ROOT.');
 
     foreach ((array)($fixture['companions'] ?? []) as $companion) {
         $companionRelative = str_replace('\\', '/', trim((string)$companion));
-        external_fixture_expect($companionRelative !== '' && preg_match('#(^|/)\.\.(/|$)#', $companionRelative) !== 1, basename($manifestPath) . ': unsafe companion filename.');
+        external_fixture_expect(external_fixture_relative_path_is_safe($companionRelative), basename($manifestPath) . ': unsafe companion filename.');
         $companionPath = realpath($manifestDirectory . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $companionRelative));
-        external_fixture_expect($companionPath !== false && is_file($companionPath) && external_fixture_inside($companionPath, $root), basename($manifestPath) . ': companion file is missing or outside the fixture root.');
+        external_fixture_expect(
+            $companionPath !== false
+            && is_file($companionPath)
+            && !is_link($companionPath)
+            && external_fixture_inside($companionPath, $root),
+            basename($manifestPath) . ': companion file is missing, is a symlink, or is outside the fixture root.'
+        );
     }
 
     if (isset($fixture['size'])) {
@@ -112,6 +126,9 @@ foreach ($fixtures as $fixture) {
         $readerOptions['parser_profile'] = $fixture['parser_profile'];
     }
     $reader = $readerOptions !== [] ? new $class($path, $readerOptions) : new $class($path);
+    foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
+        external_fixture_expect(method_exists($reader, $method), $relative . ': reader is missing ' . $method . '().');
+    }
     $header = $reader->getHeader();
     $names = $reader->getNames();
     $imports = $reader->getImports();
