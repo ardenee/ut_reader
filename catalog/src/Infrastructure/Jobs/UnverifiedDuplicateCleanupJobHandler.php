@@ -32,6 +32,7 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
                 $context->heartbeatIfDue($progress);
             }
         );
+        $errors = array_values((array)$result['errors']);
 
         return [
             'operation' => 'clean_unverified_duplicates',
@@ -44,7 +45,9 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
             'deleted_bytes_text' => \catalog_bytes((int)$result['deleted_bytes']),
             'deleted' => array_values((array)$result['deleted']),
             'deleted_list_truncated' => !empty($result['deleted_list_truncated']),
-            'errors' => array_values((array)$result['errors']),
+            'error_count' => count($errors),
+            'errors' => array_slice($errors, 0, 200),
+            'errors_truncated' => count($errors) > 200,
         ];
     }
 }
