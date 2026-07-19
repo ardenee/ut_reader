@@ -19,6 +19,7 @@ final class UnverifiedDuplicateCleanupService
     }
 
     /**
+     * @param null|callable(array<string,mixed>):void $progress
      * @return array{
      *   physical_files:int,
      *   hashed_files:int,
@@ -28,17 +29,42 @@ final class UnverifiedDuplicateCleanupService
      *   duplicate_bytes:int
      * }
      */
-    public function scan(): array
+    public function scan(?callable $progress = null): array
     {
         $indexedKeys = $this->records->indexedQueueKeys();
         $bySize = [];
         $physicalFiles = 0;
+
+        $this->emit($progress, [
+            'stage' => 'inventory',
+            'done' => 0,
+            'total' => 1,
+            'percent' => 0,
+            'message' => 'Inventorying physical unverified queues.',
+        ]);
 
         foreach ($this->inventory->all() as $item) {
             $item['indexed'] = isset($indexedKeys[(string)$item['queue_key']]);
             $bySize[(string)$item['size']][] = $item;
             $physicalFiles++;
         }
+
+        $hashCandidates = 0;
+        foreach ($bySize as $sameSize) {
+            if (count($sameSize) > 1) {
+                $hashCandidates += count($sameSize);
+            }
+        }
+        $this->emit($progress, [
+            'stage' => 'hashing',
+            'done' => 0,
+            'total' => max(1, $hashCandidates),
+            'percent' => $hashCandidates > 0 ? 10 : 70,
+            'message' => $hashCandidates > 0
+                ? 'Hashing ' . $hashCandidates . ' same-size duplicate candidates.'
+                : 'No same-size duplicate candidates were found.',
+            'physical_files' => $physicalFiles,
+        ]);
 
         $hashedFiles = 0;
         $byIdentity = [];
@@ -49,14 +75,22 @@ final class UnverifiedDuplicateCleanupService
 
             foreach ($sameSize as $item) {
                 $md5 = $this->files->md5((string)$item['path']);
-                if ($md5 === null || preg_match('/^[a-f0-9]{32}$/i', $md5) !== 1) {
-                    continue;
+                if ($md5 !== null && preg_match('/^[a-f0-9]{32}$/i', $md5) === 1) {
+                    $hashedFiles++;
+                    $item['md5'] = strtolower($md5);
+                    $identity = (string)$item['size'] . ':' . strtolower($md5);
+                    $byIdentity[$identity][] = $item;
                 }
 
-                $hashedFiles++;
-                $item['md5'] = strtolower($md5);
-                $identity = (string)$item['size'] . ':' . strtolower($md5);
-                $byIdentity[$identity][] = $item;
+                $this->emit($progress, [
+                    'stage' => 'hashing',
+                    'done' => $hashedFiles,
+                    'total' => max(1, $hashCandidates),
+                    'percent' => 10 + (int)floor(($hashedFiles * 60) / max(1, $hashCandidates)),
+                    'message' => 'Hashing same-size candidates ' . min($hashedFiles, $hashCandidates) . '/' . $hashCandidates . '.',
+                    'physical_files' => $physicalFiles,
+                    'hashed_files' => $hashedFiles,
+                ]);
             }
         }
 
@@ -100,6 +134,19 @@ final class UnverifiedDuplicateCleanupService
             );
         });
 
+        $this->emit($progress, [
+            'stage' => 'scan_complete',
+            'done' => max(1, $hashCandidates),
+            'total' => max(1, $hashCandidates),
+            'percent' => 70,
+            'message' => count($groups) . ' exact duplicate group(s) found.',
+            'physical_files' => $physicalFiles,
+            'hashed_files' => $hashedFiles,
+            'duplicate_groups' => count($groups),
+            'duplicate_files' => $duplicateFiles,
+            'duplicate_bytes' => $duplicateBytes,
+        ]);
+
         return [
             'physical_files' => $physicalFiles,
             'hashed_files' => $hashedFiles,
@@ -110,14 +157,18 @@ final class UnverifiedDuplicateCleanupService
         ];
     }
 
-    /** @return array<string,mixed> */
-    public function deleteDuplicates(): array
+    /**
+     * @param null|callable(array<string,mixed>):void $progress
+     * @return array<string,mixed>
+     */
+    public function deleteDuplicates(?callable $progress = null): array
     {
-        $scan = $this->scan();
+        $scan = $this->scan($progress);
         $deleted = [];
         $errors = [];
         $deletedCount = 0;
         $deletedBytes = 0;
+        $deleteTotal = max(1, (int)$scan['duplicate_files']);
 
         foreach ($scan['groups'] as $group) {
             $expectedSize = (int)$group['size'];
@@ -129,6 +180,7 @@ final class UnverifiedDuplicateCleanupService
                 $label = (string)$duplicate['original_name'];
                 if (!$this->files->exists($path)) {
                     $errors[] = $label . ': file disappeared before it could be deleted.';
+                    $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
                     continue;
                 }
 
@@ -140,11 +192,13 @@ final class UnverifiedDuplicateCleanupService
                     || strtolower($currentMd5) !== $expectedMd5
                 ) {
                     $errors[] = $label . ': file changed during duplicate checking and was not deleted.';
+                    $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
                     continue;
                 }
 
                 if (!$this->files->delete($path)) {
                     $errors[] = $label . ': could not delete the duplicate queue file.';
+                    $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
                     continue;
                 }
 
@@ -176,8 +230,24 @@ final class UnverifiedDuplicateCleanupService
                         'md5' => $expectedMd5,
                     ];
                 }
+                $this->emitDeleteProgress($progress, $deletedCount, $deleteTotal, $scan, $errors, $label);
             }
         }
+
+        $this->emit($progress, [
+            'stage' => 'complete',
+            'done' => $deleteTotal,
+            'total' => $deleteTotal,
+            'percent' => 100,
+            'message' => 'Duplicate cleanup complete.',
+            'physical_files' => (int)$scan['physical_files'],
+            'hashed_files' => (int)$scan['hashed_files'],
+            'duplicate_groups' => (int)$scan['duplicate_groups'],
+            'duplicate_files_found' => (int)$scan['duplicate_files'],
+            'deleted_files' => $deletedCount,
+            'deleted_bytes' => $deletedBytes,
+            'errors' => count($errors),
+        ]);
 
         return [
             'physical_files' => (int)$scan['physical_files'],
@@ -190,5 +260,36 @@ final class UnverifiedDuplicateCleanupService
             'deleted_list_truncated' => $deletedCount > count($deleted),
             'errors' => $errors,
         ];
+    }
+
+    /** @param null|callable(array<string,mixed>):void $progress */
+    private function emitDeleteProgress(
+        ?callable $progress,
+        int $deletedCount,
+        int $deleteTotal,
+        array $scan,
+        array $errors,
+        string $label
+    ): void {
+        $this->emit($progress, [
+            'stage' => 'deleting',
+            'done' => min($deleteTotal, $deletedCount + count($errors)),
+            'total' => $deleteTotal,
+            'percent' => 70 + (int)floor((min($deleteTotal, $deletedCount + count($errors)) * 30) / $deleteTotal),
+            'message' => 'Processing duplicate queue file: ' . $label,
+            'physical_files' => (int)$scan['physical_files'],
+            'hashed_files' => (int)$scan['hashed_files'],
+            'duplicate_groups' => (int)$scan['duplicate_groups'],
+            'deleted_files' => $deletedCount,
+            'errors' => count($errors),
+        ]);
+    }
+
+    /** @param null|callable(array<string,mixed>):void $progress */
+    private function emit(?callable $progress, array $state): void
+    {
+        if ($progress !== null) {
+            $progress($state);
+        }
     }
 }
