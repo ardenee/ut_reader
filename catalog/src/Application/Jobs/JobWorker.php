@@ -41,11 +41,15 @@ final class JobWorker
             $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds);
             $context->heartbeat(['stage' => 'started', 'attempt' => $job->attempt]);
             $result = $handler->handle($job, $context);
-            $context->checkpoint(['stage' => 'finalizing']);
-            $completion = $this->queue->complete($job, $result);
-            if ($completion === 'cancelled') {
-                return ['status' => 'cancelled', 'job_id' => $job->id, 'type' => $job->type];
-            }
+
+            /*
+             * Cancellation is cooperative and is observed at handler checkpoints.
+             * Once a handler returns successfully, its side effects may already be
+             * committed or its artifact atomically published. A cancellation that
+             * arrives after that boundary is too late and must not relabel completed
+             * work as cancelled.
+             */
+            $this->queue->complete($job, $result);
             return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
         } catch (JobCancellationRequested $exception) {
             try {
