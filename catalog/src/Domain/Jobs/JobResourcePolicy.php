@@ -6,6 +6,8 @@ namespace UnrealDb\Catalog\Domain\Jobs;
 final class JobResourcePolicy
 {
     public const DEPENDENCY_HEAVY = 'dependency-heavy';
+    public const STORAGE_HEAVY = 'storage-heavy';
+    public const PACKAGE_HEAVY = 'package-heavy';
     public const HOUSEKEEPING = 'housekeeping';
     public const DEFAULT = 'default';
 
@@ -33,6 +35,16 @@ final class JobResourcePolicy
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('source-identity:game:', $payload['game_id'] ?? null)
+            ),
+            JobType::CLEAN_UNVERIFIED_DUPLICATES => new JobResourceProfile(
+                self::STORAGE_HEAVY,
+                self::configuredLimit(self::STORAGE_HEAVY, 1),
+                'unverified-duplicate-cleanup'
+            ),
+            JobType::GENERATE_MOD_PACKAGE => new JobResourceProfile(
+                self::PACKAGE_HEAVY,
+                self::configuredLimit(self::PACKAGE_HEAVY, 1),
+                self::positiveKey('package:file:', $payload['file_id'] ?? null)
             ),
             JobType::PRUNE_UPLOAD_PROGRESS => new JobResourceProfile(
                 self::HOUSEKEEPING,
