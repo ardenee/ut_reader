@@ -15,6 +15,7 @@
     var download = document.getElementById('package-job-download');
     var jobId = Number(form.dataset.resumeJobId || 0);
     var pollTimer = null;
+    var workerWarning = '';
     var terminal = ['completed', 'cancelled', 'failed', 'dead_letter'];
 
     function fmt(value) {
@@ -90,7 +91,9 @@
 
         title.textContent = state === 'completed' ? 'Generated package ready' : 'Generating package';
         message.textContent = state === 'queued'
-            ? 'Queued and waiting for an available package-build slot.'
+            ? (workerWarning !== ''
+                ? 'Queued, but the detached package worker could not be started automatically: ' + workerWarning
+                : 'Queued and waiting for an available package-build slot.')
             : String(progress.message || 'The background worker is processing the package.');
         statusBox.textContent = 'Status: ' + state.replace('_', ' ') + ' · Job #' + job.id
             + (progress.file_count !== undefined ? ' · Files ' + fmt(progress.file_count) : '')
@@ -135,6 +138,7 @@
 
     function poll() {
         readStatus().then(function (payload) {
+            if (payload.worker_error) workerWarning = String(payload.worker_error);
             var state = render(payload.job || {});
             if (terminal.indexOf(state) === -1) {
                 pollTimer = window.setTimeout(poll, 1000);
@@ -152,6 +156,7 @@
         post({ action: 'enqueue' }).then(function (payload) {
             jobId = Number(payload.job_id || 0);
             if (jobId < 1) throw new Error('The server did not return a valid package-job ID.');
+            if (payload.worker_error) workerWarning = String(payload.worker_error);
             setJobUrl();
             cancel.disabled = false;
             poll();
