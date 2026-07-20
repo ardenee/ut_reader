@@ -22,7 +22,7 @@ final class JobWorker
     }
 
     /**
-     * @return array{status:string,job_id?:int,type?:string,result?:array<string,mixed>,error?:string}
+     * @return array{status:string,job_id?:int,type?:string,result?:array<string,mixed>,error?:string,error_file?:string,error_line?:int}
      */
     public function runOne(): array
     {
@@ -55,14 +55,9 @@ final class JobWorker
             try {
                 $this->queue->cancelClaimed($job, $exception->getMessage());
             } catch (\Throwable $leaseError) {
-                return [
-                    'status' => 'lease_lost',
-                    'job_id' => $job->id,
-                    'type' => $job->type,
-                    'error' => $leaseError->getMessage(),
-                ];
+                return $this->failureResult('lease_lost', $job, $leaseError);
             }
-            return ['status' => 'cancelled', 'job_id' => $job->id, 'type' => $job->type, 'error' => $exception->getMessage()];
+            return $this->failureResult('cancelled', $job, $exception);
         } catch (\Throwable $exception) {
             $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
             return $this->recordFailure($job, $exception, $delay);
@@ -70,26 +65,38 @@ final class JobWorker
     }
 
     /**
-     * @return array{status:string,job_id:int,type:string,error:string}
+     * @return array{status:string,job_id:int,type:string,error:string,error_file:string,error_line:int}
      */
     private function recordFailure(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception, int $delay): array
     {
         try {
             $disposition = $this->queue->fail($job, $exception, $delay);
         } catch (\Throwable $leaseError) {
-            return [
-                'status' => 'lease_lost',
-                'job_id' => $job->id,
-                'type' => $job->type,
-                'error' => $leaseError->getMessage(),
-            ];
+            return $this->failureResult('lease_lost', $job, $leaseError);
         }
 
+        return $this->failureResult($disposition, $job, $exception);
+    }
+
+    /**
+     * The worker is a trusted CLI/operator boundary. Include the source location
+     * so database and handler failures can be diagnosed without enabling verbose
+     * public HTTP errors or leaking stack traces through the web application.
+     *
+     * @return array{status:string,job_id:int,type:string,error:string,error_file:string,error_line:int}
+     */
+    private function failureResult(
+        string $status,
+        \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job,
+        \Throwable $exception
+    ): array {
         return [
-            'status' => $disposition,
+            'status' => $status,
             'job_id' => $job->id,
             'type' => $job->type,
             'error' => $exception->getMessage(),
+            'error_file' => str_replace('\\', '/', $exception->getFile()),
+            'error_line' => $exception->getLine(),
         ];
     }
 
