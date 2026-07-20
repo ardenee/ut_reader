@@ -6,6 +6,7 @@ require_once __DIR__ . '/lib/CatalogPakArchive.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 function pak_import_public_error(Throwable $error): string
@@ -38,7 +39,8 @@ function pak_import_source(): array
     return ['path' => $path, 'name' => (string)($file['name'] ?? 'upload.pak'), 'uploaded' => true];
 }
 
-function pak_import_enqueue(PDO $db, array $config): int
+/** @return array{job_id:int,worker:array<string,mixed>|null,worker_error:string} */
+function pak_import_enqueue(PDO $db, array $config): array
 {
     catalog_check_csrf('pak-import');
     $gameId = (int)($_POST['game_id'] ?? 0);
@@ -60,10 +62,11 @@ function pak_import_enqueue(PDO $db, array $config): int
         ? $store->stageUploadedFile($source['path'], $source['name'])
         : $store->stageLocalFile($source['path'], $source['name']);
     $queue = new PdoJobQueue($db);
+    $queueName = (string)($config['queue']['name'] ?? 'catalog');
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     try {
-        return $queue->enqueue(
-            (string)($config['queue']['name'] ?? 'catalog'),
+        $jobId = $queue->enqueue(
+            $queueName,
             JobType::IMPORT_STAGED_PAK,
             [
                 'game_id' => $gameId,
@@ -81,9 +84,20 @@ function pak_import_enqueue(PDO $db, array $config): int
             3
         );
     } catch (Throwable $error) {
-        $store->remove($staged['relative_path']);
+        $store->delete($staged['relative_path']);
         throw $error;
     }
+
+    $worker = null;
+    $workerError = '';
+    try {
+        $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
+    } catch (Throwable $error) {
+        $workerError = pak_import_public_error($error);
+        error_log('[UnrealDB PAK worker launch] ' . $error->getMessage());
+    }
+
+    return ['job_id' => $jobId, 'worker' => $worker, 'worker_error' => $workerError];
 }
 
 try {
@@ -95,8 +109,11 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $jobId = pak_import_enqueue($db, $config);
-        header('Location: pak-import.php?game_id=' . (int)($_POST['game_id'] ?? 0) . '&job_id=' . $jobId);
+        $queued = pak_import_enqueue($db, $config);
+        if ($queued['worker_error'] !== '') {
+            $_SESSION['pak_import_flash'] = 'PAK job #' . $queued['job_id'] . ' was queued, but the detached worker could not be started: ' . $queued['worker_error'];
+        }
+        header('Location: pak-import.php?game_id=' . (int)($_POST['game_id'] ?? 0) . '&job_id=' . $queued['job_id']);
         exit;
     }
 
@@ -109,21 +126,23 @@ try {
     );
 
     catalog_head('PAK Import');
+    catalog_flash($_SESSION['pak_import_flash'] ?? null);
+    unset($_SESSION['pak_import_flash']);
     catalog_page_header(
         'PAK Import',
-        'PAK files are staged and processed by the background worker. Imported entries are idempotent across retries, and valid failures enter database-backed unverified staging.',
-        ['Upload Files' => 'profiled-upload.php', 'Local Source Scan' => 'source-scan.php', 'Unverified Files' => 'unverified-files.php']
+        'PAK files are copied into durable staging, queued, and automatically started by a detached CLI worker. Closing this page does not interrupt processing.',
+        ['Background Jobs' => 'background-jobs.php', 'Upload Files' => 'profiled-upload.php', 'Local Source Scan' => 'source-scan.php', 'Unverified Files' => 'unverified-files.php']
     );
     echo CatalogUi::alert('info', 'Durable PAK extraction enabled.', 'Unencrypted PAK indexes and entries are supported, including zlib-compressed blocks. Encrypted, Oodle and IOStore containers remain unsupported.');
 
     if ($jobId > 0) {
-        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Background import job #' . $jobId . '</h2><p class="muted">This job continues if the page is closed.</p></div></div><div class="ui-section__body">';
-        echo '<div id="pak-import-job" data-job-id="' . $jobId . '" data-status-url="api/v1/job-status.php" data-action-url="api/v1/job-action.php" data-action-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
+        echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Background import job #' . $jobId . '</h2><p class="muted">The detached worker continues if this page or browser is closed.</p></div></div><div class="ui-section__body">';
+        echo '<div id="pak-import-job" data-job-id="' . $jobId . '" data-queue="' . catalog_h((string)($config['queue']['name'] ?? 'catalog')) . '" data-status-url="api/v1/job-status.php" data-action-url="api/v1/job-action.php" data-run-url="api/v1/job-run.php" data-action-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
         echo '<p id="pak-import-status">Loading job status...</p><progress id="pak-import-progress" value="0" max="100" style="width:100%"></progress>';
         echo '<p><button id="pak-import-cancel" type="button">Cancel job</button></p><div id="pak-import-result"></div></div></div></section>';
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Stage and queue PAK</h2><p>Use an uploaded file or a readable local server path.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Stage and import PAK</h2><p>Use an uploaded file or a readable local server path.</p></div></div><div class="ui-section__body">';
     echo '<form method="post" enctype="multipart/form-data" data-ui-loading-form><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('pak-import')) . '">';
     echo '<p><label>Target game<br><select name="game_id" required><option value="">Choose target game</option>';
     foreach ($games as $game) {
@@ -134,7 +153,7 @@ try {
     echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
     echo '<p><label>Upload .pak<br><input type="file" name="pak_file" accept=".pak"></label></p>';
     echo '<p><label>Or local .pak path<br><input type="text" name="local_pak_path" style="width:min(100%,760px)"></label></p>';
-    echo '<p><button type="submit">Stage and queue PAK import</button></p></form></div></section>';
+    echo '<p><button type="submit">Stage and start PAK import</button></p></form></div></section>';
     echo '<script src="assets/pak-import-jobs.js"></script>';
     catalog_foot();
 } catch (Throwable $error) {
