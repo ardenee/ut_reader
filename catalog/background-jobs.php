@@ -55,20 +55,25 @@ try {
     catalog_stat_card('Cancelled', $counts['cancelled']);
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue controls</h2><p class="muted">Run next processes one available job. Run queued keeps starting jobs from this page until the queue is empty or Stop is pressed.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue controls</h2>';
+    echo '<p class="muted">Start next launches a detached CLI worker for one job. Start queued launches a detached worker that drains the available queue and exits. The worker continues after this page or browser is closed.</p>';
+    echo '</div></div><div class="ui-section__body">';
     echo '<div id="background-jobs-app" '
         . 'data-queue="' . catalog_h($queueName) . '" '
         . 'data-status-url="api/v1/job-status.php" '
         . 'data-action-url="api/v1/job-action.php" '
         . 'data-run-url="api/v1/job-run.php" '
+        . 'data-worker-status-url="api/v1/job-worker-status.php" '
+        . 'data-worker-action-url="api/v1/job-worker-action.php" '
         . 'data-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
     echo '<p class="button-row">'
-        . '<button id="jobs-run-next" type="button">Run next</button> '
-        . '<button id="jobs-run-all" type="button">Run queued</button> '
-        . '<button id="jobs-stop" type="button">Stop running</button> '
+        . '<button id="jobs-run-next" type="button">Start next</button> '
+        . '<button id="jobs-run-all" type="button">Start queued</button> '
+        . '<button id="jobs-stop" type="button">Stop worker</button> '
         . '<button id="jobs-recover" type="button">Recover expired jobs</button> '
         . '<button id="jobs-refresh" type="button">Refresh</button>'
         . '</p>';
+    echo '<p id="jobs-worker-message" class="muted" aria-live="polite">Loading worker status...</p>';
     echo '<p id="jobs-message" class="muted" aria-live="polite">Loading queue...</p>';
     echo '<p><label>Status filter <select id="jobs-status-filter">'
         . '<option value="">All statuses</option>'
