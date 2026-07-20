@@ -14,7 +14,8 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 /**
  * Treats a bad package/archive as a completed import attempt with a failed
  * outcome. The queue can then continue immediately to the next uploaded file.
- * Queue/storage/database failures still escape and use the normal retry policy.
+ * Queue/storage/database/programming failures still escape and use the normal
+ * retry and diagnostics policy.
  */
 final class CatalogNonBlockingImportJobHandler implements JobHandler
 {
@@ -34,6 +35,10 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
         } catch (JobCancellationRequested $error) {
             throw $error;
         } catch (PDOException $error) {
+            throw $error;
+        } catch (\InvalidArgumentException $error) {
+            throw $error;
+        } catch (\Error $error) {
             throw $error;
         } catch (Throwable $error) {
             if ($this->isInfrastructureFailure($error)) {
@@ -69,6 +74,10 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
 
     private function isInfrastructureFailure(Throwable $error): bool
     {
+        if ($error instanceof \LogicException) {
+            return true;
+        }
+
         $message = strtolower(trim($error->getMessage()));
         foreach ([
             'staged import file is unavailable',
