@@ -11,13 +11,15 @@ function catalog_api_application()
     return catalog_bootstrap();
 }
 
-function catalog_api_require_admin(): void
+function catalog_api_require_admin(bool $requireRecentAuthentication = true): void
 {
     if (!catalog_support_is_admin()) {
         JsonResponse::error('unauthorized', 'Administrator authentication is required.', 401);
     }
     $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
-    if (!in_array($method, ['GET', 'HEAD', 'OPTIONS'], true) && !catalog_has_recent_admin_auth()) {
+    if ($requireRecentAuthentication
+        && !in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)
+        && !catalog_has_recent_admin_auth()) {
         JsonResponse::error(
             'reauthentication_required',
             'Recent administrator authentication is required. Confirm your password and MFA code on admin-security.php.',
