@@ -43,7 +43,7 @@ try {
     $resultColumn = $jobId > 0 ? ',result_json' : '';
     $sql = 'SELECT id,queue_name,job_type,resource_class,resource_limit,concurrency_key,priority,status,available_at,'
         . 'attempts,max_attempts,worker_id,leased_at,lease_expires_at,last_heartbeat_at,recovery_count,'
-        . 'cancel_requested_at,cancel_requested_by,cancel_reason,progress_json,progress_updated_at'
+        . 'cancel_requested_at,cancel_requested_by,cancel_reason,payload_json,progress_json,progress_updated_at'
         . $resultColumn
         . ',last_error,created_by,created_at,updated_at,completed_at,dead_lettered_at '
         . 'FROM ue_background_jobs'
@@ -51,6 +51,20 @@ try {
         . ' ORDER BY id DESC LIMIT ' . $limit;
     $rows = catalog_all($application->db, $sql, $params);
     foreach ($rows as &$row) {
+        $payload = [];
+        if (!empty($row['payload_json'])) {
+            $decoded = json_decode((string)$row['payload_json'], true);
+            if (is_array($decoded)) {
+                foreach (['original_name', 'source_relative_path', 'game_id', 'file_id', 'max_files'] as $field) {
+                    if (array_key_exists($field, $decoded)) {
+                        $payload[$field] = $decoded[$field];
+                    }
+                }
+            }
+        }
+        unset($row['payload_json']);
+        $row['payload'] = $payload;
+
         $progress = null;
         if (!empty($row['progress_json'])) {
             $decoded = json_decode((string)$row['progress_json'], true);
