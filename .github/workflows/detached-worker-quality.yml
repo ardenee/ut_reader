@@ -19,6 +19,7 @@ jobs:
           coverage: none
       - name: Syntax check detached worker PHP
         run: |
+          php -l catalog/lib/CatalogRedirectArchivePayload.php
           php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php
@@ -36,6 +37,7 @@ jobs:
           php -l catalog/dashboard.php
           php -l catalog/tests/detached-worker-contract-test.php
           php -l catalog/tests/background-job-controls-contract-test.php
+          php -l tests/catalog_redirect_payload_test.php
       - name: Syntax check detached worker clients
         run: |
           node --check catalog/assets/background-jobs.js
@@ -45,3 +47,5 @@ jobs:
         run: php catalog/tests/detached-worker-contract-test.php
       - name: Verify background job controls contract
         run: php catalog/tests/background-job-controls-contract-test.php
+      - name: Verify generic redirect payload decoding
+        run: php tests/catalog_redirect_payload_test.php
