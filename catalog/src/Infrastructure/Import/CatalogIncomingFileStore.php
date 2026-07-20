@@ -54,7 +54,21 @@ final class CatalogIncomingFileStore
         return $real;
     }
 
+    /**
+     * Retain the staged source after a handler finishes.
+     *
+     * Job completion is persisted after the handler returns. Deleting here made
+     * a successful import non-retryable when queue finalisation failed. Incoming
+     * files are now durable placeholders and are removed only by explicit
+     * deletion or age-based pruning.
+     */
     public function remove(string $relativePath): void
+    {
+        // Intentionally retained for retry/recovery.
+    }
+
+    /** Delete a staged file when no job was created or an operator cleans it up. */
+    public function delete(string $relativePath): void
     {
         try {
             $path = $this->resolve($relativePath);
@@ -68,10 +82,10 @@ final class CatalogIncomingFileStore
     }
 
     /** @return array{files:int,bytes:int} */
-    public function prune(int $maxAgeSeconds = 172800): array
+    public function prune(int $maxAgeSeconds = 2592000): array
     {
         $this->ensureDirectory();
-        $maxAgeSeconds = max(3600, min($maxAgeSeconds, 30 * 86400));
+        $maxAgeSeconds = max(86400, min($maxAgeSeconds, 90 * 86400));
         $threshold = time() - $maxAgeSeconds;
         $files = 0;
         $bytes = 0;
