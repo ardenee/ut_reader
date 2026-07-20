@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSecurity.php';
 require_once __DIR__ . '/CatalogRememberMe.php';
 require_once __DIR__ . '/CatalogUi.php';
+require_once __DIR__ . '/CatalogNavigation.php';
 
 catalog_apply_runtime_safeguards();
 
@@ -205,9 +206,9 @@ function catalog_nav_link(string $label, string $href, string $class = ''): void
 
 function catalog_nav_menu(string $label, array $links): void
 {
-    echo '<details><summary>' . catalog_h($label) . '</summary><div class="nav-menu">';
+    echo '<details class="nav-dropdown" data-admin-menu="' . catalog_h($label) . '"><summary aria-label="' . catalog_h($label . ' menu') . '">' . catalog_h($label) . '</summary><div class="nav-menu" role="menu">';
     foreach ($links as $text => $href) {
-        catalog_nav_link((string)$text, (string)$href);
+        echo '<a role="menuitem" href="' . catalog_h((string)$href) . '">' . catalog_h((string)$text) . '</a>';
     }
     echo '</div></details>';
 }
@@ -227,30 +228,9 @@ function catalog_admin_nav(): void
 
     if (catalog_support_is_admin()) {
         echo '<span class="nav-sep"></span>';
-        catalog_nav_menu('Admin', [
-            'Dashboard' => $root . 'dashboard.php',
-            'Library' => $root . 'library.php',
-            'Game Admin' => $root . 'game-manager.php',
-            'Game Profiles' => $root . 'game-profiles.php',
-            'Full Sync' => $root . 'full-sync.php',
-            'Package Normalizer' => $root . 'package-normalize.php',
-            'Base Game Protection' => $root . 'base-game-files.php',
-        ]);
-        catalog_nav_menu('Sources', [
-            'Game Sources' => $root . 'sources.php',
-            'Local Source Scan' => $root . 'source-scan.php',
-            'HTTP Source Scan' => $root . 'http-source-scan.php',
-            'Upload Files' => $root . 'profiled-upload.php',
-            'Upload Bucket' => $root . 'upload-bucket.php',
-            'Unverified Files' => $root . 'unverified-files.php',
-            'Storage Audit' => $root . 'storage-audit.php',
-        ]);
-        catalog_nav_menu('Federation', [
-            'Federation Admin' => $root . 'federation/admin.php',
-            'Transfers' => $root . 'transfers.php',
-            'Downloads' => $root . 'download-admin.php',
-            'Settings' => $root . 'federation/settings.php',
-        ]);
+        foreach (catalog_admin_navigation_groups($root) as $label => $links) {
+            catalog_nav_menu((string)$label, $links);
+        }
         echo '<form method="post" action="' . catalog_h($root . 'index.php?page=logout') . '" class="nav-logout">';
         echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('logout')) . '">';
         echo '<button type="submit" class="logout">Logout</button></form>';
