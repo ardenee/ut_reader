@@ -68,4 +68,31 @@ foreach (['GeneratedPackageJobHandler', 'UnverifiedDuplicateCleanupJobHandler'] 
     storage_package_expect(str_contains($worker, $handler), 'Worker registration is missing ' . $handler);
 }
 
+require_once __DIR__ . '/../src/Infrastructure/Import/CatalogIncomingFileStore.php';
+
+$stagingRoot = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-stage-contract-' . bin2hex(random_bytes(5));
+storage_package_expect(mkdir($stagingRoot, 0777, true), 'Could not create durable staging contract directory.');
+$sourcePath = $stagingRoot . DIRECTORY_SEPARATOR . 'source.u';
+storage_package_expect(file_put_contents($sourcePath, 'durable-staged-package') !== false, 'Could not create durable staging source.');
+
+$incomingStore = new UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore([
+    'storage_path' => $stagingRoot,
+]);
+$staged = $incomingStore->stageLocalFile($sourcePath, 'ACEv08c.u');
+$resolvedPath = $incomingStore->resolve($staged['relative_path']);
+$incomingStore->remove($staged['relative_path']);
+storage_package_expect(is_file($resolvedPath), 'A handler completion removed its retryable staged source.');
+
+$incomingStore->delete($staged['relative_path']);
+storage_package_expect(!is_file($resolvedPath), 'Explicit staged source deletion did not remove the placeholder.');
+
+@unlink($sourcePath);
+$incomingDirectory = $stagingRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'incoming';
+foreach (glob($incomingDirectory . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR) ?: [] as $directory) {
+    @rmdir($directory);
+}
+@rmdir($incomingDirectory);
+@rmdir(dirname($incomingDirectory));
+@rmdir($stagingRoot);
+
 echo "Durable storage and package job contract tests passed.\n";
