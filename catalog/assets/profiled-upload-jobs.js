@@ -16,8 +16,10 @@
     const log = document.getElementById('upload-progress-log');
     if (!form || !fileInput || !progress || !window.XMLHttpRequest || !window.fetch) return;
 
+    const queue = progress.dataset.queue || 'catalog';
     const statusUrl = progress.dataset.statusUrl || 'api/v1/job-status.php';
     const actionUrl = progress.dataset.actionUrl || 'api/v1/job-action.php';
+    const runUrl = progress.dataset.runUrl || 'api/v1/job-run.php';
     const actionCsrf = progress.dataset.actionCsrf || '';
     let activeJobId = 0;
 
@@ -82,6 +84,21 @@
         return jobs[0];
     }
 
+    async function ensureWorker() {
+        if (!actionCsrf) return;
+        try {
+            await fetch(runUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': actionCsrf},
+                body: JSON.stringify({queue: queue, mode: 'drain'})
+            });
+        } catch (error) {
+            // The server also auto-starts the worker. Polling retries this call if
+            // the job remains queued, so a transient launcher error is recoverable.
+        }
+    }
+
     function resultEntries(result, fallbackName) {
         if (!result) return [];
         if (Array.isArray(result.messages)) {
@@ -99,6 +116,7 @@
     async function waitForJob(jobId, fileName, index, total) {
         activeJobId = jobId;
         cancelButton.hidden = false;
+        let queuedPolls = 0;
         while (true) {
             const current = await readJob(jobId);
             const state = current.progress || {};
@@ -106,6 +124,12 @@
             currentBar.value = percent;
             currentLabel.textContent = 'Worker job #' + jobId + ' for ' + fileName + ' (' + percent + '%) — ' + (state.message || current.status);
             setOverall(index - 1, total, percent);
+            if (current.status === 'queued') {
+                queuedPolls++;
+                if (queuedPolls === 1 || queuedPolls % 4 === 0) await ensureWorker();
+            } else {
+                queuedPolls = 0;
+            }
             if (['completed', 'failed', 'dead_letter', 'cancelled'].includes(current.status)) {
                 activeJobId = 0;
                 cancelButton.hidden = true;
@@ -154,7 +178,8 @@
                         throw new Error(response.error || 'Upload could not be queued.');
                     }
                     const queued = response.jobs[0];
-                    addLog({status: 'queued', file: name, message: 'Background job #' + queued.job_id + ' queued.'});
+                    addLog({status: 'queued', file: name, message: 'Background job #' + queued.job_id + ' queued; detached worker start requested.'});
+                    await ensureWorker();
                     await waitForJob(parseInt(queued.job_id, 10), name, index, total);
                 } catch (error) {
                     addLog({status: 'failed', file: name, message: error.message || 'Invalid server response.'});
