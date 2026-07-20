@@ -8,24 +8,24 @@ function admin_navigation_expect(bool $condition, string $message): void
     }
 }
 
-$scriptPath = __DIR__ . '/../assets/catalog-ui.js';
-$script = file_get_contents($scriptPath);
-admin_navigation_expect(is_string($script), 'Could not read catalog admin navigation script.');
+require_once __DIR__ . '/../lib/CatalogNavigation.php';
 
-foreach ([
-    "label: 'Admin'",
-    "label: 'Catalog'",
-    "label: 'Imports'",
-    "label: 'Maintenance'",
-    "label: 'Downloads'",
-    "label: 'Federation'",
-] as $group) {
-    admin_navigation_expect(str_contains($script, $group), 'Missing admin navigation group: ' . $group);
-}
+$groups = catalog_admin_navigation_groups('');
+admin_navigation_expect(array_keys($groups) === [
+    'Admin',
+    'Catalog',
+    'Imports',
+    'Maintenance',
+    'Downloads',
+    'Federation',
+], 'Administrator navigation groups are missing or out of order.');
 
-foreach ([
+$expectedPages = [
     'dashboard.php',
     'setup.php',
+    'library.php',
+    'games.php',
+    'index.php?page=search',
     'game-manager.php',
     'game-profiles.php',
     'admin-security.php',
@@ -74,10 +74,43 @@ foreach ([
     'federation/inventory-push.php',
     'federation/upload-to-parent.php',
     'federation/claim-parent.php',
-] as $page) {
-    admin_navigation_expect(str_contains($script, "'" . $page . "'"), 'Admin navigation is missing page: ' . $page);
+];
+
+$actualPages = [];
+foreach ($groups as $label => $links) {
+    admin_navigation_expect($links !== [], 'Administrator navigation group is empty: ' . $label);
+    foreach ($links as $title => $href) {
+        $actualPages[] = $href;
+        $path = parse_url($href, PHP_URL_PATH);
+        admin_navigation_expect(is_string($path) && $path !== '', 'Navigation link has no path: ' . $title);
+        admin_navigation_expect(
+            is_file(__DIR__ . '/../' . ltrim($path, '/')),
+            'Navigation points to a missing page: ' . $href
+        );
+    }
 }
 
+foreach ($expectedPages as $page) {
+    admin_navigation_expect(in_array($page, $actualPages, true), 'Administrator navigation is missing page: ' . $page);
+}
+
+$core = file_get_contents(__DIR__ . '/../lib/CatalogSupportCore.php');
+admin_navigation_expect(is_string($core), 'Could not read CatalogSupportCore.php.');
+admin_navigation_expect(
+    str_contains($core, "require_once __DIR__ . '/CatalogNavigation.php';"),
+    'CatalogSupportCore.php does not load the centralized navigation definition.'
+);
+admin_navigation_expect(
+    str_contains($core, 'foreach (catalog_admin_navigation_groups($root) as $label => $links)'),
+    'The global header is not rendering every centralized navigation group.'
+);
+admin_navigation_expect(
+    str_contains($core, 'data-admin-menu='),
+    'Server-rendered dropdowns do not expose the admin-menu hook.'
+);
+
+$script = file_get_contents(__DIR__ . '/../assets/catalog-ui.js');
+admin_navigation_expect(is_string($script), 'Could not read catalog admin navigation script.');
 foreach ([
     "details.addEventListener('toggle'",
     'closeNavigationMenus(nav, details)',
@@ -87,7 +120,6 @@ foreach ([
 ] as $behaviour) {
     admin_navigation_expect(str_contains($script, $behaviour), 'Admin dropdown behaviour is missing: ' . $behaviour);
 }
-
 admin_navigation_expect(
     str_contains($script, 'max-height: min(72vh, 640px)'),
     'Long admin dropdowns are not height-limited and scrollable.'
