@@ -8,9 +8,12 @@
     const statusUrl = app.dataset.statusUrl || 'api/v1/job-status.php';
     const actionUrl = app.dataset.actionUrl || 'api/v1/job-action.php';
     const runUrl = app.dataset.runUrl || 'api/v1/job-run.php';
+    const workerStatusUrl = app.dataset.workerStatusUrl || 'api/v1/job-worker-status.php';
+    const workerActionUrl = app.dataset.workerActionUrl || 'api/v1/job-worker-action.php';
     const csrf = app.dataset.csrf || '';
     const tableBody = document.getElementById('jobs-table-body');
     const message = document.getElementById('jobs-message');
+    const workerMessage = document.getElementById('jobs-worker-message');
     const filter = document.getElementById('jobs-status-filter');
     const runNextButton = document.getElementById('jobs-run-next');
     const runAllButton = document.getElementById('jobs-run-all');
@@ -18,8 +21,6 @@
     const recoverButton = document.getElementById('jobs-recover');
     const refreshButton = document.getElementById('jobs-refresh');
 
-    let runLoop = false;
-    let runRequestActive = false;
     let refreshActive = false;
 
     function errorMessage(body, fallback) {
@@ -49,6 +50,15 @@
             credentials: 'same-origin'
         });
         return body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
+    }
+
+    async function readWorker() {
+        const params = new URLSearchParams({queue: queue});
+        const body = await jsonRequest(workerStatusUrl + '?' + params.toString(), {
+            cache: 'no-store',
+            credentials: 'same-origin'
+        });
+        return body && body.data ? body.data.worker || {} : {};
     }
 
     function appendCell(row, value, className) {
@@ -91,22 +101,22 @@
         });
     }
 
-    async function runOne() {
-        if (runRequestActive) return null;
-        runRequestActive = true;
-        runNextButton.disabled = true;
-        try {
-            const body = await jsonRequest(runUrl, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
-                body: JSON.stringify({queue: queue})
-            });
-            return body && body.data ? body.data.result : null;
-        } finally {
-            runRequestActive = false;
-            runNextButton.disabled = false;
-        }
+    async function launch(mode) {
+        return jsonRequest(runUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+            body: JSON.stringify({queue: queue, mode: mode})
+        });
+    }
+
+    async function stopWorker() {
+        return jsonRequest(workerActionUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+            body: JSON.stringify({action: 'stop', queue: queue, cancel_running: true})
+        });
     }
 
     function actionButton(label, handler) {
@@ -167,12 +177,29 @@
         });
     }
 
+    function renderWorker(worker) {
+        const state = worker && worker.state ? worker.state : {};
+        const active = Boolean(worker && worker.active);
+        const processed = parseInt(state.processed || 0, 10) || 0;
+        const status = active ? 'running' : String(state.status || 'stopped');
+        const detail = active
+            ? 'Detached worker is running. Processed ' + processed + ' job(s). Closing this page will not stop it.'
+            : 'Detached worker is ' + status + '. ' + (state.exit_reason ? 'Last exit: ' + state.exit_reason + '.' : '');
+        workerMessage.textContent = detail;
+        runNextButton.disabled = active;
+        runAllButton.disabled = active;
+        stopButton.disabled = !active;
+    }
+
     async function refresh() {
         if (refreshActive) return;
         refreshActive = true;
         try {
-            const jobs = await readJobs();
+            const results = await Promise.all([readJobs(), readWorker()]);
+            const jobs = results[0];
+            const worker = results[1];
             render(jobs);
+            renderWorker(worker);
             const queued = jobs.filter(function (job) { return job.status === 'queued'; }).length;
             const running = jobs.filter(function (job) { return job.status === 'running'; }).length;
             message.textContent = queued + ' queued, ' + running + ' running. Showing ' + jobs.length + ' job(s).';
@@ -184,56 +211,43 @@
     }
 
     runNextButton.addEventListener('click', async function () {
-        message.textContent = 'Running the next available job...';
+        runNextButton.disabled = true;
         try {
-            const result = await runOne();
-            message.textContent = result && result.status === 'idle'
-                ? 'No available jobs.'
-                : 'Worker request finished: ' + String(result && result.status ? result.status : 'complete') + '.';
+            const body = await launch('next');
+            const data = body && body.data ? body.data : {};
+            workerMessage.textContent = data.started === false
+                ? 'A detached worker is already running.'
+                : 'Detached worker launched for the next available job.';
         } catch (error) {
-            message.textContent = error.message || 'Could not run the next job.';
+            workerMessage.textContent = error.message || 'Could not start the detached worker.';
         }
         await refresh();
     });
 
     runAllButton.addEventListener('click', async function () {
-        if (runLoop) return;
-        runLoop = true;
         runAllButton.disabled = true;
-        message.textContent = 'Running queued jobs from this page...';
         try {
-            while (runLoop) {
-                const result = await runOne();
-                await refresh();
-                if (!result || result.status === 'idle') break;
-            }
-            message.textContent = runLoop ? 'No more jobs are currently available.' : 'Run queued stopped.';
+            const body = await launch('drain');
+            const data = body && body.data ? body.data : {};
+            workerMessage.textContent = data.started === false
+                ? 'A detached worker is already running and will continue draining available jobs.'
+                : 'Detached worker launched to drain the available queue.';
         } catch (error) {
-            message.textContent = error.message || 'Run queued failed.';
-        } finally {
-            runLoop = false;
-            runAllButton.disabled = false;
-            await refresh();
+            workerMessage.textContent = error.message || 'Could not start the detached worker.';
         }
+        await refresh();
     });
 
     stopButton.addEventListener('click', async function () {
-        runLoop = false;
         stopButton.disabled = true;
         try {
-            const running = await readJobs('running');
-            for (const job of running) {
-                await mutate('cancel', {job_id: job.id, reason: 'Stopped from Background Jobs.'});
-            }
-            message.textContent = running.length
-                ? 'Stop requested for ' + running.length + ' running job(s).'
-                : 'No running jobs were found.';
+            const body = await stopWorker();
+            const data = body && body.data ? body.data : {};
+            workerMessage.textContent = 'Stop requested. ' + String(data.running_jobs_notified || 0) + ' running job(s) were notified.';
         } catch (error) {
-            message.textContent = error.message || 'Could not stop running jobs.';
-        } finally {
-            stopButton.disabled = false;
-            await refresh();
+            workerMessage.textContent = error.message || 'Could not stop the detached worker.';
         }
+        await refresh();
     });
 
     recoverButton.addEventListener('click', async function () {
