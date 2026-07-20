@@ -39,8 +39,10 @@ function source_scan_tmp_copy(string $path): string
 
 function source_scan_work_file(string $path): array
 {
-    $name = basename($path);
-    if (!catalog_redirect_archive_is_supported_filename($name)) return ['path'=>$path,'name'=>catalog_clean_unreal_filename($name),'temp'=>false,'redirect'=>false,'source_extension'=>''];
+    // Normalise duplicate-copy markers before testing/removing a redirect suffix.
+    // Example: Name.uax (2).uz2 -> Name.uax.uz2 -> Name.uax.
+    $name = catalog_clean_unreal_filename(basename($path));
+    if (!catalog_redirect_archive_is_supported_filename($name)) return ['path'=>$path,'name'=>$name,'temp'=>false,'redirect'=>false,'source_extension'=>''];
     $decoded = catalog_redirect_archive_decompress_to_temp($path, $name);
     return ['path'=>(string)$decoded['path'],'name'=>catalog_clean_unreal_filename((string)$decoded['filename']),'temp'=>true,'redirect'=>true,'source_extension'=>(string)$decoded['source_extension']];
 }
