@@ -20,7 +20,9 @@ final class CatalogJobWorkerFactory
         return new JobWorker(
             new WorkerJobQueue($db),
             [
-                new CatalogStagedImportJobHandler($db, $config),
+                new CatalogNonBlockingImportJobHandler(
+                    new CatalogStagedImportJobHandler($db, $config)
+                ),
                 new CatalogMaintenanceJobHandler($db, $config),
                 new CatalogStorageMaintenanceJobHandler($db, $config),
                 new UnverifiedDuplicateCleanupJobHandler($db, $config),
