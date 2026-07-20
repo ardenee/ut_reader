@@ -1,0 +1,79 @@
+<?php
+declare(strict_types=1);
+
+/**
+ * User-facing administrator pages grouped for the global header.
+ * Detail, download-stream and POST-only action endpoints are intentionally omitted.
+ *
+ * @return array<string,array<string,string>>
+ */
+function catalog_admin_navigation_groups(string $root): array
+{
+    return [
+        'Admin' => [
+            'Dashboard' => $root . 'dashboard.php',
+            'Setup' => $root . 'setup.php',
+            'Library' => $root . 'library.php',
+            'Game Browser' => $root . 'games.php',
+            'Search' => $root . 'index.php?page=search',
+            'Game Admin' => $root . 'game-manager.php',
+            'Game Profiles' => $root . 'game-profiles.php',
+            'Administrator Security' => $root . 'admin-security.php',
+        ],
+        'Catalog' => [
+            'Missing Dependencies' => $root . 'missing.php',
+            'Duplicate Files' => $root . 'duplicates.php',
+            'Unverified Files' => $root . 'unverified-files.php',
+            'Import Existing Unverified DB' => $root . 'unverified-database-import.php',
+            'Base Game Protection' => $root . 'base-game-files.php',
+            'Legacy Data Audit' => $root . 'legacy-data-audit.php',
+        ],
+        'Imports' => [
+            'Game Sources' => $root . 'sources.php',
+            'Local Source Scan' => $root . 'source-scan.php',
+            'HTTP Source Scan' => $root . 'http-source-scan.php',
+            'Upload Files' => $root . 'profiled-upload.php',
+            'Upload Bucket' => $root . 'upload-bucket.php',
+            'PAK Import' => $root . 'pak-import.php',
+            'Storage Audit' => $root . 'storage-audit.php',
+        ],
+        'Maintenance' => [
+            'Background Jobs' => $root . 'background-jobs.php',
+            'Full Sync' => $root . 'full-sync.php',
+            'Dependency Refresh' => $root . 'dependency-refresh.php',
+            'Asset Metadata Rebuild' => $root . 'asset-metadata-rebuild.php',
+            'Source Identity Repair' => $root . 'source-identity-repair.php',
+            'Package Normalizer' => $root . 'package-normalize.php',
+            'GUID Normalizer' => $root . 'guid-normalize.php',
+            'Maintenance Locks' => $root . 'maintenance-locks.php',
+        ],
+        'Downloads' => [
+            'Transfers' => $root . 'transfers.php',
+            'Download Administration' => $root . 'download-admin.php',
+            'Package Download Settings' => $root . 'download-package-settings.php',
+            'Mirror Providers' => $root . 'mirror-providers.php',
+            'Mirror Links' => $root . 'mirror-links.php',
+            'Mirror Queue' => $root . 'mirror-queue.php',
+        ],
+        'Federation' => [
+            'Federation Admin' => $root . 'federation/admin.php',
+            'Join Main Parent' => $root . 'federation/join-main-parent.php',
+            'Settings' => $root . 'federation/settings.php',
+            'Peers' => $root . 'federation/peers.php',
+            'Peer Inventory' => $root . 'federation/peer-inventory.php',
+            'Requests' => $root . 'federation/requests.php',
+            'Approved Downloads' => $root . 'federation/approved-downloads.php',
+            'Join Requests' => $root . 'federation/join-requests.php',
+            'Queue' => $root . 'federation/queue.php',
+            'Bulk Worker' => $root . 'federation/worker-run.php',
+            'Conflicts' => $root . 'federation/conflicts.php',
+            'Maintenance' => $root . 'federation/maintenance.php',
+            'Logs' => $root . 'federation/logs.php',
+            'Documentation' => $root . 'federation/docs.php',
+            'Parent Pull' => $root . 'federation/parent-pull.php',
+            'Push Inventory' => $root . 'federation/inventory-push.php',
+            'Upload to Parent' => $root . 'federation/upload-to-parent.php',
+            'Claim Parent' => $root . 'federation/claim-parent.php',
+        ],
+    ];
+}
