@@ -8,13 +8,7 @@ if (PHP_SAPI !== 'cli') {
 
 require_once dirname(__DIR__) . '/bootstrap.php';
 
-use UnrealDb\Catalog\Application\Jobs\JobWorker;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogMaintenanceJobHandler;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogStagedImportJobHandler;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogStorageMaintenanceJobHandler;
-use UnrealDb\Catalog\Infrastructure\Jobs\GeneratedPackageJobHandler;
-use UnrealDb\Catalog\Infrastructure\Jobs\UnverifiedDuplicateCleanupJobHandler;
-use UnrealDb\Catalog\Infrastructure\Persistence\WorkerJobQueue;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobWorkerFactory;
 
 $options = getopt('', ['queue::', 'max-jobs::', 'sleep-ms::', 'worker-id::', 'lease-seconds::']);
 $application = catalog_bootstrap();
@@ -24,16 +18,9 @@ $sleepMs = max(50, min((int)($options['sleep-ms'] ?? 1000), 60000));
 $workerId = (string)($options['worker-id'] ?? (gethostname() . ':' . getmypid()));
 $leaseSeconds = max(15, min((int)($options['lease-seconds'] ?? ($application->config['queue']['lease_seconds'] ?? 120)), 3600));
 
-$queue = new WorkerJobQueue($application->db);
-$worker = new JobWorker(
-    $queue,
-    [
-        new CatalogStagedImportJobHandler($application->db, $application->config),
-        new CatalogMaintenanceJobHandler($application->db, $application->config),
-        new CatalogStorageMaintenanceJobHandler($application->db, $application->config),
-        new UnverifiedDuplicateCleanupJobHandler($application->db, $application->config),
-        new GeneratedPackageJobHandler($application->db, $application->config),
-    ],
+$worker = CatalogJobWorkerFactory::create(
+    $application->db,
+    $application->config,
     $queueName,
     $workerId,
     $leaseSeconds
