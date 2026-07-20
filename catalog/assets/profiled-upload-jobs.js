@@ -23,6 +23,23 @@
     const actionCsrf = progress.dataset.actionCsrf || '';
     let activeJobId = 0;
 
+    function installStatusStyles() {
+        const style = document.createElement('style');
+        style.textContent = [
+            '.upload-result { border-left:4px solid var(--line); border-radius:8px; padding:7px 9px; margin:4px 0; background:rgba(255,255,255,.025); }',
+            '.upload-result-badge { display:inline-block; min-width:82px; padding:2px 7px; border:1px solid currentColor; border-radius:999px; text-align:center; }',
+            '.upload-result-imported,.upload-result-verified,.upload-result-alias,.upload-result-decompressed,.upload-result-completed { border-left-color:#32d583; background:rgba(50,213,131,.08); }',
+            '.upload-result-imported .upload-result-badge,.upload-result-verified .upload-result-badge,.upload-result-alias .upload-result-badge,.upload-result-decompressed .upload-result-badge,.upload-result-completed .upload-result-badge { color:#a7f3d0; }',
+            '.upload-result-duplicate { border-left-color:#60a5fa; background:rgba(96,165,250,.09); }',
+            '.upload-result-duplicate .upload-result-badge { color:#bfdbfe; }',
+            '.upload-result-failed,.upload-result-invalid,.upload-result-rejected,.upload-result-unverified,.upload-result-dead_letter,.upload-result-cancelled { border-left-color:#ff6b7a; background:rgba(255,107,122,.08); }',
+            '.upload-result-failed .upload-result-badge,.upload-result-invalid .upload-result-badge,.upload-result-rejected .upload-result-badge,.upload-result-unverified .upload-result-badge,.upload-result-dead_letter .upload-result-badge,.upload-result-cancelled .upload-result-badge { color:#fecdd3; }',
+            '.upload-result-queued,.upload-result-running { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
+            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge { color:#ffe29a; }'
+        ].join('\n');
+        document.head.appendChild(style);
+    }
+
     function files() {
         return Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []);
     }
@@ -46,10 +63,10 @@
         entry = entry || {};
         const status = String(entry.status || 'info').toLowerCase();
         const row = document.createElement('div');
-        row.className = 'upload-result upload-result-' + status;
+        row.className = 'upload-result upload-result-' + status.replace(/[^a-z0-9_-]+/g, '-');
         const badge = document.createElement('span');
         badge.className = 'upload-result-badge';
-        badge.textContent = status;
+        badge.textContent = status.replace(/_/g, ' ');
         row.appendChild(badge);
         if (entry.file) {
             const file = entry.file_id ? document.createElement('a') : document.createElement('span');
@@ -234,4 +251,6 @@
         submitButton.disabled = false;
         cancelButton.hidden = true;
     });
+
+    installStatusStyles();
 })();
