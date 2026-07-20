@@ -6,6 +6,7 @@ require_once __DIR__ . '/lib/CatalogPakArchive.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 function profiled_upload_error(Throwable $error): string
@@ -37,7 +38,7 @@ function profiled_upload_relative_path(int $index, string $fallback): string
     return implode('/', $parts);
 }
 
-/** @return array{jobs:list<array<string,mixed>>,messages:list<array<string,mixed>>} */
+/** @return array{jobs:list<array<string,mixed>>,messages:list<array<string,mixed>>,worker:array<string,mixed>|null,worker_error:string} */
 function profiled_upload_enqueue(PDO $db, array $config): array
 {
     catalog_check_csrf('profiled_upload');
@@ -104,7 +105,7 @@ function profiled_upload_enqueue(PDO $db, array $config): array
                 3
             );
         } catch (Throwable $error) {
-            $store->remove($staged['relative_path']);
+            $store->delete($staged['relative_path']);
             throw $error;
         }
 
@@ -126,7 +127,24 @@ function profiled_upload_enqueue(PDO $db, array $config): array
     if ($jobs === [] && $messages === []) {
         throw new RuntimeException('No upload files were received.');
     }
-    return ['jobs' => $jobs, 'messages' => $messages];
+
+    $worker = null;
+    $workerError = '';
+    if ($jobs !== []) {
+        try {
+            $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
+        } catch (Throwable $error) {
+            $workerError = profiled_upload_error($error);
+            error_log('[UnrealDB profiled upload worker launch] ' . $error->getMessage());
+        }
+    }
+
+    return [
+        'jobs' => $jobs,
+        'messages' => $messages,
+        'worker' => $worker,
+        'worker_error' => $workerError,
+    ];
 }
 
 try {
@@ -153,7 +171,9 @@ try {
             echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             exit;
         }
-        $_SESSION['profiled_upload_flash'] = 'Queued ' . count($result['jobs']) . ' background import job(s).';
+        $_SESSION['profiled_upload_flash'] = $result['worker_error'] !== ''
+            ? 'Queued ' . count($result['jobs']) . ' import job(s), but the detached worker could not be started: ' . $result['worker_error']
+            : 'Queued ' . count($result['jobs']) . ' import job(s) and started the detached worker.';
         header('Location: profiled-upload.php?game_id=' . (int)($_POST['game_id'] ?? 0));
         exit;
     }
@@ -170,8 +190,9 @@ try {
     unset($_SESSION['profiled_upload_flash']);
     catalog_page_header(
         'Upload Files',
-        'Uploads are copied into controlled staging and imported by the background worker. Closing this page does not interrupt scanning, redirect decompression, PAK extraction, database persistence, or dependency refresh.',
+        'Uploads are copied into durable controlled staging, queued, and automatically started by a detached CLI worker. Closing this page does not interrupt processing.',
         [
+            'Background Jobs' => 'background-jobs.php',
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
             'Sources' => 'sources.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
             'PAK Import' => 'pak-import.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
@@ -179,7 +200,7 @@ try {
         ]
     );
 
-    echo '<div class="card"><h2>Upload and queue</h2>';
+    echo '<div class="card"><h2>Upload and import</h2>';
     echo '<form id="profiled-upload-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('profiled_upload')) . '">';
     echo '<p><label>Target game<br><select name="game_id" required>';
@@ -192,11 +213,13 @@ try {
     echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
-    echo '<p><button id="profiled-upload-button" type="submit">Upload and queue</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current job</button></p>';
-    echo '<p class="muted">Each browser file is uploaded and queued separately. Folder-relative paths are preserved for UE4/UE5 package identity. Redirect archives and PAK files are processed by the worker. Maximum staged file size: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '.</p>';
+    echo '<p><button id="profiled-upload-button" type="submit">Upload and import</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current job</button></p>';
+    echo '<p class="muted">Each browser file is copied into durable staging before its job is created. The detached worker is started automatically and the staged source remains available for retries. Maximum staged file size: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '.</p>';
     echo '<div id="profiled-upload-progress" class="upload-progress" hidden '
+        . 'data-queue="' . catalog_h((string)($config['queue']['name'] ?? 'catalog')) . '" '
         . 'data-status-url="api/v1/job-status.php" '
         . 'data-action-url="api/v1/job-action.php" '
+        . 'data-run-url="api/v1/job-run.php" '
         . 'data-action-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
     echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
