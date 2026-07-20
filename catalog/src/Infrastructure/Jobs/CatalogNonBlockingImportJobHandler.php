@@ -10,6 +10,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 
 /**
  * Treats a bad package/archive as a completed import attempt with a failed
@@ -19,8 +20,11 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
  */
 final class CatalogNonBlockingImportJobHandler implements JobHandler
 {
-    public function __construct(private readonly CatalogStagedImportJobHandler $inner)
-    {
+    /** @param array<string,mixed> $config */
+    public function __construct(
+        private readonly CatalogStagedImportJobHandler $inner,
+        private readonly array $config
+    ) {
     }
 
     public function supports(string $jobType): bool
@@ -30,8 +34,26 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
+        $preparedJob = $job;
+        $temporaryStagedPath = '';
+        $redirectMeta = null;
+
         try {
-            return $this->inner->handle($job, $context);
+            if ($job->type === JobType::IMPORT_STAGED_PACKAGE) {
+                [$preparedJob, $temporaryStagedPath, $redirectMeta] = $this->prepareRedirectPayload($job);
+            }
+
+            $result = $this->inner->handle($preparedJob, $context);
+            if (is_array($redirectMeta)) {
+                $result['decompressed'] = true;
+                $result['redirect_decoder'] = (string)$redirectMeta['decoder'];
+                $result['redirect_signature'] = (int)($redirectMeta['wrapper_signature'] ?? 0);
+                $result['redirect_compressed_bytes'] = (int)$redirectMeta['compressed_bytes'];
+                $result['redirect_output_bytes'] = (int)$redirectMeta['bytes'];
+                $result['redirect_is_unreal_package'] = (bool)$redirectMeta['is_unreal_package'];
+                $result['redirect_source_name'] = (string)($job->payload['original_name'] ?? '');
+            }
+            return $result;
         } catch (JobCancellationRequested $error) {
             throw $error;
         } catch (PDOException $error) {
@@ -69,7 +91,82 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
                 'original_name' => $originalName,
                 'source_relative_path' => $sourceRelativePath,
             ];
+        } finally {
+            if ($temporaryStagedPath !== '') {
+                (new CatalogIncomingFileStore($this->config))->delete($temporaryStagedPath);
+            }
         }
+    }
+
+    /**
+     * Decompress self-identifying 1234/5678 streams and exact UZ2 records before
+     * the package scanner runs. The decoded payload may be a package, text file,
+     * native library or another redirect-distributed file type.
+     *
+     * @return array{0:ClaimedJob,1:string,2:array<string,mixed>|null}
+     */
+    private function prepareRedirectPayload(ClaimedJob $job): array
+    {
+        $payload = $job->payload;
+        $originalName = trim((string)($payload['original_name'] ?? ''));
+        if ($originalName === '') {
+            return [$job, '', null];
+        }
+
+        require_once dirname(__DIR__, 3) . '/lib/CatalogRedirectArchivePayload.php';
+        if (!\catalog_redirect_archive_is_supported_filename($originalName)) {
+            return [$job, '', null];
+        }
+
+        $store = new CatalogIncomingFileStore($this->config);
+        $sourcePath = $store->resolve(trim((string)($payload['staged_path'] ?? '')));
+        $decoded = \catalog_redirect_archive_decompress_payload_to_temp(
+            $sourcePath,
+            $originalName,
+            (int)($this->config['max_upload_bytes'] ?? 0)
+        );
+
+        try {
+            $staged = $store->stageLocalFile((string)$decoded['path'], (string)$decoded['filename']);
+        } finally {
+            @unlink((string)$decoded['path']);
+        }
+
+        $sourceRelativePath = trim(
+            str_replace('\\', '/', (string)($payload['source_relative_path'] ?? $originalName)),
+            '/'
+        );
+        $payload['staged_path'] = $staged['relative_path'];
+        $payload['original_name'] = $staged['original_name'];
+        $payload['source_relative_path'] = $this->replaceRelativeFilename(
+            $sourceRelativePath,
+            $staged['original_name']
+        );
+        $payload['size'] = $staged['size'];
+        $payload['sha256'] = $staged['sha256'];
+
+        $prepared = new ClaimedJob(
+            $job->id,
+            $job->queue,
+            $job->type,
+            $payload,
+            $job->leaseToken,
+            $job->attempt,
+            $job->maxAttempts,
+            $job->leaseExpiresAt,
+            $job->resourceClass,
+            $job->resourceLimit,
+            $job->concurrencyKey
+        );
+
+        return [$prepared, (string)$staged['relative_path'], $decoded];
+    }
+
+    private function replaceRelativeFilename(string $relativePath, string $name): string
+    {
+        $relativePath = trim(str_replace('\\', '/', $relativePath), '/');
+        $directory = trim(str_replace('\\', '/', dirname($relativePath)), '. /');
+        return ($directory !== '' ? $directory . '/' : '') . $name;
     }
 
     private function isInfrastructureFailure(Throwable $error): bool
