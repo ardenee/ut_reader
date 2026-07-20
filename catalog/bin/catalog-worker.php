@@ -14,7 +14,7 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogStagedImportJobHandler;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogStorageMaintenanceJobHandler;
 use UnrealDb\Catalog\Infrastructure\Jobs\GeneratedPackageJobHandler;
 use UnrealDb\Catalog\Infrastructure\Jobs\UnverifiedDuplicateCleanupJobHandler;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\WorkerJobQueue;
 
 $options = getopt('', ['queue::', 'max-jobs::', 'sleep-ms::', 'worker-id::', 'lease-seconds::']);
 $application = catalog_bootstrap();
@@ -24,7 +24,7 @@ $sleepMs = max(50, min((int)($options['sleep-ms'] ?? 1000), 60000));
 $workerId = (string)($options['worker-id'] ?? (gethostname() . ':' . getmypid()));
 $leaseSeconds = max(15, min((int)($options['lease-seconds'] ?? ($application->config['queue']['lease_seconds'] ?? 120)), 3600));
 
-$queue = new PdoJobQueue($application->db);
+$queue = new WorkerJobQueue($application->db);
 $worker = new JobWorker(
     $queue,
     [
