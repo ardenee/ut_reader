@@ -4,12 +4,16 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
     $application = catalog_api_application();
-    catalog_api_require_admin();
+    // Queue controls are routine administrator operations. A valid logged-in
+    // administrator session plus CSRF protection is sufficient; forcing recent
+    // password/MFA reauthentication can interrupt the worker being controlled.
+    catalog_api_require_admin(false);
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         JsonResponse::error('method_not_allowed', 'Only POST is supported.', 405);
@@ -46,6 +50,31 @@ try {
             JsonResponse::error('not_retryable', 'The job is not in a retryable terminal state.', 409);
         }
         JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued']]);
+    }
+
+    if ($action === 'delete') {
+        $jobId = (int)($payload['job_id'] ?? 0);
+        if ($jobId < 1) {
+            JsonResponse::error('invalid_job', 'A positive job_id is required.', 400);
+        }
+        $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
+            ->deleteTerminalJob($jobId);
+        if ((int)$result['deleted_jobs'] !== 1) {
+            JsonResponse::error('not_deletable', 'Only completed, failed, dead-letter or cancelled jobs can be deleted.', 409);
+        }
+        JsonResponse::send(['data' => ['job_id' => $jobId] + $result]);
+    }
+
+    if ($action === 'cleanup') {
+        $retentionDays = max(1, min((int)($payload['retention_days'] ?? 30), 3650));
+        $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
+            ->cleanup($queueName, $retentionDays);
+        JsonResponse::send([
+            'data' => [
+                'queue' => $queueName,
+                'retention_days' => $retentionDays,
+            ] + $result,
+        ]);
     }
 
     if ($action === 'recover') {
@@ -226,7 +255,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
+        'Supported actions are cancel, retry, delete, cleanup, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {
