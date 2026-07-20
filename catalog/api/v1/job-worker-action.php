@@ -9,7 +9,7 @@ use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
     $application = catalog_api_application();
-    catalog_api_require_admin();
+    catalog_api_require_admin(false);
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         JsonResponse::error('method_not_allowed', 'Only POST is supported.', 405);
