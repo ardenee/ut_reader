@@ -10,6 +10,7 @@ require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/ModPackageBuilder.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Security\FileRequestRateLimiter;
 
@@ -52,6 +53,36 @@ function generated_package_authorized_job(PDO $db, int $jobId): ?array
     return $job;
 }
 
+/** @return array{worker:array<string,mixed>|null,worker_error:string} */
+function generated_package_start_worker(array $config, string $queueName, int $jobId): array
+{
+    if (!isset($_SESSION['generated_package_worker_attempts']) || !is_array($_SESSION['generated_package_worker_attempts'])) {
+        $_SESSION['generated_package_worker_attempts'] = [];
+    }
+
+    $now = time();
+    $lastAttempt = (int)($_SESSION['generated_package_worker_attempts'][(string)$jobId] ?? 0);
+    if ($lastAttempt > $now - 15) {
+        return ['worker' => null, 'worker_error' => ''];
+    }
+    $_SESSION['generated_package_worker_attempts'][(string)$jobId] = $now;
+
+    try {
+        return [
+            'worker' => (new CatalogDetachedWorker($config))->start($queueName, 10000),
+            'worker_error' => '',
+        ];
+    } catch (Throwable $error) {
+        error_log('[UnrealDB package worker launch] job #' . $jobId . ': ' . $error->getMessage());
+        return [
+            'worker' => null,
+            'worker_error' => trim($error->getMessage()) !== ''
+                ? trim($error->getMessage())
+                : 'The detached package worker could not be started.',
+        ];
+    }
+}
+
 try {
     catalog_start_session();
     $config = catalog_config();
@@ -65,6 +96,10 @@ try {
         if (!$job) {
             generated_package_reply(['ok' => false, 'error' => 'The package generation job is unavailable in this browser session.'], 404);
         }
+        $workerState = ['worker' => null, 'worker_error' => ''];
+        if (in_array((string)$job['status'], ['queued', 'retry'], true)) {
+            $workerState = generated_package_start_worker($config, $queueName, $jobId);
+        }
         foreach (['progress_json' => 'progress', 'result_json' => 'result'] as $source => $target) {
             $decoded = !empty($job[$source]) ? json_decode((string)$job[$source], true) : null;
             $job[$target] = is_array($decoded) ? $decoded : null;
@@ -75,7 +110,7 @@ try {
             $expires = strtotime((string)$job['result']['expires_at']);
             $job['result']['expired'] = $expires !== false && $expires <= time();
         }
-        generated_package_reply(['ok' => true, 'job' => $job]);
+        generated_package_reply(['ok' => true, 'job' => $job] + $workerState);
     }
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -159,12 +194,13 @@ try {
         $_SESSION['generated_package_jobs'] = array_slice($_SESSION['generated_package_jobs'], -20, null, true);
     }
 
+    $workerState = generated_package_start_worker($config, $queueName, $jobId);
     generated_package_reply([
         'ok' => true,
         'job_id' => $jobId,
         'status' => 'queued',
         'type' => JobType::GENERATE_MOD_PACKAGE,
-    ], 202);
+    ] + $workerState, 202);
 } catch (Throwable $error) {
     error_log('[UnrealDB package jobs] ' . $error->getMessage());
     generated_package_reply(['ok' => false, 'error' => 'Package generation is temporarily unavailable.'], 503);
