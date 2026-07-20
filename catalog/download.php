@@ -41,10 +41,13 @@ function public_download_send_local(array $config, array $file): void
         throw new RuntimeException('Stored file size is unavailable.');
     }
 
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . $size);
-    header('Content-Disposition: attachment; filename="' . addcslashes($fallbackName, "\\\"") . '"');
-    header("Content-Disposition: attachment; filename*=UTF-8''" . rawurlencode($downloadName), false);
+    header('Content-Disposition: attachment; filename="' . addcslashes($fallbackName, "\\\"")
+        . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
     header('X-Content-Type-Options: nosniff');
     header('Cache-Control: private, no-store');
     readfile($path);
