@@ -108,7 +108,8 @@ final class CatalogIncomingFileStore
         if ($size === false || $size <= 0) {
             throw new \RuntimeException('Import source file is empty.');
         }
-        $safeName = $this->safeName($originalName);
+        $logicalName = $this->logicalName($originalName);
+        $safeName = $this->safeName($logicalName);
         $dateDirectory = $this->directory . DIRECTORY_SEPARATOR . gmdate('Ymd');
         if (!is_dir($dateDirectory) && !mkdir($dateDirectory, 0750, true) && !is_dir($dateDirectory)) {
             throw new \RuntimeException('Could not create staged import directory.');
@@ -145,7 +146,7 @@ final class CatalogIncomingFileStore
             $relative = ltrim(str_replace('\\', '/', substr($destination, strlen($this->storageRoot))), '/');
             return [
                 'relative_path' => $relative,
-                'original_name' => $safeName,
+                'original_name' => $logicalName,
                 'size' => (int)$size,
                 'sha256' => $sha256,
             ];
@@ -163,12 +164,51 @@ final class CatalogIncomingFileStore
         }
     }
 
-    private function safeName(string $name): string
+    private function logicalName(string $name): string
     {
         $name = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], trim($name)));
-        $name = preg_replace('/[^A-Za-z0-9._ +\-]+/', '_', $name) ?? '';
+        $name = preg_replace('/[\x00-\x1F\x7F]+/u', '', $name) ?? '';
+        $name = rtrim(trim($name), ' .');
+        if ($name === '' || $name === '.' || $name === '..') {
+            return 'package.bin';
+        }
+
+        do {
+            $previous = $name;
+
+            // Some download tools append the duplicate marker after the whole
+            // filename, for example Name.ut2 (2).
+            $name = preg_replace('/\s+\([0-9]+\)$/u', '', $name) ?? $name;
+
+            // Normal copies place the marker at the end of the stem. Handling
+            // the stem also fixes Name.uax (2).uz2 before redirect decoding.
+            $extension = (string)pathinfo($name, PATHINFO_EXTENSION);
+            if ($extension !== '') {
+                $stem = (string)pathinfo($name, PATHINFO_FILENAME);
+                $stem = preg_replace('/\s+\([0-9]+\)$/u', '', $stem) ?? $stem;
+                $stem = preg_replace('/\s+-\s+copy(?:\s*\([0-9]+\))?$/iu', '', $stem) ?? $stem;
+                $stem = preg_replace('/\s+copy(?:\s*\([0-9]+\))?$/iu', '', $stem) ?? $stem;
+                $name = rtrim($stem, ' .') . '.' . $extension;
+            }
+
+            $name = rtrim(trim($name), ' .');
+        } while ($name !== $previous);
+
+        return $name !== '' ? $name : 'package.bin';
+    }
+
+    private function safeName(string $name): string
+    {
+        // This is only the controlled staging filename. It must never replace
+        // the logical original_name stored in the database.
+        $name = preg_replace('/[\x00-\x1F\x7F<>:"\/\\\\|?*]+/u', '_', $name) ?? '';
         $name = trim($name, " .\t\n\r\0\x0B");
-        return $name !== '' ? substr($name, 0, 180) : 'package.bin';
+        if (function_exists('mb_substr')) {
+            $name = mb_substr($name, 0, 180, 'UTF-8');
+        } else {
+            $name = substr($name, 0, 180);
+        }
+        return $name !== '' ? $name : 'package.bin';
     }
 
     private function removeEmptyParents(string $directory): void
