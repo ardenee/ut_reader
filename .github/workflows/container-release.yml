@@ -1,24 +1,6 @@
 name: Container release
 
 on:
-  pull_request:
-    paths:
-      - Dockerfile
-      - compose.yaml
-      - .dockerignore
-      - catalog/**
-      - deploy/**
-      - .github/workflows/container-release.yml
-  push:
-    branches: [main]
-    tags: ['v*']
-    paths:
-      - Dockerfile
-      - compose.yaml
-      - .dockerignore
-      - catalog/**
-      - deploy/**
-      - .github/workflows/container-release.yml
   workflow_dispatch:
 
 concurrency:
