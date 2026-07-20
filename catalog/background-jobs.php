@@ -73,6 +73,16 @@ try {
         . '<button id="jobs-recover" type="button">Recover expired jobs</button> '
         . '<button id="jobs-refresh" type="button">Refresh</button>'
         . '</p>';
+    echo '<p class="button-row"><label>Remove terminal jobs older than '
+        . '<select id="jobs-cleanup-days">'
+        . '<option value="1">1 day</option>'
+        . '<option value="7">7 days</option>'
+        . '<option value="30" selected>30 days</option>'
+        . '<option value="90">90 days</option>'
+        . '<option value="365">1 year</option>'
+        . '</select></label> '
+        . '<button id="jobs-cleanup" type="button">Clean old jobs</button></p>';
+    echo '<p class="muted small">Cleanup removes completed, failed, dead-letter and cancelled records and their retained staged upload files. Queued and running jobs are never removed.</p>';
     echo '<p id="jobs-worker-message" class="muted" aria-live="polite">Loading worker status...</p>';
     echo '<p id="jobs-message" class="muted" aria-live="polite">Loading queue...</p>';
     echo '<p><label>Status filter <select id="jobs-status-filter">'
