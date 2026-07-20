@@ -45,8 +45,8 @@ foreach (['job-action.php', 'job-run.php', 'job-worker-action.php'] as $file) {
 
 $action = file_get_contents(__DIR__ . '/../api/v1/job-action.php');
 foreach ([
-    "if ($action === 'delete')",
-    "if ($action === 'cleanup')",
+    'if ($action === \'delete\')',
+    'if ($action === \'cleanup\')',
     'CatalogBackgroundJobCleanup',
     'retention_days',
 ] as $fragment) {
