@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../bootstrap/autoload.php';
+require_once __DIR__ . '/../lib/CatalogScanner.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 
@@ -28,4 +29,21 @@ foreach ($cases as $input => $expected) {
     }
 }
 
-fwrite(STDOUT, "Original filename contract tests passed.\n");
+$packageCases = [
+    'DM-{aNtiBot}-Defance.ut2' => 'DM-{aNtiBot}-Defance',
+    'DM-{UEM}-OldGlory (2).ut2' => 'DM-{UEM}-OldGlory',
+    'DM-{UEM}-OldGlory.ut2 (2)' => 'DM-{UEM}-OldGlory',
+    '[FF$]Soundspack1.uax' => '[FF$]Soundspack1',
+    'CTF-[Clan]{Arena}+$Mix.ut2' => 'CTF-[Clan]{Arena}+$Mix',
+];
+
+foreach ($packageCases as $input => $expected) {
+    $actual = scanner_logical_package_name($input);
+    if ($actual !== $expected) {
+        throw new RuntimeException(
+            'Legacy package-name mismatch for [' . $input . ']: expected [' . $expected . '], got [' . $actual . ']'
+        );
+    }
+}
+
+fwrite(STDOUT, "Original filename and legacy package-name contract tests passed.\n");
