@@ -40,11 +40,14 @@ try {
         $params[] = $status;
     }
 
-    $resultColumn = $jobId > 0 ? ',result_json' : '';
+    $resultColumns = $jobId > 0
+        ? ',result_json'
+        : ',JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")) result_status,'
+            . 'JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.message")) result_message';
     $sql = 'SELECT id,queue_name,job_type,resource_class,resource_limit,concurrency_key,priority,status,available_at,'
         . 'attempts,max_attempts,worker_id,leased_at,lease_expires_at,last_heartbeat_at,recovery_count,'
         . 'cancel_requested_at,cancel_requested_by,cancel_reason,payload_json,progress_json,progress_updated_at'
-        . $resultColumn
+        . $resultColumns
         . ',last_error,created_by,created_at,updated_at,completed_at,dead_lettered_at '
         . 'FROM ue_background_jobs'
         . ($where !== [] ? ' WHERE ' . implode(' AND ', $where) : '')
@@ -81,6 +84,13 @@ try {
             }
             unset($row['result_json']);
             $row['result'] = $result;
+        } else {
+            $resultStatus = trim((string)($row['result_status'] ?? ''));
+            $resultMessage = trim((string)($row['result_message'] ?? ''));
+            unset($row['result_status'], $row['result_message']);
+            $row['result'] = $resultStatus !== '' || $resultMessage !== ''
+                ? ['status' => $resultStatus, 'message' => $resultMessage]
+                : null;
         }
     }
     unset($row);
