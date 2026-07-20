@@ -20,8 +20,11 @@ final class CatalogIncomingFileStore
     }
 
     /** @return array{relative_path:string,original_name:string,size:int,sha256:string} */
-    public function stageUploadedFile(string $temporaryPath, string $originalName): array
+    public function stageUploadedFile(string $temporaryPath, string &$originalName): array
     {
+        // Return the logical name through the existing caller variable so job
+        // payloads cannot accidentally retain an unnormalised duplicate suffix.
+        $originalName = $this->logicalName($originalName);
         return $this->stage($temporaryPath, $originalName, true);
     }
 
