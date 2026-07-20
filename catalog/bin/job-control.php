@@ -56,7 +56,7 @@ function job_control_usage(): never
     exit(2);
 }
 
-$command = strtolower(trim((string)($argv[1] ?? ''));
+$command = strtolower(trim((string)($argv[1] ?? '')));
 if ($command === '') {
     job_control_usage();
 }
