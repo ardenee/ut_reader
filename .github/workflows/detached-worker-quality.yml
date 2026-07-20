@@ -1,0 +1,38 @@
+name: Detached worker quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  detached-worker-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Syntax check detached worker PHP
+        run: |
+          php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
+          php -l catalog/bin/catalog-worker-detached.php
+          php -l catalog/api/v1/job-run.php
+          php -l catalog/api/v1/job-worker-status.php
+          php -l catalog/api/v1/job-worker-action.php
+          php -l catalog/background-jobs.php
+          php -l catalog/profiled-upload.php
+          php -l catalog/pak-import.php
+          php -l catalog/dashboard.php
+          php -l catalog/tests/detached-worker-contract-test.php
+      - name: Syntax check detached worker clients
+        run: |
+          node --check catalog/assets/background-jobs.js
+          node --check catalog/assets/profiled-upload-jobs.js
+          node --check catalog/assets/pak-import-jobs.js
+      - name: Verify detached worker contract
+        run: php catalog/tests/detached-worker-contract-test.php
