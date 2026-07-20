@@ -1,0 +1,27 @@
+name: Admin navigation quality
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  admin-navigation-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Syntax check navigation files
+        run: |
+          php -l catalog/lib/CatalogNavigation.php
+          php -l catalog/lib/CatalogSupportCore.php
+          php -l catalog/tests/admin-navigation-contract-test.php
+          node --check catalog/assets/catalog-ui.js
+      - name: Verify complete admin navigation
+        run: php catalog/tests/admin-navigation-contract-test.php
