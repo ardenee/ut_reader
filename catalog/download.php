@@ -19,10 +19,23 @@ function public_download_storage_path(array $config, array $file): string
     );
 }
 
+function public_download_original_name(array $file): string
+{
+    $name = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], (string)($file['original_name'] ?? '')));
+    $name = preg_replace('/[\x00-\x1F\x7F]+/u', '', $name) ?? '';
+    $name = rtrim(trim($name), ' .');
+    return $name !== '' && $name !== '.' && $name !== '..'
+        ? $name
+        : catalog_clean_unreal_filename((string)($file['package_name'] ?? 'package'));
+}
+
 function public_download_send_local(array $config, array $file): void
 {
     $path = public_download_storage_path($config, $file);
-    $downloadName = catalog_clean_unreal_filename((string)$file['original_name']);
+    $downloadName = public_download_original_name($file);
+    // The legacy filename parameter remains filesystem-safe. RFC 5987 filename*
+    // carries the preserved UTF-8 source name used by modern browsers.
+    $fallbackName = catalog_clean_unreal_filename($downloadName);
     $size = filesize($path);
     if ($size === false) {
         throw new RuntimeException('Stored file size is unavailable.');
@@ -30,7 +43,7 @@ function public_download_send_local(array $config, array $file): void
 
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . $size);
-    header('Content-Disposition: attachment; filename="' . addcslashes($downloadName, "\\\"") . '"');
+    header('Content-Disposition: attachment; filename="' . addcslashes($fallbackName, "\\\"") . '"');
     header("Content-Disposition: attachment; filename*=UTF-8''" . rawurlencode($downloadName), false);
     header('X-Content-Type-Options: nosniff');
     header('Cache-Control: private, no-store');
@@ -62,7 +75,7 @@ try {
     }
 
     catalog_head('Download');
-    echo '<div class="card"><h1>Download</h1><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</p><p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span></p></div>';
+    echo '<div class="card"><h1>Download</h1><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(public_download_original_name($file)) . '</p><p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span></p></div>';
 
     if (($decision['type'] ?? '') === 'external_link') {
         $link = $decision['link'];
