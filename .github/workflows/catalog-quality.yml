@@ -57,6 +57,8 @@ jobs:
         run: php catalog/tests/security-services-test.php
       - name: Verify explicit staging boundaries
         run: php catalog/tests/unverified-staging-contract-test.php
+      - name: Verify original filename and legacy package-name preservation
+        run: php catalog/tests/original-filename-contract-test.php
       - name: Verify background job reliability boundaries
         run: php catalog/tests/job-reliability-contract-test.php
       - name: Verify queued dependency refresh boundaries
