@@ -20,8 +20,22 @@
     const stopButton = document.getElementById('jobs-stop');
     const recoverButton = document.getElementById('jobs-recover');
     const refreshButton = document.getElementById('jobs-refresh');
+    const cleanupButton = document.getElementById('jobs-cleanup');
+    const cleanupDays = document.getElementById('jobs-cleanup-days');
 
     let refreshActive = false;
+
+    function installStatusStyles() {
+        const style = document.createElement('style');
+        style.textContent = [
+            '.job-status { display:inline-block; min-width:84px; padding:3px 8px; border:1px solid var(--line); border-radius:999px; font-weight:700; text-align:center; }',
+            '.job-status-queued,.job-status-running { color:#ffe29a; border-color:rgba(246,196,83,.75); background:rgba(246,196,83,.10); }',
+            '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias { color:#a7f3d0; border-color:rgba(50,213,131,.75); background:rgba(50,213,131,.10); }',
+            '.job-status-duplicate { color:#bfdbfe; border-color:rgba(96,165,250,.8); background:rgba(96,165,250,.12); }',
+            '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled { color:#fecdd3; border-color:rgba(255,107,122,.75); background:rgba(255,107,122,.10); }'
+        ].join('\n');
+        document.head.appendChild(style);
+    }
 
     function errorMessage(body, fallback) {
         return body && body.error && body.error.message ? String(body.error.message) : fallback;
@@ -76,6 +90,30 @@
         if (payload.file_id) return 'File #' + payload.file_id;
         if (payload.game_id) return 'Game #' + payload.game_id;
         return job.concurrency_key || '';
+    }
+
+    function effectiveStatus(job) {
+        const queueStatus = String(job.status || 'unknown');
+        const resultStatus = job.result && job.result.status ? String(job.result.status).toLowerCase() : '';
+        if (queueStatus !== 'completed' || resultStatus === '' || resultStatus === 'completed') {
+            return queueStatus;
+        }
+        if (resultStatus === 'verified') return 'imported';
+        return resultStatus;
+    }
+
+    function renderStatus(cell, job) {
+        const status = effectiveStatus(job);
+        const badge = document.createElement('span');
+        badge.className = 'job-status job-status-' + status.replace(/[^a-z0-9_-]+/g, '-');
+        badge.textContent = status.replace(/_/g, ' ');
+        cell.appendChild(badge);
+        if (String(job.status || '') === 'completed' && status !== 'completed') {
+            const detail = document.createElement('div');
+            detail.className = 'muted small';
+            detail.textContent = 'job completed';
+            cell.appendChild(detail);
+        }
     }
 
     function renderProgress(cell, job) {
@@ -150,14 +188,15 @@
         jobs.forEach(function (job) {
             const row = document.createElement('tr');
             appendCell(row, job.id, 'mono');
-            appendCell(row, job.status);
+            const statusCell = appendCell(row, '');
+            renderStatus(statusCell, job);
             appendCell(row, job.job_type, 'mono');
             appendCell(row, targetLabel(job), 'mono path');
             const progressCell = appendCell(row, '');
             renderProgress(progressCell, job);
             appendCell(row, String(job.attempts || 0) + '/' + String(job.max_attempts || 0));
             appendCell(row, job.created_at || '');
-            appendCell(row, job.last_error || '', 'path');
+            appendCell(row, job.last_error || (job.result && job.result.message ? job.result.message : ''), 'path');
 
             const actions = appendCell(row, '');
             if (job.status === 'queued') {
@@ -171,6 +210,15 @@
             } else if (job.status === 'dead_letter' || job.status === 'failed') {
                 actions.appendChild(actionButton('Retry', function () {
                     return mutate('retry', {job_id: job.id});
+                }));
+            }
+
+            if (['completed', 'failed', 'dead_letter', 'cancelled'].includes(job.status)) {
+                actions.appendChild(actionButton('Delete', function () {
+                    if (!window.confirm('Delete job #' + job.id + ' and its retained staged upload file?')) {
+                        return Promise.resolve();
+                    }
+                    return mutate('delete', {job_id: job.id});
                 }));
             }
             tableBody.appendChild(row);
@@ -265,9 +313,30 @@
         }
     });
 
+    cleanupButton.addEventListener('click', async function () {
+        const days = Math.max(1, parseInt(cleanupDays.value || '30', 10) || 30);
+        if (!window.confirm('Remove terminal jobs older than ' + days + ' day(s) and delete their retained staged upload files?')) {
+            return;
+        }
+        cleanupButton.disabled = true;
+        try {
+            const body = await mutate('cleanup', {retention_days: days});
+            const data = body && body.data ? body.data : {};
+            message.textContent = 'Cleanup removed ' + String(data.deleted_jobs || 0) + ' job(s) and '
+                + String(data.deleted_staged_files || 0) + ' staged file(s).'
+                + (data.limited ? ' Run cleanup again to remove the next batch.' : '');
+        } catch (error) {
+            message.textContent = error.message || 'Job cleanup failed.';
+        } finally {
+            cleanupButton.disabled = false;
+            await refresh();
+        }
+    });
+
     refreshButton.addEventListener('click', refresh);
     if (filter) filter.addEventListener('change', refresh);
 
+    installStatusStyles();
     refresh();
     window.setInterval(function () {
         if (!document.hidden) refresh();
