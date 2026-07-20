@@ -23,9 +23,13 @@ return [
         'login_block_seconds' => 15 * 60,
     ],
     'queue' => [
-        // Current deployment: MySQL-backed durable jobs run by catalog/bin/catalog-worker.php.
+        // MySQL-backed durable jobs. Web uploads automatically launch a detached
+        // CLI worker which drains the available queue and exits.
         'name' => 'catalog',
         'lease_seconds' => 120,
+        // Usually auto-detected. Set an absolute CLI PHP path when the web PHP
+        // binary differs, for example 'D:/PHP/php.exe' or '/usr/local/bin/php82'.
+        'worker_php_binary' => '',
     ],
     'cache' => [
         // File cache works on one shared filesystem. Bind CacheStore to Redis
