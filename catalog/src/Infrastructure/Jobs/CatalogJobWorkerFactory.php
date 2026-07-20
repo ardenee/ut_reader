@@ -21,7 +21,8 @@ final class CatalogJobWorkerFactory
             new WorkerJobQueue($db),
             [
                 new CatalogNonBlockingImportJobHandler(
-                    new CatalogStagedImportJobHandler($db, $config)
+                    new CatalogStagedImportJobHandler($db, $config),
+                    $config
                 ),
                 new CatalogMaintenanceJobHandler($db, $config),
                 new CatalogStorageMaintenanceJobHandler($db, $config),
