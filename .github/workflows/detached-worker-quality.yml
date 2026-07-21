@@ -44,6 +44,7 @@ jobs:
           php -l catalog/pak-info.php
           php -l catalog/pak-download.php
           php -l catalog/pak-maintenance.php
+          php -l catalog/file-pak-sources.php
           php -l catalog/game-backups.php
           php -l catalog/dashboard.php
           php -l catalog/tests/detached-worker-contract-test.php
@@ -56,6 +57,7 @@ jobs:
           node --check catalog/assets/background-jobs.js
           node --check catalog/assets/profiled-upload-jobs.js
           node --check catalog/assets/pak-import-jobs.js
+          node --check catalog/assets/file-dependency-display.js
       - name: Verify detached worker contract
         run: php catalog/tests/detached-worker-contract-test.php
       - name: Verify background job controls contract
