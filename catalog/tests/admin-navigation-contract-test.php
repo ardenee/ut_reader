@@ -19,6 +19,14 @@ admin_navigation_expect(array_keys($groups) === [
     'Downloads',
     'Federation',
 ], 'Administrator navigation groups are missing or out of order.');
+admin_navigation_expect(
+    ($groups['Admin']['Game Backups'] ?? '') === 'game-backups.php',
+    'The main Admin menu does not link to Game Backups.'
+);
+admin_navigation_expect(
+    ($groups['Imports']['Game Backups'] ?? '') === 'game-backups.php',
+    'The Imports menu does not link to Game Backups.'
+);
 
 $expectedPages = [
     'dashboard.php',
