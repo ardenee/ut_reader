@@ -17,6 +17,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Game Browser' => $root . 'games.php',
             'Search' => $root . 'index.php?page=search',
             'Game Admin' => $root . 'game-manager.php',
+            'Game Backups' => $root . 'game-backups.php',
             'Game Profiles' => $root . 'game-profiles.php',
             'Administrator Security' => $root . 'admin-security.php',
         ],
