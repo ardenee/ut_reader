@@ -377,7 +377,7 @@ final class CatalogPakImportJobHandler implements JobHandler
     /** @param array<string,mixed> $payload */
     private function verifyIdentity(string $path, array $payload): void
     {
-        $expected = strtolower(trim((string)($payload['sha256'] ?? ''));
+        $expected = strtolower(trim((string)($payload['sha256'] ?? '')));
         if ($expected === '') {
             return;
         }
