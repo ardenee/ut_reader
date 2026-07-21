@@ -76,11 +76,11 @@ final class CatalogPakImportJobHandler implements JobHandler
             }
 
             $context->checkpoint([
-                'stage' => 'pak_index',
+                'stage' => 'pak_extract',
                 'done' => 0,
                 'total' => 1,
                 'percent' => 1,
-                'message' => 'Reading UE' . $engineMajor . ' PAK index and preserving the original archive: ' . basename($originalName),
+                'message' => 'Extracting and validating UE' . $engineMajor . ' PAK: ' . basename($originalName),
             ]);
 
             $footers = \catalog_pak_footer_candidates($sourcePath);
@@ -88,41 +88,12 @@ final class CatalogPakImportJobHandler implements JobHandler
                 throw new \RuntimeException('Unsupported PAK file: no Unreal PAK footer was found.');
             }
 
-            $footer = null;
-            $index = null;
-            $lastIndexError = '';
-            foreach ($footers as $candidate) {
-                try {
-                    $candidateIndex = \catalog_pak_parse_index($sourcePath, $candidate);
-                    $footer = $candidate;
-                    $index = $candidateIndex;
-                    break;
-                } catch (Throwable $error) {
-                    $lastIndexError = $error->getMessage();
-                }
-            }
-            if (!is_array($footer) || !is_array($index)) {
-                throw new \RuntimeException(
-                    'Could not read a supported PAK index.' . ($lastIndexError !== '' ? ' Last error: ' . $lastIndexError : '')
-                );
-            }
-
-            // Publish the original archive before extracting entries. If entry
-            // extraction later fails, the retained PAK and its failure state remain
-            // available for diagnosis instead of being lost with the temp tree.
-            $pakId = $archiveStore->createOrReset(
-                $this->db,
-                $game,
-                $sourcePath,
-                $originalName,
-                $footer,
-                $index,
-                $userId
-            );
+            /*
+             * Extraction may reject an early footer/layout candidate and succeed
+             * with a later one. The retained archive metadata and entry list must
+             * therefore be selected from the same index that produced the files.
+             */
             $extracted = \catalog_pak_archive_extract_to_temp($this->config, $sourcePath, $originalName);
-
-            $profile = \gp_required_profile_for_game($this->db, $gameId);
-            $allowed = \scanner_profile_extensions($profile, $this->config);
             $extractedFiles = is_array($extracted['files'] ?? null) ? $extracted['files'] : [];
             $extractedByPath = [];
             foreach ($extractedFiles as $file) {
@@ -132,6 +103,25 @@ final class CatalogPakImportJobHandler implements JobHandler
                 }
             }
 
+            [$footer, $index] = $this->selectIndexForExtractedFiles(
+                $sourcePath,
+                $footers,
+                $extractedByPath,
+                (string)($extracted['log'] ?? '')
+            );
+
+            $pakId = $archiveStore->createOrReset(
+                $this->db,
+                $game,
+                $sourcePath,
+                $originalName,
+                $footer,
+                $index,
+                $userId
+            );
+
+            $profile = \gp_required_profile_for_game($this->db, $gameId);
+            $allowed = \scanner_profile_extensions($profile, $this->config);
             $entries = is_array($index['entries'] ?? null) ? $index['entries'] : [];
             $total = count($entries);
             $imported = 0;
@@ -372,6 +362,73 @@ final class CatalogPakImportJobHandler implements JobHandler
                 \catalog_pak_archive_delete_tree((string)$extracted['dir']);
             }
         }
+    }
+
+    /**
+     * @param list<array<string,mixed>> $footers
+     * @param array<string,array<string,mixed>> $extractedByPath
+     * @return array{0:array<string,mixed>,1:array<string,mixed>}
+     */
+    private function selectIndexForExtractedFiles(
+        string $sourcePath,
+        array $footers,
+        array $extractedByPath,
+        string $extractLog
+    ): array {
+        $expectedVersion = null;
+        $expectedLayout = '';
+        $expectedMagicOffset = null;
+        if (preg_match('/version=([0-9]+); layout=([^;]+); magic_offset=(-?[0-9]+)/', $extractLog, $match) === 1) {
+            $expectedVersion = (int)$match[1];
+            $expectedLayout = trim((string)$match[2]);
+            $expectedMagicOffset = (int)$match[3];
+        }
+
+        $bestFooter = null;
+        $bestIndex = null;
+        $bestMatches = -1;
+        $lastError = '';
+
+        foreach ($footers as $candidate) {
+            try {
+                $candidateIndex = \catalog_pak_parse_index($sourcePath, $candidate);
+            } catch (Throwable $error) {
+                $lastError = $error->getMessage();
+                continue;
+            }
+
+            $matches = 0;
+            $entries = is_array($candidateIndex['entries'] ?? null) ? $candidateIndex['entries'] : [];
+            foreach ($entries as $entry) {
+                $path = $this->normalizeEntryPath((string)($entry['filename'] ?? ''));
+                if ($path !== '' && isset($extractedByPath[strtolower($path)])) {
+                    $matches++;
+                }
+            }
+
+            $metadataMatches = $expectedVersion !== null
+                && (int)($candidate['version'] ?? -1) === $expectedVersion
+                && (string)($candidate['layout'] ?? '') === $expectedLayout
+                && (int)($candidate['magic_offset'] ?? -2) === $expectedMagicOffset;
+            if ($metadataMatches) {
+                return [$candidate, $candidateIndex];
+            }
+
+            if ($matches > $bestMatches) {
+                $bestMatches = $matches;
+                $bestFooter = $candidate;
+                $bestIndex = $candidateIndex;
+            }
+        }
+
+        if (is_array($bestFooter) && is_array($bestIndex) && $bestMatches > 0) {
+            return [$bestFooter, $bestIndex];
+        }
+
+        throw new \RuntimeException(
+            'Could not match the successfully extracted PAK files to a parsed index.'
+            . ($lastError !== '' ? ' Last index error: ' . $lastError : '')
+        );
     }
 
     /** @param array<string,mixed> $payload */
