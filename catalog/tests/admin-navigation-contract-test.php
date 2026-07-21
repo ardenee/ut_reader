@@ -41,6 +41,7 @@ $expectedPages = [
     'profiled-upload.php',
     'upload-bucket.php',
     'pak-import.php',
+    'game-backups.php',
     'storage-audit.php',
     'background-jobs.php',
     'full-sync.php',
