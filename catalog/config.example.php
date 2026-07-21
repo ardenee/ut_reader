@@ -31,6 +31,12 @@ return [
         // binary differs, for example 'D:/PHP/php.exe' or '/usr/local/bin/php82'.
         'worker_php_binary' => '',
     ],
+    'game_backups' => [
+        // Full independent file-copy exports for FTP/SFTP transfer and restore.
+        // Keep this outside the public web root when possible. Leaving it empty
+        // uses <storage_path>/game-backups.
+        'path' => '',
+    ],
     'cache' => [
         // File cache works on one shared filesystem. Bind CacheStore to Redis
         // before running multiple independent web nodes.
