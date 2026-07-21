@@ -61,5 +61,25 @@ game_backup_expect(is_string($types)
 
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 game_backup_expect(is_string($factory) && str_contains($factory, 'new GameBackupJobHandler('), 'Worker factory does not register the game backup handler.');
+$backupHandlerPosition = strpos($factory, 'new GameBackupJobHandler(');
+$maintenanceHandlerPosition = strpos($factory, 'new CatalogMaintenanceJobHandler(');
+game_backup_expect(
+    $backupHandlerPosition !== false
+    && $maintenanceHandlerPosition !== false
+    && $backupHandlerPosition < $maintenanceHandlerPosition,
+    'The catch-all maintenance handler intercepts game backup jobs before GameBackupJobHandler.'
+);
+
+foreach ([
+    'new CatalogStorageMaintenanceJobHandler(',
+    'new UnverifiedDuplicateCleanupJobHandler(',
+    'new GeneratedPackageJobHandler(',
+] as $specializedHandler) {
+    $position = strpos($factory, $specializedHandler);
+    game_backup_expect(
+        $position !== false && $maintenanceHandlerPosition !== false && $position < $maintenanceHandlerPosition,
+        'The catch-all maintenance handler intercepts specialized worker routing: ' . $specializedHandler
+    );
+}
 
 echo "Game backup contract tests passed.\n";
