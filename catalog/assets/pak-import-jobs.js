@@ -22,16 +22,25 @@
 
     function renderSummary(data) {
         const labels = {
-            extracted_files: 'Extracted files', imported: 'Imported', aliases: 'Aliases',
-            duplicates: 'Duplicates', failed: 'Moved to unverified/rejected', skipped: 'Skipped sidecar or unsupported files'
+            entry_count: 'PAK index entries',
+            extracted_files: 'Extracted entries',
+            imported: 'Imported packages',
+            aliases: 'Package aliases',
+            duplicates: 'Duplicate packages',
+            failed: 'Moved to unverified/rejected',
+            skipped: 'Skipped companion or unsupported entries',
+            not_extracted: 'Encrypted/unsupported compression entries'
         };
         let html = '<table>';
         Object.keys(labels).forEach(function (key) {
             html += '<tr><th>' + escape(labels[key]) + '</th><td>' + escape(data[key] || 0) + '</td></tr>';
         });
         html += '</table>';
+        if (parseInt(data.pak_id || '0', 10) > 0) {
+            html += '<p><a class="button primary" href="pak-info.php?id=' + encodeURIComponent(data.pak_id) + '">View retained original PAK and contents</a></p>';
+        }
         if (Array.isArray(data.messages) && data.messages.length) {
-            html += '<h3>Results</h3><table><tr><th>Status</th><th>Path</th><th>Message</th></tr>';
+            html += '<h3>Package results</h3><table><tr><th>Status</th><th>Path</th><th>Message</th></tr>';
             data.messages.forEach(function (entry) {
                 html += '<tr><td>' + escape(entry.status) + '</td><td class="mono path">' + escape(entry.file) + '</td><td>' + escape(entry.message) + '</td></tr>';
             });
