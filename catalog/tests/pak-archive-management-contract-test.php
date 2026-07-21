@@ -31,12 +31,16 @@ pak_archive_expect(str_contains($handler, "'defer_dependency_rebuild' => true"),
 pak_archive_expect(str_contains($handler, 'scanner_rebuild_game('), 'PAK imports do not perform one final game dependency refresh.');
 pak_archive_expect(str_contains($handler, 'in_array($engineMajor, [4, 5], true)'), 'PAK handler does not accept both UE4 and UE5 game profiles.');
 pak_archive_expect(str_contains($handler, 'UE4 or UE5 game profiles'), 'PAK handler error text does not describe UE4/UE5 support.');
-$retainPosition = strpos($handler, '$pakId = $archiveStore->createOrReset(');
 $extractPosition = strpos($handler, '$extracted = \\catalog_pak_archive_extract_to_temp(');
+$selectPosition = strpos($handler, 'selectIndexForExtractedFiles(');
+$retainPosition = strpos($handler, '$pakId = $archiveStore->createOrReset(');
 pak_archive_expect(
-    $retainPosition !== false && $extractPosition !== false && $retainPosition < $extractPosition,
-    'The original PAK is not retained before entry extraction begins.'
+    $extractPosition !== false && $selectPosition !== false && $retainPosition !== false
+        && $extractPosition < $selectPosition && $selectPosition < $retainPosition,
+    'PAK retention does not use the same footer/index candidate that successfully extracted the files.'
 );
+pak_archive_expect(str_contains($handler, 'magic_offset=(-?[0-9]+)'), 'PAK import does not identify the successful extractor footer metadata.');
+pak_archive_expect(str_contains($handler, 'Could not match the successfully extracted PAK files to a parsed index.'), 'PAK import does not fail safely when extracted files cannot be matched to an index.');
 pak_archive_expect(str_contains($handler, 'PAK retained; archive entries and extracted packages were cataloged'), 'PAK import completion does not report original retention.');
 
 $importPage = file_get_contents(__DIR__ . '/../pak-import.php');
