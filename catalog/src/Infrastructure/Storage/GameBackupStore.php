@@ -133,6 +133,8 @@ final class GameBackupStore
                 'game_id' => (int)($sourceGame['id'] ?? $state['game_id'] ?? 0),
                 'game_name' => (string)($sourceGame['name'] ?? $state['game_name'] ?? ''),
                 'game_slug' => (string)($sourceGame['slug'] ?? $state['game_slug'] ?? ''),
+                'engine_key' => (string)($sourceGame['engine_key'] ?? ''),
+                'profile_name' => (string)($sourceGame['profile_name'] ?? ''),
                 'entries' => (int)($summary['entries'] ?? $state['files_done'] ?? 0),
                 'physical_files' => (int)($summary['physical_files'] ?? $state['physical_files'] ?? 0),
                 'bytes' => (int)($summary['bytes'] ?? $state['bytes_done'] ?? 0),
