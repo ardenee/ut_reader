@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 6;
+$expectedMigrations = 7;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -49,6 +49,27 @@ migration_test_expect($schema->indexExists('ue_dependencies', 'idx_ue_deps_resol
 migration_test_expect($schema->tableExists('ue_asset_registry_assets'), 'Asset-registry assets table is missing.');
 migration_test_expect($schema->tableExists('ue_asset_registry_tags'), 'Asset-registry tags table is missing.');
 migration_test_expect($schema->tableExists('ue_asset_registry_dependencies'), 'Asset-registry dependencies table is missing.');
+migration_test_expect($schema->tableExists('ue_pak_archives'), 'PAK archive table is missing.');
+migration_test_expect($schema->tableExists('ue_pak_entries'), 'PAK entry table is missing.');
+
+$ue5Profile = $db->query(
+    'SELECT id,engine_key,allowed_extensions_json FROM ue_game_profiles '
+    . 'WHERE profile_name="UE5 container package profile" LIMIT 1'
+)->fetch(PDO::FETCH_ASSOC);
+migration_test_expect(is_array($ue5Profile), 'UE5 container profile migration did not create the reusable profile.');
+migration_test_expect(strtoupper((string)$ue5Profile['engine_key']) === 'UE5', 'UE5 container profile has the wrong engine key.');
+$ue5Extensions = json_decode((string)$ue5Profile['allowed_extensions_json'], true);
+migration_test_expect(
+    is_array($ue5Extensions) && in_array('uasset', $ue5Extensions, true) && in_array('umap', $ue5Extensions, true),
+    'UE5 container profile does not accept loose uasset/umap package entries.'
+);
+$ue5Game = $db->query(
+    'SELECT g.id,g.profile_id,p.engine_key FROM ue_games g '
+    . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE g.slug="ue5" LIMIT 1'
+)->fetch(PDO::FETCH_ASSOC);
+migration_test_expect(is_array($ue5Game), 'UE5 default game target was not created.');
+migration_test_expect((int)$ue5Game['profile_id'] === (int)$ue5Profile['id'], 'UE5 default game is not assigned to the reusable UE5 profile.');
+migration_test_expect(strtoupper((string)$ue5Game['engine_key']) === 'UE5', 'UE5 default game does not resolve to a UE5 profile.');
 
 $gameId = $schema->column('ue_files', 'game_id');
 migration_test_expect(is_array($gameId) && strtoupper((string)$gameId['IS_NULLABLE']) === 'YES', 'ue_files.game_id was not made nullable.');
