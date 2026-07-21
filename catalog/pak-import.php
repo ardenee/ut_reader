@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Storage\CatalogPakArchiveStore;
 
 function pak_import_public_error(Throwable $error): string
 {
@@ -43,11 +44,21 @@ function pak_import_source(): array
 function pak_import_enqueue(PDO $db, array $config): array
 {
     catalog_check_csrf('pak-import');
+    if (!CatalogPakArchiveStore::schemaInstalled($db)) {
+        throw new RuntimeException('PAK archive tables are missing. Run php catalog/bin/migrate.php migrate first.');
+    }
+
     $gameId = (int)($_POST['game_id'] ?? 0);
     $strict = (string)($_POST['strict_profile'] ?? '1') === '1';
-    if ($gameId < 1 || !catalog_one($db, 'SELECT id FROM ue_games WHERE id=?', [$gameId])) {
-        throw new RuntimeException('Choose a valid target game.');
+    $game = $gameId > 0 ? catalog_one(
+        $db,
+        'SELECT g.id,p.engine_key FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id WHERE g.id=?',
+        [$gameId]
+    ) : null;
+    if (!$game || preg_match('/^UE4/i', trim((string)$game['engine_key'])) !== 1) {
+        throw new RuntimeException('Choose a valid UE4 target game.');
     }
+
     $source = pak_import_source();
     if (!catalog_pak_archive_is_supported_filename($source['name'])) {
         throw new RuntimeException('Selected file is not a .pak archive.');
@@ -122,7 +133,8 @@ try {
     $games = catalog_all(
         $db,
         'SELECT g.id,g.name,p.engine_key profile_engine FROM ue_games g '
-        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name'
+        . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+        . 'WHERE UPPER(p.engine_key) LIKE "UE4%" ORDER BY g.name'
     );
 
     catalog_head('PAK Import');
@@ -130,10 +142,15 @@ try {
     unset($_SESSION['pak_import_flash']);
     catalog_page_header(
         'PAK Import',
-        'PAK files are copied into durable staging, queued, and automatically started by a detached CLI worker. Closing this page does not interrupt processing.',
-        ['Background Jobs' => 'background-jobs.php', 'Upload Files' => 'profiled-upload.php', 'Local Source Scan' => 'source-scan.php', 'Unverified Files' => 'unverified-files.php']
+        'The original UE4 PAK is retained as a self-contained downloadable archive while its entries are extracted and cataloged separately.',
+        ['PAK Archives' => 'paks.php', 'Background Jobs' => 'background-jobs.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']
     );
-    echo CatalogUi::alert('info', 'Durable PAK extraction enabled.', 'Unencrypted PAK indexes and entries are supported, including zlib-compressed blocks. Encrypted, Oodle and IOStore containers remain unsupported.');
+
+    if (!CatalogPakArchiveStore::schemaInstalled($db)) {
+        echo CatalogUi::alert('warning', 'PAK archive management is not installed. Run php catalog/bin/migrate.php migrate before importing PAK files.');
+    } else {
+        echo CatalogUi::alert('info', 'Original PAK retention enabled.', 'The PAK container is copied into durable game storage. Every index entry is recorded and standalone packages link back to that original archive. Encrypted, Oodle and IOStore containers remain unsupported.');
+    }
 
     if ($jobId > 0) {
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Background import job #' . $jobId . '</h2><p class="muted">The detached worker continues if this page or browser is closed.</p></div></div><div class="ui-section__body">';
@@ -142,18 +159,23 @@ try {
         echo '<p><button id="pak-import-cancel" type="button">Cancel job</button></p><div id="pak-import-result"></div></div></div></section>';
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Stage and import PAK</h2><p>Use an uploaded file or a readable local server path.</p></div></div><div class="ui-section__body">';
-    echo '<form method="post" enctype="multipart/form-data" data-ui-loading-form><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('pak-import')) . '">';
-    echo '<p><label>Target game<br><select name="game_id" required><option value="">Choose target game</option>';
-    foreach ($games as $game) {
-        echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $selectedGameId ? ' selected' : '') . '>'
-            . catalog_h((string)$game['name'] . ' / ' . ((string)($game['profile_engine'] ?: 'no profile'))) . '</option>';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Retain and import PAK</h2><p>Use an uploaded file or a readable local server path.</p></div></div><div class="ui-section__body">';
+    if ($games === []) {
+        echo CatalogUi::emptyState('No UE4 target games', 'Create a game or assign a UE4 profile before importing PAK archives.', ['label' => 'Game manager', 'href' => 'game-manager.php'], '▣');
+    } else {
+        echo '<form method="post" enctype="multipart/form-data" data-ui-loading-form><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('pak-import')) . '">';
+        echo '<p><label>Target UE4 game<br><select name="game_id" required><option value="">Choose target game</option>';
+        foreach ($games as $game) {
+            echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $selectedGameId ? ' selected' : '') . '>'
+                . catalog_h((string)$game['name'] . ' / ' . (string)$game['profile_engine']) . '</option>';
+        }
+        echo '</select></label></p>';
+        echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
+        echo '<p><label>Upload .pak<br><input type="file" name="pak_file" accept=".pak"></label></p>';
+        echo '<p><label>Or local .pak path<br><input type="text" name="local_pak_path" style="width:min(100%,760px)"></label></p>';
+        echo '<p><button type="submit">Retain and import PAK</button></p></form>';
     }
-    echo '</select></label></p>';
-    echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
-    echo '<p><label>Upload .pak<br><input type="file" name="pak_file" accept=".pak"></label></p>';
-    echo '<p><label>Or local .pak path<br><input type="text" name="local_pak_path" style="width:min(100%,760px)"></label></p>';
-    echo '<p><button type="submit">Stage and start PAK import</button></p></form></div></section>';
+    echo '</div></section>';
     echo '<script src="assets/pak-import-jobs.js"></script>';
     catalog_foot();
 } catch (Throwable $error) {
