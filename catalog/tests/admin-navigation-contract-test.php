@@ -35,6 +35,14 @@ admin_navigation_expect(
     ($groups['Imports']['PAK Archives'] ?? '') === 'paks.php',
     'The Imports menu does not link to PAK Archives.'
 );
+admin_navigation_expect(
+    ($groups['Admin']['UPK Packages'] ?? '') === 'upks.php',
+    'The main Admin menu does not link to UPK Packages.'
+);
+admin_navigation_expect(
+    ($groups['Catalog']['UPK Packages'] ?? '') === 'upks.php',
+    'The Catalog menu does not link to UPK Packages.'
+);
 
 $expectedPages = [
     'dashboard.php',
@@ -50,6 +58,8 @@ $expectedPages = [
     'unverified-files.php',
     'unverified-database-import.php',
     'base-game-files.php',
+    'paks.php',
+    'upks.php',
     'legacy-data-audit.php',
     'sources.php',
     'source-scan.php',
@@ -57,7 +67,6 @@ $expectedPages = [
     'profiled-upload.php',
     'upload-bucket.php',
     'pak-import.php',
-    'paks.php',
     'game-backups.php',
     'storage-audit.php',
     'background-jobs.php',
