@@ -46,6 +46,14 @@ final class CatalogUi
             return $actions;
         }
 
+        if ($script === 'game-files.php') {
+            $game = is_array($GLOBALS['game'] ?? null) ? $GLOBALS['game'] : [];
+            $engineKey = strtoupper(trim((string)($game['profile_engine'] ?? $game['engine_key'] ?? '')));
+            if (!str_starts_with($engineKey, 'UE4')) {
+                return $actions;
+            }
+        }
+
         $switch = [
             'Files' => 'game-files.php?id=' . $gameId,
             'PAK archives' => 'game-paks.php?id=' . $gameId,
