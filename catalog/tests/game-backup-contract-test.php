@@ -69,6 +69,20 @@ game_backup_expect(is_string($page), 'Could not read game backups page.');
 foreach (['Build server backup', 'Exports currently on this server', 'Import backup', 'Delete export'] as $fragment) {
     game_backup_expect(str_contains($page, $fragment), 'Game backups page is missing: ' . $fragment);
 }
+foreach ([
+    '$hasActiveBackupJobs = catalog_count(',
+    'status IN ("queued","running")',
+    'refreshDelayMs = 5000',
+    'window.location.reload()',
+    "document.visibilityState !== 'visible'",
+    'unrealdb-game-backups-scroll-y',
+    'refreshes automatically every 5 seconds',
+] as $refreshContract) {
+    game_backup_expect(
+        str_contains($page, $refreshContract),
+        'Game Backups active-job auto-refresh is missing: ' . $refreshContract
+    );
+}
 
 $types = file_get_contents(__DIR__ . '/../src/Domain/Jobs/JobType.php');
 game_backup_expect(is_string($types)
