@@ -19,14 +19,14 @@ pak_archive_expect(is_string($store), 'Could not read PAK archive store.');
 pak_archive_expect(str_contains($store, "'games' . DIRECTORY_SEPARATOR"), 'Original PAK storage is not game-scoped.');
 pak_archive_expect(str_contains($store, "DIRECTORY_SEPARATOR . 'paks'"), 'Original PAK storage does not use a dedicated paks folder.');
 pak_archive_expect(str_contains($store, '@copy($source, $part)'), 'Original PAK is not copied into durable storage.');
-pak_archive_expect(str_contains($store, "hash_file('sha256', $part)"), 'Original PAK copy is not verified by SHA-256.');
+pak_archive_expect(str_contains($store, "hash_file('sha256', \$part)"), 'Original PAK copy is not verified by SHA-256.');
 
 $handler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogPakImportJobHandler.php');
 pak_archive_expect(is_string($handler), 'Could not read PAK import handler.');
 pak_archive_expect(str_contains($handler, 'createOrReset('), 'PAK import does not retain the original archive.');
 pak_archive_expect(str_contains($handler, 'addEntry('), 'PAK import does not record every index entry.');
 pak_archive_expect(str_contains($handler, 'updateEntry('), 'PAK entries are not linked to import results.');
-pak_archive_expect(str_contains($handler, "'source_pak_id' => $pakId"), 'Package scanner metadata does not identify the source PAK.');
+pak_archive_expect(str_contains($handler, "'source_pak_id' => \$pakId"), 'Package scanner metadata does not identify the source PAK.');
 pak_archive_expect(str_contains($handler, 'Original PAK retained'), 'PAK import completion does not report original retention.');
 
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
