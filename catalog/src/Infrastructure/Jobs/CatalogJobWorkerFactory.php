@@ -20,6 +20,10 @@ final class CatalogJobWorkerFactory
         return new JobWorker(
             new WorkerJobQueue($db),
             [
+                // PAK imports retain the original container and build entry/file
+                // relationships, so they must be claimed before the generic
+                // staged-import handler that also recognises IMPORT_STAGED_PAK.
+                new CatalogPakImportJobHandler($db, $config),
                 new CatalogNonBlockingImportJobHandler(
                     new CatalogStagedImportJobHandler($db, $config),
                     $config
