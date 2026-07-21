@@ -38,10 +38,16 @@ final class JobResourcePolicy
                 self::positiveKey('source-identity:game:', $payload['game_id'] ?? null)
             ),
             JobType::IMPORT_STAGED_PACKAGE,
-            JobType::IMPORT_STAGED_PAK => new JobResourceProfile(
+            JobType::IMPORT_STAGED_PAK,
+            JobType::IMPORT_GAME_BACKUP => new JobResourceProfile(
                 self::IMPORT_HEAVY,
                 self::configuredLimit(self::IMPORT_HEAVY, 1),
                 self::positiveKey('import:game:', $payload['game_id'] ?? null)
+            ),
+            JobType::EXPORT_GAME_BACKUP => new JobResourceProfile(
+                self::STORAGE_HEAVY,
+                self::configuredLimit(self::STORAGE_HEAVY, 1),
+                self::positiveKey('game-backup-export:', $payload['game_id'] ?? null)
             ),
             JobType::CLEAN_UNVERIFIED_DUPLICATES,
             JobType::RECONCILE_UNVERIFIED_STORAGE => new JobResourceProfile(
