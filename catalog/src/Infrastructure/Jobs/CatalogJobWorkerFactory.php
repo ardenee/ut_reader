@@ -27,6 +27,7 @@ final class CatalogJobWorkerFactory
                 new CatalogStorageMaintenanceJobHandler($db, $config),
                 new UnverifiedDuplicateCleanupJobHandler($db, $config),
                 new GeneratedPackageJobHandler($db, $config),
+                new GameBackupExportJobHandler($db, $config),
                 new GameBackupJobHandler($db, $config),
                 // CatalogMaintenanceJobHandler currently recognises every registered
                 // JobType before dispatching its own subset, so it must remain last.
