@@ -14,8 +14,9 @@ use UnrealDb\Catalog\Infrastructure\Storage\GameBackupStore;
 use UnrealDb\Catalog\Infrastructure\Storage\LocalStoragePathGuard;
 
 /**
- * Builds game backups from the best path actually recorded for each logical
- * filename. It never infers an Unreal folder from the file extension.
+ * Builds full-copy game backups from recorded source paths. Legacy Unreal
+ * package extensions are used only as a fallback when the recorded path does
+ * not include the standard game folder needed for drag-and-drop restoration.
  */
 final class GameBackupExportJobHandler implements JobHandler
 {
@@ -138,6 +139,7 @@ final class GameBackupExportJobHandler implements JobHandler
                 'bytes_total' => $bytesTotal,
                 'physical_files' => 0,
                 'conflicts' => 0,
+                'renamed_variations' => 0,
                 'paths_from_primary' => 0,
                 'paths_from_locations' => 0,
                 'paths_unsorted' => 0,
@@ -148,12 +150,13 @@ final class GameBackupExportJobHandler implements JobHandler
             $done = 0;
             $copiedBytes = 0;
             $physicalFiles = 0;
-            $conflicts = 0;
+            $renamedVariations = 0;
             $pathsFromPrimary = 0;
             $pathsFromLocations = 0;
             $pathsUnsorted = 0;
             $catalogRoot = dirname(__DIR__, 3);
             $storageRoot = (string)($this->config['storage_path'] ?? '');
+            $engineKey = strtoupper(trim((string)($game['engine_key'] ?? '')));
 
             foreach ($files as $file) {
                 $logicalRows = [[
@@ -201,7 +204,8 @@ final class GameBackupExportJobHandler implements JobHandler
                         $locationsByFile[(int)$file['id']] ?? [],
                         (string)$logical['original_name']
                     );
-                    $relative = $this->outputRelativePath(
+                    $requestedRelative = $this->outputRelativePath(
+                        $engineKey,
                         (int)$file['id'],
                         (string)$file['extension'],
                         (string)$logical['original_name'],
@@ -215,30 +219,18 @@ final class GameBackupExportJobHandler implements JobHandler
                         $pathsUnsorted++;
                     }
 
-                    $claimKey = strtolower($relative);
-                    $copyStatus = 'copied';
-                    if (isset($claimed[$claimKey])) {
-                        if (hash_equals((string)$claimed[$claimKey]['md5'], (string)$logical['md5'])) {
-                            $relative = (string)$claimed[$claimKey]['relative'];
-                            $copyStatus = 'shared-identical';
-                        } else {
-                            $conflicts++;
-                            $relative = $this->conflictRelativePath(
-                                (int)$file['id'],
-                                isset($logical['alias_id']) ? (int)$logical['alias_id'] : null,
-                                (string)$logical['original_name']
-                            );
-                            $claimKey = strtolower($relative);
-                        }
+                    $relative = $this->allocateUniqueRelativePath($requestedRelative, $claimed);
+                    $renamedForCollision = strcasecmp($relative, $requestedRelative) !== 0;
+                    if ($renamedForCollision) {
+                        $renamedVariations++;
                     }
+                    $copyStatus = $renamedForCollision ? 'copied-renamed' : 'copied';
 
-                    if ($copyStatus === 'copied') {
-                        $destination = $paths['files_path'] . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
-                        $this->copyAndVerify($sourcePath, $destination, (int)$logical['file_size'], (string)$logical['md5']);
-                        $claimed[$claimKey] = ['md5' => (string)$logical['md5'], 'relative' => $relative];
-                        $physicalFiles++;
-                        $copiedBytes += (int)$logical['file_size'];
-                    }
+                    $destination = $paths['files_path'] . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+                    $this->copyAndVerify($sourcePath, $destination, (int)$logical['file_size'], (string)$logical['md5']);
+                    $claimed[strtolower($relative)] = true;
+                    $physicalFiles++;
+                    $copiedBytes += (int)$logical['file_size'];
 
                     $manifestEntries[] = [
                         'file_id' => (int)$file['id'],
@@ -249,7 +241,9 @@ final class GameBackupExportJobHandler implements JobHandler
                         'source_relative_path' => (string)$selection['path'],
                         'catalog_source_relative_path' => (string)($file['source_relative_path'] ?? ''),
                         'path_source' => (string)$selection['source'],
+                        'requested_relative_path' => $requestedRelative,
                         'exported_relative_path' => $relative,
+                        'renamed_for_collision' => $renamedForCollision,
                         'extension' => (string)$file['extension'],
                         'file_size' => (int)$logical['file_size'],
                         'md5' => (string)$logical['md5'],
@@ -268,7 +262,8 @@ final class GameBackupExportJobHandler implements JobHandler
                             'bytes_done' => $copiedBytes,
                             'bytes_total' => $bytesTotal,
                             'physical_files' => $physicalFiles,
-                            'conflicts' => $conflicts,
+                            'conflicts' => 0,
+                            'renamed_variations' => $renamedVariations,
                             'paths_from_primary' => $pathsFromPrimary,
                             'paths_from_locations' => $pathsFromLocations,
                             'paths_unsorted' => $pathsUnsorted,
@@ -310,12 +305,14 @@ final class GameBackupExportJobHandler implements JobHandler
                     'aliases' => count($aliases),
                     'physical_files' => $physicalFiles,
                     'bytes' => $copiedBytes,
-                    'conflicts' => $conflicts,
+                    'conflicts' => 0,
+                    'renamed_variations' => $renamedVariations,
                     'paths_from_primary' => $pathsFromPrimary,
                     'paths_from_locations' => $pathsFromLocations,
                     'paths_unsorted' => $pathsUnsorted,
                     'copy_method' => 'file-copy',
-                    'folder_policy' => 'recorded-paths-only',
+                    'folder_policy' => 'recorded-paths-with-legacy-folder-fallback',
+                    'same_name_policy' => 'numeric-suffix-before-extension',
                 ],
                 'files' => $manifestEntries,
             ];
@@ -332,6 +329,7 @@ final class GameBackupExportJobHandler implements JobHandler
                 'backup_key' => $backupKey,
                 'files' => count($manifestEntries),
                 'bytes' => $copiedBytes,
+                'renamed_variations' => $renamedVariations,
                 'paths_from_locations' => $pathsFromLocations,
                 'paths_unsorted' => $pathsUnsorted,
             ]);
@@ -360,7 +358,7 @@ final class GameBackupExportJobHandler implements JobHandler
      */
     private function selectRecordedPath(array $file, array $locations, string $originalName): array
     {
-        $wantedName = strtolower($this->packageFilename((string)$originalName));
+        $wantedName = strtolower($this->packageFilename($originalName));
         $candidates = [];
 
         $primary = GameBackupStore::safeRelativePath((string)($file['source_relative_path'] ?? ''));
@@ -428,26 +426,97 @@ final class GameBackupExportJobHandler implements JobHandler
         return preg_replace('/\.(uz|uz2|uz3)$/i', '', $name) ?? $name;
     }
 
-    private function outputRelativePath(int $fileId, string $extension, string $originalName, string $recordedPath): string
-    {
+    private function outputRelativePath(
+        string $engineKey,
+        int $fileId,
+        string $fallbackExtension,
+        string $originalName,
+        string $recordedPath
+    ): string {
         $originalName = GameBackupStore::safeRelativePath($this->packageFilename($originalName));
         if ($originalName === '') {
-            $originalName = 'file-' . $fileId . '.' . $extension;
+            $originalName = 'file-' . $fileId . '.' . $fallbackExtension;
         }
+
         $recordedPath = GameBackupStore::safeRelativePath($recordedPath);
-        if ($recordedPath === '') {
-            return '_Unsorted/' . $originalName;
-        }
         $slash = strrpos($recordedPath, '/');
         $directory = $slash === false ? '' : substr($recordedPath, 0, $slash);
+        $legacyFolder = $this->legacyFolderForExtension($engineKey, $originalName, $fallbackExtension);
+
+        if ($legacyFolder !== '' && !$this->directoryContainsFolder($directory, $legacyFolder)) {
+            $directory = $directory !== '' ? $directory . '/' . $legacyFolder : $legacyFolder;
+        }
+
         return ($directory !== '' ? $directory . '/' : '') . $originalName;
     }
 
-    private function conflictRelativePath(int $fileId, ?int $aliasId, string $originalName): string
+    private function legacyFolderForExtension(string $engineKey, string $originalName, string $fallbackExtension): string
     {
-        $name = GameBackupStore::safeRelativePath($this->packageFilename($originalName));
-        $folder = '_Conflicts/file-' . $fileId . ($aliasId !== null && $aliasId > 0 ? '-alias-' . $aliasId : '');
-        return $folder . '/' . ($name !== '' ? $name : 'package.bin');
+        if (!in_array(strtoupper(trim($engineKey)), ['UE1', 'UE2', 'UE2.5'], true)) {
+            return '';
+        }
+
+        $extension = strtolower((string)pathinfo($this->packageFilename($originalName), PATHINFO_EXTENSION));
+        if ($extension === '') {
+            $extension = strtolower(trim($fallbackExtension, '. '));
+        }
+
+        return match ($extension) {
+            'unr', 'ut2', 'un2' => 'Maps',
+            'u' => 'System',
+            'utx' => 'Textures',
+            'uax', 'est_uax', 'frt_uax', 'itt_uax' => 'Sounds',
+            'umx' => 'Music',
+            'usx' => 'StaticMeshes',
+            'ukx' => 'Animations',
+            'upx' => 'Prefabs',
+            default => '',
+        };
+    }
+
+    private function directoryContainsFolder(string $directory, string $folder): bool
+    {
+        if ($directory === '') {
+            return false;
+        }
+        foreach (explode('/', $directory) as $part) {
+            if (strcasecmp($part, $folder) === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @param array<string,bool> $claimed */
+    private function allocateUniqueRelativePath(string $requestedRelative, array $claimed): string
+    {
+        $requestedRelative = GameBackupStore::safeRelativePath($requestedRelative);
+        if ($requestedRelative === '') {
+            throw new \RuntimeException('Game backup produced an empty output path.');
+        }
+        if (!isset($claimed[strtolower($requestedRelative)])) {
+            return $requestedRelative;
+        }
+
+        $slash = strrpos($requestedRelative, '/');
+        $directory = $slash === false ? '' : substr($requestedRelative, 0, $slash);
+        $filename = $slash === false ? $requestedRelative : substr($requestedRelative, $slash + 1);
+        $extension = (string)pathinfo($filename, PATHINFO_EXTENSION);
+        $stem = (string)pathinfo($filename, PATHINFO_FILENAME);
+        if ($stem === '') {
+            $stem = $filename;
+            $extension = '';
+        }
+
+        for ($number = 2; $number < 1000000; $number++) {
+            $candidateName = $stem . ' (' . $number . ')' . ($extension !== '' ? '.' . $extension : '');
+            $candidate = ($directory !== '' ? $directory . '/' : '') . $candidateName;
+            if (!isset($claimed[strtolower($candidate)])) {
+                return $candidate;
+            }
+        }
+
+        throw new \RuntimeException('Could not allocate a unique backup filename for ' . $requestedRelative . '.');
     }
 
     private function copyAndVerify(string $source, string $destination, int $expectedSize, string $expectedMd5): void
@@ -492,8 +561,9 @@ final class GameBackupExportJobHandler implements JobHandler
         try {
             fputcsv($handle, [
                 'file_id', 'alias_id', 'is_alias', 'package_name', 'original_name', 'source_relative_path',
-                'catalog_source_relative_path', 'path_source', 'exported_relative_path', 'extension',
-                'file_size', 'md5', 'sha1', 'package_guid', 'package_version', 'licensee_version', 'copy_status',
+                'catalog_source_relative_path', 'path_source', 'requested_relative_path', 'exported_relative_path',
+                'renamed_for_collision', 'extension', 'file_size', 'md5', 'sha1', 'package_guid',
+                'package_version', 'licensee_version', 'copy_status',
             ], ',', '"', '');
             foreach ($entries as $entry) {
                 fputcsv($handle, [
@@ -505,7 +575,9 @@ final class GameBackupExportJobHandler implements JobHandler
                     $entry['source_relative_path'] ?? '',
                     $entry['catalog_source_relative_path'] ?? '',
                     $entry['path_source'] ?? '',
+                    $entry['requested_relative_path'] ?? '',
                     $entry['exported_relative_path'] ?? '',
+                    !empty($entry['renamed_for_collision']) ? '1' : '0',
                     $entry['extension'] ?? '',
                     $entry['file_size'] ?? 0,
                     $entry['md5'] ?? '',
@@ -535,12 +607,14 @@ final class GameBackupExportJobHandler implements JobHandler
             . 'Manifest entries: ' . (int)($summary['entries'] ?? 0) . "\n"
             . 'Physical copied files: ' . (int)($summary['physical_files'] ?? 0) . "\n"
             . 'Copied bytes: ' . (int)($summary['bytes'] ?? 0) . "\n"
-            . 'Path conflicts: ' . (int)($summary['conflicts'] ?? 0) . "\n"
+            . 'Same-name variations renamed: ' . (int)($summary['renamed_variations'] ?? 0) . "\n"
             . 'Paths selected from file records: ' . (int)($summary['paths_from_primary'] ?? 0) . "\n"
             . 'Paths selected from source locations: ' . (int)($summary['paths_from_locations'] ?? 0) . "\n"
             . 'Files without a recorded path: ' . (int)($summary['paths_unsorted'] ?? 0) . "\n\n"
             . "The files/ directory contains full independent file copies. No hard links are used.\n"
-            . "Folders come only from paths recorded during upload/source scans; extensions are not used to guess folders.\n"
+            . "Recorded folders are preserved. Flat legacy UE1/UE2 files are placed into standard game folders.\n"
+            . "Same-name variations remain in the same folder and are renamed Name (2).ext, Name (3).ext, etc.\n"
+            . "No _Conflicts directory is created.\n"
             . "Use Admin > Game Backups on another UnrealDB installation to import this backup,\n"
             . "or copy the complete backup directory into that installation's configured backup path.\n";
         if (file_put_contents($path, $text, LOCK_EX) === false) {
