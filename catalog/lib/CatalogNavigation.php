@@ -19,6 +19,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Game Admin' => $root . 'game-manager.php',
             'Game Backups' => $root . 'game-backups.php',
             'PAK Archives' => $root . 'paks.php',
+            'UPK Packages' => $root . 'upks.php',
             'Game Profiles' => $root . 'game-profiles.php',
             'Administrator Security' => $root . 'admin-security.php',
         ],
@@ -28,6 +29,8 @@ function catalog_admin_navigation_groups(string $root): array
             'Unverified Files' => $root . 'unverified-files.php',
             'Import Existing Unverified DB' => $root . 'unverified-database-import.php',
             'Base Game Protection' => $root . 'base-game-files.php',
+            'PAK Archives' => $root . 'paks.php',
+            'UPK Packages' => $root . 'upks.php',
             'Legacy Data Audit' => $root . 'legacy-data-audit.php',
         ],
         'Imports' => [
