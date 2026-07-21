@@ -28,6 +28,7 @@ final class CatalogJobWorkerFactory
                 new CatalogStorageMaintenanceJobHandler($db, $config),
                 new UnverifiedDuplicateCleanupJobHandler($db, $config),
                 new GeneratedPackageJobHandler($db, $config),
+                new GameBackupJobHandler($db, $config),
             ],
             $queueName,
             $workerId,
