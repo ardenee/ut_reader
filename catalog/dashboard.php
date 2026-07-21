@@ -19,8 +19,8 @@ try {
     $stats = CatalogDashboardStats::load($db);
     catalog_page_header(
         'Dashboard',
-        'Start here: setup files, identify missing packages, connect to a parent, request downloads, and monitor background work.',
-        ['Setup' => 'setup.php', 'Administrator Security' => 'admin-security.php', 'Missing Files' => 'missing.php', 'Join Main Parent' => 'federation/join-main-parent.php', 'Background Jobs' => 'background-jobs.php']
+        'Start here: setup files, identify missing packages, create game backups, connect to a parent, request downloads, and monitor background work.',
+        ['Setup' => 'setup.php', 'Game Backups' => 'game-backups.php', 'Administrator Security' => 'admin-security.php', 'Missing Files' => 'missing.php', 'Join Main Parent' => 'federation/join-main-parent.php', 'Background Jobs' => 'background-jobs.php']
     );
 
     echo '<div class="grid">';
@@ -42,12 +42,13 @@ try {
     catalog_tool_card('1. Setup library', 'setup.php', 'Add games, upload files, add storage locations, and scan local/HTTP sources.', 'start');
     catalog_tool_card('2. Browse library', 'library.php', 'View games/files, search package metadata, and inspect file details.');
     catalog_tool_card('3. Missing files', 'missing.php', 'Review missing dependencies and request files from a parent site.', $stats['missing'] > 0 ? (string)$stats['missing'] : 'ok');
-    catalog_tool_card('4. Federation', 'federation/admin.php', 'Join the main parent, manage peers, push inventory, and handle requests.');
-    catalog_tool_card('5. Background jobs', 'background-jobs.php', 'Monitor uploads and maintenance jobs; start or stop the detached worker without SSH.', 'primary');
-    catalog_tool_card('6. Transfers', 'transfers.php', 'Monitor federation downloads/uploads/imports and mirror work.');
-    catalog_tool_card('7. Downloads', 'download-admin.php', 'Control public download mode and external shared-provider links.');
-    catalog_tool_card('8. Base game protection', 'base-game-files.php', 'Seed official/base game GUIDs and block them from download, federation transfer, and ZIP bundles.');
-    catalog_tool_card('9. Administrator security', 'admin-security.php', 'Enable MFA, generate recovery codes, and renew recent authentication for sensitive actions.');
+    catalog_tool_card('4. Game backups', 'game-backups.php', 'Create full-copy game exports with original filenames and restore them on this or another site.', 'backup');
+    catalog_tool_card('5. Federation', 'federation/admin.php', 'Join the main parent, manage peers, push inventory, and handle requests.');
+    catalog_tool_card('6. Background jobs', 'background-jobs.php', 'Monitor uploads and maintenance jobs; start or stop the detached worker without SSH.', 'primary');
+    catalog_tool_card('7. Transfers', 'transfers.php', 'Monitor federation downloads/uploads/imports and mirror work.');
+    catalog_tool_card('8. Downloads', 'download-admin.php', 'Control public download mode and external shared-provider links.');
+    catalog_tool_card('9. Base game protection', 'base-game-files.php', 'Seed official/base game GUIDs and block them from download, federation transfer, and ZIP bundles.');
+    catalog_tool_card('10. Administrator security', 'admin-security.php', 'Enable MFA, generate recovery codes, and renew recent authentication for sensitive actions.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Needs attention</h2>';
