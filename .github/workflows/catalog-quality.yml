@@ -65,6 +65,8 @@ jobs:
         run: php catalog/tests/source-identity-job-contract-test.php
       - name: Verify durable storage and package boundaries
         run: php catalog/tests/storage-package-job-contract-test.php
+      - name: Verify game reset and deletion lifecycle
+        run: php catalog/tests/game-manager-lifecycle-contract-test.php
       - name: Test synthetic UE1-UE4 reader fixtures
         run: php catalog/tests/reader-fixtures-test.php
       - name: Test federation secret encryption
