@@ -52,10 +52,17 @@ game_backup_expect(str_contains($exportHandler, 'copy($source, $destination)'), 
 game_backup_expect(!preg_match('/(?<![A-Za-z])link\s*\(/', $exportHandler), 'Game backup export must not create hard links or symbolic links.');
 game_backup_expect(str_contains($exportHandler, 'FROM ue_file_locations'), 'Game backup export ignores recorded source locations.');
 game_backup_expect(str_contains($exportHandler, 'selectRecordedPath'), 'Game backup export does not select the best recorded path.');
-game_backup_expect(str_contains($exportHandler, "'folder_policy' => 'recorded-paths-only'"), 'Game backup manifest does not identify its recorded-path-only folder policy.');
-game_backup_expect(str_contains($exportHandler, 'paths_from_locations'), 'Game backup export does not report source-location path use.');
-game_backup_expect(!str_contains($exportHandler, "'utx' => 'Textures'"), 'Game backup export guesses folders from file extensions.');
-game_backup_expect(!str_contains($exportHandler, "'u' => 'System'"), 'Game backup export guesses folders from file extensions.');
+game_backup_expect(str_contains($exportHandler, 'legacyFolderForExtension'), 'Game backup export has no legacy game-folder fallback.');
+game_backup_expect(str_contains($exportHandler, "'unr', 'ut2', 'un2' => 'Maps'"), 'Map packages are not routed to Maps.');
+game_backup_expect(str_contains($exportHandler, "'u' => 'System'"), 'System packages are not routed to System.');
+game_backup_expect(str_contains($exportHandler, "'utx' => 'Textures'"), 'Texture packages are not routed to Textures.');
+game_backup_expect(str_contains($exportHandler, "'uax', 'est_uax', 'frt_uax', 'itt_uax' => 'Sounds'"), 'Sound packages are not routed to Sounds.');
+game_backup_expect(str_contains($exportHandler, "'umx' => 'Music'"), 'Music packages are not routed to Music.');
+game_backup_expect(str_contains($exportHandler, 'allocateUniqueRelativePath'), 'Same-name backup variations are not assigned unique filenames.');
+game_backup_expect(str_contains($exportHandler, "' (' . $number . ')'"), 'Same-name backup variations do not use a numeric suffix before the extension.');
+game_backup_expect(str_contains($exportHandler, "'same_name_policy' => 'numeric-suffix-before-extension'"), 'Backup manifest does not record the variation naming policy.');
+game_backup_expect(!str_contains($exportHandler, '_Conflicts/'), 'Game backup export still creates a _Conflicts directory.');
+game_backup_expect(!str_contains($exportHandler, 'conflictRelativePath'), 'Game backup export still routes variations to a conflict path.');
 
 $page = file_get_contents(__DIR__ . '/../game-backups.php');
 game_backup_expect(is_string($page), 'Could not read game backups page.');
