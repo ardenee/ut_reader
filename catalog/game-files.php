@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 catalog_start_session();
@@ -230,7 +229,9 @@ try {
     if (!$game) {
         throw new RuntimeException('Game not found');
     }
-    $showCompression = game_files_engine_major((string)($game['profile_engine'] ?? '')) >= 3;
+    $engineMajor = game_files_engine_major((string)($game['profile_engine'] ?? ''));
+    $showCompression = $engineMajor >= 3;
+    $separateUpkContainers = $engineMajor === 3;
 
     $configuredLimit = (int)(fed_setting($db, 'game_file_display_limit', '100') ?: 100);
     $limit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
@@ -253,6 +254,9 @@ try {
 
     $where = 'WHERE f.game_id=?';
     $args = [$gameId];
+    if ($separateUpkContainers) {
+        $where .= ' AND LOWER(f.extension)<>"upk"';
+    }
     if ($filter !== '') {
         $where .= ' AND (f.package_name LIKE ? OR f.original_name LIKE ? OR f.md5 LIKE ? OR f.sha1 LIKE ? OR f.package_guid LIKE ?)';
         $like = '%' . $filter . '%';
@@ -290,9 +294,14 @@ try {
     catalog_head((string)$game['name']);
     echo game_files_page_styles();
     echo '<span id="game-files-top" aria-hidden="true"></span>';
-    echo CatalogUi::pageHeader((string)$game['name'], 'Files, versions, dependency status and downloads.', ['Back to games' => 'games.php']);
+    $description = $separateUpkContainers
+        ? 'Files, versions, dependency status and downloads. UE3 UPK package containers are shown separately.'
+        : 'Files, versions, dependency status and downloads.';
+    echo CatalogUi::pageHeader((string)$game['name'], $description, ['Back to games' => 'games.php']);
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files</h2><p>' . catalog_h((string)$totalRows) . ' matching files.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Files</h2><p>' . catalog_h((string)$totalRows) . ' matching files.'
+        . ($separateUpkContainers ? ' UPK containers are available under the UPK packages tab.' : '')
+        . '</p></div></div><div class="ui-section__body">';
     echo '<form class="table-controls game-files-controls" method="get" data-ui-loading-form aria-describedby="file-filter-help">';
     echo '<input type="hidden" name="id" value="' . (int)$gameId . '">';
     echo '<label for="file-filter">Search files <input id="file-filter" class="wide-search" type="search" name="file_filter" value="' . catalog_h($filter) . '" placeholder="Package, file, MD5, SHA1, GUID"></label>';
