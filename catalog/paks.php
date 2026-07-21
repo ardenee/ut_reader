@@ -30,7 +30,8 @@ try {
         . '(SELECT COALESCE(SUM(a.file_size),0) FROM ue_pak_archives a WHERE a.game_id=g.id) pak_bytes,'
         . '(SELECT COALESCE(SUM(a.entry_count),0) FROM ue_pak_archives a WHERE a.game_id=g.id) entry_count '
         . 'FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id '
-        . 'WHERE UPPER(p.engine_key) LIKE "UE4%" ORDER BY g.name'
+        . 'WHERE UPPER(p.engine_key) LIKE ? ORDER BY g.name',
+        ['UE4%']
     );
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>UE4 game PAK collections</h2><p>Select a game to switch between its normal extracted files and original PAK containers.</p></div></div><div class="ui-section__body">';
