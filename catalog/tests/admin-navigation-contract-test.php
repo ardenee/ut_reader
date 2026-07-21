@@ -27,6 +27,14 @@ admin_navigation_expect(
     ($groups['Imports']['Game Backups'] ?? '') === 'game-backups.php',
     'The Imports menu does not link to Game Backups.'
 );
+admin_navigation_expect(
+    ($groups['Admin']['PAK Archives'] ?? '') === 'paks.php',
+    'The main Admin menu does not link to PAK Archives.'
+);
+admin_navigation_expect(
+    ($groups['Imports']['PAK Archives'] ?? '') === 'paks.php',
+    'The Imports menu does not link to PAK Archives.'
+);
 
 $expectedPages = [
     'dashboard.php',
@@ -49,6 +57,7 @@ $expectedPages = [
     'profiled-upload.php',
     'upload-bucket.php',
     'pak-import.php',
+    'paks.php',
     'game-backups.php',
     'storage-audit.php',
     'background-jobs.php',
