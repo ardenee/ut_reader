@@ -13,7 +13,7 @@ try {
     catalog_head('PAK Archives');
     catalog_page_header(
         'PAK Archives',
-        'Original UE4 PAK containers are stored and managed separately from the package files extracted from them.',
+        'Original UE4 and UE5 PAK containers are stored and managed separately from the package files extracted from them.',
         ['Import PAK' => 'pak-import.php', 'Background Jobs' => 'background-jobs.php', 'Games' => 'games.php']
     );
 
@@ -30,18 +30,18 @@ try {
         . '(SELECT COALESCE(SUM(a.file_size),0) FROM ue_pak_archives a WHERE a.game_id=g.id) pak_bytes,'
         . '(SELECT COALESCE(SUM(a.entry_count),0) FROM ue_pak_archives a WHERE a.game_id=g.id) entry_count '
         . 'FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id '
-        . 'WHERE UPPER(p.engine_key) LIKE ? ORDER BY g.name',
-        ['UE4%']
+        . 'WHERE UPPER(p.engine_key) LIKE "UE4%" OR UPPER(p.engine_key) LIKE "UE5%" '
+        . 'ORDER BY g.name'
     );
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>UE4 game PAK collections</h2><p>Select a game to switch between its normal extracted files and original PAK containers.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>UE4 and UE5 game PAK collections</h2><p>Select a game to switch between its normal extracted files and original PAK containers.</p></div></div><div class="ui-section__body">';
     if ($games === []) {
-        echo CatalogUi::emptyState('No UE4 games configured', 'Assign a UE4 game profile before importing PAK archives.', ['label' => 'Game manager', 'href' => 'game-manager.php'], '▣');
+        echo CatalogUi::emptyState('No UE4 or UE5 games configured', 'Assign a UE4 or UE5 game profile before importing PAK archives.', ['label' => 'Game manager', 'href' => 'game-manager.php'], '▣');
     } else {
         echo '<div class="grid">';
         foreach ($games as $game) {
             echo '<div class="card"><h3>' . catalog_h((string)$game['name']) . '</h3>';
-            echo '<p><strong>' . number_format((int)$game['pak_count']) . '</strong> PAK archive(s)<br>'
+            echo '<p><span class="mono small">' . catalog_h((string)$game['engine_key']) . '</span><br><strong>' . number_format((int)$game['pak_count']) . '</strong> PAK archive(s)<br>'
                 . number_format((int)$game['entry_count']) . ' indexed entries<br>'
                 . catalog_h(catalog_bytes((int)$game['pak_bytes'])) . ' retained container data</p>';
             echo '<p><a class="button primary" href="game-paks.php?id=' . (int)$game['id'] . '">View PAK archives</a> '
