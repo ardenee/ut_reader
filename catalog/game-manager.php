@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/lib/GameProfiles.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 require_once __DIR__ . '/lib/CatalogPackageAliases.php';
+require_once __DIR__ . '/lib/GameManagerLifecycle.php';
 
 function gm_slug(string $text): string
 {
@@ -216,6 +216,33 @@ function gm_json_reply(array $payload, int $status = 200): never
     exit;
 }
 
+/** @return array{progress:?callable,ajax:bool} */
+function gm_long_action_context(): array
+{
+    $ajax = (string)($_POST['ajax'] ?? '') === '1';
+    $progressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
+    $progress = null;
+    if ($progressToken !== '') {
+        $progress = static function (array $state) use ($progressToken): void {
+            upload_progress_write($progressToken, $state);
+        };
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    return ['progress' => $progress, 'ajax' => $ajax];
+}
+
+function gm_optimise_message(array $result): string
+{
+    $optimised = count((array)($result['optimised_tables'] ?? []));
+    $failed = count((array)($result['optimise_failures'] ?? []));
+    if ($failed > 0) {
+        return ' Optimised ' . $optimised . ' table(s), with ' . $failed . ' optimisation warning(s).';
+    }
+    return ' Optimised ' . $optimised . ' table(s).';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -241,30 +268,55 @@ try {
         if ($action === 'reset_game_files') {
             $gameId = (int)($_POST['game_id'] ?? 0);
             $confirmed = (string)($_POST['confirm_reset'] ?? '') === 'yes';
-            $ajax = (string)($_POST['ajax'] ?? '') === '1';
-            $progressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
             if ($gameId <= 0 || !$confirmed) {
                 throw new RuntimeException('Game reset confirmation is required.');
             }
 
-            $progress = null;
-            if ($progressToken !== '') {
-                $progress = static function (array $state) use ($progressToken): void {
-                    upload_progress_write($progressToken, $state);
-                };
-            }
-            if (session_status() === PHP_SESSION_ACTIVE) {
-                session_write_close();
-            }
-
-            $result = gm_reset_game_files($db, $config, $gameId, $progress);
+            $context = gm_long_action_context();
+            $result = gm_lifecycle_reset_game($db, $config, $gameId, $context['progress']);
             $message = 'Reset ' . $result['game_name'] . ': removed '
-                . $result['catalog_records'] . ' catalog file record(s), deleted '
+                . $result['catalog_records'] . ' catalog file record(s), '
+                . $result['pak_archives'] . ' PAK archive record(s), deleted '
                 . $result['stored_files'] . ' stored file(s), and cleared '
-                . catalog_bytes($result['total_size']) . ' of recorded file data.';
+                . catalog_bytes($result['total_size']) . ' of recorded file data.'
+                . gm_optimise_message($result);
             $returnUrl = 'game-manager.php?game_id=' . (int)$result['game_id'];
 
-            if ($ajax) {
+            if ($context['ajax']) {
+                gm_json_reply([
+                    'ok' => true,
+                    'message' => $message,
+                    'return_url' => $returnUrl,
+                    'result' => $result,
+                ]);
+            }
+
+            catalog_start_session();
+            $_SESSION['game_manager_flash'] = $message;
+            session_write_close();
+            header('Location: ' . $returnUrl);
+            exit;
+        }
+
+        if ($action === 'delete_game') {
+            $gameId = (int)($_POST['game_id'] ?? 0);
+            $confirmed = (string)($_POST['confirm_delete'] ?? '') === 'yes';
+            if ($gameId <= 0 || !$confirmed) {
+                throw new RuntimeException('Game deletion confirmation is required.');
+            }
+
+            $context = gm_long_action_context();
+            $result = gm_lifecycle_delete_game($db, $config, $gameId, $context['progress']);
+            $message = 'Deleted game ' . $result['game_name'] . ': removed '
+                . $result['catalog_records'] . ' catalog file record(s), '
+                . $result['pak_archives'] . ' PAK archive record(s), '
+                . $result['sources'] . ' source definition(s), '
+                . $result['base_game_rows'] . ' base-game protection row(s), and '
+                . $result['stored_files'] . ' stored file(s).'
+                . gm_optimise_message($result);
+            $returnUrl = 'game-manager.php';
+
+            if ($context['ajax']) {
                 gm_json_reply([
                     'ok' => true,
                     'message' => $message,
@@ -318,12 +370,13 @@ try {
 <style>
 .game-actions { display: flex; gap: 6px; align-items: flex-start; flex-wrap: wrap; }
 .game-actions form { display: inline; margin: 0; }
-.game-reset-button { border-color: rgba(255,107,122,.85); color: #fecdd3; background: linear-gradient(180deg, rgba(127,29,29,.9), rgba(69,10,10,.9)); }
+.game-reset-button { border-color: rgba(255,166,74,.85); color: #ffedd5; background: linear-gradient(180deg, rgba(124,69,16,.9), rgba(69,26,3,.9)); }
+.game-delete-button { border-color: rgba(255,107,122,.9); color: #fecdd3; background: linear-gradient(180deg, rgba(127,29,29,.95), rgba(69,10,10,.95)); }
 </style>
 CSS;
 
     $profileChoices = catalog_all($db, 'SELECT * FROM ue_game_profiles WHERE is_active=1 ORDER BY COALESCE(profile_name, engine_key), engine_key, id');
-    $games = catalog_all($db, 'SELECT g.*, p.id profile_id, p.profile_name, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max, p.licensee_version_min, p.licensee_version_max, p.confidence_policy, p.notes profile_notes, COUNT(DISTINCT f.id) file_count, COUNT(DISTINCT s.id) source_count FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id LEFT JOIN ue_sources s ON s.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
+    $games = catalog_all($db, 'SELECT g.*, p.id profile_id, p.profile_name, p.engine_key profile_engine, p.allowed_extensions_json, p.package_version_min, p.package_version_max, p.licensee_version_min, p.licensee_version_max, p.confidence_policy, p.notes profile_notes, COUNT(DISTINCT f.id) file_count, COUNT(DISTINCT s.id) source_count FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 LEFT JOIN ue_files f ON (f.game_id=g.id OR (f.game_id IS NULL AND f.unverified_queue_game_id=g.id)) LEFT JOIN ue_sources s ON s.game_id=g.id GROUP BY g.id, p.id ORDER BY g.name');
     $editId = (int)($_GET['game_id'] ?? 0);
     $edit = null;
     foreach ($games as $row) {
@@ -335,7 +388,7 @@ CSS;
 
     catalog_page_header(
         'Game Admin',
-        'Add games, assign an existing scanner profile, and attach folders or download sources to that game. Create or edit profile rules in Game Profiles.',
+        'Add, edit, reset, or permanently delete games. Reset and delete remove managed files, then optimise the affected catalog tables.',
         [
             'Game Profiles' => 'game-profiles.php',
             'Upload Files' => 'profiled-upload.php' . ($editId ? '?game_id=' . $editId : ''),
@@ -359,13 +412,14 @@ CSS;
             $engineClass = $game['profile_engine'] ? 'good-pill' : 'bad-pill';
             $gameId = (int)$game['id'];
             $fileCount = (int)$game['file_count'];
+            $sourceCount = (int)$game['source_count'];
             echo '<tr><td><strong>' . catalog_h($game['name']) . '</strong><br><span class="muted small">' . catalog_h($game['slug']) . '</span></td>'
                 . '<td>' . catalog_h($game['profile_name'] ?? 'none') . '</td>'
                 . '<td><span class="pill ' . $engineClass . '">' . catalog_h($engine) . '</span></td>'
                 . '<td class="mono small">' . catalog_h(is_array($exts) ? implode(', ', $exts) : '') . '</td>'
                 . '<td class="mono">' . catalog_h($range) . '</td>'
                 . '<td>' . $fileCount . '</td>'
-                . '<td>' . (int)$game['source_count'] . '</td>'
+                . '<td>' . $sourceCount . '</td>'
                 . '<td><div class="game-actions">'
                 . '<a class="button" href="game-manager.php?game_id=' . $gameId . '">Edit</a> '
                 . '<a class="button" href="sources.php?game_id=' . $gameId . '">Sources</a> '
@@ -376,6 +430,13 @@ CSS;
                 . '<input type="hidden" name="game_id" value="' . $gameId . '">'
                 . '<input type="hidden" name="confirm_reset" value="yes">'
                 . '<button type="submit" class="button game-reset-button">Reset</button>'
+                . '</form>'
+                . '<form method="post" class="game-delete-form" data-game-name="' . catalog_h($game['name']) . '" data-file-count="' . $fileCount . '" data-source-count="' . $sourceCount . '">'
+                . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_manager')) . '">'
+                . '<input type="hidden" name="action" value="delete_game">'
+                . '<input type="hidden" name="game_id" value="' . $gameId . '">'
+                . '<input type="hidden" name="confirm_delete" value="yes">'
+                . '<button type="submit" class="button game-delete-button">Delete</button>'
                 . '</form></div></td></tr>';
         }
         echo '</table>';
@@ -392,9 +453,81 @@ CSS;
 
     function resetMessage(gameName, fileCount) {
         return 'Reset ' + gameName + '?\n\n'
-            + 'This will permanently delete all catalogued package files for this game, remove their database records, and clear related Names, Imports, Exports, locations, aliases, and dependency rows.\n\n'
-            + 'Game setup, profile assignment, and source definitions will stay.\n\n'
+            + 'This permanently deletes all catalogued package files, retained PAK archives, managed storage, and game-associated unverified rows. Related Names, Imports, Exports, locations, aliases, asset metadata, and dependencies are removed.\n\n'
+            + 'Game setup, profile assignment, source definitions, and base-game protection remain. The affected catalog tables are optimised afterwards.\n\n'
             + 'Catalog records affected: ' + fileCount;
+    }
+
+    function deleteMessage(gameName, fileCount, sourceCount) {
+        return 'Permanently delete ' + gameName + '?\n\n'
+            + 'This deletes the game itself, all catalogued and unverified files, retained PAK archives, managed storage, source definitions, base-game protection rows, and all dependent Names, Imports, Exports, locations, aliases, asset metadata, and dependencies.\n\n'
+            + 'The assigned reusable game profile is not deleted. Existing Game Backup exports are not deleted. The affected database tables are optimised afterwards.\n\n'
+            + 'This cannot be undone.\n\n'
+            + 'Catalog records: ' + fileCount + '\nSource definitions: ' + sourceCount;
+    }
+
+    function endpoint() {
+        return window.location.pathname + window.location.search;
+    }
+
+    function disableLifecycleButtons(disabled) {
+        document.querySelectorAll('.game-reset-form button, .game-delete-form button').forEach(function (button) {
+            button.disabled = disabled;
+        });
+    }
+
+    function begin(form, options) {
+        if (!window.CatalogLongJob) {
+            window.alert('The progress window could not be loaded. Refresh the page and try again.');
+            return;
+        }
+
+        var target = endpoint();
+        var overlay = window.CatalogLongJob.create({
+            title: options.title,
+            message: options.message,
+            count: options.count
+        });
+        var token = window.CatalogLongJob.makeToken();
+        var data = new FormData(form);
+        data.set('ajax', '1');
+        data.set('progress_token', token);
+        disableLifecycleButtons(true);
+
+        var stopPolling = window.CatalogLongJob.poll(target, token, function (state) {
+            var done = Number(state.done || 0);
+            var total = Number(state.total || 0);
+            overlay.update({
+                percent: Number(state.percent || 0),
+                message: state.message || options.working,
+                count: total > 0 ? done + ' of ' + total : 'Working…',
+                status: options.status
+            });
+        }, 450);
+
+        fetch(target, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Accept': 'application/json'},
+            body: data
+        }).then(window.CatalogLongJob.parseJson).then(function (result) {
+            stopPolling();
+            if (!result.ok) {
+                throw new Error(result.error || options.failed);
+            }
+            overlay.complete(result.message || options.complete, options.completeStatus);
+            overlay.addAction('Reload Game Admin', result.return_url || 'game-manager.php');
+            if (options.uploadAfter) {
+                overlay.addAction('Upload files', 'profiled-upload.php?game_id=' + encodeURIComponent(form.querySelector('[name="game_id"]').value));
+            }
+        }).catch(function (error) {
+            stopPolling();
+            overlay.fail(error.message || options.failed);
+            overlay.addAction('Close', null, function () {
+                overlay.destroy();
+                disableLifecycleButtons(false);
+            });
+        });
     }
 
     document.querySelectorAll('.game-reset-form').forEach(function (form) {
@@ -403,65 +536,37 @@ CSS;
             var gameName = form.getAttribute('data-game-name') || 'this game';
             var fileCount = form.getAttribute('data-file-count') || '0';
             if (!window.confirm(resetMessage(gameName, fileCount))) return;
-            if (!window.CatalogLongJob) {
-                window.alert('The progress window could not be loaded. Refresh the page and try again.');
-                return;
-            }
-
-            /*
-             * Do not read form.action here. The hidden field named "action"
-             * becomes a named form property in browsers and can replace the URL
-             * property with the input element. Use the exact current page URL.
-             */
-            var endpoint = window.location.pathname + window.location.search;
-            var overlay = window.CatalogLongJob.create({
+            begin(form, {
                 title: 'Resetting ' + gameName,
                 message: 'Preparing game reset…',
-                count: '0 of ' + fileCount + ' catalog records'
+                count: '0 of ' + fileCount + ' catalog records',
+                working: 'Game reset in progress…',
+                status: 'Reset and optimisation in progress',
+                failed: 'Game reset failed.',
+                complete: 'Game reset complete.',
+                completeStatus: 'Reset complete',
+                uploadAfter: true
             });
-            var token = window.CatalogLongJob.makeToken();
-            var data = new FormData(form);
-            data.set('ajax', '1');
-            data.set('progress_token', token);
+        });
+    });
 
-            document.querySelectorAll('.game-reset-form button').forEach(function (button) {
-                button.disabled = true;
-            });
-
-            var stopPolling = window.CatalogLongJob.poll(endpoint, token, function (state) {
-                var done = Number(state.done || 0);
-                var total = Number(state.total || 0);
-                var count = total > 0 ? done + ' of ' + total : 'Working…';
-                overlay.update({
-                    percent: Number(state.percent || 0),
-                    message: state.message || 'Reset in progress…',
-                    count: count,
-                    status: 'Reset in progress'
-                });
-            }, 450);
-
-            fetch(endpoint, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {'Accept': 'application/json'},
-                body: data
-            }).then(window.CatalogLongJob.parseJson).then(function (result) {
-                stopPolling();
-                if (!result.ok) {
-                    throw new Error(result.error || 'Game reset failed.');
-                }
-                overlay.complete(result.message || 'Game reset complete.', 'Reset complete');
-                overlay.addAction('Reload Game Admin', result.return_url || window.location.href);
-                overlay.addAction('Upload files', 'profiled-upload.php?game_id=' + encodeURIComponent(form.querySelector('[name="game_id"]').value));
-            }).catch(function (error) {
-                stopPolling();
-                overlay.fail(error.message || 'Game reset failed.');
-                overlay.addAction('Close', null, function () {
-                    overlay.destroy();
-                    document.querySelectorAll('.game-reset-form button').forEach(function (button) {
-                        button.disabled = false;
-                    });
-                });
+    document.querySelectorAll('.game-delete-form').forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+            var gameName = form.getAttribute('data-game-name') || 'this game';
+            var fileCount = form.getAttribute('data-file-count') || '0';
+            var sourceCount = form.getAttribute('data-source-count') || '0';
+            if (!window.confirm(deleteMessage(gameName, fileCount, sourceCount))) return;
+            begin(form, {
+                title: 'Deleting ' + gameName,
+                message: 'Preparing permanent game deletion…',
+                count: '0 of ' + fileCount + ' catalog records',
+                working: 'Game deletion in progress…',
+                status: 'Deletion and optimisation in progress',
+                failed: 'Game deletion failed.',
+                complete: 'Game deleted.',
+                completeStatus: 'Game deleted',
+                uploadAfter: false
             });
         });
     });
