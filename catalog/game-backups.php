@@ -138,7 +138,7 @@ try {
     catalog_head('Game Backups');
     catalog_page_header(
         'Game Backups',
-        'Create full independent server-side copies using original filenames and recorded game folder paths, then restore them through a queued import.',
+        'Create independent file-copy backups with original names, recorded paths and legacy game-folder placement, then restore them through a queued import.',
         ['Background Jobs' => 'background-jobs.php', 'Game Admin' => 'game-manager.php', 'Local Source Scan' => 'source-scan.php']
     );
 
@@ -148,7 +148,7 @@ try {
     }
 
     echo '<div class="card"><h2>Create game backup</h2>';
-    echo '<p class="muted">Exports use normal file copies only. The completed directory is independent of catalog storage and remains valid if the game is reset or its stored files are deleted. Use FTP/SFTP to transfer the complete backup directory.</p>';
+    echo '<p class="muted">Exports use normal file copies only. Recorded source folders are preserved; flat UE1/UE2 packages are placed into their standard Maps, System, Textures, Sounds, Music, StaticMeshes, Animations or Prefabs folders. Same-name variations remain beside each other as Name.ext, Name (2).ext, Name (3).ext and so on. No _Conflicts directory is created.</p>';
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_backups')) . '"><input type="hidden" name="action" value="export">';
     echo '<label>Game<br><select name="game_id" required><option value="">Choose game</option>';
     foreach ($games as $game) {
@@ -175,7 +175,9 @@ try {
             echo '<td>' . catalog_h($status . $progress) . '</td>';
             echo '<td>' . number_format((int)$backup['entries'])
                 . ((int)$backup['physical_files'] > 0 ? '<br><span class="small muted">' . number_format((int)$backup['physical_files']) . ' physical copies</span>' : '')
-                . ((int)$backup['conflicts'] > 0 ? '<br><span class="small">' . number_format((int)$backup['conflicts']) . ' conflicts</span>' : '') . '</td>';
+                . ((int)($backup['renamed_variations'] ?? 0) > 0 ? '<br><span class="small">' . number_format((int)$backup['renamed_variations']) . ' same-name variations renamed</span>' : '')
+                . ((int)$backup['conflicts'] > 0 ? '<br><span class="small">' . number_format((int)$backup['conflicts']) . ' legacy conflict entries</span>' : '')
+                . ((int)($backup['paths_from_locations'] ?? 0) > 0 ? '<br><span class="small muted">' . number_format((int)$backup['paths_from_locations']) . ' paths recovered from source locations</span>' : '') . '</td>';
             echo '<td class="nowrap">' . catalog_h(catalog_bytes((int)$backup['bytes'])) . '</td>';
             echo '<td class="nowrap">' . catalog_h((string)$backup['created_at']) . '</td>';
             echo '<td><span class="mono small">' . catalog_h((string)$backup['path']) . '</span></td><td>';
@@ -221,7 +223,7 @@ try {
     }
     echo '</div>';
 
-    echo '<div class="card"><h2>Restore behaviour</h2><p>The importer verifies every backup file against the manifest, makes a temporary working copy, and imports that copy. It never moves, renames, hard-links, or modifies files inside the backup. Canonical files are restored before aliases, and dependency links are rebuilt once at the end when selected.</p></div>';
+    echo '<div class="card"><h2>Restore behaviour</h2><p>The importer verifies every backup file against the manifest, makes a temporary working copy, and imports that copy. It uses the original logical filename from the manifest, so an exported Name (2).ext variation is restored under its recorded original name. It never moves, renames, hard-links, or modifies files inside the backup. Canonical files are restored before aliases, and dependency links are rebuilt once at the end when selected.</p></div>';
 
     catalog_foot();
 } catch (Throwable $error) {
