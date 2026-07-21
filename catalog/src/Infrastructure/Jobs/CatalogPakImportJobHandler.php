@@ -70,7 +70,7 @@ final class CatalogPakImportJobHandler implements JobHandler
             if (!$game) {
                 throw new \RuntimeException('Target game no longer exists: ' . $gameId);
             }
-            if ($this->engineMajor((string)($game['profile_engine'] ?? '')) < 4) {
+            if ($this->engineMajor((string)($game['profile_engine'] ?? '')) !== 4) {
                 throw new \RuntimeException('Original PAK archive management is available only for UE4 game profiles.');
             }
 
@@ -106,7 +106,9 @@ final class CatalogPakImportJobHandler implements JobHandler
                 );
             }
 
-            $extracted = \catalog_pak_archive_extract_to_temp($this->config, $sourcePath, $originalName);
+            // Publish the original archive before extracting entries. If entry
+            // extraction later fails, the retained PAK and its failure state remain
+            // available for diagnosis instead of being lost with the temp tree.
             $pakId = $archiveStore->createOrReset(
                 $this->db,
                 $game,
@@ -116,6 +118,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                 $index,
                 $userId
             );
+            $extracted = \catalog_pak_archive_extract_to_temp($this->config, $sourcePath, $originalName);
 
             $profile = \gp_required_profile_for_game($this->db, $gameId);
             $allowed = \scanner_profile_extensions($profile, $this->config);
@@ -153,7 +156,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                     'stage' => 'pak_import',
                     'done' => $entryIndex,
                     'total' => max(1, $total),
-                    'percent' => 5 + (int)floor(($entryIndex * 94) / max(1, $total)),
+                    'percent' => 5 + (int)floor(($entryIndex * 83) / max(1, $total)),
                     'message' => 'Cataloging PAK entry ' . ($entryIndex + 1) . '/' . max(1, $total) . ': ' . ($display !== '' ? $display : 'unnamed entry'),
                     'pak_id' => $pakId,
                     'imported' => $imported,
@@ -214,6 +217,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                             'source_relative_path' => $display,
                             'source_pak_id' => $pakId,
                             'source_pak_entry_id' => $entryId,
+                            'defer_dependency_rebuild' => true,
                         ]
                     );
                     $status = (string)($result[0] ?? 'verified');
@@ -267,6 +271,27 @@ final class CatalogPakImportJobHandler implements JobHandler
                         ];
                     }
                 }
+            }
+
+            if (($imported + $aliases) > 0) {
+                $context->checkpoint([
+                    'stage' => 'dependency_refresh',
+                    'done' => max(1, $total),
+                    'total' => max(1, $total),
+                    'percent' => 90,
+                    'message' => 'Refreshing game dependency links once after the PAK import.',
+                    'pak_id' => $pakId,
+                ]);
+                \scanner_rebuild_game(
+                    $this->db,
+                    $this->config,
+                    $gameId,
+                    static function (array $progress) use ($context): void {
+                        $context->heartbeatIfDue($progress);
+                    },
+                    90,
+                    98
+                );
             }
 
             $archiveStore->finish(
