@@ -62,13 +62,14 @@ try {
         exit;
     }
 
-    if (game_paks_engine_major((string)($game['profile_engine'] ?? '')) !== 4) {
+    $engineMajor = game_paks_engine_major((string)($game['profile_engine'] ?? ''));
+    if (!in_array($engineMajor, [4, 5], true)) {
         echo CatalogUi::pageHeader(
             (string)$game['name'],
-            'PAK archives are managed for UE4 game profiles.',
+            'PAK archives are managed for UE4 and UE5 game profiles.',
             ['Files' => 'game-files.php?id=' . $gameId, 'Back to games' => 'games.php']
         );
-        echo CatalogUi::emptyState('No PAK archive view', 'This game is not assigned to a UE4 profile.', ['label' => 'View files', 'href' => 'game-files.php?id=' . $gameId], '▣');
+        echo CatalogUi::emptyState('No PAK archive view', 'This game is not assigned to a UE4 or UE5 profile.', ['label' => 'View files', 'href' => 'game-files.php?id=' . $gameId], '▣');
         catalog_foot();
         exit;
     }
@@ -104,7 +105,7 @@ try {
 
     echo CatalogUi::pageHeader(
         (string)$game['name'],
-        'Switch between extracted package files and their original self-contained PAK archives.',
+        'Switch between extracted package files and their original self-contained UE' . $engineMajor . ' PAK archives.',
         [
             'Files' => 'game-files.php?id=' . $gameId,
             'PAK archives' => 'game-paks.php?id=' . $gameId,
@@ -135,7 +136,7 @@ try {
     if ($rows === []) {
         echo CatalogUi::emptyState(
             'No PAK archives found',
-            'Import a UE4 .pak file to retain the original archive and catalog its contents.',
+            'Import a UE4 or UE5 .pak file to retain the original archive and catalog its readable contents.',
             catalog_support_is_admin() ? ['label' => 'Import PAK', 'href' => 'pak-import.php?game_id=' . $gameId] : null,
             '▣'
         );
