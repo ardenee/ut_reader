@@ -35,6 +35,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Upload Files' => $root . 'profiled-upload.php',
             'Upload Bucket' => $root . 'upload-bucket.php',
             'PAK Import' => $root . 'pak-import.php',
+            'Game Backups' => $root . 'game-backups.php',
             'Storage Audit' => $root . 'storage-audit.php',
         ],
         'Maintenance' => [
