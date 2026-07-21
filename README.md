@@ -1,6 +1,6 @@
 # UnrealDB / ut_reader
 
-UnrealDB is a PHP and MySQL catalogue, analysis and controlled-distribution system for Unreal Engine package files. It reads package headers and object tables, preserves package identity and source paths, resolves dependencies, manages verified and unverified storage, builds game-specific download packages, exchanges files between catalogue installations, and supports complete server-side game backup and restore.
+UnrealDB is a PHP and MySQL catalogue, analysis and controlled-distribution system for Unreal Engine package files. It reads package headers and object tables, preserves package identity and source paths, resolves dependencies, manages verified and unverified storage, retains original UE3/UE4/UE5 containers, builds game-specific download packages, exchanges files between catalogue installations, and supports complete server-side game backup and restore.
 
 The project is designed for large Unreal package libraries where filenames alone are not reliable enough to identify duplicates or satisfy dependencies.
 
@@ -13,6 +13,7 @@ Reader and profile support currently covers:
 - Unreal Engine 2.5
 - Unreal Engine 3
 - Unreal Engine 4
+- Unreal Engine 5 container workflows, with experimental/limited loose-package parsing
 
 Game profiles define the reader family, accepted extensions, package and licencee-version ranges, compatibility exceptions and detection policy. Profiles can be reused by multiple games through `ue_games.profile_id`.
 
@@ -33,6 +34,7 @@ For verified packages UnrealDB records:
 - package aliases sharing a physical file identity
 - local, HTTP, mirror and federation locations
 - required files and files requiring the selected package
+- source PAK archive and exact PAK entry where applicable
 
 Unreal object indices follow the standard rule:
 
@@ -55,6 +57,8 @@ The interface includes:
 - Duplicate Files management
 - Unverified Files filtering, matching, import, move and deletion
 - base-game protection lists
+- UE3 UPK container browsing
+- UE4/UE5 PAK archive browsing and original-container downloads
 - legacy data audit and normalisation tools
 - source, mirror and federation administration
 - durable background-job progress, cancellation, retry and cleanup
@@ -70,7 +74,7 @@ Files can enter the catalogue through:
 - Upload Bucket
 - Local Source Scan
 - trusted HTTP source manifests
-- PAK Import
+- UE4/UE5 PAK Import
 - federation transfer
 - Game Backup restore
 
@@ -78,7 +82,7 @@ Profiled Upload and PAK Import copy incoming data into durable staging and enque
 
 Supported redirect-compressed `.uz`, `.uz2` and `.uz3` files are decompressed before scanning. The compressed wrapper is not retained. Incomplete or unsupported redirect variants fail closed.
 
-Standard unencrypted UE4 PAK archives can be extracted and scanned. Encrypted PAK files and IOStore containers are not supported.
+Readable, unencrypted UE4 and UE5 `.pak` files can be retained, indexed and extracted where the current PHP parser supports their footer, index and compression methods. Encrypted PAKs, unsupported compression and UE5 IoStore `.utoc`/`.ucas` containers are not decoded by the PAK importer.
 
 ### Unverified-file policy
 
@@ -100,7 +104,7 @@ Original filenames and source-relative paths remain metadata and are restored fo
 
 A byte-identical package presented under another legitimate package name can be recorded as an alias of the existing physical identity. Aliases remain available for dependency matching and are exported under their own original names in a Game Backup.
 
-For UE4 packages, mounted source-relative paths are required to derive reliable long package names. Folder upload, Local Source Scan, PAK import, source manifests and backup restore preserve this context.
+For UE4/UE5 loose packages, mounted source-relative paths are required to derive reliable long package names. Folder upload, Local Source Scan, PAK import, source manifests and backup restore preserve this context.
 
 ## Dependency resolution
 
@@ -115,6 +119,50 @@ Recorded states include:
 - missing
 
 Administrators can rebuild one file, affected dependants or an entire game through durable queued jobs.
+
+## UE3 UPK package management
+
+UE3 `.upk` files are original Unreal package containers and are shown separately from ordinary game files.
+
+For UE3 games, the content switch provides:
+
+- **Files** — maps and other non-UPK files
+- **UPK packages** — original `.upk` containers
+
+`game-upks.php` lists original UPKs with package identity, version, compression state, export counts, serialized payload size, download and deletion actions. `upk-info.php` shows full UPK identity and every parsed internal export, with links to the exact export row in the package examiner.
+
+A UPK contains serialized UObject exports rather than a directory of independent package files. UnrealDB indexes these exports as the UPK contents but does not create fake child `.upk` files from raw export payloads, because those payloads are not standalone Unreal packages.
+
+Existing UE3 UPKs appear in the UPK views immediately when their Names, Imports and Exports were already parsed. Re-import only packages whose earlier parse data is incomplete.
+
+See [`docs/upk-package-management.md`](docs/upk-package-management.md).
+
+## UE4 and UE5 PAK archive management
+
+Original UE4 and UE5 `.pak` containers are managed separately from package files extracted from them.
+
+A PAK import:
+
+- validates the staged file identity
+- retains an independent original copy under `storage/games/<game-slug>/paks/<sha256>.pak`
+- verifies the retained copy by size and SHA-256
+- records the archive footer, index, mount point and hashes
+- records every readable PAK index entry
+- extracts supported unencrypted entries
+- imports accepted standalone packages through the normal scanner
+- links each imported package back to its original PAK and entry path
+- performs one game-wide dependency refresh after import
+
+UE4 and UE5 game pages switch between:
+
+- **Files** — extracted packages
+- **PAK archives** — retained original containers
+
+The original PAK remains available as the preferred self-contained download. PAK download enforces public download policy and blocks the whole container when any linked package is protected as a base-game file.
+
+Current PAK support does not imply universal UE5 container support. Encrypted indexes, unsupported/Oodle compression and IoStore `.utoc`/`.ucas` remain unsupported unless separately implemented.
+
+See [`docs/pak-archive-management.md`](docs/pak-archive-management.md).
 
 ## Game Backups
 
@@ -178,6 +226,14 @@ The restore process:
 
 The backup itself is never moved, renamed, hard-linked or modified during import.
 
+## Game reset and deletion
+
+Game reset removes managed verified files, game-associated unverified rows, retained PAK containers and dependent catalogue records while preserving the game configuration, profile, sources and base-game protection.
+
+Game deletion permanently removes the game, managed files, retained PAKs, source definitions, base-game rows and related catalogue data while retaining the reusable profile and existing Game Backup exports.
+
+Both operations display progress and run `OPTIMIZE TABLE` against affected high-churn catalogue tables after deletion. Optimisation failures are logged and shown as warnings without incorrectly reversing completed deletions.
+
 ## Base-game distribution protection
 
 Administrators can maintain base-game GUID lists per game. Protected packages remain indexed for dependency analysis but are blocked from public downloads and generated user packages.
@@ -217,7 +273,7 @@ The catalogue uses a durable MySQL-backed queue with leases, heartbeats, coopera
 Durable operations include:
 
 - staged package import
-- staged PAK extraction/import
+- staged UE4/UE5 PAK extraction/import
 - file, affected-file and full-game dependency rebuilds
 - UE4 source-identity repair
 - unverified duplicate cleanup
@@ -326,12 +382,14 @@ Documentation:
 - [`docs/production-deployment.md`](docs/production-deployment.md)
 - [`docs/database-migrations.md`](docs/database-migrations.md)
 - [`docs/background-jobs.md`](docs/background-jobs.md)
+- [`docs/pak-archive-management.md`](docs/pak-archive-management.md)
+- [`docs/upk-package-management.md`](docs/upk-package-management.md)
 - [`docs/full-review-completion.md`](docs/full-review-completion.md)
 - [`docs/production-remediation-program.md`](docs/production-remediation-program.md)
 
 ## Automated checks
 
-The repository contains PHP and JavaScript syntax checks, architecture/security tests, schema tests, queue/storage tests, package-format contracts and synthetic reader fixtures.
+The repository contains PHP and JavaScript syntax checks, architecture/security tests, schema tests, queue/storage tests, package-format contracts, PAK/UPK management contracts and synthetic reader fixtures.
 
 GitHub Actions workflows are manual-only through `workflow_dispatch`. Routine pushes to `main` do not automatically start Catalog quality, detached-worker, administration-navigation or container-release workflows.
 
@@ -339,9 +397,11 @@ GitHub Actions workflows are manual-only through `workflow_dispatch`. Routine pu
 
 Known boundaries include:
 
-- arbitrary UE4 serialized-property parsing is not fully equivalent to Epic's implementation for every package version
-- encrypted UE4 PAK and IOStore containers are unsupported
-- UE4 loose files require reliable mounted source-relative paths
+- arbitrary UE4/UE5 serialized-property parsing is not fully equivalent to Epic's implementation for every package version
+- encrypted PAK indexes/entries and unsupported/Oodle compression cannot be extracted without the required decoder or keys
+- UE5 IoStore `.utoc`/`.ucas` containers are not handled by the PAK importer
+- UE4/UE5 loose files require reliable mounted source-relative paths and compatible package readers
+- UE3 UPK export rows are indexed contents but are not valid standalone package files
 - redirect compression has multiple historical variants; unsupported payloads fail closed
 - retail packages and proprietary fixtures cannot be committed to the repository
 - large libraries require environment-specific MySQL and storage tuning
