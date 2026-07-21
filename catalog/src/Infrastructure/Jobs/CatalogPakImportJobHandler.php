@@ -70,8 +70,9 @@ final class CatalogPakImportJobHandler implements JobHandler
             if (!$game) {
                 throw new \RuntimeException('Target game no longer exists: ' . $gameId);
             }
-            if ($this->engineMajor((string)($game['profile_engine'] ?? '')) !== 4) {
-                throw new \RuntimeException('Original PAK archive management is available only for UE4 game profiles.');
+            $engineMajor = $this->engineMajor((string)($game['profile_engine'] ?? ''));
+            if (!in_array($engineMajor, [4, 5], true)) {
+                throw new \RuntimeException('Original PAK archive management is available only for UE4 or UE5 game profiles.');
             }
 
             $context->checkpoint([
@@ -79,7 +80,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                 'done' => 0,
                 'total' => 1,
                 'percent' => 1,
-                'message' => 'Reading PAK index and preserving the original archive: ' . basename($originalName),
+                'message' => 'Reading UE' . $engineMajor . ' PAK index and preserving the original archive: ' . basename($originalName),
             ]);
 
             $footers = \catalog_pak_footer_candidates($sourcePath);
@@ -307,7 +308,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                 'done' => max(1, $total),
                 'total' => max(1, $total),
                 'percent' => 100,
-                'message' => 'Original PAK retained; archive entries and extracted packages were cataloged.',
+                'message' => 'Original UE' . $engineMajor . ' PAK retained; archive entries and extracted packages were cataloged.',
                 'pak_id' => $pakId,
                 'imported' => $imported,
                 'duplicates' => $duplicates,
@@ -323,6 +324,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                 'pak_id' => $pakId,
                 'game_id' => $gameId,
                 'game_name' => (string)$game['name'],
+                'engine_major' => $engineMajor,
                 'source_name' => $originalName,
                 'entry_count' => $total,
                 'extracted_files' => count($extractedFiles),
@@ -375,7 +377,7 @@ final class CatalogPakImportJobHandler implements JobHandler
     /** @param array<string,mixed> $payload */
     private function verifyIdentity(string $path, array $payload): void
     {
-        $expected = strtolower(trim((string)($payload['sha256'] ?? '')));
+        $expected = strtolower(trim((string)($payload['sha256'] ?? ''));
         if ($expected === '') {
             return;
         }
