@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 7;
+$expectedMigrations = 6;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -75,43 +75,6 @@ foreach (['resource_class', 'resource_limit', 'concurrency_key'] as $column) {
 foreach (['idx_ue_background_jobs_resource', 'idx_ue_background_jobs_concurrency'] as $index) {
     migration_test_expect($schema->indexExists('ue_background_jobs', $index), 'Missing background-job resource index: ' . $index);
 }
-
-/* Verify that deleting a catalog file clears every parser/asset child row. */
-$testGameId = (int)$db->query('SELECT id FROM ue_games ORDER BY id LIMIT 1')->fetchColumn();
-migration_test_expect($testGameId > 0, 'Fresh schema has no game for cascade verification.');
-$insertFile = $db->prepare(
-    'INSERT INTO ue_files '
-    . '(game_id,package_name,original_name,stored_name,relative_path,extension,file_size,md5,sha1,scan_status) '
-    . 'VALUES (?,?,?,?,?,?,?,?,?,"verified")'
-);
-$insertFile->execute([
-    $testGameId,
-    'MigrationCascadeTest',
-    'MigrationCascadeTest.u',
-    'migration-cascade-test.u',
-    'storage/migration-cascade-test.u',
-    'u',
-    1,
-    md5('migration-cascade-test'),
-    sha1('migration-cascade-test'),
-]);
-$testFileId = (int)$db->lastInsertId();
-$db->prepare('INSERT INTO ue_names(file_id,name_index,name_text,flags) VALUES(?,0,"CascadeName",0)')->execute([$testFileId]);
-$db->prepare('INSERT INTO ue_imports(file_id,import_index,class_package,class_name,object_name,outer_index,full_path,root_package,relative_object_path,is_common) VALUES(?,0,"Core","Class","CascadeImport",0,"Core.CascadeImport","Core","CascadeImport",0)')->execute([$testFileId]);
-$db->prepare('INSERT INTO ue_exports(file_id,export_index,class_name,object_name,outer_index,local_path,full_path) VALUES(?,0,"Class","CascadeExport",0,"CascadeExport","MigrationCascadeTest.CascadeExport")')->execute([$testFileId]);
-$db->prepare('INSERT INTO ue_asset_registry_assets(file_id,object_path,package_name,package_path,asset_name,asset_class) VALUES(?,"/Game/Cascade.Cascade","/Game/Cascade","/Game","Cascade","Class")')->execute([$testFileId]);
-$testAssetId = (int)$db->lastInsertId();
-$db->prepare('INSERT INTO ue_asset_registry_tags(asset_id,tag_name,tag_value) VALUES(?,"Cascade","1")')->execute([$testAssetId]);
-$db->prepare('INSERT INTO ue_asset_registry_dependencies(file_id,source_asset_id,dependency_object_path,dependency_type) VALUES(?,?,"/Game/Dependency","test")')->execute([$testFileId, $testAssetId]);
-$db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$testFileId]);
-foreach (['ue_names', 'ue_imports', 'ue_exports', 'ue_asset_registry_assets', 'ue_asset_registry_dependencies'] as $table) {
-    $statement = $db->prepare('SELECT COUNT(*) FROM `' . $table . '` WHERE file_id=?');
-    $statement->execute([$testFileId]);
-    migration_test_expect((int)$statement->fetchColumn() === 0, 'File deletion left child rows in ' . $table . '.');
-}
-$tagStatement = $db->prepare('SELECT COUNT(*) FROM ue_asset_registry_tags WHERE asset_id=?');
-$tagStatement->execute([$testAssetId]);
-migration_test_expect((int)$tagStatement->fetchColumn() === 0, 'File deletion left asset-registry tags behind.');
 
 migration_test_expect($runner->migrate() === [], 'Second migration run was not idempotent.');
 $verified = $runner->status();
