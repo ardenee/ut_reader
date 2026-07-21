@@ -1,6 +1,6 @@
-# UE4 PAK archive management
+# UE4 and UE5 PAK archive management
 
-UnrealDB treats an original Unreal Engine 4 `.pak` container separately from the package files extracted from it.
+UnrealDB treats original Unreal Engine 4 and Unreal Engine 5 `.pak` containers separately from the package files extracted from them.
 
 ## Storage model
 
@@ -14,7 +14,7 @@ The copy is written through a temporary `.part` file and is verified by file siz
 
 `ue_pak_archives` stores the container identity and PAK metadata, including:
 
-- target game
+- target game and its UE4/UE5 profile
 - original filename
 - retained storage path
 - file size, MD5, SHA-1 and SHA-256
@@ -30,24 +30,26 @@ When an extracted entry becomes a catalog file, `ue_pak_entries.file_id` links t
 
 ## Import workflow
 
-`Admin → Imports → PAK Import` accepts only games assigned to a UE4 profile.
+`Admin → Imports → PAK Import` accepts games assigned to UE4 or UE5 profiles.
 
 The background job:
 
 1. validates the staged PAK identity
-2. reads a supported PAK footer and index
-3. copies and verifies the original PAK into durable game storage
-4. records every PAK index entry
-5. extracts supported unencrypted entries
-6. imports standalone package extensions through the normal scanner
-7. records duplicate, alias, verified, unverified, rejected, skipped, encrypted and not-extracted outcomes
-8. links successful package results back to their PAK entries
+2. confirms that the target game uses a UE4 or UE5 profile
+3. reads a supported PAK footer and index
+4. copies and verifies the original PAK into durable game storage
+5. records every readable PAK index entry
+6. extracts supported unencrypted entries
+7. imports standalone package extensions through the normal scanner
+8. records duplicate, alias, verified, unverified, rejected, skipped, encrypted and not-extracted outcomes
+9. links successful package results back to their PAK entries
+10. performs one game-wide dependency refresh after the import
 
 The original PAK remains the preferred self-contained download. Extracted files remain independently searchable and usable for dependency analysis.
 
 ## Browsing
 
-UE4 game pages expose two separate views:
+UE4 and UE5 game pages expose two separate views:
 
 - **Files** — extracted packages in `ue_files`
 - **PAK archives** — original retained containers in `ue_pak_archives`
@@ -66,21 +68,30 @@ An entire PAK download is blocked when any linked extracted package is present i
 
 ## Administration
 
-`Admin → PAK Archives` lists UE4 games and their retained archive totals. Administrators can inspect and delete retained PAKs. Deleting a retained PAK removes its archive and entry records but intentionally leaves independently imported package files in the catalog.
+`Admin → PAK Archives` lists UE4 and UE5 games and their retained archive totals. Administrators can inspect and delete retained PAKs. Deleting a retained PAK removes its archive and entry records but intentionally leaves independently imported package files in the catalog.
 
 ## Deployment
 
-After updating the code, apply the schema migration:
+The PAK archive tables are provided by migration `202607210001_pak_archive_management.php`:
 
 ```bash
 php catalog/bin/migrate.php migrate
 php catalog/bin/migrate.php verify
 ```
 
-Restart or stop/start any detached worker that was already running before the update so the new archive-aware PAK handler is loaded.
+Restart or stop/start any detached worker that was already running before the update so it loads the UE4/UE5-aware PAK handler.
 
-PAKs imported before this feature are not automatically reconstructed because the original container was not previously cataloged as a durable archive. Re-import the original `.pak` file to create the retained container and entry links.
+PAKs imported before original-container retention was added are not automatically reconstructed. Re-import the original `.pak` file once to create the retained container and entry links.
 
 ## Current format limits
 
-The existing extractor supports standard readable UE4 PAK indexes and supported compression methods. Encrypted entries, Oodle-compressed payloads that cannot be decoded by the PHP extractor, and IOStore containers remain visible only where their index metadata can be read; they are not extracted as standalone packages.
+The PHP extractor handles supported standard readable PAK footer/index layouts and supported compression methods. It does not claim universal UE5 container support.
+
+The following remain separate or unsupported by this PAK importer:
+
+- encrypted PAK indexes or entries without available keys
+- Oodle-compressed payloads that cannot be decoded by the PHP extractor
+- UE5 IoStore `.utoc` / `.ucas` containers
+- packages whose companion data or engine version cannot be parsed by the selected reader
+
+Unsupported entries remain recorded where their index metadata can be read, but they are not represented as successfully extracted standalone packages.
