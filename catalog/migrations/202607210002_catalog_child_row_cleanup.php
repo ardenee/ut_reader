@@ -111,7 +111,7 @@ return [
             );
         };
 
-        /* Clear optional references before deleting their parent rows. */
+        /* Clear optional references whose targets are already absent. */
         $nullOrphans('ue_dependencies', 'resolved_file_id', 'ue_files');
         $nullOrphans('ue_dependencies', 'resolved_export_id', 'ue_exports');
         $nullOrphans('ue_asset_registry_dependencies', 'source_asset_id', 'ue_asset_registry_assets');
@@ -142,6 +142,12 @@ return [
         $deleteOrphans('ue_names', 'file_id', 'ue_files');
         $deleteOrphans('ue_imports', 'file_id', 'ue_files');
         $deleteOrphans('ue_exports', 'file_id', 'ue_files');
+
+        /* Parent rows removed above can expose another layer of stale references. */
+        $deleteOrphans('ue_dependencies', 'import_id', 'ue_imports');
+        $nullOrphans('ue_dependencies', 'resolved_export_id', 'ue_exports');
+        $nullOrphans('ue_asset_registry_dependencies', 'source_asset_id', 'ue_asset_registry_assets');
+        $deleteOrphans('ue_asset_registry_tags', 'asset_id', 'ue_asset_registry_assets');
 
         /* Existing databases may predate the baseline foreign keys. Repair them. */
         $ensureForeignKey('ue_names', 'file_id', 'ue_files', 'id', 'CASCADE', 'fk_ue_names_file');
