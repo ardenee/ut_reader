@@ -22,6 +22,8 @@ jobs:
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php
           php -l catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php
+          php -l catalog/src/Infrastructure/Jobs/GameBackupJobHandler.php
+          php -l catalog/src/Infrastructure/Storage/GameBackupStore.php
           php -l catalog/bin/catalog-worker-detached.php
           php -l catalog/api/v1/_bootstrap.php
           php -l catalog/api/v1/job-run.php
@@ -32,9 +34,11 @@ jobs:
           php -l catalog/background-jobs.php
           php -l catalog/profiled-upload.php
           php -l catalog/pak-import.php
+          php -l catalog/game-backups.php
           php -l catalog/dashboard.php
           php -l catalog/tests/detached-worker-contract-test.php
           php -l catalog/tests/background-job-controls-contract-test.php
+          php -l catalog/tests/game-backup-contract-test.php
           php -l tests/catalog_redirect_payload_test.php
       - name: Syntax check detached worker clients
         run: |
@@ -45,5 +49,7 @@ jobs:
         run: php catalog/tests/detached-worker-contract-test.php
       - name: Verify background job controls contract
         run: php catalog/tests/background-job-controls-contract-test.php
+      - name: Verify game backup contract
+        run: php catalog/tests/game-backup-contract-test.php
       - name: Verify generic redirect payload decoding
         run: php tests/catalog_redirect_payload_test.php
