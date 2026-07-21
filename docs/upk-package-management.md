@@ -26,7 +26,7 @@ The normal UE3 reader parses the package tables during import:
 
 Each export records its class, object name, outer reference, local/full path, object flags, serial offset and serial size. These exports are the internal contents shown by the UPK management pages.
 
-Export payloads are not inserted as separate `ue_files` rows. A raw serialized UObject export is not normally a valid standalone `.upk`, so presenting it as an independent package file would create unusable or misleading files.
+Export payloads are not inserted as separate `ue_files` rows. A raw serialized UObject export is not a valid standalone `.upk`; presenting it as an independent package file would create an unusable or misleading file.
 
 ## Browsing
 
