@@ -55,6 +55,12 @@ detached_worker_expect(is_string($pak), 'PAK import page could not be read.');
 detached_worker_expect(str_contains($pak, 'CatalogDetachedWorker'), 'PAK import does not auto-start the detached worker.');
 detached_worker_expect(str_contains($pak, '$store->delete('), 'PAK import does not explicitly delete staging when queue creation fails.');
 
+$backups = file_get_contents(__DIR__ . '/../game-backups.php');
+detached_worker_expect(is_string($backups), 'Game backups page could not be read.');
+detached_worker_expect(str_contains($backups, 'CatalogDetachedWorker'), 'Game backup export/import does not auto-start the detached worker.');
+detached_worker_expect(str_contains($backups, 'EXPORT_GAME_BACKUP'), 'Game backup export job is not queued.');
+detached_worker_expect(str_contains($backups, 'IMPORT_GAME_BACKUP'), 'Game backup import job is not queued.');
+
 $runtime = $root . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'worker';
 foreach (glob($runtime . DIRECTORY_SEPARATOR . '*') ?: [] as $path) {
     @unlink($path);
