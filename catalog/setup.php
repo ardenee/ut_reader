@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 catalog_start_session();
@@ -29,7 +28,7 @@ try {
     $failed = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="failed"');
 
     echo '<div class="card hero"><h1>Setup</h1><p class="muted">First-time setup and file ingestion: add games, configure scanner profiles, upload or scan files, then move to Missing Files.</p>';
-    catalog_page_links(['Game Manager' => 'game-manager.php', 'Profiled Upload' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Storage Sources' => 'sources.php', 'Scan Local' => 'source-scan.php', 'Scan HTTP' => 'http-source-scan.php', 'Missing Files' => 'missing.php']);
+    catalog_page_links(['Game Manager' => 'game-manager.php', 'Game Backups' => 'game-backups.php', 'Profiled Upload' => 'profiled-upload.php', 'Game Profiles' => 'game-profiles.php', 'Storage Sources' => 'sources.php', 'Scan Local' => 'source-scan.php', 'Scan HTTP' => 'http-source-scan.php', 'Missing Files' => 'missing.php']);
     echo '</div>';
 
     echo '<div class="grid">';
@@ -44,16 +43,16 @@ try {
     catalog_tool_card('1. Game Manager', 'game-manager.php', 'Add/edit games and their scanner profiles in one place.', 'primary');
     catalog_tool_card('2. Game Profiles', 'game-profiles.php', 'Edit scanner-only rules: engine family, extensions, version ranges, and policy.', 'settings');
     catalog_tool_card('3. Profiled upload scanner', 'profiled-upload.php', 'New scanner path with engine/version/profile checks before importing as verified.', 'new');
-    catalog_tool_card('4. Legacy game admin', 'index.php?page=admin', 'Older upload/admin page. It has not been replaced everywhere yet; prefer Profiled Upload for scanner validation.', 'legacy');
-    catalog_tool_card('5. Add storage locations', 'sources.php', 'Register local folders, server paths, HTTP mirrors, or redirect sources.');
-    catalog_tool_card('6. Scan local storage', 'source-scan.php', 'Currently uses the older source scanner/linking path. Profile enforcement will be wired here next.');
-    catalog_tool_card('7. Scan HTTP/redirect source', 'http-source-scan.php', 'Scan remote manifests or redirect-server sources. Profile enforcement will be wired here later.');
+    catalog_tool_card('4. Add storage locations', 'sources.php', 'Register local folders, server paths, HTTP mirrors, or redirect sources.');
+    catalog_tool_card('5. Scan local storage', 'source-scan.php', 'Recursively scan a configured game source and preserve its relative file paths.');
+    catalog_tool_card('6. Scan HTTP/redirect source', 'http-source-scan.php', 'Scan remote manifests or redirect-server sources.');
+    catalog_tool_card('7. Game Backups', 'game-backups.php', 'Create full-copy game exports and restore them on this or another UnrealDB site.', 'backup');
     catalog_tool_card('8. Identify missing files', 'missing.php', 'Move to dependency repair after scanning.');
     echo '</div></div>';
 
-    echo '<div class="card"><h2>Scanner status</h2><p><strong>The profiled scanner is currently a new upload path:</strong> <a href="profiled-upload.php">profiled-upload.php</a>.</p><p class="muted">The original legacy upload/admin scanner still exists at index.php?page=admin and the storage source scanners still use their existing paths. I did this to avoid breaking the working scanner while adding profile validation. Once the profiled scanner is tested with your files, the next step is to replace/wire the legacy and source scanners to use the shared CatalogScanner.php functions too.</p></div>';
+    echo '<div class="card"><h2>Scanner status</h2><p><strong>The profiled scanner is currently a new upload path:</strong> <a href="profiled-upload.php">profiled-upload.php</a>.</p><p class="muted">Use Profiled Upload for direct game imports, or configure Game Sources and Local Source Scan when original folder paths must be preserved for later backups.</p></div>';
 
-    echo '<div class="card"><h2>Scanner profile note</h2><p class="muted">Profiles are intentionally data-driven so more Unreal Engine games, including future UE5 games, can be added without rewriting scanner logic. Header/version detection is used for high-confidence engine-family checks; exact same-engine game routing still needs admin choice unless future signatures are added.</p></div>';
+    echo '<div class="card"><h2>Scanner profile note</h2><p class="muted">Profiles are data-driven so more Unreal Engine games, including future UE5 games, can be added without rewriting scanner logic. Header/version detection is used for high-confidence engine-family checks; exact same-engine game routing still requires an administrator choice unless stronger signatures are available.</p></div>';
 
     catalog_foot();
 } catch (Throwable $e) {
