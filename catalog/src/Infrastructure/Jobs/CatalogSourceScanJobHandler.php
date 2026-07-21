@@ -33,9 +33,8 @@ final class CatalogSourceScanJobHandler implements JobHandler
         $importUnknown = filter_var($job->payload['import_unknown'] ?? false, FILTER_VALIDATE_BOOL);
         $strictProfile = !array_key_exists('strict_profile', $job->payload)
             || filter_var($job->payload['strict_profile'], FILTER_VALIDATE_BOOL);
-        $userId = isset($job->payload['user_id']) && (int)$job->payload['user_id'] > 0
-            ? (int)$job->payload['user_id']
-            : null;
+        $userIdValue = $job->payload['user_id'] ?? $job->payload['created_by_user_id'] ?? null;
+        $userId = (int)$userIdValue > 0 ? (int)$userIdValue : null;
 
         require_once __DIR__ . '/../../../lib/CatalogSourceScan.php';
 
@@ -47,7 +46,11 @@ final class CatalogSourceScanJobHandler implements JobHandler
             $strictProfile,
             $userId,
             static function (array $progress) use ($context): void {
-                $context->checkpoint($progress);
+                if ((string)($progress['stage'] ?? '') === 'complete') {
+                    $context->checkpoint($progress);
+                    return;
+                }
+                $context->heartbeatIfDue($progress);
             }
         );
 
