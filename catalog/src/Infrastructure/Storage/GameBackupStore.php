@@ -89,6 +89,10 @@ final class GameBackupStore
             'bytes_done' => (int)($manifest['summary']['bytes'] ?? 0),
             'bytes_total' => (int)($manifest['summary']['bytes'] ?? 0),
             'conflicts' => (int)($manifest['summary']['conflicts'] ?? 0),
+            'renamed_variations' => (int)($manifest['summary']['renamed_variations'] ?? 0),
+            'paths_from_primary' => (int)($manifest['summary']['paths_from_primary'] ?? 0),
+            'paths_from_locations' => (int)($manifest['summary']['paths_from_locations'] ?? 0),
+            'paths_unsorted' => (int)($manifest['summary']['paths_unsorted'] ?? 0),
         ]);
     }
 
@@ -139,6 +143,10 @@ final class GameBackupStore
                 'physical_files' => (int)($summary['physical_files'] ?? $state['physical_files'] ?? 0),
                 'bytes' => (int)($summary['bytes'] ?? $state['bytes_done'] ?? 0),
                 'conflicts' => (int)($summary['conflicts'] ?? $state['conflicts'] ?? 0),
+                'renamed_variations' => (int)($summary['renamed_variations'] ?? $state['renamed_variations'] ?? 0),
+                'paths_from_primary' => (int)($summary['paths_from_primary'] ?? $state['paths_from_primary'] ?? 0),
+                'paths_from_locations' => (int)($summary['paths_from_locations'] ?? $state['paths_from_locations'] ?? 0),
+                'paths_unsorted' => (int)($summary['paths_unsorted'] ?? $state['paths_unsorted'] ?? 0),
                 'complete' => is_file($path . DIRECTORY_SEPARATOR . 'manifest.json') && (string)($manifest['status'] ?? '') === 'complete',
                 'state' => $state,
             ];
