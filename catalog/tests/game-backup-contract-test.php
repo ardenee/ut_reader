@@ -40,13 +40,22 @@ game_backup_expect(!is_dir($created['path']), 'Backup deletion did not remove th
 @rmdir($store->root());
 @rmdir($root);
 
-$handler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/GameBackupJobHandler.php');
-game_backup_expect(is_string($handler), 'Could not read game backup job handler.');
-game_backup_expect(str_contains($handler, 'copy($source, $destination)'), 'Game backup export is not using a normal file copy.');
-game_backup_expect(!preg_match('/(?<![A-Za-z])link\s*\(/', $handler), 'Game backup export must not create hard links or symbolic links.');
-game_backup_expect(str_contains($handler, 'tempnam($tempDirectory'), 'Backup import does not create an independent working copy.');
-game_backup_expect(str_contains($handler, "'defer_dependency_rebuild' => true"), 'Backup import does not defer per-file dependency rebuilds.');
-game_backup_expect(str_contains($handler, 'scanner_rebuild_game('), 'Backup import does not rebuild dependencies once after restore.');
+$importHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/GameBackupJobHandler.php');
+game_backup_expect(is_string($importHandler), 'Could not read game backup import handler.');
+game_backup_expect(str_contains($importHandler, 'tempnam($tempDirectory'), 'Backup import does not create an independent working copy.');
+game_backup_expect(str_contains($importHandler, "'defer_dependency_rebuild' => true"), 'Backup import does not defer per-file dependency rebuilds.');
+game_backup_expect(str_contains($importHandler, 'scanner_rebuild_game('), 'Backup import does not rebuild dependencies once after restore.');
+
+$exportHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/GameBackupExportJobHandler.php');
+game_backup_expect(is_string($exportHandler), 'Could not read game backup export handler.');
+game_backup_expect(str_contains($exportHandler, 'copy($source, $destination)'), 'Game backup export is not using a normal file copy.');
+game_backup_expect(!preg_match('/(?<![A-Za-z])link\s*\(/', $exportHandler), 'Game backup export must not create hard links or symbolic links.');
+game_backup_expect(str_contains($exportHandler, 'FROM ue_file_locations'), 'Game backup export ignores recorded source locations.');
+game_backup_expect(str_contains($exportHandler, 'selectRecordedPath'), 'Game backup export does not select the best recorded path.');
+game_backup_expect(str_contains($exportHandler, "'folder_policy' => 'recorded-paths-only'"), 'Game backup manifest does not identify its recorded-path-only folder policy.');
+game_backup_expect(str_contains($exportHandler, 'paths_from_locations'), 'Game backup export does not report source-location path use.');
+game_backup_expect(!str_contains($exportHandler, "'utx' => 'Textures'"), 'Game backup export guesses folders from file extensions.');
+game_backup_expect(!str_contains($exportHandler, "'u' => 'System'"), 'Game backup export guesses folders from file extensions.');
 
 $page = file_get_contents(__DIR__ . '/../game-backups.php');
 game_backup_expect(is_string($page), 'Could not read game backups page.');
@@ -60,24 +69,29 @@ game_backup_expect(is_string($types)
     && str_contains($types, 'IMPORT_GAME_BACKUP'), 'Game backup job types are not registered.');
 
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
-game_backup_expect(is_string($factory) && str_contains($factory, 'new GameBackupJobHandler('), 'Worker factory does not register the game backup handler.');
-$backupHandlerPosition = strpos($factory, 'new GameBackupJobHandler(');
-$maintenanceHandlerPosition = strpos($factory, 'new CatalogMaintenanceJobHandler(');
+game_backup_expect(is_string($factory), 'Could not read the worker factory.');
+$exportPosition = strpos($factory, 'new GameBackupExportJobHandler(');
+$backupPosition = strpos($factory, 'new GameBackupJobHandler(');
+$maintenancePosition = strpos($factory, 'new CatalogMaintenanceJobHandler(');
 game_backup_expect(
-    $backupHandlerPosition !== false
-    && $maintenanceHandlerPosition !== false
-    && $backupHandlerPosition < $maintenanceHandlerPosition,
-    'The catch-all maintenance handler intercepts game backup jobs before GameBackupJobHandler.'
+    $exportPosition !== false
+    && $backupPosition !== false
+    && $maintenancePosition !== false
+    && $exportPosition < $backupPosition
+    && $backupPosition < $maintenancePosition,
+    'Game backup export/import handlers are registered in the wrong order.'
 );
 
 foreach ([
     'new CatalogStorageMaintenanceJobHandler(',
     'new UnverifiedDuplicateCleanupJobHandler(',
     'new GeneratedPackageJobHandler(',
+    'new GameBackupExportJobHandler(',
+    'new GameBackupJobHandler(',
 ] as $specializedHandler) {
     $position = strpos($factory, $specializedHandler);
     game_backup_expect(
-        $position !== false && $maintenanceHandlerPosition !== false && $position < $maintenanceHandlerPosition,
+        $position !== false && $maintenancePosition !== false && $position < $maintenancePosition,
         'The catch-all maintenance handler intercepts specialized worker routing: ' . $specializedHandler
     );
 }
