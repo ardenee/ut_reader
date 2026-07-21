@@ -18,9 +18,11 @@ jobs:
       - name: Syntax check detached worker PHP
         run: |
           php -l catalog/lib/CatalogRedirectArchivePayload.php
+          php -l catalog/lib/CatalogSourceScan.php
           php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php
           php -l catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php
           php -l catalog/src/Infrastructure/Jobs/GameBackupExportJobHandler.php
