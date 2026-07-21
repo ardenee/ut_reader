@@ -45,7 +45,9 @@
             '.file-dependency-empty{padding:14px 0}',
             '.file-dependency-tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}',
             '.file-dependency-tab.is-active{outline:2px solid var(--blue);outline-offset:2px;background:rgba(118,169,255,.13)}',
-            '.file-dependency-panel[hidden]{display:none}'
+            '.file-dependency-panel[hidden]{display:none}',
+            '.file-pak-source-card table td{vertical-align:top}',
+            '.file-pak-source-card .pak-source-actions{white-space:nowrap}'
         ].join('\n');
         document.head.appendChild(style);
     }
@@ -252,6 +254,35 @@
         });
     }
 
+    function installPakSources(data) {
+        if (!data || !Array.isArray(data.paks) || !data.paks.length || document.querySelector('.file-pak-source-card')) return;
+        var rows = data.paks.map(function (pak) {
+            return '<tr>'
+                + '<td><a href="pak-info.php?id=' + encodeURIComponent(pak.id) + '"><strong>' + h(pak.name) + '</strong></a><br><span class="mono small">' + h(pak.mount_point) + '</span></td>'
+                + '<td class="mono path">' + h(pak.entry_path) + '<br><span class="small muted">entry #' + Number(pak.entry_index) + '</span></td>'
+                + '<td>' + h(pak.import_status) + '</td>'
+                + '<td>' + h(pak.size_text) + '</td>'
+                + '<td><span class="mono small">MD5 ' + h(pak.md5) + '</span><br><span class="mono small">SHA256 ' + h(pak.sha256) + '</span></td>'
+                + '<td class="pak-source-actions"><a class="button" href="pak-info.php?id=' + encodeURIComponent(pak.id) + '">View PAK</a> <a class="button" href="pak-download.php?id=' + encodeURIComponent(pak.id) + '">Download original PAK</a></td>'
+                + '</tr>';
+        }).join('');
+        var card = document.createElement('div');
+        card.className = 'card file-pak-source-card';
+        card.innerHTML = '<h2>Source PAK archive' + (data.paks.length === 1 ? '' : 's') + '</h2>'
+            + '<p class="muted">This package was extracted from the original self-contained PAK archive shown below.</p>'
+            + '<div class="ui-table-region"><table><thead><tr><th>Original PAK</th><th>Entry path</th><th>Import result</th><th>PAK size</th><th>Identity</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
+
+        var packageTables = document.getElementById('package-tables');
+        if (packageTables && packageTables.parentNode) {
+            packageTables.parentNode.insertBefore(card, packageTables);
+            return;
+        }
+        var firstCard = document.querySelector('main > .card, main .card');
+        if (firstCard) {
+            firstCard.insertAdjacentElement('afterend', card);
+        }
+    }
+
     addStyle();
     fetch('file-dependency-files.php?id=' + encodeURIComponent(fileId), {
         credentials: 'same-origin',
@@ -267,5 +298,18 @@
         installFileInfoDependencies(data);
     }).catch(function (error) {
         console.error('[UnrealDB file dependencies]', error);
+    });
+
+    fetch('file-pak-sources.php?id=' + encodeURIComponent(fileId), {
+        credentials: 'same-origin',
+        cache: 'no-store',
+        headers: {'Accept': 'application/json'}
+    }).then(function (response) {
+        return response.json().then(function (payload) {
+            if (!response.ok || !payload.ok) throw new Error(payload.error || 'Could not load source PAK references.');
+            return payload;
+        });
+    }).then(installPakSources).catch(function (error) {
+        console.error('[UnrealDB source PAK references]', error);
     });
 })();
