@@ -27,6 +27,14 @@ pak_archive_expect(str_contains($handler, 'createOrReset('), 'PAK import does no
 pak_archive_expect(str_contains($handler, 'addEntry('), 'PAK import does not record every index entry.');
 pak_archive_expect(str_contains($handler, 'updateEntry('), 'PAK entries are not linked to import results.');
 pak_archive_expect(str_contains($handler, "'source_pak_id' => \$pakId"), 'Package scanner metadata does not identify the source PAK.');
+pak_archive_expect(str_contains($handler, "'defer_dependency_rebuild' => true"), 'PAK imports rebuild dependencies once per package instead of deferring them.');
+pak_archive_expect(str_contains($handler, 'scanner_rebuild_game('), 'PAK imports do not perform one final game dependency refresh.');
+$retainPosition = strpos($handler, '$pakId = $archiveStore->createOrReset(');
+$extractPosition = strpos($handler, '$extracted = \\catalog_pak_archive_extract_to_temp(');
+pak_archive_expect(
+    $retainPosition !== false && $extractPosition !== false && $retainPosition < $extractPosition,
+    'The original PAK is not retained before entry extraction begins.'
+);
 pak_archive_expect(str_contains($handler, 'Original PAK retained'), 'PAK import completion does not report original retention.');
 
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
