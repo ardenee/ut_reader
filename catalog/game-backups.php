@@ -134,6 +134,11 @@ try {
         . 'FROM ue_background_jobs WHERE job_type IN (?,?) ORDER BY id DESC LIMIT 20',
         [JobType::EXPORT_GAME_BACKUP, JobType::IMPORT_GAME_BACKUP]
     );
+    $hasActiveBackupJobs = catalog_count(
+        $db,
+        'SELECT COUNT(*) c FROM ue_background_jobs WHERE job_type IN (?,?) AND status IN ("queued","running")',
+        [JobType::EXPORT_GAME_BACKUP, JobType::IMPORT_GAME_BACKUP]
+    ) > 0;
 
     catalog_head('Game Backups');
     catalog_page_header(
@@ -145,6 +150,9 @@ try {
     if (isset($_SESSION['game_backup_flash'])) {
         catalog_flash((string)$_SESSION['game_backup_flash']);
         unset($_SESSION['game_backup_flash']);
+    }
+    if ($hasActiveBackupJobs) {
+        echo '<div class="alert info" id="game-backup-auto-refresh">A backup export or import is active. This page refreshes automatically every 5 seconds.</div>';
     }
 
     echo '<div class="card"><h2>Create game backup</h2>';
@@ -224,6 +232,42 @@ try {
     echo '</div>';
 
     echo '<div class="card"><h2>Restore behaviour</h2><p>The importer verifies every backup file against the manifest, makes a temporary working copy, and imports that copy. It uses the original logical filename from the manifest, so an exported Name (2).ext variation is restored under its recorded original name. It never moves, renames, hard-links, or modifies files inside the backup. Canonical files are restored before aliases, and dependency links are rebuilt once at the end when selected.</p></div>';
+
+    if ($hasActiveBackupJobs) {
+        echo <<<'HTML'
+<script>
+(() => {
+    const refreshDelayMs = 5000;
+    const scrollKey = 'unrealdb-game-backups-scroll-y';
+    const previousScroll = sessionStorage.getItem(scrollKey);
+    if (previousScroll !== null) {
+        sessionStorage.removeItem(scrollKey);
+        requestAnimationFrame(() => window.scrollTo(0, Number(previousScroll) || 0));
+    }
+
+    const refreshPage = () => {
+        if (document.visibilityState !== 'visible') {
+            return;
+        }
+        const activeElement = document.activeElement;
+        if (activeElement && /^(INPUT|SELECT|TEXTAREA)$/.test(activeElement.tagName)) {
+            window.setTimeout(refreshPage, refreshDelayMs);
+            return;
+        }
+        sessionStorage.setItem(scrollKey, String(window.scrollY));
+        window.location.reload();
+    };
+
+    window.setTimeout(refreshPage, refreshDelayMs);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            window.setTimeout(refreshPage, 250);
+        }
+    });
+})();
+</script>
+HTML;
+    }
 
     catalog_foot();
 } catch (Throwable $error) {
