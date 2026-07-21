@@ -45,6 +45,25 @@ foreach (['acquireWorkerLock', 'stopRequested', 'CatalogJobWorkerFactory::create
     detached_worker_expect(str_contains($workerScript, $fragment), 'Detached worker script is missing ' . $fragment);
 }
 
+$jobTypes = file_get_contents(__DIR__ . '/../src/Domain/Jobs/JobType.php');
+detached_worker_expect(is_string($jobTypes), 'Job type registry could not be read.');
+detached_worker_expect(str_contains($jobTypes, "SOURCE_SCAN = 'catalog.source.scan'"), 'Durable source scan job type is not registered.');
+
+$workerFactory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
+detached_worker_expect(is_string($workerFactory), 'Catalog worker factory could not be read.');
+detached_worker_expect(str_contains($workerFactory, 'new CatalogSourceScanJobHandler'), 'Catalog worker factory does not register source scan jobs.');
+
+$sourceHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php');
+detached_worker_expect(is_string($sourceHandler), 'Source scan job handler could not be read.');
+detached_worker_expect(str_contains($sourceHandler, 'JobType::SOURCE_SCAN'), 'Source scan handler does not claim the durable source scan type.');
+detached_worker_expect(str_contains($sourceHandler, 'catalog_source_scan_run'), 'Source scan handler does not execute the reusable scanner.');
+detached_worker_expect(str_contains($sourceHandler, 'heartbeatIfDue'), 'Source scan handler does not renew its worker lease during long scans.');
+
+$sourceScanner = file_get_contents(__DIR__ . '/../lib/CatalogSourceScan.php');
+detached_worker_expect(is_string($sourceScanner), 'Reusable source scanner could not be read.');
+detached_worker_expect(str_contains($sourceScanner, 'catalog_source_scan_run'), 'Reusable source scanner entrypoint is missing.');
+detached_worker_expect(str_contains($sourceScanner, "'stage' => 'complete'"), 'Reusable source scanner does not report completion progress.');
+
 $upload = file_get_contents(__DIR__ . '/../profiled-upload.php');
 detached_worker_expect(is_string($upload), 'Profiled upload page could not be read.');
 detached_worker_expect(str_contains($upload, 'CatalogDetachedWorker'), 'Profiled upload does not auto-start the detached worker.');
