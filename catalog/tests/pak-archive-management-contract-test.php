@@ -29,13 +29,20 @@ pak_archive_expect(str_contains($handler, 'updateEntry('), 'PAK entries are not 
 pak_archive_expect(str_contains($handler, "'source_pak_id' => \$pakId"), 'Package scanner metadata does not identify the source PAK.');
 pak_archive_expect(str_contains($handler, "'defer_dependency_rebuild' => true"), 'PAK imports rebuild dependencies once per package instead of deferring them.');
 pak_archive_expect(str_contains($handler, 'scanner_rebuild_game('), 'PAK imports do not perform one final game dependency refresh.');
+pak_archive_expect(str_contains($handler, 'in_array($engineMajor, [4, 5], true)'), 'PAK handler does not accept both UE4 and UE5 game profiles.');
+pak_archive_expect(str_contains($handler, 'UE4 or UE5 game profiles'), 'PAK handler error text does not describe UE4/UE5 support.');
 $retainPosition = strpos($handler, '$pakId = $archiveStore->createOrReset(');
 $extractPosition = strpos($handler, '$extracted = \\catalog_pak_archive_extract_to_temp(');
 pak_archive_expect(
     $retainPosition !== false && $extractPosition !== false && $retainPosition < $extractPosition,
     'The original PAK is not retained before entry extraction begins.'
 );
-pak_archive_expect(str_contains($handler, 'Original PAK retained'), 'PAK import completion does not report original retention.');
+pak_archive_expect(str_contains($handler, 'PAK retained; archive entries and extracted packages were cataloged'), 'PAK import completion does not report original retention.');
+
+$importPage = file_get_contents(__DIR__ . '/../pak-import.php');
+pak_archive_expect(is_string($importPage), 'Could not read PAK import page.');
+pak_archive_expect(str_contains($importPage, "preg_match('/^UE[45]/i"), 'PAK import request validation does not accept UE4 and UE5.');
+pak_archive_expect(str_contains($importPage, 'UE5 IoStore .utoc/.ucas'), 'PAK import page does not distinguish UE5 IoStore from PAK support.');
 
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 pak_archive_expect(is_string($factory), 'Could not read worker factory.');
@@ -50,8 +57,13 @@ foreach (['paks.php', 'game-paks.php', 'pak-info.php', 'pak-download.php', 'pak-
     pak_archive_expect(is_file(__DIR__ . '/../' . $page), 'PAK management page is missing: ' . $page);
 }
 
+$globalPaks = file_get_contents(__DIR__ . '/../paks.php');
+pak_archive_expect(is_string($globalPaks), 'Could not read global PAK page.');
+pak_archive_expect(str_contains($globalPaks, 'UE4 and UE5 game PAK collections'), 'Global PAK page does not list both UE4 and UE5 games.');
+
 $gamePaks = file_get_contents(__DIR__ . '/../game-paks.php');
 pak_archive_expect(is_string($gamePaks), 'Could not read game PAK list.');
+pak_archive_expect(str_contains($gamePaks, 'in_array($engineMajor, [4, 5], true)'), 'Game PAK list does not accept UE4 and UE5 games.');
 pak_archive_expect(str_contains($gamePaks, 'PAKs are not mixed into the extracted file list'), 'Game PAK list does not keep PAKs separate from files.');
 
 $pakInfo = file_get_contents(__DIR__ . '/../pak-info.php');
@@ -70,8 +82,8 @@ pak_archive_expect(str_contains($dependencyUi, 'Download original PAK'), 'File p
 
 $ui = file_get_contents(__DIR__ . '/../src/Presentation/Ui/CatalogUi.php');
 pak_archive_expect(is_string($ui), 'Could not read UI facade.');
-pak_archive_expect(str_contains($ui, "'game-files.php', 'game-paks.php'"), 'Game content pages do not expose Files/PAK switching.');
-pak_archive_expect(str_contains($ui, "str_starts_with(\$engineKey, 'UE4')"), 'PAK switching is not limited to UE4 games.');
+pak_archive_expect(str_contains($ui, "['game-files.php', 'game-paks.php', 'game-upks.php']"), 'Game content pages do not expose container switching.');
+pak_archive_expect(str_contains($ui, 'in_array($engineMajor, [4, 5], true)'), 'PAK switching is not enabled for UE4 and UE5 games.');
 
 $download = file_get_contents(__DIR__ . '/../pak-download.php');
 pak_archive_expect(is_string($download), 'Could not read PAK download controller.');
