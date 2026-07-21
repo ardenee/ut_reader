@@ -59,7 +59,7 @@ game_backup_expect(str_contains($exportHandler, "'utx' => 'Textures'"), 'Texture
 game_backup_expect(str_contains($exportHandler, "'uax', 'est_uax', 'frt_uax', 'itt_uax' => 'Sounds'"), 'Sound packages are not routed to Sounds.');
 game_backup_expect(str_contains($exportHandler, "'umx' => 'Music'"), 'Music packages are not routed to Music.');
 game_backup_expect(str_contains($exportHandler, 'allocateUniqueRelativePath'), 'Same-name backup variations are not assigned unique filenames.');
-game_backup_expect(str_contains($exportHandler, "' (' . $number . ')'"), 'Same-name backup variations do not use a numeric suffix before the extension.');
+game_backup_expect(str_contains($exportHandler, "' (' . \$number . ')'"), 'Same-name backup variations do not use a numeric suffix before the extension.');
 game_backup_expect(str_contains($exportHandler, "'same_name_policy' => 'numeric-suffix-before-extension'"), 'Backup manifest does not record the variation naming policy.');
 game_backup_expect(!str_contains($exportHandler, '_Conflicts/'), 'Game backup export still creates a _Conflicts directory.');
 game_backup_expect(!str_contains($exportHandler, 'conflictRelativePath'), 'Game backup export still routes variations to a conflict path.');
