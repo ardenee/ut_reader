@@ -55,8 +55,8 @@ function pak_import_enqueue(PDO $db, array $config): array
         'SELECT g.id,p.engine_key FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id WHERE g.id=?',
         [$gameId]
     ) : null;
-    if (!$game || preg_match('/^UE4/i', trim((string)$game['engine_key'])) !== 1) {
-        throw new RuntimeException('Choose a valid UE4 target game.');
+    if (!$game || preg_match('/^UE[45]/i', trim((string)$game['engine_key'])) !== 1) {
+        throw new RuntimeException('Choose a valid UE4 or UE5 target game.');
     }
 
     $source = pak_import_source();
@@ -134,7 +134,8 @@ try {
         $db,
         'SELECT g.id,g.name,p.engine_key profile_engine FROM ue_games g '
         . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-        . 'WHERE UPPER(p.engine_key) LIKE "UE4%" ORDER BY g.name'
+        . 'WHERE UPPER(p.engine_key) LIKE "UE4%" OR UPPER(p.engine_key) LIKE "UE5%" '
+        . 'ORDER BY g.name'
     );
 
     catalog_head('PAK Import');
@@ -142,14 +143,18 @@ try {
     unset($_SESSION['pak_import_flash']);
     catalog_page_header(
         'PAK Import',
-        'The original UE4 PAK is retained as a self-contained downloadable archive while its entries are extracted and cataloged separately.',
+        'The original UE4 or UE5 PAK is retained as a self-contained downloadable archive while its entries are extracted and cataloged separately.',
         ['PAK Archives' => 'paks.php', 'Background Jobs' => 'background-jobs.php', 'Upload Files' => 'profiled-upload.php', 'Unverified Files' => 'unverified-files.php']
     );
 
     if (!CatalogPakArchiveStore::schemaInstalled($db)) {
         echo CatalogUi::alert('warning', 'PAK archive management is not installed. Run php catalog/bin/migrate.php migrate before importing PAK files.');
     } else {
-        echo CatalogUi::alert('info', 'Original PAK retention enabled.', 'The PAK container is copied into durable game storage. Every index entry is recorded and standalone packages link back to that original archive. Encrypted, Oodle and IOStore containers remain unsupported.');
+        echo CatalogUi::alert(
+            'info',
+            'Original PAK retention enabled for UE4 and UE5.',
+            'The PAK container is copied into durable game storage. Every readable index entry is recorded and standalone packages link back to that original archive. Encrypted indexes, unsupported compression, and UE5 IoStore .utoc/.ucas containers remain separate and unsupported by this PAK importer.'
+        );
     }
 
     if ($jobId > 0) {
@@ -161,10 +166,10 @@ try {
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Retain and import PAK</h2><p>Use an uploaded file or a readable local server path.</p></div></div><div class="ui-section__body">';
     if ($games === []) {
-        echo CatalogUi::emptyState('No UE4 target games', 'Create a game or assign a UE4 profile before importing PAK archives.', ['label' => 'Game manager', 'href' => 'game-manager.php'], '▣');
+        echo CatalogUi::emptyState('No UE4 or UE5 target games', 'Create a game or assign a UE4/UE5 profile before importing PAK archives.', ['label' => 'Game manager', 'href' => 'game-manager.php'], '▣');
     } else {
         echo '<form method="post" enctype="multipart/form-data" data-ui-loading-form><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('pak-import')) . '">';
-        echo '<p><label>Target UE4 game<br><select name="game_id" required><option value="">Choose target game</option>';
+        echo '<p><label>Target UE4/UE5 game<br><select name="game_id" required><option value="">Choose target game</option>';
         foreach ($games as $game) {
             echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $selectedGameId ? ' selected' : '') . '>'
                 . catalog_h((string)$game['name'] . ' / ' . (string)$game['profile_engine']) . '</option>';
