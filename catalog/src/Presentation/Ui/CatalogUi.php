@@ -30,7 +30,32 @@ final class CatalogUi
     /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
     public static function pageHeader(string $title, string $description = '', array $actions = []): string
     {
+        $actions = self::gameContentSwitchActions($actions);
         return PageHeader::render($title, $description, $actions);
+    }
+
+    /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
+    private static function gameContentSwitchActions(array $actions): array
+    {
+        $script = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+        if (!in_array($script, ['game-files.php', 'game-paks.php'], true)) {
+            return $actions;
+        }
+        $gameId = (int)($_GET['id'] ?? 0);
+        if ($gameId < 1 || array_is_list($actions)) {
+            return $actions;
+        }
+
+        $switch = [
+            'Files' => 'game-files.php?id=' . $gameId,
+            'PAK archives' => 'game-paks.php?id=' . $gameId,
+        ];
+        foreach ($actions as $label => $href) {
+            if (!isset($switch[$label])) {
+                $switch[$label] = $href;
+            }
+        }
+        return $switch;
     }
 
     /** @param array{href?:string,type?:string,variant?:string,size?:string,disabled?:bool,class?:string,attributes?:array<string,scalar|null>} $options */
