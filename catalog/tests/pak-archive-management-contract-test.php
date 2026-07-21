@@ -38,7 +38,7 @@ pak_archive_expect(
     'Archive-aware PAK handler is not registered before the generic staged-import handler.'
 );
 
-foreach (['paks.php', 'game-paks.php', 'pak-info.php', 'pak-download.php', 'pak-maintenance.php'] as $page) {
+foreach (['paks.php', 'game-paks.php', 'pak-info.php', 'pak-download.php', 'pak-maintenance.php', 'file-pak-sources.php'] as $page) {
     pak_archive_expect(is_file(__DIR__ . '/../' . $page), 'PAK management page is missing: ' . $page);
 }
 
@@ -51,9 +51,19 @@ pak_archive_expect(is_string($pakInfo), 'Could not read PAK detail page.');
 pak_archive_expect(str_contains($pakInfo, 'Every PAK index entry is listed'), 'PAK detail page does not expose complete contents.');
 pak_archive_expect(str_contains($pakInfo, 'file-info.php?id='), 'PAK entries do not link to extracted package information.');
 
+$fileSources = file_get_contents(__DIR__ . '/../file-pak-sources.php');
+pak_archive_expect(is_string($fileSources), 'Could not read file PAK source endpoint.');
+pak_archive_expect(str_contains($fileSources, 'WHERE e.file_id=?'), 'Extracted files cannot look up their source PAK entries.');
+
+$dependencyUi = file_get_contents(__DIR__ . '/../assets/file-dependency-display.js');
+pak_archive_expect(is_string($dependencyUi), 'Could not read file relationship UI script.');
+pak_archive_expect(str_contains($dependencyUi, 'file-pak-sources.php?id='), 'File pages do not load source PAK references.');
+pak_archive_expect(str_contains($dependencyUi, 'Download original PAK'), 'File pages do not link back to the retained original PAK.');
+
 $ui = file_get_contents(__DIR__ . '/../src/Presentation/Ui/CatalogUi.php');
 pak_archive_expect(is_string($ui), 'Could not read UI facade.');
 pak_archive_expect(str_contains($ui, "'game-files.php', 'game-paks.php'"), 'Game content pages do not expose Files/PAK switching.');
+pak_archive_expect(str_contains($ui, "str_starts_with(\$engineKey, 'UE4')"), 'PAK switching is not limited to UE4 games.');
 
 $download = file_get_contents(__DIR__ . '/../pak-download.php');
 pak_archive_expect(is_string($download), 'Could not read PAK download controller.');
