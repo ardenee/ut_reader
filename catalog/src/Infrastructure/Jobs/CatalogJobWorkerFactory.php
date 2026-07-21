@@ -28,6 +28,7 @@ final class CatalogJobWorkerFactory
                     new CatalogStagedImportJobHandler($db, $config),
                     $config
                 ),
+                new CatalogSourceScanJobHandler($db, $config),
                 new CatalogStorageMaintenanceJobHandler($db, $config),
                 new UnverifiedDuplicateCleanupJobHandler($db, $config),
                 new GeneratedPackageJobHandler($db, $config),
