@@ -57,7 +57,9 @@ try {
         $like = '%' . $filter . '%';
         array_push($args, $like, $like, $like, $like);
     }
-    if ($classFilter !== '') {
+    if ($classFilter === 'unknown') {
+        $where .= ' AND (e.class_name IS NULL OR e.class_name="")';
+    } elseif ($classFilter !== '') {
         $where .= ' AND e.class_name=?';
         $args[] = $classFilter;
     }
