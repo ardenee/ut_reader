@@ -35,7 +35,11 @@ function game_paks_url(array $params): string
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    $gameId = game_paks_int('id', 0, 1, PHP_INT_MAX);
+    $gameId = game_paks_int('id', 0, 0, PHP_INT_MAX);
+    if ($gameId < 1) {
+        header('Location: paks.php');
+        exit;
+    }
     $game = catalog_one(
         $db,
         'SELECT g.id,g.name,g.slug,p.engine_key profile_engine FROM ue_games g '
@@ -58,7 +62,7 @@ try {
         exit;
     }
 
-    if (game_paks_engine_major((string)($game['profile_engine'] ?? '')) < 4) {
+    if (game_paks_engine_major((string)($game['profile_engine'] ?? '')) !== 4) {
         echo CatalogUi::pageHeader(
             (string)$game['name'],
             'PAK archives are managed for UE4 game profiles.',
@@ -108,6 +112,11 @@ try {
             'Back to games' => 'games.php',
         ]
     );
+
+    if (isset($_SESSION['pak_maintenance_flash'])) {
+        catalog_flash((string)$_SESSION['pak_maintenance_flash']);
+        unset($_SESSION['pak_maintenance_flash']);
+    }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>PAK archives</h2><p>'
         . number_format($total) . ' original archive(s). PAKs are not mixed into the extracted file list.</p></div></div><div class="ui-section__body">';
