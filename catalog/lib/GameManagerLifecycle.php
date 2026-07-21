@@ -84,11 +84,26 @@ function gm_lifecycle_optimise_tables(
 
         try {
             $statement = $db->query('OPTIMIZE TABLE `' . str_replace('`', '``', $table) . '`');
-            if ($statement !== false) {
-                do {
-                    $statement->fetchAll(PDO::FETCH_ASSOC);
-                } while ($statement->nextRowset());
-                $statement->closeCursor();
+            if ($statement === false) {
+                throw new RuntimeException('OPTIMIZE TABLE returned no result.');
+            }
+
+            $reportedErrors = [];
+            do {
+                $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+                foreach ($rows as $row) {
+                    $messageType = strtolower(trim((string)($row['Msg_type'] ?? $row['msg_type'] ?? '')));
+                    if ($messageType !== 'error') {
+                        continue;
+                    }
+                    $messageText = trim((string)($row['Msg_text'] ?? $row['msg_text'] ?? 'Unknown database optimisation error.'));
+                    $reportedErrors[] = $messageText !== '' ? $messageText : 'Unknown database optimisation error.';
+                }
+            } while ($statement->nextRowset());
+            $statement->closeCursor();
+
+            if ($reportedErrors !== []) {
+                throw new RuntimeException(implode('; ', array_unique($reportedErrors)));
             }
             $optimised[] = $table;
         } catch (Throwable $error) {
@@ -123,7 +138,8 @@ function gm_lifecycle_unverified_rows(PDO $db, int $gameId): array
         catalog_all(
             $db,
             'SELECT id,relative_path,file_size FROM ue_files '
-            . 'WHERE unverified_queue_game_id=? ORDER BY id',
+            . 'WHERE game_id IS NULL AND scan_status="unverified" '
+            . 'AND unverified_queue_game_id=? ORDER BY id',
             [$gameId]
         )
     );
@@ -151,12 +167,14 @@ function gm_lifecycle_remove_staged_storage(array $config, array $rows): int
             continue;
         }
 
-        if (@unlink($resolved)) {
-            $removed++;
+        if (!@unlink($resolved)) {
+            throw new RuntimeException('Could not remove staged game file: ' . $resolved);
         }
+        $removed++;
+
         $note = $resolved . '.txt';
-        if (is_file($note) && str_starts_with($note, $storagePrefix)) {
-            @unlink($note);
+        if (is_file($note) && str_starts_with($note, $storagePrefix) && !@unlink($note)) {
+            throw new RuntimeException('Could not remove staged game-file note: ' . $note);
         }
     }
 
