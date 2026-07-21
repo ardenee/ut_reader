@@ -38,7 +38,7 @@ final class CatalogUi
     private static function gameContentSwitchActions(array $actions): array
     {
         $script = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
-        if (!in_array($script, ['game-files.php', 'game-paks.php'], true)) {
+        if (!in_array($script, ['game-files.php', 'game-paks.php', 'game-upks.php'], true)) {
             return $actions;
         }
         $gameId = (int)($_GET['id'] ?? 0);
@@ -46,18 +46,24 @@ final class CatalogUi
             return $actions;
         }
 
-        if ($script === 'game-files.php') {
-            $game = is_array($GLOBALS['game'] ?? null) ? $GLOBALS['game'] : [];
-            $engineKey = strtoupper(trim((string)($game['profile_engine'] ?? $game['engine_key'] ?? '')));
-            if (!str_starts_with($engineKey, 'UE4')) {
-                return $actions;
-            }
+        $game = is_array($GLOBALS['game'] ?? null) ? $GLOBALS['game'] : [];
+        $engineKey = strtoupper(trim((string)($game['profile_engine'] ?? $game['engine_key'] ?? '')));
+        $engineMajor = preg_match('/UE\s*([0-9]+)/i', $engineKey, $match) === 1 ? (int)$match[1] : 0;
+
+        if ($engineMajor === 3) {
+            $switch = [
+                'Files' => 'game-files.php?id=' . $gameId,
+                'UPK packages' => 'game-upks.php?id=' . $gameId,
+            ];
+        } elseif (in_array($engineMajor, [4, 5], true)) {
+            $switch = [
+                'Files' => 'game-files.php?id=' . $gameId,
+                'PAK archives' => 'game-paks.php?id=' . $gameId,
+            ];
+        } else {
+            return $actions;
         }
 
-        $switch = [
-            'Files' => 'game-files.php?id=' . $gameId,
-            'PAK archives' => 'game-paks.php?id=' . $gameId,
-        ];
         foreach ($actions as $label => $href) {
             if (!isset($switch[$label])) {
                 $switch[$label] = $href;
