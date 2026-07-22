@@ -24,6 +24,8 @@ try {
     $store = new CatalogChunkedUploadStore($application->config);
 
     if ($action === 'init') {
+        // Clear abandoned browser uploads before accepting another large container.
+        $store->prune();
         $gameId = (int)($_POST['game_id'] ?? 0);
         $game = $gameId > 0 ? catalog_one(
             $application->db,
