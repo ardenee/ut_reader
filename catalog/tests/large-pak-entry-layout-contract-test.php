@@ -11,8 +11,8 @@ function large_pak_entry_layout_expect(bool $condition, string $message): void
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 large_pak_entry_layout_expect(is_string($factory), 'Could not read the job worker factory.');
 foreach ([
-    "$pakImportConfig = $config;",
-    "$pakImportConfig['max_upload_bytes'] = PHP_INT_MAX;",
+    '$pakImportConfig = $config;',
+    '$pakImportConfig[\'max_upload_bytes\'] = PHP_INT_MAX;',
     'new CatalogPakImportJobHandler($db, $pakImportConfig)',
 ] as $fragment) {
     large_pak_entry_layout_expect(
