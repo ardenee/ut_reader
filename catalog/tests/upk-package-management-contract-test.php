@@ -38,7 +38,6 @@ foreach ([
     'file-examine.php?id=',
     'download.php?id=',
     'file-maintenance.php',
-    'indexed_exports',
     'serialized_export_bytes',
     'title="Names / Imports / Exports">N/I/E',
     'name_count',
@@ -49,6 +48,7 @@ foreach ([
 ] as $fragment) {
     upk_package_expect(str_contains($game, $fragment), 'Game UPK page is missing: ' . $fragment);
 }
+upk_package_expect(!str_contains($game, 'indexed_exports'), 'Game UPK page still runs the obsolete per-row export count query.');
 upk_package_expect(!str_contains($game, '>Contents</th>'), 'Game UPK page still uses the old Contents column.');
 upk_package_expect(!str_contains($game, '>Imported</th>'), 'Game UPK page still includes the Imported column.');
 upk_package_expect(!str_contains($game, '>View contents</a>'), 'Game UPK actions still include the redundant View contents link.');
