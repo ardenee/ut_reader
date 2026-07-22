@@ -49,37 +49,33 @@ function jmp_allow_self_signed_tls(PDO $db): bool
 
 function jmp_post_json(PDO $db, string $url, array $payload): array
 {
-    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($body === false) {
-        throw new RuntimeException('Could not encode JSON.');
+    try {
+        $body = json_encode(
+            $payload,
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+        );
+    } catch (JsonException $error) {
+        throw new RuntimeException('Could not encode federation join request.', 0, $error);
     }
 
     $allowSelfSigned = jmp_allow_self_signed_tls($db);
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: application/json\r\nUser-Agent: UnrealFileCatalogFederation/1.0\r\n",
-            'content' => $body,
-            'timeout' => 60,
-            'ignore_errors' => true,
-        ],
-        'ssl' => [
-            'verify_peer' => !$allowSelfSigned,
-            'verify_peer_name' => !$allowSelfSigned,
-            'allow_self_signed' => $allowSelfSigned,
-        ],
-    ]);
-    $response = @file_get_contents($url, false, $context);
-    if ($response === false) {
-        $lastError = error_get_last();
-        $detail = is_array($lastError) ? trim((string)($lastError['message'] ?? '')) : '';
-        throw new RuntimeException('POST failed: ' . $url . ($detail !== '' ? ' — ' . $detail : ''));
+    TrustedHttpSourceClient::configureFederationTesting($allowSelfSigned);
+
+    try {
+        return TrustedHttpSourceClient::postJson(
+            $url,
+            [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'User-Agent: UnrealFileCatalogFederation/2.0',
+            ],
+            $body,
+            1048576,
+            60
+        );
+    } catch (Throwable $error) {
+        throw new RuntimeException('POST failed: ' . $url . ' — ' . $error->getMessage(), 0, $error);
     }
-    $json = json_decode($response, true);
-    if (!is_array($json)) {
-        throw new RuntimeException('Invalid JSON response: ' . substr($response, 0, 300));
-    }
-    return $json;
 }
 
 try {
@@ -116,6 +112,7 @@ try {
                 'contact_name' => trim((string)($_POST['contact_name'] ?? '')),
                 'contact_email' => trim((string)($_POST['contact_email'] ?? '')),
                 'notes' => trim((string)($_POST['notes'] ?? 'Automatic join request to parent.')),
+                'self_signed_tls_requested' => jmp_allow_self_signed_tls($db),
             ];
             if ($payload['site_name'] === '' || $payload['site_url'] === '' || $payload['site_fingerprint'] === '') {
                 throw new RuntimeException('Local federation identity is incomplete. Set site_name and site_url in federation settings first.');
