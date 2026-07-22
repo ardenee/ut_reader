@@ -37,6 +37,7 @@ jobs:
           php -l catalog/src/Infrastructure/Jobs/GameBackupJobHandler.php
           php -l catalog/src/Infrastructure/Storage/CatalogPakArchiveStore.php
           php -l catalog/src/Infrastructure/Storage/GameBackupStore.php
+          php -l catalog/src/Presentation/Http/LegacySupportHooks.php
           php -l catalog/src/Presentation/Ui/CatalogUi.php
           php -l catalog/migrations/202607210001_pak_archive_management.php
           php -l catalog/bin/catalog-worker-detached.php
@@ -55,6 +56,8 @@ jobs:
           php -l catalog/paks.php
           php -l catalog/game-paks.php
           php -l catalog/pak-info.php
+          php -l catalog/upk-info.php
+          php -l catalog/file-info.php
           php -l catalog/pak-download.php
           php -l catalog/pak-maintenance.php
           php -l catalog/file-pak-sources.php
