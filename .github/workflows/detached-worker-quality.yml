@@ -73,6 +73,7 @@ jobs:
           php -l catalog/tests/live-pak-job-events-contract-test.php
           php -l catalog/tests/large-pak-entry-layout-contract-test.php
           php -l catalog/tests/file-identity-display-contract-test.php
+          php -l catalog/tests/file-page-layout-contract-test.php
           php -l tests/catalog_redirect_payload_test.php
       - name: Syntax check detached worker clients
         run: |
@@ -82,6 +83,7 @@ jobs:
           node --check catalog/assets/pak-import-jobs.js
           node --check catalog/assets/file-dependency-display.js
           node --check catalog/assets/catalog-identities.js
+          node --check catalog/assets/catalog-layout-fixes.js
       - name: Verify detached worker contract
         run: php catalog/tests/detached-worker-contract-test.php
       - name: Verify background job controls contract
@@ -100,5 +102,7 @@ jobs:
         run: php catalog/tests/large-pak-entry-layout-contract-test.php
       - name: Verify canonical file identity displays
         run: php catalog/tests/file-identity-display-contract-test.php
+      - name: Verify file page layout fixes
+        run: php catalog/tests/file-page-layout-contract-test.php
       - name: Verify generic redirect payload decoding
         run: php tests/catalog_redirect_payload_test.php
