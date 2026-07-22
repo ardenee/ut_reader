@@ -37,13 +37,12 @@ try {
                 COALESCE(f.is_compressed,0) is_compressed,
                 COALESCE(f.compression_flags,0) compression_flags,
                 COALESCE(f.import_count,0) import_count,
-                COALESCE(f.export_count,0) export_count,
-                CASE WHEN bg.id IS NULL THEN 0 ELSE 1 END base_game_protected
+                COALESCE(f.export_count,0) export_count
          FROM ue_files f
          JOIN ue_games g ON g.id=f.game_id
          LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
          LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
-         WHERE f.scan_status="verified" AND f.id>?
+         WHERE f.scan_status="verified" AND f.id>? AND bg.id IS NULL
          ORDER BY f.id
          LIMIT ' . $limit,
         [$afterFileId]
@@ -70,12 +69,11 @@ try {
             'compression_flags' => (int)$row['compression_flags'],
             'import_count' => (int)$row['import_count'],
             'export_count' => (int)$row['export_count'],
-            'base_game_protected' => (int)$row['base_game_protected'],
         ];
     }
 
     $identity = fed_ensure_identity($db);
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_READ_BY_PARENT', 'Returned ' . count($files) . ' inventory row(s) after file ID ' . $afterFileId . '.');
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_READ_BY_PARENT', 'Returned ' . count($files) . ' transferable inventory row(s) after file ID ' . $afterFileId . '.');
     fed_json_response([
         'ok' => true,
         'site' => [
