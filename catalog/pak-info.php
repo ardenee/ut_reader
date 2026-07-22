@@ -94,6 +94,42 @@ try {
     );
 
     catalog_head((string)$pak['original_name']);
+    echo <<<'CSS'
+<style>
+.pak-info-natural-table {
+    width: 100%;
+    min-width: 0 !important;
+    table-layout: auto;
+}
+
+.pak-info-natural-table th,
+.pak-info-natural-table td {
+    min-width: 0;
+    max-width: none;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.pak-info-natural-table .path,
+.pak-info-natural-table .mono {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+.pak-info-table-region > table {
+    min-width: 0 !important;
+}
+
+.pak-info-notes {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+</style>
+CSS;
     echo CatalogUi::pageHeader(
         (string)$pak['original_name'],
         (string)$pak['game_name'] . ' original self-contained PAK archive.',
@@ -117,7 +153,7 @@ try {
     catalog_stat_card('Archive size', catalog_bytes((int)$pak['file_size']));
     echo '</div>';
 
-    echo '<div class="card"><h2>Original PAK details</h2><table>';
+    echo '<div class="card"><h2>Original PAK details</h2><table class="pak-info-natural-table">';
     echo '<tr><th>Game</th><td><a href="game-paks.php?id=' . (int)$pak['game_id'] . '">' . catalog_h((string)$pak['game_name']) . '</a></td></tr>';
     echo '<tr><th>Original filename</th><td>' . catalog_h((string)$pak['original_name']) . '</td></tr>';
     echo '<tr><th>Mount point</th><td class="mono path">' . catalog_h((string)$pak['mount_point']) . '</td></tr>';
@@ -138,7 +174,7 @@ try {
     echo '</div>';
 
     if (trim((string)$pak['scan_notes']) !== '') {
-        echo '<div class="card"><h2>PAK extraction notes</h2><pre class="mono">' . catalog_h((string)$pak['scan_notes']) . '</pre></div>';
+        echo '<div class="card"><h2>PAK extraction notes</h2><pre class="mono pak-info-notes">' . catalog_h((string)$pak['scan_notes']) . '</pre></div>';
     }
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Archive contents</h2><p>'
@@ -168,7 +204,7 @@ try {
     if ($entries === []) {
         echo CatalogUi::emptyState('No entries found', 'No PAK entries match the selected filters.', ['label' => 'Clear filters', 'href' => 'pak-info.php?id=' . $pakId], '⌕');
     } else {
-        echo '<div class="ui-table-region"><table><thead><tr><th>#</th><th>Entry path</th><th>Package link</th><th>Import status</th><th>Compression</th><th>Stored / unpacked</th><th>Entry identity</th><th>Message</th></tr></thead><tbody>';
+        echo '<div class="ui-table-region pak-info-table-region"><table class="pak-info-natural-table"><thead><tr><th>#</th><th>Entry path</th><th>Package link</th><th>Import status</th><th>Compression</th><th>Stored / unpacked</th><th>Entry identity</th><th>Message</th></tr></thead><tbody>';
         foreach ($entries as $entry) {
             $package = '<span class="muted">not a catalog package</span>';
             if ((int)($entry['file_id'] ?? 0) > 0) {
@@ -187,7 +223,7 @@ try {
             echo '<td>' . CatalogUi::badge((string)$entry['import_status'], $entryTone) . '</td>';
             echo '<td>' . catalog_h(pak_info_compression_label((int)$entry['compression_method']))
                 . (!empty($entry['is_encrypted']) ? '<br>' . CatalogUi::badge('encrypted', 'danger') : '') . '</td>';
-            echo '<td class="nowrap">' . catalog_h(catalog_bytes((int)$entry['stored_size'])) . '<br><span class="small muted">' . catalog_h(catalog_bytes((int)$entry['uncompressed_size'])) . '</span></td>';
+            echo '<td>' . catalog_h(catalog_bytes((int)$entry['stored_size'])) . '<br><span class="small muted">' . catalog_h(catalog_bytes((int)$entry['uncompressed_size'])) . '</span></td>';
             echo '<td><span class="mono small">SHA1 ' . catalog_h((string)$entry['entry_hash']) . '</span>'
                 . ((int)($entry['file_id'] ?? 0) > 0 ? '<br><span class="mono small">MD5 ' . catalog_h((string)$entry['file_md5']) . '</span>' : '') . '</td>';
             echo '<td class="small">' . catalog_h((string)$entry['import_message']) . '</td>';
