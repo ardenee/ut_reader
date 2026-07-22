@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
@@ -20,6 +19,11 @@ function tr_safe_name(string $name): string
 {
     $name = preg_replace('/[^A-Za-z0-9._-]+/', '_', basename($name)) ?? 'download.bin';
     return $name !== '' ? $name : 'download.bin';
+}
+
+function tr_allow_self_signed_tls(PDO $db): bool
+{
+    return (string)fed_setting($db, 'allow_self_signed_federation_certificates', '0') === '1';
 }
 
 function tr_signed_download_context(PDO $db, array $job, string $url, array $payload): array
@@ -46,6 +50,7 @@ function tr_signed_download_context(PDO $db, array $job, string $url, array $pay
         'X-Nonce: ' . $nonce,
         'X-Signature: ' . $signature,
     ];
+    $allowSelfSigned = tr_allow_self_signed_tls($db);
 
     return [
         'http' => [
@@ -56,8 +61,9 @@ function tr_signed_download_context(PDO $db, array $job, string $url, array $pay
             'ignore_errors' => true,
         ],
         'ssl' => [
-            'verify_peer' => true,
-            'verify_peer_name' => true,
+            'verify_peer' => !$allowSelfSigned,
+            'verify_peer_name' => !$allowSelfSigned,
+            'allow_self_signed' => $allowSelfSigned,
         ],
     ];
 }
@@ -98,7 +104,9 @@ function run_one_transfer(PDO $db, array $config): array
         $context = stream_context_create(tr_signed_download_context($db, $job, $url, $payload));
         $remote = @fopen($url, 'rb', false, $context);
         if (!$remote) {
-            throw new RuntimeException('Could not open remote download stream.');
+            $lastError = error_get_last();
+            $detail = is_array($lastError) ? trim((string)($lastError['message'] ?? '')) : '';
+            throw new RuntimeException('Could not open remote download stream' . ($detail !== '' ? ': ' . $detail : '.'));
         }
 
         $meta = stream_get_meta_data($remote);
@@ -181,6 +189,9 @@ try {
 
     catalog_head('Transfer Runner');
     catalog_page_header('Transfer Runner', 'Runs one queued federation download at a time: parent pulls from children, or children download approved files from parent.', catalog_federation_links() + ['Parent Pull Queue' => 'parent-pull.php', 'Approved Downloads' => 'approved-downloads.php', 'Import Downloaded Files' => 'import-run.php']);
+    if (tr_allow_self_signed_tls($db)) {
+        echo CatalogUi::alert('warning', 'Self-signed federation certificates are allowed for outbound transfers. Certificate trust and hostname verification are disabled.', 'Testing TLS mode enabled');
+    }
 
     if (isset($_SESSION['fed_transfer_run_result'])) {
         echo '<div class="card"><h2>Last run</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_transfer_run_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
