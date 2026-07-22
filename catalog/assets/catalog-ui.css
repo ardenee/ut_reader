@@ -298,6 +298,13 @@
 [data-ui-loading-form][aria-busy="true"] [data-ui-loading-indicator] { display: inline-flex; }
 [data-ui-loading-indicator] { display: none; }
 
+pre.mono {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
 @keyframes ui-spin { to { transform: rotate(360deg); } }
 @keyframes ui-shimmer { to { background-position: -200% 0; } }
 
