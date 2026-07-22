@@ -91,16 +91,13 @@ $expectedPages = [
     'federation/requests.php',
     'federation/approved-downloads.php',
     'federation/join-requests.php',
+    'federation/parent-pull.php',
     'federation/queue.php',
     'federation/worker-run.php',
     'federation/conflicts.php',
     'federation/maintenance.php',
     'federation/logs.php',
     'federation/docs.php',
-    'federation/parent-pull.php',
-    'federation/inventory-push.php',
-    'federation/upload-to-parent.php',
-    'federation/claim-parent.php',
 ];
 
 $actualPages = [];
@@ -119,6 +116,16 @@ foreach ($groups as $label => $links) {
 
 foreach ($expectedPages as $page) {
     admin_navigation_expect(in_array($page, $actualPages, true), 'Administrator navigation is missing page: ' . $page);
+}
+foreach ([
+    'federation/claim-parent.php',
+    'federation/inventory-push.php',
+    'federation/upload-to-parent.php',
+] as $obsoletePage) {
+    admin_navigation_expect(
+        !in_array($obsoletePage, $actualPages, true),
+        'Obsolete child-driven federation action remains in navigation: ' . $obsoletePage
+    );
 }
 
 $core = file_get_contents(__DIR__ . '/../lib/CatalogSupportCore.php');
