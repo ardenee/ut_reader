@@ -14,6 +14,7 @@
     const tableBody = document.getElementById('jobs-table-body');
     const message = document.getElementById('jobs-message');
     const workerMessage = document.getElementById('jobs-worker-message');
+    const selectionMessage = document.getElementById('jobs-selection-message');
     const filter = document.getElementById('jobs-status-filter');
     const runNextButton = document.getElementById('jobs-run-next');
     const runAllButton = document.getElementById('jobs-run-all');
@@ -22,8 +23,16 @@
     const refreshButton = document.getElementById('jobs-refresh');
     const cleanupButton = document.getElementById('jobs-cleanup');
     const cleanupDays = document.getElementById('jobs-cleanup-days');
+    const selectAllCheckbox = document.getElementById('jobs-select-all');
+    const selectTerminalButton = document.getElementById('jobs-select-terminal');
+    const clearSelectionButton = document.getElementById('jobs-clear-selection');
+    const deleteSelectedButton = document.getElementById('jobs-delete-selected');
+    const deleteMatchingButton = document.getElementById('jobs-delete-matching');
+    const terminalStatuses = ['completed', 'failed', 'dead_letter', 'cancelled'];
 
     let refreshActive = false;
+    let currentJobs = [];
+    const selectedJobIds = new Set();
 
     function installStatusStyles() {
         const style = document.createElement('style');
@@ -32,7 +41,10 @@
             '.job-status-queued,.job-status-running { color:#ffe29a; border-color:rgba(246,196,83,.75); background:rgba(246,196,83,.10); }',
             '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias { color:#a7f3d0; border-color:rgba(50,213,131,.75); background:rgba(50,213,131,.10); }',
             '.job-status-duplicate { color:#bfdbfe; border-color:rgba(96,165,250,.8); background:rgba(96,165,250,.12); }',
-            '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled { color:#fecdd3; border-color:rgba(255,107,122,.75); background:rgba(255,107,122,.10); }'
+            '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled { color:#fecdd3; border-color:rgba(255,107,122,.75); background:rgba(255,107,122,.10); }',
+            '.job-select-column { width:34px; text-align:center; }',
+            '.job-select-column input { width:18px; height:18px; }',
+            '.jobs-bulk-controls { align-items:center; gap:8px; flex-wrap:wrap; }'
         ].join('\n');
         document.head.appendChild(style);
     }
@@ -90,6 +102,10 @@
         if (payload.file_id) return 'File #' + payload.file_id;
         if (payload.game_id) return 'Game #' + payload.game_id;
         return job.concurrency_key || '';
+    }
+
+    function isTerminal(job) {
+        return terminalStatuses.includes(String(job.status || ''));
     }
 
     function effectiveStatus(job) {
@@ -175,18 +191,72 @@
         return button;
     }
 
+    function terminalJobsShown() {
+        return currentJobs.filter(isTerminal);
+    }
+
+    function updateSelectionControls() {
+        const shown = terminalJobsShown();
+        const shownIds = new Set(shown.map(function (job) { return Number(job.id); }));
+        Array.from(selectedJobIds).forEach(function (jobId) {
+            if (!shownIds.has(jobId)) selectedJobIds.delete(jobId);
+        });
+        const selectedCount = selectedJobIds.size;
+        if (selectAllCheckbox) {
+            selectAllCheckbox.disabled = shown.length === 0;
+            selectAllCheckbox.checked = shown.length > 0 && selectedCount === shown.length;
+            selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < shown.length;
+        }
+        if (selectTerminalButton) selectTerminalButton.disabled = shown.length === 0;
+        if (clearSelectionButton) clearSelectionButton.disabled = selectedCount === 0;
+        if (deleteSelectedButton) {
+            deleteSelectedButton.disabled = selectedCount === 0;
+            deleteSelectedButton.textContent = 'Delete selected (' + selectedCount + ')';
+        }
+        if (selectionMessage) {
+            selectionMessage.textContent = selectedCount > 0
+                ? selectedCount + ' terminal job(s) selected from the current view.'
+                : 'No jobs selected.';
+        }
+        if (deleteMatchingButton) {
+            const selectedStatus = filter ? String(filter.value || '') : '';
+            const nonTerminalFilter = selectedStatus === 'queued' || selectedStatus === 'running';
+            deleteMatchingButton.disabled = nonTerminalFilter;
+            deleteMatchingButton.textContent = selectedStatus && !nonTerminalFilter
+                ? 'Delete all ' + selectedStatus.replace(/_/g, ' ') + ' jobs'
+                : 'Delete all terminal matching filter';
+        }
+    }
+
     function render(jobs) {
+        currentJobs = jobs;
         tableBody.textContent = '';
         if (!jobs.length) {
+            selectedJobIds.clear();
             const row = document.createElement('tr');
             const cell = appendCell(row, 'No jobs match the current filter.', 'muted');
-            cell.colSpan = 9;
+            cell.colSpan = 10;
             tableBody.appendChild(row);
+            updateSelectionControls();
             return;
         }
 
         jobs.forEach(function (job) {
             const row = document.createElement('tr');
+            const selectionCell = appendCell(row, '', 'job-select-column');
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.disabled = !isTerminal(job);
+            checkbox.checked = selectedJobIds.has(Number(job.id));
+            checkbox.setAttribute('aria-label', 'Select job #' + job.id);
+            checkbox.addEventListener('change', function () {
+                const jobId = Number(job.id);
+                if (checkbox.checked) selectedJobIds.add(jobId);
+                else selectedJobIds.delete(jobId);
+                updateSelectionControls();
+            });
+            selectionCell.appendChild(checkbox);
+
             appendCell(row, job.id, 'mono');
             const statusCell = appendCell(row, '');
             renderStatus(statusCell, job);
@@ -213,16 +283,18 @@
                 }));
             }
 
-            if (['completed', 'failed', 'dead_letter', 'cancelled'].includes(job.status)) {
+            if (isTerminal(job)) {
                 actions.appendChild(actionButton('Delete', function () {
                     if (!window.confirm('Delete job #' + job.id + ' and its retained staged upload file?')) {
                         return Promise.resolve();
                     }
+                    selectedJobIds.delete(Number(job.id));
                     return mutate('delete', {job_id: job.id});
                 }));
             }
             tableBody.appendChild(row);
         });
+        updateSelectionControls();
     }
 
     function renderWorker(worker) {
@@ -322,6 +394,7 @@
         try {
             const body = await mutate('cleanup', {retention_days: days});
             const data = body && body.data ? body.data : {};
+            await refresh();
             message.textContent = 'Cleanup removed ' + String(data.deleted_jobs || 0) + ' job(s) and '
                 + String(data.deleted_staged_files || 0) + ' staged file(s).'
                 + (data.limited ? ' Run cleanup again to remove the next batch.' : '');
@@ -329,12 +402,88 @@
             message.textContent = error.message || 'Job cleanup failed.';
         } finally {
             cleanupButton.disabled = false;
-            await refresh();
         }
     });
 
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', function () {
+            terminalJobsShown().forEach(function (job) {
+                const jobId = Number(job.id);
+                if (selectAllCheckbox.checked) selectedJobIds.add(jobId);
+                else selectedJobIds.delete(jobId);
+            });
+            render(currentJobs);
+        });
+    }
+
+    if (selectTerminalButton) {
+        selectTerminalButton.addEventListener('click', function () {
+            terminalJobsShown().forEach(function (job) { selectedJobIds.add(Number(job.id)); });
+            render(currentJobs);
+        });
+    }
+
+    if (clearSelectionButton) {
+        clearSelectionButton.addEventListener('click', function () {
+            selectedJobIds.clear();
+            render(currentJobs);
+        });
+    }
+
+    if (deleteSelectedButton) {
+        deleteSelectedButton.addEventListener('click', async function () {
+            const jobIds = Array.from(selectedJobIds);
+            if (!jobIds.length) return;
+            if (!window.confirm('Delete ' + jobIds.length + ' selected terminal job(s) and their retained staged upload files?')) {
+                return;
+            }
+            deleteSelectedButton.disabled = true;
+            try {
+                const body = await mutate('delete_selected', {job_ids: jobIds});
+                const data = body && body.data ? body.data : {};
+                selectedJobIds.clear();
+                await refresh();
+                message.textContent = 'Deleted ' + String(data.deleted_jobs || 0) + ' selected job(s) and '
+                    + String(data.deleted_staged_files || 0) + ' staged file(s).'
+                    + (data.skipped_jobs ? ' ' + String(data.skipped_jobs) + ' job(s) were skipped because they were no longer terminal.' : '');
+            } catch (error) {
+                message.textContent = error.message || 'Selected job deletion failed.';
+                updateSelectionControls();
+            }
+        });
+    }
+
+    if (deleteMatchingButton) {
+        deleteMatchingButton.addEventListener('click', async function () {
+            const status = filter ? String(filter.value || '') : '';
+            if (status === 'queued' || status === 'running') return;
+            const label = status ? status.replace(/_/g, ' ') : 'all terminal';
+            if (!window.confirm('Delete ALL ' + label + ' jobs in this queue, including jobs beyond the 200 currently shown, and remove their retained staged upload files?')) {
+                return;
+            }
+            deleteMatchingButton.disabled = true;
+            try {
+                const body = await mutate('delete_matching', {status: status});
+                const data = body && body.data ? body.data : {};
+                selectedJobIds.clear();
+                await refresh();
+                message.textContent = 'Deleted ' + String(data.deleted_jobs || 0) + ' matching job(s) and '
+                    + String(data.deleted_staged_files || 0) + ' staged file(s).'
+                    + (data.limited ? ' The 10,000-job safety limit was reached; run it again for the next batch.' : '');
+            } catch (error) {
+                message.textContent = error.message || 'Matching job deletion failed.';
+                updateSelectionControls();
+            }
+        });
+    }
+
     refreshButton.addEventListener('click', refresh);
-    if (filter) filter.addEventListener('change', refresh);
+    if (filter) {
+        filter.addEventListener('change', function () {
+            selectedJobIds.clear();
+            refresh();
+        });
+    }
 
     installStatusStyles();
     refresh();
