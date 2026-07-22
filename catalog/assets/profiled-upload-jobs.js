@@ -20,8 +20,15 @@
     const statusUrl = progress.dataset.statusUrl || 'api/v1/job-status.php';
     const actionUrl = progress.dataset.actionUrl || 'api/v1/job-action.php';
     const runUrl = progress.dataset.runUrl || 'api/v1/job-run.php';
+    const chunkUrl = progress.dataset.chunkUrl || 'api/v1/profiled-upload-chunk.php';
     const actionCsrf = progress.dataset.actionCsrf || '';
+    const chunkCsrf = progress.dataset.chunkCsrf || '';
+    const configuredChunkBytes = Math.max(1024 * 1024, Number(progress.dataset.chunkBytes || 16 * 1024 * 1024));
+    const containerLimit = Math.max(0, Number(progress.dataset.containerLimit || 0));
     let activeJobId = 0;
+    let activeUploadId = '';
+    let activeXhr = null;
+    let cancelRequested = false;
 
     function installStatusStyles() {
         const style = document.createElement('style');
@@ -34,8 +41,8 @@
             '.upload-result-duplicate .upload-result-badge { color:#bfdbfe; }',
             '.upload-result-failed,.upload-result-invalid,.upload-result-rejected,.upload-result-unverified,.upload-result-dead_letter,.upload-result-cancelled { border-left-color:#ff6b7a; background:rgba(255,107,122,.08); }',
             '.upload-result-failed .upload-result-badge,.upload-result-invalid .upload-result-badge,.upload-result-rejected .upload-result-badge,.upload-result-unverified .upload-result-badge,.upload-result-dead_letter .upload-result-badge,.upload-result-cancelled .upload-result-badge { color:#fecdd3; }',
-            '.upload-result-queued,.upload-result-running { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
-            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge { color:#ffe29a; }'
+            '.upload-result-queued,.upload-result-running,.upload-result-uploading { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
+            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge,.upload-result-uploading .upload-result-badge { color:#ffe29a; }'
         ].join('\n');
         document.head.appendChild(style);
     }
@@ -48,8 +55,12 @@
         return file.webkitRelativePath || file.name;
     }
 
+    function isPak(file) {
+        return /\.pak$/i.test(file.name || '');
+    }
+
     function bytes(value) {
-        const units = ['B', 'KB', 'MB', 'GB'];
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
         let amount = Number(value || 0);
         let unit = 0;
         while (amount >= 1024 && unit < units.length - 1) {
@@ -93,11 +104,55 @@
         overallCount.textContent = done + ' of ' + total + ' complete';
     }
 
+    function responseError(body, fallback) {
+        if (body && typeof body.error === 'string' && body.error) return body.error;
+        if (body && body.error && typeof body.error.message === 'string') return body.error.message;
+        if (body && typeof body.message === 'string' && body.message) return body.message;
+        if (body && Array.isArray(body.messages) && body.messages.length && body.messages[0] && body.messages[0].message) {
+            return String(body.messages[0].message);
+        }
+        return fallback;
+    }
+
+    function requestForm(url, data, onProgress) {
+        return new Promise(function (resolve, reject) {
+            const xhr = new XMLHttpRequest();
+            activeXhr = xhr;
+            xhr.open('POST', url, true);
+            if (chunkCsrf) xhr.setRequestHeader('X-CSRF-Token', chunkCsrf);
+            if (typeof onProgress === 'function') xhr.upload.onprogress = onProgress;
+            xhr.onload = function () {
+                if (activeXhr === xhr) activeXhr = null;
+                let body = {};
+                try {
+                    body = JSON.parse(xhr.responseText || '{}');
+                } catch (error) {
+                    reject(new Error('Server returned an invalid response while receiving the upload chunk.'));
+                    return;
+                }
+                if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
+                    reject(new Error(responseError(body, 'Chunked upload request failed.')));
+                    return;
+                }
+                resolve(body);
+            };
+            xhr.onerror = function () {
+                if (activeXhr === xhr) activeXhr = null;
+                reject(new Error('Upload connection error. The current chunk can be retried.'));
+            };
+            xhr.onabort = function () {
+                if (activeXhr === xhr) activeXhr = null;
+                reject(new Error('Upload cancelled.'));
+            };
+            xhr.send(data);
+        });
+    }
+
     async function readJob(jobId) {
         const response = await fetch(statusUrl + '?job_id=' + encodeURIComponent(jobId), {cache: 'no-store', credentials: 'same-origin'});
         const body = await response.json();
         const jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
-        if (!response.ok || !jobs.length) throw new Error('Job status is unavailable.');
+        if (!response.ok || !jobs.length) throw new Error(responseError(body, 'Job status is unavailable.'));
         return jobs[0];
     }
 
@@ -111,8 +166,7 @@
                 body: JSON.stringify({queue: queue, mode: 'drain'})
             });
         } catch (error) {
-            // The server also auto-starts the worker. Polling retries this call if
-            // the job remains queued, so a transient launcher error is recoverable.
+            // Polling retries this while a job remains queued.
         }
     }
 
@@ -163,7 +217,7 @@
         }
     }
 
-    function uploadOne(file, index, total) {
+    function standardUpload(file, index, total) {
         return new Promise(function (resolve) {
             const data = new FormData();
             const name = shownName(file);
@@ -175,6 +229,7 @@
             data.append('files[]', file, file.name);
 
             const xhr = new XMLHttpRequest();
+            activeXhr = xhr;
             const started = Date.now();
             currentBar.value = 0;
             currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + name;
@@ -188,11 +243,12 @@
                 setOverall(index - 1, total, Math.min(25, percent / 4));
             };
             xhr.onload = async function () {
+                if (activeXhr === xhr) activeXhr = null;
                 speed.textContent = '';
                 try {
                     const response = JSON.parse(xhr.responseText || '{}');
                     if (!response.ok || !Array.isArray(response.jobs) || !response.jobs.length) {
-                        throw new Error(response.error || 'Upload could not be queued.');
+                        throw new Error(responseError(response, 'Upload could not be queued.'));
                     }
                     const queued = response.jobs[0];
                     addLog({status: 'queued', file: name, message: 'Background job #' + queued.job_id + ' queued; detached worker start requested.'});
@@ -205,25 +261,160 @@
                 resolve();
             };
             xhr.onerror = function () {
+                if (activeXhr === xhr) activeXhr = null;
                 speed.textContent = '';
                 addLog({status: 'failed', file: name, message: 'Upload connection error.'});
                 setOverall(index, total, 0);
+                resolve();
+            };
+            xhr.onabort = function () {
+                if (activeXhr === xhr) activeXhr = null;
+                speed.textContent = '';
+                addLog({status: 'cancelled', file: name, message: 'Upload cancelled.'});
                 resolve();
             };
             xhr.send(data);
         });
     }
 
+    async function chunkRequestWithRetry(data, onProgress, attempts) {
+        let lastError = null;
+        for (let attempt = 1; attempt <= attempts; attempt++) {
+            if (cancelRequested) throw new Error('Upload cancelled.');
+            try {
+                return await requestForm(chunkUrl, data, onProgress);
+            } catch (error) {
+                lastError = error;
+                if (cancelRequested || attempt === attempts) break;
+                await new Promise(function (resolve) { window.setTimeout(resolve, attempt * 750); });
+            }
+        }
+        throw lastError || new Error('Chunk upload failed.');
+    }
+
+    async function chunkedPakUpload(file, index, total) {
+        const name = shownName(file);
+        if (!chunkCsrf) throw new Error('Chunked upload CSRF token is unavailable.');
+        if (containerLimit > 0 && file.size > containerLimit) {
+            throw new Error('PAK is ' + bytes(file.size) + '; configured container limit is ' + bytes(containerLimit) + '.');
+        }
+        const gameId = form.querySelector('[name="game_id"]').value;
+        const strictProfile = form.querySelector('[name="strict_profile"]').value;
+        const clientKey = [file.name, file.size, file.lastModified || 0, name, gameId].join('|');
+        const initData = new FormData();
+        initData.append('action', 'init');
+        initData.append('client_key', clientKey);
+        initData.append('original_name', file.name);
+        initData.append('relative_path', name);
+        initData.append('file_size', String(file.size));
+        initData.append('game_id', gameId);
+        initData.append('strict_profile', strictProfile);
+
+        cancelRequested = false;
+        cancelButton.hidden = false;
+        currentLabel.textContent = 'Preparing resumable PAK upload: ' + name;
+        const initialized = await requestForm(chunkUrl, initData);
+        const upload = initialized.upload || {};
+        activeUploadId = String(upload.upload_id || '');
+        const chunkBytes = Math.max(1024 * 1024, Number(upload.chunk_bytes || configuredChunkBytes));
+        const totalChunks = Math.max(1, Number(upload.total_chunks || Math.ceil(file.size / chunkBytes)));
+        const received = new Set((upload.received_chunks || []).map(Number));
+        const started = Date.now();
+        let uploadedBytes = Number(upload.received_bytes || 0);
+        if (received.size) {
+            addLog({status: 'uploading', file: name, message: 'Resuming ' + received.size + ' previously stored chunk(s).'});
+        }
+
+        for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
+            const start = chunkIndex * chunkBytes;
+            const end = Math.min(file.size, start + chunkBytes);
+            const length = end - start;
+            if (received.has(chunkIndex)) {
+                const percent = Math.floor((Math.min(file.size, end) * 100) / Math.max(1, file.size));
+                currentBar.value = percent;
+                currentLabel.textContent = 'Resuming PAK ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
+                setOverall(index - 1, total, percent / 4);
+                continue;
+            }
+            const data = new FormData();
+            data.append('action', 'chunk');
+            data.append('upload_id', activeUploadId);
+            data.append('chunk_index', String(chunkIndex));
+            data.append('chunk', file.slice(start, end), file.name + '.part-' + chunkIndex);
+            const baseUploaded = uploadedBytes;
+            await chunkRequestWithRetry(data, function (event) {
+                if (!event.lengthComputable) return;
+                const currentBytes = Math.min(file.size, baseUploaded + event.loaded);
+                const percent = Math.floor((currentBytes * 100) / Math.max(1, file.size));
+                currentBar.value = percent;
+                speed.textContent = bytes(currentBytes / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
+                currentLabel.textContent = 'Uploading PAK chunk ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
+                setOverall(index - 1, total, percent / 4);
+            }, 4);
+            uploadedBytes += length;
+        }
+
+        speed.textContent = '';
+        currentBar.value = 100;
+        currentLabel.textContent = 'Finalizing durable PAK upload: ' + name;
+        const completeData = new FormData();
+        completeData.append('action', 'complete');
+        completeData.append('upload_id', activeUploadId);
+        const completed = await requestForm(chunkUrl, completeData);
+        activeUploadId = '';
+        if (!Array.isArray(completed.jobs) || !completed.jobs.length) {
+            throw new Error(responseError(completed, 'Completed PAK upload could not be queued.'));
+        }
+        const queued = completed.jobs[0];
+        addLog({status: 'queued', file: name, message: 'Resumable PAK upload complete; background job #' + queued.job_id + ' queued.'});
+        await ensureWorker();
+        await waitForJob(parseInt(queued.job_id, 10), name, index, total);
+    }
+
+    async function processOne(file, index, total) {
+        const name = shownName(file);
+        if (!isPak(file)) {
+            await standardUpload(file, index, total);
+            return;
+        }
+        try {
+            await chunkedPakUpload(file, index, total);
+        } catch (error) {
+            if (!cancelRequested) {
+                addLog({status: 'failed', file: name, message: error.message || 'Resumable PAK upload failed.'});
+            }
+        } finally {
+            speed.textContent = '';
+            activeUploadId = '';
+            activeXhr = null;
+            cancelButton.hidden = activeJobId < 1;
+            setOverall(index, total, 0);
+        }
+    }
+
     cancelButton.addEventListener('click', async function () {
-        if (!activeJobId || !actionCsrf) return;
+        cancelRequested = true;
         cancelButton.disabled = true;
         try {
-            await fetch(actionUrl, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': actionCsrf},
-                body: JSON.stringify({action: 'cancel', job_id: activeJobId, reason: 'Cancelled from Profiled Upload.'}),
-            });
+            if (activeXhr) activeXhr.abort();
+            if (activeUploadId && chunkCsrf) {
+                const data = new FormData();
+                data.append('action', 'cancel');
+                data.append('upload_id', activeUploadId);
+                try {
+                    await requestForm(chunkUrl, data);
+                } catch (error) {
+                    // A concurrent chunk request may already have released it.
+                }
+                activeUploadId = '';
+            } else if (activeJobId && actionCsrf) {
+                await fetch(actionUrl, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {'Content-Type': 'application/json', 'X-CSRF-Token': actionCsrf},
+                    body: JSON.stringify({action: 'cancel', job_id: activeJobId, reason: 'Cancelled from Profiled Upload.'}),
+                });
+            }
         } finally {
             cancelButton.disabled = false;
         }
@@ -239,17 +430,24 @@
         submitButton.disabled = true;
         progress.hidden = false;
         log.textContent = '';
+        cancelRequested = false;
         setOverall(0, selected.length, 0);
         for (let index = 0; index < selected.length; index++) {
-            await uploadOne(selected[index], index + 1, selected.length);
+            if (cancelRequested) break;
+            await processOne(selected[index], index + 1, selected.length);
         }
-        currentBar.value = 100;
-        overallBar.value = 100;
-        overallLabel.textContent = 'Overall batch complete (100%)';
-        overallCount.textContent = selected.length + ' of ' + selected.length + ' processed';
-        currentLabel.textContent = 'Upload and import batch complete.';
+        currentBar.value = cancelRequested ? 0 : 100;
+        if (!cancelRequested) {
+            overallBar.value = 100;
+            overallLabel.textContent = 'Overall batch complete (100%)';
+            overallCount.textContent = selected.length + ' of ' + selected.length + ' processed';
+            currentLabel.textContent = 'Upload and import batch complete.';
+        } else {
+            currentLabel.textContent = 'Upload batch cancelled.';
+        }
         submitButton.disabled = false;
         cancelButton.hidden = true;
+        cancelRequested = false;
     });
 
     installStatusStyles();
