@@ -15,11 +15,47 @@
             '.file-info-scan-notes { display: block; width: 100%; max-width: 100%; margin: 0; white-space: pre-wrap !important; overflow-wrap: anywhere !important; word-break: break-word !important; }',
             '.pak-info-table-region th:first-child, .pak-info-table-region td:first-child { white-space: nowrap !important; overflow-wrap: normal !important; word-break: normal !important; }',
             '.file-pak-source-card .pak-source-actions { width: 1%; white-space: nowrap; text-align: center; }',
-            '.pak-source-download-icon { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 4px; border: 1px solid var(--line2); border-radius: 7px; background: rgba(118, 169, 255, .08); }',
-            '.pak-source-download-icon:hover { background: rgba(118, 169, 255, .18); text-decoration: none; }',
-            '.pak-source-download-icon img { display: block; width: 18px; height: 18px; }'
+            '.pak-source-download-icon, .catalog-download-icon { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 4px; border: 1px solid var(--line2); border-radius: 7px; background: rgba(118, 169, 255, .08); color: var(--blue); vertical-align: middle; }',
+            '.pak-source-download-icon:hover, .catalog-download-icon:hover { background: rgba(118, 169, 255, .18); text-decoration: none; }',
+            '.pak-source-download-icon img, .catalog-download-icon img { display: block; width: 18px; height: 18px; }',
+            'main > .grid + .card, main > .grid + .two-col, main > .grid + .ui-section { margin-top: 16px; }',
+            '#unverified-bulk-form { padding: 18px; margin-bottom: 16px; border: 1px solid var(--line); border-radius: 18px; background: linear-gradient(180deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .025)); box-shadow: var(--shadow); }',
+            '#unverified-bulk-form .uv-actions { margin-top: 0; }',
+            'td:has(> form[style*="display:inline"]) { white-space: nowrap; }',
+            'td > form[style*="display:inline"] { display: inline-flex !important; align-items: center; margin: 0; vertical-align: middle; }',
+            'td > form[style*="display:inline"] button { margin-bottom: 0; }'
         ].join('\n');
         document.head.appendChild(style);
+    }
+
+    function useDownloadIcon(link, label) {
+        if (!link || link.dataset.catalogDownloadIcon === '1') return;
+        link.classList.remove('ui-icon-action', 'ui-icon-action--primary', 'ui-icon-action--secondary', 'ui-icon-action--sm', 'ui-icon-action--md');
+        link.classList.add('catalog-download-icon');
+        link.title = label;
+        link.setAttribute('aria-label', label);
+        link.textContent = '';
+        var image = document.createElement('img');
+        image.src = iconUrl;
+        image.alt = '';
+        image.width = 18;
+        image.height = 18;
+        link.appendChild(image);
+        link.dataset.catalogDownloadIcon = '1';
+    }
+
+    function fixStandardDownloadIcons(root) {
+        if (!root || !root.querySelectorAll) return;
+        if (page === 'game-paks.php' || page === 'pak-info.php') {
+            root.querySelectorAll('a[href*="pak-download.php"]').forEach(function (link) {
+                useDownloadIcon(link, 'Download original PAK');
+            });
+        }
+        if (page === 'download-info.php') {
+            root.querySelectorAll('a[href*="download.php?id="]').forEach(function (link) {
+                useDownloadIcon(link, link.getAttribute('aria-label') || link.title || 'Download file');
+            });
+        }
     }
 
     function fixScanNotes() {
@@ -107,12 +143,14 @@
     addStyle();
     fixScanNotes();
     fixPakInfoTable();
+    fixStandardDownloadIcons(document);
     fixPakSourceCards(document);
 
     var observer = new MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
             mutation.addedNodes.forEach(function (node) {
                 if (node.nodeType === Node.ELEMENT_NODE) {
+                    fixStandardDownloadIcons(node);
                     fixPakSourceCards(node);
                 }
             });
