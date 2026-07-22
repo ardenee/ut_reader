@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/FederationAuth.php';
+require_once __DIR__ . '/FederationPeerSecret.php';
 
 function federation_dependency_request_still_needed(PDO $db, string $requiredPackage, string $requiredObjectPath = ''): bool
 {
@@ -60,8 +61,7 @@ function federation_dependency_item_already_local(PDO $db, array $item): bool
 
 /**
  * Poll every active parent and queue only approved files that still satisfy a
- * local missing dependency. This is the child-side policy boundary: arbitrary
- * parent files are never queued through this path.
+ * local missing dependency. Arbitrary parent files are never queued here.
  *
  * @return array<string,mixed>
  */
@@ -95,17 +95,12 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
     );
 
     foreach ($parents as $parent) {
-        $secret = fed_peer_secret($db, $parent);
-        if ($secret === '') {
-            $parentResults[] = ['peer_id' => (int)$parent['id'], 'ok' => false, 'error' => 'Parent peer has no API secret.'];
-            continue;
-        }
-
         try {
+            $storedSecret = federation_peer_stored_signing_secret($db, $parent);
             $status = fed_http_post_signed(
                 rtrim((string)$parent['site_url'], '/') . '/api/federation/request-status.php',
                 $localSiteId,
-                $secret,
+                $storedSecret,
                 ['latest' => true]
             );
             if (empty($status['ok'])) {
