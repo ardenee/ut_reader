@@ -63,6 +63,7 @@ jobs:
           php -l catalog/tests/pak-archive-management-contract-test.php
           php -l catalog/tests/chunked-pak-upload-contract-test.php
           php -l catalog/tests/live-pak-job-events-contract-test.php
+          php -l catalog/tests/large-pak-entry-layout-contract-test.php
           php -l tests/catalog_redirect_payload_test.php
       - name: Syntax check detached worker clients
         run: |
@@ -82,5 +83,7 @@ jobs:
         run: php catalog/tests/chunked-pak-upload-contract-test.php
       - name: Verify live PAK job event streaming
         run: php catalog/tests/live-pak-job-events-contract-test.php
+      - name: Verify large PAK entries and detail layouts
+        run: php catalog/tests/large-pak-entry-layout-contract-test.php
       - name: Verify generic redirect payload decoding
         run: php tests/catalog_redirect_payload_test.php
