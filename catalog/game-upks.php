@@ -75,7 +75,6 @@ try {
     $rows = catalog_all(
         $db,
         'SELECT f.*,'
-        . '(SELECT COUNT(*) FROM ue_exports e WHERE e.file_id=f.id) indexed_exports,'
         . '(SELECT COALESCE(SUM(e.serial_size),0) FROM ue_exports e WHERE e.file_id=f.id) serialized_export_bytes '
         . 'FROM ue_files f ' . $where
         . ' ORDER BY f.package_name,f.original_name,f.id LIMIT ' . $limit . ' OFFSET ' . $offset,
