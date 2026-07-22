@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
@@ -25,7 +26,7 @@ try {
 
     if ($action === 'init') {
         // Clear abandoned browser uploads before accepting another large container.
-        $store->prune();
+        (new CatalogChunkedUploadCleanup($application->config))->pruneIncomplete();
         $gameId = (int)($_POST['game_id'] ?? 0);
         $game = $gameId > 0 ? catalog_one(
             $application->db,
