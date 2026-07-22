@@ -71,8 +71,8 @@ large_pak_entry_layout_expect(
     'PAK details still expose the removed Message column.'
 );
 large_pak_entry_layout_expect(
-    !str_contains($pakInfo, '<td class="small">' . "' . catalog_h((string)\$entry['import_message'])"),
-    'PAK details still render the removed per-entry message cell.'
+    !str_contains($pakInfo, "['import_message']"),
+    'PAK details still render the removed per-entry message value.'
 );
 large_pak_entry_layout_expect(
     !str_contains($pakInfo, '<td class="nowrap">'),
