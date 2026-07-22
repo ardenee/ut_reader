@@ -56,9 +56,9 @@ return [
         'dashboard_ttl_seconds' => 0,
     ],
     'pak' => [
-        // Built-in PHP PAK extractor limits. No external UnrealPak.exe is required.
-        'max_extracted_files' => 20000,
-        'max_extracted_bytes' => 8 * 1024 * 1024 * 1024,
+        // Admin-only full-container extraction limits for large UE4/UE5 PAKs.
+        'max_extracted_files' => 250000,
+        'max_extracted_bytes' => 128 * 1024 * 1024 * 1024,
     ],
     'ue4' => [
         // Base parser profile for standard UE4 packages. This is the default for
