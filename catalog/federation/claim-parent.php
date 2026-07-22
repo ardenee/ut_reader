@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
@@ -90,10 +89,13 @@ try {
             $peerId = (int)$db->lastInsertId();
         }
 
+        fed_set_setting($db, 'main_parent_url', $siteUrl);
         fed_set_setting($db, 'site_role', 'child');
         fed_set_setting($db, 'child_enabled', '1');
-        fed_log($db, $peerId, null, 'INFO', 'PARENT_CLAIMED', 'Parent pairing claimed from approved join request.');
-        $_SESSION['fed_claim_parent_flash'] = 'Parent claimed and paired successfully: ' . $siteName;
+        fed_set_setting($db, 'parent_enabled', '0');
+        fed_set_setting($db, 'join_requests_enabled', '0');
+        fed_log($db, $peerId, null, 'INFO', 'PARENT_CLAIMED', 'Parent pairing claimed from approved join request. Child role enforced.');
+        $_SESSION['fed_claim_parent_flash'] = 'Parent claimed and paired successfully: ' . $siteName . '. This deployment is now configured as a child.';
         header('Location: claim-parent.php');
         exit;
     }
