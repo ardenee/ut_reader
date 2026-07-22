@@ -106,6 +106,34 @@ final class CatalogUi
         return Badge::render($label, $tone);
     }
 
+    /**
+     * Render the canonical Unreal package identity in Epic-first order.
+     *
+     * GUID is the primary package identity. MD5 and SHA are secondary content
+     * hashes. Every value is kept on one line and each identity is placed on its
+     * own line so table columns remain readable and consistent.
+     */
+    public static function identity(string $guid = '', string $md5 = '', string $sha = ''): string
+    {
+        $style = 'display:inline-flex;flex-direction:column;align-items:flex-start;white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important;';
+        $lineStyle = 'display:block;white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important;';
+
+        return '<span class="catalog-identity mono small" style="' . $style . '">'
+            . '<span style="' . $lineStyle . '"><strong>GUID</strong> ' . self::identityValue($guid) . '</span>'
+            . '<span style="' . $lineStyle . '"><strong>MD5</strong> ' . self::identityValue($md5) . '</span>'
+            . '<span style="' . $lineStyle . '"><strong>SHA</strong> ' . self::identityValue($sha) . '</span>'
+            . '</span>';
+    }
+
+    private static function identityValue(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            $value = '—';
+        }
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    }
+
     /** @param list<string> $headers */
     public static function skeletonTable(array $headers, int $rows = 4, string $label = 'Loading table data'): string
     {
