@@ -88,14 +88,9 @@ try {
 
     $sourceMode = 'durable_staging';
     $sourcePath = '';
-    try {
-        $sourcePath = (new CatalogIncomingFileStore($application->config))->resolve($stagedPath);
-        catalog_pak_rerun_verify_identity($sourcePath, $sourcePayload);
-    } catch (Throwable $stagingError) {
-        if (!CatalogPakArchiveStore::schemaInstalled($application->db)) {
-            throw $stagingError;
-        }
-
+    $retainedError = null;
+    $pak = null;
+    if (CatalogPakArchiveStore::schemaInstalled($application->db)) {
         $result = catalog_pak_rerun_decode((string)($job['result_json'] ?? ''));
         $pakId = (int)($result['pak_id'] ?? 0);
         $pak = $pakId > 0
@@ -110,23 +105,42 @@ try {
                 [$gameId, $sha256]
             );
         }
-        if (!$pak) {
+    }
+
+    if ($pak) {
+        try {
+            $archiveStore = new CatalogPakArchiveStore($application->config);
+            $sourcePath = $archiveStore->resolve($pak);
+            $sourcePayload['staged_path'] = catalog_pak_rerun_local_reference($sourcePath);
+            $sourcePayload['original_name'] = (string)$pak['original_name'];
+            $sourcePayload['source_relative_path'] = (string)($sourcePayload['source_relative_path'] ?? $pak['original_name']);
+            $sourcePayload['size'] = (int)$pak['file_size'];
+            $sourcePayload['sha256'] = strtolower((string)$pak['sha256']);
+            catalog_pak_rerun_verify_identity($sourcePath, $sourcePayload);
+            $sourceMode = 'retained_pak';
+        } catch (Throwable $error) {
+            $retainedError = $error;
+            $pak = null;
+        }
+    }
+
+    if (!$pak) {
+        try {
+            $sourcePath = (new CatalogIncomingFileStore($application->config))->resolve($stagedPath);
+            catalog_pak_rerun_verify_identity($sourcePath, $sourcePayload);
+            $sourcePayload['staged_path'] = $stagedPath;
+            $sourceMode = 'durable_staging';
+        } catch (Throwable $stagingError) {
+            $detail = $retainedError instanceof Throwable
+                ? ' Retained archive error: ' . $retainedError->getMessage()
+                : '';
+            error_log('[UnrealDB PAK job rerun source] staging=' . $stagingError->getMessage() . $detail);
             JsonResponse::error(
                 'pak_source_unavailable',
-                'Neither the durable staging copy nor a retained managed PAK archive is available for this job.',
+                'Neither the retained managed PAK nor the durable staging source is available for this job.',
                 409
             );
         }
-
-        $archiveStore = new CatalogPakArchiveStore($application->config);
-        $sourcePath = $archiveStore->resolve($pak);
-        $sourcePayload['staged_path'] = catalog_pak_rerun_local_reference($sourcePath);
-        $sourcePayload['original_name'] = (string)$pak['original_name'];
-        $sourcePayload['source_relative_path'] = (string)($sourcePayload['source_relative_path'] ?? $pak['original_name']);
-        $sourcePayload['size'] = (int)$pak['file_size'];
-        $sourcePayload['sha256'] = strtolower((string)$pak['sha256']);
-        catalog_pak_rerun_verify_identity($sourcePath, $sourcePayload);
-        $sourceMode = 'retained_pak';
     }
 
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
