@@ -14,37 +14,43 @@ function cp_allow_self_signed_tls(PDO $db): bool
 function cp_post_claim(PDO $db, string $endpoint, string $token): array
 {
     $parts = parse_url($endpoint);
-    if (!is_array($parts) || !in_array(strtolower((string)($parts['scheme'] ?? '')), ['https', 'http'], true) || empty($parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
-        throw new RuntimeException('Claim endpoint must be a clean HTTP or HTTPS URL without credentials, query parameters, or a fragment.');
+    if (!is_array($parts)
+        || strtolower((string)($parts['scheme'] ?? '')) !== 'https'
+        || empty($parts['host'])
+        || isset($parts['user'])
+        || isset($parts['pass'])
+        || isset($parts['query'])
+        || isset($parts['fragment'])) {
+        throw new RuntimeException('Claim endpoint must be a clean HTTPS URL without credentials, query parameters, or a fragment.');
     }
 
-    $body = json_encode(['token' => $token], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    try {
+        $body = json_encode(
+            ['token' => $token],
+            JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR
+        );
+    } catch (JsonException $error) {
+        throw new RuntimeException('Could not encode the parent claim request.', 0, $error);
+    }
+
     $allowSelfSigned = cp_allow_self_signed_tls($db);
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: application/json\r\nAccept: application/json\r\nUser-Agent: UnrealFileCatalogFederation/1.0\r\n",
-            'content' => $body,
-            'timeout' => 60,
-            'ignore_errors' => true,
-        ],
-        'ssl' => [
-            'verify_peer' => !$allowSelfSigned,
-            'verify_peer_name' => !$allowSelfSigned,
-            'allow_self_signed' => $allowSelfSigned,
-        ],
-    ]);
-    $response = @file_get_contents($endpoint, false, $context);
-    if ($response === false) {
-        $lastError = error_get_last();
-        $detail = is_array($lastError) ? trim((string)($lastError['message'] ?? '')) : '';
-        throw new RuntimeException('Could not submit the claim request' . ($detail !== '' ? ': ' . $detail : '.'));
+    TrustedHttpSourceClient::configureFederationTesting($allowSelfSigned);
+
+    try {
+        return TrustedHttpSourceClient::postJson(
+            $endpoint,
+            [
+                'Content-Type: application/json',
+                'Accept: application/json',
+                'User-Agent: UnrealFileCatalogFederation/2.0',
+            ],
+            $body,
+            1048576,
+            60
+        );
+    } catch (Throwable $error) {
+        throw new RuntimeException('Could not submit the claim request: ' . $error->getMessage(), 0, $error);
     }
-    $json = json_decode($response, true);
-    if (!is_array($json)) {
-        throw new RuntimeException('Claim endpoint did not return valid JSON.');
-    }
-    return $json;
 }
 
 try {
@@ -88,7 +94,8 @@ try {
 
         $existing = catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE peer_site_id=? LIMIT 1', [$siteId]);
         if ($existing) {
-            $db->prepare('UPDATE ue_federation_peers SET peer_role="parent", site_name=?, site_url=?, peer_fingerprint=?, shared_secret_hash=?, shared_secret_plain=?, is_active=1 WHERE peer_site_id=?')->execute([$siteName, $siteUrl, $fingerprint, $secretFields['hash'], $secretFields['stored'], $siteId]);
+            $db->prepare('UPDATE ue_federation_peers SET peer_role="parent", site_name=?, site_url=?, peer_fingerprint=?, shared_secret_hash=?, shared_secret_plain=?, is_active=1 WHERE peer_site_id=?')
+                ->execute([$siteName, $siteUrl, $fingerprint, $secretFields['hash'], $secretFields['stored'], $siteId]);
             $peerId = (int)$existing['id'];
         } else {
             $permissions = [
@@ -97,7 +104,15 @@ try {
                 'created_by_join_claim' => true,
             ];
             $stmt = $db->prepare('INSERT INTO ue_federation_peers(peer_role, site_name, site_url, peer_site_id, peer_fingerprint, shared_secret_hash, shared_secret_plain, permissions_json, is_active) VALUES("parent",?,?,?,?,?,?,?,1)');
-            $stmt->execute([$siteName, $siteUrl, $siteId, $fingerprint, $secretFields['hash'], $secretFields['stored'], json_encode($permissions, JSON_UNESCAPED_SLASHES)]);
+            $stmt->execute([
+                $siteName,
+                $siteUrl,
+                $siteId,
+                $fingerprint,
+                $secretFields['hash'],
+                $secretFields['stored'],
+                json_encode($permissions, JSON_UNESCAPED_SLASHES),
+            ]);
             $peerId = (int)$db->lastInsertId();
         }
 
@@ -121,11 +136,23 @@ try {
     unset($_SESSION['fed_claim_parent_flash']);
 
     $allowSelfSigned = cp_allow_self_signed_tls($db);
-    catalog_page_header('Claim Parent Pairing', 'Enter the POST endpoint and one-time token supplied by the parent administrator after approving the join request.', catalog_federation_links() + ['Peers' => 'peers.php', 'Settings' => 'settings.php']);
+    catalog_page_header(
+        'Claim Parent Pairing',
+        'Enter the POST endpoint and one-time token supplied by the parent administrator after approving the join request.',
+        catalog_federation_links() + ['Peers' => 'peers.php', 'Settings' => 'settings.php']
+    );
     if ($allowSelfSigned) {
-        echo CatalogUi::alert('warning', 'Self-signed federation certificates are allowed. Certificate trust and hostname verification are disabled for this claim request.', 'Testing TLS mode enabled');
+        echo CatalogUi::alert(
+            'warning',
+            'Self-signed federation certificates are allowed. Certificate trust and hostname verification are disabled for this claim request.',
+            'Testing TLS mode enabled'
+        );
     }
-    echo '<div class="card"><h2>Claim approved parent</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_claim_parent')) . '"><p><label>Claim POST endpoint<br><input name="claim_endpoint" required style="min-width:760px" placeholder="https://parent.example.com/catalog/api/federation/join-claim.php"></label></p><p><label>One-time claim token<br><input name="claim_token" required autocomplete="off" style="min-width:520px"></label></p><p><button>Claim parent and create pairing</button></p></form></div>';
+    echo '<div class="card"><h2>Claim approved parent</h2><form method="post">';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_claim_parent')) . '">';
+    echo '<p><label>Claim POST endpoint<br><input name="claim_endpoint" required style="min-width:760px" placeholder="https://parent.example.com/catalog/api/federation/join-claim.php"></label></p>';
+    echo '<p><label>One-time claim token<br><input name="claim_token" required autocomplete="off" style="min-width:520px"></label></p>';
+    echo '<p><button>Claim parent and create pairing</button></p></form></div>';
 
     catalog_foot();
 } catch (Throwable $e) {
