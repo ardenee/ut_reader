@@ -39,10 +39,10 @@
             '.upload-result-imported .upload-result-badge,.upload-result-verified .upload-result-badge,.upload-result-alias .upload-result-badge,.upload-result-decompressed .upload-result-badge,.upload-result-completed .upload-result-badge { color:#a7f3d0; }',
             '.upload-result-duplicate { border-left-color:#60a5fa; background:rgba(96,165,250,.09); }',
             '.upload-result-duplicate .upload-result-badge { color:#bfdbfe; }',
-            '.upload-result-failed,.upload-result-invalid,.upload-result-rejected,.upload-result-unverified,.upload-result-dead_letter,.upload-result-cancelled { border-left-color:#ff6b7a; background:rgba(255,107,122,.08); }',
-            '.upload-result-failed .upload-result-badge,.upload-result-invalid .upload-result-badge,.upload-result-rejected .upload-result-badge,.upload-result-unverified .upload-result-badge,.upload-result-dead_letter .upload-result-badge,.upload-result-cancelled .upload-result-badge { color:#fecdd3; }',
-            '.upload-result-queued,.upload-result-running,.upload-result-uploading { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
-            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge,.upload-result-uploading .upload-result-badge { color:#ffe29a; }'
+            '.upload-result-failed,.upload-result-invalid,.upload-result-rejected,.upload-result-unverified,.upload-result-dead_letter,.upload-result-cancelled,.upload-result-not_extracted,.upload-result-encrypted { border-left-color:#ff6b7a; background:rgba(255,107,122,.08); }',
+            '.upload-result-failed .upload-result-badge,.upload-result-invalid .upload-result-badge,.upload-result-rejected .upload-result-badge,.upload-result-unverified .upload-result-badge,.upload-result-dead_letter .upload-result-badge,.upload-result-cancelled .upload-result-badge,.upload-result-not_extracted .upload-result-badge,.upload-result-encrypted .upload-result-badge { color:#fecdd3; }',
+            '.upload-result-queued,.upload-result-running,.upload-result-uploading,.upload-result-skipped { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
+            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge,.upload-result-uploading .upload-result-badge,.upload-result-skipped .upload-result-badge { color:#ffe29a; }'
         ].join('\n');
         document.head.appendChild(style);
     }
@@ -131,7 +131,7 @@
                     return;
                 }
                 if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
-                    reject(new Error(responseError(body, 'Chunked upload request failed.')));
+                    reject(new Error(responseError(body, 'Chunked upload request failed.'));
                     return;
                 }
                 resolve(body);
@@ -148,12 +148,23 @@
         });
     }
 
-    async function readJob(jobId) {
-        const response = await fetch(statusUrl + '?job_id=' + encodeURIComponent(jobId), {cache: 'no-store', credentials: 'same-origin'});
+    async function readJob(jobId, eventOffset) {
+        const params = new URLSearchParams({
+            job_id: String(jobId),
+            event_offset: String(Math.max(0, Number(eventOffset || 0))),
+            event_limit: '500'
+        });
+        const response = await fetch(statusUrl + '?' + params.toString(), {cache: 'no-store', credentials: 'same-origin'});
         const body = await response.json();
         const jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
         if (!response.ok || !jobs.length) throw new Error(responseError(body, 'Job status is unavailable.'));
-        return jobs[0];
+        const meta = body && body.meta ? body.meta : {};
+        return {
+            job: jobs[0],
+            events: body && body.data && Array.isArray(body.data.events) ? body.data.events : [],
+            eventOffset: Math.max(0, Number(meta.event_offset || eventOffset || 0)),
+            eventsHasMore: Boolean(meta.events_has_more)
+        };
     }
 
     async function ensureWorker() {
@@ -184,12 +195,23 @@
         }];
     }
 
+    function appendSnapshotEvents(snapshot) {
+        const events = snapshot && Array.isArray(snapshot.events) ? snapshot.events : [];
+        events.forEach(addLog);
+        return events.length;
+    }
+
     async function waitForJob(jobId, fileName, index, total) {
         activeJobId = jobId;
         cancelButton.hidden = false;
         let queuedPolls = 0;
+        let eventOffset = 0;
+        let streamedEntries = 0;
         while (true) {
-            const current = await readJob(jobId);
+            let snapshot = await readJob(jobId, eventOffset);
+            const current = snapshot.job;
+            streamedEntries += appendSnapshotEvents(snapshot);
+            eventOffset = snapshot.eventOffset;
             const state = current.progress || {};
             const percent = Math.max(0, Math.min(100, parseInt(state.percent || (current.status === 'completed' ? 100 : 0), 10)));
             currentBar.value = percent;
@@ -202,12 +224,19 @@
                 queuedPolls = 0;
             }
             if (['completed', 'failed', 'dead_letter', 'cancelled'].includes(current.status)) {
+                while (snapshot.eventsHasMore) {
+                    snapshot = await readJob(jobId, eventOffset);
+                    streamedEntries += appendSnapshotEvents(snapshot);
+                    eventOffset = snapshot.eventOffset;
+                }
                 activeJobId = 0;
                 cancelButton.hidden = true;
                 if (current.status === 'completed') {
-                    const entries = resultEntries(current.result, fileName);
-                    if (entries.length) entries.forEach(addLog);
-                    else addLog({status: 'completed', file: fileName, message: 'Background import complete.'});
+                    if (streamedEntries === 0) {
+                        const entries = resultEntries(current.result, fileName);
+                        if (entries.length) entries.forEach(addLog);
+                        else addLog({status: 'completed', file: fileName, message: 'Background import complete.'});
+                    }
                 } else {
                     addLog({status: current.status, file: fileName, message: current.last_error || state.message || 'Background import did not complete.'});
                 }
