@@ -111,18 +111,27 @@ try {
             '▤'
         );
     } else {
-        echo '<div class="ui-table-region"><table><thead><tr><th>UPK package</th><th>Package identity</th><th>Version</th><th>Contents</th><th>Size</th><th>Imported</th><th>Actions</th></tr></thead><tbody>';
+        echo '<div class="ui-table-region"><table><thead><tr><th>UPK package</th><th>Package identity</th><th>Version</th><th title="Names / Imports / Exports">N/I/E</th><th>Size</th><th>Actions</th></tr></thead><tbody>';
         foreach ($rows as $upk) {
             $id = (int)$upk['id'];
             $version = (int)$upk['package_version'] . ((int)$upk['licensee_version'] > 0 ? ' / ' . (int)$upk['licensee_version'] : '');
-            echo '<tr>';
-            echo '<td><a href="upk-info.php?id=' . $id . '"><strong>' . catalog_h((string)$upk['original_name']) . '</strong></a><br><span class="mono small">' . catalog_h((string)$upk['package_name']) . '</span></td>';
-            echo '<td><span class="mono small">GUID ' . catalog_h((string)$upk['package_guid']) . '</span><br><span class="mono small">MD5 ' . catalog_h((string)$upk['md5']) . '</span></td>';
+            $database = number_format((int)($upk['name_count'] ?? 0))
+                . ' / ' . number_format((int)($upk['import_count'] ?? 0))
+                . ' / ' . number_format((int)($upk['export_count'] ?? 0));
+
+            echo '<tr data-file-id="' . $id . '">';
+            echo '<td><a href="upk-info.php?id=' . $id . '"><strong>' . catalog_h((string)$upk['original_name']) . '</strong></a>'
+                . '<br><a class="mono small" href="file-examine.php?id=' . $id . '">' . catalog_h((string)$upk['package_name']) . '</a></td>';
+            echo '<td class="catalog-identity-cell">' . CatalogUi::identity(
+                (string)($upk['package_guid'] ?? ''),
+                (string)($upk['md5'] ?? ''),
+                (string)($upk['sha1'] ?? '')
+            ) . '</td>';
             echo '<td class="mono">' . catalog_h($version) . ((int)$upk['is_compressed'] === 1 ? '<br>' . CatalogUi::badge('compressed chunks', 'warning') : '') . '</td>';
-            echo '<td>' . number_format((int)$upk['indexed_exports']) . ' exports<br><span class="small muted">' . catalog_h(catalog_bytes((int)$upk['serialized_export_bytes'])) . ' serialized payload</span></td>';
+            echo '<td class="nowrap" title="Names / Imports / Exports"><span class="mono">' . catalog_h($database) . '</span>'
+                . '<br><span class="small muted">' . catalog_h(catalog_bytes((int)$upk['serialized_export_bytes'])) . ' serialized payload</span></td>';
             echo '<td class="nowrap">' . catalog_h(catalog_bytes((int)$upk['file_size'])) . '</td>';
-            echo '<td class="nowrap">' . catalog_h((string)$upk['uploaded_at']) . '</td>';
-            echo '<td><a class="button" href="upk-info.php?id=' . $id . '">View contents</a> <a class="button" href="download.php?id=' . $id . '">Download UPK</a>';
+            echo '<td class="nowrap"><a class="button" href="download.php?id=' . $id . '">Download UPK</a>';
             if ($isAdmin) {
                 $confirm = 'Delete ' . (string)$upk['original_name'] . ' from storage and the catalog? Its indexed names, imports, exports and dependencies will also be deleted.';
                 echo '<form method="post" action="file-maintenance.php" style="display:inline" onsubmit="return confirm(\'' . catalog_h($confirm) . '\')">'
