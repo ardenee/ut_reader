@@ -13,6 +13,7 @@
             '#game-files-table th:first-child, #game-files-table td:first-child { white-space: normal !important; overflow-wrap: anywhere !important; word-break: break-word !important; }',
             '#game-files-table .game-files-package { width: auto !important; max-width: 30ch; }',
             '.file-info-scan-notes { display: block; width: 100%; max-width: 100%; margin: 0; white-space: pre-wrap !important; overflow-wrap: anywhere !important; word-break: break-word !important; }',
+            '.pak-info-table-region th:first-child, .pak-info-table-region td:first-child { white-space: nowrap !important; overflow-wrap: normal !important; word-break: normal !important; }',
             '.file-pak-source-card .pak-source-actions { width: 1%; white-space: nowrap; text-align: center; }',
             '.pak-source-download-icon { display: inline-grid; place-items: center; width: 28px; height: 28px; padding: 4px; border: 1px solid var(--line2); border-radius: 7px; background: rgba(118, 169, 255, .08); }',
             '.pak-source-download-icon:hover { background: rgba(118, 169, 255, .18); text-decoration: none; }',
@@ -28,6 +29,19 @@
             if (!heading || heading.textContent.trim().toLowerCase() !== 'scan notes') return;
             var notes = card.querySelector(':scope > pre');
             if (notes) notes.classList.add('file-info-scan-notes');
+        });
+    }
+
+    function fixPakInfoTable() {
+        if (page !== 'pak-info.php') return;
+        document.querySelectorAll('.pak-info-table-region table').forEach(function (table) {
+            if (!table.tHead || !table.tHead.rows.length) return;
+            Array.from(table.tHead.rows[0].cells).forEach(function (header) {
+                if (header.textContent.trim().toLowerCase() === 'database (n/i/e)') {
+                    header.textContent = 'Database';
+                    header.title = 'Names / Imports / Exports';
+                }
+            });
         });
     }
 
@@ -92,6 +106,7 @@
 
     addStyle();
     fixScanNotes();
+    fixPakInfoTable();
     fixPakSourceCards(document);
 
     var observer = new MutationObserver(function (mutations) {
