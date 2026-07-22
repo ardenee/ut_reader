@@ -29,6 +29,17 @@ identity_display_expect(
     'Identity renderer does not use GUID, MD5, SHA order.'
 );
 
+$hooks = file_get_contents(__DIR__ . '/../src/Presentation/Http/LegacySupportHooks.php');
+identity_display_expect(is_string($hooks), 'Could not read legacy presentation hooks.');
+foreach ([
+    'registerIdentityAssets',
+    'catalog-identities.js',
+    "str_contains(\$requestPath, '/catalog/federation/')",
+    "str_contains(\$output, 'catalog-identities.js')",
+] as $fragment) {
+    identity_display_expect(str_contains($hooks, $fragment), 'Global identity asset loading is missing: ' . $fragment);
+}
+
 $endpoint = file_get_contents(__DIR__ . '/../api/v1/file-identities.php');
 identity_display_expect(is_string($endpoint), 'Could not read file identity endpoint.');
 foreach ([
@@ -44,6 +55,7 @@ foreach ([
 $client = file_get_contents(__DIR__ . '/../assets/catalog-identities.js');
 identity_display_expect(is_string($client), 'Could not read identity normalization client.');
 foreach ([
+    'window.__unrealDbCatalogIdentitiesLoaded',
     "strong.textContent = label",
     "identityLine('GUID'",
     "identityLine('MD5'",
@@ -62,6 +74,20 @@ identity_display_expect(is_string($search), 'Could not read catalog search page.
 identity_display_expect(str_contains($search, '<th>Identity</th>'), 'Search results do not use the canonical Identity column.');
 identity_display_expect(str_contains($search, 'CatalogUi::identity('), 'Search results do not render GUID/MD5/SHA server-side.');
 identity_display_expect(!str_contains($search, '<th>GUID / MD5</th>'), 'Search results still use the old GUID / MD5 heading.');
+
+$pakInfo = file_get_contents(__DIR__ . '/../pak-info.php');
+identity_display_expect(is_string($pakInfo), 'Could not read PAK details.');
+identity_display_expect(
+    substr_count($pakInfo, 'CatalogUi::identity(') >= 2,
+    'PAK archive and entry identities are not rendered canonically.'
+);
+identity_display_expect(str_contains($pakInfo, 'f.sha1 file_sha1'), 'PAK entry identities do not include the file SHA.');
+
+$upkInfo = file_get_contents(__DIR__ . '/../upk-info.php');
+identity_display_expect(is_string($upkInfo), 'Could not read UPK details.');
+identity_display_expect(str_contains($upkInfo, 'CatalogUi::identity('), 'UPK details do not render GUID/MD5/SHA canonically.');
+identity_display_expect(!str_contains($upkInfo, '<tr><th>MD5</th>'), 'UPK details still render a separate MD5 row.');
+identity_display_expect(!str_contains($upkInfo, '<tr><th>SHA1</th>'), 'UPK details still render a separate SHA row.');
 
 $gameList = file_get_contents(__DIR__ . '/../src/Application/Catalog/CatalogGameFileListService.php');
 identity_display_expect(is_string($gameList), 'Could not read game file list service.');
