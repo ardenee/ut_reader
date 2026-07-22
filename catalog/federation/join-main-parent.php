@@ -78,16 +78,104 @@ function jmp_post_json(PDO $db, string $url, array $payload): array
     }
 }
 
+function jmp_store_join_status(PDO $db, array $result): void
+{
+    $status = strtolower(trim((string)($result['status'] ?? 'unknown')));
+    $message = trim((string)($result['message'] ?? ''));
+    $adminNotes = trim((string)($result['admin_notes'] ?? ''));
+
+    fed_set_setting($db, 'main_parent_join_status', $status !== '' ? $status : 'unknown');
+    fed_set_setting($db, 'main_parent_join_status_message', $message);
+    fed_set_setting($db, 'main_parent_join_admin_notes', $adminNotes);
+
+    if ($status === 'claimed') {
+        fed_set_setting($db, 'main_parent_join_request_token', '');
+    }
+}
+
+function jmp_poll_parent_status(PDO $db, array $identity): array
+{
+    $parentUrl = jmp_parent_url($db);
+    $requestId = (int)(fed_setting($db, 'main_parent_join_request_id', '0') ?: 0);
+    $requestToken = (string)fed_setting($db, 'main_parent_join_request_token', '');
+    if ($requestId <= 0 || $requestToken === '') {
+        throw new RuntimeException('No stored parent join request. Submit first.');
+    }
+
+    $previousStatus = strtolower(trim((string)fed_setting($db, 'main_parent_join_status', 'none')));
+    $result = jmp_post_json($db, $parentUrl . '/api/federation/join-request-status.php', [
+        'request_id' => $requestId,
+        'site_id' => (string)$identity['site_id'],
+        'request_token' => $requestToken,
+    ]);
+    if (empty($result['ok'])) {
+        throw new RuntimeException('Parent status check failed: ' . ($result['error'] ?? 'unknown error'));
+    }
+
+    jmp_store_join_status($db, $result);
+    $newStatus = strtolower(trim((string)($result['status'] ?? 'unknown')));
+    if ($newStatus !== $previousStatus) {
+        fed_log(
+            $db,
+            null,
+            null,
+            'INFO',
+            'MAIN_PARENT_JOIN_STATUS_CHANGED',
+            'Status changed from ' . $previousStatus . ' to ' . $newStatus . ': ' . json_encode($result, JSON_UNESCAPED_SLASHES)
+        );
+    }
+
+    return $result;
+}
+
+function jmp_default_status_message(string $status): string
+{
+    return match ($status) {
+        'pending' => 'Waiting for parent admin approval.',
+        'approved' => 'Approved. Obtain the one-time claim endpoint and token from the parent administrator.',
+        'denied' => 'Join request denied by parent admin.',
+        'claimed' => 'Join request has been claimed and the parent is connected.',
+        'expired' => 'Join approval expired. Submit a new request.',
+        default => 'No active parent join request.',
+    };
+}
+
+function jmp_status_label(string $status): string
+{
+    return match ($status) {
+        'pending' => 'Pending',
+        'approved' => 'Approved',
+        'denied' => 'Denied',
+        'claimed' => 'Connected',
+        'expired' => 'Expired',
+        default => ucfirst($status !== '' ? $status : 'none'),
+    };
+}
+
+function jmp_status_pill_class(string $status): string
+{
+    return match ($status) {
+        'approved', 'claimed' => 'pill green',
+        'denied', 'expired' => 'pill red',
+        'pending' => 'pill amber',
+        default => 'pill',
+    };
+}
+
+$jmpWantsJson = false;
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $action = strtolower(trim((string)($_POST['action'] ?? 'submit')));
+        $jmpWantsJson = $action === 'poll_json';
+
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         catalog_check_csrf('fed_join_main_parent');
-        $action = strtolower(trim((string)($_POST['action'] ?? 'submit')));
         $identity = fed_ensure_identity($db);
 
         if ($action === 'submit') {
@@ -126,7 +214,7 @@ try {
             jmp_apply_child_role($db, $parentUrl);
             fed_set_setting($db, 'main_parent_join_request_id', (string)($result['request_id'] ?? '0'));
             fed_set_setting($db, 'main_parent_join_request_token', $requestToken);
-            fed_set_setting($db, 'main_parent_join_status', (string)($result['status'] ?? 'pending'));
+            jmp_store_join_status($db, $result);
             fed_log(
                 $db,
                 null,
@@ -147,23 +235,11 @@ try {
             exit;
         }
 
-        if ($action === 'poll') {
-            $parentUrl = jmp_parent_url($db);
-            $requestId = (int)(fed_setting($db, 'main_parent_join_request_id', '0') ?: 0);
-            $requestToken = (string)fed_setting($db, 'main_parent_join_request_token', '');
-            if ($requestId <= 0 || $requestToken === '') {
-                throw new RuntimeException('No stored parent join request. Submit first.');
+        if ($action === 'poll' || $action === 'poll_json') {
+            $result = jmp_poll_parent_status($db, $identity);
+            if ($action === 'poll_json') {
+                fed_json_response($result);
             }
-            $result = jmp_post_json($db, $parentUrl . '/api/federation/join-request-status.php', [
-                'request_id' => $requestId,
-                'site_id' => (string)$identity['site_id'],
-                'request_token' => $requestToken,
-            ]);
-            fed_set_setting($db, 'main_parent_join_status', (string)($result['status'] ?? 'unknown'));
-            if (($result['status'] ?? '') === 'claimed') {
-                fed_set_setting($db, 'main_parent_join_request_token', '');
-            }
-            fed_log($db, null, null, 'INFO', 'MAIN_PARENT_JOIN_POLL', json_encode($result, JSON_UNESCAPED_SLASHES));
             $_SESSION['fed_join_main_result'] = $result;
             header('Location: join-main-parent.php');
             exit;
@@ -186,10 +262,15 @@ try {
     $identity = fed_ensure_identity($db);
     $currentRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     $parentUrl = rtrim((string)fed_setting($db, 'main_parent_url', ''), '/');
-    $joinStatus = (string)fed_setting($db, 'main_parent_join_status', 'none');
+    $joinStatus = strtolower(trim((string)fed_setting($db, 'main_parent_join_status', 'none')));
+    $joinMessage = trim((string)fed_setting($db, 'main_parent_join_status_message', ''));
+    $joinAdminNotes = trim((string)fed_setting($db, 'main_parent_join_admin_notes', ''));
     $requestId = (string)fed_setting($db, 'main_parent_join_request_id', '');
     $manualUrl = $parentUrl !== JMP_OFFICIAL_PARENT_URL ? $parentUrl : '';
     $allowSelfSigned = jmp_allow_self_signed_tls($db);
+    if ($joinMessage === '') {
+        $joinMessage = jmp_default_status_message($joinStatus);
+    }
 
     catalog_page_header(
         'Join Federation Parent',
@@ -219,6 +300,15 @@ try {
         );
     }
 
+    echo '<div class="card" id="join-status-card" data-status="' . catalog_h($joinStatus) . '" data-request-id="' . catalog_h($requestId) . '">';
+    echo '<h2>Parent approval status</h2>';
+    echo '<p><span id="join-status-pill" class="' . catalog_h(jmp_status_pill_class($joinStatus)) . '">' . catalog_h(jmp_status_label($joinStatus)) . '</span></p>';
+    echo '<p id="join-status-message">' . catalog_h($joinMessage) . '</p>';
+    echo '<div id="join-admin-notes"' . ($joinAdminNotes === '' ? ' hidden' : '') . '><h3>Parent admin notes</h3><p id="join-admin-notes-text">' . catalog_h($joinAdminNotes) . '</p></div>';
+    echo '<p class="muted" id="join-auto-poll-note">' . ($joinStatus === 'pending' && $requestId !== '' ? 'Automatically checking the parent every 15 seconds.' : 'Automatic checking stops when the request is no longer pending.') . '</p>';
+    echo '<p id="join-claim-action"' . ($joinStatus === 'approved' ? '' : ' hidden') . '><a class="button" href="claim-parent.php">Open Claim Parent</a></p>';
+    echo '</div>';
+
     echo '<div class="card"><h2>Local identity sent automatically</h2><table>';
     echo '<tr><th>Current site role</th><td>' . catalog_h($currentRole) . '</td></tr>';
     echo '<tr><th>Stored parent URL</th><td class="mono path">' . catalog_h($parentUrl ?: 'not set') . '</td></tr>';
@@ -227,7 +317,7 @@ try {
     echo '<tr><th>Local site ID</th><td class="mono">' . catalog_h($identity['site_id']) . '</td></tr>';
     echo '<tr><th>Local fingerprint</th><td class="mono">' . catalog_h($identity['site_fingerprint']) . '</td></tr>';
     echo '<tr><th>Stored request ID</th><td class="mono">' . catalog_h($requestId ?: 'none') . '</td></tr>';
-    echo '<tr><th>Stored status</th><td>' . catalog_h($joinStatus) . '</td></tr>';
+    echo '<tr><th>Stored status</th><td id="stored-join-status">' . catalog_h($joinStatus) . '</td></tr>';
     echo '</table></div>';
 
     echo '<div class="card"><h2>Submit join request</h2>';
@@ -246,16 +336,174 @@ try {
     echo '<p class="muted">A successful submission automatically changes this deployment to child role and stores the selected parent URL.</p>';
     echo '</form></div>';
 
-    echo '<div class="card"><h2>Poll approval status</h2><form method="post">';
+    echo '<div class="card"><h2>Check approval status</h2><form method="post" id="poll-status-form">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '">';
     echo '<input type="hidden" name="action" value="poll">';
-    echo '<p><button' . ($requestId === '' ? ' disabled' : '') . '>Poll parent approval status</button></p>';
-    echo '</form><p class="muted">After approval, obtain the one-time claim endpoint and token from the parent administrator and open <a href="claim-parent.php">Claim Parent</a>.</p></div>';
+    echo '<p><button id="poll-status-button"' . ($requestId === '' ? ' disabled' : '') . '>Check parent now</button></p>';
+    echo '</form><p class="muted">Pending requests are checked automatically. Approval and denial notes appear in the status card above.</p></div>';
 
-    echo '<script>(function(){const modes=document.querySelectorAll(\'input[name="parent_mode"]\');const manual=document.getElementById("manual-parent-url");function sync(){const selected=document.querySelector(\'input[name="parent_mode"]:checked\');const enabled=selected&&selected.value==="manual";manual.disabled=!enabled;manual.required=Boolean(enabled);}modes.forEach(function(mode){mode.addEventListener("change",sync);});sync();})();</script>';
+    echo <<<'HTML'
+<script>
+(function () {
+    const modes = document.querySelectorAll('input[name="parent_mode"]');
+    const manual = document.getElementById('manual-parent-url');
+    const pollForm = document.getElementById('poll-status-form');
+    const pollButton = document.getElementById('poll-status-button');
+    const card = document.getElementById('join-status-card');
+    const pill = document.getElementById('join-status-pill');
+    const message = document.getElementById('join-status-message');
+    const notesWrap = document.getElementById('join-admin-notes');
+    const notesText = document.getElementById('join-admin-notes-text');
+    const autoNote = document.getElementById('join-auto-poll-note');
+    const claimAction = document.getElementById('join-claim-action');
+    const storedStatus = document.getElementById('stored-join-status');
+    let timer = null;
+    let polling = false;
+
+    function syncParentMode() {
+        const selected = document.querySelector('input[name="parent_mode"]:checked');
+        const enabled = selected && selected.value === 'manual';
+        manual.disabled = !enabled;
+        manual.required = Boolean(enabled);
+    }
+
+    function statusPresentation(status) {
+        const normalized = String(status || 'unknown').toLowerCase();
+        const labels = {
+            pending: 'Pending',
+            approved: 'Approved',
+            denied: 'Denied',
+            claimed: 'Connected',
+            expired: 'Expired'
+        };
+        const classes = {
+            pending: 'pill amber',
+            approved: 'pill green',
+            denied: 'pill red',
+            claimed: 'pill green',
+            expired: 'pill red'
+        };
+        return {
+            status: normalized,
+            label: labels[normalized] || normalized.charAt(0).toUpperCase() + normalized.slice(1),
+            className: classes[normalized] || 'pill'
+        };
+    }
+
+    function renderStatus(result) {
+        const view = statusPresentation(result.status);
+        card.dataset.status = view.status;
+        pill.className = view.className;
+        pill.textContent = view.label;
+        message.textContent = result.message || 'Parent status received.';
+        storedStatus.textContent = view.status;
+
+        const adminNotes = String(result.admin_notes || '').trim();
+        notesText.textContent = adminNotes;
+        notesWrap.hidden = adminNotes === '';
+        claimAction.hidden = view.status !== 'approved';
+
+        if (view.status === 'pending') {
+            autoNote.textContent = 'Automatically checking the parent every 15 seconds.';
+            schedulePoll();
+        } else {
+            stopPolling();
+            autoNote.textContent = 'Automatic checking stopped because the request is ' + view.status + '.';
+        }
+    }
+
+    function stopPolling() {
+        if (timer !== null) {
+            window.clearTimeout(timer);
+            timer = null;
+        }
+    }
+
+    function schedulePoll(delay) {
+        stopPolling();
+        if (card.dataset.status !== 'pending' || document.hidden) {
+            return;
+        }
+        timer = window.setTimeout(function () {
+            void pollStatus(false);
+        }, typeof delay === 'number' ? delay : 15000);
+    }
+
+    async function pollStatus(manualRequest) {
+        if (polling || !pollForm || pollButton.disabled) {
+            return;
+        }
+        polling = true;
+        pollButton.disabled = true;
+        if (manualRequest) {
+            autoNote.textContent = 'Checking the parent now…';
+        }
+
+        const data = new FormData(pollForm);
+        data.set('action', 'poll_json');
+
+        try {
+            const response = await fetch('join-main-parent.php', {
+                method: 'POST',
+                body: data,
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const text = await response.text();
+            let result;
+            try {
+                result = JSON.parse(text);
+            } catch (error) {
+                throw new Error('Status check returned invalid JSON.');
+            }
+            if (!response.ok || !result.ok) {
+                throw new Error(result.error || ('Status check failed with HTTP ' + response.status + '.'));
+            }
+            renderStatus(result);
+        } catch (error) {
+            autoNote.textContent = 'Automatic status check failed: ' + (error instanceof Error ? error.message : String(error));
+            if (card.dataset.status === 'pending') {
+                schedulePoll(30000);
+            }
+        } finally {
+            polling = false;
+            pollButton.disabled = card.dataset.requestId === '';
+        }
+    }
+
+    modes.forEach(function (mode) {
+        mode.addEventListener('change', syncParentMode);
+    });
+    syncParentMode();
+
+    pollForm.addEventListener('submit', function (event) {
+        event.preventDefault();
+        void pollStatus(true);
+    });
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) {
+            stopPolling();
+        } else if (card.dataset.status === 'pending') {
+            void pollStatus(false);
+        }
+    });
+
+    if (card.dataset.status === 'pending' && card.dataset.requestId !== '') {
+        schedulePoll(5000);
+    }
+}());
+</script>
+HTML;
 
     catalog_foot();
 } catch (Throwable $e) {
+    if ($jmpWantsJson) {
+        fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
+    }
     if (!headers_sent()) {
         catalog_head('Join parent error');
     }
