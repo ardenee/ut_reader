@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -27,16 +29,21 @@ try {
     ];
     foreach (catalog_all(
         $db,
-        'SELECT status,COUNT(*) total FROM ue_background_jobs WHERE queue_name=? GROUP BY status',
+        'SELECT status,JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")) result_status,COUNT(*) total '
+            . 'FROM ue_background_jobs WHERE queue_name=? GROUP BY status,result_status',
         [$queueName]
     ) as $row) {
-        $status = (string)$row['status'];
-        if (array_key_exists($status, $counts)) {
-            $counts[$status] = (int)$row['total'];
+        $group = CatalogJobDisplayStatus::group(
+            (string)($row['status'] ?? ''),
+            isset($row['result_status']) ? (string)$row['result_status'] : null
+        );
+        if (array_key_exists($group, $counts)) {
+            $counts[$group] += (int)$row['total'];
         }
     }
 
     catalog_head('Background Jobs');
+    echo '<style>#background-jobs-app .job-status + .muted.small{display:none}</style>';
     catalog_page_header(
         'Background Jobs',
         'View and control queued uploads, imports, dependency rebuilds, maintenance and package-generation work without using SSH.',
