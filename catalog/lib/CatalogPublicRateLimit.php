@@ -63,8 +63,11 @@ function catalog_public_join_rate_limit(string $siteId = ''): void
     $identity = catalog_client_ip() . '|' . strtolower(trim($siteId));
     catalog_public_rate_limit_or_throw(
         'federation-join',
-        catalog_public_rate_limit_value('UNREALDB_FEDERATION_JOIN_MAX_REQUESTS', 5, 1, 100),
-        catalog_public_rate_limit_value('UNREALDB_FEDERATION_JOIN_WINDOW_SECONDS', 3600, 60, 86400),
+        // Pairing can legitimately require several retries while certificates,
+        // firewall rules, and database migrations are being corrected. Keep the
+        // limiter useful without locking an administrator out for an hour.
+        catalog_public_rate_limit_value('UNREALDB_FEDERATION_JOIN_MAX_REQUESTS', 20, 1, 100),
+        catalog_public_rate_limit_value('UNREALDB_FEDERATION_JOIN_WINDOW_SECONDS', 900, 60, 86400),
         $identity
     );
 }
