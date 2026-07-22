@@ -52,7 +52,7 @@ final class CatalogGameFileListService
         $rows = \catalog_all(
             $db,
             'SELECT '
-            . 'f.id, f.package_name, f.original_name, f.package_guid, f.md5, f.extension, '
+            . 'f.id, f.package_name, f.original_name, f.package_guid, f.md5, f.sha1, f.extension, '
             . 'f.package_version, f.licensee_version, f.file_size, f.is_compressed, '
             . "COALESCE(SUM(d.status='resolved'),0) resolved_count, "
             . "COALESCE(SUM(d.status='missing'),0) missing_count, "
@@ -95,7 +95,7 @@ final class CatalogGameFileListService
         return \catalog_all(
             $db,
             'SELECT '
-            . 'f.id, f.package_name, f.original_name, f.package_guid, f.md5, f.extension, '
+            . 'f.id, f.package_name, f.original_name, f.package_guid, f.md5, f.sha1, f.extension, '
             . 'f.package_version, f.licensee_version, f.file_size, f.is_compressed, '
             . "COALESCE(SUM(d.status='resolved'),0) resolved_count, "
             . "COALESCE(SUM(d.status='missing'),0) missing_count, "
