@@ -62,6 +62,7 @@ try {
         . 'data-queue="' . catalog_h($queueName) . '" '
         . 'data-status-url="api/v1/job-status.php" '
         . 'data-action-url="api/v1/job-action.php" '
+        . 'data-pak-rerun-url="api/v1/job-rerun-pak.php" '
         . 'data-run-url="api/v1/job-run.php" '
         . 'data-worker-status-url="api/v1/job-worker-status.php" '
         . 'data-worker-action-url="api/v1/job-worker-action.php" '
@@ -110,6 +111,9 @@ try {
     $jobsScript = __DIR__ . '/assets/background-jobs.js';
     $jobsScriptVersion = is_file($jobsScript) ? (string)filemtime($jobsScript) : '1';
     echo '<script src="assets/background-jobs.js?v=' . catalog_h($jobsScriptVersion) . '"></script>';
+    $pakRerunScript = __DIR__ . '/assets/background-jobs-pak-rerun.js';
+    $pakRerunScriptVersion = is_file($pakRerunScript) ? (string)filemtime($pakRerunScript) : '1';
+    echo '<script src="assets/background-jobs-pak-rerun.js?v=' . catalog_h($pakRerunScriptVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
