@@ -27,6 +27,7 @@ jobs:
           php -l catalog/src/Application/Jobs/JobExecutionContext.php
           php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogJobEventLog.php
           php -l catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php
@@ -61,6 +62,7 @@ jobs:
           php -l catalog/tests/game-backup-contract-test.php
           php -l catalog/tests/pak-archive-management-contract-test.php
           php -l catalog/tests/chunked-pak-upload-contract-test.php
+          php -l catalog/tests/live-pak-job-events-contract-test.php
           php -l tests/catalog_redirect_payload_test.php
       - name: Syntax check detached worker clients
         run: |
@@ -78,5 +80,7 @@ jobs:
         run: php catalog/tests/pak-archive-management-contract-test.php
       - name: Verify chunked PAK upload contract
         run: php catalog/tests/chunked-pak-upload-contract-test.php
+      - name: Verify live PAK job event streaming
+        run: php catalog/tests/live-pak-job-events-contract-test.php
       - name: Verify generic redirect payload decoding
         run: php tests/catalog_redirect_payload_test.php
