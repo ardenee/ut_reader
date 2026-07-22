@@ -119,7 +119,8 @@ try {
     word-break: normal;
 }
 
-.pak-info-natural-table .pak-info-nowrap {
+.pak-info-natural-table .pak-info-nowrap,
+.pak-info-natural-table .pak-info-nowrap * {
     white-space: nowrap !important;
     overflow-wrap: normal;
     word-break: normal;
