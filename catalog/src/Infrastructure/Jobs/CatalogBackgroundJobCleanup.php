@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 use DateTimeImmutable;
 use DateTimeZone;
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 
 final class CatalogBackgroundJobCleanup
@@ -106,11 +107,23 @@ final class CatalogBackgroundJobCleanup
     private function deleteStagedFiles(array $rows): int
     {
         $store = new CatalogIncomingFileStore($this->config);
+        $chunkCleanup = new CatalogChunkedUploadCleanup($this->config);
         $deleted = 0;
         foreach ($rows as $row) {
             $payload = $this->decodePayload((string)($row['payload_json'] ?? ''));
             $relativePath = trim((string)($payload['staged_path'] ?? ''));
             if ($relativePath === '') {
+                continue;
+            }
+            if (str_starts_with($relativePath, 'chunk-upload:')) {
+                $uploadId = substr($relativePath, strlen('chunk-upload:'));
+                try {
+                    if ($chunkCleanup->delete($uploadId)) {
+                        $deleted++;
+                    }
+                } catch (\Throwable) {
+                    // Missing or already-pruned chunk stores do not block cleanup.
+                }
                 continue;
             }
             try {
