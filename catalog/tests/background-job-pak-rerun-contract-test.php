@@ -39,6 +39,7 @@ foreach ([
     'JobType::IMPORT_STAGED_PAK',
     "'source' => \$sourceMode",
     "\$sourceMode = 'retained_pak'",
+    "\$dedupeKey = 'rerun-pak:'",
 ] as $fragment) {
     pak_rerun_expect(str_contains($endpoint, $fragment), 'PAK re-run endpoint is missing: ' . $fragment);
 }
@@ -48,11 +49,16 @@ pak_rerun_expect(
     'PAK re-run makes a second large physical copy instead of referencing retained storage.'
 );
 
-$queuePosition = strpos($endpoint, 'CatalogIncomingFileStore');
 $retainedPosition = strpos($endpoint, 'CatalogPakArchiveStore::schemaInstalled');
+$stagingPosition = strpos($endpoint, 'new CatalogIncomingFileStore');
 pak_rerun_expect(
-    $queuePosition !== false && $retainedPosition !== false && $queuePosition < $retainedPosition,
-    'PAK re-run does not prefer the existing durable staging source before retained archive fallback.'
+    $retainedPosition !== false && $stagingPosition !== false && $retainedPosition < $stagingPosition,
+    'PAK re-run does not prefer the retained managed archive before durable staging fallback.'
+);
+
+pak_rerun_expect(
+    str_contains($endpoint, "Neither the retained managed PAK nor the durable staging source is available"),
+    'PAK re-run does not clearly report when both reusable sources are unavailable.'
 );
 
 echo "Background-job PAK re-run contract tests passed.\n";
