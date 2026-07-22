@@ -20,7 +20,7 @@ try {
     $payload = fed_decode_json_object($body);
     $siteName = trim((string)($payload['site_name'] ?? ''));
     $siteUrl = rtrim(trim((string)($payload['site_url'] ?? '')), '/');
-    $siteId = strtolower(trim((string)($payload['site_id'] ?? '')));
+    $siteId = strtolower(trim((string)($payload['site_id'] ?? ''));
     $fingerprint = strtoupper(trim((string)($payload['site_fingerprint'] ?? '')));
     $requestToken = trim((string)($payload['request_token'] ?? ''));
     $contactName = trim((string)($payload['contact_name'] ?? ''));
@@ -65,6 +65,11 @@ try {
     fed_log($db, null, null, 'INFO', 'JOIN_REQUEST_API_SUBMITTED', 'Auto join request #' . $id . ' from ' . $siteName . ' / ' . $siteUrl);
     fed_json_response(['ok' => true, 'request_id' => $id, 'status' => 'pending', 'message' => 'Join request submitted. Waiting for parent admin approval.']);
 } catch (Throwable $error) {
-    error_log('[UnrealDB federation join][' . catalog_request_id() . '] ' . $error->getMessage());
-    fed_json_response(['ok' => false, 'error' => 'Join request could not be processed.'], 503);
+    $requestId = catalog_request_id();
+    error_log('[UnrealDB federation join][' . $requestId . '] ' . $error->getMessage());
+    fed_json_response([
+        'ok' => false,
+        'error' => 'Join request could not be processed.',
+        'reference' => $requestId,
+    ], 503);
 }
