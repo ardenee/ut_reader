@@ -94,17 +94,21 @@ final class CatalogBackgroundJobCleanup
     public function deleteTerminalMatching(string $queueName, string $status = ''): array
     {
         $queueName = $this->queueName($queueName);
-        $status = trim($status);
-        if ($status !== '' && !in_array($status, self::TERMINAL_STATUSES, true)) {
-            throw new \InvalidArgumentException('The selected status is not a terminal job status.');
+        $status = strtolower(trim($status));
+        if ($status !== '' && !CatalogJobDisplayStatus::isValidFilter($status)) {
+            throw new \InvalidArgumentException('The selected status is not supported.');
+        }
+        if (in_array($status, ['queued', 'running'], true)) {
+            throw new \InvalidArgumentException('Queued and running jobs cannot be deleted in bulk.');
         }
 
         $sql = 'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? '
             . 'AND status IN ("completed","failed","dead_letter","cancelled")';
         $params = [$queueName];
         if ($status !== '') {
-            $sql .= ' AND status=?';
-            $params[] = $status;
+            $condition = CatalogJobDisplayStatus::filterCondition($status);
+            $sql .= ' AND ' . $condition['sql'];
+            array_push($params, ...$condition['params']);
         }
         $sql .= ' ORDER BY id LIMIT ' . self::MAX_BULK_DELETE;
         $statement = $this->db->prepare($sql);
