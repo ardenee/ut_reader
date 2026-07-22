@@ -20,7 +20,7 @@ try {
     $payload = fed_decode_json_object($body);
     $siteName = trim((string)($payload['site_name'] ?? ''));
     $siteUrl = rtrim(trim((string)($payload['site_url'] ?? '')), '/');
-    $siteId = strtolower(trim((string)($payload['site_id'] ?? ''));
+    $siteId = strtolower(trim((string)($payload['site_id'] ?? '')));
     $fingerprint = strtoupper(trim((string)($payload['site_fingerprint'] ?? '')));
     $requestToken = trim((string)($payload['request_token'] ?? ''));
     $contactName = trim((string)($payload['contact_name'] ?? ''));
