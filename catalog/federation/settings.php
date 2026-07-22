@@ -59,6 +59,7 @@ try {
             'delay_between_downloads_seconds', 'delay_between_uploads_seconds',
             'max_files_per_transfer_run', 'max_transfer_file_size_mb',
             'auto_import_downloads', 'require_https_for_remote_sites',
+            'allow_self_signed_federation_certificates',
             'api_nonce_ttl_seconds', 'transfer_token_ttl_seconds', 'log_retention_days',
             'cron_worker_enabled', 'cron_worker_token',
             'public_download_mode', 'external_mirror_auto_queue', 'external_mirror_expiry_days',
@@ -137,7 +138,8 @@ try {
         'allow_parent_pull_from_child' => 'Allow paired parent to pull files from this child',
         'allow_child_request_from_parent' => 'Allow child to request missing dependency files from parent',
         'auto_import_downloads' => 'Auto-import downloaded files after transfer',
-        'require_https_for_remote_sites' => 'Require HTTPS for remote federation sites'
+        'require_https_for_remote_sites' => 'Require HTTPS for remote federation sites',
+        'allow_self_signed_federation_certificates' => 'Allow self-signed federation certificates (testing only)'
     ] as $key => $label) {
         $val = (string)($settings[$key] ?? '0');
         $attributes = '';
@@ -150,6 +152,8 @@ try {
             $val = $isChild ? '1' : $val;
             $attributes = ' data-child-forced' . ($isChild ? ' disabled' : '');
             $note = '<span class="muted child-forced-note"' . ($isChild ? '' : ' hidden') . '> Required for child role.</span>';
+        } elseif ($key === 'allow_self_signed_federation_certificates') {
+            $note = '<span class="muted"> Disabled by default. Enabling this turns off certificate trust and hostname verification for outbound federation requests. Use only for development or testing.</span>';
         }
         echo '<tr><th>' . catalog_h($label) . '</th><td><select name="' . catalog_h($key) . '"' . $attributes . '><option value="0"' . ($val === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($val === '1' ? ' selected' : '') . '>Yes</option></select>' . $note . '</td></tr>';
     }
