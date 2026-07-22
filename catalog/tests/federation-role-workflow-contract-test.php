@@ -13,9 +13,11 @@ $join = file_get_contents($root . '/federation/join.php');
 $joinMain = file_get_contents($root . '/federation/join-main-parent.php');
 $settings = file_get_contents($root . '/federation/settings.php');
 $claim = file_get_contents($root . '/federation/claim-parent.php');
+$transfer = file_get_contents($root . '/federation/transfer-run.php');
+$httpClient = file_get_contents($root . '/lib/TrustedHttpSourceClient.php');
 
-foreach ([$join, $joinMain, $settings, $claim] as $content) {
-    federation_role_expect(is_string($content), 'A required federation role workflow file is missing.');
+foreach ([$join, $joinMain, $settings, $claim, $transfer, $httpClient] as $content) {
+    federation_role_expect(is_string($content), 'A required federation workflow file is missing.');
 }
 
 federation_role_expect(str_contains($join, "header('Location: join-main-parent.php')"), 'Administrator join page does not use the easy join workflow.');
@@ -35,4 +37,14 @@ federation_role_expect(str_contains($settings, 'data-parent-only'), 'Settings UI
 federation_role_expect(str_contains($settings, 'settings_apply_role($db, $siteRole)'), 'Settings save does not enforce role defaults.');
 federation_role_expect(str_contains($settings, 'field.disabled=child'), 'Settings UI does not disable parent controls for child role.');
 
-echo "Federation role workflow contract tests passed.\n";
+$settingName = 'allow_self_signed_federation_certificates';
+federation_role_expect(str_contains($settings, $settingName), 'Self-signed federation certificate setting is missing.');
+federation_role_expect(str_contains($settings, "\$settings[\$key] ?? '0'"), 'Self-signed federation certificate setting is not disabled by default.');
+federation_role_expect(str_contains($joinMain, $settingName), 'Join requests do not honor the self-signed certificate setting.');
+federation_role_expect(str_contains($claim, $settingName), 'Parent claims do not honor the self-signed certificate setting.');
+federation_role_expect(str_contains($transfer, $settingName), 'Manual transfers do not honor the self-signed certificate setting.');
+federation_role_expect(str_contains($httpClient, 'configureFromFederationSetting'), 'Background federation HTTP requests do not load the TLS test setting.');
+federation_role_expect(str_contains($httpClient, 'CURLOPT_SSL_VERIFYPEER => !self::$allowUntrustedTls'), 'Federation cURL verification cannot be relaxed in testing mode.');
+federation_role_expect(str_contains($httpClient, 'if (!self::$allowPrivateNetwork)'), 'Federation test mode does not support private-network endpoints.');
+
+echo "Federation role and TLS workflow contract tests passed.\n";
