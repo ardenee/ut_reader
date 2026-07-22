@@ -59,7 +59,7 @@ try {
         fed_json_response(['ok' => true, 'request_id' => (int)$existing['id'], 'status' => (string)$existing['status'], 'message' => 'Existing active join request found.']);
     }
 
-    $stmt = $db->prepare('INSERT INTO ue_federation_join_requests(status,requested_role,site_name,site_url,site_id,site_fingerprint,contact_name,contact_email,notes,request_token_hash) VALUES("pending","child",?,?,?,?,?,?,?,?,?)');
+    $stmt = $db->prepare('INSERT INTO ue_federation_join_requests(status,requested_role,site_name,site_url,site_id,site_fingerprint,contact_name,contact_email,notes,request_token_hash) VALUES("pending","child",?,?,?,?,?,?,?,?)');
     $stmt->execute([$siteName, $siteUrl, $siteId, $fingerprint, $contactName ?: null, $contactEmail ?: null, $notes ?: null, hash('sha256', $requestToken)]);
     $id = (int)$db->lastInsertId();
     fed_log($db, null, null, 'INFO', 'JOIN_REQUEST_API_SUBMITTED', 'Auto join request #' . $id . ' from ' . $siteName . ' / ' . $siteUrl);
