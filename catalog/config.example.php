@@ -13,7 +13,17 @@ return [
     ],
     'site_name' => 'Unreal File Catalog',
     'storage_path' => __DIR__ . '/storage',
+    // Ordinary package upload limit. PAK containers have a separate, much
+    // larger limit and are transferred by the browser in resumable chunks.
     'max_upload_bytes' => 256 * 1024 * 1024,
+    'max_container_upload_bytes' => 64 * 1024 * 1024 * 1024,
+    'chunk_upload' => [
+        // Each HTTP request carries only one chunk, avoiding PHP/Apache limits
+        // on a single multi-gigabyte request. 16 MiB is safe for typical hosts.
+        'chunk_bytes' => 16 * 1024 * 1024,
+        // Incomplete/resumable chunk stores older than this may be pruned.
+        'stale_hours' => 168,
+    ],
     'auth' => [
         // Persistent rotating remember-me token lifetime.
         'remember_days' => 30,
