@@ -11,13 +11,29 @@ function large_pak_entry_layout_expect(bool $condition, string $message): void
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 large_pak_entry_layout_expect(is_string($factory), 'Could not read the job worker factory.');
 foreach ([
-    '$pakImportConfig = $config;',
-    '$pakImportConfig[\'max_upload_bytes\'] = PHP_INT_MAX;',
-    'new CatalogPakImportJobHandler($db, $pakImportConfig)',
+    '$trustedImportConfig = $config;',
+    '$trustedImportConfig[\'max_upload_bytes\'] = PHP_INT_MAX;',
+    'new CatalogPakImportJobHandler($db, $trustedImportConfig)',
+    'new CatalogStagedImportJobHandler($db, $trustedImportConfig)',
+    'new CatalogSourceScanJobHandler($db, $trustedImportConfig)',
+    'new GameBackupJobHandler($db, $trustedImportConfig)',
 ] as $fragment) {
     large_pak_entry_layout_expect(
         str_contains($factory, $fragment),
-        'PAK entry imports still use the normal upload-size ceiling: ' . $fragment
+        'A trusted package import path still uses the normal upload-size ceiling: ' . $fragment
+    );
+}
+
+$unverifiedAction = file_get_contents(__DIR__ . '/../unverified-files-action.php');
+large_pak_entry_layout_expect(is_string($unverifiedAction), 'Could not read the unverified action endpoint.');
+foreach ([
+    '$trustedImportConfig = $config;',
+    '$trustedImportConfig[\'max_upload_bytes\'] = PHP_INT_MAX;',
+    'catalog_unverified_promote_item($db, $trustedImportConfig,',
+] as $fragment) {
+    large_pak_entry_layout_expect(
+        str_contains($unverifiedAction, $fragment),
+        'Large unverified package promotion is missing: ' . $fragment
     );
 }
 
