@@ -1,6 +1,9 @@
 (function () {
     'use strict';
 
+    if (window.__unrealDbCatalogIdentitiesLoaded) return;
+    window.__unrealDbCatalogIdentitiesLoaded = true;
+
     var script = document.currentScript;
     var endpoint = script && script.src
         ? new URL('../api/v1/file-identities.php', script.src).toString()
@@ -138,8 +141,8 @@
         if (!href) return 0;
         try {
             var url = new URL(href, window.location.href);
-            if (!/(?:file-info|file-examine|download-info)\.php$/i.test(url.pathname)) return 0;
-            var id = parseInt(url.searchParams.get('id') || '0', 10);
+            if (!/(?:file-info|file-examine|download-info|download|file-maintenance)\.php$/i.test(url.pathname)) return 0;
+            var id = parseInt(url.searchParams.get('file_id') || url.searchParams.get('id') || '0', 10);
             return id > 0 ? id : 0;
         } catch (error) {
             return 0;
@@ -149,6 +152,13 @@
     function fileIdFromScope(scope) {
         var explicit = parseInt(scope && scope.dataset ? (scope.dataset.fileId || '0') : '0', 10);
         if (explicit > 0) return explicit;
+
+        var hidden = scope ? scope.querySelector('input[name="file_id"][value]') : null;
+        if (hidden) {
+            var hiddenId = parseInt(hidden.value || '0', 10);
+            if (hiddenId > 0) return hiddenId;
+        }
+
         var links = scope ? scope.querySelectorAll('a[href]') : [];
         for (var i = 0; i < links.length; i++) {
             var id = fileIdFromHref(links[i].getAttribute('href'));
