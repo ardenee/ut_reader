@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
@@ -20,6 +19,24 @@ function settings_check_csrf(): void
     }
 }
 
+function settings_apply_role(PDO $db, string $role): void
+{
+    if (!in_array($role, ['standalone', 'parent', 'child'], true)) {
+        throw new RuntimeException('Invalid federation site role.');
+    }
+
+    fed_set_setting($db, 'site_role', $role);
+    if ($role === 'child') {
+        fed_set_setting($db, 'child_enabled', '1');
+        fed_set_setting($db, 'parent_enabled', '0');
+        fed_set_setting($db, 'join_requests_enabled', '0');
+    } elseif ($role === 'standalone') {
+        fed_set_setting($db, 'child_enabled', '0');
+        fed_set_setting($db, 'parent_enabled', '0');
+        fed_set_setting($db, 'join_requests_enabled', '0');
+    }
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -30,8 +47,13 @@ try {
         }
         settings_check_csrf();
 
+        $siteRole = strtolower(trim((string)($_POST['site_role'] ?? 'standalone')));
+        if (!in_array($siteRole, ['standalone', 'parent', 'child'], true)) {
+            throw new RuntimeException('Invalid federation site role.');
+        }
+
         $allowed = [
-            'site_role', 'site_name', 'site_url', 'parent_enabled', 'child_enabled',
+            'site_name', 'site_url', 'parent_enabled', 'child_enabled',
             'allow_parent_pull_from_child', 'allow_child_request_from_parent',
             'max_download_kbps', 'max_upload_kbps',
             'delay_between_downloads_seconds', 'delay_between_uploads_seconds',
@@ -46,13 +68,18 @@ try {
         ];
 
         foreach ($allowed as $key) {
-            $value = trim((string)($_POST[$key] ?? ''));
-            fed_set_setting($db, $key, $value);
+            if (!array_key_exists($key, $_POST)) {
+                continue;
+            }
+            fed_set_setting($db, $key, trim((string)$_POST[$key]));
         }
 
-        fed_ensure_identity($db, trim((string)$_POST['site_url']), trim((string)$_POST['site_name']));
-        fed_log($db, null, null, 'INFO', 'SETTINGS_SAVE', 'Federation/settings updated.');
-        $_SESSION['fed_settings_flash'] = 'Settings saved.';
+        settings_apply_role($db, $siteRole);
+        fed_ensure_identity($db, trim((string)($_POST['site_url'] ?? '')), trim((string)($_POST['site_name'] ?? '')));
+        fed_log($db, null, null, 'INFO', 'SETTINGS_SAVE', 'Federation/settings updated for role ' . $siteRole . '.');
+        $_SESSION['fed_settings_flash'] = $siteRole === 'child'
+            ? 'Settings saved. Child role enabled; parent features and public child join requests were disabled.'
+            : 'Settings saved.';
         header('Location: settings.php');
         exit;
     }
@@ -61,25 +88,32 @@ try {
         exit;
     }
 
+    $currentRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
+    if ($currentRole === 'child') {
+        settings_apply_role($db, 'child');
+    }
+
     catalog_head('Federation Settings');
     catalog_flash($_SESSION['fed_settings_flash'] ?? null);
     unset($_SESSION['fed_settings_flash']);
 
     $identity = fed_ensure_identity($db);
     $settings = fed_all_settings($db);
+    $currentRole = strtolower(trim((string)($settings['site_role'] ?? 'standalone')));
+    $isChild = $currentRole === 'child';
 
-    catalog_page_header('Federation Settings', 'Configure site identity, catalog UI defaults, parent/child permissions, transfer limits, public download handling, and DSM cron worker settings.', catalog_federation_links() + ['Join Main Parent' => 'join-main-parent.php', 'Join Requests' => 'join-requests.php', 'Mirror Providers' => '../mirror-providers.php', 'Mirror Links' => '../mirror-links.php']);
+    catalog_page_header('Federation Settings', 'Configure site identity, catalog UI defaults, parent/child permissions, transfer limits, public download handling, and DSM cron worker settings.', catalog_federation_links() + ['Join Parent' => 'join.php', 'Join Requests' => 'join-requests.php', 'Mirror Providers' => '../mirror-providers.php', 'Mirror Links' => '../mirror-links.php']);
 
-    echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(settings_csrf()) . '">';
+    echo '<form method="post" id="federation-settings-form"><input type="hidden" name="csrf" value="' . catalog_h(settings_csrf()) . '">';
     echo '<div class="card"><h2>Site identity</h2><table>';
     echo '<tr><th>Site ID</th><td class="mono">' . catalog_h($identity['site_id']) . '</td></tr>';
     echo '<tr><th>Fingerprint</th><td class="mono">' . catalog_h($identity['site_fingerprint']) . '</td></tr>';
-    echo '<tr><th>Site role</th><td><select name="site_role">';
+    echo '<tr><th>Site role</th><td><select id="federation-site-role" name="site_role">';
     foreach (['standalone','parent','child'] as $role) {
-        $sel = (($settings['site_role'] ?? 'standalone') === $role) ? ' selected' : '';
+        $sel = $currentRole === $role ? ' selected' : '';
         echo '<option value="' . catalog_h($role) . '"' . $sel . '>' . catalog_h($role) . '</option>';
     }
-    echo '</select></td></tr>';
+    echo '</select> <span class="muted">Child role automatically disables parent-only settings.</span></td></tr>';
     echo '<tr><th>Site name</th><td><input name="site_name" value="' . catalog_h($settings['site_name'] ?? '') . '" style="min-width:420px"></td></tr>';
     echo '<tr><th>Site URL</th><td><input name="site_url" value="' . catalog_h($settings['site_url'] ?? '') . '" style="min-width:640px" placeholder="https://example.com/catalog"></td></tr>';
     echo '</table></div>';
@@ -88,11 +122,12 @@ try {
     echo '<tr><th>Game files per page</th><td><input name="game_file_display_limit" type="number" min="1" max="500" value="' . catalog_h($settings['game_file_display_limit'] ?? '100') . '" style="width:120px"> <span class="muted">Default is 100. Users can still choose 25, 50, 100, 200, or 500 on the file list page.</span></td></tr>';
     echo '</table></div>';
 
-    echo '<div class="card"><h2>Join / pairing</h2><p class="muted">Public join requests are for parent sites accepting child deployments. Main parent URL is for child sites using the easy Join Main Parent workflow.</p><table>';
-    $joinEnabled = (string)($settings['join_requests_enabled'] ?? '1');
-    echo '<tr><th>Accept public child join requests on this parent</th><td><select name="join_requests_enabled"><option value="0"' . ($joinEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($joinEnabled === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
-    echo '<tr><th>Join claim token TTL, seconds</th><td><input name="join_claim_token_ttl_seconds" value="' . catalog_h($settings['join_claim_token_ttl_seconds'] ?? '86400') . '" style="width:160px"></td></tr>';
-    echo '<tr><th>Main parent URL</th><td><input name="main_parent_url" value="' . catalog_h($settings['main_parent_url'] ?? '') . '" style="min-width:640px" placeholder="https://main-parent.example.com/catalog"></td></tr>';
+    echo '<div class="card"><h2>Join / pairing</h2><p class="muted">Public join requests and claim-token settings apply only when this deployment acts as a parent.</p><table>';
+    $joinEnabled = $isChild ? '0' : (string)($settings['join_requests_enabled'] ?? '1');
+    $parentDisabled = $isChild ? ' disabled' : '';
+    echo '<tr><th>Accept public child join requests on this parent</th><td><select name="join_requests_enabled" data-parent-only' . $parentDisabled . '><option value="0"' . ($joinEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($joinEnabled === '1' ? ' selected' : '') . '>Yes</option></select><span class="muted parent-disabled-note"' . ($isChild ? '' : ' hidden') . '> Disabled for child role.</span></td></tr>';
+    echo '<tr><th>Join claim token TTL, seconds</th><td><input name="join_claim_token_ttl_seconds" data-parent-only' . $parentDisabled . ' value="' . catalog_h($settings['join_claim_token_ttl_seconds'] ?? '86400') . '" style="width:160px"><span class="muted parent-disabled-note"' . ($isChild ? '' : ' hidden') . '> Disabled for child role.</span></td></tr>';
+    echo '<tr><th>Main parent URL</th><td><input name="main_parent_url" value="' . catalog_h($settings['main_parent_url'] ?? '') . '" style="min-width:640px" placeholder="https://parent.example.com/catalog"> <a class="button" href="join.php">Join a parent</a></td></tr>';
     echo '</table></div>';
 
     echo '<div class="card"><h2>Role permissions</h2><table>';
@@ -105,7 +140,18 @@ try {
         'require_https_for_remote_sites' => 'Require HTTPS for remote federation sites'
     ] as $key => $label) {
         $val = (string)($settings[$key] ?? '0');
-        echo '<tr><th>' . catalog_h($label) . '</th><td><select name="' . catalog_h($key) . '"><option value="0"' . ($val === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($val === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
+        $attributes = '';
+        $note = '';
+        if ($key === 'parent_enabled') {
+            $val = $isChild ? '0' : $val;
+            $attributes = ' data-parent-only' . $parentDisabled;
+            $note = '<span class="muted parent-disabled-note"' . ($isChild ? '' : ' hidden') . '> Disabled for child role.</span>';
+        } elseif ($key === 'child_enabled') {
+            $val = $isChild ? '1' : $val;
+            $attributes = ' data-child-forced' . ($isChild ? ' disabled' : '');
+            $note = '<span class="muted child-forced-note"' . ($isChild ? '' : ' hidden') . '> Required for child role.</span>';
+        }
+        echo '<tr><th>' . catalog_h($label) . '</th><td><select name="' . catalog_h($key) . '"' . $attributes . '><option value="0"' . ($val === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($val === '1' ? ' selected' : '') . '>Yes</option></select>' . $note . '</td></tr>';
     }
     echo '</table></div>';
 
@@ -150,6 +196,8 @@ try {
     echo '<tr><th>Cron worker enabled</th><td><select name="cron_worker_enabled"><option value="0"' . ($cronEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($cronEnabled === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
     echo '<tr><th>Cron worker token</th><td><input name="cron_worker_token" value="' . catalog_h($settings['cron_worker_token'] ?? '') . '" style="min-width:520px" placeholder="long-random-token"></td></tr>';
     echo '</table></div><p><button>Save settings</button></p></form>';
+
+    echo '<script>(function(){const role=document.getElementById("federation-site-role");const parentOnly=document.querySelectorAll("[data-parent-only]");const childForced=document.querySelectorAll("[data-child-forced]");const parentNotes=document.querySelectorAll(".parent-disabled-note");const childNotes=document.querySelectorAll(".child-forced-note");function sync(){const child=role.value==="child";parentOnly.forEach(function(field){field.disabled=child;if(child&&(field.name==="join_requests_enabled"||field.name==="parent_enabled"))field.value="0";});childForced.forEach(function(field){field.disabled=child;if(child)field.value="1";});parentNotes.forEach(function(note){note.hidden=!child;});childNotes.forEach(function(note){note.hidden=!child;});}role.addEventListener("change",sync);sync();})();</script>';
 
     catalog_foot();
 } catch (Throwable $e) {
