@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/FederationAuth.php';
+require_once __DIR__ . '/FederationPeerSecret.php';
 
 /** @return array<string,mixed> */
 function federation_build_inventory_payload(PDO $db): array
@@ -53,13 +54,15 @@ function federation_push_inventory_to_parent(PDO $db, int $peerId): array
     if (!$parent) {
         throw new RuntimeException('Active parent peer not found.');
     }
-    $secret = fed_peer_secret($db, $parent);
-    if ($secret === '') {
-        throw new RuntimeException('Selected parent peer has no stored API secret.');
-    }
+    $storedSecret = federation_peer_stored_signing_secret($db, $parent);
 
     $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/inventory-push.php';
-    $result = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), $secret, federation_build_inventory_payload($db));
+    $result = fed_http_post_signed(
+        $url,
+        (string)fed_setting($db, 'site_id', ''),
+        $storedSecret,
+        federation_build_inventory_payload($db)
+    );
     fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'INVENTORY_PUSH_SEND', json_encode($result, JSON_UNESCAPED_SLASHES));
     return $result;
 }
@@ -131,10 +134,7 @@ function federation_pull_inventory_from_child(PDO $db, int $peerId): array
     if (!$child) {
         throw new RuntimeException('Active child peer not found.');
     }
-    $secret = fed_peer_secret($db, $child);
-    if ($secret === '') {
-        throw new RuntimeException('Child peer has no stored API secret.');
-    }
+    $storedSecret = federation_peer_stored_signing_secret($db, $child);
 
     $siteId = (string)fed_setting($db, 'site_id', '');
     if ($siteId === '') {
@@ -168,7 +168,7 @@ function federation_pull_inventory_from_child(PDO $db, int $peerId): array
         if (++$pages > 1000) {
             throw new RuntimeException('Child inventory exceeded the maximum page count.');
         }
-        $result = fed_http_post_signed($url, $siteId, $secret, [
+        $result = fed_http_post_signed($url, $siteId, $storedSecret, [
             'after_file_id' => $afterFileId,
             'limit' => 500,
         ]);
