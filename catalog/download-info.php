@@ -70,11 +70,17 @@ try {
 
     echo '<div class="card"><h2>Individual file</h2><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</p>';
     echo '<p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span>. Base-game protection and the configured download mode are enforced by the download controller.</p>';
-    echo '<p><a class="button primary" href="download.php?id=' . (int)$file['id'] . '">Download selected file</a>';
+    echo '<div class="ui-inline-actions">' . CatalogUi::iconButton([
+        'label' => 'Download ' . catalog_clean_unreal_filename((string)$file['original_name']),
+        'icon' => '⇩',
+        'href' => 'download.php?id=' . (int)$file['id'],
+        'size' => 'sm',
+        'variant' => 'primary',
+    ]);
     if ($settings['enabled'] && $settings['dependency_zip_enabled'] && external_public_download_mode($db) !== 'external_mirror') {
-        echo ' <a class="button" href="download-package.php?id=' . (int)$file['id'] . '&amp;format=dependency_zip&amp;dependencies=1">Queue dependency ZIP</a>';
+        echo CatalogUi::button('Queue dependency ZIP', ['href' => 'download-package.php?id=' . (int)$file['id'] . '&format=dependency_zip&dependencies=1']);
     }
-    echo '</p></div>';
+    echo '</div></div>';
 
     echo '<div class="card"><h2>Create mod/dependency package</h2>';
     if (!$settings['enabled']) {
@@ -127,16 +133,21 @@ try {
     echo '</div>';
 
     echo '<div class="card"><h2>Selected file availability</h2><table><tr><th>Package</th><th>File</th><th>Public download</th><th>Availability</th></tr>';
-    echo '<tr><td class="mono">' . catalog_h($file['package_name']) . '</td><td>' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</td><td>' . render_public_download_status($db, (int)$file['id']) . '</td><td>' . render_availability($db, (int)$file['id']) . '</td></tr></table></div>';
+    echo '<tr><td class="mono"><a href="file-info.php?id=' . (int)$file['id'] . '">' . catalog_h($file['package_name']) . '</a></td><td><a href="file-examine.php?id=' . (int)$file['id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</a></td><td>' . render_public_download_status($db, (int)$file['id']) . '</td><td>' . render_availability($db, (int)$file['id']) . '</td></tr></table></div>';
 
-    $deps = catalog_all($db, 'SELECT DISTINCT rf.id, rf.package_name, rf.original_name, rf.file_size, rf.md5, rf.package_guid, rf.is_compressed, d.status FROM ue_dependencies d JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? AND d.status IN ("resolved","package_only") ORDER BY rf.package_name, rf.original_name', [$id]);
+    $deps = catalog_all($db, 'SELECT DISTINCT rf.id, rf.package_name, rf.original_name, rf.file_size, rf.md5, rf.sha1, rf.package_guid, rf.is_compressed, d.status FROM ue_dependencies d JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? AND d.status IN ("resolved","package_only") ORDER BY rf.package_name, rf.original_name', [$id]);
     echo '<div class="card"><h2>Resolved dependency files (' . $depCount . ')</h2>';
     if (!$deps) {
         echo '<p class="muted">No resolved dependency files are available for this package yet.</p>';
     } else {
-        echo '<table><tr><th>Package</th><th>File</th><th>Identity</th><th>Size</th><th>Match</th><th>Public download</th><th>Availability</th><th>Download</th></tr>';
+        echo '<table><tr><th>Package</th><th>File</th><th>Identity</th><th>Size</th><th>Match</th><th>Public download</th><th>Availability</th><th>Actions</th></tr>';
         foreach ($deps as $dep) {
-            echo '<tr><td class="mono">' . catalog_h($dep['package_name']) . '</td><td>' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '</td><td><span class="mono small">MD5 ' . catalog_h($dep['md5']) . '</span><br><span class="mono small">GUID ' . catalog_h($dep['package_guid']) . '</span></td><td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td><td><span class="dep ' . catalog_h((string)$dep['status']) . '">' . catalog_h((string)$dep['status']) . '</span></td><td>' . render_public_download_status($db, (int)$dep['id']) . '</td><td>' . render_availability($db, (int)$dep['id']) . '</td><td><a class="button" href="download.php?id=' . (int)$dep['id'] . '">download</a></td></tr>';
+            echo '<tr><td class="mono"><a href="file-info.php?id=' . (int)$dep['id'] . '">' . catalog_h($dep['package_name']) . '</a></td><td><a href="file-examine.php?id=' . (int)$dep['id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$dep['original_name'])) . '</a></td><td>' . CatalogUi::identity((string)$dep['package_guid'], (string)$dep['md5'], (string)$dep['sha1']) . '</td><td>' . catalog_h(catalog_bytes((int)$dep['file_size'])) . '</td><td><span class="dep ' . catalog_h((string)$dep['status']) . '">' . catalog_h((string)$dep['status']) . '</span></td><td>' . render_public_download_status($db, (int)$dep['id']) . '</td><td>' . render_availability($db, (int)$dep['id']) . '</td><td>' . CatalogUi::iconButton([
+                'label' => 'Download ' . catalog_clean_unreal_filename((string)$dep['original_name']),
+                'icon' => '⇩',
+                'href' => 'download.php?id=' . (int)$dep['id'],
+                'size' => 'sm',
+            ]) . '</td></tr>';
         }
         echo '</table>';
     }
