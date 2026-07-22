@@ -10,14 +10,11 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    $localRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
-    $mainParentUrl = rtrim(trim((string)fed_setting($db, 'main_parent_url', '')), '/');
-
-    // Child administrators should never have to copy their generated site ID
-    // or fingerprint into a parent form. The child-side join workflow reads the
-    // local identity with fed_ensure_identity() and submits it to the configured
-    // parent API automatically.
-    if (catalog_support_is_admin() && ($localRole === 'child' || $mainParentUrl !== '')) {
+    // The local administrator always uses the child-side easy join workflow.
+    // It submits the locally generated identity automatically and handles the
+    // role transition. The public form below remains only for legacy children
+    // posting a manual request to a parent deployment.
+    if (catalog_support_is_admin()) {
         header('Location: join-main-parent.php');
         exit;
     }
@@ -77,16 +74,13 @@ try {
     catalog_flash($_SESSION['fed_join_submitted'] ?? null);
     unset($_SESSION['fed_join_submitted']);
 
-    catalog_page_header('Request Federation Access', 'Child deployments should submit their generated local identity automatically. The parent admin must approve the request before pairing credentials are created.');
+    catalog_page_header('Request Federation Access', 'This is the legacy public join form for older child deployments.');
 
-    echo '<div class="card"><h2>Automatic child join</h2>';
-    echo '<p>Do not copy or type the child site ID or fingerprint here.</p>';
-    echo '<ol><li>Open the child deployment and log in as administrator.</li><li>Open <span class="mono">/catalog/federation/settings.php</span> and set <strong>Main parent URL</strong> to this parent catalog URL.</li><li>Open <span class="mono">/catalog/federation/join-main-parent.php</span> and submit the request.</li></ol>';
-    echo '<p>The child sends its locally generated site name, HTTPS URL, site ID, and fingerprint directly to this parent through the federation API.</p>';
+    echo '<div class="card"><h2>Automatic join recommended</h2>';
+    echo '<p>Current UnrealDB deployments should log in as administrator on the child site and open <span class="mono">/catalog/federation/join.php</span>. The child sends its identity automatically.</p>';
     echo '</div>';
 
-    echo '<details class="card"><summary><strong>Legacy manual join request</strong></summary>';
-    echo '<p class="muted">Use this fallback only for an older child deployment that does not have the automatic Join Main Parent page.</p>';
+    echo '<details class="card"><summary><strong>Legacy manual identity request</strong></summary>';
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join')) . '">';
     echo '<p><label>Child site name<br><input name="site_name" required style="min-width:420px"></label></p>';
     echo '<p><label>Child site URL<br><input name="site_url" required style="min-width:640px" placeholder="https://child.example.com/catalog"></label></p>';
