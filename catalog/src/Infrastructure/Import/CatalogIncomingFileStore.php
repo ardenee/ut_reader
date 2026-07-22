@@ -9,7 +9,7 @@ final class CatalogIncomingFileStore
     private string $directory;
 
     /** @param array<string,mixed> $config */
-    public function __construct(array $config)
+    public function __construct(private readonly array $config)
     {
         $storageRoot = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
         if ($storageRoot === '') {
@@ -36,7 +36,17 @@ final class CatalogIncomingFileStore
 
     public function resolve(string $relativePath): string
     {
-        $relativePath = str_replace('\\', '/', trim($relativePath));
+        $relativePath = trim($relativePath);
+        if (str_starts_with($relativePath, 'chunk-upload:')) {
+            $uploadId = substr($relativePath, strlen('chunk-upload:'));
+            $resolved = (new CatalogChunkedUploadStore($this->config))->resolveCompletedFile($uploadId);
+            return $resolved['path'];
+        }
+        if (str_starts_with($relativePath, 'local-pak:')) {
+            return $this->resolveLocalPakReference(substr($relativePath, strlen('local-pak:')));
+        }
+
+        $relativePath = str_replace('\\', '/', $relativePath);
         if ($relativePath === '' || str_starts_with($relativePath, '/') || preg_match('/^[A-Za-z]:\//', $relativePath) === 1 || preg_match('#(^|/)\.\.(/|$)#', $relativePath) === 1) {
             throw new \RuntimeException('Unsafe staged import path.');
         }
@@ -70,6 +80,9 @@ final class CatalogIncomingFileStore
     /** Delete a staged file when no job was created or an operator cleans it up. */
     public function delete(string $relativePath): void
     {
+        if (str_starts_with($relativePath, 'chunk-upload:') || str_starts_with($relativePath, 'local-pak:')) {
+            return;
+        }
         try {
             $path = $this->resolve($relativePath);
         } catch (\Throwable) {
@@ -241,5 +254,34 @@ final class CatalogIncomingFileStore
             }
             $directory = dirname($real);
         }
+    }
+
+    private function resolveLocalPakReference(string $encodedPath): string
+    {
+        $encodedPath = trim($encodedPath);
+        if ($encodedPath === '' || preg_match('/^[A-Za-z0-9_-]+$/', $encodedPath) !== 1) {
+            throw new \RuntimeException('Local PAK reference is invalid.');
+        }
+        $padding = (4 - (strlen($encodedPath) % 4)) % 4;
+        $decoded = base64_decode(strtr($encodedPath . str_repeat('=', $padding), '-_', '+/'), true);
+        if (!is_string($decoded) || $decoded === '') {
+            throw new \RuntimeException('Local PAK reference could not be decoded.');
+        }
+        $real = realpath($decoded);
+        if ($real === false || !is_file($real) || !is_readable($real) || is_link($real)) {
+            throw new \RuntimeException('Local PAK source is unavailable.');
+        }
+        if (strtolower((string)pathinfo($real, PATHINFO_EXTENSION)) !== 'pak') {
+            throw new \RuntimeException('Local source reference is not a .pak archive.');
+        }
+        $size = filesize($real);
+        $limit = max(
+            (int)($this->config['max_upload_bytes'] ?? 0),
+            (int)($this->config['max_container_upload_bytes'] ?? (64 * 1024 * 1024 * 1024))
+        );
+        if ($size === false || $size < 1 || (int)$size > $limit) {
+            throw new \RuntimeException('Local PAK source exceeds the configured container limit.');
+        }
+        return $real;
     }
 }
