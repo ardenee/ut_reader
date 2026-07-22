@@ -21,6 +21,7 @@ jobs:
           php -l catalog/lib/CatalogSourceScan.php
           php -l catalog/lib/CatalogSourceScanNoContainers.php
           php -l catalog/src/Infrastructure/Import/CatalogChunkedUploadStore.php
+          php -l catalog/src/Infrastructure/Import/CatalogChunkedUploadCleanup.php
           php -l catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php
           php -l catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php
           php -l catalog/src/Application/Jobs/JobExecutionContext.php
