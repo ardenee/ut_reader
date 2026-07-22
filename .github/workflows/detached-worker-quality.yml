@@ -43,6 +43,7 @@ jobs:
           php -l catalog/api/v1/job-run.php
           php -l catalog/api/v1/job-status.php
           php -l catalog/api/v1/job-action.php
+          php -l catalog/api/v1/job-rerun-pak.php
           php -l catalog/api/v1/job-worker-status.php
           php -l catalog/api/v1/job-worker-action.php
           php -l catalog/api/v1/profiled-upload-chunk.php
@@ -59,6 +60,7 @@ jobs:
           php -l catalog/dashboard.php
           php -l catalog/tests/detached-worker-contract-test.php
           php -l catalog/tests/background-job-controls-contract-test.php
+          php -l catalog/tests/background-job-pak-rerun-contract-test.php
           php -l catalog/tests/game-backup-contract-test.php
           php -l catalog/tests/pak-archive-management-contract-test.php
           php -l catalog/tests/chunked-pak-upload-contract-test.php
@@ -68,6 +70,7 @@ jobs:
       - name: Syntax check detached worker clients
         run: |
           node --check catalog/assets/background-jobs.js
+          node --check catalog/assets/background-jobs-pak-rerun.js
           node --check catalog/assets/profiled-upload-jobs.js
           node --check catalog/assets/pak-import-jobs.js
           node --check catalog/assets/file-dependency-display.js
@@ -75,6 +78,8 @@ jobs:
         run: php catalog/tests/detached-worker-contract-test.php
       - name: Verify background job controls contract
         run: php catalog/tests/background-job-controls-contract-test.php
+      - name: Verify retained PAK job rerun contract
+        run: php catalog/tests/background-job-pak-rerun-contract-test.php
       - name: Verify game backup contract
         run: php catalog/tests/game-backup-contract-test.php
       - name: Verify PAK archive management contract
