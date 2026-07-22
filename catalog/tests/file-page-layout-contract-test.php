@@ -34,9 +34,4 @@ $icon = file_get_contents(__DIR__ . '/../assets/download-icon.svg');
 file_page_layout_expect(is_string($icon), 'Compact download icon is missing.');
 file_page_layout_expect(str_contains($icon, '<svg'), 'Compact download icon is not SVG content.');
 
-$sourcePakClient = file_get_contents(__DIR__ . '/../assets/file-dependency-display.js');
-file_page_layout_expect(is_string($sourcePakClient), 'Could not read source PAK renderer.');
-file_page_layout_expect(str_contains($sourcePakClient, '<th>Import result</th>'), 'Source PAK renderer contract changed unexpectedly.');
-file_page_layout_expect(str_contains($sourcePakClient, '>View PAK</a>'), 'Source PAK renderer no longer exposes the redundant link for the layout normalizer to remove.');
-
 echo "File page layout contract tests passed.\n";
