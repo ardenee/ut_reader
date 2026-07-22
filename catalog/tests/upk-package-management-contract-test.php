@@ -35,13 +35,23 @@ foreach ([
     'UPKs are not mixed into the normal file list',
     'A UE3 UPK contains serialized UObject exports',
     'upk-info.php?id=',
+    'file-examine.php?id=',
     'download.php?id=',
     'file-maintenance.php',
     'indexed_exports',
     'serialized_export_bytes',
+    'title="Names / Imports / Exports">N/I/E',
+    'name_count',
+    'import_count',
+    'export_count',
+    'serialized payload',
+    'CatalogUi::identity(',
 ] as $fragment) {
     upk_package_expect(str_contains($game, $fragment), 'Game UPK page is missing: ' . $fragment);
 }
+upk_package_expect(!str_contains($game, '>Contents</th>'), 'Game UPK page still uses the old Contents column.');
+upk_package_expect(!str_contains($game, '>Imported</th>'), 'Game UPK page still includes the Imported column.');
+upk_package_expect(!str_contains($game, '>View contents</a>'), 'Game UPK actions still include the redundant View contents link.');
 
 $info = file_get_contents(__DIR__ . '/../upk-info.php');
 upk_package_expect(is_string($info), 'Could not read UPK detail page.');
