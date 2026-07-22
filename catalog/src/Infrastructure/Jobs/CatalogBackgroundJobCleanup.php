@@ -38,63 +38,134 @@ final class CatalogBackgroundJobCleanup
         );
         $statement->execute([$queueName, $cutoff]);
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
-        if ($rows === []) {
-            return ['deleted_jobs' => 0, 'deleted_staged_files' => 0, 'limited' => false];
-        }
-
-        $ids = array_map(static fn(array $row): int => (int)$row['id'], $rows);
-        $this->deleteIds($ids);
-        $deletedFiles = $this->deleteStagedFiles($rows);
-
-        return [
-            'deleted_jobs' => count($ids),
-            'deleted_staged_files' => $deletedFiles,
-            'limited' => count($ids) >= self::MAX_BULK_DELETE,
-        ];
+        return $this->deleteRows($rows, count($rows) >= self::MAX_BULK_DELETE);
     }
 
     /** @return array{deleted_jobs:int,deleted_staged_files:int} */
     public function deleteTerminalJob(int $jobId): array
     {
-        if ($jobId < 1) {
-            return ['deleted_jobs' => 0, 'deleted_staged_files' => 0];
-        }
-
-        $statement = $this->db->prepare(
-            'SELECT id,payload_json FROM ue_background_jobs '
-            . 'WHERE id=? AND status IN ("completed","failed","dead_letter","cancelled") LIMIT 1'
-        );
-        $statement->execute([$jobId]);
-        $row = $statement->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($row)) {
-            return ['deleted_jobs' => 0, 'deleted_staged_files' => 0];
-        }
-
-        $this->deleteIds([$jobId]);
+        $result = $this->deleteTerminalJobs([$jobId]);
         return [
-            'deleted_jobs' => 1,
-            'deleted_staged_files' => $this->deleteStagedFiles([$row]),
+            'deleted_jobs' => $result['deleted_jobs'],
+            'deleted_staged_files' => $result['deleted_staged_files'],
         ];
     }
 
-    /** @param list<int> $ids */
-    private function deleteIds(array $ids): void
+    /**
+     * @param list<int> $jobIds
+     * @return array{requested_jobs:int,deleted_jobs:int,deleted_staged_files:int,skipped_jobs:int}
+     */
+    public function deleteTerminalJobs(array $jobIds, string $queueName = ''): array
     {
+        $ids = $this->jobIds($jobIds);
         if ($ids === []) {
-            return;
+            return [
+                'requested_jobs' => 0,
+                'deleted_jobs' => 0,
+                'deleted_staged_files' => 0,
+                'skipped_jobs' => 0,
+            ];
+        }
+        $queueName = trim($queueName) !== '' ? $this->queueName($queueName) : '';
+        $rows = [];
+        foreach (array_chunk($ids, 500) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $sql = 'SELECT id,payload_json FROM ue_background_jobs WHERE id IN (' . $placeholders . ') '
+                . 'AND status IN ("completed","failed","dead_letter","cancelled")';
+            $params = $chunk;
+            if ($queueName !== '') {
+                $sql .= ' AND queue_name=?';
+                $params[] = $queueName;
+            }
+            $statement = $this->db->prepare($sql);
+            $statement->execute($params);
+            array_push($rows, ...$statement->fetchAll(PDO::FETCH_ASSOC));
+        }
+        $result = $this->deleteRows($rows, false);
+        return [
+            'requested_jobs' => count($ids),
+            'deleted_jobs' => $result['deleted_jobs'],
+            'deleted_staged_files' => $result['deleted_staged_files'],
+            'skipped_jobs' => max(0, count($ids) - $result['deleted_jobs']),
+        ];
+    }
+
+    /** @return array{deleted_jobs:int,deleted_staged_files:int,limited:bool} */
+    public function deleteTerminalMatching(string $queueName, string $status = ''): array
+    {
+        $queueName = $this->queueName($queueName);
+        $status = trim($status);
+        if ($status !== '' && !in_array($status, self::TERMINAL_STATUSES, true)) {
+            throw new \InvalidArgumentException('The selected status is not a terminal job status.');
         }
 
+        $sql = 'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? '
+            . 'AND status IN ("completed","failed","dead_letter","cancelled")';
+        $params = [$queueName];
+        if ($status !== '') {
+            $sql .= ' AND status=?';
+            $params[] = $status;
+        }
+        $sql .= ' ORDER BY id LIMIT ' . self::MAX_BULK_DELETE;
+        $statement = $this->db->prepare($sql);
+        $statement->execute($params);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        return $this->deleteRows($rows, count($rows) >= self::MAX_BULK_DELETE);
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     * @return array{deleted_jobs:int,deleted_staged_files:int,limited:bool}
+     */
+    private function deleteRows(array $rows, bool $limited): array
+    {
+        if ($rows === []) {
+            return ['deleted_jobs' => 0, 'deleted_staged_files' => 0, 'limited' => $limited];
+        }
+        $ids = array_values(array_unique(array_map(static fn(array $row): int => (int)$row['id'], $rows)));
+        $deletedIds = $this->deleteIds($ids);
+        $deletedLookup = array_fill_keys($deletedIds, true);
+        $deletedRows = array_values(array_filter(
+            $rows,
+            static fn(array $row): bool => isset($deletedLookup[(int)$row['id']])
+        ));
+        return [
+            'deleted_jobs' => count($deletedIds),
+            'deleted_staged_files' => $this->deleteStagedFiles($deletedRows),
+            'limited' => $limited,
+        ];
+    }
+
+    /** @param list<int> $ids @return list<int> */
+    private function deleteIds(array $ids): array
+    {
+        if ($ids === []) {
+            return [];
+        }
+
+        $deletedIds = [];
         $this->db->beginTransaction();
         try {
             foreach (array_chunk($ids, 500) as $chunk) {
                 $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-                $statement = $this->db->prepare(
-                    'DELETE FROM ue_background_jobs WHERE id IN (' . $placeholders . ') '
-                    . 'AND status IN ("completed","failed","dead_letter","cancelled")'
+                $select = $this->db->prepare(
+                    'SELECT id FROM ue_background_jobs WHERE id IN (' . $placeholders . ') '
+                    . 'AND status IN ("completed","failed","dead_letter","cancelled") FOR UPDATE'
                 );
-                $statement->execute($chunk);
+                $select->execute($chunk);
+                $lockedIds = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN));
+                if ($lockedIds === []) {
+                    continue;
+                }
+                $lockedPlaceholders = implode(',', array_fill(0, count($lockedIds), '?'));
+                $delete = $this->db->prepare(
+                    'DELETE FROM ue_background_jobs WHERE id IN (' . $lockedPlaceholders . ')'
+                );
+                $delete->execute($lockedIds);
+                array_push($deletedIds, ...$lockedIds);
             }
             $this->db->commit();
+            return array_values(array_unique($deletedIds));
         } catch (\Throwable $error) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
@@ -151,6 +222,23 @@ final class CatalogBackgroundJobCleanup
         } catch (\JsonException) {
             return [];
         }
+    }
+
+    /** @param list<int> $jobIds @return list<int> */
+    private function jobIds(array $jobIds): array
+    {
+        $ids = [];
+        foreach ($jobIds as $jobId) {
+            $id = (int)$jobId;
+            if ($id > 0) {
+                $ids[$id] = $id;
+            }
+        }
+        $ids = array_values($ids);
+        if (count($ids) > self::MAX_BULK_DELETE) {
+            throw new \InvalidArgumentException('No more than ' . self::MAX_BULK_DELETE . ' jobs can be deleted at once.');
+        }
+        return $ids;
     }
 
     private function queueName(string $queueName): string
