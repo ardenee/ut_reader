@@ -6,7 +6,12 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 
-function cp_post_claim(string $endpoint, string $token): array
+function cp_allow_self_signed_tls(PDO $db): bool
+{
+    return (string)fed_setting($db, 'allow_self_signed_federation_certificates', '0') === '1';
+}
+
+function cp_post_claim(PDO $db, string $endpoint, string $token): array
 {
     $parts = parse_url($endpoint);
     if (!is_array($parts) || !in_array(strtolower((string)($parts['scheme'] ?? '')), ['https', 'http'], true) || empty($parts['host']) || isset($parts['user']) || isset($parts['pass']) || isset($parts['query']) || isset($parts['fragment'])) {
@@ -14,6 +19,7 @@ function cp_post_claim(string $endpoint, string $token): array
     }
 
     $body = json_encode(['token' => $token], JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR);
+    $allowSelfSigned = cp_allow_self_signed_tls($db);
     $context = stream_context_create([
         'http' => [
             'method' => 'POST',
@@ -22,11 +28,17 @@ function cp_post_claim(string $endpoint, string $token): array
             'timeout' => 60,
             'ignore_errors' => true,
         ],
-        'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+        'ssl' => [
+            'verify_peer' => !$allowSelfSigned,
+            'verify_peer_name' => !$allowSelfSigned,
+            'allow_self_signed' => $allowSelfSigned,
+        ],
     ]);
     $response = @file_get_contents($endpoint, false, $context);
     if ($response === false) {
-        throw new RuntimeException('Could not submit the claim request.');
+        $lastError = error_get_last();
+        $detail = is_array($lastError) ? trim((string)($lastError['message'] ?? '')) : '';
+        throw new RuntimeException('Could not submit the claim request' . ($detail !== '' ? ': ' . $detail : '.'));
     }
     $json = json_decode($response, true);
     if (!is_array($json)) {
@@ -53,7 +65,7 @@ try {
             throw new RuntimeException('HTTPS is required by local federation settings.');
         }
 
-        $result = cp_post_claim($claimEndpoint, $claimToken);
+        $result = cp_post_claim($db, $claimEndpoint, $claimToken);
         if (empty($result['ok']) || empty($result['parent']) || !is_array($result['parent'])) {
             throw new RuntimeException('Parent rejected claim: ' . ($result['error'] ?? 'unknown error'));
         }
@@ -108,7 +120,11 @@ try {
     catalog_flash($_SESSION['fed_claim_parent_flash'] ?? null);
     unset($_SESSION['fed_claim_parent_flash']);
 
+    $allowSelfSigned = cp_allow_self_signed_tls($db);
     catalog_page_header('Claim Parent Pairing', 'Enter the POST endpoint and one-time token supplied by the parent administrator after approving the join request.', catalog_federation_links() + ['Peers' => 'peers.php', 'Settings' => 'settings.php']);
+    if ($allowSelfSigned) {
+        echo CatalogUi::alert('warning', 'Self-signed federation certificates are allowed. Certificate trust and hostname verification are disabled for this claim request.', 'Testing TLS mode enabled');
+    }
     echo '<div class="card"><h2>Claim approved parent</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_claim_parent')) . '"><p><label>Claim POST endpoint<br><input name="claim_endpoint" required style="min-width:760px" placeholder="https://parent.example.com/catalog/api/federation/join-claim.php"></label></p><p><label>One-time claim token<br><input name="claim_token" required autocomplete="off" style="min-width:520px"></label></p><p><button>Claim parent and create pairing</button></p></form></div>';
 
     catalog_foot();
