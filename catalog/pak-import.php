@@ -4,10 +4,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPakArchive.php';
 
-use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogPakArchiveStore;
 
 function pak_import_public_error(Throwable $error): string
@@ -35,7 +34,7 @@ function pak_import_source(): array
     $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
     $path = (string)($file['tmp_name'] ?? '');
     if ($error !== UPLOAD_ERR_OK || $path === '' || !is_file($path)) {
-        throw new RuntimeException('PAK upload failed with PHP upload error ' . $error . '.');
+        throw new RuntimeException('PAK upload failed with PHP upload error ' . $error . '. Use Profiled Upload for resumable multi-gigabyte browser uploads.');
     }
     return ['path' => $path, 'name' => (string)($file['name'] ?? 'upload.pak'), 'uploaded' => true];
 }
@@ -50,55 +49,34 @@ function pak_import_enqueue(PDO $db, array $config): array
 
     $gameId = (int)($_POST['game_id'] ?? 0);
     $strict = (string)($_POST['strict_profile'] ?? '1') === '1';
-    $game = $gameId > 0 ? catalog_one(
-        $db,
-        'SELECT g.id,p.engine_key FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id WHERE g.id=?',
-        [$gameId]
-    ) : null;
-    if (!$game || preg_match('/^UE[45]/i', trim((string)$game['engine_key'])) !== 1) {
-        throw new RuntimeException('Choose a valid UE4 or UE5 target game.');
-    }
-
     $source = pak_import_source();
     if (!catalog_pak_archive_is_supported_filename($source['name'])) {
         throw new RuntimeException('Selected file is not a .pak archive.');
     }
-    $size = filesize($source['path']);
-    if ($size === false || $size <= 0 || $size > (int)$config['max_upload_bytes']) {
-        throw new RuntimeException('Bad PAK size: ' . catalog_bytes((int)($size ?: 0)));
-    }
 
-    $store = new CatalogIncomingFileStore($config);
-    $staged = $source['uploaded']
-        ? $store->stageUploadedFile($source['path'], $source['name'])
-        : $store->stageLocalFile($source['path'], $source['name']);
-    $queue = new PdoJobQueue($db);
-    $queueName = (string)($config['queue']['name'] ?? 'catalog');
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
-    try {
-        $jobId = $queue->enqueue(
-            $queueName,
-            JobType::IMPORT_STAGED_PAK,
-            [
-                'game_id' => $gameId,
-                'staged_path' => $staged['relative_path'],
-                'original_name' => $source['name'],
-                'strict_profile' => $strict,
-                'user_id' => $userId,
-                'size' => $staged['size'],
-                'sha256' => $staged['sha256'],
-            ],
-            5,
-            null,
-            null,
-            $userId,
-            3
-        );
-    } catch (Throwable $error) {
-        $store->delete($staged['relative_path']);
-        throw $error;
+    $queue = new CatalogProfiledUploadQueue($db, $config);
+    if ($source['uploaded']) {
+        $size = filesize($source['path']);
+        if ($size === false || $size <= 0 || (int)$size > $queue->containerLimitBytes()) {
+            throw new RuntimeException('Bad PAK size: ' . catalog_bytes((int)($size ?: 0)));
+        }
+        $store = new CatalogIncomingFileStore($config);
+        $name = $source['name'];
+        $staged = $store->stageUploadedFile($source['path'], $name);
+        try {
+            $queued = $queue->enqueueStaged($gameId, $staged, $name, $name, $strict, $userId);
+        } catch (Throwable $error) {
+            $store->delete($staged['relative_path']);
+            throw $error;
+        }
+    } else {
+        // A local PAK is already durable. Queue the validated path directly so a
+        // 17+ GB archive is not copied into incoming staging before processing.
+        $queued = $queue->enqueueLocalPak($gameId, $source['path'], $source['name'], $strict, $userId);
     }
 
+    $queueName = (string)($config['queue']['name'] ?? 'catalog');
     $worker = null;
     $workerError = '';
     try {
@@ -108,7 +86,7 @@ function pak_import_enqueue(PDO $db, array $config): array
         error_log('[UnrealDB PAK worker launch] ' . $error->getMessage());
     }
 
-    return ['job_id' => $jobId, 'worker' => $worker, 'worker_error' => $workerError];
+    return ['job_id' => (int)$queued['job_id'], 'worker' => $worker, 'worker_error' => $workerError];
 }
 
 try {
@@ -153,7 +131,7 @@ try {
         echo CatalogUi::alert(
             'info',
             'Original PAK retention enabled for UE4 and UE5.',
-            'The PAK container is copied into durable game storage. Every readable index entry is recorded and standalone packages link back to that original archive. Encrypted indexes, unsupported compression, and UE5 IoStore .utoc/.ucas containers remain separate and unsupported by this PAK importer.'
+            'Local server paths are queued directly without a second incoming copy. For large browser files, use Profiled Upload, which transfers PAKs in resumable chunks. Encrypted indexes, unsupported compression, and UE5 IoStore .utoc/.ucas containers remain unsupported.'
         );
     }
 
@@ -164,7 +142,7 @@ try {
         echo '<p><button id="pak-import-cancel" type="button">Cancel job</button></p><div id="pak-import-result"></div></div></div></section>';
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Retain and import PAK</h2><p>Use an uploaded file or a readable local server path.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Retain and import PAK</h2><p>Use a readable local server path, or a normal-size direct upload. Multi-gigabyte browser uploads belong on Profiled Upload.</p></div></div><div class="ui-section__body">';
     if ($games === []) {
         echo CatalogUi::emptyState('No UE4 or UE5 target games', 'Create a game or assign a UE4/UE5 profile before importing PAK archives.', ['label' => 'Game manager', 'href' => 'game-manager.php'], '▣');
     } else {
@@ -176,8 +154,8 @@ try {
         }
         echo '</select></label></p>';
         echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
-        echo '<p><label>Upload .pak<br><input type="file" name="pak_file" accept=".pak"></label></p>';
-        echo '<p><label>Or local .pak path<br><input type="text" name="local_pak_path" style="width:min(100%,760px)"></label></p>';
+        echo '<p><label>Upload smaller .pak<br><input type="file" name="pak_file" accept=".pak"></label></p>';
+        echo '<p><label>Or local .pak path (recommended for very large files)<br><input type="text" name="local_pak_path" style="width:min(100%,760px)"></label></p>';
         echo '<p><button type="submit">Retain and import PAK</button></p></form>';
     }
     echo '</div></section>';
