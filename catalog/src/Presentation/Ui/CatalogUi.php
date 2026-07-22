@@ -31,7 +31,29 @@ final class CatalogUi
     public static function pageHeader(string $title, string $description = '', array $actions = []): string
     {
         $actions = self::gameContentSwitchActions($actions);
-        return PageHeader::render($title, $description, $actions);
+        return PageHeader::render($title, $description, $actions) . self::identityScriptTag();
+    }
+
+    private static function identityScriptTag(): string
+    {
+        static $rendered = false;
+        if ($rendered) {
+            return '';
+        }
+        $rendered = true;
+
+        $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+        if (str_contains($requestPath, '/catalog/federation/')) {
+            $root = '../';
+        } elseif (str_contains($requestPath, '/catalog/')) {
+            $root = '';
+        } else {
+            $root = 'catalog/';
+        }
+        $file = dirname(__DIR__, 3) . '/assets/catalog-identities.js';
+        $version = is_file($file) ? (string)filemtime($file) : '1';
+        $src = $root . 'assets/catalog-identities.js?v=' . $version;
+        return '<script src="' . htmlspecialchars($src, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '" defer></script>';
     }
 
     /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
