@@ -85,7 +85,8 @@ try {
     echo '<p class="muted small">Cleanup removes completed, failed, dead-letter and cancelled records and their retained staged upload files. Queued and running jobs are never removed.</p>';
     echo '<p id="jobs-worker-message" class="muted" aria-live="polite">Loading worker status...</p>';
     echo '<p id="jobs-message" class="muted" aria-live="polite">Loading queue...</p>';
-    echo '<p><label>Status filter <select id="jobs-status-filter">'
+    echo '<div class="button-row jobs-bulk-controls">'
+        . '<label>Status filter <select id="jobs-status-filter">'
         . '<option value="">All statuses</option>'
         . '<option value="queued">Queued</option>'
         . '<option value="running">Running</option>'
@@ -93,13 +94,22 @@ try {
         . '<option value="failed">Failed</option>'
         . '<option value="dead_letter">Dead letter</option>'
         . '<option value="cancelled">Cancelled</option>'
-        . '</select></label></p>';
+        . '</select></label> '
+        . '<button id="jobs-select-terminal" type="button">Select terminal shown</button> '
+        . '<button id="jobs-clear-selection" type="button">Clear selection</button> '
+        . '<button id="jobs-delete-selected" type="button" disabled>Delete selected (0)</button> '
+        . '<button id="jobs-delete-matching" type="button">Delete all terminal matching filter</button>'
+        . '</div>';
+    echo '<p id="jobs-selection-message" class="muted small" aria-live="polite">No jobs selected.</p>';
     echo '<div class="table-wrap"><table><thead><tr>'
+        . '<th class="job-select-column"><input id="jobs-select-all" type="checkbox" aria-label="Select all terminal jobs shown"></th>'
         . '<th>ID</th><th>Status</th><th>Type</th><th>File / target</th><th>Progress</th><th>Attempts</th><th>Created</th><th>Error</th><th>Actions</th>'
-        . '</tr></thead><tbody id="jobs-table-body"><tr><td colspan="9" class="muted">Loading...</td></tr></tbody></table></div>';
+        . '</tr></thead><tbody id="jobs-table-body"><tr><td colspan="10" class="muted">Loading...</td></tr></tbody></table></div>';
     echo '</div></div></section>';
 
-    echo '<script src="assets/background-jobs.js"></script>';
+    $jobsScript = __DIR__ . '/assets/background-jobs.js';
+    $jobsScriptVersion = is_file($jobsScript) ? (string)filemtime($jobsScript) : '1';
+    echo '<script src="assets/background-jobs.js?v=' . catalog_h($jobsScriptVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
