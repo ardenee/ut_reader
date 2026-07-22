@@ -18,6 +18,7 @@ final class LegacySupportHooks
     {
         self::registerIdentityAssets();
         self::registerLayoutFixAssets();
+        self::registerDuplicateManagerAssets();
         self::registerUnverifiedQueueAssets();
         self::redirectStagedFileInformation();
     }
@@ -58,6 +59,27 @@ final class LegacySupportHooks
 
         ob_start(static function (string $output) use ($source, $version): string {
             if (!str_contains($output, '</head>') || str_contains($output, 'catalog-layout-fixes.js')) {
+                return $output;
+            }
+            $html = '<script src="'
+                . \catalog_h($source . '?v=' . rawurlencode($version))
+                . '" defer></script>';
+            return preg_replace('/<\/head>/', $html . '</head>', $output, 1) ?? $output;
+        });
+    }
+
+    private static function registerDuplicateManagerAssets(): void
+    {
+        if (self::currentScript() !== 'duplicates.php') {
+            return;
+        }
+
+        $source = 'assets/duplicates-keep.js';
+        $path = dirname(__DIR__, 3) . '/assets/duplicates-keep.js';
+        $version = is_file($path) ? (string)filemtime($path) : '1';
+
+        ob_start(static function (string $output) use ($source, $version): string {
+            if (!str_contains($output, '</head>') || str_contains($output, $source)) {
                 return $output;
             }
             $html = '<script src="'
