@@ -25,6 +25,7 @@ jobs:
           php -l catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php
           php -l catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php
           php -l catalog/src/Application/Jobs/JobExecutionContext.php
+          php -l catalog/src/Application/Catalog/CatalogGameFileListService.php
           php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogJobEventLog.php
@@ -47,6 +48,7 @@ jobs:
           php -l catalog/api/v1/job-worker-status.php
           php -l catalog/api/v1/job-worker-action.php
           php -l catalog/api/v1/profiled-upload-chunk.php
+          php -l catalog/api/v1/file-identities.php
           php -l catalog/background-jobs.php
           php -l catalog/profiled-upload.php
           php -l catalog/pak-import.php
@@ -58,6 +60,7 @@ jobs:
           php -l catalog/file-pak-sources.php
           php -l catalog/game-backups.php
           php -l catalog/dashboard.php
+          php -l catalog/index.php
           php -l catalog/tests/detached-worker-contract-test.php
           php -l catalog/tests/background-job-controls-contract-test.php
           php -l catalog/tests/background-job-pak-rerun-contract-test.php
@@ -66,6 +69,7 @@ jobs:
           php -l catalog/tests/chunked-pak-upload-contract-test.php
           php -l catalog/tests/live-pak-job-events-contract-test.php
           php -l catalog/tests/large-pak-entry-layout-contract-test.php
+          php -l catalog/tests/file-identity-display-contract-test.php
           php -l tests/catalog_redirect_payload_test.php
       - name: Syntax check detached worker clients
         run: |
@@ -74,6 +78,7 @@ jobs:
           node --check catalog/assets/profiled-upload-jobs.js
           node --check catalog/assets/pak-import-jobs.js
           node --check catalog/assets/file-dependency-display.js
+          node --check catalog/assets/catalog-identities.js
       - name: Verify detached worker contract
         run: php catalog/tests/detached-worker-contract-test.php
       - name: Verify background job controls contract
@@ -90,5 +95,7 @@ jobs:
         run: php catalog/tests/live-pak-job-events-contract-test.php
       - name: Verify large PAK entries and detail layouts
         run: php catalog/tests/large-pak-entry-layout-contract-test.php
+      - name: Verify canonical file identity displays
+        run: php catalog/tests/file-identity-display-contract-test.php
       - name: Verify generic redirect payload decoding
         run: php tests/catalog_redirect_payload_test.php
