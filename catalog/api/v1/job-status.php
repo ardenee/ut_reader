@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobEventLog;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -17,11 +18,10 @@ try {
     $jobId = max(0, (int)($_GET['job_id'] ?? 0));
     $limit = $jobId > 0 ? 1 : max(1, min((int)($_GET['limit'] ?? 50), 200));
     $queue = trim((string)($_GET['queue'] ?? ''));
-    $status = trim((string)($_GET['status'] ?? ''));
+    $status = strtolower(trim((string)($_GET['status'] ?? '')));
     $eventOffset = max(0, (int)($_GET['event_offset'] ?? 0));
     $eventLimit = max(1, min((int)($_GET['event_limit'] ?? 250), 1000));
-    $allowedStatuses = ['queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled'];
-    if ($status !== '' && !in_array($status, $allowedStatuses, true)) {
+    if ($status !== '' && !CatalogJobDisplayStatus::isValidFilter($status)) {
         JsonResponse::error('invalid_status', 'Unsupported job status filter.', 400);
     }
 
@@ -39,15 +39,18 @@ try {
         $params[] = $queue;
     }
     if ($status !== '') {
-        $where[] = 'status=?';
-        $params[] = $status;
+        $condition = CatalogJobDisplayStatus::filterCondition($status);
+        $where[] = $condition['sql'];
+        array_push($params, ...$condition['params']);
     }
 
+    $displayStatusSql = CatalogJobDisplayStatus::sqlExpression();
     $resultColumns = $jobId > 0
         ? ',result_json'
         : ',JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")) result_status,'
             . 'JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.message")) result_message';
-    $sql = 'SELECT id,queue_name,job_type,resource_class,resource_limit,concurrency_key,priority,status,available_at,'
+    $sql = 'SELECT id,queue_name,job_type,resource_class,resource_limit,concurrency_key,priority,status,'
+        . $displayStatusSql . ' display_status,available_at,'
         . 'attempts,max_attempts,worker_id,leased_at,lease_expires_at,last_heartbeat_at,recovery_count,'
         . 'cancel_requested_at,cancel_requested_by,cancel_reason,payload_json,progress_json,progress_updated_at'
         . $resultColumns
