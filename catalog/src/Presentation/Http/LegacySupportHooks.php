@@ -17,6 +17,7 @@ final class LegacySupportHooks
     public static function register(): void
     {
         self::registerIdentityAssets();
+        self::registerLayoutFixAssets();
         self::registerUnverifiedQueueAssets();
         self::redirectStagedFileInformation();
     }
@@ -37,6 +38,26 @@ final class LegacySupportHooks
 
         ob_start(static function (string $output) use ($source, $version): string {
             if (!str_contains($output, '</head>') || str_contains($output, 'catalog-identities.js')) {
+                return $output;
+            }
+            $html = '<script src="'
+                . \catalog_h($source . '?v=' . rawurlencode($version))
+                . '" defer></script>';
+            return preg_replace('/<\/head>/', $html . '</head>', $output, 1) ?? $output;
+        });
+    }
+
+    private static function registerLayoutFixAssets(): void
+    {
+        $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+        $source = str_contains($requestPath, '/catalog/federation/')
+            ? '../assets/catalog-layout-fixes.js'
+            : 'assets/catalog-layout-fixes.js';
+        $path = dirname(__DIR__, 3) . '/assets/catalog-layout-fixes.js';
+        $version = is_file($path) ? (string)filemtime($path) : '1';
+
+        ob_start(static function (string $output) use ($source, $version): string {
+            if (!str_contains($output, '</head>') || str_contains($output, 'catalog-layout-fixes.js')) {
                 return $output;
             }
             $html = '<script src="'
