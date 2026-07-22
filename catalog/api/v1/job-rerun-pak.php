@@ -132,6 +132,14 @@ try {
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     $sourcePayload['user_id'] = $userId;
     $sourcePayload['rerun_of_job_id'] = $jobId;
+    $sourceIdentity = strtolower(trim((string)($sourcePayload['sha256'] ?? '')));
+    if (preg_match('/^[a-f0-9]{64}$/', $sourceIdentity) !== 1) {
+        $sourceIdentity = hash(
+            'sha256',
+            $gameId . "\0" . (string)$sourcePayload['staged_path'] . "\0" . (string)$sourcePayload['original_name']
+        );
+    }
+    $dedupeKey = 'rerun-pak:' . $gameId . ':' . $sourceIdentity;
 
     $newJobId = (new PdoJobQueue($application->db))->enqueue(
         $queueName,
@@ -139,7 +147,7 @@ try {
         $sourcePayload,
         max(0, min((int)$job['priority'], 1000)),
         null,
-        null,
+        $dedupeKey,
         $userId,
         max(1, min((int)$job['max_attempts'], 20))
     );
