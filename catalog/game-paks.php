@@ -141,7 +141,7 @@ try {
             '▣'
         );
     } else {
-        echo '<div class="ui-table-region"><table><thead><tr><th>PAK archive</th><th>Status</th><th>PAK details</th><th>Contents</th><th>Identity</th><th>Size</th><th>Imported</th><th>Download</th></tr></thead><tbody>';
+        echo '<div class="ui-table-region"><table><thead><tr><th>PAK archive</th><th>Status</th><th>PAK details</th><th>Contents</th><th>Identity</th><th class="nowrap">Size</th><th>Actions</th></tr></thead><tbody>';
         foreach ($rows as $pak) {
             $tone = match ((string)$pak['status']) {
                 'ready' => 'success',
@@ -152,11 +152,15 @@ try {
             echo '<td><a href="pak-info.php?id=' . (int)$pak['id'] . '"><strong>' . catalog_h((string)$pak['original_name']) . '</strong></a><br><span class="mono small">' . catalog_h((string)$pak['mount_point']) . '</span></td>';
             echo '<td>' . CatalogUi::badge((string)$pak['status'], $tone) . '</td>';
             echo '<td class="mono">version ' . (int)$pak['pak_version'] . '<br><span class="small">' . catalog_h((string)$pak['footer_layout']) . '</span></td>';
-            echo '<td>' . number_format((int)$pak['entry_count']) . ' entries<br><span class="small muted">' . number_format((int)$pak['linked_packages']) . ' linked packages</span></td>';
+            echo '<td><span class="mono" title="Entries">' . number_format((int)$pak['entry_count']) . '</span><br><span class="mono small muted" title="Linked packages">' . number_format((int)$pak['linked_packages']) . '</span></td>';
             echo '<td><span class="mono small">MD5 ' . catalog_h((string)$pak['md5']) . '</span><br><span class="mono small">SHA256 ' . catalog_h((string)$pak['sha256']) . '</span></td>';
             echo '<td class="nowrap">' . catalog_h(catalog_bytes((int)$pak['file_size'])) . '</td>';
-            echo '<td class="nowrap">' . catalog_h((string)$pak['created_at']) . '</td>';
-            echo '<td><a class="button" href="pak-download.php?id=' . (int)$pak['id'] . '">Download PAK</a></td>';
+            echo '<td>' . CatalogUi::iconButton([
+                'label' => 'Download ' . (string)$pak['original_name'],
+                'icon' => '⇩',
+                'href' => 'pak-download.php?id=' . (int)$pak['id'],
+                'size' => 'sm',
+            ]) . '</td>';
             echo '</tr>';
         }
         echo '</tbody></table></div>';
