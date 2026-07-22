@@ -80,8 +80,37 @@ function federation_auto_push_inventory_to_parent(PDO $db): array
     return federation_push_inventory_to_parent($db, (int)$parent['id']);
 }
 
+function federation_inventory_local_game_id(PDO $db, array $file): ?int
+{
+    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? '')));
+    if ($engineKey !== '') {
+        $game = catalog_one(
+            $db,
+            'SELECT g.id
+             FROM ue_games g
+             JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
+             WHERE UPPER(p.engine_key)=?
+             ORDER BY g.id LIMIT 1',
+            [$engineKey]
+        );
+        if ($game) {
+            return (int)$game['id'];
+        }
+    }
+
+    $gameName = trim((string)($file['game_name'] ?? ''));
+    if ($gameName !== '') {
+        $game = catalog_one($db, 'SELECT id FROM ue_games WHERE name=? ORDER BY id LIMIT 1', [$gameName]);
+        if ($game) {
+            return (int)$game['id'];
+        }
+    }
+
+    return null;
+}
+
 /** @return array<int,mixed> */
-function federation_inventory_row_values(int $peerId, array $file, string $seenAt): array
+function federation_inventory_row_values(PDO $db, int $peerId, array $file, string $seenAt): array
 {
     $packageName = trim((string)($file['package_name'] ?? ''));
     $originalName = trim((string)($file['original_name'] ?? ''));
@@ -103,7 +132,7 @@ function federation_inventory_row_values(int $peerId, array $file, string $seenA
 
     return [
         $peerId,
-        isset($file['game_id']) ? max(0, (int)$file['game_id']) ?: null : null,
+        federation_inventory_local_game_id($db, $file),
         mb_substr(trim((string)($file['game_name'] ?? '')), 0, 160, 'UTF-8'),
         mb_substr(trim((string)($file['engine_key'] ?? '')), 0, 32, 'UTF-8'),
         isset($file['file_id']) ? max(0, (int)$file['file_id']) ?: null : null,
@@ -186,7 +215,7 @@ function federation_pull_inventory_from_child(PDO $db, int $peerId): array
                 if (!is_array($file)) {
                     continue;
                 }
-                $upsert->execute(federation_inventory_row_values($peerId, $file, $seenAt));
+                $upsert->execute(federation_inventory_row_values($db, $peerId, $file, $seenAt));
                 $received++;
             }
             $db->commit();
