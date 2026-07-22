@@ -3,6 +3,15 @@ declare(strict_types=1);
 
 final class TrustedHttpSourceClient
 {
+    private static bool $allowUntrustedTls = false;
+    private static bool $allowPrivateNetwork = false;
+
+    public static function configureFederationTesting(bool $enabled): void
+    {
+        self::$allowUntrustedTls = $enabled;
+        self::$allowPrivateNetwork = $enabled;
+    }
+
     public static function source(string $baseUrl): array
     {
         if (!extension_loaded('curl')) {
@@ -246,8 +255,8 @@ final class TrustedHttpSourceClient
             CURLOPT_CONNECTTIMEOUT => min(15, $timeout),
             CURLOPT_TIMEOUT => $timeout,
             CURLOPT_USERAGENT => 'UnrealDB/1.0 secure-http-client',
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_SSL_VERIFYPEER => !self::$allowUntrustedTls,
+            CURLOPT_SSL_VERIFYHOST => self::$allowUntrustedTls ? 0 : 2,
             CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
             CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTPS,
             CURLOPT_RESOLVE => [$source['host'] . ':443:' . $ip],
@@ -295,9 +304,11 @@ final class TrustedHttpSourceClient
         if (!$ips) {
             throw new RuntimeException('Source hostname could not be resolved.');
         }
-        foreach ($ips as $ip) {
-            if (!self::isPublic($ip)) {
-                throw new RuntimeException('Source hostname resolves to a blocked network address.');
+        if (!self::$allowPrivateNetwork) {
+            foreach ($ips as $ip) {
+                if (!self::isPublic($ip)) {
+                    throw new RuntimeException('Source hostname resolves to a blocked network address.');
+                }
             }
         }
         usort($ips, static fn(string $a, string $b): int => (str_contains($a, ':') ? 1 : 0) <=> (str_contains($b, ':') ? 1 : 0));
