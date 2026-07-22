@@ -19,6 +19,10 @@ jobs:
         run: |
           php -l catalog/lib/CatalogRedirectArchivePayload.php
           php -l catalog/lib/CatalogSourceScan.php
+          php -l catalog/lib/CatalogSourceScanNoContainers.php
+          php -l catalog/src/Infrastructure/Import/CatalogChunkedUploadStore.php
+          php -l catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php
+          php -l catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php
           php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php
@@ -38,6 +42,7 @@ jobs:
           php -l catalog/api/v1/job-action.php
           php -l catalog/api/v1/job-worker-status.php
           php -l catalog/api/v1/job-worker-action.php
+          php -l catalog/api/v1/profiled-upload-chunk.php
           php -l catalog/background-jobs.php
           php -l catalog/profiled-upload.php
           php -l catalog/pak-import.php
@@ -53,6 +58,7 @@ jobs:
           php -l catalog/tests/background-job-controls-contract-test.php
           php -l catalog/tests/game-backup-contract-test.php
           php -l catalog/tests/pak-archive-management-contract-test.php
+          php -l catalog/tests/chunked-pak-upload-contract-test.php
           php -l tests/catalog_redirect_payload_test.php
       - name: Syntax check detached worker clients
         run: |
@@ -68,5 +74,7 @@ jobs:
         run: php catalog/tests/game-backup-contract-test.php
       - name: Verify PAK archive management contract
         run: php catalog/tests/pak-archive-management-contract-test.php
+      - name: Verify chunked PAK upload contract
+        run: php catalog/tests/chunked-pak-upload-contract-test.php
       - name: Verify generic redirect payload decoding
         run: php tests/catalog_redirect_payload_test.php
