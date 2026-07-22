@@ -23,6 +23,7 @@ jobs:
           php -l catalog/src/Infrastructure/Import/CatalogChunkedUploadStore.php
           php -l catalog/src/Infrastructure/Import/CatalogIncomingFileStore.php
           php -l catalog/src/Infrastructure/Import/CatalogProfiledUploadQueue.php
+          php -l catalog/src/Application/Jobs/JobExecutionContext.php
           php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php
