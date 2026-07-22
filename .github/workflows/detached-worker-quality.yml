@@ -29,6 +29,7 @@ jobs:
           php -l catalog/src/Infrastructure/Jobs/CatalogDetachedWorker.php
           php -l catalog/src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogJobEventLog.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogJobDisplayStatus.php
           php -l catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php
           php -l catalog/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php
@@ -67,6 +68,7 @@ jobs:
           php -l catalog/tests/detached-worker-contract-test.php
           php -l catalog/tests/background-job-controls-contract-test.php
           php -l catalog/tests/background-job-pak-rerun-contract-test.php
+          php -l catalog/tests/background-job-status-filter-contract-test.php
           php -l catalog/tests/game-backup-contract-test.php
           php -l catalog/tests/pak-archive-management-contract-test.php
           php -l catalog/tests/chunked-pak-upload-contract-test.php
@@ -90,6 +92,8 @@ jobs:
         run: php catalog/tests/background-job-controls-contract-test.php
       - name: Verify retained PAK job rerun contract
         run: php catalog/tests/background-job-pak-rerun-contract-test.php
+      - name: Verify visible background job status filters
+        run: php catalog/tests/background-job-status-filter-contract-test.php
       - name: Verify game backup contract
         run: php catalog/tests/game-backup-contract-test.php
       - name: Verify PAK archive management contract
