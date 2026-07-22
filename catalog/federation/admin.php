@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
@@ -29,7 +28,11 @@ try {
         'failed_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"')['c'] ?? 0),
     ];
 
-    catalog_page_header('Federation Admin', 'Parent/child federation dashboard for identity, join requests, peers, inventory, requests, approvals, transfer queues, imports, uploads, maintenance, conflicts, and logs.', catalog_federation_links() + ['Docs' => 'docs.php', 'Public Join Page' => 'join.php', 'Claim Parent' => 'claim-parent.php']);
+    catalog_page_header(
+        'Federation Admin',
+        'Parent/master federation dashboard. Approved joins pair automatically; parents inspect and pull from children directly; child downloads require parent approval and are limited to missing dependencies.',
+        catalog_federation_links() + ['Docs' => 'docs.php', 'Public Join Page' => 'join.php']
+    );
 
     echo '<div class="card"><h2>Local site identity</h2><table>';
     echo '<tr><th>Site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
@@ -42,8 +45,8 @@ try {
     echo '<div class="grid">';
     catalog_stat_card('Total peers', $stats['peers']);
     catalog_stat_card('Active peers', $stats['active_peers']);
-    catalog_stat_card('Peer inventory rows', $stats['peer_files']);
-    catalog_stat_card('File requests', $stats['requests']);
+    catalog_stat_card('Cached child inventory rows', $stats['peer_files']);
+    catalog_stat_card('Dependency requests', $stats['requests']);
     catalog_stat_card('Pending join requests', $stats['join_pending'], '', $stats['join_pending'] > 0 ? 'attention' : '');
     catalog_stat_card('Queued transfer jobs', $stats['queued_jobs'], '', $stats['queued_jobs'] > 0 ? 'attention' : '');
     catalog_stat_card('Waiting import', $stats['downloaded_jobs'], '', $stats['downloaded_jobs'] > 0 ? 'attention' : '');
@@ -51,38 +54,34 @@ try {
     echo '</div>';
 
     echo '<div class="card"><h2>Core tools</h2><div class="grid">';
-    catalog_tool_card('Federation settings', 'settings.php', 'Set site role, URL, identity, speed limits, delays, transfer defaults, join request toggle, and cron worker token.', 'primary');
-    catalog_tool_card('Join requests', 'join-requests.php', 'Parent admin approval page for public child-site pairing requests.', $stats['join_pending'] > 0 ? (string)$stats['join_pending'] : '');
-    catalog_tool_card('Public join page', 'join.php', 'Share this URL so new deployments can request access to the master parent.');
-    catalog_tool_card('Claim parent', 'claim-parent.php', 'Child-side tool to claim an approved one-time parent pairing URL.');
-    catalog_tool_card('Peers', 'peers.php', 'Add/manage parent or child sites and shared secrets.');
-    catalog_tool_card('Queue overview', 'queue.php', 'Review queued/running/downloaded/imported/failed transfer jobs.', $stats['queued_jobs'] + $stats['downloaded_jobs'] + $stats['failed_jobs'] > 0 ? (string)($stats['queued_jobs'] + $stats['downloaded_jobs'] + $stats['failed_jobs']) : '');
-    catalog_tool_card('Conflict report', 'conflicts.php', 'Review same-name, same-GUID, and hash mismatch conflicts between local and peer files.');
-    catalog_tool_card('Maintenance', 'maintenance.php', 'Prune old nonces/logs and review federation incoming storage usage.');
-    catalog_tool_card('DSM/cron docs', 'docs.php', 'Setup notes and curl examples for scheduled federation workers.');
-    catalog_tool_card('Federation logs', 'logs.php', 'View API, pairing, upload/download and transfer logs.');
+    catalog_tool_card('Federation settings', 'settings.php', 'Set identity, role, transfer limits, automatic dependency download behavior, and worker settings.', 'primary');
+    catalog_tool_card('Join requests', 'join-requests.php', 'Approve or deny child pairing requests. Approval completes on the child automatically.', $stats['join_pending'] > 0 ? (string)$stats['join_pending'] : '');
+    catalog_tool_card('Join main parent', 'join-main-parent.php', 'Child-side join request and automatic approval status.');
+    catalog_tool_card('Peers', 'peers.php', 'Review automatically paired parent and child sites.');
+    catalog_tool_card('Queue overview', 'queue.php', 'Review queued, running, downloaded, imported, and failed transfer jobs.', $stats['queued_jobs'] + $stats['downloaded_jobs'] + $stats['failed_jobs'] > 0 ? (string)($stats['queued_jobs'] + $stats['downloaded_jobs'] + $stats['failed_jobs']) : '');
+    catalog_tool_card('Conflict report', 'conflicts.php', 'Review identity/hash conflicts between local and peer files.');
+    catalog_tool_card('Maintenance', 'maintenance.php', 'Prune nonces/logs and review federation storage.');
+    catalog_tool_card('Federation logs', 'logs.php', 'View pairing, inventory, request, and transfer events.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Parent/master tools</h2><div class="grid">';
-    catalog_tool_card('Peer inventory', 'peer-inventory.php', 'View each child inventory separately.');
-    catalog_tool_card('Parent pull from children', 'parent-pull.php', 'Pull missing dependencies first, then other files the parent does not have.');
-    catalog_tool_card('Child file requests', 'requests.php', 'Approve or deny child missing-dependency requests, including selected items.');
+    catalog_tool_card('Child inventory', 'peer-inventory.php', 'Read child inventory directly and show only needed or otherwise missing files.');
+    catalog_tool_card('Parent pull from children', 'parent-pull.php', 'Download selected child files absent from the parent without child approval.');
+    catalog_tool_card('Child dependency requests', 'requests.php', 'Approve or deny child requests for missing dependency files.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Child tools</h2><div class="grid">';
-    catalog_tool_card('Push inventory to parent', 'inventory-push.php', 'Send verified local file metadata to the parent.');
-    catalog_tool_card('Upload files to parent', 'upload-to-parent.php', 'Queue selected verified local files for controlled upload to parent.');
-    catalog_tool_card('Generate missing dependency request', 'request-generate.php', 'Submit local missing dependency list to the parent.');
-    catalog_tool_card('Request status/cancel', 'request-status.php', 'Poll parent status and cancel active requests.');
-    catalog_tool_card('Approved downloads', 'approved-downloads.php', 'Queue parent-approved files for controlled download.');
+    catalog_tool_card('Generate missing dependency request', 'request-generate.php', 'Submit local missing dependencies to the parent for approval.');
+    catalog_tool_card('Request status/cancel', 'request-status.php', 'Review the latest dependency request decision.');
+    catalog_tool_card('Approved dependency downloads', 'approved-downloads.php', 'Review automatically queued parent-approved dependency downloads.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Workers</h2><div class="grid">';
-    catalog_tool_card('Bulk worker', 'worker-run.php', 'Run multiple sequential transfers/imports up to the configured per-run limit.', 'primary');
-    catalog_tool_card('Run one transfer', 'transfer-run.php', 'Download or upload one queued federation job.');
-    catalog_tool_card('Import one downloaded file', 'import-run.php', 'Import one downloaded federation file into the local catalog.');
-    catalog_tool_card('Cron worker endpoint', 'cron-worker.php', 'Token-protected worker endpoint for DSM Task Scheduler.');
-    catalog_tool_card('Hello endpoint', '../api/federation/hello.php', 'Public identity/status endpoint used for connection testing.');
+    catalog_tool_card('Bulk worker', 'worker-run.php', 'Poll approvals, queue dependency-only child downloads, transfer, and import.', 'primary');
+    catalog_tool_card('Run one transfer', 'transfer-run.php', 'Run one queued federation transfer.');
+    catalog_tool_card('Import one downloaded file', 'import-run.php', 'Import one downloaded federation file.');
+    catalog_tool_card('Cron worker endpoint', 'cron-worker-streaming.php', 'Token-protected scheduled worker endpoint.');
+    catalog_tool_card('Documentation', 'docs.php', 'Federation role, approval, and worker setup.');
     echo '</div></div>';
 
     catalog_foot();
