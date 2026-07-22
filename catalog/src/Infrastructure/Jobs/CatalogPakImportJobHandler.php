@@ -36,6 +36,9 @@ final class CatalogPakImportJobHandler implements JobHandler
         $pakId = 0;
         $extracted = null;
         $archiveStore = new CatalogPakArchiveStore($this->config);
+        $eventLog = new CatalogJobEventLog($this->config);
+        $messages = [];
+        $this->resetEventLog($eventLog, $job->id);
 
         try {
             $payload = $job->payload;
@@ -130,7 +133,6 @@ final class CatalogPakImportJobHandler implements JobHandler
             $failed = 0;
             $skipped = 0;
             $notExtracted = 0;
-            $messages = [];
 
             foreach ($entries as $entryIndex => $entry) {
                 $display = $this->normalizeEntryPath((string)($entry['filename'] ?? ''));
@@ -160,15 +162,18 @@ final class CatalogPakImportJobHandler implements JobHandler
 
                 if (!is_array($extractedFile)) {
                     $notExtracted++;
-                    $archiveStore->updateEntry(
-                        $this->db,
-                        $entryId,
-                        !empty($entry['encrypted']) ? 'encrypted' : 'not_extracted',
-                        null,
-                        !empty($entry['encrypted'])
-                            ? 'Entry is encrypted.'
-                            : 'Entry uses an unsupported compression method or could not be extracted.'
-                    );
+                    $status = !empty($entry['encrypted']) ? 'encrypted' : 'not_extracted';
+                    $message = !empty($entry['encrypted'])
+                        ? 'Entry is encrypted.'
+                        : 'Entry uses an unsupported compression method or could not be extracted.';
+                    $archiveStore->updateEntry($this->db, $entryId, $status, null, $message);
+                    $this->recordEvent($eventLog, $job->id, [
+                        'status' => $status,
+                        'file' => $display,
+                        'message' => $message,
+                        'file_id' => 0,
+                        'pak_entry_id' => $entryId,
+                    ], $messages);
                     continue;
                 }
 
@@ -180,13 +185,15 @@ final class CatalogPakImportJobHandler implements JobHandler
                     || !in_array($extension, $allowed, true)
                 ) {
                     $skipped++;
-                    $archiveStore->updateEntry(
-                        $this->db,
-                        $entryId,
-                        'skipped',
-                        null,
-                        'Extracted entry is not a standalone package accepted by the selected game profile.'
-                    );
+                    $message = 'Extracted entry is not a standalone package accepted by the selected game profile.';
+                    $archiveStore->updateEntry($this->db, $entryId, 'skipped', null, $message);
+                    $this->recordEvent($eventLog, $job->id, [
+                        'status' => 'skipped',
+                        'file' => $display,
+                        'message' => $message,
+                        'file_id' => 0,
+                        'pak_entry_id' => $entryId,
+                    ], $messages);
                     continue;
                 }
 
@@ -227,15 +234,13 @@ final class CatalogPakImportJobHandler implements JobHandler
                         $fileId > 0 ? $fileId : null,
                         (string)($result[2] ?? '')
                     );
-                    if (count($messages) < self::MAX_RESULT_MESSAGES) {
-                        $messages[] = [
-                            'status' => $status,
-                            'file' => $display,
-                            'message' => (string)($result[2] ?? ''),
-                            'file_id' => $fileId,
-                            'pak_entry_id' => $entryId,
-                        ];
-                    }
+                    $this->recordEvent($eventLog, $job->id, [
+                        'status' => $status,
+                        'file' => $display,
+                        'message' => (string)($result[2] ?? ''),
+                        'file_id' => $fileId,
+                        'pak_entry_id' => $entryId,
+                    ], $messages);
                 } catch (JobCancellationRequested $error) {
                     throw $error;
                 } catch (Throwable $error) {
@@ -251,16 +256,15 @@ final class CatalogPakImportJobHandler implements JobHandler
                     );
                     $fileId = (int)($staged['file_id'] ?? 0);
                     $status = $staged !== null ? 'unverified' : 'rejected';
-                    $archiveStore->updateEntry($this->db, $entryId, $status, $fileId > 0 ? $fileId : null, $this->shortError($error));
-                    if (count($messages) < self::MAX_RESULT_MESSAGES) {
-                        $messages[] = [
-                            'status' => $status,
-                            'file' => $display,
-                            'message' => $this->shortError($error),
-                            'file_id' => $fileId,
-                            'pak_entry_id' => $entryId,
-                        ];
-                    }
+                    $message = $this->shortError($error);
+                    $archiveStore->updateEntry($this->db, $entryId, $status, $fileId > 0 ? $fileId : null, $message);
+                    $this->recordEvent($eventLog, $job->id, [
+                        'status' => $status,
+                        'file' => $display,
+                        'message' => $message,
+                        'file_id' => $fileId,
+                        'pak_entry_id' => $entryId,
+                    ], $messages);
                 }
             }
 
@@ -325,7 +329,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                 'skipped' => $skipped,
                 'not_extracted' => $notExtracted,
                 'messages' => $messages,
-                'messages_truncated' => ($imported + $duplicates + $aliases + $failed) > count($messages),
+                'messages_truncated' => $total > count($messages),
                 'extract_log' => substr((string)($extracted['log'] ?? ''), 0, 20000),
             ];
         } catch (JobCancellationRequested $error) {
@@ -340,6 +344,13 @@ final class CatalogPakImportJobHandler implements JobHandler
                 throw $error;
             }
             $message = $this->shortError($error);
+            $this->recordEvent($eventLog, $job->id, [
+                'status' => 'failed',
+                'file' => (string)($job->payload['original_name'] ?? 'archive.pak'),
+                'message' => $message,
+                'file_id' => 0,
+                'pak_entry_id' => 0,
+            ], $messages);
             $context->checkpoint([
                 'stage' => 'failed',
                 'done' => 100,
@@ -355,6 +366,7 @@ final class CatalogPakImportJobHandler implements JobHandler
                 'pak_id' => $pakId,
                 'message' => $message,
                 'original_name' => (string)($job->payload['original_name'] ?? 'archive.pak'),
+                'messages' => $messages,
             ];
         } finally {
             if (is_array($extracted) && isset($extracted['dir'])) {
@@ -429,6 +441,28 @@ final class CatalogPakImportJobHandler implements JobHandler
             'Could not match the successfully extracted PAK files to a parsed index.'
             . ($lastError !== '' ? ' Last index error: ' . $lastError : '')
         );
+    }
+
+    /** @param array<string,mixed> $event @param list<array<string,mixed>> $messages */
+    private function recordEvent(CatalogJobEventLog $eventLog, int $jobId, array $event, array &$messages): void
+    {
+        if (count($messages) < self::MAX_RESULT_MESSAGES) {
+            $messages[] = $event;
+        }
+        try {
+            $eventLog->append($jobId, $event);
+        } catch (Throwable $error) {
+            error_log('[UnrealDB PAK events] Job #' . $jobId . ': ' . $error->getMessage());
+        }
+    }
+
+    private function resetEventLog(CatalogJobEventLog $eventLog, int $jobId): void
+    {
+        try {
+            $eventLog->reset($jobId);
+        } catch (Throwable $error) {
+            error_log('[UnrealDB PAK events] Could not reset job #' . $jobId . ': ' . $error->getMessage());
+        }
     }
 
     /** @param array<string,mixed> $payload */
