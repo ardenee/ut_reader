@@ -131,7 +131,7 @@
                     return;
                 }
                 if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
-                    reject(new Error(responseError(body, 'Chunked upload request failed.'));
+                    reject(new Error(responseError(body, 'Chunked upload request failed.')));
                     return;
                 }
                 resolve(body);
