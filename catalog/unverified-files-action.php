@@ -43,7 +43,12 @@ try {
         $result = catalog_unverified_move_item($db, $config, $source, $targetGameId);
         $message = 'Moved ' . $result['original_name'] . ' to ' . $result['target_game'] . '.';
     } elseif ($action === 'import') {
-        $result = catalog_unverified_promote_item($db, $config, $source, $targetGameId, $userId, $allowOverride);
+        // This is a trusted administrator promotion from controlled unverified
+        // storage. The browser upload limit has already done its job and must not
+        // reject a valid large package while the scanner promotes it.
+        $trustedImportConfig = $config;
+        $trustedImportConfig['max_upload_bytes'] = PHP_INT_MAX;
+        $result = catalog_unverified_promote_item($db, $trustedImportConfig, $source, $targetGameId, $userId, $allowOverride);
         $message = ucfirst((string)$result['status']) . ' ' . $result['original_name'] . ' for ' . $result['target_game'] . '. ' . trim((string)$result['message']);
     } else {
         $result = catalog_unverified_discard_item($db, $config, $source);
