@@ -144,7 +144,6 @@ CSS;
         [
             'PAK archives' => 'game-paks.php?id=' . (int)$pak['game_id'],
             'Extracted files' => 'game-files.php?id=' . (int)$pak['game_id'],
-            'Download original PAK' => 'pak-download.php?id=' . $pakId,
         ]
     );
 
@@ -171,13 +170,21 @@ CSS;
     echo '<tr><th>Index hash</th><td class="mono">' . catalog_h((string)$pak['index_hash']) . '</td></tr>';
     echo '<tr><th>Identity</th><td class="pak-info-nowrap">' . CatalogUi::identity('', (string)$pak['md5'], (string)$pak['sha256']) . '</td></tr>';
     echo '<tr><th>Imported</th><td>' . catalog_h((string)$pak['created_at']) . ($pak['uploaded_by_name'] ? ' by ' . catalog_h((string)$pak['uploaded_by_name']) : '') . '</td></tr>';
-    echo '</table><p><a class="button primary" href="pak-download.php?id=' . $pakId . '">Download original PAK</a></p>';
+    echo '</table><div class="ui-inline-actions">';
+    echo CatalogUi::iconButton([
+        'label' => 'Download original PAK',
+        'icon' => '⇩',
+        'href' => 'pak-download.php?id=' . $pakId,
+        'size' => 'sm',
+        'variant' => 'primary',
+    ]);
     if (catalog_support_is_admin()) {
         echo '<form method="post" action="pak-maintenance.php" onsubmit="return confirm(\'Delete this PAK archive record and the retained original .pak file? Extracted package files will remain in the catalog.\')">';
         echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('pak-maintenance')) . '"><input type="hidden" name="pak_id" value="' . $pakId . '"><input type="hidden" name="operation" value="delete">';
-        echo '<button class="danger" type="submit">Delete retained PAK</button></form>';
+        echo CatalogUi::button('Delete retained PAK', ['type' => 'submit', 'variant' => 'danger', 'size' => 'sm']);
+        echo '</form>';
     }
-    echo '</div>';
+    echo '</div></div>';
 
     if (trim((string)$pak['scan_notes']) !== '') {
         echo '<div class="card"><h2>PAK extraction notes</h2><pre class="mono pak-info-notes">' . catalog_h((string)$pak['scan_notes']) . '</pre></div>';
@@ -210,7 +217,7 @@ CSS;
     if ($entries === []) {
         echo CatalogUi::emptyState('No entries found', 'No PAK entries match the selected filters.', ['label' => 'Clear filters', 'href' => 'pak-info.php?id=' . $pakId], '⌕');
     } else {
-        echo '<div class="ui-table-region pak-info-table-region"><table class="pak-info-natural-table"><thead><tr><th>#</th><th>Entry path</th><th>Package link</th><th class="pak-info-nowrap">Import status</th><th>Compression</th><th>Stored / unpacked</th><th class="pak-info-nowrap">Identity</th><th>Database (N/I/E)</th></tr></thead><tbody>';
+        echo '<div class="ui-table-region pak-info-table-region"><table class="pak-info-natural-table"><thead><tr><th>#</th><th>Entry path</th><th>Package link</th><th class="pak-info-nowrap">Import status</th><th>Compression</th><th>Stored / unpacked</th><th class="pak-info-nowrap">Identity</th><th>Database</th></tr></thead><tbody>';
         foreach ($entries as $entry) {
             $fileId = (int)($entry['file_id'] ?? 0);
             $entryPath = catalog_h((string)$entry['entry_path']);
