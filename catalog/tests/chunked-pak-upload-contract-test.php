@@ -57,7 +57,8 @@ try {
     $queue = file_get_contents(__DIR__ . '/../src/Infrastructure/Import/CatalogProfiledUploadQueue.php');
     $sourceHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php');
     $sourceVariant = file_get_contents(__DIR__ . '/../lib/CatalogSourceScanNoContainers.php');
-    foreach ([$endpoint, $javascript, $queue, $sourceHandler, $sourceVariant] as $content) {
+    $executionContext = file_get_contents(__DIR__ . '/../src/Application/Jobs/JobExecutionContext.php');
+    foreach ([$endpoint, $javascript, $queue, $sourceHandler, $sourceVariant, $executionContext] as $content) {
         chunked_pak_expect(is_string($content), 'A required chunked PAK upload component is missing.');
     }
     chunked_pak_expect(str_contains($endpoint, "catalog_api_require_admin(false)"), 'Chunked upload endpoint is not admin-only.');
@@ -68,6 +69,7 @@ try {
     chunked_pak_expect(str_contains($queue, "'local-pak:' . \$this->encodeLocalPath"), 'Local PAKs are copied instead of queued by validated path reference.');
     chunked_pak_expect(str_contains($sourceHandler, 'enqueueLocalPak('), 'Local source scans do not queue PAK containers separately.');
     chunked_pak_expect(str_contains($sourceVariant, "=== 'pak'"), 'Normal source package scanning does not exclude separately queued PAKs.');
+    chunked_pak_expect(str_contains($executionContext, 'JobType::IMPORT_STAGED_PAK') && str_contains($executionContext, '3600'), 'Long PAK extraction jobs do not receive an extended lease.');
 } finally {
     if (is_dir($root)) {
         $iterator = new RecursiveIteratorIterator(
