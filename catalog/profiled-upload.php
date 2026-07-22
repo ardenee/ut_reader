@@ -4,10 +4,10 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPakArchive.php';
 
-use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 function profiled_upload_error(Throwable $error): string
 {
@@ -55,7 +55,7 @@ function profiled_upload_enqueue(PDO $db, array $config): array
     }
 
     $store = new CatalogIncomingFileStore($config);
-    $queue = new PdoJobQueue($db);
+    $queue = new CatalogProfiledUploadQueue($db, $config);
     $queueName = (string)($config['queue']['name'] ?? 'catalog');
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     $jobs = [];
@@ -66,7 +66,7 @@ function profiled_upload_enqueue(PDO $db, array $config): array
         $displayName = profiled_upload_relative_path((int)$index, $originalName);
         $errorCode = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
         if ($errorCode !== UPLOAD_ERR_OK) {
-            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'Upload error ' . $errorCode];
+            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'PHP upload error ' . $errorCode . '. Large PAK files should use the resumable chunked uploader.'];
             continue;
         }
         if (!is_string($temporaryPath) || !is_file($temporaryPath)) {
@@ -74,69 +74,51 @@ function profiled_upload_enqueue(PDO $db, array $config): array
             continue;
         }
         $size = filesize($temporaryPath);
-        if ($size === false || $size <= 0 || $size > (int)$config['max_upload_bytes']) {
-            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'Bad file size: ' . catalog_bytes((int)($size ?: 0))];
+        $isPak = catalog_pak_archive_is_supported_filename($originalName);
+        $limit = $isPak ? $queue->containerLimitBytes() : (int)$config['max_upload_bytes'];
+        if ($size === false || $size <= 0 || $size > $limit) {
+            $messages[] = [
+                'status' => 'failed',
+                'file' => $displayName,
+                'message' => 'Bad file size: ' . catalog_bytes((int)($size ?: 0)) . '; configured limit: ' . catalog_bytes($limit) . '.',
+            ];
             @unlink($temporaryPath);
             continue;
         }
 
-        $staged = $store->stageUploadedFile($temporaryPath, $originalName);
-        $jobType = catalog_pak_archive_is_supported_filename($originalName)
-            ? JobType::IMPORT_STAGED_PAK
-            : JobType::IMPORT_STAGED_PACKAGE;
         try {
-            $jobId = $queue->enqueue(
-                $queueName,
-                $jobType,
-                [
-                    'game_id' => $gameId,
-                    'staged_path' => $staged['relative_path'],
-                    'original_name' => $originalName,
-                    'source_relative_path' => $displayName,
-                    'strict_profile' => $strict,
-                    'user_id' => $userId,
-                    'size' => $staged['size'],
-                    'sha256' => $staged['sha256'],
-                ],
-                5,
-                null,
-                null,
-                $userId,
-                3
-            );
+            $staged = $store->stageUploadedFile($temporaryPath, $originalName);
+            $queued = $queue->enqueueStaged($gameId, $staged, $originalName, $displayName, $strict, $userId);
         } catch (Throwable $error) {
-            $store->delete($staged['relative_path']);
-            throw $error;
+            if (isset($staged['relative_path'])) {
+                $store->delete((string)$staged['relative_path']);
+            }
+            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => profiled_upload_error($error)];
+            continue;
         }
 
-        $jobs[] = [
-            'job_id' => $jobId,
-            'type' => $jobType,
-            'file' => $displayName,
-            'size' => $staged['size'],
-        ];
+        $jobs[] = $queued;
         $messages[] = [
             'status' => 'queued',
             'file' => $displayName,
-            'message' => 'Upload staged for background import as job #' . $jobId . '.',
-            'file_size_text' => catalog_bytes($staged['size']),
-            'job_id' => $jobId,
+            'message' => 'Upload staged for background import as job #' . $queued['job_id'] . '.',
+            'file_size_text' => catalog_bytes($queued['size']),
+            'job_id' => $queued['job_id'],
         ];
     }
 
-    if ($jobs === [] && $messages === []) {
-        throw new RuntimeException('No upload files were received.');
+    if ($jobs === []) {
+        $first = $messages[0]['message'] ?? 'No upload files could be queued.';
+        throw new RuntimeException((string)$first);
     }
 
     $worker = null;
     $workerError = '';
-    if ($jobs !== []) {
-        try {
-            $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
-        } catch (Throwable $error) {
-            $workerError = profiled_upload_error($error);
-            error_log('[UnrealDB profiled upload worker launch] ' . $error->getMessage());
-        }
+    try {
+        $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
+    } catch (Throwable $error) {
+        $workerError = profiled_upload_error($error);
+        error_log('[UnrealDB profiled upload worker launch] ' . $error->getMessage());
     }
 
     return [
@@ -184,13 +166,15 @@ try {
         'SELECT g.id,g.name,g.slug,p.engine_key profile_engine,p.allowed_extensions_json,p.package_version_min,p.package_version_max '
         . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.name'
     );
+    $chunkStore = new CatalogChunkedUploadStore($config);
+    $containerLimit = $chunkStore->maxBytes();
 
     catalog_head('Upload Files');
     catalog_flash($_SESSION['profiled_upload_flash'] ?? null);
     unset($_SESSION['profiled_upload_flash']);
     catalog_page_header(
         'Upload Files',
-        'Uploads are copied into durable controlled staging, queued, and automatically started by a detached CLI worker. Closing this page does not interrupt processing.',
+        'Uploads are copied into durable controlled staging, queued, and automatically started by a detached CLI worker. Large PAK files use resumable chunks and continue from chunks already received when the file is selected again.',
         [
             'Background Jobs' => 'background-jobs.php',
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
@@ -213,14 +197,18 @@ try {
     echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
-    echo '<p><button id="profiled-upload-button" type="submit">Upload and import</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current job</button></p>';
-    echo '<p class="muted">Each browser file is copied into durable staging before its job is created. The detached worker is started automatically and the staged source remains available for retries. Maximum staged file size: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '.</p>';
+    echo '<p><button id="profiled-upload-button" type="submit">Upload and import</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current upload/job</button></p>';
+    echo '<p class="muted">Normal package files use one durable upload request. UE4/UE5 .pak files use resumable ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' chunks, so Apache and PHP never receive the whole container in one request. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
     echo '<div id="profiled-upload-progress" class="upload-progress" hidden '
         . 'data-queue="' . catalog_h((string)($config['queue']['name'] ?? 'catalog')) . '" '
         . 'data-status-url="api/v1/job-status.php" '
         . 'data-action-url="api/v1/job-action.php" '
         . 'data-run-url="api/v1/job-run.php" '
-        . 'data-action-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
+        . 'data-chunk-url="api/v1/profiled-upload-chunk.php" '
+        . 'data-action-csrf="' . catalog_h(catalog_csrf('job_action')) . '" '
+        . 'data-chunk-csrf="' . catalog_h(catalog_csrf('profiled_upload_chunk')) . '" '
+        . 'data-chunk-bytes="' . $chunkStore->chunkBytes() . '" '
+        . 'data-container-limit="' . $containerLimit . '">';
     echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
     echo '<div id="upload-progress-log" class="upload-progress-log"></div></div>';
