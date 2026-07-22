@@ -52,12 +52,31 @@ foreach ([
     'white-space: normal !important',
     'overflow-wrap: anywhere',
     'pak-info-notes',
+    'pak-info-nowrap',
+    'white-space: nowrap !important',
+    'Database (N/I/E)',
+    'f.name_count,f.import_count,f.export_count',
+    'title="Names / Imports / Exports"',
+    '<a href="file-examine.php?id=',
+    '<a href="file-info.php?id=',
 ] as $fragment) {
-    large_pak_entry_layout_expect(str_contains($pakInfo, $fragment), 'PAK detail wrapping is missing: ' . $fragment);
+    large_pak_entry_layout_expect(str_contains($pakInfo, $fragment), 'PAK detail entry layout is missing: ' . $fragment);
 }
 large_pak_entry_layout_expect(
+    !str_contains($pakInfo, 'examine extracted package'),
+    'PAK details still show a separate examine extracted package link.'
+);
+large_pak_entry_layout_expect(
+    !str_contains($pakInfo, '<th>Message</th>'),
+    'PAK details still expose the removed Message column.'
+);
+large_pak_entry_layout_expect(
+    !str_contains($pakInfo, '<td class="small">' . "' . catalog_h((string)\$entry['import_message'])"),
+    'PAK details still render the removed per-entry message cell.'
+);
+large_pak_entry_layout_expect(
     !str_contains($pakInfo, '<td class="nowrap">'),
-    'PAK detail sizes still force a no-wrap table column.'
+    'PAK detail sizes still force the legacy no-wrap table column.'
 );
 
 $fileInfo = file_get_contents(__DIR__ . '/../file-info.php');
