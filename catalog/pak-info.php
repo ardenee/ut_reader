@@ -82,7 +82,7 @@ try {
     $offset = ($page - 1) * $limit;
     $entries = catalog_all(
         $db,
-        'SELECT e.*,f.package_name,f.original_name,f.package_guid,f.md5 file_md5,f.scan_status,'
+        'SELECT e.*,f.package_name,f.original_name,f.package_guid,f.md5 file_md5,f.sha1 file_sha1,f.scan_status,'
         . 'f.name_count,f.import_count,f.export_count '
         . 'FROM ue_pak_entries e LEFT JOIN ue_files f ON f.id=e.file_id ' . $where
         . ' ORDER BY e.entry_index LIMIT ' . $limit . ' OFFSET ' . $offset,
@@ -169,9 +169,7 @@ CSS;
     echo '<tr><th>Footer layout</th><td class="mono">' . catalog_h((string)$pak['footer_layout']) . '</td></tr>';
     echo '<tr><th>Index offset / size</th><td class="mono">' . number_format((int)$pak['index_offset']) . ' / ' . number_format((int)$pak['index_size']) . '</td></tr>';
     echo '<tr><th>Index hash</th><td class="mono">' . catalog_h((string)$pak['index_hash']) . '</td></tr>';
-    echo '<tr><th>MD5</th><td class="mono">' . catalog_h((string)$pak['md5']) . '</td></tr>';
-    echo '<tr><th>SHA1</th><td class="mono">' . catalog_h((string)$pak['sha1']) . '</td></tr>';
-    echo '<tr><th>SHA256</th><td class="mono">' . catalog_h((string)$pak['sha256']) . '</td></tr>';
+    echo '<tr><th>Identity</th><td class="pak-info-nowrap">' . CatalogUi::identity('', (string)$pak['md5'], (string)$pak['sha256']) . '</td></tr>';
     echo '<tr><th>Imported</th><td>' . catalog_h((string)$pak['created_at']) . ($pak['uploaded_by_name'] ? ' by ' . catalog_h((string)$pak['uploaded_by_name']) : '') . '</td></tr>';
     echo '</table><p><a class="button primary" href="pak-download.php?id=' . $pakId . '">Download original PAK</a></p>';
     if (catalog_support_is_admin()) {
@@ -212,7 +210,7 @@ CSS;
     if ($entries === []) {
         echo CatalogUi::emptyState('No entries found', 'No PAK entries match the selected filters.', ['label' => 'Clear filters', 'href' => 'pak-info.php?id=' . $pakId], '⌕');
     } else {
-        echo '<div class="ui-table-region pak-info-table-region"><table class="pak-info-natural-table"><thead><tr><th>#</th><th>Entry path</th><th>Package link</th><th class="pak-info-nowrap">Import status</th><th>Compression</th><th>Stored / unpacked</th><th class="pak-info-nowrap">Entry identity</th><th>Database (N/I/E)</th></tr></thead><tbody>';
+        echo '<div class="ui-table-region pak-info-table-region"><table class="pak-info-natural-table"><thead><tr><th>#</th><th>Entry path</th><th>Package link</th><th class="pak-info-nowrap">Import status</th><th>Compression</th><th>Stored / unpacked</th><th class="pak-info-nowrap">Identity</th><th>Database (N/I/E)</th></tr></thead><tbody>';
         foreach ($entries as $entry) {
             $fileId = (int)($entry['file_id'] ?? 0);
             $entryPath = catalog_h((string)$entry['entry_path']);
@@ -238,8 +236,11 @@ CSS;
                     . ' / ' . number_format((int)($entry['import_count'] ?? 0))
                     . ' / ' . number_format((int)($entry['export_count'] ?? 0))
                 : '—';
+            $sha = $fileId > 0
+                ? (string)($entry['file_sha1'] ?? '')
+                : (string)($entry['entry_hash'] ?? '');
 
-            echo '<tr>';
+            echo '<tr data-file-id="' . $fileId . '">';
             echo '<td class="mono">' . (int)$entry['entry_index'] . '</td>';
             echo '<td class="mono path">' . $entryPath . '</td>';
             echo '<td>' . $package . '</td>';
@@ -247,8 +248,11 @@ CSS;
             echo '<td>' . catalog_h(pak_info_compression_label((int)$entry['compression_method']))
                 . (!empty($entry['is_encrypted']) ? '<br>' . CatalogUi::badge('encrypted', 'danger') : '') . '</td>';
             echo '<td>' . catalog_h(catalog_bytes((int)$entry['stored_size'])) . '<br><span class="small muted">' . catalog_h(catalog_bytes((int)$entry['uncompressed_size'])) . '</span></td>';
-            echo '<td class="pak-info-nowrap"><span class="mono small">SHA1 ' . catalog_h((string)$entry['entry_hash']) . '</span>'
-                . ($fileId > 0 ? '<br><span class="mono small">MD5 ' . catalog_h((string)$entry['file_md5']) . '</span>' : '') . '</td>';
+            echo '<td class="pak-info-nowrap catalog-identity-cell">' . CatalogUi::identity(
+                (string)($entry['package_guid'] ?? ''),
+                (string)($entry['file_md5'] ?? ''),
+                $sha
+            ) . '</td>';
             echo '<td class="mono pak-info-nowrap" title="Names / Imports / Exports">' . catalog_h($database) . '</td>';
             echo '</tr>';
         }
