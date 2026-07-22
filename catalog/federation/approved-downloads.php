@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationPeerSecret.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
 
 function ad_parent(PDO $db, int $peerId): array
@@ -13,9 +14,7 @@ function ad_parent(PDO $db, int $peerId): array
     if (!$parent) {
         throw new RuntimeException('Active parent peer not found.');
     }
-    if (fed_peer_secret($db, $parent) === '') {
-        throw new RuntimeException('Parent peer has no stored API key.');
-    }
+    federation_peer_stored_signing_secret($db, $parent);
     return $parent;
 }
 
@@ -25,7 +24,7 @@ function ad_poll_status(PDO $db, array $parent): array
     return fed_http_post_signed(
         rtrim((string)$parent['site_url'], '/') . '/api/federation/request-status.php',
         (string)fed_setting($db, 'site_id', ''),
-        fed_peer_secret($db, $parent),
+        federation_peer_stored_signing_secret($db, $parent),
         ['latest' => true]
     );
 }
