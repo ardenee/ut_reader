@@ -2,9 +2,11 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../src/Infrastructure/Import/CatalogChunkedUploadStore.php';
+require_once __DIR__ . '/../src/Infrastructure/Import/CatalogChunkedUploadCleanup.php';
 require_once __DIR__ . '/../src/Infrastructure/Import/CatalogIncomingFileStore.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 
 function chunked_pak_expect(bool $condition, string $message): void
@@ -49,8 +51,9 @@ try {
     $encoded = rtrim(strtr(base64_encode($pakPath), '+/', '-_'), '=');
     chunked_pak_expect($incoming->resolve('local-pak:' . $encoded) === realpath($pakPath), 'Validated local PAK references do not resolve directly.');
 
-    $store->cancel(7, (string)$state['upload_id']);
-    chunked_pak_expect(!is_file($resolved['path']), 'Cancelled/consumed chunk storage was not removed.');
+    $cleanup = new CatalogChunkedUploadCleanup($config);
+    chunked_pak_expect($cleanup->delete((string)$state['upload_id']), 'Completed chunk storage was not deleted by job cleanup.');
+    chunked_pak_expect(!is_file($resolved['path']), 'Consumed chunk storage was not removed.');
 
     $endpoint = file_get_contents(__DIR__ . '/../api/v1/profiled-upload-chunk.php');
     $javascript = file_get_contents(__DIR__ . '/../assets/profiled-upload-jobs.js');
@@ -58,7 +61,8 @@ try {
     $sourceHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogSourceScanJobHandler.php');
     $sourceVariant = file_get_contents(__DIR__ . '/../lib/CatalogSourceScanNoContainers.php');
     $executionContext = file_get_contents(__DIR__ . '/../src/Application/Jobs/JobExecutionContext.php');
-    foreach ([$endpoint, $javascript, $queue, $sourceHandler, $sourceVariant, $executionContext] as $content) {
+    $jobCleanup = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php');
+    foreach ([$endpoint, $javascript, $queue, $sourceHandler, $sourceVariant, $executionContext, $jobCleanup] as $content) {
         chunked_pak_expect(is_string($content), 'A required chunked PAK upload component is missing.');
     }
     chunked_pak_expect(str_contains($endpoint, "catalog_api_require_admin(false)"), 'Chunked upload endpoint is not admin-only.');
@@ -70,6 +74,7 @@ try {
     chunked_pak_expect(str_contains($sourceHandler, 'enqueueLocalPak('), 'Local source scans do not queue PAK containers separately.');
     chunked_pak_expect(str_contains($sourceVariant, "=== 'pak'"), 'Normal source package scanning does not exclude separately queued PAKs.');
     chunked_pak_expect(str_contains($executionContext, 'JobType::IMPORT_STAGED_PAK') && str_contains($executionContext, '3600'), 'Long PAK extraction jobs do not receive an extended lease.');
+    chunked_pak_expect(str_contains($jobCleanup, 'CatalogChunkedUploadCleanup') && str_contains($jobCleanup, "'chunk-upload:'"), 'Terminal job cleanup does not release completed chunk storage.');
 } finally {
     if (is_dir($root)) {
         $iterator = new RecursiveIteratorIterator(
