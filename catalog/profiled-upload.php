@@ -227,7 +227,9 @@ try {
             . '</td><td><a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">select</a></td></tr>';
     }
     echo '</table></div>';
-    echo '<script src="assets/profiled-upload-jobs.js"></script>';
+    $uploadClient = __DIR__ . '/assets/profiled-upload-jobs.js';
+    $uploadClientVersion = is_file($uploadClient) ? (string)filemtime($uploadClient) : '1';
+    echo '<script src="assets/profiled-upload-jobs.js?v=' . catalog_h($uploadClientVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB profiled upload][' . catalog_request_id() . '] ' . $error->getMessage());
