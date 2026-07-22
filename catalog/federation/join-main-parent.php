@@ -42,12 +42,19 @@ function jmp_apply_child_role(PDO $db, string $parentUrl): void
     fed_set_setting($db, 'join_requests_enabled', '0');
 }
 
-function jmp_post_json(string $url, array $payload): array
+function jmp_allow_self_signed_tls(PDO $db): bool
+{
+    return (string)fed_setting($db, 'allow_self_signed_federation_certificates', '0') === '1';
+}
+
+function jmp_post_json(PDO $db, string $url, array $payload): array
 {
     $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($body === false) {
         throw new RuntimeException('Could not encode JSON.');
     }
+
+    $allowSelfSigned = jmp_allow_self_signed_tls($db);
     $context = stream_context_create([
         'http' => [
             'method' => 'POST',
@@ -56,11 +63,17 @@ function jmp_post_json(string $url, array $payload): array
             'timeout' => 60,
             'ignore_errors' => true,
         ],
-        'ssl' => ['verify_peer' => true, 'verify_peer_name' => true],
+        'ssl' => [
+            'verify_peer' => !$allowSelfSigned,
+            'verify_peer_name' => !$allowSelfSigned,
+            'allow_self_signed' => $allowSelfSigned,
+        ],
     ]);
     $response = @file_get_contents($url, false, $context);
     if ($response === false) {
-        throw new RuntimeException('POST failed: ' . $url);
+        $lastError = error_get_last();
+        $detail = is_array($lastError) ? trim((string)($lastError['message'] ?? '')) : '';
+        throw new RuntimeException('POST failed: ' . $url . ($detail !== '' ? ' — ' . $detail : ''));
     }
     $json = json_decode($response, true);
     if (!is_array($json)) {
@@ -108,7 +121,7 @@ try {
                 throw new RuntimeException('Local federation identity is incomplete. Set site_name and site_url in federation settings first.');
             }
 
-            $result = jmp_post_json($parentUrl . '/api/federation/join-request-submit.php', $payload);
+            $result = jmp_post_json($db, $parentUrl . '/api/federation/join-request-submit.php', $payload);
             if (empty($result['ok'])) {
                 throw new RuntimeException('Parent rejected join request: ' . ($result['error'] ?? 'unknown error'));
             }
@@ -144,7 +157,7 @@ try {
             if ($requestId <= 0 || $requestToken === '') {
                 throw new RuntimeException('No stored parent join request. Submit first.');
             }
-            $result = jmp_post_json($parentUrl . '/api/federation/join-request-status.php', [
+            $result = jmp_post_json($db, $parentUrl . '/api/federation/join-request-status.php', [
                 'request_id' => $requestId,
                 'site_id' => (string)$identity['site_id'],
                 'request_token' => $requestToken,
@@ -179,12 +192,21 @@ try {
     $joinStatus = (string)fed_setting($db, 'main_parent_join_status', 'none');
     $requestId = (string)fed_setting($db, 'main_parent_join_request_id', '');
     $manualUrl = $parentUrl !== JMP_OFFICIAL_PARENT_URL ? $parentUrl : '';
+    $allowSelfSigned = jmp_allow_self_signed_tls($db);
 
     catalog_page_header(
         'Join Federation Parent',
         'Choose the official UnrealDB parent or enter another federation parent URL. Local identity values are generated and submitted automatically.',
         catalog_federation_links() + ['Settings' => 'settings.php', 'Peers' => 'peers.php', 'Claim Parent' => 'claim-parent.php']
     );
+
+    if ($allowSelfSigned) {
+        echo CatalogUi::alert(
+            'warning',
+            'Self-signed federation certificates are currently allowed. Certificate trust and hostname verification are disabled for outbound join requests. Use this only for development or testing.',
+            'Testing TLS mode enabled'
+        );
+    }
 
     if ($currentRole === 'parent') {
         echo CatalogUi::alert(
