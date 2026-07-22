@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
 require_once __DIR__ . '/../lib/FederationStreamingWorker.php';
+require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
 require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
 function cron_stream_json(array $data, int $status = 200): void
@@ -46,7 +47,16 @@ try {
     }
 
     $limit = max(1, min(100, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1)));
-    $result = ['ok' => true, 'mode' => 'streaming', 'started_at' => date('c'), 'transfers' => [], 'imports' => [], 'mirror_maintenance' => external_mirror_maintenance($db)];
+    $result = [
+        'ok' => true,
+        'mode' => 'streaming',
+        'started_at' => date('c'),
+        'approved_dependency_queue' => federation_queue_approved_dependency_downloads($db),
+        'transfers' => [],
+        'imports' => [],
+        'mirror_maintenance' => external_mirror_maintenance($db),
+    ];
+
     for ($i = 0; $i < $limit; $i++) {
         $transfer = federation_streaming_run_one_transfer($db, $config);
         $result['transfers'][] = $transfer;
@@ -61,8 +71,20 @@ try {
             break;
         }
     }
+
     $result['finished_at'] = date('c');
-    fed_log($db, null, null, 'INFO', 'CRON_STREAMING_WORKER_RUN', json_encode(['transfers' => count($result['transfers']), 'imports' => count($result['imports'])], JSON_UNESCAPED_SLASHES));
+    fed_log(
+        $db,
+        null,
+        null,
+        'INFO',
+        'CRON_STREAMING_WORKER_RUN',
+        json_encode([
+            'dependency_downloads_queued' => (int)($result['approved_dependency_queue']['queued'] ?? 0),
+            'transfers' => count($result['transfers']),
+            'imports' => count($result['imports']),
+        ], JSON_UNESCAPED_SLASHES)
+    );
     cron_stream_json($result);
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] federation streaming cron failed: ' . get_class($error) . ': ' . $error->getMessage());
