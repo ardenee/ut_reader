@@ -65,6 +65,34 @@ try {
         JsonResponse::send(['data' => ['job_id' => $jobId] + $result]);
     }
 
+    if ($action === 'delete_selected') {
+        $jobIds = $payload['job_ids'] ?? [];
+        if (!is_array($jobIds) || $jobIds === []) {
+            JsonResponse::error('invalid_jobs', 'Select at least one terminal job to delete.', 400);
+        }
+        $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
+            ->deleteTerminalJobs(array_values($jobIds), $queueName);
+        if ((int)$result['deleted_jobs'] < 1) {
+            JsonResponse::error('not_deletable', 'None of the selected jobs are terminal jobs in this queue.', 409);
+        }
+        JsonResponse::send(['data' => ['queue' => $queueName] + $result]);
+    }
+
+    if ($action === 'delete_matching') {
+        $status = strtolower(trim((string)($payload['status'] ?? '')));
+        if ($status !== '' && !in_array($status, ['completed', 'failed', 'dead_letter', 'cancelled'], true)) {
+            JsonResponse::error('invalid_status', 'Bulk deletion is available only for terminal job statuses.', 400);
+        }
+        $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
+            ->deleteTerminalMatching($queueName, $status);
+        JsonResponse::send([
+            'data' => [
+                'queue' => $queueName,
+                'status' => $status !== '' ? $status : null,
+            ] + $result,
+        ]);
+    }
+
     if ($action === 'cleanup') {
         $retentionDays = max(1, min((int)($payload['retention_days'] ?? 30), 3650));
         $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
@@ -255,7 +283,7 @@ try {
 
     JsonResponse::error(
         'invalid_action',
-        'Supported actions are cancel, retry, delete, cleanup, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
+        'Supported actions are cancel, retry, delete, delete_selected, delete_matching, cleanup, recover, enqueue_rebuild_game, enqueue_rebuild_file, enqueue_rebuild_affected, enqueue_source_identity_file, enqueue_source_identity_game, enqueue_reconcile_unverified, enqueue_prune_artifacts and enqueue_prune.',
         400
     );
 } catch (Throwable $exception) {
