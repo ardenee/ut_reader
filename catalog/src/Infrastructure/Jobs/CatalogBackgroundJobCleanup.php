@@ -179,8 +179,14 @@ final class CatalogBackgroundJobCleanup
     {
         $store = new CatalogIncomingFileStore($this->config);
         $chunkCleanup = new CatalogChunkedUploadCleanup($this->config);
+        $eventLog = new CatalogJobEventLog($this->config);
         $deleted = 0;
         foreach ($rows as $row) {
+            try {
+                $eventLog->remove((int)($row['id'] ?? 0));
+            } catch (\Throwable) {
+                // Event logs are auxiliary and must not block job cleanup.
+            }
             $payload = $this->decodePayload((string)($row['payload_json'] ?? ''));
             $relativePath = trim((string)($payload['staged_path'] ?? ''));
             if ($relativePath === '') {
