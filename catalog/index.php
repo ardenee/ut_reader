@@ -70,15 +70,13 @@ function catalog_render_search_results(array $rows, string $query): void
         echo '<p class="muted">No matching files found.</p></div>';
         return;
     }
-    echo '<table id="catalog-search-results" data-sortable-table><thead><tr><th>Game</th><th>Package</th><th>File</th><th>Matched Field</th><th>Tables (N/I/E)</th><th>Size</th><th>GUID / MD5</th></tr></thead><tbody>';
+    echo '<table id="catalog-search-results" data-sortable-table><thead><tr><th>Game</th><th>Package</th><th>File</th><th>Matched Field</th><th>Tables (N/I/E)</th><th>Size</th><th>Identity</th></tr></thead><tbody>';
     foreach ($rows as $row) {
         $fileId = (int)$row['id'];
         $gameId = (int)$row['game_id'];
         $gameName = (string)($row['game_name'] ?? 'Unknown game');
         $packageName = (string)$row['package_name'];
         $originalName = (string)$row['original_name'];
-        $guid = trim((string)($row['package_guid'] ?? ''));
-        $md5 = trim((string)($row['md5'] ?? ''));
         $matches = is_array($row['matched_fields'] ?? null) ? $row['matched_fields'] : [];
         $matched = '';
         foreach ($matches as $match) {
@@ -95,7 +93,11 @@ function catalog_render_search_results(array $rows, string $query): void
         echo '<td>' . ($matched !== '' ? $matched : '<span class="muted">match details unavailable</span>') . '</td>';
         echo '<td class="mono">' . (int)($row['name_count'] ?? 0) . ' / ' . (int)($row['import_count'] ?? 0) . ' / ' . (int)($row['export_count'] ?? 0) . '</td>';
         echo '<td>' . catalog_h(catalog_bytes((int)($row['file_size'] ?? 0))) . '</td>';
-        echo '<td class="mono small"><span>GUID: ' . ($guid !== '' ? catalog_search_highlight($guid, $query) : '—') . '</span><br><span>MD5: ' . ($md5 !== '' ? catalog_search_highlight($md5, $query) : '—') . '</span></td>';
+        echo '<td class="catalog-identity-cell">' . CatalogUi::identity(
+            (string)($row['package_guid'] ?? ''),
+            (string)($row['md5'] ?? ''),
+            (string)($row['sha1'] ?? '')
+        ) . '</td>';
         echo '</tr>';
     }
     echo '</tbody></table></div>';
@@ -173,11 +175,11 @@ try {
         $query = trim((string)($_GET['q'] ?? ''));
         $games = catalog_all($db, 'SELECT id,name FROM ue_games ORDER BY name');
         $gameId = catalog_search_game_id($games);
-        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form"><input type="hidden" name="page" value="search"><label>Search <input name="q" value="' . catalog_h($query) . '" placeholder="MD5, SHA1, GUID, package, object, file name"></label><label>Game <select name="game_id"><option value="">All games</option>';
+        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form"><input type="hidden" name="page" value="search"><label>Search <input name="q" value="' . catalog_h($query) . '" placeholder="GUID, MD5, SHA1, package, object, file name"></label><label>Game <select name="game_id"><option value="">All games</option>';
         foreach ($games as $game) {
             echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $gameId ? ' selected' : '') . '>' . catalog_h($game['name']) . '</option>';
         }
-        echo '</select></label><button>Search</button></form><p class="muted small">Exact MD5, SHA1 and GUID lookups use indexed identity searches. Broad searches require at least three characters and return at most 200 files.</p></div>';
+        echo '</select></label><button>Search</button></form><p class="muted small">Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Broad searches require at least three characters and return at most 200 files.</p></div>';
         if ($query !== '') {
             if (mb_strlen($query, 'UTF-8') < 3 && preg_match('/^[A-Fa-f0-9]{32,40}$/', $query) !== 1) {
                 echo '<div class="card"><p class="muted">Enter at least three characters.</p></div>';
