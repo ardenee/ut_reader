@@ -45,8 +45,12 @@ foreach (['job-action.php', 'job-run.php', 'job-worker-action.php'] as $file) {
 
 $action = file_get_contents(__DIR__ . '/../api/v1/job-action.php');
 foreach ([
-    'if ($action === \'delete\')',
-    'if ($action === \'cleanup\')',
+    "if (\$action === 'delete')",
+    "if (\$action === 'delete_selected')",
+    "if (\$action === 'delete_matching')",
+    "if (\$action === 'cleanup')",
+    'deleteTerminalJobs(',
+    'deleteTerminalMatching(',
     'CatalogBackgroundJobCleanup',
     'retention_days',
 ] as $fragment) {
@@ -58,6 +62,8 @@ background_job_controls_expect(is_string($cleanup), 'Could not read background j
 foreach ([
     'status IN ("completed","failed","dead_letter","cancelled")',
     'deleteTerminalJob',
+    'deleteTerminalJobs',
+    'deleteTerminalMatching',
     'deleteStagedFiles',
     'MAX_BULK_DELETE',
 ] as $fragment) {
@@ -66,7 +72,16 @@ foreach ([
 
 $page = file_get_contents(__DIR__ . '/../background-jobs.php');
 background_job_controls_expect(is_string($page), 'Could not read Background Jobs page.');
-foreach (['jobs-cleanup-days', 'jobs-cleanup', 'Clean old jobs'] as $fragment) {
+foreach ([
+    'jobs-cleanup-days',
+    'jobs-cleanup',
+    'Clean old jobs',
+    'jobs-select-all',
+    'jobs-select-terminal',
+    'jobs-delete-selected',
+    'jobs-delete-matching',
+    'Select terminal shown',
+] as $fragment) {
     background_job_controls_expect(str_contains($page, $fragment), 'Background Jobs page is missing: ' . $fragment);
 }
 
@@ -75,6 +90,10 @@ background_job_controls_expect(is_string($jobsClient), 'Could not read Backgroun
 foreach ([
     "mutate('cleanup'",
     "mutate('delete'",
+    "mutate('delete_selected'",
+    "mutate('delete_matching'",
+    'selectedJobIds',
+    'terminalJobsShown',
     'job-status-duplicate',
     'job-status-failed',
     'effectiveStatus',
