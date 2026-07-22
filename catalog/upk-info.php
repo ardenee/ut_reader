@@ -116,9 +116,11 @@ try {
     echo '<tr><th>Original filename</th><td>' . catalog_h((string)$upk['original_name']) . '</td></tr>';
     echo '<tr><th>Recorded source path</th><td class="mono path">' . catalog_h((string)$upk['source_relative_path']) . '</td></tr>';
     echo '<tr><th>Version / licencee</th><td class="mono">' . (int)$upk['package_version'] . ' / ' . (int)$upk['licensee_version'] . '</td></tr>';
-    echo '<tr><th>GUID</th><td class="mono">' . catalog_h((string)$upk['package_guid']) . '</td></tr>';
-    echo '<tr><th>MD5</th><td class="mono">' . catalog_h((string)$upk['md5']) . '</td></tr>';
-    echo '<tr><th>SHA1</th><td class="mono">' . catalog_h((string)$upk['sha1']) . '</td></tr>';
+    echo '<tr><th>Identity</th><td class="catalog-identity-cell">' . CatalogUi::identity(
+        (string)$upk['package_guid'],
+        (string)$upk['md5'],
+        (string)$upk['sha1']
+    ) . '</td></tr>';
     echo '<tr><th>Compression</th><td>' . ((int)$upk['is_compressed'] === 1 ? CatalogUi::badge('compressed chunks', 'warning') : CatalogUi::badge('none', 'success'))
         . ' <span class="mono small">flags 0x' . strtoupper(str_pad(dechex((int)$upk['compression_flags']), 8, '0', STR_PAD_LEFT)) . '</span></td></tr>';
     echo '<tr><th>Serialized export range</th><td class="mono">' . number_format((int)($payload['first_offset'] ?? 0)) . ' - ' . number_format((int)($payload['last_end'] ?? 0)) . '</td></tr>';
