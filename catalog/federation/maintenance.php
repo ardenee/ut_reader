@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
@@ -29,6 +28,34 @@ function fm_dir_size(string $dir): array
     return ['count' => $count, 'bytes' => $bytes, 'files' => $files];
 }
 
+function fm_public_rate_limit_dir(array $config): string
+{
+    return rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR)
+        . DIRECTORY_SEPARATOR . 'security'
+        . DIRECTORY_SEPARATOR . 'public-requests';
+}
+
+function fm_clear_public_rate_limits(string $directory): int
+{
+    if (!is_dir($directory)) {
+        return 0;
+    }
+
+    $deleted = 0;
+    foreach (new DirectoryIterator($directory) as $file) {
+        if ($file->isDot() || !$file->isFile() || $file->isLink()) {
+            continue;
+        }
+        if (strtolower($file->getExtension()) !== 'json') {
+            continue;
+        }
+        if (@unlink($file->getPathname())) {
+            $deleted++;
+        }
+    }
+    return $deleted;
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -53,6 +80,13 @@ try {
             $mirror = external_mirror_maintenance($db);
             $_SESSION['fed_maintenance_flash'] = 'Mirror maintenance: ' . json_encode($mirror, JSON_UNESCAPED_SLASHES);
             fed_log($db, null, null, 'INFO', 'MIRROR_MAINTENANCE', $_SESSION['fed_maintenance_flash']);
+        } elseif ($action === 'clear_public_rate_limits') {
+            $rateLimitDir = fm_public_rate_limit_dir($config);
+            $deleted = fm_clear_public_rate_limits($rateLimitDir);
+            $_SESSION['fed_maintenance_flash'] = 'Cleared ' . $deleted . ' public request rate-limit state file(s).';
+            fed_log($db, null, null, 'INFO', 'PUBLIC_RATE_LIMITS_CLEARED', $_SESSION['fed_maintenance_flash']);
+        } else {
+            throw new RuntimeException('Unknown maintenance action.');
         }
         header('Location: maintenance.php');
         exit;
@@ -73,17 +107,20 @@ try {
     $mirrorJobs = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin","uploading")')['c'] ?? 0);
     $incomingDir = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR) . '/federation/incoming';
     $incoming = fm_dir_size($incomingDir);
+    $rateLimitDir = fm_public_rate_limit_dir($config);
+    $rateLimits = fm_dir_size($rateLimitDir);
     $waiting = catalog_all($db, 'SELECT incoming_path FROM ue_federation_transfer_jobs WHERE incoming_path IS NOT NULL AND incoming_path<>"" AND status IN ("downloaded","running")');
     $known = [];
     foreach ($waiting as $row) {
         $known[basename((string)$row['incoming_path'])] = true;
     }
 
-    catalog_page_header('Federation Maintenance', 'Prune old nonces/logs, run mirror maintenance, and review incoming federation storage.', catalog_federation_links() + ['Mirror Queue' => '../mirror-queue.php', 'Mirror Links' => '../mirror-links.php']);
+    catalog_page_header('Federation Maintenance', 'Prune old nonces/logs, manage public request limits, run mirror maintenance, and review incoming federation storage.', catalog_federation_links() + ['Mirror Queue' => '../mirror-queue.php', 'Mirror Links' => '../mirror-links.php']);
 
     echo '<div class="grid">';
     catalog_stat_card('Stored API nonces', $nonceCount);
     catalog_stat_card('Federation log rows', $logCount);
+    catalog_stat_card('Public rate-limit files', (int)$rateLimits['count'], '', (int)$rateLimits['count'] > 0 ? 'attention' : '');
     catalog_stat_card('Active mirror links', $mirrorActive, '', $mirrorActive > 0 ? 'good' : '');
     catalog_stat_card('Expired mirror links', $mirrorExpired);
     catalog_stat_card('Mirror jobs active/waiting', $mirrorJobs, '', $mirrorJobs > 0 ? 'attention' : '');
@@ -91,6 +128,7 @@ try {
     catalog_stat_card('Incoming files', (int)$incoming['count']);
     echo '</div>';
 
+    echo '<div class="card"><h2>Clear public request rate limits</h2><p class="muted">Clears temporary join, public search, and public download counters from the active web server storage path. Use this after correcting a failed federation join workflow or during testing.</p><p class="mono path">' . catalog_h($rateLimitDir) . '</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_maintenance')) . '"><input type="hidden" name="action" value="clear_public_rate_limits"><button>Clear public request rate limits</button></form></div>';
     echo '<div class="card"><h2>Prune old API/log rows + mirror maintenance</h2><p class="muted">Uses api_nonce_ttl_seconds, log_retention_days, and external mirror expiry settings.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_maintenance')) . '"><input type="hidden" name="action" value="prune"><button>Prune old nonces/logs and run mirror maintenance</button></form></div>';
     echo '<div class="card"><h2>Mirror maintenance only</h2><p class="muted">Expires stale active mirror links, moves ManualProvider queued jobs to waiting_admin, and fails stale uploading jobs.</p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_maintenance')) . '"><input type="hidden" name="action" value="mirror_only"><button>Run mirror maintenance only</button></form></div>';
 
