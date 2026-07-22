@@ -27,8 +27,6 @@ try {
     $contactEmail = trim((string)($payload['contact_email'] ?? ''));
     $notes = trim((string)($payload['notes'] ?? ''));
 
-    catalog_public_join_rate_limit($siteId);
-
     if ($siteName === '' || strlen($siteName) > 160 || $siteUrl === '' || strlen($siteUrl) > 1000 || $siteId === '' || $fingerprint === '' || $requestToken === '') {
         fed_json_response(['ok' => false, 'error' => 'Valid site_name, site_url, site_id, site_fingerprint, and request_token values are required.'], 400);
     }
@@ -51,6 +49,15 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Fingerprint does not match site_url and site_id.'], 400);
     }
 
+    try {
+        catalog_public_join_rate_limit($siteId);
+    } catch (RuntimeException $rateLimitError) {
+        if (str_starts_with($rateLimitError->getMessage(), 'Too many requests.')) {
+            fed_json_response(['ok' => false, 'error' => $rateLimitError->getMessage()], 429);
+        }
+        throw $rateLimitError;
+    }
+
     if (catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE peer_site_id=? LIMIT 1', [$siteId])) {
         fed_json_response(['ok' => true, 'status' => 'already_paired', 'message' => 'This site ID is already known to the parent.']);
     }
@@ -67,9 +74,18 @@ try {
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     error_log('[UnrealDB federation join][' . $requestId . '] ' . $error->getMessage());
+    $safeDetails = [
+        'Request rate-limit storage is unavailable.',
+        'Could not create request rate-limit storage.',
+        'Could not lock request rate-limit state.',
+        'Could not persist request rate-limit state.',
+    ];
+    $publicError = in_array($error->getMessage(), $safeDetails, true)
+        ? $error->getMessage()
+        : 'Join request could not be processed.';
     fed_json_response([
         'ok' => false,
-        'error' => 'Join request could not be processed.',
+        'error' => $publicError,
         'reference' => $requestId,
     ], 503);
 }
