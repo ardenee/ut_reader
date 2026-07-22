@@ -86,11 +86,12 @@ function profiled_upload_enqueue(PDO $db, array $config): array
             continue;
         }
 
+        $staged = null;
         try {
             $staged = $store->stageUploadedFile($temporaryPath, $originalName);
             $queued = $queue->enqueueStaged($gameId, $staged, $originalName, $displayName, $strict, $userId);
         } catch (Throwable $error) {
-            if (isset($staged['relative_path'])) {
+            if (is_array($staged) && isset($staged['relative_path'])) {
                 $store->delete((string)$staged['relative_path']);
             }
             $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => profiled_upload_error($error)];
