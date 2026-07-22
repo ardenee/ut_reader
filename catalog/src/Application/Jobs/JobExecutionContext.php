@@ -4,21 +4,30 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Application\Jobs;
 
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 final class JobExecutionContext
 {
     private int $lastHeartbeatAt;
     private readonly int $heartbeatIntervalSeconds;
+    private readonly int $leaseSeconds;
     /** @var array<string,mixed> */
     private array $pendingProgress = [];
 
     public function __construct(
         private readonly JobQueue $queue,
         private readonly ClaimedJob $job,
-        private readonly int $leaseSeconds
+        int $leaseSeconds
     ) {
+        // Large PAK extraction can spend several minutes inside one streaming
+        // operation before another progress checkpoint is available. Extend only
+        // PAK leases to the queue's supported one-hour maximum so another worker
+        // cannot reclaim the same container halfway through extraction.
+        $this->leaseSeconds = $job->type === JobType::IMPORT_STAGED_PAK
+            ? max($leaseSeconds, 3600)
+            : $leaseSeconds;
         $this->lastHeartbeatAt = time();
-        $this->heartbeatIntervalSeconds = max(5, min(30, intdiv(max(15, $leaseSeconds), 3)));
+        $this->heartbeatIntervalSeconds = max(5, min(30, intdiv(max(15, $this->leaseSeconds), 3)));
     }
 
     /** @param array<string,mixed> $progress */
