@@ -6,6 +6,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationPeerSecret.php';
+require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
 function crs_parent(PDO $db, int $peerId): array
 {
@@ -20,12 +21,16 @@ function crs_poll(PDO $db, array $parent, int $requestId = 0): array
 {
     $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/request-status.php';
     $payload = $requestId > 0 ? ['request_id' => $requestId] : ['latest' => true];
-    return fed_http_post_signed(
+    $result = fed_http_post_signed(
         $url,
         (string)fed_setting($db, 'site_id', ''),
         federation_peer_stored_signing_secret($db, $parent),
         $payload
     );
+    if (is_array($result['policy'] ?? null)) {
+        federation_cache_parent_base_game_policy($db, (int)$parent['id'], $result['policy']);
+    }
+    return $result;
 }
 
 function crs_cancel(PDO $db, array $parent, int $requestId): array
@@ -42,18 +47,9 @@ function crs_cancel(PDO $db, array $parent, int $requestId): array
     );
 }
 
-function crs_show_base_game(mixed $value): bool
+function crs_url(int $peerId, int $requestId): string
 {
-    return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'on'], true);
-}
-
-function crs_url(int $peerId, int $requestId, bool $showBaseGame): string
-{
-    $query = ['peer_id' => $peerId, 'request_id' => $requestId];
-    if ($showBaseGame) {
-        $query['show_base_game'] = 1;
-    }
-    return 'request-status.php?' . http_build_query($query);
+    return 'request-status.php?' . http_build_query(['peer_id' => $peerId, 'request_id' => $requestId]);
 }
 
 function crs_group_key(array $item): string
@@ -151,7 +147,6 @@ try {
         catalog_check_csrf('fed_child_request_status');
         $peerId = (int)($_POST['peer_id'] ?? 0);
         $requestId = (int)($_POST['request_id'] ?? 0);
-        $showBaseGame = crs_show_base_game($_POST['show_base_game'] ?? '0');
         $action = (string)($_POST['action'] ?? 'poll');
         $parent = crs_parent($db, $peerId);
 
@@ -163,7 +158,7 @@ try {
             fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'REQUEST_STATUS_VIEW_POLL', json_encode($result, JSON_UNESCAPED_SLASHES));
         }
         $_SESSION['fed_child_request_status_result'] = $result;
-        header('Location: ' . crs_url($peerId, $requestId, $showBaseGame));
+        header('Location: ' . crs_url($peerId, $requestId));
         exit;
     }
 
@@ -175,16 +170,15 @@ try {
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $peerId = (int)($_GET['peer_id'] ?? ($parents[0]['id'] ?? 0));
     $requestId = (int)($_GET['request_id'] ?? 0);
-    $showBaseGame = crs_show_base_game($_GET['show_base_game'] ?? '0');
 
     catalog_page_header(
         'Outgoing Requests',
-        'Requests sent by this child to its parent. Approved packages remain active even when the parent has not found the file yet.',
+        'Requests sent by this child to its parent. Every row is a missing dependency; base-game packages remain visible because dependency completion is the exception to the ordinary ignore policy.',
         catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Missing Files' => 'request-generate.php', 'Approved Downloads' => 'approved-downloads.php']
     );
 
     if ($role !== 'child') {
-        echo '<div class="card"><h2>Outgoing dependency requests disabled</h2><p>This site is not in Child mode. A parent obtains files from children through Child Inventories and Parent Pull instead.</p><p><a class="button" href="request-center.php">Open Requests</a> <a class="button" href="settings.php">Federation Settings</a></p></div>';
+        echo '<div class="card"><h2>Outgoing dependency requests disabled</h2><p>This site is not in Child mode. A parent obtains files from children through Child Inventories and Parent Pull instead.</p></div>';
         catalog_foot();
         exit;
     }
@@ -200,7 +194,7 @@ try {
 
     echo '<div class="card"><h2>Select outgoing request</h2>';
     if (!$parents) {
-        echo '<p class="muted">No active parent connection is configured.</p><p><a class="button" href="join-main-parent.php">Join a parent</a></p></div>';
+        echo '<p class="muted">No active parent connection is configured.</p></div>';
         catalog_foot();
         exit;
     }
@@ -210,7 +204,6 @@ try {
         echo '<option value="' . (int)$parentRow['id'] . '"' . $sel . '>' . catalog_h($parentRow['site_name'] . ' - ' . $parentRow['site_url']) . '</option>';
     }
     echo '</select></label></p><p><label>Request ID <span class="muted">(0 means latest)</span><br><input name="request_id" value="' . $requestId . '" style="width:120px"></label></p>';
-    echo '<p><label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages</label></p>';
     echo '<button>Refresh request status</button></form></div>';
 
     if ($peerId > 0) {
@@ -227,35 +220,33 @@ try {
         } else {
             $request = $status['request'] ?? null;
             if (!$request) {
-                echo '<p class="muted">No outgoing request was found on this parent.</p><p><a class="button" href="request-generate.php?peer_id=' . $peerId . '">Create request from missing files</a></p></div>';
+                echo '<p class="muted">No outgoing request was found on this parent.</p></div>';
             } else {
                 $active = in_array((string)$request['status'], ['submitted', 'approved', 'part_approved', 'downloading'], true);
-                $allGroups = crs_group_items(is_array($status['items'] ?? null) ? $status['items'] : []);
-                $baseCount = count(array_filter($allGroups, static fn(array $group): bool => !empty($group['is_base_game'])));
-                $groups = $showBaseGame
-                    ? $allGroups
-                    : array_values(array_filter($allGroups, static fn(array $group): bool => empty($group['is_base_game'])));
+                $groups = crs_group_items(is_array($status['items'] ?? null) ? $status['items'] : []);
+                $baseCount = count(array_filter($groups, static fn(array $group): bool => !empty($group['is_base_game'])));
                 $waitingCount = count(array_filter($groups, static fn(array $group): bool => !empty($group['waiting_for_file'])));
 
                 echo '<table>';
                 echo '<tr><th>Direction</th><td><strong>This child</strong> &rarr; <strong>' . catalog_h($parent['site_name']) . '</strong> parent</td></tr>';
                 echo '<tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr>';
                 echo '<tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr>';
-                echo '<tr><th>Visible packages</th><td>' . count($groups) . '</td></tr>';
+                echo '<tr><th>Dependency packages</th><td>' . count($groups) . '</td></tr>';
+                echo '<tr><th>Base-game dependency exceptions</th><td>' . $baseCount . '</td></tr>';
                 echo '<tr><th>Waiting for parent file</th><td>' . $waitingCount . '</td></tr>';
-                echo '<tr><th>Official base-game packages</th><td>' . $baseCount . ($showBaseGame ? ' shown' : ' hidden') . '</td></tr>';
                 echo '<tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr>';
                 echo '<tr><th>Submitted</th><td>' . catalog_h($request['submitted_at']) . '</td></tr>';
                 echo '</table>';
+                echo '<p class="muted">' . catalog_h(federation_base_game_policy_label($db, $parent)) . '</p>';
                 if ($active) {
-                    echo '<form method="post" onsubmit="return confirm(\'Cancel this outgoing request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><button>Cancel outgoing request</button></form>';
+                    echo '<form method="post" onsubmit="return confirm(\'Cancel this outgoing request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><button>Cancel outgoing request</button></form>';
                 }
                 echo '</div>';
 
                 echo '<div class="card"><h2>Packages requested from the parent</h2>';
                 echo '<p><strong>Approved + waiting</strong> means the parent accepted the request but has not found the file yet. The row remains active and is linked automatically when the file is later imported.</p>';
                 if (!$groups) {
-                    echo '<p class="muted">No requested packages match the current base-game filter.</p></div>';
+                    echo '<p class="muted">No requested packages were found.</p></div>';
                 } else {
                     echo '<table><tr><th>Status</th><th>Package</th><th>Example missing object</th><th>Missing objects</th><th>Parent file</th><th>Decision / current state</th></tr>';
                     foreach ($groups as $group) {
@@ -263,7 +254,8 @@ try {
                         $originalName = trim((string)($group['original_name'] ?? ''));
                         $fileLabel = trim($parentFile . ($parentFile !== '' && $originalName !== '' ? ' / ' : '') . $originalName);
                         $displayStatus = !empty($group['waiting_for_file']) ? 'approved — waiting for file' : (string)$group['display_status'];
-                        echo '<tr><td>' . catalog_h($displayStatus) . '</td><td class="mono">' . catalog_h($group['required_package'] ?? '') . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . ($fileLabel !== '' ? catalog_h($fileLabel) : '<span class="muted">Not available yet</span>') . '</td><td>' . catalog_h($group['display_message']) . '</td></tr>';
+                        $badge = !empty($group['is_base_game']) ? ' <span class="pill amber">base-game dependency</span>' : '';
+                        echo '<tr><td>' . catalog_h($displayStatus) . '</td><td class="mono">' . catalog_h($group['required_package'] ?? '') . $badge . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . ($fileLabel !== '' ? catalog_h($fileLabel) : '<span class="muted">Not available yet</span>') . '</td><td>' . catalog_h($group['display_message']) . '</td></tr>';
                     }
                     echo '</table></div>';
                 }
