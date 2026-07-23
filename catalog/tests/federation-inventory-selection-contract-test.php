@@ -33,7 +33,7 @@ federation_inventory_selection_expect(str_contains($peerInventory, 'const PI_PAG
 federation_inventory_selection_expect(str_contains($peerInventory, 'Files this parent needs from'), 'Peer inventory does not directly list files needed from the selected child.');
 federation_inventory_selection_expect(str_contains($peerInventory, 'Parent needs from child ('), 'Peer inventory lacks the direct needed-files filter.');
 federation_inventory_selection_expect(str_contains($peerInventory, "\$_GET['inventory_tab']"), 'Peer inventory does not accept legacy inventory_tab links.');
-federation_inventory_selection_expect(str_contains($peerInventory, "'parent' => 'inventory'"), 'Peer inventory does not map the legacy parent tab to inventory.');
+federation_inventory_selection_expect(str_contains($peerInventory, "'inventory', 'parent', '' => 'inventory'"), 'Peer inventory does not map the legacy parent tab to inventory.');
 federation_inventory_selection_expect(str_contains($peerInventory, 'data-check-all="parent-files"'), 'Peer inventory lacks a check-all control.');
 federation_inventory_selection_expect(str_contains($peerInventory, 'Needed by parent files'), 'Peer inventory lacks the requiring-file count.');
 federation_inventory_selection_expect(str_contains($peerInventory, 'COUNT(DISTINCT needer.id)'), 'Peer inventory does not count distinct requiring files.');
