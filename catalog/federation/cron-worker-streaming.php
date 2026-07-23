@@ -6,6 +6,7 @@ require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
 require_once __DIR__ . '/../lib/FederationStreamingWorker.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
+require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
 function cron_stream_json(array $data, int $status = 200): void
@@ -51,6 +52,7 @@ try {
         'ok' => true,
         'mode' => 'streaming',
         'started_at' => date('c'),
+        'inventory_sync' => federation_sync_due_inventories($db),
         'approved_dependency_queue' => federation_queue_approved_dependency_downloads($db),
         'transfers' => [],
         'imports' => [],
@@ -80,6 +82,7 @@ try {
         'INFO',
         'CRON_STREAMING_WORKER_RUN',
         json_encode([
+            'inventories_synchronized' => (int)($result['inventory_sync']['synchronized'] ?? 0),
             'dependency_downloads_queued' => (int)($result['approved_dependency_queue']['queued'] ?? 0),
             'transfers' => count($result['transfers']),
             'imports' => count($result['imports']),
