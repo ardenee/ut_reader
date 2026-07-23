@@ -66,6 +66,7 @@ try {
             'allow_self_signed_federation_certificates',
             'api_nonce_ttl_seconds', 'transfer_token_ttl_seconds', 'log_retention_days',
             'cron_worker_enabled', 'cron_worker_token',
+            'inventory_sync_interval_hours',
             'public_download_mode', 'external_mirror_auto_queue', 'external_mirror_expiry_days',
             'external_mirror_require_admin_approval', 'external_mirror_max_file_size_mb',
             'join_requests_enabled', 'join_claim_token_ttl_seconds', 'main_parent_url',
@@ -73,7 +74,11 @@ try {
         ];
         foreach ($allowed as $key) {
             if (array_key_exists($key, $_POST)) {
-                fed_set_setting($db, $key, trim((string)$_POST[$key]));
+                $value = trim((string)$_POST[$key]);
+                if ($key === 'inventory_sync_interval_hours') {
+                    $value = (string)max(0, min(720, (int)$value));
+                }
+                fed_set_setting($db, $key, $value);
             }
         }
 
@@ -104,7 +109,7 @@ try {
 
     catalog_page_header(
         'Federation Settings',
-        'Configure identity, role, transfer limits, automated dependency downloads, and federation worker settings. Parent/master authority is fixed by role.',
+        'Configure identity, role, automatic inventory exchange, transfer limits, dependency downloads, and federation worker settings.',
         catalog_federation_links() + ['Join Parent' => 'join.php', 'Join Requests' => 'join-requests.php', 'Peers' => 'peers.php']
     );
 
@@ -124,8 +129,8 @@ try {
 
     echo '<div class="card"><h2>Fixed role authority</h2><table>';
     echo '<tr><th>Parent/master</th><td>May read child inventory and download any non-protected file absent from the parent. No child approval is required.</td></tr>';
-    echo '<tr><th>Child</th><td>May request only files required by local missing dependencies. Downloads require parent approval.</td></tr>';
-    echo '<tr><th>Approved child downloads</th><td>Federation workers automatically queue approved items only while the dependency is still missing.</td></tr>';
+    echo '<tr><th>Child</th><td>May download from the parent only when a file fulfils a local missing dependency and the parent has approved that request.</td></tr>';
+    echo '<tr><th>Approved child downloads</th><td>Federation workers queue approved items only while the dependency is still missing.</td></tr>';
     echo '<tr><th>Current enforcement</th><td><strong>' . catalog_h($currentRole) . '</strong> — parent features ' . ($isParent ? 'enabled' : 'disabled') . '; child features ' . ($isChild ? 'enabled' : 'disabled') . '.</td></tr>';
     echo '</table></div>';
 
@@ -134,6 +139,11 @@ try {
     echo '<tr><th>Accept public child join requests</th><td><select name="join_requests_enabled"' . (!$isParent ? ' disabled' : '') . '><option value="0"' . ($joinEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($joinEnabled === '1' ? ' selected' : '') . '>Yes</option></select>' . (!$isParent ? ' <span class="muted">Available only on a parent.</span>' : '') . '</td></tr>';
     echo '<tr><th>Automatic pairing approval TTL, seconds</th><td><input name="join_claim_token_ttl_seconds"' . (!$isParent ? ' disabled' : '') . ' value="' . catalog_h($settings['join_claim_token_ttl_seconds'] ?? '86400') . '" style="width:160px"> <span class="muted">The child uses its original request token automatically; no token is copied manually.</span></td></tr>';
     echo '<tr><th>Main parent URL</th><td><input name="main_parent_url" value="' . catalog_h($settings['main_parent_url'] ?? '') . '" style="min-width:640px" placeholder="https://parent.example.com/catalog"> <a class="button" href="join.php">Join a parent</a></td></tr>';
+    echo '</table></div>';
+
+    echo '<div class="card"><h2>Inventory synchronization</h2><p>Each site pulls the current transferable inventory from its paired opposite role. Parent sites pull every child; child sites pull their parent.</p><table>';
+    echo '<tr><th>Automatic inventory refresh interval, hours</th><td><input name="inventory_sync_interval_hours" type="number" min="0" max="720" value="' . catalog_h($settings['inventory_sync_interval_hours'] ?? '24') . '" style="width:120px"> <span class="muted">Default: 24 hours. Set 0 to disable automatic refresh. The federation worker checks whether each peer is due.</span></td></tr>';
+    echo '<tr><th>Download authority</th><td>Inventory exchange only advertises availability. It does not allow a child to download arbitrary parent files; child transfers still require an approved missing-dependency request.</td></tr>';
     echo '</table></div>';
 
     echo '<div class="card"><h2>Transfer behavior</h2><table>';
@@ -192,7 +202,7 @@ try {
 
     echo '<div class="card"><h2>Catalog UI</h2><table><tr><th>Game files per page</th><td><input name="game_file_display_limit" type="number" min="1" max="500" value="' . catalog_h($settings['game_file_display_limit'] ?? '100') . '" style="width:120px"></td></tr></table></div>';
 
-    echo '<div class="card"><h2>Cron / DSM Task Scheduler worker</h2><p class="muted">The worker polls parent approvals, queues dependency-only child downloads, transfers, and imports.</p><table>';
+    echo '<div class="card"><h2>Cron / DSM Task Scheduler worker</h2><p class="muted">The worker refreshes due inventories, polls parent approvals, queues dependency-only child downloads, transfers, and imports.</p><table>';
     $cronEnabled = (string)($settings['cron_worker_enabled'] ?? '0');
     echo '<tr><th>Cron worker enabled</th><td><select name="cron_worker_enabled"><option value="0"' . ($cronEnabled === '0' ? ' selected' : '') . '>No</option><option value="1"' . ($cronEnabled === '1' ? ' selected' : '') . '>Yes</option></select></td></tr>';
     echo '<tr><th>Cron worker token</th><td><input name="cron_worker_token" value="' . catalog_h($settings['cron_worker_token'] ?? '') . '" style="min-width:520px" placeholder="long-random-token"></td></tr>';
