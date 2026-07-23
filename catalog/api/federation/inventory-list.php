@@ -20,8 +20,12 @@ try {
 
     $body = fed_read_request_body(32768);
     $peer = fed_require_signed_peer($db, $body);
-    if ((string)$peer['peer_role'] !== 'parent') {
-        fed_json_response(['ok' => false, 'error' => 'Only the paired parent may read child inventory.'], 403);
+    $localRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
+    $peerRole = strtolower(trim((string)($peer['peer_role'] ?? '')));
+    $allowed = ($localRole === 'parent' && $peerRole === 'child')
+        || ($localRole === 'child' && $peerRole === 'parent');
+    if (!$allowed) {
+        fed_json_response(['ok' => false, 'error' => 'Only the paired opposite federation role may read this inventory.'], 403);
     }
 
     $payload = fed_decode_json_object($body);
@@ -73,13 +77,21 @@ try {
     }
 
     $identity = fed_ensure_identity($db);
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_READ_BY_PARENT', 'Returned ' . count($files) . ' transferable inventory row(s) after file ID ' . $afterFileId . '.');
+    fed_log(
+        $db,
+        (int)$peer['id'],
+        null,
+        'INFO',
+        'INVENTORY_READ_BY_PEER',
+        'Local role=' . $localRole . '; peer role=' . $peerRole . '; returned ' . count($files) . ' transferable row(s) after file ID ' . $afterFileId . '.'
+    );
     fed_json_response([
         'ok' => true,
         'site' => [
             'site_id' => (string)$identity['site_id'],
             'site_name' => (string)$identity['site_name'],
             'site_url' => (string)$identity['site_url'],
+            'site_role' => $localRole,
         ],
         'files' => $files,
         'next_after_file_id' => $nextAfter,
@@ -87,6 +99,6 @@ try {
         'generated_at' => date('c'),
     ]);
 } catch (Throwable $error) {
-    error_log('[UnrealDB][' . catalog_request_id() . '] parent inventory read failed: ' . get_class($error) . ': ' . $error->getMessage());
-    fed_json_response(['ok' => false, 'error' => 'Child inventory could not be read.', 'reference' => catalog_request_id()], 500);
+    error_log('[UnrealDB][' . catalog_request_id() . '] federation inventory read failed: ' . get_class($error) . ': ' . $error->getMessage());
+    fed_json_response(['ok' => false, 'error' => 'Federation inventory could not be read.', 'reference' => catalog_request_id()], 500);
 }
