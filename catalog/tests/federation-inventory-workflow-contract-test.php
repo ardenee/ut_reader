@@ -16,7 +16,9 @@ function federation_inventory_expect(bool $condition, string $message): void
 $root = dirname(__DIR__);
 $inventoryPage = file_get_contents($root . '/federation/peer-inventory.php');
 $inventoryLib = file_get_contents($root . '/lib/FederationInventory.php');
+$inventoryRefreshLib = file_get_contents($root . '/lib/FederationInventoryRefresh.php');
 $inventoryApi = file_get_contents($root . '/api/federation/inventory-list.php');
+$inventoryRefreshApi = file_get_contents($root . '/api/federation/inventory-refresh.php');
 $settings = file_get_contents($root . '/federation/settings.php');
 $worker = file_get_contents($root . '/federation/worker-run.php');
 $cron = file_get_contents($root . '/federation/cron-worker-streaming.php');
@@ -24,7 +26,9 @@ $cron = file_get_contents($root . '/federation/cron-worker-streaming.php');
 foreach ([
     'inventory page' => $inventoryPage,
     'inventory library' => $inventoryLib,
+    'inventory refresh library' => $inventoryRefreshLib,
     'inventory API' => $inventoryApi,
+    'inventory refresh API' => $inventoryRefreshApi,
     'settings page' => $settings,
     'worker page' => $worker,
     'cron worker' => $cron,
@@ -47,6 +51,32 @@ federation_inventory_expect(
 federation_inventory_expect(
     str_contains($inventoryPage, 'The child cannot download anything else.'),
     'Child dependency-only download policy is not explained on the inventory page.'
+);
+federation_inventory_expect(
+    str_contains($inventoryPage, 'onchange="this.form.submit()"')
+        && !str_contains($inventoryPage, '>Open child<'),
+    'Selecting a child does not open it automatically or the old Open child button remains.'
+);
+federation_inventory_expect(
+    !str_contains($inventoryPage, 'catalog_federation_links()')
+        && str_contains($inventoryPage, "'Child Inventory',\n        'Select a child and open one of the three file-need views.',\n        []"),
+    'The Child Inventory header still contains shortcut links.'
+);
+federation_inventory_expect(
+    str_contains($inventoryPage, 'federation_pull_inventory_from_child($db, $peerId)')
+        && str_contains($inventoryPage, 'federation_request_child_refresh_parent_inventory($db, $peerId)')
+        && str_contains($inventoryPage, 'Refresh both inventories now'),
+    'The manual refresh does not update both parent and child inventory caches.'
+);
+federation_inventory_expect(
+    str_contains($inventoryRefreshLib, 'federation_request_child_refresh_parent_inventory')
+        && str_contains($inventoryRefreshLib, '/api/federation/inventory-refresh.php'),
+    'The parent cannot request a child-side parent inventory refresh.'
+);
+federation_inventory_expect(
+    str_contains($inventoryRefreshApi, "$localRole !== 'child' || $peerRole !== 'parent'")
+        && str_contains($inventoryRefreshApi, 'federation_pull_inventory_from_parent($db, (int)$peer[\'id\'])'),
+    'The child-side refresh endpoint does not enforce roles or pull the parent inventory.'
 );
 federation_inventory_expect(
     str_contains($inventoryLib, 'federation_pull_inventory_from_peer')
