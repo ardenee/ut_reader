@@ -32,6 +32,14 @@ function federation_request_legacy_unavailable_denial(string $message): bool
     return false;
 }
 
+function federation_request_legacy_base_game_denial(string $message): bool
+{
+    $message = strtolower(trim($message));
+    return $message !== ''
+        && str_contains($message, 'official base-game package')
+        && !str_contains($message, 'denied by this parent administrator');
+}
+
 function federation_request_waiting_message(bool $isBaseGameDependency = false): string
 {
     $message = 'Approved by this parent; waiting for a matching file to become available. The request remains active and will be linked automatically when the parent imports the file.';
@@ -123,6 +131,7 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
     $baseLinked = 0;
     $waiting = 0;
     $legacyRepaired = 0;
+    $legacyBaseRepaired = 0;
 
     $update = $db->prepare(
         'UPDATE ue_federation_request_items
@@ -141,6 +150,10 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
             $message = federation_request_waiting_message();
             $localFileId = 0;
             $legacyRepaired++;
+        } elseif ($status === 'denied' && federation_request_legacy_base_game_denial($message)) {
+            $status = 'requested';
+            $message = 'Base-game dependency request restored after the federation policy change. Awaiting parent approval.';
+            $legacyBaseRepaired++;
         }
 
         if ($status === 'denied') {
@@ -203,6 +216,7 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
         'waiting' => $waiting,
         'base_denied' => 0,
         'legacy_repaired' => $legacyRepaired,
+        'legacy_base_game_repaired' => $legacyBaseRepaired,
         'request_status' => $headerStatus,
     ];
 }
