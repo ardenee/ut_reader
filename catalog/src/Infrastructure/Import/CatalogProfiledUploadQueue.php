@@ -26,7 +26,7 @@ final class CatalogProfiledUploadQueue
 
     /**
      * @param array{relative_path:string,original_name?:string,size:int,sha256?:string} $staged
-     * @return array{job_id:int,type:string,file:string,size:int}
+     * @return array{job_id:int,type:string,file:string,size:int,deduplicated:bool}
      */
     public function enqueueStaged(
         int $gameId,
@@ -48,11 +48,14 @@ final class CatalogProfiledUploadQueue
             $this->requirePakGame($game);
         }
         $jobType = $isPak ? JobType::IMPORT_STAGED_PAK : JobType::IMPORT_STAGED_PACKAGE;
+        $cleanSourceRelativePath = $this->cleanRelativePath(
+            $sourceRelativePath !== '' ? $sourceRelativePath : $originalName
+        );
         $payload = [
             'game_id' => $gameId,
             'staged_path' => (string)$staged['relative_path'],
             'original_name' => $originalName,
-            'source_relative_path' => $this->cleanRelativePath($sourceRelativePath !== '' ? $sourceRelativePath : $originalName),
+            'source_relative_path' => $cleanSourceRelativePath,
             'strict_profile' => $strictProfile,
             'user_id' => $userId,
             'size' => $size,
@@ -61,17 +64,53 @@ final class CatalogProfiledUploadQueue
         if ($sha256 !== '') {
             $payload['sha256'] = $sha256;
         }
+
+        // Re-uploading the same named file while its first import is queued or
+        // running must reuse that active job instead of creating a second worker
+        // attempt against another durable staging copy. The path/name remain in
+        // the key so deliberate aliases with different names are still allowed.
+        $dedupeKey = $sha256 !== ''
+            ? 'profiled-upload:' . hash(
+                'sha256',
+                $gameId . "\0"
+                . $jobType . "\0"
+                . strtolower($originalName) . "\0"
+                . strtolower($cleanSourceRelativePath) . "\0"
+                . $sha256 . "\0"
+                . ($strictProfile ? 'strict' : 'loose')
+            )
+            : null;
+
         $jobId = $this->queue()->enqueue(
             $this->queueName(),
             $jobType,
             $payload,
             5,
             null,
-            null,
+            $dedupeKey,
             $userId,
             3
         );
-        return ['job_id' => $jobId, 'type' => $jobType, 'file' => $sourceRelativePath, 'size' => $size];
+
+        $deduplicated = false;
+        if ($dedupeKey !== null) {
+            $row = $this->db->prepare('SELECT payload_json FROM ue_background_jobs WHERE id=? LIMIT 1');
+            $row->execute([$jobId]);
+            $storedPayload = json_decode((string)($row->fetchColumn() ?: ''), true);
+            $storedPath = is_array($storedPayload) ? (string)($storedPayload['staged_path'] ?? '') : '';
+            if ($storedPath !== '' && $storedPath !== (string)$staged['relative_path']) {
+                (new CatalogIncomingFileStore($this->config))->remove((string)$staged['relative_path']);
+                $deduplicated = true;
+            }
+        }
+
+        return [
+            'job_id' => $jobId,
+            'type' => $jobType,
+            'file' => $sourceRelativePath,
+            'size' => $size,
+            'deduplicated' => $deduplicated,
+        ];
     }
 
     /** @return array{job_id:int,type:string,file:string,size:int} */
