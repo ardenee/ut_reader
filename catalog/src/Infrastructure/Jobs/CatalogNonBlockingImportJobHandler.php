@@ -35,12 +35,20 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
         $preparedJob = $job;
-        $temporaryStagedPath = '';
+        $temporaryPreparedPath = '';
         $redirectMeta = null;
 
         try {
+            $context->checkpoint([
+                'stage' => 'dispatch',
+                'done' => 1,
+                'total' => 100,
+                'percent' => 1,
+                'message' => 'Preparing import handler for ' . basename((string)($job->payload['original_name'] ?? 'package')),
+            ]);
+
             if ($job->type === JobType::IMPORT_STAGED_PACKAGE) {
-                [$preparedJob, $temporaryStagedPath, $redirectMeta] = $this->prepareRedirectPayload($job);
+                [$preparedJob, $temporaryPreparedPath, $redirectMeta] = $this->prepareRedirectPayload($job, $context);
             }
 
             $result = $this->inner->handle($preparedJob, $context);
@@ -92,20 +100,20 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
                 'source_relative_path' => $sourceRelativePath,
             ];
         } finally {
-            if ($temporaryStagedPath !== '') {
-                (new CatalogIncomingFileStore($this->config))->delete($temporaryStagedPath);
+            if ($temporaryPreparedPath !== '' && is_file($temporaryPreparedPath)) {
+                @unlink($temporaryPreparedPath);
             }
         }
     }
 
     /**
      * Decompress self-identifying 1234/5678 streams and exact UZ2 records before
-     * the package scanner runs. The decoded payload may be a package, text file,
-     * native library or another redirect-distributed file type.
+     * the package scanner runs. Exact UZ2 is streamed to disk so large packages
+     * do not disappear into an unobservable, memory-heavy preparation step.
      *
      * @return array{0:ClaimedJob,1:string,2:array<string,mixed>|null}
      */
-    private function prepareRedirectPayload(ClaimedJob $job): array
+    private function prepareRedirectPayload(ClaimedJob $job, JobExecutionContext $context): array
     {
         $payload = $job->payload;
         $originalName = trim((string)($payload['original_name'] ?? ''));
@@ -118,32 +126,86 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             return [$job, '', null];
         }
 
+        $context->checkpoint([
+            'stage' => 'redirect_resolve',
+            'done' => 2,
+            'total' => 100,
+            'percent' => 2,
+            'message' => 'Resolving staged redirect archive ' . basename($originalName),
+        ]);
+
         $store = new CatalogIncomingFileStore($this->config);
         $sourcePath = $store->resolve(trim((string)($payload['staged_path'] ?? '')));
-        $decoded = \catalog_redirect_archive_decompress_payload_to_temp(
-            $sourcePath,
-            $originalName,
-            (int)($this->config['max_upload_bytes'] ?? 0)
-        );
+        $sourceExtension = \catalog_redirect_archive_extension($originalName);
+        $limit = $this->redirectOutputLimit();
 
-        try {
-            $staged = $store->stageLocalFile((string)$decoded['path'], (string)$decoded['filename']);
-        } finally {
-            @unlink((string)$decoded['path']);
+        if ($sourceExtension === 'uz2') {
+            $context->checkpoint([
+                'stage' => 'redirect_decompress',
+                'done' => 3,
+                'total' => 100,
+                'percent' => 3,
+                'message' => 'Starting streamed UZ2 decompression for ' . basename($originalName),
+            ]);
+            $decoded = CatalogRedirectArchiveStream::decompressUz2(
+                $sourcePath,
+                $originalName,
+                $limit,
+                static function (array $progress) use ($context): void {
+                    $sourcePercent = max(0, min(100, (int)($progress['percent'] ?? 0)));
+                    $percent = max(3, min(44, 3 + (int)floor($sourcePercent * 41 / 100)));
+                    $context->checkpoint([
+                        'stage' => 'redirect_decompress',
+                        'done' => (int)($progress['compressed_done'] ?? 0),
+                        'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
+                        'percent' => $percent,
+                        'message' => (string)($progress['message'] ?? 'Decompressing redirect archive.'),
+                        'compressed_bytes' => (int)($progress['compressed_done'] ?? 0),
+                        'output_bytes' => (int)($progress['output_bytes'] ?? 0),
+                        'chunks' => (int)($progress['chunks'] ?? 0),
+                    ]);
+                },
+                false
+            );
+        } else {
+            $context->checkpoint([
+                'stage' => 'redirect_decompress',
+                'done' => 3,
+                'total' => 100,
+                'percent' => 3,
+                'message' => 'Decoding legacy redirect archive ' . basename($originalName),
+            ]);
+            $decoded = \catalog_redirect_archive_decompress_payload_to_temp(
+                $sourcePath,
+                $originalName,
+                $limit
+            );
         }
+
+        $context->checkpoint([
+            'stage' => 'redirect_ready',
+            'done' => 45,
+            'total' => 100,
+            'percent' => 45,
+            'message' => 'Redirect archive decompressed to ' . basename((string)$decoded['filename'])
+                . ' (' . $this->bytes((int)$decoded['bytes']) . ').',
+            'output_bytes' => (int)$decoded['bytes'],
+            'decoder' => (string)$decoded['decoder'],
+        ]);
 
         $sourceRelativePath = trim(
             str_replace('\\', '/', (string)($payload['source_relative_path'] ?? $originalName)),
             '/'
         );
-        $payload['staged_path'] = $staged['relative_path'];
-        $payload['original_name'] = $staged['original_name'];
+        $payload['prepared_source_path'] = (string)$decoded['path'];
+        $payload['redirect_prepared'] = true;
+        $payload['original_name'] = (string)$decoded['filename'];
         $payload['source_relative_path'] = $this->replaceRelativeFilename(
             $sourceRelativePath,
-            $staged['original_name']
+            (string)$decoded['filename']
         );
-        $payload['size'] = $staged['size'];
-        $payload['sha256'] = $staged['sha256'];
+        $payload['size'] = (int)$decoded['bytes'];
+        unset($payload['sha256']);
 
         $prepared = new ClaimedJob(
             $job->id,
@@ -159,7 +221,22 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             $job->concurrencyKey
         );
 
-        return [$prepared, (string)$staged['relative_path'], $decoded];
+        return [$prepared, (string)$decoded['path'], $decoded];
+    }
+
+    private function redirectOutputLimit(): int
+    {
+        $configured = (int)($this->config['max_redirect_output_bytes'] ?? 0);
+        if ($configured > 0) {
+            return $configured;
+        }
+
+        $ingress = (int)($this->config['ingress_max_upload_bytes'] ?? 0);
+        if ($ingress > 0) {
+            return $ingress > intdiv(PHP_INT_MAX, 8) ? PHP_INT_MAX : max($ingress, $ingress * 8);
+        }
+
+        return PHP_INT_SIZE >= 8 ? 2 * 1024 * 1024 * 1024 : PHP_INT_MAX;
     }
 
     private function replaceRelativeFilename(string $relativePath, string $name): string
@@ -184,6 +261,8 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'could not create package import working copy',
             'job payload requires',
             'job lease no longer belongs',
+            'could not lock chunked upload state',
+            'timed out waiting for chunked upload state',
             'sqlstate[',
         ] as $fragment) {
             if (str_contains($message, $fragment)) {
@@ -199,5 +278,17 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
         $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
         $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
         return trim($message) !== '' ? trim($message) : 'Package import failed.';
+    }
+
+    private function bytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $value = max(0, $bytes);
+        $unit = 0;
+        while ($value >= 1024 && $unit < count($units) - 1) {
+            $value /= 1024;
+            $unit++;
+        }
+        return ($unit === 0 ? (string)$value : number_format($value, 2)) . ' ' . $units[$unit];
     }
 }
