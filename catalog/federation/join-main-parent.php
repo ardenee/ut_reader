@@ -242,11 +242,6 @@ try {
 
             $result['local_role'] = 'child';
             $result['parent_url'] = $parentUrl;
-            $result['settings_updated'] = [
-                'child_enabled' => '1',
-                'parent_enabled' => '0',
-                'join_requests_enabled' => '0',
-            ];
             $_SESSION['fed_join_main_result'] = $result;
             header('Location: join-main-parent.php');
             exit;
@@ -269,12 +264,6 @@ try {
         exit;
     }
 
-    catalog_head('Join Federation Parent');
-    if (isset($_SESSION['fed_join_main_result'])) {
-        echo '<div class="card"><h2>Last result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_join_main_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</pre></div>';
-        unset($_SESSION['fed_join_main_result']);
-    }
-
     $identity = fed_ensure_identity($db);
     $currentRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     $parentUrl = rtrim((string)fed_setting($db, 'main_parent_url', ''), '/');
@@ -286,6 +275,15 @@ try {
     $allowSelfSigned = jmp_allow_self_signed_tls($db);
     if ($joinMessage === '') {
         $joinMessage = jmp_default_status_message($joinStatus);
+    }
+
+    catalog_head('Join Federation Parent');
+    catalog_flash($_SESSION['fed_join_main_flash'] ?? null);
+    unset($_SESSION['fed_join_main_flash']);
+
+    if (isset($_SESSION['fed_join_main_result'])) {
+        echo '<div class="card"><h2>Last result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_join_main_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . '</pre></div>';
+        unset($_SESSION['fed_join_main_result']);
     }
 
     catalog_page_header(
@@ -302,8 +300,12 @@ try {
     echo '<h2>Parent approval status</h2>';
     echo '<p><span id="join-status-pill" class="' . catalog_h(jmp_status_pill_class($joinStatus)) . '">' . catalog_h(jmp_status_label($joinStatus)) . '</span></p>';
     echo '<p id="join-status-message">' . catalog_h($joinMessage) . '</p>';
-    echo '<div id="join-admin-notes"' . ($joinAdminNotes === '' ? ' hidden' : '') . '><h3>Parent admin notes</h3><p id="join-admin-notes-text">' . catalog_h($joinAdminNotes) . '</p></div>';
-    echo '<p class="muted" id="join-auto-poll-note">' . ($joinStatus === 'pending' || $joinStatus === 'approved' ? 'Automatically checking the parent every 15 seconds.' : 'Automatic checking stops when pairing reaches a final state.') . '</p>';
+    if ($joinAdminNotes !== '') {
+        echo '<h3>Parent admin notes</h3><p>' . catalog_h($joinAdminNotes) . '</p>';
+    }
+    echo '<p class="muted" id="join-auto-poll-note">' . ($joinStatus === 'pending' || $joinStatus === 'approved'
+        ? 'Automatically checking the parent every 15 seconds.'
+        : 'Automatic checking stops when pairing reaches a final state.') . '</p>';
     echo '</div>';
 
     echo '<div class="card"><h2>Local identity</h2><table>';
@@ -314,33 +316,30 @@ try {
     echo '<tr><th>Local site ID</th><td class="mono">' . catalog_h($identity['site_id']) . '</td></tr>';
     echo '<tr><th>Local fingerprint</th><td class="mono">' . catalog_h($identity['site_fingerprint']) . '</td></tr>';
     echo '<tr><th>Stored request ID</th><td class="mono">' . catalog_h($requestId ?: 'none') . '</td></tr>';
-    echo '<tr><th>Stored status</th><td id="stored-join-status">' . catalog_h($joinStatus) . '</td></tr>';
+    echo '<tr><th>Stored status</th><td>' . catalog_h($joinStatus) . '</td></tr>';
     echo '</table></div>';
 
-    echo '<div class="card"><h2>Submit join request</h2><form method="post" id="federation-join-form">';
+    echo '<div class="card"><h2>Submit join request</h2><form method="post">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="submit">';
     echo '<fieldset><legend>Choose parent</legend>';
     echo '<p><label><input type="radio" name="parent_mode" value="official"' . ($parentUrl === '' || $parentUrl === JMP_OFFICIAL_PARENT_URL ? ' checked' : '') . '> <strong>Join official UnrealDB parent</strong><br><span class="mono">' . catalog_h(JMP_OFFICIAL_PARENT_URL) . '</span></label></p>';
     echo '<p><label><input type="radio" name="parent_mode" value="manual"' . ($parentUrl !== '' && $parentUrl !== JMP_OFFICIAL_PARENT_URL ? ' checked' : '') . '> <strong>Join another parent</strong></label><br><input id="manual-parent-url" name="parent_url" value="' . catalog_h($manualUrl) . '" style="min-width:680px" placeholder="https://parent.example.com/catalog"></p>';
-    echo '</fieldset><p><label>Contact name<br><input name="contact_name" style="min-width:420px"></label></p><p><label>Contact email<br><input name="contact_email" style="min-width:420px"></label></p><p><label>Notes<br><textarea name="notes" rows="4" style="width:100%">Request to join this federation parent.</textarea></label></p><p><button>Submit join request</button></p></form></div>';
+    echo '</fieldset><p><label>Contact name<br><input name="contact_name" style="min-width:420px"></label></p><p><label>Contact email<br><input name="contact_email" style="min-width:420px"></label></p><p><label>Notes<br><textarea name="notes" rows="4" style="width:100%">Request to join this federation parent.</textarea></label></p><p><button type="submit">Submit join request</button></p></form></div>';
 
-    echo '<div class="card"><h2>Check approval status</h2><form method="post" id="poll-status-form">';
-    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="poll"><p><button id="poll-status-button"' . ($requestId === '' ? ' disabled' : '') . '>Check parent now</button></p></form><p class="muted">Pending and approved requests are checked automatically. Approval completes pairing without further child action.</p></div>';
+    echo '<div class="card"><h2>Check approval status</h2><form method="post" id="poll-status-form" data-ui-loading-form>';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="poll"><p><button type="submit" id="poll-status-button"' . ($requestId === '' ? ' disabled' : '') . '>Check parent now</button></p></form>';
+    echo '<p class="muted">This button performs a normal server request and works without JavaScript. Background polling remains automatic while the request is pending or approved.</p></div>';
 
     echo <<<'HTML'
 <script>
 (function () {
+    'use strict';
+
     const modes = document.querySelectorAll('input[name="parent_mode"]');
     const manual = document.getElementById('manual-parent-url');
-    const pollForm = document.getElementById('poll-status-form');
-    const pollButton = document.getElementById('poll-status-button');
+    const form = document.getElementById('poll-status-form');
     const card = document.getElementById('join-status-card');
-    const pill = document.getElementById('join-status-pill');
-    const message = document.getElementById('join-status-message');
-    const notesWrap = document.getElementById('join-admin-notes');
-    const notesText = document.getElementById('join-admin-notes-text');
-    const autoNote = document.getElementById('join-auto-poll-note');
-    const storedStatus = document.getElementById('stored-join-status');
+    const note = document.getElementById('join-auto-poll-note');
     let timer = null;
     let polling = false;
 
@@ -351,86 +350,65 @@ try {
         manual.required = Boolean(enabled);
     }
 
-    function presentation(status) {
-        const value = String(status || 'unknown').toLowerCase();
-        const labels = {pending:'Pending',approved:'Approved',denied:'Denied',claimed:'Connected',expired:'Expired'};
-        const classes = {pending:'pill amber',approved:'pill green',denied:'pill red',claimed:'pill green',expired:'pill red'};
-        return {status:value,label:labels[value] || value,className:classes[value] || 'pill'};
-    }
-
-    function stopPolling() {
+    function schedule(delay) {
         if (timer !== null) window.clearTimeout(timer);
         timer = null;
+        if (!form || !card || document.hidden || !['pending', 'approved'].includes(card.dataset.status)) return;
+        timer = window.setTimeout(poll, delay || 15000);
     }
 
-    function schedulePoll(delay) {
-        stopPolling();
-        if (!['pending','approved'].includes(card.dataset.status) || document.hidden) return;
-        timer = window.setTimeout(function () { void pollStatus(false); }, typeof delay === 'number' ? delay : 15000);
-    }
-
-    function renderStatus(result) {
-        const view = presentation(result.status);
-        card.dataset.status = view.status;
-        pill.className = view.className;
-        pill.textContent = view.label;
-        message.textContent = result.message || 'Parent status received.';
-        storedStatus.textContent = view.status;
-        const notes = String(result.admin_notes || '').trim();
-        notesText.textContent = notes;
-        notesWrap.hidden = notes === '';
-        if (['pending','approved'].includes(view.status)) {
-            autoNote.textContent = view.status === 'approved' ? 'Approval received; completing pairing automatically…' : 'Automatically checking the parent every 15 seconds.';
-            schedulePoll(view.status === 'approved' ? 2000 : 15000);
-        } else {
-            stopPolling();
-            autoNote.textContent = view.status === 'claimed' ? 'Automatic pairing completed.' : 'Automatic checking stopped because the request is ' + view.status + '.';
-        }
-    }
-
-    async function pollStatus(manualRequest) {
-        if (polling || !pollForm || pollButton.disabled) return;
+    async function poll() {
+        if (polling || !form || !card) return;
         polling = true;
-        pollButton.disabled = true;
-        if (manualRequest) autoNote.textContent = 'Checking the parent now…';
-        const data = new FormData(pollForm);
+        const data = new FormData(form);
         data.set('action', 'poll_json');
         try {
-            const response = await fetch('join-main-parent.php', {method:'POST',body:data,credentials:'same-origin',headers:{'Accept':'application/json','X-Requested-With':'XMLHttpRequest'}});
-            const text = await response.text();
-            let result;
-            try { result = JSON.parse(text); } catch (error) { throw new Error('Status check returned invalid JSON.'); }
-            if (!response.ok || !result.ok) throw new Error(result.error || ('Status check failed with HTTP ' + response.status + '.'));
-            renderStatus(result);
+            const response = await fetch('join-main-parent.php', {
+                method: 'POST',
+                body: data,
+                credentials: 'same-origin',
+                headers: {'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
+            });
+            const result = await response.json();
+            if (!response.ok || !result.ok) throw new Error(result.error || ('HTTP ' + response.status));
+            card.dataset.status = String(result.status || 'unknown').toLowerCase();
+            if (card.dataset.status === 'claimed') {
+                window.location.reload();
+                return;
+            }
+            note.textContent = result.message || 'Parent status checked.';
+            schedule(card.dataset.status === 'approved' ? 2000 : 15000);
         } catch (error) {
-            autoNote.textContent = 'Automatic status check failed: ' + (error instanceof Error ? error.message : String(error));
-            if (['pending','approved'].includes(card.dataset.status)) schedulePoll(30000);
+            note.textContent = 'Automatic status check failed: ' + (error instanceof Error ? error.message : String(error));
+            schedule(30000);
         } finally {
             polling = false;
-            pollButton.disabled = card.dataset.requestId === '';
         }
     }
 
     modes.forEach(function (mode) { mode.addEventListener('change', syncParentMode); });
     syncParentMode();
-    pollForm.addEventListener('submit', function (event) { event.preventDefault(); void pollStatus(true); });
     document.addEventListener('visibilitychange', function () {
-        if (document.hidden) stopPolling();
-        else if (['pending','approved'].includes(card.dataset.status)) void pollStatus(false);
+        if (document.hidden && timer !== null) {
+            window.clearTimeout(timer);
+            timer = null;
+        } else if (!document.hidden) {
+            schedule(1000);
+        }
     });
-    if (['pending','approved'].includes(card.dataset.status) && card.dataset.requestId !== '') schedulePoll(3000);
+    schedule(3000);
 }());
 </script>
 HTML;
 
     catalog_foot();
-} catch (Throwable $e) {
+} catch (Throwable $error) {
     if ($jmpWantsJson) {
-        fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
+        fed_json_response(['ok' => false, 'error' => $error->getMessage()], 500);
     }
     if (!headers_sent()) {
         catalog_head('Join parent error');
     }
-    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
+    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($error->getMessage()) . '</p></div>';
     catalog_foot();
 }
