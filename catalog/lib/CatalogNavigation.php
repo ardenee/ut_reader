@@ -10,7 +10,7 @@ declare(strict_types=1);
 function catalog_admin_navigation_groups(string $root): array
 {
     static $clientNavigationLoaded = false;
-    if (!$clientNavigationLoaded) {
+    if (!$clientNavigationLoaded && function_exists('catalog_h')) {
         $scriptPath = __DIR__ . '/../assets/catalog-navigation.js';
         $scriptVersion = is_file($scriptPath) ? (string)filemtime($scriptPath) : '1';
         echo '<script src="' . catalog_h($root . 'assets/catalog-navigation.js?v=' . $scriptVersion) . '"></script>';
