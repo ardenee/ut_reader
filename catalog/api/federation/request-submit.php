@@ -5,6 +5,59 @@ require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
 
+/** @return array<string,mixed>|null */
+function request_submit_package_match(PDO $db, string $package, string $gameName, string $engineKey): ?array
+{
+    if ($engineKey !== '') {
+        $match = catalog_one(
+            $db,
+            'SELECT f.*, g.name match_game_name, COALESCE(p.engine_key,"") match_engine_key
+             FROM ue_files f
+             JOIN ue_games g ON g.id=f.game_id
+             LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
+             WHERE f.package_name=? AND f.scan_status="verified" AND UPPER(COALESCE(p.engine_key,""))=UPPER(?)
+             ORDER BY f.id LIMIT 1',
+            [$package, $engineKey]
+        );
+        if ($match) {
+            $match['federation_match_method'] = 'package name and engine profile';
+            return $match;
+        }
+    }
+
+    if ($gameName !== '') {
+        $match = catalog_one(
+            $db,
+            'SELECT f.*, g.name match_game_name, COALESCE(p.engine_key,"") match_engine_key
+             FROM ue_files f
+             JOIN ue_games g ON g.id=f.game_id
+             LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
+             WHERE f.package_name=? AND f.scan_status="verified" AND g.name=?
+             ORDER BY f.id LIMIT 1',
+            [$package, $gameName]
+        );
+        if ($match) {
+            $match['federation_match_method'] = 'package name and game';
+            return $match;
+        }
+    }
+
+    $match = catalog_one(
+        $db,
+        'SELECT f.*, g.name match_game_name, COALESCE(p.engine_key,"") match_engine_key
+         FROM ue_files f
+         JOIN ue_games g ON g.id=f.game_id
+         LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
+         WHERE f.package_name=? AND f.scan_status="verified"
+         ORDER BY f.id LIMIT 1',
+        [$package]
+    );
+    if ($match) {
+        $match['federation_match_method'] = 'package name';
+    }
+    return $match;
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -24,6 +77,9 @@ try {
     $items = $payload['items'] ?? [];
     if (!is_array($items) || !$items) {
         fed_json_response(['ok' => false, 'error' => 'Request has no items'], 400);
+    }
+    if (count($items) > 950) {
+        fed_json_response(['ok' => false, 'error' => 'A dependency request may contain no more than 950 packages.'], 413);
     }
 
     $requestHash = hash('sha256', json_encode($items, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
@@ -52,6 +108,9 @@ try {
 
             $wantedGuid = trim((string)($item['wanted_guid'] ?? '')) ?: null;
             $wantedMd5 = strtolower(trim((string)($item['wanted_md5'] ?? ''))) ?: null;
+            $requestedGameName = trim((string)($item['game_name'] ?? ''));
+            $requestedEngineKey = trim((string)($item['engine_key'] ?? ''));
+            $useCount = max(0, (int)($item['use_count'] ?? 0));
             $localFile = null;
             $peerFile = null;
             $status = 'requested';
@@ -66,10 +125,14 @@ try {
                 }
             }
             if (!$localFile && $requiredPackage !== '') {
-                $match = catalog_one($db, 'SELECT * FROM ue_files WHERE package_name=? AND scan_status="verified" LIMIT 1', [$requiredPackage]);
+                $match = request_submit_package_match($db, $requiredPackage, $requestedGameName, $requestedEngineKey);
                 if ($match) {
                     $localFile = (int)$match['id'];
-                    $msg = 'Matched by package name on parent.';
+                    $msg = 'Matched by ' . (string)$match['federation_match_method'] . ' on parent';
+                    if (!empty($match['match_game_name'])) {
+                        $msg .= ' (' . (string)$match['match_game_name'] . ')';
+                    }
+                    $msg .= '.';
                 }
             }
             if ($match && base_game_file_is_protected($db, $match)) {
@@ -78,6 +141,20 @@ try {
             }
             if (!$localFile) {
                 $msg = 'Parent does not currently have a matching file.';
+            }
+
+            $context = [];
+            if ($requestedGameName !== '') {
+                $context[] = 'child game ' . $requestedGameName;
+            }
+            if ($requestedEngineKey !== '') {
+                $context[] = 'engine ' . $requestedEngineKey;
+            }
+            if ($useCount > 0) {
+                $context[] = 'needed by ' . $useCount . ' child file(s)';
+            }
+            if ($context) {
+                $msg .= ' Request context: ' . implode(', ', $context) . '.';
             }
 
             $itemStmt->execute([$requestId, $requiredPackage, $requiredPath, $wantedGuid, $wantedMd5, $localFile, $peerFile, $status, $msg]);
