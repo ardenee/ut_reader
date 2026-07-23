@@ -200,12 +200,15 @@ function catalog_redirect_archive_decompress_payload_to_temp(
         }
     }
 
-    $tmp = tempnam(sys_get_temp_dir(), 'ue_redirect_');
+    // Use durable staging rather than the operating-system temporary folder.
+    // Synology DSM may reject a later rename from /volume1/@tmp into the web
+    // shared folder with "Operation not permitted".
+    $tmp = tempnam(dirname($sourcePath), '.ue_redirect_');
     if ($tmp === false || @file_put_contents($tmp, $output) !== $outputBytes) {
         if (is_string($tmp)) {
             @unlink($tmp);
         }
-        throw new RuntimeException('Could not write decompressed redirect file.');
+        throw new RuntimeException('Could not write decompressed redirect file in catalog staging.');
     }
 
     $result = [
