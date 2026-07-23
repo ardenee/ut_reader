@@ -13,11 +13,15 @@ final class JobExecutionContext
     private readonly int $leaseSeconds;
     /** @var array<string,mixed> */
     private array $pendingProgress = [];
+    private string $lastEventStage = '';
+    private int $lastEventPercent = -1;
+    private int $lastEventAt = 0;
 
     public function __construct(
         private readonly JobQueue $queue,
         private readonly ClaimedJob $job,
-        int $leaseSeconds
+        int $leaseSeconds,
+        private readonly ?\Closure $eventAppender = null
     ) {
         // Staged package imports can spend several minutes in redirect archive
         // decompression, a large file copy, or a parser operation before another
@@ -53,17 +57,18 @@ final class JobExecutionContext
         if ($progress !== []) {
             $this->pendingProgress = $progress;
         }
-        $this->heartbeat();
+        $this->heartbeat([], true);
     }
 
     /** @param array<string,mixed> $progress */
-    public function heartbeat(array $progress = []): void
+    public function heartbeat(array $progress = [], bool $forceEvent = false): void
     {
         if ($progress !== []) {
             $this->pendingProgress = $progress;
         }
 
-        $state = $this->queue->heartbeat($this->job, $this->leaseSeconds, $this->pendingProgress);
+        $snapshot = $this->pendingProgress;
+        $state = $this->queue->heartbeat($this->job, $this->leaseSeconds, $snapshot);
         if ($state === 'cancel_requested') {
             throw new JobCancellationRequested('Job cancellation was requested: ' . $this->job->id);
         }
@@ -71,7 +76,60 @@ final class JobExecutionContext
             throw new \RuntimeException('Job lease is no longer owned by this worker: ' . $this->job->id);
         }
 
+        if ($snapshot !== []) {
+            $this->emitProgressEvent($snapshot, $forceEvent);
+        }
         $this->pendingProgress = [];
         $this->lastHeartbeatAt = time();
+    }
+
+    /** @param array<string,mixed> $progress */
+    private function emitProgressEvent(array $progress, bool $force): void
+    {
+        if (!$this->eventAppender instanceof \Closure) {
+            return;
+        }
+
+        $stage = trim((string)($progress['stage'] ?? 'running')) ?: 'running';
+        $percent = max(0, min(100, (int)($progress['percent'] ?? 0)));
+        $now = time();
+        $importantStage = in_array($stage, ['complete', 'failed', 'unverified', 'cancelled'], true);
+        $shouldEmit = $force
+            || $importantStage
+            || $stage !== $this->lastEventStage
+            || $this->lastEventPercent < 0
+            || abs($percent - $this->lastEventPercent) >= 2
+            || ($now - $this->lastEventAt) >= 5;
+        if (!$shouldEmit) {
+            return;
+        }
+
+        $message = trim((string)($progress['message'] ?? ''));
+        if ($message === '') {
+            $message = ucfirst(str_replace('_', ' ', $stage)) . '.';
+        }
+        $file = trim((string)($this->job->payload['source_relative_path'] ?? $this->job->payload['original_name'] ?? ''));
+        $meta = $progress;
+        unset($meta['message']);
+        $eventStatus = $stage === 'complete' ? 'completed' : ($importantStage ? $stage : 'running');
+
+        try {
+            ($this->eventAppender)(
+                $this->job->id,
+                [
+                    'status' => $eventStatus,
+                    'file' => $file,
+                    'message' => '[' . str_replace('_', ' ', $stage) . '] ' . $message . ' (' . $percent . '%)',
+                    'file_id' => max(0, (int)($progress['file_id'] ?? 0)),
+                    'meta' => $meta,
+                ]
+            );
+        } catch (\Throwable $error) {
+            error_log('[UnrealDB job progress event] ' . $error->getMessage());
+        }
+
+        $this->lastEventStage = $stage;
+        $this->lastEventPercent = $percent;
+        $this->lastEventAt = $now;
     }
 }
