@@ -73,11 +73,40 @@ final class CatalogStagedImportJobHandler implements JobHandler
         $decompressed = false;
         try {
             if (\catalog_redirect_archive_is_supported_filename($originalName)) {
-                $decoded = \catalog_redirect_archive_decompress_to_temp($sourcePath, $originalName);
+                if (\catalog_redirect_archive_extension($originalName) === 'uz2') {
+                    $decoded = CatalogRedirectArchiveStream::decompressUz2(
+                        $sourcePath,
+                        $originalName,
+                        0,
+                        static function (array $progress) use ($context): void {
+                            $percent = max(1, min(24, 1 + (int)floor(((int)($progress['percent'] ?? 0)) * 23 / 100)));
+                            $context->heartbeatIfDue([
+                                'stage' => 'decompress',
+                                'done' => (int)($progress['compressed_done'] ?? 0),
+                                'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
+                                'percent' => $percent,
+                                'message' => (string)($progress['message'] ?? 'Decompressing redirect archive.'),
+                                'output_bytes' => (int)($progress['output_bytes'] ?? 0),
+                                'chunks' => (int)($progress['chunks'] ?? 0),
+                            ]);
+                        }
+                    );
+                } else {
+                    $decoded = \catalog_redirect_archive_decompress_to_temp($sourcePath, $originalName);
+                }
                 $workingPath = (string)$decoded['path'];
                 $workingName = \scanner_clean_original_filename((string)$decoded['filename']);
                 $sourceRelativePath = $this->replaceRelativeFilename($sourceRelativePath, $workingName);
                 $decompressed = true;
+                $context->checkpoint([
+                    'stage' => 'scan',
+                    'done' => 25,
+                    'total' => 100,
+                    'percent' => 25,
+                    'message' => 'Redirect archive decompressed; scanning ' . basename($workingName),
+                    'decompressed_bytes' => (int)($decoded['bytes'] ?? 0),
+                    'decoder' => (string)($decoded['decoder'] ?? ''),
+                ]);
             } else {
                 $workingPath = $this->workingCopy($sourcePath, $workingName);
             }
