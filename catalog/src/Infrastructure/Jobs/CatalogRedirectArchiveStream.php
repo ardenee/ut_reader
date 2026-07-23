@@ -39,10 +39,14 @@ final class CatalogRedirectArchiveStream
             throw new \RuntimeException('Could not open redirect compressed file: ' . basename($sourceName));
         }
 
-        $temporary = tempnam(sys_get_temp_dir(), 'ue_redirect_');
+        // Keep the decoded working file beside durable staging. Synology DSM can
+        // prohibit rename() from /volume1/@tmp into a web shared folder even when
+        // both paths are on the same volume. A storage-local temporary file can be
+        // atomically moved into the verified catalog without crossing that boundary.
+        $temporary = tempnam(dirname($sourcePath), '.ue_redirect_');
         if ($temporary === false) {
             fclose($input);
-            throw new \RuntimeException('Could not allocate decompressed redirect package.');
+            throw new \RuntimeException('Could not allocate decompressed redirect package in catalog staging.');
         }
         $output = fopen($temporary, 'wb');
         if (!is_resource($output)) {
