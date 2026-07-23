@@ -63,12 +63,17 @@ try {
     $executionContext = file_get_contents(__DIR__ . '/../src/Application/Jobs/JobExecutionContext.php');
     $jobCleanup = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php');
     foreach ([$endpoint, $javascript, $queue, $sourceHandler, $sourceVariant, $executionContext, $jobCleanup] as $content) {
-        chunked_pak_expect(is_string($content), 'A required chunked PAK upload component is missing.');
+        chunked_pak_expect(is_string($content), 'A required chunked upload component is missing.');
     }
     chunked_pak_expect(str_contains($endpoint, "catalog_api_require_admin(false)"), 'Chunked upload endpoint is not admin-only.');
     chunked_pak_expect(str_contains($endpoint, "catalog_api_require_csrf('profiled_upload_chunk')"), 'Chunked upload endpoint lacks CSRF protection.');
-    chunked_pak_expect(str_contains($javascript, "file.slice(start, end)"), 'Browser PAK upload does not send bounded chunks.');
-    chunked_pak_expect(str_contains($javascript, 'received_chunks'), 'Browser PAK upload cannot resume stored chunks.');
+    chunked_pak_expect(str_contains($endpoint, 'enqueueStaged(') && str_contains($endpoint, "'chunk-upload:' . \$uploadId"), 'Large normal packages are not queued from durable chunk storage.');
+    chunked_pak_expect(str_contains($endpoint, "'upload_kind' => \$isPak ? 'pak' : 'package'"), 'Chunked endpoint does not distinguish packages from PAK containers.');
+    chunked_pak_expect(str_contains($javascript, 'shouldUseChunks(file)'), 'Browser upload does not select chunks for large normal files.');
+    chunked_pak_expect(str_contains($javascript, 'Number(file.size || 0) > configuredChunkBytes'), 'Large normal files are not routed around whole-request PHP limits.');
+    chunked_pak_expect(str_contains($javascript, 'file.slice(start, end)'), 'Browser upload does not send bounded chunks.');
+    chunked_pak_expect(str_contains($javascript, 'received_chunks'), 'Browser upload cannot resume stored chunks.');
+    chunked_pak_expect(str_contains($javascript, 'returned an HTML error page instead of JSON'), 'Upload client still exposes raw JSON parser errors for HTML server responses.');
     chunked_pak_expect(str_contains($queue, "'chunk-upload:' . \$uploadId"), 'Completed chunk uploads are not queued by durable reference.');
     chunked_pak_expect(str_contains($queue, "'local-pak:' . \$this->encodeLocalPath"), 'Local PAKs are copied instead of queued by validated path reference.');
     chunked_pak_expect(str_contains($sourceHandler, 'enqueueLocalPak('), 'Local source scans do not queue PAK containers separately.');
@@ -88,4 +93,4 @@ try {
     }
 }
 
-echo "Chunked PAK upload contract tests passed.\n";
+echo "Chunked profiled upload contract tests passed.\n";
