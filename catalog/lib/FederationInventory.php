@@ -82,6 +82,14 @@ function federation_auto_push_inventory_to_parent(PDO $db): array
 
 function federation_inventory_local_game_id(PDO $db, array $file): ?int
 {
+    $gameName = trim((string)($file['game_name'] ?? ''));
+    if ($gameName !== '') {
+        $game = catalog_one($db, 'SELECT id FROM ue_games WHERE name=? ORDER BY id LIMIT 1', [$gameName]);
+        if ($game) {
+            return (int)$game['id'];
+        }
+    }
+
     $engineKey = strtoupper(trim((string)($file['engine_key'] ?? '')));
     if ($engineKey !== '') {
         $game = catalog_one(
@@ -93,14 +101,6 @@ function federation_inventory_local_game_id(PDO $db, array $file): ?int
              ORDER BY g.id LIMIT 1',
             [$engineKey]
         );
-        if ($game) {
-            return (int)$game['id'];
-        }
-    }
-
-    $gameName = trim((string)($file['game_name'] ?? ''));
-    if ($gameName !== '') {
-        $game = catalog_one($db, 'SELECT id FROM ue_games WHERE name=? ORDER BY id LIMIT 1', [$gameName]);
         if ($game) {
             return (int)$game['id'];
         }
@@ -118,16 +118,16 @@ function federation_inventory_row_values(PDO $db, int $peerId, array $file, stri
     $md5 = strtolower(trim((string)($file['md5'] ?? '')));
     $sha1 = strtolower(trim((string)($file['sha1'] ?? '')));
     if ($packageName === '' || $originalName === '' || ($guid === '' && $md5 === '')) {
-        throw new RuntimeException('Child inventory contains an incomplete file identity.');
+        throw new RuntimeException('Peer inventory contains an incomplete file identity.');
     }
     if ($md5 !== '' && preg_match('/^[a-f0-9]{32}$/', $md5) !== 1) {
-        throw new RuntimeException('Child inventory contains an invalid MD5 value.');
+        throw new RuntimeException('Peer inventory contains an invalid MD5 value.');
     }
     if ($sha1 !== '' && preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
-        throw new RuntimeException('Child inventory contains an invalid SHA1 value.');
+        throw new RuntimeException('Peer inventory contains an invalid SHA1 value.');
     }
     if ($guid !== '' && preg_match('/^[A-F0-9-]{8,64}$/', $guid) !== 1) {
-        throw new RuntimeException('Child inventory contains an invalid package GUID.');
+        throw new RuntimeException('Peer inventory contains an invalid package GUID.');
     }
 
     return [
@@ -152,25 +152,30 @@ function federation_inventory_row_values(PDO $db, int $peerId, array $file, stri
 }
 
 /**
- * Parent-side inventory synchronization. The child only authenticates the
- * paired parent; no child administrator action or approval is involved.
+ * Pulls the transferable inventory from either paired side. Parent sites pull
+ * child inventories and child sites pull their parent inventory. Possessing an
+ * inventory row does not grant download authority; child downloads remain
+ * restricted to approved dependency request items.
  *
  * @return array<string,mixed>
  */
-function federation_pull_inventory_from_child(PDO $db, int $peerId): array
+function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
 {
-    $child = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="child" AND is_active=1', [$peerId]);
-    if (!$child) {
-        throw new RuntimeException('Active child peer not found.');
+    $peer = catalog_one(
+        $db,
+        'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role IN ("parent","child") AND is_active=1',
+        [$peerId]
+    );
+    if (!$peer) {
+        throw new RuntimeException('Active federation peer not found.');
     }
-    $storedSecret = federation_peer_stored_signing_secret($db, $child);
-
+    $storedSecret = federation_peer_stored_signing_secret($db, $peer);
     $siteId = (string)fed_setting($db, 'site_id', '');
     if ($siteId === '') {
-        throw new RuntimeException('Local parent site ID is unavailable.');
+        throw new RuntimeException('Local federation site ID is unavailable.');
     }
 
-    $url = rtrim((string)$child['site_url'], '/') . '/api/federation/inventory-list.php';
+    $url = rtrim((string)$peer['site_url'], '/') . '/api/federation/inventory-list.php';
     $seenAt = date('Y-m-d H:i:s');
     $afterFileId = 0;
     $received = 0;
@@ -195,18 +200,18 @@ function federation_pull_inventory_from_child(PDO $db, int $peerId): array
 
     while (!$complete) {
         if (++$pages > 1000) {
-            throw new RuntimeException('Child inventory exceeded the maximum page count.');
+            throw new RuntimeException('Peer inventory exceeded the maximum page count.');
         }
         $result = fed_http_post_signed($url, $siteId, $storedSecret, [
             'after_file_id' => $afterFileId,
             'limit' => 500,
         ]);
         if (empty($result['ok']) || !isset($result['files']) || !is_array($result['files'])) {
-            throw new RuntimeException('Child inventory request failed: ' . ($result['error'] ?? 'invalid response'));
+            throw new RuntimeException('Peer inventory request failed: ' . ($result['error'] ?? 'invalid response'));
         }
         $remoteSiteId = strtolower(trim((string)($result['site']['site_id'] ?? '')));
-        if ($remoteSiteId !== '' && !hash_equals(strtolower((string)$child['peer_site_id']), $remoteSiteId)) {
-            throw new RuntimeException('Child inventory identity does not match the selected peer.');
+        if ($remoteSiteId !== '' && !hash_equals(strtolower((string)$peer['peer_site_id']), $remoteSiteId)) {
+            throw new RuntimeException('Inventory identity does not match the selected peer.');
         }
 
         $db->beginTransaction();
@@ -229,7 +234,7 @@ function federation_pull_inventory_from_child(PDO $db, int $peerId): array
         $nextAfter = max($afterFileId, (int)($result['next_after_file_id'] ?? $afterFileId));
         $complete = !empty($result['complete']);
         if (!$complete && $nextAfter <= $afterFileId) {
-            throw new RuntimeException('Child inventory cursor did not advance.');
+            throw new RuntimeException('Peer inventory cursor did not advance.');
         }
         $afterFileId = $nextAfter;
     }
@@ -238,13 +243,139 @@ function federation_pull_inventory_from_child(PDO $db, int $peerId): array
     $delete->execute([$peerId, $seenAt]);
     $removed = $delete->rowCount();
 
-    fed_log($db, $peerId, null, 'INFO', 'INVENTORY_PULLED_BY_PARENT', 'Received ' . $received . ' row(s) in ' . $pages . ' page(s); removed ' . $removed . ' stale row(s).');
+    fed_log(
+        $db,
+        $peerId,
+        null,
+        'INFO',
+        'INVENTORY_SYNC_FROM_PEER',
+        'Role=' . (string)$peer['peer_role'] . '; received ' . $received . ' row(s) in ' . $pages . ' page(s); removed ' . $removed . ' stale row(s).'
+    );
     return [
         'ok' => true,
         'peer_id' => $peerId,
+        'peer_role' => (string)$peer['peer_role'],
+        'peer_name' => (string)$peer['site_name'],
         'received' => $received,
         'removed_stale' => $removed,
         'pages' => $pages,
         'synchronized_at' => $seenAt,
+    ];
+}
+
+/** @return array<string,mixed> */
+function federation_pull_inventory_from_child(PDO $db, int $peerId): array
+{
+    $peer = catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE id=? AND peer_role="child" AND is_active=1', [$peerId]);
+    if (!$peer) {
+        throw new RuntimeException('Active child peer not found.');
+    }
+    return federation_pull_inventory_from_peer($db, $peerId);
+}
+
+/** @return array<string,mixed> */
+function federation_pull_inventory_from_parent(PDO $db, int $peerId): array
+{
+    $peer = catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$peerId]);
+    if (!$peer) {
+        throw new RuntimeException('Active parent peer not found.');
+    }
+    return federation_pull_inventory_from_peer($db, $peerId);
+}
+
+function federation_inventory_sync_interval_hours(PDO $db): int
+{
+    return max(0, min(720, (int)(fed_setting($db, 'inventory_sync_interval_hours', '24') ?? '24')));
+}
+
+function federation_inventory_last_sync_at(PDO $db, int $peerId): ?string
+{
+    $row = catalog_one(
+        $db,
+        'SELECT MAX(created_at) synchronized_at
+         FROM ue_federation_transfer_logs
+         WHERE peer_id=? AND event IN ("INVENTORY_SYNC_FROM_PEER","INVENTORY_PULLED_BY_PARENT")',
+        [$peerId]
+    );
+    $value = trim((string)($row['synchronized_at'] ?? ''));
+    return $value !== '' ? $value : null;
+}
+
+function federation_inventory_sync_is_due(PDO $db, int $peerId, ?int $now = null): bool
+{
+    $hours = federation_inventory_sync_interval_hours($db);
+    if ($hours <= 0) {
+        return false;
+    }
+    $last = federation_inventory_last_sync_at($db, $peerId);
+    if ($last === null) {
+        return true;
+    }
+    $timestamp = strtotime($last);
+    if ($timestamp === false) {
+        return true;
+    }
+    return ($now ?? time()) >= $timestamp + ($hours * 3600);
+}
+
+/** @return array<string,mixed> */
+function federation_sync_due_inventories(PDO $db, bool $force = false): array
+{
+    $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
+    $interval = federation_inventory_sync_interval_hours($db);
+    if ($role === 'standalone') {
+        return ['ok' => true, 'skipped' => true, 'reason' => 'standalone site', 'interval_hours' => $interval, 'peers' => []];
+    }
+    if (!$force && $interval <= 0) {
+        return ['ok' => true, 'skipped' => true, 'reason' => 'automatic inventory synchronization disabled', 'interval_hours' => 0, 'peers' => []];
+    }
+
+    $wantedPeerRole = $role === 'parent' ? 'child' : 'parent';
+    $peers = catalog_all(
+        $db,
+        'SELECT id,site_name,peer_role FROM ue_federation_peers WHERE peer_role=? AND is_active=1 ORDER BY id',
+        [$wantedPeerRole]
+    );
+    $results = [];
+    $synchronized = 0;
+    $notDue = 0;
+    $failed = 0;
+    foreach ($peers as $peer) {
+        $peerId = (int)$peer['id'];
+        if (!$force && !federation_inventory_sync_is_due($db, $peerId)) {
+            $notDue++;
+            $results[] = [
+                'peer_id' => $peerId,
+                'peer_name' => (string)$peer['site_name'],
+                'status' => 'not_due',
+                'last_sync_at' => federation_inventory_last_sync_at($db, $peerId),
+            ];
+            continue;
+        }
+        try {
+            $result = federation_pull_inventory_from_peer($db, $peerId);
+            $result['status'] = 'synchronized';
+            $results[] = $result;
+            $synchronized++;
+        } catch (Throwable $error) {
+            $failed++;
+            fed_log($db, $peerId, null, 'ERROR', 'INVENTORY_SYNC_FAILED', $error->getMessage());
+            $results[] = [
+                'peer_id' => $peerId,
+                'peer_name' => (string)$peer['site_name'],
+                'status' => 'failed',
+                'error' => $error->getMessage(),
+            ];
+        }
+    }
+
+    return [
+        'ok' => $failed === 0,
+        'site_role' => $role,
+        'interval_hours' => $interval,
+        'synchronized' => $synchronized,
+        'not_due' => $notDue,
+        'failed' => $failed,
+        'peers' => $results,
     ];
 }
