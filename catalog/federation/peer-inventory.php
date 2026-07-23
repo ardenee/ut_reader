@@ -6,6 +6,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationInventory.php';
+require_once __DIR__ . '/../lib/FederationInventoryRefresh.php';
 require_once __DIR__ . '/../lib/BaseGameProtection.php';
 
 const PI_PAGE_SIZE = 100;
@@ -143,6 +144,7 @@ function pi_child_dependency_rows(PDO $db, int $peerId): array
          ORDER BY i.updated_at DESC, i.id DESC',
         [$peerId]
     );
+
     $byPackage = [];
     foreach ($rows as $row) {
         $key = strtolower(trim((string)$row['required_package']));
@@ -178,8 +180,18 @@ try {
 
         $action = (string)($_POST['action'] ?? 'refresh');
         if ($action === 'refresh') {
-            $result = federation_pull_inventory_from_child($db, $peerId);
-            $_SESSION['fed_peer_inventory_flash'] = 'Inventory refreshed from ' . (string)$peer['site_name'] . ': ' . (int)$result['received'] . ' transferable file(s), ' . (int)$result['removed_stale'] . ' stale row(s) removed.';
+            $childInventory = federation_pull_inventory_from_child($db, $peerId);
+            try {
+                $parentInventory = federation_request_child_refresh_parent_inventory($db, $peerId);
+                $_SESSION['fed_peer_inventory_flash'] = 'Both inventories refreshed. Parent received '
+                    . (int)$childInventory['received'] . ' child file(s); child received '
+                    . (int)($parentInventory['received'] ?? 0) . ' parent file(s).';
+            } catch (Throwable $refreshError) {
+                fed_log($db, $peerId, null, 'ERROR', 'BIDIRECTIONAL_INVENTORY_REFRESH_PARTIAL', $refreshError->getMessage());
+                $_SESSION['fed_peer_inventory_flash'] = 'The parent refreshed this child inventory ('
+                    . (int)$childInventory['received'] . ' file(s)), but the child could not refresh the parent inventory: '
+                    . $refreshError->getMessage();
+            }
         } elseif ($action === 'queue') {
             $ids = array_values(array_unique(array_filter(array_map('intval', $_POST['peer_file_ids'] ?? []), static fn(int $id): bool => $id > 0)));
             if (!$ids) {
@@ -254,16 +266,16 @@ try {
     unset($_SESSION['fed_peer_inventory_flash']);
     catalog_page_header(
         'Child Inventory',
-        'Select a child, check the connection, and open one of the three file-need views.',
-        catalog_federation_links() + ['Children' => 'peers.php?role=child', 'Incoming Requests' => 'requests.php', 'Transfer Queue' => 'queue.php']
+        'Select a child and open one of the three file-need views.',
+        []
     );
 
     if ($siteRole !== 'parent') {
         echo '<div class="card"><h2>Parent mode required</h2>';
         if ($siteRole === 'child') {
-            echo '<p>This server is a child and cannot have child inventories. A child may download from its parent only through approved missing-dependency requests.</p><p><a class="button" href="request-generate.php">Missing dependency needs</a> <a class="button" href="request-status.php">Outgoing requests</a> <a class="button" href="approved-downloads.php">Approved dependency downloads</a></p>';
+            echo '<p>This server is a child and cannot have child inventories. A child may download from its parent only through approved missing-dependency requests.</p>';
         } else {
-            echo '<p>Change this server to Parent mode before accepting children.</p><p><a class="button" href="settings.php">Federation Settings</a></p>';
+            echo '<p>Change this server to Parent mode before accepting children.</p>';
         }
         echo '</div>';
         catalog_foot();
@@ -280,7 +292,7 @@ try {
          ORDER BY p.site_name,p.id'
     );
     if (!$children) {
-        echo '<div class="card"><h2>No connected children</h2><p><a class="button" href="join-requests.php">Incoming Child Join Requests</a></p></div>';
+        echo '<div class="card"><h2>No connected children</h2><p>No active child sites are connected.</p></div>';
         catalog_foot();
         exit;
     }
@@ -315,11 +327,11 @@ try {
     }
 
     echo '<div class="card"><h2>Selected child</h2>';
-    echo '<form method="get" action="peer-inventory.php"><label>Child<br><select name="peer_id">';
+    echo '<form method="get" action="peer-inventory.php"><label>Child<br><select name="peer_id" onchange="this.form.submit()">';
     foreach ($children as $child) {
         echo '<option value="' . (int)$child['id'] . '"' . ((int)$child['id'] === $peerId ? ' selected' : '') . '>' . catalog_h((string)$child['site_name']) . '</option>';
     }
-    echo '</select></label><input type="hidden" name="filter" value="' . catalog_h($filter) . '"> <button>Open child</button></form>';
+    echo '</select></label><input type="hidden" name="filter" value="' . catalog_h($filter) . '"></form>';
     echo '<table style="margin-top:12px">';
     echo '<tr><th>Child</th><td><strong>' . catalog_h((string)$peer['site_name']) . '</strong></td></tr>';
     echo '<tr><th>URL</th><td class="mono path">' . catalog_h((string)$peer['site_url']) . '</td></tr>';
@@ -328,7 +340,7 @@ try {
     echo '<tr><th>Inventory last refreshed</th><td class="nowrap">' . catalog_h($lastSync !== '' ? $lastSync : 'never') . '</td></tr>';
     echo '<tr><th>Automatic refresh</th><td>' . ($syncHours > 0 ? 'Every ' . $syncHours . ' hour(s); next due ' . catalog_h($nextSync) : 'disabled') . '</td></tr>';
     echo '</table>';
-    echo '<form method="post" style="margin-top:12px"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_peer_inventory')) . '"><input type="hidden" name="action" value="refresh"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="filter" value="' . catalog_h($filter) . '"><input type="hidden" name="page" value="1"><button>Refresh inventory now</button></form></div>';
+    echo '<form method="post" style="margin-top:12px"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_peer_inventory')) . '"><input type="hidden" name="action" value="refresh"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="filter" value="' . catalog_h($filter) . '"><input type="hidden" name="page" value="1"><button>Refresh both inventories now</button></form></div>';
 
     $presenceSql = pi_local_presence_sql('pf');
     $absenceSql = pi_local_absence_sql('pf');
