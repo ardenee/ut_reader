@@ -5,6 +5,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -34,11 +35,24 @@ try {
         if ($jobId < 1) {
             JsonResponse::error('invalid_job', 'A positive job_id is required.', 400);
         }
-        $status = $queue->requestCancellation($jobId, $userId, (string)($payload['reason'] ?? 'Cancelled by administrator.'));
+        $result = (new CatalogDetachedWorkerStop($application->db, $application->config))->stopJob(
+            $jobId,
+            $userId,
+            (string)($payload['reason'] ?? 'Cancelled by administrator.')
+        );
+        $status = (string)($result['status'] ?? 'not_found');
         if ($status === 'not_found') {
             JsonResponse::error('not_found', 'The requested job was not found.', 404);
         }
-        JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => $status]]);
+        JsonResponse::send([
+            'data' => [
+                'job_id' => $jobId,
+                'status' => $status,
+                'worker_terminated' => !empty($result['terminated']),
+                'worker_inactive' => !empty($result['worker_inactive']),
+                'worker_pid' => (int)($result['pid'] ?? 0),
+            ],
+        ]);
     }
 
     if ($action === 'retry') {
