@@ -1,20 +1,17 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationPeerSecret.php';
 
 function crs_parent(PDO $db, int $peerId): array
 {
     $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$peerId]);
     if (!$parent) {
-        throw new RuntimeException('Active parent peer not found.');
-    }
-    if (empty($parent['shared_secret_plain'])) {
-        throw new RuntimeException('Parent peer has no stored API key.');
+        throw new RuntimeException('Active parent connection not found.');
     }
     return $parent;
 }
@@ -23,25 +20,101 @@ function crs_poll(PDO $db, array $parent, int $requestId = 0): array
 {
     $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/request-status.php';
     $payload = $requestId > 0 ? ['request_id' => $requestId] : ['latest' => true];
-    return fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), (string)$parent['shared_secret_plain'], $payload);
+    return fed_http_post_signed(
+        $url,
+        (string)fed_setting($db, 'site_id', ''),
+        federation_peer_stored_signing_secret($db, $parent),
+        $payload
+    );
 }
 
 function crs_cancel(PDO $db, array $parent, int $requestId): array
 {
     $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/request-cancel.php';
-    return fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), (string)$parent['shared_secret_plain'], [
-        'request_id' => $requestId,
-        'reason' => 'Cancelled from child request status page.',
-    ]);
+    return fed_http_post_signed(
+        $url,
+        (string)fed_setting($db, 'site_id', ''),
+        federation_peer_stored_signing_secret($db, $parent),
+        [
+            'request_id' => $requestId,
+            'reason' => 'Cancelled by the child administrator from Outgoing Requests.',
+        ]
+    );
+}
+
+function crs_group_key(array $item): string
+{
+    return hash(
+        'sha256',
+        strtolower(trim((string)($item['required_package'] ?? '')))
+        . "\0" . strtolower(trim((string)($item['wanted_guid'] ?? '')))
+        . "\0" . strtolower(trim((string)($item['wanted_md5'] ?? '')))
+    );
+}
+
+/**
+ * @param array<int,mixed> $items
+ * @return list<array<string,mixed>>
+ */
+function crs_group_items(array $items): array
+{
+    $groups = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        $key = crs_group_key($item);
+        if (!isset($groups[$key])) {
+            $groups[$key] = $item + [
+                'statuses' => [],
+                'object_paths' => [],
+                'messages' => [],
+                'raw_count' => 0,
+            ];
+        }
+        $groups[$key]['raw_count']++;
+        $status = trim((string)($item['status'] ?? ''));
+        if ($status !== '') {
+            $groups[$key]['statuses'][$status] = true;
+        }
+        $path = trim((string)($item['required_object_path'] ?? ''));
+        if ($path !== '') {
+            $groups[$key]['object_paths'][strtolower($path)] = $path;
+        }
+        $message = trim((string)($item['status_message'] ?? ''));
+        if ($message !== '') {
+            $groups[$key]['messages'][$message] = true;
+        }
+        if (empty($groups[$key]['local_file_id']) && !empty($item['local_file_id'])) {
+            foreach (['local_file_id', 'package_name', 'original_name'] as $field) {
+                $groups[$key][$field] = $item[$field] ?? null;
+            }
+        }
+    }
+
+    foreach ($groups as &$group) {
+        $statuses = array_keys($group['statuses']);
+        $group['display_status'] = count($statuses) === 1 ? $statuses[0] : 'mixed';
+        $group['example_object'] = (string)(reset($group['object_paths']) ?: ($group['required_object_path'] ?? ''));
+        $group['object_count'] = max(1, count($group['object_paths']));
+        $group['display_message'] = implode(' ', array_keys($group['messages']));
+    }
+    unset($group);
+
+    return array_values($groups);
 }
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
+        }
+        if ($role !== 'child') {
+            throw new RuntimeException('Outgoing requests are available only while this site is in Child mode.');
         }
         catalog_check_csrf('fed_child_request_status');
         $peerId = (int)($_POST['peer_id'] ?? 0);
@@ -61,26 +134,40 @@ try {
         exit;
     }
 
-    if (!catalog_require_admin_page('Child Request Status')) {
+    if (!catalog_require_admin_page('Outgoing Requests')) {
         exit;
     }
 
-    catalog_head('Child Request Status');
-
+    catalog_head('Outgoing Requests');
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $peerId = (int)($_GET['peer_id'] ?? ($parents[0]['id'] ?? 0));
     $requestId = (int)($_GET['request_id'] ?? 0);
 
-    catalog_page_header('Child Request Status', 'Child-side status page. Poll the parent for latest request status or cancel an active request.', catalog_federation_links() + ['Generate Request' => 'request-generate.php', 'Approved Downloads' => 'approved-downloads.php']);
+    catalog_page_header(
+        'Outgoing Requests',
+        'Child-side workflow. These requests were sent by this child to a parent because packages are missing locally.',
+        catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Missing Files' => 'request-generate.php', 'Approved Downloads' => 'approved-downloads.php']
+    );
+
+    if ($role !== 'child') {
+        echo '<div class="card"><h2>Outgoing dependency requests disabled</h2><p>This site is not in Child mode. A parent obtains files from children through Child Inventories and Parent Pull instead.</p><p><a class="button" href="request-center.php">Open Requests</a> <a class="button" href="settings.php">Federation Settings</a></p></div>';
+        catalog_foot();
+        exit;
+    }
 
     if (isset($_SESSION['fed_child_request_status_result'])) {
-        echo '<div class="card"><h2>Last action result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_child_request_status_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
+        $result = (array)$_SESSION['fed_child_request_status_result'];
+        $message = !empty($result['ok'])
+            ? 'The parent request state was updated successfully.'
+            : 'The parent request action failed: ' . (string)($result['error'] ?? 'Unknown parent response.');
+        echo CatalogUi::alert(!empty($result['ok']) ? 'success' : 'warning', $message, 'Last action');
         unset($_SESSION['fed_child_request_status_result']);
     }
 
-    echo '<div class="card"><h2>Parent / request</h2>';
+    echo '<div class="card"><h2>Select parent request</h2>';
+    echo '<p><strong>Direction:</strong> this child &rarr; selected parent.</p>';
     if (!$parents) {
-        echo '<p class="muted">No active parent peer configured.</p></div>';
+        echo '<p class="muted">No active parent connection is configured.</p><p><a class="button" href="join-main-parent.php">Join a parent</a> <a class="button" href="peers.php?role=parent">Manage parents</a></p></div>';
         catalog_foot();
         exit;
     }
@@ -89,7 +176,7 @@ try {
         $sel = (int)$parentRow['id'] === $peerId ? ' selected' : '';
         echo '<option value="' . (int)$parentRow['id'] . '"' . $sel . '>' . catalog_h($parentRow['site_name'] . ' - ' . $parentRow['site_url']) . '</option>';
     }
-    echo '</select></label></p><p><label>Request ID, blank/latest = 0<br><input name="request_id" value="' . $requestId . '" style="width:120px"></label></p><button>Poll status</button></form></div>';
+    echo '</select></label></p><p><label>Request ID <span class="muted">(0 means latest)</span><br><input name="request_id" value="' . $requestId . '" style="width:120px"></label></p><button>Refresh request status</button></form></div>';
 
     if ($peerId > 0) {
         $parent = crs_parent($db, $peerId);
@@ -99,26 +186,45 @@ try {
             $status = ['ok' => false, 'error' => $e->getMessage()];
         }
 
-        echo '<div class="card"><h2>Current parent status</h2>';
+        echo '<div class="card"><h2>Parent decision</h2>';
         if (empty($status['ok'])) {
             echo '<p class="muted">' . catalog_h($status['error'] ?? 'Status unavailable') . '</p></div>';
         } else {
             $request = $status['request'] ?? null;
             if (!$request) {
-                echo '<p class="muted">No request found on parent.</p></div>';
+                echo '<p class="muted">No outgoing request was found on this parent.</p><p><a class="button" href="request-generate.php?peer_id=' . $peerId . '">Create request from missing files</a></p></div>';
             } else {
-                $active = in_array((string)$request['status'], ['submitted','approved','part_approved','downloading'], true);
-                echo '<table><tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr><tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr><tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr><tr><th>Submitted</th><td>' . catalog_h($request['submitted_at']) . '</td></tr><tr><th>Approved</th><td>' . catalog_h($request['approved_at']) . '</td></tr></table>';
+                $active = in_array((string)$request['status'], ['submitted', 'approved', 'part_approved', 'downloading'], true);
+                $groups = crs_group_items(is_array($status['items'] ?? null) ? $status['items'] : []);
+                echo '<table>';
+                echo '<tr><th>Direction</th><td><strong>This child</strong> &rarr; <strong>' . catalog_h($parent['site_name']) . '</strong> parent</td></tr>';
+                echo '<tr><th>Meaning</th><td>This child asked the parent to supply packages that are missing locally.</td></tr>';
+                echo '<tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr>';
+                echo '<tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr>';
+                echo '<tr><th>Distinct packages</th><td>' . count($groups) . '</td></tr>';
+                echo '<tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr>';
+                echo '<tr><th>Submitted</th><td>' . catalog_h($request['submitted_at']) . '</td></tr>';
+                echo '<tr><th>Approved</th><td>' . catalog_h($request['approved_at']) . '</td></tr>';
+                echo '</table>';
                 if ($active) {
-                    echo '<form method="post" onsubmit="return confirm(\'Cancel this request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><button>Cancel request</button></form>';
+                    echo '<form method="post" onsubmit="return confirm(\'Cancel this outgoing request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><button>Cancel outgoing request</button></form>';
                 }
                 echo '</div>';
 
-                echo '<div class="card"><h2>Request items</h2><table><tr><th>ID</th><th>Status</th><th>Required package</th><th>Required object</th><th>Parent file</th><th>Message</th></tr>';
-                foreach (($status['items'] ?? []) as $item) {
-                    echo '<tr><td class="mono">' . (int)$item['id'] . '</td><td>' . catalog_h($item['status'] ?? '') . '</td><td class="mono">' . catalog_h($item['required_package'] ?? '') . '</td><td class="mono path">' . catalog_h($item['required_object_path'] ?? '') . '</td><td>' . catalog_h(($item['package_name'] ?? '') . ' / ' . ($item['original_name'] ?? '')) . '</td><td>' . catalog_h($item['status_message'] ?? '') . '</td></tr>';
+                echo '<div class="card"><h2>Packages requested from the parent</h2>';
+                echo '<p>The parent availability column tells whether the selected parent can provide a matching file. It does not describe the child inventory.</p>';
+                if (!$groups) {
+                    echo '<p class="muted">This request has no package items.</p></div>';
+                } else {
+                    echo '<table><tr><th>Status</th><th>Package requested from parent</th><th>Example missing object</th><th>Missing objects</th><th>Parent file</th><th>Parent decision / reason</th></tr>';
+                    foreach ($groups as $group) {
+                        $parentFile = trim((string)($group['package_name'] ?? ''));
+                        $originalName = trim((string)($group['original_name'] ?? ''));
+                        $fileLabel = trim($parentFile . ($parentFile !== '' && $originalName !== '' ? ' / ' : '') . $originalName);
+                        echo '<tr><td>' . catalog_h($group['display_status']) . '</td><td class="mono">' . catalog_h($group['required_package'] ?? '') . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . ($fileLabel !== '' ? catalog_h($fileLabel) : '<span class="muted">Not available on parent</span>') . '</td><td>' . catalog_h($group['display_message']) . '</td></tr>';
+                    }
+                    echo '</table></div>';
                 }
-                echo '</table></div>';
             }
         }
     }
@@ -126,7 +232,7 @@ try {
     catalog_foot();
 } catch (Throwable $e) {
     if (!headers_sent()) {
-        catalog_head('Child request status error');
+        catalog_head('Outgoing request status error');
     }
     echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
     catalog_foot();
