@@ -59,6 +59,10 @@
         return /\.pak$/i.test(file.name || '');
     }
 
+    function shouldUseChunks(file) {
+        return isPak(file) || Number(file.size || 0) > configuredChunkBytes;
+    }
+
     function bytes(value) {
         const units = ['B', 'KB', 'MB', 'GB', 'TB'];
         let amount = Number(value || 0);
@@ -114,6 +118,21 @@
         return fallback;
     }
 
+    function parseJsonResponse(text, status, contentType, label) {
+        try {
+            return JSON.parse(text || '{}');
+        } catch (error) {
+            const looksHtml = /^\s*(?:<!doctype\s+html|<html\b)/i.test(text || '') || /text\/html/i.test(contentType || '');
+            if (looksHtml) {
+                if (status === 413) {
+                    throw new Error(label + ' was rejected as too large by Apache, PHP, or a reverse proxy (HTTP 413).');
+                }
+                throw new Error(label + ' returned an HTML error page instead of JSON' + (status ? ' (HTTP ' + status + ')' : '') + '. Check the web-server and PHP error logs.');
+            }
+            throw new Error(label + ' returned an invalid JSON response' + (status ? ' (HTTP ' + status + ')' : '') + '.');
+        }
+    }
+
     function requestForm(url, data, onProgress) {
         return new Promise(function (resolve, reject) {
             const xhr = new XMLHttpRequest();
@@ -123,15 +142,15 @@
             if (typeof onProgress === 'function') xhr.upload.onprogress = onProgress;
             xhr.onload = function () {
                 if (activeXhr === xhr) activeXhr = null;
-                let body = {};
+                let body;
                 try {
-                    body = JSON.parse(xhr.responseText || '{}');
+                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Chunked upload request');
                 } catch (error) {
-                    reject(new Error('Server returned an invalid response while receiving the upload chunk.'));
+                    reject(error);
                     return;
                 }
                 if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
-                    reject(new Error(responseError(body, 'Chunked upload request failed.')));
+                    reject(new Error(responseError(body, 'Chunked upload request failed with HTTP ' + xhr.status + '.')));
                     return;
                 }
                 resolve(body);
@@ -155,7 +174,8 @@
             event_limit: '500'
         });
         const response = await fetch(statusUrl + '?' + params.toString(), {cache: 'no-store', credentials: 'same-origin'});
-        const body = await response.json();
+        const text = await response.text();
+        const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Job status request');
         const jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
         if (!response.ok || !jobs.length) throw new Error(responseError(body, 'Job status is unavailable.'));
         const meta = body && body.meta ? body.meta : {};
@@ -191,7 +211,7 @@
             file: result.original_name || fallbackName,
             file_id: result.file_id || 0,
             message: result.message || 'Background import complete.',
-            meta: result.meta || {},
+            meta: result.meta || {}
         }];
     }
 
@@ -275,9 +295,9 @@
                 if (activeXhr === xhr) activeXhr = null;
                 speed.textContent = '';
                 try {
-                    const response = JSON.parse(xhr.responseText || '{}');
-                    if (!response.ok || !Array.isArray(response.jobs) || !response.jobs.length) {
-                        throw new Error(responseError(response, 'Upload could not be queued.'));
+                    const response = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Upload request');
+                    if (xhr.status < 200 || xhr.status >= 300 || !response.ok || !Array.isArray(response.jobs) || !response.jobs.length) {
+                        throw new Error(responseError(response, 'Upload could not be queued (HTTP ' + xhr.status + ').'));
                     }
                     const queued = response.jobs[0];
                     addLog({status: 'queued', file: name, message: 'Background job #' + queued.job_id + ' queued; detached worker start requested.'});
@@ -321,10 +341,11 @@
         throw lastError || new Error('Chunk upload failed.');
     }
 
-    async function chunkedPakUpload(file, index, total) {
+    async function chunkedUpload(file, index, total) {
         const name = shownName(file);
+        const pak = isPak(file);
         if (!chunkCsrf) throw new Error('Chunked upload CSRF token is unavailable.');
-        if (containerLimit > 0 && file.size > containerLimit) {
+        if (pak && containerLimit > 0 && file.size > containerLimit) {
             throw new Error('PAK is ' + bytes(file.size) + '; configured container limit is ' + bytes(containerLimit) + '.');
         }
         const gameId = form.querySelector('[name="game_id"]').value;
@@ -341,7 +362,7 @@
 
         cancelRequested = false;
         cancelButton.hidden = false;
-        currentLabel.textContent = 'Preparing resumable PAK upload: ' + name;
+        currentLabel.textContent = 'Preparing resumable upload: ' + name;
         const initialized = await requestForm(chunkUrl, initData);
         const upload = initialized.upload || {};
         activeUploadId = String(upload.upload_id || '');
@@ -361,7 +382,7 @@
             if (received.has(chunkIndex)) {
                 const percent = Math.floor((Math.min(file.size, end) * 100) / Math.max(1, file.size));
                 currentBar.value = percent;
-                currentLabel.textContent = 'Resuming PAK ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
+                currentLabel.textContent = 'Resuming chunk ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
                 setOverall(index - 1, total, percent / 4);
                 continue;
             }
@@ -377,7 +398,7 @@
                 const percent = Math.floor((currentBytes * 100) / Math.max(1, file.size));
                 currentBar.value = percent;
                 speed.textContent = bytes(currentBytes / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
-                currentLabel.textContent = 'Uploading PAK chunk ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
+                currentLabel.textContent = 'Uploading chunk ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
                 setOverall(index - 1, total, percent / 4);
             }, 4);
             uploadedBytes += length;
@@ -385,32 +406,32 @@
 
         speed.textContent = '';
         currentBar.value = 100;
-        currentLabel.textContent = 'Finalizing durable PAK upload: ' + name;
+        currentLabel.textContent = 'Finalizing durable upload: ' + name;
         const completeData = new FormData();
         completeData.append('action', 'complete');
         completeData.append('upload_id', activeUploadId);
         const completed = await requestForm(chunkUrl, completeData);
         activeUploadId = '';
         if (!Array.isArray(completed.jobs) || !completed.jobs.length) {
-            throw new Error(responseError(completed, 'Completed PAK upload could not be queued.'));
+            throw new Error(responseError(completed, 'Completed upload could not be queued.'));
         }
         const queued = completed.jobs[0];
-        addLog({status: 'queued', file: name, message: 'Resumable PAK upload complete; background job #' + queued.job_id + ' queued.'});
+        addLog({status: 'queued', file: name, message: 'Resumable upload complete; background job #' + queued.job_id + ' queued.'});
         await ensureWorker();
         await waitForJob(parseInt(queued.job_id, 10), name, index, total);
     }
 
     async function processOne(file, index, total) {
         const name = shownName(file);
-        if (!isPak(file)) {
+        if (!shouldUseChunks(file)) {
             await standardUpload(file, index, total);
             return;
         }
         try {
-            await chunkedPakUpload(file, index, total);
+            await chunkedUpload(file, index, total);
         } catch (error) {
             if (!cancelRequested) {
-                addLog({status: 'failed', file: name, message: error.message || 'Resumable PAK upload failed.'});
+                addLog({status: 'failed', file: name, message: error.message || 'Resumable upload failed.'});
             }
         } finally {
             speed.textContent = '';
@@ -441,7 +462,7 @@
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: {'Content-Type': 'application/json', 'X-CSRF-Token': actionCsrf},
-                    body: JSON.stringify({action: 'cancel', job_id: activeJobId, reason: 'Cancelled from Profiled Upload.'}),
+                    body: JSON.stringify({action: 'cancel', job_id: activeJobId, reason: 'Cancelled from Profiled Upload.'})
                 });
             }
         } finally {
@@ -480,4 +501,4 @@
     });
 
     installStatusStyles();
-})();
+}());
