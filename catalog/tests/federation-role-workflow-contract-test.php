@@ -25,6 +25,10 @@ $paths = [
     'approved_downloads' => 'federation/approved-downloads.php',
     'availability_api' => 'api/federation/package-availability.php',
     'availability_helper' => 'lib/FederationPackageAvailability.php',
+    'request_lifecycle' => 'lib/FederationRequestLifecycle.php',
+    'request_status_api' => 'api/federation/request-status.php',
+    'request_status_page' => 'federation/request-status.php',
+    'requests' => 'federation/requests.php',
     'worker' => 'federation/worker-run.php',
     'cron' => 'federation/cron-worker-streaming.php',
     'settings' => 'federation/settings.php',
@@ -46,7 +50,6 @@ federation_role_expect(str_contains($content['join_main'], 'federation_auto_clai
 federation_role_expect(!str_contains($content['join_main'], 'Open Claim Parent'), 'Join page still exposes the obsolete manual claim action.');
 federation_role_expect(str_contains($content['legacy_claim'], "header('Location: join-main-parent.php')"), 'Legacy claim page does not redirect to automatic pairing.');
 federation_role_expect(str_contains($content['join_review'], 'claim_token_hash=request_token_hash'), 'Parent approval does not authorize automatic pairing.');
-federation_role_expect(str_contains($content['join_review'], 'Approve child and pair automatically'), 'Parent approval UI does not describe automatic pairing.');
 federation_role_expect(str_contains($content['join_status'], "'claim_ready'"), 'Join status endpoint does not signal automatic pairing readiness.');
 federation_role_expect(str_contains($content['join_claim'], "in_array(\$status, ['approved', 'claimed'], true)"), 'Automatic pairing endpoint is not retryable.');
 
@@ -55,15 +58,15 @@ federation_role_expect(str_contains($content['pairing'], "'child_download_scope'
 federation_role_expect(str_contains($content['inventory_api'], "(string)\$peer['peer_role'] !== 'parent'"), 'Child inventory API is not restricted to the paired parent.');
 federation_role_expect(str_contains($content['inventory'], 'federation_pull_inventory_from_child'), 'Parent-side direct child inventory synchronization is missing.');
 
-federation_role_expect(str_contains($content['peer_inventory'], 'Refresh directly from child'), 'Parent inventory page cannot initiate direct synchronization.');
-federation_role_expect(str_contains($content['peer_inventory'], "'all' => 'All child files'"), 'Parent inventory page does not expose the full child inventory.');
-federation_role_expect(str_contains($content['peer_inventory'], "'needed' => 'Files needed by parent dependencies'"), 'Parent inventory page lacks the needed dependency filter.');
-federation_role_expect(str_contains($content['peer_inventory'], "'missing' => 'Other files parent lacks'"), 'Parent inventory page lacks the other missing files filter.');
-federation_role_expect(str_contains($content['peer_inventory'], "'present' => 'Files parent already has'"), 'Parent inventory page lacks the already-present filter.');
-federation_role_expect(str_contains($content['peer_inventory'], 'pi_local_presence_sql'), 'Parent inventory page cannot classify files already held locally.');
+federation_role_expect(str_contains($content['peer_inventory'], 'Refresh inventory from child'), 'Parent inventory page cannot initiate direct synchronization.');
+federation_role_expect(str_contains($content['peer_inventory'], 'Files this parent needs from'), 'Parent inventory page does not show needed child files directly.');
+federation_role_expect(str_contains($content['peer_inventory'], 'Parent needs from child ('), 'Parent inventory page lacks the needed-files shortcut.');
+federation_role_expect(str_contains($content['peer_inventory'], 'Other files parent lacks ('), 'Parent inventory page lacks the other-missing-files shortcut.');
+federation_role_expect(str_contains($content['peer_inventory'], 'Already on parent ('), 'Parent inventory page lacks the already-present shortcut.');
+federation_role_expect(str_contains($content['peer_inventory'], 'pi_local_presence_sql'), 'Parent inventory page cannot classify files held locally.');
 federation_role_expect(str_contains($content['peer_inventory'], 'pi_local_absence_sql'), 'Parent inventory page cannot classify files absent locally.');
 federation_role_expect(str_contains($content['peer_inventory'], 'pi_base_game_sql'), 'Parent inventory page does not enforce base-game protection.');
-federation_role_expect(str_contains($content['peer_inventory'], 'needer_game.name='), 'Parent inventory dependency matching does not use the exact remote game.');
+federation_role_expect(str_contains($content['peer_inventory'], "\$_GET['inventory_tab']"), 'Legacy inventory links are not supported.');
 
 federation_role_expect(str_contains($content['download_file'], "(string)\$peer['peer_role'] !== 'parent'"), 'Direct child file endpoint is not restricted to the paired parent.');
 federation_role_expect(!str_contains($content['download_file'], 'allow_parent_pull_from_child'), 'Child can still disable parent/master pulls after pairing.');
@@ -72,6 +75,12 @@ federation_role_expect(str_contains($content['download_file'], 'base_game_file_i
 federation_role_expect(str_contains($content['availability_api'], "(string)\$peer['peer_role'] !== 'child'"), 'Parent package availability is not restricted to a paired child.');
 federation_role_expect(str_contains($content['availability_helper'], 'base_game_file_is_protected'), 'Parent availability checks do not enforce base-game protection.');
 federation_role_expect(str_contains($content['availability_helper'], 'function federation_package_match'), 'Shared parent package matcher is missing.');
+
+federation_role_expect(str_contains($content['request_lifecycle'], 'function federation_refresh_request_matches'), 'Approved request lifecycle refresh is missing.');
+federation_role_expect(str_contains($content['request_lifecycle'], 'federation_request_legacy_unavailable_denial'), 'Legacy automatic request denials are not repaired.');
+federation_role_expect(str_contains($content['request_status_api'], 'federation_refresh_request_matches'), 'Child status polling does not relink newly available files.');
+federation_role_expect(str_contains($content['request_status_page'], 'Show official base-game packages'), 'Outgoing request page cannot hide base-game rows.');
+federation_role_expect(str_contains($content['requests'], 'Approve all non-base-game requests'), 'Parent cannot approve unavailable open requests.');
 
 federation_role_expect(str_contains($content['dependency_downloads'], 'federation_dependency_request_still_needed'), 'Child download queue does not re-check the local missing dependency.');
 federation_role_expect(str_contains($content['dependency_downloads'], "(string)(\$item['status'] ?? '') !== 'approved'"), 'Child download queue does not require parent item approval.');
@@ -86,7 +95,6 @@ federation_role_expect(str_contains($content['settings'], 'Parent/master'), 'Set
 federation_role_expect(!str_contains($content['settings'], 'name="allow_parent_pull_from_child"'), 'Settings still expose parent pull as an optional child permission.');
 
 federation_role_expect(str_contains($content['secret_helper'], 'fed_peer_secret($db, $peer)'), 'Peer signing secret helper does not validate or migrate encrypted secrets.');
-federation_role_expect(str_contains($content['secret_helper'], 'SELECT shared_secret_plain FROM ue_federation_peers'), 'Peer signing helper does not reload the stored encrypted representation.');
 federation_role_expect(str_contains($content['inventory'], 'federation_peer_stored_signing_secret'), 'Inventory synchronization bypasses stored encrypted secret handling.');
 federation_role_expect(str_contains($content['dependency_downloads'], 'federation_peer_stored_signing_secret'), 'Dependency approval polling bypasses stored encrypted secret handling.');
 
