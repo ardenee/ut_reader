@@ -66,7 +66,7 @@ function profiled_upload_enqueue(PDO $db, array $config): array
         $displayName = profiled_upload_relative_path((int)$index, $originalName);
         $errorCode = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
         if ($errorCode !== UPLOAD_ERR_OK) {
-            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'PHP upload error ' . $errorCode . '. Large PAK files should use the resumable chunked uploader.'];
+            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'PHP upload error ' . $errorCode . '. Large files should use the resumable chunked uploader.'];
             continue;
         }
         if (!is_string($temporaryPath) || !is_file($temporaryPath)) {
@@ -102,7 +102,9 @@ function profiled_upload_enqueue(PDO $db, array $config): array
         $messages[] = [
             'status' => 'queued',
             'file' => $displayName,
-            'message' => 'Upload staged for background import as job #' . $queued['job_id'] . '.',
+            'message' => !empty($queued['deduplicated'])
+                ? 'The same file is already queued or running as job #' . $queued['job_id'] . '.'
+                : 'Upload staged for background import as job #' . $queued['job_id'] . '.',
             'file_size_text' => catalog_bytes($queued['size']),
             'job_id' => $queued['job_id'],
         ];
@@ -175,7 +177,7 @@ try {
     unset($_SESSION['profiled_upload_flash']);
     catalog_page_header(
         'Upload Files',
-        'Uploads are copied into durable controlled staging, queued, and automatically started by a detached CLI worker. Large PAK files use resumable chunks and continue from chunks already received when the file is selected again.',
+        'Uploads are copied into durable controlled staging, queued, and automatically started by a detached CLI worker. Large files use resumable chunks and continue from chunks already received when the file is selected again.',
         [
             'Background Jobs' => 'background-jobs.php',
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
@@ -199,10 +201,11 @@ try {
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
     echo '<p><button id="profiled-upload-button" type="submit">Upload and import</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current upload/job</button></p>';
-    echo '<p class="muted">Normal package files use one durable upload request. UE4/UE5 .pak files use resumable ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' chunks, so Apache and PHP never receive the whole container in one request. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
+    echo '<p class="muted">Normal package files larger than ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' also use resumable chunks. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
     echo '<div id="profiled-upload-progress" class="upload-progress" hidden '
         . 'data-queue="' . catalog_h((string)($config['queue']['name'] ?? 'catalog')) . '" '
         . 'data-status-url="api/v1/job-status.php" '
+        . 'data-worker-status-url="api/v1/job-worker-status.php" '
         . 'data-action-url="api/v1/job-action.php" '
         . 'data-run-url="api/v1/job-run.php" '
         . 'data-chunk-url="api/v1/profiled-upload-chunk.php" '
@@ -229,7 +232,10 @@ try {
     echo '</table></div>';
     $uploadClient = __DIR__ . '/assets/profiled-upload-jobs.js';
     $uploadClientVersion = is_file($uploadClient) ? (string)filemtime($uploadClient) : '1';
+    $diagnosticClient = __DIR__ . '/assets/profiled-upload-diagnostics.js';
+    $diagnosticClientVersion = is_file($diagnosticClient) ? (string)filemtime($diagnosticClient) : '1';
     echo '<script src="assets/profiled-upload-jobs.js?v=' . catalog_h($uploadClientVersion) . '"></script>';
+    echo '<script src="assets/profiled-upload-diagnostics.js?v=' . catalog_h($diagnosticClientVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB profiled upload][' . catalog_request_id() . '] ' . $error->getMessage());
