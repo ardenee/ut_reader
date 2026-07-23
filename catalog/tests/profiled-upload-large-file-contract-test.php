@@ -17,9 +17,15 @@ $paths = [
     'stream' => 'src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php',
     'factory' => 'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'queue' => 'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
+    'detached' => 'src/Infrastructure/Jobs/CatalogDetachedWorker.php',
+    'detached_script' => 'bin/catalog-worker-detached.php',
     'stopper' => 'src/Infrastructure/Jobs/CatalogDetachedWorkerStop.php',
     'job_action' => 'api/v1/job-action.php',
+    'job_run' => 'api/v1/job-run.php',
     'worker_action' => 'api/v1/job-worker-action.php',
+    'worker_status' => 'api/v1/job-worker-status.php',
+    'upload_page' => 'profiled-upload.php',
+    'upload_diagnostics' => 'assets/profiled-upload-diagnostics.js',
 ];
 
 $content = [];
@@ -44,7 +50,8 @@ profiled_large_upload_expect(
 );
 profiled_large_upload_expect(
     str_contains($content['worker'], "'stage' => 'worker_start'")
-        && str_contains($content['worker'], '$this->eventAppender'),
+        && str_contains($content['worker'], 'heartbeat_start')
+        && str_contains($content['worker'], 'handler_start'),
     'A claimed job still appears as an unexplained zero-percent running row.'
 );
 profiled_large_upload_expect(
@@ -89,6 +96,20 @@ profiled_large_upload_expect(
     'Profiled upload queue does not report an existing active job.'
 );
 profiled_large_upload_expect(
+    str_contains($content['detached'], 'codeVersion')
+        && str_contains($content['detached'], "'stale_code'"),
+    'Detached workers cannot be identified as stale after a code update.'
+);
+profiled_large_upload_expect(
+    str_contains($content['detached_script'], "'code_version' => \$codeVersion"),
+    'Detached worker state does not record the loaded code revision.'
+);
+profiled_large_upload_expect(
+    str_contains($content['stopper'], 'restartStaleQueue')
+        && str_contains($content['stopper'], 'requeueWorkerJobs'),
+    'A stale detached worker cannot be replaced without discarding its active import.'
+);
+profiled_large_upload_expect(
     str_contains($content['stopper'], 'terminateExpectedWorker'),
     'Detached worker stop cannot terminate an unresponsive import.'
 );
@@ -101,8 +122,27 @@ profiled_large_upload_expect(
     'Per-job Stop does not use detached worker termination.'
 );
 profiled_large_upload_expect(
+    str_contains($content['job_run'], 'restartStaleQueue')
+        && str_contains($content['job_run'], 'stale_worker_restart_failed'),
+    'Starting queued work does not replace a worker that loaded old PHP code.'
+);
+profiled_large_upload_expect(
     str_contains($content['worker_action'], 'CatalogDetachedWorkerStop'),
     'Stop worker does not use detached worker termination.'
+);
+profiled_large_upload_expect(
+    str_contains($content['worker_status'], 'status($queueName, true)'),
+    'Worker diagnostics do not expose the detached log tail.'
+);
+profiled_large_upload_expect(
+    str_contains($content['upload_page'], 'profiled-upload-diagnostics.js')
+        && str_contains($content['upload_page'], 'data-worker-status-url'),
+    'Profiled Upload does not load live worker diagnostics.'
+);
+profiled_large_upload_expect(
+    str_contains($content['upload_diagnostics'], 'STALE CODE')
+        && str_contains($content['upload_diagnostics'], 'Worker log:'),
+    'Profiled Upload diagnostics do not explain stale or frozen workers.'
 );
 
 echo "Large profiled upload contract tests passed.\n";
