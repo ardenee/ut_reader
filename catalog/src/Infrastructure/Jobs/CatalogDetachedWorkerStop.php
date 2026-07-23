@@ -42,8 +42,6 @@ final class CatalogDetachedWorkerStop
         $stateWorkerId = trim((string)($state['worker_id'] ?? ''));
 
         if (empty($worker['active'])) {
-            // A detached worker that is no longer alive cannot observe cooperative
-            // cancellation, so release only its stale job lease immediately.
             if (str_starts_with($jobWorkerId, 'detached:')) {
                 $this->forceCancelJob($jobId, $requestedBy, $reason);
                 return ['status' => 'cancelled', 'terminated' => false, 'worker_inactive' => true];
@@ -51,7 +49,6 @@ final class CatalogDetachedWorkerStop
             return ['status' => 'cancel_requested', 'terminated' => false, 'worker_inactive' => true];
         }
 
-        // Never terminate an external worker merely because it owns a queue row.
         if ($jobWorkerId === '' || $stateWorkerId === '' || !hash_equals($stateWorkerId, $jobWorkerId)) {
             return ['status' => 'cancel_requested', 'terminated' => false, 'worker_inactive' => false];
         }
@@ -121,13 +118,7 @@ final class CatalogDetachedWorkerStop
         ];
     }
 
-    /**
-     * Stop a detached worker that loaded an older code revision, then put its
-     * non-cancelled running jobs back into the queue. This is deployment recovery,
-     * not an operator cancellation, so the current import must not be discarded.
-     *
-     * @return array<string,mixed>
-     */
+    /** @return array<string,mixed> */
     public function restartStaleQueue(string $queueName): array
     {
         $launcher = new CatalogDetachedWorker($this->config);
@@ -334,20 +325,6 @@ final class CatalogDetachedWorkerStop
             if (!function_exists('exec')) {
                 return false;
             }
-
-            // Prefer the command line so a recycled PID belonging to another PHP
-            // process is never killed merely because tasklist reports php.exe.
-            $output = [];
-            $code = 1;
-            $command = 'powershell.exe -NoProfile -NonInteractive -Command "'
-                . '$p=Get-CimInstance Win32_Process -Filter ''ProcessId=' . $pid . ''' -ErrorAction SilentlyContinue; '
-                . 'if($p){$p.CommandLine}" 2>NUL';
-            @exec($command, $output, $code);
-            $commandLine = strtolower(implode(' ', $output));
-            if ($code === 0 && $commandLine !== '') {
-                return str_contains($commandLine, 'catalog-worker-detached.php');
-            }
-
             $output = [];
             $code = 1;
             @exec('tasklist /FI "PID eq ' . $pid . '" /FO CSV /NH 2>NUL', $output, $code);
