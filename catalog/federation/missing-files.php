@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
 try {
     $config = catalog_config();
@@ -31,40 +32,41 @@ try {
     catalog_head('Federation Missing Files');
     catalog_page_header(
         'Missing Files',
-        'One place to resolve files this server needs. The next step depends on whether this server is operating as a child or a parent.',
+        'One place to resolve files this server needs. Missing dependency totals include base-game packages because dependency completion is the exception to the ordinary federation policy.',
         catalog_federation_links() + ['Requests' => 'request-center.php', 'Queue' => 'queue.php']
     );
 
     echo '<div class="grid">';
-    catalog_stat_card('Local missing packages', $missingPackages, 'Distinct missing dependency packages across verified files.', $missingPackages > 0 ? 'attention' : '');
+    catalog_stat_card('Local missing packages', $missingPackages, 'Distinct missing dependency packages across verified files, including base-game dependency exceptions.', $missingPackages > 0 ? 'attention' : '');
     catalog_stat_card('Active parents', $activeParents);
     catalog_stat_card('Active children', $activeChildren);
     catalog_stat_card('Current role', ucfirst($role));
     echo '</div>';
+    echo '<div class="card"><p>' . catalog_h(federation_base_game_policy_label($db)) . '</p></div>';
 
     if ($role === 'child') {
         echo '<div class="card"><h2>Child workflow</h2>';
-        echo '<p>This server needs files from a parent. Select the missing packages, submit one outgoing request, then monitor the parent decision and approved downloads.</p>';
+        echo '<p>This server needs files from a parent. Select the missing dependency packages, including any base-game dependency exceptions, submit one outgoing request, then monitor the parent decision and approved downloads.</p>';
         echo '<div class="grid">';
         catalog_tool_card('1. Select missing files', 'request-generate.php', 'Review local missing dependency packages and request selected files from an active parent.', $missingPackages > 0 ? (string)$missingPackages : '');
         catalog_tool_card('2. Track outgoing request', 'request-status.php', 'See whether the parent can supply each requested package and whether it was approved.');
-        catalog_tool_card('3. Approved downloads', 'approved-downloads.php', 'Review files approved by the parent and queued for download.');
+        catalog_tool_card('3. Approved downloads', 'approved-downloads.php', 'Review files approved by the parent and queued for dependency download.');
         catalog_tool_card('4. Transfer queue', 'queue.php', 'Monitor download and import progress.');
         echo '</div></div>';
 
-        echo '<div class="card"><h2>Children</h2><p class="muted">Child management is disabled while this site is in Child mode. A child connects to parent sites; it does not manage child peers.</p></div>';
+        echo '<div class="card"><h2>Children</h2><p class="muted">Child management is disabled while this site is in Child mode. A child connects to a parent; it does not manage child peers.</p></div>';
     } elseif ($role === 'parent') {
         echo '<div class="card"><h2>Parent workflow</h2>';
-        echo '<p>This server may inspect child inventories and pull files it does not have. Parent pulls do not require child approval. Incoming child requests are a separate workflow where this parent decides what it can provide.</p>';
+        echo '<p>This server may inspect child inventories and pull files it does not have. Parent pulls do not require child approval. Ordinary base-game rows follow the parent setting; files that satisfy missing dependencies remain eligible.</p>';
         echo '<div class="grid">';
-        catalog_tool_card('1. Review child inventories', 'peer-inventory.php?filter=needed&inventory_tab=parent', 'Show child files that satisfy missing dependencies on this parent.', $activeChildren > 0 ? (string)$activeChildren : '');
-        catalog_tool_card('2. Queue parent pulls', 'parent-pull.php', 'Download selected non-protected files from children.');
-        catalog_tool_card('Incoming child requests', 'requests.php', 'Approve files that this parent can supply to a child.');
+        catalog_tool_card('1. Review child inventories', 'peer-inventory.php?filter=parent_dependency', 'Show child files that satisfy missing dependencies on this parent, including base-game dependency exceptions.', $activeChildren > 0 ? (string)$activeChildren : '');
+        catalog_tool_card('2. Queue parent pulls', 'parent-pull.php', 'Download selected eligible files from children under the current parent policy.');
+        catalog_tool_card('Incoming child requests', 'requests.php', 'Approve dependency files this parent can supply to a child.');
         catalog_tool_card('Transfer queue', 'queue.php', 'Monitor parent pulls, child downloads, and imports.');
         echo '</div></div>';
 
         if ($activeChildren === 0) {
-            echo CatalogUi::alert('warning', 'No active child connections are configured. Approve a child join request or add a recovery child connection first.', 'No children available');
+            echo CatalogUi::alert('warning', 'No active child connections are configured. Approve a child join request first.', 'No children available');
         }
     } else {
         echo '<div class="card"><h2>Federation is not active</h2><p>Select Parent or Child in Federation Settings before using missing-file workflows.</p><p><a class="button" href="settings.php">Open Federation Settings</a></p></div>';
