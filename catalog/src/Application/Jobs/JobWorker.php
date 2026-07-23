@@ -32,6 +32,7 @@ final class JobWorker
             return ['status' => 'idle'];
         }
 
+        $this->diagnostic('claimed', $job, 'Worker claimed the job row.');
         $handler = $this->findHandler($job->type);
         if ($handler === null) {
             $exception = new \RuntimeException('No job handler registered for type: ' . $job->type);
@@ -40,6 +41,7 @@ final class JobWorker
 
         try {
             $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds, $this->eventAppender);
+            $this->diagnostic('heartbeat_start', $job, 'Writing the initial worker heartbeat.');
             $context->heartbeat([
                 'stage' => 'worker_start',
                 'done' => 1,
@@ -48,18 +50,14 @@ final class JobWorker
                 'attempt' => $job->attempt,
                 'message' => 'Worker claimed job #' . $job->id . '; starting ' . $job->type . '.',
             ], true);
+            $this->diagnostic('handler_start', $job, 'Initial heartbeat stored; entering the job handler.');
             $result = $handler->handle($job, $context);
 
-            /*
-             * Cancellation is cooperative and is observed at handler checkpoints.
-             * Once a handler returns successfully, its side effects may already be
-             * committed or its artifact atomically published. A cancellation that
-             * arrives after that boundary is too late and must not relabel completed
-             * work as cancelled.
-             */
             $this->queue->complete($job, $result);
+            $this->diagnostic('completed', $job, 'Handler returned and the job was completed.');
             return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
         } catch (JobCancellationRequested $exception) {
+            $this->diagnostic('cancelled', $job, $exception->getMessage());
             try {
                 $this->queue->cancelClaimed($job, $exception->getMessage());
             } catch (\Throwable $leaseError) {
@@ -67,6 +65,12 @@ final class JobWorker
             }
             return $this->failureResult('cancelled', $job, $exception);
         } catch (\Throwable $exception) {
+            $this->diagnostic(
+                'exception',
+                $job,
+                get_class($exception) . ': ' . $exception->getMessage() . ' at '
+                    . str_replace('\\', '/', $exception->getFile()) . ':' . $exception->getLine()
+            );
             $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
             return $this->recordFailure($job, $exception, $delay);
         }
@@ -87,10 +91,6 @@ final class JobWorker
     }
 
     /**
-     * The worker is a trusted CLI/operator boundary. Include the source location
-     * so database and handler failures can be diagnosed without enabling verbose
-     * public HTTP errors or leaking stack traces through the web application.
-     *
      * @return array{status:string,job_id:int,type:string,error:string,error_file:string,error_line:int}
      */
     private function failureResult(
@@ -117,5 +117,29 @@ final class JobWorker
         }
 
         return null;
+    }
+
+    private function diagnostic(
+        string $stage,
+        \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job,
+        string $message
+    ): void {
+        $payload = [
+            'time' => gmdate(DATE_ATOM),
+            'worker_id' => $this->workerId,
+            'queue' => $this->queueName,
+            'job_id' => $job->id,
+            'job_type' => $job->type,
+            'stage' => $stage,
+            'message' => $message,
+        ];
+        try {
+            error_log('[UnrealDB worker] ' . json_encode(
+                $payload,
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+            ));
+        } catch (\Throwable) {
+            error_log('[UnrealDB worker] job #' . $job->id . ' ' . $stage . ': ' . $message);
+        }
     }
 }
