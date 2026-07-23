@@ -73,6 +73,7 @@ function catalog_admin_navigation_groups(string $root): array
         'Federation' => [
             'Overview' => $root . 'federation/admin.php',
             'Settings' => $root . 'federation/settings.php',
+            'Connections' => $root . 'federation/peers.php',
             'Parents' => $root . 'federation/peers.php?role=parent',
             'Join a Parent' => $root . 'federation/join-main-parent.php',
             'Children' => $root . 'federation/peers.php?role=child',
