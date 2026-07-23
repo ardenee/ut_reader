@@ -4,58 +4,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
 
 /** @return array<string,mixed>|null */
 function request_submit_package_match(PDO $db, string $package, string $gameName, string $engineKey): ?array
 {
-    if ($engineKey !== '') {
-        $match = catalog_one(
-            $db,
-            'SELECT f.*, g.name match_game_name, COALESCE(p.engine_key,"") match_engine_key
-             FROM ue_files f
-             JOIN ue_games g ON g.id=f.game_id
-             LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
-             WHERE f.package_name=? AND f.scan_status="verified" AND UPPER(COALESCE(p.engine_key,""))=UPPER(?)
-             ORDER BY f.id LIMIT 1',
-            [$package, $engineKey]
-        );
-        if ($match) {
-            $match['federation_match_method'] = 'package name and engine profile';
-            return $match;
-        }
-    }
-
-    if ($gameName !== '') {
-        $match = catalog_one(
-            $db,
-            'SELECT f.*, g.name match_game_name, COALESCE(p.engine_key,"") match_engine_key
-             FROM ue_files f
-             JOIN ue_games g ON g.id=f.game_id
-             LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
-             WHERE f.package_name=? AND f.scan_status="verified" AND g.name=?
-             ORDER BY f.id LIMIT 1',
-            [$package, $gameName]
-        );
-        if ($match) {
-            $match['federation_match_method'] = 'package name and game';
-            return $match;
-        }
-    }
-
-    $match = catalog_one(
-        $db,
-        'SELECT f.*, g.name match_game_name, COALESCE(p.engine_key,"") match_engine_key
-         FROM ue_files f
-         JOIN ue_games g ON g.id=f.game_id
-         LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
-         WHERE f.package_name=? AND f.scan_status="verified"
-         ORDER BY f.id LIMIT 1',
-        [$package]
-    );
-    if ($match) {
-        $match['federation_match_method'] = 'package name';
-    }
-    return $match;
+    return federation_package_match($db, $package, $gameName, $engineKey);
 }
 
 /**
@@ -177,36 +131,29 @@ try {
             $requestedEngineKey = trim((string)$item['engine_key']);
             $useCount = max(0, (int)$item['use_count']);
             $objectCount = max(1, (int)$item['object_count']);
-            $localFile = null;
+
+            $availability = federation_package_availability($db, $item);
+            $localFile = !empty($availability['available']) ? (int)($availability['file_id'] ?? 0) : null;
             $peerFile = null;
             $status = 'requested';
-            $msg = '';
-            $match = null;
 
-            if ($wantedGuid) {
-                $match = catalog_one($db, 'SELECT * FROM ue_files WHERE package_guid=? AND scan_status="verified" LIMIT 1', [$wantedGuid]);
-                if ($match) {
-                    $localFile = (int)$match['id'];
-                    $msg = 'Available on this parent; matched by GUID.';
-                }
-            }
-            if (!$localFile && $requiredPackage !== '') {
-                $match = request_submit_package_match($db, $requiredPackage, $requestedGameName, $requestedEngineKey);
-                if ($match) {
-                    $localFile = (int)$match['id'];
-                    $msg = 'Available on this parent; matched by ' . (string)$match['federation_match_method'];
-                    if (!empty($match['match_game_name'])) {
-                        $msg .= ' (' . (string)$match['match_game_name'] . ')';
-                    }
-                    $msg .= '.';
-                }
-            }
-            if ($match && base_game_file_is_protected($db, $match)) {
-                $status = 'denied';
-                $msg = base_game_block_message($match);
-            }
-            if (!$localFile) {
+            if (empty($availability['available'])) {
                 $msg = 'Not found in this parent\'s catalog. This package cannot be approved until the parent imports a matching file.';
+            } elseif (!empty($availability['is_base_game'])) {
+                $status = 'denied';
+                $match = $localFile
+                    ? catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$localFile])
+                    : [
+                        'package_name' => (string)($availability['package_name'] ?? $requiredPackage),
+                        'original_name' => (string)($availability['original_name'] ?? $requiredPackage),
+                    ];
+                $msg = base_game_block_message($match ?: null);
+            } else {
+                $msg = 'Available on this parent; matched by ' . (string)($availability['match_method'] ?? 'package identity');
+                if (!empty($availability['game_name'])) {
+                    $msg .= ' (' . (string)$availability['game_name'] . ')';
+                }
+                $msg .= '.';
             }
 
             $context = [];
