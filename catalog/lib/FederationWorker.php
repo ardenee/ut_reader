@@ -7,6 +7,7 @@ require_once __DIR__ . '/FederationTransferAuth.php';
 require_once __DIR__ . '/TrustedHttpSourceClient.php';
 require_once __DIR__ . '/CatalogImport.php';
 require_once __DIR__ . '/FederationInventory.php';
+require_once __DIR__ . '/FederationBaseGamePolicy.php';
 
 function federation_worker_incoming_dir(array $config): string
 {
@@ -124,10 +125,53 @@ function federation_worker_progress_callback(PDO $db, int $jobId): callable
     };
 }
 
-function federation_worker_download_info(array $job): array
+function federation_worker_parent_pull_dependency_exception(PDO $db, array $job): bool
+{
+    $peerFile = catalog_one(
+        $db,
+        'SELECT pf.* FROM ue_federation_peer_files pf
+         WHERE pf.peer_id=? AND pf.remote_file_id=? ORDER BY pf.id DESC LIMIT 1',
+        [(int)$job['peer_id'], (int)$job['remote_file_id']]
+    );
+    if (!$peerFile || empty($peerFile['is_base_game'])) {
+        return false;
+    }
+
+    $args = [(string)$peerFile['package_name']];
+    $gameSql = '';
+    $remoteGame = trim((string)($peerFile['remote_game_name'] ?? ''));
+    if ($remoteGame !== '') {
+        $gameSql = ' AND g.name=?';
+        $args[] = $remoteGame;
+    } elseif (!empty($peerFile['game_id'])) {
+        $gameSql = ' AND f.game_id=?';
+        $args[] = (int)$peerFile['game_id'];
+    }
+
+    return catalog_one(
+        $db,
+        'SELECT d.id
+         FROM ue_dependencies d
+         JOIN ue_files f ON f.id=d.file_id AND f.scan_status="verified"
+         JOIN ue_games g ON g.id=f.game_id
+         WHERE d.status="missing" AND LOWER(d.required_package)=LOWER(?)' . $gameSql . '
+         LIMIT 1',
+        $args
+    ) !== null;
+}
+
+function federation_worker_download_info(PDO $db, array $job): array
 {
     if ((string)$job['direction'] === 'parent_pull_from_child') {
-        return [rtrim((string)$job['site_url'], '/') . '/api/federation/download-file.php', ['remote_file_id' => (int)$job['remote_file_id']], 'PARENT_PULL_DOWNLOADED'];
+        return [
+            rtrim((string)$job['site_url'], '/') . '/api/federation/download-file.php',
+            [
+                'remote_file_id' => (int)$job['remote_file_id'],
+                'ignore_base_game_files' => federation_ignore_base_game_files($db),
+                'dependency_exception' => federation_worker_parent_pull_dependency_exception($db, $job),
+            ],
+            'PARENT_PULL_DOWNLOADED',
+        ];
     }
     if ((string)$job['direction'] === 'download_from_parent') {
         return [rtrim((string)$job['site_url'], '/') . '/api/federation/download-approved-file.php', ['request_item_id' => (int)$job['remote_request_item_id']], 'CHILD_APPROVED_DOWNLOADED'];
@@ -138,7 +182,7 @@ function federation_worker_download_info(array $job): array
 function federation_worker_run_one_download(PDO $db, array $config, array $job): array
 {
     $jobId = (int)$job['id'];
-    [$url, $payload, $logEvent] = federation_worker_download_info($job);
+    [$url, $payload, $logEvent] = federation_worker_download_info($db, $job);
     $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     if ($body === false) {
         throw new RuntimeException('Could not encode federation payload.');
