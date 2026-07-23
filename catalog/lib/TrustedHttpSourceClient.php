@@ -132,7 +132,7 @@ final class TrustedHttpSourceClient
                 return strlen($chunk);
             },
         ]);
-        self::finish($curl, 'federation POST', [200, 201, 202]);
+        self::finish($curl, 'federation POST', [200, 201, 202], $response);
         return self::decodeJson($response, 'Federation POST');
     }
 
@@ -217,7 +217,7 @@ final class TrustedHttpSourceClient
             });
         }
         try {
-            self::finish($curl, 'federation upload', [200, 201, 202]);
+            self::finish($curl, 'federation upload', [200, 201, 202], $response);
         } finally {
             fclose($in);
         }
@@ -293,18 +293,49 @@ final class TrustedHttpSourceClient
         return $curl;
     }
 
-    private static function finish($curl, string $label, array $allowed = [200]): void
+    private static function finish($curl, string $label, array $allowed = [200], ?string &$response = null): void
     {
         try {
             $ok = curl_exec($curl);
             $status = (int)curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
             $error = curl_error($curl);
             if ($ok === false || !in_array($status, $allowed, true)) {
-                throw new RuntimeException(ucfirst($label) . ' request failed' . ($status ? ' with HTTP ' . $status : '') . ($error !== '' ? ': ' . $error : '.'));
+                $detail = self::responseErrorDetail((string)($response ?? ''));
+                throw new RuntimeException(
+                    ucfirst($label) . ' request failed'
+                    . ($status ? ' with HTTP ' . $status : '')
+                    . ($detail !== '' ? ': ' . $detail : ($error !== '' ? ': ' . $error : '.'))
+                );
             }
         } finally {
             curl_close($curl);
         }
+    }
+
+    private static function responseErrorDetail(string $response): string
+    {
+        $response = trim($response);
+        if ($response === '') {
+            return '';
+        }
+
+        try {
+            $decoded = json_decode($response, true, 64, JSON_THROW_ON_ERROR);
+            if (is_array($decoded)) {
+                $message = trim((string)($decoded['error'] ?? $decoded['message'] ?? ''));
+                $reference = trim((string)($decoded['reference'] ?? ''));
+                if ($reference !== '') {
+                    $message .= ($message !== '' ? ' ' : '') . 'Reference: ' . $reference;
+                }
+                if ($message !== '') {
+                    return mb_substr(preg_replace('/\s+/', ' ', $message) ?? $message, 0, 1000, 'UTF-8');
+                }
+            }
+        } catch (Throwable) {
+            // Fall through to a bounded plain-text response.
+        }
+
+        return mb_substr(preg_replace('/\s+/', ' ', $response) ?? $response, 0, 1000, 'UTF-8');
     }
 
     /** @return array<string,mixed> */
