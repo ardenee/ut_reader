@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -28,8 +29,29 @@ try {
     }
 
     $launcher = new CatalogDetachedWorker($application->config);
+    $before = $launcher->status($queueName, true);
+    $restart = null;
+    if (!empty($before['active']) && !empty($before['stale_code'])) {
+        $restart = (new CatalogDetachedWorkerStop($application->db, $application->config))
+            ->restartStaleQueue($queueName);
+        if (empty($restart['restarted'])) {
+            JsonResponse::error(
+                'stale_worker_restart_failed',
+                'The detached worker is running old code and could not be restarted automatically. Use Stop worker, then Start queued.',
+                409,
+                ['worker' => $before, 'restart' => $restart]
+            );
+        }
+    }
+
     $result = $launcher->start($queueName, $maxJobs);
-    JsonResponse::send(['data' => ['queue' => $queueName, 'mode' => $mode] + $result], 202);
+    JsonResponse::send([
+        'data' => [
+            'queue' => $queueName,
+            'mode' => $mode,
+            'stale_restart' => $restart,
+        ] + $result,
+    ], 202);
 } catch (InvalidArgumentException $exception) {
     JsonResponse::error('invalid_worker_request', $exception->getMessage(), 400);
 } catch (Throwable $exception) {
