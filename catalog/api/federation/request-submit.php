@@ -58,6 +58,70 @@ function request_submit_package_match(PDO $db, string $package, string $gameName
     return $match;
 }
 
+/**
+ * Older children submitted one row per missing object while newer children submit
+ * one row per missing package. Normalize both formats to one request item per
+ * game/engine/package so the parent view always matches the child package list.
+ *
+ * @param array<int,mixed> $items
+ * @return list<array<string,mixed>>
+ */
+function request_submit_normalize_items(array $items): array
+{
+    $groups = [];
+
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+
+        $requiredPackage = trim((string)($item['required_package'] ?? ''));
+        $requiredPath = trim((string)($item['required_object_path'] ?? ''));
+        if ($requiredPackage === '' && $requiredPath === '') {
+            continue;
+        }
+
+        $gameName = trim((string)($item['game_name'] ?? ''));
+        $engineKey = trim((string)($item['engine_key'] ?? ''));
+        $identity = $requiredPackage !== '' ? $requiredPackage : $requiredPath;
+        $key = strtolower($gameName) . "\0" . strtolower($engineKey) . "\0" . strtolower($identity);
+
+        if (!isset($groups[$key])) {
+            $groups[$key] = [
+                'required_package' => $requiredPackage,
+                'required_object_path' => $requiredPath,
+                'wanted_guid' => trim((string)($item['wanted_guid'] ?? '')),
+                'wanted_md5' => strtolower(trim((string)($item['wanted_md5'] ?? ''))),
+                'game_name' => $gameName,
+                'engine_key' => $engineKey,
+                'use_count' => max(0, (int)($item['use_count'] ?? 0)),
+                'object_count' => max(0, (int)($item['object_count'] ?? 0)),
+                '_object_paths' => [],
+            ];
+        } else {
+            $groups[$key]['use_count'] = max((int)$groups[$key]['use_count'], max(0, (int)($item['use_count'] ?? 0)));
+            $groups[$key]['object_count'] = max((int)$groups[$key]['object_count'], max(0, (int)($item['object_count'] ?? 0)));
+            if ((string)$groups[$key]['required_object_path'] === '' && $requiredPath !== '') {
+                $groups[$key]['required_object_path'] = $requiredPath;
+            }
+        }
+
+        if ($requiredPath !== '') {
+            $groups[$key]['_object_paths'][strtolower($requiredPath)] = true;
+        }
+    }
+
+    $normalized = [];
+    foreach ($groups as $group) {
+        $distinctPaths = count($group['_object_paths']);
+        $group['object_count'] = max(1, (int)$group['object_count'], $distinctPaths);
+        unset($group['_object_paths']);
+        $normalized[] = $group;
+    }
+
+    return $normalized;
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -74,16 +138,24 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Invalid JSON payload'], 400);
     }
 
-    $items = $payload['items'] ?? [];
-    if (!is_array($items) || !$items) {
+    $rawItems = $payload['items'] ?? [];
+    if (!is_array($rawItems) || !$rawItems) {
         fed_json_response(['ok' => false, 'error' => 'Request has no items'], 400);
     }
+    if (count($rawItems) > 5000) {
+        fed_json_response(['ok' => false, 'error' => 'A dependency request contains too many raw rows.'], 413);
+    }
+
+    $items = request_submit_normalize_items($rawItems);
+    if (!$items) {
+        fed_json_response(['ok' => false, 'error' => 'Request has no valid package items'], 400);
+    }
     if (count($items) > 950) {
-        fed_json_response(['ok' => false, 'error' => 'A dependency request may contain no more than 950 packages.'], 413);
+        fed_json_response(['ok' => false, 'error' => 'A dependency request may contain no more than 950 distinct packages.'], 413);
     }
 
     $requestHash = hash('sha256', json_encode($items, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-    $title = trim((string)($payload['title'] ?? 'Missing dependency request'));
+    $title = trim((string)($payload['title'] ?? 'Missing file request'));
     $notes = trim((string)($payload['notes'] ?? ''));
 
     $db->beginTransaction();
@@ -97,20 +169,14 @@ try {
         $itemStmt = $db->prepare('INSERT INTO ue_federation_request_items(request_id,required_package,required_object_path,wanted_guid,wanted_md5,local_file_id,peer_file_id,status,status_message) VALUES(?,?,?,?,?,?,?,?,?)');
         $count = 0;
         foreach ($items as $item) {
-            if (!is_array($item)) {
-                continue;
-            }
-            $requiredPackage = trim((string)($item['required_package'] ?? ''));
-            $requiredPath = trim((string)($item['required_object_path'] ?? ''));
-            if ($requiredPackage === '' && $requiredPath === '') {
-                continue;
-            }
-
-            $wantedGuid = trim((string)($item['wanted_guid'] ?? '')) ?: null;
-            $wantedMd5 = strtolower(trim((string)($item['wanted_md5'] ?? ''))) ?: null;
-            $requestedGameName = trim((string)($item['game_name'] ?? ''));
-            $requestedEngineKey = trim((string)($item['engine_key'] ?? ''));
-            $useCount = max(0, (int)($item['use_count'] ?? 0));
+            $requiredPackage = trim((string)$item['required_package']);
+            $requiredPath = trim((string)$item['required_object_path']);
+            $wantedGuid = trim((string)$item['wanted_guid']) ?: null;
+            $wantedMd5 = strtolower(trim((string)$item['wanted_md5'])) ?: null;
+            $requestedGameName = trim((string)$item['game_name']);
+            $requestedEngineKey = trim((string)$item['engine_key']);
+            $useCount = max(0, (int)$item['use_count']);
+            $objectCount = max(1, (int)$item['object_count']);
             $localFile = null;
             $peerFile = null;
             $status = 'requested';
@@ -121,14 +187,14 @@ try {
                 $match = catalog_one($db, 'SELECT * FROM ue_files WHERE package_guid=? AND scan_status="verified" LIMIT 1', [$wantedGuid]);
                 if ($match) {
                     $localFile = (int)$match['id'];
-                    $msg = 'Matched by GUID on parent.';
+                    $msg = 'Available on this parent; matched by GUID.';
                 }
             }
             if (!$localFile && $requiredPackage !== '') {
                 $match = request_submit_package_match($db, $requiredPackage, $requestedGameName, $requestedEngineKey);
                 if ($match) {
                     $localFile = (int)$match['id'];
-                    $msg = 'Matched by ' . (string)$match['federation_match_method'] . ' on parent';
+                    $msg = 'Available on this parent; matched by ' . (string)$match['federation_match_method'];
                     if (!empty($match['match_game_name'])) {
                         $msg .= ' (' . (string)$match['match_game_name'] . ')';
                     }
@@ -140,7 +206,7 @@ try {
                 $msg = base_game_block_message($match);
             }
             if (!$localFile) {
-                $msg = 'Parent does not currently have a matching file.';
+                $msg = 'Not found in this parent\'s catalog. This package cannot be approved until the parent imports a matching file.';
             }
 
             $context = [];
@@ -150,12 +216,11 @@ try {
             if ($requestedEngineKey !== '') {
                 $context[] = 'engine ' . $requestedEngineKey;
             }
+            $context[] = $objectCount . ' missing object(s)';
             if ($useCount > 0) {
                 $context[] = 'needed by ' . $useCount . ' child file(s)';
             }
-            if ($context) {
-                $msg .= ' Request context: ' . implode(', ', $context) . '.';
-            }
+            $msg .= ' Request context: ' . implode(', ', $context) . '.';
 
             $itemStmt->execute([$requestId, $requiredPackage, $requiredPath, $wantedGuid, $wantedMd5, $localFile, $peerFile, $status, $msg]);
             $count++;
@@ -169,7 +234,7 @@ try {
         throw $e;
     }
 
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'REQUEST_SUBMIT', 'Received child request ' . $requestId . ' with ' . $count . ' item(s).');
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'REQUEST_SUBMIT', 'Received child request ' . $requestId . ' with ' . $count . ' distinct package item(s); raw rows=' . count($rawItems) . '.');
     fed_json_response(['ok' => true, 'request_id' => $requestId, 'status' => 'submitted', 'items' => $count]);
 } catch (Throwable $e) {
     fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
