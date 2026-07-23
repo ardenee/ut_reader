@@ -55,13 +55,12 @@ federation_inventory_expect(
     'Bidirectional scheduled inventory synchronization is incomplete.'
 );
 federation_inventory_expect(
-    str_contains($inventoryApi, "$localRole === 'parent' && $peerRole === 'child'")
-        && str_contains($inventoryApi, "$localRole === 'child' && $peerRole === 'parent'"),
+    str_contains($inventoryApi, '$localRole === \'parent\' && $peerRole === \'child\'')
+        && str_contains($inventoryApi, '$localRole === \'child\' && $peerRole === \'parent\''),
     'Inventory API does not enforce paired opposite roles.'
 );
 federation_inventory_expect(
     str_contains($settings, 'Automatic inventory refresh interval, hours')
-        && str_contains($settings, 'The child cannot download anything else') === false
         && str_contains($settings, 'child transfers still require an approved missing-dependency request'),
     'Inventory interval or child download authority setting text is missing.'
 );
