@@ -48,8 +48,14 @@ final class CatalogStagedImportJobHandler implements JobHandler
         $strict = !array_key_exists('strict_profile', $payload) || (bool)$payload['strict_profile'];
         $userId = isset($payload['user_id']) && (int)$payload['user_id'] > 0 ? (int)$payload['user_id'] : null;
         $store = new CatalogIncomingFileStore($this->config);
-        $sourcePath = $store->resolve($relativePath);
-        $this->verifyIdentity($sourcePath, $payload);
+        $preparedSourcePath = trim((string)($payload['prepared_source_path'] ?? ''));
+        $redirectPrepared = !empty($payload['redirect_prepared']) && $preparedSourcePath !== '';
+        $sourcePath = $redirectPrepared
+            ? $this->resolvePreparedSource($preparedSourcePath)
+            : $store->resolve($relativePath);
+        if (!$redirectPrepared) {
+            $this->verifyIdentity($sourcePath, $payload);
+        }
 
         require_once __DIR__ . '/../../../lib/CatalogSupport.php';
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
@@ -60,19 +66,28 @@ final class CatalogStagedImportJobHandler implements JobHandler
             throw new \RuntimeException('Target game no longer exists: ' . $gameId);
         }
 
+        $startPercent = $redirectPrepared ? 46 : 1;
         $context->checkpoint([
-            'stage' => 'prepare',
-            'done' => 0,
+            'stage' => $redirectPrepared ? 'scan_prepare' : 'prepare',
+            'done' => $startPercent,
             'total' => 100,
-            'percent' => 1,
-            'message' => 'Preparing staged package ' . basename($originalName),
+            'percent' => $startPercent,
+            'message' => $redirectPrepared
+                ? 'Preparing decompressed package for scanning: ' . basename($originalName)
+                : 'Preparing staged package ' . basename($originalName),
         ]);
 
         $workingPath = '';
         $workingName = \scanner_clean_original_filename($originalName);
-        $decompressed = false;
+        $decompressed = $redirectPrepared;
+        $scanStart = $startPercent;
         try {
-            if (\catalog_redirect_archive_is_supported_filename($originalName)) {
+            if ($redirectPrepared) {
+                // The non-blocking wrapper created this controlled temporary file
+                // in the current worker process. Scan it directly instead of making
+                // another large copy before the parser can begin.
+                $workingPath = $sourcePath;
+            } elseif (\catalog_redirect_archive_is_supported_filename($originalName)) {
                 if (\catalog_redirect_archive_extension($originalName) === 'uz2') {
                     $decoded = CatalogRedirectArchiveStream::decompressUz2(
                         $sourcePath,
@@ -80,7 +95,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                         0,
                         static function (array $progress) use ($context): void {
                             $percent = max(1, min(24, 1 + (int)floor(((int)($progress['percent'] ?? 0)) * 23 / 100)));
-                            $context->heartbeatIfDue([
+                            $context->checkpoint([
                                 'stage' => 'decompress',
                                 'done' => (int)($progress['compressed_done'] ?? 0),
                                 'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
@@ -98,18 +113,28 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 $workingName = \scanner_clean_original_filename((string)$decoded['filename']);
                 $sourceRelativePath = $this->replaceRelativeFilename($sourceRelativePath, $workingName);
                 $decompressed = true;
+                $scanStart = 25;
                 $context->checkpoint([
-                    'stage' => 'scan',
-                    'done' => 25,
+                    'stage' => 'scan_prepare',
+                    'done' => $scanStart,
                     'total' => 100,
-                    'percent' => 25,
+                    'percent' => $scanStart,
                     'message' => 'Redirect archive decompressed; scanning ' . basename($workingName),
                     'decompressed_bytes' => (int)($decoded['bytes'] ?? 0),
                     'decoder' => (string)($decoded['decoder'] ?? ''),
                 ]);
             } else {
-                $workingPath = $this->workingCopy($sourcePath, $workingName);
+                $workingPath = $this->workingCopy($sourcePath, $workingName, $context, 2, 20);
+                $scanStart = 20;
             }
+
+            $context->checkpoint([
+                'stage' => 'scan',
+                'done' => $scanStart,
+                'total' => 100,
+                'percent' => $scanStart,
+                'message' => 'Scanning package tables for ' . basename($workingName),
+            ]);
 
             $result = \scanner_scan_uploaded_file(
                 $this->db,
@@ -119,8 +144,17 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 $workingName,
                 $userId,
                 $strict,
-                static function (array $progress) use ($context): void {
-                    $context->heartbeatIfDue($progress);
+                static function (array $progress) use ($context, $scanStart): void {
+                    $mapped = $progress;
+                    if (array_key_exists('percent', $progress)) {
+                        $sourcePercent = max(0, min(100, (int)$progress['percent']));
+                        $mapped['percent'] = min(99, $scanStart + (int)floor($sourcePercent * (99 - $scanStart) / 100));
+                    }
+                    $mapped['stage'] = (string)($progress['stage'] ?? 'scan');
+                    if (trim((string)($mapped['message'] ?? '')) === '') {
+                        $mapped['message'] = 'Scanning package tables.';
+                    }
+                    $context->heartbeatIfDue($mapped);
                 },
                 false,
                 ['source_relative_path' => $sourceRelativePath]
@@ -366,8 +400,13 @@ final class CatalogStagedImportJobHandler implements JobHandler
         }
     }
 
-    private function workingCopy(string $sourcePath, string $name): string
-    {
+    private function workingCopy(
+        string $sourcePath,
+        string $name,
+        JobExecutionContext $context,
+        int $startPercent,
+        int $endPercent
+    ): string {
         $extension = preg_replace('/[^A-Za-z0-9_]+/', '', (string)pathinfo($name, PATHINFO_EXTENSION)) ?: 'bin';
         $base = tempnam(sys_get_temp_dir(), 'unrealdb-import-');
         if ($base === false) {
@@ -375,11 +414,85 @@ final class CatalogStagedImportJobHandler implements JobHandler
         }
         $path = $base . '.' . $extension;
         @unlink($base);
-        if (!@copy($sourcePath, $path)) {
+
+        $size = filesize($sourcePath);
+        $input = fopen($sourcePath, 'rb');
+        $output = fopen($path, 'wb');
+        if ($size === false || !is_resource($input) || !is_resource($output)) {
+            if (is_resource($input)) {
+                fclose($input);
+            }
+            if (is_resource($output)) {
+                fclose($output);
+            }
             @unlink($path);
             throw new \RuntimeException('Could not create package import working copy.');
         }
+
+        $copied = 0;
+        $lastCheckpoint = 0;
+        try {
+            while (!feof($input)) {
+                $buffer = fread($input, 4 * 1024 * 1024);
+                if (!is_string($buffer)) {
+                    throw new \RuntimeException('Could not read staged package while creating working copy.');
+                }
+                if ($buffer === '') {
+                    break;
+                }
+                $written = 0;
+                $length = strlen($buffer);
+                while ($written < $length) {
+                    $count = fwrite($output, substr($buffer, $written));
+                    if ($count === false || $count < 1) {
+                        throw new \RuntimeException('Could not create package import working copy.');
+                    }
+                    $written += $count;
+                }
+                $copied += $length;
+                if ($copied - $lastCheckpoint >= 32 * 1024 * 1024 || $copied >= (int)$size) {
+                    $sourcePercent = (int)floor($copied * 100 / max(1, (int)$size));
+                    $percent = min($endPercent, $startPercent + (int)floor($sourcePercent * ($endPercent - $startPercent) / 100));
+                    $context->checkpoint([
+                        'stage' => 'copy',
+                        'done' => $copied,
+                        'total' => max(1, (int)$size),
+                        'percent' => $percent,
+                        'message' => 'Creating parser working copy: ' . $this->bytes($copied) . ' of ' . $this->bytes((int)$size),
+                    ]);
+                    $lastCheckpoint = $copied;
+                }
+            }
+            fflush($output);
+        } catch (Throwable $error) {
+            fclose($input);
+            fclose($output);
+            @unlink($path);
+            throw $error;
+        }
+        fclose($input);
+        fclose($output);
+
+        if ($copied !== (int)$size) {
+            @unlink($path);
+            throw new \RuntimeException('Package import working copy is incomplete.');
+        }
         return $path;
+    }
+
+    private function resolvePreparedSource(string $path): string
+    {
+        $real = realpath($path);
+        $temporaryRoot = realpath(sys_get_temp_dir());
+        if ($real === false || $temporaryRoot === false || !is_file($real) || !is_readable($real) || is_link($real)) {
+            throw new \RuntimeException('Prepared redirect payload is unavailable.');
+        }
+        $prefix = rtrim(str_replace('\\', '/', $temporaryRoot), '/') . '/';
+        $normalized = str_replace('\\', '/', $real);
+        if (!str_starts_with($normalized, $prefix) || !str_starts_with(basename($real), 'ue_redirect_')) {
+            throw new \RuntimeException('Prepared redirect payload escaped controlled temporary storage.');
+        }
+        return $real;
     }
 
     private function replaceRelativeFilename(string $relativePath, string $name): string
@@ -415,5 +528,17 @@ final class CatalogStagedImportJobHandler implements JobHandler
         $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
         $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
         return trim($message) !== '' ? trim($message) : 'Unknown package import error.';
+    }
+
+    private function bytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $value = max(0, $bytes);
+        $unit = 0;
+        while ($value >= 1024 && $unit < count($units) - 1) {
+            $value /= 1024;
+            $unit++;
+        }
+        return ($unit === 0 ? (string)$value : number_format($value, 2)) . ' ' . $units[$unit];
     }
 }
