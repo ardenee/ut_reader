@@ -52,6 +52,18 @@ function requests_group_key(array $item): string
     return hash('sha256', $identity);
 }
 
+function requests_clarify_message(string $message): string
+{
+    $message = trim($message);
+    return match ($message) {
+        'Parent does not currently have a matching file.',
+        'Parent does not have matching file.' => 'Not found in this parent catalog; this package cannot be approved until a matching file is imported.',
+        'Approved by parent admin.' => 'Approved for this child by the parent administrator.',
+        'Denied by parent admin.' => 'Denied by this parent administrator.',
+        default => $message,
+    };
+}
+
 /** @return list<array<string,mixed>> */
 function requests_raw_items(PDO $db, int $requestId, bool $showBaseGame): array
 {
@@ -102,7 +114,7 @@ function requests_group_items(array $items): array
         if ($status !== '') {
             $groups[$key]['statuses'][$status] = true;
         }
-        $message = trim((string)($item['status_message'] ?? ''));
+        $message = requests_clarify_message((string)($item['status_message'] ?? ''));
         if ($message !== '') {
             $groups[$key]['messages'][$message] = true;
         }
