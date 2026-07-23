@@ -87,7 +87,7 @@ federation_role_expect(str_contains($content['availability_helper'], "'transfera
 federation_role_expect(str_contains($content['request_generate'], 'base-game dependency'), 'Child request generator does not include missing base-game dependencies.');
 federation_role_expect(!str_contains($content['request_generate'], 'Show official base-game packages'), 'Request generator still contains a page-specific base-game visibility switch.');
 federation_role_expect(str_contains($content['request_submit'], 'base-game dependency item(s)'), 'Parent request submission does not retain base-game dependency context.');
-federation_role_expect(!str_contains($content['request_submit'], "$status = 'denied';"), 'Parent still automatically denies base-game dependency requests.');
+federation_role_expect(!str_contains($content['request_submit'], '$status = \'denied\';'), 'Parent still automatically denies base-game dependency requests.');
 
 federation_role_expect(str_contains($content['request_lifecycle'], 'federation_request_legacy_base_game_denial'), 'Legacy automatic base-game denials are not repaired.');
 federation_role_expect(str_contains($content['request_lifecycle'], 'missing-dependency exception'), 'Request lifecycle does not preserve base-game dependency exceptions.');
