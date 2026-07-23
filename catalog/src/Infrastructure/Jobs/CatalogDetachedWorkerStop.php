@@ -59,9 +59,9 @@ final class CatalogDetachedWorkerStop
         $launcher->requestStop($queueName);
         $pid = max(0, (int)($state['pid'] ?? 0));
         $terminated = $pid > 0 && $this->terminateExpectedWorker($pid);
-        $inactive = $this->waitUntilInactive($launcher, $queueName, 2500);
+        $inactive = $terminated || $this->waitUntilInactive($launcher, $queueName, 2500);
 
-        if ($terminated || $inactive) {
+        if ($inactive) {
             $this->forceCancelJob($jobId, $requestedBy, $reason);
             $this->markStopped($launcher, $queueName, $state, $pid, 'job_stop');
             return [
@@ -90,7 +90,7 @@ final class CatalogDetachedWorkerStop
         $pid = max(0, (int)($state['pid'] ?? 0));
         $wasActive = !empty($worker['active']);
         $terminated = $wasActive && $pid > 0 && $this->terminateExpectedWorker($pid);
-        $inactive = !$wasActive || $this->waitUntilInactive($launcher, $queueName, 2500);
+        $inactive = !$wasActive || $terminated || $this->waitUntilInactive($launcher, $queueName, 2500);
 
         $queue = new PdoJobQueue($this->db);
         $cancelled = 0;
@@ -108,7 +108,7 @@ final class CatalogDetachedWorkerStop
             }
         }
 
-        if (($terminated || $inactive) && ($wasActive || $stateWorkerId !== '')) {
+        if ($inactive && ($wasActive || $stateWorkerId !== '')) {
             $this->markStopped($launcher, $queueName, $state, $pid, 'queue_stop');
         }
 
@@ -118,6 +118,72 @@ final class CatalogDetachedWorkerStop
             'pid' => $pid,
             'cancelled_jobs' => $cancelled,
             'cooperative_jobs' => $cooperative,
+        ];
+    }
+
+    /**
+     * Stop a detached worker that loaded an older code revision, then put its
+     * non-cancelled running jobs back into the queue. This is deployment recovery,
+     * not an operator cancellation, so the current import must not be discarded.
+     *
+     * @return array<string,mixed>
+     */
+    public function restartStaleQueue(string $queueName): array
+    {
+        $launcher = new CatalogDetachedWorker($this->config);
+        $worker = $launcher->status($queueName, true);
+        if (empty($worker['active']) || empty($worker['stale_code'])) {
+            return [
+                'restarted' => false,
+                'reason' => empty($worker['active']) ? 'worker_inactive' : 'worker_current',
+                'requeued_jobs' => 0,
+                'cancelled_jobs' => 0,
+                'worker' => $worker,
+            ];
+        }
+
+        $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+        $stateWorkerId = trim((string)($state['worker_id'] ?? ''));
+        $pid = max(0, (int)($state['pid'] ?? 0));
+        if ($stateWorkerId === '' || !str_starts_with($stateWorkerId, 'detached:')) {
+            return [
+                'restarted' => false,
+                'reason' => 'worker_identity_unavailable',
+                'requeued_jobs' => 0,
+                'cancelled_jobs' => 0,
+                'worker' => $worker,
+            ];
+        }
+
+        $launcher->requestStop($queueName);
+        $terminated = $pid > 0 && $this->terminateExpectedWorker($pid);
+        $inactive = $terminated || $this->waitUntilInactive($launcher, $queueName, 3500);
+        if (!$inactive) {
+            return [
+                'restarted' => false,
+                'reason' => 'worker_would_not_stop',
+                'terminated' => false,
+                'pid' => $pid,
+                'requeued_jobs' => 0,
+                'cancelled_jobs' => 0,
+                'worker' => $launcher->status($queueName, true),
+            ];
+        }
+
+        $cancelled = $this->cancelRequestedWorkerJobs($queueName, $stateWorkerId);
+        $requeued = $this->requeueWorkerJobs($queueName, $stateWorkerId);
+        $this->markStopped($launcher, $queueName, $state, $pid, 'stale_code_restart');
+
+        return [
+            'restarted' => true,
+            'reason' => 'stale_code',
+            'terminated' => $terminated,
+            'pid' => $pid,
+            'requeued_jobs' => $requeued,
+            'cancelled_jobs' => $cancelled,
+            'previous_code_version' => (string)($worker['code_version_running'] ?? ''),
+            'current_code_version' => (string)($worker['code_version_current'] ?? ''),
+            'worker' => $launcher->status($queueName, true),
         ];
     }
 
@@ -164,6 +230,32 @@ final class CatalogDetachedWorkerStop
             . 'completed_at=?, updated_at=? WHERE ' . $where . ' AND status="running"'
         );
         $statement->execute(array_merge([$timestamp, $requestedBy, $reason, $timestamp, $timestamp], $whereArgs));
+        return $statement->rowCount();
+    }
+
+    private function cancelRequestedWorkerJobs(string $queueName, string $workerId): int
+    {
+        $timestamp = gmdate('Y-m-d H:i:s');
+        $statement = $this->db->prepare(
+            'UPDATE ue_background_jobs SET status="cancelled", dedupe_key=NULL, worker_id=NULL, lease_token=NULL, '
+            . 'leased_at=NULL, lease_expires_at=NULL, last_heartbeat_at=NULL, completed_at=?, updated_at=? '
+            . 'WHERE queue_name=? AND status="running" AND worker_id=? AND cancel_requested_at IS NOT NULL'
+        );
+        $statement->execute([$timestamp, $timestamp, $queueName, $workerId]);
+        return $statement->rowCount();
+    }
+
+    private function requeueWorkerJobs(string $queueName, string $workerId): int
+    {
+        $timestamp = gmdate('Y-m-d H:i:s');
+        $statement = $this->db->prepare(
+            'UPDATE ue_background_jobs SET status="queued", attempts=GREATEST(attempts-1,0), available_at=?, '
+            . 'worker_id=NULL, lease_token=NULL, leased_at=NULL, lease_expires_at=NULL, last_heartbeat_at=NULL, '
+            . 'progress_json=NULL, progress_updated_at=NULL, '
+            . 'last_error="Detached worker was restarted after a code update; import requeued without consuming an attempt.", '
+            . 'updated_at=? WHERE queue_name=? AND status="running" AND worker_id=? AND cancel_requested_at IS NULL'
+        );
+        $statement->execute([$timestamp, $timestamp, $queueName, $workerId]);
         return $statement->rowCount();
     }
 
@@ -242,6 +334,20 @@ final class CatalogDetachedWorkerStop
             if (!function_exists('exec')) {
                 return false;
             }
+
+            // Prefer the command line so a recycled PID belonging to another PHP
+            // process is never killed merely because tasklist reports php.exe.
+            $output = [];
+            $code = 1;
+            $command = 'powershell.exe -NoProfile -NonInteractive -Command "'
+                . '$p=Get-CimInstance Win32_Process -Filter ''ProcessId=' . $pid . ''' -ErrorAction SilentlyContinue; '
+                . 'if($p){$p.CommandLine}" 2>NUL';
+            @exec($command, $output, $code);
+            $commandLine = strtolower(implode(' ', $output));
+            if ($code === 0 && $commandLine !== '') {
+                return str_contains($commandLine, 'catalog-worker-detached.php');
+            }
+
             $output = [];
             $code = 1;
             @exec('tasklist /FI "PID eq ' . $pid . '" /FO CSV /NH 2>NUL', $output, $code);
