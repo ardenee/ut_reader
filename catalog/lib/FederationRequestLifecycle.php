@@ -32,9 +32,13 @@ function federation_request_legacy_unavailable_denial(string $message): bool
     return false;
 }
 
-function federation_request_waiting_message(): string
+function federation_request_waiting_message(bool $isBaseGameDependency = false): string
 {
-    return 'Approved by this parent; waiting for a matching file to become available. The request remains active and will be linked automatically when the parent imports the file.';
+    $message = 'Approved by this parent; waiting for a matching file to become available. The request remains active and will be linked automatically when the parent imports the file.';
+    if ($isBaseGameDependency) {
+        $message .= ' This is a base-game package included through the missing-dependency exception.';
+    }
+    return $message;
 }
 
 function federation_request_recalculate_header(PDO $db, int $requestId): string
@@ -95,8 +99,9 @@ function federation_request_recalculate_header(PDO $db, int $requestId): string
  * Refresh request rows against the current parent catalog.
  *
  * Approved rows without a file remain approved and open. When a matching file
- * later appears, local_file_id is linked automatically. Protected base-game
- * matches are denied because they can never be transferred.
+ * later appears, local_file_id is linked automatically. Official base-game
+ * packages are treated exactly the same when they satisfy a missing dependency;
+ * the ordinary base-game ignore policy does not remove dependency requests.
  *
  * @return array<string,int|string>
  */
@@ -115,8 +120,8 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
     );
 
     $linked = 0;
+    $baseLinked = 0;
     $waiting = 0;
-    $baseDenied = 0;
     $legacyRepaired = 0;
 
     $update = $db->prepare(
@@ -146,11 +151,11 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
             $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [$localFileId]);
             if (!$file) {
                 $localFileId = 0;
-            } elseif (base_game_file_is_protected($db, $file)) {
-                $update->execute([$localFileId, 'denied', base_game_block_message($file), $itemId, $requestId]);
-                $baseDenied++;
-                continue;
             } else {
+                $isBaseGame = base_game_file_is_protected($db, $file);
+                if ($isBaseGame && !str_contains(strtolower($message), 'base-game')) {
+                    $message = trim($message . ' This official base-game file is available through the missing-dependency exception.');
+                }
                 $update->execute([$localFileId, $status, $message, $itemId, $requestId]);
                 continue;
             }
@@ -161,24 +166,7 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
             'wanted_guid' => (string)($row['wanted_guid'] ?? ''),
             'wanted_md5' => (string)($row['wanted_md5'] ?? ''),
         ]);
-
-        if (!empty($availability['is_base_game'])) {
-            $matchedId = (int)($availability['file_id'] ?? 0);
-            $file = $matchedId > 0 ? catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$matchedId]) : null;
-            $fallback = [
-                'package_name' => (string)($availability['package_name'] ?? $row['required_package']),
-                'original_name' => (string)($availability['original_name'] ?? $row['required_package']),
-            ];
-            $update->execute([
-                $matchedId > 0 ? $matchedId : null,
-                'denied',
-                base_game_block_message($file ?: $fallback),
-                $itemId,
-                $requestId,
-            ]);
-            $baseDenied++;
-            continue;
-        }
+        $isBaseGameDependency = !empty($availability['is_base_game']);
 
         if (!empty($availability['available']) && (int)($availability['file_id'] ?? 0) > 0) {
             $matchedId = (int)$availability['file_id'];
@@ -186,22 +174,24 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
             $newMessage = $status === 'approved'
                 ? 'Approved request is now available on this parent; matched by ' . $method . '. It is ready for the child download worker.'
                 : 'Available on this parent; matched by ' . $method . '. Awaiting parent approval.';
+            if ($isBaseGameDependency) {
+                $newMessage .= ' This official base-game file is included through the missing-dependency exception.';
+                $baseLinked++;
+            }
             $update->execute([$matchedId, $status, $newMessage, $itemId, $requestId]);
             $linked++;
             continue;
         }
 
         if ($status === 'approved') {
-            $update->execute([null, 'approved', federation_request_waiting_message(), $itemId, $requestId]);
+            $update->execute([null, 'approved', federation_request_waiting_message($isBaseGameDependency), $itemId, $requestId]);
             $waiting++;
         } elseif ($status === 'requested') {
-            $update->execute([
-                null,
-                'requested',
-                'Not available on this parent yet. The parent may approve the request now; it will remain active until a matching file is imported.',
-                $itemId,
-                $requestId,
-            ]);
+            $newMessage = 'Not available on this parent yet. The parent may approve the request now; it will remain active until a matching file is imported.';
+            if ($isBaseGameDependency) {
+                $newMessage .= ' This is a base-game package included through the missing-dependency exception.';
+            }
+            $update->execute([null, 'requested', $newMessage, $itemId, $requestId]);
         }
     }
 
@@ -209,8 +199,9 @@ function federation_refresh_request_matches(PDO $db, int $requestId): array
 
     return [
         'linked' => $linked,
+        'base_game_dependency_linked' => $baseLinked,
         'waiting' => $waiting,
-        'base_denied' => $baseDenied,
+        'base_denied' => 0,
         'legacy_repaired' => $legacyRepaired,
         'request_status' => $headerStatus,
     ];
