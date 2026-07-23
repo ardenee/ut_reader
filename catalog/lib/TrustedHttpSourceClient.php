@@ -321,17 +321,46 @@ final class TrustedHttpSourceClient
         return $decoded;
     }
 
+    /** @return list<string> */
+    private static function resolveHostIps(string $host): array
+    {
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            return [$host];
+        }
+
+        $ips = [];
+        if (function_exists('dns_get_record')) {
+            foreach (@dns_get_record($host, DNS_A | DNS_AAAA) ?: [] as $record) {
+                $candidate = (string)($record['ip'] ?? $record['ipv6'] ?? '');
+                if ($candidate !== '') {
+                    $ips[] = $candidate;
+                }
+            }
+        }
+
+        // dns_get_record() queries DNS directly and can miss Windows hosts-file,
+        // DNS suffix, LLMNR, and NetBIOS resolution. The socket resolver used by
+        // gethostbynamel()/gethostbyname() follows the operating-system resolver.
+        foreach (@gethostbynamel($host) ?: [] as $candidate) {
+            $ips[] = (string)$candidate;
+        }
+        $single = @gethostbyname($host);
+        if (is_string($single) && $single !== '' && strcasecmp($single, $host) !== 0) {
+            $ips[] = $single;
+        }
+
+        $ips = array_values(array_unique(array_filter(
+            $ips,
+            static fn(string $ip): bool => filter_var($ip, FILTER_VALIDATE_IP) !== false
+        )));
+        return $ips;
+    }
+
     private static function publicIp(string $host): string
     {
-        $ips = filter_var($host, FILTER_VALIDATE_IP) ? [$host] : [];
+        $ips = self::resolveHostIps($host);
         if (!$ips) {
-            foreach (dns_get_record($host, DNS_A | DNS_AAAA) ?: [] as $record) {
-                $ips[] = (string)($record['ip'] ?? $record['ipv6'] ?? '');
-            }
-            $ips = array_values(array_filter(array_unique($ips)));
-        }
-        if (!$ips) {
-            throw new RuntimeException('Source hostname could not be resolved.');
+            throw new RuntimeException('Source hostname could not be resolved by PHP: ' . $host);
         }
         if (!self::$allowPrivateNetwork) {
             foreach ($ips as $ip) {
