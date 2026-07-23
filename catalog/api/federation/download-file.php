@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 
 try {
     $config = catalog_config();
@@ -26,8 +27,15 @@ try {
     if (!$file) {
         fed_json_response(['ok' => false, 'error' => 'File not found or not verified.'], 404);
     }
-    if (base_game_file_is_protected($db, $file)) {
-        fed_json_response(['ok' => false, 'error' => base_game_block_message($file)], 403);
+
+    $isBaseGame = base_game_file_is_protected($db, $file);
+    $ignoreBaseGame = federation_policy_bool($payload['ignore_base_game_files'] ?? true, true);
+    $dependencyException = federation_policy_bool($payload['dependency_exception'] ?? false, false);
+    if ($isBaseGame && $ignoreBaseGame && !$dependencyException) {
+        fed_json_response([
+            'ok' => false,
+            'error' => 'The parent policy ignores base-game files in ordinary federation pulls. This file may be transferred only when the signed request identifies a current missing-dependency exception.',
+        ], 403);
     }
 
     $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
@@ -36,7 +44,17 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Stored file missing.'], 404);
     }
 
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'PARENT_PULL_DOWNLOAD', 'Serving file ID ' . $fileId . ' to parent/master peer without child approval.');
+    $event = $isBaseGame
+        ? ($dependencyException ? 'PARENT_PULL_BASE_GAME_DEPENDENCY' : 'PARENT_PULL_BASE_GAME_POLICY_ALLOWED')
+        : 'PARENT_PULL_DOWNLOAD';
+    fed_log(
+        $db,
+        (int)$peer['id'],
+        null,
+        'INFO',
+        $event,
+        'Serving file ID ' . $fileId . ' to parent peer. ignore_base_game=' . ($ignoreBaseGame ? '1' : '0') . '; dependency_exception=' . ($dependencyException ? '1' : '0') . '.'
+    );
 
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . filesize($path));
@@ -45,6 +63,8 @@ try {
     header('X-UE-Package-Guid: ' . (string)$file['package_guid']);
     header('X-UE-MD5: ' . (string)$file['md5']);
     header('X-UE-SHA1: ' . (string)$file['sha1']);
+    header('X-UE-Base-Game: ' . ($isBaseGame ? '1' : '0'));
+    header('X-UE-Dependency-Exception: ' . ($dependencyException ? '1' : '0'));
     header('X-Content-Type-Options: nosniff');
     readfile($path);
     exit;
