@@ -74,7 +74,7 @@ federation_inventory_expect(
     'The parent cannot request a child-side parent inventory refresh.'
 );
 federation_inventory_expect(
-    str_contains($inventoryRefreshApi, "$localRole !== 'child' || $peerRole !== 'parent'")
+    str_contains($inventoryRefreshApi, '$localRole !== \'child\' || $peerRole !== \'parent\'')
         && str_contains($inventoryRefreshApi, 'federation_pull_inventory_from_parent($db, (int)$peer[\'id\'])'),
     'The child-side refresh endpoint does not enforce roles or pull the parent inventory.'
 );
