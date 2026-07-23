@@ -30,8 +30,28 @@ final class CatalogUi
     /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
     public static function pageHeader(string $title, string $description = '', array $actions = []): string
     {
+        $actions = self::federationPageActions($actions);
         $actions = self::gameContentSwitchActions($actions);
         return PageHeader::render($title, $description, $actions) . self::identityScriptTag();
+    }
+
+    /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
+    private static function federationPageActions(array $actions): array
+    {
+        $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+        if (!str_contains($requestPath, '/catalog/federation/') || array_is_list($actions)) {
+            return $actions;
+        }
+
+        // Federation pages historically supplied their own action arrays, which
+        // allowed the page-header menu to drift from the global Federation menu.
+        // Keep the core child dependency workflow reachable from every federation
+        // page while preserving any page-specific action labels already supplied.
+        return $actions + [
+            'Generate Missing Dependency Request' => 'request-generate.php',
+            'Request Status' => 'request-status.php',
+            'Approved Dependency Downloads' => 'approved-downloads.php',
+        ];
     }
 
     private static function identityScriptTag(): string
@@ -69,7 +89,7 @@ final class CatalogUi
         }
 
         $game = is_array($GLOBALS['game'] ?? null) ? $GLOBALS['game'] : [];
-        $engineKey = strtoupper(trim((string)($game['profile_engine'] ?? $game['engine_key'] ?? '')));
+        $engineKey = strtoupper(trim((string)($game['profile_engine'] ?? $game['engine_key'] ?? ''));
         $engineMajor = preg_match('/UE\s*([0-9]+)/i', $engineKey, $match) === 1 ? (int)$match[1] : 0;
 
         if ($engineMajor === 3) {
