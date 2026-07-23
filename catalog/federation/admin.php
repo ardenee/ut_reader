@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
 try {
     $config = catalog_config();
@@ -16,10 +17,12 @@ try {
 
     $identity = fed_ensure_identity($db);
     $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
+    $ignoreBaseGame = federation_ignore_base_game_files($db);
+    $peerFilePolicySql = $ignoreBaseGame ? ' WHERE COALESCE(is_base_game,0)=0' : '';
     $stats = [
         'parents' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1')['c'] ?? 0),
         'children' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peers WHERE peer_role="child" AND is_active=1')['c'] ?? 0),
-        'peer_files' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files')['c'] ?? 0),
+        'peer_files' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files' . $peerFilePolicySql)['c'] ?? 0),
         'incoming_open' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_requests WHERE direction="child_to_parent" AND status IN ("submitted","part_approved")')['c'] ?? 0),
         'join_pending' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_join_requests WHERE status="pending"')['c'] ?? 0),
         'queued_jobs' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"')['c'] ?? 0),
@@ -50,6 +53,7 @@ try {
     echo '<tr><th>URL</th><td class="mono path">' . catalog_h($identity['site_url']) . '</td></tr>';
     echo '<tr><th>Site ID</th><td class="mono">' . catalog_h($identity['site_id']) . '</td></tr>';
     echo '<tr><th>Fingerprint</th><td class="mono">' . catalog_h($identity['site_fingerprint']) . '</td></tr>';
+    echo '<tr><th>Base-game policy</th><td>' . catalog_h(federation_base_game_policy_label($db)) . '</td></tr>';
     echo '</table><p><a class="button" href="settings.php">Change federation settings</a></p></div>';
 
     echo '<div class="grid">';
@@ -64,9 +68,9 @@ try {
     echo '</div>';
 
     if ($role === 'child') {
-        echo '<div class="card"><h2>Child workflow</h2><p>This server requests missing files from a parent. The parent checks its own catalog, approves available files, and the child worker downloads approved items.</p><div class="grid">';
+        echo '<div class="card"><h2>Child workflow</h2><p>This server requests missing files from a parent. Missing base-game dependencies are included; ordinary base-game files follow the parent policy.</p><div class="grid">';
         catalog_tool_card('1. Parents', 'peers.php?role=parent', 'Manage parent connections or join a parent.', $stats['parents'] > 0 ? (string)$stats['parents'] : 'setup');
-        catalog_tool_card('2. Missing Files', 'missing-files.php', 'Select local missing packages and submit a request to a parent.', $stats['missing_packages'] > 0 ? (string)$stats['missing_packages'] : '');
+        catalog_tool_card('2. Missing Files', 'missing-files.php', 'Select local missing dependency packages and submit a request to a parent.', $stats['missing_packages'] > 0 ? (string)$stats['missing_packages'] : '');
         catalog_tool_card('3. Outgoing Requests', 'request-status.php', 'Track the parent decision and cancel an active request.');
         catalog_tool_card('4. Approved Downloads', 'approved-downloads.php', 'Review parent-approved dependency downloads.');
         catalog_tool_card('5. Queue', 'queue.php', 'Monitor download and import progress.', $stats['queued_jobs'] + $stats['downloaded_jobs'] > 0 ? (string)($stats['queued_jobs'] + $stats['downloaded_jobs']) : '');
@@ -77,8 +81,8 @@ try {
         echo '<div class="card"><h2>Parent workflow</h2><p>This server manages children, reads child inventories, pulls files it needs, and decides whether it can provide files requested by children.</p><div class="grid">';
         catalog_tool_card('1. Children', 'peers.php?role=child', 'Manage child connections and open inventories.', $stats['children'] > 0 ? (string)$stats['children'] : 'setup');
         catalog_tool_card('2. Child Join Requests', 'join-requests.php', 'Approve or deny new child pairing requests.', $stats['join_pending'] > 0 ? (string)$stats['join_pending'] : '');
-        catalog_tool_card('3. Missing Files', 'missing-files.php', 'Find files this parent needs that are available from children.', $stats['missing_packages'] > 0 ? (string)$stats['missing_packages'] : '');
-        catalog_tool_card('4. Incoming Requests', 'requests.php', 'Review packages children are asking this parent to provide.', $stats['incoming_open'] > 0 ? (string)$stats['incoming_open'] : '');
+        catalog_tool_card('3. Missing Files', 'missing-files.php', 'Find dependency files this parent needs that are available from children.', $stats['missing_packages'] > 0 ? (string)$stats['missing_packages'] : '');
+        catalog_tool_card('4. Incoming Requests', 'requests.php', 'Review dependency packages children are asking this parent to provide.', $stats['incoming_open'] > 0 ? (string)$stats['incoming_open'] : '');
         catalog_tool_card('5. Child Inventories', 'peer-inventory.php', 'Compare parent and child inventories and queue parent pulls.', $stats['peer_files'] > 0 ? (string)$stats['peer_files'] : '');
         catalog_tool_card('6. Queue', 'queue.php', 'Monitor parent pulls, approved child downloads, and imports.', $stats['queued_jobs'] + $stats['downloaded_jobs'] > 0 ? (string)($stats['queued_jobs'] + $stats['downloaded_jobs']) : '');
         echo '</div></div>';
