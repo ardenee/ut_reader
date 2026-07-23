@@ -6,33 +6,28 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../lib/FederationRequestLifecycle.php';
 
 function requests_show_base_game(mixed $value): bool
 {
-    return in_array((string)$value, ['1', 'true', 'yes', 'on'], true);
+    return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'on'], true);
 }
 
 function requests_update_header(PDO $db, int $requestId): void
 {
-    $c = catalog_one($db, 'SELECT COUNT(*) total, SUM(status="approved") approved, SUM(status="denied") denied, SUM(status="requested") requested FROM ue_federation_request_items WHERE request_id=?', [$requestId]);
-    if (!$c || (int)$c['total'] === 0) {
-        return;
-    }
-    if ((int)$c['approved'] > 0 && (int)$c['denied'] > 0) {
-        $status = 'part_approved';
-    } elseif ((int)$c['approved'] > 0 && (int)$c['requested'] === 0) {
-        $status = 'approved';
-    } elseif ((int)$c['denied'] >= (int)$c['total']) {
-        $status = 'denied';
-    } else {
-        $status = 'submitted';
-    }
-    $db->prepare('UPDATE ue_federation_requests SET status=?, approved_at=IF(? IN ("approved","part_approved"), NOW(), approved_at), approved_by=? WHERE id=?')->execute([$status, $status, $_SESSION['user']['id'] ?? null, $requestId]);
+    federation_request_recalculate_header($db, $requestId);
 }
 
 function requests_item_file(PDO $db, int $requestId, int $itemId): ?array
 {
-    return catalog_one($db, 'SELECT i.*, f.id file_id, f.game_id, f.package_guid, f.original_name, f.package_name FROM ue_federation_request_items i LEFT JOIN ue_files f ON f.id=i.local_file_id WHERE i.request_id=? AND i.id=?', [$requestId, $itemId]);
+    return catalog_one(
+        $db,
+        'SELECT i.*, f.id file_id, f.game_id, f.package_guid, f.original_name, f.package_name
+         FROM ue_federation_request_items i
+         LEFT JOIN ue_files f ON f.id=i.local_file_id
+         WHERE i.request_id=? AND i.id=?',
+        [$requestId, $itemId]
+    );
 }
 
 function requests_url(int $requestId, bool $showBaseGame): string
@@ -46,10 +41,12 @@ function requests_url(int $requestId, bool $showBaseGame): string
 
 function requests_group_key(array $item): string
 {
-    $identity = strtolower(trim((string)($item['required_package'] ?? '')))
+    return hash(
+        'sha256',
+        strtolower(trim((string)($item['required_package'] ?? '')))
         . "\0" . strtolower(trim((string)($item['wanted_guid'] ?? '')))
-        . "\0" . strtolower(trim((string)($item['wanted_md5'] ?? '')));
-    return hash('sha256', $identity);
+        . "\0" . strtolower(trim((string)($item['wanted_md5'] ?? '')))
+    );
 }
 
 function requests_clarify_message(string $message): string
@@ -57,7 +54,10 @@ function requests_clarify_message(string $message): string
     $message = trim($message);
     return match ($message) {
         'Parent does not currently have a matching file.',
-        'Parent does not have matching file.' => 'Not found in this parent catalog; this package cannot be approved until a matching file is imported.',
+        'Parent does not have matching file.',
+        'Not found in this parent catalog; this package cannot be approved.',
+        'Not found in this parent\'s catalog. This package cannot be approved until the parent imports a matching file.'
+            => 'Not available yet. This request can be approved and kept active until a matching file is imported.',
         'Approved by parent admin.' => 'Approved for this child by the parent administrator.',
         'Denied by parent admin.' => 'Denied by this parent administrator.',
         default => $message,
@@ -67,7 +67,7 @@ function requests_clarify_message(string $message): string
 /** @return list<array<string,mixed>> */
 function requests_raw_items(PDO $db, int $requestId, bool $showBaseGame): array
 {
-    $baseFilter = $showBaseGame ? '' : ' AND bg.id IS NULL';
+    $baseFilter = $showBaseGame ? '' : ' AND bg.id IS NULL AND LOWER(COALESCE(i.status_message,"")) NOT LIKE "%official base-game package%"';
     return catalog_all(
         $db,
         'SELECT i.*, f.package_name local_package, f.original_name local_file,
@@ -82,9 +82,6 @@ function requests_raw_items(PDO $db, int $requestId, bool $showBaseGame): array
 }
 
 /**
- * Group legacy object-level rows and current package-level rows into the same
- * package-level display. Actions still update every underlying database row.
- *
  * @param list<array<string,mixed>> $items
  * @return array<string,array<string,mixed>>
  */
@@ -101,11 +98,16 @@ function requests_group_items(array $items): array
                 'statuses' => [],
                 'messages' => [],
                 'raw_count' => 0,
+                'is_base_game' => false,
             ];
         }
 
         $groups[$key]['item_ids'][] = (int)$item['id'];
         $groups[$key]['raw_count']++;
+        $groups[$key]['is_base_game'] = !empty($groups[$key]['is_base_game'])
+            || !empty($item['base_game_id'])
+            || str_contains(strtolower((string)($item['status_message'] ?? '')), 'official base-game package');
+
         $path = trim((string)($item['required_object_path'] ?? ''));
         if ($path !== '') {
             $groups[$key]['object_paths'][strtolower($path)] = $path;
@@ -123,9 +125,6 @@ function requests_group_items(array $items): array
                 $groups[$key][$field] = $item[$field] ?? null;
             }
         }
-        if (!empty($item['base_game_id'])) {
-            $groups[$key]['base_game_id'] = $item['base_game_id'];
-        }
     }
 
     foreach ($groups as &$group) {
@@ -134,6 +133,7 @@ function requests_group_items(array $items): array
         $group['object_count'] = max(1, count($group['object_paths']));
         $group['example_object'] = (string)(reset($group['object_paths']) ?: ($group['required_object_path'] ?? ''));
         $group['display_message'] = implode(' ', array_keys($group['messages']));
+        $group['waiting_for_file'] = $group['display_status'] === 'approved' && empty($group['local_file_id']);
         $group['can_select'] = (bool)array_intersect($statuses, ['requested', 'approved', 'denied']);
     }
     unset($group);
@@ -149,19 +149,33 @@ function requests_set_item_decision(PDO $db, int $requestId, int $itemId, string
     }
 
     if ($decision === 'deny') {
-        $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message="Denied by this parent administrator." WHERE request_id=? AND id=?')->execute([$requestId, $itemId]);
+        $db->prepare(
+            'UPDATE ue_federation_request_items
+             SET status="denied", status_message="Denied by this parent administrator."
+             WHERE request_id=? AND id=?'
+        )->execute([$requestId, $itemId]);
+        return;
+    }
+
+    if (!empty($item['local_file_id']) && base_game_file_is_protected($db, $item)) {
+        $db->prepare(
+            'UPDATE ue_federation_request_items SET status="denied", status_message=? WHERE request_id=? AND id=?'
+        )->execute([base_game_block_message($item), $requestId, $itemId]);
         return;
     }
 
     if (empty($item['local_file_id'])) {
-        $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message="Not found in this parent catalog; this package cannot be approved." WHERE request_id=? AND id=?')->execute([$requestId, $itemId]);
+        $db->prepare(
+            'UPDATE ue_federation_request_items SET status="approved", status_message=? WHERE request_id=? AND id=?'
+        )->execute([federation_request_waiting_message(), $requestId, $itemId]);
         return;
     }
-    if (base_game_file_is_protected($db, $item)) {
-        $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message=? WHERE request_id=? AND id=?')->execute([base_game_block_message($item), $requestId, $itemId]);
-        return;
-    }
-    $db->prepare('UPDATE ue_federation_request_items SET status="approved", status_message="Approved for this child by the parent administrator." WHERE request_id=? AND id=?')->execute([$requestId, $itemId]);
+
+    $db->prepare(
+        'UPDATE ue_federation_request_items
+         SET status="approved", status_message="Approved for this child by the parent administrator."
+         WHERE request_id=? AND id=?'
+    )->execute([$requestId, $itemId]);
 }
 
 try {
@@ -186,16 +200,22 @@ try {
             throw new RuntimeException('Incoming child request not found.');
         }
 
+        federation_refresh_request_matches($db, $requestId);
+
         if ($action === 'approve_all') {
             $items = catalog_all($db, 'SELECT id FROM ue_federation_request_items WHERE request_id=? AND status="requested"', [$requestId]);
             foreach ($items as $itemRow) {
                 requests_set_item_decision($db, $requestId, (int)$itemRow['id'], 'approve');
             }
             requests_update_header($db, $requestId);
-            fed_log($db, (int)$request['peer_id'], null, 'INFO', 'REQUEST_APPROVE_ALL', 'Request ' . $requestId . ': all packages available on this parent were approved.');
+            fed_log($db, (int)$request['peer_id'], null, 'INFO', 'REQUEST_APPROVE_ALL', 'Request ' . $requestId . ': all non-base-game package requests were approved, including files not yet available.');
         } elseif ($action === 'deny_all') {
-            $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message="Denied by this parent administrator." WHERE request_id=? AND status IN ("requested","approved")')->execute([$requestId]);
-            $db->prepare('UPDATE ue_federation_requests SET status="denied", approved_at=NULL, approved_by=? WHERE id=?')->execute([$_SESSION['user']['id'] ?? null, $requestId]);
+            $db->prepare(
+                'UPDATE ue_federation_request_items
+                 SET status="denied", status_message="Denied by this parent administrator."
+                 WHERE request_id=? AND status IN ("requested","approved")'
+            )->execute([$requestId]);
+            requests_update_header($db, $requestId);
             fed_log($db, (int)$request['peer_id'], null, 'INFO', 'REQUEST_DENY_ALL', 'Incoming request ' . $requestId . ' denied.');
         } elseif ($action === 'approve_selected' || $action === 'deny_selected') {
             $selectedKeys = array_values(array_unique(array_filter(
@@ -234,12 +254,12 @@ try {
     $requestId = (int)($_GET['request_id'] ?? 0);
     catalog_page_header(
         'Incoming Requests',
-        'Parent-side workflow. Every request shown here was sent by a child asking this parent to provide missing dependency packages.',
+        'Requests from children for missing dependency packages. Approving an unavailable package keeps the request open until the file is found.',
         catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Children' => 'peers.php?role=child', 'Child Inventories' => 'peer-inventory.php']
     );
 
     if ($role !== 'parent') {
-        echo '<div class="card"><h2>Incoming child requests disabled</h2><p>This site is not in Parent mode. A child does not approve file requests from other children.</p><p><a class="button" href="request-center.php">Open Requests</a> <a class="button" href="settings.php">Federation Settings</a></p></div>';
+        echo '<div class="card"><h2>Incoming child requests disabled</h2><p>This site is not in Parent mode.</p></div>';
         catalog_foot();
         exit;
     }
@@ -247,19 +267,18 @@ try {
     $requests = catalog_all(
         $db,
         'SELECT r.*, p.site_name peer_name,
-                (SELECT COUNT(DISTINCT LOWER(i.required_package)) FROM ue_federation_request_items i WHERE i.request_id=r.id) package_count,
-                (SELECT COUNT(*) FROM ue_federation_request_items i WHERE i.request_id=r.id) raw_item_count
+                (SELECT COUNT(DISTINCT LOWER(i.required_package)) FROM ue_federation_request_items i WHERE i.request_id=r.id) package_count
          FROM ue_federation_requests r
          JOIN ue_federation_peers p ON p.id=r.peer_id
          WHERE r.direction="child_to_parent"
          ORDER BY r.created_at DESC LIMIT 200'
     );
+
     echo '<div class="card"><h2>Requests from children</h2>';
-    echo '<p><strong>Direction:</strong> child &rarr; this parent. Opening a request never means the parent is asking the child for these files.</p>';
     if (!$requests) {
         echo '<p class="muted">No child requests have been received.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>From child</th><th>Status</th><th>Requested packages</th><th>Title</th><th>Submitted</th><th>Action</th></tr>';
+        echo '<table><tr><th>ID</th><th>From child</th><th>Status</th><th>Packages</th><th>Title</th><th>Submitted</th><th>Action</th></tr>';
         foreach ($requests as $row) {
             echo '<tr><td class="mono">' . (int)$row['id'] . '</td><td>' . catalog_h($row['peer_name']) . '</td><td>' . catalog_h($row['status']) . '</td><td>' . (int)$row['package_count'] . '</td><td>' . catalog_h($row['title']) . '</td><td>' . catalog_h($row['submitted_at']) . '</td><td><a href="requests.php?request_id=' . (int)$row['id'] . '">Review request</a></td></tr>';
         }
@@ -268,61 +287,62 @@ try {
     echo '</div>';
 
     if ($requestId > 0) {
-        $request = catalog_one($db, 'SELECT r.*, p.site_name peer_name FROM ue_federation_requests r JOIN ue_federation_peers p ON p.id=r.peer_id WHERE r.id=? AND r.direction="child_to_parent"', [$requestId]);
+        $request = catalog_one(
+            $db,
+            'SELECT r.*, p.site_name peer_name
+             FROM ue_federation_requests r
+             JOIN ue_federation_peers p ON p.id=r.peer_id
+             WHERE r.id=? AND r.direction="child_to_parent"',
+            [$requestId]
+        );
         if (!$request) {
             throw new RuntimeException('Incoming child request not found.');
         }
 
+        $refresh = federation_refresh_request_matches($db, $requestId);
+        $request = catalog_one($db, 'SELECT r.*, p.site_name peer_name FROM ue_federation_requests r JOIN ue_federation_peers p ON p.id=r.peer_id WHERE r.id=?', [$requestId]) ?: $request;
         $allRawItems = requests_raw_items($db, $requestId, true);
         $allGroups = requests_group_items($allRawItems);
-        $baseGameCount = 0;
-        foreach ($allGroups as $group) {
-            if (!empty($group['base_game_id'])) {
-                $baseGameCount++;
-            }
-        }
+        $baseGameCount = count(array_filter($allGroups, static fn(array $group): bool => !empty($group['is_base_game'])));
+        $waitingCount = count(array_filter($allGroups, static fn(array $group): bool => !empty($group['waiting_for_file'])));
 
-        echo '<div class="card"><h2>Incoming request #' . (int)$request['id'] . '</h2><table>';
-        echo '<tr><th>Direction</th><td><strong>' . catalog_h($request['peer_name']) . '</strong> child &rarr; <strong>this parent</strong></td></tr>';
-        echo '<tr><th>Meaning</th><td>The child is missing these packages and is asking this parent to provide them.</td></tr>';
+        echo '<div class="card"><h2>Request #' . (int)$request['id'] . ' from ' . catalog_h($request['peer_name']) . '</h2><table>';
         echo '<tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr>';
-        echo '<tr><th>Distinct packages</th><td>' . count($allGroups) . '</td></tr>';
-        echo '<tr><th>Received item rows</th><td>' . count($allRawItems) . (count($allRawItems) > count($allGroups) ? ' <span class="muted">(legacy object-level rows are grouped below)</span>' : '') . '</td></tr>';
-        echo '<tr><th>Hash</th><td class="mono">' . catalog_h($request['request_hash']) . '</td></tr>';
-        echo '<tr><th>Notes</th><td>' . catalog_h($request['notes']) . '</td></tr>';
+        echo '<tr><th>Requested packages</th><td>' . count($allGroups) . '</td></tr>';
+        echo '<tr><th>Approved and waiting for a file</th><td>' . $waitingCount . '</td></tr>';
         echo '<tr><th>Official base-game packages</th><td>' . $baseGameCount . ($showBaseGame ? ' shown' : ' hidden') . '</td></tr>';
+        echo '<tr><th>Automatically linked now</th><td>' . (int)($refresh['linked'] ?? 0) . '</td></tr>';
+        echo '<tr><th>Notes</th><td>' . catalog_h($request['notes']) . '</td></tr>';
         echo '</table>';
 
-        echo '<form method="get" action="requests.php" class="filter-bar">';
-        echo '<input type="hidden" name="request_id" value="' . (int)$requestId . '">';
-        echo '<label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages</label> ';
-        echo '<button>Apply filter</button></form>';
+        echo '<form method="get" action="requests.php" class="filter-bar"><input type="hidden" name="request_id" value="' . $requestId . '"><label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages</label> <button>Apply filter</button></form>';
 
         if (in_array((string)$request['status'], ['submitted', 'part_approved', 'approved'], true)) {
-            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><input type="hidden" name="action" value="approve_all"><button>Approve every package this parent can supply</button></form> ';
-            echo '<form method="post" style="display:inline" onsubmit="return confirm(\'Deny all remaining packages in this child request?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><input type="hidden" name="action" value="deny_all"><button>Deny request</button></form>';
+            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . $requestId . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><input type="hidden" name="action" value="approve_all"><button>Approve all non-base-game requests</button></form> ';
+            echo '<form method="post" style="display:inline" onsubmit="return confirm(\'Deny all remaining packages in this child request?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . $requestId . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><input type="hidden" name="action" value="deny_all"><button>Deny remaining request</button></form>';
         }
         echo '</div>';
 
         $groups = requests_group_items(requests_raw_items($db, $requestId, $showBaseGame));
         echo '<div class="card"><h2>Packages requested by the child</h2>';
-        echo '<p>The availability column refers to this parent. The child is requesting these packages because it does not currently have the dependencies it needs.</p>';
+        echo '<p>Unavailable packages can be approved. They stay active as <strong>approved — waiting for file</strong> and are linked automatically after the parent imports a matching package.</p>';
         if (!$groups) {
             echo '<p class="muted">No requested packages match the current filter.</p></div>';
         } else {
-            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$requestId . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '">';
-            echo '<p><button name="action" value="approve_selected">Approve selected available packages</button> <button name="action" value="deny_selected">Deny selected packages</button></p>';
-            echo '<table><tr><th>Select</th><th>Decision status</th><th>Package requested by child</th><th>Example missing object</th><th>Missing objects</th><th>Availability on this parent</th><th>Decision / reason</th></tr>';
+            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . $requestId . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '">';
+            echo '<p><button name="action" value="approve_selected">Approve selected requests</button> <button name="action" value="deny_selected">Deny selected requests</button></p>';
+            echo '<table><tr><th>Select</th><th>Status</th><th>Package</th><th>Example missing object</th><th>Missing objects</th><th>Parent availability</th><th>Current state</th></tr>';
             foreach ($groups as $group) {
-                $isBase = !empty($group['base_game_id']);
+                $isBase = !empty($group['is_base_game']);
                 $match = !empty($group['local_file_id'])
                     ? '<a href="../file-info.php?id=' . (int)$group['local_file_id'] . '" target="_blank">' . catalog_h($group['local_package'] ?: $group['local_file']) . '</a>' . ($isBase ? ' <span class="pill amber">official base-game blocked</span>' : '')
-                    : '<span class="muted">Not available on this parent</span>';
+                    : '<span class="muted">Not available yet</span>';
+                $displayStatus = !empty($group['waiting_for_file']) ? 'approved — waiting for file' : (string)$group['display_status'];
                 $message = (string)$group['display_message'];
                 if (empty($group['local_file_id']) && $message === '') {
-                    $message = 'Not found in this parent catalog; this package cannot be approved.';
+                    $message = 'Not available yet. Approve to keep this request active until the file is found.';
                 }
-                echo '<tr><td>' . (!empty($group['can_select']) ? '<input type="checkbox" name="group_keys[]" value="' . catalog_h($group['group_key']) . '">' : '') . '</td><td>' . catalog_h($group['display_status']) . '</td><td class="mono">' . catalog_h($group['required_package']) . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . $match . '</td><td>' . catalog_h($message) . '</td></tr>';
+                echo '<tr><td>' . (!empty($group['can_select']) && !$isBase ? '<input type="checkbox" name="group_keys[]" value="' . catalog_h($group['group_key']) . '">' : '') . '</td><td>' . catalog_h($displayStatus) . '</td><td class="mono">' . catalog_h($group['required_package']) . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . $match . '</td><td>' . catalog_h($message) . '</td></tr>';
             }
             echo '</table></form></div>';
         }
