@@ -9,6 +9,14 @@ declare(strict_types=1);
  */
 function catalog_admin_navigation_groups(string $root): array
 {
+    static $clientNavigationLoaded = false;
+    if (!$clientNavigationLoaded) {
+        $scriptPath = __DIR__ . '/../assets/catalog-navigation.js';
+        $scriptVersion = is_file($scriptPath) ? (string)filemtime($scriptPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/catalog-navigation.js?v=' . $scriptVersion) . '"></script>';
+        $clientNavigationLoaded = true;
+    }
+
     return [
         'Admin' => [
             'Dashboard' => $root . 'dashboard.php',
@@ -68,11 +76,11 @@ function catalog_admin_navigation_groups(string $root): array
             'Parents' => $root . 'federation/peers.php?role=parent',
             'Join a Parent' => $root . 'federation/join-main-parent.php',
             'Children' => $root . 'federation/peers.php?role=child',
-            'Child Join Requests' => $root . 'federation/join-requests.php',
+            'Incoming Child Join Requests' => $root . 'federation/join-requests.php',
             'Missing Files' => $root . 'federation/missing-files.php',
             'Requests' => $root . 'federation/request-center.php',
-            'Incoming Requests' => $root . 'federation/requests.php',
-            'Outgoing Requests' => $root . 'federation/request-status.php',
+            'Incoming File Requests' => $root . 'federation/requests.php',
+            'Outgoing File Requests' => $root . 'federation/request-status.php',
             'Approved Downloads' => $root . 'federation/approved-downloads.php',
             'Child Inventories' => $root . 'federation/peer-inventory.php',
             'Parent Pull' => $root . 'federation/parent-pull.php',
