@@ -25,6 +25,14 @@ function jmp_validate_parent_url(string $url): string
     return $url;
 }
 
+function jmp_existing_parent(PDO $db): ?array
+{
+    return catalog_one(
+        $db,
+        'SELECT * FROM ue_federation_peers WHERE peer_role="parent" ORDER BY is_active DESC, id ASC LIMIT 1'
+    );
+}
+
 function jmp_parent_url(PDO $db): string
 {
     $url = trim((string)fed_setting($db, 'main_parent_url', ''));
@@ -90,13 +98,10 @@ function jmp_poll_parent_status(PDO $db, array $identity): array
     $requestId = (int)(fed_setting($db, 'main_parent_join_request_id', '0') ?: 0);
     $requestToken = (string)fed_setting($db, 'main_parent_join_request_token', '');
     if ($requestId <= 0) {
-        throw new RuntimeException('No stored parent join request. Submit first.');
+        throw new RuntimeException('No stored parent join request.');
     }
 
-    $localParent = catalog_one(
-        $db,
-        'SELECT id,site_name,site_url,peer_site_id FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY id LIMIT 1'
-    );
+    $localParent = jmp_existing_parent($db);
     if ($localParent && $requestToken === '') {
         $result = [
             'ok' => true,
@@ -109,7 +114,7 @@ function jmp_poll_parent_status(PDO $db, array $identity): array
         return $result;
     }
     if ($requestToken === '') {
-        throw new RuntimeException('Stored parent join token is unavailable. Submit a new request.');
+        throw new RuntimeException('Stored parent join token is unavailable. Disconnect the incomplete parent state before trying again.');
     }
 
     $previousStatus = strtolower(trim((string)fed_setting($db, 'main_parent_join_status', 'none')));
@@ -147,11 +152,11 @@ function jmp_poll_parent_status(PDO $db, array $identity): array
 function jmp_default_status_message(string $status): string
 {
     return match ($status) {
-        'pending' => 'Waiting for parent admin approval.',
+        'pending' => 'Waiting for parent administrator approval.',
         'approved' => 'Approved. Automatic pairing is being completed.',
-        'denied' => 'Join request denied by parent admin.',
+        'denied' => 'The parent denied this join request.',
         'claimed' => 'Parent pairing is connected.',
-        'expired' => 'Join approval expired. Submit a new request.',
+        'expired' => 'The join approval expired.',
         default => 'No active parent join request.',
     };
 }
@@ -195,6 +200,11 @@ try {
         $identity = fed_ensure_identity($db);
 
         if ($action === 'submit') {
+            $existingParent = jmp_existing_parent($db);
+            if ($existingParent) {
+                throw new RuntimeException('This child already has a parent connection. Disconnect from ' . (string)$existingParent['site_name'] . ' before joining another parent.');
+            }
+
             $parentMode = strtolower(trim((string)($_POST['parent_mode'] ?? 'manual')));
             $parentUrl = jmp_validate_parent_url(
                 $parentMode === 'official' ? JMP_OFFICIAL_PARENT_URL : (string)($_POST['parent_url'] ?? '')
@@ -222,11 +232,11 @@ try {
                 'request_token' => $requestToken,
                 'contact_name' => trim((string)($_POST['contact_name'] ?? '')),
                 'contact_email' => trim((string)($_POST['contact_email'] ?? '')),
-                'notes' => trim((string)($_POST['notes'] ?? 'Automatic join request to parent.')),
+                'notes' => trim((string)($_POST['notes'] ?? 'Request to join this federation parent.')),
                 'self_signed_tls_requested' => jmp_allow_self_signed_tls($db),
             ];
             if ($payload['site_name'] === '' || $payload['site_url'] === '' || $payload['site_fingerprint'] === '') {
-                throw new RuntimeException('Local federation identity is incomplete. Set site_name and site_url in federation settings first.');
+                throw new RuntimeException('Local federation identity is incomplete. Set the site name and URL in Federation Settings first.');
             }
 
             $result = jmp_post_json($db, $parentUrl . '/api/federation/join-request-submit.php', $payload);
@@ -260,12 +270,13 @@ try {
         throw new RuntimeException('Unknown join action.');
     }
 
-    if (!catalog_require_admin_page('Join Federation Parent')) {
+    if (!catalog_require_admin_page('Join a Parent')) {
         exit;
     }
 
     $identity = fed_ensure_identity($db);
     $currentRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
+    $existingParent = jmp_existing_parent($db);
     $parentUrl = rtrim((string)fed_setting($db, 'main_parent_url', ''), '/');
     $joinStatus = strtolower(trim((string)fed_setting($db, 'main_parent_join_status', 'none')));
     $joinMessage = trim((string)fed_setting($db, 'main_parent_join_status_message', ''));
@@ -277,7 +288,7 @@ try {
         $joinMessage = jmp_default_status_message($joinStatus);
     }
 
-    catalog_head('Join Federation Parent');
+    catalog_head('Join a Parent');
     catalog_flash($_SESSION['fed_join_main_flash'] ?? null);
     unset($_SESSION['fed_join_main_flash']);
 
@@ -287,54 +298,73 @@ try {
     }
 
     catalog_page_header(
-        'Join Federation Parent',
-        'Submit this child to a parent. After parent approval, pairing completes automatically without a separate claim step.',
-        catalog_federation_links() + ['Settings' => 'settings.php', 'Peers' => 'peers.php']
+        'Join a Parent',
+        'A child can have one parent connection. Disconnect the current parent before joining a different one.',
+        catalog_federation_links() + ['Parents' => 'peers.php?role=parent', 'Settings' => 'settings.php']
     );
+
+    echo '<div class="card"><h2>Server mode</h2><p>This server is running in <strong>' . catalog_h(ucfirst($currentRole)) . '</strong> mode.</p></div>';
 
     if ($allowSelfSigned) {
         echo CatalogUi::alert('warning', 'Self-signed federation certificates are currently allowed for testing.', 'Testing TLS mode enabled');
     }
 
+    if ($existingParent) {
+        echo '<div class="card"><h2>Connected parent</h2><table>';
+        echo '<tr><th>Name</th><td>' . catalog_h($existingParent['site_name']) . '</td></tr>';
+        echo '<tr><th>URL</th><td class="mono path">' . catalog_h($existingParent['site_url']) . '</td></tr>';
+        echo '<tr><th>Active</th><td>' . ((int)$existingParent['is_active'] === 1 ? 'yes' : 'no') . '</td></tr>';
+        echo '<tr><th>Site ID</th><td class="mono">' . catalog_h($existingParent['peer_site_id']) . '</td></tr>';
+        echo '<tr><th>Fingerprint</th><td class="mono">' . catalog_h($existingParent['peer_fingerprint']) . '</td></tr>';
+        echo '</table><p>This child cannot submit another parent join request while this connection exists.</p>';
+        echo '<p><a class="button" href="peers.php?role=parent">Manage or disconnect parent</a></p></div>';
+
+        echo '<div class="card"><h2>Local identity</h2><table>';
+        echo '<tr><th>Local site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
+        echo '<tr><th>Local site URL</th><td class="mono path">' . catalog_h($identity['site_url']) . '</td></tr>';
+        echo '<tr><th>Local site ID</th><td class="mono">' . catalog_h($identity['site_id']) . '</td></tr>';
+        echo '</table></div>';
+        catalog_foot();
+        exit;
+    }
+
     echo '<div class="card" id="join-status-card" data-status="' . catalog_h($joinStatus) . '" data-request-id="' . catalog_h($requestId) . '">';
-    echo '<h2>Parent approval status</h2>';
+    echo '<h2>Outgoing join request status</h2>';
     echo '<p><span id="join-status-pill" class="' . catalog_h(jmp_status_pill_class($joinStatus)) . '">' . catalog_h(jmp_status_label($joinStatus)) . '</span></p>';
     echo '<p id="join-status-message">' . catalog_h($joinMessage) . '</p>';
     if ($joinAdminNotes !== '') {
-        echo '<h3>Parent admin notes</h3><p>' . catalog_h($joinAdminNotes) . '</p>';
+        echo '<h3>Parent administrator notes</h3><p>' . catalog_h($joinAdminNotes) . '</p>';
     }
-    echo '<p class="muted" id="join-auto-poll-note">' . ($joinStatus === 'pending' || $joinStatus === 'approved'
+    echo '<p class="muted" id="join-auto-poll-note">' . (in_array($joinStatus, ['pending', 'approved'], true)
         ? 'Automatically checking the parent every 15 seconds.'
-        : 'Automatic checking stops when pairing reaches a final state.') . '</p>';
+        : 'No active approval check is running.') . '</p>';
     echo '</div>';
 
     echo '<div class="card"><h2>Local identity</h2><table>';
     echo '<tr><th>Current site role</th><td>' . catalog_h($currentRole) . '</td></tr>';
-    echo '<tr><th>Stored parent URL</th><td class="mono path">' . catalog_h($parentUrl ?: 'not set') . '</td></tr>';
     echo '<tr><th>Local site name</th><td>' . catalog_h($identity['site_name']) . '</td></tr>';
     echo '<tr><th>Local site URL</th><td class="mono path">' . catalog_h($identity['site_url']) . '</td></tr>';
     echo '<tr><th>Local site ID</th><td class="mono">' . catalog_h($identity['site_id']) . '</td></tr>';
     echo '<tr><th>Local fingerprint</th><td class="mono">' . catalog_h($identity['site_fingerprint']) . '</td></tr>';
     echo '<tr><th>Stored request ID</th><td class="mono">' . catalog_h($requestId ?: 'none') . '</td></tr>';
-    echo '<tr><th>Stored status</th><td>' . catalog_h($joinStatus) . '</td></tr>';
     echo '</table></div>';
 
-    echo '<div class="card"><h2>Submit join request</h2><form method="post">';
+    echo '<div class="card"><h2>Submit parent join request</h2><form method="post">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="submit">';
     echo '<fieldset><legend>Choose parent</legend>';
-    echo '<p><label><input type="radio" name="parent_mode" value="official"' . ($parentUrl === '' || $parentUrl === JMP_OFFICIAL_PARENT_URL ? ' checked' : '') . '> <strong>Join official UnrealDB parent</strong><br><span class="mono">' . catalog_h(JMP_OFFICIAL_PARENT_URL) . '</span></label></p>';
-    echo '<p><label><input type="radio" name="parent_mode" value="manual"' . ($parentUrl !== '' && $parentUrl !== JMP_OFFICIAL_PARENT_URL ? ' checked' : '') . '> <strong>Join another parent</strong></label><br><input id="manual-parent-url" name="parent_url" value="' . catalog_h($manualUrl) . '" style="min-width:680px" placeholder="https://parent.example.com/catalog"></p>';
-    echo '</fieldset><p><label>Contact name<br><input name="contact_name" style="min-width:420px"></label></p><p><label>Contact email<br><input name="contact_email" style="min-width:420px"></label></p><p><label>Notes<br><textarea name="notes" rows="4" style="width:100%">Request to join this federation parent.</textarea></label></p><p><button type="submit">Submit join request</button></p></form></div>';
+    echo '<p><label><input type="radio" name="parent_mode" value="official"' . ($parentUrl === '' || $parentUrl === JMP_OFFICIAL_PARENT_URL ? ' checked' : '') . '> <strong>Official UnrealDB parent</strong><br><span class="mono">' . catalog_h(JMP_OFFICIAL_PARENT_URL) . '</span></label></p>';
+    echo '<p><label><input type="radio" name="parent_mode" value="manual"' . ($parentUrl !== '' && $parentUrl !== JMP_OFFICIAL_PARENT_URL ? ' checked' : '') . '> <strong>Another parent</strong></label><br><input id="manual-parent-url" name="parent_url" value="' . catalog_h($manualUrl) . '" style="min-width:680px" placeholder="https://parent.example.com/catalog"></p>';
+    echo '</fieldset><p><label>Contact name<br><input name="contact_name" style="min-width:420px"></label></p><p><label>Contact email<br><input name="contact_email" style="min-width:420px"></label></p><p><label>Notes<br><textarea name="notes" rows="4" style="width:100%">Request to join this federation parent.</textarea></label></p><p><button type="submit">Submit join request to parent</button></p></form></div>';
 
-    echo '<div class="card"><h2>Check approval status</h2><form method="post" id="poll-status-form" data-ui-loading-form>';
-    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="poll"><p><button type="submit" id="poll-status-button"' . ($requestId === '' ? ' disabled' : '') . '>Check parent now</button></p></form>';
-    echo '<p class="muted">This button performs a normal server request and works without JavaScript. Background polling remains automatic while the request is pending or approved.</p></div>';
+    if ($requestId !== '') {
+        echo '<div class="card"><h2>Check outgoing request</h2><form method="post" id="poll-status-form" data-ui-loading-form>';
+        echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_main_parent')) . '"><input type="hidden" name="action" value="poll"><p><button type="submit" id="poll-status-button">Check parent now</button></p></form></div>';
+    }
 
     echo <<<'HTML'
 <script>
 (function () {
     'use strict';
-
     const modes = document.querySelectorAll('input[name="parent_mode"]');
     const manual = document.getElementById('manual-parent-url');
     const form = document.getElementById('poll-status-form');
@@ -344,6 +374,7 @@ try {
     let polling = false;
 
     function syncParentMode() {
+        if (!manual) return;
         const selected = document.querySelector('input[name="parent_mode"]:checked');
         const enabled = selected && selected.value === 'manual';
         manual.disabled = !enabled;
@@ -376,10 +407,10 @@ try {
                 window.location.reload();
                 return;
             }
-            note.textContent = result.message || 'Parent status checked.';
+            if (note) note.textContent = result.message || 'Parent status checked.';
             schedule(card.dataset.status === 'approved' ? 2000 : 15000);
         } catch (error) {
-            note.textContent = 'Automatic status check failed: ' + (error instanceof Error ? error.message : String(error));
+            if (note) note.textContent = 'Automatic status check failed: ' + (error instanceof Error ? error.message : String(error));
             schedule(30000);
         } finally {
             polling = false;
