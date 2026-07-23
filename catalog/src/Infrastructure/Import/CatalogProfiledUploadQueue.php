@@ -47,13 +47,15 @@ final class CatalogProfiledUploadQueue
         if ($isPak) {
             $this->requirePakGame($game);
         }
+
         $jobType = $isPak ? JobType::IMPORT_STAGED_PAK : JobType::IMPORT_STAGED_PACKAGE;
+        $stagedPath = (string)$staged['relative_path'];
         $cleanSourceRelativePath = $this->cleanRelativePath(
             $sourceRelativePath !== '' ? $sourceRelativePath : $originalName
         );
         $payload = [
             'game_id' => $gameId,
-            'staged_path' => (string)$staged['relative_path'],
+            'staged_path' => $stagedPath,
             'original_name' => $originalName,
             'source_relative_path' => $cleanSourceRelativePath,
             'strict_profile' => $strictProfile,
@@ -65,12 +67,13 @@ final class CatalogProfiledUploadQueue
             $payload['sha256'] = $sha256;
         }
 
-        // Re-uploading the same named file while its first import is queued or
-        // running must reuse that active job instead of creating a second worker
-        // attempt against another durable staging copy. The path/name remain in
-        // the key so deliberate aliases with different names are still allowed.
-        $dedupeKey = $sha256 !== ''
-            ? 'profiled-upload:' . hash(
+        // Standard uploads use their content hash. Large browser uploads already
+        // have a stable chunk-upload ID derived from file metadata, so use that
+        // ID when no whole-file hash is available yet. Either key prevents an
+        // exact re-upload from creating another queued/running import.
+        $dedupeKey = null;
+        if ($sha256 !== '') {
+            $dedupeKey = 'profiled-upload:' . hash(
                 'sha256',
                 $gameId . "\0"
                 . $jobType . "\0"
@@ -78,11 +81,31 @@ final class CatalogProfiledUploadQueue
                 . strtolower($cleanSourceRelativePath) . "\0"
                 . $sha256 . "\0"
                 . ($strictProfile ? 'strict' : 'loose')
-            )
-            : null;
+            );
+        } elseif (preg_match('/^chunk-upload:([a-f0-9]{64})$/', $stagedPath, $chunkMatch) === 1) {
+            $dedupeKey = 'profiled-chunk:' . hash(
+                'sha256',
+                $gameId . "\0"
+                . $jobType . "\0"
+                . strtolower($originalName) . "\0"
+                . strtolower($cleanSourceRelativePath) . "\0"
+                . $chunkMatch[1] . "\0"
+                . ($strictProfile ? 'strict' : 'loose')
+            );
+        }
+
+        $queueName = $this->queueName();
+        $existingJobId = 0;
+        if ($dedupeKey !== null) {
+            $existing = $this->db->prepare(
+                'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
+            );
+            $existing->execute([$queueName, $dedupeKey]);
+            $existingJobId = (int)($existing->fetchColumn() ?: 0);
+        }
 
         $jobId = $this->queue()->enqueue(
-            $this->queueName(),
+            $queueName,
             $jobType,
             $payload,
             5,
@@ -92,15 +115,17 @@ final class CatalogProfiledUploadQueue
             3
         );
 
-        $deduplicated = false;
-        if ($dedupeKey !== null) {
+        $deduplicated = $existingJobId > 0 && $existingJobId === $jobId;
+        if ($deduplicated) {
             $row = $this->db->prepare('SELECT payload_json FROM ue_background_jobs WHERE id=? LIMIT 1');
             $row->execute([$jobId]);
             $storedPayload = json_decode((string)($row->fetchColumn() ?: ''), true);
             $storedPath = is_array($storedPayload) ? (string)($storedPayload['staged_path'] ?? '') : '';
-            if ($storedPath !== '' && $storedPath !== (string)$staged['relative_path']) {
-                (new CatalogIncomingFileStore($this->config))->remove((string)$staged['relative_path']);
-                $deduplicated = true;
+            // A second conventional upload created a different durable object;
+            // remove only that unused copy. A resumed chunk upload shares the
+            // active job's path and must remain intact.
+            if ($storedPath !== '' && $storedPath !== $stagedPath) {
+                (new CatalogIncomingFileStore($this->config))->remove($stagedPath);
             }
         }
 
