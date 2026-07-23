@@ -89,7 +89,7 @@ final class CatalogUi
         }
 
         $game = is_array($GLOBALS['game'] ?? null) ? $GLOBALS['game'] : [];
-        $engineKey = strtoupper(trim((string)($game['profile_engine'] ?? $game['engine_key'] ?? ''));
+        $engineKey = strtoupper(trim((string)($game['profile_engine'] ?? $game['engine_key'] ?? '')));
         $engineMajor = preg_match('/UE\s*([0-9]+)/i', $engineKey, $match) === 1 ? (int)$match[1] : 0;
 
         if ($engineMajor === 3) {
