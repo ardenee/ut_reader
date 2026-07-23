@@ -45,9 +45,14 @@ try {
         'SELECT j.*, p.site_name peer_name, pf.package_name, pf.original_name, COALESCE(pf.is_base_game,0) is_base_game
          FROM ue_federation_transfer_jobs j
          JOIN ue_federation_peers p ON p.id=j.peer_id
-         LEFT JOIN ue_federation_peer_files pf ON pf.peer_id=j.peer_id AND pf.remote_file_id=j.remote_file_id
+         LEFT JOIN ue_federation_peer_files pf
+           ON pf.id=(
+                SELECT MAX(pf_latest.id)
+                FROM ue_federation_peer_files pf_latest
+                WHERE pf_latest.peer_id=j.peer_id
+                  AND pf_latest.remote_file_id=j.remote_file_id
+           )
          WHERE j.direction="parent_pull_from_child"
-         GROUP BY j.id
          ORDER BY j.created_at DESC, j.id DESC
          LIMIT 200'
     );
