@@ -52,6 +52,18 @@ function crs_group_key(array $item): string
     );
 }
 
+function crs_clarify_message(string $message): string
+{
+    $message = trim($message);
+    return match ($message) {
+        'Parent does not currently have a matching file.',
+        'Parent does not have matching file.' => 'Not found in the selected parent catalog; the parent cannot approve this package until a matching file is imported.',
+        'Approved by parent admin.' => 'Approved for this child by the parent administrator.',
+        'Denied by parent admin.' => 'Denied by the parent administrator.',
+        default => $message,
+    };
+}
+
 /**
  * @param array<int,mixed> $items
  * @return list<array<string,mixed>>
@@ -81,7 +93,7 @@ function crs_group_items(array $items): array
         if ($path !== '') {
             $groups[$key]['object_paths'][strtolower($path)] = $path;
         }
-        $message = trim((string)($item['status_message'] ?? ''));
+        $message = crs_clarify_message((string)($item['status_message'] ?? ''));
         if ($message !== '') {
             $groups[$key]['messages'][$message] = true;
         }
