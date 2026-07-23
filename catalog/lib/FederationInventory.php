@@ -4,17 +4,22 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/FederationAuth.php';
 require_once __DIR__ . '/FederationPeerSecret.php';
+require_once __DIR__ . '/BaseGameProtection.php';
+require_once __DIR__ . '/FederationBaseGamePolicy.php';
 
 /** @return array<string,mixed> */
 function federation_build_inventory_payload(PDO $db): array
 {
+    base_game_ensure($db);
     $identity = fed_ensure_identity($db);
     $files = catalog_all(
         $db,
-        'SELECT f.*, g.name game_name, p.engine_key profile_engine
+        'SELECT f.*, g.name game_name, p.engine_key profile_engine,
+                CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END is_base_game
          FROM ue_files f
          JOIN ue_games g ON g.id=f.game_id
          LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
+         LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
          WHERE f.scan_status="verified"
          ORDER BY f.id'
     );
@@ -32,6 +37,7 @@ function federation_build_inventory_payload(PDO $db): array
             'md5' => (string)$file['md5'],
             'sha1' => (string)$file['sha1'],
             'package_guid' => (string)$file['package_guid'],
+            'is_base_game' => (int)$file['is_base_game'],
             'is_compressed' => (int)($file['is_compressed'] ?? 0),
             'compression_flags' => (int)($file['compression_flags'] ?? 0),
             'import_count' => (int)$file['import_count'],
@@ -41,6 +47,9 @@ function federation_build_inventory_payload(PDO $db): array
 
     return [
         'site' => $identity,
+        'policy' => strtolower(trim((string)fed_setting($db, 'site_role', 'standalone'))) === 'parent'
+            ? federation_parent_base_game_policy($db)
+            : null,
         'generated_at' => date('c'),
         'file_count' => count($out),
         'files' => $out,
@@ -63,6 +72,9 @@ function federation_push_inventory_to_parent(PDO $db, int $peerId): array
         $storedSecret,
         federation_build_inventory_payload($db)
     );
+    if (is_array($result['policy'] ?? null)) {
+        federation_cache_parent_base_game_policy($db, (int)$parent['id'], $result['policy']);
+    }
     fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'INVENTORY_PUSH_SEND', json_encode($result, JSON_UNESCAPED_SLASHES));
     return $result;
 }
@@ -90,7 +102,7 @@ function federation_inventory_local_game_id(PDO $db, array $file): ?int
         }
     }
 
-    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? '')));
+    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? ''));
     if ($engineKey !== '') {
         $game = catalog_one(
             $db,
@@ -114,9 +126,9 @@ function federation_inventory_row_values(PDO $db, int $peerId, array $file, stri
 {
     $packageName = trim((string)($file['package_name'] ?? ''));
     $originalName = trim((string)($file['original_name'] ?? ''));
-    $guid = strtoupper(trim((string)($file['package_guid'] ?? '')));
-    $md5 = strtolower(trim((string)($file['md5'] ?? '')));
-    $sha1 = strtolower(trim((string)($file['sha1'] ?? '')));
+    $guid = strtoupper(trim((string)($file['package_guid'] ?? ''));
+    $md5 = strtolower(trim((string)($file['md5'] ?? ''));
+    $sha1 = strtolower(trim((string)($file['sha1'] ?? ''));
     if ($packageName === '' || $originalName === '' || ($guid === '' && $md5 === '')) {
         throw new RuntimeException('Peer inventory contains an incomplete file identity.');
     }
@@ -143,6 +155,7 @@ function federation_inventory_row_values(PDO $db, int $peerId, array $file, stri
         $md5 !== '' ? $md5 : null,
         $sha1 !== '' ? $sha1 : null,
         $guid !== '' ? $guid : null,
+        !empty($file['is_base_game']) ? 1 : 0,
         !empty($file['is_compressed']) ? 1 : 0,
         max(0, (int)($file['compression_flags'] ?? 0)),
         max(0, (int)($file['import_count'] ?? 0)),
@@ -152,10 +165,10 @@ function federation_inventory_row_values(PDO $db, int $peerId, array $file, stri
 }
 
 /**
- * Pulls the transferable inventory from either paired side. Parent sites pull
- * child inventories and child sites pull their parent inventory. Possessing an
- * inventory row does not grant download authority; child downloads remain
- * restricted to approved dependency request items.
+ * Pulls the classified inventory from either paired side. Parent sites pull
+ * child inventories and child sites pull their parent inventory. Base-game rows
+ * are retained internally so missing-dependency searches can use them; ordinary
+ * federation views apply the parent-controlled ignore policy.
  *
  * @return array<string,mixed>
  */
@@ -181,18 +194,19 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
     $received = 0;
     $pages = 0;
     $complete = false;
+    $policy = null;
     $upsert = $db->prepare(
         'INSERT INTO ue_federation_peer_files(
             peer_id,game_id,remote_game_name,remote_engine_key,remote_file_id,
-            package_name,original_name,extension,file_size,md5,sha1,package_guid,
+            package_name,original_name,extension,file_size,md5,sha1,package_guid,is_base_game,
             is_compressed,compression_flags,import_count,export_count,last_seen_at
-         ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
          ON DUPLICATE KEY UPDATE
             game_id=VALUES(game_id), remote_game_name=VALUES(remote_game_name),
             remote_engine_key=VALUES(remote_engine_key), remote_file_id=VALUES(remote_file_id),
             package_name=VALUES(package_name), original_name=VALUES(original_name),
             extension=VALUES(extension), file_size=VALUES(file_size), md5=VALUES(md5),
-            sha1=VALUES(sha1), package_guid=VALUES(package_guid),
+            sha1=VALUES(sha1), package_guid=VALUES(package_guid), is_base_game=VALUES(is_base_game),
             is_compressed=VALUES(is_compressed), compression_flags=VALUES(compression_flags),
             import_count=VALUES(import_count), export_count=VALUES(export_count),
             last_seen_at=VALUES(last_seen_at)'
@@ -208,6 +222,12 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
         ]);
         if (empty($result['ok']) || !isset($result['files']) || !is_array($result['files'])) {
             throw new RuntimeException('Peer inventory request failed: ' . ($result['error'] ?? 'invalid response'));
+        }
+        if (is_array($result['policy'] ?? null)) {
+            $policy = $result['policy'];
+            if ((string)$peer['peer_role'] === 'parent') {
+                federation_cache_parent_base_game_policy($db, $peerId, $policy);
+            }
         }
         $remoteSiteId = strtolower(trim((string)($result['site']['site_id'] ?? '')));
         if ($remoteSiteId !== '' && !hash_equals(strtolower((string)$peer['peer_site_id']), $remoteSiteId)) {
@@ -249,7 +269,7 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
         null,
         'INFO',
         'INVENTORY_SYNC_FROM_PEER',
-        'Role=' . (string)$peer['peer_role'] . '; received ' . $received . ' row(s) in ' . $pages . ' page(s); removed ' . $removed . ' stale row(s).'
+        'Role=' . (string)$peer['peer_role'] . '; received ' . $received . ' classified row(s) in ' . $pages . ' page(s); removed ' . $removed . ' stale row(s).'
     );
     return [
         'ok' => true,
@@ -259,6 +279,7 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
         'received' => $received,
         'removed_stale' => $removed,
         'pages' => $pages,
+        'policy' => $policy,
         'synchronized_at' => $seenAt,
     ];
 }
