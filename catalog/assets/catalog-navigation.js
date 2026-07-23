@@ -24,6 +24,7 @@
         var links = [
             ['Overview', 'federation/admin.php'],
             ['Settings', 'federation/settings.php'],
+            ['Connections', 'federation/peers.php'],
             ['Parents', 'federation/peers.php?role=parent'],
             ['Join a Parent', 'federation/join-main-parent.php'],
             ['Children', 'federation/peers.php?role=child'],
