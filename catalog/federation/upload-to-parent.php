@@ -4,29 +4,41 @@ declare(strict_types=1);
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
+require_once __DIR__ . '/../lib/FederationAuth.php';
 
 try {
-    if (!catalog_require_admin_page('Parent Pull Authority')) {
+    $config = catalog_config();
+    $db = catalog_db($config);
+
+    if (!catalog_require_admin_page('Federation Transfers')) {
         exit;
     }
 
-    catalog_head('Parent Pull Authority');
+    $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
+    catalog_head('Federation Transfers');
     catalog_page_header(
-        'Files Are Pulled by the Parent',
-        'Manual child uploads to the parent are no longer part of the federation workflow.',
-        catalog_federation_links() + ['Federation Admin' => 'admin.php', 'Peers' => 'peers.php']
+        'Federation Transfers',
+        'Manual child uploads to a parent are not used by the current federation workflow.',
+        catalog_federation_links() + ['Overview' => 'admin.php', 'Transfer Queue' => 'queue.php']
     );
 
-    echo '<div class="card"><h2>No child upload action</h2>';
-    echo '<p>The parent/master reads this child inventory and selects any transferable file that the parent does not already have.</p>';
-    echo '<p>The parent then downloads the selected file directly from the child without child approval.</p>';
-    echo '<p class="muted">This prevents child-driven arbitrary uploads and keeps the parent in control as the federation source of truth.</p>';
+    echo '<div class="card"><h2>Current mode: ' . catalog_h(ucfirst($role)) . '</h2>';
+    if ($role === 'parent') {
+        echo '<p>Select files from a connected child inventory. The parent then pulls those files directly.</p>';
+        echo '<p><a class="button" href="peer-inventory.php">Open Child Inventories</a></p>';
+    } elseif ($role === 'child') {
+        echo '<p>This child does not push arbitrary files to its parent. Missing files are requested from the parent, while the parent independently pulls child files it needs.</p>';
+        echo '<p><a class="button" href="missing-files.php">Open Missing Files</a></p>';
+    } else {
+        echo '<p>Federation transfers are unavailable while this site is in Standalone mode.</p>';
+        echo '<p><a class="button" href="settings.php">Federation Settings</a></p>';
+    }
     echo '</div>';
 
     catalog_foot();
 } catch (Throwable $e) {
     if (!headers_sent()) {
-        catalog_head('Parent pull authority error');
+        catalog_head('Federation transfers error');
     }
     echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
     catalog_foot();
