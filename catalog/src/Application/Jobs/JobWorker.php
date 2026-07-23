@@ -17,7 +17,8 @@ final class JobWorker
         private readonly array $handlers,
         private readonly string $queueName,
         private readonly string $workerId,
-        private readonly int $leaseSeconds = 120
+        private readonly int $leaseSeconds = 120,
+        private readonly ?\Closure $eventAppender = null
     ) {
     }
 
@@ -38,8 +39,15 @@ final class JobWorker
         }
 
         try {
-            $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds);
-            $context->heartbeat(['stage' => 'started', 'attempt' => $job->attempt]);
+            $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds, $this->eventAppender);
+            $context->heartbeat([
+                'stage' => 'worker_start',
+                'done' => 1,
+                'total' => 100,
+                'percent' => 1,
+                'attempt' => $job->attempt,
+                'message' => 'Worker claimed job #' . $job->id . '; starting ' . $job->type . '.',
+            ], true);
             $result = $handler->handle($job, $context);
 
             /*
