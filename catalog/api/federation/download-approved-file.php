@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
@@ -27,23 +26,43 @@ try {
         fed_json_response(['ok' => false, 'error' => 'request_item_id is required'], 400);
     }
 
-    $item = catalog_one($db, 'SELECT i.*, r.peer_id, f.* FROM ue_federation_request_items i JOIN ue_federation_requests r ON r.id=i.request_id JOIN ue_files f ON f.id=i.local_file_id WHERE i.id=? AND r.peer_id=? AND i.status IN ("approved","queued","downloading")', [$itemId, (int)$peer['id']]);
+    $item = catalog_one(
+        $db,
+        'SELECT i.*, r.peer_id, f.*
+         FROM ue_federation_request_items i
+         JOIN ue_federation_requests r ON r.id=i.request_id
+         JOIN ue_files f ON f.id=i.local_file_id
+         WHERE i.id=? AND r.peer_id=? AND r.direction="child_to_parent"
+           AND i.status IN ("approved","queued","downloading")',
+        [$itemId, (int)$peer['id']]
+    );
     if (!$item) {
-        fed_json_response(['ok' => false, 'error' => 'Approved request item not found'], 404);
+        fed_json_response(['ok' => false, 'error' => 'Approved dependency request item not found'], 404);
     }
-    if (base_game_file_is_protected($db, $item)) {
-        $db->prepare('UPDATE ue_federation_request_items SET status="denied", status_message=? WHERE id=?')->execute([base_game_block_message($item), $itemId]);
-        fed_json_response(['ok' => false, 'error' => base_game_block_message($item)], 403);
-    }
+
+    // This endpoint is intentionally narrower than ordinary federation download
+    // routes: an administrator-approved request item proves that the file is for
+    // a missing dependency. Therefore a protected base-game file is allowed here.
+    $isBaseGameDependency = base_game_file_is_protected($db, $item);
 
     $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
     $path = realpath(__DIR__ . '/../../' . (string)$item['relative_path']);
-    if (!$root || !$path || !str_starts_with($path, $root) || !is_file($path)) {
+    if (!$root || !$path || !str_starts_with(str_replace('\\', '/', $path) . '/', rtrim(str_replace('\\', '/', $root), '/') . '/') || !is_file($path) || is_link($path)) {
         fed_json_response(['ok' => false, 'error' => 'Stored file missing'], 404);
     }
 
-    $db->prepare('UPDATE ue_federation_request_items SET status="downloading", status_message="Child started download." WHERE id=?')->execute([$itemId]);
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'CHILD_APPROVED_DOWNLOAD', 'Serving approved request item ' . $itemId . '.');
+    $message = $isBaseGameDependency
+        ? 'Child started approved base-game dependency download.'
+        : 'Child started approved dependency download.';
+    $db->prepare('UPDATE ue_federation_request_items SET status="downloading", status_message=? WHERE id=?')->execute([$message, $itemId]);
+    fed_log(
+        $db,
+        (int)$peer['id'],
+        null,
+        'INFO',
+        $isBaseGameDependency ? 'CHILD_APPROVED_BASE_GAME_DEPENDENCY_DOWNLOAD' : 'CHILD_APPROVED_DOWNLOAD',
+        'Serving approved request item ' . $itemId . '.'
+    );
 
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . filesize($path));
@@ -53,6 +72,7 @@ try {
     header('X-UE-Package-Guid: ' . (string)$item['package_guid']);
     header('X-UE-MD5: ' . (string)$item['md5']);
     header('X-UE-SHA1: ' . (string)$item['sha1']);
+    header('X-UE-Base-Game-Dependency: ' . ($isBaseGameDependency ? '1' : '0'));
     header('X-Content-Type-Options: nosniff');
     readfile($path);
     exit;
