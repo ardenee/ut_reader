@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
 function settings_csrf(): string
 {
@@ -72,11 +73,16 @@ try {
             'join_requests_enabled', 'join_claim_token_ttl_seconds', 'main_parent_url',
             'game_file_display_limit',
         ];
+        if ($siteRole === 'parent') {
+            $allowed[] = 'ignore_base_game_files';
+        }
         foreach ($allowed as $key) {
             if (array_key_exists($key, $_POST)) {
                 $value = trim((string)$_POST[$key]);
                 if ($key === 'inventory_sync_interval_hours') {
                     $value = (string)max(0, min(720, (int)$value));
+                } elseif ($key === 'ignore_base_game_files') {
+                    $value = federation_policy_bool($value, true) ? '1' : '0';
                 }
                 fed_set_setting($db, $key, $value);
             }
@@ -106,6 +112,10 @@ try {
     $currentRole = strtolower(trim((string)($settings['site_role'] ?? 'standalone')));
     $isChild = $currentRole === 'child';
     $isParent = $currentRole === 'parent';
+    $parentPeer = $isChild
+        ? catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY id LIMIT 1')
+        : null;
+    $effectiveIgnoreBaseGame = federation_ignore_base_game_files($db, $parentPeer ?: null);
 
     catalog_page_header(
         'Federation Settings',
@@ -128,10 +138,23 @@ try {
     echo '</table></div>';
 
     echo '<div class="card"><h2>Fixed role authority</h2><table>';
-    echo '<tr><th>Parent/master</th><td>May read child inventory and download any non-protected file absent from the parent. No child approval is required.</td></tr>';
+    echo '<tr><th>Parent/master</th><td>May read child inventory and download files absent from the parent. The parent controls the federation base-game policy.</td></tr>';
     echo '<tr><th>Child</th><td>May download from the parent only when a file fulfils a local missing dependency and the parent has approved that request.</td></tr>';
     echo '<tr><th>Approved child downloads</th><td>Federation workers queue approved items only while the dependency is still missing.</td></tr>';
     echo '<tr><th>Current enforcement</th><td><strong>' . catalog_h($currentRole) . '</strong> — parent features ' . ($isParent ? 'enabled' : 'disabled') . '; child features ' . ($isChild ? 'enabled' : 'disabled') . '.</td></tr>';
+    echo '</table></div>';
+
+    echo '<div class="card"><h2>Base-game federation policy</h2><table>';
+    if ($isParent) {
+        $value = (string)($settings['ignore_base_game_files'] ?? '1');
+        echo '<tr><th>Ignore base-game files</th><td><select name="ignore_base_game_files"><option value="1"' . ($value !== '0' ? ' selected' : '') . '>Yes</option><option value="0"' . ($value === '0' ? ' selected' : '') . '>No</option></select></td></tr>';
+        echo '<tr><th>Effect</th><td>When enabled, official base-game files are excluded from ordinary federation totals, inventories, lists, reports and unrestricted parent pulls. Missing dependencies are the exception: a base-game package needed to complete a dependency is still searched for, requestable, approvable and transferable.</td></tr>';
+    } elseif ($isChild) {
+        echo '<tr><th>Controlled by parent</th><td><strong>' . ($effectiveIgnoreBaseGame ? 'Ignore base-game files: Yes' : 'Ignore base-game files: No') . '</strong></td></tr>';
+        echo '<tr><th>Effect</th><td>' . catalog_h(federation_base_game_policy_label($db, $parentPeer ?: null)) . ' The child cannot override this setting.</td></tr>';
+    } else {
+        echo '<tr><th>Available in Parent mode</th><td>Choose Parent mode to control the policy inherited by child sites.</td></tr>';
+    }
     echo '</table></div>';
 
     echo '<div class="card"><h2>Join and pairing</h2><table>';
@@ -141,7 +164,7 @@ try {
     echo '<tr><th>Main parent URL</th><td><input name="main_parent_url" value="' . catalog_h($settings['main_parent_url'] ?? '') . '" style="min-width:640px" placeholder="https://parent.example.com/catalog"> <a class="button" href="join.php">Join a parent</a></td></tr>';
     echo '</table></div>';
 
-    echo '<div class="card"><h2>Inventory synchronization</h2><p>Each site pulls the current transferable inventory from its paired opposite role. Parent sites pull every child; child sites pull their parent.</p><table>';
+    echo '<div class="card"><h2>Inventory synchronization</h2><p>Each site pulls the current inventory from its paired opposite role. Parent sites pull every child; child sites pull their parent.</p><table>';
     echo '<tr><th>Automatic inventory refresh interval, hours</th><td><input name="inventory_sync_interval_hours" type="number" min="0" max="720" value="' . catalog_h($settings['inventory_sync_interval_hours'] ?? '24') . '" style="width:120px"> <span class="muted">Default: 24 hours. Set 0 to disable automatic refresh. The federation worker checks whether each peer is due.</span></td></tr>';
     echo '<tr><th>Download authority</th><td>Inventory exchange only advertises availability. It does not allow a child to download arbitrary parent files; child transfers still require an approved missing-dependency request.</td></tr>';
     echo '</table></div>';
