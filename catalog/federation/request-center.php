@@ -5,6 +5,7 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
 try {
     $config = catalog_config();
@@ -17,7 +18,7 @@ try {
     $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     $incoming = (int)(catalog_one(
         $db,
-        'SELECT COUNT(*) c FROM ue_federation_requests WHERE direction="child_to_parent" AND status IN ("submitted","part_approved")'
+        'SELECT COUNT(*) c FROM ue_federation_requests WHERE direction="child_to_parent" AND status IN ("submitted","part_approved","approved","downloading")'
     )['c'] ?? 0);
     $allIncoming = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_requests WHERE direction="child_to_parent"')['c'] ?? 0);
     $approvedJobs = (int)(catalog_one(
@@ -30,13 +31,14 @@ try {
     catalog_head('Federation Requests');
     catalog_page_header(
         'Requests',
-        'Incoming requests ask this server to provide files. Outgoing requests ask another server to provide files to this server.',
+        'Incoming requests ask this server to provide missing dependency files. Outgoing requests ask a parent to provide missing dependency files to this child. Base-game packages remain eligible only through the dependency exception.',
         catalog_federation_links() + ['Missing Files' => 'missing-files.php', 'Queue' => 'queue.php']
     );
 
     echo '<div class="card"><h2>Direction guide</h2><table>';
-    echo '<tr><th>Incoming</th><td>A child is asking this parent to provide missing dependency packages. This parent checks availability and approves or denies the request.</td></tr>';
-    echo '<tr><th>Outgoing</th><td>This child has asked a parent to provide packages that are missing locally. The parent decides what it can supply.</td></tr>';
+    echo '<tr><th>Incoming</th><td>A child is asking this parent to provide missing dependency packages. This parent may approve a package before the file is available; the request remains open until it is found and transferred.</td></tr>';
+    echo '<tr><th>Outgoing</th><td>This child has asked a parent to provide packages that are missing locally. The parent approves or denies each dependency request.</td></tr>';
+    echo '<tr><th>Base-game policy</th><td>' . catalog_h(federation_base_game_policy_label($db)) . '</td></tr>';
     echo '</table></div>';
 
     echo '<div class="grid">';
@@ -48,7 +50,7 @@ try {
 
     if ($role === 'parent') {
         echo '<div class="card"><h2>Parent request workflow</h2><div class="grid">';
-        catalog_tool_card('Incoming requests from children', 'requests.php', 'Review exactly what each child is asking this parent to provide, check parent availability, then approve or deny.', $incoming > 0 ? (string)$incoming : '');
+        catalog_tool_card('Incoming requests from children', 'requests.php', 'Review dependency packages, approve requests immediately or keep approved requests waiting until a file is found.', $incoming > 0 ? (string)$incoming : '');
         catalog_tool_card('Children', 'peers.php?role=child', 'Manage child connections and open inventories or join requests.', $children > 0 ? (string)$children : '');
         catalog_tool_card('Child inventories', 'peer-inventory.php', 'Review files held by children and files needed by either side.');
         catalog_tool_card('Transfer queue', 'queue.php', 'Monitor approved transfers and imports.');
@@ -57,10 +59,10 @@ try {
         echo '<div class="card"><h2>Outgoing requests</h2><p class="muted">Outgoing dependency requests are disabled while this site is in Parent mode. A parent obtains files from children through Child Inventories and Parent Pull.</p></div>';
     } elseif ($role === 'child') {
         echo '<div class="card"><h2>Child request workflow</h2><div class="grid">';
-        catalog_tool_card('Create request from missing files', 'request-generate.php', 'Select local missing packages and submit one request to a parent.');
+        catalog_tool_card('Create request from missing files', 'request-generate.php', 'Select local missing dependency packages, including base-game dependency exceptions, and submit one request to the parent.');
         catalog_tool_card('Outgoing request status', 'request-status.php', 'See the parent decision for each requested package and cancel an active request.');
-        catalog_tool_card('Approved downloads', 'approved-downloads.php', 'Review parent-approved files and download/import progress.', $approvedJobs > 0 ? (string)$approvedJobs : '');
-        catalog_tool_card('Parents', 'peers.php?role=parent', 'Manage parent connections or join another parent.', $parents > 0 ? (string)$parents : '');
+        catalog_tool_card('Approved downloads', 'approved-downloads.php', 'Review parent-approved dependency files and download/import progress.', $approvedJobs > 0 ? (string)$approvedJobs : '');
+        catalog_tool_card('Parents', 'peers.php?role=parent', 'View the active parent connection.', $parents > 0 ? (string)$parents : '');
         echo '</div></div>';
 
         echo '<div class="card"><h2>Incoming child requests</h2><p class="muted">Incoming child requests are disabled while this site is in Child mode. A child does not approve requests from other children.</p></div>';
