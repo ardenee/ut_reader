@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/FederationAuth.php';
 require_once __DIR__ . '/FederationPeerSecret.php';
+require_once __DIR__ . '/FederationBaseGamePolicy.php';
 
 function federation_dependency_request_still_needed(PDO $db, string $requiredPackage, string $requiredObjectPath = ''): bool
 {
@@ -76,14 +77,14 @@ function federation_cache_approved_parent_file(PDO $db, int $peerId, array $item
     $db->prepare(
         'INSERT INTO ue_federation_peer_files(
             peer_id,game_id,remote_game_name,remote_engine_key,remote_file_id,
-            package_name,original_name,extension,file_size,md5,sha1,package_guid,
+            package_name,original_name,extension,file_size,md5,sha1,package_guid,is_base_game,
             is_compressed,compression_flags,import_count,export_count,last_seen_at
-         ) VALUES(?,NULL,"","",?,?,?,?,?,?,?,?,0,0,0,0,NOW())
+         ) VALUES(?,NULL,"","",?,?,?,?,?,?,?,?,?,0,0,0,0,NOW())
          ON DUPLICATE KEY UPDATE
             package_name=VALUES(package_name), original_name=VALUES(original_name),
             extension=VALUES(extension), file_size=VALUES(file_size),
             md5=VALUES(md5), sha1=VALUES(sha1), package_guid=VALUES(package_guid),
-            last_seen_at=NOW()'
+            is_base_game=VALUES(is_base_game), last_seen_at=NOW()'
     )->execute([
         $peerId,
         $remoteFileId,
@@ -94,12 +95,15 @@ function federation_cache_approved_parent_file(PDO $db, int $peerId, array $item
         $md5 !== '' ? $md5 : null,
         $sha1 !== '' ? $sha1 : null,
         $guid !== '' ? $guid : null,
+        !empty($item['is_base_game']) ? 1 : 0,
     ]);
 }
 
 /**
  * Poll every active parent and queue only approved files that still satisfy a
- * local missing dependency. Arbitrary parent files are never queued here.
+ * local missing dependency. This includes official base-game files only through
+ * the explicit missing-dependency exception. Arbitrary parent files are never
+ * queued here.
  *
  * @return array<string,mixed>
  */
@@ -121,6 +125,7 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
 
     $queued = 0;
     $approvedSeen = 0;
+    $baseGameDependencySeen = 0;
     $notNeeded = 0;
     $alreadyLocal = 0;
     $duplicates = 0;
@@ -144,6 +149,9 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
             if (empty($status['ok'])) {
                 throw new RuntimeException((string)($status['error'] ?? 'Parent request status failed.'));
             }
+            if (is_array($status['policy'] ?? null)) {
+                federation_cache_parent_base_game_policy($db, (int)$parent['id'], $status['policy']);
+            }
 
             $parentQueued = 0;
             foreach (($status['items'] ?? []) as $item) {
@@ -151,6 +159,9 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
                     continue;
                 }
                 $approvedSeen++;
+                if (!empty($item['is_base_game'])) {
+                    $baseGameDependencySeen++;
+                }
 
                 $requiredPackage = trim((string)($item['required_package'] ?? ''));
                 $requiredObjectPath = trim((string)($item['required_object_path'] ?? ''));
@@ -216,13 +227,14 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
     }
 
     if ($queued > 0) {
-        fed_log($db, null, null, 'INFO', 'DEPENDENCY_DOWNLOADS_AUTO_QUEUED', 'Queued ' . $queued . ' approved dependency download(s).');
+        fed_log($db, null, null, 'INFO', 'DEPENDENCY_DOWNLOADS_AUTO_QUEUED', 'Queued ' . $queued . ' approved dependency download(s), including eligible base-game dependency exceptions.');
     }
 
     return [
         'ok' => true,
         'queued' => $queued,
         'approved_seen' => $approvedSeen,
+        'base_game_dependency_seen' => $baseGameDependencySeen,
         'not_needed' => $notNeeded,
         'already_local' => $alreadyLocal,
         'duplicates' => $duplicates,
