@@ -6,12 +6,13 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationInventory.php';
+require_once __DIR__ . '/../lib/BaseGameProtection.php';
 
 const PI_PAGE_SIZE = 100;
 
-function pi_local_absence_sql(string $peerAlias = 'pf'): string
+function pi_local_presence_sql(string $peerAlias = 'pf'): string
 {
-    return 'NOT EXISTS (
+    return 'EXISTS (
         SELECT 1 FROM ue_files local
         WHERE local.scan_status="verified"
           AND (
@@ -22,16 +23,31 @@ function pi_local_absence_sql(string $peerAlias = 'pf'): string
     )';
 }
 
+function pi_local_absence_sql(string $peerAlias = 'pf'): string
+{
+    return 'NOT (' . pi_local_presence_sql($peerAlias) . ')';
+}
+
+/**
+ * Count local parent files that currently miss this child package. Exact remote
+ * game name is preferred because several games can share the same engine key.
+ */
 function pi_need_count_sql(string $peerAlias = 'pf'): string
 {
     return '(SELECT COUNT(DISTINCT needer.id)
         FROM ue_dependencies d
         JOIN ue_files needer ON needer.id=d.file_id
+        JOIN ue_games needer_game ON needer_game.id=needer.game_id
         WHERE d.status="missing"
           AND needer.scan_status="verified"
-          AND ' . $peerAlias . '.game_id IS NOT NULL
-          AND needer.game_id=' . $peerAlias . '.game_id
-          AND d.required_package=' . $peerAlias . '.package_name)';
+          AND d.required_package=' . $peerAlias . '.package_name
+          AND (
+            (' . $peerAlias . '.remote_game_name IS NOT NULL AND ' . $peerAlias . '.remote_game_name<>"" AND needer_game.name=' . $peerAlias . '.remote_game_name)
+            OR
+            ((' . $peerAlias . '.remote_game_name IS NULL OR ' . $peerAlias . '.remote_game_name="")
+             AND ' . $peerAlias . '.game_id IS NOT NULL
+             AND needer.game_id=' . $peerAlias . '.game_id)
+          ))';
 }
 
 function pi_needed_sql(string $peerAlias = 'pf'): string
@@ -39,14 +55,33 @@ function pi_needed_sql(string $peerAlias = 'pf'): string
     return pi_need_count_sql($peerAlias) . ' > 0';
 }
 
+function pi_base_game_sql(string $peerAlias = 'pf'): string
+{
+    return 'EXISTS (
+        SELECT 1
+        FROM ue_base_game_files bg
+        JOIN ue_games bg_game ON bg_game.id=bg.game_id
+        WHERE ' . $peerAlias . '.package_guid IS NOT NULL
+          AND ' . $peerAlias . '.package_guid<>""
+          AND bg.package_guid=' . $peerAlias . '.package_guid
+          AND (
+            (' . $peerAlias . '.remote_game_name IS NOT NULL AND ' . $peerAlias . '.remote_game_name<>"" AND bg_game.name=' . $peerAlias . '.remote_game_name)
+            OR
+            ((' . $peerAlias . '.remote_game_name IS NULL OR ' . $peerAlias . '.remote_game_name="")
+             AND ' . $peerAlias . '.game_id IS NOT NULL
+             AND bg.game_id=' . $peerAlias . '.game_id)
+          )
+    )';
+}
+
 function pi_filter_value(string $value): string
 {
-    return in_array($value, ['all', 'needed', 'missing'], true) ? $value : 'all';
+    return in_array($value, ['all', 'needed', 'missing', 'present'], true) ? $value : 'all';
 }
 
 function pi_tab_value(string $value): string
 {
-    return in_array($value, ['parent', 'child'], true) ? $value : 'parent';
+    return in_array($value, ['inventory', 'requests'], true) ? $value : 'inventory';
 }
 
 function pi_page_value(mixed $value): int
@@ -93,6 +128,7 @@ function pi_pagination(int $peerId, string $filter, string $tab, int $page, int 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    base_game_ensure($db);
     $siteRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -105,7 +141,7 @@ try {
         catalog_check_csrf('fed_peer_inventory');
         $peerId = (int)($_POST['peer_id'] ?? 0);
         $filter = pi_filter_value((string)($_POST['filter'] ?? 'all'));
-        $tab = pi_tab_value((string)($_POST['tab'] ?? 'parent'));
+        $tab = pi_tab_value((string)($_POST['tab'] ?? 'inventory'));
         $page = pi_page_value($_POST['page'] ?? 1);
         $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="child" AND is_active=1', [$peerId]);
         if (!$peer) {
@@ -130,7 +166,8 @@ try {
                 $db,
                 'SELECT pf.* FROM ue_federation_peer_files pf
                  WHERE pf.peer_id=? AND pf.id IN (' . $placeholders . ')
-                   AND ' . pi_local_absence_sql('pf'),
+                   AND ' . pi_local_absence_sql('pf') . '
+                   AND NOT (' . pi_base_game_sql('pf') . ')',
                 array_merge([$peerId], $ids)
             );
             $insert = $db->prepare(
@@ -165,7 +202,7 @@ try {
                 $queued++;
             }
             fed_log($db, $peerId, null, 'INFO', 'PARENT_PULL_QUEUE', 'Queued ' . $queued . ' child file(s) from peer inventory.');
-            $_SESSION['fed_peer_inventory_flash'] = 'Queued ' . $queued . ' child file(s) for parent download.';
+            $_SESSION['fed_peer_inventory_flash'] = 'Queued ' . $queued . ' child file(s) for parent download. Already-present and protected base-game files were ignored.';
         } else {
             throw new RuntimeException('Unknown child inventory action.');
         }
@@ -191,7 +228,7 @@ try {
     $activeChildren = array_values(array_filter($children, static fn(array $row): bool => (int)$row['is_active'] === 1));
     $peerId = (int)($_GET['peer_id'] ?? ($activeChildren[0]['id'] ?? 0));
     $filter = pi_filter_value((string)($_GET['filter'] ?? 'all'));
-    $tab = pi_tab_value((string)($_GET['tab'] ?? 'parent'));
+    $tab = pi_tab_value((string)($_GET['tab'] ?? 'inventory'));
     $page = pi_page_value($_GET['page'] ?? 1);
     $peer = $peerId > 0
         ? catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="child"', [$peerId])
@@ -215,7 +252,7 @@ try {
     unset($_SESSION['fed_peer_inventory_flash']);
     catalog_page_header(
         'Child Inventories',
-        'Parent-side view of connected child catalogs, missing files, dependency needs, incoming requests, and parent pull actions.',
+        'Parent-side view of every file reported by each child. Filter the full inventory by files this parent needs, other files it lacks, or files it already has.',
         catalog_federation_links() + ['Children' => 'peers.php?role=child', 'Incoming Requests' => 'requests.php', 'Parent Pull' => 'parent-pull.php', 'Transfer Queue' => 'queue.php']
     );
 
@@ -243,7 +280,7 @@ try {
     echo '<table><tr><th>Child</th><th>URL</th><th>Active</th><th>Cached files</th><th>Requests</th><th>Last inventory</th><th>Actions</th></tr>';
     foreach ($children as $child) {
         $view = 'peer-inventory.php?peer_id=' . (int)$child['id'];
-        echo '<tr><td><strong>' . catalog_h($child['site_name']) . '</strong></td><td class="mono path">' . catalog_h($child['site_url']) . '</td><td>' . ((int)$child['is_active'] === 1 ? 'yes' : 'no') . '</td><td>' . (int)$child['cached_files'] . '</td><td>' . (int)$child['request_count'] . '</td><td class="nowrap">' . catalog_h($child['inventory_seen_at'] ?? 'never') . '</td><td><a href="' . catalog_h($view) . '">View inventory</a> · <a href="requests.php">Incoming requests</a> · <a href="parent-pull.php?peer_id=' . (int)$child['id'] . '">Parent pull</a> · <a href="peers.php?role=child">Manage</a></td></tr>';
+        echo '<tr><td><strong>' . catalog_h($child['site_name']) . '</strong></td><td class="mono path">' . catalog_h($child['site_url']) . '</td><td>' . ((int)$child['is_active'] === 1 ? 'yes' : 'no') . '</td><td>' . (int)$child['cached_files'] . '</td><td>' . (int)$child['request_count'] . '</td><td class="nowrap">' . catalog_h($child['inventory_seen_at'] ?? 'never') . '</td><td><a href="' . catalog_h($view) . '">View full inventory</a> · <a href="requests.php">Incoming requests</a> · <a href="parent-pull.php?peer_id=' . (int)$child['id'] . '">Parent pull</a> · <a href="peers.php?role=child">Manage</a></td></tr>';
     }
     echo '</table></div>';
 
@@ -267,24 +304,33 @@ try {
         $selected = (int)$row['id'] === $peerId ? ' selected' : '';
         echo '<option value="' . (int)$row['id'] . '"' . $selected . '>' . catalog_h($row['site_name'] . ' - ' . $row['site_url']) . '</option>';
     }
-    echo '</select></label> <label>Parent needs<br><select name="filter">';
-    foreach (['all' => 'All files parent lacks', 'needed' => 'Needed dependency files', 'missing' => 'Other missing files'] as $value => $label) {
+    echo '</select></label> <label>Inventory filter<br><select name="filter">';
+    foreach ([
+        'all' => 'All child files',
+        'needed' => 'Files needed by parent dependencies',
+        'missing' => 'Other files parent lacks',
+        'present' => 'Files parent already has',
+    ] as $value => $label) {
         echo '<option value="' . $value . '"' . ($filter === $value ? ' selected' : '') . '>' . catalog_h($label) . '</option>';
     }
     echo '</select></label><input type="hidden" name="tab" value="' . catalog_h($tab) . '"><button>View</button></form>';
     echo '<form method="post" style="margin-top:12px"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_peer_inventory')) . '"><input type="hidden" name="action" value="refresh"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="filter" value="' . catalog_h($filter) . '"><input type="hidden" name="tab" value="' . catalog_h($tab) . '"><input type="hidden" name="page" value="' . $page . '"><button>Refresh directly from child</button></form></div>';
 
+    $presenceSql = pi_local_presence_sql('pf');
     $absenceSql = pi_local_absence_sql('pf');
     $neededSql = pi_needed_sql('pf');
     $needCountSql = pi_need_count_sql('pf');
+    $baseGameSql = pi_base_game_sql('pf');
     $summary = catalog_one(
         $db,
-        'SELECT COUNT(*) unavailable,
-                SUM(CASE WHEN ' . $neededSql . ' THEN 1 ELSE 0 END) needed,
-                SUM(CASE WHEN NOT (' . $neededSql . ') THEN 1 ELSE 0 END) other_missing,
+        'SELECT COUNT(*) total_files,
+                SUM(CASE WHEN ' . $absenceSql . ' AND ' . $neededSql . ' THEN 1 ELSE 0 END) needed,
+                SUM(CASE WHEN ' . $absenceSql . ' AND NOT (' . $neededSql . ') THEN 1 ELSE 0 END) other_missing,
+                SUM(CASE WHEN ' . $presenceSql . ' THEN 1 ELSE 0 END) already_present,
+                SUM(CASE WHEN ' . $baseGameSql . ' THEN 1 ELSE 0 END) protected_files,
                 MAX(pf.last_seen_at) last_received_at
          FROM ue_federation_peer_files pf
-         WHERE pf.peer_id=? AND ' . $absenceSql,
+         WHERE pf.peer_id=?',
         [$peerId]
     ) ?: [];
     $latestRequest = catalog_one(
@@ -297,42 +343,69 @@ try {
         : 0;
 
     echo '<div class="card"><h2>Inventory summary</h2><table>';
+    echo '<tr><th>Total child inventory files</th><td>' . (int)($summary['total_files'] ?? 0) . '</td></tr>';
     echo '<tr><th>Files parent needs for dependencies</th><td>' . (int)($summary['needed'] ?? 0) . '</td></tr>';
     echo '<tr><th>Other child files parent lacks</th><td>' . (int)($summary['other_missing'] ?? 0) . '</td></tr>';
-    echo '<tr><th>Total files parent lacks</th><td>' . (int)($summary['unavailable'] ?? 0) . '</td></tr>';
+    echo '<tr><th>Files parent already has</th><td>' . (int)($summary['already_present'] ?? 0) . '</td></tr>';
+    echo '<tr><th>Protected official base-game files</th><td>' . (int)($summary['protected_files'] ?? 0) . '</td></tr>';
     echo '<tr><th>Parent files matched to latest child request</th><td>' . $childMatchedCount . '</td></tr>';
     echo '<tr><th>Last inventory synchronized</th><td>' . catalog_h((string)($summary['last_received_at'] ?? 'never')) . '</td></tr>';
     echo '</table></div>';
 
-    echo '<div class="card"><p class="page-links"><a class="button" href="' . catalog_h(pi_url($peerId, $filter, 'parent', 1)) . '">Parent needs from child</a> <a class="button" href="' . catalog_h(pi_url($peerId, $filter, 'child', 1)) . '">Child needs from parent</a></p>';
-    if ($tab === 'parent') {
-        $filterSql = $filter === 'needed' ? ' AND ' . $neededSql : ($filter === 'missing' ? ' AND NOT (' . $neededSql . ')' : '');
-        $totalRows = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files pf WHERE pf.peer_id=? AND ' . $absenceSql . $filterSql, [$peerId])['c'] ?? 0);
+    echo '<div class="card"><p class="page-links"><a class="button" href="' . catalog_h(pi_url($peerId, $filter, 'inventory', 1)) . '">Full child inventory</a> <a class="button" href="' . catalog_h(pi_url($peerId, $filter, 'requests', 1)) . '">Files requested by child</a></p>';
+
+    if ($tab === 'inventory') {
+        $filterSql = match ($filter) {
+            'needed' => ' AND ' . $absenceSql . ' AND ' . $neededSql,
+            'missing' => ' AND ' . $absenceSql . ' AND NOT (' . $neededSql . ')',
+            'present' => ' AND ' . $presenceSql,
+            default => '',
+        };
+        $totalRows = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files pf WHERE pf.peer_id=?' . $filterSql, [$peerId])['c'] ?? 0);
         $pages = max(1, (int)ceil($totalRows / PI_PAGE_SIZE));
         $page = min($page, $pages);
         $offset = ($page - 1) * PI_PAGE_SIZE;
         $rows = catalog_all(
             $db,
-            'SELECT pf.*, g.name local_game_name, ' . $needCountSql . ' needed_by_files,
-                    CASE WHEN ' . $neededSql . ' THEN "needed" ELSE "missing" END availability_type
+            'SELECT pf.*, COALESCE(g.name,pf.remote_game_name) display_game,
+                    ' . $needCountSql . ' needed_by_files,
+                    CASE WHEN ' . $presenceSql . ' THEN "present"
+                         WHEN ' . $neededSql . ' THEN "needed"
+                         ELSE "missing" END availability_type,
+                    CASE WHEN ' . $baseGameSql . ' THEN 1 ELSE 0 END is_base_game
              FROM ue_federation_peer_files pf
              LEFT JOIN ue_games g ON g.id=pf.game_id
-             WHERE pf.peer_id=? AND ' . $absenceSql . $filterSql . '
-             ORDER BY FIELD(availability_type,"needed","missing"), needed_by_files DESC, COALESCE(g.name,pf.remote_game_name), pf.package_name, pf.original_name
+             WHERE pf.peer_id=?' . $filterSql . '
+             ORDER BY FIELD(availability_type,"needed","missing","present"), needed_by_files DESC,
+                      COALESCE(pf.remote_game_name,g.name), pf.package_name, pf.original_name, pf.id
              LIMIT ' . PI_PAGE_SIZE . ' OFFSET ' . $offset,
             [$peerId]
         );
-        echo '<h2>Files this parent does not have</h2>';
+
+        $heading = match ($filter) {
+            'needed' => 'Child files needed by this parent',
+            'missing' => 'Other child files this parent lacks',
+            'present' => 'Child files already present on this parent',
+            default => 'Full child inventory',
+        };
+        echo '<h2>' . catalog_h($heading) . '</h2><p>Showing ' . count($rows) . ' of ' . $totalRows . ' matching inventory rows. Needed counts use the exact remote game name before any engine fallback.</p>';
         if (!$rows) {
-            echo '<p class="muted">No matching child files were found.</p>';
+            echo '<p class="muted">No matching child inventory files were found.</p>';
         } else {
-            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_peer_inventory')) . '"><input type="hidden" name="action" value="queue"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="filter" value="' . catalog_h($filter) . '"><input type="hidden" name="tab" value="parent"><input type="hidden" name="page" value="' . $page . '">';
-            echo '<p><label><input type="checkbox" data-check-all="parent-files"> Check all on this page</label> <button>Queue selected downloads from child</button></p>';
-            echo '<table><tr><th>Select</th><th>Type</th><th>Game</th><th>Needed by files</th><th>Package</th><th>File</th><th>GUID / MD5 / SHA1</th><th>Size</th></tr>';
+            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_peer_inventory')) . '"><input type="hidden" name="action" value="queue"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="filter" value="' . catalog_h($filter) . '"><input type="hidden" name="tab" value="inventory"><input type="hidden" name="page" value="' . $page . '">';
+            echo '<p><label><input type="checkbox" data-check-all="parent-files"> Check all downloadable files on this page</label> <button>Queue selected downloads from child</button></p>';
+            echo '<table><tr><th>Select</th><th>Parent status</th><th>Game</th><th>Needed by files</th><th>Package</th><th>File</th><th>Database (I/E)</th><th>GUID / MD5 / SHA1</th><th>Size</th></tr>';
             foreach ($rows as $row) {
                 $type = (string)$row['availability_type'];
-                $gameName = trim((string)($row['local_game_name'] ?? '')) ?: (string)$row['remote_game_name'];
-                echo '<tr><td><input type="checkbox" data-check-group="parent-files" name="peer_file_ids[]" value="' . (int)$row['id'] . '"></td><td><span class="pill ' . ($type === 'needed' ? 'amber' : '') . '">' . catalog_h($type) . '</span></td><td>' . catalog_h($gameName) . '</td><td>' . (int)$row['needed_by_files'] . '</td><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td>' . pi_identity_html($row) . '</td><td class="nowrap">' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
+                $isBase = !empty($row['is_base_game']);
+                $downloadable = $type !== 'present' && !$isBase;
+                $status = $isBase ? 'official base-game' : ($type === 'present' ? 'already have' : $type);
+                $pill = $isBase ? 'amber' : ($type === 'needed' ? 'amber' : '');
+                $select = $downloadable
+                    ? '<input type="checkbox" data-check-group="parent-files" name="peer_file_ids[]" value="' . (int)$row['id'] . '">'
+                    : '<span class="muted">—</span>';
+                $gameName = trim((string)($row['remote_game_name'] ?? '')) ?: (string)($row['display_game'] ?? '');
+                echo '<tr><td>' . $select . '</td><td><span class="pill ' . $pill . '">' . catalog_h($status) . '</span></td><td>' . catalog_h($gameName) . '<div class="muted small">' . catalog_h($row['remote_engine_key']) . '</div></td><td>' . (int)$row['needed_by_files'] . '</td><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="nowrap">' . (int)$row['import_count'] . ' / ' . (int)$row['export_count'] . '</td><td>' . pi_identity_html($row) . '</td><td class="nowrap">' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
             }
             echo '</table><p><button>Queue selected downloads from child</button></p></form>';
             pi_pagination($peerId, $filter, $tab, $page, $pages);
@@ -398,7 +471,7 @@ try {
     }
     echo '</div>';
 
-    echo '<script>(function(){document.querySelectorAll("[data-check-all]").forEach(function(master){master.addEventListener("change",function(){var group=master.getAttribute("data-check-all");document.querySelectorAll("[data-check-group=\""+group+"\"]").forEach(function(box){box.checked=master.checked;});});});})();</script>';
+    echo '<script>(function(){document.querySelectorAll("[data-check-all]").forEach(function(master){master.addEventListener("change",function(){var group=master.getAttribute("data-check-all");document.querySelectorAll("[data-check-group=\""+group+"\"]").forEach(function(box){if(!box.disabled){box.checked=master.checked;}});});});})();</script>';
     catalog_foot();
 } catch (Throwable $e) {
     if (!headers_sent()) {
