@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
 require_once __DIR__ . '/../../lib/FederationRequestLifecycle.php';
 
@@ -31,7 +32,7 @@ try {
     }
 
     if (!$request) {
-        fed_json_response(['ok' => true, 'request' => null, 'items' => []]);
+        fed_json_response(['ok' => true, 'policy' => federation_parent_base_game_policy($db), 'request' => null, 'items' => []]);
     }
 
     $refresh = federation_refresh_request_matches($db, (int)$request['id']);
@@ -52,6 +53,7 @@ try {
 
     fed_json_response([
         'ok' => true,
+        'policy' => federation_parent_base_game_policy($db),
         'request' => [
             'id' => (int)$request['id'],
             'status' => (string)$request['status'],
@@ -64,7 +66,7 @@ try {
         'refresh' => $refresh,
         'items' => array_map(static function (array $row) use ($db): array {
             $isBaseGame = !empty($row['is_base_game']);
-            if (!$isBaseGame && str_contains(strtolower((string)($row['status_message'] ?? '')), 'official base-game package')) {
+            if (!$isBaseGame && str_contains(strtolower((string)($row['status_message'] ?? '')), 'base-game')) {
                 $isBaseGame = true;
             }
             if (!$isBaseGame && empty($row['local_file_id'])) {
@@ -84,6 +86,7 @@ try {
                 'sha1' => (string)($row['sha1'] ?? ''),
                 'package_guid' => (string)($row['package_guid'] ?? ''),
                 'is_base_game' => $isBaseGame,
+                'dependency_exception' => $isBaseGame,
                 'status_message' => (string)($row['status_message'] ?? ''),
                 'updated_at' => (string)($row['updated_at'] ?? ''),
             ];
