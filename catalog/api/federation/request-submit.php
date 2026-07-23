@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
 
 /** @return array<string,mixed>|null */
@@ -50,11 +51,13 @@ function request_submit_normalize_items(array $items): array
                 'engine_key' => $engineKey,
                 'use_count' => max(0, (int)($item['use_count'] ?? 0)),
                 'object_count' => max(0, (int)($item['object_count'] ?? 0)),
+                'is_base_game_dependency' => !empty($item['is_base_game_dependency']),
                 '_object_paths' => [],
             ];
         } else {
             $groups[$key]['use_count'] = max((int)$groups[$key]['use_count'], max(0, (int)($item['use_count'] ?? 0)));
             $groups[$key]['object_count'] = max((int)$groups[$key]['object_count'], max(0, (int)($item['object_count'] ?? 0)));
+            $groups[$key]['is_base_game_dependency'] = !empty($groups[$key]['is_base_game_dependency']) || !empty($item['is_base_game_dependency']);
             if ((string)$groups[$key]['required_object_path'] === '' && $requiredPath !== '') {
                 $groups[$key]['required_object_path'] = $requiredPath;
             }
@@ -122,6 +125,7 @@ try {
 
         $itemStmt = $db->prepare('INSERT INTO ue_federation_request_items(request_id,required_package,required_object_path,wanted_guid,wanted_md5,local_file_id,peer_file_id,status,status_message) VALUES(?,?,?,?,?,?,?,?,?)');
         $count = 0;
+        $baseGameDependencies = 0;
         foreach ($items as $item) {
             $requiredPackage = trim((string)$item['required_package']);
             $requiredPath = trim((string)$item['required_object_path']);
@@ -133,20 +137,17 @@ try {
             $objectCount = max(1, (int)$item['object_count']);
 
             $availability = federation_package_availability($db, $item);
-            $localFile = !empty($availability['available']) ? (int)($availability['file_id'] ?? 0) : null;
+            $localFile = !empty($availability['available']) && (int)($availability['file_id'] ?? 0) > 0
+                ? (int)$availability['file_id']
+                : null;
             $peerFile = null;
             $status = 'requested';
+            $isBaseGameDependency = !empty($availability['is_base_game']) || !empty($item['is_base_game_dependency']);
+            if ($isBaseGameDependency) {
+                $baseGameDependencies++;
+            }
 
-            if (!empty($availability['is_base_game'])) {
-                $status = 'denied';
-                $match = $localFile
-                    ? catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$localFile])
-                    : [
-                        'package_name' => (string)($availability['package_name'] ?? $requiredPackage),
-                        'original_name' => (string)($availability['original_name'] ?? $requiredPackage),
-                    ];
-                $msg = base_game_block_message($match ?: null);
-            } elseif (empty($availability['available'])) {
+            if (empty($availability['available'])) {
                 $msg = 'Not available on this parent yet. The parent may approve the request now; it will remain active until a matching file is imported.';
             } else {
                 $msg = 'Available on this parent; matched by ' . (string)($availability['match_method'] ?? 'package identity');
@@ -154,6 +155,9 @@ try {
                     $msg .= ' (' . (string)$availability['game_name'] . ')';
                 }
                 $msg .= '.';
+            }
+            if ($isBaseGameDependency) {
+                $msg .= ' This is an official base-game package, included because it is required to complete a missing dependency.';
             }
 
             $context = [];
@@ -181,8 +185,15 @@ try {
         throw $e;
     }
 
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'REQUEST_SUBMIT', 'Received child request ' . $requestId . ' with ' . $count . ' distinct package item(s); raw rows=' . count($rawItems) . '.');
-    fed_json_response(['ok' => true, 'request_id' => $requestId, 'status' => 'submitted', 'items' => $count]);
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'REQUEST_SUBMIT', 'Received child request ' . $requestId . ' with ' . $count . ' distinct package item(s), including ' . $baseGameDependencies . ' base-game dependency item(s); raw rows=' . count($rawItems) . '.');
+    fed_json_response([
+        'ok' => true,
+        'request_id' => $requestId,
+        'status' => 'submitted',
+        'items' => $count,
+        'base_game_dependency_items' => $baseGameDependencies,
+        'policy' => federation_parent_base_game_policy($db),
+    ]);
 } catch (Throwable $e) {
     fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
 }
