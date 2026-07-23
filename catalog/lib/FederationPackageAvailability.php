@@ -177,12 +177,12 @@ function federation_base_game_package_match(PDO $db, string $package, string $ga
 
     $attempts = [];
     if ($gameName !== '') {
-        $attempts[] = [' AND g.name=?', [$package, $package, $package, $package, $gameName], 'protected base-game package name and game'];
+        $attempts[] = [' AND g.name=?', [$package, $package, $package, $package, $gameName], 'base-game package name and game'];
     }
     if ($engineKey !== '') {
-        $attempts[] = [' AND UPPER(COALESCE(p.engine_key,""))=UPPER(?)', [$package, $package, $package, $package, $engineKey], 'protected base-game package name and engine profile'];
+        $attempts[] = [' AND UPPER(COALESCE(p.engine_key,""))=UPPER(?)', [$package, $package, $package, $package, $engineKey], 'base-game package name and engine profile'];
     }
-    $attempts[] = ['', [$package, $package, $package, $package], 'protected base-game package name'];
+    $attempts[] = ['', [$package, $package, $package, $package], 'base-game package name'];
 
     foreach ($attempts as [$contextSql, $args, $method]) {
         $match = catalog_one(
@@ -191,11 +191,12 @@ function federation_base_game_package_match(PDO $db, string $package, string $ga
                     COALESCE(NULLIF(bg.package_name,""),src.package_name,?) package_name,
                     COALESCE(NULLIF(bg.original_name,""),src.original_name,"") original_name,
                     COALESCE(src.file_size,0) file_size,
+                    COALESCE(src.id,0) file_id,
                     g.name match_game_name, COALESCE(p.engine_key,"") match_engine_key
              FROM ue_base_game_files bg
              JOIN ue_games g ON g.id=bg.game_id
              LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
-             LEFT JOIN ue_files src ON src.id=bg.source_file_id
+             LEFT JOIN ue_files src ON src.id=bg.source_file_id AND src.scan_status="verified"
              WHERE ' . $nameCondition . $contextSql . '
              ORDER BY bg.id LIMIT 1',
             array_merge([$package], $args)
@@ -209,7 +210,13 @@ function federation_base_game_package_match(PDO $db, string $package, string $ga
     return null;
 }
 
-/** @return array<string,mixed> */
+/**
+ * Dependency availability deliberately treats an official base-game file as
+ * transferable when it is being requested to satisfy a missing dependency.
+ * Ordinary inventories and unrestricted pulls apply the separate parent policy.
+ *
+ * @return array<string,mixed>
+ */
 function federation_package_availability(PDO $db, array $item): array
 {
     $match = federation_package_match(
@@ -229,16 +236,19 @@ function federation_package_availability(PDO $db, array $item): array
             (string)($item['engine_key'] ?? '')
         );
         if ($protected) {
+            $fileId = (int)($protected['file_id'] ?? 0);
             return [
-                'available' => false,
+                'available' => $fileId > 0,
                 'is_base_game' => true,
-                'transferable' => false,
+                'transferable' => $fileId > 0,
+                'ordinary_transferable' => false,
+                'dependency_exception' => true,
                 'match_method' => (string)($protected['federation_match_method'] ?? ''),
                 'package_name' => (string)($protected['package_name'] ?? ''),
                 'original_name' => (string)($protected['original_name'] ?? ''),
                 'file_size' => (int)($protected['file_size'] ?? 0),
                 'package_guid' => (string)($protected['package_guid'] ?? ''),
-                'file_id' => 0,
+                'file_id' => $fileId,
                 'game_id' => (int)($protected['game_id'] ?? 0),
                 'game_name' => (string)($protected['match_game_name'] ?? ''),
             ];
@@ -247,11 +257,14 @@ function federation_package_availability(PDO $db, array $item): array
             'available' => false,
             'is_base_game' => false,
             'transferable' => false,
+            'ordinary_transferable' => false,
+            'dependency_exception' => false,
             'match_method' => '',
             'package_name' => '',
             'original_name' => '',
             'file_size' => 0,
             'package_guid' => '',
+            'file_id' => 0,
         ];
     }
 
@@ -259,7 +272,9 @@ function federation_package_availability(PDO $db, array $item): array
     return [
         'available' => true,
         'is_base_game' => $isBaseGame,
-        'transferable' => !$isBaseGame,
+        'transferable' => true,
+        'ordinary_transferable' => !$isBaseGame,
+        'dependency_exception' => $isBaseGame,
         'match_method' => (string)($match['federation_match_method'] ?? ''),
         'package_name' => (string)($match['package_name'] ?? ''),
         'original_name' => (string)($match['original_name'] ?? ''),
