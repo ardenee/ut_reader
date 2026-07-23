@@ -137,9 +137,7 @@ try {
             $peerFile = null;
             $status = 'requested';
 
-            if (empty($availability['available'])) {
-                $msg = 'Not found in this parent\'s catalog. This package cannot be approved until the parent imports a matching file.';
-            } elseif (!empty($availability['is_base_game'])) {
+            if (!empty($availability['is_base_game'])) {
                 $status = 'denied';
                 $match = $localFile
                     ? catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [$localFile])
@@ -148,6 +146,8 @@ try {
                         'original_name' => (string)($availability['original_name'] ?? $requiredPackage),
                     ];
                 $msg = base_game_block_message($match ?: null);
+            } elseif (empty($availability['available'])) {
+                $msg = 'Not found in this parent\'s catalog. This package cannot be approved until the parent imports a matching file.';
             } else {
                 $msg = 'Available on this parent; matched by ' . (string)($availability['match_method'] ?? 'package identity');
                 if (!empty($availability['game_name'])) {
