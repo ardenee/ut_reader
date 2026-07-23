@@ -118,6 +118,9 @@ try {
     $jobsScript = __DIR__ . '/assets/background-jobs.js';
     $jobsScriptVersion = is_file($jobsScript) ? (string)filemtime($jobsScript) : '1';
     echo '<script src="assets/background-jobs.js?v=' . catalog_h($jobsScriptVersion) . '"></script>';
+    $staleScript = __DIR__ . '/assets/background-jobs-stale-worker.js';
+    $staleScriptVersion = is_file($staleScript) ? (string)filemtime($staleScript) : '1';
+    echo '<script src="assets/background-jobs-stale-worker.js?v=' . catalog_h($staleScriptVersion) . '"></script>';
     $pakRerunScript = __DIR__ . '/assets/background-jobs-pak-rerun.js';
     $pakRerunScriptVersion = is_file($pakRerunScript) ? (string)filemtime($pakRerunScript) : '1';
     echo '<script src="assets/background-jobs-pak-rerun.js?v=' . catalog_h($pakRerunScriptVersion) . '"></script>';
