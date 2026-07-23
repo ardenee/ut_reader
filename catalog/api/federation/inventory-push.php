@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
+require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 
 function inventory_push_text(mixed $value, int $maxLength): string
 {
@@ -68,6 +69,7 @@ try {
             $md5 !== '' ? $md5 : null,
             $sha1 !== '' ? $sha1 : null,
             $guid !== '' ? $guid : null,
+            !empty($file['is_base_game']) ? 1 : 0,
             !empty($file['is_compressed']) ? 1 : 0,
             max(0, (int)($file['compression_flags'] ?? 0)),
             max(0, (int)($file['import_count'] ?? 0)),
@@ -75,7 +77,7 @@ try {
         ];
     }
 
-    $sql = 'INSERT INTO ue_federation_peer_files(peer_id,game_id,remote_game_name,remote_engine_key,remote_file_id,package_name,original_name,extension,file_size,md5,sha1,package_guid,is_compressed,compression_flags,import_count,export_count,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE game_id=VALUES(game_id), remote_game_name=VALUES(remote_game_name), remote_engine_key=VALUES(remote_engine_key), remote_file_id=VALUES(remote_file_id), package_name=VALUES(package_name), original_name=VALUES(original_name), extension=VALUES(extension), file_size=VALUES(file_size), md5=VALUES(md5), sha1=VALUES(sha1), package_guid=VALUES(package_guid), is_compressed=VALUES(is_compressed), compression_flags=VALUES(compression_flags), import_count=VALUES(import_count), export_count=VALUES(export_count), last_seen_at=NOW()';
+    $sql = 'INSERT INTO ue_federation_peer_files(peer_id,game_id,remote_game_name,remote_engine_key,remote_file_id,package_name,original_name,extension,file_size,md5,sha1,package_guid,is_base_game,is_compressed,compression_flags,import_count,export_count,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE game_id=VALUES(game_id), remote_game_name=VALUES(remote_game_name), remote_engine_key=VALUES(remote_engine_key), remote_file_id=VALUES(remote_file_id), package_name=VALUES(package_name), original_name=VALUES(original_name), extension=VALUES(extension), file_size=VALUES(file_size), md5=VALUES(md5), sha1=VALUES(sha1), package_guid=VALUES(package_guid), is_base_game=VALUES(is_base_game), is_compressed=VALUES(is_compressed), compression_flags=VALUES(compression_flags), import_count=VALUES(import_count), export_count=VALUES(export_count), last_seen_at=NOW()';
     $count = 0;
     foreach (array_chunk($normalized, 500) as $chunk) {
         $db->beginTransaction();
@@ -94,8 +96,14 @@ try {
         }
     }
 
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_PUSH', 'Received ' . $count . ' inventory row(s).');
-    fed_json_response(['ok' => true, 'received' => $count]);
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_PUSH', 'Received ' . $count . ' classified inventory row(s).');
+    fed_json_response([
+        'ok' => true,
+        'received' => $count,
+        'policy' => strtolower(trim((string)fed_setting($db, 'site_role', 'standalone'))) === 'parent'
+            ? federation_parent_base_game_policy($db)
+            : null,
+    ]);
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] federation inventory push failed: ' . get_class($error) . ': ' . $error->getMessage());
     fed_json_response(['ok' => false, 'error' => 'Inventory could not be processed.', 'reference' => catalog_request_id()], 500);
