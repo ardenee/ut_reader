@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
 
 try {
@@ -24,7 +25,7 @@ try {
 
     $items = $payload['items'] ?? [];
     if (!is_array($items) || !$items) {
-        fed_json_response(['ok' => true, 'items' => []]);
+        fed_json_response(['ok' => true, 'policy' => federation_parent_base_game_policy($db), 'items' => []]);
     }
     if (count($items) > 950) {
         fed_json_response(['ok' => false, 'error' => 'Availability checks are limited to 950 packages per request.'], 413);
@@ -44,7 +45,11 @@ try {
         $results[] = ['key' => $key, 'required_package' => $requiredPackage] + $availability;
     }
 
-    fed_json_response(['ok' => true, 'items' => $results]);
+    fed_json_response([
+        'ok' => true,
+        'policy' => federation_parent_base_game_policy($db),
+        'items' => $results,
+    ]);
 } catch (Throwable $e) {
     fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
 }
