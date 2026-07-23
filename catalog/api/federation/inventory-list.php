@@ -7,6 +7,7 @@ ini_set('display_startup_errors', '0');
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 
 try {
     if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'POST') {
@@ -38,6 +39,7 @@ try {
                 COALESCE(p.engine_key, "") engine_key,
                 f.package_name, f.original_name, f.extension,
                 f.file_size, f.md5, f.sha1, f.package_guid,
+                CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END is_base_game,
                 COALESCE(f.is_compressed,0) is_compressed,
                 COALESCE(f.compression_flags,0) compression_flags,
                 COALESCE(f.import_count,0) import_count,
@@ -46,7 +48,7 @@ try {
          JOIN ue_games g ON g.id=f.game_id
          LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
          LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
-         WHERE f.scan_status="verified" AND f.id>? AND bg.id IS NULL
+         WHERE f.scan_status="verified" AND f.id>?
          ORDER BY f.id
          LIMIT ' . $limit,
         [$afterFileId]
@@ -69,6 +71,7 @@ try {
             'md5' => (string)$row['md5'],
             'sha1' => (string)$row['sha1'],
             'package_guid' => (string)$row['package_guid'],
+            'is_base_game' => (int)$row['is_base_game'],
             'is_compressed' => (int)$row['is_compressed'],
             'compression_flags' => (int)$row['compression_flags'],
             'import_count' => (int)$row['import_count'],
@@ -77,22 +80,15 @@ try {
     }
 
     $identity = fed_ensure_identity($db);
-    fed_log(
-        $db,
-        (int)$peer['id'],
-        null,
-        'INFO',
-        'INVENTORY_READ_BY_PEER',
-        'Local role=' . $localRole . '; peer role=' . $peerRole . '; returned ' . count($files) . ' transferable row(s) after file ID ' . $afterFileId . '.'
-    );
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_READ_BY_PEER', 'Returned ' . count($files) . ' classified inventory row(s) after file ID ' . $afterFileId . '.');
     fed_json_response([
         'ok' => true,
         'site' => [
             'site_id' => (string)$identity['site_id'],
             'site_name' => (string)$identity['site_name'],
             'site_url' => (string)$identity['site_url'],
-            'site_role' => $localRole,
         ],
+        'policy' => $localRole === 'parent' ? federation_parent_base_game_policy($db) : null,
         'files' => $files,
         'next_after_file_id' => $nextAfter,
         'complete' => count($rows) < $limit,
@@ -100,5 +96,5 @@ try {
     ]);
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] federation inventory read failed: ' . get_class($error) . ': ' . $error->getMessage());
-    fed_json_response(['ok' => false, 'error' => 'Federation inventory could not be read.', 'reference' => catalog_request_id()], 500);
+    fed_json_response(['ok' => false, 'error' => 'Peer inventory could not be read.', 'reference' => catalog_request_id()], 500);
 }
