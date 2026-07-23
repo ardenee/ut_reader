@@ -7,13 +7,9 @@ catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationPeerSecret.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
+require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
 const AD_PAGE_SIZE = 50;
-
-function ad_bool(mixed $value): bool
-{
-    return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'on'], true);
-}
 
 function ad_page(mixed $value): int
 {
@@ -33,25 +29,25 @@ function ad_parent(PDO $db, int $peerId): array
 /** @return array<string,mixed> */
 function ad_poll_status(PDO $db, array $parent): array
 {
-    return fed_http_post_signed(
+    $result = fed_http_post_signed(
         rtrim((string)$parent['site_url'], '/') . '/api/federation/request-status.php',
         (string)fed_setting($db, 'site_id', ''),
         federation_peer_stored_signing_secret($db, $parent),
         ['latest' => true]
     );
+    if (is_array($result['policy'] ?? null)) {
+        federation_cache_parent_base_game_policy($db, (int)$parent['id'], $result['policy']);
+    }
+    return $result;
 }
 
-function ad_url(int $peerId, bool $showBaseGame, int $itemPage, int $jobPage): string
+function ad_url(int $peerId, int $itemPage, int $jobPage): string
 {
-    $query = [
+    return 'approved-downloads.php?' . http_build_query([
         'peer_id' => $peerId,
         'item_page' => $itemPage,
         'job_page' => $jobPage,
-    ];
-    if ($showBaseGame) {
-        $query['show_base_game'] = 1;
-    }
-    return 'approved-downloads.php?' . http_build_query($query);
+    ]);
 }
 
 function ad_page_links(int $page, int $pages, callable $urlForPage): void
@@ -97,21 +93,18 @@ try {
 
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $peerId = (int)($_GET['peer_id'] ?? ($parents[0]['id'] ?? 0));
-    $showBaseGame = ad_bool($_GET['show_base_game'] ?? '0');
     $itemPage = ad_page($_GET['item_page'] ?? 1);
     $jobPage = ad_page($_GET['job_page'] ?? 1);
 
     catalog_head('Approved Downloads');
     catalog_page_header(
         'Approved Downloads',
-        'Child-side page showing files the parent approved for this child. The worker queues only approved files that are still required by a local missing dependency, then records their transfer and import progress below.',
+        'Child-side page showing dependency files the parent approved for this child. Base-game files appear only when they complete a missing dependency.',
         catalog_federation_links() + ['Missing Files' => 'missing-files.php', 'Outgoing Requests' => 'request-status.php', 'Worker' => 'worker-run.php', 'Transfer Queue' => 'queue.php']
     );
 
-    echo '<div class="card"><h2>Server mode</h2><p>This server is running in <strong>' . catalog_h(ucfirst($siteRole)) . '</strong> mode.</p></div>';
     if ($siteRole !== 'child') {
-        echo '<div class="card"><h2>Approved Downloads disabled</h2><p>This page applies only to a Child server receiving parent-approved dependency files. A Parent server approves incoming child file requests on Incoming Requests.</p>';
-        echo '<p><a class="button" href="requests.php">Incoming Requests</a> <a class="button" href="settings.php">Federation Settings</a></p></div>';
+        echo '<div class="card"><h2>Approved Downloads disabled</h2><p>This page applies only to a Child server receiving parent-approved dependency files.</p></div>';
         catalog_foot();
         exit;
     }
@@ -123,16 +116,16 @@ try {
 
     echo '<div class="card"><h2>Parent approval source</h2>';
     if (!$parents) {
-        echo '<p class="muted">No active parent connection is configured.</p><p><a class="button" href="join-main-parent.php">Join a Parent</a></p></div>';
+        echo '<p class="muted">No active parent connection is configured.</p></div>';
         catalog_foot();
         exit;
     }
-    echo '<form method="get"><input type="hidden" name="item_page" value="1"><input type="hidden" name="job_page" value="1"><label>Parent<br><select name="peer_id">';
+    echo '<form method="get"><input type="hidden" name="item_page" value="1"><input type="hidden" name="job_page" value="1"><label>Parent<br><select name="peer_id" onchange="this.form.submit()">';
     foreach ($parents as $parent) {
         $selected = (int)$parent['id'] === $peerId ? ' selected' : '';
         echo '<option value="' . (int)$parent['id'] . '"' . $selected . '>' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';
     }
-    echo '</select></label> <label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game items</label> <button>Apply</button></form>';
+    echo '</select></label></form>';
     echo '<form method="post" style="margin-top:12px"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_approved_downloads')) . '"><input type="hidden" name="peer_id" value="' . $peerId . '"><button>Check approvals and queue still-needed downloads now</button></form>';
     echo '<p class="muted">The scheduled federation worker performs the same approval check automatically.</p></div>';
 
@@ -150,29 +143,26 @@ try {
         echo '<p class="muted">No dependency request exists on this parent.</p></div>';
     } else {
         $request = $status['request'];
-        echo '<table><tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr><tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr><tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr><tr><th>Submitted</th><td>' . catalog_h($request['submitted_at'] ?? '') . '</td></tr><tr><th>Last updated</th><td>' . catalog_h($request['updated_at'] ?? '') . '</td></tr></table></div>';
+        echo '<table><tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr><tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr><tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr><tr><th>Submitted</th><td>' . catalog_h($request['submitted_at'] ?? '') . '</td></tr><tr><th>Last updated</th><td>' . catalog_h($request['updated_at'] ?? '') . '</td></tr><tr><th>Base-game policy</th><td>' . catalog_h(federation_base_game_policy_label($db, $parent)) . '</td></tr></table></div>';
 
         $allItems = array_values(array_filter(
             is_array($status['items'] ?? null) ? $status['items'] : [],
             static fn(mixed $item): bool => is_array($item)
         ));
-        $baseGameCount = count(array_filter($allItems, static fn(array $item): bool => !empty($item['is_base_game'])));
-        if (!$showBaseGame) {
-            $allItems = array_values(array_filter($allItems, static fn(array $item): bool => empty($item['is_base_game'])));
-        }
         usort($allItems, static function (array $a, array $b): int {
             $dateCompare = strcmp((string)($b['updated_at'] ?? ''), (string)($a['updated_at'] ?? ''));
             return $dateCompare !== 0 ? $dateCompare : ((int)($b['id'] ?? 0) <=> (int)($a['id'] ?? 0));
         });
         $itemTotal = count($allItems);
+        $baseGameCount = count(array_filter($allItems, static fn(array $item): bool => !empty($item['is_base_game'])));
         $itemPages = max(1, (int)ceil($itemTotal / AD_PAGE_SIZE));
         $itemPage = min($itemPage, $itemPages);
         $pageItems = array_slice($allItems, ($itemPage - 1) * AD_PAGE_SIZE, AD_PAGE_SIZE);
 
         echo '<div class="card"><h2>Request items</h2>';
-        echo '<p>Showing <strong>' . count($pageItems) . '</strong> of <strong>' . $itemTotal . '</strong> visible items. Official base-game items: <strong>' . $baseGameCount . '</strong> ' . ($showBaseGame ? 'shown.' : 'hidden.') . '</p>';
+        echo '<p>Showing <strong>' . count($pageItems) . '</strong> of <strong>' . $itemTotal . '</strong> dependency items. Base-game dependency exceptions: <strong>' . $baseGameCount . '</strong>.</p>';
         if (!$pageItems) {
-            echo '<p class="muted">No request items match the current filter.</p>';
+            echo '<p class="muted">No request items were found.</p>';
         } else {
             echo '<table><tr><th>Status</th><th>Still needed locally</th><th>Required package</th><th>Required object</th><th>Parent file</th><th>Size</th><th>Updated</th><th>Message</th></tr>';
             foreach ($pageItems as $item) {
@@ -181,7 +171,7 @@ try {
                     (string)($item['required_package'] ?? ''),
                     (string)($item['required_object_path'] ?? '')
                 );
-                $baseBadge = !empty($item['is_base_game']) ? ' <span class="pill amber">official base-game</span>' : '';
+                $baseBadge = !empty($item['is_base_game']) ? ' <span class="pill amber">base-game dependency</span>' : '';
                 $parentFile = trim((string)($item['package_name'] ?? '') . ' / ' . (string)($item['original_name'] ?? ''), ' /');
                 echo '<tr><td>' . catalog_h($item['status'] ?? '') . '</td><td>' . ($stillNeeded ? '<span class="pill amber">yes</span>' : '<span class="muted">no</span>') . '</td><td class="mono">' . catalog_h($item['required_package'] ?? '') . $baseBadge . '</td><td class="mono path">' . catalog_h($item['required_object_path'] ?? '') . '</td><td>' . catalog_h($parentFile !== '' ? $parentFile : 'not available') . '</td><td class="nowrap">' . catalog_h(catalog_bytes((int)($item['file_size'] ?? 0))) . '</td><td class="nowrap">' . catalog_h($item['updated_at'] ?? '') . '</td><td class="path">' . catalog_h($item['status_message'] ?? '') . '</td></tr>';
             }
@@ -189,7 +179,7 @@ try {
             ad_page_links(
                 $itemPage,
                 $itemPages,
-                fn(int $page): string => ad_url($peerId, $showBaseGame, $page, $jobPage)
+                fn(int $page): string => ad_url($peerId, $page, $jobPage)
             );
         }
         echo '</div>';
@@ -225,7 +215,7 @@ try {
         ad_page_links(
             $jobPage,
             $jobPages,
-            fn(int $page): string => ad_url($peerId, $showBaseGame, $itemPage, $page)
+            fn(int $page): string => ad_url($peerId, $itemPage, $page)
         );
     }
     echo '</div>';
