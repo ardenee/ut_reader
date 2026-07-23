@@ -19,10 +19,25 @@ final class CatalogJobWorkerFactory
     ): JobWorker {
         // max_upload_bytes protects browser/staging ingress. It must not reject a
         // trusted package after it has already entered durable staging, a local
-        // source, a PAK extraction, or a managed game backup. Those entry points
-        // validate their own input before creating the worker job.
+        // source, a PAK extraction, or a managed game backup. Preserve the real
+        // ingress limit separately so redirect decompression still has a finite,
+        // configurable expansion ceiling rather than inheriting PHP_INT_MAX.
         $trustedImportConfig = $config;
+        $ingressLimit = max(1, (int)($config['max_upload_bytes'] ?? (256 * 1024 * 1024)));
+        $defaultRedirectLimit = $ingressLimit > intdiv(PHP_INT_MAX, 8)
+            ? PHP_INT_MAX
+            : $ingressLimit * 8;
+        $trustedImportConfig['ingress_max_upload_bytes'] = $ingressLimit;
+        $trustedImportConfig['max_redirect_output_bytes'] = max(
+            $ingressLimit,
+            (int)($config['max_redirect_output_bytes'] ?? $defaultRedirectLimit)
+        );
         $trustedImportConfig['max_upload_bytes'] = PHP_INT_MAX;
+
+        $eventLog = new CatalogJobEventLog($config);
+        $eventAppender = static function (int $jobId, array $event) use ($eventLog): void {
+            $eventLog->append($jobId, $event);
+        };
 
         return new JobWorker(
             new WorkerJobQueue($db),
@@ -33,7 +48,7 @@ final class CatalogJobWorkerFactory
                 new CatalogPakImportJobHandler($db, $trustedImportConfig),
                 new CatalogNonBlockingImportJobHandler(
                     new CatalogStagedImportJobHandler($db, $trustedImportConfig),
-                    $config
+                    $trustedImportConfig
                 ),
                 new CatalogSourceScanJobHandler($db, $trustedImportConfig),
                 new CatalogStorageMaintenanceJobHandler($db, $config),
@@ -47,7 +62,8 @@ final class CatalogJobWorkerFactory
             ],
             $queueName,
             $workerId,
-            $leaseSeconds
+            $leaseSeconds,
+            $eventAppender
         );
     }
 }
