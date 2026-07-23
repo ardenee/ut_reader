@@ -3,8 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -22,37 +21,28 @@ try {
     if ($action !== 'stop') {
         JsonResponse::error('invalid_action', 'Supported worker action is stop.', 400);
     }
-
-    $launcher = new CatalogDetachedWorker($application->config);
-    $worker = $launcher->requestStop($queueName);
-    $cancelRunning = !array_key_exists('cancel_running', $payload) || (bool)$payload['cancel_running'];
-    $cancelled = 0;
-    if ($cancelRunning) {
-        $rows = catalog_all(
-            $application->db,
-            'SELECT id FROM ue_background_jobs WHERE queue_name=? AND status="running" ORDER BY id',
-            [$queueName]
-        );
-        $queue = new PdoJobQueue($application->db);
-        $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
-        foreach ($rows as $row) {
-            $status = $queue->requestCancellation(
-                (int)$row['id'],
-                $userId,
-                'Stopped from Background Jobs.'
-            );
-            if (in_array($status, ['cancelled', 'cancel_requested'], true)) {
-                $cancelled++;
-            }
-        }
+    if ($queueName === '' || strlen($queueName) > 80) {
+        JsonResponse::error('invalid_queue', 'A valid queue name is required.', 400);
     }
+
+    $cancelRunning = !array_key_exists('cancel_running', $payload) || (bool)$payload['cancel_running'];
+    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+    $stopper = new CatalogDetachedWorkerStop($application->db, $application->config);
+    $result = $stopper->stopQueue(
+        $queueName,
+        $userId,
+        $cancelRunning ? 'Stopped from Background Jobs.' : 'Detached worker stop requested.'
+    );
 
     JsonResponse::send([
         'data' => [
             'queue' => $queueName,
             'stop_requested' => true,
-            'running_jobs_notified' => $cancelled,
-            'worker' => $worker,
+            'worker_terminated' => !empty($result['terminated']),
+            'worker_pid' => (int)($result['pid'] ?? 0),
+            'running_jobs_notified' => (int)($result['cancelled_jobs'] ?? 0) + (int)($result['cooperative_jobs'] ?? 0),
+            'running_jobs_cancelled' => (int)($result['cancelled_jobs'] ?? 0),
+            'worker' => $result['worker'] ?? [],
         ],
     ]);
 } catch (InvalidArgumentException $exception) {
