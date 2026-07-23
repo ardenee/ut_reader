@@ -116,7 +116,7 @@ try {
     try {
         $db->prepare('UPDATE ue_federation_requests SET status="updated" WHERE peer_id=? AND direction="child_to_parent" AND status IN ("submitted","approved","part_approved")')->execute([(int)$peer['id']]);
 
-        $stmt = $db->prepare('INSERT INTO ue_federation_requests(peer_id,direction,status,request_hash,title,notes,submitted_at) VALUES(?,"child_to_parent","submitted",?,?,?,NOW())');
+        $stmt = $db->prepare('INSERT INTO ue_federation_requests(peer_id,direction,status,request_hash,title,notes,submitted_at) VALUES(? ,"child_to_parent","submitted",?,?,?,NOW())');
         $stmt->execute([(int)$peer['id'], $requestHash, $title, $notes]);
         $requestId = (int)$db->lastInsertId();
 
@@ -147,7 +147,7 @@ try {
                     ];
                 $msg = base_game_block_message($match ?: null);
             } elseif (empty($availability['available'])) {
-                $msg = 'Not found in this parent\'s catalog. This package cannot be approved until the parent imports a matching file.';
+                $msg = 'Not available on this parent yet. The parent may approve the request now; it will remain active until a matching file is imported.';
             } else {
                 $msg = 'Available on this parent; matched by ' . (string)($availability['match_method'] ?? 'package identity');
                 if (!empty($availability['game_name'])) {
