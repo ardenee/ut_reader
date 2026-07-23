@@ -42,6 +42,20 @@ function crs_cancel(PDO $db, array $parent, int $requestId): array
     );
 }
 
+function crs_show_base_game(mixed $value): bool
+{
+    return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'on'], true);
+}
+
+function crs_url(int $peerId, int $requestId, bool $showBaseGame): string
+{
+    $query = ['peer_id' => $peerId, 'request_id' => $requestId];
+    if ($showBaseGame) {
+        $query['show_base_game'] = 1;
+    }
+    return 'request-status.php?' . http_build_query($query);
+}
+
 function crs_group_key(array $item): string
 {
     return hash(
@@ -57,7 +71,10 @@ function crs_clarify_message(string $message): string
     $message = trim($message);
     return match ($message) {
         'Parent does not currently have a matching file.',
-        'Parent does not have matching file.' => 'Not found in the selected parent catalog; the parent cannot approve this package until a matching file is imported.',
+        'Parent does not have matching file.',
+        'Not found in this parent catalog; this package cannot be approved.',
+        'Not found in this parent\'s catalog. This package cannot be approved until the parent imports a matching file.'
+            => 'Not available on the selected parent yet. An approved request remains active until the parent imports a matching file.',
         'Approved by parent admin.' => 'Approved for this child by the parent administrator.',
         'Denied by parent admin.' => 'Denied by the parent administrator.',
         default => $message,
@@ -82,9 +99,11 @@ function crs_group_items(array $items): array
                 'object_paths' => [],
                 'messages' => [],
                 'raw_count' => 0,
+                'is_base_game' => false,
             ];
         }
         $groups[$key]['raw_count']++;
+        $groups[$key]['is_base_game'] = !empty($groups[$key]['is_base_game']) || !empty($item['is_base_game']);
         $status = trim((string)($item['status'] ?? ''));
         if ($status !== '') {
             $groups[$key]['statuses'][$status] = true;
@@ -110,6 +129,7 @@ function crs_group_items(array $items): array
         $group['example_object'] = (string)(reset($group['object_paths']) ?: ($group['required_object_path'] ?? ''));
         $group['object_count'] = max(1, count($group['object_paths']));
         $group['display_message'] = implode(' ', array_keys($group['messages']));
+        $group['waiting_for_file'] = $group['display_status'] === 'approved' && empty($group['local_file_id']);
     }
     unset($group);
 
@@ -131,6 +151,7 @@ try {
         catalog_check_csrf('fed_child_request_status');
         $peerId = (int)($_POST['peer_id'] ?? 0);
         $requestId = (int)($_POST['request_id'] ?? 0);
+        $showBaseGame = crs_show_base_game($_POST['show_base_game'] ?? '0');
         $action = (string)($_POST['action'] ?? 'poll');
         $parent = crs_parent($db, $peerId);
 
@@ -142,7 +163,7 @@ try {
             fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'REQUEST_STATUS_VIEW_POLL', json_encode($result, JSON_UNESCAPED_SLASHES));
         }
         $_SESSION['fed_child_request_status_result'] = $result;
-        header('Location: request-status.php?peer_id=' . $peerId . '&request_id=' . $requestId);
+        header('Location: ' . crs_url($peerId, $requestId, $showBaseGame));
         exit;
     }
 
@@ -154,10 +175,11 @@ try {
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $peerId = (int)($_GET['peer_id'] ?? ($parents[0]['id'] ?? 0));
     $requestId = (int)($_GET['request_id'] ?? 0);
+    $showBaseGame = crs_show_base_game($_GET['show_base_game'] ?? '0');
 
     catalog_page_header(
         'Outgoing Requests',
-        'Child-side workflow. These requests were sent by this child to a parent because packages are missing locally.',
+        'Requests sent by this child to its parent. Approved packages remain active even when the parent has not found the file yet.',
         catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Missing Files' => 'request-generate.php', 'Approved Downloads' => 'approved-downloads.php']
     );
 
@@ -176,10 +198,9 @@ try {
         unset($_SESSION['fed_child_request_status_result']);
     }
 
-    echo '<div class="card"><h2>Select parent request</h2>';
-    echo '<p><strong>Direction:</strong> this child &rarr; selected parent.</p>';
+    echo '<div class="card"><h2>Select outgoing request</h2>';
     if (!$parents) {
-        echo '<p class="muted">No active parent connection is configured.</p><p><a class="button" href="join-main-parent.php">Join a parent</a> <a class="button" href="peers.php?role=parent">Manage parents</a></p></div>';
+        echo '<p class="muted">No active parent connection is configured.</p><p><a class="button" href="join-main-parent.php">Join a parent</a></p></div>';
         catalog_foot();
         exit;
     }
@@ -188,7 +209,9 @@ try {
         $sel = (int)$parentRow['id'] === $peerId ? ' selected' : '';
         echo '<option value="' . (int)$parentRow['id'] . '"' . $sel . '>' . catalog_h($parentRow['site_name'] . ' - ' . $parentRow['site_url']) . '</option>';
     }
-    echo '</select></label></p><p><label>Request ID <span class="muted">(0 means latest)</span><br><input name="request_id" value="' . $requestId . '" style="width:120px"></label></p><button>Refresh request status</button></form></div>';
+    echo '</select></label></p><p><label>Request ID <span class="muted">(0 means latest)</span><br><input name="request_id" value="' . $requestId . '" style="width:120px"></label></p>';
+    echo '<p><label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages</label></p>';
+    echo '<button>Refresh request status</button></form></div>';
 
     if ($peerId > 0) {
         $parent = crs_parent($db, $peerId);
@@ -198,7 +221,7 @@ try {
             $status = ['ok' => false, 'error' => $e->getMessage()];
         }
 
-        echo '<div class="card"><h2>Parent decision</h2>';
+        echo '<div class="card"><h2>Request state</h2>';
         if (empty($status['ok'])) {
             echo '<p class="muted">' . catalog_h($status['error'] ?? 'Status unavailable') . '</p></div>';
         } else {
@@ -207,33 +230,40 @@ try {
                 echo '<p class="muted">No outgoing request was found on this parent.</p><p><a class="button" href="request-generate.php?peer_id=' . $peerId . '">Create request from missing files</a></p></div>';
             } else {
                 $active = in_array((string)$request['status'], ['submitted', 'approved', 'part_approved', 'downloading'], true);
-                $groups = crs_group_items(is_array($status['items'] ?? null) ? $status['items'] : []);
+                $allGroups = crs_group_items(is_array($status['items'] ?? null) ? $status['items'] : []);
+                $baseCount = count(array_filter($allGroups, static fn(array $group): bool => !empty($group['is_base_game'])));
+                $groups = $showBaseGame
+                    ? $allGroups
+                    : array_values(array_filter($allGroups, static fn(array $group): bool => empty($group['is_base_game'])));
+                $waitingCount = count(array_filter($groups, static fn(array $group): bool => !empty($group['waiting_for_file'])));
+
                 echo '<table>';
                 echo '<tr><th>Direction</th><td><strong>This child</strong> &rarr; <strong>' . catalog_h($parent['site_name']) . '</strong> parent</td></tr>';
-                echo '<tr><th>Meaning</th><td>This child asked the parent to supply packages that are missing locally.</td></tr>';
                 echo '<tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr>';
                 echo '<tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr>';
-                echo '<tr><th>Distinct packages</th><td>' . count($groups) . '</td></tr>';
+                echo '<tr><th>Visible packages</th><td>' . count($groups) . '</td></tr>';
+                echo '<tr><th>Waiting for parent file</th><td>' . $waitingCount . '</td></tr>';
+                echo '<tr><th>Official base-game packages</th><td>' . $baseCount . ($showBaseGame ? ' shown' : ' hidden') . '</td></tr>';
                 echo '<tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr>';
                 echo '<tr><th>Submitted</th><td>' . catalog_h($request['submitted_at']) . '</td></tr>';
-                echo '<tr><th>Approved</th><td>' . catalog_h($request['approved_at']) . '</td></tr>';
                 echo '</table>';
                 if ($active) {
-                    echo '<form method="post" onsubmit="return confirm(\'Cancel this outgoing request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><button>Cancel outgoing request</button></form>';
+                    echo '<form method="post" onsubmit="return confirm(\'Cancel this outgoing request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><button>Cancel outgoing request</button></form>';
                 }
                 echo '</div>';
 
                 echo '<div class="card"><h2>Packages requested from the parent</h2>';
-                echo '<p>The parent availability column tells whether the selected parent can provide a matching file. It does not describe the child inventory.</p>';
+                echo '<p><strong>Approved + waiting</strong> means the parent accepted the request but has not found the file yet. The row remains active and is linked automatically when the file is later imported.</p>';
                 if (!$groups) {
-                    echo '<p class="muted">This request has no package items.</p></div>';
+                    echo '<p class="muted">No requested packages match the current base-game filter.</p></div>';
                 } else {
-                    echo '<table><tr><th>Status</th><th>Package requested from parent</th><th>Example missing object</th><th>Missing objects</th><th>Parent file</th><th>Parent decision / reason</th></tr>';
+                    echo '<table><tr><th>Status</th><th>Package</th><th>Example missing object</th><th>Missing objects</th><th>Parent file</th><th>Decision / current state</th></tr>';
                     foreach ($groups as $group) {
                         $parentFile = trim((string)($group['package_name'] ?? ''));
                         $originalName = trim((string)($group['original_name'] ?? ''));
                         $fileLabel = trim($parentFile . ($parentFile !== '' && $originalName !== '' ? ' / ' : '') . $originalName);
-                        echo '<tr><td>' . catalog_h($group['display_status']) . '</td><td class="mono">' . catalog_h($group['required_package'] ?? '') . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . ($fileLabel !== '' ? catalog_h($fileLabel) : '<span class="muted">Not available on parent</span>') . '</td><td>' . catalog_h($group['display_message']) . '</td></tr>';
+                        $displayStatus = !empty($group['waiting_for_file']) ? 'approved — waiting for file' : (string)$group['display_status'];
+                        echo '<tr><td>' . catalog_h($displayStatus) . '</td><td class="mono">' . catalog_h($group['required_package'] ?? '') . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . ($fileLabel !== '' ? catalog_h($fileLabel) : '<span class="muted">Not available yet</span>') . '</td><td>' . catalog_h($group['display_message']) . '</td></tr>';
                     }
                     echo '</table></div>';
                 }
