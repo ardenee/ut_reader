@@ -14,20 +14,30 @@ try {
         exit;
     }
 
+    $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     catalog_head('Parent Pull');
     catalog_page_header(
         'Parent Pull From Children',
-        'Parent/master downloads do not require child approval. Select needed dependency files or other files absent from the parent on the Child Inventory page.',
+        'Parent/master downloads do not require child approval. Files are selected from connected child inventories.',
         catalog_federation_links() + [
-            'Child Inventory' => 'peer-inventory.php',
+            'Child Inventories' => 'peer-inventory.php',
             'Run Transfer Queue' => 'transfer-run.php',
             'Import Downloaded Files' => 'import-run.php',
         ]
     );
 
+    echo '<div class="card"><h2>Server mode</h2><p>This server is running in <strong>' . catalog_h(ucfirst($role)) . '</strong> mode.</p></div>';
+    if ($role !== 'parent') {
+        echo '<div class="card"><h2>Parent Pull disabled</h2>';
+        echo '<p>Only a server running in Parent mode can pull files from child sites. A Child site cannot have children.</p>';
+        echo '<p><a class="button" href="settings.php">Federation Settings</a> <a class="button" href="peers.php?role=parent">Parent Connection</a></p></div>';
+        catalog_foot();
+        exit;
+    }
+
     echo '<div class="card"><h2>Select files from child inventory</h2>';
     echo '<p>The parent may download any non-protected child file that is not already present locally. Files already held by the parent are not offered.</p>';
-    echo '<p><a class="button" href="peer-inventory.php">Open Child Inventory</a></p>';
+    echo '<p><a class="button" href="peer-inventory.php">Open Child Inventories</a></p>';
     echo '<ul><li><strong>Needed</strong>: matches a current missing dependency on the parent.</li><li><strong>Missing</strong>: another child file that the parent does not have.</li></ul>';
     echo '</div>';
 
@@ -37,7 +47,7 @@ try {
          FROM ue_federation_transfer_jobs j
          JOIN ue_federation_peers p ON p.id=j.peer_id
          WHERE j.direction="parent_pull_from_child"
-         ORDER BY j.created_at DESC
+         ORDER BY j.created_at DESC, j.id DESC
          LIMIT 200'
     );
 
