@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 catalog_start_session();
+require_once __DIR__ . '/lib/FederationAuth.php';
 
 function fl_is_admin(): bool
 {
@@ -27,6 +27,7 @@ try {
         exit;
     }
 
+    $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     $stats = [
         'peers' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peers')['c'] ?? 0),
         'active_peers' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peers WHERE is_active=1')['c'] ?? 0),
@@ -37,41 +38,44 @@ try {
         'peer_files' => (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files')['c'] ?? 0),
     ];
 
-    echo '<div class="card"><h1>Federation Launcher</h1><p class="muted">Admin-only quick launch page for all federation functions.</p><p><a class="button" href="admin.php">Catalog Admin</a> <a class="button" href="federation/admin.php">Federation Admin</a> <a class="button" href="games.php">Games</a></p></div>';
+    echo '<div class="card"><h1>Federation Launcher</h1><p>Current server mode: <strong>' . catalog_h(ucfirst($role)) . '</strong>.</p><p class="muted">Role-specific pages explain when a function is unavailable.</p><p><a class="button" href="federation/admin.php">Federation Overview</a> <a class="button" href="federation/settings.php">Settings</a> <a class="button" href="games.php">Games</a></p></div>';
 
     echo '<div class="grid">';
-    echo '<div class="stat"><h2>' . $stats['peers'] . '</h2><p>Total peers</p></div>';
-    echo '<div class="stat"><h2>' . $stats['active_peers'] . '</h2><p>Active peers</p></div>';
-    echo '<div class="stat"><h2>' . $stats['peer_files'] . '</h2><p>Peer inventory rows</p></div>';
-    echo '<div class="stat"><h2>' . $stats['requests'] . '</h2><p>Requests</p></div>';
+    echo '<div class="stat"><h2>' . $stats['peers'] . '</h2><p>Total connections</p></div>';
+    echo '<div class="stat"><h2>' . $stats['active_peers'] . '</h2><p>Active connections</p></div>';
+    echo '<div class="stat"><h2>' . $stats['peer_files'] . '</h2><p>Cached inventory rows</p></div>';
+    echo '<div class="stat"><h2>' . $stats['requests'] . '</h2><p>File requests</p></div>';
     echo '<div class="stat"><h2>' . $stats['queued'] . '</h2><p>Queued jobs</p></div>';
     echo '<div class="stat"><h2>' . $stats['downloaded'] . '</h2><p>Waiting import</p></div>';
     echo '<div class="stat"><h2>' . $stats['failed'] . '</h2><p>Failed jobs</p></div>';
     echo '</div>';
 
-    echo '<div class="card"><h2>Core federation</h2><div class="grid">';
-    fl_card('Federation admin', 'federation/admin.php', 'Main federation dashboard.');
-    fl_card('Settings', 'federation/settings.php', 'Identity, role, transfer limits, and worker token.');
-    fl_card('Peers', 'federation/peers.php', 'Add/manage parent and child pairings.');
-    fl_card('Queue', 'federation/queue.php', 'Queued/running/downloaded/imported/failed jobs.');
-    fl_card('Bulk worker', 'federation/worker-run.php', 'Run multiple sequential transfer/import jobs.');
-    fl_card('Maintenance', 'federation/maintenance.php', 'Prune logs/nonces and review incoming storage.');
-    fl_card('Docs', 'federation/docs.php', 'DSM Task Scheduler and curl examples.');
+    echo '<div class="card"><h2>Connections and requests</h2><div class="grid">';
+    fl_card('Parents', 'federation/peers.php?role=parent', 'View the parent connected to a Child server.');
+    fl_card('Join a Parent', 'federation/join-main-parent.php', 'Join only when no parent connection exists.');
+    fl_card('Children', 'federation/peers.php?role=child', 'View children connected to a Parent server.');
+    fl_card('Incoming Child Join Requests', 'federation/join-requests.php', 'Parent-side approval of child pairing requests.');
+    fl_card('Missing Files', 'federation/missing-files.php', 'Select locally missing packages and request them from a parent.');
+    fl_card('Requests', 'federation/request-center.php', 'Role-aware request overview.');
+    fl_card('Incoming File Requests', 'federation/requests.php', 'Parent-side approval of files requested by children.');
+    fl_card('Outgoing File Requests', 'federation/request-status.php', 'Child-side status for requests sent to a parent.');
+    fl_card('Approved Downloads', 'federation/approved-downloads.php', 'Child-side approved dependency download and import history.');
     echo '</div></div>';
 
-    echo '<div class="card"><h2>Parent/master</h2><div class="grid">';
-    fl_card('Peer inventory', 'federation/peer-inventory.php', 'View child inventories separately.');
-    fl_card('Parent pull', 'federation/parent-pull.php', 'Pull missing dependency files and other child files.');
-    fl_card('Child requests', 'federation/requests.php', 'Approve/deny child dependency requests.');
-    fl_card('Conflicts', 'federation/conflicts.php', 'Review GUID/package/hash conflicts.');
+    echo '<div class="card"><h2>Inventories and transfers</h2><div class="grid">';
+    fl_card('Child Inventories', 'federation/peer-inventory.php', 'Parent-side child list, inventories, and actions.');
+    fl_card('Parent Pull', 'federation/parent-pull.php', 'Parent pulls selected files directly from children.');
+    fl_card('Transfer Queue', 'federation/queue.php', 'Queued, running, downloaded, imported, and failed jobs.');
+    fl_card('Run Worker', 'federation/worker-run.php', 'Poll approvals, transfer files, and import downloads.');
+    fl_card('Conflicts', 'federation/conflicts.php', 'Review GUID, package, and hash conflicts.');
     echo '</div></div>';
 
-    echo '<div class="card"><h2>Child site</h2><div class="grid">';
-    fl_card('Push inventory', 'federation/inventory-push.php', 'Send verified local inventory to parent.');
-    fl_card('Upload to parent', 'federation/upload-to-parent.php', 'Queue selected verified files for parent upload.');
-    fl_card('Generate request', 'federation/request-generate.php', 'Request missing dependency files from parent.');
-    fl_card('Request status/cancel', 'federation/request-status.php', 'Poll/cancel active parent request.');
-    fl_card('Approved downloads', 'federation/approved-downloads.php', 'Queue parent-approved file downloads.');
+    echo '<div class="card"><h2>Administration</h2><div class="grid">';
+    fl_card('Federation Overview', 'federation/admin.php', 'Role-aware dashboard and next actions.');
+    fl_card('Settings', 'federation/settings.php', 'Identity, role, transfer limits, and worker settings.');
+    fl_card('Maintenance', 'federation/maintenance.php', 'Clean up federation data and review storage.');
+    fl_card('Logs', 'federation/logs.php', 'Pairing, request, inventory, and transfer events.');
+    fl_card('Documentation', 'federation/docs.php', 'Federation setup and worker guidance.');
     echo '</div></div>';
 
     catalog_foot();
