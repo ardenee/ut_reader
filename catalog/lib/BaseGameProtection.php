@@ -5,6 +5,27 @@ require_once __DIR__ . '/CatalogSupport.php';
 
 function base_game_ensure(PDO $db): void
 {
+    /** @var array<int,bool> $ensured */
+    static $ensured = [];
+    $connectionId = spl_object_id($db);
+    if (isset($ensured[$connectionId])) {
+        return;
+    }
+
+    // MySQL implicitly commits active transactions around DDL. Never execute the
+    // compatibility CREATE TABLE path from dependency/request transactions.
+    if ($db->inTransaction()) {
+        $exists = catalog_one(
+            $db,
+            'SELECT 1 AS present FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name="ue_base_game_files" LIMIT 1'
+        );
+        if (!$exists) {
+            throw new RuntimeException('Base-game protection table is missing. Run the database migrations before processing transfers.');
+        }
+        $ensured[$connectionId] = true;
+        return;
+    }
+
     $db->exec(<<<'SQL'
 CREATE TABLE IF NOT EXISTS ue_base_game_files (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -23,6 +44,7 @@ CREATE TABLE IF NOT EXISTS ue_base_game_files (
   KEY idx_ue_base_game_files_source_file (source_file_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
 SQL);
+    $ensured[$connectionId] = true;
 }
 
 function base_game_normalize_guid(string $guid): string
