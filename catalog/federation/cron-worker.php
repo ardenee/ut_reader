@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
+require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
 function cron_json(array $data, int $status = 200): void
@@ -54,10 +55,10 @@ try {
         'started_at' => date('c'),
         'transfer_limit' => $limit,
         'import_limit' => $limit,
+        'inventory_sync' => federation_sync_due_inventories($db),
         'mirror_maintenance' => external_mirror_maintenance($db),
         'transfers' => [],
         'imports' => [],
-        'auto_inventory_push' => null,
     ];
 
     for ($i = 0; $i < $limit; $i++) {
@@ -68,29 +69,28 @@ try {
         }
     }
 
-    $importedSomething = false;
     for ($i = 0; $i < $limit; $i++) {
         $result = federation_worker_run_one_import($db, $config);
         $results['imports'][] = $result;
         if (!empty($result['skipped'])) {
             break;
         }
-        if (!empty($result['result']['file_id'])) {
-            $importedSomething = true;
-        }
-    }
-
-    if ($importedSomething && (string)fed_setting($db, 'site_role', 'standalone') === 'child') {
-        try {
-            $results['auto_inventory_push'] = federation_auto_push_inventory_to_parent($db);
-        } catch (Throwable $error) {
-            $results['auto_inventory_push'] = ['ok' => false, 'error' => 'Automatic inventory push failed.'];
-            fed_log($db, null, null, 'ERROR', 'CRON_AUTO_INVENTORY_PUSH_FAIL', $error->getMessage());
-        }
     }
 
     $results['finished_at'] = date('c');
-    fed_log($db, null, null, 'INFO', 'CRON_WORKER_RUN', json_encode(['transfers' => count($results['transfers']), 'imports' => count($results['imports']), 'mirror' => $results['mirror_maintenance']], JSON_UNESCAPED_SLASHES));
+    fed_log(
+        $db,
+        null,
+        null,
+        'INFO',
+        'CRON_WORKER_RUN',
+        json_encode([
+            'inventories_synchronized' => (int)($results['inventory_sync']['synchronized'] ?? 0),
+            'transfers' => count($results['transfers']),
+            'imports' => count($results['imports']),
+            'mirror' => $results['mirror_maintenance'],
+        ], JSON_UNESCAPED_SLASHES)
+    );
     cron_json($results);
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] federation cron failed: ' . get_class($error) . ': ' . $error->getMessage());
