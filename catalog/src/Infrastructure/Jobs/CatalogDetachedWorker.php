@@ -8,6 +8,7 @@ final class CatalogDetachedWorker
     private string $storageRoot;
     private string $runtimeDirectory;
     private string $catalogRoot;
+    private ?string $cachedCodeVersion = null;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly array $config)
@@ -30,7 +31,11 @@ final class CatalogDetachedWorker
 
         $status = $this->status($queueName);
         if (!empty($status['active'])) {
-            return ['started' => false, 'reason' => 'already_running', 'worker' => $status];
+            return [
+                'started' => false,
+                'reason' => !empty($status['stale_code']) ? 'stale_worker_running' : 'already_running',
+                'worker' => $status,
+            ];
         }
 
         $this->clearStopRequest($queueName);
@@ -52,6 +57,7 @@ final class CatalogDetachedWorker
             'status' => 'launching',
             'queue' => $queueName,
             'max_jobs' => $maxJobs,
+            'code_version' => $this->codeVersion(),
             'requested_at' => gmdate('c'),
         ]);
 
@@ -66,7 +72,7 @@ final class CatalogDetachedWorker
     }
 
     /** @return array<string,mixed> */
-    public function status(string $queueName): array
+    public function status(string $queueName, bool $includeLog = false): array
     {
         $queueName = $this->queueName($queueName);
         $this->ensureRuntimeDirectory();
@@ -80,13 +86,80 @@ final class CatalogDetachedWorker
             }
         }
 
-        return [
+        $currentVersion = $this->codeVersion();
+        $runningVersion = trim((string)($state['code_version'] ?? ''));
+        $staleCode = $active && ($runningVersion === '' || !hash_equals($currentVersion, $runningVersion));
+        $result = [
             'active' => $active,
             'queue' => $queueName,
             'stop_requested' => is_file($this->stopPath($queueName)),
             'state' => $state,
+            'code_version_current' => $currentVersion,
+            'code_version_running' => $runningVersion,
+            'stale_code' => $staleCode,
             'log_file' => basename($this->logPath($queueName)),
         ];
+        if ($includeLog) {
+            $result['log_tail'] = $this->tailLog($queueName);
+        }
+        return $result;
+    }
+
+    public function codeVersion(): string
+    {
+        if ($this->cachedCodeVersion !== null) {
+            return $this->cachedCodeVersion;
+        }
+
+        $paths = [
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'catalog-worker-detached.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Application' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobWorker.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Application' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobExecutionContext.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogJobWorkerFactory.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogNonBlockingImportJobHandler.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogStagedImportJobHandler.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchiveStream.php',
+        ];
+        $parts = [];
+        foreach ($paths as $path) {
+            if (!is_file($path)) {
+                $parts[] = str_replace('\\', '/', $path) . ':missing';
+                continue;
+            }
+            $hash = hash_file('sha256', $path);
+            $parts[] = str_replace('\\', '/', $path) . ':' . (is_string($hash) ? $hash : 'unreadable');
+        }
+        $this->cachedCodeVersion = substr(hash('sha256', implode("\n", $parts)), 0, 24);
+        return $this->cachedCodeVersion;
+    }
+
+    public function tailLog(string $queueName, int $maximumBytes = 16384): string
+    {
+        $queueName = $this->queueName($queueName);
+        $path = $this->logPath($queueName);
+        if (!is_file($path) || !is_readable($path)) {
+            return '';
+        }
+        $maximumBytes = max(1024, min($maximumBytes, 131072));
+        $size = filesize($path);
+        if ($size === false || $size < 1) {
+            return '';
+        }
+        $handle = fopen($path, 'rb');
+        if (!is_resource($handle)) {
+            return '';
+        }
+        try {
+            $offset = max(0, (int)$size - $maximumBytes);
+            if ($offset > 0) {
+                fseek($handle, $offset);
+                fgets($handle);
+            }
+            $data = stream_get_contents($handle);
+            return is_string($data) ? trim($data) : '';
+        } finally {
+            fclose($handle);
+        }
     }
 
     /** @return array<string,mixed> */
