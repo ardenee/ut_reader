@@ -58,7 +58,7 @@ $requestSubmit = $content['request_submit'];
 federation_inventory_selection_expect(str_contains($requestSubmit, 'The parent may approve the request now; it will remain active'), 'Unavailable request submission still claims the item cannot be approved.');
 federation_inventory_selection_expect(str_contains($requestSubmit, 'federation_package_availability'), 'Request submission bypasses shared availability checks.');
 federation_inventory_selection_expect(str_contains($requestSubmit, 'is_base_game_dependency'), 'Request submission discards base-game dependency context.');
-federation_inventory_selection_expect(!str_contains($requestSubmit, "$status = 'denied';"), 'Request submission still automatically denies a base-game dependency.');
+federation_inventory_selection_expect(!str_contains($requestSubmit, '$status = \'denied\';'), 'Request submission still automatically denies a base-game dependency.');
 
 $lifecycle = $content['request_lifecycle'];
 federation_inventory_selection_expect(str_contains($lifecycle, 'function federation_refresh_request_matches'), 'Request lifecycle refresh is missing.');
