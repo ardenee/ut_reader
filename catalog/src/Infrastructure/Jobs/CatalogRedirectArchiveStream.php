@@ -12,14 +12,15 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 final class CatalogRedirectArchiveStream
 {
     /**
-     * @param callable(array<string,int|string>):void|null $progress
-     * @return array{path:string,filename:string,bytes:int,compressed_bytes:int,source_extension:string,decoder:string,chunks:int,expected_bytes:int}
+     * @param callable(array<string,int|string|bool>):void|null $progress
+     * @return array{path:string,filename:string,bytes:int,compressed_bytes:int,source_extension:string,decoder:string,chunks:int,expected_bytes:int,is_unreal_package:bool}
      */
     public static function decompressUz2(
         string $sourcePath,
         string $sourceName,
         int $maxOutputBytes = 0,
-        ?callable $progress = null
+        ?callable $progress = null,
+        bool $requirePackageTag = true
     ): array {
         if (\catalog_redirect_archive_extension($sourceName) !== 'uz2') {
             throw new \RuntimeException('Streaming redirect decoder requires a .uz2 file.');
@@ -53,7 +54,7 @@ final class CatalogRedirectArchiveStream
         $readBytes = 0;
         $writtenBytes = 0;
         $chunks = 0;
-        $firstOutput = '';
+        $isUnrealPackage = false;
 
         try {
             while ($readBytes < $compressedBytes) {
@@ -87,8 +88,8 @@ final class CatalogRedirectArchiveStream
 
                 $block = (string)$decoded['data'];
                 if ($chunks === 0) {
-                    $firstOutput = substr($block, 0, 4);
-                    if (!\catalog_redirect_archive_has_package_tag($firstOutput)) {
+                    $isUnrealPackage = \catalog_redirect_archive_has_package_tag(substr($block, 0, 4));
+                    if ($requirePackageTag && !$isUnrealPackage) {
                         throw new \RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
                     }
                 }
@@ -105,6 +106,7 @@ final class CatalogRedirectArchiveStream
                         'output_bytes' => $writtenBytes,
                         'chunks' => $chunks,
                         'percent' => (int)floor(($readBytes * 100) / max(1, (int)$compressedBytes)),
+                        'is_unreal_package' => $isUnrealPackage,
                         'message' => 'Decompressing ' . basename($sourceName) . ': block ' . $chunks,
                     ]);
                 }
@@ -137,6 +139,7 @@ final class CatalogRedirectArchiveStream
             'decoder' => 'epic-uz2-zlib-stream',
             'chunks' => $chunks,
             'expected_bytes' => $writtenBytes,
+            'is_unreal_package' => $isUnrealPackage,
         ];
     }
 
