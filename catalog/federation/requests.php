@@ -1,12 +1,16 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/BaseGameProtection.php';
+
+function requests_show_base_game(mixed $value): bool
+{
+    return in_array((string)$value, ['1', 'true', 'yes', 'on'], true);
+}
 
 function requests_update_header(PDO $db, int $requestId): void
 {
@@ -31,10 +35,21 @@ function requests_item_file(PDO $db, int $requestId, int $itemId): ?array
     return catalog_one($db, 'SELECT i.*, f.id file_id, f.game_id, f.package_guid, f.original_name, f.package_name FROM ue_federation_request_items i LEFT JOIN ue_files f ON f.id=i.local_file_id WHERE i.request_id=? AND i.id=?', [$requestId, $itemId]);
 }
 
+function requests_url(int $requestId, bool $showBaseGame): string
+{
+    $query = ['request_id' => $requestId];
+    if ($showBaseGame) {
+        $query['show_base_game'] = 1;
+    }
+    return 'requests.php?' . http_build_query($query);
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
     base_game_ensure($db);
+
+    $showBaseGame = requests_show_base_game($_REQUEST['show_base_game'] ?? '0');
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
@@ -75,7 +90,7 @@ try {
             }
             foreach ($ids as $id) {
                 $item = requests_item_file($db, $requestId, $id);
-                if (!$item || !in_array((string)$item['status'], ['requested','approved','denied'], true)) {
+                if (!$item || !in_array((string)$item['status'], ['requested', 'approved', 'denied'], true)) {
                     continue;
                 }
                 if ($action === 'deny_selected') {
@@ -96,7 +111,7 @@ try {
             fed_log($db, (int)$request['peer_id'], null, 'INFO', strtoupper($action), 'Request ' . $requestId . ' item count=' . count($ids));
         }
 
-        header('Location: requests.php?request_id=' . $requestId);
+        header('Location: ' . requests_url($requestId, $showBaseGame));
         exit;
     }
 
@@ -107,7 +122,11 @@ try {
     catalog_head('Federation Requests');
 
     $requestId = (int)($_GET['request_id'] ?? 0);
-    catalog_page_header('Child File Requests', 'Parent-side approval page. Requests are kept per child. Protected base-game files are denied automatically and cannot be approved for transfer.', catalog_federation_links() + ['Conflicts' => 'conflicts.php', 'Base Game Files' => '../base-game-files.php']);
+    catalog_page_header(
+        'Child File Requests',
+        'Parent-side approval page. Official base-game packages are hidden by default and always blocked from federation transfer.',
+        catalog_federation_links() + ['Conflicts' => 'conflicts.php', 'Base Game Files' => '../base-game-files.php']
+    );
 
     $requests = catalog_all($db, 'SELECT r.*, p.site_name peer_name FROM ue_federation_requests r JOIN ue_federation_peers p ON p.id=r.peer_id WHERE r.direction="child_to_parent" ORDER BY r.created_at DESC LIMIT 200');
     echo '<div class="card"><h2>Requests</h2>';
@@ -128,29 +147,64 @@ try {
             throw new RuntimeException('Request not found.');
         }
 
+        $itemSummary = catalog_one(
+            $db,
+            'SELECT COUNT(*) total, SUM(CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END) base_game
+             FROM ue_federation_request_items i
+             LEFT JOIN ue_files f ON f.id=i.local_file_id
+             LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
+             WHERE i.request_id=?',
+            [$requestId]
+        ) ?: [];
+        $baseGameCount = (int)($itemSummary['base_game'] ?? 0);
+
         echo '<div class="card"><h2>Request #' . (int)$request['id'] . '</h2><table>';
         echo '<tr><th>Child</th><td>' . catalog_h($request['peer_name']) . '</td></tr>';
         echo '<tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr>';
         echo '<tr><th>Hash</th><td class="mono">' . catalog_h($request['request_hash']) . '</td></tr>';
         echo '<tr><th>Notes</th><td>' . catalog_h($request['notes']) . '</td></tr>';
+        echo '<tr><th>Official base-game packages</th><td>' . $baseGameCount . ($showBaseGame ? ' shown' : ' hidden') . '</td></tr>';
         echo '</table>';
-        if (in_array((string)$request['status'], ['submitted','part_approved','approved'], true)) {
-            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="approve_all"><button>Approve available non-base-game items</button></form> ';
-            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="action" value="deny_all"><button>Deny all</button></form>';
+
+        echo '<form method="get" action="requests.php" class="filter-bar">';
+        echo '<input type="hidden" name="request_id" value="' . (int)$requestId . '">';
+        echo '<label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages</label> ';
+        echo '<button>Apply</button></form>';
+
+        if (in_array((string)$request['status'], ['submitted', 'part_approved', 'approved'], true)) {
+            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><input type="hidden" name="action" value="approve_all"><button>Approve available non-base-game items</button></form> ';
+            echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '"><input type="hidden" name="action" value="deny_all"><button>Deny all</button></form>';
         }
         echo '</div>';
 
-        $items = catalog_all($db, 'SELECT i.*, f.package_name local_package, f.original_name local_file, f.game_id local_game_id, f.package_guid local_package_guid, bg.id base_game_id FROM ue_federation_request_items i LEFT JOIN ue_files f ON f.id=i.local_file_id LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid WHERE i.request_id=? ORDER BY FIELD(i.status,"requested","approved","denied","imported","failed"), i.required_package, i.required_object_path', [$requestId]);
-        echo '<div class="card"><h2>Request items</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$requestId . '">';
-        echo '<p><button name="action" value="approve_selected">Approve selected</button> <button name="action" value="deny_selected">Deny selected</button></p>';
-        echo '<table><tr><th>Select</th><th>Status</th><th>Required package</th><th>Required object</th><th>Parent match</th><th>Message</th></tr>';
-        foreach ($items as $item) {
-            $isBase = !empty($item['base_game_id']);
-            $canSelect = in_array((string)$item['status'], ['requested','approved','denied'], true);
-            $match = $item['local_file_id'] ? '<a href="../file-info.php?id=' . (int)$item['local_file_id'] . '" target="_blank">' . catalog_h($item['local_package'] ?: $item['local_file']) . '</a>' . ($isBase ? ' <span class="pill amber">base-game blocked</span>' : '') : '<span class="muted">not available</span>';
-            echo '<tr><td>' . ($canSelect ? '<input type="checkbox" name="item_ids[]" value="' . (int)$item['id'] . '">' : '') . '</td><td>' . catalog_h($item['status']) . '</td><td class="mono">' . catalog_h($item['required_package']) . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . $match . '</td><td>' . catalog_h($item['status_message']) . '</td></tr>';
+        $baseFilter = $showBaseGame ? '' : ' AND bg.id IS NULL';
+        $items = catalog_all(
+            $db,
+            'SELECT i.*, f.package_name local_package, f.original_name local_file, f.game_id local_game_id, f.package_guid local_package_guid, bg.id base_game_id
+             FROM ue_federation_request_items i
+             LEFT JOIN ue_files f ON f.id=i.local_file_id
+             LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
+             WHERE i.request_id=?' . $baseFilter . '
+             ORDER BY FIELD(i.status,"requested","approved","denied","imported","failed"), i.required_package, i.required_object_path',
+            [$requestId]
+        );
+        echo '<div class="card"><h2>Request items</h2>';
+        if (!$items) {
+            echo '<p class="muted">No request items match the current filter.</p></div>';
+        } else {
+            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_requests')) . '"><input type="hidden" name="request_id" value="' . (int)$requestId . '"><input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '">';
+            echo '<p><button name="action" value="approve_selected">Approve selected</button> <button name="action" value="deny_selected">Deny selected</button></p>';
+            echo '<table><tr><th>Select</th><th>Status</th><th>Required package</th><th>Required object</th><th>Parent match</th><th>Message</th></tr>';
+            foreach ($items as $item) {
+                $isBase = !empty($item['base_game_id']);
+                $canSelect = in_array((string)$item['status'], ['requested', 'approved', 'denied'], true);
+                $match = $item['local_file_id']
+                    ? '<a href="../file-info.php?id=' . (int)$item['local_file_id'] . '" target="_blank">' . catalog_h($item['local_package'] ?: $item['local_file']) . '</a>' . ($isBase ? ' <span class="pill amber">official base-game blocked</span>' : '')
+                    : '<span class="muted">not available</span>';
+                echo '<tr><td>' . ($canSelect ? '<input type="checkbox" name="item_ids[]" value="' . (int)$item['id'] . '">' : '') . '</td><td>' . catalog_h($item['status']) . '</td><td class="mono">' . catalog_h($item['required_package']) . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . $match . '</td><td>' . catalog_h($item['status_message']) . '</td></tr>';
+            }
+            echo '</table></form></div>';
         }
-        echo '</table></form></div>';
     }
 
     catalog_foot();
