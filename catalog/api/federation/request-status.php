@@ -4,6 +4,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
+require_once __DIR__ . '/../../lib/FederationRequestLifecycle.php';
 
 try {
     $config = catalog_config();
@@ -32,10 +34,13 @@ try {
         fed_json_response(['ok' => true, 'request' => null, 'items' => []]);
     }
 
+    $refresh = federation_refresh_request_matches($db, (int)$request['id']);
+    $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=?', [(int)$request['id']]) ?: $request;
+
     $items = catalog_all(
         $db,
         'SELECT i.*, f.package_name local_package, f.original_name local_file,
-                f.file_size, f.md5, f.sha1, f.package_guid,
+                f.file_size, f.md5, f.sha1, f.package_guid, f.game_id,
                 CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END is_base_game
          FROM ue_federation_request_items i
          LEFT JOIN ue_files f ON f.id=i.local_file_id
@@ -56,7 +61,16 @@ try {
             'approved_at' => (string)$request['approved_at'],
             'updated_at' => (string)$request['updated_at'],
         ],
-        'items' => array_map(static function (array $row): array {
+        'refresh' => $refresh,
+        'items' => array_map(static function (array $row) use ($db): array {
+            $isBaseGame = !empty($row['is_base_game']);
+            if (!$isBaseGame && str_contains(strtolower((string)($row['status_message'] ?? '')), 'official base-game package')) {
+                $isBaseGame = true;
+            }
+            if (!$isBaseGame && empty($row['local_file_id'])) {
+                $isBaseGame = federation_base_game_package_match($db, (string)$row['required_package']) !== null;
+            }
+
             return [
                 'id' => (int)$row['id'],
                 'status' => (string)$row['status'],
@@ -69,7 +83,7 @@ try {
                 'md5' => (string)($row['md5'] ?? ''),
                 'sha1' => (string)($row['sha1'] ?? ''),
                 'package_guid' => (string)($row['package_guid'] ?? ''),
-                'is_base_game' => !empty($row['is_base_game']),
+                'is_base_game' => $isBaseGame,
                 'status_message' => (string)($row['status_message'] ?? ''),
                 'updated_at' => (string)($row['updated_at'] ?? ''),
             ];
