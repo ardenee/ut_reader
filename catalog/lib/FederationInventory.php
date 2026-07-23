@@ -102,7 +102,7 @@ function federation_inventory_local_game_id(PDO $db, array $file): ?int
         }
     }
 
-    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? ''));
+    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? '')));
     if ($engineKey !== '') {
         $game = catalog_one(
             $db,
@@ -126,9 +126,9 @@ function federation_inventory_row_values(PDO $db, int $peerId, array $file, stri
 {
     $packageName = trim((string)($file['package_name'] ?? ''));
     $originalName = trim((string)($file['original_name'] ?? ''));
-    $guid = strtoupper(trim((string)($file['package_guid'] ?? ''));
-    $md5 = strtolower(trim((string)($file['md5'] ?? ''));
-    $sha1 = strtolower(trim((string)($file['sha1'] ?? ''));
+    $guid = strtoupper(trim((string)($file['package_guid'] ?? '')));
+    $md5 = strtolower(trim((string)($file['md5'] ?? '')));
+    $sha1 = strtolower(trim((string)($file['sha1'] ?? '')));
     if ($packageName === '' || $originalName === '' || ($guid === '' && $md5 === '')) {
         throw new RuntimeException('Peer inventory contains an incomplete file identity.');
     }
