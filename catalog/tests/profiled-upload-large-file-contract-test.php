@@ -55,7 +55,7 @@ profiled_large_upload_expect(
     'Repeated resumable package uploads are not deduplicated.'
 );
 profiled_large_upload_expect(
-    str_contains($content['queue'], "'deduplicated' => $deduplicated"),
+    str_contains($content['queue'], "'deduplicated' => \$deduplicated"),
     'Profiled upload queue does not report an existing active job.'
 );
 profiled_large_upload_expect(
