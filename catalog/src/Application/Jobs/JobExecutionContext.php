@@ -19,11 +19,17 @@ final class JobExecutionContext
         private readonly ClaimedJob $job,
         int $leaseSeconds
     ) {
-        // Large PAK extraction can spend several minutes inside one streaming
-        // operation before another progress checkpoint is available. Extend only
-        // PAK leases to the queue's supported one-hour maximum so another worker
-        // cannot reclaim the same container halfway through extraction.
-        $this->leaseSeconds = $job->type === JobType::IMPORT_STAGED_PAK
+        // Staged package imports can spend several minutes in redirect archive
+        // decompression, a large file copy, or a parser operation before another
+        // progress callback is available. Give both ordinary packages and PAKs
+        // the queue's supported one-hour lease so another worker cannot reclaim
+        // the same durable staged file while the original import is still alive.
+        $longStagedImport = in_array(
+            $job->type,
+            [JobType::IMPORT_STAGED_PACKAGE, JobType::IMPORT_STAGED_PAK],
+            true
+        );
+        $this->leaseSeconds = $longStagedImport
             ? max($leaseSeconds, 3600)
             : $leaseSeconds;
         $this->lastHeartbeatAt = time();
