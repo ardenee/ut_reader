@@ -92,7 +92,7 @@ function base_game_file_protection(PDO $db, int $fileId): ?array
 function base_game_block_message(?array $file = null): string
 {
     $name = $file ? catalog_clean_unreal_filename((string)($file['original_name'] ?? $file['package_name'] ?? 'this package')) : 'this package';
-    return $name . ' is an official base-game package. UnrealDB keeps its exports indexed so custom maps/mods can resolve dependencies, but the original game file is excluded from public downloads, ordinary federation inventories/pulls, mirrors, and bundle packaging. Federation may transfer it only through an approved missing-dependency exception. If no such dependency exists, install or copy the file from your own game installation.';
+    return $name . ' is an official base-game package. UnrealDB keeps its exports indexed so custom maps/mods can resolve dependencies, but the original game file remains excluded from public downloads, external mirrors, and bundle packaging. Ordinary federation inventory and parent-pull visibility follows the parent-controlled Ignore base-game files setting. An approved missing-dependency transfer remains allowed even when ordinary base-game files are ignored.';
 }
 
 function base_game_block_html(?array $file = null): string
