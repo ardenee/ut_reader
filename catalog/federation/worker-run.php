@@ -7,6 +7,7 @@ catalog_start_session();
 require_once __DIR__ . '/../lib/FederationWorker.php';
 require_once __DIR__ . '/../lib/FederationStreamingWorker.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
+require_once __DIR__ . '/../lib/FederationInventory.php';
 
 function fw_run_bulk(PDO $db, array $config): array
 {
@@ -14,6 +15,7 @@ function fw_run_bulk(PDO $db, array $config): array
     $results = [
         'transfer_limit' => $limit,
         'import_limit' => $limit,
+        'inventory_sync' => federation_sync_due_inventories($db),
         'approved_dependency_queue' => federation_queue_approved_dependency_downloads($db),
         'transfers' => [],
         'imports' => [],
@@ -60,10 +62,11 @@ try {
     $limit = max(1, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1));
     $queued = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"')['c'] ?? 0);
     $downloaded = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded"')['c'] ?? 0);
+    $syncHours = max(0, (int)(fed_setting($db, 'inventory_sync_interval_hours', '24') ?? '24'));
 
     catalog_page_header(
         'Federation Bulk Worker',
-        'Polls parent approvals, automatically queues only dependency-needed child downloads, then runs streaming transfers and imports sequentially.',
+        'Refreshes due parent/child inventories, polls parent approvals, queues dependency-only child downloads, then runs streaming transfers and imports sequentially.',
         catalog_federation_links() + ['Run One Transfer' => 'transfer-run.php', 'Import One Download' => 'import-run.php']
     );
 
@@ -74,6 +77,7 @@ try {
 
     echo '<div class="card"><h2>Run worker</h2><table>';
     echo '<tr><th>Transfer mode</th><td>Streaming cURL</td></tr>';
+    echo '<tr><th>Inventory refresh</th><td>' . ($syncHours > 0 ? 'Every ' . $syncHours . ' hour(s), when this worker runs' : 'Disabled') . '</td></tr>';
     echo '<tr><th>Child download policy</th><td>Parent-approved missing dependencies only</td></tr>';
     echo '<tr><th>Max files per run</th><td>' . $limit . '</td></tr>';
     echo '<tr><th>Queued transfers</th><td>' . $queued . '</td></tr>';
