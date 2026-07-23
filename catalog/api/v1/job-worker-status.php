@@ -16,7 +16,7 @@ try {
 
     $queueName = trim((string)($_GET['queue'] ?? ($application->config['queue']['name'] ?? 'catalog')));
     $launcher = new CatalogDetachedWorker($application->config);
-    JsonResponse::send(['data' => ['worker' => $launcher->status($queueName)]]);
+    JsonResponse::send(['data' => ['worker' => $launcher->status($queueName, true)]]);
 } catch (InvalidArgumentException $exception) {
     JsonResponse::error('invalid_worker_request', $exception->getMessage(), 400);
 } catch (Throwable $exception) {
