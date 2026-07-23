@@ -1,64 +1,160 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationPeerSecret.php';
 
-function reqgen_items(PDO $db): array
+const REQGEN_PAGE_SIZE = 950;
+
+function reqgen_page(mixed $value): int
 {
-    $rows = catalog_all($db, 'SELECT d.required_package, d.required_object_path, COUNT(*) use_count FROM ue_dependencies d JOIN ue_files f ON f.id=d.file_id WHERE d.status="missing" AND f.scan_status="verified" GROUP BY d.required_package, d.required_object_path ORDER BY use_count DESC, d.required_package, d.required_object_path');
-    $items = [];
-    foreach ($rows as $row) {
-        $items[] = [
-            'required_package' => (string)$row['required_package'],
-            'required_object_path' => (string)$row['required_object_path'],
-            'wanted_guid' => '',
-            'wanted_md5' => '',
-            'use_count' => (int)$row['use_count'],
-        ];
+    return max(1, (int)$value);
+}
+
+function reqgen_item_key(array $item): string
+{
+    return hash('sha256', (int)($item['game_id'] ?? 0) . "\0" . strtolower(trim((string)($item['required_package'] ?? ''))));
+}
+
+function reqgen_total(PDO $db): int
+{
+    $row = catalog_one(
+        $db,
+        'SELECT COUNT(*) c FROM (
+            SELECT f.game_id, d.required_package
+            FROM ue_dependencies d
+            JOIN ue_files f ON f.id=d.file_id
+            WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""
+            GROUP BY f.game_id, d.required_package
+        ) grouped_missing_packages'
+    );
+    return (int)($row['c'] ?? 0);
+}
+
+/** @return list<array<string,mixed>> */
+function reqgen_items_page(PDO $db, int $page): array
+{
+    $offset = ($page - 1) * REQGEN_PAGE_SIZE;
+    $rows = catalog_all(
+        $db,
+        'SELECT f.game_id, g.name game_name, COALESCE(p.engine_key,"") engine_key,
+                d.required_package,
+                MIN(d.required_object_path) required_object_path,
+                COUNT(DISTINCT d.required_object_path) object_count,
+                COUNT(DISTINCT d.file_id) use_count
+         FROM ue_dependencies d
+         JOIN ue_files f ON f.id=d.file_id
+         JOIN ue_games g ON g.id=f.game_id
+         LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
+         WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""
+         GROUP BY f.game_id, g.name, p.engine_key, d.required_package
+         ORDER BY g.name, use_count DESC, d.required_package
+         LIMIT ' . REQGEN_PAGE_SIZE . ' OFFSET ' . $offset
+    );
+
+    foreach ($rows as &$row) {
+        $row['item_key'] = reqgen_item_key($row);
     }
-    return $items;
+    unset($row);
+    return $rows;
+}
+
+function reqgen_url(int $page, int $peerId): string
+{
+    return 'request-generate.php?' . http_build_query(['page' => $page, 'peer_id' => $peerId]);
+}
+
+function reqgen_pagination(int $page, int $pages, int $peerId): void
+{
+    if ($pages <= 1) {
+        return;
+    }
+    echo '<p class="page-links">';
+    if ($page > 1) {
+        echo '<a class="button" href="' . catalog_h(reqgen_url($page - 1, $peerId)) . '">Previous</a> ';
+    }
+    echo '<span>Page ' . $page . ' of ' . $pages . '</span> ';
+    if ($page < $pages) {
+        echo '<a class="button" href="' . catalog_h(reqgen_url($page + 1, $peerId)) . '">Next</a>';
+    }
+    echo '</p>';
 }
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
+    $selectedParentId = (int)($_REQUEST['peer_id'] ?? ($parents[0]['id'] ?? 0));
+    $page = reqgen_page($_REQUEST['page'] ?? 1);
+    $totalItems = reqgen_total($db);
+    $pages = max(1, (int)ceil($totalItems / REQGEN_PAGE_SIZE));
+    $page = min($page, $pages);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         catalog_check_csrf('fed_reqgen');
-        $parentId = (int)($_POST['peer_id'] ?? 0);
-        $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$parentId]);
+        $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$selectedParentId]);
         if (!$parent) {
             throw new RuntimeException('Active parent peer not found.');
         }
-        $apiKey = (string)($parent['shared_secret_plain'] ?? '');
-        if ($apiKey === '') {
-            throw new RuntimeException('Parent peer has no stored API key.');
+        $storedSecret = federation_peer_stored_signing_secret($db, $parent);
+
+        $selectedKeys = array_values(array_unique(array_filter(
+            array_map('strval', $_POST['item_keys'] ?? []),
+            static fn(string $key): bool => preg_match('/^[a-f0-9]{64}$/', $key) === 1
+        )));
+        if (!$selectedKeys) {
+            throw new RuntimeException('Select at least one missing package to request.');
+        }
+        if (count($selectedKeys) > REQGEN_PAGE_SIZE) {
+            throw new RuntimeException('Select no more than ' . REQGEN_PAGE_SIZE . ' packages per request.');
         }
 
-        $items = reqgen_items($db);
+        $pageItems = reqgen_items_page($db, $page);
+        $available = [];
+        foreach ($pageItems as $item) {
+            $available[(string)$item['item_key']] = $item;
+        }
+
+        $items = [];
+        foreach ($selectedKeys as $key) {
+            $item = $available[$key] ?? null;
+            if (!$item) {
+                continue;
+            }
+            $items[] = [
+                'required_package' => (string)$item['required_package'],
+                'required_object_path' => (string)$item['required_object_path'],
+                'wanted_guid' => '',
+                'wanted_md5' => '',
+                'game_name' => (string)$item['game_name'],
+                'engine_key' => (string)$item['engine_key'],
+                'use_count' => (int)$item['use_count'],
+                'object_count' => (int)$item['object_count'],
+            ];
+        }
         if (!$items) {
-            throw new RuntimeException('No missing dependency rows found.');
+            throw new RuntimeException('The selected packages are no longer missing on this page. Refresh and try again.');
         }
 
+        $siteLabel = fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: fed_setting($db, 'site_id', 'child');
         $payload = [
-            'title' => 'Missing dependency request from ' . (fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: fed_setting($db, 'site_id', 'child')),
-            'notes' => 'Generated from local ue_dependencies where status=missing.',
+            'title' => 'Missing dependency request from ' . $siteLabel,
+            'notes' => 'Selected ' . count($items) . ' missing package(s) from local verified dependency data.',
             'generated_at' => date('c'),
             'items' => $items,
         ];
 
         $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/request-submit.php';
-        $result = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), $apiKey, $payload);
+        $result = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), $storedSecret, $payload);
         fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'REQUEST_SUBMIT_SEND', json_encode($result, JSON_UNESCAPED_SLASHES));
-        $_SESSION['fed_reqgen_result'] = $result;
-        header('Location: request-generate.php');
+        $_SESSION['fed_reqgen_result'] = $result + ['selected_packages' => count($items)];
+        header('Location: ' . reqgen_url($page, $selectedParentId));
         exit;
     }
 
@@ -67,41 +163,51 @@ try {
     }
 
     catalog_head('Generate Missing Dependency Request');
-    catalog_page_header('Generate Missing Dependency Request', 'Child-side tool. Builds a request from local missing dependency rows and submits it to the configured parent. If the parent has an older submitted/approved request from this child, it is marked updated on the parent.', catalog_federation_links() + ['Peers' => 'peers.php', 'Request Status' => 'request-status.php', 'Approved Downloads' => 'approved-downloads.php']);
+    catalog_page_header(
+        'Generate Missing Dependency Request',
+        'Child-side tool. Select only the missing packages to request from the parent. All packages on the current page are selected by default; each page is capped at 950 selections for standard PHP max_input_vars limits.',
+        catalog_federation_links() + ['Request Status' => 'request-status.php', 'Approved Downloads' => 'approved-downloads.php']
+    );
 
     if (isset($_SESSION['fed_reqgen_result'])) {
         echo '<div class="card"><h2>Last submit result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_reqgen_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
         unset($_SESSION['fed_reqgen_result']);
     }
 
-    $items = reqgen_items($db);
-    echo '<div class="card"><h2>Request preview</h2><p>Missing dependency items: <strong>' . count($items) . '</strong></p>';
-    if ($items) {
-        echo '<table><tr><th>Required package</th><th>Required object</th><th>Used by files</th></tr>';
-        foreach (array_slice($items, 0, 300) as $item) {
-            echo '<tr><td class="mono">' . catalog_h($item['required_package']) . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . (int)$item['use_count'] . '</td></tr>';
-        }
-        echo '</table>';
-        if (count($items) > 300) {
-            echo '<p class="muted">Showing first 300 only. Full request will include all items.</p>';
-        }
+    $items = reqgen_items_page($db, $page);
+    echo '<div class="card"><h2>Missing package request</h2>';
+    echo '<p>Total missing packages: <strong>' . $totalItems . '</strong>. Showing ' . count($items) . ' on this page.</p>';
+
+    if (!$parents) {
+        echo '<p class="muted">No active parent peer is configured.</p></div>';
+        catalog_foot();
+        exit;
     }
+    if (!$items) {
+        echo '<p class="muted">No missing dependency packages were found.</p></div>';
+        catalog_foot();
+        exit;
+    }
+
+    echo '<form method="post">';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_reqgen')) . '">';
+    echo '<input type="hidden" name="page" value="' . $page . '">';
+    echo '<p><label>Parent<br><select name="peer_id">';
+    foreach ($parents as $parent) {
+        $selected = (int)$parent['id'] === $selectedParentId ? ' selected' : '';
+        echo '<option value="' . (int)$parent['id'] . '"' . $selected . '>' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';
+    }
+    echo '</select></label></p>';
+    echo '<p><label><input type="checkbox" data-check-all="request-packages" checked> Check all on this page</label> <button>Submit selected packages to parent</button></p>';
+    echo '<table><tr><th>Select</th><th>Game</th><th>Required package</th><th>Example required object</th><th>Objects missing</th><th>Needed by files</th></tr>';
+    foreach ($items as $item) {
+        echo '<tr><td><input type="checkbox" data-check-group="request-packages" name="item_keys[]" value="' . catalog_h($item['item_key']) . '" checked></td><td>' . catalog_h($item['game_name']) . '<div class="muted small">' . catalog_h($item['engine_key']) . '</div></td><td class="mono">' . catalog_h($item['required_package']) . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . (int)$item['object_count'] . '</td><td>' . (int)$item['use_count'] . '</td></tr>';
+    }
+    echo '</table><p><button>Submit selected packages to parent</button></p></form>';
+    reqgen_pagination($page, $pages, $selectedParentId);
     echo '</div>';
 
-    $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
-    echo '<div class="card"><h2>Submit to parent</h2>';
-    if (!$parents) {
-        echo '<p class="muted">No active parent peer configured.</p>';
-    } elseif (!$items) {
-        echo '<p class="muted">No missing dependencies to request.</p>';
-    } else {
-        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_reqgen')) . '"><p><label>Parent<br><select name="peer_id">';
-        foreach ($parents as $parent) {
-            echo '<option value="' . (int)$parent['id'] . '">' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';
-        }
-        echo '</select></label></p><button>Submit missing dependency request</button></form>';
-    }
-    echo '</div>';
+    echo '<script>(function(){document.querySelectorAll("[data-check-all]").forEach(function(master){master.addEventListener("change",function(){var group=master.getAttribute("data-check-all");document.querySelectorAll("[data-check-group=\""+group+"\"]").forEach(function(box){box.checked=master.checked;});});});})();</script>';
 
     catalog_foot();
 } catch (Throwable $e) {
