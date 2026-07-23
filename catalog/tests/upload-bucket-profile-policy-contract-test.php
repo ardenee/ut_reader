@@ -25,8 +25,8 @@ bucket_policy_expect(str_contains($source, 'if ($extensions === [])'), 'Legacy g
 bucket_policy_expect(str_contains($source, 'not allowed by any active game profile'), 'Extension errors do not identify the effective policy.');
 
 bucket_policy_expect(str_contains($source, 'function upload_bucket_post_limit_error'), 'Oversized POST detection is missing.');
-bucket_policy_expect(str_contains($source, "ini_get('post_max_size')"), 'Upload bucket does not report PHP post_max_size.');
-bucket_policy_expect(str_contains($source, "ini_get('upload_max_filesize')"), 'Upload bucket does not report PHP upload_max_filesize.');
+bucket_policy_expect(str_contains($source, "ini_get('post_max_size')"), 'Upload bucket does not inspect PHP post_max_size.');
+bucket_policy_expect(str_contains($source, "upload_bucket_php_limit_text('upload_max_filesize')"), 'Upload bucket does not report PHP upload_max_filesize.');
 bucket_policy_expect(str_contains($source, 'HTTP_X_UPLOAD_BUCKET_AJAX'), 'AJAX detection does not survive an empty oversized POST body.');
 bucket_policy_expect(str_contains($source, "url.searchParams.set('ajax', '1')"), 'Browser requests do not preserve the AJAX marker in the query string.');
 bucket_policy_expect(str_contains($source, "xhr.setRequestHeader('X-Upload-Bucket-Ajax', '1')"), 'Browser requests do not preserve the AJAX marker in a header.');
