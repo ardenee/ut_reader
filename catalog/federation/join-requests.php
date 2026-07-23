@@ -9,10 +9,14 @@ require_once __DIR__ . '/../lib/FederationAuth.php';
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $siteRole = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
+        }
+        if ($siteRole !== 'parent') {
+            throw new RuntimeException('Incoming child join requests are available only while this server is in Parent mode.');
         }
         catalog_check_csrf('fed_join_requests');
         $id = (int)($_POST['id'] ?? 0);
@@ -29,8 +33,8 @@ try {
                  SET status="denied", admin_notes=?, claim_token_hash=NULL, claim_expires_at=NULL
                  WHERE id=?'
             )->execute([$notes, $id]);
-            fed_log($db, null, null, 'INFO', 'JOIN_REQUEST_DENIED', 'Join request #' . $id . ' denied.');
-            $_SESSION['fed_join_review_flash'] = 'Join request #' . $id . ' denied.';
+            fed_log($db, null, null, 'INFO', 'JOIN_REQUEST_DENIED', 'Incoming child join request #' . $id . ' denied.');
+            $_SESSION['fed_join_review_flash'] = 'Child join request #' . $id . ' denied.';
         } elseif ($action === 'approve') {
             if ((string)$req['status'] !== 'pending') {
                 throw new RuntimeException('Only pending join requests can be approved.');
@@ -38,7 +42,7 @@ try {
 
             $existingPeer = catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE peer_site_id=? LIMIT 1', [(string)$req['site_id']]);
             if ($existingPeer) {
-                throw new RuntimeException('A peer already exists for this site ID.');
+                throw new RuntimeException('A child connection already exists for this site ID.');
             }
 
             $sharedSecret = fed_random_secret();
@@ -95,8 +99,8 @@ try {
                 throw $e;
             }
 
-            fed_log($db, $peerId, null, 'INFO', 'JOIN_REQUEST_APPROVED', 'Join request #' . $id . ' approved for automatic pairing.');
-            $_SESSION['fed_join_review_flash'] = 'Join request #' . $id . ' approved. The child will complete pairing automatically on its next status check.';
+            fed_log($db, $peerId, null, 'INFO', 'JOIN_REQUEST_APPROVED', 'Incoming child join request #' . $id . ' approved for automatic pairing.');
+            $_SESSION['fed_join_review_flash'] = 'Child join request #' . $id . ' approved. The child will complete pairing automatically.';
         } else {
             throw new RuntimeException('Unknown join request action.');
         }
@@ -105,34 +109,48 @@ try {
         exit;
     }
 
-    if (!catalog_require_admin_page('Federation Join Requests')) {
+    if (!catalog_require_admin_page('Incoming Child Join Requests')) {
         exit;
     }
 
-    catalog_head('Federation Join Requests');
+    catalog_head('Incoming Child Join Requests');
     catalog_flash($_SESSION['fed_join_review_flash'] ?? null);
     unset($_SESSION['fed_join_review_flash']);
 
     catalog_page_header(
-        'Federation Join Requests',
-        'Approve child sites. Approval immediately authorizes automatic pairing; the child does not copy a token or complete a separate claim step.',
-        catalog_federation_links() + ['Peers' => 'peers.php', 'Public Join Page' => 'join.php', 'Logs' => 'logs.php']
+        'Incoming Child Join Requests',
+        'Parent-side page for reviewing sites that want to join this server as children. Outgoing requests to join this server’s parent are shown on Join a Parent instead.',
+        catalog_federation_links() + ['Children' => 'peers.php?role=child', 'Join a Parent' => 'join-main-parent.php', 'Logs' => 'logs.php']
     );
+
+    echo '<div class="card"><h2>Server mode</h2><p>This server is running in <strong>' . catalog_h(ucfirst($siteRole)) . '</strong> mode.</p></div>';
+    if ($siteRole !== 'parent') {
+        echo '<div class="card"><h2>Incoming child joins disabled</h2>';
+        if ($siteRole === 'child') {
+            echo '<p>A Child server cannot have child sites. The request sent to your current parent is an outgoing join request and is tracked on the Join a Parent page.</p>';
+            echo '<p><a class="button" href="join-main-parent.php">Open Join a Parent</a> <a class="button" href="peers.php?role=parent">View Parent</a></p>';
+        } else {
+            echo '<p>Change this server to Parent mode before accepting child join requests.</p><p><a class="button" href="settings.php">Federation Settings</a></p>';
+        }
+        echo '</div>';
+        catalog_foot();
+        exit;
+    }
 
     $requests = catalog_all(
         $db,
         'SELECT r.*, p.id peer_id
          FROM ue_federation_join_requests r
          LEFT JOIN ue_federation_peers p ON p.id=r.created_peer_id
-         ORDER BY FIELD(r.status,"pending","approved","claimed","denied","expired"), r.created_at DESC
+         ORDER BY FIELD(r.status,"pending","approved","claimed","denied","expired"), r.created_at DESC, r.id DESC
          LIMIT 200'
     );
 
-    echo '<div class="card"><h2>Requests</h2>';
+    echo '<div class="card"><h2>Incoming requests</h2>';
     if (!$requests) {
-        echo '<p class="muted">No join requests yet.</p>';
+        echo '<p class="muted">No child sites have requested to join this parent.</p>';
     } else {
-        echo '<table><tr><th>ID</th><th>Status</th><th>Site</th><th>URL</th><th>Fingerprint</th><th>Contact</th><th>Created</th><th>Open</th></tr>';
+        echo '<table><tr><th>ID</th><th>Status</th><th>Child site</th><th>URL</th><th>Fingerprint</th><th>Contact</th><th>Received</th><th>Open</th></tr>';
         foreach ($requests as $row) {
             echo '<tr><td class="mono">' . (int)$row['id'] . '</td><td>' . catalog_h($row['status']) . '</td><td>' . catalog_h($row['site_name']) . '</td><td class="mono path">' . catalog_h($row['site_url']) . '</td><td class="mono small">' . catalog_h($row['site_fingerprint']) . '</td><td>' . catalog_h(trim(($row['contact_name'] ?? '') . ' ' . ($row['contact_email'] ?? ''))) . '</td><td>' . catalog_h($row['created_at']) . '</td><td><a href="join-requests.php?id=' . (int)$row['id'] . '">open</a></td></tr>';
         }
@@ -147,23 +165,23 @@ try {
             throw new RuntimeException('Join request not found.');
         }
 
-        echo '<div class="card"><h2>Request #' . (int)$req['id'] . '</h2><table>';
+        echo '<div class="card"><h2>Incoming request #' . (int)$req['id'] . '</h2><table>';
         foreach (['status','site_name','site_url','site_id','site_fingerprint','contact_name','contact_email','notes','admin_notes','claim_expires_at','claimed_at','approved_at','created_peer_id','created_at'] as $key) {
             echo '<tr><th>' . catalog_h($key) . '</th><td class="mono path">' . catalog_h($req[$key] ?? '') . '</td></tr>';
         }
         echo '</table></div>';
 
         if ((string)$req['status'] === 'pending') {
-            echo '<div class="card"><h2>Review</h2><form method="post">';
+            echo '<div class="card"><h2>Review child request</h2><form method="post">';
             echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_join_requests')) . '">';
             echo '<input type="hidden" name="id" value="' . (int)$req['id'] . '">';
             echo '<p><label>Admin notes<br><textarea name="admin_notes" rows="4" style="width:100%"></textarea></label></p>';
             echo '<p><button name="action" value="approve">Approve child and pair automatically</button> <button class="danger" name="action" value="deny">Deny</button></p>';
             echo '</form></div>';
         } elseif ((string)$req['status'] === 'approved') {
-            echo '<div class="card"><h2>Approved</h2><p class="muted">The child will complete pairing automatically when it polls this decision. No claim token needs to be copied.</p></div>';
+            echo '<div class="card"><h2>Approved</h2><p class="muted">The child will complete pairing automatically when it polls this decision.</p></div>';
         } elseif ((string)$req['status'] === 'claimed') {
-            echo '<div class="card"><h2>Connected</h2><p class="muted">The child completed automatic pairing.</p></div>';
+            echo '<div class="card"><h2>Connected</h2><p class="muted">The child completed automatic pairing and now appears under Children.</p></div>';
         }
     }
 
