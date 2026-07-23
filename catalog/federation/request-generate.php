@@ -25,13 +25,34 @@ function reqgen_item_key(array $item): string
     return hash('sha256', (int)($item['game_id'] ?? 0) . "\0" . strtolower(trim((string)($item['required_package'] ?? ''))));
 }
 
+/**
+ * Match the dependency package against every useful name stored for a protected
+ * base-game file. Some older base lists have a blank or stale package_name but a
+ * correct original filename/source file, so package_name alone is insufficient.
+ */
 function reqgen_base_game_join(): string
 {
+    $bgStem = '(CASE WHEN LOCATE(".",COALESCE(bg.original_name,""))>0 '
+        . 'THEN LEFT(bg.original_name,CHAR_LENGTH(bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg.original_name,".",-1))-1) '
+        . 'ELSE COALESCE(bg.original_name,"") END)';
+    $sourceStem = '(CASE WHEN LOCATE(".",COALESCE(bg_source.original_name,""))>0 '
+        . 'THEN LEFT(bg_source.original_name,CHAR_LENGTH(bg_source.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg_source.original_name,".",-1))-1) '
+        . 'ELSE COALESCE(bg_source.original_name,"") END)';
+
     return ' LEFT JOIN ue_base_game_files bg
              ON bg.game_id=f.game_id
-            AND bg.package_name IS NOT NULL
-            AND bg.package_name<>""
-            AND bg.package_name=d.required_package ';
+            AND (
+                LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(d.required_package))
+                OR LOWER(TRIM(' . $bgStem . '))=LOWER(TRIM(d.required_package))
+                OR EXISTS (
+                    SELECT 1 FROM ue_files bg_source
+                    WHERE bg_source.id=bg.source_file_id
+                      AND (
+                        LOWER(TRIM(COALESCE(bg_source.package_name,"")))=LOWER(TRIM(d.required_package))
+                        OR LOWER(TRIM(' . $sourceStem . '))=LOWER(TRIM(d.required_package))
+                      )
+                )
+            ) ';
 }
 
 function reqgen_total(PDO $db, bool $showBaseGame): int
@@ -93,9 +114,78 @@ function reqgen_items_page(PDO $db, int $page, bool $showBaseGame): array
 
     foreach ($rows as &$row) {
         $row['item_key'] = reqgen_item_key($row);
+        $row['parent_available'] = null;
+        $row['parent_is_base_game'] = false;
+        $row['parent_file'] = '';
     }
     unset($row);
     return $rows;
+}
+
+/**
+ * Ask the selected parent to classify the current package rows before they are
+ * displayed or submitted. This is required because a child can be missing an
+ * official file and therefore may not have that GUID in its own local base list.
+ *
+ * @param list<array<string,mixed>> $items
+ * @return array<string,array<string,mixed>> keyed by item_key
+ */
+function reqgen_parent_availability(PDO $db, array $parent, array $items): array
+{
+    if (!$items) {
+        return [];
+    }
+
+    $payloadItems = [];
+    foreach ($items as $item) {
+        $payloadItems[] = [
+            'key' => (string)$item['item_key'],
+            'required_package' => (string)$item['required_package'],
+            'game_name' => (string)$item['game_name'],
+            'engine_key' => (string)$item['engine_key'],
+            'wanted_guid' => '',
+            'wanted_md5' => '',
+        ];
+    }
+
+    $result = fed_http_post_signed(
+        rtrim((string)$parent['site_url'], '/') . '/api/federation/package-availability.php',
+        (string)fed_setting($db, 'site_id', ''),
+        federation_peer_stored_signing_secret($db, $parent),
+        ['items' => $payloadItems]
+    );
+    if (empty($result['ok']) || !is_array($result['items'] ?? null)) {
+        throw new RuntimeException('Parent package protection check failed: ' . (string)($result['error'] ?? 'invalid response'));
+    }
+
+    $byKey = [];
+    foreach ($result['items'] as $row) {
+        if (!is_array($row)) {
+            continue;
+        }
+        $key = trim((string)($row['key'] ?? ''));
+        if ($key !== '') {
+            $byKey[$key] = $row;
+        }
+    }
+    return $byKey;
+}
+
+/**
+ * @param list<array<string,mixed>> $items
+ * @param array<string,array<string,mixed>> $availability
+ * @return list<array<string,mixed>>
+ */
+function reqgen_apply_parent_availability(array $items, array $availability): array
+{
+    foreach ($items as &$item) {
+        $parent = $availability[(string)$item['item_key']] ?? [];
+        $item['parent_available'] = array_key_exists('available', $parent) ? !empty($parent['available']) : null;
+        $item['parent_is_base_game'] = !empty($parent['is_base_game']);
+        $item['parent_file'] = trim((string)($parent['package_name'] ?? '') . ' / ' . (string)($parent['original_name'] ?? ''), ' /');
+    }
+    unset($item);
+    return $items;
 }
 
 function reqgen_url(int $page, int $peerId, bool $showBaseGame): string
@@ -137,6 +227,9 @@ try {
     $baseGameTotal = reqgen_base_game_total($db);
     $pages = max(1, (int)ceil($totalItems / REQGEN_PAGE_SIZE));
     $page = min($page, $pages);
+    $parent = $selectedParentId > 0
+        ? catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$selectedParentId])
+        : null;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
@@ -146,11 +239,9 @@ try {
             throw new RuntimeException('Outgoing dependency requests are available only while this site is in Child mode.');
         }
         catalog_check_csrf('fed_reqgen');
-        $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$selectedParentId]);
         if (!$parent) {
             throw new RuntimeException('Active parent connection not found.');
         }
-        $storedSecret = federation_peer_stored_signing_secret($db, $parent);
 
         $selectedKeys = array_values(array_unique(array_filter(
             array_map('strval', $_POST['item_keys'] ?? []),
@@ -164,8 +255,12 @@ try {
         }
 
         $pageItems = reqgen_items_page($db, $page, $showBaseGame);
+        $pageItems = reqgen_apply_parent_availability($pageItems, reqgen_parent_availability($db, $parent, $pageItems));
         $available = [];
         foreach ($pageItems as $item) {
+            if (!empty($item['is_base_game']) || !empty($item['parent_is_base_game'])) {
+                continue;
+            }
             $available[(string)$item['item_key']] = $item;
         }
 
@@ -187,19 +282,23 @@ try {
             ];
         }
         if (!$items) {
-            throw new RuntimeException('The selected packages are no longer missing on this page. Refresh and try again.');
+            throw new RuntimeException('The selected packages are protected base-game files or are no longer missing. Refresh and try again.');
         }
 
         $siteLabel = fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: fed_setting($db, 'site_id', 'child');
         $payload = [
             'title' => 'Missing file request from ' . $siteLabel,
-            'notes' => 'This child is requesting ' . count($items) . ' distinct missing package(s) from its local verified dependency data.',
+            'notes' => 'This child is requesting ' . count($items) . ' distinct missing package(s) after local and parent base-game protection checks.',
             'generated_at' => date('c'),
             'items' => $items,
         ];
 
-        $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/request-submit.php';
-        $result = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), $storedSecret, $payload);
+        $result = fed_http_post_signed(
+            rtrim((string)$parent['site_url'], '/') . '/api/federation/request-submit.php',
+            (string)fed_setting($db, 'site_id', ''),
+            federation_peer_stored_signing_secret($db, $parent),
+            $payload
+        );
         fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'REQUEST_SUBMIT_SEND', json_encode($result, JSON_UNESCAPED_SLASHES));
 
         if (!empty($result['ok']) && (int)($result['request_id'] ?? 0) > 0) {
@@ -219,7 +318,7 @@ try {
     catalog_head('Missing Files');
     catalog_page_header(
         'Missing Files',
-        'Child-side workflow. These packages are missing on this server. Select the files to ask a parent to provide; each row is one package, not one missing object.',
+        'Child-side workflow. These packages are missing on this server. The selected parent is checked before display so official base-game files cannot be requested.',
         catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Outgoing Requests' => 'request-status.php', 'Approved Downloads' => 'approved-downloads.php']
     );
 
@@ -239,22 +338,43 @@ try {
     }
 
     $items = reqgen_items_page($db, $page, $showBaseGame);
+    $preflightError = '';
+    $parentBaseCount = 0;
+    if ($parent && $items) {
+        try {
+            $items = reqgen_apply_parent_availability($items, reqgen_parent_availability($db, $parent, $items));
+            $parentBaseCount = count(array_filter($items, static fn(array $item): bool => !empty($item['parent_is_base_game']) && empty($item['is_base_game'])));
+            if (!$showBaseGame) {
+                $items = array_values(array_filter($items, static fn(array $item): bool => empty($item['parent_is_base_game'])));
+            }
+        } catch (Throwable $error) {
+            $preflightError = $error->getMessage();
+            $items = [];
+        }
+    }
+
     echo '<div class="card"><h2>Files this server needs</h2>';
-    echo '<p><strong>Direction:</strong> this child &rarr; selected parent. The parent will check whether it has each package and decide whether it can be supplied.</p>';
+    echo '<p><strong>Direction:</strong> this child &rarr; selected parent. Both local and parent base-game protection lists are checked before a package is offered.</p>';
     echo '<form method="get" action="request-generate.php" class="filter-bar">';
     echo '<input type="hidden" name="page" value="1">';
     echo '<input type="hidden" name="peer_id" value="' . $selectedParentId . '">';
-    echo '<label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages</label> ';
+    echo '<label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages for reference</label> ';
     echo '<button>Apply filter</button></form>';
-    echo '<p>Requestable missing packages: <strong>' . $totalItems . '</strong>. Official base-game packages: <strong>' . $baseGameTotal . '</strong>' . ($showBaseGame ? ' shown for reference.' : ' hidden because they cannot be transferred.') . ' Showing ' . count($items) . ' on this page.</p>';
+    echo '<p>Local missing-package rows: <strong>' . $totalItems . '</strong>. Locally identified base-game packages: <strong>' . $baseGameTotal . '</strong>' . ($showBaseGame ? ' shown as non-requestable references.' : ' hidden.') . ' Parent-identified base-game packages on this page: <strong>' . $parentBaseCount . '</strong>' . ($showBaseGame ? ' shown as non-requestable references.' : ' hidden.') . '</p>';
 
     if (!$parents) {
         echo '<p class="muted">No active parent connection is configured.</p><p><a class="button" href="join-main-parent.php">Join a parent</a> <a class="button" href="peers.php?role=parent">Manage parents</a></p></div>';
         catalog_foot();
         exit;
     }
+    if ($preflightError !== '') {
+        echo CatalogUi::alert('warning', 'The parent could not be checked, so request selection is disabled. Update both servers and retry. ' . $preflightError, 'Parent protection check unavailable');
+        echo '</div>';
+        catalog_foot();
+        exit;
+    }
     if (!$items) {
-        echo '<p class="muted">No missing dependency packages match the current filter.</p></div>';
+        echo '<p class="muted">No requestable missing dependency packages match the current filter.</p></div>';
         catalog_foot();
         exit;
     }
@@ -264,22 +384,29 @@ try {
     echo '<input type="hidden" name="page" value="' . $page . '">';
     echo '<input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '">';
     echo '<p><label>Request files from parent<br><select name="peer_id">';
-    foreach ($parents as $parent) {
-        $selected = (int)$parent['id'] === $selectedParentId ? ' selected' : '';
-        echo '<option value="' . (int)$parent['id'] . '"' . $selected . '>' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';
+    foreach ($parents as $parentRow) {
+        $selected = (int)$parentRow['id'] === $selectedParentId ? ' selected' : '';
+        echo '<option value="' . (int)$parentRow['id'] . '"' . $selected . '>' . catalog_h($parentRow['site_name'] . ' - ' . $parentRow['site_url']) . '</option>';
     }
     echo '</select></label></p>';
-    echo '<p><label><input type="checkbox" data-check-all="request-packages" checked> Check all on this page</label> <button>Request selected files from parent</button></p>';
-    echo '<table><tr><th>Select</th><th>Game</th><th>Missing package</th><th>Example missing object</th><th>Missing objects</th><th>Files that need it</th></tr>';
+    echo '<p><label><input type="checkbox" data-check-all="request-packages" checked> Check all requestable packages on this page</label> <button>Request selected files from parent</button></p>';
+    echo '<table><tr><th>Select</th><th>Game</th><th>Missing package</th><th>Example missing object</th><th>Missing objects</th><th>Files that need it</th><th>Parent check</th></tr>';
     foreach ($items as $item) {
-        $baseBadge = !empty($item['is_base_game']) ? ' <span class="pill amber">official base-game</span>' : '';
-        echo '<tr><td><input type="checkbox" data-check-group="request-packages" name="item_keys[]" value="' . catalog_h($item['item_key']) . '" checked></td><td>' . catalog_h($item['game_name']) . '<div class="muted small">' . catalog_h($item['engine_key']) . '</div></td><td class="mono">' . catalog_h($item['required_package']) . $baseBadge . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . (int)$item['object_count'] . '</td><td>' . (int)$item['use_count'] . '</td></tr>';
+        $isBase = !empty($item['is_base_game']) || !empty($item['parent_is_base_game']);
+        $baseBadge = $isBase ? ' <span class="pill amber">official base-game</span>' : '';
+        $select = $isBase
+            ? '<span class="muted">blocked</span>'
+            : '<input type="checkbox" data-check-group="request-packages" name="item_keys[]" value="' . catalog_h($item['item_key']) . '" checked>';
+        $parentCheck = $isBase
+            ? 'Protected by parent; cannot transfer'
+            : (!empty($item['parent_available']) ? 'Available on parent' : 'Not currently on parent');
+        echo '<tr><td>' . $select . '</td><td>' . catalog_h($item['game_name']) . '<div class="muted small">' . catalog_h($item['engine_key']) . '</div></td><td class="mono">' . catalog_h($item['required_package']) . $baseBadge . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . (int)$item['object_count'] . '</td><td>' . (int)$item['use_count'] . '</td><td>' . catalog_h($parentCheck) . '</td></tr>';
     }
     echo '</table><p><button>Request selected files from parent</button></p></form>';
     reqgen_pagination($page, $pages, $selectedParentId, $showBaseGame);
     echo '</div>';
 
-    echo '<script>(function(){document.querySelectorAll("[data-check-all]").forEach(function(master){master.addEventListener("change",function(){var group=master.getAttribute("data-check-all");document.querySelectorAll("[data-check-group=\""+group+"\"]").forEach(function(box){box.checked=master.checked;});});});})();</script>';
+    echo '<script>(function(){document.querySelectorAll("[data-check-all]").forEach(function(master){master.addEventListener("change",function(){var group=master.getAttribute("data-check-all");document.querySelectorAll("[data-check-group=\""+group+"\"]").forEach(function(box){if(!box.disabled){box.checked=master.checked;}});});});})();</script>';
 
     catalog_foot();
 } catch (Throwable $e) {
