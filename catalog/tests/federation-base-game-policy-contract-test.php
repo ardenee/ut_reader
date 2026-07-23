@@ -65,7 +65,7 @@ federation_base_policy_expect(str_contains($content['inventory'], 'federation_ca
 
 federation_base_policy_expect(str_contains($content['peer_inventory'], 'COALESCE(pf.is_base_game,0)=0'), 'Ordinary peer inventory does not exclude base-game rows.');
 federation_base_policy_expect(str_contains($content['peer_inventory'], 'Base-game dependency matches are included'), 'Peer dependency view does not include base-game exceptions.');
-federation_base_policy_expect(str_contains($content['peer_inventory'], 'dependency_exception'), 'Peer inventory queue does not preserve dependency exception semantics.');
+federation_base_policy_expect(str_contains($content['peer_inventory'], 'pi_parent_dependency_sql'), 'Peer inventory queue does not re-check dependency eligibility.');
 
 federation_base_policy_expect(str_contains($content['availability'], "'dependency_exception' => true"), 'Base-game dependency availability is not transferable.');
 federation_base_policy_expect(str_contains($content['request_generate'], 'Base-game packages are included'), 'Request generator does not include missing base-game dependencies.');
