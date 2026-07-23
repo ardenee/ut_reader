@@ -20,6 +20,7 @@ $leaseSeconds = max(15, min((int)($options['lease-seconds'] ?? ($application->co
 $workerId = trim((string)($options['worker-id'] ?? ('detached:' . (gethostname() ?: 'host') . ':' . getmypid())));
 
 $controller = new CatalogDetachedWorker($application->config);
+$codeVersion = $controller->codeVersion();
 $lock = $controller->acquireWorkerLock($queueName);
 if (!is_resource($lock)) {
     fwrite(STDOUT, json_encode(['status' => 'already_running', 'queue' => $queueName], JSON_UNESCAPED_SLASHES) . PHP_EOL);
@@ -40,6 +41,7 @@ try {
         'pid' => getmypid(),
         'max_jobs' => $maxJobs,
         'processed' => 0,
+        'code_version' => $codeVersion,
         'started_at' => $startedAt,
     ]);
 
@@ -54,6 +56,10 @@ try {
     for ($index = 0; $index < $maxJobs; $index++) {
         if ($controller->stopRequested($queueName)) {
             $exitReason = 'stop_requested';
+            break;
+        }
+        if (!hash_equals($codeVersion, $controller->codeVersion())) {
+            $exitReason = 'code_changed';
             break;
         }
 
@@ -78,6 +84,7 @@ try {
             'pid' => getmypid(),
             'max_jobs' => $maxJobs,
             'processed' => $processed,
+            'code_version' => $codeVersion,
             'started_at' => $startedAt,
             'last_result' => $lastResult,
         ]);
@@ -98,6 +105,7 @@ try {
         'pid' => getmypid(),
         'max_jobs' => $maxJobs,
         'processed' => $processed,
+        'code_version' => $codeVersion,
         'started_at' => $startedAt,
         'ended_at' => gmdate('c'),
         'exit_reason' => $exitReason,
@@ -109,6 +117,7 @@ try {
         'queue' => $queueName,
         'processed' => $processed,
         'exit_reason' => $exitReason,
+        'code_version' => $codeVersion,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
     exit(0);
 } catch (Throwable $error) {
@@ -118,6 +127,7 @@ try {
         'worker_id' => $workerId,
         'pid' => getmypid(),
         'processed' => $processed,
+        'code_version' => $codeVersion,
         'started_at' => $startedAt,
         'ended_at' => gmdate('c'),
         'error' => $error->getMessage(),
@@ -130,6 +140,7 @@ try {
         'error' => $error->getMessage(),
         'error_file' => str_replace('\\', '/', $error->getFile()),
         'error_line' => $error->getLine(),
+        'code_version' => $codeVersion,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
     exit(1);
 } finally {
