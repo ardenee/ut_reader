@@ -70,7 +70,7 @@ federation_base_policy_expect(str_contains($content['peer_inventory'], 'pi_paren
 federation_base_policy_expect(str_contains($content['availability'], "'dependency_exception' => true"), 'Base-game dependency availability is not transferable.');
 federation_base_policy_expect(str_contains($content['request_generate'], 'Base-game packages are included'), 'Request generator does not include missing base-game dependencies.');
 federation_base_policy_expect(!str_contains($content['request_generate'], 'Show official base-game packages'), 'Request generator retains an inconsistent local visibility switch.');
-federation_base_policy_expect(!str_contains($content['request_submit'], "$status = 'denied';"), 'Request submission still automatically denies base-game dependencies.');
+federation_base_policy_expect(!str_contains($content['request_submit'], '$status = \'denied\';'), 'Request submission still automatically denies base-game dependencies.');
 federation_base_policy_expect(str_contains($content['request_lifecycle'], 'federation_request_legacy_base_game_denial'), 'Legacy automatic base-game denials are not repaired.');
 federation_base_policy_expect(str_contains($content['requests'], 'Approve all dependency requests'), 'Parent cannot approve base-game dependency exceptions.');
 federation_base_policy_expect(str_contains($content['status_api'], "'dependency_exception' => \$isBaseGame"), 'Status API does not expose dependency exception classification.');
