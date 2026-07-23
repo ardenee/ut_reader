@@ -128,6 +128,7 @@ try {
     $db = catalog_db($config);
     base_game_ensure($db);
 
+    $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $selectedParentId = (int)($_REQUEST['peer_id'] ?? ($parents[0]['id'] ?? 0));
     $showBaseGame = reqgen_show_base_game($_REQUEST['show_base_game'] ?? '0');
@@ -141,10 +142,13 @@ try {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
+        if ($role !== 'child') {
+            throw new RuntimeException('Outgoing dependency requests are available only while this site is in Child mode.');
+        }
         catalog_check_csrf('fed_reqgen');
         $parent = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$selectedParentId]);
         if (!$parent) {
-            throw new RuntimeException('Active parent peer not found.');
+            throw new RuntimeException('Active parent connection not found.');
         }
         $storedSecret = federation_peer_stored_signing_secret($db, $parent);
 
@@ -188,8 +192,8 @@ try {
 
         $siteLabel = fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: fed_setting($db, 'site_id', 'child');
         $payload = [
-            'title' => 'Missing dependency request from ' . $siteLabel,
-            'notes' => 'Selected ' . count($items) . ' missing package(s) from local verified dependency data.',
+            'title' => 'Missing file request from ' . $siteLabel,
+            'notes' => 'This child is requesting ' . count($items) . ' distinct missing package(s) from its local verified dependency data.',
             'generated_at' => date('c'),
             'items' => $items,
         ];
@@ -197,43 +201,60 @@ try {
         $url = rtrim((string)$parent['site_url'], '/') . '/api/federation/request-submit.php';
         $result = fed_http_post_signed($url, (string)fed_setting($db, 'site_id', ''), $storedSecret, $payload);
         fed_log($db, (int)$parent['id'], null, !empty($result['ok']) ? 'INFO' : 'ERROR', 'REQUEST_SUBMIT_SEND', json_encode($result, JSON_UNESCAPED_SLASHES));
+
+        if (!empty($result['ok']) && (int)($result['request_id'] ?? 0) > 0) {
+            header('Location: request-status.php?peer_id=' . (int)$parent['id'] . '&request_id=' . (int)$result['request_id']);
+            exit;
+        }
+
         $_SESSION['fed_reqgen_result'] = $result + ['selected_packages' => count($items)];
         header('Location: ' . reqgen_url($page, $selectedParentId, $showBaseGame));
         exit;
     }
 
-    if (!catalog_require_admin_page('Generate Missing Dependency Request')) {
+    if (!catalog_require_admin_page('Missing Files')) {
         exit;
     }
 
-    catalog_head('Generate Missing Dependency Request');
+    catalog_head('Missing Files');
     catalog_page_header(
-        'Generate Missing Dependency Request',
-        'Child-side tool. Select missing packages to request from the parent. Official base-game packages are hidden by default because federation cannot transfer them. Each page is capped at 950 selections for standard PHP max_input_vars limits.',
-        catalog_federation_links() + ['Request Status' => 'request-status.php', 'Approved Downloads' => 'approved-downloads.php']
+        'Missing Files',
+        'Child-side workflow. These packages are missing on this server. Select the files to ask a parent to provide; each row is one package, not one missing object.',
+        catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Outgoing Requests' => 'request-status.php', 'Approved Downloads' => 'approved-downloads.php']
     );
 
+    if ($role !== 'child') {
+        echo '<div class="card"><h2>Outgoing requests disabled</h2><p>This page is available only in Child mode. In Parent mode, use Child Inventories to find files this parent needs and pull them directly from a child.</p><p><a class="button" href="missing-files.php">Open role-appropriate Missing Files workflow</a></p></div>';
+        catalog_foot();
+        exit;
+    }
+
     if (isset($_SESSION['fed_reqgen_result'])) {
-        echo '<div class="card"><h2>Last submit result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_reqgen_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
+        $result = (array)$_SESSION['fed_reqgen_result'];
+        $message = !empty($result['ok'])
+            ? 'Request #' . (int)($result['request_id'] ?? 0) . ' was submitted.'
+            : 'The request was not submitted: ' . (string)($result['error'] ?? 'Unknown parent response.');
+        echo CatalogUi::alert(!empty($result['ok']) ? 'success' : 'warning', $message, 'Last request attempt');
         unset($_SESSION['fed_reqgen_result']);
     }
 
     $items = reqgen_items_page($db, $page, $showBaseGame);
-    echo '<div class="card"><h2>Missing package request</h2>';
+    echo '<div class="card"><h2>Files this server needs</h2>';
+    echo '<p><strong>Direction:</strong> this child &rarr; selected parent. The parent will check whether it has each package and decide whether it can be supplied.</p>';
     echo '<form method="get" action="request-generate.php" class="filter-bar">';
     echo '<input type="hidden" name="page" value="1">';
     echo '<input type="hidden" name="peer_id" value="' . $selectedParentId . '">';
     echo '<label><input type="checkbox" name="show_base_game" value="1"' . ($showBaseGame ? ' checked' : '') . '> Show official base-game packages</label> ';
-    echo '<button>Apply</button></form>';
-    echo '<p>Visible missing packages: <strong>' . $totalItems . '</strong>. Official base-game packages: <strong>' . $baseGameTotal . '</strong>' . ($showBaseGame ? ' shown.' : ' hidden.') . ' Showing ' . count($items) . ' on this page.</p>';
+    echo '<button>Apply filter</button></form>';
+    echo '<p>Requestable missing packages: <strong>' . $totalItems . '</strong>. Official base-game packages: <strong>' . $baseGameTotal . '</strong>' . ($showBaseGame ? ' shown for reference.' : ' hidden because they cannot be transferred.') . ' Showing ' . count($items) . ' on this page.</p>';
 
     if (!$parents) {
-        echo '<p class="muted">No active parent peer is configured.</p></div>';
+        echo '<p class="muted">No active parent connection is configured.</p><p><a class="button" href="join-main-parent.php">Join a parent</a> <a class="button" href="peers.php?role=parent">Manage parents</a></p></div>';
         catalog_foot();
         exit;
     }
     if (!$items) {
-        echo '<p class="muted">No matching missing dependency packages were found with the current filter.</p></div>';
+        echo '<p class="muted">No missing dependency packages match the current filter.</p></div>';
         catalog_foot();
         exit;
     }
@@ -242,19 +263,19 @@ try {
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_reqgen')) . '">';
     echo '<input type="hidden" name="page" value="' . $page . '">';
     echo '<input type="hidden" name="show_base_game" value="' . ($showBaseGame ? '1' : '0') . '">';
-    echo '<p><label>Parent<br><select name="peer_id">';
+    echo '<p><label>Request files from parent<br><select name="peer_id">';
     foreach ($parents as $parent) {
         $selected = (int)$parent['id'] === $selectedParentId ? ' selected' : '';
         echo '<option value="' . (int)$parent['id'] . '"' . $selected . '>' . catalog_h($parent['site_name'] . ' - ' . $parent['site_url']) . '</option>';
     }
     echo '</select></label></p>';
-    echo '<p><label><input type="checkbox" data-check-all="request-packages" checked> Check all on this page</label> <button>Submit selected packages to parent</button></p>';
-    echo '<table><tr><th>Select</th><th>Game</th><th>Required package</th><th>Example required object</th><th>Objects missing</th><th>Needed by files</th></tr>';
+    echo '<p><label><input type="checkbox" data-check-all="request-packages" checked> Check all on this page</label> <button>Request selected files from parent</button></p>';
+    echo '<table><tr><th>Select</th><th>Game</th><th>Missing package</th><th>Example missing object</th><th>Missing objects</th><th>Files that need it</th></tr>';
     foreach ($items as $item) {
         $baseBadge = !empty($item['is_base_game']) ? ' <span class="pill amber">official base-game</span>' : '';
         echo '<tr><td><input type="checkbox" data-check-group="request-packages" name="item_keys[]" value="' . catalog_h($item['item_key']) . '" checked></td><td>' . catalog_h($item['game_name']) . '<div class="muted small">' . catalog_h($item['engine_key']) . '</div></td><td class="mono">' . catalog_h($item['required_package']) . $baseBadge . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . (int)$item['object_count'] . '</td><td>' . (int)$item['use_count'] . '</td></tr>';
     }
-    echo '</table><p><button>Submit selected packages to parent</button></p></form>';
+    echo '</table><p><button>Request selected files from parent</button></p></form>';
     reqgen_pagination($page, $pages, $selectedParentId, $showBaseGame);
     echo '</div>';
 
@@ -263,7 +284,7 @@ try {
     catalog_foot();
 } catch (Throwable $e) {
     if (!headers_sent()) {
-        catalog_head('Request generate error');
+        catalog_head('Missing files request error');
     }
     echo '<div class="card"><h1>Error</h1><p>' . catalog_h($e->getMessage()) . '</p></div>';
     catalog_foot();
