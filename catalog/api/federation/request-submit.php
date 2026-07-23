@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
@@ -87,7 +86,9 @@ try {
 
         $db->commit();
     } catch (Throwable $e) {
-        $db->rollBack();
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
         throw $e;
     }
 
