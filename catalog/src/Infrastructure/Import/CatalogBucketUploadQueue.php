@@ -7,7 +7,7 @@ use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
-/** Queues redirect wrappers for the detached CLI worker after chunk upload. */
+/** Queues every Upload Bucket redirect wrapper for the detached CLI worker. */
 final class CatalogBucketUploadQueue
 {
     /** @param array<string,mixed> $config */
@@ -30,6 +30,60 @@ final class CatalogBucketUploadQueue
         if (preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
             throw new \InvalidArgumentException('Chunked upload identifier is invalid.');
         }
+        return $this->enqueue(
+            [
+                'upload_id' => $uploadId,
+                'source_kind' => 'chunk-upload',
+            ],
+            'bucket-redirect:' . $uploadId,
+            $originalName,
+            $sourceRelativePath,
+            $size,
+            $userId
+        );
+    }
+
+    /**
+     * @param array{relative_path:string,size:int,sha256?:string} $staged
+     * @return array{job_id:int,type:string,file:string,size:int,deduplicated:bool}
+     */
+    public function enqueueStagedRedirect(
+        array $staged,
+        string $originalName,
+        string $sourceRelativePath,
+        int $userId
+    ): array {
+        $stagedPath = trim((string)($staged['relative_path'] ?? ''));
+        $size = (int)($staged['size'] ?? 0);
+        $sha256 = strtolower(trim((string)($staged['sha256'] ?? '')));
+        if ($stagedPath === '' || $size < 1 || $sha256 === '') {
+            throw new \InvalidArgumentException('Durable redirect staging metadata is incomplete.');
+        }
+        return $this->enqueue(
+            [
+                'staged_path' => $stagedPath,
+                'source_kind' => 'incoming-file',
+            ],
+            'bucket-redirect-staged:' . hash('sha256', strtolower($originalName) . "\0" . $sha256),
+            $originalName,
+            $sourceRelativePath,
+            $size,
+            $userId
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $source
+     * @return array{job_id:int,type:string,file:string,size:int,deduplicated:bool}
+     */
+    private function enqueue(
+        array $source,
+        string $dedupeKey,
+        string $originalName,
+        string $sourceRelativePath,
+        int $size,
+        int $userId
+    ): array {
         $originalName = $this->requiredName($originalName);
         require_once dirname(__DIR__, 3) . '/lib/CatalogRedirectArchive.php';
         if (!\catalog_redirect_archive_is_supported_filename($originalName)) {
@@ -40,7 +94,6 @@ final class CatalogBucketUploadQueue
         }
 
         $queueName = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
-        $dedupeKey = 'bucket-redirect:' . $uploadId;
         $existing = $this->db->prepare(
             'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
         );
@@ -50,8 +103,7 @@ final class CatalogBucketUploadQueue
         $jobId = (new PdoJobQueue($this->db))->enqueue(
             $queueName,
             JobType::PREPARE_BUCKET_REDIRECT,
-            [
-                'upload_id' => $uploadId,
+            $source + [
                 'original_name' => $originalName,
                 'source_relative_path' => $this->cleanRelativePath(
                     $sourceRelativePath !== '' ? $sourceRelativePath : $originalName
