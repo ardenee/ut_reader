@@ -19,10 +19,16 @@ jobs:
           coverage: none
       - name: PHP syntax
         run: |
-          php_files=$(git diff --name-only --diff-filter=ACM origin/main...HEAD -- '*.php')
-          if [ -n "$php_files" ]; then
-            printf '%s\n' "$php_files" | xargs -n1 php -l
-          fi
+          failed=0
+          while IFS= read -r file; do
+            [ -n "$file" ] || continue
+            if ! output=$(php -l "$file" 2>&1); then
+              echo "--- $file"
+              echo "$output"
+              failed=1
+            fi
+          done < <(git diff --name-only --diff-filter=ACM origin/main...HEAD -- '*.php')
+          exit "$failed"
       - name: Base-game policy contract
         run: php catalog/tests/federation-base-game-policy-contract-test.php
       - name: Federation role workflow contract
