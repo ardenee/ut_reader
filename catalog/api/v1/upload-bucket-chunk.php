@@ -3,12 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
-require_once dirname(__DIR__, 2) . '/lib/CatalogEpicRedirect.php';
 require_once dirname(__DIR__, 2) . '/lib/UnverifiedFileManager.php';
 require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -151,8 +152,8 @@ try {
         }
 
         // CatalogChunkedUploadStore currently records a positive processing context.
-        // Bucket uploads are finalized here rather than queued to a game, so this
-        // internal value is never used as a ue_games or ue_files assignment.
+        // Bucket uploads use a neutral logical name/path and are never assigned to
+        // this internal game identifier.
         $state = $store->initialize(
             $userId,
             (string)($_POST['client_key'] ?? ''),
@@ -184,47 +185,74 @@ try {
     if ($action === 'complete') {
         $uploadId = (string)($_POST['upload_id'] ?? '');
         $state = $store->complete($userId, $uploadId);
-        $resolved = $store->resolveCompletedFile($uploadId, $userId);
         $submittedRelativePath = (string)($state['relative_path'] ?? '');
         $submittedName = bucket_chunk_clean_name(basename(str_replace('\\', '/', $submittedRelativePath)));
+
+        if (catalog_redirect_archive_is_supported_filename($submittedName)) {
+            $queued = (new CatalogBucketUploadQueue($application->db, $application->config))->enqueueRedirect(
+                $uploadId,
+                $submittedName,
+                $submittedRelativePath,
+                (int)($state['file_size'] ?? 0),
+                $userId
+            );
+            $worker = null;
+            $workerError = '';
+            try {
+                $worker = (new CatalogDetachedWorker($application->config))->start(
+                    trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog',
+                    10000
+                );
+            } catch (Throwable $error) {
+                $workerError = bucket_chunk_short_error($error);
+                error_log('[UnrealDB bucket redirect worker launch] ' . $error->getMessage());
+            }
+
+            $message = !empty($queued['deduplicated'])
+                ? 'This redirect archive is already queued or running as background job #' . $queued['job_id'] . '.'
+                : 'Redirect archive uploaded and queued for the shared CLI decompression process as job #' . $queued['job_id'] . '.';
+            if ($workerError !== '') {
+                $message .= ' The job remains queued, but the detached worker could not be started: ' . $workerError;
+            }
+            JsonResponse::send([
+                'ok' => true,
+                'upload' => $state,
+                'job_id' => (int)$queued['job_id'],
+                'worker' => $worker,
+                'messages' => [[
+                    'status' => 'queued',
+                    'file' => $submittedRelativePath,
+                    'message' => $message,
+                    'file_size' => (int)($state['file_size'] ?? 0),
+                    'file_size_text' => catalog_bytes((int)($state['file_size'] ?? 0)),
+                    'job_id' => (int)$queued['job_id'],
+                ]],
+            ], 200);
+        }
+
+        $resolved = $store->resolveCompletedFile($uploadId, $userId);
         $workingPath = (string)$resolved['path'];
-        $workingName = $submittedName;
-        $decompressed = null;
+        bucket_chunk_validate_name($submittedName, $allowedExtensions, false);
+        $storedSize = is_file($workingPath) ? (int)(filesize($workingPath) ?: 0) : 0;
+        if ($storedSize < 1) {
+            throw new RuntimeException('Completed chunked upload is empty.');
+        }
 
         try {
-            if (catalog_redirect_archive_is_supported_filename($submittedName)) {
-                $decompressed = catalog_epic_redirect_decompress_to_temp(
-                    $workingPath,
-                    $submittedName,
-                    PHP_INT_MAX,
-                    true
-                );
-                $workingPath = (string)$decompressed['path'];
-                $workingName = bucket_chunk_clean_name((string)$decompressed['filename']);
-            }
-            bucket_chunk_validate_name($workingName, $allowedExtensions, false);
-            $storedSize = is_file($workingPath) ? (int)(filesize($workingPath) ?: 0) : 0;
-            if ($storedSize < 1) {
-                throw new RuntimeException('Completed chunked upload is empty.');
-            }
-
-            $cleanNote = $submittedName !== $workingName ? ' Original browser filename was: ' . $submittedName . '.' : '';
-            $redirectNote = is_array($decompressed)
-                ? ' Redirect archive .' . $decompressed['source_extension'] . ' was decompressed before storage; compressed wrapper was not retained. Decoder: ' . $decompressed['decoder'] . '.'
-                : '';
-            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.' . $redirectNote . $cleanNote;
+            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s')
+                . '. No game assignment has been made yet.';
             $staged = (new LegacyUnverifiedFileStager($application->db, $application->config))->stageBucketUpload(
                 $workingPath,
-                $workingName,
+                $submittedName,
                 $note,
                 $userId,
-                bucket_chunk_relative_path($submittedRelativePath, $workingName)
+                bucket_chunk_relative_path($submittedRelativePath, $submittedName)
             );
 
             if ((string)($staged['status'] ?? '') === 'duplicate') {
                 $message = [
                     'status' => 'duplicate',
-                    'file' => $workingName,
+                    'file' => $submittedName,
                     'message' => (string)$staged['message'],
                     'file_size' => $storedSize,
                     'file_size_text' => catalog_bytes($storedSize),
@@ -232,15 +260,14 @@ try {
                     'md5' => (string)($staged['md5'] ?? ''),
                 ];
             } else {
-                $text = is_array($decompressed)
-                    ? 'Decompressed redirect archive into upload bucket and indexed as unverified using ' . $decompressed['decoder']
-                    : 'Stored in upload bucket and indexed as unverified';
+                $text = 'Stored in upload bucket and indexed as unverified';
                 if ($staged['parse_error'] !== null) {
-                    $text .= '; package tables could not be read: ' . bucket_chunk_short_error(new RuntimeException((string)$staged['parse_error']));
+                    $text .= '; package tables could not be read: '
+                        . bucket_chunk_short_error(new RuntimeException((string)$staged['parse_error']));
                 }
                 $message = [
-                    'status' => is_array($decompressed) ? 'decompressed' : 'bucketed',
-                    'file' => $workingName,
+                    'status' => 'bucketed',
+                    'file' => $submittedName,
                     'message' => $text,
                     'file_size' => (int)$staged['size'],
                     'file_size_text' => catalog_bytes((int)$staged['size']),
@@ -253,9 +280,6 @@ try {
                 $store->cancel($userId, $uploadId);
             } catch (Throwable $cleanupError) {
                 error_log('[UnrealDB bucket chunk cleanup] ' . $cleanupError->getMessage());
-            }
-            if (is_array($decompressed) && is_file((string)($decompressed['path'] ?? ''))) {
-                @unlink((string)$decompressed['path']);
             }
         }
 
