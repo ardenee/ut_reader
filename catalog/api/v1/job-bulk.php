@@ -89,11 +89,11 @@ try {
     $where[] = $actionCondition;
     $whereSql = implode(' AND ', $where);
 
-    $requested = (int)(catalog_value(
+    $requested = catalog_count(
         $application->db,
-        'SELECT COUNT(*) FROM ue_background_jobs WHERE ' . $whereSql,
+        'SELECT COUNT(*) c FROM ue_background_jobs WHERE ' . $whereSql,
         $params
-    ) ?? 0);
+    );
 
     $affected = 0;
     $deletedStagedFiles = 0;
