@@ -49,12 +49,14 @@ function federation_base_game_policy_ensure_schema(PDO $db): void
             . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files" AND column_name="is_base_game"'
         )->fetchColumn() > 0;
     };
+    $columnAdded = false;
     if (!$columnExists()) {
         try {
             $db->exec(
                 'ALTER TABLE ue_federation_peer_files '
                 . 'ADD COLUMN is_base_game TINYINT(1) NOT NULL DEFAULT 0 AFTER package_guid'
             );
+            $columnAdded = true;
         } catch (Throwable $error) {
             if (!$columnExists()) {
                 throw new RuntimeException(
@@ -90,16 +92,18 @@ function federation_base_game_policy_ensure_schema(PDO $db): void
         }
     }
 
-    $baseGameTable = (int)$db->query(
-        'SELECT COUNT(*) FROM information_schema.tables '
-        . 'WHERE table_schema=DATABASE() AND table_name="ue_base_game_files"'
-    )->fetchColumn();
-    if ($baseGameTable > 0) {
-        $db->exec(
-            'UPDATE ue_federation_peer_files pf '
-            . 'JOIN ue_base_game_files bg ON bg.game_id=pf.game_id AND bg.package_guid=pf.package_guid '
-            . 'SET pf.is_base_game=1 WHERE COALESCE(pf.is_base_game,0)=0'
-        );
+    if ($columnAdded) {
+        $baseGameTable = (int)$db->query(
+            'SELECT COUNT(*) FROM information_schema.tables '
+            . 'WHERE table_schema=DATABASE() AND table_name="ue_base_game_files"'
+        )->fetchColumn();
+        if ($baseGameTable > 0) {
+            $db->exec(
+                'UPDATE ue_federation_peer_files pf '
+                . 'JOIN ue_base_game_files bg ON bg.game_id=pf.game_id AND bg.package_guid=pf.package_guid '
+                . 'SET pf.is_base_game=1 WHERE COALESCE(pf.is_base_game,0)=0'
+            );
+        }
     }
 
     $ready[$connectionId] = true;
