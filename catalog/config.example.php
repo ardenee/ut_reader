@@ -17,9 +17,6 @@ return [
     // larger limit and are transferred by the browser in resumable chunks.
     'max_upload_bytes' => 256 * 1024 * 1024,
     'max_container_upload_bytes' => 64 * 1024 * 1024 * 1024,
-    // Hard deadline for one UE2 .uz2 redirect decompression job. A corrupt or
-    // wedged archive is failed so the shared Upload Bucket queue can continue.
-    'redirect_decompress_timeout_seconds' => 15 * 60,
     'chunk_upload' => [
         // Each HTTP request carries only one chunk, avoiding PHP/Apache limits
         // on a single multi-gigabyte request. 16 MiB is safe for typical hosts.
