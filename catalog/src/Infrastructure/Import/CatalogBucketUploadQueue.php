@@ -37,13 +37,15 @@ final class CatalogBucketUploadQueue
         if (preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
             throw new \InvalidArgumentException('Chunked upload identifier is invalid.');
         }
+        $sha256 = $this->completedChunkSha256($uploadId, $userId);
         return $this->enqueue(
             [
                 'upload_id' => $uploadId,
                 'staged_path' => 'chunk-upload:' . $uploadId,
                 'source_kind' => 'chunk-upload',
+                'source_sha256' => $sha256,
             ],
-            'bucket-redirect:' . $uploadId,
+            'bucket-redirect-content:' . $sha256,
             $originalName,
             $sourceRelativePath,
             $size,
@@ -64,15 +66,16 @@ final class CatalogBucketUploadQueue
         $stagedPath = trim((string)($staged['relative_path'] ?? ''));
         $size = (int)($staged['size'] ?? 0);
         $sha256 = strtolower(trim((string)($staged['sha256'] ?? '')));
-        if ($stagedPath === '' || $size < 1 || $sha256 === '') {
+        if ($stagedPath === '' || $size < 1 || preg_match('/^[a-f0-9]{64}$/', $sha256) !== 1) {
             throw new \InvalidArgumentException('Durable redirect staging metadata is incomplete.');
         }
         $result = $this->enqueue(
             [
                 'staged_path' => $stagedPath,
                 'source_kind' => 'incoming-file',
+                'source_sha256' => $sha256,
             ],
-            'bucket-redirect-staged:' . hash('sha256', strtolower($originalName) . "\0" . $sha256),
+            'bucket-redirect-content:' . $sha256,
             $originalName,
             $sourceRelativePath,
             $size,
@@ -142,6 +145,19 @@ final class CatalogBucketUploadQueue
             'size' => $size,
             'deduplicated' => $existingJobId > 0 && $existingJobId === $jobId,
         ];
+    }
+
+    private function completedChunkSha256(string $uploadId, int $userId): string
+    {
+        $storeConfig = $this->config;
+        $storeConfig['max_upload_bytes'] = PHP_INT_MAX;
+        $storeConfig['max_container_upload_bytes'] = PHP_INT_MAX;
+        $resolved = (new CatalogChunkedUploadStore($storeConfig))->resolveCompletedFile($uploadId, $userId);
+        $hash = hash_file('sha256', (string)$resolved['path']);
+        if (!is_string($hash) || preg_match('/^[a-f0-9]{64}$/', $hash) !== 1) {
+            throw new \RuntimeException('Could not hash the completed redirect upload.');
+        }
+        return $hash;
     }
 
     private function recoverStalledRedirectWorker(string $queueName, int $userId): void
