@@ -39,10 +39,13 @@ final class JobResourcePolicy
             ),
             JobType::IMPORT_STAGED_PACKAGE,
             JobType::IMPORT_STAGED_PAK,
+            JobType::PREPARE_BUCKET_REDIRECT,
             JobType::IMPORT_GAME_BACKUP => new JobResourceProfile(
                 self::IMPORT_HEAVY,
                 self::configuredLimit(self::IMPORT_HEAVY, 1),
-                self::positiveKey('import:game:', $payload['game_id'] ?? null)
+                $jobType === JobType::PREPARE_BUCKET_REDIRECT
+                    ? 'bucket-redirect'
+                    : self::positiveKey('import:game:', $payload['game_id'] ?? null)
             ),
             JobType::EXPORT_GAME_BACKUP => new JobResourceProfile(
                 self::STORAGE_HEAVY,
