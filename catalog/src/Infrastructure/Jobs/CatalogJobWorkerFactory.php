@@ -42,6 +42,9 @@ final class CatalogJobWorkerFactory
         return new JobWorker(
             new WorkerJobQueue($db),
             [
+                // Bucket redirect finalization must happen in the configured CLI
+                // PHP runtime, never in Apache/Web Station request handlers.
+                new CatalogBucketRedirectJobHandler($db, $trustedImportConfig),
                 // PAK imports retain the original container and build entry/file
                 // relationships, so they must be claimed before the generic
                 // staged-import handler that also recognises IMPORT_STAGED_PAK.
