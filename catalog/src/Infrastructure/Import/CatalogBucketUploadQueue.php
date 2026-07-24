@@ -17,6 +17,12 @@ final class CatalogBucketUploadQueue
     ) {
     }
 
+    public function queueName(): string
+    {
+        $base = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        return $base . ':bucket-redirects';
+    }
+
     /**
      * @return array{job_id:int,type:string,file:string,size:int,deduplicated:bool}
      */
@@ -97,7 +103,7 @@ final class CatalogBucketUploadQueue
             throw new \InvalidArgumentException('Bucket redirect job metadata is incomplete.');
         }
 
-        $queueName = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $queueName = $this->queueName();
         $existing = $this->db->prepare(
             'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
         );
