@@ -31,6 +31,7 @@ try {
     $targetGameId = $targetGameId === false || $targetGameId === null ? 0 : (int)$targetGameId;
     $allowOverride = (string)($_POST['allow_profile_override'] ?? '') === '1';
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+    $importDetails = null;
 
     if ($token === '') throw new RuntimeException('A queued file is required.');
     if (!in_array($action, ['move', 'import', 'delete'], true)) throw new RuntimeException('Unknown unverified queue action.');
@@ -49,7 +50,27 @@ try {
         $trustedImportConfig = $config;
         $trustedImportConfig['max_upload_bytes'] = PHP_INT_MAX;
         $result = catalog_unverified_promote_item($db, $trustedImportConfig, $source, $targetGameId, $userId, $allowOverride);
-        $message = ucfirst((string)$result['status']) . ' ' . $result['original_name'] . ' for ' . $result['target_game'] . '. ' . trim((string)$result['message']);
+        $details = catalog_one(
+            $db,
+            'SELECT package_guid,name_count,import_count,export_count FROM ue_files WHERE id=?',
+            [(int)$result['file_id']]
+        ) ?: [];
+        $guid = trim((string)($details['package_guid'] ?? ''));
+        $importDetails = [
+            'name_count' => (int)($details['name_count'] ?? 0),
+            'import_count' => (int)($details['import_count'] ?? 0),
+            'export_count' => (int)($details['export_count'] ?? 0),
+            'package_guid' => $guid,
+        ];
+        $statusLabel = match (strtolower((string)$result['status'])) {
+            'verified' => 'Verified',
+            'duplicate' => 'Duplicate',
+            'alias' => 'Alias added',
+            default => ucfirst((string)$result['status']),
+        };
+        $message = $statusLabel . ' ' . $result['original_name'] . ' for ' . $result['target_game']
+            . '. N/I/E: ' . $importDetails['name_count'] . '/' . $importDetails['import_count'] . '/' . $importDetails['export_count']
+            . ' | GUID: ' . ($guid !== '' ? $guid : 'N/A') . '.';
     } else {
         $result = catalog_unverified_discard_item($db, $config, $source);
         $message = 'Deleted ' . $result['original_name'] . ' from unverified storage and the staging database.';
@@ -60,6 +81,7 @@ try {
         'action' => $action,
         'original_name' => (string)$result['original_name'],
         'file_id' => isset($result['file_id']) ? (int)$result['file_id'] : null,
+        'details' => $importDetails,
         'message' => $message,
     ]);
 } catch (Throwable $error) {
