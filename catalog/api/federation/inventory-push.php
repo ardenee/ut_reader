@@ -24,6 +24,7 @@ try {
 
     if ((string)($peer['peer_role'] ?? '') === 'parent' && is_array($payload['policy'] ?? null)) {
         federation_cache_parent_base_game_policy($db, (int)$peer['id'], $payload['policy']);
+        $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=?', [(int)$peer['id']]) ?: $peer;
     }
     $ignoreBaseGame = federation_ignore_base_game_files(
         $db,
