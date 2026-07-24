@@ -52,6 +52,37 @@ redirect_payload_assert(is_array($decodedUz2), 'non-package UZ2 record stream wa
 redirect_payload_assert((string)$decodedUz2['decoder'] === 'epic-uz2-zlib', 'UZ2 text used the wrong decoder.');
 redirect_payload_assert(hash_equals($textOutput, (string)$decodedUz2['data']), 'UZ2 text output differs.');
 
+/* A valid zlib member wins even when its compressed and source sizes are equal. */
+$equalPackage = "\xC1\x83\x2A\x9E" . str_repeat("\x9E", 9);
+$equalCompressed = hex2bin('78da3bd8ac350f0e0033be079b');
+redirect_payload_assert(is_string($equalCompressed), 'equal-size zlib fixture could not be prepared.');
+redirect_payload_assert(strlen($equalCompressed) === strlen($equalPackage), 'equal-size zlib fixture lengths differ.');
+$equalUz2 = pack('V2', strlen($equalCompressed), strlen($equalPackage)) . $equalCompressed;
+$equalDecoded = catalog_redirect_archive_decode_payload($equalUz2, 'uz2', 1024 * 1024);
+redirect_payload_assert(is_array($equalDecoded), 'equal-size exact zlib record was rejected.');
+redirect_payload_assert((string)$equalDecoded['decoder'] === 'epic-uz2-zlib', 'equal-size valid zlib was treated as stored.');
+redirect_payload_assert(hash_equals($equalPackage, (string)$equalDecoded['data']), 'equal-size zlib output differs.');
+
+/* If exact zlib fails and both sizes match, the record is a verbatim Epic block. */
+$storedPackage = "\xC1\x83\x2A\x9E" . hash('sha256', 'Epic UZ2 stored record regression', true);
+$storedUz2 = pack('V2', strlen($storedPackage), strlen($storedPackage)) . $storedPackage;
+$storedDecoded = catalog_redirect_archive_decode_payload($storedUz2, 'uz2', 1024 * 1024);
+redirect_payload_assert(is_array($storedDecoded), 'equal-size verbatim UZ2 record was rejected.');
+redirect_payload_assert((string)$storedDecoded['decoder'] === 'epic-uz2-stored', 'verbatim UZ2 record used the wrong decoder.');
+redirect_payload_assert(hash_equals($storedPackage, (string)$storedDecoded['data']), 'verbatim UZ2 output differs.');
+
+$storedPath = tempnam(sys_get_temp_dir(), 'redirect-uz2-stored-');
+redirect_payload_assert(is_string($storedPath), 'could not allocate stored UZ2 fixture path.');
+file_put_contents($storedPath, $storedUz2);
+try {
+    $result = catalog_epic_redirect_decompress_to_temp($storedPath, 'Stored.utx.uz2', 1024 * 1024, true);
+    redirect_payload_assert(str_contains((string)$result['decoder'], 'stored'), 'streamed UZ2 path did not use stored-record handling.');
+    redirect_payload_assert(hash_equals($storedPackage, (string)file_get_contents((string)$result['path'])), 'streamed stored-record output differs.');
+    @unlink((string)$result['path']);
+} finally {
+    @unlink($storedPath);
+}
+
 /* UE3 UZ3 is 5678 + total uncompressed size + one exact zlib stream. */
 $uz3Output = "\xC1\x83\x2A\x9E" . str_repeat('Epic UE3 UZ3 package payload.', 100);
 $uz3Compressed = gzcompress($uz3Output, 9);
