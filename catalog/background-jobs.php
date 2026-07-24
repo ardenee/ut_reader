@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -45,16 +43,10 @@ try {
 
     $queueName = $requestedQueue;
     if ($queueName === '') {
-        $configuredActive = ($queueOptions[$configuredQueue]['queued'] ?? 0) > 0
-            || ($queueOptions[$configuredQueue]['running'] ?? 0) > 0;
-        if ($configuredActive) {
-            $queueName = $configuredQueue;
-        } else {
-            foreach ($queueOptions as $candidate => $summary) {
-                if (($summary['queued'] ?? 0) > 0 || ($summary['running'] ?? 0) > 0) {
-                    $queueName = $candidate;
-                    break;
-                }
+        foreach ($queueOptions as $candidate => $summary) {
+            if (($summary['queued'] ?? 0) > 0 || ($summary['running'] ?? 0) > 0) {
+                $queueName = $candidate;
+                break;
             }
         }
     }
@@ -66,34 +58,31 @@ try {
     }
     ksort($queueOptions, SORT_NATURAL | SORT_FLAG_CASE);
 
-    $counts = [
-        'queued' => 0,
-        'running' => 0,
-        'completed' => 0,
-        'failed' => 0,
-        'dead_letter' => 0,
-        'cancelled' => 0,
-    ];
-    foreach (catalog_all(
-        $db,
-        'SELECT status,JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")) result_status,COUNT(*) total '
-            . 'FROM ue_background_jobs WHERE queue_name=? GROUP BY status,result_status',
-        [$queueName]
-    ) as $row) {
-        $group = CatalogJobDisplayStatus::group(
-            (string)($row['status'] ?? ''),
-            isset($row['result_status']) ? (string)$row['result_status'] : null
-        );
-        if (array_key_exists($group, $counts)) {
-            $counts[$group] += (int)$row['total'];
-        }
-    }
-
     catalog_head('Background Jobs');
-    echo '<style>#background-jobs-app .job-status + .muted.small{display:none}.job-queue-picker{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}.job-queue-picker select{min-width:320px}.job-running-for{white-space:nowrap}</style>';
+    echo '<style>'
+        . '.jobs-queue-switcher{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}'
+        . '.jobs-queue-switcher select{min-width:340px}'
+        . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar,.jobs-pagination{display:flex;gap:10px;align-items:center;flex-wrap:wrap}'
+        . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar{margin:0 0 14px}'
+        . '.jobs-worker-state{margin-left:auto}'
+        . '.jobs-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}'
+        . '.jobs-tabs button[aria-selected="true"]{font-weight:700;box-shadow:inset 0 -2px 0 currentColor}'
+        . '.jobs-search{min-width:260px;flex:1}'
+        . '.jobs-selection-summary{min-width:160px}'
+        . '.jobs-pagination{justify-content:space-between;margin-top:14px}'
+        . '.jobs-page-controls{display:flex;gap:8px;align-items:center}'
+        . '.jobs-running-for{white-space:nowrap}'
+        . '.jobs-actions{white-space:nowrap}'
+        . '.jobs-maintenance{margin-top:18px}'
+        . '.jobs-maintenance summary{cursor:pointer;font-weight:700}'
+        . '.jobs-maintenance-body{padding:14px 0 0}'
+        . '.jobs-empty{text-align:center;padding:30px}'
+        . '.jobs-row-checkbox{width:18px;height:18px}'
+        . '</style>';
+
     catalog_page_header(
         'Background Jobs',
-        'View and control jobs in queue ' . $queueName . '. Upload Bucket redirect decompression uses its own queue.',
+        'Manage queued work, inspect long-running jobs and apply actions to selected jobs or every matching result.',
         [
             'Upload Bucket' => 'upload-bucket.php',
             'Upload Files' => 'profiled-upload.php',
@@ -102,9 +91,10 @@ try {
         ]
     );
 
-    echo '<form method="get" class="job-queue-picker"><label><strong>Job queue</strong> <select name="queue" onchange="this.form.submit()">';
+    echo '<form method="get" class="jobs-queue-switcher">'
+        . '<label><strong>Queue</strong> <select name="queue" onchange="this.form.submit()">';
     foreach ($queueOptions as $name => $summary) {
-        $label = $name . ' — ' . (int)$summary['total'] . ' job(s)';
+        $label = $name . ' — ' . (int)$summary['total'] . ' jobs';
         if ((int)$summary['running'] > 0 || (int)$summary['queued'] > 0) {
             $label .= ' (' . (int)$summary['running'] . ' running, ' . (int)$summary['queued'] . ' queued)';
         }
@@ -113,79 +103,91 @@ try {
     }
     echo '</select></label><noscript><button type="submit">Open queue</button></noscript></form>';
 
-    echo '<div class="grid">';
-    catalog_stat_card('Queued', $counts['queued'], '', $counts['queued'] > 0 ? 'attention' : '');
-    catalog_stat_card('Running', $counts['running'], '', $counts['running'] > 0 ? 'attention' : '');
-    catalog_stat_card('Completed', $counts['completed'], '', 'good');
-    catalog_stat_card('Failed', $counts['failed'] + $counts['dead_letter'], '', ($counts['failed'] + $counts['dead_letter']) > 0 ? 'warning' : '');
-    catalog_stat_card('Cancelled', $counts['cancelled']);
-    echo '</div>';
-
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue controls</h2>';
-    echo '<p class="muted">Start next launches a detached CLI worker for one job. Start queued launches a detached worker that drains this queue and exits. The worker continues after this page or browser is closed. Running jobs are never stopped automatically; use Stop job when a job is clearly stuck.</p>';
-    echo '</div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__body">';
     echo '<div id="background-jobs-app" '
         . 'data-queue="' . catalog_h($queueName) . '" '
         . 'data-status-url="api/v1/job-status.php" '
+        . 'data-bulk-url="api/v1/job-bulk.php" '
         . 'data-action-url="api/v1/job-action.php" '
-        . 'data-pak-rerun-url="api/v1/job-rerun-pak.php" '
         . 'data-run-url="api/v1/job-run.php" '
         . 'data-worker-status-url="api/v1/job-worker-status.php" '
         . 'data-worker-action-url="api/v1/job-worker-action.php" '
+        . 'data-pak-rerun-url="api/v1/job-rerun-pak.php" '
         . 'data-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
-    echo '<p class="button-row">'
-        . '<button id="jobs-run-next" type="button">Start next</button> '
-        . '<button id="jobs-run-all" type="button">Start queued</button> '
-        . '<button id="jobs-stop" type="button">Stop worker</button> '
-        . '<button id="jobs-recover" type="button">Recover expired jobs</button> '
+
+    echo '<div class="jobs-toolbar">'
+        . '<button id="jobs-start" type="button">Start / resume queue</button>'
+        . '<button id="jobs-stop-worker" type="button">Stop worker</button>'
         . '<button id="jobs-refresh" type="button">Refresh</button>'
-        . '</p>';
-    echo '<p class="button-row"><label>Remove terminal jobs older than '
-        . '<select id="jobs-cleanup-days">'
-        . '<option value="1">1 day</option>'
-        . '<option value="7">7 days</option>'
-        . '<option value="30" selected>30 days</option>'
-        . '<option value="90">90 days</option>'
-        . '<option value="365">1 year</option>'
-        . '</select></label> '
-        . '<button id="jobs-cleanup" type="button">Clean old jobs</button></p>';
-    echo '<p class="muted small">Cleanup removes completed, failed, dead-letter and cancelled records and their retained staged upload files. Queued and running jobs are never removed.</p>';
-    echo '<p id="jobs-worker-message" class="muted" aria-live="polite">Loading worker status...</p>';
-    echo '<p id="jobs-message" class="muted" aria-live="polite">Loading queue...</p>';
-    echo '<div class="button-row jobs-bulk-controls">'
-        . '<label>Status filter <select id="jobs-status-filter">'
-        . '<option value="">All statuses</option>'
-        . '<option value="queued">Queued</option>'
-        . '<option value="running">Running</option>'
-        . '<option value="completed">Completed</option>'
-        . '<option value="failed">Failed</option>'
-        . '<option value="dead_letter">Dead letter</option>'
-        . '<option value="cancelled">Cancelled</option>'
-        . '</select></label> '
-        . '<button id="jobs-select-terminal" type="button">Select terminal shown</button> '
-        . '<button id="jobs-clear-selection" type="button">Clear selection</button> '
-        . '<button id="jobs-delete-selected" type="button" disabled>Delete selected (0)</button> '
-        . '<button id="jobs-delete-matching" type="button">Delete all terminal matching filter</button>'
+        . '<span id="jobs-worker-state" class="muted jobs-worker-state">Loading worker status…</span>'
         . '</div>';
-    echo '<p id="jobs-selection-message" class="muted small" aria-live="polite">No jobs selected.</p>';
+
+    echo '<nav id="jobs-status-tabs" class="jobs-tabs" aria-label="Job status">';
+    foreach ([
+        '' => 'All',
+        'queued' => 'Queued',
+        'running' => 'Running',
+        'completed' => 'Completed',
+        'failed' => 'Failed',
+        'dead_letter' => 'Dead letter',
+        'cancelled' => 'Cancelled',
+    ] as $value => $label) {
+        echo '<button type="button" data-status="' . catalog_h($value) . '" aria-selected="false">'
+            . catalog_h($label) . ' <span data-status-count="' . catalog_h($value !== '' ? $value : 'all') . '">0</span>'
+            . '</button>';
+    }
+    echo '</nav>';
+
+    echo '<div class="jobs-filterbar">'
+        . '<label class="jobs-search">Search <input id="jobs-search" type="search" placeholder="File, job ID, type or error" autocomplete="off"></label>'
+        . '<label>Rows <select id="jobs-page-size">'
+        . '<option value="50">50</option><option value="100" selected>100</option><option value="250">250</option>'
+        . '<option value="500">500</option><option value="1000">1000</option>'
+        . '</select></label>'
+        . '</div>';
+
+    echo '<div class="jobs-selectionbar">'
+        . '<label><input id="jobs-select-page" type="checkbox" class="jobs-row-checkbox"> Select page</label>'
+        . '<span id="jobs-selection-summary" class="jobs-selection-summary muted">Nothing selected</span>'
+        . '<button id="jobs-select-matching" type="button">Select all matching</button>'
+        . '<button id="jobs-clear-selection" type="button" disabled>Clear selection</button>'
+        . '<label>Action <select id="jobs-bulk-action"><option value="">Choose action</option></select></label>'
+        . '<button id="jobs-apply-action" type="button" disabled>Apply</button>'
+        . '</div>';
+
+    echo '<p id="jobs-message" class="muted" aria-live="polite">Loading jobs…</p>';
+
     echo '<div class="table-wrap"><table><thead><tr>'
-        . '<th class="job-select-column"><input id="jobs-select-all" type="checkbox" aria-label="Select all terminal jobs shown"></th>'
-        . '<th>ID</th><th>Status</th><th>Type</th><th>File / target</th><th>Progress</th><th data-running-for-column="1">Running for</th><th>Attempts</th><th>Created</th><th>Error</th><th>Actions</th>'
-        . '</tr></thead><tbody id="jobs-table-body"><tr><td colspan="11" class="muted">Loading...</td></tr></tbody></table></div>';
+        . '<th></th><th>ID</th><th>Status</th><th>Type</th><th>File / target</th><th>Progress</th>'
+        . '<th>Running for</th><th>Attempts</th><th>Created</th><th>Error</th><th>Action</th>'
+        . '</tr></thead><tbody id="jobs-table-body"><tr><td colspan="11" class="jobs-empty muted">Loading…</td></tr></tbody></table></div>';
+
+    echo '<div class="jobs-pagination">'
+        . '<span id="jobs-page-summary" class="muted"></span>'
+        . '<div class="jobs-page-controls">'
+        . '<button id="jobs-first-page" type="button">First</button>'
+        . '<button id="jobs-previous-page" type="button">Previous</button>'
+        . '<span id="jobs-page-label">Page 1 of 1</span>'
+        . '<button id="jobs-next-page" type="button">Next</button>'
+        . '<button id="jobs-last-page" type="button">Last</button>'
+        . '</div></div>';
+
+    echo '<details class="jobs-maintenance"><summary>Maintenance</summary><div class="jobs-maintenance-body">'
+        . '<p class="muted">These are occasional repair and cleanup operations, not normal queue controls.</p>'
+        . '<p class="button-row">'
+        . '<button id="jobs-recover" type="button">Recover expired leases</button>'
+        . '<label>Delete terminal jobs older than <select id="jobs-cleanup-days">'
+        . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
+        . '<option value="90">90 days</option><option value="365">1 year</option>'
+        . '</select></label>'
+        . '<button id="jobs-cleanup" type="button">Clean old jobs</button>'
+        . '</p></div></details>';
+
     echo '</div></div></section>';
 
-    $jobsScript = __DIR__ . '/assets/background-jobs.js';
-    $jobsScriptVersion = is_file($jobsScript) ? (string)filemtime($jobsScript) : '1';
-    echo '<script src="assets/background-jobs.js?v=' . catalog_h($jobsScriptVersion) . '"></script>';
-    $runningScript = __DIR__ . '/assets/background-jobs-running-controls.js';
-    $runningScriptVersion = is_file($runningScript) ? (string)filemtime($runningScript) : '1';
-    echo '<script src="assets/background-jobs-running-controls.js?v=' . catalog_h($runningScriptVersion) . '"></script>';
-    $staleScript = __DIR__ . '/assets/background-jobs-stale-worker.js';
-    $staleScriptVersion = is_file($staleScript) ? (string)filemtime($staleScript) : '1';
-    echo '<script src="assets/background-jobs-stale-worker.js?v=' . catalog_h($staleScriptVersion) . '"></script>';
-    $pakRerunScript = __DIR__ . '/assets/background-jobs-pak-rerun.js';
-    $pakRerunScriptVersion = is_file($pakRerunScript) ? (string)filemtime($pakRerunScript) : '1';
-    echo '<script src="assets/background-jobs-pak-rerun.js?v=' . catalog_h($pakRerunScriptVersion) . '"></script>';
+    $script = __DIR__ . '/assets/background-jobs.js';
+    $version = is_file($script) ? (string)filemtime($script) : '1';
+    echo '<script src="assets/background-jobs.js?v=' . catalog_h($version) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
