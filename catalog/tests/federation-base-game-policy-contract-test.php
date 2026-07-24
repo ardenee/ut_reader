@@ -73,7 +73,11 @@ federation_base_policy_expect(substr_count($content['peer_inventory'], 'COALESCE
 federation_base_policy_expect(str_contains($content['peer_inventory'], 'pi_child_dependency_rows($db, $peerId, $ignoreBaseGame)'), 'Child dependency view does not apply the policy.');
 federation_base_policy_expect(str_contains($content['peer_inventory'], 'Policy-excluded base-game files are removed.'), 'Child inventory page does not document the global exclusion.');
 
-federation_base_policy_expect(str_contains($content['availability'], "'policy_excluded' => true"), 'Shared availability does not mark ignored base-game packages as excluded.');
+federation_base_policy_expect(
+    str_contains($content['availability'], "'policy_excluded' => \$policyExcluded")
+        && substr_count($content['availability'], 'federation_package_unavailable_result(true, true,') >= 2,
+    'Shared availability does not mark ignored base-game packages as excluded.'
+);
 federation_base_policy_expect(!str_contains($content['availability'], "'dependency_exception' => true"), 'Shared availability still permits a dependency exception.');
 federation_base_policy_expect(str_contains($content['request_generate'], 'reqgen_policy_having'), 'Request generator totals are not policy-filtered.');
 federation_base_policy_expect(str_contains($content['request_generate'], 'reqgen_apply_base_game_policy'), 'Request generator page and submission are not policy-filtered.');
