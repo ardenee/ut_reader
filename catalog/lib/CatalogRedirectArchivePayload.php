@@ -5,61 +5,6 @@ require_once __DIR__ . '/CatalogRedirectArchive.php';
 require_once __DIR__ . '/CatalogEpicRedirect.php';
 
 /**
- * Decode the signed UE1 native FCodec wrapper without requiring package magic.
- * Signature 5678 is retained only as the historical alternate UE1 FCodec form;
- * it is not the UE3 .uz3 format.
- *
- * @return array{
- *   data:string,
- *   decoder:string,
- *   chunks:int,
- *   expected_bytes:int,
- *   embedded_filename:string,
- *   wrapper_signature:int
- * }|null
- */
-function catalog_redirect_archive_legacy_payload(string $data, int $maxOutputBytes): ?array
-{
-    $header = catalog_legacy_uz_header($data);
-    if ($header === null) {
-        return null;
-    }
-
-    try {
-        $limit = max(1, $maxOutputBytes);
-        $stageLimit = $limit + intdiv($limit, 4) + 16 * 1024 * 1024;
-        $huffman = catalog_legacy_uz_decode_huffman(substr($data, $header['offset']), $stageLimit);
-
-        if ($header['signature'] === 5678) {
-            $rle = catalog_legacy_uz_decode_rle($huffman, $stageLimit);
-            unset($huffman);
-            $mtf = catalog_legacy_uz_decode_mtf($rle);
-            unset($rle);
-        } else {
-            $mtf = catalog_legacy_uz_decode_mtf($huffman);
-            unset($huffman);
-        }
-
-        $bwt = catalog_legacy_uz_decode_bwt($mtf, $stageLimit);
-        unset($mtf);
-        $output = catalog_legacy_uz_decode_rle($bwt['data'], $limit);
-
-        return [
-            'data' => $output,
-            'decoder' => $header['signature'] === 5678
-                ? 'legacy-uz-5678-huffman+rle+mtf+bwt+rle'
-                : 'epic-uz-huffman+mtf+bwt+rle',
-            'chunks' => (int)$bwt['chunks'],
-            'expected_bytes' => strlen($output),
-            'embedded_filename' => (string)$header['filename'],
-            'wrapper_signature' => (int)$header['signature'],
-        ];
-    } catch (Throwable) {
-        return null;
-    }
-}
-
-/**
  * Decode Epic's exact UE2 UZ2 record stream without requiring package magic.
  * Exact zlib is attempted first for every record. If it fails and the declared
  * compressed and uncompressed sizes are equal, the record is copied verbatim.
@@ -143,10 +88,7 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
 
     if ($extension === 'uz') {
-        $legacy = catalog_redirect_archive_legacy_payload($data, $limit);
-        return is_array($legacy) && (int)($legacy['wrapper_signature'] ?? 0) === 1234
-            ? $legacy
-            : null;
+        return catalog_epic_uz_decode($data, min($limit, 2147483647));
     }
 
     if ($extension === 'uz2') {
@@ -154,7 +96,7 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
     }
 
     if ($extension === 'uz3') {
-        return catalog_epic_uz3_decode($data, $limit);
+        return catalog_epic_uz3_decode($data, min($limit, 2147483647));
     }
 
     return null;
