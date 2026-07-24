@@ -56,6 +56,13 @@ bucket_policy_expect(str_contains($content['javascript'], 'received_chunks'), 'B
 bucket_policy_expect(!str_contains($content['javascript'], 'wholeFileUpload('), 'Browser client still routes redirect wrappers through whole-file POST.');
 bucket_policy_expect(!str_contains($content['javascript'], 'isRedirectArchive('), 'Browser client still selects an upload transport by redirect extension.');
 bucket_policy_expect(
+    str_contains(
+        $content['javascript'],
+        "reject(new Error(responseError(body, 'Chunk request failed with HTTP ' + xhr.status + '.')));"
+    ),
+    'Upload Bucket JavaScript response-error statement is malformed.'
+);
+bucket_policy_expect(
     str_contains($content['javascript'], 'async function waitForJob')
         && str_contains($content['javascript'], "'api/v1/job-status.php'")
         && str_contains($content['javascript'], 'return await waitForJob(jobId, name);'),
