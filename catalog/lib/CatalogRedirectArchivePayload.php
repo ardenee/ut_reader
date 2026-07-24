@@ -61,6 +61,8 @@ function catalog_redirect_archive_legacy_payload(string $data, int $maxOutputByt
 
 /**
  * Decode Epic's exact UE2 UZ2 record stream without requiring package magic.
+ * Exact zlib is attempted first for every record. If it fails and the declared
+ * compressed and uncompressed sizes are equal, the record is copied verbatim.
  *
  * @return array{data:string,decoder:string,chunks:int,expected_bytes:int}|null
  */
@@ -70,6 +72,7 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
     $length = strlen($data);
     $output = '';
     $chunks = 0;
+    $encodings = [];
 
     while ($position < $length) {
         if ($position + 8 > $length) {
@@ -98,12 +101,23 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
             $limit - strlen($output),
             $uncompressed
         );
-        if ($decoded === null) {
+
+        if ($decoded !== null) {
+            $block = (string)$decoded['data'];
+            $encoding = 'zlib';
+        } elseif ($compressed === $uncompressed) {
+            $block = $payload;
+            $encoding = 'stored';
+        } else {
             return null;
         }
 
-        $output .= $decoded['data'];
+        if (strlen($block) !== $uncompressed) {
+            return null;
+        }
+        $output .= $block;
         $chunks++;
+        $encodings[$encoding] = true;
     }
 
     if ($chunks === 0 || $position !== $length || $output === '') {
@@ -112,7 +126,7 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
 
     return [
         'data' => $output,
-        'decoder' => 'epic-uz2-zlib',
+        'decoder' => 'epic-uz2-' . implode('+', array_keys($encodings)),
         'chunks' => $chunks,
         'expected_bytes' => strlen($output),
     ];
