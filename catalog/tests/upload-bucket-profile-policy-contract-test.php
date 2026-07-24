@@ -13,24 +13,44 @@ function bucket_policy_expect(bool $condition, string $message): void
     }
 }
 
-$path = dirname(__DIR__) . '/upload-bucket.php';
-$source = file_get_contents($path);
-bucket_policy_expect(is_string($source), 'Upload bucket page is missing.');
+$page = file_get_contents(dirname(__DIR__) . '/upload-bucket.php');
+$endpoint = file_get_contents(dirname(__DIR__) . '/api/v1/upload-bucket-chunk.php');
+$javascript = file_get_contents(dirname(__DIR__) . '/assets/upload-bucket.js');
+bucket_policy_expect(is_string($page), 'Upload bucket page is missing.');
+bucket_policy_expect(is_string($endpoint), 'Chunked upload bucket endpoint is missing.');
+bucket_policy_expect(is_string($javascript), 'Chunked upload bucket browser client is missing.');
 
-bucket_policy_expect(str_contains($source, "require_once __DIR__ . '/lib/GameProfiles.php';"), 'Upload bucket does not load game profile helpers.');
-bucket_policy_expect(str_contains($source, 'function upload_bucket_allowed_extensions'), 'Upload bucket profile extension policy helper is missing.');
-bucket_policy_expect(str_contains($source, 'foreach (gp_all_profiles($db) as $profile)'), 'Upload bucket does not read active profiles.');
-bucket_policy_expect(str_contains($source, 'foreach (gp_extensions($profile) as $extension)'), 'Upload bucket does not use allowed_extensions_json through the profile helper.');
-bucket_policy_expect(str_contains($source, 'if ($extensions === [])'), 'Legacy global extensions are not restricted to fallback use.');
-bucket_policy_expect(str_contains($source, 'not allowed by any active game profile'), 'Extension errors do not identify the effective policy.');
+bucket_policy_expect(str_contains($page, "require_once __DIR__ . '/lib/GameProfiles.php';"), 'Upload bucket does not load game profile helpers.');
+bucket_policy_expect(str_contains($page, 'function upload_bucket_allowed_extensions'), 'Upload bucket profile extension policy helper is missing.');
+bucket_policy_expect(str_contains($page, 'foreach (gp_all_profiles($db) as $profile)'), 'Upload bucket does not read active profiles.');
+bucket_policy_expect(str_contains($page, 'foreach (gp_extensions($profile) as $extension)'), 'Upload bucket does not use allowed_extensions_json through the profile helper.');
+bucket_policy_expect(str_contains($page, 'if ($extensions === [])'), 'Legacy global extensions are not restricted to fallback use.');
+bucket_policy_expect(str_contains($page, 'not allowed by any active game profile'), 'Extension errors do not identify the effective policy.');
 
-bucket_policy_expect(str_contains($source, 'function upload_bucket_post_limit_error'), 'Oversized POST detection is missing.');
-bucket_policy_expect(str_contains($source, "ini_get('post_max_size')"), 'Upload bucket does not inspect PHP post_max_size.');
-bucket_policy_expect(str_contains($source, "upload_bucket_php_limit_text('upload_max_filesize')"), 'Upload bucket does not report PHP upload_max_filesize.');
-bucket_policy_expect(str_contains($source, 'HTTP_X_UPLOAD_BUCKET_AJAX'), 'AJAX detection does not survive an empty oversized POST body.');
-bucket_policy_expect(str_contains($source, "url.searchParams.set('ajax', '1')"), 'Browser requests do not preserve the AJAX marker in the query string.');
-bucket_policy_expect(str_contains($source, "xhr.setRequestHeader('X-Upload-Bucket-Ajax', '1')"), 'Browser requests do not preserve the AJAX marker in a header.');
-bucket_policy_expect(str_contains($source, 'server returned non-JSON data'), 'Browser errors still discard non-JSON server responses.');
-bucket_policy_expect(str_contains($source, 'request_id'), 'Upload errors do not expose a request reference.');
+bucket_policy_expect(str_contains($page, 'function upload_bucket_stats'), 'Upload bucket lacks a lightweight physical-folder statistics scan.');
+bucket_policy_expect(!str_contains($page, 'uvf_list($db, $config, 0)'), 'Upload bucket still hashes and parses every queued file merely to render totals.');
+bucket_policy_expect(str_contains($page, 'FilesystemIterator($bucketDir'), 'Physical bucket statistics are not calculated from the bucket folder.');
+bucket_policy_expect(str_contains($page, 'bucket-path') && str_contains($page, 'overflow-wrap:anywhere'), 'Physical bucket path is not allowed to wrap.');
+bucket_policy_expect(str_contains($page, 'grid-template-columns:minmax(125px,.55fr)'), 'Bucket count and storage cards were not narrowed for the path card.');
+
+bucket_policy_expect(str_contains($page, 'bucket-overall-progress-bar'), 'Overall upload progress bar is missing.');
+bucket_policy_expect(str_contains($page, 'bucket-progress-bar'), 'Current-file upload progress bar is missing.');
+bucket_policy_expect(str_contains($page, 'data-chunk-url="api/v1/upload-bucket-chunk.php"'), 'Upload bucket does not select the chunk endpoint by default.');
+bucket_policy_expect(str_contains($page, 'No UnrealDB total-file-size limit is applied'), 'Upload bucket still advertises an application file-size cap.');
+bucket_policy_expect(str_contains($javascript, 'async function chunkedUpload'), 'Browser client lacks the chunked upload implementation.');
+bucket_policy_expect(str_contains($javascript, 'file.slice(start, end)'), 'Browser client does not send bounded file chunks.');
+bucket_policy_expect(str_contains($javascript, 'received_chunks'), 'Browser client cannot resume already stored chunks.');
+bucket_policy_expect(!str_contains($javascript, 'standardUpload('), 'Browser client still defaults some files to whole-file multipart uploads.');
+
+bucket_policy_expect(str_contains($endpoint, "catalog_api_require_admin(false)"), 'Bucket chunk endpoint is not admin-only.');
+bucket_policy_expect(str_contains($endpoint, "catalog_api_require_csrf('upload_bucket_chunk')"), 'Bucket chunk endpoint lacks CSRF protection.');
+bucket_policy_expect(str_contains($endpoint, "['max_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint still applies the normal upload size cap.');
+bucket_policy_expect(str_contains($endpoint, "['max_container_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint still applies the container size cap.');
+bucket_policy_expect(str_contains($endpoint, 'stageBucketUpload('), 'Completed chunks are not passed through duplicate-safe bucket staging.');
+bucket_policy_expect(str_contains($endpoint, 'catalog_redirect_archive_decompress_to_temp'), 'Chunked redirect archives are not decompressed before bucket staging.');
+
+bucket_policy_expect(str_contains($page, 'function upload_bucket_post_limit_error'), 'Fallback oversized POST detection is missing.');
+bucket_policy_expect(str_contains($page, "ini_get('post_max_size')"), 'Fallback handler does not inspect PHP post_max_size.');
+bucket_policy_expect(str_contains($page, 'request_id'), 'Fallback upload errors do not expose a request reference.');
 
 echo "Upload bucket profile policy contract tests passed.\n";
