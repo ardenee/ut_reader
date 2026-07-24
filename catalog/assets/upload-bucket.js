@@ -19,6 +19,9 @@
     const statusUrl = progressBox.dataset.statusUrl || 'api/v1/job-status.php';
     const chunkCsrf = progressBox.dataset.chunkCsrf || '';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
+    const queuedForegroundWaitMs = 15000;
+    const stalledForegroundWaitMs = 60000;
+    const maximumForegroundWaitMs = 5 * 60 * 1000;
     let batchTotalBytes = 1;
     let processedBytes = 0;
     let processedFiles = 0;
@@ -95,6 +98,10 @@
         overallCount.textContent = processedFiles + ' of ' + totalFiles + ' processed · ' + fmtBytes(completed) + ' of ' + fmtBytes(batchTotalBytes);
     }
 
+    function sleep(milliseconds) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+    }
+
     function requestForm(data, onProgress) {
         return new Promise(function (resolve, reject) {
             const xhr = new XMLHttpRequest();
@@ -116,12 +123,8 @@
                 }
                 resolve(body);
             };
-            xhr.onerror = function () {
-                reject(new Error('Upload connection error. The current chunk can be retried.'));
-            };
-            xhr.onabort = function () {
-                reject(new Error('Upload was aborted by the browser.'));
-            };
+            xhr.onerror = function () { reject(new Error('Upload connection error. The current chunk can be retried.')); };
+            xhr.onabort = function () { reject(new Error('Upload was aborted by the browser.')); };
             xhr.send(data);
         });
     }
@@ -134,7 +137,7 @@
             } catch (error) {
                 lastError = error;
                 if (attempt === 4) break;
-                await new Promise(function (resolve) { window.setTimeout(resolve, attempt * 750); });
+                await sleep(attempt * 750);
             }
         }
         throw lastError || new Error('Chunk upload failed.');
@@ -150,11 +153,39 @@
         return jobs[0];
     }
 
+    function backgroundMessage(jobId, reason) {
+        return 'Redirect job #' + jobId + ' ' + reason + ' It remains queued/running in Background Jobs while this upload batch continues.';
+    }
+
     async function waitForJob(jobId, fileName) {
+        const startedAt = Date.now();
+        let lastActivityAt = startedAt;
+        let lastSignature = '';
+        let statusErrors = 0;
+
         while (true) {
-            const job = await readJob(jobId);
+            let job;
+            try {
+                job = await readJob(jobId);
+                statusErrors = 0;
+            } catch (error) {
+                statusErrors++;
+                if (statusErrors >= 4) {
+                    addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'status could not be polled reliably.')});
+                    return 'queued';
+                }
+                await sleep(1500);
+                continue;
+            }
+
             const progress = job.progress || {};
             const percent = Math.max(0, Math.min(100, parseInt(progress.percent || (job.status === 'completed' ? 100 : 0), 10)));
+            const signature = [job.status, percent, progress.message || '', job.progress_updated_at || '', job.last_heartbeat_at || '', job.updated_at || ''].join('|');
+            if (signature !== lastSignature) {
+                lastSignature = signature;
+                lastActivityAt = Date.now();
+            }
+
             currentBar.value = percent;
             currentSpeed.textContent = '';
             currentLabel.textContent = 'CLI redirect job #' + jobId + ' for ' + fileName + ' (' + percent + '%) — ' + (progress.message || job.status);
@@ -178,7 +209,21 @@
                 });
                 return 'failed';
             }
-            await new Promise(function (resolve) { window.setTimeout(resolve, 750); });
+
+            const now = Date.now();
+            if (job.status === 'queued' && (now - startedAt) >= queuedForegroundWaitMs) {
+                addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'is waiting for the CLI worker.')});
+                return 'queued';
+            }
+            if ((now - lastActivityAt) >= stalledForegroundWaitMs) {
+                addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'has not reported progress for 60 seconds.')});
+                return 'queued';
+            }
+            if ((now - startedAt) >= maximumForegroundWaitMs) {
+                addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'is still processing after five minutes.')});
+                return 'queued';
+            }
+            await sleep(750);
         }
     }
 
@@ -205,9 +250,7 @@
         const received = new Set((upload.received_chunks || []).map(Number));
         let acknowledgedBytes = Math.max(0, Number(upload.received_bytes || 0));
         const started = Date.now();
-        if (received.size) {
-            addLog({status: 'uploading', file: name, message: 'Resuming ' + received.size + ' previously stored chunk(s).'});
-        }
+        if (received.size) addLog({status: 'uploading', file: name, message: 'Resuming ' + received.size + ' previously stored chunk(s).'});
         setOverall(Math.min(file.size, acknowledgedBytes), total);
 
         for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
@@ -249,13 +292,9 @@
         completeData.append('action', 'complete');
         completeData.append('upload_id', uploadId);
         const completed = await requestForm(completeData);
-        if (Array.isArray(completed.messages) && completed.messages.length) {
-            completed.messages.forEach(addLog);
-        }
+        if (Array.isArray(completed.messages) && completed.messages.length) completed.messages.forEach(addLog);
         const jobId = Math.max(0, parseInt(completed.job_id || 0, 10));
-        if (jobId > 0) {
-            return await waitForJob(jobId, name);
-        }
+        if (jobId > 0) return await waitForJob(jobId, name);
         if (!Array.isArray(completed.messages) || !completed.messages.length) {
             addLog({status: 'bucketed', file: name, message: 'Stored and indexed in upload bucket.', file_size_text: fmtBytes(file.size)});
         }
@@ -307,7 +346,7 @@
         overallCount.textContent = files.length + ' of ' + files.length + ' processed · ' + fmtBytes(batchTotalBytes);
         currentBar.value = 100;
         currentSpeed.textContent = '';
-        currentLabel.textContent = 'Upload bucket batch complete: stored ' + counts.stored + ', duplicate ' + counts.duplicate + ', failed ' + counts.failed + '.';
+        currentLabel.textContent = 'Upload bucket batch complete: stored/queued ' + counts.stored + ', duplicate ' + counts.duplicate + ', failed ' + counts.failed + '.';
         button.disabled = false;
     });
 }());
