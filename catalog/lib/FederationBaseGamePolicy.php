@@ -17,7 +17,7 @@ function federation_parent_base_game_policy(PDO $db): array
 {
     return [
         'ignore_base_game_files' => federation_policy_bool(fed_setting($db, 'ignore_base_game_files', '1'), true),
-        'missing_dependency_exception' => true,
+        'missing_dependency_exception' => false,
     ];
 }
 
@@ -50,7 +50,7 @@ function federation_cache_parent_base_game_policy(PDO $db, int $peerId, array $p
     $permissions = federation_peer_permissions($peer);
     $permissions['parent_policy'] = [
         'ignore_base_game_files' => federation_policy_bool($policy['ignore_base_game_files'] ?? true, true),
-        'missing_dependency_exception' => true,
+        'missing_dependency_exception' => false,
         'updated_at' => date('c'),
     ];
     $encoded = json_encode($permissions, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
@@ -87,9 +87,31 @@ function federation_ignore_base_game_files(PDO $db, ?array $parentPeer = null): 
     return federation_policy_bool($policy['ignore_base_game_files'] ?? true, true);
 }
 
+function federation_base_game_allowed(PDO $db, ?array $parentPeer = null): bool
+{
+    return !federation_ignore_base_game_files($db, $parentPeer);
+}
+
+function federation_base_game_row_visible(PDO $db, array $row, ?array $parentPeer = null): bool
+{
+    return federation_base_game_allowed($db, $parentPeer) || empty($row['is_base_game']);
+}
+
+/** @return list<array<string,mixed>> */
+function federation_filter_base_game_rows(PDO $db, array $rows, ?array $parentPeer = null): array
+{
+    if (federation_base_game_allowed($db, $parentPeer)) {
+        return array_values($rows);
+    }
+    return array_values(array_filter(
+        $rows,
+        static fn(mixed $row): bool => is_array($row) && empty($row['is_base_game'])
+    ));
+}
+
 function federation_base_game_policy_label(PDO $db, ?array $parentPeer = null): string
 {
     return federation_ignore_base_game_files($db, $parentPeer)
-        ? 'Base-game files are ignored in ordinary federation views and transfers. Missing-dependency matches remain included.'
-        : 'Base-game files participate in ordinary federation inventories, totals, lists and transfers.';
+        ? 'Base-game files are excluded from all federation inventories, missing-file lists, requests, totals, reports and transfers.'
+        : 'Base-game files participate in federation inventories, missing-file lists, requests, totals, reports and transfers.';
 }
