@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/BaseGameProtection.php';
+require_once __DIR__ . '/FederationBaseGamePolicy.php';
 
 /** @return array<string,mixed>|null */
 function federation_package_match_canonical(PDO $db, string $package, string $gameName = '', string $engineKey = ''): ?array
@@ -210,10 +211,31 @@ function federation_base_game_package_match(PDO $db, string $package, string $ga
     return null;
 }
 
+/** @return array<string,mixed> */
+function federation_package_unavailable_result(bool $isBaseGame = false, bool $policyExcluded = false, ?array $match = null): array
+{
+    return [
+        'available' => false,
+        'is_base_game' => $isBaseGame,
+        'transferable' => false,
+        'ordinary_transferable' => false,
+        'dependency_exception' => false,
+        'policy_excluded' => $policyExcluded,
+        'match_method' => (string)($match['federation_match_method'] ?? ''),
+        'package_name' => (string)($match['package_name'] ?? ''),
+        'original_name' => (string)($match['original_name'] ?? ''),
+        'file_size' => (int)($match['file_size'] ?? 0),
+        'package_guid' => (string)($match['package_guid'] ?? ''),
+        'file_id' => (int)($match['file_id'] ?? $match['id'] ?? 0),
+        'game_id' => (int)($match['game_id'] ?? 0),
+        'game_name' => (string)($match['match_game_name'] ?? ''),
+    ];
+}
+
 /**
- * Dependency availability deliberately treats an official base-game file as
- * transferable when it is being requested to satisfy a missing dependency.
- * Ordinary inventories and unrestricted pulls apply the separate parent policy.
+ * Apply the parent-controlled base-game policy to dependency availability too.
+ * When Ignore base-game files is enabled, there is no request or transfer
+ * exception. When disabled, base-game packages participate normally.
  *
  * @return array<string,mixed>
  */
@@ -235,46 +257,43 @@ function federation_package_availability(PDO $db, array $item): array
             (string)($item['game_name'] ?? ''),
             (string)($item['engine_key'] ?? '')
         );
-        if ($protected) {
-            $fileId = (int)($protected['file_id'] ?? 0);
-            return [
-                'available' => $fileId > 0,
-                'is_base_game' => true,
-                'transferable' => $fileId > 0,
-                'ordinary_transferable' => false,
-                'dependency_exception' => true,
-                'match_method' => (string)($protected['federation_match_method'] ?? ''),
-                'package_name' => (string)($protected['package_name'] ?? ''),
-                'original_name' => (string)($protected['original_name'] ?? ''),
-                'file_size' => (int)($protected['file_size'] ?? 0),
-                'package_guid' => (string)($protected['package_guid'] ?? ''),
-                'file_id' => $fileId,
-                'game_id' => (int)($protected['game_id'] ?? 0),
-                'game_name' => (string)($protected['match_game_name'] ?? ''),
-            ];
+        if (!$protected) {
+            return federation_package_unavailable_result();
         }
+        if (federation_ignore_base_game_files($db)) {
+            return federation_package_unavailable_result(true, true, $protected);
+        }
+        $fileId = (int)($protected['file_id'] ?? 0);
         return [
-            'available' => false,
-            'is_base_game' => false,
-            'transferable' => false,
-            'ordinary_transferable' => false,
+            'available' => $fileId > 0,
+            'is_base_game' => true,
+            'transferable' => $fileId > 0,
+            'ordinary_transferable' => $fileId > 0,
             'dependency_exception' => false,
-            'match_method' => '',
-            'package_name' => '',
-            'original_name' => '',
-            'file_size' => 0,
-            'package_guid' => '',
-            'file_id' => 0,
+            'policy_excluded' => false,
+            'match_method' => (string)($protected['federation_match_method'] ?? ''),
+            'package_name' => (string)($protected['package_name'] ?? ''),
+            'original_name' => (string)($protected['original_name'] ?? ''),
+            'file_size' => (int)($protected['file_size'] ?? 0),
+            'package_guid' => (string)($protected['package_guid'] ?? ''),
+            'file_id' => $fileId,
+            'game_id' => (int)($protected['game_id'] ?? 0),
+            'game_name' => (string)($protected['match_game_name'] ?? ''),
         ];
     }
 
     $isBaseGame = base_game_file_is_protected($db, $match);
+    if ($isBaseGame && federation_ignore_base_game_files($db)) {
+        return federation_package_unavailable_result(true, true, $match);
+    }
+
     return [
         'available' => true,
         'is_base_game' => $isBaseGame,
         'transferable' => true,
-        'ordinary_transferable' => !$isBaseGame,
-        'dependency_exception' => $isBaseGame,
+        'ordinary_transferable' => true,
+        'dependency_exception' => false,
+        'policy_excluded' => false,
         'match_method' => (string)($match['federation_match_method'] ?? ''),
         'package_name' => (string)($match['package_name'] ?? ''),
         'original_name' => (string)($match['original_name'] ?? ''),

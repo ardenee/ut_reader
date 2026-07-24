@@ -63,6 +63,7 @@ federation_role_expect(str_contains($content['pairing'], "'child_download_scope'
 federation_role_expect(str_contains($content['inventory_api'], '$localRole === \'parent\' && $peerRole === \'child\''), 'Parent-to-child inventory authorization is missing.');
 federation_role_expect(str_contains($content['inventory_api'], '$localRole === \'child\' && $peerRole === \'parent\''), 'Child-to-parent inventory authorization is missing.');
 federation_role_expect(str_contains($content['inventory_api'], "'is_base_game'"), 'Inventory API does not classify base-game rows.');
+federation_role_expect(str_contains($content['inventory_api'], 'bg.id IS NULL'), 'Inventory API does not enforce the effective base-game policy.');
 federation_role_expect(str_contains($content['inventory_api'], "'policy'"), 'Parent inventory responses do not advertise the parent policy.');
 federation_role_expect(str_contains($content['inventory'], 'federation_pull_inventory_from_peer'), 'Bidirectional inventory synchronization is missing.');
 federation_role_expect(str_contains($content['inventory'], 'is_base_game=VALUES(is_base_game)'), 'Peer inventory does not persist base-game classification.');
@@ -72,45 +73,49 @@ federation_role_expect(str_contains($content['peer_inventory'], 'Parent Dependen
 federation_role_expect(str_contains($content['peer_inventory'], 'Parent Needs'), 'Parent ordinary-needs view is missing.');
 federation_role_expect(str_contains($content['peer_inventory'], 'Child Dependency Needs'), 'Child dependency view is missing.');
 federation_role_expect(str_contains($content['peer_inventory'], 'Refresh both inventories now'), 'Manual inventory refresh is not bidirectional.');
-federation_role_expect(str_contains($content['peer_inventory'], 'COALESCE(pf.is_base_game,0)=0'), 'Parent ordinary inventory views do not apply the base-game policy.');
-federation_role_expect(str_contains($content['peer_inventory'], 'Base-game dependency matches are included'), 'Parent dependency view does not document the base-game exception.');
+federation_role_expect(substr_count($content['peer_inventory'], 'COALESCE(pf.is_base_game,0)=0') >= 2, 'Parent inventory views and queueing do not consistently apply the base-game policy.');
+federation_role_expect(str_contains($content['peer_inventory'], 'Policy-excluded base-game files are removed.'), 'Dependency inventory does not document global policy filtering.');
 
 federation_role_expect(str_contains($content['download_file'], "(string)\$peer['peer_role'] !== 'parent'"), 'Direct child file endpoint is not restricted to the paired parent.');
 federation_role_expect(str_contains($content['download_file'], 'ignore_base_game_files'), 'Child download endpoint does not enforce the signed parent base-game policy.');
-federation_role_expect(str_contains($content['download_file'], 'dependency_exception'), 'Child download endpoint does not support the missing-dependency exception.');
-federation_role_expect(str_contains($content['worker_core'], 'federation_worker_parent_pull_dependency_exception'), 'Parent worker does not validate dependency exceptions before signing a pull.');
+federation_role_expect(!str_contains($content['download_file'], '$dependencyException'), 'Child download endpoint still supports a dependency exception override.');
 federation_role_expect(str_contains($content['worker_core'], "'ignore_base_game_files' => federation_ignore_base_game_files"), 'Parent worker does not send the effective policy.');
 
 federation_role_expect(str_contains($content['availability_api'], "(string)\$peer['peer_role'] !== 'child'"), 'Parent package availability is not restricted to a paired child.');
-federation_role_expect(str_contains($content['availability_helper'], "'dependency_exception' => true"), 'Shared availability does not expose base-game dependency exceptions.');
-federation_role_expect(str_contains($content['availability_helper'], "'transferable' => true"), 'Available missing dependencies are not transferable.');
-federation_role_expect(str_contains($content['request_generate'], 'base-game dependency'), 'Child request generator does not include missing base-game dependencies.');
-federation_role_expect(!str_contains($content['request_generate'], 'Show official base-game packages'), 'Request generator still contains a page-specific base-game visibility switch.');
-federation_role_expect(str_contains($content['request_submit'], 'base-game dependency item(s)'), 'Parent request submission does not retain base-game dependency context.');
-federation_role_expect(!str_contains($content['request_submit'], '$status = \'denied\';'), 'Parent still automatically denies base-game dependency requests.');
+federation_role_expect(
+    str_contains($content['availability_helper'], "'policy_excluded' => \$policyExcluded")
+        && substr_count($content['availability_helper'], 'federation_package_unavailable_result(true, true,') >= 2,
+    'Shared availability does not exclude ignored base-game packages.'
+);
+federation_role_expect(!str_contains($content['availability_helper'], "'dependency_exception' => true"), 'Shared availability still exposes a base-game dependency exception.');
+federation_role_expect(str_contains($content['availability_helper'], "'transferable' => true"), 'Policy-eligible available dependencies are not transferable.');
+federation_role_expect(str_contains($content['request_generate'], 'reqgen_apply_base_game_policy'), 'Child request generator does not apply the inherited policy.');
+federation_role_expect(str_contains($content['request_generate'], 'reqgen_policy_having'), 'Child request generator totals are not policy-filtered.');
+federation_role_expect(str_contains($content['request_submit'], 'Every selected package is excluded by the parent Ignore base-game files policy.'), 'Parent request submission does not reject an all-base-game request.');
+federation_role_expect(str_contains($content['request_submit'], "'policy_excluded'"), 'Parent request submission does not defensively skip excluded rows.');
 
-federation_role_expect(str_contains($content['request_lifecycle'], 'federation_request_legacy_base_game_denial'), 'Legacy automatic base-game denials are not repaired.');
-federation_role_expect(str_contains($content['request_lifecycle'], 'missing-dependency exception'), 'Request lifecycle does not preserve base-game dependency exceptions.');
+federation_role_expect(str_contains($content['request_lifecycle'], 'function federation_refresh_request_matches'), 'Request lifecycle refresh is missing.');
 federation_role_expect(str_contains($content['request_status_api'], 'federation_parent_base_game_policy'), 'Child status polling does not receive the parent policy.');
-federation_role_expect(str_contains($content['request_status_page'], 'base-game dependency'), 'Outgoing request page does not display base-game dependency exceptions.');
-federation_role_expect(!str_contains($content['request_status_page'], 'Show official base-game packages'), 'Outgoing request page still has a conflicting local base-game filter.');
-federation_role_expect(str_contains($content['requests'], 'Approve all dependency requests'), 'Parent cannot approve every missing dependency request.');
-federation_role_expect(str_contains($content['requests'], 'base-game dependency'), 'Parent request review does not show base-game dependency exceptions.');
+federation_role_expect(str_contains($content['request_status_api'], 'if ($ignoreBaseGame && $isBaseGame)'), 'Child status polling does not remove historical base-game request rows.');
+federation_role_expect(str_contains($content['request_status_page'], 'crs_group_items(array $items, bool $ignoreBaseGame)'), 'Outgoing request page does not apply inherited base-game filtering.');
+federation_role_expect(str_contains($content['requests'], 'Approve all visible dependency requests'), 'Parent cannot approve all policy-visible dependency requests.');
+federation_role_expect(str_contains($content['requests'], '$ignoreBaseGame && !empty($group[\'is_base_game\'])'), 'Parent request review does not remove historical base-game groups.');
 
 federation_role_expect(str_contains($content['dependency_downloads'], 'federation_dependency_request_still_needed'), 'Child download queue does not re-check the local missing dependency.');
 federation_role_expect(str_contains($content['dependency_downloads'], "(string)(\$item['status'] ?? '') !== 'approved'"), 'Child download queue does not require parent item approval.');
-federation_role_expect(str_contains($content['dependency_downloads'], 'base_game_dependency_seen'), 'Child download queue does not report base-game dependency exceptions.');
-federation_role_expect(str_contains($content['approved_download_endpoint'], 'approved base-game dependency'), 'Approved dependency endpoint does not allow the base-game exception.');
-federation_role_expect(!str_contains($content['approved_downloads'], 'Show official base-game packages'), 'Approved downloads still has a conflicting local base-game filter.');
+federation_role_expect(str_contains($content['dependency_downloads'], 'base_game_excluded'), 'Child download queue does not report excluded base-game items.');
+federation_role_expect(str_contains($content['approved_download_endpoint'], '$isBaseGame && federation_ignore_base_game_files($db)'), 'Approved dependency endpoint does not enforce the global base-game policy.');
+federation_role_expect(str_contains($content['approved_downloads'], 'federation_visible_transfer_job_sql'), 'Approved download report does not filter historical jobs.');
 federation_role_expect(!str_contains($content['approved_downloads'], 'request_item_ids[]'), 'Child approved-download page still allows arbitrary manual item selection.');
 federation_role_expect(str_contains($content['worker'], 'federation_queue_approved_dependency_downloads'), 'Interactive federation worker does not auto-queue approved dependency downloads.');
 federation_role_expect(str_contains($content['cron'], 'federation_queue_approved_dependency_downloads'), 'Scheduled federation worker does not auto-queue approved dependency downloads.');
 
 federation_role_expect(str_contains($content['base_policy'], "ignore_base_game_files', '1"), 'Base-game federation policy does not default to enabled.');
+federation_role_expect(str_contains($content['base_policy'], "'missing_dependency_exception' => false"), 'Base-game federation policy still enables dependency exceptions.');
 federation_role_expect(str_contains($content['base_policy'], 'federation_cache_parent_base_game_policy'), 'Parent policy cannot be cached by a child.');
 federation_role_expect(str_contains($content['settings'], 'Ignore base-game files'), 'Parent setting is missing.');
 federation_role_expect(str_contains($content['settings'], 'The child cannot override this setting.'), 'Child setting page does not identify parent control.');
-federation_role_expect(str_contains($content['settings'], 'missing dependency'), 'Setting does not explain the dependency exception.');
+federation_role_expect(str_contains($content['settings'], 'There is no missing-dependency exception.'), 'Setting does not explain global exclusion.');
 federation_role_expect(!str_contains($content['settings'], 'name="allow_parent_pull_from_child"'), 'Settings still expose parent pull as an optional child permission.');
 
 foreach (['claim-parent.php', 'inventory-push.php', 'upload-to-parent.php'] as $obsolete) {

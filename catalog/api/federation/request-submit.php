@@ -107,6 +107,31 @@ try {
     if (!$items) {
         fed_json_response(['ok' => false, 'error' => 'Request has no valid package items'], 400);
     }
+
+    $ignoreBaseGame = federation_ignore_base_game_files($db);
+    if ($ignoreBaseGame) {
+        $items = array_values(array_filter(
+            $items,
+            static function (array $item) use ($db): bool {
+                if (!empty($item['is_base_game_dependency'])) {
+                    return false;
+                }
+                return federation_base_game_package_match(
+                    $db,
+                    (string)($item['required_package'] ?? ''),
+                    (string)($item['game_name'] ?? ''),
+                    (string)($item['engine_key'] ?? '')
+                ) === null;
+            }
+        ));
+    }
+    if (!$items) {
+        fed_json_response([
+            'ok' => false,
+            'error' => 'Every selected package is excluded by the parent Ignore base-game files policy.',
+            'policy' => federation_parent_base_game_policy($db),
+        ], 422);
+    }
     if (count($items) > 950) {
         fed_json_response(['ok' => false, 'error' => 'A dependency request may contain no more than 950 distinct packages.'], 413);
     }
@@ -125,7 +150,7 @@ try {
 
         $itemStmt = $db->prepare('INSERT INTO ue_federation_request_items(request_id,required_package,required_object_path,wanted_guid,wanted_md5,local_file_id,peer_file_id,status,status_message) VALUES(?,?,?,?,?,?,?,?,?)');
         $count = 0;
-        $baseGameDependencies = 0;
+        $baseGameItems = 0;
         foreach ($items as $item) {
             $requiredPackage = trim((string)$item['required_package']);
             $requiredPath = trim((string)$item['required_object_path']);
@@ -137,14 +162,17 @@ try {
             $objectCount = max(1, (int)$item['object_count']);
 
             $availability = federation_package_availability($db, $item);
+            if (!empty($availability['policy_excluded'])) {
+                continue;
+            }
             $localFile = !empty($availability['available']) && (int)($availability['file_id'] ?? 0) > 0
                 ? (int)$availability['file_id']
                 : null;
             $peerFile = null;
             $status = 'requested';
-            $isBaseGameDependency = !empty($availability['is_base_game']) || !empty($item['is_base_game_dependency']);
-            if ($isBaseGameDependency) {
-                $baseGameDependencies++;
+            $isBaseGame = !empty($availability['is_base_game']);
+            if ($isBaseGame) {
+                $baseGameItems++;
             }
 
             if (empty($availability['available'])) {
@@ -156,8 +184,8 @@ try {
                 }
                 $msg .= '.';
             }
-            if ($isBaseGameDependency) {
-                $msg .= ' This is an official base-game package, included because it is required to complete a missing dependency.';
+            if ($isBaseGame) {
+                $msg .= ' This official base-game package is included because the parent policy permits base-game federation participation.';
             }
 
             $context = [];
@@ -177,6 +205,9 @@ try {
             $count++;
         }
 
+        if ($count < 1) {
+            throw new RuntimeException('No request items remain after applying the base-game federation policy.');
+        }
         $db->commit();
     } catch (Throwable $e) {
         if ($db->inTransaction()) {
@@ -185,13 +216,13 @@ try {
         throw $e;
     }
 
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'REQUEST_SUBMIT', 'Received child request ' . $requestId . ' with ' . $count . ' distinct package item(s), including ' . $baseGameDependencies . ' base-game dependency item(s); raw rows=' . count($rawItems) . '.');
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'REQUEST_SUBMIT', 'Received child request ' . $requestId . ' with ' . $count . ' distinct package item(s), including ' . $baseGameItems . ' base-game item(s) permitted by policy; raw rows=' . count($rawItems) . '.');
     fed_json_response([
         'ok' => true,
         'request_id' => $requestId,
         'status' => 'submitted',
         'items' => $count,
-        'base_game_dependency_items' => $baseGameDependencies,
+        'base_game_items' => $baseGameItems,
         'policy' => federation_parent_base_game_policy($db),
     ]);
 } catch (Throwable $e) {

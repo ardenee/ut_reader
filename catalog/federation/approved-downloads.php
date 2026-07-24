@@ -99,7 +99,7 @@ try {
     catalog_head('Approved Downloads');
     catalog_page_header(
         'Approved Downloads',
-        'Child-side page showing dependency files the parent approved for this child. Base-game files appear only when they complete a missing dependency.',
+        'Child-side page showing dependency files approved by the parent after applying the parent-controlled base-game policy.',
         catalog_federation_links() + ['Missing Files' => 'missing-files.php', 'Outgoing Requests' => 'request-status.php', 'Worker' => 'worker-run.php', 'Transfer Queue' => 'queue.php']
     );
 
@@ -130,8 +130,10 @@ try {
     echo '<p class="muted">The scheduled federation worker performs the same approval check automatically.</p></div>';
 
     $parent = ad_parent($db, $peerId);
+    $ignoreBaseGame = federation_ignore_base_game_files($db, $parent);
     try {
         $status = ad_poll_status($db, $parent);
+        $ignoreBaseGame = federation_ignore_base_game_files($db, $parent);
     } catch (Throwable $error) {
         $status = ['ok' => false, 'error' => $error->getMessage()];
     }
@@ -140,7 +142,7 @@ try {
     if (empty($status['ok'])) {
         echo '<p class="muted">' . catalog_h($status['error'] ?? 'Status unavailable.') . '</p></div>';
     } elseif (empty($status['request'])) {
-        echo '<p class="muted">No dependency request exists on this parent.</p></div>';
+        echo '<p class="muted">No policy-eligible dependency request exists on this parent.</p></div>';
     } else {
         $request = $status['request'];
         echo '<table><tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr><tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr><tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr><tr><th>Submitted</th><td>' . catalog_h($request['submitted_at'] ?? '') . '</td></tr><tr><th>Last updated</th><td>' . catalog_h($request['updated_at'] ?? '') . '</td></tr><tr><th>Base-game policy</th><td>' . catalog_h(federation_base_game_policy_label($db, $parent)) . '</td></tr></table></div>';
@@ -149,20 +151,22 @@ try {
             is_array($status['items'] ?? null) ? $status['items'] : [],
             static fn(mixed $item): bool => is_array($item)
         ));
+        if ($ignoreBaseGame) {
+            $allItems = array_values(array_filter($allItems, static fn(array $item): bool => empty($item['is_base_game'])));
+        }
         usort($allItems, static function (array $a, array $b): int {
             $dateCompare = strcmp((string)($b['updated_at'] ?? ''), (string)($a['updated_at'] ?? ''));
             return $dateCompare !== 0 ? $dateCompare : ((int)($b['id'] ?? 0) <=> (int)($a['id'] ?? 0));
         });
         $itemTotal = count($allItems);
-        $baseGameCount = count(array_filter($allItems, static fn(array $item): bool => !empty($item['is_base_game'])));
         $itemPages = max(1, (int)ceil($itemTotal / AD_PAGE_SIZE));
         $itemPage = min($itemPage, $itemPages);
         $pageItems = array_slice($allItems, ($itemPage - 1) * AD_PAGE_SIZE, AD_PAGE_SIZE);
 
         echo '<div class="card"><h2>Request items</h2>';
-        echo '<p>Showing <strong>' . count($pageItems) . '</strong> of <strong>' . $itemTotal . '</strong> dependency items. Base-game dependency exceptions: <strong>' . $baseGameCount . '</strong>.</p>';
+        echo '<p>Showing <strong>' . count($pageItems) . '</strong> of <strong>' . $itemTotal . '</strong> policy-eligible dependency items.</p>';
         if (!$pageItems) {
-            echo '<p class="muted">No request items were found.</p>';
+            echo '<p class="muted">No policy-eligible request items were found.</p>';
         } else {
             echo '<table><tr><th>Status</th><th>Still needed locally</th><th>Required package</th><th>Required object</th><th>Parent file</th><th>Size</th><th>Updated</th><th>Message</th></tr>';
             foreach ($pageItems as $item) {
@@ -171,7 +175,7 @@ try {
                     (string)($item['required_package'] ?? ''),
                     (string)($item['required_object_path'] ?? '')
                 );
-                $baseBadge = !empty($item['is_base_game']) ? ' <span class="pill amber">base-game dependency</span>' : '';
+                $baseBadge = !empty($item['is_base_game']) ? ' <span class="pill amber">base-game</span>' : '';
                 $parentFile = trim((string)($item['package_name'] ?? '') . ' / ' . (string)($item['original_name'] ?? ''), ' /');
                 echo '<tr><td>' . catalog_h($item['status'] ?? '') . '</td><td>' . ($stillNeeded ? '<span class="pill amber">yes</span>' : '<span class="muted">no</span>') . '</td><td class="mono">' . catalog_h($item['required_package'] ?? '') . $baseBadge . '</td><td class="mono path">' . catalog_h($item['required_object_path'] ?? '') . '</td><td>' . catalog_h($parentFile !== '' ? $parentFile : 'not available') . '</td><td class="nowrap">' . catalog_h(catalog_bytes((int)($item['file_size'] ?? 0))) . '</td><td class="nowrap">' . catalog_h($item['updated_at'] ?? '') . '</td><td class="path">' . catalog_h($item['status_message'] ?? '') . '</td></tr>';
             }
@@ -185,9 +189,10 @@ try {
         echo '</div>';
     }
 
+    $jobPolicySql = federation_visible_transfer_job_sql($db, 'j', $parent);
     $jobTotal = (int)(catalog_one(
         $db,
-        'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE direction="download_from_parent" AND peer_id=?',
+        'SELECT COUNT(*) c FROM ue_federation_transfer_jobs j WHERE j.direction="download_from_parent" AND j.peer_id=? AND ' . $jobPolicySql,
         [$peerId]
     )['c'] ?? 0);
     $jobPages = max(1, (int)ceil($jobTotal / AD_PAGE_SIZE));
@@ -198,14 +203,14 @@ try {
         'SELECT j.*, p.site_name peer_name
          FROM ue_federation_transfer_jobs j
          JOIN ue_federation_peers p ON p.id=j.peer_id
-         WHERE j.direction="download_from_parent" AND j.peer_id=?
+         WHERE j.direction="download_from_parent" AND j.peer_id=? AND ' . $jobPolicySql . '
          ORDER BY j.created_at DESC, j.id DESC
          LIMIT ' . AD_PAGE_SIZE . ' OFFSET ' . $jobOffset,
         [$peerId]
     );
-    echo '<div class="card"><h2>Download and import history</h2><p>Most recent jobs are shown first.</p>';
+    echo '<div class="card"><h2>Download and import history</h2><p>Most recent policy-visible jobs are shown first.</p>';
     if (!$jobs) {
-        echo '<p class="muted">No approved dependency downloads have been queued from this parent.</p>';
+        echo '<p class="muted">No policy-eligible approved dependency downloads have been queued from this parent.</p>';
     } else {
         echo '<table><tr><th>ID</th><th>Parent</th><th>Request item</th><th>Remote file</th><th>Status</th><th>Bytes</th><th>Message</th><th>Created</th></tr>';
         foreach ($jobs as $job) {

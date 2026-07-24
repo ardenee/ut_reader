@@ -19,7 +19,7 @@ try {
     catalog_head('Parent Pull');
     catalog_page_header(
         'Parent Pull From Children',
-        'Parent/master downloads do not require child approval. Files are selected from connected child inventories under the parent-controlled base-game policy.',
+        'Parent/master downloads do not require child approval. Files are selected from connected child inventories under the global parent-controlled base-game policy.',
         catalog_federation_links() + [
             'Child Inventories' => 'peer-inventory.php',
             'Run Transfer Queue' => 'transfer-run.php',
@@ -35,11 +35,12 @@ try {
     }
 
     echo '<div class="card"><h2>Select files from child inventory</h2>';
-    echo '<p>The parent may download child files that are not already present locally. ' . catalog_h(federation_base_game_policy_label($db)) . '</p>';
+    echo '<p>The parent may download child files that are not already present locally and remain visible under policy. ' . catalog_h(federation_base_game_policy_label($db)) . '</p>';
     echo '<p><a class="button" href="peer-inventory.php">Open Child Inventories</a></p>';
-    echo '<ul><li><strong>Parent Dependency Needs</strong>: files that satisfy current missing dependencies, including base-game dependency exceptions.</li><li><strong>Parent Needs</strong>: other absent files after applying the ordinary base-game policy.</li></ul>';
+    echo '<ul><li><strong>Parent Dependency Needs</strong>: policy-eligible files that satisfy current missing dependencies.</li><li><strong>Parent Needs</strong>: all other policy-eligible files absent from the parent.</li></ul>';
     echo '</div>';
 
+    $visibleJobSql = federation_visible_transfer_job_sql($db, 'j');
     $jobs = catalog_all(
         $db,
         'SELECT j.*, p.site_name peer_name, pf.package_name, pf.original_name, COALESCE(pf.is_base_game,0) is_base_game
@@ -52,14 +53,14 @@ try {
                 WHERE pf_latest.peer_id=j.peer_id
                   AND pf_latest.remote_file_id=j.remote_file_id
            )
-         WHERE j.direction="parent_pull_from_child"
+         WHERE j.direction="parent_pull_from_child" AND ' . $visibleJobSql . '
          ORDER BY j.created_at DESC, j.id DESC
          LIMIT 200'
     );
 
-    echo '<div class="card"><h2>Recent parent pull jobs</h2>';
+    echo '<div class="card"><h2>Recent policy-visible parent pull jobs</h2>';
     if (!$jobs) {
-        echo '<p class="muted">No parent pull jobs have been queued.</p>';
+        echo '<p class="muted">No policy-visible parent pull jobs have been queued.</p>';
     } else {
         echo '<table><tr><th>ID</th><th>Child</th><th>File</th><th>Status</th><th>Bytes</th><th>Message</th><th>Created</th></tr>';
         foreach ($jobs as $job) {

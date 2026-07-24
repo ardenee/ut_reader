@@ -30,11 +30,10 @@ try {
 
     $isBaseGame = base_game_file_is_protected($db, $file);
     $ignoreBaseGame = federation_policy_bool($payload['ignore_base_game_files'] ?? true, true);
-    $dependencyException = federation_policy_bool($payload['dependency_exception'] ?? false, false);
-    if ($isBaseGame && $ignoreBaseGame && !$dependencyException) {
+    if ($isBaseGame && $ignoreBaseGame) {
         fed_json_response([
             'ok' => false,
-            'error' => 'The parent policy ignores base-game files in ordinary federation pulls. This file may be transferred only when the signed request identifies a current missing-dependency exception.',
+            'error' => 'The parent policy excludes base-game files from all federation lists, requests and transfers.',
         ], 403);
     }
 
@@ -44,16 +43,13 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Stored file missing.'], 404);
     }
 
-    $event = $isBaseGame
-        ? ($dependencyException ? 'PARENT_PULL_BASE_GAME_DEPENDENCY' : 'PARENT_PULL_BASE_GAME_POLICY_ALLOWED')
-        : 'PARENT_PULL_DOWNLOAD';
     fed_log(
         $db,
         (int)$peer['id'],
         null,
         'INFO',
-        $event,
-        'Serving file ID ' . $fileId . ' to parent peer. ignore_base_game=' . ($ignoreBaseGame ? '1' : '0') . '; dependency_exception=' . ($dependencyException ? '1' : '0') . '.'
+        $isBaseGame ? 'PARENT_PULL_BASE_GAME_POLICY_ALLOWED' : 'PARENT_PULL_DOWNLOAD',
+        'Serving file ID ' . $fileId . ' to parent peer. ignore_base_game=' . ($ignoreBaseGame ? '1' : '0') . '.'
     );
 
     header('Content-Type: application/octet-stream');
@@ -64,7 +60,6 @@ try {
     header('X-UE-MD5: ' . (string)$file['md5']);
     header('X-UE-SHA1: ' . (string)$file['sha1']);
     header('X-UE-Base-Game: ' . ($isBaseGame ? '1' : '0'));
-    header('X-UE-Dependency-Exception: ' . ($dependencyException ? '1' : '0'));
     header('X-Content-Type-Options: nosniff');
     readfile($path);
     exit;

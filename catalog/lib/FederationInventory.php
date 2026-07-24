@@ -12,6 +12,7 @@ function federation_build_inventory_payload(PDO $db): array
 {
     base_game_ensure($db);
     $identity = fed_ensure_identity($db);
+    $ignoreBaseGame = federation_ignore_base_game_files($db);
     $files = catalog_all(
         $db,
         'SELECT f.*, g.name game_name, p.engine_key profile_engine,
@@ -20,7 +21,8 @@ function federation_build_inventory_payload(PDO $db): array
          JOIN ue_games g ON g.id=f.game_id
          LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
          LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
-         WHERE f.scan_status="verified"
+         WHERE f.scan_status="verified"'
+            . ($ignoreBaseGame ? ' AND bg.id IS NULL' : '') . '
          ORDER BY f.id'
     );
     $out = [];
@@ -52,6 +54,7 @@ function federation_build_inventory_payload(PDO $db): array
             : null,
         'generated_at' => date('c'),
         'file_count' => count($out),
+        'base_game_excluded' => $ignoreBaseGame,
         'files' => $out,
     ];
 }
@@ -102,7 +105,7 @@ function federation_inventory_local_game_id(PDO $db, array $file): ?int
         }
     }
 
-    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? '')));
+    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? ''));
     if ($engineKey !== '') {
         $game = catalog_one(
             $db,
@@ -165,10 +168,9 @@ function federation_inventory_row_values(PDO $db, int $peerId, array $file, stri
 }
 
 /**
- * Pulls the classified inventory from either paired side. Parent sites pull
+ * Pulls the policy-filtered inventory from either paired side. Parent sites pull
  * child inventories and child sites pull their parent inventory. Base-game rows
- * are retained internally so missing-dependency searches can use them; ordinary
- * federation views apply the parent-controlled ignore policy.
+ * are discarded when the effective parent policy says to ignore them.
  *
  * @return array<string,mixed>
  */
@@ -192,9 +194,11 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
     $seenAt = date('Y-m-d H:i:s');
     $afterFileId = 0;
     $received = 0;
+    $excluded = 0;
     $pages = 0;
     $complete = false;
     $policy = null;
+    $ignoreBaseGame = federation_ignore_base_game_files($db, (string)$peer['peer_role'] === 'parent' ? $peer : null);
     $upsert = $db->prepare(
         'INSERT INTO ue_federation_peer_files(
             peer_id,game_id,remote_game_name,remote_engine_key,remote_file_id,
@@ -227,6 +231,8 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
             $policy = $result['policy'];
             if ((string)$peer['peer_role'] === 'parent') {
                 federation_cache_parent_base_game_policy($db, $peerId, $policy);
+                $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=?', [$peerId]) ?: $peer;
+                $ignoreBaseGame = federation_ignore_base_game_files($db, $peer);
             }
         }
         $remoteSiteId = strtolower(trim((string)($result['site']['site_id'] ?? '')));
@@ -238,6 +244,10 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
         try {
             foreach ($result['files'] as $file) {
                 if (!is_array($file)) {
+                    continue;
+                }
+                if ($ignoreBaseGame && !empty($file['is_base_game'])) {
+                    $excluded++;
                     continue;
                 }
                 $upsert->execute(federation_inventory_row_values($db, $peerId, $file, $seenAt));
@@ -259,7 +269,9 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
         $afterFileId = $nextAfter;
     }
 
-    $delete = $db->prepare('DELETE FROM ue_federation_peer_files WHERE peer_id=? AND last_seen_at<>?');
+    $deleteSql = 'DELETE FROM ue_federation_peer_files WHERE peer_id=? AND (last_seen_at<>?'
+        . ($ignoreBaseGame ? ' OR COALESCE(is_base_game,0)=1' : '') . ')';
+    $delete = $db->prepare($deleteSql);
     $delete->execute([$peerId, $seenAt]);
     $removed = $delete->rowCount();
 
@@ -269,7 +281,7 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
         null,
         'INFO',
         'INVENTORY_SYNC_FROM_PEER',
-        'Role=' . (string)$peer['peer_role'] . '; received ' . $received . ' classified row(s) in ' . $pages . ' page(s); removed ' . $removed . ' stale row(s).'
+        'Role=' . (string)$peer['peer_role'] . '; received ' . $received . ' policy-visible row(s) in ' . $pages . ' page(s); excluded ' . $excluded . ' base-game row(s); removed ' . $removed . ' stale or excluded row(s).'
     );
     return [
         'ok' => true,
@@ -277,6 +289,7 @@ function federation_pull_inventory_from_peer(PDO $db, int $peerId): array
         'peer_role' => (string)$peer['peer_role'],
         'peer_name' => (string)$peer['site_name'],
         'received' => $received,
+        'base_game_excluded' => $excluded,
         'removed_stale' => $removed,
         'pages' => $pages,
         'policy' => $policy,
