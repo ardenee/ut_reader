@@ -59,7 +59,7 @@ final class CatalogBucketUploadQueue
         if ($stagedPath === '' || $size < 1 || $sha256 === '') {
             throw new \InvalidArgumentException('Durable redirect staging metadata is incomplete.');
         }
-        return $this->enqueue(
+        $result = $this->enqueue(
             [
                 'staged_path' => $stagedPath,
                 'source_kind' => 'incoming-file',
@@ -70,6 +70,10 @@ final class CatalogBucketUploadQueue
             $size,
             $userId
         );
+        if ($result['deduplicated']) {
+            (new CatalogIncomingFileStore($this->config))->delete($stagedPath);
+        }
+        return $result;
     }
 
     /**
