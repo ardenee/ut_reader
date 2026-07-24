@@ -12,9 +12,103 @@ function federation_policy_bool(mixed $value, bool $default = true): bool
     return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'on'], true);
 }
 
+/**
+ * Keep federation pages compatible when application files are updated before the
+ * latest migration has been applied. The normal migration remains authoritative;
+ * this only repairs the one policy setting, peer-file column and supporting index
+ * required by every base-game-aware federation query.
+ */
+function federation_base_game_policy_ensure_schema(PDO $db): void
+{
+    static $ready = [];
+    $connectionId = spl_object_id($db);
+    if (!empty($ready[$connectionId])) {
+        return;
+    }
+
+    $settingsTable = (int)$db->query(
+        'SELECT COUNT(*) FROM information_schema.tables '
+        . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_settings"'
+    )->fetchColumn();
+    $peerFilesTable = (int)$db->query(
+        'SELECT COUNT(*) FROM information_schema.tables '
+        . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files"'
+    )->fetchColumn();
+    if ($settingsTable === 0 || $peerFilesTable === 0) {
+        throw new RuntimeException('Federation database tables are incomplete. Run the pending catalog migrations.');
+    }
+
+    $db->prepare(
+        'INSERT INTO ue_federation_settings(setting_name,setting_value) VALUES("ignore_base_game_files","1") '
+        . 'ON DUPLICATE KEY UPDATE setting_value=setting_value'
+    )->execute();
+
+    $columnExists = static function () use ($db): bool {
+        return (int)$db->query(
+            'SELECT COUNT(*) FROM information_schema.columns '
+            . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files" AND column_name="is_base_game"'
+        )->fetchColumn() > 0;
+    };
+    if (!$columnExists()) {
+        try {
+            $db->exec(
+                'ALTER TABLE ue_federation_peer_files '
+                . 'ADD COLUMN is_base_game TINYINT(1) NOT NULL DEFAULT 0 AFTER package_guid'
+            );
+        } catch (Throwable $error) {
+            if (!$columnExists()) {
+                throw new RuntimeException(
+                    'The federation base-game policy column could not be created. Run migration 202607230001. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
+        }
+    }
+
+    $indexExists = static function () use ($db): bool {
+        return (int)$db->query(
+            'SELECT COUNT(*) FROM information_schema.statistics '
+            . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files" '
+            . 'AND index_name="idx_ue_federation_peer_files_base_game"'
+        )->fetchColumn() > 0;
+    };
+    if (!$indexExists()) {
+        try {
+            $db->exec(
+                'ALTER TABLE ue_federation_peer_files '
+                . 'ADD KEY idx_ue_federation_peer_files_base_game(peer_id,is_base_game)'
+            );
+        } catch (Throwable $error) {
+            if (!$indexExists()) {
+                throw new RuntimeException(
+                    'The federation base-game policy index could not be created. Run migration 202607230001. ' . $error->getMessage(),
+                    0,
+                    $error
+                );
+            }
+        }
+    }
+
+    $baseGameTable = (int)$db->query(
+        'SELECT COUNT(*) FROM information_schema.tables '
+        . 'WHERE table_schema=DATABASE() AND table_name="ue_base_game_files"'
+    )->fetchColumn();
+    if ($baseGameTable > 0) {
+        $db->exec(
+            'UPDATE ue_federation_peer_files pf '
+            . 'JOIN ue_base_game_files bg ON bg.game_id=pf.game_id AND bg.package_guid=pf.package_guid '
+            . 'SET pf.is_base_game=1 WHERE COALESCE(pf.is_base_game,0)=0'
+        );
+    }
+
+    $ready[$connectionId] = true;
+}
+
 /** @return array<string,mixed> */
 function federation_parent_base_game_policy(PDO $db): array
 {
+    federation_base_game_policy_ensure_schema($db);
     return [
         'ignore_base_game_files' => federation_policy_bool(fed_setting($db, 'ignore_base_game_files', '1'), true),
         'missing_dependency_exception' => false,
@@ -42,6 +136,7 @@ function federation_peer_permissions(array $peer): array
  */
 function federation_cache_parent_base_game_policy(PDO $db, int $peerId, array $policy): void
 {
+    federation_base_game_policy_ensure_schema($db);
     $peer = catalog_one($db, 'SELECT id,peer_role,permissions_json FROM ue_federation_peers WHERE id=?', [$peerId]);
     if (!$peer || (string)$peer['peer_role'] !== 'parent') {
         return;
@@ -63,6 +158,7 @@ function federation_cache_parent_base_game_policy(PDO $db, int $peerId, array $p
  */
 function federation_ignore_base_game_files(PDO $db, ?array $parentPeer = null): bool
 {
+    federation_base_game_policy_ensure_schema($db);
     $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     if ($role !== 'child') {
         return federation_policy_bool(fed_setting($db, 'ignore_base_game_files', '1'), true);
