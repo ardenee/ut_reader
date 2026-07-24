@@ -10,6 +10,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -42,8 +43,7 @@ function bucket_chunk_effective_bytes(array $config): int
         bucket_chunk_ini_bytes((string)ini_get('post_max_size')),
     ], static fn(int $limit): bool => $limit > 0);
     if ($phpLimits !== []) {
-        $safePhpBytes = max(1024 * 1024, min($phpLimits) - (512 * 1024));
-        $bytes = min($bytes, $safePhpBytes);
+        $bytes = min($bytes, max(1024 * 1024, min($phpLimits) - (512 * 1024)));
     }
     return max(1024 * 1024, $bytes);
 }
@@ -121,6 +121,29 @@ function bucket_chunk_short_error(Throwable $error): string
     return $message !== '' ? $message : 'Unknown chunked upload error';
 }
 
+/** @return array<string,mixed> */
+function bucket_chunk_start_redirect_worker(PDO $db, array $config, string $queueName): array
+{
+    $launcher = new CatalogDetachedWorker($config);
+    $before = $launcher->status($queueName, true);
+    $restart = null;
+
+    if (!empty($before['active']) && !empty($before['stale_code'])) {
+        $restart = (new CatalogDetachedWorkerStop($db, $config))->restartStaleQueue($queueName);
+        if (empty($restart['restarted'])) {
+            throw new RuntimeException(
+                'The Upload Bucket worker is running old code and could not be restarted automatically. '
+                . 'Open Background Jobs for this queue, stop the worker, then start queued.'
+            );
+        }
+    }
+
+    return [
+        'stale_restart' => $restart,
+        'launch' => $launcher->start($queueName, 10000),
+    ];
+}
+
 try {
     $application = catalog_api_application();
     catalog_api_require_admin(false);
@@ -146,14 +169,7 @@ try {
         if ($fileSize < 1) {
             JsonResponse::error('invalid_size', 'Chunked bucket upload file size must be greater than zero.', 400);
         }
-        $relativePath = trim((string)($_POST['relative_path'] ?? ''));
-        if ($relativePath === '') {
-            $relativePath = $originalName;
-        }
-
-        // CatalogChunkedUploadStore currently records a positive processing context.
-        // Bucket uploads use a neutral logical name/path and are never assigned to
-        // this internal game identifier.
+        $relativePath = trim((string)($_POST['relative_path'] ?? '')) ?: $originalName;
         $state = $store->initialize(
             $userId,
             (string)($_POST['client_key'] ?? ''),
@@ -197,12 +213,14 @@ try {
                 (int)($state['file_size'] ?? 0),
                 $userId
             );
+
             $worker = null;
             $workerError = '';
             try {
-                $worker = (new CatalogDetachedWorker($application->config))->start(
-                    $bucketQueue->queueName(),
-                    10000
+                $worker = bucket_chunk_start_redirect_worker(
+                    $application->db,
+                    $application->config,
+                    $bucketQueue->queueName()
                 );
             } catch (Throwable $error) {
                 $workerError = bucket_chunk_short_error($error);
@@ -212,9 +230,13 @@ try {
             $message = !empty($queued['deduplicated'])
                 ? 'This redirect archive is already queued or running as background job #' . $queued['job_id'] . '.'
                 : 'Redirect archive uploaded and queued for the shared CLI decompression process as job #' . $queued['job_id'] . '.';
+            if (!empty($worker['stale_restart']['restarted'])) {
+                $message .= ' The stale Upload Bucket worker was restarted automatically and its interrupted job was requeued.';
+            }
             if ($workerError !== '') {
                 $message .= ' The job remains queued, but the detached worker could not be started: ' . $workerError;
             }
+
             JsonResponse::send([
                 'ok' => true,
                 'upload' => $state,
