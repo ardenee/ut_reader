@@ -189,7 +189,8 @@ try {
         $submittedName = bucket_chunk_clean_name(basename(str_replace('\\', '/', $submittedRelativePath)));
 
         if (catalog_redirect_archive_is_supported_filename($submittedName)) {
-            $queued = (new CatalogBucketUploadQueue($application->db, $application->config))->enqueueRedirect(
+            $bucketQueue = new CatalogBucketUploadQueue($application->db, $application->config);
+            $queued = $bucketQueue->enqueueRedirect(
                 $uploadId,
                 $submittedName,
                 $submittedRelativePath,
@@ -200,7 +201,7 @@ try {
             $workerError = '';
             try {
                 $worker = (new CatalogDetachedWorker($application->config))->start(
-                    trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog',
+                    $bucketQueue->queueName(),
                     10000
                 );
             } catch (Throwable $error) {
