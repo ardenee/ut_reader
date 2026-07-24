@@ -22,6 +22,18 @@ staging_contract_expect(
     str_contains($bucketController, "data.append('relative_path', shownName)"),
     'Upload Bucket no longer preserves folder-relative identity context.'
 );
+staging_contract_expect(
+    str_contains($bucketController, "(string)(\$staged['status'] ?? '') === 'duplicate'"),
+    'Upload Bucket does not handle duplicate staging results separately.'
+);
+staging_contract_expect(
+    str_contains($bucketController, "'duplicates' => \$duplicates"),
+    'Upload Bucket does not report the duplicate count.'
+);
+staging_contract_expect(
+    str_contains($bucketController, 'Duplicate size+MD5 content already present in this bucket is reported and discarded.'),
+    'Upload Bucket does not explain duplicate disposal.'
+);
 
 staging_contract_expect(
     !is_file(__DIR__ . '/../lib/CatalogUnverifiedAutoIndex.php'),
@@ -107,6 +119,21 @@ staging_contract_expect(
 staging_contract_expect(
     str_contains($stager, 'Database staging failed:'),
     'The explicit staging service no longer records recoverable database failures beside retained files.'
+);
+staging_contract_expect(
+    str_contains($stager, 'md5_file($temporaryPath)')
+        && str_contains($stager, 'unverified_queue_game_id=0')
+        && str_contains($stager, "'status' => 'duplicate'"),
+    'The upload-bucket stager does not reject an existing size+MD5 identity.'
+);
+staging_contract_expect(
+    str_contains($stager, 'SELECT GET_LOCK(?, 30) acquired')
+        && str_contains($stager, 'SELECT RELEASE_LOCK(?) released'),
+    'Concurrent upload-bucket duplicate checks are not serialized.'
+);
+staging_contract_expect(
+    str_contains($stager, 'Uploaded copy discarded.'),
+    'Duplicate staging does not clearly report that the incoming copy was discarded.'
 );
 
 echo "Explicit unverified staging contract tests passed.\n";
