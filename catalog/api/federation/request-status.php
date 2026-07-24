@@ -38,7 +38,7 @@ try {
     $refresh = federation_refresh_request_matches($db, (int)$request['id']);
     $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=?', [(int)$request['id']]) ?: $request;
 
-    $items = catalog_all(
+    $rows = catalog_all(
         $db,
         'SELECT i.*, f.package_name local_package, f.original_name local_file,
                 f.file_size, f.md5, f.sha1, f.package_guid, f.game_id,
@@ -51,46 +51,55 @@ try {
         [(int)$request['id']]
     );
 
+    $items = [];
+    $ignoreBaseGame = federation_ignore_base_game_files($db);
+    foreach ($rows as $row) {
+        $isBaseGame = !empty($row['is_base_game']);
+        if (!$isBaseGame && str_contains(strtolower((string)($row['status_message'] ?? '')), 'base-game')) {
+            $isBaseGame = true;
+        }
+        if (!$isBaseGame && empty($row['local_file_id'])) {
+            $isBaseGame = federation_base_game_package_match($db, (string)$row['required_package']) !== null;
+        }
+        if ($ignoreBaseGame && $isBaseGame) {
+            continue;
+        }
+
+        $items[] = [
+            'id' => (int)$row['id'],
+            'status' => (string)$row['status'],
+            'required_package' => (string)$row['required_package'],
+            'required_object_path' => (string)$row['required_object_path'],
+            'local_file_id' => $row['local_file_id'] !== null ? (int)$row['local_file_id'] : null,
+            'package_name' => (string)($row['local_package'] ?? ''),
+            'original_name' => (string)($row['local_file'] ?? ''),
+            'file_size' => (int)($row['file_size'] ?? 0),
+            'md5' => (string)($row['md5'] ?? ''),
+            'sha1' => (string)($row['sha1'] ?? ''),
+            'package_guid' => (string)($row['package_guid'] ?? ''),
+            'is_base_game' => $isBaseGame,
+            'dependency_exception' => false,
+            'status_message' => (string)($row['status_message'] ?? ''),
+            'updated_at' => (string)($row['updated_at'] ?? ''),
+        ];
+    }
+
+    $visibleRequest = $items !== [] ? [
+        'id' => (int)$request['id'],
+        'status' => (string)$request['status'],
+        'request_hash' => (string)$request['request_hash'],
+        'title' => (string)$request['title'],
+        'submitted_at' => (string)$request['submitted_at'],
+        'approved_at' => (string)$request['approved_at'],
+        'updated_at' => (string)$request['updated_at'],
+    ] : null;
+
     fed_json_response([
         'ok' => true,
         'policy' => federation_parent_base_game_policy($db),
-        'request' => [
-            'id' => (int)$request['id'],
-            'status' => (string)$request['status'],
-            'request_hash' => (string)$request['request_hash'],
-            'title' => (string)$request['title'],
-            'submitted_at' => (string)$request['submitted_at'],
-            'approved_at' => (string)$request['approved_at'],
-            'updated_at' => (string)$request['updated_at'],
-        ],
+        'request' => $visibleRequest,
         'refresh' => $refresh,
-        'items' => array_map(static function (array $row) use ($db): array {
-            $isBaseGame = !empty($row['is_base_game']);
-            if (!$isBaseGame && str_contains(strtolower((string)($row['status_message'] ?? '')), 'base-game')) {
-                $isBaseGame = true;
-            }
-            if (!$isBaseGame && empty($row['local_file_id'])) {
-                $isBaseGame = federation_base_game_package_match($db, (string)$row['required_package']) !== null;
-            }
-
-            return [
-                'id' => (int)$row['id'],
-                'status' => (string)$row['status'],
-                'required_package' => (string)$row['required_package'],
-                'required_object_path' => (string)$row['required_object_path'],
-                'local_file_id' => $row['local_file_id'] !== null ? (int)$row['local_file_id'] : null,
-                'package_name' => (string)($row['local_package'] ?? ''),
-                'original_name' => (string)($row['local_file'] ?? ''),
-                'file_size' => (int)($row['file_size'] ?? 0),
-                'md5' => (string)($row['md5'] ?? ''),
-                'sha1' => (string)($row['sha1'] ?? ''),
-                'package_guid' => (string)($row['package_guid'] ?? ''),
-                'is_base_game' => $isBaseGame,
-                'dependency_exception' => $isBaseGame,
-                'status_message' => (string)($row['status_message'] ?? ''),
-                'updated_at' => (string)($row['updated_at'] ?? ''),
-            ];
-        }, $items),
+        'items' => $items,
     ]);
 } catch (Throwable $e) {
     fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
