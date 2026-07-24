@@ -105,7 +105,7 @@ function federation_inventory_local_game_id(PDO $db, array $file): ?int
         }
     }
 
-    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? ''));
+    $engineKey = strtoupper(trim((string)($file['engine_key'] ?? '')));
     if ($engineKey !== '') {
         $game = catalog_one(
             $db,
