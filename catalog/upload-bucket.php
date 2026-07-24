@@ -288,7 +288,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
         } catch (Throwable $error) {
             if (is_array($durable) && isset($durable['relative_path'])) {
                 try {
-                    $incoming->remove((string)$durable['relative_path']);
+                    $incoming->delete((string)$durable['relative_path']);
                 } catch (Throwable) {
                 }
             }
@@ -305,10 +305,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
     $workerError = '';
     if ($jobs !== []) {
         try {
-            (new CatalogDetachedWorker($config))->start(
-                trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog',
-                10000
-            );
+            (new CatalogDetachedWorker($config))->start($queue->queueName(), 10000);
         } catch (Throwable $error) {
             $workerError = upload_bucket_short_error($error);
             error_log('[UnrealDB bucket fallback worker launch] ' . $error->getMessage());
