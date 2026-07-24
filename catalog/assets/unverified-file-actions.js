@@ -107,6 +107,29 @@
         row.remove();
     }
 
+    function compactServerText(text) {
+        return String(text || '')
+            .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+            .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 700);
+    }
+
+    function invalidResponseMessage(response, text) {
+        var status = 'HTTP ' + (response.status || 0) + (response.statusText ? ' ' + response.statusText : '');
+        var body = compactServerText(text);
+        var message = status + '; the server returned a non-JSON progress response';
+        if ([502, 503, 504].indexOf(response.status) !== -1) {
+            message += '. The web server or proxy timed out; refresh before retrying because the import may already have completed';
+        } else if (response.status === 500) {
+            message += '. The server stopped while processing the file';
+        }
+        message += body ? ': ' + body : '; the response body was empty';
+        return message;
+    }
+
     async function postAction(form, action, entry) {
         var data = new FormData();
         var csrf = form.querySelector('input[name="csrf"]');
@@ -118,20 +141,30 @@
         if (target) data.append('target_game_id', target.value || '0');
         if (override && override.checked) data.append('allow_profile_override', '1');
 
-        var response = await fetch('unverified-files-action.php', {
-            method: 'POST',
-            body: data,
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-        });
+        var response;
+        try {
+            response = await fetch('unverified-files-action.php', {
+                method: 'POST',
+                body: data,
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+        } catch (error) {
+            throw new Error('The connection ended before the server returned a result. Refresh before retrying because the import may have completed. ' + (error.message || 'Network error.'));
+        }
+
         var text = await response.text();
         var payload;
         try {
             payload = JSON.parse(text);
         } catch (error) {
-            throw new Error('The server returned an invalid progress response.');
+            throw new Error(invalidResponseMessage(response, text));
         }
-        if (!response.ok || !payload.ok) throw new Error(payload.error || 'The selected action failed.');
+        if (!response.ok || !payload.ok) {
+            var message = payload.error || 'The selected action failed.';
+            if (payload.request_id) message += ' Reference: ' + payload.request_id + '.';
+            throw new Error(message);
+        }
         return payload;
     }
 
@@ -157,7 +190,7 @@
             try {
                 var result = await postAction(form, action, entry);
                 successes++;
-                appendLog(overlay, result.message || entry.name + ': complete', 'success');
+                appendLog(overlay, result.message || entry.name + ': complete', result.warning ? 'info' : 'success');
                 removeCompletedRow(entry);
             } catch (error) {
                 failures++;
