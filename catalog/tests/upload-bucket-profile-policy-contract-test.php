@@ -19,13 +19,17 @@ $endpoint = file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
 $javascript = file_get_contents($root . '/assets/upload-bucket.js');
 $support = file_get_contents($root . '/lib/CatalogSupport.php');
 $epicRedirect = file_get_contents($root . '/lib/CatalogEpicRedirect.php');
+$uz2Stream = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php');
 bucket_policy_expect(is_string($page), 'Upload bucket page is missing.');
 bucket_policy_expect(is_string($endpoint), 'Chunked upload bucket endpoint is missing.');
 bucket_policy_expect(is_string($javascript), 'Chunked upload bucket browser client is missing.');
 bucket_policy_expect(is_string($support), 'Catalog support bootstrap is missing.');
 bucket_policy_expect(is_string($epicRedirect), 'Strict Epic redirect dispatcher is missing.');
+bucket_policy_expect(is_string($uz2Stream), 'Streamed Epic UZ2 decoder is missing.');
 
 bucket_policy_expect(str_contains($page, "require_once __DIR__ . '/lib/GameProfiles.php';"), 'Upload bucket does not load game profile helpers.');
+bucket_policy_expect(str_contains($page, "require_once __DIR__ . '/lib/CatalogEpicRedirect.php';"), 'Upload bucket fallback does not load the strict Epic redirect dispatcher.');
+bucket_policy_expect(str_contains($page, 'catalog_epic_redirect_decompress_to_temp('), 'Upload bucket fallback does not use the strict Epic redirect dispatcher.');
 bucket_policy_expect(str_contains($page, 'function upload_bucket_allowed_extensions'), 'Upload bucket profile extension policy helper is missing.');
 bucket_policy_expect(str_contains($page, 'foreach (gp_all_profiles($db) as $profile)'), 'Upload bucket does not read active profiles.');
 bucket_policy_expect(str_contains($page, 'foreach (gp_extensions($profile) as $extension)'), 'Upload bucket does not use allowed_extensions_json through the profile helper.');
@@ -68,6 +72,11 @@ bucket_policy_expect(str_contains($epicRedirect, "\$signature !== 5678"), 'UE3 U
 bucket_policy_expect(str_contains($epicRedirect, "'decoder' => 'epic-uz3-zlib'"), 'UE3 UZ3 does not use the exact single-zlib decoder.');
 bucket_policy_expect(!str_contains($epicRedirect, 'ZLIB_ENCODING_GZIP'), 'Strict dispatcher includes a gzip fallback.');
 bucket_policy_expect(!str_contains($epicRedirect, 'ZLIB_ENCODING_RAW'), 'Strict dispatcher includes a raw-deflate fallback.');
+
+bucket_policy_expect(str_contains($uz2Stream, 'catalog_redirect_archive_inflate_epic_zlib('), 'UZ2 records do not try exact zlib.');
+bucket_policy_expect(str_contains($uz2Stream, "elseif (\$compressed === \$uncompressed)"), 'UZ2 records do not support the equal-size verbatim path.');
+bucket_policy_expect(strpos($uz2Stream, 'catalog_redirect_archive_inflate_epic_zlib(') < strpos($uz2Stream, "elseif (\$compressed === \$uncompressed)"), 'Equal-size records are treated as stored before exact zlib is tested.');
+bucket_policy_expect(str_contains($uz2Stream, 'offset='), 'UZ2 failures do not report the failing record offset.');
 
 bucket_policy_expect(str_contains($page, 'function upload_bucket_post_limit_error'), 'Fallback oversized POST detection is missing.');
 bucket_policy_expect(str_contains($page, "ini_get('post_max_size')"), 'Fallback handler does not inspect PHP post_max_size.');
