@@ -1,18 +1,25 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
+require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
-function fq_status_card(PDO $db, string $direction, string $title): void
+function fq_status_card(PDO $db, string $direction, string $title, string $visibleJobSql): void
 {
-    $counts = catalog_all($db, 'SELECT status, COUNT(*) c FROM ue_federation_transfer_jobs WHERE direction=? GROUP BY status ORDER BY status', [$direction]);
+    $counts = catalog_all(
+        $db,
+        'SELECT j.status, COUNT(*) c
+         FROM ue_federation_transfer_jobs j
+         WHERE j.direction=? AND ' . $visibleJobSql . '
+         GROUP BY j.status ORDER BY j.status',
+        [$direction]
+    );
     echo '<div class="stat"><h2>' . catalog_h($title) . '</h2>';
     if (!$counts) {
-        echo '<p class="muted">No jobs</p>';
+        echo '<p class="muted">No policy-visible jobs</p>';
     } else {
         foreach ($counts as $row) {
             echo '<p><span class="mono">' . catalog_h($row['status']) . '</span>: ' . (int)$row['c'] . '</p>';
@@ -23,26 +30,27 @@ function fq_status_card(PDO $db, string $direction, string $title): void
 
 function fq_job_action(PDO $db, int $jobId, string $action): string
 {
-    $job = catalog_one($db, 'SELECT * FROM ue_federation_transfer_jobs WHERE id=?', [$jobId]);
+    $visibleSql = federation_visible_transfer_job_sql($db, 'j');
+    $job = catalog_one($db, 'SELECT j.* FROM ue_federation_transfer_jobs j WHERE j.id=? AND ' . $visibleSql, [$jobId]);
     if (!$job) {
-        throw new RuntimeException('Job not found.');
+        throw new RuntimeException('Job not found or excluded by the current base-game policy.');
     }
 
     if ($action === 'retry') {
-        if (!in_array((string)$job['status'], ['failed','cancelled'], true)) {
+        if (!in_array((string)$job['status'], ['failed', 'cancelled'], true)) {
             throw new RuntimeException('Only failed/cancelled jobs can be retried.');
         }
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status="queued", bytes_done=0, incoming_path=NULL, downloaded_md5=NULL, downloaded_sha1=NULL, started_at=NULL, finished_at=NULL, last_error=NULL WHERE id=?')->execute([$jobId]);
-        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_RETRY', 'Job reset to queued.');
+        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_RETRY', 'Policy-visible job reset to queued.');
         return 'Job #' . $jobId . ' reset to queued.';
     }
 
     if ($action === 'cancel') {
-        if (!in_array((string)$job['status'], ['queued','failed'], true)) {
+        if (!in_array((string)$job['status'], ['queued', 'failed'], true)) {
             throw new RuntimeException('Only queued/failed jobs can be cancelled from this page.');
         }
         $db->prepare('UPDATE ue_federation_transfer_jobs SET status="cancelled", finished_at=NOW(), last_error="Cancelled by admin." WHERE id=?')->execute([$jobId]);
-        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_CANCEL', 'Job cancelled by admin.');
+        fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_CANCEL', 'Policy-visible job cancelled by admin.');
         return 'Job #' . $jobId . ' cancelled.';
     }
 
@@ -67,22 +75,36 @@ try {
         exit;
     }
 
+    $visibleJobSql = federation_visible_transfer_job_sql($db, 'j');
     catalog_head('Federation Queue');
     catalog_flash($_SESSION['fed_queue_flash'] ?? null);
     unset($_SESSION['fed_queue_flash']);
 
-    catalog_page_header('Federation Queue Overview', 'Review parent pulls, child downloads, downloaded files waiting for import, completed imports, failures, retries, and cancellations.', catalog_federation_links() + ['Run One Transfer' => 'transfer-run.php', 'Import One Download' => 'import-run.php', 'Parent Pull' => 'parent-pull.php', 'Approved Downloads' => 'approved-downloads.php']);
+    catalog_page_header(
+        'Federation Queue Overview',
+        'Review policy-visible parent pulls, child downloads, downloaded files waiting for import, completed imports, failures, retries, and cancellations.',
+        catalog_federation_links() + ['Run One Transfer' => 'transfer-run.php', 'Import One Download' => 'import-run.php', 'Parent Pull' => 'parent-pull.php', 'Approved Downloads' => 'approved-downloads.php']
+    );
+    echo '<div class="card"><p>' . catalog_h(federation_base_game_policy_label($db)) . '</p></div>';
 
     echo '<div class="card"><h2>Queue counts</h2><div class="grid">';
-    fq_status_card($db, 'parent_pull_from_child', 'Parent pulls from children');
-    fq_status_card($db, 'download_from_parent', 'Child downloads from parent');
-    fq_status_card($db, 'upload_to_parent', 'Uploads to parent');
+    fq_status_card($db, 'parent_pull_from_child', 'Parent pulls from children', $visibleJobSql);
+    fq_status_card($db, 'download_from_parent', 'Child downloads from parent', $visibleJobSql);
+    fq_status_card($db, 'upload_to_parent', 'Uploads to parent', $visibleJobSql);
     echo '</div></div>';
 
-    $waitingImport = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status="downloaded" AND j.incoming_path IS NOT NULL AND j.incoming_path<>"" ORDER BY j.finished_at ASC, j.id ASC LIMIT 100');
+    $waitingImport = catalog_all(
+        $db,
+        'SELECT j.*, p.site_name peer_name
+         FROM ue_federation_transfer_jobs j
+         JOIN ue_federation_peers p ON p.id=j.peer_id
+         WHERE j.status="downloaded" AND j.incoming_path IS NOT NULL AND j.incoming_path<>""
+           AND ' . $visibleJobSql . '
+         ORDER BY j.finished_at ASC, j.id ASC LIMIT 100'
+    );
     echo '<div class="card"><h2>Downloaded files waiting for import</h2>';
     if (!$waitingImport) {
-        echo '<p class="muted">No downloaded files are waiting for import.</p>';
+        echo '<p class="muted">No policy-visible downloaded files are waiting for import.</p>';
     } else {
         echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Remote item</th><th>Remote file</th><th>Incoming</th><th>Bytes</th><th>Hashes</th><th>Finished</th></tr>';
         foreach ($waitingImport as $job) {
@@ -92,10 +114,17 @@ try {
     }
     echo '</div>';
 
-    $active = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status IN ("queued","running") ORDER BY FIELD(j.status,"running","queued"), j.created_at ASC LIMIT 200');
+    $active = catalog_all(
+        $db,
+        'SELECT j.*, p.site_name peer_name
+         FROM ue_federation_transfer_jobs j
+         JOIN ue_federation_peers p ON p.id=j.peer_id
+         WHERE j.status IN ("queued","running") AND ' . $visibleJobSql . '
+         ORDER BY FIELD(j.status,"running","queued"), j.created_at ASC LIMIT 200'
+    );
     echo '<div class="card"><h2>Queued / running transfer jobs</h2>';
     if (!$active) {
-        echo '<p class="muted">No queued or running transfer jobs.</p>';
+        echo '<p class="muted">No policy-visible queued or running transfer jobs.</p>';
     } else {
         echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Remote item</th><th>Remote file</th><th>Progress</th><th>Speed limit</th><th>Created</th><th>Action</th></tr>';
         foreach ($active as $job) {
@@ -109,10 +138,17 @@ try {
     }
     echo '</div>';
 
-    $failed = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id WHERE j.status IN ("failed","cancelled") ORDER BY j.finished_at DESC, j.id DESC LIMIT 100');
+    $failed = catalog_all(
+        $db,
+        'SELECT j.*, p.site_name peer_name
+         FROM ue_federation_transfer_jobs j
+         JOIN ue_federation_peers p ON p.id=j.peer_id
+         WHERE j.status IN ("failed","cancelled") AND ' . $visibleJobSql . '
+         ORDER BY j.finished_at DESC, j.id DESC LIMIT 100'
+    );
     echo '<div class="card"><h2>Failed / cancelled jobs</h2>';
     if (!$failed) {
-        echo '<p class="muted">No failed or cancelled jobs.</p>';
+        echo '<p class="muted">No policy-visible failed or cancelled jobs.</p>';
     } else {
         echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Remote item</th><th>Remote file</th><th>Error</th><th>Finished</th><th>Action</th></tr>';
         foreach ($failed as $job) {
@@ -123,10 +159,17 @@ try {
     }
     echo '</div>';
 
-    $recent = catalog_all($db, 'SELECT j.*, p.site_name peer_name FROM ue_federation_transfer_jobs j JOIN ue_federation_peers p ON p.id=j.peer_id ORDER BY j.created_at DESC LIMIT 100');
+    $recent = catalog_all(
+        $db,
+        'SELECT j.*, p.site_name peer_name
+         FROM ue_federation_transfer_jobs j
+         JOIN ue_federation_peers p ON p.id=j.peer_id
+         WHERE ' . $visibleJobSql . '
+         ORDER BY j.created_at DESC LIMIT 100'
+    );
     echo '<div class="card"><h2>Recent jobs</h2>';
     if (!$recent) {
-        echo '<p class="muted">No federation transfer jobs yet.</p>';
+        echo '<p class="muted">No policy-visible federation transfer jobs yet.</p>';
     } else {
         echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Remote item</th><th>Remote file</th><th>Local file</th><th>Message</th><th>Created</th></tr>';
         foreach ($recent as $job) {
