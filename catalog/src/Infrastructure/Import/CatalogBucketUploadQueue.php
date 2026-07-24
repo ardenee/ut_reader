@@ -39,6 +39,7 @@ final class CatalogBucketUploadQueue
         return $this->enqueue(
             [
                 'upload_id' => $uploadId,
+                'staged_path' => 'chunk-upload:' . $uploadId,
                 'source_kind' => 'chunk-upload',
             ],
             'bucket-redirect:' . $uploadId,
