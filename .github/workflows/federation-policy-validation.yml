@@ -1,0 +1,31 @@
+name: Federation policy validation
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_mysql, curl, mbstring, openssl, sodium, zip
+          coverage: none
+      - name: PHP syntax
+        run: |
+          php_files=$(git diff --name-only --diff-filter=ACM origin/main...HEAD -- '*.php')
+          if [ -n "$php_files" ]; then
+            printf '%s\n' "$php_files" | xargs -n1 php -l
+          fi
+      - name: Base-game policy contract
+        run: php catalog/tests/federation-base-game-policy-contract-test.php
+      - name: Federation role workflow contract
+        run: php catalog/tests/federation-role-workflow-contract-test.php
+      - name: Federation inventory selection contract
+        run: php catalog/tests/federation-inventory-selection-contract-test.php
