@@ -175,6 +175,7 @@ try {
             'events' => $eventState['events'],
         ],
         'meta' => [
+            'limit' => $perPage,
             'page' => $page,
             'per_page' => $perPage,
             'total' => $total,
