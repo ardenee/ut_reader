@@ -5,10 +5,9 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 /**
  * Memory-bounded decoder for Epic's UE2 .uz2 format. Each record contains a
- * little-endian compressed size, uncompressed size, and then either an exact
- * zlib stream or a verbatim block when both sizes are equal. The latter is
- * used for data that does not benefit from compression, such as some already
- * compressed texture/audio blocks.
+ * little-endian compressed size, uncompressed size, and then normally an exact
+ * zlib stream. When exact zlib validation fails and both sizes are equal, the
+ * record is a verbatim block used for data that did not benefit from compression.
  */
 final class CatalogRedirectArchiveStream
 {
@@ -110,26 +109,26 @@ final class CatalogRedirectArchiveStream
                 $payload = self::readExact($input, $compressed);
                 $readBytes += $compressed;
 
-                if ($compressed === $uncompressed) {
-                    // Epic may store a block verbatim when compression would not
-                    // reduce it. Equal record sizes identify this case exactly.
+                // A valid zlib member takes precedence even when compressed and
+                // uncompressed lengths happen to be equal. Only an equal-size
+                // payload that is not valid exact zlib is treated as verbatim.
+                $decoded = \catalog_redirect_archive_inflate_epic_zlib(
+                    $payload,
+                    $limit - $writtenBytes,
+                    $uncompressed
+                );
+                if ($decoded !== null) {
+                    $block = (string)$decoded['data'];
+                    $encoding = 'zlib';
+                } elseif ($compressed === $uncompressed) {
                     $block = $payload;
                     $encoding = 'stored';
                 } else {
-                    $decoded = \catalog_redirect_archive_inflate_epic_zlib(
-                        $payload,
-                        $limit - $writtenBytes,
-                        $uncompressed
+                    throw new \RuntimeException(
+                        'Epic UZ2 zlib data failed exact validation at record ' . $recordNumber
+                        . ' (compressed=' . $compressed . ', uncompressed=' . $uncompressed
+                        . ', offset=' . $recordOffset . ') in ' . basename($sourceName) . '.'
                     );
-                    if ($decoded === null) {
-                        throw new \RuntimeException(
-                            'Epic UZ2 zlib data failed exact validation at record ' . $recordNumber
-                            . ' (compressed=' . $compressed . ', uncompressed=' . $uncompressed
-                            . ', offset=' . $recordOffset . ') in ' . basename($sourceName) . '.'
-                        );
-                    }
-                    $block = (string)$decoded['data'];
-                    $encoding = 'zlib';
                 }
 
                 if (strlen($block) !== $uncompressed) {
