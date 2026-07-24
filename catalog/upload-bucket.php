@@ -155,6 +155,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
     $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
     $ok = 0;
+    $duplicates = 0;
     $failed = 0;
     $messages = [];
     $temporaryPaths = $_FILES['files']['tmp_name'] ?? [];
@@ -226,6 +227,17 @@ function upload_bucket_handle_request(PDO $db, array $config): array
                 $sourceRelativePath
             );
 
+            if ((string)($staged['status'] ?? '') === 'duplicate') {
+                $duplicates++;
+                $messages[] = upload_bucket_result('duplicate', $workingName, (string)$staged['message'], [
+                    'file_size' => $storedSize,
+                    'file_size_text' => catalog_bytes($storedSize),
+                    'existing_file_id' => (int)$staged['file_id'],
+                    'md5' => (string)($staged['md5'] ?? ''),
+                ]);
+                continue;
+            }
+
             $ok++;
             $message = is_array($decompressed)
                 ? 'Decompressed redirect archive into upload bucket and indexed as unverified'
@@ -253,7 +265,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
         }
     }
 
-    return ['ok' => $ok, 'failed' => $failed, 'messages' => $messages];
+    return ['ok' => $ok, 'duplicates' => $duplicates, 'failed' => $failed, 'messages' => $messages];
 }
 
 try {
@@ -271,7 +283,7 @@ try {
             exit;
         }
 
-        $_SESSION['upload_bucket_flash'] = 'Bucket upload complete. Stored=' . $result['ok'] . ' Failed=' . $result['failed'] . '. ' . implode(' | ', array_map('upload_bucket_result_text', array_slice($result['messages'], 0, 12)));
+        $_SESSION['upload_bucket_flash'] = 'Bucket upload complete. Stored=' . $result['ok'] . ' Duplicate=' . $result['duplicates'] . ' Failed=' . $result['failed'] . '. ' . implode(' | ', array_map('upload_bucket_result_text', array_slice($result['messages'], 0, 12)));
         header('Location: upload-bucket.php');
         exit;
     }
@@ -294,6 +306,7 @@ try {
 .bucket-result-file { color:var(--text); }
 .bucket-result-message { color:var(--muted); white-space:normal; }
 .bucket-result-bucketed .bucket-result-badge, .bucket-result-decompressed .bucket-result-badge { color:#a7f3d0; }
+.bucket-result-duplicate .bucket-result-badge { color:#fde68a; }
 .bucket-result-failed .bucket-result-badge { color:#fecdd3; }
 .bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 </style>
@@ -301,7 +314,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Upload unsorted Unreal package files into a neutral bucket. You can select individual files or a whole folder/subfolders. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and only the real package is retained.',
+        'Upload unsorted Unreal package files into a neutral bucket. Files matching an existing bucket row by size and MD5 are discarded instead of creating another physical file or unverified database row. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and compared using the real package content.',
         ['Open Bucket Queue' => 'unverified-files.php?source_game_id=-1', 'All Queues' => 'unverified-files.php', 'Upload Files to Game' => 'profiled-upload.php']
     );
 
@@ -311,7 +324,7 @@ CSS;
     echo '<div class="stat"><h2 class="mono small">' . catalog_h($bucketDir) . '</h2><p>Physical bucket folder</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Files are uploaded one at a time to avoid browser/PHP file-count limits. Each retained file receives an unverified database row immediately, but no game assignment or dependencies.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Files are uploaded one at a time to avoid browser/PHP file-count limits. Each retained file receives an unverified database row immediately, but no game assignment or dependencies. Duplicate size+MD5 content already present in this bucket is reported and discarded.</p></div></div><div class="ui-section__body">';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
     echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
@@ -438,7 +451,7 @@ CSS;
                         message += '; empty response';
                     }
                     addLog({status: 'failed', file: shownName, message: message, file_size_text: fmtBytes(file.size)});
-                    resolve();
+                    resolve('failed');
                     return;
                 }
 
@@ -448,24 +461,26 @@ CSS;
                         message += ' | reference: ' + res.request_id;
                     }
                     addLog({status: 'failed', file: shownName, message: message, file_size_text: fmtBytes(file.size)});
+                    resolve('failed');
                 } else if (res.messages && res.messages.length) {
                     res.messages.forEach(addLog);
+                    resolve(String(res.messages[0].status || 'bucketed').toLowerCase());
                 } else {
                     addLog({status: 'bucketed', file: shownName, message: 'Stored and indexed in upload bucket', file_size_text: fmtBytes(file.size)});
+                    resolve('bucketed');
                 }
-                resolve();
             };
             xhr.onerror = function () {
                 addLog({status: 'failed', file: shownName, message: 'Upload connection error; HTTP status ' + (xhr.status || 0), file_size_text: fmtBytes(file.size)});
-                resolve();
+                resolve('failed');
             };
             xhr.ontimeout = function () {
                 addLog({status: 'failed', file: shownName, message: 'Upload timed out after 60 minutes', file_size_text: fmtBytes(file.size)});
-                resolve();
+                resolve('failed');
             };
             xhr.onabort = function () {
                 addLog({status: 'failed', file: shownName, message: 'Upload was aborted by the browser', file_size_text: fmtBytes(file.size)});
-                resolve();
+                resolve('failed');
             };
             xhr.send(data);
         });
@@ -482,10 +497,18 @@ CSS;
         button.disabled = true;
         progressBox.hidden = false;
         log.textContent = '';
+        const counts = {stored: 0, duplicate: 0, failed: 0};
         for (let i = 0; i < files.length; i++) {
-            await uploadOne(files[i], i + 1, files.length);
+            const status = await uploadOne(files[i], i + 1, files.length);
+            if (status === 'duplicate') {
+                counts.duplicate++;
+            } else if (status === 'failed') {
+                counts.failed++;
+            } else {
+                counts.stored++;
+            }
         }
-        progressLabel.textContent = 'Upload bucket batch complete.';
+        progressLabel.textContent = 'Upload bucket batch complete: stored ' + counts.stored + ', duplicate ' + counts.duplicate + ', failed ' + counts.failed + '.';
         progressCount.textContent = files.length + ' of ' + files.length + ' complete';
         progressBar.value = 100;
         button.disabled = false;
