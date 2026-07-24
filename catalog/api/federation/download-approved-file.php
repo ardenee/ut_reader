@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
 require_once __DIR__ . '/../../lib/BaseGameProtection.php';
+require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 
 try {
     $config = catalog_config();
@@ -40,10 +41,13 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Approved dependency request item not found'], 404);
     }
 
-    // This endpoint is intentionally narrower than ordinary federation download
-    // routes: an administrator-approved request item proves that the file is for
-    // a missing dependency. Therefore a protected base-game file is allowed here.
-    $isBaseGameDependency = base_game_file_is_protected($db, $item);
+    $isBaseGame = base_game_file_is_protected($db, $item);
+    if ($isBaseGame && federation_ignore_base_game_files($db)) {
+        fed_json_response([
+            'ok' => false,
+            'error' => 'The parent policy excludes base-game files from all federation requests and transfers.',
+        ], 403);
+    }
 
     $root = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
     $path = realpath(__DIR__ . '/../../' . (string)$item['relative_path']);
@@ -51,8 +55,8 @@ try {
         fed_json_response(['ok' => false, 'error' => 'Stored file missing'], 404);
     }
 
-    $message = $isBaseGameDependency
-        ? 'Child started approved base-game dependency download.'
+    $message = $isBaseGame
+        ? 'Child started approved base-game download while base-game federation participation is enabled.'
         : 'Child started approved dependency download.';
     $db->prepare('UPDATE ue_federation_request_items SET status="downloading", status_message=? WHERE id=?')->execute([$message, $itemId]);
     fed_log(
@@ -60,7 +64,7 @@ try {
         (int)$peer['id'],
         null,
         'INFO',
-        $isBaseGameDependency ? 'CHILD_APPROVED_BASE_GAME_DEPENDENCY_DOWNLOAD' : 'CHILD_APPROVED_DOWNLOAD',
+        $isBaseGame ? 'CHILD_APPROVED_BASE_GAME_DOWNLOAD' : 'CHILD_APPROVED_DOWNLOAD',
         'Serving approved request item ' . $itemId . '.'
     );
 
@@ -72,7 +76,7 @@ try {
     header('X-UE-Package-Guid: ' . (string)$item['package_guid']);
     header('X-UE-MD5: ' . (string)$item['md5']);
     header('X-UE-SHA1: ' . (string)$item['sha1']);
-    header('X-UE-Base-Game-Dependency: ' . ($isBaseGameDependency ? '1' : '0'));
+    header('X-UE-Base-Game: ' . ($isBaseGame ? '1' : '0'));
     header('X-Content-Type-Options: nosniff');
     readfile($path);
     exit;
