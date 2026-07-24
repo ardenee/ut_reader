@@ -182,9 +182,15 @@
     }
 
     tableBody.addEventListener('click', function (event) {
-        const button = event.target && event.target.closest ? event.target.closest('button[data-stop-job]') : null;
+        const button = event.target && event.target.closest ? event.target.closest('button') : null;
         if (!button) return;
-        const jobId = Math.max(0, parseInt(button.getAttribute('data-stop-job') || '0', 10) || 0);
+        const label = button.textContent.trim();
+        if (!button.hasAttribute('data-stop-job') && label !== 'Stop' && label !== 'Stop job') return;
+        const row = button.closest('tr');
+        const jobId = Math.max(
+            0,
+            parseInt(button.getAttribute('data-stop-job') || '0', 10) || jobIdForRow(row)
+        );
         if (!jobId) return;
         event.preventDefault();
         event.stopImmediatePropagation();
