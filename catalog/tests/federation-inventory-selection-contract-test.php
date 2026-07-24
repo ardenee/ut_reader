@@ -89,7 +89,11 @@ federation_inventory_selection_expect(!str_contains($content['approved_downloads
 
 federation_inventory_selection_expect(str_contains($content['availability_api'], 'federation_package_availability'), 'Availability endpoint bypasses the shared matcher.');
 federation_inventory_selection_expect(str_contains($content['availability_helper'], 'function federation_package_match'), 'Shared federation package matcher is missing.');
-federation_inventory_selection_expect(str_contains($content['availability_helper'], "'policy_excluded' => true"), 'Shared availability does not exclude base-game packages under policy.');
+federation_inventory_selection_expect(
+    str_contains($content['availability_helper'], "'policy_excluded' => \$policyExcluded")
+        && substr_count($content['availability_helper'], 'federation_package_unavailable_result(true, true,') >= 2,
+    'Shared availability does not exclude base-game packages under policy.'
+);
 federation_inventory_selection_expect(!str_contains($content['availability_helper'], "'dependency_exception' => true"), 'Shared availability still permits base-game dependency exceptions.');
 federation_inventory_selection_expect(str_contains($content['base_policy'], "ignore_base_game_files', '1"), 'The parent base-game policy does not default to enabled.');
 federation_inventory_selection_expect(str_contains($content['base_policy'], "'missing_dependency_exception' => false"), 'The parent base-game policy still enables dependency exceptions.');
