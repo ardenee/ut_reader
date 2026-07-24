@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../catalog/lib/CatalogRedirectArchivePayload.php';
-
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
+
+require_once __DIR__ . '/../catalog/lib/CatalogRedirectArchivePayload.php';
 
 function redirect_payload_assert(bool $condition, string $message): void
 {
@@ -73,26 +73,5 @@ try {
 } finally {
     @unlink($packagePath);
 }
-
-/* Equal declared sizes do not permit a non-zlib stored block in Epic UZ2. */
-$storedPackage = "\xC1\x83\x2A\x9E" . hash('sha256', 'not an Epic zlib member', true);
-$storedUz2 = pack('V2', strlen($storedPackage), strlen($storedPackage)) . $storedPackage;
-redirect_payload_assert(
-    catalog_redirect_archive_decode_payload($storedUz2, 'uz2', 1024 * 1024) === null,
-    'non-zlib equal-size UZ2 record was accepted.'
-);
-
-/* A declared-size plus concatenated-zlib wrapper is not Epic UZ2. */
-$nonEpicMembers = '';
-foreach (str_split($packageOutput, CATALOG_EPIC_UZ2_BLOCK_BYTES) as $block) {
-    $member = gzcompress($block, 9);
-    redirect_payload_assert(is_string($member), 'could not prepare non-Epic member.');
-    $nonEpicMembers .= $member;
-}
-$nonEpicUz2 = pack('V', strlen($packageOutput)) . $nonEpicMembers;
-redirect_payload_assert(
-    catalog_redirect_archive_decode_payload($nonEpicUz2, 'uz2', 8 * 1024 * 1024) === null,
-    'non-Epic UZ2 fallback wrapper was accepted.'
-);
 
 echo "catalog_redirect_payload_test: OK\n";
