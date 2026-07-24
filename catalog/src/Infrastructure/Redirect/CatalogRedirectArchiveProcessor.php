@@ -58,8 +58,7 @@ final class CatalogRedirectArchiveProcessor
                 $sourceName,
                 $this->outputLimit(),
                 $progress,
-                $requirePackageTag,
-                $this->timeoutSeconds()
+                $requirePackageTag
             );
         }
 
@@ -94,10 +93,5 @@ final class CatalogRedirectArchiveProcessor
         }
 
         return PHP_INT_SIZE >= 8 ? 2 * 1024 * 1024 * 1024 : PHP_INT_MAX;
-    }
-
-    public function timeoutSeconds(): int
-    {
-        return max(30, min((int)($this->config['redirect_decompress_timeout_seconds'] ?? 900), 86400));
     }
 }
