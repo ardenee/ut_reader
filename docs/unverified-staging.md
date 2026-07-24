@@ -19,6 +19,8 @@ Both modes use the same safe queue naming, metadata parsing, hashing and databas
 
 The Upload Bucket stages files directly. Folder uploads record the browser-relative path for later UE4/UE5 package identity analysis while physical storage uses a safe generated queue filename.
 
+Before a new bucket file is stored, the stager calculates its size and MD5 and compares it with database-backed Upload Bucket rows. The check is serialized with a database lock so simultaneous uploads of the same bytes cannot both be retained. When an identical size+MD5 file already exists physically in the bucket, the incoming temporary file is deleted and the existing unverified file ID is returned with `status=duplicate`. No second physical file, queue note, or `ue_files` row is created. Redirect archives are decompressed first, so the real package content is compared rather than the `.uz`, `.uz2`, or `.uz3` wrapper.
+
 ### Profiled Upload and PAK entries
 
 Profiled Upload routes rejected Unreal packages through the shared scanner failure primitive, including failed extracted PAK entries. The database row is created before the request finishes. Non-package failures are deleted rather than filling unverified storage.
@@ -59,6 +61,8 @@ Using a null `game_id` keeps staging rows outside normal game lists even if an o
 `unverified-files.php` shows identity duplicates, stored N/I/E counts, game-profile compatibility, the number of verified catalogue files requiring the package, and exact required-object/export matches.
 
 `unverified-file-details.php` shows the complete staged metadata and paginated stored package tables.
+
+Existing duplicates created by older versions can be removed through the unverified duplicate-cleanup action. New Upload Bucket requests are rejected before a second bucket copy or row is created.
 
 ## Promotion
 
