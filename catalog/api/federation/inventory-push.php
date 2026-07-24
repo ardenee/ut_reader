@@ -22,6 +22,14 @@ try {
     $peer = fed_require_signed_peer($db, $body);
     $payload = fed_decode_json_object($body);
 
+    if ((string)($peer['peer_role'] ?? '') === 'parent' && is_array($payload['policy'] ?? null)) {
+        federation_cache_parent_base_game_policy($db, (int)$peer['id'], $payload['policy']);
+    }
+    $ignoreBaseGame = federation_ignore_base_game_files(
+        $db,
+        (string)($peer['peer_role'] ?? '') === 'parent' ? $peer : null
+    );
+
     $files = $payload['files'] ?? [];
     if (!is_array($files)) {
         fed_json_response(['ok' => false, 'error' => 'Missing files array.'], 400);
@@ -33,8 +41,13 @@ try {
     }
 
     $normalized = [];
+    $excluded = 0;
     foreach ($files as $file) {
         if (!is_array($file)) {
+            continue;
+        }
+        if ($ignoreBaseGame && !empty($file['is_base_game'])) {
+            $excluded++;
             continue;
         }
 
@@ -77,6 +90,10 @@ try {
         ];
     }
 
+    if ($ignoreBaseGame) {
+        $db->prepare('DELETE FROM ue_federation_peer_files WHERE peer_id=? AND COALESCE(is_base_game,0)=1')->execute([(int)$peer['id']]);
+    }
+
     $sql = 'INSERT INTO ue_federation_peer_files(peer_id,game_id,remote_game_name,remote_engine_key,remote_file_id,package_name,original_name,extension,file_size,md5,sha1,package_guid,is_base_game,is_compressed,compression_flags,import_count,export_count,last_seen_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE game_id=VALUES(game_id), remote_game_name=VALUES(remote_game_name), remote_engine_key=VALUES(remote_engine_key), remote_file_id=VALUES(remote_file_id), package_name=VALUES(package_name), original_name=VALUES(original_name), extension=VALUES(extension), file_size=VALUES(file_size), md5=VALUES(md5), sha1=VALUES(sha1), package_guid=VALUES(package_guid), is_base_game=VALUES(is_base_game), is_compressed=VALUES(is_compressed), compression_flags=VALUES(compression_flags), import_count=VALUES(import_count), export_count=VALUES(export_count), last_seen_at=NOW()';
     $count = 0;
     foreach (array_chunk($normalized, 500) as $chunk) {
@@ -96,10 +113,11 @@ try {
         }
     }
 
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_PUSH', 'Received ' . $count . ' classified inventory row(s).');
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_PUSH', 'Received ' . $count . ' policy-visible inventory row(s); excluded ' . $excluded . ' base-game row(s).');
     fed_json_response([
         'ok' => true,
         'received' => $count,
+        'base_game_excluded' => $excluded,
         'policy' => strtolower(trim((string)fed_setting($db, 'site_role', 'standalone'))) === 'parent'
             ? federation_parent_base_game_policy($db)
             : null,
