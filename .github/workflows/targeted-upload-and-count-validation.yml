@@ -17,16 +17,22 @@ jobs:
           php-version: '8.3'
           extensions: pdo_mysql, curl, mbstring, openssl, sodium, zip, zlib
           coverage: none
-      - name: PHP syntax
-        run: |
-          php -l catalog/api/v1/upload-bucket-chunk.php
-          php -l catalog/api/v1/game-missing-counts.php
-          php -l catalog/games.php
-          php -l catalog/library.php
-          php -l catalog/lib/CatalogSupport.php
-          php -l catalog/tests/upload-bucket-profile-policy-contract-test.php
-          php -l catalog/tests/game-missing-counts-contract-test.php
-          php -l tests/catalog_redirect_payload_test.php
+      - name: Lint upload bucket endpoint
+        run: php -l catalog/api/v1/upload-bucket-chunk.php
+      - name: Lint missing count endpoint
+        run: php -l catalog/api/v1/game-missing-counts.php
+      - name: Lint games page
+        run: php -l catalog/games.php
+      - name: Lint library page
+        run: php -l catalog/library.php
+      - name: Lint support loader
+        run: php -l catalog/lib/CatalogSupport.php
+      - name: Lint upload bucket contract
+        run: php -l catalog/tests/upload-bucket-profile-policy-contract-test.php
+      - name: Lint game count contract
+        run: php -l catalog/tests/game-missing-counts-contract-test.php
+      - name: Lint redirect payload regression
+        run: php -l tests/catalog_redirect_payload_test.php
       - name: JavaScript syntax
         run: node --check catalog/assets/game-manager-missing-counts.js
       - name: Redirect archive regression tests
