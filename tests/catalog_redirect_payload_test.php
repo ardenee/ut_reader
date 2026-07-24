@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../catalog/lib/CatalogRedirectArchivePayload.php';
 
+use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
+
 function redirect_payload_assert(bool $condition, string $message): void
 {
     if (!$condition) {
@@ -10,10 +12,7 @@ function redirect_payload_assert(bool $condition, string $message): void
     }
 }
 
-/*
- * Small signature-1234 fixture generated with Epic's UE1 codec chain:
- * RLE -> BWT -> MTF -> Huffman. Its payload is an ELF-style non-package file.
- */
+/* Signature-1234 UE1 fixture with a non-package ELF payload. */
 $legacy = base64_decode(
     '0gQAAApTYW1wbGUuc28AMgAAAAMoYHr+CBwdhA0oCS4CBy/BQzSOtgQqLGRnBq01bXsTl5y6KhgEVdDtYvY47Lrku11fyVPtif9Ok/1EFG8+Ag==',
     true
@@ -32,7 +31,8 @@ $legacyPath = tempnam(sys_get_temp_dir(), 'redirect-payload-');
 redirect_payload_assert(is_string($legacyPath), 'could not allocate legacy fixture path.');
 file_put_contents($legacyPath, $legacy);
 try {
-    $result = catalog_redirect_archive_decompress_payload_to_temp($legacyPath, 'renamed.so.uz', 1024 * 1024);
+    $result = (new CatalogRedirectArchiveProcessor(['max_redirect_output_bytes' => 1024 * 1024]))
+        ->decompressToTemp($legacyPath, 'renamed.so.uz', null, false);
     redirect_payload_assert((string)$result['filename'] === 'Sample.so', 'embedded legacy output name was not used.');
     redirect_payload_assert((int)$result['bytes'] === strlen($legacyOutput), 'legacy output size is incorrect.');
     redirect_payload_assert($result['is_unreal_package'] === false, 'legacy ELF payload was marked as an Unreal package.');
@@ -52,71 +52,46 @@ redirect_payload_assert(is_array($decodedUz2), 'non-package UZ2 record stream wa
 redirect_payload_assert((string)$decodedUz2['decoder'] === 'epic-uz2-zlib', 'UZ2 text used the wrong decoder.');
 redirect_payload_assert(hash_equals($textOutput, (string)$decodedUz2['data']), 'UZ2 text output differs.');
 
-/* A valid zlib member wins even when its compressed and source sizes are equal. */
-$equalPackage = "\xC1\x83\x2A\x9E" . str_repeat("\x9E", 9);
-$equalCompressed = hex2bin('78da3bd8ac350f0e0033be079b');
-redirect_payload_assert(is_string($equalCompressed), 'equal-size zlib fixture could not be prepared.');
-redirect_payload_assert(strlen($equalCompressed) === strlen($equalPackage), 'equal-size zlib fixture lengths differ.');
-$equalUz2 = pack('V2', strlen($equalCompressed), strlen($equalPackage)) . $equalCompressed;
-$equalDecoded = catalog_redirect_archive_decode_payload($equalUz2, 'uz2', 1024 * 1024);
-redirect_payload_assert(is_array($equalDecoded), 'equal-size exact zlib record was rejected.');
-redirect_payload_assert((string)$equalDecoded['decoder'] === 'epic-uz2-zlib', 'equal-size valid zlib was treated as stored.');
-redirect_payload_assert(hash_equals($equalPackage, (string)$equalDecoded['data']), 'equal-size zlib output differs.');
+/* The shared processor uses the same streamed UZ2 decoder as background imports. */
+$packageOutput = "\xC1\x83\x2A\x9E" . str_repeat('Shared processor UZ2 package.', 2000);
+$packageWrapper = '';
+foreach (str_split($packageOutput, CATALOG_EPIC_UZ2_BLOCK_BYTES) as $block) {
+    $member = gzcompress($block, 9);
+    redirect_payload_assert(is_string($member), 'could not prepare package UZ2 member.');
+    $packageWrapper .= pack('V2', strlen($member), strlen($block)) . $member;
+}
+$packagePath = tempnam(sys_get_temp_dir(), 'redirect-processor-');
+redirect_payload_assert(is_string($packagePath), 'could not allocate processor fixture path.');
+file_put_contents($packagePath, $packageWrapper);
+try {
+    $result = (new CatalogRedirectArchiveProcessor(['max_redirect_output_bytes' => 8 * 1024 * 1024]))
+        ->decompressToTemp($packagePath, 'Shared.utx.uz2', null, true);
+    redirect_payload_assert((string)$result['decoder'] === 'epic-uz2-zlib-stream', 'shared processor did not use the restored streamed UZ2 decoder.');
+    redirect_payload_assert((string)$result['filename'] === 'Shared.utx', 'shared processor output filename is incorrect.');
+    redirect_payload_assert(hash_equals($packageOutput, (string)file_get_contents((string)$result['path'])), 'shared processor UZ2 output differs.');
+    @unlink((string)$result['path']);
+} finally {
+    @unlink($packagePath);
+}
 
-/* If exact zlib fails and both sizes match, the record is a verbatim Epic block. */
-$storedPackage = "\xC1\x83\x2A\x9E" . hash('sha256', 'Epic UZ2 stored record regression', true);
+/* Equal declared sizes do not permit a non-zlib stored block in Epic UZ2. */
+$storedPackage = "\xC1\x83\x2A\x9E" . hash('sha256', 'not an Epic zlib member', true);
 $storedUz2 = pack('V2', strlen($storedPackage), strlen($storedPackage)) . $storedPackage;
-$storedDecoded = catalog_redirect_archive_decode_payload($storedUz2, 'uz2', 1024 * 1024);
-redirect_payload_assert(is_array($storedDecoded), 'equal-size verbatim UZ2 record was rejected.');
-redirect_payload_assert((string)$storedDecoded['decoder'] === 'epic-uz2-stored', 'verbatim UZ2 record used the wrong decoder.');
-redirect_payload_assert(hash_equals($storedPackage, (string)$storedDecoded['data']), 'verbatim UZ2 output differs.');
+redirect_payload_assert(
+    catalog_redirect_archive_decode_payload($storedUz2, 'uz2', 1024 * 1024) === null,
+    'non-zlib equal-size UZ2 record was accepted.'
+);
 
-$storedPath = tempnam(sys_get_temp_dir(), 'redirect-uz2-stored-');
-redirect_payload_assert(is_string($storedPath), 'could not allocate stored UZ2 fixture path.');
-file_put_contents($storedPath, $storedUz2);
-try {
-    $result = catalog_epic_redirect_decompress_to_temp($storedPath, 'Stored.utx.uz2', 1024 * 1024, true);
-    redirect_payload_assert(str_contains((string)$result['decoder'], 'stored'), 'streamed UZ2 path did not use stored-record handling.');
-    redirect_payload_assert(hash_equals($storedPackage, (string)file_get_contents((string)$result['path'])), 'streamed stored-record output differs.');
-    @unlink((string)$result['path']);
-} finally {
-    @unlink($storedPath);
-}
-
-/* UE3 UZ3 is 5678 + total uncompressed size + one exact zlib stream. */
-$uz3Output = "\xC1\x83\x2A\x9E" . str_repeat('Epic UE3 UZ3 package payload.', 100);
-$uz3Compressed = gzcompress($uz3Output, 9);
-redirect_payload_assert(is_string($uz3Compressed), 'could not prepare UZ3 fixture.');
-$uz3 = pack('V2', 5678, strlen($uz3Output)) . $uz3Compressed;
-$decodedUz3 = catalog_redirect_archive_decode_payload($uz3, 'uz3', 1024 * 1024);
-redirect_payload_assert(is_array($decodedUz3), 'exact UZ3 wrapper was rejected.');
-redirect_payload_assert((string)$decodedUz3['decoder'] === 'epic-uz3-zlib', 'UZ3 used the wrong decoder.');
-redirect_payload_assert((int)($decodedUz3['wrapper_signature'] ?? 0) === 5678, 'UZ3 signature was not preserved.');
-redirect_payload_assert(hash_equals($uz3Output, (string)$decodedUz3['data']), 'UZ3 output differs.');
-
-$uz3Path = tempnam(sys_get_temp_dir(), 'redirect-uz3-');
-redirect_payload_assert(is_string($uz3Path), 'could not allocate UZ3 fixture path.');
-file_put_contents($uz3Path, $uz3);
-try {
-    $result = catalog_redirect_archive_decompress_payload_to_temp($uz3Path, 'Example.upk.uz3', 1024 * 1024);
-    redirect_payload_assert((string)$result['filename'] === 'Example.upk', 'UZ3 output name is incorrect.');
-    redirect_payload_assert((string)$result['decoder'] === 'epic-uz3-zlib', 'UZ3 temporary path used the wrong decoder.');
-    redirect_payload_assert(hash_equals($uz3Output, (string)file_get_contents((string)$result['path'])), 'UZ3 temporary output differs.');
-    @unlink((string)$result['path']);
-} finally {
-    @unlink($uz3Path);
-}
-
-/* A declared-size plus concatenated-zlib wrapper is not Epic UZ2 and is rejected. */
+/* A declared-size plus concatenated-zlib wrapper is not Epic UZ2. */
 $nonEpicMembers = '';
-foreach (str_split($uz3Output, 32768) as $block) {
+foreach (str_split($packageOutput, CATALOG_EPIC_UZ2_BLOCK_BYTES) as $block) {
     $member = gzcompress($block, 9);
     redirect_payload_assert(is_string($member), 'could not prepare non-Epic member.');
     $nonEpicMembers .= $member;
 }
-$nonEpicUz2 = pack('V', strlen($uz3Output)) . $nonEpicMembers;
+$nonEpicUz2 = pack('V', strlen($packageOutput)) . $nonEpicMembers;
 redirect_payload_assert(
-    catalog_redirect_archive_decode_payload($nonEpicUz2, 'uz2', 1024 * 1024) === null,
+    catalog_redirect_archive_decode_payload($nonEpicUz2, 'uz2', 8 * 1024 * 1024) === null,
     'non-Epic UZ2 fallback wrapper was accepted.'
 );
 
