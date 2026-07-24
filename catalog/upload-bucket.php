@@ -7,6 +7,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
+require_once __DIR__ . '/lib/CatalogEpicRedirect.php';
 require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
@@ -214,9 +215,14 @@ function upload_bucket_handle_request(PDO $db, array $config): array
                 throw new RuntimeException('The uploaded file is empty.');
             }
             if (catalog_redirect_archive_is_supported_filename($submittedName)) {
-                $decompressed = catalog_redirect_archive_decompress_to_temp($workingTmp, $submittedName);
-                $workingTmp = $decompressed['path'];
-                $workingName = catalog_clean_unreal_filename($decompressed['filename']);
+                $decompressed = catalog_epic_redirect_decompress_to_temp(
+                    $workingTmp,
+                    $submittedName,
+                    PHP_INT_MAX,
+                    true
+                );
+                $workingTmp = (string)$decompressed['path'];
+                $workingName = catalog_clean_unreal_filename((string)$decompressed['filename']);
                 if (is_string($tmp) && is_file($tmp)) {
                     @unlink($tmp);
                 }
@@ -236,7 +242,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
 
             $cleanNote = $submittedName !== $workingName ? ' Original browser filename was: ' . basename($submittedName) . '.' : '';
             $redirectNote = is_array($decompressed)
-                ? ' Redirect archive .' . $decompressed['source_extension'] . ' was decompressed before storage; compressed wrapper was not retained.'
+                ? ' Redirect archive .' . $decompressed['source_extension'] . ' was decompressed before storage; compressed wrapper was not retained. Decoder: ' . $decompressed['decoder'] . '.'
                 : '';
             $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.' . $redirectNote . $cleanNote;
             $staged = $stager->stageBucketUpload(
@@ -260,7 +266,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
 
             $ok++;
             $message = is_array($decompressed)
-                ? 'Decompressed redirect archive into upload bucket and indexed as unverified'
+                ? 'Decompressed redirect archive into upload bucket and indexed as unverified using ' . $decompressed['decoder']
                 : 'Stored in upload bucket and indexed as unverified';
             if ($staged['parse_error'] !== null) {
                 $message .= '; package tables could not be read: ' . upload_bucket_short_error(new RuntimeException((string)$staged['parse_error']));
