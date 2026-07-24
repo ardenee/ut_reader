@@ -1,0 +1,138 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/CatalogRedirectArchive.php';
+require_once __DIR__ . '/../src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php';
+
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogRedirectArchiveStream;
+
+/**
+ * Strict, extension-aware Unreal redirect decompression.
+ *
+ * .uz  (UE1): 1234 header + embedded filename + Epic FCodec chain.
+ * .uz2 (UE2): repeated LE compressed-size/uncompressed-size/zlib records.
+ * .uz3 (UE3): LE 5678 tag + LE total output size + one zlib stream.
+ *
+ * No gzip, raw-deflate, stored-record, byte-order, or record-order fallbacks are
+ * used here. A wrapper must match the format selected by its own extension.
+ *
+ * @return array{
+ *   path:string,
+ *   filename:string,
+ *   bytes:int,
+ *   compressed_bytes:int,
+ *   source_extension:string,
+ *   decoder:string,
+ *   chunks:int,
+ *   expected_bytes:int,
+ *   wrapper_signature?:int,
+ *   is_unreal_package:bool
+ * }
+ */
+function catalog_epic_redirect_decompress_to_temp(
+    string $sourcePath,
+    string $sourceName,
+    int $maxOutputBytes = 0,
+    bool $requirePackageTag = true
+): array {
+    $extension = catalog_redirect_archive_extension($sourceName);
+    if ($extension === '') {
+        throw new RuntimeException('Not an Unreal redirect compressed file: ' . basename($sourceName));
+    }
+    if (!is_file($sourcePath)) {
+        throw new RuntimeException('Redirect compressed source file is missing.');
+    }
+
+    $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
+    if ($extension === 'uz2') {
+        return CatalogRedirectArchiveStream::decompressUz2(
+            $sourcePath,
+            $sourceName,
+            $limit,
+            null,
+            $requirePackageTag
+        );
+    }
+
+    $archive = @file_get_contents($sourcePath);
+    if (!is_string($archive) || $archive === '') {
+        throw new RuntimeException('Could not read redirect compressed file: ' . basename($sourceName));
+    }
+
+    if ($extension === 'uz') {
+        $decoded = catalog_legacy_uz_decode($archive, $limit, 1234);
+        if (!is_array($decoded)) {
+            throw new RuntimeException('Invalid Epic UE1 UZ 1234/FCodec archive: ' . basename($sourceName));
+        }
+        $outputName = trim((string)($decoded['embedded_filename'] ?? ''));
+        if ($outputName === '') {
+            $outputName = catalog_redirect_archive_output_name($sourceName);
+        } else {
+            $outputName = catalog_clean_unreal_filename(basename(str_replace('\\', '/', $outputName)));
+        }
+    } else {
+        $decoded = catalog_epic_uz3_decode($archive, $limit);
+        if (!is_array($decoded)) {
+            throw new RuntimeException('Invalid Epic UE3 UZ3 5678/zlib archive: ' . basename($sourceName));
+        }
+        $outputName = catalog_redirect_archive_output_name($sourceName);
+    }
+
+    $output = (string)$decoded['data'];
+    $isPackage = catalog_redirect_archive_has_package_tag($output);
+    if ($requirePackageTag && !$isPackage) {
+        throw new RuntimeException('Redirect archive did not contain an Unreal package: ' . basename($sourceName));
+    }
+
+    $temporary = tempnam(dirname($sourcePath), '.ue_redirect_');
+    if ($temporary === false || @file_put_contents($temporary, $output) !== strlen($output)) {
+        if (is_string($temporary)) {
+            @unlink($temporary);
+        }
+        throw new RuntimeException('Could not write decompressed redirect file in catalog staging.');
+    }
+
+    $result = [
+        'path' => $temporary,
+        'filename' => $outputName,
+        'bytes' => strlen($output),
+        'compressed_bytes' => strlen($archive),
+        'source_extension' => $extension,
+        'decoder' => (string)$decoded['decoder'],
+        'chunks' => (int)$decoded['chunks'],
+        'expected_bytes' => (int)$decoded['expected_bytes'],
+        'is_unreal_package' => $isPackage,
+    ];
+    if (isset($decoded['wrapper_signature'])) {
+        $result['wrapper_signature'] = (int)$decoded['wrapper_signature'];
+    }
+    return $result;
+}
+
+/** @return array{data:string,decoder:string,chunks:int,expected_bytes:int,wrapper_signature:int}|null */
+function catalog_epic_uz3_decode(string $archive, int $limit): ?array
+{
+    if (strlen($archive) <= 8) {
+        return null;
+    }
+
+    $signature = catalog_redirect_archive_read_u32($archive, 0, 'le');
+    $expected = catalog_redirect_archive_read_u32($archive, 4, 'le');
+    if ($signature !== 5678 || $expected <= 0 || $expected > $limit) {
+        return null;
+    }
+
+    $payload = substr($archive, 8);
+    $decoded = catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expected);
+    if ($decoded === null) {
+        return null;
+    }
+
+    return [
+        'data' => (string)$decoded['data'],
+        'decoder' => 'epic-uz3-zlib',
+        'chunks' => 1,
+        'expected_bytes' => $expected,
+        'wrapper_signature' => 5678,
+    ];
+}
