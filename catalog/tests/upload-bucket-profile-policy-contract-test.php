@@ -47,7 +47,10 @@ bucket_policy_expect(str_contains($endpoint, "catalog_api_require_csrf('upload_b
 bucket_policy_expect(str_contains($endpoint, "['max_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint still applies the normal upload size cap.');
 bucket_policy_expect(str_contains($endpoint, "['max_container_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint still applies the container size cap.');
 bucket_policy_expect(str_contains($endpoint, 'stageBucketUpload('), 'Completed chunks are not passed through duplicate-safe bucket staging.');
-bucket_policy_expect(str_contains($endpoint, 'catalog_redirect_archive_decompress_to_temp'), 'Chunked redirect archives are not decompressed before bucket staging.');
+bucket_policy_expect(str_contains($endpoint, "CatalogRedirectArchivePayload.php"), 'Chunked redirect archives do not load the multi-format payload decoder.');
+bucket_policy_expect(str_contains($endpoint, 'catalog_redirect_archive_decompress_payload_to_temp'), 'Chunked redirect archives do not use the compatible decoder chain.');
+bucket_policy_expect(!str_contains($endpoint, 'catalog_redirect_archive_decompress_to_temp($workingPath'), 'Chunked UZ2 uploads still use the strict package-only decoder path.');
+bucket_policy_expect(str_contains($endpoint, "empty($decompressed['is_unreal_package'])"), 'Decompressed bucket uploads do not verify Unreal package magic.');
 
 bucket_policy_expect(str_contains($page, 'function upload_bucket_post_limit_error'), 'Fallback oversized POST detection is missing.');
 bucket_policy_expect(str_contains($page, "ini_get('post_max_size')"), 'Fallback handler does not inspect PHP post_max_size.');
