@@ -14,6 +14,10 @@
     const jobs = new Map();
     let reading = false;
 
+    function sleep(milliseconds) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+    }
+
     function utcTimestamp(value) {
         const text = String(value || '').trim();
         if (!text) return 0;
@@ -145,6 +149,22 @@
         }
     }
 
+    async function launchQueueAfterStop() {
+        let lastBody = null;
+        for (let attempt = 0; attempt < 60; attempt++) {
+            lastBody = await jsonRequest(runUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+                body: JSON.stringify({queue: queue, mode: 'drain'})
+            });
+            const data = lastBody && lastBody.data ? lastBody.data : {};
+            if (data.started !== false) return {started: true, body: lastBody};
+            await sleep(500);
+        }
+        return {started: false, body: lastBody};
+    }
+
     async function stopJobAndContinue(jobId, button) {
         button.disabled = true;
         if (message) message.textContent = 'Stopping job #' + jobId + ' and continuing the queue...';
@@ -161,17 +181,11 @@
                 })
             });
 
-            const runBody = await jsonRequest(runUrl, {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
-                body: JSON.stringify({queue: queue, mode: 'drain'})
-            });
-            const data = runBody && runBody.data ? runBody.data : {};
+            const continuation = await launchQueueAfterStop();
             if (message) {
-                message.textContent = data.started === false
-                    ? 'Job #' + jobId + ' was stopped. The active worker will continue the queue.'
-                    : 'Job #' + jobId + ' was stopped. A worker was started for the next queued job.';
+                message.textContent = continuation.started
+                    ? 'Job #' + jobId + ' was stopped. A worker was started for the next queued job.'
+                    : 'Job #' + jobId + ' was stopped, but the previous worker is still shutting down. Press Start queued if it remains inactive.';
             }
         } catch (error) {
             if (message) message.textContent = error.message || 'Could not stop the job and continue the queue.';
