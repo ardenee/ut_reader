@@ -2,11 +2,12 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogRedirectArchive.php';
+require_once __DIR__ . '/CatalogEpicRedirect.php';
 
 /**
- * Decode exact, signed Unreal redirect formats without assuming the payload is
- * an Unreal package. Redirect servers also distribute text files, native
- * libraries and other game support files.
+ * Decode the signed UE1 native FCodec wrapper without requiring package magic.
+ * Signature 5678 is retained only as the historical alternate UE1 FCodec form;
+ * it is not the UE3 .uz3 format.
  *
  * @return array{
  *   data:string,
@@ -46,8 +47,8 @@ function catalog_redirect_archive_legacy_payload(string $data, int $maxOutputByt
         return [
             'data' => $output,
             'decoder' => $header['signature'] === 5678
-                ? 'epic-uz3-huffman+rle+mtf+bwt+rle'
-                : 'legacy-uz-huffman+mtf+bwt+rle',
+                ? 'legacy-uz-5678-huffman+rle+mtf+bwt+rle'
+                : 'epic-uz-huffman+mtf+bwt+rle',
             'chunks' => (int)$bwt['chunks'],
             'expected_bytes' => strlen($output),
             'embedded_filename' => (string)$header['filename'],
@@ -124,30 +125,32 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
         return null;
     }
 
+    $extension = catalog_redirect_archive_extension('payload.' . strtolower(trim($sourceExtension, '. ')));
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
 
-    // Signatures 1234 and 5678 are self-identifying and include an embedded
-    // filename, so they can safely contain package or non-package payloads.
-    $legacy = catalog_redirect_archive_legacy_payload($data, $limit);
-    if ($legacy !== null) {
-        return $legacy;
+    if ($extension === 'uz') {
+        $legacy = catalog_redirect_archive_legacy_payload($data, $limit);
+        return is_array($legacy) && (int)($legacy['wrapper_signature'] ?? 0) === 1234
+            ? $legacy
+            : null;
     }
 
-    // UZ2 is an exact sequence of bounded records whose zlib streams and
-    // declared lengths must all match, so package magic is not needed.
-    if ($sourceExtension === 'uz2') {
-        $uz2 = catalog_redirect_archive_epic_uz2_payload($data, $limit);
-        if ($uz2 !== null) {
-            return $uz2;
-        }
+    if ($extension === 'uz2') {
+        return catalog_redirect_archive_epic_uz2_payload($data, $limit);
     }
 
-    // Keep the existing package-oriented compatibility decoders for ambiguous
-    // historical wrappers. Those heuristics still require Unreal package magic.
-    return catalog_redirect_archive_decode_data($data, $limit);
+    if ($extension === 'uz3') {
+        return catalog_epic_uz3_decode($data, $limit);
+    }
+
+    return null;
 }
 
 /**
+ * Decompress a redirect wrapper beside its staged source using the same strict,
+ * extension-aware Epic dispatcher as the Upload Bucket. Package magic is not
+ * required here because redirect servers may also carry text/native support files.
+ *
  * @return array{
  *   path:string,
  *   filename:string,
@@ -166,65 +169,10 @@ function catalog_redirect_archive_decompress_payload_to_temp(
     string $sourceName,
     int $maxOutputBytes = 0
 ): array {
-    if (!catalog_redirect_archive_is_supported_filename($sourceName)) {
-        throw new RuntimeException('Not an Unreal redirect compressed file: ' . basename($sourceName));
-    }
-    if (!is_file($sourcePath)) {
-        throw new RuntimeException('Redirect compressed source file is missing.');
-    }
-
-    $data = @file_get_contents($sourcePath);
-    if (!is_string($data) || $data === '') {
-        throw new RuntimeException('Could not read redirect compressed file: ' . basename($sourceName));
-    }
-
-    $sourceExtension = catalog_redirect_archive_extension($sourceName);
-    $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
-    $decoded = catalog_redirect_archive_decode_payload($data, $sourceExtension, $limit);
-    if (!is_array($decoded)) {
-        throw new RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
-    }
-
-    $output = (string)($decoded['data'] ?? '');
-    $outputBytes = strlen($output);
-    if ($outputBytes <= 0 || $outputBytes > $limit) {
-        throw new RuntimeException('Bad decompressed redirect file size: ' . catalog_bytes($outputBytes));
-    }
-
-    $outputName = catalog_redirect_archive_output_name($sourceName);
-    $embeddedName = trim((string)($decoded['embedded_filename'] ?? ''));
-    if ($embeddedName !== '') {
-        $embeddedName = catalog_clean_unreal_filename(basename(str_replace('\\', '/', $embeddedName)));
-        if ($embeddedName !== '') {
-            $outputName = $embeddedName;
-        }
-    }
-
-    // Use durable staging rather than the operating-system temporary folder.
-    // Synology DSM may reject a later rename from /volume1/@tmp into the web
-    // shared folder with "Operation not permitted".
-    $tmp = tempnam(dirname($sourcePath), '.ue_redirect_');
-    if ($tmp === false || @file_put_contents($tmp, $output) !== $outputBytes) {
-        if (is_string($tmp)) {
-            @unlink($tmp);
-        }
-        throw new RuntimeException('Could not write decompressed redirect file in catalog staging.');
-    }
-
-    $result = [
-        'path' => $tmp,
-        'filename' => $outputName,
-        'bytes' => $outputBytes,
-        'compressed_bytes' => strlen($data),
-        'source_extension' => $sourceExtension,
-        'decoder' => (string)$decoded['decoder'],
-        'chunks' => (int)$decoded['chunks'],
-        'expected_bytes' => (int)$decoded['expected_bytes'],
-        'is_unreal_package' => catalog_redirect_archive_has_package_tag($output),
-    ];
-    if (isset($decoded['wrapper_signature'])) {
-        $result['wrapper_signature'] = (int)$decoded['wrapper_signature'];
-    }
-
-    return $result;
+    return catalog_epic_redirect_decompress_to_temp(
+        $sourcePath,
+        $sourceName,
+        $maxOutputBytes,
+        false
+    );
 }
