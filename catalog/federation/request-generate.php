@@ -46,7 +46,14 @@ function reqgen_base_game_join(): string
             ) ';
 }
 
-function reqgen_total(PDO $db): int
+function reqgen_policy_having(bool $ignoreBaseGame): string
+{
+    return $ignoreBaseGame
+        ? ' HAVING MAX(CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END)=0'
+        : '';
+}
+
+function reqgen_total(PDO $db, bool $ignoreBaseGame): int
 {
     $row = catalog_one(
         $db,
@@ -54,15 +61,17 @@ function reqgen_total(PDO $db): int
             SELECT f.game_id, d.required_package
             FROM ue_dependencies d
             JOIN ue_files f ON f.id=d.file_id
+            ' . reqgen_base_game_join() . '
             WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""
-            GROUP BY f.game_id, d.required_package
+            GROUP BY f.game_id, d.required_package'
+            . reqgen_policy_having($ignoreBaseGame) . '
         ) grouped_missing_packages'
     );
     return (int)($row['c'] ?? 0);
 }
 
 /** @return list<array<string,mixed>> */
-function reqgen_items_page(PDO $db, int $page): array
+function reqgen_items_page(PDO $db, int $page, bool $ignoreBaseGame): array
 {
     $offset = ($page - 1) * REQGEN_PAGE_SIZE;
     $rows = catalog_all(
@@ -79,7 +88,8 @@ function reqgen_items_page(PDO $db, int $page): array
          LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
          ' . reqgen_base_game_join() . '
          WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""
-         GROUP BY f.game_id, g.name, p.engine_key, d.required_package
+         GROUP BY f.game_id, g.name, p.engine_key, d.required_package'
+         . reqgen_policy_having($ignoreBaseGame) . '
          ORDER BY g.name, use_count DESC, d.required_package
          LIMIT ' . REQGEN_PAGE_SIZE . ' OFFSET ' . $offset
     );
@@ -88,6 +98,7 @@ function reqgen_items_page(PDO $db, int $page): array
         $row['item_key'] = reqgen_item_key($row);
         $row['parent_available'] = null;
         $row['parent_is_base_game'] = false;
+        $row['parent_policy_excluded'] = false;
         $row['parent_file'] = '';
     }
     unset($row);
@@ -153,10 +164,25 @@ function reqgen_apply_parent_availability(array $items, array $availability): ar
         $parent = $availability[(string)$item['item_key']] ?? [];
         $item['parent_available'] = array_key_exists('available', $parent) ? !empty($parent['available']) : null;
         $item['parent_is_base_game'] = !empty($parent['is_base_game']);
+        $item['parent_policy_excluded'] = !empty($parent['policy_excluded']);
         $item['parent_file'] = trim((string)($parent['package_name'] ?? '') . ' / ' . (string)($parent['original_name'] ?? ''), ' /');
     }
     unset($item);
     return $items;
+}
+
+/** @return list<array<string,mixed>> */
+function reqgen_apply_base_game_policy(array $items, bool $ignoreBaseGame): array
+{
+    if (!$ignoreBaseGame) {
+        return array_values($items);
+    }
+    return array_values(array_filter(
+        $items,
+        static fn(array $item): bool => empty($item['is_base_game'])
+            && empty($item['parent_is_base_game'])
+            && empty($item['parent_policy_excluded'])
+    ));
 }
 
 function reqgen_url(int $page, int $peerId): string
@@ -188,13 +214,14 @@ try {
     $role = strtolower(trim((string)fed_setting($db, 'site_role', 'standalone')));
     $parents = catalog_all($db, 'SELECT * FROM ue_federation_peers WHERE peer_role="parent" AND is_active=1 ORDER BY site_name');
     $selectedParentId = (int)($_REQUEST['peer_id'] ?? ($parents[0]['id'] ?? 0));
-    $page = reqgen_page($_REQUEST['page'] ?? 1);
-    $totalItems = reqgen_total($db);
-    $pages = max(1, (int)ceil($totalItems / REQGEN_PAGE_SIZE));
-    $page = min($page, $pages);
     $parent = $selectedParentId > 0
         ? catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND peer_role="parent" AND is_active=1', [$selectedParentId])
         : null;
+    $ignoreBaseGame = federation_ignore_base_game_files($db, $parent ?: null);
+    $page = reqgen_page($_REQUEST['page'] ?? 1);
+    $totalItems = reqgen_total($db, $ignoreBaseGame);
+    $pages = max(1, (int)ceil($totalItems / REQGEN_PAGE_SIZE));
+    $page = min($page, $pages);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
@@ -219,8 +246,9 @@ try {
             throw new RuntimeException('Select no more than ' . REQGEN_PAGE_SIZE . ' packages per request.');
         }
 
-        $pageItems = reqgen_items_page($db, $page);
+        $pageItems = reqgen_items_page($db, $page, $ignoreBaseGame);
         $pageItems = reqgen_apply_parent_availability($pageItems, reqgen_parent_availability($db, $parent, $pageItems));
+        $pageItems = reqgen_apply_base_game_policy($pageItems, $ignoreBaseGame);
         $available = [];
         foreach ($pageItems as $item) {
             $available[(string)$item['item_key']] = $item;
@@ -241,17 +269,17 @@ try {
                 'engine_key' => (string)$item['engine_key'],
                 'use_count' => (int)$item['use_count'],
                 'object_count' => (int)$item['object_count'],
-                'is_base_game_dependency' => !empty($item['is_base_game']) || !empty($item['parent_is_base_game']),
+                'is_base_game_dependency' => false,
             ];
         }
         if (!$items) {
-            throw new RuntimeException('The selected packages are no longer missing. Refresh and try again.');
+            throw new RuntimeException('The selected packages are no longer eligible after applying the base-game federation policy. Refresh and try again.');
         }
 
         $siteLabel = fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: fed_setting($db, 'site_id', 'child');
         $payload = [
             'title' => 'Missing file request from ' . $siteLabel,
-            'notes' => 'This child is requesting ' . count($items) . ' distinct missing package(s). Missing base-game dependencies are included by policy exception.',
+            'notes' => 'This child is requesting ' . count($items) . ' distinct missing package(s) after applying the parent base-game policy.',
             'generated_at' => date('c'),
             'items' => $items,
         ];
@@ -284,7 +312,7 @@ try {
     catalog_head('Missing Files');
     catalog_page_header(
         'Missing Files',
-        'Child-side workflow. Every row is a package required by a currently missing dependency. Base-game packages are included because dependency completion is the explicit exception to the ordinary ignore policy.',
+        'Child-side workflow. Every row is a package required by a currently missing dependency after applying the parent-controlled base-game policy.',
         catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Outgoing Requests' => 'request-status.php', 'Approved Downloads' => 'approved-downloads.php']
     );
 
@@ -303,11 +331,12 @@ try {
         unset($_SESSION['fed_reqgen_result']);
     }
 
-    $items = reqgen_items_page($db, $page);
+    $items = reqgen_items_page($db, $page, $ignoreBaseGame);
     $preflightError = '';
     if ($parent && $items) {
         try {
             $items = reqgen_apply_parent_availability($items, reqgen_parent_availability($db, $parent, $items));
+            $items = reqgen_apply_base_game_policy($items, $ignoreBaseGame);
         } catch (Throwable $error) {
             $preflightError = $error->getMessage();
             $items = [];
@@ -315,9 +344,9 @@ try {
     }
 
     echo '<div class="card"><h2>Files this server needs</h2>';
-    echo '<p><strong>Direction:</strong> this child &rarr; selected parent. Only packages tied to local missing dependencies are shown.</p>';
+    echo '<p><strong>Direction:</strong> this child &rarr; selected parent. Only packages tied to local missing dependencies and allowed by policy are shown.</p>';
     echo '<p>' . catalog_h(federation_base_game_policy_label($db, $parent ?: null)) . '</p>';
-    echo '<p>Missing dependency packages: <strong>' . $totalItems . '</strong>.</p>';
+    echo '<p>Eligible missing dependency packages: <strong>' . $totalItems . '</strong>.</p>';
 
     if (!$parents) {
         echo '<p class="muted">No active parent connection is configured.</p></div>';
@@ -331,7 +360,7 @@ try {
         exit;
     }
     if (!$items) {
-        echo '<p class="muted">No missing dependency packages were found.</p></div>';
+        echo '<p class="muted">No eligible missing dependency packages were found.</p></div>';
         catalog_foot();
         exit;
     }
@@ -348,12 +377,10 @@ try {
     echo '<p><label><input type="checkbox" data-check-all="request-packages" checked> Check all packages on this page</label> <button>Request selected files from parent</button></p>';
     echo '<table><tr><th>Select</th><th>Game</th><th>Missing package</th><th>Example missing object</th><th>Missing objects</th><th>Files that need it</th><th>Parent check</th></tr>';
     foreach ($items as $item) {
-        $isBase = !empty($item['is_base_game']) || !empty($item['parent_is_base_game']);
-        $baseBadge = $isBase ? ' <span class="pill amber">base-game dependency</span>' : '';
         $parentCheck = !empty($item['parent_available'])
-            ? 'Available on parent' . ($isBase ? ' through dependency exception' : '')
+            ? 'Available on parent'
             : 'Not currently on parent; request may remain active';
-        echo '<tr><td><input type="checkbox" data-check-group="request-packages" name="item_keys[]" value="' . catalog_h($item['item_key']) . '" checked></td><td>' . catalog_h($item['game_name']) . '<div class="muted small">' . catalog_h($item['engine_key']) . '</div></td><td class="mono">' . catalog_h($item['required_package']) . $baseBadge . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . (int)$item['object_count'] . '</td><td>' . (int)$item['use_count'] . '</td><td>' . catalog_h($parentCheck) . '</td></tr>';
+        echo '<tr><td><input type="checkbox" data-check-group="request-packages" name="item_keys[]" value="' . catalog_h($item['item_key']) . '" checked></td><td>' . catalog_h($item['game_name']) . '<div class="muted small">' . catalog_h($item['engine_key']) . '</div></td><td class="mono">' . catalog_h($item['required_package']) . '</td><td class="mono path">' . catalog_h($item['required_object_path']) . '</td><td>' . (int)$item['object_count'] . '</td><td>' . (int)$item['use_count'] . '</td><td>' . catalog_h($parentCheck) . '</td></tr>';
     }
     echo '</table><p><button>Request selected files from parent</button></p></form>';
     reqgen_pagination($page, $pages, $selectedParentId);
