@@ -16,32 +16,90 @@ try {
     }
 
     $jobId = max(0, (int)($_GET['job_id'] ?? 0));
-    $limit = $jobId > 0 ? 1 : max(1, min((int)($_GET['limit'] ?? 50), 200));
     $queue = trim((string)($_GET['queue'] ?? ''));
     $status = strtolower(trim((string)($_GET['status'] ?? '')));
+    $search = trim((string)($_GET['search'] ?? ''));
+    $page = $jobId > 0 ? 1 : max(1, (int)($_GET['page'] ?? 1));
+    $perPage = $jobId > 0
+        ? 1
+        : max(1, min((int)($_GET['per_page'] ?? $_GET['limit'] ?? 100), 1000));
     $eventOffset = max(0, (int)($_GET['event_offset'] ?? 0));
     $eventLimit = max(1, min((int)($_GET['event_limit'] ?? 250), 1000));
+
+    if ($queue !== '' && (strlen($queue) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queue) !== 1)) {
+        JsonResponse::error('invalid_queue', 'A valid queue name is required.', 400);
+    }
     if ($status !== '' && !CatalogJobDisplayStatus::isValidFilter($status)) {
         JsonResponse::error('invalid_status', 'Unsupported job status filter.', 400);
     }
+    if (mb_strlen($search, 'UTF-8') > 200) {
+        JsonResponse::error('invalid_search', 'Search text is too long.', 400);
+    }
 
-    $where = [];
-    $params = [];
+    $baseWhere = [];
+    $baseParams = [];
     if ($jobId > 0) {
-        $where[] = 'id=?';
-        $params[] = $jobId;
+        $baseWhere[] = 'id=?';
+        $baseParams[] = $jobId;
     }
     if ($queue !== '') {
-        if (strlen($queue) > 80) {
-            JsonResponse::error('invalid_queue', 'Queue name is too long.', 400);
-        }
-        $where[] = 'queue_name=?';
-        $params[] = $queue;
+        $baseWhere[] = 'queue_name=?';
+        $baseParams[] = $queue;
     }
+    if ($search !== '') {
+        $baseWhere[] = '(CAST(id AS CHAR) LIKE ? OR job_type LIKE ? OR COALESCE(concurrency_key,"") LIKE ? '
+            . 'OR COALESCE(payload_json,"") LIKE ? OR COALESCE(last_error,"") LIKE ? '
+            . 'OR COALESCE(result_json,"") LIKE ?)';
+        $like = '%' . $search . '%';
+        array_push($baseParams, $like, $like, $like, $like, $like, $like);
+    }
+
+    $where = $baseWhere;
+    $params = $baseParams;
     if ($status !== '') {
         $condition = CatalogJobDisplayStatus::filterCondition($status);
         $where[] = $condition['sql'];
         array_push($params, ...$condition['params']);
+    }
+
+    $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
+    $baseWhereSql = $baseWhere !== [] ? ' WHERE ' . implode(' AND ', $baseWhere) : '';
+
+    $total = (int)(catalog_value(
+        $application->db,
+        'SELECT COUNT(*) FROM ue_background_jobs' . $whereSql,
+        $params
+    ) ?? 0);
+    $pages = max(1, (int)ceil($total / max(1, $perPage)));
+    if ($page > $pages) {
+        $page = $pages;
+    }
+    $offset = ($page - 1) * $perPage;
+
+    $counts = [
+        'all' => 0,
+        'queued' => 0,
+        'running' => 0,
+        'completed' => 0,
+        'failed' => 0,
+        'dead_letter' => 0,
+        'cancelled' => 0,
+    ];
+    foreach (catalog_all(
+        $application->db,
+        'SELECT status,JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")) result_status,COUNT(*) total '
+            . 'FROM ue_background_jobs' . $baseWhereSql . ' GROUP BY status,result_status',
+        $baseParams
+    ) as $countRow) {
+        $amount = (int)($countRow['total'] ?? 0);
+        $counts['all'] += $amount;
+        $group = CatalogJobDisplayStatus::group(
+            (string)($countRow['status'] ?? ''),
+            isset($countRow['result_status']) ? (string)$countRow['result_status'] : null
+        );
+        if (array_key_exists($group, $counts)) {
+            $counts[$group] += $amount;
+        }
     }
 
     $displayStatusSql = CatalogJobDisplayStatus::sqlExpression();
@@ -55,10 +113,10 @@ try {
         . 'cancel_requested_at,cancel_requested_by,cancel_reason,payload_json,progress_json,progress_updated_at'
         . $resultColumns
         . ',last_error,created_by,created_at,updated_at,completed_at,dead_lettered_at '
-        . 'FROM ue_background_jobs'
-        . ($where !== [] ? ' WHERE ' . implode(' AND ', $where) : '')
-        . ' ORDER BY id DESC LIMIT ' . $limit;
+        . 'FROM ue_background_jobs' . $whereSql
+        . ' ORDER BY id DESC LIMIT ' . $perPage . ' OFFSET ' . $offset;
     $rows = catalog_all($application->db, $sql, $params);
+
     foreach ($rows as &$row) {
         $payload = [];
         if (!empty($row['payload_json'])) {
@@ -117,10 +175,15 @@ try {
             'events' => $eventState['events'],
         ],
         'meta' => [
-            'limit' => $limit,
+            'page' => $page,
+            'per_page' => $perPage,
+            'total' => $total,
+            'pages' => $pages,
+            'counts' => $counts,
             'job_id' => $jobId > 0 ? $jobId : null,
             'queue' => $queue !== '' ? $queue : null,
             'status' => $status !== '' ? $status : null,
+            'search' => $search !== '' ? $search : null,
             'event_offset' => (int)$eventState['offset'],
             'events_has_more' => (bool)$eventState['has_more'],
         ],
