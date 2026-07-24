@@ -70,7 +70,8 @@ $externalFiles = [];
 try {
     $bucketTemp = tempnam(sys_get_temp_dir(), 'unrealdb-bucket-');
     staging_expect(is_string($bucketTemp), 'Could not create a bucket test file.');
-    file_put_contents($bucketTemp, str_repeat('bucket-metadata-test', 8));
+    $bucketPayload = str_repeat('bucket-metadata-test', 8);
+    file_put_contents($bucketTemp, $bucketPayload);
 
     $bucket = $stager->stageBucketUpload(
         $bucketTemp,
@@ -90,6 +91,33 @@ try {
     staging_expect((int)$bucketRow['unverified_queue_game_id'] === 0, 'Bucket queue identity is incorrect.');
     staging_expect((string)$bucketRow['unverified_queue_name'] === (string)$bucket['queue_name'], 'Bucket queue name was not persisted.');
     staging_expect((string)$bucketRow['source_relative_path'] === 'Fixture/Content/Explicit Bucket.utx', 'Bucket source-relative path was not preserved.');
+
+    $duplicateTemp = tempnam(sys_get_temp_dir(), 'unrealdb-bucket-duplicate-');
+    staging_expect(is_string($duplicateTemp), 'Could not create a duplicate bucket test file.');
+    file_put_contents($duplicateTemp, $bucketPayload);
+    $duplicate = $stager->stageBucketUpload(
+        $duplicateTemp,
+        'Different Browser Name.utx',
+        'Integration test duplicate bucket upload.',
+        null,
+        'Another/Path/Different Browser Name.utx'
+    );
+    staging_expect((string)$duplicate['status'] === 'duplicate', 'Identical bucket content was not reported as a duplicate.');
+    staging_expect((int)$duplicate['file_id'] === (int)$bucket['file_id'], 'Duplicate upload did not point to the existing bucket identity.');
+    staging_expect(!is_file($duplicateTemp), 'Duplicate temporary upload was not discarded.');
+    staging_expect(str_contains((string)$duplicate['message'], 'Uploaded copy discarded.'), 'Duplicate result did not explain that the uploaded copy was discarded.');
+
+    $duplicateRows = (int)(catalog_one(
+        $db,
+        'SELECT COUNT(*) c FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0 AND file_size=? AND md5=?',
+        [(int)$bucketRow['file_size'], (string)$bucketRow['md5']]
+    )['c'] ?? 0);
+    staging_expect($duplicateRows === 1, 'Duplicate upload created another unverified database row.');
+    $bucketDataFiles = array_values(array_filter(
+        scandir($storage . DIRECTORY_SEPARATOR . 'upload-bucket') ?: [],
+        static fn(string $entry): bool => $entry !== '.' && $entry !== '..' && !str_ends_with(strtolower($entry), '.txt')
+    ));
+    staging_expect(count($bucketDataFiles) === 1, 'Duplicate upload created another physical bucket file.');
 
     $game = $db->query('SELECT id,slug FROM ue_games ORDER BY id LIMIT 1')->fetch();
     staging_expect(is_array($game) && (int)$game['id'] > 0, 'A seeded game is required for failed-upload staging.');
@@ -113,7 +141,7 @@ try {
     staging_expect(is_file((string)$failed['path']), 'Failed-upload staging did not retain the physical package.');
 
     $failedRow = catalog_one($db, 'SELECT * FROM ue_files WHERE id=?', [(int)$failed['file_id']]);
-    staging_expect(is_array($failedRow), 'Failed-upload staging did not create a ue_files row.');
+    staging_expect(is_array($failedRow), 'Failed-upload staging did not create a database row.');
     staging_expect((string)$failedRow['scan_status'] === 'unverified', 'Failed-upload row is not unverified.');
     staging_expect($failedRow['game_id'] === null, 'Failed-upload row unexpectedly has a verified game assignment.');
     staging_expect((int)$failedRow['unverified_queue_game_id'] === $gameId, 'Failed-upload queue game was not persisted.');
