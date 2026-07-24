@@ -5,7 +5,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 /**
  * Memory-bounded decoder for Epic's UE2 .uz2 format. Each record contains a
- * little-endian compressed size, uncompressed size, and one zlib stream.
+ * little-endian compressed size, uncompressed size, and one compressed payload.
  */
 final class CatalogRedirectArchiveStream
 {
@@ -53,6 +53,7 @@ final class CatalogRedirectArchiveStream
         $writtenBytes = 0;
         $chunks = 0;
         $isUnrealPackage = false;
+        $decoders = [];
 
         try {
             while ($readBytes < $compressedBytes) {
@@ -102,18 +103,17 @@ final class CatalogRedirectArchiveStream
                 $payload = self::readExact($input, $compressed);
                 $readBytes += $compressed;
 
-                // Restore the original working behavior: decode each complete UZ2
-                // record normally, then verify Epic's declared output length.
-                $block = function_exists('gzuncompress')
-                    ? @gzuncompress($payload, $uncompressed)
-                    : false;
-                if (!is_string($block) || strlen($block) !== $uncompressed) {
+                $decoded = self::decodePayload($payload, $uncompressed);
+                if ($decoded === null) {
                     throw new \RuntimeException(
-                        'Epic UZ2 zlib decompression failed at record ' . $recordNumber
+                        'Epic UZ2 PHP decompression failed at record ' . $recordNumber
                         . ' (compressed=' . $compressed . ', uncompressed=' . $uncompressed
-                        . ', offset=' . $recordOffset . ') in ' . basename($sourceName) . '.'
+                        . ', offset=' . $recordOffset . ') in ' . basename($sourceName)
+                        . '; available functions: ' . self::availableDecoders() . '.'
                     );
                 }
+                $block = $decoded['data'];
+                $decoders[$decoded['decoder']] = true;
 
                 if ($chunks === 0) {
                     $isUnrealPackage = \catalog_redirect_archive_has_package_tag(substr($block, 0, 4));
@@ -178,11 +178,37 @@ final class CatalogRedirectArchiveStream
             'bytes' => $writtenBytes,
             'compressed_bytes' => (int)$compressedBytes,
             'source_extension' => 'uz2',
-            'decoder' => 'epic-uz2-zlib-stream',
+            'decoder' => 'epic-uz2-' . implode('+', array_keys($decoders)) . '-stream',
             'chunks' => $chunks,
             'expected_bytes' => $writtenBytes,
             'is_unreal_package' => $isUnrealPackage,
         ];
+    }
+
+    /** @return array{data:string,decoder:string}|null */
+    private static function decodePayload(string $payload, int $expectedBytes): ?array
+    {
+        foreach (['zlib_decode', 'gzuncompress', 'gzinflate', 'gzdecode'] as $function) {
+            if (!function_exists($function)) {
+                continue;
+            }
+            $decoded = @$function($payload);
+            if (is_string($decoded) && strlen($decoded) === $expectedBytes) {
+                return ['data' => $decoded, 'decoder' => $function];
+            }
+        }
+        return null;
+    }
+
+    private static function availableDecoders(): string
+    {
+        $available = [];
+        foreach (['zlib_decode', 'gzuncompress', 'gzinflate', 'gzdecode'] as $function) {
+            if (function_exists($function)) {
+                $available[] = $function;
+            }
+        }
+        return $available === [] ? 'none' : implode(', ', $available);
     }
 
     /** @param resource $stream */
