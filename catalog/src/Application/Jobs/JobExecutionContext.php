@@ -23,17 +23,16 @@ final class JobExecutionContext
         int $leaseSeconds,
         private readonly ?\Closure $eventAppender = null
     ) {
-        // Staged package imports can spend several minutes in redirect archive
-        // decompression, a large file copy, or a parser operation before another
-        // progress callback is available. Give both ordinary packages and PAKs
-        // the queue's supported one-hour lease so another worker cannot reclaim
-        // the same durable staged file while the original import is still alive.
-        $longStagedImport = in_array(
+        // Redirect decompression, staged imports and large PAK work can spend
+        // several minutes in CPU, disk or parser operations before another
+        // progress callback is available. Use the queue's supported one-hour
+        // lease so a healthy job cannot be reclaimed by a second worker.
+        $longRunningImport = in_array(
             $job->type,
-            [JobType::IMPORT_STAGED_PACKAGE, JobType::IMPORT_STAGED_PAK],
+            [JobType::PREPARE_BUCKET_REDIRECT, JobType::IMPORT_STAGED_PACKAGE, JobType::IMPORT_STAGED_PAK],
             true
         );
-        $this->leaseSeconds = $longStagedImport
+        $this->leaseSeconds = $longRunningImport
             ? max($leaseSeconds, 3600)
             : $leaseSeconds;
         $this->lastHeartbeatAt = time();
