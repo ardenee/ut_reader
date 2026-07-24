@@ -17,6 +17,7 @@
 
     const chunkUrl = progressBox.dataset.chunkUrl || 'api/v1/upload-bucket-chunk.php';
     const chunkCsrf = progressBox.dataset.chunkCsrf || '';
+    const wholeFileCsrfField = form.querySelector('[name="csrf"]');
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
     let batchTotalBytes = 1;
     let processedBytes = 0;
@@ -28,6 +29,16 @@
 
     function displayName(file) {
         return file.webkitRelativePath || file.name;
+    }
+
+    function isRedirectArchive(file) {
+        return /\.(?:uz|uz2|uz3)$/i.test(String(file && file.name ? file.name : ''));
+    }
+
+    function wholeFileUrl() {
+        const url = new URL(form.action || window.location.href, window.location.href);
+        url.searchParams.set('ajax', '1');
+        return url.toString();
     }
 
     function fmtBytes(bytes) {
@@ -48,15 +59,15 @@
         return fallback;
     }
 
-    function parseJsonResponse(text, status, contentType) {
+    function parseJsonResponse(text, status, contentType, requestType) {
         try {
             return JSON.parse(text || '{}');
         } catch (error) {
             const looksHtml = /^\s*(?:<!doctype\s+html|<html\b)/i.test(text || '') || /text\/html/i.test(contentType || '');
             if (looksHtml) {
-                throw new Error('Chunk request returned an HTML error page instead of JSON' + (status ? ' (HTTP ' + status + ')' : '') + '. Check the web-server and PHP logs.');
+                throw new Error(requestType + ' returned an HTML error page instead of JSON' + (status ? ' (HTTP ' + status + ')' : '') + '. Check the web-server and PHP logs.');
             }
-            throw new Error('Chunk request returned invalid JSON' + (status ? ' (HTTP ' + status + ')' : '') + '.');
+            throw new Error(requestType + ' returned invalid JSON' + (status ? ' (HTTP ' + status + ')' : '') + '.');
         }
     }
 
@@ -103,7 +114,7 @@
             xhr.onload = function () {
                 let body;
                 try {
-                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'));
+                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Chunk request');
                 } catch (error) {
                     reject(error);
                     return;
@@ -136,6 +147,68 @@
             }
         }
         throw lastError || new Error('Chunk upload failed.');
+    }
+
+    function wholeFileUpload(file, index, total) {
+        return new Promise(function (resolve, reject) {
+            const name = displayName(file);
+            const data = new FormData();
+            data.append('ajax', '1');
+            data.append('csrf', wholeFileCsrfField ? wholeFileCsrfField.value : '');
+            data.append('relative_path', name);
+            data.append('client_file_size', String(file.size || 0));
+            data.append('files[]', file, file.name);
+
+            const xhr = new XMLHttpRequest();
+            const started = Date.now();
+            currentBar.value = 0;
+            currentSpeed.textContent = '';
+            currentLabel.textContent = 'Uploading redirect with original handler ' + index + ' of ' + total + ': ' + name;
+            xhr.open('POST', wholeFileUrl(), true);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('X-Upload-Bucket-Ajax', '1');
+            xhr.timeout = 60 * 60 * 1000;
+            xhr.upload.onprogress = function (event) {
+                if (!event.lengthComputable) return;
+                const percent = Math.floor((event.loaded * 100) / Math.max(1, event.total));
+                currentBar.value = percent;
+                currentSpeed.textContent = fmtBytes(event.loaded / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
+                currentLabel.textContent = 'Uploading redirect with original handler ' + index + ' of ' + total + ': ' + name + ' (' + percent + '%)';
+                setOverall(Math.min(file.size, event.loaded), total);
+            };
+            xhr.onload = function () {
+                let body;
+                try {
+                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Original redirect upload');
+                } catch (error) {
+                    reject(error);
+                    return;
+                }
+                if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
+                    reject(new Error(responseError(body, 'Original redirect upload failed with HTTP ' + xhr.status + '.')));
+                    return;
+                }
+                currentBar.value = 100;
+                currentSpeed.textContent = '';
+                if (Array.isArray(body.messages) && body.messages.length) {
+                    body.messages.forEach(addLog);
+                    resolve(String(body.messages[0].status || 'bucketed').toLowerCase());
+                    return;
+                }
+                addLog({status: 'bucketed', file: name, message: 'Stored and indexed through the original upload handler.', file_size_text: fmtBytes(file.size)});
+                resolve('bucketed');
+            };
+            xhr.onerror = function () {
+                reject(new Error('Original redirect upload connection error.'));
+            };
+            xhr.ontimeout = function () {
+                reject(new Error('Original redirect upload timed out after 60 minutes.'));
+            };
+            xhr.onabort = function () {
+                reject(new Error('Original redirect upload was aborted by the browser.'));
+            };
+            xhr.send(data);
+        });
     }
 
     async function chunkedUpload(file, index, total) {
@@ -220,8 +293,12 @@
             window.alert('Choose one or more files, or choose a folder/subfolders first.');
             return;
         }
-        if (!chunkCsrf) {
+        if (files.some(function (file) { return !isRedirectArchive(file); }) && !chunkCsrf) {
             window.alert('Chunk upload security token is unavailable. Reload the page and try again.');
+            return;
+        }
+        if (files.some(isRedirectArchive) && (!wholeFileCsrfField || !wholeFileCsrfField.value)) {
+            window.alert('Original redirect upload security token is unavailable. Reload the page and try again.');
             return;
         }
 
@@ -238,9 +315,11 @@
             const file = files[index];
             let status = 'failed';
             try {
-                status = await chunkedUpload(file, index + 1, files.length);
+                status = isRedirectArchive(file)
+                    ? await wholeFileUpload(file, index + 1, files.length)
+                    : await chunkedUpload(file, index + 1, files.length);
             } catch (error) {
-                addLog({status: 'failed', file: displayName(file), message: error.message || 'Resumable upload failed.', file_size_text: fmtBytes(file.size)});
+                addLog({status: 'failed', file: displayName(file), message: error.message || 'Upload failed.', file_size_text: fmtBytes(file.size)});
             }
 
             if (status === 'duplicate') counts.duplicate++;
