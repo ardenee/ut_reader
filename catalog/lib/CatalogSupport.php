@@ -6,6 +6,20 @@ require_once __DIR__ . '/../bootstrap/autoload.php';
 
 \UnrealDb\Catalog\Presentation\Http\LegacySupportHooks::register();
 
+/*
+ * Upload Bucket advertises no UnrealDB total-file-size cap. Redirect archives
+ * must therefore not inherit the ordinary profiled-upload output limit while
+ * reconstructing their real package bytes. This changes only the size ceiling;
+ * the extension-specific Epic UZ/UZ2/UZ3 decoders remain responsible for the
+ * actual format validation.
+ */
+if (in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['upload-bucket.php', 'upload-bucket-chunk.php'], true)) {
+    $redirectLimit = (int)(getenv('UNREALDB_REDIRECT_MAX_OUTPUT_BYTES') ?: 0);
+    if ($redirectLimit <= 0) {
+        putenv('UNREALDB_REDIRECT_MAX_OUTPUT_BYTES=' . (PHP_INT_SIZE >= 8 ? '2147483647' : (string)PHP_INT_MAX));
+    }
+}
+
 /**
  * peer-inventory.php depends on several federation services before its own page
  * try/catch begins. Keep an emergency handler at the shared bootstrap layer so
