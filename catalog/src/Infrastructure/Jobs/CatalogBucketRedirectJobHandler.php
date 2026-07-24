@@ -16,12 +16,6 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
-/**
- * CLI-only finalizer for every Upload Bucket redirect wrapper.
- *
- * Web requests only place the wrapper in durable storage and enqueue this job.
- * Format detection and decompression always go through the shared processor.
- */
 final class CatalogBucketRedirectJobHandler implements JobHandler
 {
     /** @param array<string,mixed> $config */
@@ -61,8 +55,6 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
         }
 
         $decodedPath = '';
-        $cleanupSource = false;
-
         try {
             $context->checkpoint([
                 'stage' => 'redirect_resolve',
@@ -128,7 +120,6 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
                 $this->replaceRelativeFilename($relativePath, $workingName)
             );
             $decodedPath = '';
-            $cleanupSource = true;
 
             $status = (string)($staged['status'] ?? 'stored');
             $message = $status === 'duplicate'
@@ -166,7 +157,6 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
         } catch (PDOException $error) {
             throw $error;
         } catch (Throwable $error) {
-            $cleanupSource = true;
             $message = $this->shortError($error);
             $context->checkpoint([
                 'stage' => 'failed',
@@ -188,9 +178,6 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
             if ($decodedPath !== '' && is_file($decodedPath)) {
                 @unlink($decodedPath);
             }
-            if ($cleanupSource) {
-                $this->cleanupSource($sourceKind, $uploadId, $stagedPath, $userId);
-            }
         }
     }
 
@@ -200,19 +187,6 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
             return (string)$this->chunkStore()->resolveCompletedFile($uploadId, $userId)['path'];
         }
         return (new CatalogIncomingFileStore($this->config))->resolve($stagedPath);
-    }
-
-    private function cleanupSource(string $sourceKind, string $uploadId, string $stagedPath, int $userId): void
-    {
-        try {
-            if ($sourceKind === 'chunk-upload') {
-                $this->chunkStore()->cancel($userId, $uploadId);
-            } else {
-                (new CatalogIncomingFileStore($this->config))->remove($stagedPath);
-            }
-        } catch (Throwable $cleanupError) {
-            error_log('[UnrealDB bucket redirect cleanup] ' . $cleanupError->getMessage());
-        }
     }
 
     private function chunkStore(): CatalogChunkedUploadStore
