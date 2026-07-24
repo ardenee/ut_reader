@@ -10,7 +10,13 @@ require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 function fc_rows(PDO $db, string $type, int $peerId, bool $ignoreBaseGame): array
 {
     $peerSql = $peerId > 0 ? ' AND pf.peer_id=' . $peerId . ' ' : '';
-    $policySql = $ignoreBaseGame ? ' AND COALESCE(pf.is_base_game,0)=0 ' : '';
+    $policySql = $ignoreBaseGame
+        ? ' AND COALESCE(pf.is_base_game,0)=0
+            AND NOT EXISTS (
+                SELECT 1 FROM ue_base_game_files local_bg
+                WHERE local_bg.game_id=f.game_id AND local_bg.package_guid=f.package_guid
+            ) '
+        : '';
     if ($type === 'same_guid_diff_hash') {
         return catalog_all($db, 'SELECT pf.*, p.site_name peer_name, f.id local_id, f.original_name local_file, f.md5 local_md5, f.sha1 local_sha1 FROM ue_federation_peer_files pf JOIN ue_federation_peers p ON p.id=pf.peer_id JOIN ue_files f ON f.package_guid=pf.package_guid AND f.scan_status="verified" WHERE pf.package_guid IS NOT NULL AND pf.package_guid<>"" AND pf.md5 IS NOT NULL AND pf.md5<>"" AND f.md5<>pf.md5 ' . $policySql . $peerSql . ' ORDER BY p.site_name, pf.package_name, pf.original_name LIMIT 1000');
     }
@@ -33,7 +39,7 @@ try {
     $peerId = (int)($_GET['peer_id'] ?? 0);
     $ignoreBaseGame = federation_ignore_base_game_files($db);
     $peers = catalog_all($db, 'SELECT id, site_name, peer_role FROM ue_federation_peers ORDER BY peer_role, site_name');
-    catalog_page_header('Federation Conflict Report', 'Shows package identity mismatches between local verified files and peer inventories after applying the parent-controlled ordinary base-game policy.', catalog_federation_links() + ['Peer Inventory' => 'peer-inventory.php', 'Parent Pull' => 'parent-pull.php']);
+    catalog_page_header('Federation Conflict Report', 'Shows policy-visible package identity mismatches between local verified files and peer inventories.', catalog_federation_links() + ['Peer Inventory' => 'peer-inventory.php', 'Parent Pull' => 'parent-pull.php']);
 
     echo '<div class="card"><p>' . catalog_h(federation_base_game_policy_label($db)) . '</p><form><label>Peer filter<br><select name="peer_id"><option value="0">All peers</option>';
     foreach ($peers as $peer) {
@@ -52,7 +58,7 @@ try {
         $rows = fc_rows($db, $type, $peerId, $ignoreBaseGame);
         echo '<div class="card"><h2>' . catalog_h($title) . '</h2>';
         if (!$rows) {
-            echo '<p class="muted">No rows found.</p>';
+            echo '<p class="muted">No policy-visible rows found.</p>';
         } else {
             echo '<table><tr><th>Peer</th><th>Package</th><th>Peer file</th><th>Local file</th><th>Peer GUID</th><th>Local GUID</th><th>Peer MD5</th><th>Local MD5</th><th>Sizes</th></tr>';
             foreach ($rows as $row) {
