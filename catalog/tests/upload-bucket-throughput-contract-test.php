@@ -11,9 +11,13 @@ function upload_bucket_throughput_expect(bool $condition, string $message): void
 $root = dirname(__DIR__);
 $client = file_get_contents($root . '/assets/upload-bucket.js');
 $queue = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketUploadQueue.php');
+$controls = file_get_contents($root . '/assets/background-jobs-running-controls.js');
+$page = file_get_contents($root . '/background-jobs.php');
 
 upload_bucket_throughput_expect(is_string($client), 'Upload Bucket client is missing.');
 upload_bucket_throughput_expect(is_string($queue), 'Upload Bucket redirect queue is missing.');
+upload_bucket_throughput_expect(is_string($controls), 'Background Jobs running controls are missing.');
+upload_bucket_throughput_expect(is_string($page), 'Background Jobs page is missing.');
 
 upload_bucket_throughput_expect(
     !str_contains($client, 'return await waitForJob(jobId, name)'),
@@ -28,16 +32,24 @@ upload_bucket_throughput_expect(
     'Upload summary does not distinguish queued redirect work.'
 );
 upload_bucket_throughput_expect(
-    str_contains($queue, "bucket_redirect_stall_seconds'] ?? 90"),
-    'Redirect queue has no stalled-worker threshold.'
+    !str_contains($queue, 'recoverStalledRedirectWorker'),
+    'Redirect enqueue still auto-cancels jobs based on elapsed time.'
 );
 upload_bucket_throughput_expect(
-    str_contains($queue, 'recoverStalledRedirectWorker'),
-    'Redirect enqueue does not check for a worker that stopped heartbeating.'
+    !str_contains($queue, 'CatalogDetachedWorkerStop'),
+    'Redirect enqueue still terminates running workers automatically.'
 );
 upload_bucket_throughput_expect(
-    str_contains($queue, 'CatalogDetachedWorkerStop'),
-    'Stalled redirect workers cannot be terminated automatically.'
+    str_contains($controls, "action: 'cancel'") && str_contains($controls, "mode: 'drain'"),
+    'Manual Stop job does not stop the selected job and continue the queue.'
+);
+upload_bucket_throughput_expect(
+    str_contains($controls, 'durationText') && str_contains($page, 'Running for'),
+    'Background Jobs does not display the live job runtime.'
+);
+upload_bucket_throughput_expect(
+    str_contains($page, 'Running jobs are never stopped automatically'),
+    'Background Jobs does not document manual-only stopping.'
 );
 
 echo "Upload Bucket throughput contract tests passed.\n";
