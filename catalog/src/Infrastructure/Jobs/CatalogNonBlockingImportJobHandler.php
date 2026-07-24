@@ -11,6 +11,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
 /**
  * Treats a bad package/archive as a completed import attempt with a failed
@@ -107,9 +108,8 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
     }
 
     /**
-     * Decompress self-identifying 1234/5678 streams and exact UZ2 records before
-     * the package scanner runs. Exact UZ2 is streamed to disk so large packages
-     * do not disappear into an unobservable, memory-heavy preparation step.
+     * Resolve the staged wrapper, then delegate all format dispatch and decoding
+     * to the shared redirect processor before the package scanner runs.
      *
      * @return array{0:ClaimedJob,1:string,2:array<string,mixed>|null}
      */
@@ -121,8 +121,8 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             return [$job, '', null];
         }
 
-        require_once dirname(__DIR__, 3) . '/lib/CatalogRedirectArchivePayload.php';
-        if (!\catalog_redirect_archive_is_supported_filename($originalName)) {
+        $processor = new CatalogRedirectArchiveProcessor($this->config);
+        if (!$processor->supports($originalName)) {
             return [$job, '', null];
         }
 
@@ -136,51 +136,33 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
 
         $store = new CatalogIncomingFileStore($this->config);
         $sourcePath = $store->resolve(trim((string)($payload['staged_path'] ?? '')));
-        $sourceExtension = \catalog_redirect_archive_extension($originalName);
-        $limit = $this->redirectOutputLimit();
+        $context->checkpoint([
+            'stage' => 'redirect_decompress',
+            'done' => 3,
+            'total' => 100,
+            'percent' => 3,
+            'message' => 'Starting redirect decompression for ' . basename($originalName),
+        ]);
 
-        if ($sourceExtension === 'uz2') {
-            $context->checkpoint([
-                'stage' => 'redirect_decompress',
-                'done' => 3,
-                'total' => 100,
-                'percent' => 3,
-                'message' => 'Starting streamed UZ2 decompression for ' . basename($originalName),
-            ]);
-            $decoded = CatalogRedirectArchiveStream::decompressUz2(
-                $sourcePath,
-                $originalName,
-                $limit,
-                static function (array $progress) use ($context): void {
-                    $sourcePercent = max(0, min(100, (int)($progress['percent'] ?? 0)));
-                    $percent = max(3, min(44, 3 + (int)floor($sourcePercent * 41 / 100)));
-                    $context->checkpoint([
-                        'stage' => 'redirect_decompress',
-                        'done' => (int)($progress['compressed_done'] ?? 0),
-                        'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
-                        'percent' => $percent,
-                        'message' => (string)($progress['message'] ?? 'Decompressing redirect archive.'),
-                        'compressed_bytes' => (int)($progress['compressed_done'] ?? 0),
-                        'output_bytes' => (int)($progress['output_bytes'] ?? 0),
-                        'chunks' => (int)($progress['chunks'] ?? 0),
-                    ]);
-                },
-                false
-            );
-        } else {
-            $context->checkpoint([
-                'stage' => 'redirect_decompress',
-                'done' => 3,
-                'total' => 100,
-                'percent' => 3,
-                'message' => 'Decoding legacy redirect archive ' . basename($originalName),
-            ]);
-            $decoded = \catalog_redirect_archive_decompress_payload_to_temp(
-                $sourcePath,
-                $originalName,
-                $limit
-            );
-        }
+        $decoded = $processor->decompressToTemp(
+            $sourcePath,
+            $originalName,
+            static function (array $progress) use ($context): void {
+                $sourcePercent = max(0, min(100, (int)($progress['percent'] ?? 0)));
+                $percent = max(3, min(44, 3 + (int)floor($sourcePercent * 41 / 100)));
+                $context->checkpoint([
+                    'stage' => 'redirect_decompress',
+                    'done' => (int)($progress['compressed_done'] ?? 0),
+                    'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
+                    'percent' => $percent,
+                    'message' => (string)($progress['message'] ?? 'Decompressing redirect archive.'),
+                    'compressed_bytes' => (int)($progress['compressed_done'] ?? 0),
+                    'output_bytes' => (int)($progress['output_bytes'] ?? 0),
+                    'chunks' => (int)($progress['chunks'] ?? 0),
+                ]);
+            },
+            false
+        );
 
         $context->checkpoint([
             'stage' => 'redirect_ready',
@@ -222,21 +204,6 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
         );
 
         return [$prepared, (string)$decoded['path'], $decoded];
-    }
-
-    private function redirectOutputLimit(): int
-    {
-        $configured = (int)($this->config['max_redirect_output_bytes'] ?? 0);
-        if ($configured > 0) {
-            return $configured;
-        }
-
-        $ingress = (int)($this->config['ingress_max_upload_bytes'] ?? 0);
-        if ($ingress > 0) {
-            return $ingress > intdiv(PHP_INT_MAX, 8) ? PHP_INT_MAX : max($ingress, $ingress * 8);
-        }
-
-        return PHP_INT_SIZE >= 8 ? 2 * 1024 * 1024 * 1024 : PHP_INT_MAX;
     }
 
     private function replaceRelativeFilename(string $relativePath, string $name): string
