@@ -52,4 +52,36 @@ redirect_payload_assert(is_array($decodedUz2), 'non-package UZ2 record stream wa
 redirect_payload_assert((string)$decodedUz2['decoder'] === 'epic-uz2-zlib', 'UZ2 text used the wrong decoder.');
 redirect_payload_assert(hash_equals($textOutput, (string)$decodedUz2['data']), 'UZ2 text output differs.');
 
+/*
+ * Some redirect archives use a declared total size followed by concatenated zlib
+ * members. This is valid package data but is not the strict repeated Epic UZ2
+ * record layout. Bucket uploads must fall back to the compatibility decoders.
+ */
+$compatPackage = "\xC1\x83\x2A\x9E" . str_repeat('Compatible UZ2 package payload.', 3000);
+$compatMembers = '';
+foreach (str_split($compatPackage, 32768) as $block) {
+    $member = gzcompress($block, 9);
+    redirect_payload_assert(is_string($member), 'could not prepare compatibility UZ2 member.');
+    $compatMembers .= $member;
+}
+$compatUz2 = pack('V', strlen($compatPackage)) . $compatMembers;
+redirect_payload_assert(catalog_redirect_archive_epic_uz2_payload($compatUz2, 2 * 1024 * 1024) === null, 'compatibility fixture unexpectedly matched the strict Epic layout.');
+$decodedCompat = catalog_redirect_archive_decode_payload($compatUz2, 'uz2', 2 * 1024 * 1024);
+redirect_payload_assert(is_array($decodedCompat), 'compatible non-record UZ2 wrapper was rejected.');
+redirect_payload_assert(str_starts_with((string)$decodedCompat['decoder'], 'concatenated-'), 'compatible UZ2 wrapper did not use the fallback decoder.');
+redirect_payload_assert(hash_equals($compatPackage, (string)$decodedCompat['data']), 'compatible UZ2 package bytes differ.');
+
+$compatPath = tempnam(sys_get_temp_dir(), 'redirect-compat-');
+redirect_payload_assert(is_string($compatPath), 'could not allocate compatibility fixture path.');
+file_put_contents($compatPath, $compatUz2);
+try {
+    $result = catalog_redirect_archive_decompress_payload_to_temp($compatPath, 'Compatible.utx.uz2', 2 * 1024 * 1024);
+    redirect_payload_assert($result['is_unreal_package'] === true, 'compatible UZ2 package was not identified as an Unreal package.');
+    redirect_payload_assert((string)$result['filename'] === 'Compatible.utx', 'compatible UZ2 output name is incorrect.');
+    redirect_payload_assert(hash_equals(hash('sha256', $compatPackage), (string)hash_file('sha256', (string)$result['path'])), 'compatible UZ2 temporary output differs.');
+    @unlink((string)$result['path']);
+} finally {
+    @unlink($compatPath);
+}
+
 echo "catalog_redirect_payload_test: OK\n";
