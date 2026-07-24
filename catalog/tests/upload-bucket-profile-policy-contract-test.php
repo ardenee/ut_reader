@@ -114,8 +114,9 @@ bucket_policy_expect(
 bucket_policy_expect(
     str_contains($content['queue'], "return \$base . ':bucket-redirects';")
         && str_contains($content['queue'], "'source_kind' => 'chunk-upload'")
-        && str_contains($content['queue'], "'source_kind' => 'incoming-file'"),
-    'Chunked and fallback bucket uploads do not share the dedicated worker queue and job.'
+        && str_contains($content['queue'], "'source_kind' => 'incoming-file'")
+        && str_contains($content['queue'], "'staged_path' => 'chunk-upload:' . \$uploadId"),
+    'Bucket redirects do not share the dedicated worker queue and terminal-job cleanup linkage.'
 );
 
 bucket_policy_expect(str_contains($content['page'], 'function upload_bucket_stats'), 'Upload bucket physical-folder statistics are missing.');
