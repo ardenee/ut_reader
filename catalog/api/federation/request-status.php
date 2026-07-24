@@ -8,36 +8,9 @@ require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
 require_once __DIR__ . '/../../lib/FederationRequestLifecycle.php';
 
-try {
-    $config = catalog_config();
-    $db = catalog_db($config);
-    base_game_ensure($db);
-    $body = file_get_contents('php://input') ?: '';
-    $peer = fed_require_signed_peer($db, $body);
-
-    if ((string)$peer['peer_role'] !== 'child') {
-        fed_json_response(['ok' => false, 'error' => 'Only a paired child may poll request status.'], 403);
-    }
-
-    $payload = json_decode($body, true);
-    if (!is_array($payload)) {
-        fed_json_response(['ok' => false, 'error' => 'Invalid JSON payload'], 400);
-    }
-
-    $requestId = (int)($payload['request_id'] ?? 0);
-    if ($requestId > 0) {
-        $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=? AND peer_id=? AND direction="child_to_parent"', [$requestId, (int)$peer['id']]);
-    } else {
-        $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE peer_id=? AND direction="child_to_parent" ORDER BY created_at DESC, id DESC LIMIT 1', [(int)$peer['id']]);
-    }
-
-    if (!$request) {
-        fed_json_response(['ok' => true, 'policy' => federation_parent_base_game_policy($db), 'request' => null, 'items' => []]);
-    }
-
-    $refresh = federation_refresh_request_matches($db, (int)$request['id']);
-    $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=?', [(int)$request['id']]) ?: $request;
-
+/** @return list<array<string,mixed>> */
+function request_status_items(PDO $db, int $requestId, bool $ignoreBaseGame): array
+{
     $rows = catalog_all(
         $db,
         'SELECT i.*, f.package_name local_package, f.original_name local_file,
@@ -48,11 +21,10 @@ try {
          LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
          WHERE i.request_id=?
          ORDER BY i.updated_at DESC, i.id DESC',
-        [(int)$request['id']]
+        [$requestId]
     );
 
     $items = [];
-    $ignoreBaseGame = federation_ignore_base_game_files($db);
     foreach ($rows as $row) {
         $isBaseGame = !empty($row['is_base_game']);
         if (!$isBaseGame && str_contains(strtolower((string)($row['status_message'] ?? '')), 'base-game')) {
@@ -83,7 +55,106 @@ try {
             'updated_at' => (string)($row['updated_at'] ?? ''),
         ];
     }
+    return $items;
+}
 
+try {
+    $db = catalog_db(catalog_config());
+    base_game_ensure($db);
+    $body = file_get_contents('php://input') ?: '';
+    $peer = fed_require_signed_peer($db, $body);
+    if ((string)$peer['peer_role'] !== 'child') {
+        fed_json_response(['ok' => false, 'error' => 'Only a paired child may poll request status.'], 403);
+    }
+
+    $payload = json_decode($body, true);
+    if (!is_array($payload)) {
+        fed_json_response(['ok' => false, 'error' => 'Invalid JSON payload'], 400);
+    }
+    $ignoreBaseGame = federation_ignore_base_game_files($db);
+
+    if (!empty($payload['package_statuses'])) {
+        $requestRows = catalog_all(
+            $db,
+            'SELECT * FROM ue_federation_requests
+             WHERE peer_id=? AND direction="child_to_parent"
+               AND status NOT IN ("cancelled","completed","denied")
+             ORDER BY updated_at DESC,id DESC LIMIT 200',
+            [(int)$peer['id']]
+        );
+        $statuses = [];
+        foreach ($requestRows as $requestRow) {
+            federation_refresh_request_matches($db, (int)$requestRow['id']);
+            foreach (request_status_items($db, (int)$requestRow['id'], $ignoreBaseGame) as $item) {
+                $package = strtolower(trim((string)($item['required_package'] ?? '')));
+                if ($package === '' || isset($statuses[$package])) {
+                    continue;
+                }
+                $statuses[$package] = [
+                    'request_id' => (int)$requestRow['id'],
+                    'request_status' => (string)$requestRow['status'],
+                    'item_status' => (string)$item['status'],
+                    'status_message' => (string)$item['status_message'],
+                    'updated_at' => (string)$item['updated_at'],
+                ];
+            }
+        }
+        fed_json_response([
+            'ok' => true,
+            'policy' => federation_parent_base_game_policy($db),
+            'packages' => $statuses,
+        ]);
+    }
+
+    if (!empty($payload['list'])) {
+        $rows = catalog_all(
+            $db,
+            'SELECT * FROM ue_federation_requests
+             WHERE peer_id=? AND direction="child_to_parent"
+             ORDER BY created_at DESC,id DESC LIMIT 200',
+            [(int)$peer['id']]
+        );
+        $requests = [];
+        foreach ($rows as $request) {
+            federation_refresh_request_matches($db, (int)$request['id']);
+            $items = request_status_items($db, (int)$request['id'], $ignoreBaseGame);
+            if (!$items) {
+                continue;
+            }
+            $statusCounts = [];
+            foreach ($items as $item) {
+                $status = (string)$item['status'];
+                $statusCounts[$status] = ($statusCounts[$status] ?? 0) + 1;
+            }
+            $requests[] = [
+                'id' => (int)$request['id'],
+                'status' => (string)$request['status'],
+                'title' => (string)$request['title'],
+                'submitted_at' => (string)$request['submitted_at'],
+                'updated_at' => (string)$request['updated_at'],
+                'item_count' => count($items),
+                'status_counts' => $statusCounts,
+            ];
+        }
+        fed_json_response([
+            'ok' => true,
+            'policy' => federation_parent_base_game_policy($db),
+            'requests' => $requests,
+        ]);
+    }
+
+    $requestId = (int)($payload['request_id'] ?? 0);
+    $request = $requestId > 0
+        ? catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=? AND peer_id=? AND direction="child_to_parent"', [$requestId, (int)$peer['id']])
+        : catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE peer_id=? AND direction="child_to_parent" ORDER BY created_at DESC,id DESC LIMIT 1', [(int)$peer['id']]);
+
+    if (!$request) {
+        fed_json_response(['ok' => true, 'policy' => federation_parent_base_game_policy($db), 'request' => null, 'items' => []]);
+    }
+
+    $refresh = federation_refresh_request_matches($db, (int)$request['id']);
+    $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=?', [(int)$request['id']]) ?: $request;
+    $items = request_status_items($db, (int)$request['id'], $ignoreBaseGame);
     $visibleRequest = $items !== [] ? [
         'id' => (int)$request['id'],
         'status' => (string)$request['status'],
@@ -101,6 +172,6 @@ try {
         'refresh' => $refresh,
         'items' => $items,
     ]);
-} catch (Throwable $e) {
-    fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
+} catch (Throwable $error) {
+    fed_json_response(['ok' => false, 'error' => $error->getMessage()], 500);
 }

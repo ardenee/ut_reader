@@ -20,38 +20,14 @@ use UnrealDb\Catalog\Presentation\Ui\Component\TextField;
 
 /**
  * Backward-compatible facade for the server-rendered catalog design system.
- *
- * New component implementations live in Presentation/Ui/Component so each
- * primitive can evolve and be tested independently. Existing page controllers
- * may continue using CatalogUi while migration remains incremental.
  */
 final class CatalogUi
 {
     /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
     public static function pageHeader(string $title, string $description = '', array $actions = []): string
     {
-        $actions = self::federationPageActions($actions);
         $actions = self::gameContentSwitchActions($actions);
         return PageHeader::render($title, $description, $actions) . self::identityScriptTag();
-    }
-
-    /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
-    private static function federationPageActions(array $actions): array
-    {
-        $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
-        if (!str_contains($requestPath, '/catalog/federation/') || array_is_list($actions)) {
-            return $actions;
-        }
-
-        // Federation pages historically supplied their own action arrays, which
-        // allowed the page-header menu to drift from the global Federation menu.
-        // Keep the core child dependency workflow reachable from every federation
-        // page while preserving any page-specific action labels already supplied.
-        return $actions + [
-            'Generate Missing Dependency Request' => 'request-generate.php',
-            'Request Status' => 'request-status.php',
-            'Approved Dependency Downloads' => 'approved-downloads.php',
-        ];
     }
 
     private static function identityScriptTag(): string
@@ -148,13 +124,6 @@ final class CatalogUi
         return Badge::render($label, $tone);
     }
 
-    /**
-     * Render the canonical Unreal package identity in Epic-first order.
-     *
-     * GUID is the primary package identity. MD5 and SHA are secondary content
-     * hashes. Every value is kept on one line and each identity is placed on its
-     * own line so table columns remain readable and consistent.
-     */
     public static function identity(string $guid = '', string $md5 = '', string $sha = ''): string
     {
         $style = 'display:inline-flex;flex-direction:column;align-items:flex-start;white-space:nowrap!important;overflow-wrap:normal!important;word-break:normal!important;';

@@ -23,25 +23,12 @@
         var current = new URL(window.location.href);
         var links = [
             ['Overview', 'federation/admin.php'],
+            ['Connections', 'federation/connections.php'],
+            ['Inventories', 'federation/inventories.php'],
+            ['File Requests', 'federation/requests.php'],
+            ['Transfers', 'federation/queue.php'],
             ['Settings', 'federation/settings.php'],
-            ['Connections', 'federation/peers.php'],
-            ['Parents', 'federation/peers.php?role=parent'],
-            ['Join a Parent', 'federation/join-main-parent.php'],
-            ['Children', 'federation/peers.php?role=child'],
-            ['Incoming Child Join Requests', 'federation/join-requests.php'],
-            ['Missing Files', 'federation/missing-files.php'],
-            ['Requests', 'federation/request-center.php'],
-            ['Incoming File Requests', 'federation/requests.php'],
-            ['Outgoing File Requests', 'federation/request-status.php'],
-            ['Approved Downloads', 'federation/approved-downloads.php'],
-            ['Child Inventories', 'federation/peer-inventory.php'],
-            ['Parent Pull', 'federation/parent-pull.php'],
-            ['Transfer Queue', 'federation/queue.php'],
-            ['Run Worker', 'federation/worker-run.php'],
-            ['Conflicts', 'federation/conflicts.php'],
-            ['Maintenance', 'federation/maintenance.php'],
-            ['Logs', 'federation/logs.php'],
-            ['Documentation', 'federation/docs.php']
+            ['Diagnostics', 'federation/diagnostics.php']
         ];
 
         menu.replaceChildren();
@@ -58,5 +45,8 @@
         });
     }
 
-    document.addEventListener('DOMContentLoaded', replaceFederationMenu);
+    document.addEventListener('DOMContentLoaded', function () {
+        replaceFederationMenu();
+        window.setTimeout(replaceFederationMenu, 0);
+    });
 }());

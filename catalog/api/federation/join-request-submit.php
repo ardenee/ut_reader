@@ -58,19 +58,51 @@ try {
         throw $rateLimitError;
     }
 
-    if (catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE peer_site_id=? LIMIT 1', [$siteId])) {
-        fed_json_response(['ok' => true, 'status' => 'already_paired', 'message' => 'This site ID is already known to the parent.']);
+    if (catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE peer_site_id=? AND peer_role="child" AND is_active=1 LIMIT 1', [$siteId])) {
+        fed_json_response(['ok' => false, 'error' => 'This site is already paired as a child. Remove the existing child connection before pairing it again.'], 409);
     }
-    $existing = catalog_one($db, 'SELECT id,status FROM ue_federation_join_requests WHERE site_id=? AND status IN ("pending","approved") ORDER BY id DESC LIMIT 1', [$siteId]);
+
+    $tokenHash = hash('sha256', $requestToken);
+    $existing = catalog_one(
+        $db,
+        'SELECT id,status FROM ue_federation_join_requests WHERE site_id=? AND status IN ("pending","approved") ORDER BY id DESC LIMIT 1',
+        [$siteId]
+    );
     if ($existing) {
-        fed_json_response(['ok' => true, 'request_id' => (int)$existing['id'], 'status' => (string)$existing['status'], 'message' => 'Existing active join request found.']);
+        $status = (string)$existing['status'];
+        $db->prepare(
+            'UPDATE ue_federation_join_requests
+             SET site_name=?,site_url=?,site_fingerprint=?,contact_name=?,contact_email=?,notes=?,
+                 request_token_hash=?,claim_token_hash=CASE WHEN status="approved" THEN ? ELSE NULL END,
+                 updated_at=NOW()
+             WHERE id=?'
+        )->execute([
+            $siteName,
+            $siteUrl,
+            $fingerprint,
+            $contactName ?: null,
+            $contactEmail ?: null,
+            $notes ?: null,
+            $tokenHash,
+            $tokenHash,
+            (int)$existing['id'],
+        ]);
+        fed_log($db, null, null, 'INFO', 'JOIN_REQUEST_API_REFRESHED', 'Refreshed active join request #' . (int)$existing['id'] . ' for ' . $siteName . '.');
+        fed_json_response([
+            'ok' => true,
+            'request_id' => (int)$existing['id'],
+            'status' => $status,
+            'message' => $status === 'approved'
+                ? 'Existing approved join request refreshed. Check status to complete pairing.'
+                : 'Existing pending join request refreshed.',
+        ]);
     }
 
     $stmt = $db->prepare('INSERT INTO ue_federation_join_requests(status,requested_role,site_name,site_url,site_id,site_fingerprint,contact_name,contact_email,notes,request_token_hash) VALUES("pending","child",?,?,?,?,?,?,?,?)');
-    $stmt->execute([$siteName, $siteUrl, $siteId, $fingerprint, $contactName ?: null, $contactEmail ?: null, $notes ?: null, hash('sha256', $requestToken)]);
+    $stmt->execute([$siteName, $siteUrl, $siteId, $fingerprint, $contactName ?: null, $contactEmail ?: null, $notes ?: null, $tokenHash]);
     $id = (int)$db->lastInsertId();
     fed_log($db, null, null, 'INFO', 'JOIN_REQUEST_API_SUBMITTED', 'Auto join request #' . $id . ' from ' . $siteName . ' / ' . $siteUrl);
-    fed_json_response(['ok' => true, 'request_id' => $id, 'status' => 'pending', 'message' => 'Join request submitted. Waiting for parent admin approval.']);
+    fed_json_response(['ok' => true, 'request_id' => $id, 'status' => 'pending', 'message' => 'Join request submitted. Waiting for parent administrator approval.']);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     error_log('[UnrealDB federation join][' . $requestId . '] ' . $error->getMessage());
