@@ -90,7 +90,7 @@ try {
     }
 
     catalog_head('Background Jobs');
-    echo '<style>#background-jobs-app .job-status + .muted.small{display:none}.job-queue-picker{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}.job-queue-picker select{min-width:320px}</style>';
+    echo '<style>#background-jobs-app .job-status + .muted.small{display:none}.job-queue-picker{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}.job-queue-picker select{min-width:320px}.job-running-for{white-space:nowrap}</style>';
     catalog_page_header(
         'Background Jobs',
         'View and control jobs in queue ' . $queueName . '. Upload Bucket redirect decompression uses its own queue.',
@@ -122,7 +122,7 @@ try {
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue controls</h2>';
-    echo '<p class="muted">Start next launches a detached CLI worker for one job. Start queued launches a detached worker that drains this queue and exits. The worker continues after this page or browser is closed.</p>';
+    echo '<p class="muted">Start next launches a detached CLI worker for one job. Start queued launches a detached worker that drains this queue and exits. The worker continues after this page or browser is closed. Running jobs are never stopped automatically; use Stop job when a job is clearly stuck.</p>';
     echo '</div></div><div class="ui-section__body">';
     echo '<div id="background-jobs-app" '
         . 'data-queue="' . catalog_h($queueName) . '" '
@@ -170,13 +170,16 @@ try {
     echo '<p id="jobs-selection-message" class="muted small" aria-live="polite">No jobs selected.</p>';
     echo '<div class="table-wrap"><table><thead><tr>'
         . '<th class="job-select-column"><input id="jobs-select-all" type="checkbox" aria-label="Select all terminal jobs shown"></th>'
-        . '<th>ID</th><th>Status</th><th>Type</th><th>File / target</th><th>Progress</th><th>Attempts</th><th>Created</th><th>Error</th><th>Actions</th>'
-        . '</tr></thead><tbody id="jobs-table-body"><tr><td colspan="10" class="muted">Loading...</td></tr></tbody></table></div>';
+        . '<th>ID</th><th>Status</th><th>Type</th><th>File / target</th><th>Progress</th><th data-running-for-column="1">Running for</th><th>Attempts</th><th>Created</th><th>Error</th><th>Actions</th>'
+        . '</tr></thead><tbody id="jobs-table-body"><tr><td colspan="11" class="muted">Loading...</td></tr></tbody></table></div>';
     echo '</div></div></section>';
 
     $jobsScript = __DIR__ . '/assets/background-jobs.js';
     $jobsScriptVersion = is_file($jobsScript) ? (string)filemtime($jobsScript) : '1';
     echo '<script src="assets/background-jobs.js?v=' . catalog_h($jobsScriptVersion) . '"></script>';
+    $runningScript = __DIR__ . '/assets/background-jobs-running-controls.js';
+    $runningScriptVersion = is_file($runningScript) ? (string)filemtime($runningScript) : '1';
+    echo '<script src="assets/background-jobs-running-controls.js?v=' . catalog_h($runningScriptVersion) . '"></script>';
     $staleScript = __DIR__ . '/assets/background-jobs-stale-worker.js';
     $staleScriptVersion = is_file($staleScript) ? (string)filemtime($staleScript) : '1';
     echo '<script src="assets/background-jobs-stale-worker.js?v=' . catalog_h($staleScriptVersion) . '"></script>';
