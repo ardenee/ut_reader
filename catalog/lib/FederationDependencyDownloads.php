@@ -101,9 +101,8 @@ function federation_cache_approved_parent_file(PDO $db, int $peerId, array $item
 
 /**
  * Poll every active parent and queue only approved files that still satisfy a
- * local missing dependency. This includes official base-game files only through
- * the explicit missing-dependency exception. Arbitrary parent files are never
- * queued here.
+ * local missing dependency and remain visible under the parent base-game policy.
+ * Arbitrary or policy-excluded parent files are never queued here.
  *
  * @return array<string,mixed>
  */
@@ -125,7 +124,7 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
 
     $queued = 0;
     $approvedSeen = 0;
-    $baseGameDependencySeen = 0;
+    $baseGameExcluded = 0;
     $notNeeded = 0;
     $alreadyLocal = 0;
     $duplicates = 0;
@@ -152,6 +151,7 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
             if (is_array($status['policy'] ?? null)) {
                 federation_cache_parent_base_game_policy($db, (int)$parent['id'], $status['policy']);
             }
+            $ignoreBaseGame = federation_ignore_base_game_files($db, $parent);
 
             $parentQueued = 0;
             foreach (($status['items'] ?? []) as $item) {
@@ -159,8 +159,9 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
                     continue;
                 }
                 $approvedSeen++;
-                if (!empty($item['is_base_game'])) {
-                    $baseGameDependencySeen++;
+                if ($ignoreBaseGame && !empty($item['is_base_game'])) {
+                    $baseGameExcluded++;
+                    continue;
                 }
 
                 $requiredPackage = trim((string)($item['required_package'] ?? ''));
@@ -227,14 +228,14 @@ function federation_queue_approved_dependency_downloads(PDO $db): array
     }
 
     if ($queued > 0) {
-        fed_log($db, null, null, 'INFO', 'DEPENDENCY_DOWNLOADS_AUTO_QUEUED', 'Queued ' . $queued . ' approved dependency download(s), including eligible base-game dependency exceptions.');
+        fed_log($db, null, null, 'INFO', 'DEPENDENCY_DOWNLOADS_AUTO_QUEUED', 'Queued ' . $queued . ' approved dependency download(s) after applying the base-game policy.');
     }
 
     return [
         'ok' => true,
         'queued' => $queued,
         'approved_seen' => $approvedSeen,
-        'base_game_dependency_seen' => $baseGameDependencySeen,
+        'base_game_excluded' => $baseGameExcluded,
         'not_needed' => $notNeeded,
         'already_local' => $alreadyLocal,
         'duplicates' => $duplicates,
