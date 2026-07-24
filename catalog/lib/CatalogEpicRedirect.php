@@ -10,11 +10,13 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogRedirectArchiveStream;
  * Strict, extension-aware Unreal redirect decompression.
  *
  * .uz  (UE1): 1234 header + embedded filename + Epic FCodec chain.
- * .uz2 (UE2): repeated LE compressed-size/uncompressed-size/zlib records.
+ * .uz2 (UE2): repeated LE compressed-size/uncompressed-size records containing
+ *              exact zlib data, with the equal-size verbatim record path.
  * .uz3 (UE3): LE 5678 tag + LE total output size + one zlib stream.
  *
- * No gzip, raw-deflate, stored-record, byte-order, or record-order fallbacks are
- * used here. A wrapper must match the format selected by its own extension.
+ * No gzip, raw-deflate, byte-order, record-order, concatenated-stream, or
+ * declared-total compatibility wrappers are used here. A wrapper must match the
+ * format selected by its own extension.
  *
  * @return array{
  *   path:string,
@@ -54,6 +56,10 @@ function catalog_epic_redirect_decompress_to_temp(
         );
     }
 
+    // UE1 and UE3 are decoded as complete in-memory payloads. Keep their limit
+    // inside a signed 32-bit file-size range so intermediate length arithmetic
+    // cannot overflow when Upload Bucket passes PHP_INT_MAX.
+    $limit = min($limit, 2147483647);
     $archive = @file_get_contents($sourcePath);
     if (!is_string($archive) || $archive === '') {
         throw new RuntimeException('Could not read redirect compressed file: ' . basename($sourceName));
@@ -118,7 +124,11 @@ function catalog_epic_uz_decode(string $archive, int $limit): ?array
     }
 
     try {
-        $stageLimit = $limit + intdiv($limit, 4) + 16 * 1024 * 1024;
+        $quarter = intdiv($limit, 4);
+        $headroom = 16 * 1024 * 1024;
+        $stageLimit = $limit > PHP_INT_MAX - $quarter - $headroom
+            ? PHP_INT_MAX
+            : $limit + $quarter + $headroom;
         $huffman = catalog_legacy_uz_decode_huffman(substr($archive, $header['offset']), $stageLimit);
         $mtf = catalog_legacy_uz_decode_mtf($huffman);
         unset($huffman);
