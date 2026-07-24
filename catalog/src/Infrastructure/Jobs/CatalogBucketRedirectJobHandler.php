@@ -12,14 +12,15 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
 /**
- * CLI-only finalizer for Upload Bucket redirect wrappers.
+ * CLI-only finalizer for every Upload Bucket redirect wrapper.
  *
- * The web request stores chunks and queues this job. All decompression then goes
- * through CatalogRedirectArchiveProcessor under the configured worker PHP.
+ * Web requests only place the wrapper in durable storage and enqueue this job.
+ * Format detection and decompression always go through the shared processor.
  */
 final class CatalogBucketRedirectJobHandler implements JobHandler
 {
@@ -40,17 +41,27 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
         $payload = $job->payload;
+        $sourceKind = trim((string)($payload['source_kind'] ?? 'chunk-upload'));
         $uploadId = trim((string)($payload['upload_id'] ?? ''));
+        $stagedPath = trim((string)($payload['staged_path'] ?? ''));
         $originalName = $this->requiredName((string)($payload['original_name'] ?? ''));
         $relativePath = $this->cleanRelativePath((string)($payload['source_relative_path'] ?? $originalName));
         $userId = (int)($payload['user_id'] ?? 0);
-        if (preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1 || $userId < 1) {
+        if ($userId < 1) {
             throw new \InvalidArgumentException('Bucket redirect job payload is incomplete.');
         }
+        if ($sourceKind === 'chunk-upload' && preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
+            throw new \InvalidArgumentException('Bucket redirect chunk identifier is invalid.');
+        }
+        if ($sourceKind === 'incoming-file' && $stagedPath === '') {
+            throw new \InvalidArgumentException('Bucket redirect staged path is missing.');
+        }
+        if (!in_array($sourceKind, ['chunk-upload', 'incoming-file'], true)) {
+            throw new \InvalidArgumentException('Bucket redirect source kind is invalid.');
+        }
 
-        $store = $this->chunkStore();
         $decodedPath = '';
-        $cleanupUpload = false;
+        $cleanupSource = false;
 
         try {
             $context->checkpoint([
@@ -60,8 +71,7 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
                 'percent' => 2,
                 'message' => 'Resolving Upload Bucket redirect ' . basename($originalName),
             ]);
-            $resolved = $store->resolveCompletedFile($uploadId, $userId);
-            $sourcePath = (string)$resolved['path'];
+            $sourcePath = $this->resolveSource($sourceKind, $uploadId, $stagedPath, $userId);
 
             $processor = new CatalogRedirectArchiveProcessor($this->config);
             $context->checkpoint([
@@ -118,7 +128,7 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
                 $this->replaceRelativeFilename($relativePath, $workingName)
             );
             $decodedPath = '';
-            $cleanupUpload = true;
+            $cleanupSource = true;
 
             $status = (string)($staged['status'] ?? 'stored');
             $message = $status === 'duplicate'
@@ -156,7 +166,7 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
         } catch (PDOException $error) {
             throw $error;
         } catch (Throwable $error) {
-            $cleanupUpload = true;
+            $cleanupSource = true;
             $message = $this->shortError($error);
             $context->checkpoint([
                 'stage' => 'failed',
@@ -178,13 +188,30 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
             if ($decodedPath !== '' && is_file($decodedPath)) {
                 @unlink($decodedPath);
             }
-            if ($cleanupUpload) {
-                try {
-                    $store->cancel($userId, $uploadId);
-                } catch (Throwable $cleanupError) {
-                    error_log('[UnrealDB bucket redirect cleanup] ' . $cleanupError->getMessage());
-                }
+            if ($cleanupSource) {
+                $this->cleanupSource($sourceKind, $uploadId, $stagedPath, $userId);
             }
+        }
+    }
+
+    private function resolveSource(string $sourceKind, string $uploadId, string $stagedPath, int $userId): string
+    {
+        if ($sourceKind === 'chunk-upload') {
+            return (string)$this->chunkStore()->resolveCompletedFile($uploadId, $userId)['path'];
+        }
+        return (new CatalogIncomingFileStore($this->config))->resolve($stagedPath);
+    }
+
+    private function cleanupSource(string $sourceKind, string $uploadId, string $stagedPath, int $userId): void
+    {
+        try {
+            if ($sourceKind === 'chunk-upload') {
+                $this->chunkStore()->cancel($userId, $uploadId);
+            } else {
+                (new CatalogIncomingFileStore($this->config))->remove($stagedPath);
+            }
+        } catch (Throwable $cleanupError) {
+            error_log('[UnrealDB bucket redirect cleanup] ' . $cleanupError->getMessage());
         }
     }
 
