@@ -39,8 +39,9 @@ bucket_policy_expect(
 );
 bucket_policy_expect(
     str_contains($content['page'], 'enqueueStagedRedirect(')
-        && str_contains($content['page'], 'CatalogDetachedWorker'),
-    'Whole-file fallback does not stage and queue redirects for the CLI worker.'
+        && str_contains($content['page'], 'CatalogDetachedWorker')
+        && str_contains($content['page'], '$queue->queueName()'),
+    'Whole-file fallback does not stage and queue redirects on the dedicated CLI worker queue.'
 );
 bucket_policy_expect(
     str_contains($content['page'], 'Every file uses resumable chunks')
@@ -62,8 +63,9 @@ bucket_policy_expect(
 bucket_policy_expect(
     str_contains($content['endpoint'], 'CatalogBucketUploadQueue')
         && str_contains($content['endpoint'], 'enqueueRedirect(')
+        && str_contains($content['endpoint'], '$bucketQueue->queueName()')
         && str_contains($content['endpoint'], 'CatalogDetachedWorker'),
-    'Chunk endpoint does not queue redirect finalization to the detached worker.'
+    'Chunk endpoint does not queue redirect finalization on the dedicated detached worker queue.'
 );
 bucket_policy_expect(str_contains($content['endpoint'], "'status' => 'queued'"), 'Redirect upload does not report its queued state.');
 
@@ -77,6 +79,11 @@ bucket_policy_expect(
     str_contains($content['handler'], 'new CatalogRedirectArchiveProcessor(')
         && str_contains($content['import_handler'], 'new CatalogRedirectArchiveProcessor('),
     'Bucket and profiled import jobs do not use the same redirect processor.'
+);
+bucket_policy_expect(
+    !str_contains($content['handler'], '->cancel($userId, $uploadId)')
+        && !str_contains($content['handler'], '->delete($stagedPath)'),
+    'Bucket redirect handler removes its durable source before job completion is persisted.'
 );
 bucket_policy_expect(
     str_contains($content['stream'], 'catalog_redirect_archive_inflate_epic_zlib(')
@@ -93,9 +100,10 @@ bucket_policy_expect(
     'Bucket redirect job type is not fully registered with the worker.'
 );
 bucket_policy_expect(
-    str_contains($content['queue'], "'source_kind' => 'chunk-upload'")
+    str_contains($content['queue'], "return \$base . ':bucket-redirects';")
+        && str_contains($content['queue'], "'source_kind' => 'chunk-upload'")
         && str_contains($content['queue'], "'source_kind' => 'incoming-file'"),
-    'Chunked and fallback bucket uploads do not share the same worker job.'
+    'Chunked and fallback bucket uploads do not share the dedicated worker queue and job.'
 );
 
 bucket_policy_expect(str_contains($content['page'], 'function upload_bucket_stats'), 'Upload bucket physical-folder statistics are missing.');
