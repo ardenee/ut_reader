@@ -13,9 +13,10 @@
     const overallLabel = document.getElementById('bucket-overall-progress-label');
     const overallCount = document.getElementById('bucket-overall-progress-count');
     const log = document.getElementById('bucket-log');
-    if (!form || !fileInput || !progressBox || !window.XMLHttpRequest) return;
+    if (!form || !fileInput || !progressBox || !window.XMLHttpRequest || !window.fetch) return;
 
     const chunkUrl = progressBox.dataset.chunkUrl || 'api/v1/upload-bucket-chunk.php';
+    const statusUrl = progressBox.dataset.statusUrl || 'api/v1/job-status.php';
     const chunkCsrf = progressBox.dataset.chunkCsrf || '';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
     let batchTotalBytes = 1;
@@ -48,15 +49,15 @@
         return fallback;
     }
 
-    function parseJsonResponse(text, status, contentType) {
+    function parseJsonResponse(text, status, contentType, label) {
         try {
             return JSON.parse(text || '{}');
         } catch (error) {
             const looksHtml = /^\s*(?:<!doctype\s+html|<html\b)/i.test(text || '') || /text\/html/i.test(contentType || '');
             if (looksHtml) {
-                throw new Error('Chunk request returned an HTML error page instead of JSON' + (status ? ' (HTTP ' + status + ')' : '') + '. Check the web-server and PHP logs.');
+                throw new Error(label + ' returned an HTML error page instead of JSON' + (status ? ' (HTTP ' + status + ')' : '') + '. Check the web-server and PHP logs.');
             }
-            throw new Error('Chunk request returned invalid JSON' + (status ? ' (HTTP ' + status + ')' : '') + '.');
+            throw new Error(label + ' returned invalid JSON' + (status ? ' (HTTP ' + status + ')' : '') + '.');
         }
     }
 
@@ -71,9 +72,10 @@
         badge.textContent = status.replace(/_/g, ' ');
         row.appendChild(badge);
 
-        const file = document.createElement('span');
+        const file = entry.file_id ? document.createElement('a') : document.createElement('span');
         file.className = 'bucket-result-file';
         file.textContent = String(entry.file || '');
+        if (entry.file_id) file.href = 'file-examine.php?id=' + encodeURIComponent(entry.file_id);
         row.appendChild(file);
 
         const message = document.createElement('span');
@@ -103,7 +105,7 @@
             xhr.onload = function () {
                 let body;
                 try {
-                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'));
+                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Chunk request');
                 } catch (error) {
                     reject(error);
                     return;
@@ -136,6 +138,48 @@
             }
         }
         throw lastError || new Error('Chunk upload failed.');
+    }
+
+    async function readJob(jobId) {
+        const params = new URLSearchParams({job_id: String(jobId), event_offset: '0', event_limit: '1'});
+        const response = await fetch(statusUrl + '?' + params.toString(), {cache: 'no-store', credentials: 'same-origin'});
+        const text = await response.text();
+        const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Job status request');
+        const jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
+        if (!response.ok || !jobs.length) throw new Error(responseError(body, 'Redirect job status is unavailable.'));
+        return jobs[0];
+    }
+
+    async function waitForJob(jobId, fileName) {
+        while (true) {
+            const job = await readJob(jobId);
+            const progress = job.progress || {};
+            const percent = Math.max(0, Math.min(100, parseInt(progress.percent || (job.status === 'completed' ? 100 : 0), 10)));
+            currentBar.value = percent;
+            currentSpeed.textContent = '';
+            currentLabel.textContent = 'CLI redirect job #' + jobId + ' for ' + fileName + ' (' + percent + '%) — ' + (progress.message || job.status);
+
+            if (['completed', 'failed', 'dead_letter', 'cancelled'].includes(job.status)) {
+                if (job.status === 'completed') {
+                    const result = job.result || {};
+                    addLog({
+                        status: result.status || 'completed',
+                        file: result.original_name || fileName,
+                        file_id: result.file_id || 0,
+                        message: result.message || 'Redirect processing completed.',
+                        file_size_text: result.bytes ? fmtBytes(result.bytes) : ''
+                    });
+                    return String(result.status || 'completed').toLowerCase();
+                }
+                addLog({
+                    status: job.status,
+                    file: fileName,
+                    message: job.last_error || progress.message || 'Redirect processing did not complete.'
+                });
+                return 'failed';
+            }
+            await new Promise(function (resolve) { window.setTimeout(resolve, 750); });
+        }
     }
 
     async function chunkedUpload(file, index, total) {
@@ -207,10 +251,17 @@
         const completed = await requestForm(completeData);
         if (Array.isArray(completed.messages) && completed.messages.length) {
             completed.messages.forEach(addLog);
-            return String(completed.messages[0].status || 'bucketed').toLowerCase();
         }
-        addLog({status: 'bucketed', file: name, message: 'Stored and indexed in upload bucket.', file_size_text: fmtBytes(file.size)});
-        return 'bucketed';
+        const jobId = Math.max(0, parseInt(completed.job_id || 0, 10));
+        if (jobId > 0) {
+            return await waitForJob(jobId, name);
+        }
+        if (!Array.isArray(completed.messages) || !completed.messages.length) {
+            addLog({status: 'bucketed', file: name, message: 'Stored and indexed in upload bucket.', file_size_text: fmtBytes(file.size)});
+        }
+        return completed.messages && completed.messages[0]
+            ? String(completed.messages[0].status || 'bucketed').toLowerCase()
+            : 'bucketed';
     }
 
     form.addEventListener('submit', async function (event) {
@@ -244,7 +295,7 @@
             }
 
             if (status === 'duplicate') counts.duplicate++;
-            else if (status === 'failed') counts.failed++;
+            else if (['failed', 'dead_letter', 'cancelled'].includes(status)) counts.failed++;
             else counts.stored++;
             processedBytes += Math.max(0, Number(file.size || 0));
             processedFiles++;
