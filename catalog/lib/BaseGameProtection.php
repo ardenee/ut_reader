@@ -60,6 +60,41 @@ function base_game_guid_is_usable(string $guid): bool
     return $guid !== '' && $guid !== '00000000-00000000-00000000-00000000';
 }
 
+/**
+ * SQL EXISTS expression matching a package name against the official base-game
+ * package list. Names can come from the stored package name, original filename,
+ * or the currently linked source file. Matching is scoped to a game when given.
+ */
+function base_game_package_exists_sql(string $packageSql, ?string $gameIdSql = null): string
+{
+    $baseStem = '(CASE WHEN LOCATE(".",COALESCE(base_dep_bg.original_name,""))>0 '
+        . 'THEN LEFT(base_dep_bg.original_name,CHAR_LENGTH(base_dep_bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(base_dep_bg.original_name,".",-1))-1) '
+        . 'ELSE COALESCE(base_dep_bg.original_name,"") END)';
+    $sourceStem = '(CASE WHEN LOCATE(".",COALESCE(base_dep_src.original_name,""))>0 '
+        . 'THEN LEFT(base_dep_src.original_name,CHAR_LENGTH(base_dep_src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(base_dep_src.original_name,".",-1))-1) '
+        . 'ELSE COALESCE(base_dep_src.original_name,"") END)';
+    $gameSql = $gameIdSql !== null && trim($gameIdSql) !== ''
+        ? ' AND base_dep_bg.game_id=' . $gameIdSql
+        : '';
+
+    return 'EXISTS (
+        SELECT 1
+        FROM ue_base_game_files base_dep_bg
+        LEFT JOIN ue_files base_dep_src ON base_dep_src.id=base_dep_bg.source_file_id
+        WHERE (
+            LOWER(TRIM(COALESCE(base_dep_bg.package_name,"")))=LOWER(TRIM(' . $packageSql . '))
+            OR LOWER(TRIM(' . $baseStem . '))=LOWER(TRIM(' . $packageSql . '))
+            OR LOWER(TRIM(COALESCE(base_dep_src.package_name,"")))=LOWER(TRIM(' . $packageSql . '))
+            OR LOWER(TRIM(' . $sourceStem . '))=LOWER(TRIM(' . $packageSql . '))
+        )' . $gameSql . '
+    )';
+}
+
+function base_game_dependency_is_official_sql(string $fileAlias = 'f', string $dependencyAlias = 'd'): string
+{
+    return base_game_package_exists_sql($dependencyAlias . '.required_package', $fileAlias . '.game_id');
+}
+
 function base_game_lookup(PDO $db, int $gameId, string $packageGuid): ?array
 {
     base_game_ensure($db);
