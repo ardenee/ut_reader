@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
-require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchivePayload.php';
+require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
 require_once dirname(__DIR__, 2) . '/lib/UnverifiedFileManager.php';
 require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
@@ -192,14 +192,7 @@ try {
 
         try {
             if (catalog_redirect_archive_is_supported_filename($submittedName)) {
-                // UZ/UZ2/UZ3 files have several valid wrappers in circulation.
-                // Use the signed-format decoder first, then the package-compatible
-                // fallback decoders instead of forcing every .uz2 through only the
-                // strict repeated 32 KiB Epic record layout.
-                $decompressed = catalog_redirect_archive_decompress_payload_to_temp($workingPath, $submittedName);
-                if (empty($decompressed['is_unreal_package'])) {
-                    throw new RuntimeException('Redirect archive did not contain an Unreal package: ' . basename($submittedName));
-                }
+                $decompressed = catalog_redirect_archive_decompress_to_temp($workingPath, $submittedName);
                 $workingPath = (string)$decompressed['path'];
                 $workingName = bucket_chunk_clean_name((string)$decompressed['filename']);
             }
@@ -211,7 +204,7 @@ try {
 
             $cleanNote = $submittedName !== $workingName ? ' Original browser filename was: ' . $submittedName . '.' : '';
             $redirectNote = is_array($decompressed)
-                ? ' Redirect archive .' . $decompressed['source_extension'] . ' was decompressed before storage; compressed wrapper was not retained. Decoder: ' . $decompressed['decoder'] . '.'
+                ? ' Redirect archive .' . $decompressed['source_extension'] . ' was decompressed before storage; compressed wrapper was not retained.'
                 : '';
             $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s') . '. No game assignment has been made yet.' . $redirectNote . $cleanNote;
             $staged = (new LegacyUnverifiedFileStager($application->db, $application->config))->stageBucketUpload(
@@ -234,7 +227,7 @@ try {
                 ];
             } else {
                 $text = is_array($decompressed)
-                    ? 'Decompressed redirect archive into upload bucket and indexed as unverified using ' . $decompressed['decoder']
+                    ? 'Decompressed redirect archive into upload bucket and indexed as unverified'
                     : 'Stored in upload bucket and indexed as unverified';
                 if ($staged['parse_error'] !== null) {
                     $text .= '; package tables could not be read: ' . bucket_chunk_short_error(new RuntimeException((string)$staged['parse_error']));
