@@ -18,6 +18,7 @@ $paths = [
     'page' => 'upload-bucket.php',
     'endpoint' => 'api/v1/upload-bucket-chunk.php',
     'javascript' => 'assets/upload-bucket.js',
+    'library' => 'lib/CatalogRedirectArchive.php',
     'processor' => 'src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php',
     'handler' => 'src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
     'import_handler' => 'src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
@@ -54,6 +55,12 @@ bucket_policy_expect(str_contains($content['javascript'], 'file.slice(start, end
 bucket_policy_expect(str_contains($content['javascript'], 'received_chunks'), 'Browser client cannot resume chunks.');
 bucket_policy_expect(!str_contains($content['javascript'], 'wholeFileUpload('), 'Browser client still routes redirect wrappers through whole-file POST.');
 bucket_policy_expect(!str_contains($content['javascript'], 'isRedirectArchive('), 'Browser client still selects an upload transport by redirect extension.');
+bucket_policy_expect(
+    str_contains($content['javascript'], 'async function waitForJob')
+        && str_contains($content['javascript'], "'api/v1/job-status.php'")
+        && str_contains($content['javascript'], 'return await waitForJob(jobId, name);'),
+    'Upload Bucket does not report the final detached-worker redirect result.'
+);
 
 bucket_policy_expect(
     !str_contains($content['endpoint'], 'catalog_epic_redirect_decompress_to_temp(')
@@ -74,6 +81,11 @@ bucket_policy_expect(
         && str_contains($content['processor'], 'CatalogRedirectArchiveStream::decompressUz2(')
         && str_contains($content['processor'], 'catalog_redirect_archive_decompress_payload_to_temp('),
     'Shared redirect processor does not own all format dispatch.'
+);
+bucket_policy_expect(
+    str_contains($content['library'], 'new \\UnrealDb\\Catalog\\Infrastructure\\Redirect\\CatalogRedirectArchiveProcessor(')
+        && !str_contains($content['library'], '$data = @file_get_contents($sourcePath);'),
+    'Legacy redirect helper still owns a separate decompression implementation.'
 );
 bucket_policy_expect(
     str_contains($content['handler'], 'new CatalogRedirectArchiveProcessor(')
