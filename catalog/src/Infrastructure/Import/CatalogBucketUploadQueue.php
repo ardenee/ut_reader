@@ -5,7 +5,6 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /** Queues every Upload Bucket redirect wrapper for the detached CLI worker. */
@@ -133,11 +132,10 @@ final class CatalogBucketUploadQueue
             3
         );
 
-        // A redirect decoder can become trapped inside a PHP/zlib call where no
-        // cooperative timeout or heartbeat can run. Do not allow that one process
-        // to hold the single-concurrency redirect queue indefinitely.
-        $this->recoverStalledRedirectWorker($queueName, $userId);
-
+        // Do not infer failure from elapsed time or a quiet progress stage. Large
+        // package hashing, duplicate checks and database indexing can legitimately
+        // run for a long time without emitting another checkpoint. Only an actual
+        // processing error or an explicit administrator cancellation may stop it.
         return [
             'job_id' => $jobId,
             'type' => JobType::PREPARE_BUCKET_REDIRECT,
@@ -158,54 +156,6 @@ final class CatalogBucketUploadQueue
             throw new \RuntimeException('Could not hash the completed redirect upload.');
         }
         return $hash;
-    }
-
-    private function recoverStalledRedirectWorker(string $queueName, int $userId): void
-    {
-        $queueConfig = is_array($this->config['queue'] ?? null) ? $this->config['queue'] : [];
-        $stallSeconds = max(30, min((int)($queueConfig['bucket_redirect_stall_seconds'] ?? 90), 3600));
-
-        try {
-            $statement = $this->db->prepare(
-                'SELECT id,created_at,leased_at,last_heartbeat_at,progress_updated_at,updated_at '
-                . 'FROM ue_background_jobs WHERE queue_name=? AND job_type=? AND status="running" '
-                . 'ORDER BY id LIMIT 1'
-            );
-            $statement->execute([$queueName, JobType::PREPARE_BUCKET_REDIRECT]);
-            $row = $statement->fetch(PDO::FETCH_ASSOC);
-            if (!is_array($row)) {
-                return;
-            }
-
-            $lastActivity = 0;
-            foreach (['last_heartbeat_at', 'progress_updated_at', 'updated_at', 'leased_at', 'created_at'] as $field) {
-                $timestamp = strtotime((string)($row[$field] ?? ''));
-                if ($timestamp !== false) {
-                    $lastActivity = max($lastActivity, $timestamp);
-                }
-            }
-            if ($lastActivity > 0 && $lastActivity >= time() - $stallSeconds) {
-                return;
-            }
-
-            $jobId = (int)($row['id'] ?? 0);
-            if ($jobId < 1) {
-                return;
-            }
-
-            $reason = 'Upload Bucket redirect job automatically stopped after '
-                . $stallSeconds . ' seconds without a worker heartbeat or progress update.';
-            $result = (new CatalogDetachedWorkerStop($this->db, $this->config))
-                ->stopJob($jobId, $userId, $reason);
-            error_log('[UnrealDB bucket redirect recovery] job #' . $jobId . ' ' . json_encode(
-                $result,
-                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-            ));
-        } catch (\Throwable $error) {
-            // Uploading the next durable file is more important than the guard.
-            // The administrator can still stop the worker from Background Jobs.
-            error_log('[UnrealDB bucket redirect recovery] ' . $error->getMessage());
-        }
     }
 
     private function requiredName(string $name): string
