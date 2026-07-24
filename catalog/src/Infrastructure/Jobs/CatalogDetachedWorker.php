@@ -113,12 +113,17 @@ final class CatalogDetachedWorker
 
         $paths = [
             $this->catalogRoot . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'catalog-worker-detached.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchive.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchivePayload.php',
             $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Application' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobWorker.php',
             $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Application' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobExecutionContext.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Import' . DIRECTORY_SEPARATOR . 'CatalogBucketUploadQueue.php',
             $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogJobWorkerFactory.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogBucketRedirectJobHandler.php',
             $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogNonBlockingImportJobHandler.php',
             $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogStagedImportJobHandler.php',
             $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchiveStream.php',
+            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Redirect' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchiveProcessor.php',
         ];
         $parts = [];
         foreach ($paths as $path) {
