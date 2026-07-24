@@ -62,7 +62,6 @@ function catalog_redirect_archive_output_limit(int $maxOutputBytes): int
             return $configuredLimit;
         }
     } catch (Throwable) {
-        // Library tests and isolated reader tools may not have a catalog config.
     }
 
     return 256 * 1024 * 1024;
@@ -135,13 +134,7 @@ function catalog_redirect_archive_inflate_epic_zlib(string $payload, int $limit,
     return ['data' => $decoded, 'consumed' => $consumed, 'encoding' => 'zlib'];
 }
 
-/**
- * Decode the exact UE2 redirect format implemented by Epic's
- * FFileManagerGeneric::Copy(FILECOPY_Decompress): repeated little-endian
- * [compressed DWORD][uncompressed DWORD][zlib payload] records.
- *
- * @return array{data:string,decoder:string,chunks:int,expected_bytes:int}|null
- */
+/** @return array{data:string,decoder:string,chunks:int,expected_bytes:int}|null */
 function catalog_redirect_archive_epic_uz2(string $data, int $limit): ?array
 {
     $position = 0;
@@ -409,7 +402,6 @@ function catalog_redirect_archive_decode_data(string $data, int $maxOutputBytes 
         }
     }
 
-    /* Other wrappers put the final uncompressed size before their members. */
     foreach (['le', 'be'] as $endian) {
         $expected = catalog_redirect_archive_read_u32($data, 0, $endian);
         if ($expected <= 0 || $expected > $limit) {
@@ -456,58 +448,16 @@ function catalog_redirect_archive_decode_data(string $data, int $maxOutputBytes 
     return null;
 }
 
-/** @return array{path:string,filename:string,bytes:int,compressed_bytes:int,source_extension:string,decoder:string,chunks:int,expected_bytes:int} */
+/**
+ * Compatibility adapter retained for existing scanners and indexers.
+ * All production format selection and decompression is owned by the shared processor.
+ *
+ * @return array{path:string,filename:string,bytes:int,compressed_bytes:int,source_extension:string,decoder:string,chunks:int,expected_bytes:int,is_unreal_package:bool}
+ */
 function catalog_redirect_archive_decompress_to_temp(string $sourcePath, string $sourceName, int $maxOutputBytes = 0): array
 {
-    if (!catalog_redirect_archive_is_supported_filename($sourceName)) {
-        throw new RuntimeException('Not an Unreal redirect compressed file: ' . basename($sourceName));
-    }
-    if (!is_file($sourcePath)) {
-        throw new RuntimeException('Redirect compressed source file is missing.');
-    }
-    $data = @file_get_contents($sourcePath);
-    if (!is_string($data) || $data === '') {
-        throw new RuntimeException('Could not read redirect compressed file: ' . basename($sourceName));
-    }
-
-    $sourceExtension = catalog_redirect_archive_extension($sourceName);
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
-    $decoded = $sourceExtension === 'uz2'
-        ? catalog_redirect_archive_epic_uz2($data, $limit)
-        : catalog_redirect_archive_decode_data($data, $limit);
-    if (!is_array($decoded) || !catalog_redirect_archive_has_package_tag((string)$decoded['data'])) {
-        throw new RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
-    }
-    $output = (string)$decoded['data'];
-    $outputBytes = strlen($output);
-    if ($outputBytes <= 0 || $outputBytes > $limit) {
-        throw new RuntimeException('Bad decompressed redirect package size: ' . catalog_bytes($outputBytes));
-    }
-
-    $outputName = catalog_redirect_archive_output_name($sourceName);
-    $embeddedName = trim((string)($decoded['embedded_filename'] ?? ''));
-    if ($embeddedName !== '') {
-        $embeddedName = catalog_clean_unreal_filename(basename(str_replace('\\', '/', $embeddedName)));
-        if ($embeddedName !== '') {
-            $outputName = $embeddedName;
-        }
-    }
-
-    $tmp = tempnam(sys_get_temp_dir(), 'ue_redirect_');
-    if ($tmp === false || @file_put_contents($tmp, $output) !== $outputBytes) {
-        if (is_string($tmp)) {
-            @unlink($tmp);
-        }
-        throw new RuntimeException('Could not write decompressed redirect package.');
-    }
-    return [
-        'path' => $tmp,
-        'filename' => $outputName,
-        'bytes' => $outputBytes,
-        'compressed_bytes' => strlen($data),
-        'source_extension' => $sourceExtension,
-        'decoder' => (string)$decoded['decoder'],
-        'chunks' => (int)$decoded['chunks'],
-        'expected_bytes' => (int)$decoded['expected_bytes'],
-    ];
+    return (new \UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor([
+        'max_redirect_output_bytes' => $limit,
+    ]))->decompressToTemp($sourcePath, $sourceName, null, true);
 }
