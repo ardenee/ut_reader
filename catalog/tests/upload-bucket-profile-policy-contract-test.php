@@ -63,7 +63,7 @@ bucket_policy_expect(str_contains($support, 'UNREALDB_REDIRECT_MAX_OUTPUT_BYTES'
 
 bucket_policy_expect(str_contains($epicRedirect, "if (\$extension === 'uz2')"), 'Strict dispatcher does not isolate UE2 UZ2.');
 bucket_policy_expect(str_contains($epicRedirect, 'CatalogRedirectArchiveStream::decompressUz2('), 'UZ2 does not use the exact streamed Epic record decoder.');
-bucket_policy_expect(str_contains($epicRedirect, "catalog_legacy_uz_decode(\$archive, \$limit, 1234)"), 'UE1 UZ does not require the 1234 Epic FCodec wrapper.');
+bucket_policy_expect(str_contains($epicRedirect, "catalog_legacy_uz_header(\$archive, 1234)"), 'UE1 UZ does not require the 1234 Epic FCodec wrapper.');
 bucket_policy_expect(str_contains($epicRedirect, "\$signature !== 5678"), 'UE3 UZ3 does not require the 5678 Epic tag.');
 bucket_policy_expect(str_contains($epicRedirect, "'decoder' => 'epic-uz3-zlib'"), 'UE3 UZ3 does not use the exact single-zlib decoder.');
 bucket_policy_expect(!str_contains($epicRedirect, 'ZLIB_ENCODING_GZIP'), 'Strict dispatcher includes a gzip fallback.');
