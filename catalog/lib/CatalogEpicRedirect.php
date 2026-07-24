@@ -60,7 +60,7 @@ function catalog_epic_redirect_decompress_to_temp(
     }
 
     if ($extension === 'uz') {
-        $decoded = catalog_legacy_uz_decode($archive, $limit, 1234);
+        $decoded = catalog_epic_uz_decode($archive, $limit);
         if (!is_array($decoded)) {
             throw new RuntimeException('Invalid Epic UE1 UZ 1234/FCodec archive: ' . basename($sourceName));
         }
@@ -107,6 +107,36 @@ function catalog_epic_redirect_decompress_to_temp(
         $result['wrapper_signature'] = (int)$decoded['wrapper_signature'];
     }
     return $result;
+}
+
+/** @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename:string,wrapper_signature:int}|null */
+function catalog_epic_uz_decode(string $archive, int $limit): ?array
+{
+    $header = catalog_legacy_uz_header($archive, 1234);
+    if ($header === null) {
+        return null;
+    }
+
+    try {
+        $stageLimit = $limit + intdiv($limit, 4) + 16 * 1024 * 1024;
+        $huffman = catalog_legacy_uz_decode_huffman(substr($archive, $header['offset']), $stageLimit);
+        $mtf = catalog_legacy_uz_decode_mtf($huffman);
+        unset($huffman);
+        $bwt = catalog_legacy_uz_decode_bwt($mtf, $stageLimit);
+        unset($mtf);
+        $output = catalog_legacy_uz_decode_rle($bwt['data'], $limit);
+    } catch (Throwable) {
+        return null;
+    }
+
+    return [
+        'data' => $output,
+        'decoder' => 'epic-uz-huffman+mtf+bwt+rle',
+        'chunks' => (int)$bwt['chunks'],
+        'expected_bytes' => strlen($output),
+        'embedded_filename' => (string)$header['filename'],
+        'wrapper_signature' => 1234,
+    ];
 }
 
 /** @return array{data:string,decoder:string,chunks:int,expected_bytes:int,wrapper_signature:int}|null */
