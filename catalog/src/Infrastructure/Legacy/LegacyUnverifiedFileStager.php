@@ -26,18 +26,65 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         ?int $uploadedBy = null,
         string $sourceRelativePath = ''
     ): array {
-        $stored = \uvf_store_bucket_upload($this->config, $temporaryPath, $originalName, $reason);
+        if (!is_file($temporaryPath)) {
+            throw new RuntimeException('Upload temporary file is missing.');
+        }
 
-        return $this->indexStored(
-            0,
-            (string)$stored['queue_name'],
-            (string)$stored['path'],
-            (string)$stored['original_name'],
-            $reason,
-            $uploadedBy,
-            $sourceRelativePath,
-            (int)$stored['size']
-        );
+        $size = (int)(filesize($temporaryPath) ?: 0);
+        $md5 = md5_file($temporaryPath);
+        if ($size <= 0 || !is_string($md5) || $md5 === '') {
+            throw new RuntimeException('Could not calculate the upload-bucket duplicate identity.');
+        }
+        $md5 = strtolower($md5);
+        $lockName = 'unrealdb-bucket-md5-' . $md5;
+        $lock = \catalog_one($this->db, 'SELECT GET_LOCK(?, 30) acquired', [$lockName]);
+        if ((int)($lock['acquired'] ?? 0) !== 1) {
+            throw new RuntimeException('Timed out while checking the upload bucket for an identical file.');
+        }
+
+        try {
+            $duplicate = $this->findBucketDuplicate($size, $md5);
+            if ($duplicate !== null) {
+                @unlink($temporaryPath);
+                $existingName = trim((string)($duplicate['original_name'] ?? ''));
+                if ($existingName === '') {
+                    $existingName = (string)($duplicate['unverified_queue_name'] ?? 'existing bucket file');
+                }
+                return [
+                    'status' => 'duplicate',
+                    'file_id' => (int)$duplicate['id'],
+                    'queue_name' => (string)$duplicate['unverified_queue_name'],
+                    'original_name' => $existingName,
+                    'path' => (string)$duplicate['physical_path'],
+                    'size' => (int)$duplicate['file_size'],
+                    'message' => 'Duplicate size and MD5 already exist in the Upload Bucket as '
+                        . $existingName . ' (file #' . (int)$duplicate['id'] . ', MD5 ' . $md5 . '). Uploaded copy discarded.',
+                    'parse_error' => null,
+                    'md5' => $md5,
+                ];
+            }
+
+            $stored = \uvf_store_bucket_upload($this->config, $temporaryPath, $originalName, $reason);
+
+            $indexed = $this->indexStored(
+                0,
+                (string)$stored['queue_name'],
+                (string)$stored['path'],
+                (string)$stored['original_name'],
+                $reason,
+                $uploadedBy,
+                $sourceRelativePath,
+                (int)$stored['size']
+            );
+            $indexed['md5'] = $md5;
+            return $indexed;
+        } finally {
+            try {
+                \catalog_one($this->db, 'SELECT RELEASE_LOCK(?) released', [$lockName]);
+            } catch (Throwable $error) {
+                error_log('[UnrealDB upload bucket duplicate lock] ' . $error->getMessage());
+            }
+        }
     }
 
     public function stageFailedUpload(
@@ -76,6 +123,46 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
             $sourceRelativePath,
             true
         );
+    }
+
+    /** @return array<string,mixed>|null */
+    private function findBucketDuplicate(int $size, string $md5): ?array
+    {
+        \catalog_unverified_schema_ensure($this->db);
+        $rows = \catalog_all(
+            $this->db,
+            'SELECT id,original_name,unverified_queue_name,file_size,md5
+             FROM ue_files
+             WHERE scan_status="unverified"
+               AND unverified_queue_game_id=0
+               AND file_size=?
+               AND LOWER(md5)=?
+             ORDER BY id
+             LIMIT 50',
+            [$size, $md5]
+        );
+        if ($rows === []) {
+            return null;
+        }
+
+        $bucketRoot = \uvf_upload_bucket_dir($this->config, false);
+        foreach ($rows as $row) {
+            $queueName = basename((string)($row['unverified_queue_name'] ?? ''));
+            if ($queueName === '') {
+                continue;
+            }
+            $path = $bucketRoot . DIRECTORY_SEPARATOR . $queueName;
+            if (!is_file($path) || !\uvf_path_inside($path, $bucketRoot)) {
+                continue;
+            }
+            $physicalSize = filesize($path);
+            if ($physicalSize === false || (int)$physicalSize !== $size) {
+                continue;
+            }
+            $row['physical_path'] = $path;
+            return $row;
+        }
+        return null;
     }
 
     /**
