@@ -5,9 +5,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 /**
  * Memory-bounded decoder for Epic's UE2 .uz2 format. Each record contains a
- * little-endian compressed size, uncompressed size, and then normally an exact
- * zlib stream. When exact zlib validation fails and both sizes are equal, the
- * record is a verbatim block used for data that did not benefit from compression.
+ * little-endian compressed size, uncompressed size, and one zlib stream.
  */
 final class CatalogRedirectArchiveStream
 {
@@ -39,10 +37,6 @@ final class CatalogRedirectArchiveStream
             throw new \RuntimeException('Could not open redirect compressed file: ' . basename($sourceName));
         }
 
-        // Keep the decoded working file beside durable staging. Synology DSM can
-        // prohibit rename() from /volume1/@tmp into a web shared folder even when
-        // both paths are on the same volume. A storage-local temporary file can be
-        // atomically moved into the verified catalog without crossing that boundary.
         $temporary = tempnam(dirname($sourcePath), '.ue_redirect_');
         if ($temporary === false) {
             fclose($input);
@@ -59,7 +53,6 @@ final class CatalogRedirectArchiveStream
         $writtenBytes = 0;
         $chunks = 0;
         $isUnrealPackage = false;
-        $encodings = [];
 
         try {
             while ($readBytes < $compressedBytes) {
@@ -109,35 +102,18 @@ final class CatalogRedirectArchiveStream
                 $payload = self::readExact($input, $compressed);
                 $readBytes += $compressed;
 
-                // A valid zlib member takes precedence even when compressed and
-                // uncompressed lengths happen to be equal. Only an equal-size
-                // payload that is not valid exact zlib is treated as verbatim.
-                $decoded = \catalog_redirect_archive_inflate_epic_zlib(
-                    $payload,
-                    $limit - $writtenBytes,
-                    $uncompressed
-                );
-                if ($decoded !== null) {
-                    $block = (string)$decoded['data'];
-                    $encoding = 'zlib';
-                } elseif ($compressed === $uncompressed) {
-                    $block = $payload;
-                    $encoding = 'stored';
-                } else {
+                // Restore the original working behavior: decode each complete UZ2
+                // record normally, then verify Epic's declared output length.
+                $block = function_exists('gzuncompress')
+                    ? @gzuncompress($payload, $uncompressed)
+                    : false;
+                if (!is_string($block) || strlen($block) !== $uncompressed) {
                     throw new \RuntimeException(
-                        'Epic UZ2 zlib data failed exact validation at record ' . $recordNumber
+                        'Epic UZ2 zlib decompression failed at record ' . $recordNumber
                         . ' (compressed=' . $compressed . ', uncompressed=' . $uncompressed
                         . ', offset=' . $recordOffset . ') in ' . basename($sourceName) . '.'
                     );
                 }
-
-                if (strlen($block) !== $uncompressed) {
-                    throw new \RuntimeException(
-                        'Epic UZ2 record ' . $recordNumber . ' produced ' . strlen($block)
-                        . ' bytes instead of ' . $uncompressed . ' in ' . basename($sourceName) . '.'
-                    );
-                }
-                $encodings[$encoding] = true;
 
                 if ($chunks === 0) {
                     $isUnrealPackage = \catalog_redirect_archive_has_package_tag(substr($block, 0, 4));
@@ -202,7 +178,7 @@ final class CatalogRedirectArchiveStream
             'bytes' => $writtenBytes,
             'compressed_bytes' => (int)$compressedBytes,
             'source_extension' => 'uz2',
-            'decoder' => 'epic-uz2-' . implode('+', array_keys($encodings)) . '-stream',
+            'decoder' => 'epic-uz2-zlib-stream',
             'chunks' => $chunks,
             'expected_bytes' => $writtenBytes,
             'is_unreal_package' => $isUnrealPackage,
