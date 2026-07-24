@@ -7,7 +7,6 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 
 catalog_start_session();
 require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
-require_once __DIR__ . '/lib/CatalogEpicRedirect.php';
 require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
@@ -61,7 +60,7 @@ function upload_bucket_post_limit_error(): ?string
     if ($contentLength > 0 && $postMax > 0 && $contentLength > $postMax) {
         return 'Request body ' . catalog_bytes($contentLength)
             . ' exceeds PHP post_max_size ' . upload_bucket_php_limit_text('post_max_size')
-            . '. The JavaScript chunk uploader was not used or the configured chunk is too large.';
+            . '. PHP discarded the whole-file redirect upload before UnrealDB could inspect it.';
     }
     return null;
 }
@@ -96,8 +95,8 @@ function upload_bucket_allowed_extensions(PDO $db, array $config): array
 function upload_bucket_upload_error_message(int $error): string
 {
     return match ($error) {
-        UPLOAD_ERR_INI_SIZE => 'PHP rejected the fallback whole-file request because it exceeds upload_max_filesize ' . upload_bucket_php_limit_text('upload_max_filesize') . '.',
-        UPLOAD_ERR_FORM_SIZE => 'The fallback browser upload exceeded the form file-size limit.',
+        UPLOAD_ERR_INI_SIZE => 'PHP rejected the whole-file redirect request because it exceeds upload_max_filesize ' . upload_bucket_php_limit_text('upload_max_filesize') . '.',
+        UPLOAD_ERR_FORM_SIZE => 'The whole-file redirect upload exceeded the form file-size limit.',
         UPLOAD_ERR_PARTIAL => 'Only part of the file reached the server. Retry the file and check the connection or reverse-proxy timeout.',
         UPLOAD_ERR_NO_FILE => 'No file data reached PHP.',
         UPLOAD_ERR_NO_TMP_DIR => 'PHP has no temporary upload directory.',
@@ -165,7 +164,7 @@ function upload_bucket_chunk_bytes(array $config): int
     return max(1024 * 1024, min((int)($chunkConfig['chunk_bytes'] ?? (16 * 1024 * 1024)), 64 * 1024 * 1024));
 }
 
-/** Whole-file POST fallback for browsers where the chunk uploader cannot run. */
+/** Original whole-file upload/decompression path used for .uz, .uz2 and .uz3 wrappers. */
 function upload_bucket_handle_request(PDO $db, array $config): array
 {
     $postLimitError = upload_bucket_post_limit_error();
@@ -176,7 +175,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
     catalog_check_csrf('upload-bucket');
     if (!isset($_FILES['files'])) {
         throw new RuntimeException(
-            'No files reached the fallback bucket handler. PHP upload_max_filesize=' . upload_bucket_php_limit_text('upload_max_filesize')
+            'No files reached the whole-file bucket handler. PHP upload_max_filesize=' . upload_bucket_php_limit_text('upload_max_filesize')
             . '; post_max_size=' . upload_bucket_php_limit_text('post_max_size') . '.'
         );
     }
@@ -215,12 +214,7 @@ function upload_bucket_handle_request(PDO $db, array $config): array
                 throw new RuntimeException('The uploaded file is empty.');
             }
             if (catalog_redirect_archive_is_supported_filename($submittedName)) {
-                $decompressed = catalog_epic_redirect_decompress_to_temp(
-                    $workingTmp,
-                    $submittedName,
-                    PHP_INT_MAX,
-                    true
-                );
+                $decompressed = catalog_redirect_archive_decompress_to_temp($workingTmp, $submittedName);
                 $workingTmp = (string)$decompressed['path'];
                 $workingName = catalog_clean_unreal_filename((string)$decompressed['filename']);
                 if (is_string($tmp) && is_file($tmp)) {
@@ -346,7 +340,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Upload unsorted Unreal package files into a neutral bucket. Files matching an existing bucket row by size and MD5 are discarded instead of creating another physical file or unverified database row. Redirect-compressed .uz/.uz2/.uz3 uploads are decompressed first and compared using the real package content.',
+        'Upload unsorted Unreal package files into a neutral bucket. Files matching an existing bucket row by size and MD5 are discarded instead of creating another physical file or unverified database row. Redirect-compressed .uz/.uz2/.uz3 files use the original working whole-file decompression path.',
         ['Open Bucket Queue' => 'unverified-files.php?source_game_id=-1', 'All Queues' => 'unverified-files.php', 'Upload Files to Game' => 'profiled-upload.php']
     );
 
@@ -356,14 +350,14 @@ CSS;
     echo '<div class="stat bucket-path-card"><h2 class="mono small bucket-path">' . catalog_h($bucketDir) . '</h2><p>Physical bucket folder</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Every selected file is uploaded in resumable chunks. Each retained file receives an unverified database row immediately, but no game assignment or dependencies. Duplicate size+MD5 content already present in this bucket is reported and discarded.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Normal package files use resumable chunks. Redirect wrappers (.uz/.uz2/.uz3) use the original upload-bucket.php whole-file handler and decoder. Each retained file receives an unverified database row immediately, and duplicate size+MD5 content is discarded.</p></div></div><div class="ui-section__body">';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
     echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
     echo '<p><button id="upload-bucket-button" type="submit">Upload to bucket</button></p>';
     echo '<p class="muted"><strong>Allowed by active game profiles:</strong> ' . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured') . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
-    echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total-file-size limit is applied to bucket uploads. Files are split into chunks of up to ' . catalog_h(catalog_bytes($chunkBytes)) . '; PHP upload_max_filesize and post_max_size only need to accept one chunk plus multipart overhead.</p>';
+    echo '<p class="muted"><strong>Upload sizing:</strong> Normal package files are split into chunks of up to ' . catalog_h(catalog_bytes($chunkBytes)) . ' with no UnrealDB total-file-size limit. Redirect wrappers use the original whole-file handler and must fit PHP upload_max_filesize ' . catalog_h(upload_bucket_php_limit_text('upload_max_filesize')) . ' and post_max_size ' . catalog_h(upload_bucket_php_limit_text('post_max_size')) . '.</p>';
     echo '<div id="bucket-progress" class="bucket-progress" hidden'
         . ' data-chunk-url="api/v1/upload-bucket-chunk.php"'
         . ' data-chunk-csrf="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '"'
