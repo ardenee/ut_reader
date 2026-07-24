@@ -32,6 +32,9 @@ try {
     $payload = fed_decode_json_object($body);
     $afterFileId = max(0, (int)($payload['after_file_id'] ?? 0));
     $limit = max(1, min(1000, (int)($payload['limit'] ?? 500)));
+    $policySql = federation_ignore_base_game_files($db, $peerRole === 'parent' ? $peer : null)
+        ? ' AND bg.id IS NULL'
+        : '';
 
     $rows = catalog_all(
         $db,
@@ -48,7 +51,7 @@ try {
          JOIN ue_games g ON g.id=f.game_id
          LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
          LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND bg.package_guid=f.package_guid
-         WHERE f.scan_status="verified" AND f.id>?
+         WHERE f.scan_status="verified" AND f.id>?' . $policySql . '
          ORDER BY f.id
          LIMIT ' . $limit,
         [$afterFileId]
@@ -80,7 +83,7 @@ try {
     }
 
     $identity = fed_ensure_identity($db);
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_READ_BY_PEER', 'Returned ' . count($files) . ' classified inventory row(s) after file ID ' . $afterFileId . '.');
+    fed_log($db, (int)$peer['id'], null, 'INFO', 'INVENTORY_READ_BY_PEER', 'Returned ' . count($files) . ' inventory row(s) after file ID ' . $afterFileId . ' under the effective base-game policy.');
     fed_json_response([
         'ok' => true,
         'site' => [
