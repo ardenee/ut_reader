@@ -13,15 +13,11 @@
     const overallLabel = document.getElementById('bucket-overall-progress-label');
     const overallCount = document.getElementById('bucket-overall-progress-count');
     const log = document.getElementById('bucket-log');
-    if (!form || !fileInput || !progressBox || !window.XMLHttpRequest || !window.fetch) return;
+    if (!form || !fileInput || !progressBox || !window.XMLHttpRequest) return;
 
     const chunkUrl = progressBox.dataset.chunkUrl || 'api/v1/upload-bucket-chunk.php';
-    const statusUrl = progressBox.dataset.statusUrl || 'api/v1/job-status.php';
     const chunkCsrf = progressBox.dataset.chunkCsrf || '';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
-    const queuedForegroundWaitMs = 15000;
-    const stalledForegroundWaitMs = 60000;
-    const maximumForegroundWaitMs = 5 * 60 * 1000;
     let batchTotalBytes = 1;
     let processedBytes = 0;
     let processedFiles = 0;
@@ -143,90 +139,6 @@
         throw lastError || new Error('Chunk upload failed.');
     }
 
-    async function readJob(jobId) {
-        const params = new URLSearchParams({job_id: String(jobId), event_offset: '0', event_limit: '1'});
-        const response = await fetch(statusUrl + '?' + params.toString(), {cache: 'no-store', credentials: 'same-origin'});
-        const text = await response.text();
-        const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Job status request');
-        const jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
-        if (!response.ok || !jobs.length) throw new Error(responseError(body, 'Redirect job status is unavailable.'));
-        return jobs[0];
-    }
-
-    function backgroundMessage(jobId, reason) {
-        return 'Redirect job #' + jobId + ' ' + reason + ' It remains queued/running in Background Jobs while this upload batch continues.';
-    }
-
-    async function waitForJob(jobId, fileName) {
-        const startedAt = Date.now();
-        let lastActivityAt = startedAt;
-        let lastSignature = '';
-        let statusErrors = 0;
-
-        while (true) {
-            let job;
-            try {
-                job = await readJob(jobId);
-                statusErrors = 0;
-            } catch (error) {
-                statusErrors++;
-                if (statusErrors >= 4) {
-                    addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'status could not be polled reliably.')});
-                    return 'queued';
-                }
-                await sleep(1500);
-                continue;
-            }
-
-            const progress = job.progress || {};
-            const percent = Math.max(0, Math.min(100, parseInt(progress.percent || (job.status === 'completed' ? 100 : 0), 10)));
-            const signature = [job.status, percent, progress.message || '', job.progress_updated_at || '', job.last_heartbeat_at || '', job.updated_at || ''].join('|');
-            if (signature !== lastSignature) {
-                lastSignature = signature;
-                lastActivityAt = Date.now();
-            }
-
-            currentBar.value = percent;
-            currentSpeed.textContent = '';
-            currentLabel.textContent = 'CLI redirect job #' + jobId + ' for ' + fileName + ' (' + percent + '%) — ' + (progress.message || job.status);
-
-            if (['completed', 'failed', 'dead_letter', 'cancelled'].includes(job.status)) {
-                if (job.status === 'completed') {
-                    const result = job.result || {};
-                    addLog({
-                        status: result.status || 'completed',
-                        file: result.original_name || fileName,
-                        file_id: result.file_id || 0,
-                        message: result.message || 'Redirect processing completed.',
-                        file_size_text: result.bytes ? fmtBytes(result.bytes) : ''
-                    });
-                    return String(result.status || 'completed').toLowerCase();
-                }
-                addLog({
-                    status: job.status,
-                    file: fileName,
-                    message: job.last_error || progress.message || 'Redirect processing did not complete.'
-                });
-                return 'failed';
-            }
-
-            const now = Date.now();
-            if (job.status === 'queued' && (now - startedAt) >= queuedForegroundWaitMs) {
-                addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'is waiting for the CLI worker.')});
-                return 'queued';
-            }
-            if ((now - lastActivityAt) >= stalledForegroundWaitMs) {
-                addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'has not reported progress for 60 seconds.')});
-                return 'queued';
-            }
-            if ((now - startedAt) >= maximumForegroundWaitMs) {
-                addLog({status: 'queued', file: fileName, message: backgroundMessage(jobId, 'is still processing after five minutes.')});
-                return 'queued';
-            }
-            await sleep(750);
-        }
-    }
-
     async function chunkedUpload(file, index, total) {
         const name = displayName(file);
         const clientKey = [file.name, file.size, file.lastModified || 0, name].join('|');
@@ -287,14 +199,18 @@
 
         currentBar.value = 100;
         currentSpeed.textContent = '';
-        currentLabel.textContent = 'Finalizing, duplicate-checking and indexing ' + index + ' of ' + total + ': ' + name;
+        currentLabel.textContent = 'Finalizing ' + index + ' of ' + total + ': ' + name;
         const completeData = new FormData();
         completeData.append('action', 'complete');
         completeData.append('upload_id', uploadId);
         const completed = await requestForm(completeData);
         if (Array.isArray(completed.messages) && completed.messages.length) completed.messages.forEach(addLog);
+
         const jobId = Math.max(0, parseInt(completed.job_id || 0, 10));
-        if (jobId > 0) return await waitForJob(jobId, name);
+        if (jobId > 0) {
+            currentLabel.textContent = 'Queued redirect job #' + jobId + '; continuing with the next file.';
+            return 'queued';
+        }
         if (!Array.isArray(completed.messages) || !completed.messages.length) {
             addLog({status: 'bucketed', file: name, message: 'Stored and indexed in upload bucket.', file_size_text: fmtBytes(file.size)});
         }
@@ -321,7 +237,7 @@
         processedBytes = 0;
         processedFiles = 0;
         batchTotalBytes = Math.max(1, files.reduce(function (sum, file) { return sum + Math.max(0, Number(file.size || 0)); }, 0));
-        const counts = {stored: 0, duplicate: 0, failed: 0};
+        const counts = {stored: 0, queued: 0, duplicate: 0, failed: 0};
         setOverall(0, files.length);
 
         for (let index = 0; index < files.length; index++) {
@@ -333,7 +249,8 @@
                 addLog({status: 'failed', file: displayName(file), message: error.message || 'Resumable upload failed.', file_size_text: fmtBytes(file.size)});
             }
 
-            if (status === 'duplicate') counts.duplicate++;
+            if (status === 'queued') counts.queued++;
+            else if (status === 'duplicate') counts.duplicate++;
             else if (['failed', 'dead_letter', 'cancelled'].includes(status)) counts.failed++;
             else counts.stored++;
             processedBytes += Math.max(0, Number(file.size || 0));
@@ -346,7 +263,9 @@
         overallCount.textContent = files.length + ' of ' + files.length + ' processed · ' + fmtBytes(batchTotalBytes);
         currentBar.value = 100;
         currentSpeed.textContent = '';
-        currentLabel.textContent = 'Upload bucket batch complete: stored/queued ' + counts.stored + ', duplicate ' + counts.duplicate + ', failed ' + counts.failed + '.';
+        currentLabel.textContent = 'Upload bucket batch complete: stored ' + counts.stored
+            + ', queued for background decompression ' + counts.queued
+            + ', duplicate ' + counts.duplicate + ', failed ' + counts.failed + '.';
         button.disabled = false;
     });
 }());
