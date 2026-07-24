@@ -13,12 +13,17 @@ function bucket_policy_expect(bool $condition, string $message): void
     }
 }
 
-$page = file_get_contents(dirname(__DIR__) . '/upload-bucket.php');
-$endpoint = file_get_contents(dirname(__DIR__) . '/api/v1/upload-bucket-chunk.php');
-$javascript = file_get_contents(dirname(__DIR__) . '/assets/upload-bucket.js');
+$root = dirname(__DIR__);
+$page = file_get_contents($root . '/upload-bucket.php');
+$endpoint = file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
+$javascript = file_get_contents($root . '/assets/upload-bucket.js');
+$support = file_get_contents($root . '/lib/CatalogSupport.php');
+$epicRedirect = file_get_contents($root . '/lib/CatalogEpicRedirect.php');
 bucket_policy_expect(is_string($page), 'Upload bucket page is missing.');
 bucket_policy_expect(is_string($endpoint), 'Chunked upload bucket endpoint is missing.');
 bucket_policy_expect(is_string($javascript), 'Chunked upload bucket browser client is missing.');
+bucket_policy_expect(is_string($support), 'Catalog support bootstrap is missing.');
+bucket_policy_expect(is_string($epicRedirect), 'Strict Epic redirect dispatcher is missing.');
 
 bucket_policy_expect(str_contains($page, "require_once __DIR__ . '/lib/GameProfiles.php';"), 'Upload bucket does not load game profile helpers.');
 bucket_policy_expect(str_contains($page, 'function upload_bucket_allowed_extensions'), 'Upload bucket profile extension policy helper is missing.');
@@ -47,7 +52,22 @@ bucket_policy_expect(str_contains($endpoint, "catalog_api_require_csrf('upload_b
 bucket_policy_expect(str_contains($endpoint, "['max_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint still applies the normal upload size cap.');
 bucket_policy_expect(str_contains($endpoint, "['max_container_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint still applies the container size cap.');
 bucket_policy_expect(str_contains($endpoint, 'stageBucketUpload('), 'Completed chunks are not passed through duplicate-safe bucket staging.');
-bucket_policy_expect(str_contains($endpoint, 'catalog_redirect_archive_decompress_to_temp'), 'Chunked redirect archives are not decompressed before bucket staging.');
+bucket_policy_expect(str_contains($endpoint, 'CatalogEpicRedirect.php'), 'Chunk endpoint does not load the strict Epic redirect dispatcher.');
+bucket_policy_expect(str_contains($endpoint, 'catalog_epic_redirect_decompress_to_temp('), 'Chunk endpoint does not use the strict Epic redirect dispatcher.');
+bucket_policy_expect(str_contains($endpoint, 'PHP_INT_MAX'), 'Chunk redirect decompression still inherits the ordinary upload output limit.');
+bucket_policy_expect(!str_contains($endpoint, 'CatalogRedirectArchivePayload.php'), 'Chunk endpoint loads the compatibility payload decoder.');
+bucket_policy_expect(!str_contains($endpoint, 'catalog_redirect_archive_decompress_payload_to_temp('), 'Chunk endpoint uses the compatibility payload path.');
+
+bucket_policy_expect(str_contains($support, "['upload-bucket.php', 'upload-bucket-chunk.php']"), 'Upload Bucket pages do not receive the uncapped redirect-output policy.');
+bucket_policy_expect(str_contains($support, 'UNREALDB_REDIRECT_MAX_OUTPUT_BYTES'), 'Upload Bucket redirect-output policy is missing.');
+
+bucket_policy_expect(str_contains($epicRedirect, "if (\$extension === 'uz2')"), 'Strict dispatcher does not isolate UE2 UZ2.');
+bucket_policy_expect(str_contains($epicRedirect, 'CatalogRedirectArchiveStream::decompressUz2('), 'UZ2 does not use the exact streamed Epic record decoder.');
+bucket_policy_expect(str_contains($epicRedirect, "catalog_legacy_uz_decode(\$archive, \$limit, 1234)"), 'UE1 UZ does not require the 1234 Epic FCodec wrapper.');
+bucket_policy_expect(str_contains($epicRedirect, "\$signature !== 5678"), 'UE3 UZ3 does not require the 5678 Epic tag.');
+bucket_policy_expect(str_contains($epicRedirect, "'decoder' => 'epic-uz3-zlib'"), 'UE3 UZ3 does not use the exact single-zlib decoder.');
+bucket_policy_expect(!str_contains($epicRedirect, 'ZLIB_ENCODING_GZIP'), 'Strict dispatcher includes a gzip fallback.');
+bucket_policy_expect(!str_contains($epicRedirect, 'ZLIB_ENCODING_RAW'), 'Strict dispatcher includes a raw-deflate fallback.');
 
 bucket_policy_expect(str_contains($page, 'function upload_bucket_post_limit_error'), 'Fallback oversized POST detection is missing.');
 bucket_policy_expect(str_contains($page, "ini_get('post_max_size')"), 'Fallback handler does not inspect PHP post_max_size.');
