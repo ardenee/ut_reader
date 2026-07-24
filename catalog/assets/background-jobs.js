@@ -6,93 +6,150 @@
 
     const queue = app.dataset.queue || 'catalog';
     const statusUrl = app.dataset.statusUrl || 'api/v1/job-status.php';
+    const bulkUrl = app.dataset.bulkUrl || 'api/v1/job-bulk.php';
     const actionUrl = app.dataset.actionUrl || 'api/v1/job-action.php';
     const runUrl = app.dataset.runUrl || 'api/v1/job-run.php';
     const workerStatusUrl = app.dataset.workerStatusUrl || 'api/v1/job-worker-status.php';
     const workerActionUrl = app.dataset.workerActionUrl || 'api/v1/job-worker-action.php';
+    const pakRerunUrl = app.dataset.pakRerunUrl || 'api/v1/job-rerun-pak.php';
     const csrf = app.dataset.csrf || '';
+
     const tableBody = document.getElementById('jobs-table-body');
     const message = document.getElementById('jobs-message');
-    const workerMessage = document.getElementById('jobs-worker-message');
-    const selectionMessage = document.getElementById('jobs-selection-message');
-    const filter = document.getElementById('jobs-status-filter');
-    const runNextButton = document.getElementById('jobs-run-next');
-    const runAllButton = document.getElementById('jobs-run-all');
-    const stopButton = document.getElementById('jobs-stop');
-    const recoverButton = document.getElementById('jobs-recover');
+    const workerState = document.getElementById('jobs-worker-state');
+    const startButton = document.getElementById('jobs-start');
+    const stopWorkerButton = document.getElementById('jobs-stop-worker');
     const refreshButton = document.getElementById('jobs-refresh');
+    const searchInput = document.getElementById('jobs-search');
+    const pageSizeSelect = document.getElementById('jobs-page-size');
+    const tabs = document.getElementById('jobs-status-tabs');
+    const selectPage = document.getElementById('jobs-select-page');
+    const selectionSummary = document.getElementById('jobs-selection-summary');
+    const selectMatchingButton = document.getElementById('jobs-select-matching');
+    const clearSelectionButton = document.getElementById('jobs-clear-selection');
+    const bulkAction = document.getElementById('jobs-bulk-action');
+    const applyActionButton = document.getElementById('jobs-apply-action');
+    const pageSummary = document.getElementById('jobs-page-summary');
+    const pageLabel = document.getElementById('jobs-page-label');
+    const firstPageButton = document.getElementById('jobs-first-page');
+    const previousPageButton = document.getElementById('jobs-previous-page');
+    const nextPageButton = document.getElementById('jobs-next-page');
+    const lastPageButton = document.getElementById('jobs-last-page');
+    const recoverButton = document.getElementById('jobs-recover');
     const cleanupButton = document.getElementById('jobs-cleanup');
     const cleanupDays = document.getElementById('jobs-cleanup-days');
-    const selectAllCheckbox = document.getElementById('jobs-select-all');
-    const selectTerminalButton = document.getElementById('jobs-select-terminal');
-    const clearSelectionButton = document.getElementById('jobs-clear-selection');
-    const deleteSelectedButton = document.getElementById('jobs-delete-selected');
-    const deleteMatchingButton = document.getElementById('jobs-delete-matching');
-    const terminalStatuses = ['completed', 'failed', 'dead_letter', 'cancelled'];
 
-    let refreshActive = false;
-    let currentJobs = [];
-    const selectedJobIds = new Set();
+    if (!tableBody || !message || !tabs) return;
+
+    const validStatuses = ['', 'queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled'];
+    const retryableStatuses = ['cancelled', 'failed', 'dead_letter'];
+    const terminalStatuses = ['completed', 'failed', 'dead_letter', 'cancelled'];
+    const query = new URLSearchParams(window.location.search);
+    const requestedStatus = String(query.get('status') || '').toLowerCase();
+    const requestedPerPage = parseInt(query.get('per_page') || '100', 10) || 100;
+
+    const state = {
+        status: validStatuses.includes(requestedStatus) ? requestedStatus : '',
+        search: String(query.get('search') || ''),
+        page: Math.max(1, parseInt(query.get('page') || '1', 10) || 1),
+        perPage: [50, 100, 250, 500, 1000].includes(requestedPerPage) ? requestedPerPage : 100,
+        jobs: [],
+        meta: {page: 1, per_page: 100, total: 0, pages: 1, counts: {}},
+        worker: {},
+        selected: new Map(),
+        allMatching: false,
+        loading: false,
+        noticeUntil: 0,
+        searchTimer: 0
+    };
+
+    searchInput.value = state.search;
+    pageSizeSelect.value = String(state.perPage);
 
     function installStatusStyles() {
         const style = document.createElement('style');
         style.textContent = [
-            '.job-status { display:inline-block; min-width:84px; padding:3px 8px; border:1px solid var(--line); border-radius:999px; font-weight:700; text-align:center; }',
-            '.job-status-queued,.job-status-running { color:#ffe29a; border-color:rgba(246,196,83,.75); background:rgba(246,196,83,.10); }',
-            '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias { color:#a7f3d0; border-color:rgba(50,213,131,.75); background:rgba(50,213,131,.10); }',
-            '.job-status-duplicate { color:#bfdbfe; border-color:rgba(96,165,250,.8); background:rgba(96,165,250,.12); }',
-            '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled { color:#fecdd3; border-color:rgba(255,107,122,.75); background:rgba(255,107,122,.10); }',
-            '.job-select-column { width:34px; text-align:center; }',
-            '.job-select-column input { width:18px; height:18px; }',
-            '.jobs-bulk-controls { align-items:center; gap:8px; flex-wrap:wrap; }'
+            '.job-status{display:inline-block;min-width:84px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}',
+            '.job-status-queued,.job-status-running{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}',
+            '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}',
+            '.job-status-duplicate{color:#bfdbfe;border-color:rgba(96,165,250,.8);background:rgba(96,165,250,.12)}',
+            '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75);background:rgba(255,107,122,.10)}'
         ].join('\n');
         document.head.appendChild(style);
     }
 
-    function errorMessage(body, fallback) {
+    function setNotice(text, milliseconds) {
+        message.textContent = text;
+        state.noticeUntil = Date.now() + (milliseconds || 5000);
+    }
+
+    function responseError(body, fallback) {
         return body && body.error && body.error.message ? String(body.error.message) : fallback;
     }
 
     async function jsonRequest(url, options) {
         const response = await fetch(url, options || {});
-        let body = null;
+        let body;
         try {
             body = await response.json();
         } catch (error) {
             throw new Error('The server returned an invalid response.');
         }
         if (!response.ok) {
-            throw new Error(errorMessage(body, 'The request failed.'));
+            throw new Error(responseError(body, 'The request failed.'));
         }
         return body;
     }
 
-    async function readJobs(statusOverride) {
-        const selected = typeof statusOverride === 'string' ? statusOverride : (filter ? filter.value : '');
-        const params = new URLSearchParams({queue: queue, limit: '200'});
-        if (selected) params.set('status', selected);
-        const body = await jsonRequest(statusUrl + '?' + params.toString(), {
-            cache: 'no-store',
-            credentials: 'same-origin'
+    async function postJson(url, payload) {
+        return jsonRequest(url, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+            body: JSON.stringify(payload)
         });
-        return body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
     }
 
-    async function readWorker() {
-        const params = new URLSearchParams({queue: queue});
-        const body = await jsonRequest(workerStatusUrl + '?' + params.toString(), {
-            cache: 'no-store',
-            credentials: 'same-origin'
-        });
-        return body && body.data ? body.data.worker || {} : {};
+    function updateUrl() {
+        const params = new URLSearchParams(window.location.search);
+        params.set('queue', queue);
+        if (state.status) params.set('status', state.status); else params.delete('status');
+        if (state.search) params.set('search', state.search); else params.delete('search');
+        if (state.page > 1) params.set('page', String(state.page)); else params.delete('page');
+        if (state.perPage !== 100) params.set('per_page', String(state.perPage)); else params.delete('per_page');
+        window.history.replaceState(null, '', window.location.pathname + '?' + params.toString());
     }
 
-    function appendCell(row, value, className) {
-        const cell = document.createElement('td');
-        if (className) cell.className = className;
-        cell.textContent = value == null ? '' : String(value);
-        row.appendChild(cell);
-        return cell;
+    function parseUtc(value) {
+        const text = String(value || '').trim();
+        if (!text) return 0;
+        const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
+            ? text.replace(' ', 'T') + 'Z'
+            : text;
+        const timestamp = Date.parse(normalized);
+        return Number.isFinite(timestamp) ? timestamp : 0;
+    }
+
+    function formatDate(value) {
+        const timestamp = parseUtc(value);
+        if (!timestamp) return String(value || '');
+        return new Date(timestamp).toLocaleString();
+    }
+
+    function formatDuration(milliseconds) {
+        let seconds = Math.max(0, Math.floor(milliseconds / 1000));
+        const days = Math.floor(seconds / 86400);
+        seconds -= days * 86400;
+        const hours = Math.floor(seconds / 3600);
+        seconds -= hours * 3600;
+        const minutes = Math.floor(seconds / 60);
+        seconds -= minutes * 60;
+        const parts = [];
+        if (days) parts.push(days + 'd');
+        if (days || hours) parts.push(hours + 'h');
+        if (days || hours || minutes) parts.push(minutes + 'm');
+        parts.push(seconds + 's');
+        return parts.join(' ');
     }
 
     function targetLabel(job) {
@@ -101,284 +158,507 @@
         if (payload.original_name) return String(payload.original_name);
         if (payload.file_id) return 'File #' + payload.file_id;
         if (payload.game_id) return 'Game #' + payload.game_id;
-        return job.concurrency_key || '';
+        return String(job.concurrency_key || '');
+    }
+
+    function displayStatus(job) {
+        return String(job.display_status || job.status || 'unknown').toLowerCase();
+    }
+
+    function appendCell(row, text, className) {
+        const cell = document.createElement('td');
+        if (className) cell.className = className;
+        cell.textContent = text == null ? '' : String(text);
+        row.appendChild(cell);
+        return cell;
+    }
+
+    function renderStatus(cell, job) {
+        const status = displayStatus(job);
+        const badge = document.createElement('span');
+        badge.className = 'job-status job-status-' + status.replace(/[^a-z0-9_-]+/g, '-');
+        badge.textContent = status.replace(/_/g, ' ');
+        cell.appendChild(badge);
+    }
+
+    function renderProgress(cell, job) {
+        const progress = job.progress || {};
+        const percent = Math.max(0, Math.min(100, parseInt(progress.percent || (job.status === 'completed' ? 100 : 0), 10) || 0));
+        const bar = document.createElement('progress');
+        bar.max = 100;
+        bar.value = percent;
+        bar.style.width = '140px';
+        cell.appendChild(bar);
+        const detail = document.createElement('div');
+        detail.className = 'muted';
+        detail.textContent = percent + '% ' + String(progress.message || '');
+        cell.appendChild(detail);
+    }
+
+    function runtimeText(job) {
+        const started = parseUtc(job.leased_at);
+        if (!started) return job.status === 'queued' ? 'Not started' : '—';
+        if (job.status === 'running') return formatDuration(Date.now() - started);
+        const finished = parseUtc(job.completed_at);
+        return finished >= started ? formatDuration(finished - started) : '—';
+    }
+
+    function jobError(job) {
+        if (job.last_error) return String(job.last_error);
+        if (job.cancel_reason) return String(job.cancel_reason);
+        if (job.result && job.result.message) return String(job.result.message);
+        return '';
     }
 
     function isTerminal(job) {
         return terminalStatuses.includes(String(job.status || ''));
     }
 
-    function effectiveStatus(job) {
-        const queueStatus = String(job.status || 'unknown');
-        const resultStatus = job.result && job.result.status ? String(job.result.status).toLowerCase() : '';
-        if (queueStatus !== 'completed' || resultStatus === '' || resultStatus === 'completed') {
-            return queueStatus;
+    function rowAction(job) {
+        const status = String(job.status || '');
+        if (status === 'queued') return {label: 'Cancel', action: 'cancel'};
+        if (status === 'running') return {label: 'Stop job', action: 'stop'};
+        if (retryableStatuses.includes(status)) return {label: 'Restart', action: 'restart'};
+        if (status === 'completed' && String(job.job_type || '') === 'catalog.import_staged_pak') {
+            return {label: 'Re-run PAK', action: 'rerun_pak'};
         }
-        if (resultStatus === 'verified') return 'imported';
-        return resultStatus;
+        if (isTerminal(job)) return {label: 'Delete', action: 'delete'};
+        return null;
     }
 
-    function renderStatus(cell, job) {
-        const status = effectiveStatus(job);
-        const badge = document.createElement('span');
-        badge.className = 'job-status job-status-' + status.replace(/[^a-z0-9_-]+/g, '-');
-        badge.textContent = status.replace(/_/g, ' ');
-        cell.appendChild(badge);
-        if (String(job.status || '') === 'completed' && status !== 'completed') {
-            const detail = document.createElement('div');
-            detail.className = 'muted small';
-            detail.textContent = 'job completed';
-            cell.appendChild(detail);
-        }
-    }
-
-    function renderProgress(cell, job) {
-        const state = job.progress || {};
-        const percent = Math.max(0, Math.min(100, parseInt(state.percent || (job.status === 'completed' ? 100 : 0), 10) || 0));
-        const bar = document.createElement('progress');
-        bar.max = 100;
-        bar.value = percent;
-        bar.style.width = '140px';
-        cell.appendChild(bar);
-        const text = document.createElement('div');
-        text.className = 'muted';
-        text.textContent = percent + '% ' + String(state.message || '');
-        cell.appendChild(text);
-    }
-
-    async function mutate(action, extra) {
-        return jsonRequest(actionUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
-            body: JSON.stringify(Object.assign({action: action, queue: queue}, extra || {}))
-        });
-    }
-
-    async function launch(mode) {
-        return jsonRequest(runUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
-            body: JSON.stringify({queue: queue, mode: mode})
-        });
-    }
-
-    async function stopWorker() {
-        return jsonRequest(workerActionUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
-            body: JSON.stringify({action: 'stop', queue: queue, cancel_running: true})
-        });
-    }
-
-    function actionButton(label, handler) {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.textContent = label;
-        button.addEventListener('click', async function () {
-            button.disabled = true;
-            try {
-                await handler();
-                await refresh();
-            } catch (error) {
-                message.textContent = error.message || 'Job action failed.';
-            } finally {
-                button.disabled = false;
-            }
-        });
-        return button;
-    }
-
-    function terminalJobsShown() {
-        return currentJobs.filter(isTerminal);
-    }
-
-    function updateSelectionControls() {
-        const shown = terminalJobsShown();
-        const shownIds = new Set(shown.map(function (job) { return Number(job.id); }));
-        Array.from(selectedJobIds).forEach(function (jobId) {
-            if (!shownIds.has(jobId)) selectedJobIds.delete(jobId);
-        });
-        const selectedCount = selectedJobIds.size;
-        if (selectAllCheckbox) {
-            selectAllCheckbox.disabled = shown.length === 0;
-            selectAllCheckbox.checked = shown.length > 0 && selectedCount === shown.length;
-            selectAllCheckbox.indeterminate = selectedCount > 0 && selectedCount < shown.length;
-        }
-        if (selectTerminalButton) selectTerminalButton.disabled = shown.length === 0;
-        if (clearSelectionButton) clearSelectionButton.disabled = selectedCount === 0;
-        if (deleteSelectedButton) {
-            deleteSelectedButton.disabled = selectedCount === 0;
-            deleteSelectedButton.textContent = 'Delete selected (' + selectedCount + ')';
-        }
-        if (selectionMessage) {
-            selectionMessage.textContent = selectedCount > 0
-                ? selectedCount + ' terminal job(s) selected from the current view.'
-                : 'No jobs selected.';
-        }
-        if (deleteMatchingButton) {
-            const selectedStatus = filter ? String(filter.value || '') : '';
-            const nonTerminalFilter = selectedStatus === 'queued' || selectedStatus === 'running';
-            deleteMatchingButton.disabled = nonTerminalFilter;
-            deleteMatchingButton.textContent = selectedStatus && !nonTerminalFilter
-                ? 'Delete all ' + selectedStatus.replace(/_/g, ' ') + ' jobs'
-                : 'Delete all terminal matching filter';
-        }
-    }
-
-    function render(jobs) {
-        currentJobs = jobs;
+    function renderRows() {
         tableBody.textContent = '';
-        if (!jobs.length) {
-            selectedJobIds.clear();
+        if (!state.jobs.length) {
             const row = document.createElement('tr');
-            const cell = appendCell(row, 'No jobs match the current filter.', 'muted');
-            cell.colSpan = 10;
+            const cell = appendCell(row, 'No jobs match the current filters.', 'jobs-empty muted');
+            cell.colSpan = 11;
             tableBody.appendChild(row);
-            updateSelectionControls();
             return;
         }
 
-        jobs.forEach(function (job) {
+        state.jobs.forEach(function (job) {
             const row = document.createElement('tr');
-            const selectionCell = appendCell(row, '', 'job-select-column');
+            const selectCell = appendCell(row, '');
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.disabled = !isTerminal(job);
-            checkbox.checked = selectedJobIds.has(Number(job.id));
+            checkbox.className = 'jobs-row-checkbox';
+            checkbox.disabled = state.allMatching;
+            checkbox.checked = state.allMatching || state.selected.has(Number(job.id));
             checkbox.setAttribute('aria-label', 'Select job #' + job.id);
             checkbox.addEventListener('change', function () {
-                const jobId = Number(job.id);
-                if (checkbox.checked) selectedJobIds.add(jobId);
-                else selectedJobIds.delete(jobId);
-                updateSelectionControls();
+                const id = Number(job.id);
+                if (checkbox.checked) state.selected.set(id, job);
+                else state.selected.delete(id);
+                updateSelectionUi();
             });
-            selectionCell.appendChild(checkbox);
+            selectCell.appendChild(checkbox);
 
             appendCell(row, job.id, 'mono');
-            const statusCell = appendCell(row, '');
-            renderStatus(statusCell, job);
+            renderStatus(appendCell(row, ''), job);
             appendCell(row, job.job_type, 'mono');
             appendCell(row, targetLabel(job), 'mono path');
-            const progressCell = appendCell(row, '');
-            renderProgress(progressCell, job);
+            renderProgress(appendCell(row, ''), job);
+            appendCell(row, runtimeText(job), 'mono jobs-running-for');
             appendCell(row, String(job.attempts || 0) + '/' + String(job.max_attempts || 0));
-            appendCell(row, job.created_at || '');
-            appendCell(row, job.last_error || (job.result && job.result.message ? job.result.message : ''), 'path');
+            appendCell(row, formatDate(job.created_at));
+            appendCell(row, jobError(job), 'path');
 
-            const actions = appendCell(row, '');
-            if (job.status === 'queued') {
-                actions.appendChild(actionButton('Cancel', function () {
-                    return mutate('cancel', {job_id: job.id, reason: 'Cancelled from Background Jobs.'});
-                }));
-            } else if (job.status === 'running') {
-                actions.appendChild(actionButton('Stop', function () {
-                    return mutate('cancel', {job_id: job.id, reason: 'Stopped from Background Jobs.'});
-                }));
-            } else if (job.status === 'dead_letter' || job.status === 'failed') {
-                actions.appendChild(actionButton('Retry', function () {
-                    return mutate('retry', {job_id: job.id});
-                }));
-            }
-
-            if (isTerminal(job)) {
-                actions.appendChild(actionButton('Delete', function () {
-                    if (!window.confirm('Delete job #' + job.id + ' and its retained staged upload file?')) {
-                        return Promise.resolve();
-                    }
-                    selectedJobIds.delete(Number(job.id));
-                    return mutate('delete', {job_id: job.id});
-                }));
+            const actionCell = appendCell(row, '', 'jobs-actions');
+            const action = rowAction(job);
+            if (action) {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = action.label;
+                button.addEventListener('click', function () {
+                    runRowAction(action.action, job, button);
+                });
+                actionCell.appendChild(button);
             }
             tableBody.appendChild(row);
         });
-        updateSelectionControls();
     }
 
-    function renderWorker(worker) {
-        const state = worker && worker.state ? worker.state : {};
-        const active = Boolean(worker && worker.active);
-        const processed = parseInt(state.processed || 0, 10) || 0;
-        const status = active ? 'running' : String(state.status || 'stopped');
-        const detail = active
-            ? 'Detached worker is running. Processed ' + processed + ' job(s). Closing this page will not stop it.'
-            : 'Detached worker is ' + status + '. ' + (state.exit_reason ? 'Last exit: ' + state.exit_reason + '.' : '');
-        workerMessage.textContent = detail;
-        runNextButton.disabled = active;
-        runAllButton.disabled = active;
-        stopButton.disabled = !active;
+    function renderTabs() {
+        const counts = state.meta.counts || {};
+        tabs.querySelectorAll('button[data-status]').forEach(function (button) {
+            const value = String(button.dataset.status || '');
+            button.setAttribute('aria-selected', value === state.status ? 'true' : 'false');
+        });
+        tabs.querySelectorAll('[data-status-count]').forEach(function (element) {
+            const key = String(element.dataset.statusCount || 'all');
+            element.textContent = String(counts[key] || 0);
+        });
+    }
+
+    function renderPagination() {
+        const total = Number(state.meta.total || 0);
+        const page = Number(state.meta.page || 1);
+        const pages = Math.max(1, Number(state.meta.pages || 1));
+        const start = total ? ((page - 1) * state.perPage) + 1 : 0;
+        const end = total ? Math.min(total, start + state.jobs.length - 1) : 0;
+        pageSummary.textContent = total ? 'Showing ' + start + '–' + end + ' of ' + total + ' jobs' : 'No matching jobs';
+        pageLabel.textContent = 'Page ' + page + ' of ' + pages;
+        firstPageButton.disabled = page <= 1;
+        previousPageButton.disabled = page <= 1;
+        nextPageButton.disabled = page >= pages;
+        lastPageButton.disabled = page >= pages;
+        if (Date.now() >= state.noticeUntil) {
+            message.textContent = pageSummary.textContent + '.';
+        }
+    }
+
+    function currentPageFullySelected() {
+        return state.jobs.length > 0 && state.jobs.every(function (job) {
+            return state.selected.has(Number(job.id));
+        });
+    }
+
+    function selectionJobs() {
+        return Array.from(state.selected.values());
+    }
+
+    function allowedBulkActions() {
+        if (state.allMatching) {
+            if (state.status === 'queued') return [{value: 'cancel', label: 'Cancel matching queued jobs'}];
+            if (retryableStatuses.includes(state.status)) {
+                return [
+                    {value: 'restart', label: 'Restart matching jobs'},
+                    {value: 'delete', label: 'Delete matching terminal jobs'}
+                ];
+            }
+            if (state.status === 'running') return [];
+            return [{value: 'delete', label: 'Delete matching terminal jobs'}];
+        }
+
+        const jobs = selectionJobs();
+        if (!jobs.length) return [];
+        const statuses = jobs.map(function (job) { return String(job.status || ''); });
+        const actions = [];
+        if (statuses.every(function (status) { return status === 'queued'; })) {
+            actions.push({value: 'cancel', label: 'Cancel selected queued jobs'});
+        }
+        if (statuses.every(function (status) { return retryableStatuses.includes(status); })) {
+            actions.push({value: 'restart', label: 'Restart selected jobs'});
+        }
+        if (statuses.every(function (status) { return terminalStatuses.includes(status); })) {
+            actions.push({value: 'delete', label: 'Delete selected terminal jobs'});
+        }
+        return actions;
+    }
+
+    function updateBulkActionOptions() {
+        const current = bulkAction.value;
+        const actions = allowedBulkActions();
+        bulkAction.textContent = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = actions.length ? 'Choose action' : 'No valid bulk action';
+        bulkAction.appendChild(placeholder);
+        actions.forEach(function (action) {
+            const option = document.createElement('option');
+            option.value = action.value;
+            option.textContent = action.label;
+            bulkAction.appendChild(option);
+        });
+        if (actions.some(function (action) { return action.value === current; })) {
+            bulkAction.value = current;
+        }
+        bulkAction.disabled = actions.length === 0;
+        applyActionButton.disabled = !bulkAction.value;
+    }
+
+    function updateSelectionUi() {
+        const selectedCount = state.allMatching ? Number(state.meta.total || 0) : state.selected.size;
+        if (state.allMatching) {
+            selectionSummary.textContent = selectedCount + ' matching jobs selected';
+        } else if (selectedCount > 0) {
+            selectionSummary.textContent = selectedCount + ' job' + (selectedCount === 1 ? '' : 's') + ' selected';
+        } else {
+            selectionSummary.textContent = 'Nothing selected';
+        }
+
+        selectPage.disabled = state.allMatching || state.jobs.length === 0;
+        selectPage.checked = state.allMatching || currentPageFullySelected();
+        selectPage.indeterminate = !state.allMatching
+            && state.jobs.some(function (job) { return state.selected.has(Number(job.id)); })
+            && !currentPageFullySelected();
+        selectMatchingButton.disabled = state.allMatching || Number(state.meta.total || 0) === 0;
+        selectMatchingButton.textContent = 'Select all ' + String(state.meta.total || 0) + ' matching';
+        clearSelectionButton.disabled = !state.allMatching && state.selected.size === 0;
+
+        tableBody.querySelectorAll('input.jobs-row-checkbox').forEach(function (checkbox) {
+            checkbox.disabled = state.allMatching;
+            if (state.allMatching) checkbox.checked = true;
+        });
+        updateBulkActionOptions();
+    }
+
+    function clearSelection() {
+        state.selected.clear();
+        state.allMatching = false;
+        renderRows();
+        updateSelectionUi();
+    }
+
+    function renderWorker() {
+        const worker = state.worker || {};
+        const active = Boolean(worker.active);
+        const stale = Boolean(worker.stale_code);
+        const details = worker.state || {};
+        const processed = parseInt(details.processed || 0, 10) || 0;
+        if (active) {
+            workerState.textContent = stale
+                ? 'Worker is running older code. Start / resume will restart it safely.'
+                : 'Worker running · ' + processed + ' jobs processed';
+        } else {
+            workerState.textContent = 'Worker stopped' + (details.exit_reason ? ' · ' + details.exit_reason : '');
+        }
+        startButton.disabled = active && !stale;
+        startButton.textContent = stale ? 'Restart worker' : 'Start / resume queue';
+        stopWorkerButton.disabled = !active;
+    }
+
+    async function readJobs() {
+        const params = new URLSearchParams({
+            queue: queue,
+            page: String(state.page),
+            per_page: String(state.perPage)
+        });
+        if (state.status) params.set('status', state.status);
+        if (state.search) params.set('search', state.search);
+        const body = await jsonRequest(statusUrl + '?' + params.toString(), {
+            cache: 'no-store',
+            credentials: 'same-origin'
+        });
+        state.jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
+        state.meta = body && body.meta ? body.meta : state.meta;
+        state.page = Number(state.meta.page || 1);
+    }
+
+    async function readWorker() {
+        const params = new URLSearchParams({queue: queue});
+        const body = await jsonRequest(workerStatusUrl + '?' + params.toString(), {
+            cache: 'no-store',
+            credentials: 'same-origin'
+        });
+        state.worker = body && body.data ? body.data.worker || {} : {};
     }
 
     async function refresh() {
-        if (refreshActive) return;
-        refreshActive = true;
+        if (state.loading) return;
+        state.loading = true;
+        refreshButton.disabled = true;
         try {
-            const results = await Promise.all([readJobs(), readWorker()]);
-            const jobs = results[0];
-            const worker = results[1];
-            render(jobs);
-            renderWorker(worker);
-            const queued = jobs.filter(function (job) { return job.status === 'queued'; }).length;
-            const running = jobs.filter(function (job) { return job.status === 'running'; }).length;
-            message.textContent = queued + ' queued, ' + running + ' running. Showing ' + jobs.length + ' job(s).';
+            await Promise.all([readJobs(), readWorker()]);
+            renderTabs();
+            renderRows();
+            renderPagination();
+            renderWorker();
+            updateSelectionUi();
+            updateUrl();
         } catch (error) {
-            message.textContent = error.message || 'Could not refresh jobs.';
+            setNotice(error.message || 'Could not load background jobs.', 10000);
         } finally {
-            refreshActive = false;
+            state.loading = false;
+            refreshButton.disabled = false;
         }
     }
 
-    runNextButton.addEventListener('click', async function () {
-        runNextButton.disabled = true;
+    async function launchQueue() {
+        startButton.disabled = true;
         try {
-            const body = await launch('next');
+            const body = await postJson(runUrl, {queue: queue, mode: 'drain'});
             const data = body && body.data ? body.data : {};
-            workerMessage.textContent = data.started === false
-                ? 'A detached worker is already running.'
-                : 'Detached worker launched for the next available job.';
+            setNotice(data.started === false
+                ? 'The queue worker is already running.'
+                : 'The queue worker was started.', 4000);
         } catch (error) {
-            workerMessage.textContent = error.message || 'Could not start the detached worker.';
+            setNotice(error.message || 'Could not start the queue worker.', 10000);
         }
         await refresh();
+    }
+
+    async function stopWorker() {
+        if (!window.confirm('Stop the queue worker and cancel its currently running job? Queued jobs will remain queued.')) return;
+        stopWorkerButton.disabled = true;
+        try {
+            await postJson(workerActionUrl, {action: 'stop', queue: queue, cancel_running: true});
+            setNotice('The queue worker was stopped.', 5000);
+        } catch (error) {
+            setNotice(error.message || 'Could not stop the queue worker.', 10000);
+        }
+        await refresh();
+    }
+
+    async function launchAfterStop() {
+        for (let attempt = 0; attempt < 40; attempt++) {
+            const body = await postJson(runUrl, {queue: queue, mode: 'drain'});
+            const data = body && body.data ? body.data : {};
+            if (data.started !== false) return true;
+            await new Promise(function (resolve) { window.setTimeout(resolve, 500); });
+        }
+        return false;
+    }
+
+    async function stopJob(job, button) {
+        button.disabled = true;
+        try {
+            await postJson(actionUrl, {
+                action: 'cancel',
+                queue: queue,
+                job_id: Number(job.id),
+                reason: 'Stopped manually from Background Jobs so the queue could continue.'
+            });
+            const continued = await launchAfterStop();
+            setNotice(continued
+                ? 'Job #' + job.id + ' was stopped and the queue continued.'
+                : 'Job #' + job.id + ' was stopped. Start the queue if the next job does not begin.', 8000);
+        } catch (error) {
+            setNotice(error.message || 'Could not stop the selected job.', 10000);
+        } finally {
+            button.disabled = false;
+            await refresh();
+        }
+    }
+
+    async function runBulk(action, scope, jobs, button) {
+        const selectedIds = jobs.map(function (job) { return Number(job.id); });
+        const scopeLabel = scope === 'matching'
+            ? 'all matching eligible jobs'
+            : selectedIds.length + ' selected job' + (selectedIds.length === 1 ? '' : 's');
+        const verb = action === 'restart' ? 'Restart' : action === 'cancel' ? 'Cancel' : 'Delete';
+        const warning = action === 'delete' ? ' Retained staged upload files will also be removed.' : '';
+        if (!window.confirm(verb + ' ' + scopeLabel + '?' + warning)) return;
+
+        button.disabled = true;
+        try {
+            const body = await postJson(bulkUrl, {
+                action: action,
+                scope: scope,
+                queue: queue,
+                status: state.status,
+                search: state.search,
+                job_ids: selectedIds
+            });
+            const data = body && body.data ? body.data : {};
+            let text = verb + ' affected ' + String(data.affected || 0) + ' job(s).';
+            if (data.skipped) text += ' ' + String(data.skipped) + ' job(s) were skipped.';
+            if (data.deleted_staged_files) text += ' Removed ' + String(data.deleted_staged_files) + ' staged upload(s).';
+            if (data.limited) text += ' The 10,000-job safety limit was reached; apply the action again for the remainder.';
+            if (data.worker_error) text += ' Jobs were queued, but the worker could not start: ' + String(data.worker_error);
+            setNotice(text, 10000);
+            state.selected.clear();
+            state.allMatching = false;
+        } catch (error) {
+            setNotice(error.message || 'The bulk action failed.', 10000);
+        } finally {
+            button.disabled = false;
+            await refresh();
+        }
+    }
+
+    async function rerunPak(job, button) {
+        if (!window.confirm('Queue a new full PAK import using the retained source file?')) return;
+        button.disabled = true;
+        try {
+            const body = await postJson(pakRerunUrl, {job_id: Number(job.id), queue: queue});
+            const data = body && body.data ? body.data : {};
+            setNotice('Queued PAK re-run as job #' + String(data.job_id || '') + '.', 6000);
+        } catch (error) {
+            setNotice(error.message || 'The PAK import could not be queued again.', 10000);
+        } finally {
+            button.disabled = false;
+            await refresh();
+        }
+    }
+
+    function runRowAction(action, job, button) {
+        if (action === 'stop') {
+            stopJob(job, button);
+            return;
+        }
+        if (action === 'rerun_pak') {
+            rerunPak(job, button);
+            return;
+        }
+        runBulk(action, 'selected', [job], button);
+    }
+
+    tabs.addEventListener('click', function (event) {
+        const button = event.target && event.target.closest ? event.target.closest('button[data-status]') : null;
+        if (!button) return;
+        state.status = String(button.dataset.status || '');
+        state.page = 1;
+        clearSelection();
+        refresh();
     });
 
-    runAllButton.addEventListener('click', async function () {
-        runAllButton.disabled = true;
-        try {
-            const body = await launch('drain');
-            const data = body && body.data ? body.data : {};
-            workerMessage.textContent = data.started === false
-                ? 'A detached worker is already running and will continue draining available jobs.'
-                : 'Detached worker launched to drain the available queue.';
-        } catch (error) {
-            workerMessage.textContent = error.message || 'Could not start the detached worker.';
-        }
-        await refresh();
+    searchInput.addEventListener('input', function () {
+        window.clearTimeout(state.searchTimer);
+        state.searchTimer = window.setTimeout(function () {
+            state.search = searchInput.value.trim();
+            state.page = 1;
+            clearSelection();
+            refresh();
+        }, 350);
     });
 
-    stopButton.addEventListener('click', async function () {
-        stopButton.disabled = true;
-        try {
-            const body = await stopWorker();
-            const data = body && body.data ? body.data : {};
-            workerMessage.textContent = 'Stop requested. ' + String(data.running_jobs_notified || 0) + ' running job(s) were notified.';
-        } catch (error) {
-            workerMessage.textContent = error.message || 'Could not stop the detached worker.';
-        }
-        await refresh();
+    pageSizeSelect.addEventListener('change', function () {
+        state.perPage = parseInt(pageSizeSelect.value || '100', 10) || 100;
+        state.page = 1;
+        clearSelection();
+        refresh();
     });
+
+    selectPage.addEventListener('change', function () {
+        if (state.allMatching) return;
+        state.jobs.forEach(function (job) {
+            const id = Number(job.id);
+            if (selectPage.checked) state.selected.set(id, job);
+            else state.selected.delete(id);
+        });
+        renderRows();
+        updateSelectionUi();
+    });
+
+    selectMatchingButton.addEventListener('click', function () {
+        if (!Number(state.meta.total || 0)) return;
+        state.selected.clear();
+        state.allMatching = true;
+        renderRows();
+        updateSelectionUi();
+    });
+
+    clearSelectionButton.addEventListener('click', clearSelection);
+
+    bulkAction.addEventListener('change', function () {
+        applyActionButton.disabled = !bulkAction.value;
+    });
+
+    applyActionButton.addEventListener('click', function () {
+        const action = bulkAction.value;
+        if (!action) return;
+        runBulk(action, state.allMatching ? 'matching' : 'selected', selectionJobs(), applyActionButton);
+    });
+
+    firstPageButton.addEventListener('click', function () { state.page = 1; refresh(); });
+    previousPageButton.addEventListener('click', function () { state.page = Math.max(1, state.page - 1); refresh(); });
+    nextPageButton.addEventListener('click', function () { state.page = Math.min(Number(state.meta.pages || 1), state.page + 1); refresh(); });
+    lastPageButton.addEventListener('click', function () { state.page = Math.max(1, Number(state.meta.pages || 1)); refresh(); });
+
+    startButton.addEventListener('click', launchQueue);
+    stopWorkerButton.addEventListener('click', stopWorker);
+    refreshButton.addEventListener('click', refresh);
 
     recoverButton.addEventListener('click', async function () {
         recoverButton.disabled = true;
         try {
-            const body = await mutate('recover');
+            const body = await postJson(actionUrl, {action: 'recover', queue: queue});
             const data = body && body.data ? body.data : {};
-            message.textContent = 'Recovery complete: ' + String(data.requeued || 0) + ' requeued, '
-                + String(data.cancelled || 0) + ' cancelled, ' + String(data.dead_lettered || 0) + ' dead-lettered.';
+            setNotice('Recovery complete: ' + String(data.requeued || 0) + ' requeued, '
+                + String(data.cancelled || 0) + ' cancelled, ' + String(data.dead_lettered || 0) + ' dead-lettered.', 8000);
         } catch (error) {
-            message.textContent = error.message || 'Recovery failed.';
+            setNotice(error.message || 'Recovery failed.', 10000);
         } finally {
             recoverButton.disabled = false;
             await refresh();
@@ -387,107 +667,25 @@
 
     cleanupButton.addEventListener('click', async function () {
         const days = Math.max(1, parseInt(cleanupDays.value || '30', 10) || 30);
-        if (!window.confirm('Remove terminal jobs older than ' + days + ' day(s) and delete their retained staged upload files?')) {
-            return;
-        }
+        if (!window.confirm('Delete terminal jobs older than ' + days + ' day(s) and their retained staged uploads?')) return;
         cleanupButton.disabled = true;
         try {
-            const body = await mutate('cleanup', {retention_days: days});
+            const body = await postJson(actionUrl, {action: 'cleanup', queue: queue, retention_days: days});
             const data = body && body.data ? body.data : {};
-            await refresh();
-            message.textContent = 'Cleanup removed ' + String(data.deleted_jobs || 0) + ' job(s) and '
-                + String(data.deleted_staged_files || 0) + ' staged file(s).'
-                + (data.limited ? ' Run cleanup again to remove the next batch.' : '');
+            setNotice('Removed ' + String(data.deleted_jobs || 0) + ' old job(s) and '
+                + String(data.deleted_staged_files || 0) + ' staged upload(s).', 8000);
         } catch (error) {
-            message.textContent = error.message || 'Job cleanup failed.';
+            setNotice(error.message || 'Cleanup failed.', 10000);
         } finally {
             cleanupButton.disabled = false;
+            await refresh();
         }
     });
 
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function () {
-            terminalJobsShown().forEach(function (job) {
-                const jobId = Number(job.id);
-                if (selectAllCheckbox.checked) selectedJobIds.add(jobId);
-                else selectedJobIds.delete(jobId);
-            });
-            render(currentJobs);
-        });
-    }
-
-    if (selectTerminalButton) {
-        selectTerminalButton.addEventListener('click', function () {
-            terminalJobsShown().forEach(function (job) { selectedJobIds.add(Number(job.id)); });
-            render(currentJobs);
-        });
-    }
-
-    if (clearSelectionButton) {
-        clearSelectionButton.addEventListener('click', function () {
-            selectedJobIds.clear();
-            render(currentJobs);
-        });
-    }
-
-    if (deleteSelectedButton) {
-        deleteSelectedButton.addEventListener('click', async function () {
-            const jobIds = Array.from(selectedJobIds);
-            if (!jobIds.length) return;
-            if (!window.confirm('Delete ' + jobIds.length + ' selected terminal job(s) and their retained staged upload files?')) {
-                return;
-            }
-            deleteSelectedButton.disabled = true;
-            try {
-                const body = await mutate('delete_selected', {job_ids: jobIds});
-                const data = body && body.data ? body.data : {};
-                selectedJobIds.clear();
-                await refresh();
-                message.textContent = 'Deleted ' + String(data.deleted_jobs || 0) + ' selected job(s) and '
-                    + String(data.deleted_staged_files || 0) + ' staged file(s).'
-                    + (data.skipped_jobs ? ' ' + String(data.skipped_jobs) + ' job(s) were skipped because they were no longer terminal.' : '');
-            } catch (error) {
-                message.textContent = error.message || 'Selected job deletion failed.';
-                updateSelectionControls();
-            }
-        });
-    }
-
-    if (deleteMatchingButton) {
-        deleteMatchingButton.addEventListener('click', async function () {
-            const status = filter ? String(filter.value || '') : '';
-            if (status === 'queued' || status === 'running') return;
-            const label = status ? status.replace(/_/g, ' ') : 'all terminal';
-            if (!window.confirm('Delete ALL ' + label + ' jobs in this queue, including jobs beyond the 200 currently shown, and remove their retained staged upload files?')) {
-                return;
-            }
-            deleteMatchingButton.disabled = true;
-            try {
-                const body = await mutate('delete_matching', {status: status});
-                const data = body && body.data ? body.data : {};
-                selectedJobIds.clear();
-                await refresh();
-                message.textContent = 'Deleted ' + String(data.deleted_jobs || 0) + ' matching job(s) and '
-                    + String(data.deleted_staged_files || 0) + ' staged file(s).'
-                    + (data.limited ? ' The 10,000-job safety limit was reached; run it again for the next batch.' : '');
-            } catch (error) {
-                message.textContent = error.message || 'Matching job deletion failed.';
-                updateSelectionControls();
-            }
-        });
-    }
-
-    refreshButton.addEventListener('click', refresh);
-    if (filter) {
-        filter.addEventListener('change', function () {
-            selectedJobIds.clear();
-            refresh();
-        });
-    }
-
     installStatusStyles();
+    renderTabs();
     refresh();
     window.setInterval(function () {
         if (!document.hidden) refresh();
     }, 2000);
-})();
+}());
