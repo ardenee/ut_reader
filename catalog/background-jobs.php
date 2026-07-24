@@ -14,10 +14,57 @@ try {
         exit;
     }
 
-    $queueName = trim((string)($_GET['queue'] ?? ($config['queue']['name'] ?? 'catalog')));
-    if ($queueName === '' || strlen($queueName) > 80) {
-        $queueName = 'catalog';
+    $configuredQueue = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    $requestedQueue = trim((string)($_GET['queue'] ?? ''));
+    if ($requestedQueue !== ''
+        && (strlen($requestedQueue) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $requestedQueue) !== 1)) {
+        $requestedQueue = '';
     }
+
+    $queueRows = catalog_all(
+        $db,
+        'SELECT queue_name,COUNT(*) total,'
+            . 'SUM(status="queued") queued_total,SUM(status="running") running_total '
+            . 'FROM ue_background_jobs GROUP BY queue_name ORDER BY queue_name'
+    );
+    $queueOptions = [];
+    foreach ($queueRows as $row) {
+        $name = trim((string)($row['queue_name'] ?? ''));
+        if ($name === '') {
+            continue;
+        }
+        $queueOptions[$name] = [
+            'total' => (int)($row['total'] ?? 0),
+            'queued' => (int)($row['queued_total'] ?? 0),
+            'running' => (int)($row['running_total'] ?? 0),
+        ];
+    }
+    if (!isset($queueOptions[$configuredQueue])) {
+        $queueOptions[$configuredQueue] = ['total' => 0, 'queued' => 0, 'running' => 0];
+    }
+
+    $queueName = $requestedQueue;
+    if ($queueName === '') {
+        $configuredActive = ($queueOptions[$configuredQueue]['queued'] ?? 0) > 0
+            || ($queueOptions[$configuredQueue]['running'] ?? 0) > 0;
+        if ($configuredActive) {
+            $queueName = $configuredQueue;
+        } else {
+            foreach ($queueOptions as $candidate => $summary) {
+                if (($summary['queued'] ?? 0) > 0 || ($summary['running'] ?? 0) > 0) {
+                    $queueName = $candidate;
+                    break;
+                }
+            }
+        }
+    }
+    if ($queueName === '') {
+        $queueName = $configuredQueue;
+    }
+    if (!isset($queueOptions[$queueName])) {
+        $queueOptions[$queueName] = ['total' => 0, 'queued' => 0, 'running' => 0];
+    }
+    ksort($queueOptions, SORT_NATURAL | SORT_FLAG_CASE);
 
     $counts = [
         'queued' => 0,
@@ -43,16 +90,28 @@ try {
     }
 
     catalog_head('Background Jobs');
-    echo '<style>#background-jobs-app .job-status + .muted.small{display:none}</style>';
+    echo '<style>#background-jobs-app .job-status + .muted.small{display:none}.job-queue-picker{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 14px}.job-queue-picker select{min-width:320px}</style>';
     catalog_page_header(
         'Background Jobs',
-        'View and control queued uploads, imports, dependency rebuilds, maintenance and package-generation work without using SSH.',
+        'View and control jobs in queue ' . $queueName . '. Upload Bucket redirect decompression uses its own queue.',
         [
+            'Upload Bucket' => 'upload-bucket.php',
             'Upload Files' => 'profiled-upload.php',
             'PAK Import' => 'pak-import.php',
             'Dashboard' => 'dashboard.php',
         ]
     );
+
+    echo '<form method="get" class="job-queue-picker"><label><strong>Job queue</strong> <select name="queue" onchange="this.form.submit()">';
+    foreach ($queueOptions as $name => $summary) {
+        $label = $name . ' — ' . (int)$summary['total'] . ' job(s)';
+        if ((int)$summary['running'] > 0 || (int)$summary['queued'] > 0) {
+            $label .= ' (' . (int)$summary['running'] . ' running, ' . (int)$summary['queued'] . ' queued)';
+        }
+        echo '<option value="' . catalog_h($name) . '"' . ($name === $queueName ? ' selected' : '') . '>'
+            . catalog_h($label) . '</option>';
+    }
+    echo '</select></label><noscript><button type="submit">Open queue</button></noscript></form>';
 
     echo '<div class="grid">';
     catalog_stat_card('Queued', $counts['queued'], '', $counts['queued'] > 0 ? 'attention' : '');
@@ -63,7 +122,7 @@ try {
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Queue controls</h2>';
-    echo '<p class="muted">Start next launches a detached CLI worker for one job. Start queued launches a detached worker that drains the available queue and exits. The worker continues after this page or browser is closed.</p>';
+    echo '<p class="muted">Start next launches a detached CLI worker for one job. Start queued launches a detached worker that drains this queue and exits. The worker continues after this page or browser is closed.</p>';
     echo '</div></div><div class="ui-section__body">';
     echo '<div id="background-jobs-app" '
         . 'data-queue="' . catalog_h($queueName) . '" '
