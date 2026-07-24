@@ -47,13 +47,18 @@
     }
 
     function ensureRuntimeHeader() {
-        const row = tableBody.closest('table') && tableBody.closest('table').querySelector('thead tr');
+        const table = tableBody.closest('table');
+        const row = table ? table.querySelector('thead tr') : null;
         if (!row || row.querySelector('[data-running-for-column]')) return;
         const cell = document.createElement('th');
         cell.textContent = 'Running for';
         cell.setAttribute('data-running-for-column', '1');
         const attempts = row.cells[6] || null;
         row.insertBefore(cell, attempts);
+    }
+
+    function setText(element, value) {
+        if (element.textContent !== value) element.textContent = value;
     }
 
     function decorateRows() {
@@ -79,16 +84,16 @@
             const startedAt = utcTimestamp(job.leased_at);
             const finishedAt = utcTimestamp(job.completed_at);
             if (String(job.status || '') === 'running' && startedAt > 0) {
-                runtimeCell.textContent = durationText(Date.now() - startedAt);
+                setText(runtimeCell, durationText(Date.now() - startedAt));
                 runtimeCell.title = 'Running since ' + String(job.leased_at || '');
             } else if (startedAt > 0 && finishedAt >= startedAt) {
-                runtimeCell.textContent = durationText(finishedAt - startedAt);
+                setText(runtimeCell, durationText(finishedAt - startedAt));
                 runtimeCell.title = 'Total execution time';
             } else if (String(job.status || '') === 'queued') {
-                runtimeCell.textContent = 'Not started';
+                setText(runtimeCell, 'Not started');
                 runtimeCell.title = '';
             } else {
-                runtimeCell.textContent = '—';
+                setText(runtimeCell, '—');
                 runtimeCell.title = '';
             }
 
@@ -187,7 +192,7 @@
     }, true);
 
     const observer = new MutationObserver(decorateRows);
-    observer.observe(tableBody, {childList: true, subtree: true});
+    observer.observe(tableBody, {childList: true});
 
     ensureRuntimeHeader();
     readJobs();
