@@ -4,10 +4,11 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 /**
- * Memory-bounded decoder for Epic's UE2 .uz2 redirect format. The legacy helper
- * decodes into one PHP string, which is unsuitable for very large texture and
- * map packages. This implementation reads and writes one 32 KiB record at a
- * time and exposes progress/cancellation checkpoints to the job worker.
+ * Memory-bounded decoder for Epic's UE2 .uz2 format. Each record contains a
+ * little-endian compressed size, uncompressed size, and then either an exact
+ * zlib stream or a verbatim block when both sizes are equal. The latter is
+ * used for data that does not benefit from compression, such as some already
+ * compressed texture/audio blocks.
  */
 final class CatalogRedirectArchiveStream
 {
@@ -59,6 +60,7 @@ final class CatalogRedirectArchiveStream
         $writtenBytes = 0;
         $chunks = 0;
         $isUnrealPackage = false;
+        $encodings = [];
 
         try {
             while ($readBytes < $compressedBytes) {
@@ -107,20 +109,37 @@ final class CatalogRedirectArchiveStream
 
                 $payload = self::readExact($input, $compressed);
                 $readBytes += $compressed;
-                $decoded = \catalog_redirect_archive_inflate_epic_zlib(
-                    $payload,
-                    $limit - $writtenBytes,
-                    $uncompressed
-                );
-                if ($decoded === null) {
-                    throw new \RuntimeException(
-                        'Epic UZ2 zlib data failed exact validation at record ' . $recordNumber
-                        . ' (compressed=' . $compressed . ', uncompressed=' . $uncompressed
-                        . ', offset=' . $recordOffset . ') in ' . basename($sourceName) . '.'
+
+                if ($compressed === $uncompressed) {
+                    // Epic may store a block verbatim when compression would not
+                    // reduce it. Equal record sizes identify this case exactly.
+                    $block = $payload;
+                    $encoding = 'stored';
+                } else {
+                    $decoded = \catalog_redirect_archive_inflate_epic_zlib(
+                        $payload,
+                        $limit - $writtenBytes,
+                        $uncompressed
                     );
+                    if ($decoded === null) {
+                        throw new \RuntimeException(
+                            'Epic UZ2 zlib data failed exact validation at record ' . $recordNumber
+                            . ' (compressed=' . $compressed . ', uncompressed=' . $uncompressed
+                            . ', offset=' . $recordOffset . ') in ' . basename($sourceName) . '.'
+                        );
+                    }
+                    $block = (string)$decoded['data'];
+                    $encoding = 'zlib';
                 }
 
-                $block = (string)$decoded['data'];
+                if (strlen($block) !== $uncompressed) {
+                    throw new \RuntimeException(
+                        'Epic UZ2 record ' . $recordNumber . ' produced ' . strlen($block)
+                        . ' bytes instead of ' . $uncompressed . ' in ' . basename($sourceName) . '.'
+                    );
+                }
+                $encodings[$encoding] = true;
+
                 if ($chunks === 0) {
                     $isUnrealPackage = \catalog_redirect_archive_has_package_tag(substr($block, 0, 4));
                     if ($requirePackageTag && !$isUnrealPackage) {
@@ -184,7 +203,7 @@ final class CatalogRedirectArchiveStream
             'bytes' => $writtenBytes,
             'compressed_bytes' => (int)$compressedBytes,
             'source_extension' => 'uz2',
-            'decoder' => 'epic-uz2-zlib-stream',
+            'decoder' => 'epic-uz2-' . implode('+', array_keys($encodings)) . '-stream',
             'chunks' => $chunks,
             'expected_bytes' => $writtenBytes,
             'is_unreal_package' => $isUnrealPackage,
