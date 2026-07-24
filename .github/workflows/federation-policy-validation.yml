@@ -29,9 +29,35 @@ jobs:
             fi
           done < <(git diff --name-only --diff-filter=ACM origin/main...HEAD -- '*.php')
           exit "$failed"
-      - name: Base-game policy contract
-        run: php catalog/tests/federation-base-game-policy-contract-test.php
-      - name: Federation role workflow contract
-        run: php catalog/tests/federation-role-workflow-contract-test.php
-      - name: Federation inventory selection contract
-        run: php catalog/tests/federation-inventory-selection-contract-test.php
+      - name: Run federation contracts
+        id: contracts
+        continue-on-error: true
+        run: |
+          mkdir -p validation-results
+          failed=0
+          for test in \
+            catalog/tests/federation-base-game-policy-contract-test.php \
+            catalog/tests/federation-role-workflow-contract-test.php \
+            catalog/tests/federation-inventory-selection-contract-test.php; do
+            name=$(basename "$test" .php)
+            if php "$test" >"validation-results/${name}.log" 2>&1; then
+              echo "$test: passed"
+            else
+              echo "$test: failed"
+              failed=1
+            fi
+          done
+          echo "failed=$failed" >> "$GITHUB_OUTPUT"
+      - name: Upload contract outputs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: federation-contract-results
+          path: validation-results
+          if-no-files-found: error
+          retention-days: 1
+      - name: Fail on contract errors
+        if: steps.contracts.outputs.failed != '0'
+        run: |
+          cat validation-results/*.log
+          exit 1
