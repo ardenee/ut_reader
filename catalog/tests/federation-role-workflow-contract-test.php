@@ -82,7 +82,11 @@ federation_role_expect(!str_contains($content['download_file'], '$dependencyExce
 federation_role_expect(str_contains($content['worker_core'], "'ignore_base_game_files' => federation_ignore_base_game_files"), 'Parent worker does not send the effective policy.');
 
 federation_role_expect(str_contains($content['availability_api'], "(string)\$peer['peer_role'] !== 'child'"), 'Parent package availability is not restricted to a paired child.');
-federation_role_expect(str_contains($content['availability_helper'], "'policy_excluded' => true"), 'Shared availability does not exclude ignored base-game packages.');
+federation_role_expect(
+    str_contains($content['availability_helper'], "'policy_excluded' => \$policyExcluded")
+        && substr_count($content['availability_helper'], 'federation_package_unavailable_result(true, true,') >= 2,
+    'Shared availability does not exclude ignored base-game packages.'
+);
 federation_role_expect(!str_contains($content['availability_helper'], "'dependency_exception' => true"), 'Shared availability still exposes a base-game dependency exception.');
 federation_role_expect(str_contains($content['availability_helper'], "'transferable' => true"), 'Policy-eligible available dependencies are not transferable.');
 federation_role_expect(str_contains($content['request_generate'], 'reqgen_apply_base_game_policy'), 'Child request generator does not apply the inherited policy.');
