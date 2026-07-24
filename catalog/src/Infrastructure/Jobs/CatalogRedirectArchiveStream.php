@@ -20,8 +20,7 @@ final class CatalogRedirectArchiveStream
         string $sourceName,
         int $maxOutputBytes = 0,
         ?callable $progress = null,
-        bool $requirePackageTag = true,
-        int $timeoutSeconds = 900
+        bool $requirePackageTag = true
     ): array {
         if (\catalog_redirect_archive_extension($sourceName) !== 'uz2') {
             throw new \RuntimeException('Streaming redirect decoder requires a .uz2 file.');
@@ -35,9 +34,7 @@ final class CatalogRedirectArchiveStream
             throw new \RuntimeException('Could not read redirect compressed file: ' . basename($sourceName));
         }
         $limit = \catalog_redirect_archive_output_limit($maxOutputBytes);
-        $timeoutSeconds = max(30, min($timeoutSeconds, 86400));
         $startedAt = microtime(true);
-        $deadline = $startedAt + $timeoutSeconds;
         $lastProgressAt = $startedAt;
 
         $input = fopen($sourcePath, 'rb');
@@ -64,7 +61,6 @@ final class CatalogRedirectArchiveStream
 
         try {
             while ($readBytes < $compressedBytes) {
-                self::assertWithinDeadline($deadline, $timeoutSeconds, $sourceName);
                 $header = self::readExact($input, 8);
                 $readBytes += 8;
                 $sizes = unpack('Vcompressed/Vuncompressed', $header);
@@ -84,7 +80,6 @@ final class CatalogRedirectArchiveStream
 
                 $payload = self::readExact($input, $compressed);
                 $readBytes += $compressed;
-                self::assertWithinDeadline($deadline, $timeoutSeconds, $sourceName);
 
                 $decoded = \catalog_redirect_archive_inflate_epic_zlib(
                     $payload,
@@ -94,7 +89,6 @@ final class CatalogRedirectArchiveStream
                 if ($decoded === null) {
                     throw new \RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
                 }
-                self::assertWithinDeadline($deadline, $timeoutSeconds, $sourceName);
 
                 $block = (string)$decoded['data'];
                 if ($chunks === 0) {
@@ -108,7 +102,6 @@ final class CatalogRedirectArchiveStream
                 }
                 $writtenBytes += strlen($block);
                 $chunks++;
-                self::assertWithinDeadline($deadline, $timeoutSeconds, $sourceName);
 
                 $now = microtime(true);
                 if ($progress !== null && ($chunks === 1 || ($chunks % 32) === 0 || $readBytes >= $compressedBytes || ($now - $lastProgressAt) >= 2.0)) {
@@ -120,7 +113,6 @@ final class CatalogRedirectArchiveStream
                         'percent' => (int)floor(($readBytes * 100) / max(1, (int)$compressedBytes)),
                         'is_unreal_package' => $isUnrealPackage,
                         'elapsed_seconds' => (int)floor($now - $startedAt),
-                        'timeout_seconds' => $timeoutSeconds,
                         'message' => 'Decompressing ' . basename($sourceName) . ': block ' . $chunks,
                     ]);
                     $lastProgressAt = $now;
@@ -156,16 +148,6 @@ final class CatalogRedirectArchiveStream
             'expected_bytes' => $writtenBytes,
             'is_unreal_package' => $isUnrealPackage,
         ];
-    }
-
-    private static function assertWithinDeadline(float $deadline, int $timeoutSeconds, string $sourceName): void
-    {
-        if (microtime(true) <= $deadline) {
-            return;
-        }
-        throw new \RuntimeException(
-            'Redirect decompression exceeded the ' . $timeoutSeconds . '-second safety limit: ' . basename($sourceName)
-        );
     }
 
     /** @param resource $stream */
