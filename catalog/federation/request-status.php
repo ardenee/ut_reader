@@ -81,7 +81,7 @@ function crs_clarify_message(string $message): string
  * @param array<int,mixed> $items
  * @return list<array<string,mixed>>
  */
-function crs_group_items(array $items): array
+function crs_group_items(array $items, bool $ignoreBaseGame): array
 {
     $groups = [];
     foreach ($items as $item) {
@@ -119,7 +119,11 @@ function crs_group_items(array $items): array
         }
     }
 
-    foreach ($groups as &$group) {
+    foreach ($groups as $key => &$group) {
+        if ($ignoreBaseGame && !empty($group['is_base_game'])) {
+            unset($groups[$key]);
+            continue;
+        }
         $statuses = array_keys($group['statuses']);
         $group['display_status'] = count($statuses) === 1 ? $statuses[0] : 'mixed';
         $group['example_object'] = (string)(reset($group['object_paths']) ?: ($group['required_object_path'] ?? ''));
@@ -173,7 +177,7 @@ try {
 
     catalog_page_header(
         'Outgoing Requests',
-        'Requests sent by this child to its parent. Every row is a missing dependency; base-game packages remain visible because dependency completion is the exception to the ordinary ignore policy.',
+        'Requests sent by this child to its parent. Policy-excluded base-game packages are removed from the request and its totals.',
         catalog_federation_links() + ['Request Centre' => 'request-center.php', 'Missing Files' => 'request-generate.php', 'Approved Downloads' => 'approved-downloads.php']
     );
 
@@ -220,24 +224,23 @@ try {
         } else {
             $request = $status['request'] ?? null;
             if (!$request) {
-                echo '<p class="muted">No outgoing request was found on this parent.</p></div>';
+                echo '<p class="muted">No policy-eligible outgoing request was found on this parent.</p></div>';
             } else {
+                $ignoreBaseGame = federation_ignore_base_game_files($db, $parent);
                 $active = in_array((string)$request['status'], ['submitted', 'approved', 'part_approved', 'downloading'], true);
-                $groups = crs_group_items(is_array($status['items'] ?? null) ? $status['items'] : []);
-                $baseCount = count(array_filter($groups, static fn(array $group): bool => !empty($group['is_base_game'])));
+                $groups = crs_group_items(is_array($status['items'] ?? null) ? $status['items'] : [], $ignoreBaseGame);
                 $waitingCount = count(array_filter($groups, static fn(array $group): bool => !empty($group['waiting_for_file'])));
 
                 echo '<table>';
                 echo '<tr><th>Direction</th><td><strong>This child</strong> &rarr; <strong>' . catalog_h($parent['site_name']) . '</strong> parent</td></tr>';
                 echo '<tr><th>Request ID</th><td>' . (int)$request['id'] . '</td></tr>';
                 echo '<tr><th>Status</th><td>' . catalog_h($request['status']) . '</td></tr>';
-                echo '<tr><th>Dependency packages</th><td>' . count($groups) . '</td></tr>';
-                echo '<tr><th>Base-game dependency exceptions</th><td>' . $baseCount . '</td></tr>';
+                echo '<tr><th>Policy-eligible dependency packages</th><td>' . count($groups) . '</td></tr>';
                 echo '<tr><th>Waiting for parent file</th><td>' . $waitingCount . '</td></tr>';
+                echo '<tr><th>Base-game policy</th><td>' . catalog_h(federation_base_game_policy_label($db, $parent)) . '</td></tr>';
                 echo '<tr><th>Title</th><td>' . catalog_h($request['title']) . '</td></tr>';
                 echo '<tr><th>Submitted</th><td>' . catalog_h($request['submitted_at']) . '</td></tr>';
                 echo '</table>';
-                echo '<p class="muted">' . catalog_h(federation_base_game_policy_label($db, $parent)) . '</p>';
                 if ($active) {
                     echo '<form method="post" onsubmit="return confirm(\'Cancel this outgoing request on the parent?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_child_request_status')) . '"><input type="hidden" name="action" value="cancel"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="request_id" value="' . (int)$request['id'] . '"><button>Cancel outgoing request</button></form>';
                 }
@@ -246,7 +249,7 @@ try {
                 echo '<div class="card"><h2>Packages requested from the parent</h2>';
                 echo '<p><strong>Approved + waiting</strong> means the parent accepted the request but has not found the file yet. The row remains active and is linked automatically when the file is later imported.</p>';
                 if (!$groups) {
-                    echo '<p class="muted">No requested packages were found.</p></div>';
+                    echo '<p class="muted">No policy-eligible requested packages were found.</p></div>';
                 } else {
                     echo '<table><tr><th>Status</th><th>Package</th><th>Example missing object</th><th>Missing objects</th><th>Parent file</th><th>Decision / current state</th></tr>';
                     foreach ($groups as $group) {
@@ -254,8 +257,8 @@ try {
                         $originalName = trim((string)($group['original_name'] ?? ''));
                         $fileLabel = trim($parentFile . ($parentFile !== '' && $originalName !== '' ? ' / ' : '') . $originalName);
                         $displayStatus = !empty($group['waiting_for_file']) ? 'approved — waiting for file' : (string)$group['display_status'];
-                        $badge = !empty($group['is_base_game']) ? ' <span class="pill amber">base-game dependency</span>' : '';
-                        echo '<tr><td>' . catalog_h($displayStatus) . '</td><td class="mono">' . catalog_h($group['required_package'] ?? '') . $badge . '</td><td class="mono path">' . catalog_h($group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . ($fileLabel !== '' ? catalog_h($fileLabel) : '<span class="muted">Not available yet</span>') . '</td><td>' . catalog_h($group['display_message']) . '</td></tr>';
+                        $badge = !empty($group['is_base_game']) ? ' <span class="pill amber">base-game</span>' : '';
+                        echo '<tr><td>' . catalog_h($displayStatus) . '</td><td class="mono">' . catalog_h((string)$group['required_package']) . $badge . '</td><td class="mono path">' . catalog_h((string)$group['example_object']) . '</td><td>' . (int)$group['object_count'] . '</td><td>' . catalog_h($fileLabel !== '' ? $fileLabel : 'not available') . '</td><td class="path">' . catalog_h((string)$group['display_message']) . '</td></tr>';
                     }
                     echo '</table></div>';
                 }
