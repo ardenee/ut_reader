@@ -65,11 +65,11 @@ try {
     $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
     $baseWhereSql = $baseWhere !== [] ? ' WHERE ' . implode(' AND ', $baseWhere) : '';
 
-    $total = (int)(catalog_value(
+    $total = catalog_count(
         $application->db,
-        'SELECT COUNT(*) FROM ue_background_jobs' . $whereSql,
+        'SELECT COUNT(*) c FROM ue_background_jobs' . $whereSql,
         $params
-    ) ?? 0);
+    );
     $pages = max(1, (int)ceil($total / max(1, $perPage)));
     if ($page > $pages) {
         $page = $pages;
