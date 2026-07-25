@@ -5,6 +5,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
@@ -25,7 +26,7 @@ try {
     $action = strtolower(trim((string)($payload['action'] ?? '')));
     $queue = new PdoJobQueue($application->db);
     $queueName = trim((string)($payload['queue'] ?? ($application->config['queue']['name'] ?? 'catalog')));
-    if ($queueName === '' || strlen($queueName) > 80) {
+    if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
         JsonResponse::error('invalid_queue', 'A valid queue name is required.', 400);
     }
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
@@ -120,8 +121,60 @@ try {
     }
 
     if ($action === 'recover') {
-        $result = $queue->recoverExpiredLeases($queueName);
-        JsonResponse::send(['data' => ['queue' => $queueName] + $result]);
+        $launcher = new CatalogDetachedWorker($application->config);
+        $worker = $launcher->status($queueName, false);
+        $orphanedRequeued = 0;
+        $orphanedCancelled = 0;
+
+        if (empty($worker['active'])) {
+            $now = gmdate('Y-m-d H:i:s');
+
+            // A detached process cannot still own these rows when its queue lock is
+            // not held. Preserve administrator cancellation requests; requeue all
+            // other orphaned rows without consuming another attempt.
+            $cancel = $application->db->prepare(
+                'UPDATE ue_background_jobs SET status="cancelled",dedupe_key=NULL,worker_id=NULL,lease_token=NULL,'
+                . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,completed_at=?,updated_at=? '
+                . 'WHERE queue_name=? AND status="running" AND worker_id LIKE "detached:%" '
+                . 'AND cancel_requested_at IS NOT NULL'
+            );
+            $cancel->execute([$now, $now, $queueName]);
+            $orphanedCancelled = $cancel->rowCount();
+
+            $requeue = $application->db->prepare(
+                'UPDATE ue_background_jobs SET status="queued",attempts=GREATEST(attempts-1,0),available_at=?,'
+                . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
+                . 'progress_json=NULL,progress_updated_at=NULL,last_error="Detached worker process disappeared; orphaned job requeued without consuming an attempt.",'
+                . 'updated_at=? WHERE queue_name=? AND status="running" AND worker_id LIKE "detached:%" '
+                . 'AND cancel_requested_at IS NULL'
+            );
+            $requeue->execute([$now, $now, $queueName]);
+            $orphanedRequeued = $requeue->rowCount();
+
+            if ($orphanedRequeued > 0 || $orphanedCancelled > 0) {
+                $launcher->writeState($queueName, [
+                    'status' => 'stopped',
+                    'queue' => $queueName,
+                    'ended_at' => gmdate('c'),
+                    'exit_reason' => 'orphan_recovery',
+                    'orphaned_requeued' => $orphanedRequeued,
+                    'orphaned_cancelled' => $orphanedCancelled,
+                ]);
+                $launcher->clearStopRequest($queueName);
+            }
+        }
+
+        $expired = $queue->recoverExpiredLeases($queueName);
+        JsonResponse::send([
+            'data' => [
+                'queue' => $queueName,
+                'orphaned_requeued' => $orphanedRequeued,
+                'orphaned_cancelled' => $orphanedCancelled,
+                'requeued' => $orphanedRequeued + (int)($expired['requeued'] ?? 0),
+                'cancelled' => $orphanedCancelled + (int)($expired['cancelled'] ?? 0),
+                'dead_lettered' => (int)($expired['dead_lettered'] ?? 0),
+            ],
+        ]);
     }
 
     if ($action === 'enqueue_rebuild_game') {
