@@ -26,8 +26,34 @@ final class CatalogUi
     /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
     public static function pageHeader(string $title, string $description = '', array $actions = []): string
     {
+        $actions = self::repairActionLabels($actions);
         $actions = self::gameContentSwitchActions($actions);
         return PageHeader::render($title, $description, $actions) . self::identityScriptTag();
+    }
+
+    /** @param array<string,string>|list<array{label:string,href:string,variant?:string}> $actions */
+    private static function repairActionLabels(array $actions): array
+    {
+        if (array_is_list($actions)) {
+            foreach ($actions as &$action) {
+                if (is_array($action)
+                    && (string)($action['href'] ?? '') === 'unverified-database-import.php'
+                    && (string)($action['label'] ?? '') === 'Index existing queue files') {
+                    $action['label'] = 'Repair missing metadata';
+                }
+            }
+            unset($action);
+            return $actions;
+        }
+
+        if (($actions['Index existing queue files'] ?? null) === 'unverified-database-import.php') {
+            $rewritten = [];
+            foreach ($actions as $label => $href) {
+                $rewritten[$label === 'Index existing queue files' ? 'Repair missing metadata' : $label] = $href;
+            }
+            return $rewritten;
+        }
+        return $actions;
     }
 
     private static function identityScriptTag(): string
