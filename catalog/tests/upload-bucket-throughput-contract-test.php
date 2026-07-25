@@ -16,13 +16,12 @@ $batchQueue = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucke
 $handler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $processor = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketUploadProcessor.php');
 $manager = file_get_contents($root . '/assets/background-jobs.js');
-$authority = file_get_contents($root . '/assets/background-jobs-authority.js');
 $bulkApi = file_get_contents($root . '/api/v1/job-bulk.php');
 $statusApi = file_get_contents($root . '/api/v1/job-status.php');
 $workerStatusApi = file_get_contents($root . '/api/v1/job-worker-status.php');
 $page = file_get_contents($root . '/background-jobs.php');
 
-foreach (compact('client', 'chunkApi', 'batchApi', 'batchQueue', 'handler', 'processor', 'manager', 'authority', 'bulkApi', 'statusApi', 'workerStatusApi', 'page') as $name => $source) {
+foreach (compact('client', 'chunkApi', 'batchApi', 'batchQueue', 'handler', 'processor', 'manager', 'bulkApi', 'statusApi', 'workerStatusApi', 'page') as $name => $source) {
     upload_bucket_throughput_expect(is_string($source), $name . ' is missing.');
 }
 
@@ -80,19 +79,23 @@ upload_bucket_throughput_expect(
     'Manual Stop job does not continue the queue.'
 );
 upload_bucket_throughput_expect(
-    str_contains($authority, 'authoritative_status')
+    str_contains($manager, 'authoritative_status')
+        && str_contains($manager, 'Recover and resume')
         && str_contains($workerStatusApi, "'orphaned'")
         && str_contains($workerStatusApi, 'queue_counts'),
-    'Background Jobs still reports competing worker states.'
+    'Background Jobs does not use one authoritative worker state.'
 );
 upload_bucket_throughput_expect(
-    str_contains($manager, 'Select all ') && str_contains($manager, 'scope: scope')
-        && str_contains($authority, 'Restart matching retryable jobs'),
+    str_contains($manager, 'Select all ')
+        && str_contains($manager, 'scope: scope')
+        && str_contains($manager, 'Restart matching retryable jobs'),
     'Background Jobs cannot manage all matching or mixed eligible jobs.'
 );
 upload_bucket_throughput_expect(
-    str_contains($bulkApi, "'matching'") && str_contains($bulkApi, 'COUNT(*) c'),
-    'Bulk actions are still limited to the visible page.'
+    str_contains($bulkApi, "'matching'")
+        && str_contains($bulkApi, 'COUNT(*) c')
+        && str_contains($bulkApi, 'status="completed" AND'),
+    'Bulk actions are still page-limited or cannot restart legacy failed-result jobs.'
 );
 upload_bucket_throughput_expect(
     str_contains($statusApi, "'per_page'") && str_contains($statusApi, 'OFFSET ')
@@ -101,10 +104,10 @@ upload_bucket_throughput_expect(
 );
 upload_bucket_throughput_expect(
     substr_count($page, 'assets/background-jobs.js') === 1
-        && substr_count($page, 'assets/background-jobs-authority.js') === 1
+        && !str_contains($page, 'background-jobs-authority.js')
         && !str_contains($page, 'background-jobs-running-controls.js')
         && !str_contains($page, 'background-jobs-stale-worker.js'),
-    'Background Jobs still loads obsolete competing table-control scripts.'
+    'Background Jobs still loads competing control scripts.'
 );
 
 echo "Deferred Upload Bucket throughput contract tests passed.\n";
