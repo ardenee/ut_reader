@@ -64,7 +64,10 @@ try {
         . '.jobs-queue-switcher select{min-width:340px}'
         . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar,.jobs-pagination{display:flex;gap:10px;align-items:center;flex-wrap:wrap}'
         . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar{margin:0 0 14px}'
-        . '.jobs-worker-state{margin-left:auto}'
+        . '.jobs-worker-state{margin-left:auto;font-weight:600}'
+        . '.jobs-worker-state[data-authoritative-status="running"]{color:#a7f3d0}'
+        . '.jobs-worker-state[data-authoritative-status="orphaned"]{color:#fecdd3}'
+        . '.jobs-worker-state[data-authoritative-status="stopped_with_queue"]{color:#fde68a}'
         . '.jobs-tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:10px}'
         . '.jobs-tabs button[aria-selected="true"]{font-weight:700;box-shadow:inset 0 -2px 0 currentColor}'
         . '.jobs-search{min-width:260px;flex:1}'
@@ -82,7 +85,7 @@ try {
 
     catalog_page_header(
         'Background Jobs',
-        'Manage queued work, inspect long-running jobs and apply actions to selected jobs or every matching result.',
+        'Manage queued work using one authoritative worker state. A stopped worker and an orphaned running database row are reported as separate conditions.',
         [
             'Upload Bucket' => 'upload-bucket.php',
             'Upload Files' => 'profiled-upload.php',
@@ -119,7 +122,7 @@ try {
         . '<button id="jobs-start" type="button">Start / resume queue</button>'
         . '<button id="jobs-stop-worker" type="button">Stop worker</button>'
         . '<button id="jobs-refresh" type="button">Refresh</button>'
-        . '<span id="jobs-worker-state" class="muted jobs-worker-state">Loading worker status…</span>'
+        . '<span id="jobs-worker-state" class="muted jobs-worker-state">Loading authoritative worker status…</span>'
         . '</div>';
 
     echo '<nav id="jobs-status-tabs" class="jobs-tabs" aria-label="Job status">';
@@ -173,7 +176,7 @@ try {
         . '</div></div>';
 
     echo '<details class="jobs-maintenance"><summary>Maintenance</summary><div class="jobs-maintenance-body">'
-        . '<p class="muted">These are occasional repair and cleanup operations, not normal queue controls.</p>'
+        . '<p class="muted">Use recovery only when the authoritative state reports orphaned running rows or expired leases.</p>'
         . '<p class="button-row">'
         . '<button id="jobs-recover" type="button">Recover expired leases</button>'
         . '<label>Delete terminal jobs older than <select id="jobs-cleanup-days">'
@@ -188,6 +191,9 @@ try {
     $script = __DIR__ . '/assets/background-jobs.js';
     $version = is_file($script) ? (string)filemtime($script) : '1';
     echo '<script src="assets/background-jobs.js?v=' . catalog_h($version) . '"></script>';
+    $authorityScript = __DIR__ . '/assets/background-jobs-authority.js';
+    $authorityVersion = is_file($authorityScript) ? (string)filemtime($authorityScript) : '1';
+    echo '<script src="assets/background-jobs-authority.js?v=' . catalog_h($authorityVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
