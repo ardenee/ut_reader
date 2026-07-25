@@ -57,6 +57,7 @@ try {
         $autoRecovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
             ->recoverInactiveQueue($queueName);
         $counts = job_worker_status_counts($application->db, $queueName);
+        $worker = $launcher->status($queueName, true);
 
         if ($counts['queued'] > 0) {
             try {
@@ -65,6 +66,25 @@ try {
                 $autoStartError = trim($error->getMessage()) ?: 'Recovered jobs are queued, but the worker could not restart.';
                 error_log('[UnrealDB orphan auto-start] ' . get_class($error) . ': ' . $autoStartError);
             }
+        }
+        $worker = $launcher->status($queueName, true);
+        $counts = job_worker_status_counts($application->db, $queueName);
+    }
+
+    // A fatal-shutdown recorder may already have moved the claimed row back to
+    // queued before the page polls. Resume only when the worker state explicitly
+    // proves that the queue stopped because of a crash; a deliberate pause remains
+    // stopped until the administrator resumes it.
+    $workerState = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+    $exitReason = strtolower(trim((string)($workerState['exit_reason'] ?? '')));
+    $crashStopped = in_array($exitReason, ['fatal_shutdown', 'uncaught_exception', 'orphan_recovery'], true)
+        || strtolower(trim((string)($workerState['status'] ?? ''))) === 'failed';
+    if (empty($worker['active']) && $counts['running'] === 0 && $counts['queued'] > 0 && $crashStopped) {
+        try {
+            $autoStart = $launcher->start($queueName, 10000);
+        } catch (Throwable $error) {
+            $autoStartError = trim($error->getMessage()) ?: 'Crash-recovered jobs are queued, but the worker could not restart.';
+            error_log('[UnrealDB crash queue auto-start] ' . get_class($error) . ': ' . $autoStartError);
         }
         $worker = $launcher->status($queueName, true);
         $counts = job_worker_status_counts($application->db, $queueName);
