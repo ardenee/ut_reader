@@ -140,7 +140,7 @@
                     return;
                 }
                 if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
-                    reject(new Error(responseError(body, 'Chunk request failed with HTTP ' + xhr.status + '.'));
+                    reject(new Error(responseError(body, 'Chunk request failed with HTTP ' + xhr.status + '.')));
                     return;
                 }
                 resolve(body);
