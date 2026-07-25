@@ -33,7 +33,7 @@ upload_bucket_throughput_expect(
     'The browser does not transfer the complete batch before finalisation.'
 );
 upload_bucket_throughput_expect(
-    str_contains($chunkApi, "if ($action === 'complete')")
+    str_contains($chunkApi, "if (\$action === 'complete')")
         && str_contains($chunkApi, 'Transfer completed and retained in durable staging')
         && !str_contains($chunkApi, 'CatalogDetachedWorker'),
     'Per-file completion still starts processing or a worker.'
@@ -45,7 +45,7 @@ upload_bucket_throughput_expect(
     'Batch finalisation does not create all jobs before starting one worker.'
 );
 upload_bucket_throughput_expect(
-    str_contains($batchQueue, "return $base . ':bucket-processing'")
+    str_contains($batchQueue, "return \$base . ':bucket-processing'")
         && str_contains($batchQueue, 'bucket-upload-source:'),
     'Deferred Upload Bucket jobs do not use the dedicated processing queue and source fingerprint.'
 );
