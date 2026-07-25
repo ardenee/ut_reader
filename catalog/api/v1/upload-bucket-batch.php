@@ -37,10 +37,33 @@ try {
         if (preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
             JsonResponse::error('invalid_upload', 'A completed Upload Bucket source identifier is invalid.', 400);
         }
-        $uploadIds[] = $uploadId;
+        $uploadIds[$uploadId] = $uploadId;
     }
+    $uploadIds = array_values($uploadIds);
 
     $queue = new CatalogBucketBatchQueue($application->db, $application->config);
+    $launcher = new CatalogDetachedWorker($application->config);
+    $activeQueues = [];
+    foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
+        $workerStatus = $launcher->status($queueName, false);
+        if (!empty($workerStatus['active'])) {
+            $activeQueues[] = $queueName;
+        }
+    }
+    if ($activeQueues !== []) {
+        JsonResponse::error(
+            'bucket_processing_not_paused',
+            'Upload Bucket processing is still active in ' . implode(', ', $activeQueues)
+                . '. Wait for the current job to finish or stop that job, then retry batch finalisation.',
+            409,
+            ['active_queues' => $activeQueues]
+        );
+    }
+
+    // Old pending redirect jobs are now handled by the same worker and granular
+    // processor as new batch uploads. Keep terminal rows in their historical queue.
+    $legacyMigrated = $queue->migrateLegacyQueuedJobs();
+
     $messages = [];
     $jobIds = [];
     $queued = 0;
@@ -90,9 +113,9 @@ try {
 
     $worker = null;
     $workerError = '';
-    if ($jobIds !== []) {
+    if ($jobIds !== [] || $legacyMigrated > 0) {
         try {
-            $worker = (new CatalogDetachedWorker($application->config))->start($queue->queueName(), 10000);
+            $worker = $launcher->start($queue->queueName(), 10000);
         } catch (Throwable $error) {
             $workerError = trim($error->getMessage());
             error_log('[UnrealDB bucket batch worker] ' . $error->getMessage());
@@ -107,12 +130,13 @@ try {
             'queued' => $queued,
             'duplicates' => $duplicates,
             'failed' => $failed,
+            'legacy_migrated' => $legacyMigrated,
             'job_ids' => array_values($jobIds),
             'worker' => $worker,
             'worker_error' => $workerError,
             'messages' => $messages,
         ],
-    ], $failed > 0 && $queued === 0 && $duplicates === 0 ? 500 : 200);
+    ], $failed > 0 && $queued === 0 && $duplicates === 0 && $legacyMigrated === 0 ? 500 : 200);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     error_log('[UnrealDB][' . $requestId . '] bucket batch finalization failed: ' . get_class($error) . ': ' . $error->getMessage());
