@@ -190,6 +190,26 @@ try {
                         . (int)$result['import_count'] . ' Imports and '
                         . (int)$result['export_count'] . ' Exports recorded.';
                 }
+            } elseif ((string)($row['job_type'] ?? '') === JobType::PROCESS_BUCKET_UPLOAD
+                && strtolower(trim((string)($result['status'] ?? ''))) === 'bucketed') {
+                $queueFile = basename((string)($result['queue_name'] ?? ''));
+                $storageRoot = rtrim((string)($application->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
+                if ($queueFile !== '' && $storageRoot !== '') {
+                    $physicalPath = $storageRoot . DIRECTORY_SEPARATOR . 'upload-bucket' . DIRECTORY_SEPARATOR . $queueFile;
+                    $physicalExists = is_file($physicalPath);
+                    $result['physical_path'] = $physicalPath;
+                    $result['physical_exists'] = $physicalExists;
+                    if (!is_array($progress)) {
+                        $progress = [];
+                    }
+                    $currentMessage = trim((string)($progress['message'] ?? $result['message'] ?? 'Upload Bucket processing completed.'));
+                    $pathMessage = $physicalExists
+                        ? 'Stored at: ' . $physicalPath
+                        : 'Expected physical file is missing: ' . $physicalPath;
+                    if (!str_contains($currentMessage, $physicalPath)) {
+                        $progress['message'] = rtrim($currentMessage, " \t\n\r\0\x0B.") . '. ' . $pathMessage;
+                    }
+                }
             }
 
             $resultStatus = strtolower(trim((string)($result['status'] ?? '')));
