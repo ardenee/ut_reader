@@ -69,7 +69,7 @@ metadata_repair_expect(
         && str_contains($handler, "'repair_save'")
         && str_contains($handler, '$context->checkpoint($mapped)')
         && str_contains($handler, "'stage' => 'complete'")
-        && str_contains($handler, "'message' => $completionMessage"),
+        && str_contains($handler, "'message' => \$completionMessage"),
     'Repair progress does not expose forced Header/Names/Imports/Exports/save checkpoints and a real completion message.'
 );
 metadata_repair_expect(
