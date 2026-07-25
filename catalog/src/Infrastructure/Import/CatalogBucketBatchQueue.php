@@ -49,6 +49,7 @@ final class CatalogBucketBatchQueue
      *   job_id:int,
      *   deduplicated:bool,
      *   duplicate_source_removed:bool,
+     *   duplicate_kind:string,
      *   upload_id:string,
      *   original_name:string,
      *   source_relative_path:string,
@@ -74,6 +75,33 @@ final class CatalogBucketBatchQueue
         }
 
         $queueName = $this->queueName();
+
+        // Completed successful jobs release their active dedupe key, but their
+        // payload retains the exact verified chunk fingerprint. Reuse that history
+        // to delete a repeated staged upload before any package work is scheduled.
+        $completed = $this->db->prepare(
+            'SELECT id FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status="completed" '
+            . 'AND JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.source_fingerprint"))=? '
+            . 'ORDER BY id DESC LIMIT 1'
+        );
+        $completed->execute([$queueName, $fingerprint]);
+        $completedJobId = (int)($completed->fetchColumn() ?: 0);
+        if ($completedJobId > 0) {
+            $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
+            return [
+                'job_id' => $completedJobId,
+                'deduplicated' => true,
+                'duplicate_source_removed' => $removed,
+                'duplicate_kind' => 'completed_source',
+                'upload_id' => $uploadId,
+                'original_name' => $originalName,
+                'source_relative_path' => $relativePath,
+                'size' => $size,
+                'fingerprint' => $fingerprint,
+            ];
+        }
+
         $dedupeKey = 'bucket-upload-source:' . $fingerprint;
         $existing = $this->db->prepare(
             'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
@@ -119,6 +147,7 @@ final class CatalogBucketBatchQueue
             'job_id' => $jobId,
             'deduplicated' => $deduplicated,
             'duplicate_source_removed' => $removed,
+            'duplicate_kind' => $deduplicated ? 'active_source' : '',
             'upload_id' => $uploadId,
             'original_name' => $originalName,
             'source_relative_path' => $relativePath,
