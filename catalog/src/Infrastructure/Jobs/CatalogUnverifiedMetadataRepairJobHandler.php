@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogUnverifiedMetadataRepairProcessor;
 
 final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
 {
@@ -33,12 +34,17 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
             throw new \RuntimeException('The metadata-repair queue reference is invalid.');
         }
 
-        $context->heartbeatIfDue([
+        $fileStartedAt = gmdate(DATE_ATOM);
+        $context->checkpoint([
             'stage' => 'repair_resolve',
-            'done' => 3,
+            'done' => 0,
             'total' => 100,
-            'percent' => 3,
-            'message' => 'Resolving the physical unverified file.',
+            'percent' => 0,
+            'part' => 0,
+            'part_total' => 4,
+            'file_started_at' => $fileStartedAt,
+            'stage_started_at' => $fileStartedAt,
+            'message' => 'Resolving the physical unverified file for this repair job.',
         ]);
 
         if ($queueGameId === 0) {
@@ -82,36 +88,88 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
             ? trim((string)@file_get_contents($reasonPath, false, null, 0, 65535))
             : '';
 
-        // This repair path uses older indexing helpers that do not yet emit
-        // record-level heartbeats. Extend the lease before entering the parser so
-        // large packages cannot be reclaimed by another worker mid-repair.
-        $lease = $this->db->prepare(
-            'UPDATE ue_background_jobs SET lease_expires_at=DATE_ADD(UTC_TIMESTAMP(),INTERVAL 6 HOUR),'
-            . ' last_heartbeat_at=UTC_TIMESTAMP(),updated_at=UTC_TIMESTAMP()'
-            . ' WHERE id=? AND status="running" AND lease_token=?'
-        );
-        $lease->execute([$job->id, $job->leaseToken]);
-
-        $context->heartbeatIfDue([
-            'stage' => 'repair_inventory',
-            'done' => 10,
-            'total' => 100,
-            'percent' => 10,
-            'message' => 'Recalculating identity, engine information and package tables for ' . $originalName . '.',
-        ]);
-
-        $result = \catalog_unverified_index_path(
-            $this->db,
-            $this->config,
-            $queueGameId,
-            $queueName,
-            $path,
+        $lastVisibleStage = '';
+        $lastVisiblePercent = -1;
+        $lastVisibleAt = 0.0;
+        $stageStartedAt = $fileStartedAt;
+        $progress = function (array $raw) use (
+            $context,
             $originalName,
-            $reason,
-            $uploadedBy > 0 ? $uploadedBy : null,
-            $sourceRelativePath,
-            true
-        );
+            $fileStartedAt,
+            &$lastVisibleStage,
+            &$lastVisiblePercent,
+            &$lastVisibleAt,
+            &$stageStartedAt
+        ): void {
+            $mapped = $this->mapRepairProgress($raw, $originalName);
+            $stage = (string)$mapped['stage'];
+            $percent = (int)$mapped['percent'];
+            $now = microtime(true);
+            $stageChanged = $stage !== $lastVisibleStage;
+            if ($stageChanged) {
+                $stageStartedAt = gmdate(DATE_ATOM);
+            }
+            $mapped['file_started_at'] = $fileStartedAt;
+            $mapped['stage_started_at'] = $stageStartedAt;
+
+            $forceVisible = $stageChanged
+                || $lastVisiblePercent < 0
+                || abs($percent - $lastVisiblePercent) >= 3
+                || ($now - $lastVisibleAt) >= 2.0
+                || $percent >= 99;
+            if ($forceVisible) {
+                $context->checkpoint($mapped);
+                $lastVisibleStage = $stage;
+                $lastVisiblePercent = $percent;
+                $lastVisibleAt = $now;
+                return;
+            }
+            $context->heartbeatIfDue($mapped);
+        };
+
+        if ($queueGameId === 0) {
+            $progress([
+                'stage' => 'hash_identity',
+                'percent' => 45,
+                'message' => 'Starting the Upload Bucket repair.',
+            ]);
+            $result = (new CatalogUnverifiedMetadataRepairProcessor($this->db, $this->config))->repair(
+                $queueName,
+                $path,
+                $originalName,
+                $reason,
+                max(1, $uploadedBy),
+                $sourceRelativePath,
+                $progress
+            );
+        } else {
+            // Older per-game unverified queues still use the legacy staging helper.
+            // Keep explicit visible checkpoints around it; Upload Bucket repairs use
+            // the granular processor above.
+            $context->checkpoint([
+                'stage' => 'repair_header',
+                'done' => 0,
+                'total' => 100,
+                'percent' => 0,
+                'part' => 1,
+                'part_total' => 4,
+                'file_started_at' => $fileStartedAt,
+                'stage_started_at' => gmdate(DATE_ATOM),
+                'message' => 'Part 1 of 4 — reading package identity and Header for ' . $originalName . '.',
+            ]);
+            $result = \catalog_unverified_index_path(
+                $this->db,
+                $this->config,
+                $queueGameId,
+                $queueName,
+                $path,
+                $originalName,
+                $reason,
+                $uploadedBy > 0 ? $uploadedBy : null,
+                $sourceRelativePath,
+                true
+            );
+        }
 
         $fileId = (int)($result['file_id'] ?? 0);
         if ($fileId < 1) {
@@ -142,15 +200,29 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
         $this->db->prepare('UPDATE ue_files SET scan_notes=?,detection_notes=? WHERE id=?')
             ->execute([$notes, $notes, $fileId]);
 
-        $context->heartbeatIfDue([
-            'stage' => 'repair_complete',
+        $completionMessage = empty($result['parse_error'])
+            ? 'Metadata repair completed for ' . $originalName . ': Header, '
+                . (int)$row['name_count'] . ' Names, '
+                . (int)$row['import_count'] . ' Imports and '
+                . (int)$row['export_count'] . ' Exports recorded.'
+            : 'Basic metadata was repaired for ' . $originalName
+                . ', but package tables remain unreadable: ' . trim((string)$result['parse_error']);
+        $context->checkpoint([
+            'stage' => 'complete',
             'done' => 100,
             'total' => 100,
             'percent' => 100,
-            'message' => 'Metadata repair completed for ' . $originalName . '.',
+            'part' => 4,
+            'part_total' => 4,
+            'file_started_at' => $fileStartedAt,
+            'stage_started_at' => gmdate(DATE_ATOM),
+            'file_id' => $fileId,
+            'message' => $completionMessage,
         ]);
 
         return [
+            'status' => 'completed',
+            'message' => $completionMessage,
             'operation' => 'repair_unverified_metadata',
             'file_id' => $fileId,
             'queue_game_id' => $queueGameId,
@@ -167,6 +239,81 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
             'export_count' => (int)$row['export_count'],
             'parse_error' => $result['parse_error'] ?? null,
             'requested_missing_reasons' => array_values((array)($job->payload['missing_reasons'] ?? [])),
+        ];
+    }
+
+    /** @param array<string,mixed> $raw @return array<string,mixed> */
+    private function mapRepairProgress(array $raw, string $originalName): array
+    {
+        $rawStage = trim((string)($raw['stage'] ?? 'repair_header'));
+        $rawPercent = max(0, min(100, (int)($raw['percent'] ?? 0)));
+        $meta = $raw;
+        unset($meta['stage'], $meta['done'], $meta['total'], $meta['percent'], $meta['message']);
+
+        if ($rawStage === 'hash_identity') {
+            $fraction = max(0.0, min(1.0, ($rawPercent - 45) / 10));
+            $percent = (int)floor($fraction * 18);
+            $done = (int)($raw['bytes_done'] ?? 0);
+            $total = (int)($raw['bytes_total'] ?? 0);
+            $detail = $total > 0 ? ' (' . $done . ' of ' . $total . ' bytes)' : '';
+            return $meta + [
+                'stage' => 'repair_header',
+                'done' => $percent,
+                'total' => 100,
+                'percent' => $percent,
+                'part' => 1,
+                'part_total' => 4,
+                'message' => 'Part 1 of 4 — calculating MD5/SHA-1 before reading the Header for ' . $originalName . $detail . '.',
+            ];
+        }
+
+        return match ($rawStage) {
+            'engine_detect' => $meta + $this->partProgress(1, 18, 'Part 1 of 4 — detecting the Unreal Engine generation and package summary.'),
+            'reader_validate' => $meta + $this->partProgress(1, 21, 'Part 1 of 4 — validating the package reader.'),
+            'read_header' => $meta + $this->partProgress(1, 23, 'Part 1 of 4 — reading the package Header.'),
+            'read_names' => $meta + $this->partProgress(2, 25, 'Part 2 of 4 — reading the Names table.'),
+            'read_imports' => $meta + $this->partProgress(3, 50, 'Part 3 of 4 — reading the Imports table.'),
+            'read_exports' => $meta + $this->partProgress(4, 75, 'Part 4 of 4 — reading the Exports table.'),
+            'reader_warning' => $meta + $this->partProgress(4, 80, 'Package table reading failed; preserving the basic identity and parser error.'),
+            'database_file' => $meta + $this->saveProgress(82, 'Saving the repaired file identity and package summary.'),
+            'database_names' => $meta + $this->saveProgress(max(83, min(89, $rawPercent)), (string)($raw['message'] ?? 'Saving the Names table.')),
+            'database_imports' => $meta + $this->saveProgress(max(90, min(94, $rawPercent)), (string)($raw['message'] ?? 'Saving the Imports table.')),
+            'database_exports' => $meta + $this->saveProgress(max(95, min(98, $rawPercent)), (string)($raw['message'] ?? 'Saving the Exports table.')),
+            'database_commit' => $meta + $this->saveProgress(99, 'Committing the repaired package inventory.'),
+            default => $meta + $this->saveProgress(max(1, min(99, $rawPercent)), trim((string)($raw['message'] ?? 'Repairing package metadata.')) ?: 'Repairing package metadata.'),
+        };
+    }
+
+    /** @return array<string,mixed> */
+    private function partProgress(int $part, int $percent, string $message): array
+    {
+        return [
+            'stage' => match ($part) {
+                1 => 'repair_header',
+                2 => 'repair_names',
+                3 => 'repair_imports',
+                default => 'repair_exports',
+            },
+            'done' => $percent,
+            'total' => 100,
+            'percent' => $percent,
+            'part' => $part,
+            'part_total' => 4,
+            'message' => $message,
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private function saveProgress(int $percent, string $message): array
+    {
+        return [
+            'stage' => 'repair_save',
+            'done' => $percent,
+            'total' => 100,
+            'percent' => $percent,
+            'part' => 4,
+            'part_total' => 4,
+            'message' => trim($message) !== '' ? $message : 'Saving the repaired package inventory.',
         ];
     }
 }
