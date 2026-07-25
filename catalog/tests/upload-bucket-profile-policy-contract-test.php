@@ -17,13 +17,16 @@ $root = dirname(__DIR__);
 $paths = [
     'page' => 'upload-bucket.php',
     'endpoint' => 'api/v1/upload-bucket-chunk.php',
+    'batch_endpoint' => 'api/v1/upload-bucket-batch.php',
     'javascript' => 'assets/upload-bucket.js',
     'library' => 'lib/CatalogRedirectArchive.php',
-    'processor' => 'src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php',
-    'handler' => 'src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
+    'redirect_processor' => 'src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php',
+    'batch_processor' => 'src/Infrastructure/Import/CatalogBucketUploadProcessor.php',
+    'handler' => 'src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php',
+    'legacy_handler' => 'src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
     'import_handler' => 'src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
     'stream' => 'src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php',
-    'queue' => 'src/Infrastructure/Import/CatalogBucketUploadQueue.php',
+    'batch_queue' => 'src/Infrastructure/Import/CatalogBucketBatchQueue.php',
     'factory' => 'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'job_type' => 'src/Domain/Jobs/JobType.php',
 ];
@@ -34,59 +37,65 @@ foreach ($paths as $key => $path) {
 }
 
 bucket_policy_expect(
-    !str_contains($content['page'], 'catalog_redirect_archive_decompress_to_temp(')
-        && !str_contains($content['page'], 'catalog_epic_redirect_decompress_to_temp('),
-    'Upload Bucket page still decompresses redirect archives inside web PHP.'
+    !str_contains($content['page'], 'CatalogBucketUploadQueue')
+        && !str_contains($content['page'], 'LegacyUnverifiedFileStager')
+        && !str_contains($content['page'], 'CatalogDetachedWorker'),
+    'Upload Bucket page still performs package processing inside web PHP.'
 );
 bucket_policy_expect(
-    str_contains($content['page'], 'enqueueStagedRedirect(')
-        && str_contains($content['page'], 'CatalogDetachedWorker')
-        && str_contains($content['page'], '$queue->queueName()'),
-    'Whole-file fallback does not stage and queue redirects on the dedicated CLI worker queue.'
-);
-bucket_policy_expect(
-    str_contains($content['page'], 'Every file uses resumable chunks')
-        && str_contains($content['page'], 'shared detached CLI process'),
-    'Upload Bucket does not describe the single worker-side redirect process.'
+    str_contains($content['page'], 'Transfer every selected file into durable staging first')
+        && str_contains($content['page'], 'catalog:bucket-processing')
+        && str_contains($content['page'], 'whole-file fallback processing has been disabled'),
+    'Upload Bucket page does not enforce or explain the transfer-first process.'
 );
 
 bucket_policy_expect(str_contains($content['javascript'], 'async function chunkedUpload'), 'Browser client lacks chunked uploads.');
 bucket_policy_expect(str_contains($content['javascript'], 'file.slice(start, end)'), 'Browser client does not send bounded chunks.');
 bucket_policy_expect(str_contains($content['javascript'], 'received_chunks'), 'Browser client cannot resume chunks.');
-bucket_policy_expect(!str_contains($content['javascript'], 'wholeFileUpload('), 'Browser client still routes redirect wrappers through whole-file POST.');
-bucket_policy_expect(!str_contains($content['javascript'], 'isRedirectArchive('), 'Browser client still selects an upload transport by redirect extension.');
+bucket_policy_expect(!str_contains($content['javascript'], 'wholeFileUpload('), 'Browser client still routes files through whole-file POST.');
 bucket_policy_expect(
-    str_contains(
-        $content['javascript'],
-        "reject(new Error(responseError(body, 'Chunk request failed with HTTP ' + xhr.status + '.')));"
-    ),
-    'Upload Bucket JavaScript response-error statement is malformed.'
+    str_contains($content['javascript'], 'await beginBatch()')
+        && str_contains($content['javascript'], 'completedUploads.push')
+        && str_contains($content['javascript'], 'await finalizeBatch('),
+    'Browser client does not finish the complete transfer phase before processing finalisation.'
 );
 bucket_policy_expect(
-    str_contains($content['javascript'], 'async function waitForJob')
-        && str_contains($content['javascript'], "'api/v1/job-status.php'")
-        && str_contains($content['javascript'], 'return await waitForJob(jobId, name);'),
-    'Upload Bucket does not report the final detached-worker redirect result.'
+    str_contains($content['javascript'], 'xhr.timeout')
+        && str_contains($content['javascript'], 'xhr.ontimeout')
+        && str_contains($content['javascript'], 'requestReference'),
+    'Browser upload reporting can still wait forever or omit request references.'
 );
 
 bucket_policy_expect(
-    !str_contains($content['endpoint'], 'catalog_epic_redirect_decompress_to_temp(')
-        && !str_contains($content['endpoint'], 'catalog_redirect_archive_decompress_to_temp('),
-    'Chunk endpoint still decompresses redirect archives inside web PHP.'
+    !str_contains($content['endpoint'], 'CatalogDetachedWorker')
+        && !str_contains($content['endpoint'], 'CatalogBucketUploadQueue')
+        && !str_contains($content['endpoint'], 'LegacyUnverifiedFileStager'),
+    'Per-file chunk completion still starts processing before the batch is complete.'
 );
 bucket_policy_expect(
-    str_contains($content['endpoint'], 'CatalogBucketUploadQueue')
-        && str_contains($content['endpoint'], 'enqueueRedirect(')
-        && str_contains($content['endpoint'], '$bucketQueue->queueName()')
-        && str_contains($content['endpoint'], 'CatalogDetachedWorker'),
-    'Chunk endpoint does not queue redirect finalization on the dedicated detached worker queue.'
+    str_contains($content['endpoint'], "if (\$action === 'begin_batch')")
+        && str_contains($content['endpoint'], "if (\$action === 'complete')")
+        && str_contains($content['endpoint'], 'retained in durable staging'),
+    'Chunk endpoint does not provide transfer-only batch preparation and completion.'
 );
-bucket_policy_expect(str_contains($content['endpoint'], "'status' => 'queued'"), 'Redirect upload does not report its queued state.');
 
 bucket_policy_expect(
-    str_contains($content['processor'], 'final class CatalogRedirectArchiveProcessor')
-        && str_contains($content['processor'], 'CatalogRedirectArchiveStream::decompressUz2(')
-        && str_contains($content['processor'], 'catalog_redirect_archive_decompress_payload_to_temp('),
+    str_contains($content['batch_endpoint'], 'CatalogBucketBatchQueue')
+        && str_contains($content['batch_endpoint'], 'foreach ($uploadIds as $uploadId)')
+        && str_contains($content['batch_endpoint'], 'CatalogDetachedWorker')
+        && str_contains($content['batch_endpoint'], 'start($queue->queueName(), 10000)'),
+    'Batch endpoint does not queue all completed sources before starting one worker.'
+);
+bucket_policy_expect(
+    str_contains($content['batch_queue'], "return \$base . ':bucket-processing'")
+        && str_contains($content['batch_queue'], 'bucket-upload-source:')
+        && str_contains($content['batch_queue'], 'source_fingerprint'),
+    'Completed uploads do not pass through the exact-source duplicate queue.'
+);
+
+bucket_policy_expect(
+    str_contains($content['redirect_processor'], 'CatalogRedirectArchiveStream::decompressUz2(')
+        && str_contains($content['redirect_processor'], 'catalog_redirect_archive_decompress_payload_to_temp('),
     'Shared redirect processor does not own all format dispatch.'
 );
 bucket_policy_expect(
@@ -96,39 +105,59 @@ bucket_policy_expect(
 );
 bucket_policy_expect(
     str_contains($content['handler'], 'new CatalogRedirectArchiveProcessor(')
+        && str_contains($content['legacy_handler'], 'new CatalogRedirectArchiveProcessor(')
         && str_contains($content['import_handler'], 'new CatalogRedirectArchiveProcessor('),
     'Bucket and profiled import jobs do not use the same redirect processor.'
 );
+
 bucket_policy_expect(
-    !str_contains($content['handler'], '->cancel($userId, $uploadId)')
-        && !str_contains($content['handler'], '->delete($stagedPath)'),
-    'Bucket redirect handler removes its durable source before job completion is persisted.'
+    str_contains($content['batch_processor'], "'hash_identity'")
+        && str_contains($content['batch_processor'], "'duplicate_check'")
+        && str_contains($content['batch_processor'], "'read_header'")
+        && str_contains($content['batch_processor'], "'read_names'")
+        && str_contains($content['batch_processor'], "'read_imports'")
+        && str_contains($content['batch_processor'], "'read_exports'")
+        && str_contains($content['batch_processor'], "'database_commit'"),
+    'Package processing still collapses hashing, parsing and indexing into one opaque stage.'
 );
+bucket_policy_expect(
+    !str_contains($content['handler'], "'percent' => 75")
+        && !str_contains($content['legacy_handler'], "'percent' => 75")
+        && !str_contains($content['handler'], 'Duplicate-checking and indexing')
+        && !str_contains($content['legacy_handler'], 'Duplicate-checking and indexing'),
+    'A bucket job handler still contains the broken 75 percent stage.'
+);
+bucket_policy_expect(
+    str_contains($content['handler'], 'throw $error;')
+        && str_contains($content['legacy_handler'], 'throw $error;'),
+    'Processing errors are returned as completed results instead of using queue retries and dead-letter handling.'
+);
+bucket_policy_expect(
+    str_contains($content['handler'], 'CatalogChunkedUploadCleanup')
+        && str_contains($content['handler'], 'delete($uploadId)')
+        && str_contains($content['legacy_handler'], 'CatalogChunkedUploadCleanup'),
+    'Successful jobs do not remove their now-unneeded durable browser sources.'
+);
+
 bucket_policy_expect(
     str_contains($content['stream'], 'catalog_redirect_archive_inflate_epic_zlib(')
         && str_contains($content['stream'], 'CATALOG_EPIC_UZ2_BLOCK_BYTES')
         && !str_contains($content['stream'], 'availableDecoders')
         && !str_contains($content['stream'], 'decodePayload('),
-    'Known-good July 23 UZ2 stream decoder was not restored exactly.'
+    'Known-good UZ2 stream decoder was replaced.'
 );
 
 bucket_policy_expect(
-    str_contains($content['job_type'], 'PREPARE_BUCKET_REDIRECT')
-        && str_contains($content['queue'], 'JobType::PREPARE_BUCKET_REDIRECT')
+    str_contains($content['job_type'], 'PROCESS_BUCKET_UPLOAD')
+        && str_contains($content['factory'], 'new CatalogBucketUploadJobHandler(')
         && str_contains($content['factory'], 'new CatalogBucketRedirectJobHandler('),
-    'Bucket redirect job type is not fully registered with the worker.'
-);
-bucket_policy_expect(
-    str_contains($content['queue'], "return \$base . ':bucket-redirects';")
-        && str_contains($content['queue'], "'source_kind' => 'chunk-upload'")
-        && str_contains($content['queue'], "'source_kind' => 'incoming-file'")
-        && str_contains($content['queue'], "'staged_path' => 'chunk-upload:' . \$uploadId"),
-    'Bucket redirects do not share the dedicated worker queue and terminal-job cleanup linkage.'
+    'New and legacy bucket job types are not both registered with the worker.'
 );
 
 bucket_policy_expect(str_contains($content['page'], 'function upload_bucket_stats'), 'Upload bucket physical-folder statistics are missing.');
 bucket_policy_expect(!str_contains($content['page'], 'uvf_list($db, $config, 0)'), 'Upload bucket hashes every queued file while rendering totals.');
 bucket_policy_expect(str_contains($content['endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'Chunk endpoint lacks CSRF protection.');
+bucket_policy_expect(str_contains($content['batch_endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'Batch endpoint lacks CSRF protection.');
 bucket_policy_expect(str_contains($content['endpoint'], "['max_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint applies the ordinary upload limit.');
 
-echo "Upload bucket shared CLI redirect contract tests passed.\n";
+echo "Upload Bucket transfer-first architecture contract tests passed.\n";
