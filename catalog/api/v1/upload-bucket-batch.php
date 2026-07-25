@@ -7,6 +7,7 @@ require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -43,9 +44,18 @@ try {
 
     $queue = new CatalogBucketBatchQueue($application->db, $application->config);
     $launcher = new CatalogDetachedWorker($application->config);
+    $orphanRecovery = [];
     $activeQueues = [];
     foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
         $workerStatus = $launcher->status($queueName, false);
+        if (empty($workerStatus['active'])) {
+            $recovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
+                ->recoverInactiveQueue($queueName);
+            if (!empty($recovery['recovered'])) {
+                $orphanRecovery[$queueName] = $recovery;
+            }
+            $workerStatus = $launcher->status($queueName, false);
+        }
         if (!empty($workerStatus['active'])) {
             $activeQueues[] = $queueName;
         }
@@ -90,16 +100,11 @@ try {
                     $message = 'An identical physical file already exists in '
                         . ($kind === 'upload_bucket' ? 'the Upload Bucket' : 'catalog storage')
                         . ' as file #' . $duplicateFileId . '.';
-                } elseif ($kind === 'completed_source') {
-                    $message = 'Exact uploaded source content was already processed successfully by job #' . $jobId . '.';
                 } else {
                     $message = 'Exact uploaded source content already belongs to active processing job #' . $jobId . '.';
                 }
                 if (!empty($result['duplicate_source_removed'])) {
                     $message .= ' The repeated staged upload was deleted before package processing.';
-                }
-                if ($identityText === '' && in_array($kind, ['completed_source', 'active_source'], true)) {
-                    $message .= ' This is a compressed-wrapper fingerprint match; package MD5/SHA-1 are calculated only after decompression.';
                 }
                 $messages[] = [
                     'status' => 'duplicate',
@@ -127,11 +132,12 @@ try {
         } catch (Throwable $error) {
             $failed++;
             $requestId = catalog_request_id();
-            error_log('[UnrealDB][' . $requestId . '] bucket batch source ' . $uploadId . ' failed: ' . get_class($error) . ': ' . $error->getMessage());
+            $errorMessage = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
+            error_log('[UnrealDB][' . $requestId . '] bucket batch source ' . $uploadId . ' failed: ' . get_class($error) . ': ' . $errorMessage);
             $messages[] = [
                 'status' => 'failed',
                 'file' => $uploadId,
-                'message' => (trim($error->getMessage()) ?: 'Could not queue the completed upload.') . ' | reference: ' . $requestId,
+                'message' => $errorMessage . ' | reference: ' . $requestId,
             ];
         }
     }
@@ -145,10 +151,14 @@ try {
     $workerError = '';
     if ($pendingJobs > 0) {
         try {
+            // A second recovery closes the small race between the initial queue
+            // inspection and the worker launch at the end of batch finalisation.
+            (new CatalogOrphanedJobRecovery($application->db, $application->config))
+                ->recoverInactiveQueue($queue->queueName());
             $worker = $launcher->start($queue->queueName(), 10000);
         } catch (Throwable $error) {
-            $workerError = trim($error->getMessage());
-            error_log('[UnrealDB bucket batch worker] ' . $error->getMessage());
+            $workerError = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
+            error_log('[UnrealDB bucket batch worker] ' . get_class($error) . ': ' . $workerError);
         }
     }
 
@@ -165,15 +175,17 @@ try {
             'job_ids' => array_values($jobIds),
             'worker' => $worker,
             'worker_error' => $workerError,
+            'orphan_recovery' => $orphanRecovery,
             'messages' => $messages,
         ],
     ], $failed > 0 && $queued === 0 && $duplicates === 0 && $legacyMigrated === 0 ? 500 : 200);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
-    error_log('[UnrealDB][' . $requestId . '] bucket batch finalization failed: ' . get_class($error) . ': ' . $error->getMessage());
+    $errorMessage = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
+    error_log('[UnrealDB][' . $requestId . '] bucket batch finalization failed: ' . get_class($error) . ': ' . $errorMessage);
     JsonResponse::error(
         'bucket_batch_failed',
-        trim($error->getMessage()) ?: 'The Upload Bucket batch could not be finalized.',
+        $errorMessage,
         500,
         ['request_id' => $requestId]
     );
