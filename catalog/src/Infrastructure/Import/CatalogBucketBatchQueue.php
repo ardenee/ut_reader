@@ -22,8 +22,26 @@ final class CatalogBucketBatchQueue
 
     public function queueName(): string
     {
-        $base = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
-        return $base . ':bucket-processing';
+        return $this->baseQueueName() . ':bucket-processing';
+    }
+
+    public function legacyQueueName(): string
+    {
+        return $this->baseQueueName() . ':bucket-redirects';
+    }
+
+    /**
+     * Move only pending legacy redirect work into the one new processing queue.
+     * Terminal history remains under its original queue name.
+     */
+    public function migrateLegacyQueuedJobs(): int
+    {
+        $statement = $this->db->prepare(
+            'UPDATE ue_background_jobs SET queue_name=?,updated_at=? '
+            . 'WHERE queue_name=? AND status="queued"'
+        );
+        $statement->execute([$this->queueName(), gmdate('Y-m-d H:i:s'), $this->legacyQueueName()]);
+        return $statement->rowCount();
     }
 
     /**
@@ -143,6 +161,11 @@ final class CatalogBucketBatchQueue
         $config['max_upload_bytes'] = PHP_INT_MAX;
         $config['max_container_upload_bytes'] = PHP_INT_MAX;
         return new CatalogChunkedUploadStore($config);
+    }
+
+    private function baseQueueName(): string
+    {
+        return trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
     }
 
     private function requiredName(string $name): string
