@@ -28,6 +28,7 @@ final class JobExecutionContext
             [
                 JobType::PREPARE_BUCKET_REDIRECT,
                 JobType::PROCESS_BUCKET_UPLOAD,
+                JobType::REPAIR_UNVERIFIED_METADATA,
                 JobType::IMPORT_STAGED_PACKAGE,
                 JobType::IMPORT_STAGED_PAK,
             ],
