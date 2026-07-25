@@ -37,6 +37,10 @@ return [
         // CLI worker which drains the available queue and exits.
         'name' => 'catalog',
         'lease_seconds' => 120,
+        // Detached inventory workers raise lower PHP CLI limits to this value.
+        // Streaming readers avoid package-sized copies, but large object tables
+        // still need headroom. Existing higher or unlimited limits are preserved.
+        'worker_memory_limit' => '512M',
         // Usually auto-detected. Set an absolute CLI PHP path when the web PHP
         // binary differs, for example 'D:/PHP/php.exe' or '/usr/local/bin/php82'.
         'worker_php_binary' => '',
