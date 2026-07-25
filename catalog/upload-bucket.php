@@ -106,9 +106,9 @@ try {
 .bucket-result-badge { min-width:98px; font-weight:700; text-transform:uppercase; }
 .bucket-result-file { color:var(--text); }
 .bucket-result-message { color:var(--muted); white-space:normal; }
-.bucket-result-bucketed .bucket-result-badge,.bucket-result-decompressed .bucket-result-badge,.bucket-result-uploaded .bucket-result-badge { color:#a7f3d0; }
+.bucket-result-bucketed .bucket-result-badge,.bucket-result-decompressed .bucket-result-badge,.bucket-result-uploaded .bucket-result-badge,.bucket-result-ready .bucket-result-badge { color:#a7f3d0; }
 .bucket-result-queued .bucket-result-badge { color:#bfdbfe; }
-.bucket-result-duplicate .bucket-result-badge { color:#fde68a; }
+.bucket-result-duplicate .bucket-result-badge,.bucket-result-waiting .bucket-result-badge { color:#fde68a; }
 .bucket-result-retrying .bucket-result-badge { color:#fdba74; }
 .bucket-result-failed .bucket-result-badge { color:#fecdd3; }
 .bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -120,7 +120,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Transfer every selected file into durable staging first. Only after the complete browser batch finishes will UnrealDB remove exact upload duplicates, create processing jobs and start decompression, inventory and unverified indexing.',
+        'Upload and processing are mutually exclusive. UnrealDB first lets any current Upload Bucket job finish and pauses its worker, then transfers every selected file, removes exact source duplicates, creates all jobs and resumes one consolidated processing queue.',
         [
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
             'Processing Jobs' => 'background-jobs.php?queue=catalog%3Abucket-processing',
@@ -136,14 +136,15 @@ CSS;
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
-        . '<p>Uploading and package processing are separate phases. The worker is not started while files are still transferring.</p>'
+        . '<p>If another Upload Bucket job is running, this page waits for that job to finish normally and pauses the worker before sending the first new chunk.</p>'
         . '</div></div><div class="ui-section__body">';
     echo '<ol class="bucket-phases">'
-        . '<li>Transfer all selected files using resumable chunks.</li>'
+        . '<li>Request a cooperative pause of old and new Upload Bucket processing queues; the current job is not cancelled.</li>'
+        . '<li>Transfer all selected files using resumable chunks while processing is paused.</li>'
         . '<li>Verify every completed staged upload.</li>'
-        . '<li>Remove repeated exact-source uploads before processing.</li>'
-        . '<li>Create all jobs in <code>catalog:bucket-processing</code>.</li>'
-        . '<li>Start one worker to perform duplicate checking, decompression where required, package inventory and unverified indexing.</li>'
+        . '<li>Remove repeated exact-source uploads before package processing.</li>'
+        . '<li>Move remaining legacy queued redirects into <code>catalog:bucket-processing</code> and create all new jobs there.</li>'
+        . '<li>Start one worker to perform decompression where required, package duplicate checking, inventory and unverified indexing.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
