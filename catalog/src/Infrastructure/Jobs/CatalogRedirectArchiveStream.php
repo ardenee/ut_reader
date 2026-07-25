@@ -13,7 +13,7 @@ final class CatalogRedirectArchiveStream
 {
     /**
      * @param callable(array<string,int|string|bool>):void|null $progress
-     * @return array{path:string,filename:string,bytes:int,compressed_bytes:int,source_extension:string,decoder:string,chunks:int,expected_bytes:int,is_unreal_package:bool}
+     * @return array{path:string,filename:string,bytes:int,compressed_bytes:int,source_extension:string,decoder:string,chunks:int,expected_bytes:int,md5:string,sha1:string,is_unreal_package:bool}
      */
     public static function decompressUz2(
         string $sourcePath,
@@ -58,6 +58,8 @@ final class CatalogRedirectArchiveStream
         $writtenBytes = 0;
         $chunks = 0;
         $isUnrealPackage = false;
+        $md5Context = hash_init('md5');
+        $sha1Context = hash_init('sha1');
 
         try {
             while ($readBytes < $compressedBytes) {
@@ -97,6 +99,8 @@ final class CatalogRedirectArchiveStream
                         throw new \RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
                     }
                 }
+                hash_update($md5Context, $block);
+                hash_update($sha1Context, $block);
                 if (self::writeAll($output, $block) !== strlen($block)) {
                     throw new \RuntimeException('Could not write decompressed redirect package.');
                 }
@@ -113,7 +117,7 @@ final class CatalogRedirectArchiveStream
                         'percent' => (int)floor(($readBytes * 100) / max(1, (int)$compressedBytes)),
                         'is_unreal_package' => $isUnrealPackage,
                         'elapsed_seconds' => (int)floor($now - $startedAt),
-                        'message' => 'Decompressing ' . basename($sourceName) . ': block ' . $chunks,
+                        'message' => 'Decompressing and hashing ' . basename($sourceName) . ': block ' . $chunks,
                     ]);
                     $lastProgressAt = $now;
                 }
@@ -146,6 +150,8 @@ final class CatalogRedirectArchiveStream
             'decoder' => 'epic-uz2-zlib-stream',
             'chunks' => $chunks,
             'expected_bytes' => $writtenBytes,
+            'md5' => hash_final($md5Context),
+            'sha1' => hash_final($sha1Context),
             'is_unreal_package' => $isUnrealPackage,
         ];
     }
