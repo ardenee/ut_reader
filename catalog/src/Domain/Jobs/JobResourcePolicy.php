@@ -41,10 +41,15 @@ final class JobResourcePolicy
             JobType::IMPORT_STAGED_PAK,
             JobType::PREPARE_BUCKET_REDIRECT,
             JobType::PROCESS_BUCKET_UPLOAD,
+            JobType::REPAIR_UNVERIFIED_METADATA,
             JobType::IMPORT_GAME_BACKUP => new JobResourceProfile(
                 self::IMPORT_HEAVY,
                 self::configuredLimit(self::IMPORT_HEAVY, 1),
-                in_array($jobType, [JobType::PREPARE_BUCKET_REDIRECT, JobType::PROCESS_BUCKET_UPLOAD], true)
+                in_array($jobType, [
+                    JobType::PREPARE_BUCKET_REDIRECT,
+                    JobType::PROCESS_BUCKET_UPLOAD,
+                    JobType::REPAIR_UNVERIFIED_METADATA,
+                ], true)
                     ? 'bucket-processing'
                     : self::positiveKey('import:game:', $payload['game_id'] ?? null)
             ),
