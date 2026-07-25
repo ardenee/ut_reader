@@ -48,12 +48,12 @@ bucket_policy_expect(
     'Upload Bucket page still performs package processing inside web PHP.'
 );
 bucket_policy_expect(
-    str_contains($content['page'], 'calculates MD5 and SHA-1 in the browser before transfer')
+    str_contains($content['page'], 'Uncompressed files are hashed in the browser')
+        && str_contains($content['page'], '.uz/.uz2/.uz3 wrappers are uploaded without package duplicate rejection')
         && str_contains($content['page'], 'cooperative pause')
-        && str_contains($content['page'], 'catalog:bucket-processing')
         && str_contains($content['page'], 'whole-file fallback processing has been disabled')
-        && str_contains($content['page'], 'Official base-game metadata without a stored source file remains uploadable'),
-    'Upload Bucket page does not explain the paused transfer-first physical duplicate policy.'
+        && str_contains($content['page'], 'official base-game records whose physical file is absent'),
+    'Upload Bucket page does not explain the ordinary-versus-redirect duplicate policy.'
 );
 
 bucket_policy_expect(str_contains($content['javascript'], 'async function chunkedUpload'), 'Browser client lacks chunked uploads.');
@@ -70,9 +70,10 @@ bucket_policy_expect(
 bucket_policy_expect(
     str_contains($content['hash_javascript'], 'class Md5')
         && str_contains($content['hash_javascript'], 'class Sha1')
-        && str_contains($content['javascript'], "action', 'preflight'")
-        && str_contains($content['javascript'], 'if (checked.duplicate)'),
-    'Browser client does not hash and preflight ordinary files before upload.'
+        && str_contains($content['javascript'], 'isRedirectWrapper(file)')
+        && str_contains($content['javascript'], 'identity = await calculateIdentity')
+        && str_contains($content['javascript'], 'if (identity)'),
+    'Browser client does not hash only ordinary files while leaving wrappers unhashed.'
 );
 bucket_policy_expect(
     str_contains($content['javascript'], 'xhr.timeout')
@@ -99,9 +100,10 @@ bucket_policy_expect(
 );
 bucket_policy_expect(
     str_contains($content['endpoint'], 'if ($redirect)')
-        && str_contains($content['endpoint'], 'compressed wrapper hashes are not package hashes')
-        && str_contains($content['endpoint'], "'duplicate' => false"),
-    'Compressed redirect wrappers are incorrectly compared to package MD5/SHA-1 records before decompression.'
+        && str_contains($content['endpoint'], "'identity' => null")
+        && str_contains($content['endpoint'], 'real package identity will be calculated from the decompressed output')
+        && str_contains($content['endpoint'], "\$identity = \$redirect ? null"),
+    'Compressed redirect wrappers are still browser-hashed or compared to package records before decompression.'
 );
 
 bucket_policy_expect(
@@ -117,10 +119,11 @@ bucket_policy_expect(
         && str_contains($content['batch_queue'], "':bucket-redirects'")
         && str_contains($content['batch_queue'], 'migrateLegacyQueuedJobs')
         && str_contains($content['batch_queue'], 'bucket-upload-source:')
-        && str_contains($content['batch_queue'], 'source_fingerprint')
-        && str_contains($content['batch_queue'], 'if (!$redirect)')
+        && str_contains($content['batch_queue'], 'bucket-redirect-upload:')
+        && str_contains($content['batch_queue'], 'every wrapper must')
+        && str_contains($content['batch_queue'], 'reach decompression')
         && str_contains($content['batch_queue'], 'package_md5'),
-    'Completed uploads do not separate ordinary package identity from compressed redirect source identity.'
+    'Redirect wrappers can still be discarded or merged before decompression.'
 );
 
 bucket_policy_expect(
@@ -164,7 +167,7 @@ bucket_policy_expect(
 bucket_policy_expect(
     str_contains($content['identity_store'], 'identity.json')
         && str_contains($content['identity_store'], "preg_match('/^[a-f0-9]{32}$/', \$md5)"),
-    'Browser-calculated upload identities are not retained with resumable staging.'
+    'Browser-calculated ordinary-file identities are not retained with resumable staging.'
 );
 
 bucket_policy_expect(
