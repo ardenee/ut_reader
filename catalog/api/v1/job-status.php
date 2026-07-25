@@ -143,7 +143,6 @@ try {
             $progress = is_array($decoded) ? $decoded : null;
         }
         unset($row['progress_json']);
-        $row['progress'] = $progress;
 
         $result = null;
         if (!empty($row['result_json'])) {
@@ -192,7 +191,27 @@ try {
                         . (int)$result['export_count'] . ' Exports recorded.';
                 }
             }
+
+            $resultStatus = strtolower(trim((string)($result['status'] ?? '')));
+            $successfulCompletion = (string)($row['status'] ?? '') === 'completed'
+                && empty($result['integrity_mismatch'])
+                && trim((string)($result['parse_error'] ?? '')) === ''
+                && !in_array($resultStatus, ['failed', 'rejected', 'unverified', 'error'], true);
+            if ($successfulCompletion) {
+                $completionMessage = trim((string)($result['message'] ?? ''));
+                if ($completionMessage !== '') {
+                    if (!is_array($progress)) {
+                        $progress = [];
+                    }
+                    if (trim((string)($progress['message'] ?? '')) === '') {
+                        $progress['message'] = $completionMessage;
+                    }
+                    unset($result['message']);
+                }
+            }
         }
+
+        $row['progress'] = $progress;
         $row['result'] = $result;
     }
     unset($row);
