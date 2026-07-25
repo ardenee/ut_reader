@@ -12,6 +12,7 @@ final class JobType
     public const REPAIR_SOURCE_IDENTITY_GAME = 'catalog.repair_source_identity_game';
     public const SOURCE_SCAN = 'catalog.source.scan';
     public const CLEAN_UNVERIFIED_DUPLICATES = 'catalog.clean_unverified_duplicates';
+    public const REPAIR_UNVERIFIED_METADATA = 'catalog.repair_unverified_metadata';
     public const GENERATE_MOD_PACKAGE = 'catalog.generate_mod_package';
     public const EXPORT_GAME_BACKUP = 'catalog.export_game_backup';
     public const IMPORT_GAME_BACKUP = 'catalog.import_game_backup';
@@ -34,6 +35,7 @@ final class JobType
             self::REPAIR_SOURCE_IDENTITY_GAME,
             self::SOURCE_SCAN,
             self::CLEAN_UNVERIFIED_DUPLICATES,
+            self::REPAIR_UNVERIFIED_METADATA,
             self::GENERATE_MOD_PACKAGE,
             self::EXPORT_GAME_BACKUP,
             self::IMPORT_GAME_BACKUP,
