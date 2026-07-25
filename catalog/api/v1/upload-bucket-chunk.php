@@ -6,8 +6,10 @@ require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
 require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchQueue;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadIdentityStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadDuplicateDetector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -91,6 +93,17 @@ function bucket_chunk_validate_name(string $name, array $allowedExtensions, bool
     }
 }
 
+/** @return array{md5:string,sha1:string} */
+function bucket_chunk_hash_identity(array $source): array
+{
+    $md5 = strtolower(trim((string)($source['md5'] ?? '')));
+    $sha1 = strtolower(trim((string)($source['sha1'] ?? '')));
+    if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
+        throw new InvalidArgumentException('A valid browser-calculated MD5 and SHA-1 are required.');
+    }
+    return ['md5' => $md5, 'sha1' => $sha1];
+}
+
 function bucket_chunk_store(array $config): CatalogChunkedUploadStore
 {
     $storeConfig = $config;
@@ -154,6 +167,7 @@ try {
 
     $action = strtolower(trim((string)($_POST['action'] ?? '')));
     $store = bucket_chunk_store($application->config);
+    $identityStore = new CatalogBucketUploadIdentityStore($application->config);
     $allowedExtensions = bucket_chunk_allowed_extensions($application->db, $application->config);
 
     if ($action === 'begin_batch') {
@@ -169,6 +183,60 @@ try {
         ], 200);
     }
 
+    if ($action === 'preflight') {
+        $originalName = bucket_chunk_clean_name((string)($_POST['original_name'] ?? ''));
+        bucket_chunk_validate_name($originalName, $allowedExtensions, true);
+        $fileSize = (int)($_POST['file_size'] ?? 0);
+        if ($fileSize < 1) {
+            JsonResponse::error('invalid_size', 'Upload file size must be greater than zero.', 400);
+        }
+        $identity = bucket_chunk_hash_identity($_POST);
+        $redirect = catalog_redirect_archive_is_supported_filename($originalName);
+
+        if ($redirect) {
+            JsonResponse::send([
+                'ok' => true,
+                'duplicate' => false,
+                'redirect_wrapper' => true,
+                'identity' => $identity,
+                'message' => 'The wrapper MD5 and SHA-1 were calculated before transfer. The stored package duplicate check will run after decompression because compressed wrapper hashes are not package hashes.',
+            ], 200);
+        }
+
+        $inspection = (new CatalogUploadDuplicateDetector($application->db, $application->config))
+            ->inspect($fileSize, $identity['md5'], $identity['sha1']);
+        $duplicate = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
+        if ($duplicate !== null) {
+            JsonResponse::send([
+                'ok' => true,
+                'duplicate' => true,
+                'redirect_wrapper' => false,
+                'identity' => $identity,
+                'match' => $duplicate,
+                'message' => 'An identical physical file already exists in '
+                    . ((string)$duplicate['location_kind'] === 'upload_bucket' ? 'the Upload Bucket' : 'catalog storage')
+                    . ' as file #' . (int)$duplicate['file_id'] . '. The browser upload was skipped.',
+            ], 200);
+        }
+
+        $missing = (int)($inspection['missing_physical_matches'] ?? 0);
+        $missingBase = (int)($inspection['missing_base_game_matches'] ?? 0);
+        JsonResponse::send([
+            'ok' => true,
+            'duplicate' => false,
+            'redirect_wrapper' => false,
+            'identity' => $identity,
+            'identity_matches' => (int)($inspection['identity_matches'] ?? 0),
+            'missing_physical_matches' => $missing,
+            'missing_base_game_matches' => $missingBase,
+            'message' => $missingBase > 0
+                ? 'Matching official base-game identity metadata exists, but its physical file is missing. Upload is allowed so UnrealDB can retain the actual package.'
+                : ($missing > 0
+                    ? 'Matching database identity metadata exists, but no physical file could be confirmed. Upload is allowed.'
+                    : 'No identical physical file is already stored.'),
+        ], 200);
+    }
+
     if ($action === 'init') {
         $originalName = bucket_chunk_clean_name((string)($_POST['original_name'] ?? ''));
         bucket_chunk_validate_name($originalName, $allowedExtensions, true);
@@ -176,6 +244,7 @@ try {
         if ($fileSize < 1) {
             JsonResponse::error('invalid_size', 'Chunked bucket upload file size must be greater than zero.', 400);
         }
+        $identity = bucket_chunk_hash_identity($_POST);
         $relativePath = trim((string)($_POST['relative_path'] ?? '')) ?: $originalName;
         $state = $store->initialize(
             $userId,
@@ -186,7 +255,17 @@ try {
             1,
             false
         );
-        JsonResponse::send(['ok' => true, 'upload' => $state], 200);
+        $identityStore->save(
+            (string)$state['upload_id'],
+            $userId,
+            $fileSize,
+            $identity['md5'],
+            $identity['sha1'],
+            $originalName,
+            $relativePath,
+            catalog_redirect_archive_is_supported_filename($originalName)
+        );
+        JsonResponse::send(['ok' => true, 'upload' => $state, 'identity' => $identity], 200);
     }
 
     if ($action === 'chunk') {
@@ -207,6 +286,7 @@ try {
     if ($action === 'complete') {
         $uploadId = strtolower(trim((string)($_POST['upload_id'] ?? '')));
         $state = $store->complete($userId, $uploadId);
+        $identity = $identityStore->load($uploadId, $userId);
         $relativePath = (string)($state['relative_path'] ?? '');
         $submittedName = bucket_chunk_clean_name(basename(str_replace('\\', '/', $relativePath)));
         bucket_chunk_validate_name($submittedName, $allowedExtensions, true);
@@ -215,10 +295,11 @@ try {
             'ok' => true,
             'upload_id' => $uploadId,
             'upload' => $state,
+            'identity' => ['md5' => (string)$identity['md5'], 'sha1' => (string)$identity['sha1']],
             'messages' => [[
                 'status' => 'uploaded',
                 'file' => $relativePath !== '' ? $relativePath : $submittedName,
-                'message' => 'Transfer completed and retained in durable staging. Processing will begin after every selected file finishes uploading.',
+                'message' => 'Transfer completed with its pre-calculated MD5 and SHA-1 retained in durable staging. Processing will begin after every selected file finishes uploading.',
                 'file_size' => (int)($state['file_size'] ?? 0),
                 'file_size_text' => catalog_bytes((int)($state['file_size'] ?? 0)),
             ]],
@@ -230,7 +311,7 @@ try {
         JsonResponse::send(['ok' => true, 'status' => 'cancelled'], 200);
     }
 
-    JsonResponse::error('invalid_action', 'Chunked bucket upload action must be begin_batch, batch_status, init, chunk, complete or cancel.', 400);
+    JsonResponse::error('invalid_action', 'Chunked bucket upload action must be begin_batch, batch_status, preflight, init, chunk, complete or cancel.', 400);
 } catch (InvalidArgumentException $error) {
     JsonResponse::error('invalid_chunk_upload', $error->getMessage(), 400);
 } catch (Throwable $error) {
