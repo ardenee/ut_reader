@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use DateTimeImmutable;
+use DateTimeZone;
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobQueue;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -11,9 +12,9 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 /**
  * Worker-facing queue adapter.
  *
- * All queue operations delegate to PdoJobQueue except completion. Completion is
- * implemented here with an exact seven-parameter UPDATE so a successfully
- * consumed staged upload cannot be incorrectly requeued by PDO HY093.
+ * All queue operations delegate to PdoJobQueue except completion and heartbeat.
+ * These exact worker updates avoid placeholder ambiguity and permit renewable
+ * long-running package leases without changing browser/API queue behaviour.
  */
 final class WorkerJobQueue implements JobQueue
 {
@@ -118,7 +119,46 @@ final class WorkerJobQueue implements JobQueue
 
     public function heartbeat(ClaimedJob $job, int $leaseSeconds, array $progress = []): string
     {
-        return $this->inner->heartbeat($job, $leaseSeconds, $progress);
+        $leaseSeconds = max(15, min($leaseSeconds, 6 * 3600));
+        $now = new DateTimeImmutable('now', new DateTimeZone('UTC'));
+        $timestamp = $now->format('Y-m-d H:i:s');
+        $expires = $now->modify('+' . $leaseSeconds . ' seconds')->format('Y-m-d H:i:s');
+
+        if ($progress === []) {
+            $statement = $this->db->prepare(
+                'UPDATE ue_background_jobs SET lease_expires_at=?,last_heartbeat_at=?,updated_at=? '
+                . 'WHERE id=? AND status="running" AND lease_token=?'
+            );
+            $statement->execute([$expires, $timestamp, $timestamp, $job->id, $job->leaseToken]);
+        } else {
+            $statement = $this->db->prepare(
+                'UPDATE ue_background_jobs SET lease_expires_at=?,last_heartbeat_at=?,progress_json=?,progress_updated_at=?,updated_at=? '
+                . 'WHERE id=? AND status="running" AND lease_token=?'
+            );
+            $statement->execute([
+                $expires,
+                $timestamp,
+                self::encodeJson($progress),
+                $timestamp,
+                $timestamp,
+                $job->id,
+                $job->leaseToken,
+            ]);
+        }
+        if ($statement->rowCount() !== 1) {
+            return 'lost';
+        }
+
+        $check = $this->db->prepare(
+            'SELECT cancel_requested_at FROM ue_background_jobs '
+            . 'WHERE id=? AND status="running" AND lease_token=?'
+        );
+        $check->execute([$job->id, $job->leaseToken]);
+        $row = $check->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return 'lost';
+        }
+        return empty($row['cancel_requested_at']) ? 'active' : 'cancel_requested';
     }
 
     public function requestCancellation(int $jobId, ?int $requestedBy = null, string $reason = ''): string
