@@ -5,6 +5,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -30,6 +31,13 @@ try {
 
     $launcher = new CatalogDetachedWorker($application->config);
     $before = $launcher->status($queueName, true);
+    $orphanRecovery = null;
+    if (empty($before['active'])) {
+        $orphanRecovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
+            ->recoverInactiveQueue($queueName);
+        $before = $launcher->status($queueName, true);
+    }
+
     $restart = null;
     if (!empty($before['active']) && !empty($before['stale_code'])) {
         $restart = (new CatalogDetachedWorkerStop($application->db, $application->config))
@@ -49,12 +57,19 @@ try {
         'data' => [
             'queue' => $queueName,
             'mode' => $mode,
+            'orphan_recovery' => $orphanRecovery,
             'stale_restart' => $restart,
         ] + $result,
     ], 202);
 } catch (InvalidArgumentException $exception) {
     JsonResponse::error('invalid_worker_request', $exception->getMessage(), 400);
 } catch (Throwable $exception) {
-    error_log('[UnrealDB detached job launcher] ' . $exception->getMessage());
-    JsonResponse::error('launch_failed', $exception->getMessage(), 500);
+    $requestId = catalog_request_id();
+    error_log('[UnrealDB][' . $requestId . '] detached job launcher failed: ' . get_class($exception) . ': ' . $exception->getMessage());
+    JsonResponse::error(
+        'launch_failed',
+        trim($exception->getMessage()) ?: 'The detached queue worker could not be launched.',
+        500,
+        ['request_id' => $requestId]
+    );
 }
