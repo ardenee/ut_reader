@@ -23,17 +23,21 @@ final class JobExecutionContext
         int $leaseSeconds,
         private readonly ?\Closure $eventAppender = null
     ) {
-        // Redirect decompression, staged imports and large PAK work can spend
-        // several minutes in CPU, disk or parser operations before another
-        // progress callback is available. Use the queue's supported one-hour
-        // lease so a healthy job cannot be reclaimed by a second worker.
         $longRunningImport = in_array(
             $job->type,
-            [JobType::PREPARE_BUCKET_REDIRECT, JobType::IMPORT_STAGED_PACKAGE, JobType::IMPORT_STAGED_PAK],
+            [
+                JobType::PREPARE_BUCKET_REDIRECT,
+                JobType::PROCESS_BUCKET_UPLOAD,
+                JobType::IMPORT_STAGED_PACKAGE,
+                JobType::IMPORT_STAGED_PAK,
+            ],
             true
         );
+        // Package readers can legitimately spend a long time inside one table
+        // method before another checkpoint is possible. Keep the lease renewable
+        // for six hours; operators still retain the explicit Stop job control.
         $this->leaseSeconds = $longRunningImport
-            ? max($leaseSeconds, 3600)
+            ? max($leaseSeconds, 6 * 3600)
             : $leaseSeconds;
         $this->lastHeartbeatAt = time();
         $this->heartbeatIntervalSeconds = max(5, min(30, intdiv(max(15, $this->leaseSeconds), 3)));
@@ -92,7 +96,7 @@ final class JobExecutionContext
         $stage = trim((string)($progress['stage'] ?? 'running')) ?: 'running';
         $percent = max(0, min(100, (int)($progress['percent'] ?? 0)));
         $now = time();
-        $importantStage = in_array($stage, ['complete', 'failed', 'unverified', 'cancelled'], true);
+        $importantStage = in_array($stage, ['complete', 'failed', 'unverified', 'cancelled', 'duplicate'], true);
         $shouldEmit = $force
             || $importantStage
             || $stage !== $this->lastEventStage
