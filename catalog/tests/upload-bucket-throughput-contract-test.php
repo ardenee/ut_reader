@@ -48,8 +48,9 @@ upload_bucket_throughput_expect(
     str_contains($client, "action', 'preflight'")
         && str_contains($client, 'if (checked.duplicate)')
         && str_contains($client, "initData.append('md5'")
-        && str_contains($client, "initData.append('sha1'"),
-    'The browser does not preflight ordinary physical duplicates before transfer.'
+        && str_contains($client, "initData.append('sha1'")
+        && str_contains($client, 'isRedirectWrapper(file)'),
+    'The browser does not separate ordinary physical preflight from redirect wrapper transfer.'
 );
 upload_bucket_throughput_expect(
     str_contains($chunkApi, "if (\$action === 'complete')")
@@ -63,9 +64,9 @@ upload_bucket_throughput_expect(
 upload_bucket_throughput_expect(
     str_contains($chunkApi, "if (\$action === 'preflight')")
         && str_contains($chunkApi, 'if ($redirect)')
-        && str_contains($chunkApi, "'duplicate' => false")
-        && str_contains($chunkApi, 'compressed wrapper hashes are not package hashes'),
-    'Redirect wrappers are incorrectly rejected using their compressed-file hashes.'
+        && str_contains($chunkApi, "'identity' => null")
+        && str_contains($chunkApi, 'real package identity will be calculated from the decompressed output'),
+    'Redirect wrappers are incorrectly browser-hashed or compared to package identities.'
 );
 upload_bucket_throughput_expect(
     str_contains($batchApi, 'foreach ($uploadIds as $uploadId)')
@@ -79,9 +80,12 @@ upload_bucket_throughput_expect(
         && str_contains($batchQueue, "':bucket-redirects'")
         && str_contains($batchQueue, 'migrateLegacyQueuedJobs')
         && str_contains($batchQueue, 'bucket-upload-source:')
+        && str_contains($batchQueue, 'bucket-redirect-upload:')
         && str_contains($batchQueue, 'if (!$redirect)')
-        && str_contains($batchQueue, 'CatalogUploadDuplicateDetector'),
-    'Deferred Upload Bucket work does not separate ordinary package duplicate checks from redirect wrapper processing.'
+        && str_contains($batchQueue, 'CatalogUploadDuplicateDetector')
+        && str_contains($batchQueue, 'every wrapper must')
+        && str_contains($batchQueue, 'reach decompression'),
+    'Deferred Upload Bucket work does not force redirect wrappers through decompression before package dedupe.'
 );
 upload_bucket_throughput_expect(
     str_contains($handler, 'CatalogBucketIdentityProcessor')
