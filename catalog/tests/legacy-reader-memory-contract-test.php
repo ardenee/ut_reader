@@ -26,22 +26,22 @@ legacy_memory_expect(
     'UE1/UE2 catalog reader resolution still evaluates rewritten source at runtime.'
 );
 legacy_memory_expect(
-    str_contains($reader, "fopen($path, 'rb')")
+    str_contains($reader, "fopen(\$path, 'rb')")
         && str_contains($reader, 'fseek($this->handle')
         && !str_contains($reader, 'file_get_contents($path)')
         && !str_contains($reader, 'private string $bytes'),
     'Legacy catalog inventory still retains the complete package in a PHP string.'
 );
 legacy_memory_expect(
-    str_contains($reader, "seek((int)$this->header['nameOffset'])")
-        && str_contains($reader, "seek((int)$this->header['importOffset'])")
-        && str_contains($reader, "seek((int)$this->header['exportOffset'])"),
+    str_contains($reader, "seek((int)\$this->header['nameOffset'])")
+        && str_contains($reader, "seek((int)\$this->header['importOffset'])")
+        && str_contains($reader, "seek((int)\$this->header['exportOffset'])"),
     'Legacy Names/Imports/Exports are not read by bounded random-access seeks.'
 );
 legacy_memory_expect(
     str_contains($factory, "worker_memory_limit'] ?? '512M'")
         && str_contains($factory, 'currentBytes >= $targetBytes')
-        && str_contains($factory, "ini_set('memory_limit', $target)"),
+        && str_contains($factory, "ini_set('memory_limit', \$target)"),
     'Detached worker memory safety limit is missing or can lower an existing limit.'
 );
 
