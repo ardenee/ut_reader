@@ -1,15 +1,9 @@
 <?php
 declare(strict_types=1);
 
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadQueue;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 catalog_start_session();
-require_once __DIR__ . '/lib/CatalogRedirectArchive.php';
 require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 require_once __DIR__ . '/lib/GameProfiles.php';
 
@@ -18,54 +12,7 @@ function upload_bucket_short_error(Throwable $error): string
     $message = trim($error->getMessage());
     $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
     $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
-    $message = trim($message);
-    return $message !== '' ? $message : 'Unknown error';
-}
-
-function upload_bucket_is_ajax_request(): bool
-{
-    return (string)($_GET['ajax'] ?? $_POST['ajax'] ?? '') === '1'
-        || (string)($_SERVER['HTTP_X_UPLOAD_BUCKET_AJAX'] ?? '') === '1';
-}
-
-function upload_bucket_ini_bytes(string $value): int
-{
-    $value = trim($value);
-    if ($value === '' || $value === '-1') {
-        return 0;
-    }
-    if (preg_match('/^([0-9]+(?:\.[0-9]+)?)\s*([KMGTP]?)B?$/i', $value, $match) !== 1) {
-        return max(0, (int)$value);
-    }
-    $number = (float)$match[1];
-    $power = match (strtoupper((string)$match[2])) {
-        'K' => 1,
-        'M' => 2,
-        'G' => 3,
-        'T' => 4,
-        'P' => 5,
-        default => 0,
-    };
-    return (int)floor($number * (1024 ** $power));
-}
-
-function upload_bucket_php_limit_text(string $setting): string
-{
-    $raw = trim((string)ini_get($setting));
-    $bytes = upload_bucket_ini_bytes($raw);
-    return $bytes > 0 ? catalog_bytes($bytes) . ' (' . $raw . ')' : ($raw !== '' ? $raw : 'unknown');
-}
-
-function upload_bucket_post_limit_error(): ?string
-{
-    $contentLength = max(0, (int)($_SERVER['CONTENT_LENGTH'] ?? 0));
-    $postMax = upload_bucket_ini_bytes((string)ini_get('post_max_size'));
-    if ($contentLength > 0 && $postMax > 0 && $contentLength > $postMax) {
-        return 'Request body ' . catalog_bytes($contentLength)
-            . ' exceeds PHP post_max_size ' . upload_bucket_php_limit_text('post_max_size')
-            . '. The JavaScript resumable uploader was not used.';
-    }
-    return null;
+    return trim($message) !== '' ? trim($message) : 'Unknown error';
 }
 
 /** @return list<string> */
@@ -91,44 +38,6 @@ function upload_bucket_allowed_extensions(PDO $db, array $config): array
     $result = array_keys($extensions);
     sort($result, SORT_NATURAL | SORT_FLAG_CASE);
     return array_values($result);
-}
-
-function upload_bucket_upload_error_message(int $error): string
-{
-    return match ($error) {
-        UPLOAD_ERR_INI_SIZE => 'PHP rejected the fallback whole-file request because it exceeds upload_max_filesize ' . upload_bucket_php_limit_text('upload_max_filesize') . '.',
-        UPLOAD_ERR_FORM_SIZE => 'The fallback whole-file request exceeded the form file-size limit.',
-        UPLOAD_ERR_PARTIAL => 'Only part of the file reached the server. Retry the file and check the connection or reverse-proxy timeout.',
-        UPLOAD_ERR_NO_FILE => 'No file data reached PHP.',
-        UPLOAD_ERR_NO_TMP_DIR => 'PHP has no temporary upload directory.',
-        UPLOAD_ERR_CANT_WRITE => 'PHP could not write the uploaded file to its temporary directory.',
-        UPLOAD_ERR_EXTENSION => 'A PHP extension stopped the upload before UnrealDB could process it.',
-        default => 'PHP upload failed with error code ' . $error . '.',
-    };
-}
-
-function upload_bucket_result(string $status, string $file, string $message, array $meta = []): array
-{
-    return ['status' => $status, 'file' => $file, 'message' => $message] + $meta;
-}
-
-function upload_bucket_result_text(array $entry): string
-{
-    $text = (string)$entry['file'] . ': ' . (string)$entry['status'] . ' - ' . (string)$entry['message'];
-    if (!empty($entry['file_size_text'])) {
-        $text .= ' | size: ' . (string)$entry['file_size_text'];
-    }
-    return $text;
-}
-
-function upload_bucket_source_relative_path(string $submittedPath, string $storedName): string
-{
-    $submittedPath = scanner_normalize_source_relative_path($submittedPath);
-    if ($submittedPath === '') {
-        return scanner_normalize_source_relative_path($storedName);
-    }
-    $directory = trim(str_replace('\\', '/', dirname($submittedPath)), '. /');
-    return scanner_normalize_source_relative_path(($directory !== '' ? $directory . '/' : '') . $storedName);
 }
 
 /** @return array{count:int,bytes:int} */
@@ -163,165 +72,6 @@ function upload_bucket_chunk_bytes(array $config): int
     return max(1024 * 1024, min((int)($chunkConfig['chunk_bytes'] ?? (16 * 1024 * 1024)), 64 * 1024 * 1024));
 }
 
-/**
- * Whole-file fallback for browsers without the JavaScript chunk client.
- * Redirect wrappers are only durably staged here; the CLI worker decompresses them.
- *
- * @return array{ok:int,duplicates:int,failed:int,messages:list<array<string,mixed>>,jobs:list<array<string,mixed>>,worker_error:string}
- */
-function upload_bucket_handle_request(PDO $db, array $config): array
-{
-    $postLimitError = upload_bucket_post_limit_error();
-    if ($postLimitError !== null) {
-        throw new RuntimeException($postLimitError);
-    }
-
-    catalog_check_csrf('upload-bucket');
-    if (!isset($_FILES['files'])) {
-        throw new RuntimeException(
-            'No files reached the fallback bucket handler. PHP upload_max_filesize=' . upload_bucket_php_limit_text('upload_max_filesize')
-            . '; post_max_size=' . upload_bucket_php_limit_text('post_max_size') . '.'
-        );
-    }
-
-    $allowedExtensions = upload_bucket_allowed_extensions($db, $config);
-    $stager = new LegacyUnverifiedFileStager($db, $config);
-    $incoming = new CatalogIncomingFileStore($config);
-    $queue = new CatalogBucketUploadQueue($db, $config);
-    $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
-    if ($uploadedBy < 1) {
-        throw new RuntimeException('Administrator authentication is required.');
-    }
-
-    $ok = 0;
-    $duplicates = 0;
-    $failed = 0;
-    $messages = [];
-    $jobs = [];
-    $temporaryPaths = $_FILES['files']['tmp_name'] ?? [];
-    if (!is_array($temporaryPaths)) {
-        $temporaryPaths = [];
-    }
-
-    foreach ($temporaryPaths as $index => $tmp) {
-        $submittedName = (string)($_FILES['files']['name'][$index] ?? 'upload.bin');
-        $submittedRelativePath = (string)($_POST['relative_path'] ?? $submittedName);
-        $cleanName = catalog_clean_unreal_filename($submittedName);
-        $err = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
-        $size = is_string($tmp) && is_file($tmp) ? (int)(filesize($tmp) ?: 0) : 0;
-        $meta = ['file_size' => $size, 'file_size_text' => catalog_bytes($size)];
-
-        if ($err !== UPLOAD_ERR_OK) {
-            $failed++;
-            $messages[] = upload_bucket_result('failed', $cleanName, upload_bucket_upload_error_message($err), $meta);
-            continue;
-        }
-
-        $durable = null;
-        try {
-            if ($size <= 0 || !is_string($tmp) || !is_file($tmp)) {
-                throw new RuntimeException('The uploaded file is empty or unavailable.');
-            }
-
-            if (catalog_redirect_archive_is_supported_filename($submittedName)) {
-                $durable = $incoming->stageUploadedFile($tmp, $submittedName);
-                $queued = $queue->enqueueStagedRedirect(
-                    $durable,
-                    $submittedName,
-                    $submittedRelativePath,
-                    $uploadedBy
-                );
-                $jobs[] = $queued;
-                $ok++;
-                $messages[] = upload_bucket_result(
-                    'queued',
-                    $submittedRelativePath,
-                    !empty($queued['deduplicated'])
-                        ? 'This redirect archive is already queued or running as background job #' . $queued['job_id'] . '.'
-                        : 'Redirect archive staged for the shared CLI decompression process as job #' . $queued['job_id'] . '.',
-                    $meta + ['job_id' => (int)$queued['job_id']]
-                );
-                continue;
-            }
-
-            $extension = catalog_clean_unreal_extension((string)pathinfo($cleanName, PATHINFO_EXTENSION));
-            if ($allowedExtensions !== [] && !in_array($extension, $allowedExtensions, true)) {
-                throw new RuntimeException(
-                    'Extension .' . ($extension !== '' ? $extension : '(none)')
-                    . ' is not allowed by any active game profile.'
-                );
-            }
-
-            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s')
-                . '. No game assignment has been made yet.';
-            $staged = $stager->stageBucketUpload(
-                $tmp,
-                $cleanName,
-                $note,
-                $uploadedBy,
-                upload_bucket_source_relative_path($submittedRelativePath, $cleanName)
-            );
-
-            if ((string)($staged['status'] ?? '') === 'duplicate') {
-                $duplicates++;
-                $messages[] = upload_bucket_result('duplicate', $cleanName, (string)$staged['message'], [
-                    'file_size' => $size,
-                    'file_size_text' => catalog_bytes($size),
-                    'existing_file_id' => (int)$staged['file_id'],
-                    'md5' => (string)($staged['md5'] ?? ''),
-                ]);
-                continue;
-            }
-
-            $ok++;
-            $message = 'Stored in upload bucket and indexed as unverified';
-            if ($staged['parse_error'] !== null) {
-                $message .= '; package tables could not be read: '
-                    . upload_bucket_short_error(new RuntimeException((string)$staged['parse_error']));
-            }
-            $messages[] = upload_bucket_result('bucketed', $cleanName, $message, [
-                'file_size' => (int)$staged['size'],
-                'file_size_text' => catalog_bytes((int)$staged['size']),
-                'queue_name' => (string)$staged['queue_name'],
-                'file_id' => (int)$staged['file_id'],
-            ]);
-        } catch (Throwable $error) {
-            if (is_array($durable) && isset($durable['relative_path'])) {
-                try {
-                    $incoming->delete((string)$durable['relative_path']);
-                } catch (Throwable) {
-                }
-            }
-            $failed++;
-            $requestId = catalog_request_id();
-            error_log('[UnrealDB][' . $requestId . '] bucket upload failed for ' . $submittedRelativePath . ': ' . get_class($error) . ': ' . $error->getMessage());
-            $messages[] = upload_bucket_result('failed', $cleanName, upload_bucket_short_error($error) . ' | reference: ' . $requestId, $meta);
-            if (is_string($tmp) && is_file($tmp)) {
-                @unlink($tmp);
-            }
-        }
-    }
-
-    $workerError = '';
-    if ($jobs !== []) {
-        try {
-            (new CatalogDetachedWorker($config))->start($queue->queueName(), 10000);
-        } catch (Throwable $error) {
-            $workerError = upload_bucket_short_error($error);
-            error_log('[UnrealDB bucket fallback worker launch] ' . $error->getMessage());
-        }
-    }
-
-    return [
-        'ok' => $ok,
-        'duplicates' => $duplicates,
-        'failed' => $failed,
-        'messages' => $messages,
-        'jobs' => $jobs,
-        'worker_error' => $workerError,
-    ];
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -330,17 +80,9 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $result = upload_bucket_handle_request($db, $config);
-        if (upload_bucket_is_ajax_request()) {
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => true, 'request_id' => catalog_request_id()] + $result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-            exit;
-        }
-        $_SESSION['upload_bucket_flash'] = 'Bucket upload complete. Stored/queued=' . $result['ok']
-            . ' Duplicate=' . $result['duplicates'] . ' Failed=' . $result['failed'] . '. '
-            . implode(' | ', array_map('upload_bucket_result_text', array_slice($result['messages'], 0, 12)));
-        header('Location: upload-bucket.php');
-        exit;
+        throw new RuntimeException(
+            'Upload Bucket requires the resumable JavaScript uploader. Reload the page with JavaScript enabled; whole-file fallback processing has been disabled so uploading and package processing cannot run at the same time.'
+        );
     }
 
     $bucketDir = uvf_upload_bucket_dir($config, true);
@@ -349,8 +91,6 @@ try {
     $chunkBytes = upload_bucket_chunk_bytes($config);
 
     catalog_head('Upload Bucket');
-    catalog_flash($_SESSION['upload_bucket_flash'] ?? null);
-    unset($_SESSION['upload_bucket_flash']);
 
     echo <<<'CSS'
 <style>
@@ -361,24 +101,32 @@ try {
 .bucket-progress { margin-top:12px; border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.03); }
 .bucket-progress progress { width:100%; height:18px; }
 .bucket-progress .progress-row + progress { margin-bottom:10px; }
-.bucket-log { max-height:320px; overflow:auto; margin-top:10px; font-family:Consolas, ui-monospace, monospace; font-size:12px; color:var(--muted); }
+.bucket-log { max-height:420px; overflow:auto; margin-top:10px; font-family:Consolas,ui-monospace,monospace; font-size:12px; color:var(--muted); }
 .bucket-result { display:flex; gap:8px; align-items:baseline; padding:3px 0; white-space:nowrap; }
 .bucket-result-badge { min-width:98px; font-weight:700; text-transform:uppercase; }
 .bucket-result-file { color:var(--text); }
 .bucket-result-message { color:var(--muted); white-space:normal; }
-.bucket-result-bucketed .bucket-result-badge, .bucket-result-decompressed .bucket-result-badge { color:#a7f3d0; }
+.bucket-result-bucketed .bucket-result-badge,.bucket-result-decompressed .bucket-result-badge,.bucket-result-uploaded .bucket-result-badge { color:#a7f3d0; }
 .bucket-result-queued .bucket-result-badge { color:#bfdbfe; }
 .bucket-result-duplicate .bucket-result-badge { color:#fde68a; }
+.bucket-result-retrying .bucket-result-badge { color:#fdba74; }
 .bucket-result-failed .bucket-result-badge { color:#fecdd3; }
 .bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.bucket-phases { margin:0 0 16px; padding-left:22px; }
+.bucket-phases li + li { margin-top:5px; }
 @media (max-width:900px) { .bucket-stats { grid-template-columns:1fr; } }
 </style>
 CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Upload unsorted Unreal package files into a neutral bucket. Every file uses resumable chunks. Redirect-compressed .uz/.uz2/.uz3 files are durably staged, then decompressed by the shared detached CLI process.',
-        ['Open Bucket Queue' => 'unverified-files.php?source_game_id=-1', 'All Queues' => 'unverified-files.php', 'Background Jobs' => 'background-jobs.php', 'Upload Files to Game' => 'profiled-upload.php']
+        'Transfer every selected file into durable staging first. Only after the complete browser batch finishes will UnrealDB remove exact upload duplicates, create processing jobs and start decompression, inventory and unverified indexing.',
+        [
+            'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
+            'Processing Jobs' => 'background-jobs.php?queue=catalog%3Abucket-processing',
+            'All Queues' => 'unverified-files.php',
+            'Upload Files to Game' => 'profiled-upload.php',
+        ]
     );
 
     echo '<div class="grid bucket-stats">';
@@ -387,23 +135,41 @@ CSS;
     echo '<div class="stat bucket-path-card"><h2 class="mono small bucket-path">' . catalog_h($bucketDir) . '</h2><p>Physical bucket folder</p></div>';
     echo '</div>';
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2><p>Every selected file uses resumable chunks. Ordinary packages are indexed immediately; redirect wrappers are queued to the same CLI decompression process used by profiled imports. Duplicate size+MD5 content is discarded.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
+        . '<p>Uploading and package processing are separate phases. The worker is not started while files are still transferring.</p>'
+        . '</div></div><div class="ui-section__body">';
+    echo '<ol class="bucket-phases">'
+        . '<li>Transfer all selected files using resumable chunks.</li>'
+        . '<li>Verify every completed staged upload.</li>'
+        . '<li>Remove repeated exact-source uploads before processing.</li>'
+        . '<li>Create all jobs in <code>catalog:bucket-processing</code>.</li>'
+        . '<li>Start one worker to perform duplicate checking, decompression where required, package inventory and unverified indexing.</li>'
+        . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
     echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
-    echo '<p><button id="upload-bucket-button" type="submit">Upload to bucket</button></p>';
-    echo '<p class="muted"><strong>Allowed by active game profiles:</strong> ' . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured') . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
-    echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total-file-size limit is applied to bucket uploads. Files are split into chunks of up to ' . catalog_h(catalog_bytes($chunkBytes)) . '; PHP upload_max_filesize and post_max_size only need to accept one chunk plus multipart overhead.</p>';
+    echo '<p><button id="upload-bucket-button" type="submit">Upload complete batch</button></p>';
+    echo '<p class="muted"><strong>Allowed by active game profiles:</strong> '
+        . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured')
+        . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
+    echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total batch-size limit is applied. Files are split into chunks of up to '
+        . catalog_h(catalog_bytes($chunkBytes))
+        . '; the server may reduce the effective chunk size to fit PHP upload_max_filesize and post_max_size.</p>';
     echo '<div id="bucket-progress" class="bucket-progress" hidden'
         . ' data-chunk-url="api/v1/upload-bucket-chunk.php"'
+        . ' data-batch-url="api/v1/upload-bucket-batch.php"'
         . ' data-chunk-csrf="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '"'
         . ' data-chunk-bytes="' . $chunkBytes . '">';
-    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Overall batch progress</span><span id="bucket-overall-progress-count"></span></div><progress id="bucket-overall-progress-bar" value="0" max="100"></progress>';
-    echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-speed"></span></div><progress id="bucket-progress-bar" value="0" max="100"></progress>';
+    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Upload phase</span><span id="bucket-overall-progress-count"></span></div>'
+        . '<progress id="bucket-overall-progress-bar" value="0" max="100"></progress>';
+    echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-speed"></span></div>'
+        . '<progress id="bucket-progress-bar" value="0" max="100"></progress>';
     echo '<div id="bucket-log" class="bucket-log"></div></div>';
     echo '</form>';
-    echo '<p class="bucket-actions"><a class="button" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a><a class="button secondary" href="background-jobs.php">Background jobs</a><a class="button secondary" href="unverified-files.php">Review all queues</a></p>';
+    echo '<p class="bucket-actions"><a class="button" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
+        . '<a class="button secondary" href="background-jobs.php?queue=catalog%3Abucket-processing">Processing jobs</a>'
+        . '<a class="button secondary" href="unverified-files.php">Review all queues</a></p>';
     echo '</div></section>';
 
     $scriptPath = __DIR__ . '/assets/upload-bucket.js';
@@ -415,14 +181,9 @@ CSS;
     $message = upload_bucket_short_error($error);
     $requestId = catalog_request_id();
     error_log('[UnrealDB][' . $requestId . '] upload bucket request failed: ' . get_class($error) . ': ' . $error->getMessage());
-    if (upload_bucket_is_ajax_request()) {
-        $status = str_contains($message, 'exceeds PHP post_max_size') ? 413 : 500;
-        http_response_code($status);
-        header('Content-Type: application/json');
-        echo json_encode(['ok' => false, 'error' => $message, 'request_id' => $requestId], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        exit;
+    if (!headers_sent()) {
+        catalog_head('Upload Bucket Error');
     }
-    catalog_head('Upload Bucket Error');
     echo CatalogUi::alert('danger', $message . ' Reference: ' . $requestId, 'The upload bucket could not be loaded.');
     catalog_foot();
 }
