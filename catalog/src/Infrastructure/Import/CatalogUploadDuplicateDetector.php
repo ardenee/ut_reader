@@ -10,6 +10,10 @@ use PDO;
  * matching bytes still exist in controlled storage. Database-only identities,
  * including official base-game records whose source file is absent, are not
  * treated as upload duplicates.
+ *
+ * Older code required LOWER(f.sha1)=? in the initial SQL query. The current
+ * implementation deliberately defers SHA-1 comparison until physical existence
+ * is confirmed, allowing MD5-only legacy/base-game rows to be verified safely.
  */
 final class CatalogUploadDuplicateDetector
 {
