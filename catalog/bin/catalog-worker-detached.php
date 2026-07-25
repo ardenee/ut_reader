@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobWorkerFactory;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
 
 $options = getopt('', ['queue::', 'max-jobs::', 'sleep-ms::', 'worker-id::', 'lease-seconds::']);
 $application = catalog_bootstrap();
@@ -32,6 +33,71 @@ $exitReason = 'queue_empty';
 $lastResult = null;
 $idlePasses = 0;
 $startedAt = gmdate('c');
+$normalExit = false;
+// Keep enough memory available for the shutdown recorder after memory exhaustion.
+$shutdownReserve = str_repeat('R', 1024 * 1024);
+
+register_shutdown_function(static function () use (
+    &$shutdownReserve,
+    &$normalExit,
+    $application,
+    $controller,
+    $queueName,
+    $workerId,
+    $codeVersion,
+    $startedAt,
+    &$processed
+): void {
+    if ($normalExit) {
+        return;
+    }
+    $shutdownReserve = '';
+    $last = error_get_last();
+    $fatalTypes = [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR, E_RECOVERABLE_ERROR];
+    if (!is_array($last) || !in_array((int)($last['type'] ?? 0), $fatalTypes, true)) {
+        return;
+    }
+
+    $message = trim((string)($last['message'] ?? ''));
+    if ($message === '' || $message === "''" || $message === '""') {
+        $message = 'Detached PHP worker terminated with an empty fatal-error message.';
+    }
+    $file = str_replace('\\', '/', trim((string)($last['file'] ?? '')));
+    $line = max(0, (int)($last['line'] ?? 0));
+    $error = 'Fatal PHP worker error: ' . $message;
+    if ($file !== '') {
+        $error .= ' at ' . $file . ($line > 0 ? ':' . $line : '');
+    }
+
+    $recovery = null;
+    try {
+        $recovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
+            ->recordWorkerCrash($queueName, $workerId, $error);
+    } catch (Throwable $recoveryError) {
+        error_log('[UnrealDB worker shutdown recovery] ' . get_class($recoveryError) . ': ' . $recoveryError->getMessage());
+    }
+
+    try {
+        $controller->writeState($queueName, [
+            'status' => 'failed',
+            'queue' => $queueName,
+            'worker_id' => $workerId,
+            'pid' => getmypid(),
+            'processed' => $processed,
+            'code_version' => $codeVersion,
+            'started_at' => $startedAt,
+            'ended_at' => gmdate('c'),
+            'exit_reason' => 'fatal_shutdown',
+            'error' => $error,
+            'error_file' => $file,
+            'error_line' => $line,
+            'crash_recovery' => $recovery,
+        ]);
+    } catch (Throwable $stateError) {
+        error_log('[UnrealDB worker shutdown state] ' . get_class($stateError) . ': ' . $stateError->getMessage());
+    }
+    error_log('[UnrealDB worker fatal] ' . $error);
+});
 
 try {
     $controller->writeState($queueName, [
@@ -119,8 +185,23 @@ try {
         'exit_reason' => $exitReason,
         'code_version' => $codeVersion,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
+    $normalExit = true;
     exit(0);
 } catch (Throwable $error) {
+    $message = trim($error->getMessage());
+    if ($message === '' || $message === "''" || $message === '""') {
+        $message = get_class($error) . ' was thrown without an error message.';
+    }
+    $file = str_replace('\\', '/', $error->getFile());
+    $errorText = get_class($error) . ': ' . $message . ' at ' . $file . ':' . $error->getLine();
+    $recovery = null;
+    try {
+        $recovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
+            ->recordWorkerCrash($queueName, $workerId, $errorText);
+    } catch (Throwable $recoveryError) {
+        error_log('[UnrealDB worker exception recovery] ' . get_class($recoveryError) . ': ' . $recoveryError->getMessage());
+    }
+
     $controller->writeState($queueName, [
         'status' => 'failed',
         'queue' => $queueName,
@@ -130,18 +211,22 @@ try {
         'code_version' => $codeVersion,
         'started_at' => $startedAt,
         'ended_at' => gmdate('c'),
-        'error' => $error->getMessage(),
-        'error_file' => str_replace('\\', '/', $error->getFile()),
+        'exit_reason' => 'uncaught_exception',
+        'error' => $errorText,
+        'error_file' => $file,
         'error_line' => $error->getLine(),
+        'crash_recovery' => $recovery,
     ]);
     fwrite(STDERR, json_encode([
         'status' => 'failed',
         'queue' => $queueName,
-        'error' => $error->getMessage(),
-        'error_file' => str_replace('\\', '/', $error->getFile()),
+        'error' => $errorText,
+        'error_file' => $file,
         'error_line' => $error->getLine(),
         'code_version' => $codeVersion,
+        'crash_recovery' => $recovery,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
+    $normalExit = true;
     exit(1);
 } finally {
     flock($lock, LOCK_UN);
