@@ -157,6 +157,8 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
  *   decoder:string,
  *   chunks:int,
  *   expected_bytes:int,
+ *   md5:string,
+ *   sha1:string,
  *   wrapper_signature?:int,
  *   is_unreal_package:bool
  * }
@@ -200,6 +202,10 @@ function catalog_redirect_archive_decompress_payload_to_temp(
         }
     }
 
+    // The decompressed bytes are already resident here. Calculate the package
+    // identity before writing them instead of reopening the temporary file.
+    $md5 = md5($output);
+    $sha1 = sha1($output);
     $tmp = tempnam(sys_get_temp_dir(), 'ue_redirect_');
     if ($tmp === false || @file_put_contents($tmp, $output) !== $outputBytes) {
         if (is_string($tmp)) {
@@ -217,6 +223,8 @@ function catalog_redirect_archive_decompress_payload_to_temp(
         'decoder' => (string)$decoded['decoder'],
         'chunks' => (int)$decoded['chunks'],
         'expected_bytes' => (int)$decoded['expected_bytes'],
+        'md5' => $md5,
+        'sha1' => $sha1,
         'is_unreal_package' => catalog_redirect_archive_has_package_tag($output),
     ];
     if (isset($decoded['wrapper_signature'])) {
