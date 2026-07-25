@@ -27,26 +27,33 @@ foreach (compact('client', 'chunkApi', 'batchApi', 'batchQueue', 'handler', 'pro
 
 upload_bucket_throughput_expect(
     str_contains($client, "action', 'begin_batch'")
+        && str_contains($client, "processingState('batch_status')")
         && str_contains($client, 'completedUploads.push')
         && str_contains($client, 'finalizeBatch(completedUploads.map'),
-    'The browser does not transfer the complete batch before finalisation.'
+    'The browser does not pause processing and transfer the complete batch before finalisation.'
 );
 upload_bucket_throughput_expect(
     str_contains($chunkApi, "if (\$action === 'complete')")
         && str_contains($chunkApi, 'Transfer completed and retained in durable staging')
-        && !str_contains($chunkApi, 'CatalogDetachedWorker'),
-    'Per-file completion still starts processing or a worker.'
+        && str_contains($chunkApi, 'requestStop($queueName)')
+        && !str_contains($chunkApi, '->start(')
+        && !str_contains($chunkApi, 'CatalogBucketUploadProcessor')
+        && !str_contains($chunkApi, 'CatalogBucketUploadQueue'),
+    'Per-file completion still starts or performs package processing.'
 );
 upload_bucket_throughput_expect(
     str_contains($batchApi, 'foreach ($uploadIds as $uploadId)')
+        && str_contains($batchApi, 'migrateLegacyQueuedJobs()')
         && str_contains($batchApi, 'CatalogDetachedWorker')
         && str_contains($batchApi, 'start($queue->queueName(), 10000)'),
-    'Batch finalisation does not create all jobs before starting one worker.'
+    'Batch finalisation does not consolidate and create all jobs before starting one worker.'
 );
 upload_bucket_throughput_expect(
-    str_contains($batchQueue, "return \$base . ':bucket-processing'")
+    str_contains($batchQueue, "':bucket-processing'")
+        && str_contains($batchQueue, "':bucket-redirects'")
+        && str_contains($batchQueue, 'migrateLegacyQueuedJobs')
         && str_contains($batchQueue, 'bucket-upload-source:'),
-    'Deferred Upload Bucket jobs do not use the dedicated processing queue and source fingerprint.'
+    'Deferred Upload Bucket work does not use one consolidated queue and source fingerprint.'
 );
 upload_bucket_throughput_expect(
     str_contains($handler, 'CatalogBucketUploadProcessor')
@@ -110,4 +117,4 @@ upload_bucket_throughput_expect(
     'Background Jobs still loads competing control scripts.'
 );
 
-echo "Deferred Upload Bucket throughput contract tests passed.\n";
+echo "Paused deferred Upload Bucket throughput contract tests passed.\n";
