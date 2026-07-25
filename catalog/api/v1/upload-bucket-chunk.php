@@ -3,15 +3,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
-require_once dirname(__DIR__, 2) . '/lib/UnverifiedFileManager.php';
 require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
-use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 function bucket_chunk_ini_bytes(string $value): int
@@ -80,16 +75,6 @@ function bucket_chunk_clean_name(string $name): string
     return $name;
 }
 
-function bucket_chunk_relative_path(string $submittedPath, string $storedName): string
-{
-    $submittedPath = scanner_normalize_source_relative_path($submittedPath);
-    if ($submittedPath === '') {
-        return scanner_normalize_source_relative_path($storedName);
-    }
-    $directory = trim(str_replace('\\', '/', dirname($submittedPath)), '. /');
-    return scanner_normalize_source_relative_path(($directory !== '' ? $directory . '/' : '') . $storedName);
-}
-
 function bucket_chunk_validate_name(string $name, array $allowedExtensions, bool $allowRedirectWrapper): void
 {
     if ($allowRedirectWrapper && catalog_redirect_archive_is_supported_filename($name)) {
@@ -121,29 +106,6 @@ function bucket_chunk_short_error(Throwable $error): string
     return $message !== '' ? $message : 'Unknown chunked upload error';
 }
 
-/** @return array<string,mixed> */
-function bucket_chunk_start_redirect_worker(PDO $db, array $config, string $queueName): array
-{
-    $launcher = new CatalogDetachedWorker($config);
-    $before = $launcher->status($queueName, true);
-    $restart = null;
-
-    if (!empty($before['active']) && !empty($before['stale_code'])) {
-        $restart = (new CatalogDetachedWorkerStop($db, $config))->restartStaleQueue($queueName);
-        if (empty($restart['restarted'])) {
-            throw new RuntimeException(
-                'The Upload Bucket worker is running old code and could not be restarted automatically. '
-                . 'Open Background Jobs for this queue, stop the worker, then start queued.'
-            );
-        }
-    }
-
-    return [
-        'stale_restart' => $restart,
-        'launch' => $launcher->start($queueName, 10000),
-    ];
-}
-
 try {
     $application = catalog_api_application();
     catalog_api_require_admin(false);
@@ -161,8 +123,12 @@ try {
     $store = bucket_chunk_store($application->config);
     $allowedExtensions = bucket_chunk_allowed_extensions($application->db, $application->config);
 
+    if ($action === 'begin_batch') {
+        $pruned = (new CatalogChunkedUploadCleanup($application->config))->pruneIncomplete();
+        JsonResponse::send(['ok' => true, 'cleanup' => $pruned], 200);
+    }
+
     if ($action === 'init') {
-        (new CatalogChunkedUploadCleanup($application->config))->pruneIncomplete();
         $originalName = bucket_chunk_clean_name((string)($_POST['original_name'] ?? ''));
         bucket_chunk_validate_name($originalName, $allowedExtensions, true);
         $fileSize = (int)($_POST['file_size'] ?? 0);
@@ -179,7 +145,6 @@ try {
             1,
             false
         );
-        $state['logical_original_name'] = $originalName;
         JsonResponse::send(['ok' => true, 'upload' => $state], 200);
     }
 
@@ -199,114 +164,24 @@ try {
     }
 
     if ($action === 'complete') {
-        $uploadId = (string)($_POST['upload_id'] ?? '');
+        $uploadId = strtolower(trim((string)($_POST['upload_id'] ?? '')));
         $state = $store->complete($userId, $uploadId);
-        $submittedRelativePath = (string)($state['relative_path'] ?? '');
-        $submittedName = bucket_chunk_clean_name(basename(str_replace('\\', '/', $submittedRelativePath)));
+        $relativePath = (string)($state['relative_path'] ?? '');
+        $submittedName = bucket_chunk_clean_name(basename(str_replace('\\', '/', $relativePath)));
+        bucket_chunk_validate_name($submittedName, $allowedExtensions, true);
 
-        if (catalog_redirect_archive_is_supported_filename($submittedName)) {
-            $bucketQueue = new CatalogBucketUploadQueue($application->db, $application->config);
-            $queued = $bucketQueue->enqueueRedirect(
-                $uploadId,
-                $submittedName,
-                $submittedRelativePath,
-                (int)($state['file_size'] ?? 0),
-                $userId
-            );
-
-            $worker = null;
-            $workerError = '';
-            try {
-                $worker = bucket_chunk_start_redirect_worker(
-                    $application->db,
-                    $application->config,
-                    $bucketQueue->queueName()
-                );
-            } catch (Throwable $error) {
-                $workerError = bucket_chunk_short_error($error);
-                error_log('[UnrealDB bucket redirect worker launch] ' . $error->getMessage());
-            }
-
-            $message = !empty($queued['deduplicated'])
-                ? 'This redirect archive is already queued or running as background job #' . $queued['job_id'] . '.'
-                : 'Redirect archive uploaded and queued for the shared CLI decompression process as job #' . $queued['job_id'] . '.';
-            if (!empty($worker['stale_restart']['restarted'])) {
-                $message .= ' The stale Upload Bucket worker was restarted automatically and its interrupted job was requeued.';
-            }
-            if ($workerError !== '') {
-                $message .= ' The job remains queued, but the detached worker could not be started: ' . $workerError;
-            }
-
-            JsonResponse::send([
-                'ok' => true,
-                'upload' => $state,
-                'job_id' => (int)$queued['job_id'],
-                'worker' => $worker,
-                'messages' => [[
-                    'status' => 'queued',
-                    'file' => $submittedRelativePath,
-                    'message' => $message,
-                    'file_size' => (int)($state['file_size'] ?? 0),
-                    'file_size_text' => catalog_bytes((int)($state['file_size'] ?? 0)),
-                    'job_id' => (int)$queued['job_id'],
-                ]],
-            ], 200);
-        }
-
-        $resolved = $store->resolveCompletedFile($uploadId, $userId);
-        $workingPath = (string)$resolved['path'];
-        bucket_chunk_validate_name($submittedName, $allowedExtensions, false);
-        $storedSize = is_file($workingPath) ? (int)(filesize($workingPath) ?: 0) : 0;
-        if ($storedSize < 1) {
-            throw new RuntimeException('Completed chunked upload is empty.');
-        }
-
-        try {
-            $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s')
-                . '. No game assignment has been made yet.';
-            $staged = (new LegacyUnverifiedFileStager($application->db, $application->config))->stageBucketUpload(
-                $workingPath,
-                $submittedName,
-                $note,
-                $userId,
-                bucket_chunk_relative_path($submittedRelativePath, $submittedName)
-            );
-
-            if ((string)($staged['status'] ?? '') === 'duplicate') {
-                $message = [
-                    'status' => 'duplicate',
-                    'file' => $submittedName,
-                    'message' => (string)$staged['message'],
-                    'file_size' => $storedSize,
-                    'file_size_text' => catalog_bytes($storedSize),
-                    'existing_file_id' => (int)$staged['file_id'],
-                    'md5' => (string)($staged['md5'] ?? ''),
-                ];
-            } else {
-                $text = 'Stored in upload bucket and indexed as unverified';
-                if ($staged['parse_error'] !== null) {
-                    $text .= '; package tables could not be read: '
-                        . bucket_chunk_short_error(new RuntimeException((string)$staged['parse_error']));
-                }
-                $message = [
-                    'status' => 'bucketed',
-                    'file' => $submittedName,
-                    'message' => $text,
-                    'file_size' => (int)$staged['size'],
-                    'file_size_text' => catalog_bytes((int)$staged['size']),
-                    'queue_name' => (string)$staged['queue_name'],
-                    'file_id' => (int)$staged['file_id'],
-                ];
-            }
-        } finally {
-            try {
-                $store->cancel($userId, $uploadId);
-            } catch (Throwable $cleanupError) {
-                error_log('[UnrealDB bucket chunk cleanup] ' . $cleanupError->getMessage());
-            }
-        }
-
-        JsonResponse::send(['ok' => true, 'upload' => $state, 'messages' => [$message]], 200);
+        JsonResponse::send([
+            'ok' => true,
+            'upload_id' => $uploadId,
+            'upload' => $state,
+            'messages' => [[
+                'status' => 'uploaded',
+                'file' => $relativePath !== '' ? $relativePath : $submittedName,
+                'message' => 'Transfer completed and retained in durable staging. Processing will begin after every selected file finishes uploading.',
+                'file_size' => (int)($state['file_size'] ?? 0),
+                'file_size_text' => catalog_bytes((int)($state['file_size'] ?? 0)),
+            ]],
+        ], 200);
     }
 
     if ($action === 'cancel') {
@@ -314,7 +189,7 @@ try {
         JsonResponse::send(['ok' => true, 'status' => 'cancelled'], 200);
     }
 
-    JsonResponse::error('invalid_action', 'Chunked bucket upload action must be init, chunk, complete or cancel.', 400);
+    JsonResponse::error('invalid_action', 'Chunked bucket upload action must be begin_batch, init, chunk, complete or cancel.', 400);
 } catch (InvalidArgumentException $error) {
     JsonResponse::error('invalid_chunk_upload', $error->getMessage(), 400);
 } catch (Throwable $error) {
