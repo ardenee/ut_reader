@@ -191,9 +191,6 @@ try {
     $script = __DIR__ . '/assets/background-jobs.js';
     $version = is_file($script) ? (string)filemtime($script) : '1';
     echo '<script src="assets/background-jobs.js?v=' . catalog_h($version) . '"></script>';
-    $authorityScript = __DIR__ . '/assets/background-jobs-authority.js';
-    $authorityVersion = is_file($authorityScript) ? (string)filemtime($authorityScript) : '1';
-    echo '<script src="assets/background-jobs-authority.js?v=' . catalog_h($authorityVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
