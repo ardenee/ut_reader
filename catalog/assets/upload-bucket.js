@@ -285,7 +285,9 @@
     async function finalizeBatch(uploadIds) {
         currentBar.value = 100;
         currentSpeed.textContent = '';
-        currentLabel.textContent = 'All files transferred. Removing exact duplicates, consolidating pending work and creating processing jobs...';
+        currentLabel.textContent = uploadIds.length
+            ? 'All files transferred. Removing exact duplicates, consolidating pending work and creating processing jobs...'
+            : 'No files transferred. Resuming previously queued Upload Bucket processing...';
         const controller = window.AbortController ? new AbortController() : null;
         const timer = controller ? window.setTimeout(function () { controller.abort(); }, 300000) : 0;
         try {
@@ -365,7 +367,22 @@
         overallCount.textContent = files.length + ' of ' + files.length + ' attempted · ' + fmtBytes(batchTotalBytes);
 
         if (!completedUploads.length) {
-            currentLabel.textContent = 'No files completed transfer. Failed ' + uploadFailed + '. Upload Bucket processing remains paused.';
+            try {
+                const resumed = await finalizeBatch([]);
+                const pending = Number(resumed.pending_jobs || 0);
+                currentLabel.textContent = 'No files completed transfer. Failed ' + uploadFailed + '. '
+                    + (pending > 0 ? 'Previously queued Upload Bucket processing was resumed.' : 'No previous processing work remained.');
+                addLog({
+                    status: pending > 0 ? 'ready' : 'info',
+                    file: 'Upload batch',
+                    message: pending > 0
+                        ? 'No new files were queued; the existing processing queue was resumed.'
+                        : 'No new files were queued and the processing queue is empty.'
+                });
+            } catch (error) {
+                addLog({status: 'failed', file: 'Processing resume', message: error.message || 'Could not resume Upload Bucket processing.'});
+                currentLabel.textContent = 'No files completed transfer and the previous processing queue could not be resumed.';
+            }
             button.disabled = false;
             return;
         }
@@ -374,9 +391,10 @@
             const finalized = await finalizeBatch(completedUploads.map(function (item) { return item.uploadId; }));
             if (Array.isArray(finalized.messages)) finalized.messages.forEach(addLog);
             const queue = String(finalized.queue || 'catalog:bucket-processing');
+            const pending = Number(finalized.pending_jobs || 0);
             const workerText = finalized.worker_error
                 ? ' Processing jobs are queued, but the worker could not start: ' + String(finalized.worker_error)
-                : ' Processing starts now in ' + queue + '.';
+                : (pending > 0 ? ' Processing starts now in ' + queue + '.' : ' No processing jobs remain.');
             currentLabel.textContent = 'Batch ready: ' + String(finalized.queued || 0) + ' queued, '
                 + String(finalized.duplicates || 0) + ' exact upload duplicate(s) removed, '
                 + String(finalized.legacy_migrated || 0) + ' legacy queued job(s) consolidated, '
