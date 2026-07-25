@@ -1,0 +1,125 @@
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/_bootstrap.php';
+require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
+require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
+
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchQueue;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Presentation\Http\JsonResponse;
+
+try {
+    $application = catalog_api_application();
+    catalog_api_require_admin(false);
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        JsonResponse::error('method_not_allowed', 'Only POST is supported.', 405);
+    }
+    catalog_api_require_csrf('upload_bucket_chunk');
+
+    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+    if ($userId < 1) {
+        JsonResponse::error('unauthorized', 'Administrator authentication is required.', 401);
+    }
+
+    $payload = catalog_api_json_body();
+    $rawIds = $payload['upload_ids'] ?? [];
+    if (!is_array($rawIds) || $rawIds === []) {
+        JsonResponse::error('invalid_uploads', 'At least one completed Upload Bucket source is required.', 400);
+    }
+    if (count($rawIds) > 10000) {
+        JsonResponse::error('too_many_uploads', 'Finalize no more than 10,000 uploaded files at once.', 400);
+    }
+
+    $uploadIds = [];
+    foreach ($rawIds as $rawId) {
+        $uploadId = strtolower(trim((string)$rawId));
+        if (preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
+            JsonResponse::error('invalid_upload', 'A completed Upload Bucket source identifier is invalid.', 400);
+        }
+        $uploadIds[] = $uploadId;
+    }
+
+    $queue = new CatalogBucketBatchQueue($application->db, $application->config);
+    $messages = [];
+    $jobIds = [];
+    $queued = 0;
+    $duplicates = 0;
+    $failed = 0;
+
+    foreach ($uploadIds as $uploadId) {
+        try {
+            $result = $queue->enqueueCompletedUpload($uploadId, $userId);
+            $jobId = (int)$result['job_id'];
+            $jobIds[$jobId] = $jobId;
+            if (!empty($result['deduplicated'])) {
+                $duplicates++;
+                $messages[] = [
+                    'status' => 'duplicate',
+                    'file' => (string)$result['source_relative_path'],
+                    'message' => !empty($result['duplicate_source_removed'])
+                        ? 'Exact uploaded content already belongs to processing job #' . $jobId . '. The repeated staged upload was deleted.'
+                        : 'Exact uploaded content already belongs to processing job #' . $jobId . '.',
+                    'file_size' => (int)$result['size'],
+                    'file_size_text' => catalog_bytes((int)$result['size']),
+                    'job_id' => $jobId,
+                ];
+                continue;
+            }
+
+            $queued++;
+            $messages[] = [
+                'status' => 'queued',
+                'file' => (string)$result['source_relative_path'],
+                'message' => 'Upload completed and passed the exact-source duplicate pass. Processing job #' . $jobId . ' was created.',
+                'file_size' => (int)$result['size'],
+                'file_size_text' => catalog_bytes((int)$result['size']),
+                'job_id' => $jobId,
+            ];
+        } catch (Throwable $error) {
+            $failed++;
+            $requestId = catalog_request_id();
+            error_log('[UnrealDB][' . $requestId . '] bucket batch source ' . $uploadId . ' failed: ' . get_class($error) . ': ' . $error->getMessage());
+            $messages[] = [
+                'status' => 'failed',
+                'file' => $uploadId,
+                'message' => (trim($error->getMessage()) ?: 'Could not queue the completed upload.') . ' | reference: ' . $requestId,
+            ];
+        }
+    }
+
+    $worker = null;
+    $workerError = '';
+    if ($jobIds !== []) {
+        try {
+            $worker = (new CatalogDetachedWorker($application->config))->start($queue->queueName(), 10000);
+        } catch (Throwable $error) {
+            $workerError = trim($error->getMessage());
+            error_log('[UnrealDB bucket batch worker] ' . $error->getMessage());
+        }
+    }
+
+    JsonResponse::send([
+        'ok' => true,
+        'data' => [
+            'queue' => $queue->queueName(),
+            'requested' => count($uploadIds),
+            'queued' => $queued,
+            'duplicates' => $duplicates,
+            'failed' => $failed,
+            'job_ids' => array_values($jobIds),
+            'worker' => $worker,
+            'worker_error' => $workerError,
+            'messages' => $messages,
+        ],
+    ], $failed > 0 && $queued === 0 && $duplicates === 0 ? 500 : 200);
+} catch (Throwable $error) {
+    $requestId = catalog_request_id();
+    error_log('[UnrealDB][' . $requestId . '] bucket batch finalization failed: ' . get_class($error) . ': ' . $error->getMessage());
+    JsonResponse::error(
+        'bucket_batch_failed',
+        trim($error->getMessage()) ?: 'The Upload Bucket batch could not be finalized.',
+        500,
+        ['request_id' => $requestId]
+    );
+}
