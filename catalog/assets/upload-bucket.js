@@ -111,8 +111,8 @@
         const completed = Math.min(batchTotalBytes, processedBytes + Math.max(0, Number(currentFileBytes || 0)));
         const percent = Math.max(0, Math.min(100, Math.round((completed * 100) / batchTotalBytes)));
         overallBar.value = percent;
-        overallLabel.textContent = 'Upload phase (' + percent + '%)';
-        overallCount.textContent = processedFiles + ' of ' + totalFiles + ' transferred · ' + fmtBytes(completed) + ' of ' + fmtBytes(batchTotalBytes);
+        overallLabel.textContent = 'Hash / upload phase (' + percent + '%)';
+        overallCount.textContent = processedFiles + ' of ' + totalFiles + ' checked · ' + fmtBytes(completed) + ' of ' + fmtBytes(batchTotalBytes);
     }
 
     function sleep(milliseconds) {
@@ -206,15 +206,69 @@
             addLog({
                 status: 'ready',
                 file: 'Upload batch',
-                message: 'Upload Bucket processing is paused. Starting the transfer-only phase.'
+                message: 'Upload Bucket processing is paused. Starting browser hash and physical duplicate checks.'
             });
         }
-        currentLabel.textContent = 'Upload Bucket processing paused. Starting file transfers...';
+        currentLabel.textContent = 'Upload Bucket processing paused. Starting browser hash checks...';
         return body;
+    }
+
+    async function calculateIdentity(file, index, total) {
+        if (!window.UnrealDbUploadHash || typeof window.UnrealDbUploadHash.hashFile !== 'function') {
+            throw new Error('The browser MD5/SHA-1 component is unavailable. Reload the page without cached scripts.');
+        }
+        const name = displayName(file);
+        currentBar.value = 0;
+        currentSpeed.textContent = '';
+        currentLabel.textContent = 'Calculating MD5 and SHA-1 for ' + index + ' of ' + total + ': ' + name;
+        return window.UnrealDbUploadHash.hashFile(file, function (done, size) {
+            const percent = Math.floor((done * 100) / Math.max(1, size));
+            currentBar.value = percent;
+            currentLabel.textContent = 'Calculating MD5 and SHA-1 for ' + index + ' of ' + total + ': ' + name + ' (' + percent + '%)';
+            setOverall(done, total);
+        });
+    }
+
+    async function preflight(file, identity) {
+        const name = displayName(file);
+        const data = new FormData();
+        data.append('action', 'preflight');
+        data.append('original_name', file.name);
+        data.append('relative_path', name);
+        data.append('file_size', String(file.size || 0));
+        data.append('md5', identity.md5);
+        data.append('sha1', identity.sha1);
+        currentLabel.textContent = 'Checking physical duplicates: ' + name;
+        return requestWithRetry(data, null, name, 'Duplicate preflight', 120000);
     }
 
     async function chunkedUpload(file, index, total) {
         const name = displayName(file);
+        const identity = await calculateIdentity(file, index, total);
+        const checked = await preflight(file, identity);
+        if (checked.duplicate) {
+            const match = checked.match || {};
+            addLog({
+                status: 'duplicate',
+                file: name,
+                file_id: Number(match.file_id || 0),
+                message: String(checked.message || 'An identical physical file already exists. Upload skipped.')
+                    + ' MD5: ' + identity.md5 + ' | SHA-1: ' + identity.sha1,
+                file_size_text: fmtBytes(file.size)
+            });
+            currentBar.value = 100;
+            currentLabel.textContent = 'Duplicate skipped before transfer: ' + name;
+            return {duplicate: true, uploadId: '', name: name, size: Number(file.size || 0)};
+        }
+
+        if (Number(checked.missing_physical_matches || 0) > 0 || checked.redirect_wrapper) {
+            addLog({
+                status: 'ready',
+                file: name,
+                message: String(checked.message || 'Upload allowed after duplicate preflight.')
+            });
+        }
+
         const clientKey = fileKey(file);
         const initData = new FormData();
         initData.append('action', 'init');
@@ -222,6 +276,8 @@
         initData.append('original_name', file.name);
         initData.append('relative_path', name);
         initData.append('file_size', String(file.size || 0));
+        initData.append('md5', identity.md5);
+        initData.append('sha1', identity.sha1);
 
         currentBar.value = 0;
         currentSpeed.textContent = '';
@@ -279,14 +335,21 @@
         completeData.append('upload_id', uploadId);
         const completed = await requestWithRetry(completeData, null, name, 'Upload completion', 120000);
         if (Array.isArray(completed.messages)) completed.messages.forEach(addLog);
-        return {uploadId: String(completed.upload_id || uploadId), name: name, size: Number(file.size || 0)};
+        return {
+            duplicate: false,
+            uploadId: String(completed.upload_id || uploadId),
+            name: name,
+            size: Number(file.size || 0),
+            md5: identity.md5,
+            sha1: identity.sha1
+        };
     }
 
     async function finalizeBatch(uploadIds) {
         currentBar.value = 100;
         currentSpeed.textContent = '';
         currentLabel.textContent = uploadIds.length
-            ? 'All files transferred. Removing exact duplicates, consolidating pending work and creating processing jobs...'
+            ? 'All required files transferred. Rechecking physical duplicates, consolidating pending work and creating processing jobs...'
             : 'No files transferred. Resuming previously queued Upload Bucket processing...';
         const controller = window.AbortController ? new AbortController() : null;
         const timer = controller ? window.setTimeout(function () { controller.abort(); }, 300000) : 0;
@@ -329,6 +392,10 @@
             window.alert('Chunk upload security token is unavailable. Reload the page and try again.');
             return;
         }
+        if (!window.UnrealDbUploadHash || typeof window.UnrealDbUploadHash.hashFile !== 'function') {
+            window.alert('The browser MD5/SHA-1 component is unavailable. Reload the page without cached scripts.');
+            return;
+        }
 
         button.disabled = true;
         progressBox.hidden = false;
@@ -338,6 +405,7 @@
         batchTotalBytes = Math.max(1, files.reduce(function (sum, file) { return sum + Math.max(0, Number(file.size || 0)); }, 0));
         const completedUploads = [];
         let uploadFailed = 0;
+        let preflightDuplicates = 0;
         setOverall(0, files.length);
 
         try {
@@ -352,7 +420,9 @@
         for (let index = 0; index < files.length; index++) {
             const file = files[index];
             try {
-                completedUploads.push(await chunkedUpload(file, index + 1, files.length));
+                const result = await chunkedUpload(file, index + 1, files.length);
+                if (result.duplicate) preflightDuplicates++;
+                else completedUploads.push(result);
             } catch (error) {
                 uploadFailed++;
                 addLog({status: 'failed', file: displayName(file), message: error.message || 'Resumable upload failed.', file_size_text: fmtBytes(file.size)});
@@ -363,14 +433,15 @@
         }
 
         overallBar.value = 100;
-        overallLabel.textContent = 'Upload phase complete (100%)';
-        overallCount.textContent = files.length + ' of ' + files.length + ' attempted · ' + fmtBytes(batchTotalBytes);
+        overallLabel.textContent = 'Hash / upload phase complete (100%)';
+        overallCount.textContent = files.length + ' of ' + files.length + ' checked · ' + fmtBytes(batchTotalBytes);
 
         if (!completedUploads.length) {
             try {
                 const resumed = await finalizeBatch([]);
                 const pending = Number(resumed.pending_jobs || 0);
-                currentLabel.textContent = 'No files completed transfer. Failed ' + uploadFailed + '. '
+                currentLabel.textContent = 'No files required transfer. '
+                    + preflightDuplicates + ' physical duplicate(s) skipped, ' + uploadFailed + ' failure(s). '
                     + (pending > 0 ? 'Previously queued Upload Bucket processing was resumed.' : 'No previous processing work remained.');
                 addLog({
                     status: pending > 0 ? 'ready' : 'info',
@@ -381,7 +452,7 @@
                 });
             } catch (error) {
                 addLog({status: 'failed', file: 'Processing resume', message: error.message || 'Could not resume Upload Bucket processing.'});
-                currentLabel.textContent = 'No files completed transfer and the previous processing queue could not be resumed.';
+                currentLabel.textContent = 'No files required transfer, but the previous processing queue could not be resumed.';
             }
             button.disabled = false;
             return;
@@ -396,13 +467,14 @@
                 ? ' Processing jobs are queued, but the worker could not start: ' + String(finalized.worker_error)
                 : (pending > 0 ? ' Processing starts now in ' + queue + '.' : ' No processing jobs remain.');
             currentLabel.textContent = 'Batch ready: ' + String(finalized.queued || 0) + ' queued, '
-                + String(finalized.duplicates || 0) + ' exact upload duplicate(s) removed, '
+                + preflightDuplicates + ' physical duplicate(s) skipped before transfer, '
+                + String(finalized.duplicates || 0) + ' duplicate(s) removed during finalisation, '
                 + String(finalized.legacy_migrated || 0) + ' legacy queued job(s) consolidated, '
                 + String(finalized.failed || 0) + ' finalisation failure(s), '
                 + uploadFailed + ' transfer failure(s).' + workerText;
         } catch (error) {
             addLog({status: 'failed', file: 'Batch finalisation', message: error.message || 'Could not create processing jobs.'});
-            currentLabel.textContent = 'All successful files were transferred, but batch finalisation failed. Staged uploads were retained and processing remains paused.';
+            currentLabel.textContent = 'All required files were transferred, but batch finalisation failed. Staged uploads were retained and processing remains paused.';
         }
 
         button.disabled = false;
