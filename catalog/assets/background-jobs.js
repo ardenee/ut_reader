@@ -39,11 +39,11 @@
     const cleanupButton = document.getElementById('jobs-cleanup');
     const cleanupDays = document.getElementById('jobs-cleanup-days');
 
-    if (!tableBody || !message || !tabs) return;
+    if (!tableBody || !message || !tabs || !workerState) return;
 
     const validStatuses = ['', 'queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled'];
-    const retryableStatuses = ['cancelled', 'failed', 'dead_letter'];
-    const terminalStatuses = ['completed', 'failed', 'dead_letter', 'cancelled'];
+    const terminalQueueStatuses = ['completed', 'failed', 'dead_letter', 'cancelled'];
+    const failedDisplayStatuses = ['failed', 'rejected', 'unverified'];
     const query = new URLSearchParams(window.location.search);
     const requestedStatus = String(query.get('status') || '').toLowerCase();
     const requestedPerPage = parseInt(query.get('per_page') || '100', 10) || 100;
@@ -71,20 +71,27 @@
         style.textContent = [
             '.job-status{display:inline-block;min-width:84px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}',
             '.job-status-queued,.job-status-running{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}',
-            '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}',
+            '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias,.job-status-bucketed,.job-status-decompressed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}',
             '.job-status-duplicate{color:#bfdbfe;border-color:rgba(96,165,250,.8);background:rgba(96,165,250,.12)}',
             '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75);background:rgba(255,107,122,.10)}'
         ].join('\n');
         document.head.appendChild(style);
     }
 
-    function setNotice(text, milliseconds) {
-        message.textContent = text;
-        state.noticeUntil = Date.now() + (milliseconds || 5000);
+    function requestReference(body) {
+        if (!body || typeof body !== 'object') return '';
+        if (body.request_id) return String(body.request_id);
+        if (body.error && body.error.request_id) return String(body.error.request_id);
+        if (body.error && body.error.details && body.error.details.request_id) return String(body.error.details.request_id);
+        return '';
     }
 
     function responseError(body, fallback) {
-        return body && body.error && body.error.message ? String(body.error.message) : fallback;
+        let text = fallback;
+        if (body && body.error && body.error.message) text = String(body.error.message);
+        else if (body && typeof body.error === 'string') text = body.error;
+        const reference = requestReference(body);
+        return reference && text.indexOf(reference) === -1 ? text + ' | reference: ' + reference : text;
     }
 
     async function jsonRequest(url, options) {
@@ -93,10 +100,10 @@
         try {
             body = await response.json();
         } catch (error) {
-            throw new Error('The server returned an invalid response.');
+            throw new Error('The server returned invalid JSON (HTTP ' + response.status + ').');
         }
         if (!response.ok) {
-            throw new Error(responseError(body, 'The request failed.'));
+            throw new Error(responseError(body, 'The request failed with HTTP ' + response.status + '.'));
         }
         return body;
     }
@@ -108,6 +115,11 @@
             headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
             body: JSON.stringify(payload)
         });
+    }
+
+    function setNotice(text, milliseconds) {
+        message.textContent = text;
+        state.noticeUntil = Date.now() + (milliseconds || 5000);
     }
 
     function updateUrl() {
@@ -132,8 +144,7 @@
 
     function formatDate(value) {
         const timestamp = parseUtc(value);
-        if (!timestamp) return String(value || '');
-        return new Date(timestamp).toLocaleString();
+        return timestamp ? new Date(timestamp).toLocaleString() : String(value || '');
     }
 
     function formatDuration(milliseconds) {
@@ -165,6 +176,19 @@
         return String(job.display_status || job.status || 'unknown').toLowerCase();
     }
 
+    function queueStatus(job) {
+        return String(job.status || '').toLowerCase();
+    }
+
+    function retryable(job) {
+        return ['cancelled', 'failed', 'dead_letter'].includes(queueStatus(job))
+            || failedDisplayStatuses.includes(displayStatus(job));
+    }
+
+    function deletable(job) {
+        return terminalQueueStatuses.includes(queueStatus(job));
+    }
+
     function appendCell(row, text, className) {
         const cell = document.createElement('td');
         if (className) cell.className = className;
@@ -183,7 +207,8 @@
 
     function renderProgress(cell, job) {
         const progress = job.progress || {};
-        const percent = Math.max(0, Math.min(100, parseInt(progress.percent || (job.status === 'completed' ? 100 : 0), 10) || 0));
+        const fallback = queueStatus(job) === 'completed' ? 100 : 0;
+        const percent = Math.max(0, Math.min(100, parseInt(progress.percent == null ? fallback : progress.percent, 10) || 0));
         const bar = document.createElement('progress');
         bar.max = 100;
         bar.value = percent;
@@ -191,14 +216,16 @@
         cell.appendChild(bar);
         const detail = document.createElement('div');
         detail.className = 'muted';
-        detail.textContent = percent + '% ' + String(progress.message || '');
+        const stage = String(progress.stage || '').replace(/_/g, ' ');
+        const text = String(progress.message || '');
+        detail.textContent = percent + '%' + (stage ? ' · ' + stage : '') + (text ? ' · ' + text : '');
         cell.appendChild(detail);
     }
 
     function runtimeText(job) {
         const started = parseUtc(job.leased_at);
-        if (!started) return job.status === 'queued' ? 'Not started' : '—';
-        if (job.status === 'running') return formatDuration(Date.now() - started);
+        if (!started) return queueStatus(job) === 'queued' ? 'Not started' : '—';
+        if (queueStatus(job) === 'running') return formatDuration(Date.now() - started);
         const finished = parseUtc(job.completed_at);
         return finished >= started ? formatDuration(finished - started) : '—';
     }
@@ -210,19 +237,15 @@
         return '';
     }
 
-    function isTerminal(job) {
-        return terminalStatuses.includes(String(job.status || ''));
-    }
-
     function rowAction(job) {
-        const status = String(job.status || '');
+        const status = queueStatus(job);
         if (status === 'queued') return {label: 'Cancel', action: 'cancel'};
         if (status === 'running') return {label: 'Stop job', action: 'stop'};
-        if (retryableStatuses.includes(status)) return {label: 'Restart', action: 'restart'};
+        if (retryable(job)) return {label: 'Restart', action: 'restart'};
         if (status === 'completed' && String(job.job_type || '') === 'catalog.import_staged_pak') {
             return {label: 'Re-run PAK', action: 'rerun_pak'};
         }
-        if (isTerminal(job)) return {label: 'Delete', action: 'delete'};
+        if (deletable(job)) return {label: 'Delete', action: 'delete'};
         return null;
     }
 
@@ -266,13 +289,13 @@
             const actionCell = appendCell(row, '', 'jobs-actions');
             const action = rowAction(job);
             if (action) {
-                const button = document.createElement('button');
-                button.type = 'button';
-                button.textContent = action.label;
-                button.addEventListener('click', function () {
-                    runRowAction(action.action, job, button);
+                const actionButton = document.createElement('button');
+                actionButton.type = 'button';
+                actionButton.textContent = action.label;
+                actionButton.addEventListener('click', function () {
+                    runRowAction(action.action, job, actionButton);
                 });
-                actionCell.appendChild(button);
+                actionCell.appendChild(actionButton);
             }
             tableBody.appendChild(row);
         });
@@ -280,9 +303,9 @@
 
     function renderTabs() {
         const counts = state.meta.counts || {};
-        tabs.querySelectorAll('button[data-status]').forEach(function (button) {
-            const value = String(button.dataset.status || '');
-            button.setAttribute('aria-selected', value === state.status ? 'true' : 'false');
+        tabs.querySelectorAll('button[data-status]').forEach(function (tab) {
+            const value = String(tab.dataset.status || '');
+            tab.setAttribute('aria-selected', value === state.status ? 'true' : 'false');
         });
         tabs.querySelectorAll('[data-status-count]').forEach(function (element) {
             const key = String(element.dataset.statusCount || 'all');
@@ -302,9 +325,34 @@
         previousPageButton.disabled = page <= 1;
         nextPageButton.disabled = page >= pages;
         lastPageButton.disabled = page >= pages;
-        if (Date.now() >= state.noticeUntil) {
-            message.textContent = pageSummary.textContent + '.';
+        if (Date.now() >= state.noticeUntil) message.textContent = pageSummary.textContent + '.';
+    }
+
+    function renderWorker() {
+        const worker = state.worker || {};
+        const authority = String(worker.authoritative_status || (worker.active ? 'running' : 'stopped'));
+        const counts = worker.queue_counts || {};
+        const stale = Boolean(worker.stale_code);
+        const processed = parseInt((worker.state || {}).processed || 0, 10) || 0;
+        workerState.dataset.authoritativeStatus = authority;
+
+        if (authority === 'running') {
+            workerState.textContent = stale
+                ? 'Worker running older code · restart required'
+                : 'Worker running · ' + processed + ' processed · ' + String(counts.running || 0) + ' active · ' + String(counts.queued || 0) + ' queued';
+        } else if (authority === 'orphaned') {
+            workerState.textContent = 'Worker stopped · ' + String(counts.running || 0) + ' orphaned running job(s)';
+        } else if (authority === 'stopped_with_queue') {
+            workerState.textContent = 'Worker stopped · ' + String(counts.queued || 0) + ' queued job(s) waiting';
+        } else {
+            workerState.textContent = 'Worker stopped · queue empty';
         }
+
+        startButton.disabled = authority === 'running' && !stale;
+        startButton.textContent = authority === 'orphaned'
+            ? 'Recover and resume'
+            : (stale ? 'Restart worker' : 'Start / resume queue');
+        stopWorkerButton.disabled = authority !== 'running';
     }
 
     function currentPageFullySelected() {
@@ -318,29 +366,30 @@
     }
 
     function allowedBulkActions() {
+        const actions = [];
         if (state.allMatching) {
-            if (state.status === 'queued') return [{value: 'cancel', label: 'Cancel matching queued jobs'}];
-            if (retryableStatuses.includes(state.status)) {
-                return [
-                    {value: 'restart', label: 'Restart matching jobs'},
-                    {value: 'delete', label: 'Delete matching terminal jobs'}
-                ];
+            const counts = state.meta.counts || {};
+            if (Number(counts.queued || 0) > 0) {
+                actions.push({value: 'cancel', label: 'Cancel matching queued jobs'});
             }
-            if (state.status === 'running') return [];
-            return [{value: 'delete', label: 'Delete matching terminal jobs'}];
+            if (Number(counts.failed || 0) + Number(counts.dead_letter || 0) + Number(counts.cancelled || 0) > 0) {
+                actions.push({value: 'restart', label: 'Restart matching retryable jobs'});
+            }
+            if (Number(counts.completed || 0) + Number(counts.failed || 0) + Number(counts.dead_letter || 0) + Number(counts.cancelled || 0) > 0) {
+                actions.push({value: 'delete', label: 'Delete matching terminal jobs'});
+            }
+            return actions;
         }
 
         const jobs = selectionJobs();
-        if (!jobs.length) return [];
-        const statuses = jobs.map(function (job) { return String(job.status || ''); });
-        const actions = [];
-        if (statuses.every(function (status) { return status === 'queued'; })) {
+        if (!jobs.length) return actions;
+        if (jobs.some(function (job) { return queueStatus(job) === 'queued'; })) {
             actions.push({value: 'cancel', label: 'Cancel selected queued jobs'});
         }
-        if (statuses.every(function (status) { return retryableStatuses.includes(status); })) {
-            actions.push({value: 'restart', label: 'Restart selected jobs'});
+        if (jobs.some(retryable)) {
+            actions.push({value: 'restart', label: 'Restart selected retryable jobs'});
         }
-        if (statuses.every(function (status) { return terminalStatuses.includes(status); })) {
+        if (jobs.some(deletable)) {
             actions.push({value: 'delete', label: 'Delete selected terminal jobs'});
         }
         return actions;
@@ -360,22 +409,16 @@
             option.textContent = action.label;
             bulkAction.appendChild(option);
         });
-        if (actions.some(function (action) { return action.value === current; })) {
-            bulkAction.value = current;
-        }
+        if (actions.some(function (action) { return action.value === current; })) bulkAction.value = current;
         bulkAction.disabled = actions.length === 0;
         applyActionButton.disabled = !bulkAction.value;
     }
 
     function updateSelectionUi() {
         const selectedCount = state.allMatching ? Number(state.meta.total || 0) : state.selected.size;
-        if (state.allMatching) {
-            selectionSummary.textContent = selectedCount + ' matching jobs selected';
-        } else if (selectedCount > 0) {
-            selectionSummary.textContent = selectedCount + ' job' + (selectedCount === 1 ? '' : 's') + ' selected';
-        } else {
-            selectionSummary.textContent = 'Nothing selected';
-        }
+        selectionSummary.textContent = state.allMatching
+            ? selectedCount + ' matching jobs selected'
+            : (selectedCount ? selectedCount + ' job' + (selectedCount === 1 ? '' : 's') + ' selected' : 'Nothing selected');
 
         selectPage.disabled = state.allMatching || state.jobs.length === 0;
         selectPage.checked = state.allMatching || currentPageFullySelected();
@@ -385,11 +428,6 @@
         selectMatchingButton.disabled = state.allMatching || Number(state.meta.total || 0) === 0;
         selectMatchingButton.textContent = 'Select all ' + String(state.meta.total || 0) + ' matching';
         clearSelectionButton.disabled = !state.allMatching && state.selected.size === 0;
-
-        tableBody.querySelectorAll('input.jobs-row-checkbox').forEach(function (checkbox) {
-            checkbox.disabled = state.allMatching;
-            if (state.allMatching) checkbox.checked = true;
-        });
         updateBulkActionOptions();
     }
 
@@ -400,24 +438,6 @@
         updateSelectionUi();
     }
 
-    function renderWorker() {
-        const worker = state.worker || {};
-        const active = Boolean(worker.active);
-        const stale = Boolean(worker.stale_code);
-        const details = worker.state || {};
-        const processed = parseInt(details.processed || 0, 10) || 0;
-        if (active) {
-            workerState.textContent = stale
-                ? 'Worker is running older code. Start / resume will restart it safely.'
-                : 'Worker running · ' + processed + ' jobs processed';
-        } else {
-            workerState.textContent = 'Worker stopped' + (details.exit_reason ? ' · ' + details.exit_reason : '');
-        }
-        startButton.disabled = active && !stale;
-        startButton.textContent = stale ? 'Restart worker' : 'Start / resume queue';
-        stopWorkerButton.disabled = !active;
-    }
-
     async function readJobs() {
         const params = new URLSearchParams({
             queue: queue,
@@ -426,18 +446,14 @@
         });
         if (state.status) params.set('status', state.status);
         if (state.search) params.set('search', state.search);
-        const body = await jsonRequest(statusUrl + '?' + params.toString(), {
-            cache: 'no-store',
-            credentials: 'same-origin'
-        });
+        const body = await jsonRequest(statusUrl + '?' + params.toString(), {cache: 'no-store', credentials: 'same-origin'});
         state.jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : [];
         state.meta = body && body.meta ? body.meta : state.meta;
         state.page = Number(state.meta.page || 1);
     }
 
     async function readWorker() {
-        const params = new URLSearchParams({queue: queue});
-        const body = await jsonRequest(workerStatusUrl + '?' + params.toString(), {
+        const body = await jsonRequest(workerStatusUrl + '?' + new URLSearchParams({queue: queue}).toString(), {
             cache: 'no-store',
             credentials: 'same-origin'
         });
@@ -467,11 +483,12 @@
     async function launchQueue() {
         startButton.disabled = true;
         try {
+            if (String((state.worker || {}).authoritative_status || '') === 'orphaned') {
+                await postJson(actionUrl, {action: 'recover', queue: queue});
+            }
             const body = await postJson(runUrl, {queue: queue, mode: 'drain'});
             const data = body && body.data ? body.data : {};
-            setNotice(data.started === false
-                ? 'The queue worker is already running.'
-                : 'The queue worker was started.', 4000);
+            setNotice(data.started === false ? 'The queue worker is already running.' : 'The queue worker was started.', 5000);
         } catch (error) {
             setNotice(error.message || 'Could not start the queue worker.', 10000);
         }
@@ -483,7 +500,7 @@
         stopWorkerButton.disabled = true;
         try {
             await postJson(workerActionUrl, {action: 'stop', queue: queue, cancel_running: true});
-            setNotice('The queue worker was stopped.', 5000);
+            setNotice('The worker and its current job were stopped. Queued jobs were left unchanged.', 6000);
         } catch (error) {
             setNotice(error.message || 'Could not stop the queue worker.', 10000);
         }
@@ -500,8 +517,8 @@
         return false;
     }
 
-    async function stopJob(job, button) {
-        button.disabled = true;
+    async function stopJob(job, actionButton) {
+        actionButton.disabled = true;
         try {
             await postJson(actionUrl, {
                 action: 'cancel',
@@ -511,17 +528,17 @@
             });
             const continued = await launchAfterStop();
             setNotice(continued
-                ? 'Job #' + job.id + ' was stopped and the queue continued.'
-                : 'Job #' + job.id + ' was stopped. Start the queue if the next job does not begin.', 8000);
+                ? 'Job #' + job.id + ' was stopped and the next queued job was started.'
+                : 'Job #' + job.id + ' was stopped. Use Start / resume if the next job does not begin.', 8000);
         } catch (error) {
             setNotice(error.message || 'Could not stop the selected job.', 10000);
         } finally {
-            button.disabled = false;
+            actionButton.disabled = false;
             await refresh();
         }
     }
 
-    async function runBulk(action, scope, jobs, button) {
+    async function runBulk(action, scope, jobs, actionButton) {
         const selectedIds = jobs.map(function (job) { return Number(job.id); });
         const scopeLabel = scope === 'matching'
             ? 'all matching eligible jobs'
@@ -530,7 +547,7 @@
         const warning = action === 'delete' ? ' Retained staged upload files will also be removed.' : '';
         if (!window.confirm(verb + ' ' + scopeLabel + '?' + warning)) return;
 
-        button.disabled = true;
+        actionButton.disabled = true;
         try {
             const body = await postJson(bulkUrl, {
                 action: action,
@@ -542,9 +559,9 @@
             });
             const data = body && body.data ? body.data : {};
             let text = verb + ' affected ' + String(data.affected || 0) + ' job(s).';
-            if (data.skipped) text += ' ' + String(data.skipped) + ' job(s) were skipped.';
-            if (data.deleted_staged_files) text += ' Removed ' + String(data.deleted_staged_files) + ' staged upload(s).';
-            if (data.limited) text += ' The 10,000-job safety limit was reached; apply the action again for the remainder.';
+            if (data.skipped) text += ' ' + String(data.skipped) + ' ineligible job(s) were skipped.';
+            if (data.deleted_staged_files) text += ' Removed ' + String(data.deleted_staged_files) + ' retained upload(s).';
+            if (data.limited) text += ' The 10,000-job safety limit was reached; apply again for the remainder.';
             if (data.worker_error) text += ' Jobs were queued, but the worker could not start: ' + String(data.worker_error);
             setNotice(text, 10000);
             state.selected.clear();
@@ -552,14 +569,14 @@
         } catch (error) {
             setNotice(error.message || 'The bulk action failed.', 10000);
         } finally {
-            button.disabled = false;
+            actionButton.disabled = false;
             await refresh();
         }
     }
 
-    async function rerunPak(job, button) {
+    async function rerunPak(job, actionButton) {
         if (!window.confirm('Queue a new full PAK import using the retained source file?')) return;
-        button.disabled = true;
+        actionButton.disabled = true;
         try {
             const body = await postJson(pakRerunUrl, {job_id: Number(job.id), queue: queue});
             const data = body && body.data ? body.data : {};
@@ -567,27 +584,21 @@
         } catch (error) {
             setNotice(error.message || 'The PAK import could not be queued again.', 10000);
         } finally {
-            button.disabled = false;
+            actionButton.disabled = false;
             await refresh();
         }
     }
 
-    function runRowAction(action, job, button) {
-        if (action === 'stop') {
-            stopJob(job, button);
-            return;
-        }
-        if (action === 'rerun_pak') {
-            rerunPak(job, button);
-            return;
-        }
-        runBulk(action, 'selected', [job], button);
+    function runRowAction(action, job, actionButton) {
+        if (action === 'stop') return void stopJob(job, actionButton);
+        if (action === 'rerun_pak') return void rerunPak(job, actionButton);
+        runBulk(action, 'selected', [job], actionButton);
     }
 
     tabs.addEventListener('click', function (event) {
-        const button = event.target && event.target.closest ? event.target.closest('button[data-status]') : null;
-        if (!button) return;
-        state.status = String(button.dataset.status || '');
+        const tab = event.target && event.target.closest ? event.target.closest('button[data-status]') : null;
+        if (!tab) return;
+        state.status = String(tab.dataset.status || '');
         state.page = 1;
         clearSelection();
         refresh();
@@ -630,15 +641,10 @@
     });
 
     clearSelectionButton.addEventListener('click', clearSelection);
-
-    bulkAction.addEventListener('change', function () {
-        applyActionButton.disabled = !bulkAction.value;
-    });
-
+    bulkAction.addEventListener('change', function () { applyActionButton.disabled = !bulkAction.value; });
     applyActionButton.addEventListener('click', function () {
-        const action = bulkAction.value;
-        if (!action) return;
-        runBulk(action, state.allMatching ? 'matching' : 'selected', selectionJobs(), applyActionButton);
+        if (!bulkAction.value) return;
+        runBulk(bulkAction.value, state.allMatching ? 'matching' : 'selected', selectionJobs(), applyActionButton);
     });
 
     firstPageButton.addEventListener('click', function () { state.page = 1; refresh(); });
