@@ -10,7 +10,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadProcessor;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketIdentityProcessor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
@@ -58,6 +58,8 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
             $decoder = '';
             $compressedBytes = 0;
+            $packageMd5 = '';
+            $packageSha1 = '';
 
             if ($redirect) {
                 $context->checkpoint([
@@ -65,7 +67,7 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                     'done' => 5,
                     'total' => 100,
                     'percent' => 5,
-                    'message' => 'Starting redirect decompression.',
+                    'message' => 'Starting redirect decompression. Package hashes will be calculated from the decompressed output.',
                 ]);
                 $decoded = (new CatalogRedirectArchiveProcessor($this->config))->decompressToTemp(
                     $sourcePath,
@@ -77,7 +79,7 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                             'done' => (int)($progress['compressed_done'] ?? 0),
                             'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
                             'percent' => max(5, min(40, 5 + (int)floor($sourcePercent * 35 / 100))),
-                            'message' => (string)($progress['message'] ?? 'Decompressing redirect archive.'),
+                            'message' => (string)($progress['message'] ?? 'Decompressing and hashing redirect archive.'),
                             'compressed_bytes' => (int)($progress['compressed_done'] ?? 0),
                             'output_bytes' => (int)($progress['output_bytes'] ?? 0),
                             'chunks' => (int)($progress['chunks'] ?? 0),
@@ -89,6 +91,8 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                 $workingName = $this->requiredName((string)$decoded['filename']);
                 $decoder = (string)$decoded['decoder'];
                 $compressedBytes = (int)$decoded['compressed_bytes'];
+                $packageMd5 = strtolower(trim((string)($decoded['md5'] ?? '')));
+                $packageSha1 = strtolower(trim((string)($decoded['sha1'] ?? '')));
                 $relativePath = $this->replaceRelativeFilename($relativePath, $workingName);
             } else {
                 $this->validateOutputExtension($workingName);
@@ -97,9 +101,22 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                     'done' => 5,
                     'total' => 100,
                     'percent' => 5,
-                    'message' => 'Preparing the uploaded package for isolated processing.',
+                    'message' => 'Preparing the uploaded package and verifying its browser-calculated MD5/SHA-1.',
                 ]);
-                $workingPath = $this->copyToWorkingFile($sourcePath, $job->id, $context);
+                $prepared = $this->copyToWorkingFile(
+                    $sourcePath,
+                    $job->id,
+                    $context,
+                    strtolower(trim((string)($payload['package_md5'] ?? $payload['source_md5'] ?? ''))),
+                    strtolower(trim((string)($payload['package_sha1'] ?? $payload['source_sha1'] ?? '')))
+                );
+                $workingPath = $prepared['path'];
+                $packageMd5 = $prepared['md5'];
+                $packageSha1 = $prepared['sha1'];
+            }
+
+            if (preg_match('/^[a-f0-9]{32}$/', $packageMd5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $packageSha1) !== 1) {
+                throw new \RuntimeException('The prepared package identity could not be calculated.');
             }
 
             $this->validateOutputExtension($workingName);
@@ -107,17 +124,20 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                 . '. No game assignment has been made yet.';
             if ($redirect) {
                 $note .= ' Redirect archive was decompressed after the complete browser batch finished. Decoder: '
-                    . $decoder . '. Original wrapper: ' . $originalName . '.';
+                    . $decoder . '. Original wrapper: ' . $originalName
+                    . '. MD5/SHA-1 identify the decompressed package, not the wrapper.';
             } else {
-                $note .= ' Package processing began only after the complete browser upload batch finished.';
+                $note .= ' Package identity was calculated before upload and verified while the isolated working copy was written.';
             }
 
-            $staged = (new CatalogBucketUploadProcessor($this->db, $this->config))->stage(
+            $staged = (new CatalogBucketIdentityProcessor($this->db, $this->config))->stage(
                 $workingPath,
                 $workingName,
                 $note,
                 $userId,
                 $relativePath,
+                $packageMd5,
+                $packageSha1,
                 static function (array $progress) use ($context): void {
                     $context->checkpoint($progress);
                 }
@@ -125,7 +145,7 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             $workingPath = '';
 
             // Successful processing has created the durable bucket copy or found
-            // an existing duplicate. The browser staging source is no longer needed.
+            // an existing physical duplicate. Browser staging is no longer needed.
             (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
 
             $status = (string)($staged['status'] ?? 'indexed');
@@ -182,8 +202,14 @@ final class CatalogBucketUploadJobHandler implements JobHandler
         }
     }
 
-    private function copyToWorkingFile(string $sourcePath, int $jobId, JobExecutionContext $context): string
-    {
+    /** @return array{path:string,md5:string,sha1:string} */
+    private function copyToWorkingFile(
+        string $sourcePath,
+        int $jobId,
+        JobExecutionContext $context,
+        string $expectedMd5,
+        string $expectedSha1
+    ): array {
         $storage = rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
         if ($storage === '') {
             throw new \RuntimeException('Catalog storage path is unavailable.');
@@ -215,6 +241,8 @@ final class CatalogBucketUploadJobHandler implements JobHandler
         $done = 0;
         $lastReport = microtime(true);
         $copyError = null;
+        $md5Context = hash_init('md5');
+        $sha1Context = hash_init('sha1');
         try {
             while (!feof($input)) {
                 $buffer = fread($input, 4 * 1024 * 1024);
@@ -225,6 +253,8 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                     if (feof($input)) break;
                     throw new \RuntimeException('Uploaded source copy stopped before end of file.');
                 }
+                hash_update($md5Context, $buffer);
+                hash_update($sha1Context, $buffer);
                 $offset = 0;
                 $length = strlen($buffer);
                 while ($offset < $length) {
@@ -243,7 +273,7 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                         'done' => $done,
                         'total' => max(1, $size),
                         'percent' => 5 + (int)floor($fraction * 35),
-                        'message' => 'Preparing working copy: ' . $done . ' of ' . $size . ' bytes.',
+                        'message' => 'Preparing and hashing working copy: ' . $done . ' of ' . $size . ' bytes.',
                         'bytes_done' => $done,
                         'bytes_total' => $size,
                     ]);
@@ -266,7 +296,19 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             @unlink($destination);
             throw new \RuntimeException('Upload Bucket working copy size is incomplete.');
         }
-        return $destination;
+
+        $md5 = hash_final($md5Context);
+        $sha1 = hash_final($sha1Context);
+        if (preg_match('/^[a-f0-9]{32}$/', $expectedMd5) === 1 && !hash_equals($expectedMd5, $md5)) {
+            @unlink($destination);
+            throw new \RuntimeException('Uploaded package MD5 does not match the browser-calculated MD5.');
+        }
+        if (preg_match('/^[a-f0-9]{40}$/', $expectedSha1) === 1 && !hash_equals($expectedSha1, $sha1)) {
+            @unlink($destination);
+            throw new \RuntimeException('Uploaded package SHA-1 does not match the browser-calculated SHA-1.');
+        }
+
+        return ['path' => $destination, 'md5' => $md5, 'sha1' => $sha1];
     }
 
     private function chunkStore(): CatalogChunkedUploadStore
