@@ -79,35 +79,38 @@ final class CatalogBucketBatchQueue
             throw new \RuntimeException('Completed Upload Bucket source is incomplete.');
         }
 
-        $identityStore = new CatalogBucketUploadIdentityStore($this->config);
-        try {
-            $identity = $identityStore->load($uploadId, $userId);
-        } catch (\Throwable) {
-            // Compatibility for uploads completed before browser-side hashing was
-            // introduced. New uploads never take this fallback full-file pass.
-            $md5 = hash_file('md5', $sourcePath);
-            $sha1 = hash_file('sha1', $sourcePath);
-            if (!is_string($md5) || !is_string($sha1)) {
-                throw new \RuntimeException('Could not calculate legacy staged upload identity.');
-            }
-            $identity = $identityStore->save(
-                $uploadId,
-                $userId,
-                $size,
-                $md5,
-                $sha1,
-                $originalName,
-                $relativePath,
-                $redirect
-            );
-        }
-        $md5 = strtolower((string)$identity['md5']);
-        $sha1 = strtolower((string)$identity['sha1']);
-        if ((int)($identity['file_size'] ?? 0) !== $size) {
-            throw new \RuntimeException('Upload hash identity size no longer matches the completed source.');
-        }
-
+        $md5 = '';
+        $sha1 = '';
         if (!$redirect) {
+            $identityStore = new CatalogBucketUploadIdentityStore($this->config);
+            try {
+                $identity = $identityStore->load($uploadId, $userId);
+            } catch (\Throwable) {
+                // Compatibility for ordinary uploads completed before browser-side
+                // hashing was introduced. Redirect wrappers deliberately do not
+                // take this path because their source hashes are not package hashes.
+                $legacyMd5 = hash_file('md5', $sourcePath);
+                $legacySha1 = hash_file('sha1', $sourcePath);
+                if (!is_string($legacyMd5) || !is_string($legacySha1)) {
+                    throw new \RuntimeException('Could not calculate legacy staged upload identity.');
+                }
+                $identity = $identityStore->save(
+                    $uploadId,
+                    $userId,
+                    $size,
+                    $legacyMd5,
+                    $legacySha1,
+                    $originalName,
+                    $relativePath,
+                    false
+                );
+            }
+            $md5 = strtolower((string)$identity['md5']);
+            $sha1 = strtolower((string)$identity['sha1']);
+            if ((int)($identity['file_size'] ?? 0) !== $size) {
+                throw new \RuntimeException('Upload hash identity size no longer matches the completed source.');
+            }
+
             // Recheck under server control after transfer. This closes the race
             // where another batch stores the same file after browser preflight.
             $inspection = (new CatalogUploadDuplicateDetector($this->db, $this->config))
@@ -134,9 +137,8 @@ final class CatalogBucketBatchQueue
 
         $queueName = $this->queueName();
 
-        // Compressed wrappers cannot be compared to the decompressed package by
-        // MD5/SHA-1. Retain the verified chunk fingerprint to reject an identical
-        // wrapper that was already processed successfully.
+        // For redirects this fingerprint identifies the compressed wrapper only.
+        // The real package duplicate check is deferred until decompression.
         $completed = $this->db->prepare(
             'SELECT id FROM ue_background_jobs '
             . 'WHERE queue_name=? AND status="completed" '
@@ -186,8 +188,8 @@ final class CatalogBucketBatchQueue
                 'staged_path' => 'chunk-upload:' . $uploadId,
                 'source_kind' => 'chunk-upload',
                 'source_fingerprint' => $fingerprint,
-                'source_md5' => $md5,
-                'source_sha1' => $sha1,
+                'source_md5' => $redirect ? '' : $md5,
+                'source_sha1' => $redirect ? '' : $sha1,
                 'package_md5' => $redirect ? '' : $md5,
                 'package_sha1' => $redirect ? '' : $sha1,
                 'source_relative_path' => $relativePath,
