@@ -10,18 +10,24 @@ function upload_bucket_throughput_expect(bool $condition, string $message): void
 
 $root = dirname(__DIR__);
 $client = file_get_contents($root . '/assets/upload-bucket.js');
+$hashClient = file_get_contents($root . '/assets/upload-file-hash.js');
 $chunkApi = file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
 $batchApi = file_get_contents($root . '/api/v1/upload-bucket-batch.php');
 $batchQueue = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketBatchQueue.php');
 $handler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
+$redirectHandler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php');
 $processor = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketUploadProcessor.php');
+$identityProcessor = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketIdentityProcessor.php');
+$duplicateDetector = file_get_contents($root . '/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php');
+$redirectStream = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php');
+$redirectPayload = file_get_contents($root . '/lib/CatalogRedirectArchivePayload.php');
 $manager = file_get_contents($root . '/assets/background-jobs.js');
 $bulkApi = file_get_contents($root . '/api/v1/job-bulk.php');
 $statusApi = file_get_contents($root . '/api/v1/job-status.php');
 $workerStatusApi = file_get_contents($root . '/api/v1/job-worker-status.php');
 $page = file_get_contents($root . '/background-jobs.php');
 
-foreach (compact('client', 'chunkApi', 'batchApi', 'batchQueue', 'handler', 'processor', 'manager', 'bulkApi', 'statusApi', 'workerStatusApi', 'page') as $name => $source) {
+foreach (compact('client', 'hashClient', 'chunkApi', 'batchApi', 'batchQueue', 'handler', 'redirectHandler', 'processor', 'identityProcessor', 'duplicateDetector', 'redirectStream', 'redirectPayload', 'manager', 'bulkApi', 'statusApi', 'workerStatusApi', 'page') as $name => $source) {
     upload_bucket_throughput_expect(is_string($source), $name . ' is missing.');
 }
 
@@ -33,13 +39,33 @@ upload_bucket_throughput_expect(
     'The browser does not pause processing and transfer the complete batch before finalisation.'
 );
 upload_bucket_throughput_expect(
+    str_contains($hashClient, 'class Md5')
+        && str_contains($hashClient, 'class Sha1')
+        && str_contains($hashClient, 'hashFile'),
+    'The browser does not calculate MD5 and SHA-1 before an ordinary file upload.'
+);
+upload_bucket_throughput_expect(
+    str_contains($client, "action', 'preflight'")
+        && str_contains($client, 'if (checked.duplicate)')
+        && str_contains($client, "initData.append('md5'")
+        && str_contains($client, "initData.append('sha1'"),
+    'The browser does not preflight ordinary physical duplicates before transfer.'
+);
+upload_bucket_throughput_expect(
     str_contains($chunkApi, "if (\$action === 'complete')")
-        && str_contains($chunkApi, 'Transfer completed and retained in durable staging')
+        && str_contains($chunkApi, 'retained in durable staging')
         && str_contains($chunkApi, 'requestStop($queueName)')
         && !str_contains($chunkApi, '->start(')
         && !str_contains($chunkApi, 'CatalogBucketUploadProcessor')
         && !str_contains($chunkApi, 'CatalogBucketUploadQueue'),
     'Per-file completion still starts or performs package processing.'
+);
+upload_bucket_throughput_expect(
+    str_contains($chunkApi, "if (\$action === 'preflight')")
+        && str_contains($chunkApi, 'if ($redirect)')
+        && str_contains($chunkApi, "'duplicate' => false")
+        && str_contains($chunkApi, 'compressed wrapper hashes are not package hashes'),
+    'Redirect wrappers are incorrectly rejected using their compressed-file hashes.'
 );
 upload_bucket_throughput_expect(
     str_contains($batchApi, 'foreach ($uploadIds as $uploadId)')
@@ -52,14 +78,47 @@ upload_bucket_throughput_expect(
     str_contains($batchQueue, "':bucket-processing'")
         && str_contains($batchQueue, "':bucket-redirects'")
         && str_contains($batchQueue, 'migrateLegacyQueuedJobs')
-        && str_contains($batchQueue, 'bucket-upload-source:'),
-    'Deferred Upload Bucket work does not use one consolidated queue and source fingerprint.'
+        && str_contains($batchQueue, 'bucket-upload-source:')
+        && str_contains($batchQueue, 'if (!$redirect)')
+        && str_contains($batchQueue, 'CatalogUploadDuplicateDetector'),
+    'Deferred Upload Bucket work does not separate ordinary package duplicate checks from redirect wrapper processing.'
 );
 upload_bucket_throughput_expect(
-    str_contains($handler, 'CatalogBucketUploadProcessor')
+    str_contains($handler, 'CatalogBucketIdentityProcessor')
         && str_contains($handler, 'CatalogChunkedUploadCleanup')
+        && str_contains($handler, 'package_md5')
+        && str_contains($handler, 'hash_update($md5Context, $buffer)')
         && str_contains($handler, 'throw $error;'),
-    'Deferred processing does not retain sources for retries and remove them only after success.'
+    'Ordinary deferred processing does not reuse and verify hashes while making its existing working copy.'
+);
+upload_bucket_throughput_expect(
+    str_contains($redirectHandler, 'CatalogBucketIdentityProcessor')
+        && str_contains($redirectHandler, "(string)(\$decoded['md5']")
+        && str_contains($redirectHandler, "(string)(\$decoded['sha1']"),
+    'Redirect jobs do not use decompressed package identities.'
+);
+upload_bucket_throughput_expect(
+    str_contains($redirectStream, "hash_init('md5')")
+        && str_contains($redirectStream, 'hash_update($md5Context, $block)')
+        && str_contains($redirectStream, "'md5' => hash_final(\$md5Context)")
+        && str_contains($redirectPayload, '$md5 = md5($output)')
+        && str_contains($redirectPayload, '$sha1 = sha1($output)'),
+    'Redirect package hashes are not calculated while decompressed bytes are produced.'
+);
+upload_bucket_throughput_expect(
+    str_contains($identityProcessor, 'Using MD5 and SHA-1 calculated while the package bytes were produced')
+        && str_contains($identityProcessor, 'CatalogUploadDuplicateDetector')
+        && !str_contains($identityProcessor, 'hash_file(')
+        && !str_contains($identityProcessor, 'md5_file(')
+        && !str_contains($identityProcessor, 'sha1_file('),
+    'Identity-aware package processing still performs a separate full-file hashing pass.'
+);
+upload_bucket_throughput_expect(
+    str_contains($duplicateDetector, 'missing_base_game_matches')
+        && str_contains($duplicateDetector, 'physicalPath')
+        && str_contains($duplicateDetector, 'ue_base_game_files')
+        && str_contains($duplicateDetector, 'LOWER(f.sha1)=?'),
+    'Duplicate detection does not require a physical size/MD5/SHA-1 match or protect metadata-only base-game identities.'
 );
 upload_bucket_throughput_expect(
     str_contains($processor, "'hash_identity'")
