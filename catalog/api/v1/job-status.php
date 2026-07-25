@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobEventLog;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
@@ -103,16 +104,11 @@ try {
     }
 
     $displayStatusSql = CatalogJobDisplayStatus::sqlExpression();
-    $resultColumns = $jobId > 0
-        ? ',result_json'
-        : ',JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")) result_status,'
-            . 'JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.message")) result_message';
     $sql = 'SELECT id,queue_name,job_type,resource_class,resource_limit,concurrency_key,priority,status,'
         . $displayStatusSql . ' display_status,available_at,'
         . 'attempts,max_attempts,worker_id,leased_at,lease_expires_at,last_heartbeat_at,recovery_count,'
-        . 'cancel_requested_at,cancel_requested_by,cancel_reason,payload_json,progress_json,progress_updated_at'
-        . $resultColumns
-        . ',last_error,created_by,created_at,updated_at,completed_at,dead_lettered_at '
+        . 'cancel_requested_at,cancel_requested_by,cancel_reason,payload_json,progress_json,progress_updated_at,'
+        . 'result_json,last_error,created_by,created_at,updated_at,completed_at,dead_lettered_at '
         . 'FROM ue_background_jobs' . $whereSql
         . ' ORDER BY id DESC LIMIT ' . $perPage . ' OFFSET ' . $offset;
     $rows = catalog_all($application->db, $sql, $params);
@@ -122,7 +118,16 @@ try {
         if (!empty($row['payload_json'])) {
             $decoded = json_decode((string)$row['payload_json'], true);
             if (is_array($decoded)) {
-                foreach (['original_name', 'source_relative_path', 'game_id', 'file_id', 'max_files'] as $field) {
+                foreach ([
+                    'original_name',
+                    'source_relative_path',
+                    'queue_name',
+                    'queue_game_id',
+                    'game_id',
+                    'file_id',
+                    'expected_size',
+                    'max_files',
+                ] as $field) {
                     if (array_key_exists($field, $decoded)) {
                         $payload[$field] = $decoded[$field];
                     }
@@ -140,22 +145,55 @@ try {
         unset($row['progress_json']);
         $row['progress'] = $progress;
 
-        if ($jobId > 0) {
-            $result = null;
-            if (!empty($row['result_json'])) {
-                $decoded = json_decode((string)$row['result_json'], true);
-                $result = is_array($decoded) ? $decoded : null;
-            }
-            unset($row['result_json']);
-            $row['result'] = $result;
-        } else {
-            $resultStatus = trim((string)($row['result_status'] ?? ''));
-            $resultMessage = trim((string)($row['result_message'] ?? ''));
-            unset($row['result_status'], $row['result_message']);
-            $row['result'] = $resultStatus !== '' || $resultMessage !== ''
-                ? ['status' => $resultStatus, 'message' => $resultMessage]
-                : null;
+        $result = null;
+        if (!empty($row['result_json'])) {
+            $decoded = json_decode((string)$row['result_json'], true);
+            $result = is_array($decoded) ? $decoded : null;
         }
+        unset($row['result_json']);
+
+        if (is_array($result)) {
+            $expectedJobId = (int)$row['id'];
+            $resultJobId = (int)($result['job_id'] ?? 0);
+            $expectedName = trim((string)($payload['original_name'] ?? ''));
+            $resultName = trim((string)($result['original_name'] ?? $result['job_original_name'] ?? ''));
+            $jobMismatch = $resultJobId > 0 && $resultJobId !== $expectedJobId;
+            $nameMismatch = $expectedName !== '' && $resultName !== ''
+                && strcasecmp($expectedName, $resultName) !== 0;
+
+            if ($jobMismatch || $nameMismatch) {
+                $details = [];
+                if ($jobMismatch) {
+                    $details[] = 'result belongs to job #' . $resultJobId;
+                }
+                if ($nameMismatch) {
+                    $details[] = 'result names ' . $resultName . ' instead of ' . $expectedName;
+                }
+                $result = [
+                    'status' => 'failed',
+                    'message' => 'Stored result identity mismatch for job #' . $expectedJobId . ': '
+                        . implode('; ', $details) . '. Re-run this metadata repair.',
+                    'integrity_mismatch' => true,
+                    'job_id' => $expectedJobId,
+                    'job_original_name' => $expectedName,
+                ];
+            } elseif ((string)($row['job_type'] ?? '') === JobType::REPAIR_UNVERIFIED_METADATA) {
+                $displayName = $expectedName !== '' ? $expectedName : ($resultName !== '' ? $resultName : 'this file');
+                $parseError = trim((string)($result['parse_error'] ?? ''));
+                if ($parseError !== '') {
+                    $result['message'] = 'Basic metadata was repaired for ' . $displayName
+                        . ', but package tables remain unreadable: ' . $parseError;
+                } elseif (array_key_exists('name_count', $result)
+                    && array_key_exists('import_count', $result)
+                    && array_key_exists('export_count', $result)) {
+                    $result['message'] = 'Metadata repair completed for ' . $displayName . ': Header, '
+                        . (int)$result['name_count'] . ' Names, '
+                        . (int)$result['import_count'] . ' Imports and '
+                        . (int)$result['export_count'] . ' Exports recorded.';
+                }
+            }
+        }
+        $row['result'] = $result;
     }
     unset($row);
 
