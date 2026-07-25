@@ -47,6 +47,9 @@ final class CatalogJobWorkerFactory
                 // New Upload Bucket batches transfer every file first, then this
                 // handler performs duplicate checks, decompression and inventory.
                 new CatalogBucketUploadJobHandler($db, $trustedImportConfig),
+                // Repair only incomplete Upload Bucket/unverified metadata without
+                // moving or re-uploading the physical file.
+                new CatalogUnverifiedMetadataRepairJobHandler($db, $trustedImportConfig),
                 // Legacy redirect jobs remain readable/restartable after upgrades.
                 new CatalogBucketRedirectJobHandler($db, $trustedImportConfig),
                 // PAK imports retain the original container and build entry/file
