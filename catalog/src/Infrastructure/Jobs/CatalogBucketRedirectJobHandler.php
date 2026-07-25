@@ -10,7 +10,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadProcessor;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketIdentityProcessor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
@@ -71,7 +71,7 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
                 'done' => 5,
                 'total' => 100,
                 'percent' => 5,
-                'message' => 'Starting redirect decompression.',
+                'message' => 'Starting redirect decompression. Package hashes will be calculated from the decompressed output.',
             ]);
             $decoded = (new CatalogRedirectArchiveProcessor($this->config))->decompressToTemp(
                 $sourcePath,
@@ -83,7 +83,7 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
                         'done' => (int)($progress['compressed_done'] ?? 0),
                         'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
                         'percent' => max(5, min(40, 5 + (int)floor($sourcePercent * 35 / 100))),
-                        'message' => (string)($progress['message'] ?? 'Decompressing redirect archive.'),
+                        'message' => (string)($progress['message'] ?? 'Decompressing and hashing redirect archive.'),
                         'compressed_bytes' => (int)($progress['compressed_done'] ?? 0),
                         'output_bytes' => (int)($progress['output_bytes'] ?? 0),
                         'chunks' => (int)($progress['chunks'] ?? 0),
@@ -95,16 +95,24 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
             $workingName = $this->requiredName((string)$decoded['filename']);
             $this->validateOutputExtension($workingName);
             $relativePath = $this->replaceRelativeFilename($relativePath, $workingName);
+            $packageMd5 = strtolower(trim((string)($decoded['md5'] ?? '')));
+            $packageSha1 = strtolower(trim((string)($decoded['sha1'] ?? '')));
+            if (preg_match('/^[a-f0-9]{32}$/', $packageMd5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $packageSha1) !== 1) {
+                throw new \RuntimeException('Decompressed redirect package identity could not be calculated.');
+            }
 
             $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s')
                 . '. No game assignment has been made yet. Legacy redirect job was decompressed by the CLI worker. Decoder: '
-                . (string)$decoded['decoder'] . '. Original wrapper: ' . $originalName . '.';
-            $staged = (new CatalogBucketUploadProcessor($this->db, $this->config))->stage(
+                . (string)$decoded['decoder'] . '. Original wrapper: ' . $originalName
+                . '. MD5/SHA-1 identify the decompressed package, not the wrapper.';
+            $staged = (new CatalogBucketIdentityProcessor($this->db, $this->config))->stage(
                 $decodedPath,
                 $workingName,
                 $note,
                 $userId,
                 $relativePath,
+                $packageMd5,
+                $packageSha1,
                 static function (array $progress) use ($context): void {
                     $context->checkpoint($progress);
                 }
@@ -162,7 +170,6 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
                 ]);
             } catch (Throwable) {
             }
-            // Throw so the queue applies attempts, retry delay and dead-letter state.
             throw $error;
         } finally {
             if ($decodedPath !== '' && is_file($decodedPath)) {
