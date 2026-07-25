@@ -75,24 +75,19 @@ function fi_pagination(int $page, int $pages, callable $url): void
     echo '</p>';
 }
 
-function fi_missing_base_join(): string
-{
-    $stem = '(CASE WHEN LOCATE(".",COALESCE(bg.original_name,""))>0 THEN LEFT(bg.original_name,CHAR_LENGTH(bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg.original_name,".",-1))-1) ELSE COALESCE(bg.original_name,"") END)';
-    return ' LEFT JOIN ue_base_game_files bg ON bg.game_id=f.game_id AND (LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(d.required_package)) OR LOWER(TRIM(' . $stem . '))=LOWER(TRIM(d.required_package))) ';
-}
-
 /** @return list<array<string,mixed>> */
 function fi_child_missing_rows(PDO $db, int $peerId, int $page, bool $ignoreBaseGame): array
 {
     $offset = ($page - 1) * FI_CHILD_PAGE_SIZE;
-    $having = $ignoreBaseGame ? ' HAVING MAX(CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END)=0' : '';
+    $baseGameSql = federation_dependency_is_base_game_sql('f', 'd');
+    $policySql = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
     return catalog_all(
         $db,
         'SELECT f.game_id,g.name game_name,COALESCE(gp.engine_key,"") engine_key,d.required_package,
                 MIN(d.required_object_path) required_object_path,
                 COUNT(DISTINCT d.required_object_path) object_count,
                 COUNT(DISTINCT d.file_id) use_count,
-                MAX(CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END) is_base_game,
+                MAX(CASE WHEN ' . $baseGameSql . ' THEN 1 ELSE 0 END) is_base_game,
                 MAX(CASE WHEN pf.id IS NOT NULL THEN 1 ELSE 0 END) parent_available,
                 MAX(pf.id) parent_peer_file_id,
                 MAX(pf.original_name) parent_file,
@@ -100,15 +95,14 @@ function fi_child_missing_rows(PDO $db, int $peerId, int $page, bool $ignoreBase
          FROM ue_dependencies d
          JOIN ue_files f ON f.id=d.file_id
          JOIN ue_games g ON g.id=f.game_id
-         LEFT JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1'
-            . fi_missing_base_join() . '
+         LEFT JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1
          LEFT JOIN ue_federation_peer_files pf
            ON pf.peer_id=? AND LOWER(pf.package_name)=LOWER(d.required_package)
           AND (pf.game_id=f.game_id OR pf.remote_game_name=g.name)
           ' . ($ignoreBaseGame ? 'AND COALESCE(pf.is_base_game,0)=0' : '') . '
-         WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""
-         GROUP BY f.game_id,g.name,gp.engine_key,d.required_package'
-            . $having . '
+         WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""'
+            . $policySql . '
+         GROUP BY f.game_id,g.name,gp.engine_key,d.required_package
          ORDER BY g.name,use_count DESC,d.required_package
          LIMIT ' . FI_CHILD_PAGE_SIZE . ' OFFSET ' . $offset,
         [$peerId]
@@ -117,16 +111,17 @@ function fi_child_missing_rows(PDO $db, int $peerId, int $page, bool $ignoreBase
 
 function fi_child_missing_total(PDO $db, bool $ignoreBaseGame): int
 {
-    $having = $ignoreBaseGame ? ' HAVING MAX(CASE WHEN bg.id IS NOT NULL THEN 1 ELSE 0 END)=0' : '';
+    $baseGameSql = federation_dependency_is_base_game_sql('f', 'd');
+    $policySql = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
     return (int)(catalog_one(
         $db,
         'SELECT COUNT(*) c FROM (
             SELECT f.game_id,d.required_package
             FROM ue_dependencies d
-            JOIN ue_files f ON f.id=d.file_id'
-                . fi_missing_base_join() . '
-            WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""
-            GROUP BY f.game_id,d.required_package' . $having . '
+            JOIN ue_files f ON f.id=d.file_id
+            WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""'
+                . $policySql . '
+            GROUP BY f.game_id,d.required_package
          ) x'
     )['c'] ?? 0);
 }
@@ -224,8 +219,9 @@ try {
                 throw new RuntimeException('Only a Child may request missing dependency files from its Parent.');
             }
             $page = fi_page($_POST['page'] ?? 1);
-            $rows = fi_child_missing_rows($db, $peerId, $page, $ignoreBaseGame);
             $activeStatuses = fi_child_request_statuses($db, $peer);
+            $ignoreBaseGame = federation_ignore_base_game_files($db, $peer);
+            $rows = fi_child_missing_rows($db, $peerId, $page, $ignoreBaseGame);
             $byKey = [];
             foreach ($rows as $row) {
                 $existing = $activeStatuses[strtolower(trim((string)$row['required_package']))] ?? null;
@@ -250,24 +246,33 @@ try {
                     'engine_key' => (string)$row['engine_key'],
                     'use_count' => (int)$row['use_count'],
                     'object_count' => (int)$row['object_count'],
-                    'is_base_game_dependency' => false,
+                    'is_base_game_dependency' => !empty($row['is_base_game']),
                 ];
             }
             if (!$items) {
-                throw new RuntimeException('Select at least one currently missing dependency package.');
+                throw new RuntimeException('The selected packages are no longer eligible. The Parent policy or request status changed; reload the list and select from the remaining packages.');
             }
             $siteLabel = fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: 'child';
-            $result = fed_http_post_signed(
-                rtrim((string)$peer['site_url'], '/') . '/api/federation/request-submit.php',
-                (string)fed_setting($db, 'site_id', ''),
-                federation_peer_stored_signing_secret($db, $peer),
-                [
-                    'title' => 'Missing file request from ' . $siteLabel,
-                    'notes' => 'Requested from the consolidated Parent Inventory page.',
-                    'generated_at' => date('c'),
-                    'items' => $items,
-                ]
-            );
+            try {
+                $result = fed_http_post_signed(
+                    rtrim((string)$peer['site_url'], '/') . '/api/federation/request-submit.php',
+                    (string)fed_setting($db, 'site_id', ''),
+                    federation_peer_stored_signing_secret($db, $peer),
+                    [
+                        'title' => 'Missing file request from ' . $siteLabel,
+                        'notes' => 'Requested from the consolidated Parent Inventory page.',
+                        'generated_at' => date('c'),
+                        'items' => $items,
+                    ]
+                );
+            } catch (RuntimeException $requestError) {
+                if (str_contains($requestError->getMessage(), 'Every selected package is excluded by the parent Ignore base-game files policy.')) {
+                    $_SESSION['fed_inventory_flash'] = 'The Parent base-game policy changed or was refreshed. Excluded base-game packages were removed from the request list.';
+                    header('Location: ' . fi_child_url($peerId, $page));
+                    exit;
+                }
+                throw $requestError;
+            }
             if (is_array($result['policy'] ?? null)) {
                 federation_cache_parent_base_game_policy($db, $peerId, $result['policy']);
             }
@@ -375,10 +380,6 @@ try {
         }
         $peerId = (int)$parent['id'];
         $page = fi_page($_GET['page'] ?? 1);
-        $total = fi_child_missing_total($db, $ignoreBaseGame);
-        $pages = max(1, (int)ceil($total / FI_CHILD_PAGE_SIZE));
-        $page = min($page, $pages);
-        $rows = fi_child_missing_rows($db, $peerId, $page, $ignoreBaseGame);
         $requestStatuses = [];
         $requestStatusError = '';
         try {
@@ -386,6 +387,11 @@ try {
         } catch (Throwable $statusError) {
             $requestStatusError = $statusError->getMessage();
         }
+        $ignoreBaseGame = federation_ignore_base_game_files($db, $parent);
+        $total = fi_child_missing_total($db, $ignoreBaseGame);
+        $pages = max(1, (int)ceil($total / FI_CHILD_PAGE_SIZE));
+        $page = min($page, $pages);
+        $rows = fi_child_missing_rows($db, $peerId, $page, $ignoreBaseGame);
         foreach ($rows as &$row) {
             $row['item_key'] = fi_child_key($row);
             $row['request_state'] = $requestStatuses[strtolower(trim((string)$row['required_package']))] ?? null;
