@@ -11,14 +11,17 @@ function metadata_repair_expect(bool $condition, string $message): void
 $root = dirname(__DIR__);
 $jobType = file_get_contents($root . '/src/Domain/Jobs/JobType.php');
 $policy = file_get_contents($root . '/src/Domain/Jobs/JobResourcePolicy.php');
+$context = file_get_contents($root . '/src/Application/Jobs/JobExecutionContext.php');
 $factory = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $handler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogUnverifiedMetadataRepairJobHandler.php');
+$processor = file_get_contents($root . '/src/Infrastructure/Import/CatalogUnverifiedMetadataRepairProcessor.php');
 $library = file_get_contents($root . '/lib/UnverifiedMetadataRepair.php');
 $page = file_get_contents($root . '/unverified-database-import.php');
 $action = file_get_contents($root . '/unverified-database-import-action.php');
+$jobsPage = file_get_contents($root . '/background-jobs.php');
 $ui = file_get_contents($root . '/src/Presentation/Ui/CatalogUi.php');
 
-foreach (compact('jobType', 'policy', 'factory', 'handler', 'library', 'page', 'action', 'ui') as $name => $source) {
+foreach (compact('jobType', 'policy', 'context', 'factory', 'handler', 'processor', 'library', 'page', 'action', 'jobsPage', 'ui') as $name => $source) {
     metadata_repair_expect(is_string($source), $name . ' source is missing.');
 }
 
@@ -29,8 +32,9 @@ metadata_repair_expect(
 );
 metadata_repair_expect(
     str_contains($policy, 'JobType::REPAIR_UNVERIFIED_METADATA')
-        && str_contains($policy, "'bucket-processing'"),
-    'Metadata repair is not serialized with Upload Bucket processing.'
+        && str_contains($policy, "'bucket-processing'")
+        && str_contains($context, 'JobType::REPAIR_UNVERIFIED_METADATA'),
+    'Metadata repair is not serialized with Upload Bucket processing or given a renewable package lease.'
 );
 metadata_repair_expect(
     str_contains($library, 'No file content')
@@ -48,11 +52,32 @@ metadata_repair_expect(
     'Repair jobs can loop unreadable files or be queued repeatedly without deduplication.'
 );
 metadata_repair_expect(
-    str_contains($handler, 'catalog_unverified_index_path')
-        && str_contains($handler, 'true')
-        && str_contains($handler, 'game_id=NULL')
-        && str_contains($handler, 'INTERVAL 6 HOUR'),
-    'Repair jobs do not force a safe staging reindex or preserve unverified ownership.'
+    str_contains($processor, "new ReflectionMethod(CatalogBucketUploadProcessor::class, 'hashIdentity')")
+        && str_contains($processor, "new ReflectionMethod(CatalogBucketUploadProcessor::class, 'indexStored')")
+        && !str_contains($processor, 'rename('),
+    'Upload Bucket repair does not reuse the granular parser/database writer in place.'
+);
+metadata_repair_expect(
+    str_contains($handler, 'Part 1 of 4')
+        && str_contains($handler, 'Part 2 of 4')
+        && str_contains($handler, 'Part 3 of 4')
+        && str_contains($handler, 'Part 4 of 4')
+        && str_contains($handler, "'repair_header'")
+        && str_contains($handler, "'repair_names'")
+        && str_contains($handler, "'repair_imports'")
+        && str_contains($handler, "'repair_exports'")
+        && str_contains($handler, "'repair_save'")
+        && str_contains($handler, '$context->checkpoint($mapped)')
+        && str_contains($handler, "'stage' => 'complete'")
+        && str_contains($handler, "'message' => $completionMessage"),
+    'Repair progress does not expose forced Header/Names/Imports/Exports/save checkpoints and a real completion message.'
+);
+metadata_repair_expect(
+    str_contains($handler, "'file_started_at'")
+        && str_contains($handler, "'stage_started_at'")
+        && str_contains($jobsPage, 'Current file time')
+        && str_contains($jobsPage, 'job’s own claim time'),
+    'Per-file and per-stage timing is not identified separately from the worker process lifetime.'
 );
 metadata_repair_expect(
     str_contains($page, 'Complete files are not opened or reprocessed')
