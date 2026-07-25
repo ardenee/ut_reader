@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
+use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
@@ -81,7 +82,7 @@ final class CatalogBucketBatchQueue
             $identityStore = new CatalogBucketUploadIdentityStore($this->config);
             try {
                 $identity = $identityStore->load($uploadId, $userId);
-            } catch (\Throwable) {
+            } catch (Throwable) {
                 // Compatibility for ordinary uploads completed before browser-side
                 // hashing was introduced. Redirect wrappers deliberately do not
                 // take this path because their source hashes are not package hashes.
@@ -132,39 +133,14 @@ final class CatalogBucketBatchQueue
         }
 
         $queueName = $this->queueName();
-        $completedJobId = 0;
         $existingId = 0;
         $existingUploadId = '';
+        $existingSourceAvailable = false;
 
         if (!$redirect) {
-            // An ordinary file fingerprint describes the actual package bytes, so
-            // completed/active source history may safely prevent repeat work.
-            $completed = $this->db->prepare(
-                'SELECT id FROM ue_background_jobs '
-                . 'WHERE queue_name=? AND status="completed" '
-                . 'AND JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.source_fingerprint"))=? '
-                . 'ORDER BY id DESC LIMIT 1'
-            );
-            $completed->execute([$queueName, $fingerprint]);
-            $completedJobId = (int)($completed->fetchColumn() ?: 0);
-            if ($completedJobId > 0) {
-                $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
-                return [
-                    'job_id' => $completedJobId,
-                    'duplicate_file_id' => 0,
-                    'deduplicated' => true,
-                    'duplicate_source_removed' => $removed,
-                    'duplicate_kind' => 'completed_source',
-                    'upload_id' => $uploadId,
-                    'original_name' => $originalName,
-                    'source_relative_path' => $relativePath,
-                    'size' => $size,
-                    'fingerprint' => $fingerprint,
-                    'md5' => $md5,
-                    'sha1' => $sha1,
-                ];
-            }
-
+            // Completed job history is not physical storage and cannot suppress a
+            // re-upload. Active source dedupe is allowed only while that job's
+            // retained staged upload still exists and resolves successfully.
             $dedupeKey = 'bucket-upload-source:' . $fingerprint;
             $existing = $this->db->prepare(
                 'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
@@ -177,6 +153,20 @@ final class CatalogBucketBatchQueue
                 if (is_array($decoded)) {
                     $existingUploadId = trim((string)($decoded['upload_id'] ?? ''));
                 }
+            }
+            if (preg_match('/^[a-f0-9]{64}$/', $existingUploadId) === 1) {
+                try {
+                    $store->resolveCompletedFile($existingUploadId, null);
+                    $existingSourceAvailable = true;
+                } catch (Throwable) {
+                    $existingSourceAvailable = false;
+                }
+            }
+            if ($existingId > 0 && !$existingSourceAvailable) {
+                // Do not let an orphaned job identity block replacement bytes.
+                $existingId = 0;
+                $existingUploadId = '';
+                $dedupeKey .= ':' . $uploadId;
             }
         } else {
             // A redirect fingerprint identifies only compressed wrapper bytes.
@@ -210,7 +200,10 @@ final class CatalogBucketBatchQueue
             3
         );
 
-        $deduplicated = !$redirect && $existingId > 0 && $existingId === $jobId;
+        $deduplicated = !$redirect
+            && $existingSourceAvailable
+            && $existingId > 0
+            && $existingId === $jobId;
         $removed = false;
         if ($deduplicated && $existingUploadId !== '' && !hash_equals($existingUploadId, $uploadId)) {
             $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
