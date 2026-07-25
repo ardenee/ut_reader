@@ -17,6 +17,8 @@ final class CatalogJobWorkerFactory
         string $workerId,
         int $leaseSeconds
     ): JobWorker {
+        self::raiseWorkerMemoryLimit($config);
+
         // max_upload_bytes protects browser/staging ingress. It must not reject a
         // trusted package after it has already entered durable staging, a local
         // source, a PAK extraction, or a managed game backup. Preserve the real
@@ -70,5 +72,53 @@ final class CatalogJobWorkerFactory
             $leaseSeconds,
             $eventAppender
         );
+    }
+
+    /** @param array<string,mixed> $config */
+    private static function raiseWorkerMemoryLimit(array $config): void
+    {
+        $target = trim((string)($config['queue']['worker_memory_limit'] ?? '512M'));
+        if ($target === '' || $target === '-1') {
+            return;
+        }
+
+        $targetBytes = self::memoryBytes($target);
+        if ($targetBytes < 1) {
+            return;
+        }
+        $current = trim((string)ini_get('memory_limit'));
+        $currentBytes = self::memoryBytes($current);
+        if ($current === '-1' || ($currentBytes > 0 && $currentBytes >= $targetBytes)) {
+            return;
+        }
+
+        @ini_set('memory_limit', $target);
+    }
+
+    private static function memoryBytes(string $value): int
+    {
+        $value = trim($value);
+        if ($value === '' || $value === '-1') {
+            return $value === '-1' ? PHP_INT_MAX : 0;
+        }
+        if (!preg_match('/^(\d+)([KMGTP]?)$/i', $value, $match)) {
+            return 0;
+        }
+        $bytes = (int)$match[1];
+        $power = match (strtoupper((string)$match[2])) {
+            'K' => 1,
+            'M' => 2,
+            'G' => 3,
+            'T' => 4,
+            'P' => 5,
+            default => 0,
+        };
+        for ($index = 0; $index < $power; $index++) {
+            if ($bytes > intdiv(PHP_INT_MAX, 1024)) {
+                return PHP_INT_MAX;
+            }
+            $bytes *= 1024;
+        }
+        return $bytes;
     }
 }
