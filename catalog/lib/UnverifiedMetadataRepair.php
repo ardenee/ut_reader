@@ -11,8 +11,10 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /**
  * Lightweight inventory used to find only physical unverified files whose
- * database identity or package-table inventory is incomplete. No file content
- * is read while building this list.
+ * database identity or package-table inventory is incomplete. Candidate
+ * discovery reads filesystem metadata and, for existing rows, at most the
+ * 16-byte package summary used to verify stored engine/version classification.
+ * It never reads package tables or hashes complete files.
  *
  * sourceGameId follows unverified-files.php semantics:
  *   0  = all queues
@@ -87,7 +89,7 @@ function catalog_unverified_metadata_inventory(PDO $db, array $config, int $sour
             $size = (int)(filesize($path) ?: 0);
             $key = catalog_unverified_queue_key($gameId, $entry);
             $row = $rowsByKey[$key] ?? null;
-            $reasons = catalog_unverified_metadata_missing_reasons($row, $size);
+            $reasons = catalog_unverified_metadata_missing_reasons($row, $size, $path);
             $items[] = [
                 'token' => uvf_token($gameId, $entry),
                 'queue_game_id' => $gameId,
@@ -114,7 +116,7 @@ function catalog_unverified_metadata_inventory(PDO $db, array $config, int $sour
 }
 
 /** @return list<string> */
-function catalog_unverified_metadata_missing_reasons(?array $row, int $physicalSize): array
+function catalog_unverified_metadata_missing_reasons(?array $row, int $physicalSize, string $path = ''): array
 {
     if ($row === null) {
         return ['Missing database inventory row'];
@@ -142,6 +144,25 @@ function catalog_unverified_metadata_missing_reasons(?array $row, int $physicalS
     }
     if (trim((string)($row['extension'] ?? '')) === '') {
         $reasons[] = 'File extension is missing';
+    }
+
+    // Reader/detection fixes must be able to revisit an earlier completed repair.
+    // Compare only the tiny package summary, not the full file or package tables.
+    if ($path !== '' && is_file($path)) {
+        $summary = gp_read_legacy_summary($path);
+        if (!empty($summary['ok'])) {
+            $headerEngine = strtoupper(trim((string)($summary['engine_hint'] ?? '')));
+            $headerVersion = $summary['version'] ?? null;
+            if ($headerEngine !== '' && $headerEngine !== 'UNKNOWN'
+                && $engine !== '' && $engine !== 'UNKNOWN'
+                && $headerEngine !== $engine) {
+                $reasons[] = 'Stored engine ' . $engine . ' does not match package header ' . $headerEngine;
+            }
+            if (is_numeric($headerVersion) && is_numeric($version)
+                && (int)$headerVersion !== (int)$version) {
+                $reasons[] = 'Stored package version does not match the package header';
+            }
+        }
     }
 
     // Retry unknown engine/version once with the current reader code. If the
@@ -201,10 +222,12 @@ function catalog_queue_unverified_metadata_repairs(
         if (empty($item['needs_repair'])) {
             continue;
         }
-        $dedupeKey = 'unverified-metadata:' . substr(hash(
+        // v2 deliberately permits one new job after the early-UE3 detection fix;
+        // the previous v1 dedupe key may belong to an already completed bad parse.
+        $dedupeKey = 'unverified-metadata-v2:' . substr(hash(
             'sha256',
             (int)$item['queue_game_id'] . "\0" . (string)$item['queue_name']
-        ), 0, 48);
+        ), 0, 45);
         $jobId = $queue->enqueue(
             $queueName,
             JobType::REPAIR_UNVERIFIED_METADATA,
