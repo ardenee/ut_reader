@@ -81,8 +81,12 @@ try {
         array_push($params, $like, $like, $like, $like, $like, $like);
     }
 
+    $displayStatus = CatalogJobDisplayStatus::sqlExpression();
     $actionCondition = match ($action) {
-        'restart' => 'status IN ("cancelled","failed","dead_letter")',
+        // Older handlers returned a failed result normally, which left the queue
+        // row as completed. Treat those visible failed outcomes as retryable too.
+        'restart' => '(status IN ("cancelled","failed","dead_letter") '
+            . 'OR (status="completed" AND ' . $displayStatus . ' IN ("failed","rejected","unverified")))',
         'cancel' => 'status="queued"',
         'delete' => 'status IN ("completed","failed","dead_letter","cancelled")',
     };
