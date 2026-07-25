@@ -16,12 +16,14 @@ $factory = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerF
 $handler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogUnverifiedMetadataRepairJobHandler.php');
 $processor = file_get_contents($root . '/src/Infrastructure/Import/CatalogUnverifiedMetadataRepairProcessor.php');
 $library = file_get_contents($root . '/lib/UnverifiedMetadataRepair.php');
+$profiles = file_get_contents($root . '/lib/GameProfiles.php');
 $page = file_get_contents($root . '/unverified-database-import.php');
 $action = file_get_contents($root . '/unverified-database-import-action.php');
 $jobsPage = file_get_contents($root . '/background-jobs.php');
+$statusApi = file_get_contents($root . '/api/v1/job-status.php');
 $ui = file_get_contents($root . '/src/Presentation/Ui/CatalogUi.php');
 
-foreach (compact('jobType', 'policy', 'context', 'factory', 'handler', 'processor', 'library', 'page', 'action', 'jobsPage', 'ui') as $name => $source) {
+foreach (compact('jobType', 'policy', 'context', 'factory', 'handler', 'processor', 'library', 'profiles', 'page', 'action', 'jobsPage', 'statusApi', 'ui') as $name => $source) {
     metadata_repair_expect(is_string($source), $name . ' source is missing.');
 }
 
@@ -37,19 +39,26 @@ metadata_repair_expect(
     'Metadata repair is not serialized with Upload Bucket processing or given a renewable package lease.'
 );
 metadata_repair_expect(
-    str_contains($library, 'No file content')
+    str_contains($library, '16-byte package summary')
+        && str_contains($library, 'gp_read_legacy_summary($path)')
         && str_contains($library, 'actual_name_count')
         && str_contains($library, 'actual_import_count')
         && str_contains($library, 'actual_export_count')
         && str_contains($library, 'Missing database inventory row')
         && str_contains($library, 'Package table inventory is empty'),
-    'Candidate discovery does not remain lightweight or cannot find inventory gaps.'
+    'Candidate discovery does not remain lightweight or cannot find inventory/classification gaps.'
+);
+metadata_repair_expect(
+    str_contains($profiles, 'if ($version >= 334)')
+        && str_contains($profiles, 'UE3 package-summary layout starts at version 334')
+        && str_contains($library, 'does not match package header')
+        && str_contains($library, 'unverified-metadata-v2:'),
+    'Early UE3 packages cannot be reclassified and queued after the reader-boundary fix.'
 );
 metadata_repair_expect(
     str_contains($library, 'Metadata repair attempted:')
-        && str_contains($library, 'REPAIR_UNVERIFIED_METADATA')
-        && str_contains($library, 'unverified-metadata:'),
-    'Repair jobs can loop unreadable files or be queued repeatedly without deduplication.'
+        && str_contains($library, 'REPAIR_UNVERIFIED_METADATA'),
+    'Repair jobs can loop unreadable files or are not registered for deduplicated queueing.'
 );
 metadata_repair_expect(
     str_contains($processor, "new ReflectionMethod(CatalogBucketUploadProcessor::class, 'hashIdentity')")
@@ -78,6 +87,12 @@ metadata_repair_expect(
         && str_contains($jobsPage, 'Current file time')
         && str_contains($jobsPage, 'job’s own claim time'),
     'Per-file and per-stage timing is not identified separately from the worker process lifetime.'
+);
+metadata_repair_expect(
+    str_contains($statusApi, 'normalizedResult')
+        && str_contains($statusApi, 'normalizedProgress')
+        && str_contains($statusApi, "unset(\$result['message'])"),
+    'Completed parser warnings can still be shown twice as status and Error/result.'
 );
 metadata_repair_expect(
     str_contains($page, 'Complete files are not opened or reprocessed')
