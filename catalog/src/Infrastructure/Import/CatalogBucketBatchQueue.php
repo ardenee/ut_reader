@@ -30,10 +30,6 @@ final class CatalogBucketBatchQueue
         return $this->baseQueueName() . ':bucket-redirects';
     }
 
-    /**
-     * Move only pending legacy redirect work into the one new processing queue.
-     * Terminal history remains under its original queue name.
-     */
     public function migrateLegacyQueuedJobs(): int
     {
         $statement = $this->db->prepare(
@@ -136,48 +132,57 @@ final class CatalogBucketBatchQueue
         }
 
         $queueName = $this->queueName();
-
-        // For redirects this fingerprint identifies the compressed wrapper only.
-        // The real package duplicate check is deferred until decompression.
-        $completed = $this->db->prepare(
-            'SELECT id FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND status="completed" '
-            . 'AND JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.source_fingerprint"))=? '
-            . 'ORDER BY id DESC LIMIT 1'
-        );
-        $completed->execute([$queueName, $fingerprint]);
-        $completedJobId = (int)($completed->fetchColumn() ?: 0);
-        if ($completedJobId > 0) {
-            $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
-            return [
-                'job_id' => $completedJobId,
-                'duplicate_file_id' => 0,
-                'deduplicated' => true,
-                'duplicate_source_removed' => $removed,
-                'duplicate_kind' => 'completed_source',
-                'upload_id' => $uploadId,
-                'original_name' => $originalName,
-                'source_relative_path' => $relativePath,
-                'size' => $size,
-                'fingerprint' => $fingerprint,
-                'md5' => $md5,
-                'sha1' => $sha1,
-            ];
-        }
-
-        $dedupeKey = 'bucket-upload-source:' . $fingerprint;
-        $existing = $this->db->prepare(
-            'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
-        );
-        $existing->execute([$queueName, $dedupeKey]);
-        $existingRow = $existing->fetch(PDO::FETCH_ASSOC);
-        $existingId = is_array($existingRow) ? (int)($existingRow['id'] ?? 0) : 0;
+        $completedJobId = 0;
+        $existingId = 0;
         $existingUploadId = '';
-        if (is_array($existingRow) && !empty($existingRow['payload_json'])) {
-            $decoded = json_decode((string)$existingRow['payload_json'], true);
-            if (is_array($decoded)) {
-                $existingUploadId = trim((string)($decoded['upload_id'] ?? ''));
+
+        if (!$redirect) {
+            // An ordinary file fingerprint describes the actual package bytes, so
+            // completed/active source history may safely prevent repeat work.
+            $completed = $this->db->prepare(
+                'SELECT id FROM ue_background_jobs '
+                . 'WHERE queue_name=? AND status="completed" '
+                . 'AND JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.source_fingerprint"))=? '
+                . 'ORDER BY id DESC LIMIT 1'
+            );
+            $completed->execute([$queueName, $fingerprint]);
+            $completedJobId = (int)($completed->fetchColumn() ?: 0);
+            if ($completedJobId > 0) {
+                $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
+                return [
+                    'job_id' => $completedJobId,
+                    'duplicate_file_id' => 0,
+                    'deduplicated' => true,
+                    'duplicate_source_removed' => $removed,
+                    'duplicate_kind' => 'completed_source',
+                    'upload_id' => $uploadId,
+                    'original_name' => $originalName,
+                    'source_relative_path' => $relativePath,
+                    'size' => $size,
+                    'fingerprint' => $fingerprint,
+                    'md5' => $md5,
+                    'sha1' => $sha1,
+                ];
             }
+
+            $dedupeKey = 'bucket-upload-source:' . $fingerprint;
+            $existing = $this->db->prepare(
+                'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
+            );
+            $existing->execute([$queueName, $dedupeKey]);
+            $existingRow = $existing->fetch(PDO::FETCH_ASSOC);
+            $existingId = is_array($existingRow) ? (int)($existingRow['id'] ?? 0) : 0;
+            if (is_array($existingRow) && !empty($existingRow['payload_json'])) {
+                $decoded = json_decode((string)$existingRow['payload_json'], true);
+                if (is_array($decoded)) {
+                    $existingUploadId = trim((string)($decoded['upload_id'] ?? ''));
+                }
+            }
+        } else {
+            // A redirect fingerprint identifies only compressed wrapper bytes.
+            // Never merge or discard it as a package duplicate; every wrapper must
+            // reach decompression so the real package identity can be checked.
+            $dedupeKey = 'bucket-redirect-upload:' . $uploadId;
         }
 
         $jobId = (new PdoJobQueue($this->db))->enqueue(
@@ -205,7 +210,7 @@ final class CatalogBucketBatchQueue
             3
         );
 
-        $deduplicated = $existingId > 0 && $existingId === $jobId;
+        $deduplicated = !$redirect && $existingId > 0 && $existingId === $jobId;
         $removed = false;
         if ($deduplicated && $existingUploadId !== '' && !hash_equals($existingUploadId, $uploadId)) {
             $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
