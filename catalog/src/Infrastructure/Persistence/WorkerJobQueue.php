@@ -59,7 +59,7 @@ final class WorkerJobQueue implements JobQueue
 
         try {
             $select = $this->db->prepare(
-                'SELECT cancel_requested_at,cancel_reason FROM ue_background_jobs '
+                'SELECT cancel_requested_at,cancel_reason,leased_at,progress_json FROM ue_background_jobs '
                 . 'WHERE id=? AND status="running" AND lease_token=? FOR UPDATE'
             );
             $select->execute([$job->id, $job->leaseToken]);
@@ -75,7 +75,7 @@ final class WorkerJobQueue implements JobQueue
                 }
                 $statement = $this->db->prepare(
                     'UPDATE ue_background_jobs SET status="cancelled", dedupe_key=NULL, worker_id=NULL, lease_token=NULL, '
-                    . 'leased_at=NULL, lease_expires_at=NULL, last_heartbeat_at=NULL, '
+                    . 'lease_expires_at=NULL, last_heartbeat_at=NULL, '
                     . 'cancel_requested_at=COALESCE(cancel_requested_at,?), '
                     . 'cancel_reason=CASE WHEN cancel_reason IS NULL OR cancel_reason="" THEN ? ELSE cancel_reason END, '
                     . 'completed_at=?, updated_at=? WHERE id=? AND status="running" AND lease_token=?'
@@ -86,15 +86,52 @@ final class WorkerJobQueue implements JobQueue
                 return 'cancelled';
             }
 
+            // Bind terminal output to this exact claimed row. This makes it
+            // impossible for a list/API renderer to silently treat another job's
+            // completion payload as belonging to the current row.
+            $result['job_id'] = $job->id;
+            $expectedOriginalName = trim((string)($job->payload['original_name'] ?? ''));
+            if ($expectedOriginalName !== '') {
+                $result['job_original_name'] = $expectedOriginalName;
+            }
+            $leasedAt = trim((string)($row['leased_at'] ?? ''));
+            if ($leasedAt !== '') {
+                $result['file_started_at'] = $leasedAt;
+            }
+            $result['file_completed_at'] = $now;
+
+            $progress = [];
+            if (!empty($row['progress_json'])) {
+                $decoded = json_decode((string)$row['progress_json'], true);
+                if (is_array($decoded)) {
+                    $progress = $decoded;
+                }
+            }
+            $progress['stage'] = 'completed';
+            $progress['done'] = 100;
+            $progress['total'] = 100;
+            $progress['percent'] = 100;
+            $progress['job_id'] = $job->id;
+            if ($leasedAt !== '') {
+                $progress['file_started_at'] = $progress['file_started_at'] ?? $leasedAt;
+            }
+            $progress['file_completed_at'] = $now;
+            $resultMessage = trim((string)($result['message'] ?? ''));
+            if ($resultMessage !== '') {
+                $progress['message'] = $resultMessage;
+            } elseif (trim((string)($progress['message'] ?? '')) === '') {
+                $progress['message'] = 'Job #' . $job->id . ' completed.';
+            }
+
             $statement = $this->db->prepare(
                 'UPDATE ue_background_jobs SET status="completed", result_json=?, dedupe_key=NULL, '
-                . 'worker_id=NULL, lease_token=NULL, leased_at=NULL, lease_expires_at=NULL, '
+                . 'worker_id=NULL, lease_token=NULL, lease_expires_at=NULL, '
                 . 'progress_json=?, progress_updated_at=?, completed_at=?, updated_at=? '
                 . 'WHERE id=? AND status="running" AND lease_token=?'
             );
             $statement->execute([
                 self::encodeJson($result),
-                self::encodeJson(['stage' => 'completed']),
+                self::encodeJson($progress),
                 $now,
                 $now,
                 $now,
