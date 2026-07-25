@@ -55,9 +55,10 @@ bucket_policy_expect(str_contains($content['javascript'], 'received_chunks'), 'B
 bucket_policy_expect(!str_contains($content['javascript'], 'wholeFileUpload('), 'Browser client still routes files through whole-file POST.');
 bucket_policy_expect(
     str_contains($content['javascript'], 'await beginBatch()')
+        && str_contains($content['javascript'], "processingState('batch_status')")
         && str_contains($content['javascript'], 'completedUploads.push')
         && str_contains($content['javascript'], 'await finalizeBatch('),
-    'Browser client does not finish the complete transfer phase before processing finalisation.'
+    'Browser client does not pause existing processing and finish the complete transfer phase before finalisation.'
 );
 bucket_policy_expect(
     str_contains($content['javascript'], 'xhr.timeout')
@@ -67,30 +68,36 @@ bucket_policy_expect(
 );
 
 bucket_policy_expect(
-    !str_contains($content['endpoint'], 'CatalogDetachedWorker')
-        && !str_contains($content['endpoint'], 'CatalogBucketUploadQueue')
-        && !str_contains($content['endpoint'], 'LegacyUnverifiedFileStager'),
-    'Per-file chunk completion still starts processing before the batch is complete.'
+    !str_contains($content['endpoint'], 'CatalogBucketUploadQueue')
+        && !str_contains($content['endpoint'], 'LegacyUnverifiedFileStager')
+        && !str_contains($content['endpoint'], 'CatalogBucketUploadProcessor')
+        && !str_contains($content['endpoint'], '->start('),
+    'Per-file chunk completion still starts or performs processing before the batch is complete.'
 );
 bucket_policy_expect(
     str_contains($content['endpoint'], "if (\$action === 'begin_batch')")
+        && str_contains($content['endpoint'], "if (\$action === 'batch_status')")
+        && str_contains($content['endpoint'], 'requestStop($queueName)')
         && str_contains($content['endpoint'], "if (\$action === 'complete')")
         && str_contains($content['endpoint'], 'retained in durable staging'),
-    'Chunk endpoint does not provide transfer-only batch preparation and completion.'
+    'Chunk endpoint does not pause processing and provide transfer-only completion.'
 );
 
 bucket_policy_expect(
     str_contains($content['batch_endpoint'], 'CatalogBucketBatchQueue')
         && str_contains($content['batch_endpoint'], 'foreach ($uploadIds as $uploadId)')
+        && str_contains($content['batch_endpoint'], 'migrateLegacyQueuedJobs()')
         && str_contains($content['batch_endpoint'], 'CatalogDetachedWorker')
         && str_contains($content['batch_endpoint'], 'start($queue->queueName(), 10000)'),
-    'Batch endpoint does not queue all completed sources before starting one worker.'
+    'Batch endpoint does not consolidate and queue all completed sources before starting one worker.'
 );
 bucket_policy_expect(
-    str_contains($content['batch_queue'], "return \$base . ':bucket-processing'")
+    str_contains($content['batch_queue'], "':bucket-processing'")
+        && str_contains($content['batch_queue'], "':bucket-redirects'")
+        && str_contains($content['batch_queue'], 'migrateLegacyQueuedJobs')
         && str_contains($content['batch_queue'], 'bucket-upload-source:')
         && str_contains($content['batch_queue'], 'source_fingerprint'),
-    'Completed uploads do not pass through the exact-source duplicate queue.'
+    'Completed uploads do not pass through the consolidated exact-source duplicate queue.'
 );
 
 bucket_policy_expect(
@@ -160,4 +167,4 @@ bucket_policy_expect(str_contains($content['endpoint'], "catalog_api_require_csr
 bucket_policy_expect(str_contains($content['batch_endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'Batch endpoint lacks CSRF protection.');
 bucket_policy_expect(str_contains($content['endpoint'], "['max_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint applies the ordinary upload limit.');
 
-echo "Upload Bucket transfer-first architecture contract tests passed.\n";
+echo "Paused transfer-first Upload Bucket architecture contract tests passed.\n";
