@@ -56,6 +56,13 @@ live_layout_expect(
 );
 
 live_layout_expect(
+    str_contains($statusApi, '$successfulCompletion')
+        && str_contains($statusApi, "unset(\$result['message'])")
+        && str_contains($statusApi, "\$progress['message'] = \$completionMessage"),
+    'Successful completion text can still be displayed both as status and as Error/result.'
+);
+
+live_layout_expect(
     str_contains($uploadPage, 'data-processing-url=')
         && str_contains($uploadPage, 'upload-bucket-follow.js')
         && str_contains($handoff, 'Opening the processing queue in 3 seconds')
@@ -63,4 +70,4 @@ live_layout_expect(
     'Upload Bucket does not automatically hand completed batches to the processing queue.'
 );
 
-echo "Background Jobs live-layout, per-job runtime and result-isolation contract tests passed.\n";
+echo "Background Jobs live-layout, per-job runtime, result-isolation and single-message contract tests passed.\n";
