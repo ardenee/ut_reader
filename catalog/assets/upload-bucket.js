@@ -40,6 +40,10 @@
         return file.webkitRelativePath || file.name;
     }
 
+    function isRedirectWrapper(file) {
+        return /\.(?:uz|uz2|uz3)$/i.test(String(file && file.name ? file.name : ''));
+    }
+
     function fmtBytes(bytes) {
         const units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
         let value = Number(bytes || 0);
@@ -111,7 +115,7 @@
         const completed = Math.min(batchTotalBytes, processedBytes + Math.max(0, Number(currentFileBytes || 0)));
         const percent = Math.max(0, Math.min(100, Math.round((completed * 100) / batchTotalBytes)));
         overallBar.value = percent;
-        overallLabel.textContent = 'Hash / upload phase (' + percent + '%)';
+        overallLabel.textContent = 'Check / upload phase (' + percent + '%)';
         overallCount.textContent = processedFiles + ' of ' + totalFiles + ' checked · ' + fmtBytes(completed) + ' of ' + fmtBytes(batchTotalBytes);
     }
 
@@ -136,7 +140,7 @@
                     return;
                 }
                 if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
-                    reject(new Error(responseError(body, 'Chunk request failed with HTTP ' + xhr.status + '.')));
+                    reject(new Error(responseError(body, 'Chunk request failed with HTTP ' + xhr.status + '.'));
                     return;
                 }
                 resolve(body);
@@ -206,10 +210,10 @@
             addLog({
                 status: 'ready',
                 file: 'Upload batch',
-                message: 'Upload Bucket processing is paused. Starting browser hash and physical duplicate checks.'
+                message: 'Upload Bucket processing is paused. Starting ordinary-file hash checks and redirect transfers.'
             });
         }
-        currentLabel.textContent = 'Upload Bucket processing paused. Starting browser hash checks...';
+        currentLabel.textContent = 'Upload Bucket processing paused. Starting file checks...';
         return body;
     }
 
@@ -225,7 +229,6 @@
             const percent = Math.floor((done * 100) / Math.max(1, size));
             currentBar.value = percent;
             currentLabel.textContent = 'Calculating MD5 and SHA-1 for ' + index + ' of ' + total + ': ' + name + ' (' + percent + '%)';
-            setOverall(done, total);
         });
     }
 
@@ -236,37 +239,54 @@
         data.append('original_name', file.name);
         data.append('relative_path', name);
         data.append('file_size', String(file.size || 0));
-        data.append('md5', identity.md5);
-        data.append('sha1', identity.sha1);
+        if (identity && identity.md5 && identity.sha1) {
+            data.append('md5', identity.md5);
+            data.append('sha1', identity.sha1);
+        }
         currentLabel.textContent = 'Checking physical duplicates: ' + name;
         return requestWithRetry(data, null, name, 'Duplicate preflight', 120000);
     }
 
     async function chunkedUpload(file, index, total) {
         const name = displayName(file);
-        const identity = await calculateIdentity(file, index, total);
-        const checked = await preflight(file, identity);
-        if (checked.duplicate) {
-            const match = checked.match || {};
-            addLog({
-                status: 'duplicate',
-                file: name,
-                file_id: Number(match.file_id || 0),
-                message: String(checked.message || 'An identical physical file already exists. Upload skipped.')
-                    + ' MD5: ' + identity.md5 + ' | SHA-1: ' + identity.sha1,
-                file_size_text: fmtBytes(file.size)
-            });
-            currentBar.value = 100;
-            currentLabel.textContent = 'Duplicate skipped before transfer: ' + name;
-            return {duplicate: true, uploadId: '', name: name, size: Number(file.size || 0)};
-        }
+        const redirect = isRedirectWrapper(file);
+        let identity = null;
+        let checked;
 
-        if (Number(checked.missing_physical_matches || 0) > 0 || checked.redirect_wrapper) {
+        if (redirect) {
+            currentBar.value = 0;
+            currentSpeed.textContent = '';
+            checked = await preflight(file, null);
             addLog({
                 status: 'ready',
                 file: name,
-                message: String(checked.message || 'Upload allowed after duplicate preflight.')
+                message: String(checked.message || 'Redirect wrapper will be checked after decompression.')
             });
+        } else {
+            identity = await calculateIdentity(file, index, total);
+            checked = await preflight(file, identity);
+            if (checked.duplicate) {
+                const match = checked.match || {};
+                addLog({
+                    status: 'duplicate',
+                    file: name,
+                    file_id: Number(match.file_id || 0),
+                    message: String(checked.message || 'An identical physical file already exists. Upload skipped.')
+                        + ' MD5: ' + identity.md5 + ' | SHA-1: ' + identity.sha1,
+                    file_size_text: fmtBytes(file.size)
+                });
+                currentBar.value = 100;
+                currentLabel.textContent = 'Duplicate skipped before transfer: ' + name;
+                return {duplicate: true, uploadId: '', name: name, size: Number(file.size || 0)};
+            }
+
+            if (Number(checked.missing_physical_matches || 0) > 0) {
+                addLog({
+                    status: 'ready',
+                    file: name,
+                    message: String(checked.message || 'Upload allowed after duplicate preflight.')
+                });
+            }
         }
 
         const clientKey = fileKey(file);
@@ -276,8 +296,10 @@
         initData.append('original_name', file.name);
         initData.append('relative_path', name);
         initData.append('file_size', String(file.size || 0));
-        initData.append('md5', identity.md5);
-        initData.append('sha1', identity.sha1);
+        if (identity) {
+            initData.append('md5', identity.md5);
+            initData.append('sha1', identity.sha1);
+        }
 
         currentBar.value = 0;
         currentSpeed.textContent = '';
@@ -340,8 +362,9 @@
             uploadId: String(completed.upload_id || uploadId),
             name: name,
             size: Number(file.size || 0),
-            md5: identity.md5,
-            sha1: identity.sha1
+            md5: identity ? identity.md5 : '',
+            sha1: identity ? identity.sha1 : '',
+            redirect: redirect
         };
     }
 
@@ -349,7 +372,7 @@
         currentBar.value = 100;
         currentSpeed.textContent = '';
         currentLabel.textContent = uploadIds.length
-            ? 'All required files transferred. Rechecking physical duplicates, consolidating pending work and creating processing jobs...'
+            ? 'All required files transferred. Rechecking ordinary physical duplicates, consolidating pending work and creating processing jobs...'
             : 'No files transferred. Resuming previously queued Upload Bucket processing...';
         const controller = window.AbortController ? new AbortController() : null;
         const timer = controller ? window.setTimeout(function () { controller.abort(); }, 300000) : 0;
@@ -392,7 +415,8 @@
             window.alert('Chunk upload security token is unavailable. Reload the page and try again.');
             return;
         }
-        if (!window.UnrealDbUploadHash || typeof window.UnrealDbUploadHash.hashFile !== 'function') {
+        const needsBrowserHash = files.some(function (file) { return !isRedirectWrapper(file); });
+        if (needsBrowserHash && (!window.UnrealDbUploadHash || typeof window.UnrealDbUploadHash.hashFile !== 'function')) {
             window.alert('The browser MD5/SHA-1 component is unavailable. Reload the page without cached scripts.');
             return;
         }
@@ -433,7 +457,7 @@
         }
 
         overallBar.value = 100;
-        overallLabel.textContent = 'Hash / upload phase complete (100%)';
+        overallLabel.textContent = 'Check / upload phase complete (100%)';
         overallCount.textContent = files.length + ' of ' + files.length + ' checked · ' + fmtBytes(batchTotalBytes);
 
         if (!completedUploads.length) {
@@ -468,7 +492,7 @@
                 : (pending > 0 ? ' Processing starts now in ' + queue + '.' : ' No processing jobs remain.');
             currentLabel.textContent = 'Batch ready: ' + String(finalized.queued || 0) + ' queued, '
                 + preflightDuplicates + ' physical duplicate(s) skipped before transfer, '
-                + String(finalized.duplicates || 0) + ' duplicate(s) removed during finalisation, '
+                + String(finalized.duplicates || 0) + ' duplicate(s) removed during finalisation or redirect decompression, '
                 + String(finalized.legacy_migrated || 0) + ' legacy queued job(s) consolidated, '
                 + String(finalized.failed || 0) + ' finalisation failure(s), '
                 + uploadFailed + ' transfer failure(s).' + workerText;
