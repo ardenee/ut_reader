@@ -47,6 +47,7 @@ final class CatalogBucketBatchQueue
     /**
      * @return array{
      *   job_id:int,
+     *   duplicate_file_id:int,
      *   deduplicated:bool,
      *   duplicate_source_removed:bool,
      *   duplicate_kind:string,
@@ -54,7 +55,9 @@ final class CatalogBucketBatchQueue
      *   original_name:string,
      *   source_relative_path:string,
      *   size:int,
-     *   fingerprint:string
+     *   fingerprint:string,
+     *   md5:string,
+     *   sha1:string
      * }
      */
     public function enqueueCompletedUpload(string $uploadId, int $userId): array
@@ -66,19 +69,74 @@ final class CatalogBucketBatchQueue
         $store = $this->chunkStore();
         $resolved = $store->resolveCompletedFile($uploadId, $userId);
         $manifest = is_array($resolved['manifest'] ?? null) ? $resolved['manifest'] : [];
+        $sourcePath = (string)($resolved['path'] ?? '');
         $size = (int)($manifest['file_size'] ?? 0);
         $relativePath = $this->cleanRelativePath((string)($manifest['relative_path'] ?? ''));
         $originalName = $this->requiredName(basename(str_replace('\\', '/', $relativePath)));
+        $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
         $fingerprint = $this->fingerprint($manifest);
-        if ($size < 1 || $relativePath === '' || $fingerprint === '') {
+        if ($size < 1 || $relativePath === '' || $fingerprint === '' || !is_file($sourcePath)) {
             throw new \RuntimeException('Completed Upload Bucket source is incomplete.');
+        }
+
+        $identityStore = new CatalogBucketUploadIdentityStore($this->config);
+        try {
+            $identity = $identityStore->load($uploadId, $userId);
+        } catch (\Throwable) {
+            // Compatibility for uploads completed before browser-side hashing was
+            // introduced. New uploads never take this fallback full-file pass.
+            $md5 = hash_file('md5', $sourcePath);
+            $sha1 = hash_file('sha1', $sourcePath);
+            if (!is_string($md5) || !is_string($sha1)) {
+                throw new \RuntimeException('Could not calculate legacy staged upload identity.');
+            }
+            $identity = $identityStore->save(
+                $uploadId,
+                $userId,
+                $size,
+                $md5,
+                $sha1,
+                $originalName,
+                $relativePath,
+                $redirect
+            );
+        }
+        $md5 = strtolower((string)$identity['md5']);
+        $sha1 = strtolower((string)$identity['sha1']);
+        if ((int)($identity['file_size'] ?? 0) !== $size) {
+            throw new \RuntimeException('Upload hash identity size no longer matches the completed source.');
+        }
+
+        if (!$redirect) {
+            // Recheck under server control after transfer. This closes the race
+            // where another batch stores the same file after browser preflight.
+            $inspection = (new CatalogUploadDuplicateDetector($this->db, $this->config))
+                ->inspect($size, $md5, $sha1);
+            $physical = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
+            if ($physical !== null) {
+                $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
+                return [
+                    'job_id' => 0,
+                    'duplicate_file_id' => (int)$physical['file_id'],
+                    'deduplicated' => true,
+                    'duplicate_source_removed' => $removed,
+                    'duplicate_kind' => (string)$physical['location_kind'],
+                    'upload_id' => $uploadId,
+                    'original_name' => $originalName,
+                    'source_relative_path' => $relativePath,
+                    'size' => $size,
+                    'fingerprint' => $fingerprint,
+                    'md5' => $md5,
+                    'sha1' => $sha1,
+                ];
+            }
         }
 
         $queueName = $this->queueName();
 
-        // Completed successful jobs release their active dedupe key, but their
-        // payload retains the exact verified chunk fingerprint. Reuse that history
-        // to delete a repeated staged upload before any package work is scheduled.
+        // Compressed wrappers cannot be compared to the decompressed package by
+        // MD5/SHA-1. Retain the verified chunk fingerprint to reject an identical
+        // wrapper that was already processed successfully.
         $completed = $this->db->prepare(
             'SELECT id FROM ue_background_jobs '
             . 'WHERE queue_name=? AND status="completed" '
@@ -91,6 +149,7 @@ final class CatalogBucketBatchQueue
             $removed = (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
             return [
                 'job_id' => $completedJobId,
+                'duplicate_file_id' => 0,
                 'deduplicated' => true,
                 'duplicate_source_removed' => $removed,
                 'duplicate_kind' => 'completed_source',
@@ -99,6 +158,8 @@ final class CatalogBucketBatchQueue
                 'source_relative_path' => $relativePath,
                 'size' => $size,
                 'fingerprint' => $fingerprint,
+                'md5' => $md5,
+                'sha1' => $sha1,
             ];
         }
 
@@ -122,13 +183,18 @@ final class CatalogBucketBatchQueue
             JobType::PROCESS_BUCKET_UPLOAD,
             [
                 'upload_id' => $uploadId,
+                'staged_path' => 'chunk-upload:' . $uploadId,
                 'source_kind' => 'chunk-upload',
                 'source_fingerprint' => $fingerprint,
+                'source_md5' => $md5,
+                'source_sha1' => $sha1,
+                'package_md5' => $redirect ? '' : $md5,
+                'package_sha1' => $redirect ? '' : $sha1,
                 'source_relative_path' => $relativePath,
                 'original_name' => $originalName,
                 'size' => $size,
                 'user_id' => $userId,
-                'redirect_wrapper' => \catalog_redirect_archive_is_supported_filename($originalName),
+                'redirect_wrapper' => $redirect,
             ],
             5,
             null,
@@ -145,6 +211,7 @@ final class CatalogBucketBatchQueue
 
         return [
             'job_id' => $jobId,
+            'duplicate_file_id' => 0,
             'deduplicated' => $deduplicated,
             'duplicate_source_removed' => $removed,
             'duplicate_kind' => $deduplicated ? 'active_source' : '',
@@ -153,6 +220,8 @@ final class CatalogBucketBatchQueue
             'source_relative_path' => $relativePath,
             'size' => $size,
             'fingerprint' => $fingerprint,
+            'md5' => $md5,
+            'sha1' => $sha1,
         ];
     }
 
