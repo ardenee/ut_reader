@@ -167,11 +167,50 @@
         throw lastError || new Error(operation + ' failed.');
     }
 
-    async function beginBatch() {
+    function activeProcessingQueues(processing) {
+        const workers = processing && Array.isArray(processing.workers) ? processing.workers : [];
+        return workers.filter(function (worker) { return Boolean(worker.active); })
+            .map(function (worker) { return String(worker.queue || 'Upload Bucket queue'); });
+    }
+
+    async function processingState(action) {
         const data = new FormData();
-        data.append('action', 'begin_batch');
-        currentLabel.textContent = 'Preparing durable upload staging...';
-        return requestWithRetry(data, null, 'Upload batch', 'Batch preparation', 120000);
+        data.append('action', action);
+        return requestWithRetry(data, null, 'Upload batch', action === 'begin_batch' ? 'Batch preparation' : 'Processing pause check', 120000);
+    }
+
+    async function beginBatch() {
+        currentLabel.textContent = 'Preparing durable upload staging and pausing Upload Bucket processing...';
+        let body = await processingState('begin_batch');
+        let processing = body.processing || {};
+        let waitingLogged = false;
+
+        while (!processing.ready) {
+            const queues = activeProcessingQueues(processing);
+            currentLabel.textContent = 'Waiting for the current Upload Bucket job to finish before transfer. Pausing: '
+                + (queues.length ? queues.join(', ') : 'processing worker') + '.';
+            if (!waitingLogged) {
+                addLog({
+                    status: 'waiting',
+                    file: 'Upload batch',
+                    message: 'A previous Upload Bucket job is still running. It will finish normally, then the worker will pause before this batch uploads. Use Background Jobs → Stop job only if it is genuinely stuck.'
+                });
+                waitingLogged = true;
+            }
+            await sleep(2000);
+            body = await processingState('batch_status');
+            processing = body.processing || {};
+        }
+
+        if (waitingLogged) {
+            addLog({
+                status: 'ready',
+                file: 'Upload batch',
+                message: 'Upload Bucket processing is paused. Starting the transfer-only phase.'
+            });
+        }
+        currentLabel.textContent = 'Upload Bucket processing paused. Starting file transfers...';
+        return body;
     }
 
     async function chunkedUpload(file, index, total) {
@@ -246,7 +285,7 @@
     async function finalizeBatch(uploadIds) {
         currentBar.value = 100;
         currentSpeed.textContent = '';
-        currentLabel.textContent = 'All files transferred. Removing exact duplicates and creating processing jobs...';
+        currentLabel.textContent = 'All files transferred. Removing exact duplicates, consolidating pending work and creating processing jobs...';
         const controller = window.AbortController ? new AbortController() : null;
         const timer = controller ? window.setTimeout(function () { controller.abort(); }, 300000) : 0;
         try {
@@ -326,7 +365,7 @@
         overallCount.textContent = files.length + ' of ' + files.length + ' attempted · ' + fmtBytes(batchTotalBytes);
 
         if (!completedUploads.length) {
-            currentLabel.textContent = 'No files completed transfer. Failed ' + uploadFailed + '.';
+            currentLabel.textContent = 'No files completed transfer. Failed ' + uploadFailed + '. Upload Bucket processing remains paused.';
             button.disabled = false;
             return;
         }
@@ -340,11 +379,12 @@
                 : ' Processing starts now in ' + queue + '.';
             currentLabel.textContent = 'Batch ready: ' + String(finalized.queued || 0) + ' queued, '
                 + String(finalized.duplicates || 0) + ' exact upload duplicate(s) removed, '
+                + String(finalized.legacy_migrated || 0) + ' legacy queued job(s) consolidated, '
                 + String(finalized.failed || 0) + ' finalisation failure(s), '
                 + uploadFailed + ' transfer failure(s).' + workerText;
         } catch (error) {
             addLog({status: 'failed', file: 'Batch finalisation', message: error.message || 'Could not create processing jobs.'});
-            currentLabel.textContent = 'All successful files were transferred, but batch finalisation failed. The staged uploads were retained for recovery.';
+            currentLabel.textContent = 'All successful files were transferred, but batch finalisation failed. Staged uploads were retained and processing remains paused.';
         }
 
         button.disabled = false;
