@@ -16,8 +16,9 @@ $handler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogUnverified
 $library = file_get_contents($root . '/lib/UnverifiedMetadataRepair.php');
 $page = file_get_contents($root . '/unverified-database-import.php');
 $action = file_get_contents($root . '/unverified-database-import-action.php');
+$ui = file_get_contents($root . '/src/Presentation/Ui/CatalogUi.php');
 
-foreach (compact('jobType', 'policy', 'factory', 'handler', 'library', 'page', 'action') as $name => $source) {
+foreach (compact('jobType', 'policy', 'factory', 'handler', 'library', 'page', 'action', 'ui') as $name => $source) {
     metadata_repair_expect(is_string($source), $name . ' source is missing.');
 }
 
@@ -59,6 +60,11 @@ metadata_repair_expect(
         && str_contains($action, 'CatalogDetachedWorker')
         && str_contains($action, 'recoverInactiveQueue'),
     'The repair UI does not explain the targeted scope or start the background worker safely.'
+);
+metadata_repair_expect(
+    str_contains($ui, 'Repair missing metadata')
+        && str_contains($ui, 'unverified-database-import.php'),
+    'The repair option is not visibly labelled from Unverified Files.'
 );
 
 echo "Targeted unverified metadata repair contract tests passed.\n";
