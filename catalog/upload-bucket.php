@@ -89,6 +89,7 @@ try {
     $bucketStats = upload_bucket_stats($bucketDir);
     $allowedExtensions = upload_bucket_allowed_extensions($db, $config);
     $chunkBytes = upload_bucket_chunk_bytes($config);
+    $processingUrl = 'background-jobs.php?queue=catalog%3Abucket-processing';
 
     catalog_head('Upload Bucket');
 
@@ -114,16 +115,18 @@ try {
 .bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .bucket-phases { margin:0 0 16px; padding-left:22px; }
 .bucket-phases li + li { margin-top:5px; }
+.bucket-next-phase { margin-top:12px; padding:12px; border:1px solid rgba(96,165,250,.65); border-radius:10px; background:rgba(96,165,250,.08); }
+.bucket-next-phase .button { margin-left:8px; }
 @media (max-width:900px) { .bucket-stats { grid-template-columns:1fr; } }
 </style>
 CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Uncompressed files are hashed in the browser and checked before transfer. .uz/.uz2/.uz3 wrappers are uploaded without package duplicate rejection; their real package MD5/SHA-1 are calculated only after decompression. Database-only identities, including official base-game records whose physical file is absent, do not block storage.',
+        'Files are transferred and staged first. After the complete batch is queued, this page automatically opens Background Jobs so the processing phase and live progress are visible.',
         [
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
-            'Processing Jobs' => 'background-jobs.php?queue=catalog%3Abucket-processing',
+            'Processing Jobs' => $processingUrl,
             'All Queues' => 'unverified-files.php',
             'Upload Files to Game' => 'profiled-upload.php',
         ]
@@ -136,15 +139,15 @@ CSS;
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
-        . '<p>If another Upload Bucket job is running, this page waits for that job to finish normally and pauses the worker before checking the next batch.</p>'
+        . '<p>The upload phase completes first. UnrealDB then creates the processing queue and opens its live view automatically.</p>'
         . '</div></div><div class="ui-section__body">';
     echo '<ol class="bucket-phases">'
         . '<li>Request a cooperative pause of old and new Upload Bucket processing queues; the current job is not cancelled.</li>'
         . '<li>For uncompressed files, calculate MD5 and SHA-1 locally and check size + MD5 + SHA-1 against physical Upload Bucket and catalog files.</li>'
         . '<li>Skip confirmed physical duplicates before transfer. Metadata-only matches do not count as duplicates.</li>'
         . '<li>Upload .uz/.uz2/.uz3 wrappers without comparing wrapper hashes to package records.</li>'
-        . '<li>After all transfers finish, decompress redirect wrappers and calculate the real package MD5/SHA-1 from the decompressed bytes.</li>'
-        . '<li>Run the physical package duplicate check, then inventory and index only packages UnrealDB still needs.</li>'
+        . '<li>After every transfer finishes, create the processing jobs and start the Upload Bucket worker once.</li>'
+        . '<li>Open Background Jobs automatically to show decompression, duplicate checks, inventory and indexing progress.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
@@ -161,6 +164,7 @@ CSS;
     echo '<div id="bucket-progress" class="bucket-progress" hidden'
         . ' data-chunk-url="api/v1/upload-bucket-chunk.php"'
         . ' data-batch-url="api/v1/upload-bucket-batch.php"'
+        . ' data-processing-url="' . catalog_h($processingUrl) . '"'
         . ' data-chunk-csrf="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '"'
         . ' data-chunk-bytes="' . $chunkBytes . '">';
     echo '<div class="progress-row"><span id="bucket-overall-progress-label">Check / upload phase</span><span id="bucket-overall-progress-count"></span></div>'
@@ -170,7 +174,7 @@ CSS;
     echo '<div id="bucket-log" class="bucket-log"></div></div>';
     echo '</form>';
     echo '<p class="bucket-actions"><a class="button" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
-        . '<a class="button secondary" href="background-jobs.php?queue=catalog%3Abucket-processing">Processing jobs</a>'
+        . '<a class="button secondary" href="' . catalog_h($processingUrl) . '">Processing jobs</a>'
         . '<a class="button secondary" href="unverified-files.php">Review all queues</a></p>';
     echo '</div></section>';
 
@@ -178,8 +182,11 @@ CSS;
     $hashScriptVersion = is_file($hashScriptPath) ? (string)(filemtime($hashScriptPath) ?: 1) : '1';
     $scriptPath = __DIR__ . '/assets/upload-bucket.js';
     $scriptVersion = is_file($scriptPath) ? (string)(filemtime($scriptPath) ?: 1) : '1';
+    $followScriptPath = __DIR__ . '/assets/upload-bucket-follow.js';
+    $followScriptVersion = is_file($followScriptPath) ? (string)(filemtime($followScriptPath) ?: 1) : '1';
     echo '<script src="assets/upload-file-hash.js?v=' . catalog_h($hashScriptVersion) . '"></script>';
     echo '<script src="assets/upload-bucket.js?v=' . catalog_h($scriptVersion) . '"></script>';
+    echo '<script src="assets/upload-bucket-follow.js?v=' . catalog_h($followScriptVersion) . '"></script>';
 
     catalog_foot();
 } catch (Throwable $error) {
