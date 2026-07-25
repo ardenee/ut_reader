@@ -57,9 +57,10 @@ final class JobWorker
             $this->diagnostic('completed', $job, 'Handler returned and the job was completed.');
             return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
         } catch (JobCancellationRequested $exception) {
-            $this->diagnostic('cancelled', $job, $exception->getMessage());
+            $message = $this->errorText($exception);
+            $this->diagnostic('cancelled', $job, $message);
             try {
-                $this->queue->cancelClaimed($job, $exception->getMessage());
+                $this->queue->cancelClaimed($job, $message);
             } catch (\Throwable $leaseError) {
                 return $this->failureResult('lease_lost', $job, $leaseError);
             }
@@ -68,7 +69,7 @@ final class JobWorker
             $this->diagnostic(
                 'exception',
                 $job,
-                get_class($exception) . ': ' . $exception->getMessage() . ' at '
+                get_class($exception) . ': ' . $this->errorText($exception) . ' at '
                     . str_replace('\\', '/', $exception->getFile()) . ':' . $exception->getLine()
             );
             $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
@@ -102,10 +103,19 @@ final class JobWorker
             'status' => $status,
             'job_id' => $job->id,
             'type' => $job->type,
-            'error' => $exception->getMessage(),
+            'error' => $this->errorText($exception),
             'error_file' => str_replace('\\', '/', $exception->getFile()),
             'error_line' => $exception->getLine(),
         ];
+    }
+
+    private function errorText(\Throwable $exception): string
+    {
+        $message = trim($exception->getMessage());
+        if ($message === '' || $message === "''" || $message === '""') {
+            return get_class($exception) . ' was thrown without an error message.';
+        }
+        return $message;
     }
 
     private function findHandler(string $type): ?JobHandler
@@ -131,7 +141,7 @@ final class JobWorker
             'job_id' => $job->id,
             'job_type' => $job->type,
             'stage' => $stage,
-            'message' => $message,
+            'message' => trim($message) !== '' ? $message : 'Worker diagnostic message was empty.',
         ];
         try {
             error_log('[UnrealDB worker] ' . json_encode(
@@ -139,7 +149,7 @@ final class JobWorker
                 JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
             ));
         } catch (\Throwable) {
-            error_log('[UnrealDB worker] job #' . $job->id . ' ' . $stage . ': ' . $message);
+            error_log('[UnrealDB worker] job #' . $job->id . ' ' . $stage . ': ' . $payload['message']);
         }
     }
 }
