@@ -13,11 +13,12 @@ $page = file_get_contents($root . '/background-jobs.php');
 $jobs = file_get_contents($root . '/assets/background-jobs-stable.js');
 $uploadPage = file_get_contents($root . '/upload-bucket.php');
 $handoff = file_get_contents($root . '/assets/upload-bucket-follow.js');
+$workerQueue = file_get_contents($root . '/src/Infrastructure/Persistence/WorkerJobQueue.php');
+$statusApi = file_get_contents($root . '/api/v1/job-status.php');
 
-live_layout_expect(is_string($page), 'Background Jobs page is missing.');
-live_layout_expect(is_string($jobs), 'Stable Background Jobs controller is missing.');
-live_layout_expect(is_string($uploadPage), 'Upload Bucket page is missing.');
-live_layout_expect(is_string($handoff), 'Upload Bucket handoff controller is missing.');
+foreach (compact('page', 'jobs', 'uploadPage', 'handoff', 'workerQueue', 'statusApi') as $name => $source) {
+    live_layout_expect(is_string($source), $name . ' source is missing.');
+}
 
 live_layout_expect(
     str_contains($page, 'background-jobs-stable.js')
@@ -37,6 +38,24 @@ live_layout_expect(
 );
 
 live_layout_expect(
+    str_contains($workerQueue, 'SELECT cancel_requested_at,cancel_reason,leased_at,progress_json')
+        && str_contains($workerQueue, "\$result['job_id'] = \$job->id")
+        && str_contains($workerQueue, "\$result['file_started_at'] = \$leasedAt")
+        && str_contains($workerQueue, "\$progress['file_completed_at'] = \$now")
+        && !str_contains($workerQueue, 'worker_id=NULL, lease_token=NULL, leased_at=NULL, lease_expires_at=NULL'),
+    'Worker completion still erases the current file start time or loses its final progress checkpoint.'
+);
+
+live_layout_expect(
+    str_contains($statusApi, 'result_json,last_error')
+        && str_contains($statusApi, '$resultJobId')
+        && str_contains($statusApi, '$nameMismatch')
+        && str_contains($statusApi, 'Stored result identity mismatch')
+        && str_contains($statusApi, 'Metadata repair completed for '),
+    'The status API does not decode and validate each job result independently.'
+);
+
+live_layout_expect(
     str_contains($uploadPage, 'data-processing-url=')
         && str_contains($uploadPage, 'upload-bucket-follow.js')
         && str_contains($handoff, 'Opening the processing queue in 3 seconds')
@@ -44,4 +63,4 @@ live_layout_expect(
     'Upload Bucket does not automatically hand completed batches to the processing queue.'
 );
 
-echo "Background Jobs live-layout and Upload Bucket handoff contract tests passed.\n";
+echo "Background Jobs live-layout, per-job runtime and result-isolation contract tests passed.\n";
