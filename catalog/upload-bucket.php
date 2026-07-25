@@ -120,7 +120,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'UnrealDB calculates MD5 and SHA-1 in the browser before transfer. Files already present in the Upload Bucket or verified catalog storage are skipped before any bytes are uploaded. Database-only identities, including official base-game records whose physical file is absent, do not block the upload.',
+        'Uncompressed files are hashed in the browser and checked before transfer. .uz/.uz2/.uz3 wrappers are uploaded without package duplicate rejection; their real package MD5/SHA-1 are calculated only after decompression. Database-only identities, including official base-game records whose physical file is absent, do not block storage.',
         [
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
             'Processing Jobs' => 'background-jobs.php?queue=catalog%3Abucket-processing',
@@ -136,15 +136,15 @@ CSS;
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
-        . '<p>If another Upload Bucket job is running, this page waits for that job to finish normally and pauses the worker before calculating and checking the next batch.</p>'
+        . '<p>If another Upload Bucket job is running, this page waits for that job to finish normally and pauses the worker before checking the next batch.</p>'
         . '</div></div><div class="ui-section__body">';
     echo '<ol class="bucket-phases">'
         . '<li>Request a cooperative pause of old and new Upload Bucket processing queues; the current job is not cancelled.</li>'
-        . '<li>Calculate each selected file&apos;s MD5 and SHA-1 locally in the browser.</li>'
-        . '<li>Check size + MD5 + SHA-1 against physical Upload Bucket and catalog files. Metadata-only matches do not count as duplicates.</li>'
-        . '<li>Skip confirmed physical duplicates before transfer; upload the remaining files using resumable chunks.</li>'
-        . '<li>Move remaining legacy queued redirects into <code>catalog:bucket-processing</code> and create all new jobs there.</li>'
-        . '<li>Start one worker to perform decompression where required, final package duplicate checking, inventory and unverified indexing.</li>'
+        . '<li>For uncompressed files, calculate MD5 and SHA-1 locally and check size + MD5 + SHA-1 against physical Upload Bucket and catalog files.</li>'
+        . '<li>Skip confirmed physical duplicates before transfer. Metadata-only matches do not count as duplicates.</li>'
+        . '<li>Upload .uz/.uz2/.uz3 wrappers without comparing wrapper hashes to package records.</li>'
+        . '<li>After all transfers finish, decompress redirect wrappers and calculate the real package MD5/SHA-1 from the decompressed bytes.</li>'
+        . '<li>Run the physical package duplicate check, then inventory and index only packages UnrealDB still needs.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
@@ -154,7 +154,7 @@ CSS;
     echo '<p class="muted"><strong>Allowed by active game profiles:</strong> '
         . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured')
         . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
-    echo '<p class="muted"><strong>Duplicate rule:</strong> an MD5/SHA-1 database match is rejected only when its physical file is confirmed. Official base-game metadata without a stored source file remains uploadable.</p>';
+    echo '<p class="muted"><strong>Duplicate rule:</strong> uncompressed files are checked before transfer. Redirect wrappers are checked only after decompression. A database identity is rejected only when its physical file is confirmed; official base-game metadata without a stored source remains uploadable.</p>';
     echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total batch-size limit is applied. Files are split into chunks of up to '
         . catalog_h(catalog_bytes($chunkBytes))
         . '; the server may reduce the effective chunk size to fit PHP upload_max_filesize and post_max_size.</p>';
@@ -163,7 +163,7 @@ CSS;
         . ' data-batch-url="api/v1/upload-bucket-batch.php"'
         . ' data-chunk-csrf="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '"'
         . ' data-chunk-bytes="' . $chunkBytes . '">';
-    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Hash / upload phase</span><span id="bucket-overall-progress-count"></span></div>'
+    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Check / upload phase</span><span id="bucket-overall-progress-count"></span></div>'
         . '<progress id="bucket-overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-speed"></span></div>'
         . '<progress id="bucket-progress-bar" value="0" max="100"></progress>';
