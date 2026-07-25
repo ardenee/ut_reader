@@ -226,6 +226,20 @@ try {
                     if (trim((string)($progress['message'] ?? '')) === '') {
                         $progress['message'] = $completionMessage;
                     }
+                }
+            }
+
+            // A completed warning/result may already be the full-width status
+            // message. Do not render the same text again as Error/result. Real
+            // failed jobs, cancellations and identity mismatches remain separate.
+            if ((string)($row['status'] ?? '') === 'completed' && empty($result['integrity_mismatch'])) {
+                $resultMessage = trim((string)($result['message'] ?? ''));
+                $progressMessage = is_array($progress) ? trim((string)($progress['message'] ?? '')) : '';
+                $normalizedResult = preg_replace('/\s+/', ' ', $resultMessage) ?? $resultMessage;
+                $normalizedProgress = preg_replace('/\s+/', ' ', $progressMessage) ?? $progressMessage;
+                if ($resultMessage !== '' && $progressMessage !== '' && $normalizedResult === $normalizedProgress) {
+                    unset($result['message']);
+                } elseif ($successfulCompletion) {
                     unset($result['message']);
                 }
             }
