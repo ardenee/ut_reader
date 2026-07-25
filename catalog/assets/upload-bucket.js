@@ -13,17 +13,27 @@
     const overallLabel = document.getElementById('bucket-overall-progress-label');
     const overallCount = document.getElementById('bucket-overall-progress-count');
     const log = document.getElementById('bucket-log');
-    if (!form || !fileInput || !progressBox || !window.XMLHttpRequest) return;
+    if (!form || !fileInput || !progressBox || !window.XMLHttpRequest || !window.fetch) return;
 
     const chunkUrl = progressBox.dataset.chunkUrl || 'api/v1/upload-bucket-chunk.php';
+    const batchUrl = progressBox.dataset.batchUrl || 'api/v1/upload-bucket-batch.php';
     const chunkCsrf = progressBox.dataset.chunkCsrf || '';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
     let batchTotalBytes = 1;
     let processedBytes = 0;
     let processedFiles = 0;
 
+    function fileKey(file) {
+        return [file.name, file.size, file.lastModified || 0, file.webkitRelativePath || file.name].join('|');
+    }
+
     function selectedFiles() {
-        return Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []);
+        const unique = new Map();
+        Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []).forEach(function (file) {
+            const key = fileKey(file);
+            if (!unique.has(key)) unique.set(key, file);
+        });
+        return Array.from(unique.values());
     }
 
     function displayName(file) {
@@ -41,11 +51,22 @@
         return (unit ? value.toFixed(2) : String(Math.round(value))) + ' ' + units[unit];
     }
 
+    function requestReference(body) {
+        if (!body || typeof body !== 'object') return '';
+        if (body.request_id) return String(body.request_id);
+        if (body.error && body.error.request_id) return String(body.error.request_id);
+        if (body.error && body.error.details && body.error.details.request_id) return String(body.error.details.request_id);
+        if (body.meta && body.meta.request_id) return String(body.meta.request_id);
+        return '';
+    }
+
     function responseError(body, fallback) {
-        if (body && typeof body.error === 'string' && body.error) return body.error;
-        if (body && body.error && typeof body.error.message === 'string') return body.error.message;
-        if (body && typeof body.message === 'string' && body.message) return body.message;
-        return fallback;
+        let text = fallback;
+        if (body && typeof body.error === 'string' && body.error) text = body.error;
+        else if (body && body.error && typeof body.error.message === 'string') text = body.error.message;
+        else if (body && typeof body.message === 'string' && body.message) text = body.message;
+        const reference = requestReference(body);
+        return reference && text.indexOf(reference) === -1 ? text + ' | reference: ' + reference : text;
     }
 
     function parseJsonResponse(text, status, contentType, label) {
@@ -90,18 +111,19 @@
         const completed = Math.min(batchTotalBytes, processedBytes + Math.max(0, Number(currentFileBytes || 0)));
         const percent = Math.max(0, Math.min(100, Math.round((completed * 100) / batchTotalBytes)));
         overallBar.value = percent;
-        overallLabel.textContent = 'Overall batch progress (' + percent + '%)';
-        overallCount.textContent = processedFiles + ' of ' + totalFiles + ' processed · ' + fmtBytes(completed) + ' of ' + fmtBytes(batchTotalBytes);
+        overallLabel.textContent = 'Upload phase (' + percent + '%)';
+        overallCount.textContent = processedFiles + ' of ' + totalFiles + ' transferred · ' + fmtBytes(completed) + ' of ' + fmtBytes(batchTotalBytes);
     }
 
     function sleep(milliseconds) {
         return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
     }
 
-    function requestForm(data, onProgress) {
+    function requestForm(data, onProgress, timeoutMs) {
         return new Promise(function (resolve, reject) {
             const xhr = new XMLHttpRequest();
             xhr.open('POST', chunkUrl, true);
+            xhr.timeout = Math.max(30000, Number(timeoutMs || 120000));
             xhr.setRequestHeader('Accept', 'application/json');
             if (chunkCsrf) xhr.setRequestHeader('X-CSRF-Token', chunkCsrf);
             if (typeof onProgress === 'function') xhr.upload.onprogress = onProgress;
@@ -119,29 +141,42 @@
                 }
                 resolve(body);
             };
-            xhr.onerror = function () { reject(new Error('Upload connection error. The current chunk can be retried.')); };
+            xhr.onerror = function () { reject(new Error('Upload connection error. The current request can be retried.')); };
             xhr.onabort = function () { reject(new Error('Upload was aborted by the browser.')); };
+            xhr.ontimeout = function () { reject(new Error('Upload request timed out after ' + Math.round(xhr.timeout / 1000) + ' seconds.')); };
             xhr.send(data);
         });
     }
 
-    async function requestChunkWithRetry(data, onProgress) {
+    async function requestWithRetry(data, onProgress, fileName, operation, timeoutMs) {
         let lastError = null;
         for (let attempt = 1; attempt <= 4; attempt++) {
             try {
-                return await requestForm(data, onProgress);
+                return await requestForm(data, onProgress, timeoutMs);
             } catch (error) {
                 lastError = error;
                 if (attempt === 4) break;
-                await sleep(attempt * 750);
+                addLog({
+                    status: 'retrying',
+                    file: fileName,
+                    message: operation + ' attempt ' + attempt + ' failed: ' + (error.message || 'Unknown error') + '. Retrying...'
+                });
+                await sleep(attempt * 1000);
             }
         }
-        throw lastError || new Error('Chunk upload failed.');
+        throw lastError || new Error(operation + ' failed.');
+    }
+
+    async function beginBatch() {
+        const data = new FormData();
+        data.append('action', 'begin_batch');
+        currentLabel.textContent = 'Preparing durable upload staging...';
+        return requestWithRetry(data, null, 'Upload batch', 'Batch preparation', 120000);
     }
 
     async function chunkedUpload(file, index, total) {
         const name = displayName(file);
-        const clientKey = [file.name, file.size, file.lastModified || 0, name].join('|');
+        const clientKey = fileKey(file);
         const initData = new FormData();
         initData.append('action', 'init');
         initData.append('client_key', clientKey);
@@ -151,8 +186,8 @@
 
         currentBar.value = 0;
         currentSpeed.textContent = '';
-        currentLabel.textContent = 'Preparing resumable upload ' + index + ' of ' + total + ': ' + name;
-        const initialized = await requestForm(initData);
+        currentLabel.textContent = 'Preparing upload ' + index + ' of ' + total + ': ' + name;
+        const initialized = await requestWithRetry(initData, null, name, 'Upload initialisation', 120000);
         const upload = initialized.upload || {};
         const uploadId = String(upload.upload_id || '');
         if (!uploadId) throw new Error('Chunk upload did not return an upload ID.');
@@ -184,7 +219,7 @@
             data.append('chunk_index', String(chunkIndex));
             data.append('chunk', file.slice(start, end), file.name + '.part-' + chunkIndex);
             const baseBytes = acknowledgedBytes;
-            await requestChunkWithRetry(data, function (event) {
+            await requestWithRetry(data, function (event) {
                 if (!event.lengthComputable) return;
                 const currentBytes = Math.min(file.size, baseBytes + event.loaded);
                 const percent = Math.floor((currentBytes * 100) / Math.max(1, file.size));
@@ -192,31 +227,54 @@
                 currentSpeed.textContent = fmtBytes(Math.max(0, currentBytes - Number(upload.received_bytes || 0)) / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
                 currentLabel.textContent = 'Uploading chunk ' + (chunkIndex + 1) + '/' + totalChunks + ' for ' + index + ' of ' + total + ': ' + name + ' (' + percent + '%)';
                 setOverall(currentBytes, total);
-            });
+            }, name, 'Chunk ' + (chunkIndex + 1) + '/' + totalChunks, 180000);
             acknowledgedBytes += length;
             setOverall(acknowledgedBytes, total);
         }
 
         currentBar.value = 100;
         currentSpeed.textContent = '';
-        currentLabel.textContent = 'Finalizing ' + index + ' of ' + total + ': ' + name;
+        currentLabel.textContent = 'Verifying transferred file ' + index + ' of ' + total + ': ' + name;
         const completeData = new FormData();
         completeData.append('action', 'complete');
         completeData.append('upload_id', uploadId);
-        const completed = await requestForm(completeData);
-        if (Array.isArray(completed.messages) && completed.messages.length) completed.messages.forEach(addLog);
+        const completed = await requestWithRetry(completeData, null, name, 'Upload completion', 120000);
+        if (Array.isArray(completed.messages)) completed.messages.forEach(addLog);
+        return {uploadId: String(completed.upload_id || uploadId), name: name, size: Number(file.size || 0)};
+    }
 
-        const jobId = Math.max(0, parseInt(completed.job_id || 0, 10));
-        if (jobId > 0) {
-            currentLabel.textContent = 'Queued redirect job #' + jobId + '; continuing with the next file.';
-            return 'queued';
+    async function finalizeBatch(uploadIds) {
+        currentBar.value = 100;
+        currentSpeed.textContent = '';
+        currentLabel.textContent = 'All files transferred. Removing exact duplicates and creating processing jobs...';
+        const controller = window.AbortController ? new AbortController() : null;
+        const timer = controller ? window.setTimeout(function () { controller.abort(); }, 300000) : 0;
+        try {
+            const response = await fetch(batchUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': chunkCsrf},
+                body: JSON.stringify({upload_ids: uploadIds}),
+                signal: controller ? controller.signal : undefined
+            });
+            let body;
+            try {
+                body = await response.json();
+            } catch (error) {
+                throw new Error('Batch finalisation returned invalid JSON (HTTP ' + response.status + ').');
+            }
+            if (!response.ok || !body.ok) {
+                throw new Error(responseError(body, 'Batch finalisation failed with HTTP ' + response.status + '.'));
+            }
+            return body.data || {};
+        } catch (error) {
+            if (error && error.name === 'AbortError') {
+                throw new Error('Batch finalisation timed out after 300 seconds. Uploaded sources remain in durable staging.');
+            }
+            throw error;
+        } finally {
+            if (timer) window.clearTimeout(timer);
         }
-        if (!Array.isArray(completed.messages) || !completed.messages.length) {
-            addLog({status: 'bucketed', file: name, message: 'Stored and indexed in upload bucket.', file_size_text: fmtBytes(file.size)});
-        }
-        return completed.messages && completed.messages[0]
-            ? String(completed.messages[0].status || 'bucketed').toLowerCase()
-            : 'bucketed';
     }
 
     form.addEventListener('submit', async function (event) {
@@ -237,35 +295,58 @@
         processedBytes = 0;
         processedFiles = 0;
         batchTotalBytes = Math.max(1, files.reduce(function (sum, file) { return sum + Math.max(0, Number(file.size || 0)); }, 0));
-        const counts = {stored: 0, queued: 0, duplicate: 0, failed: 0};
+        const completedUploads = [];
+        let uploadFailed = 0;
         setOverall(0, files.length);
+
+        try {
+            await beginBatch();
+        } catch (error) {
+            addLog({status: 'failed', file: 'Upload batch', message: error.message || 'Could not prepare durable upload staging.'});
+            currentLabel.textContent = 'Upload batch could not start.';
+            button.disabled = false;
+            return;
+        }
 
         for (let index = 0; index < files.length; index++) {
             const file = files[index];
-            let status = 'failed';
             try {
-                status = await chunkedUpload(file, index + 1, files.length);
+                completedUploads.push(await chunkedUpload(file, index + 1, files.length));
             } catch (error) {
+                uploadFailed++;
                 addLog({status: 'failed', file: displayName(file), message: error.message || 'Resumable upload failed.', file_size_text: fmtBytes(file.size)});
             }
-
-            if (status === 'queued') counts.queued++;
-            else if (status === 'duplicate') counts.duplicate++;
-            else if (['failed', 'dead_letter', 'cancelled'].includes(status)) counts.failed++;
-            else counts.stored++;
             processedBytes += Math.max(0, Number(file.size || 0));
             processedFiles++;
             setOverall(0, files.length);
         }
 
         overallBar.value = 100;
-        overallLabel.textContent = 'Overall batch complete (100%)';
-        overallCount.textContent = files.length + ' of ' + files.length + ' processed · ' + fmtBytes(batchTotalBytes);
-        currentBar.value = 100;
-        currentSpeed.textContent = '';
-        currentLabel.textContent = 'Upload bucket batch complete: stored ' + counts.stored
-            + ', queued for background decompression ' + counts.queued
-            + ', duplicate ' + counts.duplicate + ', failed ' + counts.failed + '.';
+        overallLabel.textContent = 'Upload phase complete (100%)';
+        overallCount.textContent = files.length + ' of ' + files.length + ' attempted · ' + fmtBytes(batchTotalBytes);
+
+        if (!completedUploads.length) {
+            currentLabel.textContent = 'No files completed transfer. Failed ' + uploadFailed + '.';
+            button.disabled = false;
+            return;
+        }
+
+        try {
+            const finalized = await finalizeBatch(completedUploads.map(function (item) { return item.uploadId; }));
+            if (Array.isArray(finalized.messages)) finalized.messages.forEach(addLog);
+            const queue = String(finalized.queue || 'catalog:bucket-processing');
+            const workerText = finalized.worker_error
+                ? ' Processing jobs are queued, but the worker could not start: ' + String(finalized.worker_error)
+                : ' Processing starts now in ' + queue + '.';
+            currentLabel.textContent = 'Batch ready: ' + String(finalized.queued || 0) + ' queued, '
+                + String(finalized.duplicates || 0) + ' exact upload duplicate(s) removed, '
+                + String(finalized.failed || 0) + ' finalisation failure(s), '
+                + uploadFailed + ' transfer failure(s).' + workerText;
+        } catch (error) {
+            addLog({status: 'failed', file: 'Batch finalisation', message: error.message || 'Could not create processing jobs.'});
+            currentLabel.textContent = 'All successful files were transferred, but batch finalisation failed. The staged uploads were retained for recovery.';
+        }
+
         button.disabled = false;
     });
 }());
