@@ -44,11 +44,13 @@ final class CatalogUploadDuplicateDetector
         $rows = \catalog_all(
             $this->db,
             'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.file_size,f.md5,f.sha1,'
-                . 'f.scan_status,f.unverified_queue_game_id,f.unverified_queue_name,'
-                . 'EXISTS(SELECT 1 FROM ue_base_game_files bg WHERE bg.source_file_id=f.id) AS is_base_game '
-                . 'FROM ue_files f WHERE f.file_size=? AND LOWER(f.md5)=? AND LOWER(f.sha1)=? '
+                . 'f.package_guid,f.scan_status,f.unverified_queue_game_id,f.unverified_queue_name,'
+                . 'EXISTS(SELECT 1 FROM ue_base_game_files bg '
+                . 'WHERE bg.source_file_id=f.id '
+                . 'OR (bg.game_id=f.game_id AND bg.package_guid=f.package_guid AND f.package_guid IS NOT NULL AND f.package_guid<>"")) AS is_base_game '
+                . 'FROM ue_files f WHERE f.file_size=? AND LOWER(f.md5)=? '
                 . 'ORDER BY (f.scan_status="unverified" AND f.unverified_queue_game_id=0) DESC,f.id LIMIT 200',
-            [$fileSize, $md5, $sha1]
+            [$fileSize, $md5]
         );
 
         $missing = 0;
@@ -69,6 +71,20 @@ final class CatalogUploadDuplicateDetector
                 if (!empty($row['is_base_game'])) {
                     $missingBaseGame++;
                 }
+                continue;
+            }
+
+            $storedSha1 = strtolower(trim((string)($row['sha1'] ?? '')));
+            if (preg_match('/^[a-f0-9]{40}$/', $storedSha1) !== 1) {
+                // Older/base-game identities can contain MD5 without SHA-1. Only
+                // complete the comparison when their physical file is present.
+                $physicalSha1 = hash_file('sha1', $physicalPath);
+                if (!is_string($physicalSha1)) {
+                    continue;
+                }
+                $storedSha1 = strtolower($physicalSha1);
+            }
+            if (!hash_equals($sha1, $storedSha1)) {
                 continue;
             }
 
@@ -123,13 +139,20 @@ final class CatalogUploadDuplicateDetector
         if ($storageRoot === false || !is_dir($storageRoot)) {
             return null;
         }
-        $relative = ltrim(str_replace('\\', '/', trim((string)($row['relative_path'] ?? ''))), '/');
-        if ($relative === '' || str_contains($relative, "\0") || str_contains($relative, '../')) {
+        $rawPath = trim((string)($row['relative_path'] ?? ''));
+        if ($rawPath === '' || str_contains($rawPath, "\0")) {
+            return null;
+        }
+        $relative = ltrim(str_replace('\\', '/', $rawPath), '/');
+        if ($relative === '' || str_contains($relative, '../')) {
             return null;
         }
 
         $catalogRoot = realpath(dirname(__DIR__, 3));
         $candidates = [];
+        if ($this->isAbsolutePath($rawPath)) {
+            $candidates[] = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $rawPath);
+        }
         if ($catalogRoot !== false) {
             $candidates[] = $catalogRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
         }
@@ -154,5 +177,13 @@ final class CatalogUploadDuplicateDetector
             }
         }
         return null;
+    }
+
+    private function isAbsolutePath(string $path): bool
+    {
+        $normalized = str_replace('\\', '/', trim($path));
+        return str_starts_with($normalized, '/')
+            || preg_match('/^[A-Za-z]:\//', $normalized) === 1
+            || str_starts_with($normalized, '//');
     }
 }
