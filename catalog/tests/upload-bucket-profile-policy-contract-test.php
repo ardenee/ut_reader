@@ -19,9 +19,14 @@ $paths = [
     'endpoint' => 'api/v1/upload-bucket-chunk.php',
     'batch_endpoint' => 'api/v1/upload-bucket-batch.php',
     'javascript' => 'assets/upload-bucket.js',
+    'hash_javascript' => 'assets/upload-file-hash.js',
     'library' => 'lib/CatalogRedirectArchive.php',
+    'redirect_payload' => 'lib/CatalogRedirectArchivePayload.php',
     'redirect_processor' => 'src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php',
     'batch_processor' => 'src/Infrastructure/Import/CatalogBucketUploadProcessor.php',
+    'identity_processor' => 'src/Infrastructure/Import/CatalogBucketIdentityProcessor.php',
+    'identity_store' => 'src/Infrastructure/Import/CatalogBucketUploadIdentityStore.php',
+    'duplicate_detector' => 'src/Infrastructure/Import/CatalogUploadDuplicateDetector.php',
     'handler' => 'src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php',
     'legacy_handler' => 'src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
     'import_handler' => 'src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
@@ -43,11 +48,12 @@ bucket_policy_expect(
     'Upload Bucket page still performs package processing inside web PHP.'
 );
 bucket_policy_expect(
-    str_contains($content['page'], 'Upload and processing are mutually exclusive')
+    str_contains($content['page'], 'calculates MD5 and SHA-1 in the browser before transfer')
         && str_contains($content['page'], 'cooperative pause')
         && str_contains($content['page'], 'catalog:bucket-processing')
-        && str_contains($content['page'], 'whole-file fallback processing has been disabled'),
-    'Upload Bucket page does not enforce or explain the paused transfer-first process.'
+        && str_contains($content['page'], 'whole-file fallback processing has been disabled')
+        && str_contains($content['page'], 'Official base-game metadata without a stored source file remains uploadable'),
+    'Upload Bucket page does not explain the paused transfer-first physical duplicate policy.'
 );
 
 bucket_policy_expect(str_contains($content['javascript'], 'async function chunkedUpload'), 'Browser client lacks chunked uploads.');
@@ -60,6 +66,13 @@ bucket_policy_expect(
         && str_contains($content['javascript'], 'completedUploads.push')
         && str_contains($content['javascript'], 'await finalizeBatch('),
     'Browser client does not pause existing processing and finish the complete transfer phase before finalisation.'
+);
+bucket_policy_expect(
+    str_contains($content['hash_javascript'], 'class Md5')
+        && str_contains($content['hash_javascript'], 'class Sha1')
+        && str_contains($content['javascript'], "action', 'preflight'")
+        && str_contains($content['javascript'], 'if (checked.duplicate)'),
+    'Browser client does not hash and preflight ordinary files before upload.'
 );
 bucket_policy_expect(
     str_contains($content['javascript'], 'xhr.timeout')
@@ -79,9 +92,16 @@ bucket_policy_expect(
     str_contains($content['endpoint'], "if (\$action === 'begin_batch')")
         && str_contains($content['endpoint'], "if (\$action === 'batch_status')")
         && str_contains($content['endpoint'], 'requestStop($queueName)')
+        && str_contains($content['endpoint'], "if (\$action === 'preflight')")
         && str_contains($content['endpoint'], "if (\$action === 'complete')")
         && str_contains($content['endpoint'], 'retained in durable staging'),
-    'Chunk endpoint does not pause processing and provide transfer-only completion.'
+    'Chunk endpoint does not pause processing, preflight identities and provide transfer-only completion.'
+);
+bucket_policy_expect(
+    str_contains($content['endpoint'], 'if ($redirect)')
+        && str_contains($content['endpoint'], 'compressed wrapper hashes are not package hashes')
+        && str_contains($content['endpoint'], "'duplicate' => false"),
+    'Compressed redirect wrappers are incorrectly compared to package MD5/SHA-1 records before decompression.'
 );
 
 bucket_policy_expect(
@@ -97,8 +117,10 @@ bucket_policy_expect(
         && str_contains($content['batch_queue'], "':bucket-redirects'")
         && str_contains($content['batch_queue'], 'migrateLegacyQueuedJobs')
         && str_contains($content['batch_queue'], 'bucket-upload-source:')
-        && str_contains($content['batch_queue'], 'source_fingerprint'),
-    'Completed uploads do not pass through the consolidated exact-source duplicate queue.'
+        && str_contains($content['batch_queue'], 'source_fingerprint')
+        && str_contains($content['batch_queue'], 'if (!$redirect)')
+        && str_contains($content['batch_queue'], 'package_md5'),
+    'Completed uploads do not separate ordinary package identity from compressed redirect source identity.'
 );
 
 bucket_policy_expect(
@@ -116,6 +138,33 @@ bucket_policy_expect(
         && str_contains($content['legacy_handler'], 'new CatalogRedirectArchiveProcessor(')
         && str_contains($content['import_handler'], 'new CatalogRedirectArchiveProcessor('),
     'Bucket and profiled import jobs do not use the same redirect processor.'
+);
+
+bucket_policy_expect(
+    str_contains($content['stream'], "hash_init('md5')")
+        && str_contains($content['stream'], 'hash_update($md5Context, $block)')
+        && str_contains($content['redirect_payload'], '$md5 = md5($output)')
+        && str_contains($content['handler'], "(string)(\$decoded['md5']")
+        && str_contains($content['legacy_handler'], "(string)(\$decoded['md5']"),
+    'Redirect package identity is not calculated from decompressed bytes.'
+);
+bucket_policy_expect(
+    str_contains($content['identity_processor'], 'Using MD5 and SHA-1 calculated while the package bytes were produced')
+        && str_contains($content['identity_processor'], 'CatalogUploadDuplicateDetector')
+        && !str_contains($content['identity_processor'], 'hash_file('),
+    'Identity-aware processing still performs a second standalone hash read.'
+);
+bucket_policy_expect(
+    str_contains($content['duplicate_detector'], 'physicalPath')
+        && str_contains($content['duplicate_detector'], 'missing_base_game_matches')
+        && str_contains($content['duplicate_detector'], 'ue_base_game_files')
+        && str_contains($content['duplicate_detector'], 'LOWER(f.sha1)=?'),
+    'Duplicate detection does not require a physical size/MD5/SHA-1 match or protect base-game metadata-only rows.'
+);
+bucket_policy_expect(
+    str_contains($content['identity_store'], 'identity.json')
+        && str_contains($content['identity_store'], "preg_match('/^[a-f0-9]{32}$/', \$md5)"),
+    'Browser-calculated upload identities are not retained with resumable staging.'
 );
 
 bucket_policy_expect(
