@@ -24,6 +24,14 @@ foreach (compact('inventory', 'requests', 'requestSubmit', 'requestStatus', 'ava
 federation_inventory_selection_expect(str_contains($inventory, 'fi_parent_need_count_sql'), 'Parent dependency matcher is missing.');
 federation_inventory_selection_expect(str_contains($inventory, 'LOWER(d.required_package)=LOWER('), 'Parent dependency package matching is not case-insensitive.');
 federation_inventory_selection_expect(str_contains($inventory, 'COALESCE(pf.is_base_game,0)=0'), 'Inventory selection does not enforce Parent base-game policy.');
+federation_inventory_selection_expect(str_contains($inventory, "federation_dependency_is_base_game_sql('f', 'd')"), 'Child inventory does not use the shared base-game dependency matcher.');
+federation_inventory_selection_expect(!str_contains($inventory, 'fi_missing_base_join'), 'Child inventory still uses the narrower legacy base-game join.');
+federation_inventory_selection_expect(str_contains($inventory, '$ignoreBaseGame = federation_ignore_base_game_files($db, $peer);'), 'Child request submission does not reload the signed Parent policy.');
+federation_inventory_selection_expect(str_contains($inventory, "'is_base_game_dependency' => !empty(\$row['is_base_game'])"), 'Child request payload discards base-game classification.');
+$submitStatusPosition = strpos($inventory, '$activeStatuses = fi_child_request_statuses($db, $peer);');
+$submitRowsPosition = $submitStatusPosition === false ? false : strpos($inventory, '$rows = fi_child_missing_rows($db, $peerId, $page, $ignoreBaseGame);', $submitStatusPosition);
+federation_inventory_selection_expect($submitStatusPosition !== false && $submitRowsPosition !== false && $submitStatusPosition < $submitRowsPosition, 'Child request rows are built before the signed Parent policy is refreshed.');
+federation_inventory_selection_expect(str_contains($inventory, 'The Parent base-game policy changed or was refreshed.'), 'Child request submission does not recover from a Parent policy race.');
 federation_inventory_selection_expect(str_contains($inventory, 'queue_parent_pull'), 'Parent cannot queue selected Child files.');
 federation_inventory_selection_expect(str_contains($inventory, 'submit_child_request'), 'Child cannot request selected required packages.');
 federation_inventory_selection_expect(str_contains($inventory, 'fi_child_request_statuses'), 'Existing request status is not checked.');
