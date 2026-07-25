@@ -24,8 +24,8 @@ try {
 
     $payload = catalog_api_json_body();
     $rawIds = $payload['upload_ids'] ?? [];
-    if (!is_array($rawIds) || $rawIds === []) {
-        JsonResponse::error('invalid_uploads', 'At least one completed Upload Bucket source is required.', 400);
+    if (!is_array($rawIds)) {
+        JsonResponse::error('invalid_uploads', 'Upload Bucket source identifiers must be an array.', 400);
     }
     if (count($rawIds) > 10000) {
         JsonResponse::error('too_many_uploads', 'Finalize no more than 10,000 uploaded files at once.', 400);
@@ -77,12 +77,17 @@ try {
             $jobIds[$jobId] = $jobId;
             if (!empty($result['deduplicated'])) {
                 $duplicates++;
+                $completedDuplicate = (string)($result['duplicate_kind'] ?? '') === 'completed_source';
+                $message = $completedDuplicate
+                    ? 'Exact uploaded content was already processed successfully by job #' . $jobId . '.'
+                    : 'Exact uploaded content already belongs to active processing job #' . $jobId . '.';
+                if (!empty($result['duplicate_source_removed'])) {
+                    $message .= ' The repeated staged upload was deleted before package processing.';
+                }
                 $messages[] = [
                     'status' => 'duplicate',
                     'file' => (string)$result['source_relative_path'],
-                    'message' => !empty($result['duplicate_source_removed'])
-                        ? 'Exact uploaded content already belongs to processing job #' . $jobId . '. The repeated staged upload was deleted.'
-                        : 'Exact uploaded content already belongs to processing job #' . $jobId . '.',
+                    'message' => $message,
                     'file_size' => (int)$result['size'],
                     'file_size_text' => catalog_bytes((int)$result['size']),
                     'job_id' => $jobId,
@@ -111,9 +116,14 @@ try {
         }
     }
 
+    $pendingJobs = catalog_count(
+        $application->db,
+        'SELECT COUNT(*) c FROM ue_background_jobs WHERE queue_name=? AND status="queued"',
+        [$queue->queueName()]
+    );
     $worker = null;
     $workerError = '';
-    if ($jobIds !== [] || $legacyMigrated > 0) {
+    if ($pendingJobs > 0) {
         try {
             $worker = $launcher->start($queue->queueName(), 10000);
         } catch (Throwable $error) {
@@ -131,6 +141,7 @@ try {
             'duplicates' => $duplicates,
             'failed' => $failed,
             'legacy_migrated' => $legacyMigrated,
+            'pending_jobs' => $pendingJobs,
             'job_ids' => array_values($jobIds),
             'worker' => $worker,
             'worker_error' => $workerError,
