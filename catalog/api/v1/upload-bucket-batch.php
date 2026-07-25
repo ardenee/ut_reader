@@ -73,21 +73,32 @@ try {
     foreach ($uploadIds as $uploadId) {
         try {
             $result = $queue->enqueueCompletedUpload($uploadId, $userId);
-            $jobId = (int)$result['job_id'];
-            $jobIds[$jobId] = $jobId;
+            $jobId = (int)($result['job_id'] ?? 0);
+            if ($jobId > 0) {
+                $jobIds[$jobId] = $jobId;
+            }
+
             if (!empty($result['deduplicated'])) {
                 $duplicates++;
-                $completedDuplicate = (string)($result['duplicate_kind'] ?? '') === 'completed_source';
-                $message = $completedDuplicate
-                    ? 'Exact uploaded content was already processed successfully by job #' . $jobId . '.'
-                    : 'Exact uploaded content already belongs to active processing job #' . $jobId . '.';
+                $kind = (string)($result['duplicate_kind'] ?? '');
+                $duplicateFileId = (int)($result['duplicate_file_id'] ?? 0);
+                if (in_array($kind, ['upload_bucket', 'catalog_storage'], true)) {
+                    $message = 'An identical physical file already exists in '
+                        . ($kind === 'upload_bucket' ? 'the Upload Bucket' : 'catalog storage')
+                        . ' as file #' . $duplicateFileId . '.';
+                } elseif ($kind === 'completed_source') {
+                    $message = 'Exact uploaded source content was already processed successfully by job #' . $jobId . '.';
+                } else {
+                    $message = 'Exact uploaded source content already belongs to active processing job #' . $jobId . '.';
+                }
                 if (!empty($result['duplicate_source_removed'])) {
                     $message .= ' The repeated staged upload was deleted before package processing.';
                 }
                 $messages[] = [
                     'status' => 'duplicate',
                     'file' => (string)$result['source_relative_path'],
-                    'message' => $message,
+                    'file_id' => $duplicateFileId,
+                    'message' => $message . ' MD5: ' . (string)$result['md5'] . ' | SHA-1: ' . (string)$result['sha1'],
                     'file_size' => (int)$result['size'],
                     'file_size_text' => catalog_bytes((int)$result['size']),
                     'job_id' => $jobId,
@@ -99,7 +110,7 @@ try {
             $messages[] = [
                 'status' => 'queued',
                 'file' => (string)$result['source_relative_path'],
-                'message' => 'Upload completed and passed the exact-source duplicate pass. Processing job #' . $jobId . ' was created.',
+                'message' => 'Upload completed, retained its pre-calculated MD5/SHA-1 and passed the final physical duplicate check. Processing job #' . $jobId . ' was created.',
                 'file_size' => (int)$result['size'],
                 'file_size_text' => catalog_bytes((int)$result['size']),
                 'job_id' => $jobId,
