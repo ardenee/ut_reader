@@ -36,6 +36,18 @@ unverified_import_error_expect(
     'A post-promotion dependency failure can still be reported as a complete import failure.'
 );
 unverified_import_error_expect(
+    str_contains($action, 'function unverified_action_resolve_source')
+        && !str_contains($action, '$source = uvf_resolve('),
+    'Unverified import still performs the redundant pre-promotion package hash/header pass.'
+);
+unverified_import_error_expect(
+    str_contains($action, "\$_POST['operation'] = 'sync_reimport'")
+        && str_contains($action, 'JobType::REBUILD_AFFECTED_DEPENDENCIES')
+        && str_contains($action, 'unverified_action_queue_affected_refresh')
+        && str_contains($action, 'Existing dependant files will refresh in background job #'),
+    'Unverified imports still block the browser while rebuilding all existing dependant files.'
+);
+unverified_import_error_expect(
     str_contains($client, 'compactServerText')
         && str_contains($client, 'the server returned a non-JSON progress response')
         && str_contains($client, 'refresh before retrying because the import may already have completed')
