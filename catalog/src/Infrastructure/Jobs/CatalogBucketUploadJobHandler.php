@@ -112,8 +112,7 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                 $note .= ' Package processing began only after the complete browser upload batch finished.';
             }
 
-            $processor = new CatalogBucketUploadProcessor($this->db, $this->config);
-            $staged = $processor->stage(
+            $staged = (new CatalogBucketUploadProcessor($this->db, $this->config))->stage(
                 $workingPath,
                 $workingName,
                 $note,
@@ -193,6 +192,15 @@ final class CatalogBucketUploadJobHandler implements JobHandler
         if (!is_dir($directory) && !@mkdir($directory, 0750, true) && !is_dir($directory)) {
             throw new \RuntimeException('Could not create Upload Bucket working storage.');
         }
+
+        // A forced process termination cannot execute finally. Remove only stale
+        // working copies belonging to this exact job before a retry creates one.
+        foreach (glob($directory . DIRECTORY_SEPARATOR . 'job-' . $jobId . '-*.part') ?: [] as $oldPath) {
+            if (is_string($oldPath) && is_file($oldPath)) {
+                @unlink($oldPath);
+            }
+        }
+
         $destination = $directory . DIRECTORY_SEPARATOR . 'job-' . $jobId . '-' . bin2hex(random_bytes(6)) . '.part';
         $input = fopen($sourcePath, 'rb');
         $output = fopen($destination, 'xb');
@@ -202,9 +210,11 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             @unlink($destination);
             throw new \RuntimeException('Could not open Upload Bucket working copy.');
         }
+
         $size = (int)(filesize($sourcePath) ?: 0);
         $done = 0;
         $lastReport = microtime(true);
+        $copyError = null;
         try {
             while (!feof($input)) {
                 $buffer = fread($input, 4 * 1024 * 1024);
@@ -242,11 +252,15 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             }
             fflush($output);
         } catch (Throwable $error) {
-            @unlink($destination);
-            throw $error;
+            $copyError = $error;
         } finally {
             fclose($input);
             fclose($output);
+        }
+
+        if ($copyError instanceof Throwable) {
+            @unlink($destination);
+            throw $copyError;
         }
         if ($size < 1 || $done !== $size) {
             @unlink($destination);
