@@ -99,7 +99,7 @@ function bucket_chunk_hash_identity(array $source): array
     $md5 = strtolower(trim((string)($source['md5'] ?? '')));
     $sha1 = strtolower(trim((string)($source['sha1'] ?? '')));
     if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
-        throw new InvalidArgumentException('A valid browser-calculated MD5 and SHA-1 are required.');
+        throw new InvalidArgumentException('A valid browser-calculated MD5 and SHA-1 are required for an uncompressed file.');
     }
     return ['md5' => $md5, 'sha1' => $sha1];
 }
@@ -132,8 +132,6 @@ function bucket_chunk_processing_state(PDO $db, array $config, bool $requestPaus
     foreach ([$queues->queueName(), $queues->legacyQueueName()] as $queueName) {
         $status = $launcher->status($queueName, false);
         if ($requestPause && !empty($status['active'])) {
-            // This is deliberately cooperative. The worker finishes its current
-            // package, sees the stop file before claiming another, then exits.
             $launcher->requestStop($queueName);
             $status = $launcher->status($queueName, false);
         }
@@ -190,19 +188,18 @@ try {
         if ($fileSize < 1) {
             JsonResponse::error('invalid_size', 'Upload file size must be greater than zero.', 400);
         }
-        $identity = bucket_chunk_hash_identity($_POST);
         $redirect = catalog_redirect_archive_is_supported_filename($originalName);
-
         if ($redirect) {
             JsonResponse::send([
                 'ok' => true,
                 'duplicate' => false,
                 'redirect_wrapper' => true,
-                'identity' => $identity,
-                'message' => 'The wrapper MD5 and SHA-1 were calculated before transfer. The stored package duplicate check will run after decompression because compressed wrapper hashes are not package hashes.',
+                'identity' => null,
+                'message' => 'Compressed redirect wrappers are not compared to package MD5/SHA-1 records. The real package identity will be calculated from the decompressed output after the complete batch uploads.',
             ], 200);
         }
 
+        $identity = bucket_chunk_hash_identity($_POST);
         $inspection = (new CatalogUploadDuplicateDetector($application->db, $application->config))
             ->inspect($fileSize, $identity['md5'], $identity['sha1']);
         $duplicate = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
@@ -244,7 +241,8 @@ try {
         if ($fileSize < 1) {
             JsonResponse::error('invalid_size', 'Chunked bucket upload file size must be greater than zero.', 400);
         }
-        $identity = bucket_chunk_hash_identity($_POST);
+        $redirect = catalog_redirect_archive_is_supported_filename($originalName);
+        $identity = $redirect ? null : bucket_chunk_hash_identity($_POST);
         $relativePath = trim((string)($_POST['relative_path'] ?? '')) ?: $originalName;
         $state = $store->initialize(
             $userId,
@@ -255,17 +253,24 @@ try {
             1,
             false
         );
-        $identityStore->save(
-            (string)$state['upload_id'],
-            $userId,
-            $fileSize,
-            $identity['md5'],
-            $identity['sha1'],
-            $originalName,
-            $relativePath,
-            catalog_redirect_archive_is_supported_filename($originalName)
-        );
-        JsonResponse::send(['ok' => true, 'upload' => $state, 'identity' => $identity], 200);
+        if (is_array($identity)) {
+            $identityStore->save(
+                (string)$state['upload_id'],
+                $userId,
+                $fileSize,
+                $identity['md5'],
+                $identity['sha1'],
+                $originalName,
+                $relativePath,
+                false
+            );
+        }
+        JsonResponse::send([
+            'ok' => true,
+            'upload' => $state,
+            'identity' => $identity,
+            'redirect_wrapper' => $redirect,
+        ], 200);
     }
 
     if ($action === 'chunk') {
@@ -286,20 +291,26 @@ try {
     if ($action === 'complete') {
         $uploadId = strtolower(trim((string)($_POST['upload_id'] ?? '')));
         $state = $store->complete($userId, $uploadId);
-        $identity = $identityStore->load($uploadId, $userId);
         $relativePath = (string)($state['relative_path'] ?? '');
         $submittedName = bucket_chunk_clean_name(basename(str_replace('\\', '/', $relativePath)));
         bucket_chunk_validate_name($submittedName, $allowedExtensions, true);
+        $redirect = catalog_redirect_archive_is_supported_filename($submittedName);
+        $identity = $redirect ? null : $identityStore->load($uploadId, $userId);
 
         JsonResponse::send([
             'ok' => true,
             'upload_id' => $uploadId,
             'upload' => $state,
-            'identity' => ['md5' => (string)$identity['md5'], 'sha1' => (string)$identity['sha1']],
+            'identity' => is_array($identity)
+                ? ['md5' => (string)$identity['md5'], 'sha1' => (string)$identity['sha1']]
+                : null,
+            'redirect_wrapper' => $redirect,
             'messages' => [[
                 'status' => 'uploaded',
                 'file' => $relativePath !== '' ? $relativePath : $submittedName,
-                'message' => 'Transfer completed with its pre-calculated MD5 and SHA-1 retained in durable staging. Processing will begin after every selected file finishes uploading.',
+                'message' => $redirect
+                    ? 'Redirect wrapper transfer completed. Its real package MD5/SHA-1 and duplicate check will run after decompression.'
+                    : 'Transfer completed with its pre-calculated MD5 and SHA-1 retained in durable staging. Processing will begin after every selected file finishes uploading.',
                 'file_size' => (int)($state['file_size'] ?? 0),
                 'file_size_text' => catalog_bytes((int)($state['file_size'] ?? 0)),
             ]],
