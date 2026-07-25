@@ -43,10 +43,11 @@ bucket_policy_expect(
     'Upload Bucket page still performs package processing inside web PHP.'
 );
 bucket_policy_expect(
-    str_contains($content['page'], 'Transfer every selected file into durable staging first')
+    str_contains($content['page'], 'Upload and processing are mutually exclusive')
+        && str_contains($content['page'], 'cooperative pause')
         && str_contains($content['page'], 'catalog:bucket-processing')
         && str_contains($content['page'], 'whole-file fallback processing has been disabled'),
-    'Upload Bucket page does not enforce or explain the transfer-first process.'
+    'Upload Bucket page does not enforce or explain the paused transfer-first process.'
 );
 
 bucket_policy_expect(str_contains($content['javascript'], 'async function chunkedUpload'), 'Browser client lacks chunked uploads.');
@@ -126,6 +127,13 @@ bucket_policy_expect(
         && str_contains($content['batch_processor'], "'read_exports'")
         && str_contains($content['batch_processor'], "'database_commit'"),
     'Package processing still collapses hashing, parsing and indexing into one opaque stage.'
+);
+bucket_policy_expect(
+    str_contains($content['batch_processor'], 'INSERT_BATCH_SIZE')
+        && str_contains($content['batch_processor'], 'array_chunk($names, self::INSERT_BATCH_SIZE')
+        && str_contains($content['batch_processor'], 'array_chunk($rows, self::INSERT_BATCH_SIZE)')
+        && str_contains($content['batch_processor'], 'Fall back to a bounded stream copy'),
+    'Upload Bucket inventory still uses per-row SQL or assumes same-volume rename storage.'
 );
 bucket_policy_expect(
     !str_contains($content['handler'], "'percent' => 75")
