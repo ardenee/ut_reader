@@ -82,7 +82,7 @@ try {
         . '.jobs-row-checkbox{width:18px;height:18px}'
         . '.jobs-table{table-layout:fixed;min-width:1180px}'
         . '.jobs-table .jobs-col-select{width:42px}.jobs-table .jobs-col-id{width:72px}.jobs-table .jobs-col-status{width:118px}'
-        . '.jobs-table .jobs-col-type{width:230px}.jobs-table .jobs-col-runtime{width:105px}.jobs-table .jobs-col-attempts{width:82px}'
+        . '.jobs-table .jobs-col-type{width:230px}.jobs-table .jobs-col-runtime{width:135px}.jobs-table .jobs-col-attempts{width:82px}'
         . '.jobs-table .jobs-col-created{width:175px}.jobs-table .jobs-col-action{width:110px}'
         . '.jobs-main-row td{vertical-align:top;border-bottom:0;padding-bottom:7px}'
         . '.jobs-main-row.is-running td{background:rgba(246,196,83,.025)}'
@@ -107,7 +107,7 @@ try {
 
     catalog_page_header(
         'Background Jobs',
-        'Each job uses a fixed summary row plus a full-width live status row. The page is not reloaded: existing rows remain in place while only changed values are updated every two seconds.',
+        'Each job uses a fixed summary row plus a full-width live status row. Current file time is measured from that job’s own claim time; latest status is the age of that file’s saved progress checkpoint. The worker banner describes the detached queue process separately.',
         [
             'Upload Bucket' => 'upload-bucket.php',
             'Upload Files' => 'profiled-upload.php',
@@ -187,7 +187,7 @@ try {
         . '<col><col class="jobs-col-runtime"><col class="jobs-col-attempts"><col class="jobs-col-created"><col class="jobs-col-action">'
         . '</colgroup><thead><tr>'
         . '<th></th><th>ID</th><th>Status</th><th>Type</th><th>File / target</th>'
-        . '<th>Running for</th><th>Attempts</th><th>Created</th><th>Action</th>'
+        . '<th>Current file time</th><th>Attempts</th><th>Created</th><th>Action</th>'
         . '</tr></thead><tbody id="jobs-table-body"><tr class="jobs-empty-row"><td colspan="9" class="jobs-empty muted">Loading…</td></tr></tbody></table></div>';
 
     echo '<div class="jobs-pagination">'
