@@ -83,7 +83,11 @@ function gp_engine_from_version(?int $version): ?string
     if ($version === null || $version <= 0) {
         return null;
     }
-    if ($version >= 500) {
+
+    // The UE3 package-summary layout starts at version 334. The UE3 reader has
+    // always used this boundary; keeping detection at 500 incorrectly sent early
+    // UE3 packages (including .u files) through the UE1/UE2 header layout.
+    if ($version >= 334) {
         return 'UE3';
     }
     if ($version >= 100 && $version <= 199) {
