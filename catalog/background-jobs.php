@@ -74,18 +74,40 @@ try {
         . '.jobs-selection-summary{min-width:160px}'
         . '.jobs-pagination{justify-content:space-between;margin-top:14px}'
         . '.jobs-page-controls{display:flex;gap:8px;align-items:center}'
-        . '.jobs-running-for{white-space:nowrap}'
-        . '.jobs-actions{white-space:nowrap}'
+        . '.jobs-running-for,.jobs-actions,.jobs-attempts,.jobs-created,.jobs-id{white-space:nowrap}'
         . '.jobs-maintenance{margin-top:18px}'
         . '.jobs-maintenance summary{cursor:pointer;font-weight:700}'
         . '.jobs-maintenance-body{padding:14px 0 0}'
         . '.jobs-empty{text-align:center;padding:30px}'
         . '.jobs-row-checkbox{width:18px;height:18px}'
+        . '.jobs-table{table-layout:fixed;min-width:1180px}'
+        . '.jobs-table .jobs-col-select{width:42px}.jobs-table .jobs-col-id{width:72px}.jobs-table .jobs-col-status{width:118px}'
+        . '.jobs-table .jobs-col-type{width:230px}.jobs-table .jobs-col-runtime{width:105px}.jobs-table .jobs-col-attempts{width:82px}'
+        . '.jobs-table .jobs-col-created{width:175px}.jobs-table .jobs-col-action{width:110px}'
+        . '.jobs-main-row td{vertical-align:top;border-bottom:0;padding-bottom:7px}'
+        . '.jobs-main-row.is-running td{background:rgba(246,196,83,.025)}'
+        . '.jobs-detail-row td{padding-top:0;border-top:0}'
+        . '.jobs-detail-row td::before{display:none}'
+        . '.jobs-detail-card{display:grid;grid-template-columns:190px minmax(300px,1fr) minmax(180px,.45fr);gap:14px;align-items:start;padding:8px 12px 11px;border-left:3px solid var(--line2);background:rgba(255,255,255,.018)}'
+        . '.jobs-detail-row.is-running .jobs-detail-card{border-left-color:#f6c453;background:rgba(246,196,83,.035)}'
+        . '.jobs-detail-progress{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:center;white-space:nowrap}'
+        . '.jobs-detail-progress progress{width:100%;height:13px}'
+        . '.jobs-detail-text strong,.jobs-detail-text span,.jobs-detail-meta span{display:block}'
+        . '.jobs-detail-text strong{text-transform:capitalize;margin-bottom:3px}'
+        . '.jobs-detail-text span,.jobs-detail-error{overflow-wrap:anywhere}'
+        . '.jobs-detail-meta{text-align:right;font-size:12px}'
+        . '.jobs-detail-error{margin-top:4px;color:#fecdd3}'
+        . '.job-status{display:inline-block;min-width:84px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}'
+        . '.job-status-queued,.job-status-running{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}'
+        . '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias,.job-status-bucketed,.job-status-decompressed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}'
+        . '.job-status-duplicate{color:#bfdbfe;border-color:rgba(96,165,250,.8);background:rgba(96,165,250,.12)}'
+        . '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75);background:rgba(255,107,122,.10)}'
+        . '@media(max-width:900px){.jobs-detail-card{grid-template-columns:1fr}.jobs-detail-meta{text-align:left}}'
         . '</style>';
 
     catalog_page_header(
         'Background Jobs',
-        'Manage queued work using one authoritative worker state. A stopped worker and an orphaned running database row are reported as separate conditions.',
+        'Each job uses a fixed summary row plus a full-width live status row. The page is not reloaded: existing rows remain in place while only changed values are updated every two seconds.',
         [
             'Upload Bucket' => 'upload-bucket.php',
             'Upload Files' => 'profiled-upload.php',
@@ -99,7 +121,7 @@ try {
     foreach ($queueOptions as $name => $summary) {
         $label = $name . ' — ' . (int)$summary['total'] . ' jobs';
         if ((int)$summary['running'] > 0 || (int)$summary['queued'] > 0) {
-            $label .= ' (' . (int)$summary['running'] . ' running, ' . (int)$summary['queued'] . ' queued)';
+            $label .= ' (' . (int)$summary['running'] . ' active database row, ' . (int)$summary['queued'] . ' queued)';
         }
         echo '<option value="' . catalog_h($name) . '"' . ($name === $queueName ? ' selected' : '') . '>'
             . catalog_h($label) . '</option>';
@@ -160,10 +182,13 @@ try {
 
     echo '<p id="jobs-message" class="muted" aria-live="polite">Loading jobs…</p>';
 
-    echo '<div class="table-wrap"><table><thead><tr>'
-        . '<th></th><th>ID</th><th>Status</th><th>Type</th><th>File / target</th><th>Progress</th>'
-        . '<th>Running for</th><th>Attempts</th><th>Created</th><th>Error</th><th>Action</th>'
-        . '</tr></thead><tbody id="jobs-table-body"><tr><td colspan="11" class="jobs-empty muted">Loading…</td></tr></tbody></table></div>';
+    echo '<div class="table-wrap"><table class="jobs-table"><colgroup>'
+        . '<col class="jobs-col-select"><col class="jobs-col-id"><col class="jobs-col-status"><col class="jobs-col-type">'
+        . '<col><col class="jobs-col-runtime"><col class="jobs-col-attempts"><col class="jobs-col-created"><col class="jobs-col-action">'
+        . '</colgroup><thead><tr>'
+        . '<th></th><th>ID</th><th>Status</th><th>Type</th><th>File / target</th>'
+        . '<th>Running for</th><th>Attempts</th><th>Created</th><th>Action</th>'
+        . '</tr></thead><tbody id="jobs-table-body"><tr class="jobs-empty-row"><td colspan="9" class="jobs-empty muted">Loading…</td></tr></tbody></table></div>';
 
     echo '<div class="jobs-pagination">'
         . '<span id="jobs-page-summary" class="muted"></span>'
@@ -178,7 +203,7 @@ try {
     echo '<details class="jobs-maintenance"><summary>Maintenance</summary><div class="jobs-maintenance-body">'
         . '<p class="muted">Use recovery only when the authoritative state reports orphaned running rows or expired leases.</p>'
         . '<p class="button-row">'
-        . '<button id="jobs-recover" type="button">Recover expired leases</button>'
+        . '<button id="jobs-recover" type="button">Recover orphaned / expired jobs</button>'
         . '<label>Delete terminal jobs older than <select id="jobs-cleanup-days">'
         . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
         . '<option value="90">90 days</option><option value="365">1 year</option>'
@@ -188,9 +213,9 @@ try {
 
     echo '</div></div></section>';
 
-    $script = __DIR__ . '/assets/background-jobs.js';
+    $script = __DIR__ . '/assets/background-jobs-stable.js';
     $version = is_file($script) ? (string)filemtime($script) : '1';
-    echo '<script src="assets/background-jobs.js?v=' . catalog_h($version) . '"></script>';
+    echo '<script src="assets/background-jobs-stable.js?v=' . catalog_h($version) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
