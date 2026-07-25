@@ -75,28 +75,30 @@ try {
         . '.jobs-pagination{justify-content:space-between;margin-top:14px}'
         . '.jobs-page-controls{display:flex;gap:8px;align-items:center}'
         . '.jobs-running-for,.jobs-actions,.jobs-attempts,.jobs-created,.jobs-id{white-space:nowrap}'
+        . '.jobs-type,.jobs-target{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap!important;word-break:normal!important;overflow-wrap:normal!important}'
         . '.jobs-maintenance{margin-top:18px}'
         . '.jobs-maintenance summary{cursor:pointer;font-weight:700}'
         . '.jobs-maintenance-body{padding:14px 0 0}'
         . '.jobs-empty{text-align:center;padding:30px}'
         . '.jobs-row-checkbox{width:18px;height:18px}'
-        . '.jobs-table{table-layout:fixed;min-width:1180px}'
+        . '.jobs-table{table-layout:fixed;min-width:1280px}'
         . '.jobs-table .jobs-col-select{width:42px}.jobs-table .jobs-col-id{width:72px}.jobs-table .jobs-col-status{width:118px}'
-        . '.jobs-table .jobs-col-type{width:230px}.jobs-table .jobs-col-runtime{width:135px}.jobs-table .jobs-col-attempts{width:82px}'
+        . '.jobs-table .jobs-col-type{width:310px}.jobs-table .jobs-col-runtime{width:135px}.jobs-table .jobs-col-attempts{width:82px}'
         . '.jobs-table .jobs-col-created{width:175px}.jobs-table .jobs-col-action{width:110px}'
         . '.jobs-main-row td{vertical-align:top;border-bottom:0;padding-bottom:7px}'
         . '.jobs-main-row.is-running td{background:rgba(246,196,83,.025)}'
         . '.jobs-detail-row td{padding-top:0;border-top:0}'
         . '.jobs-detail-row td::before{display:none}'
-        . '.jobs-detail-card{display:grid;grid-template-columns:190px minmax(300px,1fr) minmax(180px,.45fr);gap:14px;align-items:start;padding:8px 12px 11px;border-left:3px solid var(--line2);background:rgba(255,255,255,.018)}'
+        . '.jobs-detail-card{display:grid;grid-template-columns:190px minmax(300px,1fr);gap:14px;align-items:start;padding:8px 12px 11px;border-left:3px solid var(--line2);background:rgba(255,255,255,.018)}'
         . '.jobs-detail-row.is-running .jobs-detail-card{border-left-color:#f6c453;background:rgba(246,196,83,.035)}'
         . '.jobs-detail-progress{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:8px;align-items:center;white-space:nowrap}'
         . '.jobs-detail-progress progress{width:100%;height:13px}'
         . '.jobs-detail-text strong,.jobs-detail-text span,.jobs-detail-meta span{display:block}'
         . '.jobs-detail-text strong{text-transform:capitalize;margin-bottom:3px}'
         . '.jobs-detail-text span,.jobs-detail-error{overflow-wrap:anywhere}'
-        . '.jobs-detail-meta{text-align:right;font-size:12px}'
-        . '.jobs-detail-error{margin-top:4px;color:#fecdd3}'
+        . '.jobs-detail-meta{grid-column:1/-1;text-align:left;font-size:12px}'
+        . '.jobs-detail-meta>span:first-child{display:none!important}'
+        . '.jobs-detail-error{margin-top:0;color:#fecdd3}'
         . '.job-status{display:inline-block;min-width:84px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}'
         . '.job-status-queued,.job-status-running{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}'
         . '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias,.job-status-bucketed,.job-status-decompressed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}'
@@ -107,7 +109,7 @@ try {
 
     catalog_page_header(
         'Background Jobs',
-        'Each job uses a fixed summary row plus a full-width live status row. Current file time is measured from that job’s own claim time; latest status is the age of that file’s saved progress checkpoint. The worker banner describes the detached queue process separately.',
+        'Each job uses a fixed summary row plus a full-width live status row. Current file time is measured from that job’s own claim time. The worker banner describes the detached queue process separately.',
         [
             'Upload Bucket' => 'upload-bucket.php',
             'Upload Files' => 'profiled-upload.php',
