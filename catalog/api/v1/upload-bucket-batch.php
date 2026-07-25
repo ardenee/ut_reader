@@ -60,8 +60,6 @@ try {
         );
     }
 
-    // Old pending redirect jobs are now handled by the same worker and granular
-    // processor as new batch uploads. Keep terminal rows in their historical queue.
     $legacyMigrated = $queue->migrateLegacyQueuedJobs();
 
     $messages = [];
@@ -77,6 +75,12 @@ try {
             if ($jobId > 0) {
                 $jobIds[$jobId] = $jobId;
             }
+
+            $md5 = trim((string)($result['md5'] ?? ''));
+            $sha1 = trim((string)($result['sha1'] ?? ''));
+            $identityText = $md5 !== '' && $sha1 !== ''
+                ? ' MD5: ' . $md5 . ' | SHA-1: ' . $sha1
+                : '';
 
             if (!empty($result['deduplicated'])) {
                 $duplicates++;
@@ -94,11 +98,14 @@ try {
                 if (!empty($result['duplicate_source_removed'])) {
                     $message .= ' The repeated staged upload was deleted before package processing.';
                 }
+                if ($identityText === '' && in_array($kind, ['completed_source', 'active_source'], true)) {
+                    $message .= ' This is a compressed-wrapper fingerprint match; package MD5/SHA-1 are calculated only after decompression.';
+                }
                 $messages[] = [
                     'status' => 'duplicate',
                     'file' => (string)$result['source_relative_path'],
                     'file_id' => $duplicateFileId,
-                    'message' => $message . ' MD5: ' . (string)$result['md5'] . ' | SHA-1: ' . (string)$result['sha1'],
+                    'message' => $message . $identityText,
                     'file_size' => (int)$result['size'],
                     'file_size_text' => catalog_bytes((int)$result['size']),
                     'job_id' => $jobId,
@@ -110,7 +117,9 @@ try {
             $messages[] = [
                 'status' => 'queued',
                 'file' => (string)$result['source_relative_path'],
-                'message' => 'Upload completed, retained its pre-calculated MD5/SHA-1 and passed the final physical duplicate check. Processing job #' . $jobId . ' was created.',
+                'message' => $identityText !== ''
+                    ? 'Upload completed, retained its pre-calculated package MD5/SHA-1 and passed the final physical duplicate check. Processing job #' . $jobId . ' was created.'
+                    : 'Redirect wrapper upload completed. Processing job #' . $jobId . ' will decompress it, calculate the real package MD5/SHA-1 and then run the physical duplicate check.',
                 'file_size' => (int)$result['size'],
                 'file_size_text' => catalog_bytes((int)$result['size']),
                 'job_id' => $jobId,
