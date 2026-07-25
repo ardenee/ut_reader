@@ -5,8 +5,10 @@ require_once __DIR__ . '/_bootstrap.php';
 require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
 require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchQueue;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 function bucket_chunk_ini_bytes(string $value): int
@@ -106,6 +108,37 @@ function bucket_chunk_short_error(Throwable $error): string
     return $message !== '' ? $message : 'Unknown chunked upload error';
 }
 
+/** @return array{ready:bool,workers:list<array<string,mixed>>} */
+function bucket_chunk_processing_state(PDO $db, array $config, bool $requestPause): array
+{
+    $queues = new CatalogBucketBatchQueue($db, $config);
+    $launcher = new CatalogDetachedWorker($config);
+    $workers = [];
+    $ready = true;
+
+    foreach ([$queues->queueName(), $queues->legacyQueueName()] as $queueName) {
+        $status = $launcher->status($queueName, false);
+        if ($requestPause && !empty($status['active'])) {
+            // This is deliberately cooperative. The worker finishes its current
+            // package, sees the stop file before claiming another, then exits.
+            $launcher->requestStop($queueName);
+            $status = $launcher->status($queueName, false);
+        }
+        $active = !empty($status['active']);
+        if ($active) {
+            $ready = false;
+        }
+        $workers[] = [
+            'queue' => $queueName,
+            'active' => $active,
+            'stop_requested' => !empty($status['stop_requested']),
+            'state' => is_array($status['state'] ?? null) ? $status['state'] : [],
+        ];
+    }
+
+    return ['ready' => $ready, 'workers' => $workers];
+}
+
 try {
     $application = catalog_api_application();
     catalog_api_require_admin(false);
@@ -125,7 +158,15 @@ try {
 
     if ($action === 'begin_batch') {
         $pruned = (new CatalogChunkedUploadCleanup($application->config))->pruneIncomplete();
-        JsonResponse::send(['ok' => true, 'cleanup' => $pruned], 200);
+        $processing = bucket_chunk_processing_state($application->db, $application->config, true);
+        JsonResponse::send(['ok' => true, 'cleanup' => $pruned, 'processing' => $processing], 200);
+    }
+
+    if ($action === 'batch_status') {
+        JsonResponse::send([
+            'ok' => true,
+            'processing' => bucket_chunk_processing_state($application->db, $application->config, false),
+        ], 200);
     }
 
     if ($action === 'init') {
@@ -189,7 +230,7 @@ try {
         JsonResponse::send(['ok' => true, 'status' => 'cancelled'], 200);
     }
 
-    JsonResponse::error('invalid_action', 'Chunked bucket upload action must be begin_batch, init, chunk, complete or cancel.', 400);
+    JsonResponse::error('invalid_action', 'Chunked bucket upload action must be begin_batch, batch_status, init, chunk, complete or cancel.', 400);
 } catch (InvalidArgumentException $error) {
     JsonResponse::error('invalid_chunk_upload', $error->getMessage(), 400);
 } catch (Throwable $error) {
