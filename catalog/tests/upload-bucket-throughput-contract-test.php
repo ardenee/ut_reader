@@ -119,10 +119,15 @@ upload_bucket_throughput_expect(
 );
 upload_bucket_throughput_expect(
     str_contains($duplicateDetector, 'missing_base_game_matches')
+        && str_contains($duplicateDetector, 'physical_identity_mismatches')
         && str_contains($duplicateDetector, 'physicalPath')
-        && str_contains($duplicateDetector, 'ue_base_game_files')
-        && str_contains($duplicateDetector, 'LOWER(f.sha1)=?'),
-    'Duplicate detection does not require a physical size/MD5/SHA-1 match or protect metadata-only base-game identities.'
+        && str_contains($duplicateDetector, 'physicalIdentity')
+        && str_contains($duplicateDetector, "hash_init('md5')")
+        && str_contains($duplicateDetector, "hash_init('sha1')")
+        && str_contains($duplicateDetector, "hash_equals(\$md5, \$physicalIdentity['md5'])")
+        && str_contains($duplicateDetector, "hash_equals(\$sha1, \$physicalIdentity['sha1'])")
+        && str_contains($duplicateDetector, 'ue_base_game_files'),
+    'Duplicate detection does not verify the actual physical size/MD5/SHA-1 or protect metadata-only base-game identities.'
 );
 upload_bucket_throughput_expect(
     str_contains($processor, "'hash_identity'")
