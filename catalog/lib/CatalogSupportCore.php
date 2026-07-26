@@ -327,8 +327,11 @@ function catalog_head(string $title): void
     echo '<link rel="stylesheet" href="' . catalog_h($root . 'assets/catalog-ui.css') . '">';
     echo '<script src="' . catalog_h($root . 'assets/catalog-ui.js?v=' . $uiScriptVersion) . '" defer></script>';
     if ($scriptName === 'unverified-files.php') {
+        $timeoutRecoveryPath = __DIR__ . '/../assets/unverified-import-timeout-recovery.js';
+        $timeoutRecoveryVersion = is_file($timeoutRecoveryPath) ? (string)filemtime($timeoutRecoveryPath) : '1';
         $unverifiedActionsPath = __DIR__ . '/../assets/unverified-file-actions.js';
         $unverifiedActionsVersion = is_file($unverifiedActionsPath) ? (string)filemtime($unverifiedActionsPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/unverified-import-timeout-recovery.js?v=' . $timeoutRecoveryVersion) . '" defer></script>';
         echo '<script src="' . catalog_h($root . 'assets/unverified-file-actions.js?v=' . $unverifiedActionsVersion) . '" defer></script>';
     }
     if (in_array($scriptName, ['game-files.php', 'full-sync.php'], true)) {
