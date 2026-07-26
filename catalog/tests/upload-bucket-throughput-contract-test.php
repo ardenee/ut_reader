@@ -111,6 +111,14 @@ upload_bucket_throughput_expect(
     'Redirect package hashes are not calculated while decompressed bytes are produced.'
 );
 upload_bucket_throughput_expect(
+    str_contains($statusApi, 'catalog_job_status_names_match')
+        && str_contains($statusApi, "['uz', 'uz2', 'uz3']")
+        && str_contains($statusApi, "trim((string)(\$result['decoder'] ?? ''))")
+        && str_contains($statusApi, "strcasecmp(\$packageName, \$resultName) === 0")
+        && str_contains($statusApi, "'Restart this job.'"),
+    'Completed redirect uploads can still be falsely marked as identity mismatches because their wrapper and package names differ.'
+);
+upload_bucket_throughput_expect(
     str_contains($identityProcessor, 'Using MD5 and SHA-1 calculated while the package bytes were produced')
         && str_contains($identityProcessor, 'CatalogUploadDuplicateDetector')
         && !str_contains($identityProcessor, 'hash_file(')
