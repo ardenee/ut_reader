@@ -11,9 +11,10 @@ use PDO;
  * including official base-game records whose source file is absent, are not
  * treated as upload duplicates.
  *
- * Older code required LOWER(f.sha1)=? in the initial SQL query. The current
- * implementation deliberately defers SHA-1 comparison until physical existence
- * is confirmed, allowing MD5-only legacy/base-game rows to be verified safely.
+ * Database hashes are used only to find likely candidates. The candidate's
+ * physical file is then read once to calculate its actual MD5 and SHA-1. This
+ * prevents stale but syntactically valid SHA-1 metadata from allowing an exact
+ * package through the Upload Bucket before import catches it as a duplicate.
  */
 final class CatalogUploadDuplicateDetector
 {
@@ -31,7 +32,8 @@ final class CatalogUploadDuplicateDetector
      *   duplicate:?array<string,mixed>,
      *   identity_matches:int,
      *   missing_physical_matches:int,
-     *   missing_base_game_matches:int
+     *   missing_base_game_matches:int,
+     *   physical_identity_mismatches:int
      * }
      */
     public function inspect(int $fileSize, string $md5, string $sha1): array
@@ -59,6 +61,7 @@ final class CatalogUploadDuplicateDetector
 
         $missing = 0;
         $missingBaseGame = 0;
+        $physicalIdentityMismatches = 0;
         foreach ($rows as $row) {
             $physicalPath = $this->physicalPath($row);
             if ($physicalPath === null) {
@@ -78,17 +81,17 @@ final class CatalogUploadDuplicateDetector
                 continue;
             }
 
-            $storedSha1 = strtolower(trim((string)($row['sha1'] ?? '')));
-            if (preg_match('/^[a-f0-9]{40}$/', $storedSha1) !== 1) {
-                // Older/base-game identities can contain MD5 without SHA-1. Only
-                // complete the comparison when their physical file is present.
-                $physicalSha1 = hash_file('sha1', $physicalPath);
-                if (!is_string($physicalSha1)) {
-                    continue;
+            $physicalIdentity = $this->physicalIdentity($physicalPath);
+            if ($physicalIdentity === null) {
+                $missing++;
+                if (!empty($row['is_base_game'])) {
+                    $missingBaseGame++;
                 }
-                $storedSha1 = strtolower($physicalSha1);
+                continue;
             }
-            if (!hash_equals($sha1, $storedSha1)) {
+            if (!hash_equals($md5, $physicalIdentity['md5'])
+                || !hash_equals($sha1, $physicalIdentity['sha1'])) {
+                $physicalIdentityMismatches++;
                 continue;
             }
 
@@ -106,12 +109,13 @@ final class CatalogUploadDuplicateDetector
                     'is_base_game' => !empty($row['is_base_game']),
                     'physical_path' => $physicalPath,
                     'file_size' => $fileSize,
-                    'md5' => $md5,
-                    'sha1' => $sha1,
+                    'md5' => $physicalIdentity['md5'],
+                    'sha1' => $physicalIdentity['sha1'],
                 ],
                 'identity_matches' => count($rows),
                 'missing_physical_matches' => $missing,
                 'missing_base_game_matches' => $missingBaseGame,
+                'physical_identity_mismatches' => $physicalIdentityMismatches,
             ];
         }
 
@@ -120,6 +124,48 @@ final class CatalogUploadDuplicateDetector
             'identity_matches' => count($rows),
             'missing_physical_matches' => $missing,
             'missing_base_game_matches' => $missingBaseGame,
+            'physical_identity_mismatches' => $physicalIdentityMismatches,
+        ];
+    }
+
+    /** @return array{md5:string,sha1:string}|null */
+    private function physicalIdentity(string $path): ?array
+    {
+        $handle = @fopen($path, 'rb');
+        if (!is_resource($handle)) {
+            return null;
+        }
+
+        $md5Context = hash_init('md5');
+        $sha1Context = hash_init('sha1');
+        $failed = false;
+        try {
+            while (!feof($handle)) {
+                $buffer = fread($handle, 4 * 1024 * 1024);
+                if (!is_string($buffer)) {
+                    $failed = true;
+                    break;
+                }
+                if ($buffer === '') {
+                    if (feof($handle)) {
+                        break;
+                    }
+                    $failed = true;
+                    break;
+                }
+                hash_update($md5Context, $buffer);
+                hash_update($sha1Context, $buffer);
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        if ($failed) {
+            return null;
+        }
+        return [
+            'md5' => hash_final($md5Context),
+            'sha1' => hash_final($sha1Context),
         ];
     }
 
