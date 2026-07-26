@@ -120,6 +120,9 @@ upload_bucket_throughput_expect(
 upload_bucket_throughput_expect(
     str_contains($duplicateDetector, 'missing_base_game_matches')
         && str_contains($duplicateDetector, 'physical_identity_mismatches')
+        && str_contains($duplicateDetector, 'FROM ue_files f WHERE LOWER(f.md5)=?')
+        && !str_contains($duplicateDetector, 'FROM ue_files f WHERE f.file_size=? AND LOWER(f.md5)=?')
+        && str_contains($duplicateDetector, 'filesize($physicalPath)')
         && str_contains($duplicateDetector, 'physicalPath')
         && str_contains($duplicateDetector, 'physicalIdentity')
         && str_contains($duplicateDetector, "hash_init('md5')")
@@ -127,7 +130,7 @@ upload_bucket_throughput_expect(
         && str_contains($duplicateDetector, "hash_equals(\$md5, \$physicalIdentity['md5'])")
         && str_contains($duplicateDetector, "hash_equals(\$sha1, \$physicalIdentity['sha1'])")
         && str_contains($duplicateDetector, 'ue_base_game_files'),
-    'Duplicate detection does not verify the actual physical size/MD5/SHA-1 or protect metadata-only base-game identities.'
+    'Duplicate detection trusts stale database size/hash metadata instead of verifying the physical package identity.'
 );
 upload_bucket_throughput_expect(
     str_contains($processor, "'hash_identity'")
