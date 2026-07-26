@@ -69,94 +69,72 @@ final class CatalogBucketIdentityProcessor
             'sha1' => $sha1,
         ]);
 
-        $lockName = self::identityLockName($md5, $sha1);
-        $this->emit($progress, 'duplicate_lock', 56, 'Waiting for the package identity duplicate lock.');
-        $lock = \catalog_one($this->db, 'SELECT GET_LOCK(?, 30) acquired', [$lockName]);
-        if ((int)($lock['acquired'] ?? 0) !== 1) {
-            throw new \RuntimeException('Timed out while waiting for the Upload Bucket duplicate lock.');
+        $this->emit($progress, 'duplicate_check', 58, 'Checking size, MD5 and SHA-1 against physical Upload Bucket and catalog files.');
+        $inspection = (new CatalogUploadDuplicateDetector($this->db, $this->config))->inspect($size, $md5, $sha1);
+        $duplicate = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
+        if ($duplicate !== null) {
+            @unlink($temporaryPath);
+            $existingName = trim((string)($duplicate['original_name'] ?? ''));
+            if ($existingName === '') {
+                $existingName = trim((string)($duplicate['package_name'] ?? '')) ?: 'existing physical package';
+            }
+            $location = (string)($duplicate['location_kind'] ?? '') === 'upload_bucket'
+                ? 'the Upload Bucket'
+                : 'catalog storage';
+            $message = 'Duplicate size, MD5 and SHA-1 already exist in ' . $location
+                . ' as ' . $existingName . ' (file #' . (int)$duplicate['file_id'] . '). Prepared copy discarded.';
+            $this->emit($progress, 'duplicate', 100, $message, ['file_id' => (int)$duplicate['file_id']]);
+            return [
+                'status' => 'duplicate',
+                'file_id' => (int)$duplicate['file_id'],
+                'queue_name' => '',
+                'original_name' => $existingName,
+                'path' => (string)$duplicate['physical_path'],
+                'size' => $size,
+                'message' => $message,
+                'parse_error' => null,
+                'md5' => $md5,
+                'sha1' => $sha1,
+            ];
         }
+
+        $missingBase = (int)($inspection['missing_base_game_matches'] ?? 0);
+        if ($missingBase > 0) {
+            $this->emit(
+                $progress,
+                'duplicate_check',
+                59,
+                'Official base-game identity metadata matched, but no physical source file exists. Keeping this package.'
+            );
+        }
+
+        $this->emit($progress, 'bucket_store', 60, 'Moving the prepared package into Upload Bucket storage.');
+        /** @var array{queue_name:string,original_name:string,size:int,path:string} $stored */
+        $stored = $this->storeMethod->invoke($this->processor, $temporaryPath, $originalName, $reason);
+        $storedPath = (string)$stored['path'];
 
         try {
-            $this->emit($progress, 'duplicate_check', 58, 'Checking size, MD5 and SHA-1 against physical Upload Bucket and catalog files.');
-            $inspection = (new CatalogUploadDuplicateDetector($this->db, $this->config))->inspect($size, $md5, $sha1);
-            $duplicate = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
-            if ($duplicate !== null) {
-                @unlink($temporaryPath);
-                $existingName = trim((string)($duplicate['original_name'] ?? ''));
-                if ($existingName === '') {
-                    $existingName = trim((string)($duplicate['package_name'] ?? '')) ?: 'existing physical package';
-                }
-                $location = (string)($duplicate['location_kind'] ?? '') === 'upload_bucket'
-                    ? 'the Upload Bucket'
-                    : 'catalog storage';
-                $message = 'Duplicate size, MD5 and SHA-1 already exist in ' . $location
-                    . ' as ' . $existingName . ' (file #' . (int)$duplicate['file_id'] . '). Prepared copy discarded.';
-                $this->emit($progress, 'duplicate', 100, $message, ['file_id' => (int)$duplicate['file_id']]);
-                return [
-                    'status' => 'duplicate',
-                    'file_id' => (int)$duplicate['file_id'],
-                    'queue_name' => '',
-                    'original_name' => $existingName,
-                    'path' => (string)$duplicate['physical_path'],
-                    'size' => $size,
-                    'message' => $message,
-                    'parse_error' => null,
-                    'md5' => $md5,
-                    'sha1' => $sha1,
-                ];
-            }
-
-            $missingBase = (int)($inspection['missing_base_game_matches'] ?? 0);
-            if ($missingBase > 0) {
-                $this->emit(
-                    $progress,
-                    'duplicate_check',
-                    59,
-                    'Official base-game identity metadata matched, but no physical source file exists. Keeping this package.'
-                );
-            }
-
-            $this->emit($progress, 'bucket_store', 60, 'Moving the prepared package into Upload Bucket storage.');
-            /** @var array{queue_name:string,original_name:string,size:int,path:string} $stored */
-            $stored = $this->storeMethod->invoke($this->processor, $temporaryPath, $originalName, $reason);
-            $storedPath = (string)$stored['path'];
-
-            try {
-                /** @var array<string,mixed> $indexed */
-                $indexed = $this->indexMethod->invoke(
-                    $this->processor,
-                    (string)$stored['queue_name'],
-                    $storedPath,
-                    (string)$stored['original_name'],
-                    $reason,
-                    $uploadedBy,
-                    $sourceRelativePath,
-                    (int)$stored['size'],
-                    $md5,
-                    $sha1,
-                    $progress
-                );
-            } catch (Throwable $error) {
-                @unlink($storedPath . '.txt');
-                @unlink($storedPath);
-                throw $error;
-            }
-
-            return $indexed + ['md5' => $md5, 'sha1' => $sha1];
-        } finally {
-            try {
-                \catalog_one($this->db, 'SELECT RELEASE_LOCK(?) released', [$lockName]);
-            } catch (Throwable $error) {
-                error_log('[UnrealDB bucket duplicate lock] ' . $error->getMessage());
-            }
+            /** @var array<string,mixed> $indexed */
+            $indexed = $this->indexMethod->invoke(
+                $this->processor,
+                (string)$stored['queue_name'],
+                $storedPath,
+                (string)$stored['original_name'],
+                $reason,
+                $uploadedBy,
+                $sourceRelativePath,
+                (int)$stored['size'],
+                $md5,
+                $sha1,
+                $progress
+            );
+        } catch (Throwable $error) {
+            @unlink($storedPath . '.txt');
+            @unlink($storedPath);
+            throw $error;
         }
-    }
 
-    private static function identityLockName(string $md5, string $sha1): string
-    {
-        // MariaDB/MySQL user-level lock names are limited to 64 characters.
-        // Keep a readable namespace and retain 224 bits of the combined identity.
-        return 'udb-bi-' . substr(hash('sha256', $md5 . ':' . $sha1), 0, 56);
+        return $indexed + ['md5' => $md5, 'sha1' => $sha1];
     }
 
     /** @param callable(array<string,mixed>):void|null $progress @param array<string,mixed> $meta */
