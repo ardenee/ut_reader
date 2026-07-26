@@ -245,7 +245,7 @@ try {
                 }
             }
 
-            $resultStatus = strtolower(trim((string)($result['status'] ?? ''));
+            $resultStatus = strtolower(trim((string)($result['status'] ?? '')));
             $successfulCompletion = (string)($row['status'] ?? '') === 'completed'
                 && empty($result['integrity_mismatch'])
                 && trim((string)($result['parse_error'] ?? '')) === ''
