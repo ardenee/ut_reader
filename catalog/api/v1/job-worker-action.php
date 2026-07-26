@@ -34,15 +34,31 @@ try {
         $cancelRunning ? 'Stopped from Background Jobs.' : 'Detached worker stop requested.'
     );
 
+    $worker = is_array($result['worker'] ?? null) ? $result['worker'] : [];
+    if (!empty($worker['active'])) {
+        JsonResponse::error(
+            'worker_stop_incomplete',
+            'The stop request was written, but the detached worker is still running. The current job was not reported as stopped.',
+            409,
+            [
+                'queue' => $queueName,
+                'worker_pid' => (int)($result['pid'] ?? 0),
+                'worker_terminated' => !empty($result['terminated']),
+                'worker' => $worker,
+            ]
+        );
+    }
+
     JsonResponse::send([
         'data' => [
             'queue' => $queueName,
             'stop_requested' => true,
+            'stop_completed' => true,
             'worker_terminated' => !empty($result['terminated']),
             'worker_pid' => (int)($result['pid'] ?? 0),
             'running_jobs_notified' => (int)($result['cancelled_jobs'] ?? 0) + (int)($result['cooperative_jobs'] ?? 0),
             'running_jobs_cancelled' => (int)($result['cancelled_jobs'] ?? 0),
-            'worker' => $result['worker'] ?? [],
+            'worker' => $worker,
         ],
     ]);
 } catch (InvalidArgumentException $exception) {
