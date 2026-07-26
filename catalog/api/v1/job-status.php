@@ -8,6 +8,36 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobEventLog;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
+/** @param array<string,mixed> $result */
+function catalog_job_status_names_match(
+    string $jobType,
+    string $expectedName,
+    string $resultName,
+    array $result
+): bool {
+    if ($expectedName === '' || $resultName === '' || strcasecmp($expectedName, $resultName) === 0) {
+        return true;
+    }
+
+    // Upload Bucket redirect jobs legitimately store the decompressed package
+    // name while their payload retains the original .uz/.uz2/.uz3 wrapper name.
+    // Accept only that exact suffix removal and only when a decoder was used.
+    if ($jobType !== JobType::PROCESS_BUCKET_UPLOAD
+        || trim((string)($result['decoder'] ?? '')) === '') {
+        return false;
+    }
+
+    $extension = strtolower((string)pathinfo($expectedName, PATHINFO_EXTENSION));
+    if (!in_array($extension, ['uz', 'uz2', 'uz3'], true)) {
+        return false;
+    }
+
+    $packageName = substr($expectedName, 0, -strlen('.' . $extension));
+    return is_string($packageName)
+        && $packageName !== ''
+        && strcasecmp($packageName, $resultName) === 0;
+}
+
 try {
     $application = catalog_api_application();
     catalog_api_require_admin();
@@ -154,11 +184,11 @@ try {
         if (is_array($result)) {
             $expectedJobId = (int)$row['id'];
             $resultJobId = (int)($result['job_id'] ?? 0);
+            $jobType = (string)($row['job_type'] ?? '');
             $expectedName = trim((string)($payload['original_name'] ?? ''));
             $resultName = trim((string)($result['original_name'] ?? $result['job_original_name'] ?? ''));
             $jobMismatch = $resultJobId > 0 && $resultJobId !== $expectedJobId;
-            $nameMismatch = $expectedName !== '' && $resultName !== ''
-                && strcasecmp($expectedName, $resultName) !== 0;
+            $nameMismatch = !catalog_job_status_names_match($jobType, $expectedName, $resultName, $result);
 
             if ($jobMismatch || $nameMismatch) {
                 $details = [];
@@ -168,15 +198,18 @@ try {
                 if ($nameMismatch) {
                     $details[] = 'result names ' . $resultName . ' instead of ' . $expectedName;
                 }
+                $retryInstruction = $jobType === JobType::REPAIR_UNVERIFIED_METADATA
+                    ? 'Re-run this metadata repair.'
+                    : 'Restart this job.';
                 $result = [
                     'status' => 'failed',
                     'message' => 'Stored result identity mismatch for job #' . $expectedJobId . ': '
-                        . implode('; ', $details) . '. Re-run this metadata repair.',
+                        . implode('; ', $details) . '. ' . $retryInstruction,
                     'integrity_mismatch' => true,
                     'job_id' => $expectedJobId,
                     'job_original_name' => $expectedName,
                 ];
-            } elseif ((string)($row['job_type'] ?? '') === JobType::REPAIR_UNVERIFIED_METADATA) {
+            } elseif ($jobType === JobType::REPAIR_UNVERIFIED_METADATA) {
                 $displayName = $expectedName !== '' ? $expectedName : ($resultName !== '' ? $resultName : 'this file');
                 $parseError = trim((string)($result['parse_error'] ?? ''));
                 if ($parseError !== '') {
@@ -190,7 +223,7 @@ try {
                         . (int)$result['import_count'] . ' Imports and '
                         . (int)$result['export_count'] . ' Exports recorded.';
                 }
-            } elseif ((string)($row['job_type'] ?? '') === JobType::PROCESS_BUCKET_UPLOAD
+            } elseif ($jobType === JobType::PROCESS_BUCKET_UPLOAD
                 && strtolower(trim((string)($result['status'] ?? ''))) === 'bucketed') {
                 $queueFile = basename((string)($result['queue_name'] ?? ''));
                 $storageRoot = rtrim((string)($application->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
@@ -212,7 +245,7 @@ try {
                 }
             }
 
-            $resultStatus = strtolower(trim((string)($result['status'] ?? '')));
+            $resultStatus = strtolower(trim((string)($result['status'] ?? ''));
             $successfulCompletion = (string)($row['status'] ?? '') === 'completed'
                 && empty($result['integrity_mismatch'])
                 && trim((string)($result['parse_error'] ?? '')) === ''
