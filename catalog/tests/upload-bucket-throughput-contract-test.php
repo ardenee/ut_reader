@@ -25,9 +25,10 @@ $manager = file_get_contents($root . '/assets/background-jobs.js');
 $bulkApi = file_get_contents($root . '/api/v1/job-bulk.php');
 $statusApi = file_get_contents($root . '/api/v1/job-status.php');
 $workerStatusApi = file_get_contents($root . '/api/v1/job-worker-status.php');
+$workerActionApi = file_get_contents($root . '/api/v1/job-worker-action.php');
 $page = file_get_contents($root . '/background-jobs.php');
 
-foreach (compact('client', 'hashClient', 'chunkApi', 'batchApi', 'batchQueue', 'handler', 'redirectHandler', 'processor', 'identityProcessor', 'duplicateDetector', 'redirectStream', 'redirectPayload', 'manager', 'bulkApi', 'statusApi', 'workerStatusApi', 'page') as $name => $source) {
+foreach (compact('client', 'hashClient', 'chunkApi', 'batchApi', 'batchQueue', 'handler', 'redirectHandler', 'processor', 'identityProcessor', 'duplicateDetector', 'redirectStream', 'redirectPayload', 'manager', 'bulkApi', 'statusApi', 'workerStatusApi', 'workerActionApi', 'page') as $name => $source) {
     upload_bucket_throughput_expect(is_string($source), $name . ' is missing.');
 }
 
@@ -117,13 +118,13 @@ upload_bucket_throughput_expect(
         && !str_contains($identityProcessor, 'sha1_file('),
     'Identity-aware package processing still performs a separate full-file hashing pass.'
 );
-$sampleIdentityLock = 'udb-bi-' . substr(hash('sha256', str_repeat('a', 32) . ':' . str_repeat('b', 40)), 0, 56);
 upload_bucket_throughput_expect(
-    strlen($sampleIdentityLock) <= 64
-        && str_contains($identityProcessor, 'identityLockName')
-        && str_contains($identityProcessor, "'udb-bi-' . substr(hash('sha256', \$md5 . ':' . \$sha1), 0, 56)")
-        && !str_contains($identityProcessor, "'unrealdb-bucket-identity-' . \$md5 . '-' . \$sha1"),
-    'Upload Bucket identity locks can exceed the MariaDB/MySQL 64-character user-level lock limit.'
+    !str_contains($identityProcessor, 'GET_LOCK(')
+        && !str_contains($identityProcessor, 'RELEASE_LOCK(')
+        && !str_contains($identityProcessor, 'identityLockName')
+        && !str_contains($identityProcessor, 'unrealdb-bucket-identity-')
+        && !str_contains($identityProcessor, 'duplicate_lock'),
+    'Upload Bucket processing still introduces an unnecessary database user-level identity lock.'
 );
 upload_bucket_throughput_expect(
     str_contains($duplicateDetector, 'missing_base_game_matches')
@@ -163,6 +164,12 @@ upload_bucket_throughput_expect(
 upload_bucket_throughput_expect(
     str_contains($manager, 'Stop job') && str_contains($manager, 'launchAfterStop'),
     'Manual Stop job does not continue the queue.'
+);
+upload_bucket_throughput_expect(
+    str_contains($workerActionApi, 'worker_stop_incomplete')
+        && str_contains($workerActionApi, "if (!empty(\$worker['active']))")
+        && str_contains($workerActionApi, "'stop_completed' => true"),
+    'Stop Worker can still report success while the detached worker remains active.'
 );
 upload_bucket_throughput_expect(
     str_contains($manager, 'authoritative_status')
