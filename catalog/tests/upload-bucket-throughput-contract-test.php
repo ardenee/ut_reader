@@ -117,6 +117,14 @@ upload_bucket_throughput_expect(
         && !str_contains($identityProcessor, 'sha1_file('),
     'Identity-aware package processing still performs a separate full-file hashing pass.'
 );
+$sampleIdentityLock = 'udb-bi-' . substr(hash('sha256', str_repeat('a', 32) . ':' . str_repeat('b', 40)), 0, 56);
+upload_bucket_throughput_expect(
+    strlen($sampleIdentityLock) <= 64
+        && str_contains($identityProcessor, 'identityLockName')
+        && str_contains($identityProcessor, "'udb-bi-' . substr(hash('sha256', \$md5 . ':' . \$sha1), 0, 56)")
+        && !str_contains($identityProcessor, "'unrealdb-bucket-identity-' . \$md5 . '-' . \$sha1"),
+    'Upload Bucket identity locks can exceed the MariaDB/MySQL 64-character user-level lock limit.'
+);
 upload_bucket_throughput_expect(
     str_contains($duplicateDetector, 'missing_base_game_matches')
         && str_contains($duplicateDetector, 'physical_identity_mismatches')
