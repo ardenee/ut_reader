@@ -10,8 +10,12 @@ function unverified_import_error_expect(bool $condition, string $message): void
 
 $action = file_get_contents(__DIR__ . '/../unverified-files-action.php');
 $client = file_get_contents(__DIR__ . '/../assets/unverified-file-actions.js');
+$timeoutRecovery = file_get_contents(__DIR__ . '/../assets/unverified-import-timeout-recovery.js');
+$supportCore = file_get_contents(__DIR__ . '/../lib/CatalogSupportCore.php');
 unverified_import_error_expect(is_string($action), 'Unverified action endpoint could not be read.');
 unverified_import_error_expect(is_string($client), 'Unverified action client could not be read.');
+unverified_import_error_expect(is_string($timeoutRecovery), 'Unverified timeout recovery client could not be read.');
+unverified_import_error_expect(is_string($supportCore), 'Catalog support core could not be read.');
 
 unverified_import_error_expect(
     str_contains($action, 'JSON_INVALID_UTF8_SUBSTITUTE')
@@ -55,9 +59,27 @@ unverified_import_error_expect(
 unverified_import_error_expect(
     str_contains($client, 'compactServerText')
         && str_contains($client, 'the server returned a non-JSON progress response')
-        && str_contains($client, 'refresh before retrying because the import may already have completed')
         && str_contains($client, 'payload.request_id'),
     'The progress client still hides the HTTP response and request reference behind a generic parse error.'
+);
+unverified_import_error_expect(
+    str_contains($timeoutRecovery, 'window.fetch = async function')
+        && str_contains($timeoutRecovery, "body.get('progress_token')")
+        && str_contains($timeoutRecovery, '[502, 503, 504]')
+        && str_contains($timeoutRecovery, 'recoverFromProgress')
+        && str_contains($timeoutRecovery, 'while (true)')
+        && str_contains($timeoutRecovery, "stage === 'done'")
+        && str_contains($timeoutRecovery, "stage === 'failed'")
+        && str_contains($timeoutRecovery, 'recovered_after_timeout'),
+    'A proxy timeout still ends an unverified import instead of following its progress token to a terminal result.'
+);
+$recoveryPosition = strpos($supportCore, 'assets/unverified-import-timeout-recovery.js');
+$actionPosition = strpos($supportCore, 'assets/unverified-file-actions.js');
+unverified_import_error_expect(
+    $recoveryPosition !== false
+        && $actionPosition !== false
+        && $recoveryPosition < $actionPosition,
+    'The timeout recovery client is not loaded before the unverified action client.'
 );
 
 echo "Unverified import error contract tests passed.\n";
