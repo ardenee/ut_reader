@@ -11,10 +11,11 @@ use PDO;
  * including official base-game records whose source file is absent, are not
  * treated as upload duplicates.
  *
- * Database hashes are used only to find likely candidates. The candidate's
- * physical file is then read once to calculate its actual MD5 and SHA-1. This
- * prevents stale but syntactically valid SHA-1 metadata from allowing an exact
- * package through the Upload Bucket before import catches it as a duplicate.
+ * Database MD5 values are used only to find likely candidates. The candidate's
+ * physical file is then read once to calculate its actual size, MD5 and SHA-1.
+ * This prevents stale but syntactically valid size or SHA-1 metadata from
+ * allowing an exact package through the Upload Bucket before import catches it
+ * as a duplicate.
  */
 final class CatalogUploadDuplicateDetector
 {
@@ -54,9 +55,9 @@ final class CatalogUploadDuplicateDetector
                 . 'EXISTS(SELECT 1 FROM ue_base_game_files bg '
                 . 'WHERE bg.source_file_id=f.id '
                 . 'OR (bg.game_id=f.game_id AND bg.package_guid=f.package_guid AND f.package_guid IS NOT NULL AND f.package_guid<>"")) AS is_base_game '
-                . 'FROM ue_files f WHERE f.file_size=? AND LOWER(f.md5)=? '
+                . 'FROM ue_files f WHERE LOWER(f.md5)=? '
                 . 'ORDER BY (f.scan_status="unverified" AND f.unverified_queue_game_id=0) DESC,f.id LIMIT 200',
-            [$fileSize, $md5]
+            [$md5]
         );
 
         $missing = 0;
@@ -74,10 +75,7 @@ final class CatalogUploadDuplicateDetector
 
             $physicalSize = filesize($physicalPath);
             if ($physicalSize === false || (int)$physicalSize !== $fileSize) {
-                $missing++;
-                if (!empty($row['is_base_game'])) {
-                    $missingBaseGame++;
-                }
+                $physicalIdentityMismatches++;
                 continue;
             }
 
@@ -222,7 +220,10 @@ final class CatalogUploadDuplicateDetector
                 continue;
             }
             $normalized = str_replace('\\', '/', $resolved);
-            if (str_starts_with($normalized, $rootPrefix)) {
+            $insideStorage = DIRECTORY_SEPARATOR === '\\'
+                ? str_starts_with(strtolower($normalized), strtolower($rootPrefix))
+                : str_starts_with($normalized, $rootPrefix);
+            if ($insideStorage) {
                 return $resolved;
             }
         }
