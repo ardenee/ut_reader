@@ -30,22 +30,27 @@ unverified_import_error_expect(
     'Stale dependency/import collisions are not cleaned before or after promotion.'
 );
 unverified_import_error_expect(
-    str_contains($action, 'scan_status="verified"')
-        && str_contains($action, 'File verification completed, but dependency refresh failed:')
-        && str_contains($action, 'unverified_action_recover_verified_dependencies'),
-    'A post-promotion dependency failure can still be reported as a complete import failure.'
+    str_contains($action, 'scanner_rebuild_dependencies($db, $config, (int)$row[\'id\'], $progress, 52, 68')
+        && str_contains($action, 'scanner_rebuild_affected_dependencies($db, $config, (int)$row[\'id\'], $progress, 68, 99)')
+        && !str_contains($action, 'JobType::REBUILD_AFFECTED_DEPENDENCIES')
+        && !str_contains($action, 'unverified_action_queue_affected_refresh'),
+    'Unverified import is not completing its full dependency refresh synchronously.'
 );
 unverified_import_error_expect(
-    str_contains($action, 'function unverified_action_resolve_source')
-        && !str_contains($action, '$source = uvf_resolve('),
-    'Unverified import still performs the redundant pre-promotion package hash/header pass.'
+    str_contains($action, "require_once __DIR__ . '/lib/UploadProgress.php';")
+        && str_contains($action, "\$_GET['progress']")
+        && str_contains($action, "\$_POST['progress_token']")
+        && str_contains($action, 'upload_progress_write'),
+    'Unverified import does not expose live per-file progress.'
 );
 unverified_import_error_expect(
-    str_contains($action, "\$_POST['operation'] = 'sync_reimport'")
-        && str_contains($action, 'JobType::REBUILD_AFFECTED_DEPENDENCIES')
-        && str_contains($action, 'unverified_action_queue_affected_refresh')
-        && str_contains($action, 'Existing dependant files will refresh in background job #'),
-    'Unverified imports still block the browser while rebuilding all existing dependant files.'
+    str_contains($client, 'Overall 0%')
+        && str_contains($client, 'File 0%')
+        && str_contains($client, 'data-status')
+        && str_contains($client, 'pollProgress')
+        && str_contains($client, 'progress_token')
+        && str_contains($client, 'updateProgressDisplay'),
+    'The progress overlay does not show overall progress, file progress and current status together.'
 );
 unverified_import_error_expect(
     str_contains($client, 'compactServerText')
