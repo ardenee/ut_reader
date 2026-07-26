@@ -69,7 +69,7 @@ final class CatalogBucketIdentityProcessor
             'sha1' => $sha1,
         ]);
 
-        $lockName = 'unrealdb-bucket-identity-' . $md5 . '-' . $sha1;
+        $lockName = self::identityLockName($md5, $sha1);
         $this->emit($progress, 'duplicate_lock', 56, 'Waiting for the package identity duplicate lock.');
         $lock = \catalog_one($this->db, 'SELECT GET_LOCK(?, 30) acquired', [$lockName]);
         if ((int)($lock['acquired'] ?? 0) !== 1) {
@@ -150,6 +150,13 @@ final class CatalogBucketIdentityProcessor
                 error_log('[UnrealDB bucket duplicate lock] ' . $error->getMessage());
             }
         }
+    }
+
+    private static function identityLockName(string $md5, string $sha1): string
+    {
+        // MariaDB/MySQL user-level lock names are limited to 64 characters.
+        // Keep a readable namespace and retain 224 bits of the combined identity.
+        return 'udb-bi-' . substr(hash('sha256', $md5 . ':' . $sha1), 0, 56);
     }
 
     /** @param callable(array<string,mixed>):void|null $progress @param array<string,mixed> $meta */
