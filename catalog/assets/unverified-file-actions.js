@@ -35,6 +35,8 @@
             '.unverified-select-all-label { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }',
             '.uv-table { min-width:1250px !important; }',
             '.uv-table td:nth-child(4), .uv-table th:nth-child(4), .uv-table td:nth-child(6), .uv-table th:nth-child(6), .uv-table td:nth-child(7), .uv-table th:nth-child(7) { white-space:nowrap; }',
+            '.uv-detected-line { display:block; white-space:nowrap; }',
+            '.uv-detected-line + .uv-detected-line { margin-top:2px; color:var(--muted); }',
             '.uv-table td:nth-child(2) small, .uv-file > small, .uv-database-counts { display:block; margin-top:3px; }',
             '.uv-file > strong, .uv-file > a.uv-file-link { display:block; }',
             '.uv-file a.uv-package-link { white-space:nowrap; }',
@@ -397,7 +399,21 @@
             if (!row.cells || row.cells.length < 8) return;
             var fileCell = row.cells[2];
             var databaseCell = row.cells[4];
+            var detectedCell = row.cells[5];
             var fileId = fileIdFromDatabaseCell(databaseCell);
+
+            if (detectedCell) {
+                var detectedParts = detectedCell.textContent.trim().split(/\s+\/\s+/, 2);
+                if (detectedParts.length === 2) {
+                    detectedCell.textContent = '';
+                    detectedParts.forEach(function (part) {
+                        var line = document.createElement('span');
+                        line.className = 'uv-detected-line';
+                        line.textContent = part;
+                        detectedCell.appendChild(line);
+                    });
+                }
+            }
 
             if (fileId > 0) {
                 wrapElement(fileCell.querySelector(':scope > strong'), 'file-examine.php?id=' + fileId, 'Examine this file', 'uv-file-link');
