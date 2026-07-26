@@ -11,12 +11,18 @@
         style.textContent = [
             'body.unverified-action-overlay-open { overflow:hidden; }',
             '.unverified-action-overlay { position:fixed; inset:0; z-index:30000; display:grid; place-items:center; padding:20px; background:rgba(4,8,16,.82); backdrop-filter:blur(4px); }',
-            '.unverified-action-dialog { width:min(760px,96vw); max-height:90vh; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--line2); border-radius:12px; background:var(--panel,#111827); box-shadow:0 28px 80px rgba(0,0,0,.55); }',
+            '.unverified-action-dialog { width:min(800px,96vw); max-height:90vh; display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--line2); border-radius:12px; background:var(--panel,#111827); box-shadow:0 28px 80px rgba(0,0,0,.55); }',
             '.unverified-action-dialog [hidden] { display:none !important; }',
             '.unverified-action-dialog__header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding:18px 20px 12px; border-bottom:1px solid var(--line2); }',
             '.unverified-action-dialog__header h2 { margin:0 0 4px; }',
             '.unverified-action-dialog__header p { margin:0; color:var(--muted); }',
-            '.unverified-action-dialog__body { min-height:0; display:flex; flex:1; flex-direction:column; gap:14px; padding:18px 20px; overflow:auto; }',
+            '.unverified-action-dialog__body { min-height:0; display:flex; flex:1; flex-direction:column; gap:12px; padding:18px 20px; overflow:auto; }',
+            '.unverified-action-progress-line { display:grid; grid-template-columns:auto auto minmax(0,1fr); gap:14px; align-items:center; min-height:24px; }',
+            '.unverified-action-progress-line strong { white-space:nowrap; }',
+            '.unverified-action-progress-line [data-status] { min-width:0; overflow-wrap:anywhere; color:var(--muted); }',
+            '.unverified-action-progress-pair { display:grid; grid-template-columns:1fr 1fr; gap:10px; }',
+            '.unverified-action-progress-wrap { display:flex; flex-direction:column; gap:4px; }',
+            '.unverified-action-progress-wrap small { color:var(--muted); }',
             '.unverified-action-progress { height:12px; overflow:hidden; border:1px solid var(--line2); border-radius:999px; background:rgba(255,255,255,.055); }',
             '.unverified-action-progress__bar { width:0; height:100%; border-radius:inherit; background:linear-gradient(90deg,var(--blue),#78a9ff); transition:width .2s ease; }',
             '.unverified-action-current { min-height:42px; padding:10px 12px; border:1px solid var(--line2); border-radius:8px; background:rgba(255,255,255,.025); overflow-wrap:anywhere; }',
@@ -43,7 +49,7 @@
             '.uv-note-details { border-left:3px solid #f6c453; padding:6px 10px; }',
             '.uv-note-details summary { cursor:pointer; font-weight:700; color:var(--text); }',
             '.uv-note-details__content { margin-top:8px; white-space:normal; }',
-            '@media (max-width:700px) { .unverified-action-overlay { padding:8px; } .unverified-action-dialog { width:100%; max-height:96vh; } }',
+            '@media (max-width:700px) { .unverified-action-overlay { padding:8px; } .unverified-action-dialog { width:100%; max-height:96vh; } .unverified-action-progress-line { grid-template-columns:1fr 1fr; } .unverified-action-progress-line [data-status] { grid-column:1 / -1; } .unverified-action-progress-pair { grid-template-columns:1fr; } }',
             '@media (prefers-reduced-motion:reduce) { .unverified-action-progress__bar { transition:none; } }'
         ].join('\n');
         document.head.appendChild(style);
@@ -64,7 +70,11 @@
             + '<section class="unverified-action-dialog" role="dialog" aria-modal="true" aria-labelledby="unverified-action-title">'
             + '<header class="unverified-action-dialog__header"><div><h2 id="unverified-action-title"></h2><p data-summary></p></div></header>'
             + '<div class="unverified-action-dialog__body">'
-            + '<div class="unverified-action-progress"><div class="unverified-action-progress__bar" data-bar></div></div>'
+            + '<div class="unverified-action-progress-line"><strong data-overall-text>Overall 0%</strong><strong data-file-text>File 0%</strong><span data-status>Waiting to start</span></div>'
+            + '<div class="unverified-action-progress-pair">'
+            + '<div class="unverified-action-progress-wrap"><small>Overall progress</small><div class="unverified-action-progress"><div class="unverified-action-progress__bar" data-overall-bar></div></div></div>'
+            + '<div class="unverified-action-progress-wrap"><small>Current file progress</small><div class="unverified-action-progress"><div class="unverified-action-progress__bar" data-file-bar></div></div></div>'
+            + '</div>'
             + '<div class="unverified-action-current" data-current role="status" aria-live="polite"></div>'
             + '<ol class="unverified-action-log" data-log></ol>'
             + '</div><footer class="unverified-action-dialog__footer">'
@@ -77,7 +87,11 @@
 
         return {
             summary: root.querySelector('[data-summary]'),
-            bar: root.querySelector('[data-bar]'),
+            overallText: root.querySelector('[data-overall-text]'),
+            fileText: root.querySelector('[data-file-text]'),
+            status: root.querySelector('[data-status]'),
+            overallBar: root.querySelector('[data-overall-bar]'),
+            fileBar: root.querySelector('[data-file-bar]'),
             current: root.querySelector('[data-current]'),
             log: root.querySelector('[data-log]'),
             stop: root.querySelector('[data-stop]'),
@@ -130,17 +144,61 @@
         return message;
     }
 
-    async function postAction(form, action, entry) {
+    function clampPercent(value) {
+        value = parseInt(value, 10);
+        return isFinite(value) ? Math.max(0, Math.min(100, value)) : 0;
+    }
+
+    function makeProgressToken() {
+        var random = '';
+        if (window.crypto && window.crypto.getRandomValues) {
+            var bytes = new Uint32Array(4);
+            window.crypto.getRandomValues(bytes);
+            random = Array.prototype.map.call(bytes, function (value) { return value.toString(16); }).join('');
+        } else {
+            random = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+        }
+        return 'uv_' + Date.now().toString(36) + '_' + random;
+    }
+
+    function delay(milliseconds) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+    }
+
+    async function pollProgress(token, onProgress, isFinished) {
+        while (!isFinished()) {
+            try {
+                var response = await fetch('unverified-files-action.php?progress=' + encodeURIComponent(token), {
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-store'
+                });
+                if (response.ok) {
+                    var state = await response.json();
+                    if (state && typeof state === 'object') onProgress(state);
+                }
+            } catch (error) {
+                // The action request remains authoritative; a missed poll should not fail the import.
+            }
+            await delay(250);
+        }
+    }
+
+    async function postAction(form, action, entry, onProgress) {
         var data = new FormData();
         var csrf = form.querySelector('input[name="csrf"]');
         var target = form.querySelector('[name="target_game_id"]');
         var override = form.querySelector('[name="allow_profile_override"]');
+        var progressToken = makeProgressToken();
         data.append('csrf', csrf ? csrf.value : '');
         data.append('action', action);
         data.append('token', entry.token);
+        data.append('progress_token', progressToken);
         if (target) data.append('target_game_id', target.value || '0');
         if (override && override.checked) data.append('allow_profile_override', '1');
 
+        var finished = false;
+        var polling = pollProgress(progressToken, onProgress, function () { return finished; });
         var response;
         try {
             response = await fetch('unverified-files-action.php', {
@@ -150,10 +208,14 @@
                 headers: { 'Accept': 'application/json' }
             });
         } catch (error) {
+            finished = true;
+            await polling;
             throw new Error('The connection ended before the server returned a result. Refresh before retrying because the import may have completed. ' + (error.message || 'Network error.'));
         }
 
         var text = await response.text();
+        finished = true;
+        await polling;
         var payload;
         try {
             payload = JSON.parse(text);
@@ -166,6 +228,16 @@
             throw new Error(message);
         }
         return payload;
+    }
+
+    function updateProgressDisplay(overlay, fileIndex, fileCount, state) {
+        var filePercent = clampPercent(state.percent);
+        var overallPercent = Math.round(((fileIndex + (filePercent / 100)) / Math.max(1, fileCount)) * 100);
+        overlay.overallText.textContent = 'Overall ' + overallPercent + '%';
+        overlay.fileText.textContent = 'File ' + filePercent + '%';
+        overlay.status.textContent = String(state.message || state.stage || 'Processing');
+        overlay.overallBar.style.width = overallPercent + '%';
+        overlay.fileBar.style.width = filePercent + '%';
     }
 
     async function runBatch(form, action, entries) {
@@ -187,19 +259,28 @@
             if (stopped) break;
             var entry = entries[index];
             overlay.current.textContent = (index + 1) + ' of ' + entries.length + ': ' + entry.name;
+            updateProgressDisplay(overlay, index, entries.length, { percent: 0, message: 'Starting ' + entry.name });
             try {
-                var result = await postAction(form, action, entry);
+                var result = await postAction(form, action, entry, function (state) {
+                    updateProgressDisplay(overlay, index, entries.length, state);
+                });
                 successes++;
+                updateProgressDisplay(overlay, index, entries.length, { percent: 100, message: result.message || 'Complete' });
                 appendLog(overlay, result.message || entry.name + ': complete', result.warning ? 'info' : 'success');
                 removeCompletedRow(entry);
             } catch (error) {
                 failures++;
+                updateProgressDisplay(overlay, index, entries.length, { percent: 100, message: error.message || 'Failed' });
                 appendLog(overlay, entry.name + ': ' + (error.message || 'failed'), 'error');
             }
-            overlay.bar.style.width = Math.round(((index + 1) / entries.length) * 100) + '%';
         }
 
         var processed = successes + failures;
+        var finalOverall = Math.round((processed / Math.max(1, entries.length)) * 100);
+        overlay.overallText.textContent = 'Overall ' + finalOverall + '%';
+        overlay.overallBar.style.width = finalOverall + '%';
+        overlay.fileText.textContent = stopped ? 'File stopped' : 'File 100%';
+        overlay.status.textContent = stopped ? 'Stopped after current file' : 'Batch complete';
         overlay.current.textContent = stopped
             ? 'Stopped after ' + processed + ' of ' + entries.length + ' file(s).'
             : 'Completed ' + processed + ' of ' + entries.length + ' file(s).';
@@ -219,9 +300,7 @@
         actions.insertBefore(label, actions.firstChild);
 
         var selectAll = label.querySelector('input');
-        var boxes = function () {
-            return Array.prototype.slice.call(form.querySelectorAll('.unverified-select'));
-        };
+        var boxes = function () { return Array.prototype.slice.call(form.querySelectorAll('.unverified-select')); };
         var sync = function () {
             var current = boxes();
             var checked = current.filter(function (box) { return box.checked; }).length;
@@ -268,18 +347,16 @@
 
         var countStrong = columns[1].querySelector('strong');
         var usedBySmall = columns[1].querySelector('small');
-        var packageReferences = 0;
-        var usedBy = 0;
         if (countStrong) {
             var exact = countStrong.textContent.match(/\d+\s*\/\s*(\d+)\s+exact/i);
             var simple = countStrong.textContent.match(/(\d+)/);
-            packageReferences = exact ? parseInt(exact[1], 10) : (/no package references/i.test(countStrong.textContent) ? 0 : (simple ? parseInt(simple[1], 10) : 0));
+            var packageReferences = exact ? parseInt(exact[1], 10) : (/no package references/i.test(countStrong.textContent) ? 0 : (simple ? parseInt(simple[1], 10) : 0));
             countStrong.textContent = 'PF: ' + packageReferences;
             countStrong.title = 'Package references: ' + packageReferences;
         }
         if (usedBySmall) {
             var used = usedBySmall.textContent.match(/(\d+)/);
-            usedBy = used ? parseInt(used[1], 10) : 0;
+            var usedBy = used ? parseInt(used[1], 10) : 0;
             usedBySmall.textContent = 'UB: ' + usedBy;
             usedBySmall.title = 'Used by ' + usedBy + ' verified file(s)';
         }
