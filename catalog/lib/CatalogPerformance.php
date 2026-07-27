@@ -209,7 +209,7 @@ function catalog_performance_count_ttl(string $normalizedSql): int
 
 function catalog_performance_boolean_query(string $search): string
 {
-    $tokens = preg_split('/[^\p{L}\p{N}_-]+/u', mb_strtolower(trim($search), 'UTF-8'));
+    $tokens = preg_split('/[^\p{L}\p{N}_]+/u', mb_strtolower(trim($search), 'UTF-8'));
     if (!is_array($tokens)) {
         return '';
     }
@@ -232,23 +232,15 @@ function catalog_performance_sync_job_search(PDO $db, int $limit = 2000): bool
             'SELECT COALESCE(MAX(source_updated_at),"1970-01-01 00:00:00") watermark FROM ue_background_job_search'
         );
         $watermark = (string)($watermarkStatement->fetchColumn() ?: '1970-01-01 00:00:00');
-        $watermarkTime = strtotime($watermark . ' UTC');
-        $threshold = gmdate('Y-m-d H:i:s', ($watermarkTime !== false ? $watermarkTime : 0) - 2);
         $sql = 'INSERT INTO ue_background_job_search(job_id,queue_name,job_type,source_status,search_text,source_updated_at) '
             . 'SELECT j.id,j.queue_name,j.job_type,j.status,LEFT(CONCAT_WS(" ",CAST(j.id AS CHAR),j.queue_name,j.job_type,'
             . 'COALESCE(j.concurrency_key,""),COALESCE(j.payload_json,""),COALESCE(j.last_error,""),COALESCE(j.result_json,"")),65535),j.updated_at '
             . 'FROM ue_background_jobs j LEFT JOIN ue_background_job_search s ON s.job_id=j.id '
-            . 'WHERE j.updated_at>=? AND (s.job_id IS NULL OR s.source_updated_at<j.updated_at) '
+            . 'WHERE j.updated_at>=DATE_SUB(?,INTERVAL 2 SECOND) AND (s.job_id IS NULL OR s.source_updated_at<j.updated_at) '
             . 'ORDER BY j.updated_at ASC,j.id ASC LIMIT ' . $limit . ' '
             . 'ON DUPLICATE KEY UPDATE queue_name=VALUES(queue_name),job_type=VALUES(job_type),source_status=VALUES(source_status),'
             . 'search_text=VALUES(search_text),source_updated_at=VALUES(source_updated_at)';
-        catalog_performance_statement($db, $sql, [$threshold]);
-        if (random_int(1, 50) === 1) {
-            $db->exec(
-                'DELETE FROM ue_background_job_search WHERE job_id NOT IN '
-                . '(SELECT id FROM ue_background_jobs) LIMIT 1000'
-            );
-        }
+        catalog_performance_statement($db, $sql, [$watermark]);
         return true;
     } catch (Throwable $error) {
         error_log('[UnrealDB performance] background job search projection unavailable: ' . $error->getMessage());
