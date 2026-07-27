@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 21;
+$expectedMigrations = 22;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -94,6 +94,9 @@ migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_sourc
 migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_confidence'), 'Dependency resolution_confidence column is missing.');
 migration_test_expect($schema->indexExists('ue_dependencies', 'idx_ue_deps_resolution_source'), 'Dependency resolution_source index is missing.');
 migration_test_expect($schema->indexExists('ue_dependencies', 'idx_ue_deps_resolution_confidence'), 'Dependency resolution_confidence index is missing.');
+foreach (['idx_ue_deps_missing_package_cursor', 'idx_ue_deps_missing_file_cursor'] as $index) {
+    migration_test_expect($schema->indexExists('ue_dependencies', $index), 'Missing-object drill-down cursor index is missing: ' . $index);
+}
 migration_test_expect($schema->tableExists('ue_asset_registry_assets'), 'Asset-registry assets table is missing.');
 migration_test_expect($schema->tableExists('ue_asset_registry_tags'), 'Asset-registry tags table is missing.');
 migration_test_expect($schema->tableExists('ue_asset_registry_dependencies'), 'Asset-registry dependencies table is missing.');
