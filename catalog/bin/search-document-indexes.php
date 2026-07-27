@@ -66,10 +66,10 @@ function search_index_drive(string $path): string
 
 function search_index_print_paths(array $paths): void
 {
-    fwrite(STDOUT, "MariaDB paths:\n");
+    fwrite(STDOUT, "MySQL/MariaDB paths:\n");
     fwrite(STDOUT, '  tmpdir:        ' . ($paths['tmpdir'] !== '' ? $paths['tmpdir'] : '(server default)') . "\n");
     fwrite(STDOUT, '  innodb_tmpdir: ' . ($paths['innodb_tmpdir'] !== '' ? $paths['innodb_tmpdir'] : '(uses tmpdir)') . "\n");
-    fwrite(STDOUT, '  datadir:       ' . ($paths['datadir'] !== '' ? $paths['datadir'] : '(unknown)') . "\n");
+    fwrite(STDOUT, '  datadir:       ' . ($paths['datadir'] !== '' ? $paths['datadir'] : '(unknown)') . " (database remains here)\n");
 }
 
 try {
@@ -110,8 +110,8 @@ try {
     $unsafeInnodb = $paths['innodb_tmpdir'] !== '' && $innodbDrive !== '' && $innodbDrive === $systemDrive;
     if (($unsafeTmp || $unsafeInnodb) && !$arguments['allow_system_temp']) {
         throw new RuntimeException(
-            'Refusing to build large search indexes while MariaDB temporary work points to the Windows system drive. '
-            . 'Move tmpdir and innodb_tmpdir to a drive with adequate free space, restart MariaDB, confirm with the status command, then retry. '
+            'Refusing to build large search indexes while MySQL temporary work points to the Windows system drive. '
+            . 'Keep the database datadir where it is, but move tmpdir and innodb_tmpdir to a drive with adequate temporary free space, restart MySQL, confirm with the status command, then retry. '
             . 'Use --allow-system-temp only when you have deliberately confirmed sufficient system-drive space.'
         );
     }
