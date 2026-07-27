@@ -44,6 +44,14 @@ The detailed `ue_dependencies` table remains authoritative for object-level insp
 
 Normal imports refresh the imported file's summary through the existing search-index job. Affected dependency workers and manual file/game dependency jobs rebuild summaries inline, avoiding a second large job fan-out during maintenance.
 
+### Cached game catalogue statistics
+
+`ue_game_catalog_stats` stores compact per-game file, storage and dependency counters. Dashboard catalogue totals, the public Games page, Library and the game missing-count API read this projection instead of repeatedly aggregating `ue_files` and detailed dependency rows.
+
+Imports, search-index jobs, affected dependency refreshes and manual file/game dependency rebuilds proactively refresh the affected game. A five-minute read-through reconciliation repairs rows missed by rare maintenance or status-change paths. Non-blocking advisory locks prevent concurrent page requests or workers from rebuilding the same game row simultaneously.
+
+Global catalogue counters are calculated by summing the small per-game table and adding unassigned Upload Bucket/unverified file rows directly, so files with `game_id IS NULL` are not lost.
+
 ### Upload progress
 
 Progress persistence is throttled except for terminal states. Expired temporary progress files are cleaned separately from durable incoming job sources.
@@ -56,10 +64,11 @@ Apply during a maintenance window with the worker stopped:
 2. `202607270002_package_provider_index.php`
 3. `202607270003_search_documents.php`
 4. `202607270004_dependency_package_summaries.php`
+5. `202607270005_game_catalog_stats.php`
 
 The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
 
-The dependency-summary migration performs one grouped backfill from `ue_dependencies`. Both migrations can require temporary InnoDB space and substantial disk I/O on a large catalogue.
+The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. Large catalogues can require temporary InnoDB space and substantial disk I/O.
 
 ## Operational validation
 
@@ -73,6 +82,7 @@ Collect `EXPLAIN` plans and duration samples for:
 - affected dependency refresh jobs with zero, few, and many dependent files;
 - search-index jobs for files with small and very large parser tables;
 - Missing Files totals and package/file lists;
+- Dashboard, Games and Library page loads before and after cache warm-up;
 - alias creation for a package with many dependent files;
 - full-game dependency rebuilds.
 
@@ -80,21 +90,21 @@ Record database statement counts as well as elapsed time. The batching change sh
 
 ## Next structural phases
 
-### 1. Cached game counters
-
-Maintain file count, storage size, unresolved dependency count and parser-row totals per game. Dashboard and home pages should read the cache. Reconciliation jobs should periodically compare cached totals with authoritative tables.
-
-### 2. Keyset pagination
+### 1. Keyset pagination
 
 Replace deep `OFFSET` pagination on large file, dependency and search lists with stable keyset cursors based on the selected sort plus file ID. Keep exact total counts optional on public pages because full counts can be more expensive than retrieving the page itself.
 
-### 3. Chunked Examine views
+### 2. Chunked Examine views
 
 Names, Imports and Exports pages should load bounded chunks rather than rendering every parser row. Provide downloadable JSON/CSV exports for full-table inspection.
 
-### 4. Source fingerprint cache
+### 3. Source fingerprint cache
 
 Persist source path, size, modification time and a trusted quick fingerprint. Re-hash a source file only when those signals change, while retaining full MD5/SHA verification before accepting a new catalogue identity.
+
+### 4. Federation summary conversion
+
+Convert remaining federation inventory/request queries that still inspect detailed dependency rows to package summaries while preserving parent-controlled base-game policy and request lifecycle semantics.
 
 ## Scale limits that remain
 
