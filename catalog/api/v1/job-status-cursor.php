@@ -203,6 +203,7 @@ try {
         JsonResponse::error('invalid_search', 'Search text is too long.', 400);
     }
 
+    $fromSql = 'ue_background_jobs j';
     $baseWhere = [];
     $baseParams = [];
     if ($queue !== '') {
@@ -210,11 +211,29 @@ try {
         $baseParams[] = $queue;
     }
     if ($search !== '') {
-        $baseWhere[] = '(CAST(j.id AS CHAR) LIKE ? OR j.job_type LIKE ? OR COALESCE(j.concurrency_key,"") LIKE ? '
-            . 'OR COALESCE(j.payload_json,"") LIKE ? OR COALESCE(j.last_error,"") LIKE ? '
-            . 'OR COALESCE(j.result_json,"") LIKE ?)';
-        $like = '%' . $search . '%';
-        array_push($baseParams, $like, $like, $like, $like, $like, $like);
+        $projectionAvailable = catalog_performance_sync_job_search($application->db);
+        $booleanSearch = catalog_performance_boolean_query($search);
+        if ($projectionAvailable && $booleanSearch !== '') {
+            $fromSql .= ' JOIN ue_background_job_search js ON js.job_id=j.id';
+            if (ctype_digit($search)) {
+                $baseWhere[] = '(j.id=? OR MATCH(js.search_text) AGAINST (? IN BOOLEAN MODE))';
+                $baseParams[] = (int)$search;
+                $baseParams[] = $booleanSearch;
+            } else {
+                $baseWhere[] = 'MATCH(js.search_text) AGAINST (? IN BOOLEAN MODE)';
+                $baseParams[] = $booleanSearch;
+            }
+        } elseif ($projectionAvailable) {
+            $fromSql .= ' JOIN ue_background_job_search js ON js.job_id=j.id';
+            $baseWhere[] = 'js.search_text LIKE ?';
+            $baseParams[] = '%' . $search . '%';
+        } else {
+            $baseWhere[] = '(CAST(j.id AS CHAR) LIKE ? OR j.job_type LIKE ? OR COALESCE(j.concurrency_key,"") LIKE ? '
+                . 'OR COALESCE(j.payload_json,"") LIKE ? OR COALESCE(j.last_error,"") LIKE ? '
+                . 'OR COALESCE(j.result_json,"") LIKE ?)';
+            $like = '%' . $search . '%';
+            array_push($baseParams, $like, $like, $like, $like, $like, $like);
+        }
     }
 
     $where = $baseWhere;
@@ -227,7 +246,7 @@ try {
     $whereSql = implode(' AND ', $where);
     $baseWhereSql = implode(' AND ', $baseWhere);
 
-    $totalSql = 'SELECT COUNT(*) c FROM ue_background_jobs j' . ($whereSql !== '' ? ' WHERE ' . $whereSql : '');
+    $totalSql = 'SELECT COUNT(*) c FROM ' . $fromSql . ($whereSql !== '' ? ' WHERE ' . $whereSql : '');
     $total = catalog_count($application->db, $totalSql, $params);
     $pages = max(1, (int)ceil($total / max(1, $perPage)));
 
@@ -241,7 +260,7 @@ try {
         'cancelled' => 0,
     ];
     $countSql = 'SELECT j.status,JSON_UNQUOTE(JSON_EXTRACT(j.result_json,"$.status")) result_status,COUNT(*) total '
-        . 'FROM ue_background_jobs j' . ($baseWhereSql !== '' ? ' WHERE ' . $baseWhereSql : '')
+        . 'FROM ' . $fromSql . ($baseWhereSql !== '' ? ' WHERE ' . $baseWhereSql : '')
         . ' GROUP BY j.status,result_status';
     foreach (catalog_all($application->db, $countSql, $baseParams) as $countRow) {
         $amount = (int)($countRow['total'] ?? 0);
@@ -282,7 +301,7 @@ try {
         . 'j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,j.last_heartbeat_at,j.recovery_count,'
         . 'j.cancel_requested_at,j.cancel_requested_by,j.cancel_reason,j.payload_json,j.progress_json,j.progress_updated_at,'
         . 'j.result_json,j.last_error,j.created_by,j.created_at,j.updated_at,j.completed_at,j.dead_lettered_at '
-        . 'FROM ue_background_jobs j';
+        . 'FROM ' . $fromSql;
     $pageResult = CatalogBackgroundJobPageService::fetch(
         $application->db,
         $selectSql,

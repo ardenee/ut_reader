@@ -5,6 +5,7 @@ require_once __DIR__ . '/CatalogSecurity.php';
 require_once __DIR__ . '/CatalogRememberMe.php';
 require_once __DIR__ . '/CatalogUi.php';
 require_once __DIR__ . '/CatalogNavigation.php';
+require_once __DIR__ . '/CatalogPerformance.php';
 
 catalog_apply_runtime_safeguards();
 
@@ -17,6 +18,7 @@ function catalog_db(array $config): PDO
 {
     static $pdo = null;
     if ($pdo instanceof PDO) {
+        catalog_performance_remember_db($pdo);
         return $pdo;
     }
 
@@ -31,27 +33,25 @@ function catalog_db(array $config): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
+    catalog_performance_remember_db($pdo);
     return $pdo;
 }
 
 function catalog_one(PDO $db, string $sql, array $args = []): ?array
 {
-    $stmt = $db->prepare($sql);
-    $stmt->execute($args);
+    $stmt = catalog_performance_statement($db, $sql, $args);
     $row = $stmt->fetch();
     return $row ?: null;
 }
 
 function catalog_all(PDO $db, string $sql, array $args = []): array
 {
-    $stmt = $db->prepare($sql);
-    $stmt->execute($args);
-    return $stmt->fetchAll();
+    return catalog_performance_statement($db, $sql, $args)->fetchAll();
 }
 
 function catalog_count(PDO $db, string $sql, array $args = []): int
 {
-    return (int)(catalog_one($db, $sql, $args)['c'] ?? 0);
+    return catalog_performance_count($db, $sql, $args);
 }
 
 function catalog_bytes(int $bytes): string
@@ -359,6 +359,7 @@ function catalog_head(string $title): void
 
 function catalog_foot(): void
 {
+    catalog_performance_finish();
     echo '</main></body></html>';
 }
 

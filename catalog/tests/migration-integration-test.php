@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 25;
+$expectedMigrations = 26;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -62,6 +62,9 @@ foreach ([
     'ue_federation_join_requests',
     'ue_exact_count_telemetry',
     'ue_exact_count_query_plans',
+    'ue_exact_count_cache',
+    'ue_background_job_search',
+    'ue_request_performance',
 ] as $table) {
     migration_test_expect($schema->tableExists($table), 'Required migrated table is missing: ' . $table);
 }
@@ -116,6 +119,15 @@ foreach ([
     ['ue_exact_count_query_plans', 'idx_ue_exact_plan_assessment'],
     ['ue_exact_count_query_plans', 'idx_ue_exact_plan_captured'],
     ['ue_exact_count_query_plans', 'idx_ue_exact_plan_metric'],
+    ['ue_exact_count_cache', 'idx_ue_exact_count_cache_query'],
+    ['ue_exact_count_cache', 'idx_ue_exact_count_cache_expiry'],
+    ['ue_background_job_search', 'idx_ue_job_search_queue_job'],
+    ['ue_background_job_search', 'idx_ue_job_search_status_job'],
+    ['ue_background_job_search', 'idx_ue_job_search_updated'],
+    ['ue_background_job_search', 'ft_ue_job_search_text'],
+    ['ue_request_performance', 'uq_ue_request_performance_route'],
+    ['ue_request_performance', 'idx_ue_request_performance_slow'],
+    ['ue_request_performance', 'idx_ue_request_performance_seen'],
 ] as [$table, $index]) {
     migration_test_expect($schema->indexExists($table, $index), 'Required migrated index is missing: ' . $table . '.' . $index);
 }
@@ -149,6 +161,15 @@ foreach (['metric_key', 'context_hash', 'sample_count', 'total_duration_us', 'ma
 }
 foreach (['metric_key', 'context_hash', 'query_hash', 'query_sql', 'plan_json', 'estimated_rows', 'full_scan_rows', 'selected_keys', 'assessment', 'recommendation', 'captured_at'] as $column) {
     migration_test_expect($schema->columnExists('ue_exact_count_query_plans', $column), 'Exact-count query-plan column is missing: ' . $column);
+}
+foreach (['cache_key', 'query_hash', 'result_count', 'expires_at', 'generated_at', 'hit_count'] as $column) {
+    migration_test_expect($schema->columnExists('ue_exact_count_cache', $column), 'Exact-count cache column is missing: ' . $column);
+}
+foreach (['job_id', 'queue_name', 'job_type', 'source_status', 'search_text', 'source_updated_at'] as $column) {
+    migration_test_expect($schema->columnExists('ue_background_job_search', $column), 'Background-job search column is missing: ' . $column);
+}
+foreach (['route_key', 'method', 'sample_count', 'total_duration_us', 'total_sql_us', 'max_duration_us', 'last_query_count', 'last_status'] as $column) {
+    migration_test_expect($schema->columnExists('ue_request_performance', $column), 'Request-performance column is missing: ' . $column);
 }
 
 $ue5Profile = $db->query(
