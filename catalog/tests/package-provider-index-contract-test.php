@@ -13,9 +13,27 @@ package_provider_expect(is_string($migration), 'Package-provider migration could
 package_provider_expect(
     str_contains($migration, 'CREATE TABLE ue_package_providers')
         && str_contains($migration, 'idx_ue_package_providers_lookup')
-        && str_contains($migration, 'trg_ue_files_package_provider_au')
-        && str_contains($migration, 'trg_ue_alias_package_provider_ai'),
-    'Package-provider migration does not create and maintain the materialized lookup.'
+        && !str_contains($migration, 'CREATE TRIGGER'),
+    'Package-provider migration is not compatible with restricted binary-logging installations.'
+);
+
+$providerRepository = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/PdoPackageProviderRepository.php');
+package_provider_expect(is_string($providerRepository), 'Package-provider repository could not be read.');
+package_provider_expect(
+    str_contains($providerRepository, 'function syncFile(')
+        && str_contains($providerRepository, 'function syncAlias(')
+        && str_contains($providerRepository, 'ON DUPLICATE KEY UPDATE'),
+    'Application writes do not maintain the package-provider lookup.'
+);
+
+$aliasRepository = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/PdoPackageAliasRepository.php');
+$affectedRefresh = file_get_contents(__DIR__ . '/../src/Application/Dependency/CatalogAffectedDependencyRefreshService.php');
+package_provider_expect(
+    is_string($aliasRepository)
+        && is_string($affectedRefresh)
+        && str_contains($aliasRepository, 'syncAlias($aliasId)')
+        && str_contains($affectedRefresh, 'syncFile($newFileId)'),
+    'File or alias import paths do not update package providers.'
 );
 
 $resolver = file_get_contents(__DIR__ . '/../src/Application/Dependency/CatalogDependencyResolver.php');
@@ -25,6 +43,13 @@ package_provider_expect(
         && str_contains($resolver, 'p.game_id=?')
         && str_contains($resolver, 'p.package_name IN ('),
     'Dependency resolution is not using the game-scoped package-provider index.'
+);
+package_provider_expect(
+    str_contains($resolver, 'FROM ue_files f')
+        && str_contains($resolver, 'FROM ue_file_package_aliases a')
+        && str_contains($resolver, 'missingLookupValues(')
+        && str_contains($resolver, 'catch (PDOException)'),
+    'Dependency resolution does not retain an exact authoritative-table fallback.'
 );
 package_provider_expect(
     !str_contains($resolver, 'valuesTableSql(')
