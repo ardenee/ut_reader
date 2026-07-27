@@ -25,12 +25,32 @@ foreach (['enqueue_rebuild_game', 'enqueue_rebuild_file', 'job_id=', "action: 'c
 $types = file_get_contents(__DIR__ . '/../src/Domain/Jobs/JobType.php');
 dependency_refresh_contract_expect(is_string($types), 'JobType.php could not be read.');
 dependency_refresh_contract_expect(str_contains($types, 'REBUILD_FILE_DEPENDENCIES'), 'The exact file dependency job type is missing.');
+dependency_refresh_contract_expect(str_contains($types, 'REBUILD_AFFECTED_DEPENDENCIES'), 'The affected dependency job type is missing.');
 
 $handler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogMaintenanceJobHandler.php');
 dependency_refresh_contract_expect(is_string($handler), 'CatalogMaintenanceJobHandler.php could not be read.');
 dependency_refresh_contract_expect(str_contains($handler, 'JobType::REBUILD_FILE_DEPENDENCIES'), 'The maintenance handler does not dispatch exact file jobs.');
+dependency_refresh_contract_expect(str_contains($handler, 'JobType::REBUILD_AFFECTED_DEPENDENCIES'), 'The maintenance handler does not dispatch affected-file jobs.');
 dependency_refresh_contract_expect(str_contains($handler, '\\scanner_rebuild_dependencies('), 'The exact file job no longer rebuilds the selected file itself.');
 dependency_refresh_contract_expect(str_contains($handler, "job->payload['offset']"), 'The queued game refresh no longer preserves start offsets.');
+
+$service = file_get_contents(__DIR__ . '/../src/Application/Dependency/CatalogAffectedDependencyRefreshService.php');
+dependency_refresh_contract_expect(is_string($service), 'CatalogAffectedDependencyRefreshService.php could not be read.');
+foreach ([
+    'new PdoJobQueue($db)',
+    'JobType::REBUILD_AFFECTED_DEPENDENCIES',
+    "'rebuild-affected-file:' . \$fileId",
+    'isActiveRefreshJob(',
+    'hasAffectedFiles(',
+    'new CatalogDetachedWorker($config)',
+    'using synchronous fallback',
+] as $fragment) {
+    dependency_refresh_contract_expect(str_contains($service, $fragment), 'Automatic affected dependency refresh is missing ' . $fragment);
+}
+dependency_refresh_contract_expect(
+    str_contains($service, "status=\"running\"") && str_contains($service, "return [];") ,
+    'Normal imports do not defer affected-file rebuilding to the active worker job.'
+);
 
 $action = file_get_contents(__DIR__ . '/../api/v1/job-action.php');
 dependency_refresh_contract_expect(is_string($action), 'job-action.php could not be read.');
