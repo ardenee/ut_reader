@@ -54,6 +54,7 @@ function catalog_admin_navigation_groups(string $root): array
         ],
         'Maintenance' => [
             'Background Jobs' => $root . 'background-jobs.php',
+            'Exact Count Telemetry' => $root . 'query-telemetry.php',
             'Full Sync' => $root . 'full-sync.php',
             'Dependency Refresh' => $root . 'dependency-refresh.php',
             'Asset Metadata Rebuild' => $root . 'asset-metadata-rebuild.php',
