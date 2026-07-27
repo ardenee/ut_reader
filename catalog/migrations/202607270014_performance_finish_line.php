@@ -5,6 +5,13 @@ return [
     'version' => '202607270014',
     'description' => 'Add evidence-driven count caching, background-job search projection and bounded request performance aggregates.',
     'up' => static function (PDO $db, \UnrealDb\Catalog\Infrastructure\Persistence\SchemaInspector $schema): void {
+        $schema->requireTable('ue_background_jobs');
+        $schema->ensureIndex(
+            'ue_background_jobs',
+            'idx_ue_background_jobs_updated_id',
+            'ALTER TABLE ue_background_jobs ADD KEY idx_ue_background_jobs_updated_id (updated_at,id)'
+        );
+
         $schema->ensureTable(
             'ue_exact_count_cache',
             'CREATE TABLE ue_exact_count_cache ('
