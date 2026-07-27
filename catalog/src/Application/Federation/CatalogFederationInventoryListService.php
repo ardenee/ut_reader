@@ -9,6 +9,9 @@ use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 /** Loads parent/child federation inventory pages from compact package summaries. */
 final class CatalogFederationInventoryListService
 {
+    /** @var array<int,bool> */
+    private static array $examplePathAvailability = [];
+
     /** @return array{required:int,missing:int} */
     public static function parentCounts(PDO $db, int $peerId, bool $ignoreBaseGame): array
     {
@@ -75,7 +78,7 @@ final class CatalogFederationInventoryListService
     {
         return (int)(\catalog_one(
             $db,
-            'SELECT COUNT(*) c FROM (' . self::childNeedsSql($ignoreBaseGame) . ') needs'
+            'SELECT COUNT(*) c FROM (' . self::childNeedsSql($db, $ignoreBaseGame) . ') needs'
         )['c'] ?? 0);
     }
 
@@ -112,7 +115,7 @@ final class CatalogFederationInventoryListService
             . 'needs.required_object_path,needs.object_count,needs.use_count,needs.is_base_game,'
             . 'MAX(CASE WHEN pf.id IS NOT NULL THEN 1 ELSE 0 END) parent_available,'
             . 'MAX(pf.id) parent_peer_file_id,MAX(pf.original_name) parent_file,MAX(pf.file_size) parent_file_size '
-            . 'FROM (' . self::childNeedsSql($ignoreBaseGame) . ') needs '
+            . 'FROM (' . self::childNeedsSql($db, $ignoreBaseGame) . ') needs '
             . 'LEFT JOIN ue_federation_peer_files pf ON pf.peer_id=? '
             . 'AND LOWER(TRIM(pf.package_name))=LOWER(TRIM(needs.required_package)) '
             . 'AND (pf.game_id=needs.game_id OR pf.remote_game_name=needs.game_name)'
@@ -160,12 +163,15 @@ final class CatalogFederationInventoryListService
             . ')' . $policy;
     }
 
-    private static function childNeedsSql(bool $ignoreBaseGame): string
+    private static function childNeedsSql(PDO $db, bool $ignoreBaseGame): string
     {
         $baseGameSql = \federation_base_game_package_exists_sql('s.required_package', 's.game_id');
         $policy = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
+        $examplePath = self::hasExamplePathColumn($db)
+            ? 'MIN(COALESCE(s.example_required_object_path,""))'
+            : '""';
         return 'SELECT s.game_id,g.name game_name,COALESCE(gp.engine_key,"") engine_key,s.required_package,'
-            . 'MIN(COALESCE(s.example_required_object_path,"")) required_object_path,'
+            . $examplePath . ' required_object_path,'
             . 'SUM(s.missing_count) object_count,COUNT(*) use_count,'
             . 'MAX(CASE WHEN ' . $baseGameSql . ' THEN 1 ELSE 0 END) is_base_game '
             . 'FROM ue_dependency_package_summaries s '
@@ -174,6 +180,25 @@ final class CatalogFederationInventoryListService
             . 'LEFT JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1 '
             . 'WHERE s.missing_count>0 AND s.required_package<>""' . $policy . ' '
             . 'GROUP BY s.game_id,g.name,gp.engine_key,s.required_package';
+    }
+
+    private static function hasExamplePathColumn(PDO $db): bool
+    {
+        $connectionId = spl_object_id($db);
+        if (array_key_exists($connectionId, self::$examplePathAvailability)) {
+            return self::$examplePathAvailability[$connectionId];
+        }
+        try {
+            $statement = $db->query(
+                'SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() '
+                . 'AND table_name="ue_dependency_package_summaries" '
+                . 'AND column_name="example_required_object_path" LIMIT 1'
+            );
+            self::$examplePathAvailability[$connectionId] = $statement !== false && $statement->fetchColumn() !== false;
+        } catch (\Throwable) {
+            self::$examplePathAvailability[$connectionId] = false;
+        }
+        return self::$examplePathAvailability[$connectionId];
     }
 
     private static function move(string $move): string
