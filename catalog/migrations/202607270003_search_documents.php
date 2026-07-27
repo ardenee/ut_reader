@@ -10,6 +10,9 @@ return [
         $schema->requireTable('ue_imports');
         $schema->requireTable('ue_exports');
 
+        // Build only the primary/unique/FK structure before the large backfill.
+        // Adding secondary and FULLTEXT indexes afterwards avoids maintaining each
+        // index row-by-row while the existing catalogue is copied.
         $schema->ensureTable(
             'ue_search_documents',
             'CREATE TABLE ue_search_documents ('
@@ -23,32 +26,8 @@ return [
             . 'indexed_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,'
             . 'PRIMARY KEY (id),'
             . 'UNIQUE KEY uq_ue_search_document_source (file_id,document_type,source_id),'
-            . 'KEY idx_ue_search_game_primary (game_id,primary_value(191),file_id),'
-            . 'KEY idx_ue_search_game_secondary (game_id,secondary_value(191),file_id),'
-            . 'KEY idx_ue_search_file (file_id),'
-            . 'FULLTEXT KEY ft_ue_search_values (primary_value,secondary_value),'
             . 'CONSTRAINT fk_ue_search_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE'
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
-        );
-        $schema->ensureIndex(
-            'ue_search_documents',
-            'idx_ue_search_game_primary',
-            'ALTER TABLE ue_search_documents ADD KEY idx_ue_search_game_primary (game_id,primary_value(191),file_id)'
-        );
-        $schema->ensureIndex(
-            'ue_search_documents',
-            'idx_ue_search_game_secondary',
-            'ALTER TABLE ue_search_documents ADD KEY idx_ue_search_game_secondary (game_id,secondary_value(191),file_id)'
-        );
-        $schema->ensureIndex(
-            'ue_search_documents',
-            'idx_ue_search_file',
-            'ALTER TABLE ue_search_documents ADD KEY idx_ue_search_file (file_id)'
-        );
-        $schema->ensureIndex(
-            'ue_search_documents',
-            'ft_ue_search_values',
-            'ALTER TABLE ue_search_documents ADD FULLTEXT KEY ft_ue_search_values (primary_value,secondary_value)'
         );
 
         $upsert = ' ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),primary_value=VALUES(primary_value),'
@@ -74,6 +53,27 @@ return [
             'INSERT INTO ue_search_documents(game_id,file_id,document_type,source_id,primary_value,secondary_value) '
             . 'SELECT f.game_id,e.file_id,"export",e.id,e.object_name,e.full_path '
             . 'FROM ue_exports e JOIN ue_files f ON f.id=e.file_id AND f.scan_status="verified"' . $upsert
+        );
+
+        $schema->ensureIndex(
+            'ue_search_documents',
+            'idx_ue_search_game_primary',
+            'ALTER TABLE ue_search_documents ADD KEY idx_ue_search_game_primary (game_id,primary_value(191),file_id)'
+        );
+        $schema->ensureIndex(
+            'ue_search_documents',
+            'idx_ue_search_game_secondary',
+            'ALTER TABLE ue_search_documents ADD KEY idx_ue_search_game_secondary (game_id,secondary_value(191),file_id)'
+        );
+        $schema->ensureIndex(
+            'ue_search_documents',
+            'idx_ue_search_file',
+            'ALTER TABLE ue_search_documents ADD KEY idx_ue_search_file (file_id)'
+        );
+        $schema->ensureIndex(
+            'ue_search_documents',
+            'ft_ue_search_values',
+            'ALTER TABLE ue_search_documents ADD FULLTEXT KEY ft_ue_search_values (primary_value,secondary_value)'
         );
     },
 ];
