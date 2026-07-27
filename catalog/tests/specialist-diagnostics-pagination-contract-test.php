@@ -10,12 +10,13 @@ function specialist_diagnostics_expect(bool $condition, string $message): void
 
 $conflicts = file_get_contents(__DIR__ . '/../src/Application/Federation/CatalogFederationConflictListService.php');
 $diagnostics = file_get_contents(__DIR__ . '/../federation/diagnostics.php');
+$conflictView = file_get_contents(__DIR__ . '/../federation/_diagnostics-conflicts.php');
 $jobs = file_get_contents(__DIR__ . '/../src/Application/Jobs/CatalogBackgroundJobPageService.php');
 $endpoint = file_get_contents(__DIR__ . '/../api/v1/job-status-cursor.php');
 $bridge = file_get_contents(__DIR__ . '/../assets/background-jobs-cursor-bridge.js');
 $page = file_get_contents(__DIR__ . '/../background-jobs.php');
 $migration = file_get_contents(__DIR__ . '/../migrations/202607270011_specialist_diagnostics_pagination.php');
-foreach ([$conflicts, $diagnostics, $jobs, $endpoint, $bridge, $page, $migration] as $source) {
+foreach ([$conflicts, $diagnostics, $conflictView, $jobs, $endpoint, $bridge, $page, $migration] as $source) {
     specialist_diagnostics_expect(is_string($source), 'Specialist diagnostics pagination source could not be read.');
 }
 
@@ -27,7 +28,15 @@ specialist_diagnostics_expect(
 );
 specialist_diagnostics_expect(!str_contains(strtoupper($conflicts), ' OFFSET '), 'Federation conflicts returned to OFFSET pagination.');
 specialist_diagnostics_expect(str_contains($conflicts, "LIMIT ' . (\$limit + 1)"), 'Federation conflicts do not read one bounded look-ahead row.');
-specialist_diagnostics_expect(!str_contains($diagnostics, 'LIMIT 1000'), 'Federation Diagnostics still caps conflicts at 1,000 rows.');
+specialist_diagnostics_expect(
+    str_contains($conflicts, '$remainder = $total % $limit;'),
+    'Federation conflict Last navigation does not return the exact partial final page.'
+);
+specialist_diagnostics_expect(
+    str_contains($diagnostics, "require __DIR__ . '/_diagnostics-conflicts.php';"),
+    'Federation Diagnostics does not load the isolated conflict view.'
+);
+specialist_diagnostics_expect(!str_contains($diagnostics . $conflictView, 'LIMIT 1000'), 'Federation Diagnostics still caps conflicts at 1,000 rows.');
 foreach ([
     'CatalogFederationConflictListService::count(',
     'CatalogFederationConflictListService::fetch(',
@@ -35,9 +44,9 @@ foreach ([
     "'peer_id' => \$peerId",
     "'ignore_base_game' => \$ignore",
     "'conflict_cursor'",
-    'diagnostics_conflict_links(',
+    'federation_diagnostics_conflict_links(',
 ] as $fragment) {
-    specialist_diagnostics_expect(str_contains($diagnostics, $fragment), 'Federation conflict cursor is missing: ' . $fragment);
+    specialist_diagnostics_expect(str_contains($conflictView, $fragment), 'Federation conflict cursor is missing: ' . $fragment);
 }
 
 specialist_diagnostics_expect(
@@ -48,6 +57,10 @@ specialist_diagnostics_expect(
 );
 specialist_diagnostics_expect(!str_contains(strtoupper($jobs), ' OFFSET '), 'Background-job page service contains OFFSET.');
 specialist_diagnostics_expect(!str_contains(strtoupper($endpoint), ' OFFSET '), 'Cursor job API contains OFFSET.');
+specialist_diagnostics_expect(
+    str_contains($jobs, '$remainder = $total % $limit;'),
+    'Background-job Last navigation does not return the exact partial final page.'
+);
 foreach ([
     'CatalogBackgroundJobPageService::fetch(',
     'CatalogKeysetPaginator::decode(',
@@ -63,11 +76,11 @@ foreach ([
 }
 
 specialist_diagnostics_expect(
-    str_contains($bridge, "job-status-cursor.php")
-        && str_contains($bridge, "state.descriptors.set(page - 1")
-        && str_contains($bridge, "state.descriptors.set(page + 1")
-        && str_contains($bridge, "job_cursor")
-        && str_contains($bridge, "job_move"),
+    str_contains($bridge, 'job-status-cursor.php')
+        && str_contains($bridge, 'state.descriptors.set(page - 1')
+        && str_contains($bridge, 'state.descriptors.set(page + 1')
+        && str_contains($bridge, 'job_cursor')
+        && str_contains($bridge, 'job_move'),
     'Background Jobs cursor bridge does not preserve sequential and reload navigation.'
 );
 $bridgePosition = strpos($page, 'background-jobs-cursor-bridge.js');
