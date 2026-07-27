@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
+
+use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
 
 catalog_start_session();
 require_once __DIR__ . '/lib/CatalogScanner.php';
@@ -54,24 +55,20 @@ function package_normalize_export_dirty_count(PDO $db, int $fileId, string $clea
 {
     return (int)(catalog_one(
         $db,
-        'SELECT COUNT(*) c
-         FROM ue_exports
-         WHERE file_id=?
-           AND full_path<>CASE WHEN local_path<>"" THEN CONCAT(?, ".", local_path) ELSE ? END',
+        'SELECT COUNT(*) c FROM ue_exports WHERE file_id=? '
+        . 'AND full_path<>CASE WHEN local_path<>"" THEN CONCAT(?, ".", local_path) ELSE ? END',
         [$fileId, $cleanPackage, $cleanPackage]
     )['c'] ?? 0);
 }
 
-/** @return array{changed:bool,game_id:int,old_package:string,new_package:string,old_original:string,new_original:string,export_rows:int} */
+/** @return array{changed:bool,file_id:int,game_id:int,old_package:string,new_package:string,old_original:string,new_original:string,export_rows:int} */
 function package_normalize_file(PDO $db, int $fileId): array
 {
     $file = catalog_one(
         $db,
-        'SELECT f.id, f.game_id, f.package_name, f.original_name, f.detected_engine_key, p.engine_key profile_engine
-         FROM ue_files f
-         JOIN ue_games g ON g.id=f.game_id
-         LEFT JOIN ue_game_profiles p ON p.id=g.profile_id
-         WHERE f.id=?',
+        'SELECT f.id,f.game_id,f.package_name,f.original_name,f.detected_engine_key,p.engine_key profile_engine '
+        . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
+        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE f.id=?',
         [$fileId]
     );
     if (!$file) {
@@ -87,12 +84,16 @@ function package_normalize_file(PDO $db, int $fileId): array
     $changed = $oldPackage !== $cleanPackage || $oldOriginal !== $cleanOriginal || $exportDirty > 0;
 
     if ($changed) {
-        $db->prepare('UPDATE ue_files SET package_name=?, original_name=? WHERE id=?')->execute([$cleanPackage, $cleanOriginal, $fileId]);
-        $db->prepare('UPDATE ue_exports SET full_path=CASE WHEN local_path<>"" THEN CONCAT(?, ".", local_path) ELSE ? END WHERE file_id=?')->execute([$cleanPackage, $cleanPackage, $fileId]);
+        $db->prepare('UPDATE ue_files SET package_name=?,original_name=? WHERE id=?')
+            ->execute([$cleanPackage, $cleanOriginal, $fileId]);
+        $db->prepare(
+            'UPDATE ue_exports SET full_path=CASE WHEN local_path<>"" THEN CONCAT(?, ".", local_path) ELSE ? END WHERE file_id=?'
+        )->execute([$cleanPackage, $cleanPackage, $fileId]);
     }
 
     return [
         'changed' => $changed,
+        'file_id' => $fileId,
         'game_id' => (int)$file['game_id'],
         'old_package' => $oldPackage,
         'new_package' => $cleanPackage,
@@ -105,29 +106,28 @@ function package_normalize_file(PDO $db, int $fileId): array
 /** @return list<array<string,mixed>> */
 function package_normalize_dirty_rows(PDO $db, int $gameId): array
 {
-    $sql = 'SELECT f.id, f.game_id, g.name game_name, f.package_name, f.original_name, f.package_guid, f.md5, f.file_size, f.scan_status,
-                   f.detected_engine_key, p.engine_key profile_engine
-            FROM ue_files f
-            JOIN ue_games g ON g.id=f.game_id
-            LEFT JOIN ue_game_profiles p ON p.id=g.profile_id
-            WHERE f.scan_status<>"failed"
-              AND UPPER(COALESCE(f.detected_engine_key,"")) NOT IN ("UE4","UE5")
-              AND UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5")';
+    $sql = 'SELECT f.id,f.game_id,g.name game_name,f.package_name,f.original_name,f.package_guid,f.md5,f.file_size,f.scan_status,'
+        . 'f.detected_engine_key,p.engine_key profile_engine FROM ue_files f '
+        . 'JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id '
+        . 'WHERE f.scan_status<>"failed" '
+        . 'AND UPPER(COALESCE(f.detected_engine_key,"")) NOT IN ("UE4","UE5") '
+        . 'AND UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5")';
     $args = [];
     if ($gameId > 0) {
         $sql .= ' AND f.game_id=?';
         $args[] = $gameId;
     }
-    $sql .= ' ORDER BY g.name, f.package_name, f.original_name, f.id';
+    $sql .= ' ORDER BY g.name,f.package_name,f.original_name,f.id';
 
-    $rows = catalog_all($db, $sql, $args);
     $dirty = [];
-    foreach ($rows as $row) {
+    foreach (catalog_all($db, $sql, $args) as $row) {
         package_normalize_assert_legacy_engine($row);
         $cleanPackage = package_normalize_clean_package($row);
         $cleanOriginal = package_normalize_clean_original($row);
         $exportDirty = package_normalize_export_dirty_count($db, (int)$row['id'], $cleanPackage);
-        if ((string)$row['package_name'] === $cleanPackage && (string)$row['original_name'] === $cleanOriginal && $exportDirty === 0) {
+        if ((string)$row['package_name'] === $cleanPackage
+            && (string)$row['original_name'] === $cleanOriginal
+            && $exportDirty === 0) {
             continue;
         }
         $row['clean_package_name'] = $cleanPackage;
@@ -150,11 +150,9 @@ try {
 
     $games = catalog_all(
         $db,
-        'SELECT g.id, g.name, p.engine_key
-         FROM ue_games g
-         LEFT JOIN ue_game_profiles p ON p.id=g.profile_id
-         WHERE UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5")
-         ORDER BY g.name'
+        'SELECT g.id,g.name,p.engine_key FROM ue_games g '
+        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id '
+        . 'WHERE UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5") ORDER BY g.name'
     );
     $gameId = package_normalize_int('game_id', 0, 0, PHP_INT_MAX);
     $knownGameIds = array_map(static fn(array $game): int => (int)$game['id'], $games);
@@ -164,10 +162,7 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('package-normalize');
-        $ids = $_POST['file_ids'] ?? [];
-        if (!is_array($ids)) {
-            $ids = [];
-        }
+        $ids = is_array($_POST['file_ids'] ?? null) ? $_POST['file_ids'] : [];
         $ids = array_values(array_filter(array_unique(array_map('intval', $ids)), static fn(int $id): bool => $id > 0));
         if (count($ids) > PACKAGE_NORMALIZE_MAX_ROWS) {
             throw new RuntimeException('Too many files selected. Process at most ' . PACKAGE_NORMALIZE_MAX_ROWS . ' files at once.');
@@ -182,18 +177,36 @@ try {
         try {
             foreach ($ids as $fileId) {
                 $result = package_normalize_file($db, $fileId);
-                if ($result['changed']) {
-                    $changed[] = $result;
-                    $affectedPackages[(int)$result['game_id'] . ':' . $result['new_package']] = [(int)$result['game_id'], (string)$result['new_package']];
-                    if ((string)$result['old_package'] !== '' && (string)$result['old_package'] !== (string)$result['new_package']) {
-                        $affectedPackages[(int)$result['game_id'] . ':' . $result['old_package']] = [(int)$result['game_id'], (string)$result['old_package']];
+                if (!$result['changed']) {
+                    continue;
+                }
+                $changed[] = $result;
+                foreach ([$result['old_package'], $result['new_package']] as $packageName) {
+                    $packageName = trim((string)$packageName);
+                    if ($packageName !== '') {
+                        $affectedPackages[(int)$result['game_id'] . ':' . mb_strtolower($packageName, 'UTF-8')] = [
+                            (int)$result['game_id'],
+                            $packageName,
+                        ];
                     }
                 }
             }
             $db->commit();
         } catch (Throwable $error) {
-            $db->rollBack();
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
             throw $error;
+        }
+
+        foreach ($changed as $result) {
+            CatalogProjectionReconciliationQueue::enqueue(
+                $db,
+                (int)$result['file_id'],
+                [(int)$result['game_id']],
+                [(string)$result['old_package'], (string)$result['new_package']],
+                $config
+            );
         }
 
         $rebuild = (string)($_POST['rebuild_dependencies'] ?? '') === '1';
@@ -201,15 +214,29 @@ try {
         if ($rebuild) {
             foreach ($affectedPackages as [$affectedGameId, $packageName]) {
                 try {
-                    scanner_rebuild_affected_dependencies_for_package($db, $config, (int)$affectedGameId, (string)$packageName, null, 0, 100);
+                    scanner_rebuild_affected_dependencies_for_package(
+                        $db,
+                        $config,
+                        (int)$affectedGameId,
+                        (string)$packageName,
+                        null,
+                        0,
+                        100
+                    );
                 } catch (Throwable $error) {
                     $rebuildWarnings++;
-                    error_log('[UnrealDB package normalize] dependency refresh failed for game=' . (int)$affectedGameId . ' package=' . (string)$packageName . ': ' . $error->getMessage());
+                    error_log(
+                        '[UnrealDB package normalize] dependency refresh failed for game=' . (int)$affectedGameId
+                        . ' package=' . (string)$packageName . ': ' . $error->getMessage()
+                    );
                 }
             }
         }
 
-        $_SESSION['package_normalize_flash'] = 'Normalized ' . count($changed) . ' file(s).' . ($rebuild ? ' Dependency refresh package checks=' . count($affectedPackages) . ', warnings=' . $rebuildWarnings . '.' : ' Dependency refresh was not run.');
+        $_SESSION['package_normalize_flash'] = 'Normalized ' . count($changed) . ' file(s).'
+            . ($rebuild
+                ? ' Dependency refresh package checks=' . count($affectedPackages) . ', warnings=' . $rebuildWarnings . '.'
+                : ' Durable projection reconciliation was queued.');
         header('Location: package-normalize.php' . ($gameId > 0 ? '?game_id=' . $gameId : ''));
         exit;
     }
