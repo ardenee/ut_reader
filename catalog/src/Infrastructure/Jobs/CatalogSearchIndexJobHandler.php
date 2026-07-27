@@ -10,9 +10,10 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoSearchDocumentIndexer;
 
-/** Rebuilds compact search, dependency and game-stat projections after a file changes. */
+/** Rebuilds compact provider, search, dependency and game-stat projections after a file changes. */
 final class CatalogSearchIndexJobHandler implements JobHandler
 {
     public function __construct(private readonly PDO $db)
@@ -36,10 +37,20 @@ final class CatalogSearchIndexJobHandler implements JobHandler
         $gameId = (int)($gameStatement->fetchColumn() ?: 0);
 
         $context->checkpoint([
-            'stage' => 'search_index',
+            'stage' => 'package_providers',
             'done' => 0,
-            'total' => 3,
+            'total' => 4,
             'percent' => 0,
+            'message' => 'Reconciling package provider rows.',
+            'file_id' => $fileId,
+        ]);
+        (new PdoPackageProviderRepository($this->db))->reconcileFile($fileId);
+
+        $context->checkpoint([
+            'stage' => 'search_index',
+            'done' => 1,
+            'total' => 4,
+            'percent' => 25,
             'message' => 'Rebuilding file search documents.',
             'file_id' => $fileId,
         ]);
@@ -47,9 +58,9 @@ final class CatalogSearchIndexJobHandler implements JobHandler
         $result = (new PdoSearchDocumentIndexer($this->db))->rebuildFile($fileId);
         $context->checkpoint([
             'stage' => 'dependency_summary',
-            'done' => 1,
-            'total' => 3,
-            'percent' => 34,
+            'done' => 2,
+            'total' => 4,
+            'percent' => 50,
             'message' => 'Rebuilding package dependency summary.',
             'file_id' => $fileId,
             'documents' => (int)$result['total'],
@@ -58,9 +69,9 @@ final class CatalogSearchIndexJobHandler implements JobHandler
 
         $context->checkpoint([
             'stage' => 'game_stats',
-            'done' => 2,
-            'total' => 3,
-            'percent' => 67,
+            'done' => 3,
+            'total' => 4,
+            'percent' => 75,
             'message' => 'Refreshing cached game counters.',
             'file_id' => $fileId,
             'documents' => (int)$result['total'],
@@ -72,12 +83,12 @@ final class CatalogSearchIndexJobHandler implements JobHandler
 
         $context->checkpoint([
             'stage' => 'search_index',
-            'done' => 3,
-            'total' => 3,
+            'done' => 4,
+            'total' => 4,
             'percent' => 100,
             'message' => !empty($result['indexed'])
-                ? 'Search documents, dependency summary and game counters rebuilt.'
-                : 'Search documents and dependency summary removed; game counters reconciled.',
+                ? 'Provider, search, dependency and game-counter projections rebuilt.'
+                : 'Provider, search and dependency projections removed; game counters reconciled.',
             'file_id' => $fileId,
             'documents' => (int)$result['total'],
             'dependency_summary_rows' => (int)$summary['summary_rows'],
@@ -85,6 +96,7 @@ final class CatalogSearchIndexJobHandler implements JobHandler
         ]);
 
         return ['operation' => 'rebuild_file_search_index'] + $result + [
+            'package_providers_reconciled' => true,
             'dependency_summary_rows' => (int)$summary['summary_rows'],
             'dependency_summary_available' => (bool)$summary['available'],
             'game_id' => $gameId,
