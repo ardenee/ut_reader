@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector;
+
 /**
  * Render serialized FName control bytes visibly without altering their stored
  * value or the database/reference lookups used by the examiner.
@@ -40,15 +42,68 @@ function file_examine_render_opaque_controls(string $html, int &$replacementCoun
     return implode('', $parts);
 }
 
+/** @param array{ok:bool,error:string,summary:array<string,mixed>,rows:list<array<string,mixed>>}|null $inspection */
+function file_examine_header_html(?array $inspection): string
+{
+    if ($inspection === null) {
+        return '';
+    }
+    $html = '<div class="card"><h2>Raw package header</h2>';
+    if (!$inspection['ok']) {
+        return $html . '<p class="muted">' . catalog_h($inspection['error']) . '</p></div>';
+    }
+
+    $html .= '<div class="two-col"><table>';
+    $summary = $inspection['summary'];
+    $left = ['GUID','Version','Licensee Version','Signature','Name Offset','Import Offset','Export Offset','Total Header Size'];
+    $right = ['Flags','Build','Heritage','Counts','Catalog Counts','Generations','Folder Name'];
+    foreach ($left as $label) {
+        if (array_key_exists($label, $summary)) {
+            $html .= '<tr><th>' . catalog_h($label) . '</th><td class="mono path">' . catalog_h((string)$summary[$label]) . '</td></tr>';
+        }
+    }
+    $html .= '</table><table>';
+    foreach ($right as $label) {
+        if (array_key_exists($label, $summary)) {
+            $html .= '<tr><th>' . catalog_h($label) . '</th><td class="mono path">' . catalog_h((string)$summary[$label]) . '</td></tr>';
+        }
+    }
+    $html .= '</table></div>';
+
+    if ($inspection['rows'] !== []) {
+        $rows = array_slice($inspection['rows'], 0, 500);
+        $html .= '<details><summary>Raw fields (' . count($inspection['rows']) . ')</summary><div class="examine-table-region"><table><thead><tr><th>Offset</th><th>Size</th><th>Field</th><th>Type</th><th>Value</th><th>Raw hex</th><th>Note</th></tr></thead><tbody>';
+        foreach ($rows as $row) {
+            $html .= '<tr><td class="mono">' . (int)$row['offset'] . '</td><td class="mono">' . (int)$row['size'] . '</td><td class="mono">' . catalog_h($row['field']) . '</td><td class="mono">' . catalog_h($row['type']) . '</td><td class="mono path">' . catalog_h($row['value']) . '</td><td class="mono path">' . catalog_h($row['hex']) . '</td><td>' . catalog_h($row['note']) . '</td></tr>';
+        }
+        $html .= '</tbody></table></div>';
+        if (count($inspection['rows']) > count($rows)) {
+            $html .= '<p class="muted">Only the first ' . count($rows) . ' raw header fields are displayed.</p>';
+        }
+        $html .= '</details>';
+    }
+    return $html . '</div>';
+}
+
 $id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
 $id = $id === false || $id === null ? 0 : max(0, (int)$id);
+$headerInspection = null;
 if ($id > 0) {
     try {
-        $db = catalog_db(catalog_config());
-        $row = catalog_one($db, 'SELECT scan_status FROM ue_files WHERE id=? LIMIT 1', [$id]);
+        $config = catalog_config();
+        $db = catalog_db($config);
+        $row = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? LIMIT 1', [$id]);
         if ($row && (string)$row['scan_status'] === 'unverified') {
             header('Location: unverified-file-details.php?id=' . $id, true, 302);
             exit;
+        }
+        if ($row) {
+            $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+            $storedPath = realpath(__DIR__ . '/' . (string)$row['relative_path']);
+            if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
+                $storedPath = null;
+            }
+            $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
         }
     } catch (Throwable $error) {
         error_log('[UnrealDB file examiner routing] ' . $error->getMessage());
@@ -72,6 +127,11 @@ if ($opaqueControlBytes > 0) {
         . 'Their stored values and import/export reference identities have not been changed.</p></div>';
     $marker = '<div class="card"><h2>Package header</h2>';
     $html = str_replace($marker, $notice . $marker, $html);
+}
+
+$headerHtml = file_examine_header_html($headerInspection);
+if ($headerHtml !== '') {
+    $html = str_replace('<div class="card" id="package-tables">', $headerHtml . '<div class="card" id="package-tables">', $html);
 }
 
 echo $html;
