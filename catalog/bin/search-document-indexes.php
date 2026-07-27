@@ -16,21 +16,16 @@ function search_index_usage(): void
 {
     fwrite(STDOUT, "Usage:\n");
     fwrite(STDOUT, "  php catalog/bin/search-document-indexes.php status\n");
-    fwrite(STDOUT, "  php catalog/bin/search-document-indexes.php build [--allow-system-temp]\n");
+    fwrite(STDOUT, "  php catalog/bin/search-document-indexes.php build\n");
 }
 
-/** @return array{command:string,allow_system_temp:bool} */
+/** @return array{command:string} */
 function search_index_arguments(array $arguments): array
 {
     $command = 'status';
     $commandSet = false;
-    $allowSystemTemp = false;
     foreach ($arguments as $argument) {
         $argument = (string)$argument;
-        if ($argument === '--allow-system-temp') {
-            $allowSystemTemp = true;
-            continue;
-        }
         if (str_starts_with($argument, '-')) {
             throw new InvalidArgumentException('Unknown option: ' . $argument);
         }
@@ -40,7 +35,7 @@ function search_index_arguments(array $arguments): array
         $command = strtolower(trim($argument));
         $commandSet = true;
     }
-    return ['command' => $command, 'allow_system_temp' => $allowSystemTemp];
+    return ['command' => $command];
 }
 
 /** @return array{tmpdir:string,innodb_tmpdir:string,datadir:string} */
@@ -56,20 +51,12 @@ function search_index_database_paths(PDO $db): array
     ];
 }
 
-function search_index_drive(string $path): string
-{
-    if (preg_match('/^([A-Za-z]):[\\\/]/', trim($path), $match) === 1) {
-        return strtoupper($match[1]) . ':';
-    }
-    return '';
-}
-
 function search_index_print_paths(array $paths): void
 {
-    fwrite(STDOUT, "MySQL/MariaDB paths:\n");
+    fwrite(STDOUT, "MySQL/MariaDB paths (informational only):\n");
     fwrite(STDOUT, '  tmpdir:        ' . ($paths['tmpdir'] !== '' ? $paths['tmpdir'] : '(server default)') . "\n");
     fwrite(STDOUT, '  innodb_tmpdir: ' . ($paths['innodb_tmpdir'] !== '' ? $paths['innodb_tmpdir'] : '(uses tmpdir)') . "\n");
-    fwrite(STDOUT, '  datadir:       ' . ($paths['datadir'] !== '' ? $paths['datadir'] : '(unknown)') . " (database remains here)\n");
+    fwrite(STDOUT, '  datadir:       ' . ($paths['datadir'] !== '' ? $paths['datadir'] : '(unknown)') . "\n");
 }
 
 try {
@@ -101,19 +88,6 @@ try {
 
     if ($arguments['command'] === 'status') {
         exit(0);
-    }
-
-    $systemDrive = strtoupper(trim((string)(getenv('SystemDrive') ?: 'C:')));
-    $tmpDrive = search_index_drive($paths['tmpdir']);
-    $innodbDrive = search_index_drive($paths['innodb_tmpdir']);
-    $unsafeTmp = $tmpDrive !== '' && $tmpDrive === $systemDrive;
-    $unsafeInnodb = $paths['innodb_tmpdir'] !== '' && $innodbDrive !== '' && $innodbDrive === $systemDrive;
-    if (($unsafeTmp || $unsafeInnodb) && !$arguments['allow_system_temp']) {
-        throw new RuntimeException(
-            'Refusing to build large search indexes while MySQL temporary work points to the Windows system drive. '
-            . 'Keep the database datadir where it is, but move tmpdir and innodb_tmpdir to a drive with adequate temporary free space, restart MySQL, confirm with the status command, then retry. '
-            . 'Use --allow-system-temp only when you have deliberately confirmed sufficient system-drive space.'
-        );
     }
 
     foreach ($definitions as [$index, $sql]) {
