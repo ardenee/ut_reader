@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
+
 catalog_start_session();
 require_once __DIR__ . '/lib/FederationAuth.php';
 require_once __DIR__ . '/lib/CatalogGameFileListService.php';
@@ -31,7 +33,14 @@ function game_files_sort_link(string $label, string $key, string $activeSort, st
 {
     $nextDir = ($activeSort === $key && $activeDir === 'asc') ? 'desc' : 'asc';
     $marker = $activeSort === $key ? ($activeDir === 'asc' ? ' ▲' : ' ▼') : '';
-    return '<a class="sort-link" href="' . catalog_h(game_files_url(['sort' => $key, 'dir' => $nextDir, 'file_page' => 1])) . '">' . catalog_h($label . $marker) . '</a>';
+    return '<a class="sort-link" href="' . catalog_h(game_files_url([
+        'sort' => $key,
+        'dir' => $nextDir,
+        'cursor' => null,
+        'cursor_move' => null,
+        'cursor_page' => null,
+        'file_page' => null,
+    ])) . '">' . catalog_h($label . $marker) . '</a>';
 }
 
 function game_files_engine_major(string $engineKey): int
@@ -88,18 +97,44 @@ function game_files_status_badge(string $status, int $count): string
     return CatalogUi::badge($status . ': ' . $count, $tone);
 }
 
-function game_files_pagination(int $pageNo, int $totalPages): string
-{
+function game_files_pagination(
+    int $pageNo,
+    int $totalPages,
+    bool $hasPrevious,
+    bool $hasNext,
+    string $previousCursor,
+    string $nextCursor
+): string {
     $start = '';
-    if ($pageNo > 1) {
-        $start .= CatalogUi::button('First', ['href' => game_files_url(['file_page' => 1]), 'variant' => 'secondary', 'size' => 'sm']);
-        $start .= CatalogUi::button('Previous', ['href' => game_files_url(['file_page' => $pageNo - 1]), 'variant' => 'secondary', 'size' => 'sm']);
+    if ($hasPrevious) {
+        $start .= CatalogUi::button('First', ['href' => game_files_url([
+            'cursor' => null,
+            'cursor_move' => null,
+            'cursor_page' => null,
+            'file_page' => null,
+        ]), 'variant' => 'secondary', 'size' => 'sm']);
+        $start .= CatalogUi::button('Previous', ['href' => game_files_url([
+            'cursor' => $previousCursor,
+            'cursor_move' => 'prev',
+            'cursor_page' => max(1, $pageNo - 1),
+            'file_page' => null,
+        ]), 'variant' => 'secondary', 'size' => 'sm']);
     }
 
     $end = '';
-    if ($pageNo < $totalPages) {
-        $end .= CatalogUi::button('Next', ['href' => game_files_url(['file_page' => $pageNo + 1]), 'variant' => 'secondary', 'size' => 'sm']);
-        $end .= CatalogUi::button('Last', ['href' => game_files_url(['file_page' => $totalPages]), 'variant' => 'secondary', 'size' => 'sm']);
+    if ($hasNext) {
+        $end .= CatalogUi::button('Next', ['href' => game_files_url([
+            'cursor' => $nextCursor,
+            'cursor_move' => 'next',
+            'cursor_page' => min($totalPages, $pageNo + 1),
+            'file_page' => null,
+        ]), 'variant' => 'secondary', 'size' => 'sm']);
+        $end .= CatalogUi::button('Last', ['href' => game_files_url([
+            'cursor' => null,
+            'cursor_move' => 'last',
+            'cursor_page' => $totalPages,
+            'file_page' => null,
+        ]), 'variant' => 'secondary', 'size' => 'sm']);
     }
 
     return '<nav class="game-files-pagination" aria-label="File pagination">'
@@ -235,7 +270,6 @@ try {
 
     $configuredLimit = (int)(fed_setting($db, 'game_file_display_limit', '100') ?: 100);
     $limit = max(1, min(500, $configuredLimit > 0 ? $configuredLimit : 100));
-    $pageNo = game_files_int('file_page', 1, 1, PHP_INT_MAX);
     $filter = trim((string)($_GET['file_filter'] ?? ''));
     $depFilter = trim((string)($_GET['dep_filter'] ?? ''));
     $typeFilter = trim((string)($_GET['type_filter'] ?? ''));
@@ -264,10 +298,15 @@ try {
     }
     if (in_array($depFilter, ['resolved', 'missing', 'package_only', 'common', 'any'], true)) {
         if ($depFilter === 'any') {
-            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependencies dx WHERE dx.file_id=f.id)';
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx WHERE dx.file_id=f.id)';
         } else {
-            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependencies dx WHERE dx.file_id=f.id AND dx.status=?)';
-            $args[] = $depFilter;
+            $countColumn = match ($depFilter) {
+                'resolved' => 'resolved_count',
+                'missing' => 'missing_count',
+                'package_only' => 'package_only_count',
+                default => 'common_count',
+            };
+            $where .= ' AND EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx WHERE dx.file_id=f.id AND dx.' . $countColumn . '>0)';
         }
     }
     $typeExts = game_files_type_filter_sql($typeFilter);
@@ -285,9 +324,57 @@ try {
 
     $totalRows = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_files f ' . $where, $args)['c'] ?? 0);
     $totalPages = max(1, (int)ceil($totalRows / $limit));
-    $pageNo = min($pageNo, $totalPages);
-    $offset = ($pageNo - 1) * $limit;
-    $files = CatalogGameFileListService::fetchPage($db, $where, $args, $sort, $dir, $limit, $offset);
+    $move = strtolower(trim((string)($_GET['cursor_move'] ?? 'first')));
+    $move = in_array($move, ['first', 'next', 'prev', 'last'], true) ? $move : 'first';
+    $pageNo = game_files_int('cursor_page', $move === 'last' ? $totalPages : 1, 1, $totalPages);
+    if ($move === 'first') {
+        $pageNo = 1;
+    } elseif ($move === 'last') {
+        $pageNo = $totalPages;
+    }
+
+    $cursorContext = json_encode([
+        'page' => 'game-files',
+        'game_id' => $gameId,
+        'limit' => $limit,
+        'filter' => $filter,
+        'dependency' => $depFilter,
+        'type' => $typeFilter,
+        'compression' => $compressionFilter,
+        'sort' => $sort,
+        'direction' => $dir,
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    $cursorToken = trim((string)($_GET['cursor'] ?? ''));
+    $cursor = $cursorToken !== '' ? CatalogKeysetPaginator::decode($config, $cursorContext, $cursorToken) : null;
+    if ($cursorToken !== '' && $cursor === null) {
+        $move = 'first';
+        $pageNo = 1;
+    }
+
+    $page = CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, $cursor, $move);
+    $files = $page['rows'];
+    if ($files === [] && $totalRows > 0 && $move !== 'first') {
+        $move = 'first';
+        $pageNo = 1;
+        $page = CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, null, 'first');
+        $files = $page['rows'];
+    }
+
+    $previousCursor = is_array($page['first_cursor'])
+        ? CatalogKeysetPaginator::encode($config, $cursorContext, $page['first_cursor'])
+        : '';
+    $nextCursor = is_array($page['last_cursor'])
+        ? CatalogKeysetPaginator::encode($config, $cursorContext, $page['last_cursor'])
+        : '';
+    $pagination = game_files_pagination(
+        $pageNo,
+        $totalPages,
+        (bool)$page['has_previous'],
+        (bool)$page['has_next'],
+        $previousCursor,
+        $nextCursor
+    );
+
     $isAdmin = catalog_support_is_admin();
     $maintenanceCsrf = $isAdmin ? catalog_csrf('catalog-maintenance') : '';
 
@@ -330,7 +417,7 @@ try {
     echo '<span data-ui-loading-indicator>' . CatalogUi::loadingState('Applying filters…', true) . '</span></span>';
     echo '<span id="file-filter-help" class="ui-sr-only">Changing filters reloads this file list.</span></form>';
 
-    echo game_files_pagination($pageNo, $totalPages);
+    echo $pagination;
     if ($files === []) {
         $action = ($filter !== '' || $depFilter !== '' || $typeFilter !== '' || ($showCompression && $compressionFilter !== ''))
             ? ['label' => 'Clear filters', 'href' => 'game-files.php?id=' . (int)$gameId]
@@ -383,7 +470,7 @@ try {
             echo '</tr>';
         }
         echo '</tbody></table></div>';
-        echo game_files_pagination($pageNo, $totalPages);
+        echo $pagination;
     }
 
     echo '</div></section><a class="game-files-to-top" href="#game-files-top" title="To Top" aria-label="To Top">↑</a>';
