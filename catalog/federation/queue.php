@@ -8,6 +8,8 @@ require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
+use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+
 function ft_tab(mixed $value): string
 {
     $tab = strtolower(trim((string)$value));
@@ -25,9 +27,31 @@ function ft_statuses(string $tab): array
     };
 }
 
+/** @param array<string,mixed> $page */
+function ft_page_links(string $tab, int $pageSize, array $page): string
+{
+    $link = static function (string $label, string $move, string $cursor = '') use ($tab, $pageSize): string {
+        $query = ['tab' => $tab, 'page_size' => $pageSize, 'move' => $move];
+        if ($cursor !== '') {
+            $query['cursor'] = $cursor;
+        }
+        return '<a class="button" href="queue.php?' . catalog_h(http_build_query($query)) . '">' . catalog_h($label) . '</a>';
+    };
+    $html = '<p class="page-links">' . $link('Newest', 'first');
+    if (!empty($page['has_previous']) && (string)($page['previous_cursor'] ?? '') !== '') {
+        $html .= ' ' . $link('Newer', 'previous', (string)$page['previous_cursor']);
+    }
+    if (!empty($page['has_next']) && (string)($page['next_cursor'] ?? '') !== '') {
+        $html .= ' ' . $link('Older', 'next', (string)$page['next_cursor']);
+    }
+    return $html . ' ' . $link('Oldest', 'last') . '</p>';
+}
+
 try {
-    $db = catalog_db(catalog_config());
+    $config = catalog_config();
+    $db = catalog_db($config);
     $tab = ft_tab($_REQUEST['tab'] ?? 'active');
+    $pageSize = CatalogFederationHistoryPageService::normalizePageSize((int)($_REQUEST['page_size'] ?? 100));
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
@@ -91,18 +115,28 @@ try {
 
     $statuses = ft_statuses($tab);
     $quoted = implode(',', array_map([$db, 'quote'], $statuses));
-    $jobs = catalog_all(
+    $page = CatalogFederationHistoryPageService::fetch(
         $db,
-        'SELECT j.*,p.site_name peer_name,p.peer_role
+        $config,
+        'federation-transfer-queue|tab=' . $tab . '|' . $visible,
+        'SELECT j.*,p.site_name peer_name,p.peer_role,j.created_at cursor_created_at,j.id cursor_id
          FROM ue_federation_transfer_jobs j
-         JOIN ue_federation_peers p ON p.id=j.peer_id
-         WHERE j.status IN (' . $quoted . ') AND ' . $visible . '
-         ORDER BY COALESCE(j.started_at,j.created_at) DESC,j.id DESC LIMIT 500'
+         JOIN ue_federation_peers p ON p.id=j.peer_id',
+        'j.status IN (' . $quoted . ') AND ' . $visible,
+        [],
+        ['j.created_at', 'j.id'],
+        ['cursor_created_at', 'cursor_id'],
+        ['DESC', 'DESC'],
+        $pageSize,
+        (string)($_GET['cursor'] ?? ''),
+        (string)($_GET['move'] ?? 'first')
     );
+    $jobs = $page['rows'];
 
     echo '<div class="card"><h2>' . catalog_h(ucfirst($tab)) . ' Transfers</h2>';
+    echo ft_page_links($tab, $pageSize, $page);
     if (!$jobs) {
-        echo '<p class="muted">No matching policy-visible transfers.</p>';
+        echo '<p class="muted">No matching policy-visible transfers on this page.</p>';
     } else {
         echo '<table><tr><th>ID</th><th>Peer</th><th>Direction</th><th>Status</th><th>Request item</th><th>Remote file</th><th>Progress</th><th>Local file</th><th>Message</th><th>Created</th><th>Action</th></tr>';
         foreach ($jobs as $job) {
@@ -117,6 +151,7 @@ try {
         }
         echo '</table>';
     }
+    echo ft_page_links($tab, $pageSize, $page);
     echo '</div><div class="card"><p><a class="button" href="diagnostics.php?tab=worker">Worker controls</a> <a class="button" href="diagnostics.php?tab=logs">Transfer logs</a></p></div>';
 
     catalog_foot();
