@@ -54,8 +54,12 @@ $writer = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/PdoDep
 federation_summary_expect(is_string($writer), 'Dependency summary writer could not be read.');
 federation_summary_expect(
     str_contains($writer, 'MIN(NULLIF(d.required_object_path,"")) example_required_object_path')
-        && str_contains($writer, 'hasExamplePathColumn()'),
-    'Dependency summary writer does not maintain the representative object path safely.'
+        || str_contains($writer, 'MIN(NULLIF(d.required_object_path,"")) example_required_object_path,'),
+    'Dependency summary writer does not maintain the representative object path.'
+);
+federation_summary_expect(
+    str_contains($writer, 'hasExamplePathColumn()'),
+    'Dependency summary writer does not preserve pre-migration compatibility.'
 );
 
 $migration = file_get_contents(__DIR__ . '/../migrations/202607270007_federation_summary_pagination.php');
