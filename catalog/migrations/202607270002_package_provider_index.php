@@ -48,6 +48,9 @@ return [
             . 'ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),package_name=VALUES(package_name),file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at)'
         );
 
+        // Some installations may have partially executed the earlier trigger-based
+        // form of this pending migration. Remove any such triggers so the migration
+        // is safe under binary logging without SUPER/TRIGGER privileges.
         foreach ([
             'trg_ue_files_package_provider_ai',
             'trg_ue_files_package_provider_au',
@@ -55,76 +58,15 @@ return [
             'trg_ue_alias_package_provider_au',
             'trg_ue_alias_package_provider_ad',
         ] as $trigger) {
-            $db->exec('DROP TRIGGER IF EXISTS ' . $trigger);
+            try {
+                $db->exec('DROP TRIGGER IF EXISTS ' . $trigger);
+            } catch (PDOException $error) {
+                // DROP TRIGGER itself may be restricted on shared hosting. It is
+                // harmless when no trigger was created before the original failure.
+                if ((string)$error->getCode() !== '42000') {
+                    throw $error;
+                }
+            }
         }
-
-        $db->exec(<<<'SQL'
-CREATE TRIGGER trg_ue_files_package_provider_ai
-AFTER INSERT ON ue_files
-FOR EACH ROW
-BEGIN
-    IF NEW.game_id IS NOT NULL AND NEW.scan_status = 'verified' THEN
-        INSERT INTO ue_package_providers(source_kind,source_id,game_id,package_name,file_id,provider_created_at)
-        VALUES('primary',NEW.id,NEW.game_id,NEW.package_name,NEW.id,NEW.uploaded_at)
-        ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),package_name=VALUES(package_name),file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at);
-    END IF;
-END
-SQL);
-
-        $db->exec(<<<'SQL'
-CREATE TRIGGER trg_ue_files_package_provider_au
-AFTER UPDATE ON ue_files
-FOR EACH ROW
-BEGIN
-    DELETE FROM ue_package_providers WHERE file_id=OLD.id;
-    IF NEW.game_id IS NOT NULL AND NEW.scan_status = 'verified' THEN
-        INSERT INTO ue_package_providers(source_kind,source_id,game_id,package_name,file_id,provider_created_at)
-        VALUES('primary',NEW.id,NEW.game_id,NEW.package_name,NEW.id,NEW.uploaded_at)
-        ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),package_name=VALUES(package_name),file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at);
-
-        INSERT INTO ue_package_providers(source_kind,source_id,game_id,package_name,file_id,provider_created_at)
-        SELECT 'alias',a.id,a.game_id,a.package_name,a.file_id,a.created_at
-        FROM ue_file_package_aliases a
-        WHERE a.file_id=NEW.id AND a.game_id=NEW.game_id
-        ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),package_name=VALUES(package_name),file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at);
-    END IF;
-END
-SQL);
-
-        $db->exec(<<<'SQL'
-CREATE TRIGGER trg_ue_alias_package_provider_ai
-AFTER INSERT ON ue_file_package_aliases
-FOR EACH ROW
-BEGIN
-    INSERT INTO ue_package_providers(source_kind,source_id,game_id,package_name,file_id,provider_created_at)
-    SELECT 'alias',NEW.id,NEW.game_id,NEW.package_name,NEW.file_id,NEW.created_at
-    FROM ue_files f
-    WHERE f.id=NEW.file_id AND f.game_id=NEW.game_id AND f.scan_status='verified'
-    ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),package_name=VALUES(package_name),file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at);
-END
-SQL);
-
-        $db->exec(<<<'SQL'
-CREATE TRIGGER trg_ue_alias_package_provider_au
-AFTER UPDATE ON ue_file_package_aliases
-FOR EACH ROW
-BEGIN
-    DELETE FROM ue_package_providers WHERE source_kind='alias' AND source_id=OLD.id;
-    INSERT INTO ue_package_providers(source_kind,source_id,game_id,package_name,file_id,provider_created_at)
-    SELECT 'alias',NEW.id,NEW.game_id,NEW.package_name,NEW.file_id,NEW.created_at
-    FROM ue_files f
-    WHERE f.id=NEW.file_id AND f.game_id=NEW.game_id AND f.scan_status='verified'
-    ON DUPLICATE KEY UPDATE game_id=VALUES(game_id),package_name=VALUES(package_name),file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at);
-END
-SQL);
-
-        $db->exec(<<<'SQL'
-CREATE TRIGGER trg_ue_alias_package_provider_ad
-AFTER DELETE ON ue_file_package_aliases
-FOR EACH ROW
-BEGIN
-    DELETE FROM ue_package_providers WHERE source_kind='alias' AND source_id=OLD.id;
-END
-SQL);
     },
 ];
