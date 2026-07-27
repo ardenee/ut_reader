@@ -36,6 +36,14 @@ Package-only dependency resolution now uses one provider lookup rather than sepa
 
 Primary package identities outrank aliases with the same package name. Resolver map keys are case-normalized so package casing differences do not create false missing dependencies.
 
+### Dependency package summaries
+
+`ue_dependency_package_summaries` stores one row per requiring file and required package. It retains dependency, resolved, missing, package-only and common counts, a summary status and the single resolved provider file when one exists.
+
+The detailed `ue_dependencies` table remains authoritative for object-level inspection. Missing Files totals, package lists, requiring-file lists and affected-package discovery use the compact summary table, with detailed-query fallbacks while the migration is pending.
+
+Normal imports refresh the imported file's summary through the existing search-index job. Affected dependency workers and manual file/game dependency jobs rebuild summaries inline, avoiding a second large job fan-out during maintenance.
+
 ### Upload progress
 
 Progress persistence is throttled except for terminal states. Expired temporary progress files are cleaned separately from durable incoming job sources.
@@ -47,8 +55,11 @@ Apply during a maintenance window with the worker stopped:
 1. `202607270001_catalog_scale_indexes.php`
 2. `202607270002_package_provider_index.php`
 3. `202607270003_search_documents.php`
+4. `202607270004_dependency_package_summaries.php`
 
-The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill. Large catalogues require temporary InnoDB space and substantial disk I/O.
+The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
+
+The dependency-summary migration performs one grouped backfill from `ue_dependencies`. Both migrations can require temporary InnoDB space and substantial disk I/O on a large catalogue.
 
 ## Operational validation
 
@@ -61,6 +72,7 @@ Collect `EXPLAIN` plans and duration samples for:
 - import of a package that resolves existing missing dependencies;
 - affected dependency refresh jobs with zero, few, and many dependent files;
 - search-index jobs for files with small and very large parser tables;
+- Missing Files totals and package/file lists;
 - alias creation for a package with many dependent files;
 - full-game dependency rebuilds.
 
@@ -68,25 +80,19 @@ Record database statement counts as well as elapsed time. The batching change sh
 
 ## Next structural phases
 
-### 1. Dependency package summaries
-
-Add one summary row per requiring file and required package, including import count and resolved/missing counts. Missing-package pages, federation requirement generation and affected-file discovery can then query summaries instead of the full dependency row set.
-
-The detailed `ue_dependencies` rows remain the source of truth for object-level inspection.
-
-### 2. Cached game counters
+### 1. Cached game counters
 
 Maintain file count, storage size, unresolved dependency count and parser-row totals per game. Dashboard and home pages should read the cache. Reconciliation jobs should periodically compare cached totals with authoritative tables.
 
-### 3. Keyset pagination
+### 2. Keyset pagination
 
 Replace deep `OFFSET` pagination on large file, dependency and search lists with stable keyset cursors based on the selected sort plus file ID. Keep exact total counts optional on public pages because full counts can be more expensive than retrieving the page itself.
 
-### 4. Chunked Examine views
+### 3. Chunked Examine views
 
 Names, Imports and Exports pages should load bounded chunks rather than rendering every parser row. Provide downloadable JSON/CSV exports for full-table inspection.
 
-### 5. Source fingerprint cache
+### 4. Source fingerprint cache
 
 Persist source path, size, modification time and a trusted quick fingerprint. Re-hash a source file only when those signals change, while retaining full MD5/SHA verification before accepting a new catalogue identity.
 
@@ -94,7 +100,7 @@ Persist source path, size, modification time and a trusted quick fingerprint. Re
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact counts and dependency-count sorting can still require broad aggregation.
-- Alias-created affected dependency refreshes still use their existing synchronous package refresh path and should move to a package-keyed durable job in a later pass.
+- Some federation inventory/request pages still use detailed dependency rows until their base-game-policy queries are converted in a separate pass.
 - Direct maintenance operations that rewrite package identity should enqueue a search-index reconciliation in a later maintenance-hook pass.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
