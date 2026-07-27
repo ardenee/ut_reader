@@ -11,9 +11,7 @@ require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
-use UnrealDb\Catalog\Application\Federation\CatalogFederationConflictListService;
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
-use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 
 function diagnostics_tab(mixed $value): string
 {
@@ -33,16 +31,12 @@ function diagnostics_worker(PDO $db, array $config): array
     for ($i = 0; $i < $limit; $i++) {
         $run = federation_streaming_run_one_transfer($db, $config);
         $result['transfers'][] = $run;
-        if (!empty($run['skipped'])) {
-            break;
-        }
+        if (!empty($run['skipped'])) break;
     }
     for ($i = 0; $i < $limit; $i++) {
         $run = federation_worker_run_one_import($db, $config);
         $result['imports'][] = $run;
-        if (!empty($run['skipped'])) {
-            break;
-        }
+        if (!empty($run['skipped'])) break;
     }
     return $result;
 }
@@ -67,34 +61,6 @@ function diagnostics_log_links(array $filters, array $page): string
     return $html . ' ' . $link('Oldest', 'last') . '</p>';
 }
 
-/** @param array<string,mixed> $filters @param array<string,mixed> $page */
-function diagnostics_conflict_links(array $filters, array $page, int $pageNo, int $pageCount, int $total): string
-{
-    $link = static function (string $label, string $move, int $targetPage, string $cursor = '') use ($filters): string {
-        $query = $filters + [
-            'tab' => 'conflicts',
-            'conflict_move' => $move,
-            'conflict_page' => $targetPage,
-        ];
-        if ($cursor !== '') {
-            $query['conflict_cursor'] = $cursor;
-        }
-        return '<a class="button" href="diagnostics.php?' . catalog_h(http_build_query($query)) . '">' . catalog_h($label) . '</a>';
-    };
-
-    $html = '<p class="page-links"><span class="muted">Page ' . $pageNo . ' of ' . $pageCount
-        . ' (' . $total . ' conflicts)</span> ';
-    if ($pageNo > 1 && !empty($page['has_previous'])) {
-        $html .= $link('First', 'first', 1) . ' '
-            . $link('Previous', 'previous', max(1, $pageNo - 1), (string)($page['previous_cursor'] ?? '')) . ' ';
-    }
-    if ($pageNo < $pageCount && !empty($page['has_next'])) {
-        $html .= $link('Next', 'next', min($pageCount, $pageNo + 1), (string)($page['next_cursor'] ?? '')) . ' '
-            . $link('Last', 'last', $pageCount);
-    }
-    return rtrim($html) . '</p>';
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -102,9 +68,7 @@ try {
     $tab = diagnostics_tab($_REQUEST['tab'] ?? 'logs');
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        if (!catalog_support_is_admin()) {
-            throw new RuntimeException('Admin required.');
-        }
+        if (!catalog_support_is_admin()) throw new RuntimeException('Admin required.');
         catalog_check_csrf('fed_diagnostics');
         $action = strtolower(trim((string)($_POST['action'] ?? '')));
         if ($action === 'run_worker') {
@@ -135,16 +99,14 @@ try {
         exit;
     }
 
-    if (!catalog_require_admin_page('Federation Diagnostics')) {
-        exit;
-    }
+    if (!catalog_require_admin_page('Federation Diagnostics')) exit;
     catalog_head('Federation Diagnostics');
     catalog_flash($_SESSION['fed_diagnostics_flash'] ?? null);
     unset($_SESSION['fed_diagnostics_flash']);
     catalog_page_header('Federation Diagnostics', 'Logs, cleanup, conflicts, worker controls and connection health.', federation_main_links());
 
     echo '<div class="card"><p class="page-links">';
-    foreach (['logs' => 'Logs', 'cleanup' => 'Cleanup', 'conflicts' => 'Conflicts', 'worker' => 'Worker', 'connections' => 'Connection Diagnostics'] as $key => $label) {
+    foreach (['logs'=>'Logs','cleanup'=>'Cleanup','conflicts'=>'Conflicts','worker'=>'Worker','connections'=>'Connection Diagnostics'] as $key=>$label) {
         echo '<a class="button" href="diagnostics.php?tab=' . $key . '">' . $label . '</a> ';
     }
     echo '</p></div>';
@@ -154,20 +116,10 @@ try {
         $peerId = (int)($_GET['peer_id'] ?? 0);
         $event = trim((string)($_GET['event'] ?? ''));
         $pageSize = CatalogFederationHistoryPageService::normalizePageSize((int)($_GET['page_size'] ?? 100));
-        $where = [];
-        $args = [];
-        if ($level !== '') {
-            $where[] = 'l.level=?';
-            $args[] = $level;
-        }
-        if ($peerId > 0) {
-            $where[] = 'l.peer_id=?';
-            $args[] = $peerId;
-        }
-        if ($event !== '') {
-            $where[] = 'l.event LIKE ?';
-            $args[] = '%' . $event . '%';
-        }
+        $where=[]; $args=[];
+        if ($level !== '') { $where[]='l.level=?'; $args[]=$level; }
+        if ($peerId > 0) { $where[]='l.peer_id=?'; $args[]=$peerId; }
+        if ($event !== '') { $where[]='l.event LIKE ?'; $args[]='%'.$event.'%'; }
         $context = 'federation-diagnostics-logs|level=' . $level . '|peer=' . $peerId . '|event=' . strtolower($event);
         $page = CatalogFederationHistoryPageService::fetch(
             $db,
@@ -188,28 +140,19 @@ try {
         $rows = $page['rows'];
         $peers = catalog_all($db, 'SELECT id,site_name,peer_role FROM ue_federation_peers ORDER BY peer_role,site_name');
         echo '<div class="card"><h2>Log filters</h2><form method="get"><input type="hidden" name="tab" value="logs"><label>Level <select name="level"><option value="">All</option>';
-        foreach (['INFO', 'WARN', 'ERROR'] as $v) {
-            echo '<option' . ($level === $v ? ' selected' : '') . '>' . $v . '</option>';
-        }
+        foreach (['INFO','WARN','ERROR'] as $v) echo '<option'.($level===$v?' selected':'').'>' . $v . '</option>';
         echo '</select></label> <label>Peer <select name="peer_id"><option value="0">All</option>';
-        foreach ($peers as $p) {
-            echo '<option value="' . (int)$p['id'] . '"' . ((int)$p['id'] === $peerId ? ' selected' : '') . '>' . catalog_h($p['peer_role'] . ' - ' . $p['site_name']) . '</option>';
-        }
-        echo '</select></label> <label>Event <input name="event" value="' . catalog_h($event) . '"></label> <label>Rows <select name="page_size">';
-        foreach ([50, 100, 250, 500] as $option) {
-            echo '<option value="' . $option . '"' . ($pageSize === $option ? ' selected' : '') . '>' . $option . '</option>';
-        }
+        foreach ($peers as $p) echo '<option value="'.(int)$p['id'].'"'.((int)$p['id']===$peerId?' selected':'').'>' . catalog_h($p['peer_role'].' - '.$p['site_name']) . '</option>';
+        echo '</select></label> <label>Event <input name="event" value="'.catalog_h($event).'"></label> <label>Rows <select name="page_size">';
+        foreach ([50,100,250,500] as $option) echo '<option value="'.$option.'"'.($pageSize===$option?' selected':'').'>'.$option.'</option>';
         echo '</select></label> <button>Filter</button></form></div>';
         $filters = ['level' => $level, 'peer_id' => $peerId, 'event' => $event, 'page_size' => $pageSize];
         echo '<div class="card"><h2>Federation Logs</h2>';
         echo diagnostics_log_links($filters, $page);
-        if (!$rows) {
-            echo '<p class="muted">No matching logs on this page.</p>';
-        } else {
+        if (!$rows) echo '<p class="muted">No matching logs on this page.</p>';
+        else {
             echo '<table><tr><th>Time</th><th>Level</th><th>Peer</th><th>Job</th><th>Event</th><th>Details</th></tr>';
-            foreach ($rows as $row) {
-                echo '<tr><td class="nowrap">' . catalog_h($row['created_at']) . '</td><td>' . catalog_h($row['level']) . '</td><td>' . catalog_h($row['peer_name'] ?? '') . '</td><td class="mono">' . catalog_h($row['transfer_job_id'] ?? '') . '</td><td class="mono">' . catalog_h($row['event']) . '</td><td class="path">' . catalog_h($row['details']) . '</td></tr>';
-            }
+            foreach ($rows as $row) echo '<tr><td class="nowrap">'.catalog_h($row['created_at']).'</td><td>'.catalog_h($row['level']).'</td><td>'.catalog_h($row['peer_name']??'').'</td><td class="mono">'.catalog_h($row['transfer_job_id']??'').'</td><td class="mono">'.catalog_h($row['event']).'</td><td class="path">'.catalog_h($row['details']).'</td></tr>';
             echo '</table>';
         }
         echo diagnostics_log_links($filters, $page);
@@ -220,122 +163,29 @@ try {
         $oldJobs = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status IN ("imported","cancelled","failed")');
         $stale = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files WHERE last_seen_at<DATE_SUB(NOW(),INTERVAL 90 DAY)');
         echo '<div class="grid">';
-        catalog_stat_card('Stored nonces', $nonceCount);
-        catalog_stat_card('Log rows', $logCount);
-        catalog_stat_card('Historical transfer jobs', $oldJobs);
-        catalog_stat_card('Inventory rows older than 90 days', $stale);
+        catalog_stat_card('Stored nonces',$nonceCount); catalog_stat_card('Log rows',$logCount); catalog_stat_card('Historical transfer jobs',$oldJobs); catalog_stat_card('Inventory rows older than 90 days',$stale);
         echo '</div>';
-        echo '<div class="card"><h2>Prune old records</h2><form method="post" onsubmit="return confirm(\'Delete old federation history?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_diagnostics')) . '"><input type="hidden" name="action" value="prune"><label>Older than <input type="number" name="days" min="1" max="3650" value="30"> days</label> <button>Run cleanup</button></form></div>';
-        echo '<div class="card"><h2>Clear stale inventory cache</h2><form method="post" onsubmit="return confirm(\'Delete stale cached inventory rows?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_diagnostics')) . '"><input type="hidden" name="action" value="clear_inventory"><label>Older than <input type="number" name="days" min="1" max="3650" value="90"> days</label> <button>Clear stale cache</button></form></div>';
+        echo '<div class="card"><h2>Prune old records</h2><form method="post" onsubmit="return confirm(\'Delete old federation history?\')"><input type="hidden" name="csrf" value="'.catalog_h(catalog_csrf('fed_diagnostics')).'"><input type="hidden" name="action" value="prune"><label>Older than <input type="number" name="days" min="1" max="3650" value="30"> days</label> <button>Run cleanup</button></form></div>';
+        echo '<div class="card"><h2>Clear stale inventory cache</h2><form method="post" onsubmit="return confirm(\'Delete stale cached inventory rows?\')"><input type="hidden" name="csrf" value="'.catalog_h(catalog_csrf('fed_diagnostics')).'"><input type="hidden" name="action" value="clear_inventory"><label>Older than <input type="number" name="days" min="1" max="3650" value="90"> days</label> <button>Clear stale cache</button></form></div>';
     } elseif ($tab === 'worker') {
         $queued = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="queued"');
         $downloaded = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="downloaded"');
         $failed = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs WHERE status="failed"');
-        echo '<div class="grid">';
-        catalog_stat_card('Queued', $queued);
-        catalog_stat_card('Waiting import', $downloaded);
-        catalog_stat_card('Failed', $failed, '', $failed ? 'warning' : '');
-        catalog_stat_card('Files per run', (int)fed_setting($db, 'max_files_per_transfer_run', '1'));
-        echo '</div>';
-        if (isset($_SESSION['fed_diagnostics_result'])) {
-            echo '<div class="card"><h2>Last result</h2><pre class="mono">' . catalog_h(json_encode($_SESSION['fed_diagnostics_result'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . '</pre></div>';
-            unset($_SESSION['fed_diagnostics_result']);
-        }
-        echo '<div class="card"><h2>Run Worker</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_diagnostics')) . '"><button name="action" value="run_worker">Run federation worker now</button></form><p><a class="button" href="queue.php">Open Transfers</a></p></div>';
+        echo '<div class="grid">'; catalog_stat_card('Queued',$queued); catalog_stat_card('Waiting import',$downloaded); catalog_stat_card('Failed',$failed,'',$failed?'warning':''); catalog_stat_card('Files per run',(int)fed_setting($db,'max_files_per_transfer_run','1')); echo '</div>';
+        if (isset($_SESSION['fed_diagnostics_result'])) { echo '<div class="card"><h2>Last result</h2><pre class="mono">'.catalog_h(json_encode($_SESSION['fed_diagnostics_result'],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES)).'</pre></div>'; unset($_SESSION['fed_diagnostics_result']); }
+        echo '<div class="card"><h2>Run Worker</h2><form method="post"><input type="hidden" name="csrf" value="'.catalog_h(catalog_csrf('fed_diagnostics')).'"><button name="action" value="run_worker">Run federation worker now</button></form><p><a class="button" href="queue.php">Open Transfers</a></p></div>';
     } elseif ($tab === 'connections') {
         $peers = catalog_all($db, 'SELECT p.*,(SELECT COUNT(*) FROM ue_federation_peer_files pf WHERE pf.peer_id=p.id) inventory_rows,(SELECT MAX(last_seen_at) FROM ue_federation_peer_files pf WHERE pf.peer_id=p.id) inventory_updated,(SELECT MAX(created_at) FROM ue_federation_transfer_logs l WHERE l.peer_id=p.id) last_log FROM ue_federation_peers p ORDER BY p.peer_role,p.site_name');
         echo '<div class="card"><h2>Connection Diagnostics</h2>';
-        if (!$peers) {
-            echo '<p class="muted">No established connections.</p>';
-        } else {
-            echo '<table><tr><th>Role</th><th>Peer</th><th>URL</th><th>Active</th><th>Last contact</th><th>Cached inventory</th><th>Inventory updated</th><th>Last log</th><th>Actions</th></tr>';
-            foreach ($peers as $p) {
-                echo '<tr><td>' . catalog_h($p['peer_role']) . '</td><td>' . catalog_h($p['site_name']) . '</td><td class="mono path">' . catalog_h($p['site_url']) . '</td><td>' . ((int)$p['is_active'] ? 'yes' : 'no') . '</td><td>' . catalog_h($p['last_seen_at'] ?? 'never') . '</td><td>' . (int)$p['inventory_rows'] . '</td><td>' . catalog_h($p['inventory_updated'] ?? 'never') . '</td><td>' . catalog_h($p['last_log'] ?? 'never') . '</td><td><a href="connections.php">Test/manage</a> · <a href="inventories.php?peer_id=' . (int)$p['id'] . '">Inventory</a></td></tr>';
-            }
-            echo '</table>';
-        }
+        if (!$peers) echo '<p class="muted">No established connections.</p>';
+        else { echo '<table><tr><th>Role</th><th>Peer</th><th>URL</th><th>Active</th><th>Last contact</th><th>Cached inventory</th><th>Inventory updated</th><th>Last log</th><th>Actions</th></tr>'; foreach ($peers as $p) echo '<tr><td>'.catalog_h($p['peer_role']).'</td><td>'.catalog_h($p['site_name']).'</td><td class="mono path">'.catalog_h($p['site_url']).'</td><td>'.((int)$p['is_active']?'yes':'no').'</td><td>'.catalog_h($p['last_seen_at']??'never').'</td><td>'.(int)$p['inventory_rows'].'</td><td>'.catalog_h($p['inventory_updated']??'never').'</td><td>'.catalog_h($p['last_log']??'never').'</td><td><a href="connections.php">Test/manage</a> · <a href="inventories.php?peer_id='.(int)$p['id'].'">Inventory</a></td></tr>'; echo '</table>'; }
         echo '</div>';
     } else {
-        $ignore = federation_ignore_base_game_files($db);
-        $peerId = max(0, (int)($_GET['peer_id'] ?? 0));
-        $pageSize = CatalogFederationHistoryPageService::normalizePageSize((int)($_GET['page_size'] ?? 100));
-        $peers = catalog_all($db, 'SELECT id,site_name,peer_role FROM ue_federation_peers ORDER BY peer_role,site_name,id');
-        $total = CatalogFederationConflictListService::count($db, $peerId, $ignore);
-        $pageCount = max(1, (int)ceil($total / max(1, $pageSize)));
-        $move = strtolower(trim((string)($_GET['conflict_move'] ?? 'first')));
-        if ($move === 'prev') {
-            $move = 'previous';
-        }
-        if (!in_array($move, ['first', 'next', 'previous', 'last'], true)) {
-            $move = 'first';
-        }
-        $pageNo = max(1, min($pageCount, (int)($_GET['conflict_page'] ?? ($move === 'last' ? $pageCount : 1))));
-        if ($move === 'first') {
-            $pageNo = 1;
-        } elseif ($move === 'last') {
-            $pageNo = $pageCount;
-        }
-
-        $context = json_encode([
-            'page' => 'federation-conflicts',
-            'peer_id' => $peerId,
-            'ignore_base_game' => $ignore,
-            'limit' => $pageSize,
-        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-        $cursorToken = trim((string)($_GET['conflict_cursor'] ?? ''));
-        $cursor = $cursorToken !== '' ? CatalogKeysetPaginator::decode($config, $context, $cursorToken) : null;
-        if ($cursorToken !== '' && $cursor === null) {
-            $move = 'first';
-            $pageNo = 1;
-        }
-        $page = CatalogFederationConflictListService::fetch($db, $peerId, $ignore, $pageSize, $cursor, $move);
-        if ($page['rows'] === [] && $total > 0 && $move !== 'first') {
-            $move = 'first';
-            $pageNo = 1;
-            $page = CatalogFederationConflictListService::fetch($db, $peerId, $ignore, $pageSize, null, 'first');
-        }
-        $page['previous_cursor'] = is_array($page['first_cursor'])
-            ? CatalogKeysetPaginator::encode($config, $context, $page['first_cursor'])
-            : '';
-        $page['next_cursor'] = is_array($page['last_cursor'])
-            ? CatalogKeysetPaginator::encode($config, $context, $page['last_cursor'])
-            : '';
-        $filters = ['peer_id' => $peerId, 'page_size' => $pageSize];
-
-        echo '<div class="card"><h2>Identity Conflict Filters</h2><form method="get">'
-            . '<input type="hidden" name="tab" value="conflicts"><label>Peer <select name="peer_id"><option value="0">All peers</option>';
-        foreach ($peers as $peer) {
-            echo '<option value="' . (int)$peer['id'] . '"' . ((int)$peer['id'] === $peerId ? ' selected' : '') . '>'
-                . catalog_h($peer['peer_role'] . ' - ' . $peer['site_name']) . '</option>';
-        }
-        echo '</select></label> <label>Rows <select name="page_size">';
-        foreach ([50, 100, 250, 500] as $option) {
-            echo '<option value="' . $option . '"' . ($pageSize === $option ? ' selected' : '') . '>' . $option . '</option>';
-        }
-        echo '</select></label> <button>Filter</button></form></div>';
-
-        echo '<div class="card"><h2>Identity Conflicts</h2><p>' . catalog_h(federation_base_game_policy_label($db)) . '</p>';
-        echo diagnostics_conflict_links($filters, $page, $pageNo, $pageCount, $total);
-        if (!$page['rows']) {
-            echo '<p class="muted">No matching conflicts.</p>';
-        } else {
-            echo '<div class="table-wrap"><table><tr><th>Peer</th><th>Package</th><th>Peer file</th><th>Local file</th><th>Peer identity</th><th>Local identity</th><th>Sizes</th></tr>';
-            foreach ($page['rows'] as $row) {
-                echo '<tr><td>' . catalog_h($row['peer_name']) . '</td><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td><a href="../file-info.php?id=' . (int)$row['local_id'] . '">' . catalog_h($row['local_file']) . '</a></td>';
-                echo '<td class="mono small">GUID ' . catalog_h($row['package_guid']) . '<br>MD5 ' . catalog_h($row['md5']) . (!empty($row['sha1']) ? '<br>SHA1 ' . catalog_h($row['sha1']) : '') . '</td>';
-                echo '<td class="mono small">GUID ' . catalog_h($row['local_guid']) . '<br>MD5 ' . catalog_h($row['local_md5']) . (!empty($row['local_sha1']) ? '<br>SHA1 ' . catalog_h($row['local_sha1']) : '') . '</td>';
-                echo '<td class="nowrap">' . catalog_h(catalog_bytes((int)$row['file_size']) . ' / ' . catalog_bytes((int)$row['local_size'])) . '</td></tr>';
-            }
-            echo '</table></div>';
-        }
-        echo diagnostics_conflict_links($filters, $page, $pageNo, $pageCount, $total);
-        echo '</div>';
+        require __DIR__ . '/_diagnostics-conflicts.php';
     }
     catalog_foot();
 } catch (Throwable $error) {
-    if (!headers_sent()) {
-        catalog_head('Federation diagnostics error');
-    }
-    echo '<div class="card"><h1>Error</h1><p>' . catalog_h($error->getMessage()) . '</p></div>';
+    if (!headers_sent()) catalog_head('Federation diagnostics error');
+    echo '<div class="card"><h1>Error</h1><p>'.catalog_h($error->getMessage()).'</p></div>';
     catalog_foot();
 }
