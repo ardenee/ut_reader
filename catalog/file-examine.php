@@ -60,7 +60,7 @@ if (session_status() === PHP_SESSION_ACTIVE) {
 }
 
 ob_start();
-require __DIR__ . '/file-examine-core.php';
+require __DIR__ . '/file-examine-paged-core.php';
 $html = (string)ob_get_clean();
 $opaqueControlBytes = 0;
 $html = file_examine_render_opaque_controls($html, $opaqueControlBytes);
