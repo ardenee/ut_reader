@@ -120,7 +120,7 @@ The dependency-summary migration performs one grouped backfill from `ue_dependen
 
 Migration `202607270008` creates an empty source-fingerprint cache. It does not hash existing files during migration; rows are populated incrementally by later local-source scans.
 
-Migration `202607270009` only adds request, request-item, transfer and log indexes matching the new `(created_at, id)` history cursors. It performs no data backfill or table copy.
+Migration `202607270009` adds only secondary request, request-item, transfer and log indexes matching the new `(created_at, id)` history cursors. It performs no application-level data backfill or backup; MySQL may use its normal temporary space while creating the indexes.
 
 The chunked package-examination phase requires no schema migration because the existing unique `(file_id, name/import/export index)` keys already support bounded range reads.
 
