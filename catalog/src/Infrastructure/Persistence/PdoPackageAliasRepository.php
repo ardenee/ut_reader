@@ -5,8 +5,8 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use PDOException;
+use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
 use UnrealDb\Catalog\Application\PackageAlias\PackageAliasRepository;
-use UnrealDb\Catalog\Application\Search\CatalogSearchIndexQueue;
 
 /** PDO implementation of logical package alias persistence. */
 final class PdoPackageAliasRepository implements PackageAliasRepository
@@ -84,12 +84,17 @@ final class PdoPackageAliasRepository implements PackageAliasRepository
                 (new PdoPackageProviderRepository($this->db))->syncAlias($aliasId);
             } catch (PDOException $exception) {
                 // The alias remains authoritative. Dependency resolution has an
-                // exact-table fallback and maintenance can reconcile the cache.
+                // exact-table fallback and the durable reconciliation repairs it.
                 error_log('[UnrealDB package provider] alias_id=' . $aliasId . ' sync failed: ' . $exception->getMessage());
             }
         }
 
-        CatalogSearchIndexQueue::enqueueFile($this->db, $fileId);
+        CatalogProjectionReconciliationQueue::enqueue(
+            $this->db,
+            $fileId,
+            [$gameId],
+            [$packageName]
+        );
         return true;
     }
 }
