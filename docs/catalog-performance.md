@@ -96,6 +96,16 @@ The Parent request-status API accepts optional request-list cursor, direction an
 
 Status, peer, event and base-game visibility filters form part of each cursor context. Changing a filter invalidates the previous token and restarts at the newest page.
 
+### Maintenance projection reconciliation
+
+Direct changes to package identity, aliases, GUIDs, verification state or game contents enqueue one durable `catalog.reconcile_catalog_projections` job carrying the old and current game/package context. This covers alias creation, duplicate retirement, UE4/UE5 source-identity repair, legacy package normalization, zero-GUID repair, file re-import/removal and game reset.
+
+The reconciliation worker rebuilds or removes package-provider rows, search documents and the changed file's dependency summary. It then refreshes verified files that depend on any old or new package name and rebuilds cached game statistics. Deleted files are supported because the queue payload retains the context that is no longer available from `ue_files`.
+
+Projection reconciliation shares the single-concurrency dependency-heavy worker class and acquires the existing catalog-maintenance advisory lock. It therefore runs only after the direct write and alias restoration are complete and does not overlap another dependency-heavy repair. Completed jobs release their dedupe key so a later change to the same file can queue another reconciliation.
+
+Normal search-index jobs now reconcile all primary and alias provider rows as well, repairing provider drift during ordinary imports without requiring a separate maintenance action.
+
 ### Upload progress
 
 Progress persistence is throttled except for terminal states. Expired temporary progress files are cleaned separately from durable incoming job sources.
@@ -122,7 +132,7 @@ Migration `202607270008` creates an empty source-fingerprint cache. It does not 
 
 Migration `202607270009` adds only secondary request, request-item, transfer and log indexes matching the new `(created_at, id)` history cursors. It performs no application-level data backfill or backup; MySQL may use its normal temporary space while creating the indexes.
 
-The chunked package-examination phase requires no schema migration because the existing unique `(file_id, name/import/export index)` keys already support bounded range reads.
+The chunked package-examination and maintenance-reconciliation phases require no schema migration.
 
 ## Operational validation
 
@@ -142,6 +152,12 @@ Collect `EXPLAIN` plans and duration samples for:
 - unchanged redirect archives, confirming the second scan avoids decompression;
 - a same-size/same-timestamp source file changed inside a sampled region;
 - a cached file whose matched catalogue row was retired or deleted;
+- alias creation followed by package search and missing-dependency checks;
+- duplicate retirement followed by search, provider and cached-count checks;
+- legacy and UE4/UE5 identity repair using both old and new package names;
+- zero-GUID repair where dependencies previously matched by another identity;
+- file re-import/removal after preserved aliases are restored;
+- game reset, confirming cached counts return to zero after optimisation;
 - package, file-name, import-object and export-object searches within one game;
 - administrator all-game searches;
 - import of packages with small and very large N/I/E tables;
@@ -150,24 +166,23 @@ Collect `EXPLAIN` plans and duration samples for:
 - search-index jobs for files with small and very large parser tables;
 - Missing Files totals and package/file lists;
 - Dashboard, Games and Library page loads before and after cache warm-up;
-- alias creation for a package with many dependent files;
 - full-game dependency rebuilds.
 
 Record database statement counts as well as elapsed time. The batching change should reduce parser-table and dependency insert statements approximately from one per row to one per 250 rows. Import response time should no longer include rebuilding existing affected files or rebuilding search documents.
 
 ## Next structural phases
 
-### 1. Maintenance reconciliation hooks
-
-Direct maintenance operations that rewrite package identity should enqueue search-document, dependency-summary and game-statistics reconciliation consistently.
-
-### 2. Bounded missing-object drill-down
+### 1. Bounded missing-object drill-down
 
 The selected-package object detail on Missing Files should use bounded pages rather than reading every authoritative dependency object row at once.
 
-### 3. Remaining specialist diagnostics
+### 2. Remaining specialist diagnostics
 
 Identity-conflict drill-down and any background-job event views that telemetry shows growing beyond a normal page should adopt the shared cursor helper without changing their remediation actions.
+
+### 3. Reconciliation observability
+
+Expose projection-reconciliation counts and failures in maintenance diagnostics if operational telemetry shows that administrators need a dedicated view beyond the existing background-job details.
 
 ## Scale limits that remain
 
