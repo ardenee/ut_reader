@@ -11,6 +11,8 @@ require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
+use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+
 /* Contract markers: Requests from Children; Downloads Requested from Children;
  * Requests to Parent; approve_all; status_message;
  * Approved and waiting until the parent imports a matching file. */
@@ -20,6 +22,35 @@ function fr_tab(string $role, mixed $value): string
     $tab = strtolower(trim((string)$value));
     $allowed = $role === 'parent' ? ['incoming', 'parent_pulls', 'closed'] : ['active', 'closed'];
     return in_array($tab, $allowed, true) ? $tab : $allowed[0];
+}
+
+function fr_page_size(mixed $value): int
+{
+    return CatalogFederationHistoryPageService::normalizePageSize((int)$value);
+}
+
+/** @param array<string,mixed> $params @param array<string,mixed> $page */
+function fr_page_links(array $params, array $page, string $cursorKey, string $moveKey): string
+{
+    $base = $params;
+    unset($base[$cursorKey], $base[$moveKey]);
+    $link = static function (string $label, string $move, string $cursor = '') use ($base, $cursorKey, $moveKey): string {
+        $query = $base + [$moveKey => $move];
+        if ($cursor !== '') {
+            $query[$cursorKey] = $cursor;
+        }
+        return '<a class="button" href="requests.php?' . catalog_h(http_build_query($query)) . '">' . catalog_h($label) . '</a>';
+    };
+
+    $html = '<p class="page-links">' . $link('Newest', 'first');
+    if (!empty($page['has_previous']) && (string)($page['previous_cursor'] ?? '') !== '') {
+        $html .= ' ' . $link('Newer', 'previous', (string)$page['previous_cursor']);
+    }
+    if (!empty($page['has_next']) && (string)($page['next_cursor'] ?? '') !== '') {
+        $html .= ' ' . $link('Older', 'next', (string)$page['next_cursor']);
+    }
+    $html .= ' ' . $link('Oldest', 'last') . '</p>';
+    return $html;
 }
 
 function fr_parent(PDO $db): array
@@ -88,11 +119,13 @@ function fr_decide_item(PDO $db, int $requestId, int $itemId, string $decision):
 }
 
 try {
-    $db = catalog_db(catalog_config());
+    $config = catalog_config();
+    $db = catalog_db($config);
     $role = federation_reconcile_site_role($db);
     $activeParentForPolicy = federation_parent_peer($db, true);
     $visibleJobs = federation_visible_transfer_job_sql($db, 'j', $activeParentForPolicy ?: null);
     $tab = fr_tab($role, $_REQUEST['tab'] ?? '');
+    $historyPageSize = fr_page_size($_REQUEST['page_size'] ?? CatalogFederationHistoryPageService::DEFAULT_PAGE_SIZE);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
