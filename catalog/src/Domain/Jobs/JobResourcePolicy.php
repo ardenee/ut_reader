@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Domain\Jobs;
 final class JobResourcePolicy
 {
     public const DEPENDENCY_HEAVY = 'dependency-heavy';
+    public const SEARCH_HEAVY = 'search-heavy';
     public const IMPORT_HEAVY = 'import-heavy';
     public const STORAGE_HEAVY = 'storage-heavy';
     public const PACKAGE_HEAVY = 'package-heavy';
@@ -26,6 +27,11 @@ final class JobResourcePolicy
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
+            ),
+            JobType::REBUILD_FILE_SEARCH_INDEX => new JobResourceProfile(
+                self::SEARCH_HEAVY,
+                self::configuredLimit(self::SEARCH_HEAVY, 1),
+                self::positiveKey('search:file:', $payload['file_id'] ?? null)
             ),
             JobType::REPAIR_SOURCE_IDENTITY_FILE => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
