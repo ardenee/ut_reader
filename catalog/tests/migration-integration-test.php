@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 10;
+$expectedMigrations = 12;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -51,6 +51,18 @@ migration_test_expect($schema->tableExists('ue_asset_registry_tags'), 'Asset-reg
 migration_test_expect($schema->tableExists('ue_asset_registry_dependencies'), 'Asset-registry dependencies table is missing.');
 migration_test_expect($schema->tableExists('ue_pak_archives'), 'PAK archive table is missing.');
 migration_test_expect($schema->tableExists('ue_pak_entries'), 'PAK entry table is missing.');
+migration_test_expect($schema->tableExists('ue_federation_join_requests'), 'Federation join-request upgrade migration is missing.');
+
+foreach ([
+    ['ue_files', 'idx_ue_files_game_status_package'],
+    ['ue_files', 'idx_ue_files_game_status_original'],
+    ['ue_file_package_aliases', 'idx_ue_file_alias_game_original'],
+    ['ue_imports', 'idx_ue_imports_root_file'],
+    ['ue_exports', 'idx_ue_exports_file_local'],
+    ['ue_dependencies', 'idx_ue_deps_required_file'],
+] as [$table, $index]) {
+    migration_test_expect($schema->indexExists($table, $index), 'Missing catalog scale index: ' . $index);
+}
 
 $ue5Profile = $db->query(
     'SELECT id,engine_key,allowed_extensions_json FROM ue_game_profiles '
