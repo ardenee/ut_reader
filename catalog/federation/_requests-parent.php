@@ -82,9 +82,11 @@ if (!$requests) {
     echo '<table><tr><th>ID</th><th>Child</th><th>Status</th><th>Title</th><th>Submitted</th><th>Open</th></tr>';
     foreach ($requests as $request) {
         $openParams = $listParams + ['request_id' => (int)$request['id']];
+        if (isset($_GET['request_move'])) {
+            $openParams['request_move'] = (string)$_GET['request_move'];
+        }
         if ((string)($_GET['request_cursor'] ?? '') !== '') {
             $openParams['request_cursor'] = (string)$_GET['request_cursor'];
-            $openParams['request_move'] = (string)($_GET['request_move'] ?? 'first');
         }
         echo '<tr><td>' . (int)$request['id'] . '</td><td>' . catalog_h($request['peer_name']) . '</td><td>' . catalog_h($request['status']) . '</td><td>' . catalog_h($request['title']) . '</td><td>' . catalog_h($request['submitted_at']) . '</td><td><a href="requests.php?' . catalog_h(http_build_query($openParams)) . '">open</a></td></tr>';
     }
