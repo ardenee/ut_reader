@@ -9,6 +9,7 @@ use Throwable;
 use UnrealDb\Catalog\Application\Search\CatalogSearchIndexQueue;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
@@ -53,17 +54,30 @@ final class CatalogAffectedDependencyRefreshService
         }
 
         $fileIds = [];
-        self::collectFileIds(
-            $db,
-            'SELECT DISTINCT d.file_id'
-            . ' FROM ue_dependencies d'
-            . ' JOIN ue_files f ON f.id=d.file_id'
-            . ' WHERE d.required_package=? AND d.file_id<>?'
-            . ' AND f.game_id=? AND f.scan_status="verified"'
-            . ' ORDER BY d.file_id',
-            [$packageName, $newFileId, $gameId],
-            $fileIds
-        );
+        if (self::summaryAvailable($db)) {
+            self::collectFileIds(
+                $db,
+                'SELECT s.file_id FROM ue_dependency_package_summaries s'
+                . ' JOIN ue_files f ON f.id=s.file_id'
+                . ' WHERE s.required_package=? AND s.file_id<>?'
+                . ' AND s.game_id=? AND f.scan_status="verified"'
+                . ' ORDER BY s.file_id',
+                [$packageName, $newFileId, $gameId],
+                $fileIds
+            );
+        } else {
+            self::collectFileIds(
+                $db,
+                'SELECT DISTINCT d.file_id'
+                . ' FROM ue_dependencies d'
+                . ' JOIN ue_files f ON f.id=d.file_id'
+                . ' WHERE d.required_package=? AND d.file_id<>?'
+                . ' AND f.game_id=? AND f.scan_status="verified"'
+                . ' ORDER BY d.file_id',
+                [$packageName, $newFileId, $gameId],
+                $fileIds
+            );
+        }
 
         return array_map('intval', array_keys($fileIds));
     }
@@ -79,14 +93,28 @@ final class CatalogAffectedDependencyRefreshService
         }
     }
 
+    private static function summaryAvailable(PDO $db): bool
+    {
+        return (new PdoDependencyPackageSummary($db))->available();
+    }
+
     private static function hasAffectedFiles(PDO $db, int $gameId, int $newFileId, string $packageName): bool
     {
-        $statement = $db->prepare(
-            'SELECT 1 FROM ue_dependencies d'
-            . ' JOIN ue_files f ON f.id=d.file_id'
-            . ' WHERE d.required_package=? AND d.file_id<>?'
-            . ' AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
-        );
+        if (self::summaryAvailable($db)) {
+            $statement = $db->prepare(
+                'SELECT 1 FROM ue_dependency_package_summaries s'
+                . ' JOIN ue_files f ON f.id=s.file_id'
+                . ' WHERE s.required_package=? AND s.file_id<>?'
+                . ' AND s.game_id=? AND f.scan_status="verified" LIMIT 1'
+            );
+        } else {
+            $statement = $db->prepare(
+                'SELECT 1 FROM ue_dependencies d'
+                . ' JOIN ue_files f ON f.id=d.file_id'
+                . ' WHERE d.required_package=? AND d.file_id<>?'
+                . ' AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
+            );
+        }
         $statement->execute([$packageName, $newFileId, $gameId]);
         return $statement->fetchColumn() !== false;
     }
