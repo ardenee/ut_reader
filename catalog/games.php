@@ -4,22 +4,41 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
 
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
     base_game_ensure($db);
-    $baseGameDependencySql = base_game_dependency_is_official_sql('df', 'd');
-    $games = catalog_all(
-        $db,
-        'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, '
-        . 'COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size, '
-        . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id) missing_dependency_count, '
-        . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id AND ' . $baseGameDependencySql . ') missing_base_game_dependency_count '
-        . 'FROM ue_games g '
-        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-        . 'LEFT JOIN ue_files f ON f.game_id=g.id '
-        . 'GROUP BY g.id, p.id ORDER BY g.name'
-    );
+
+    $stats = new PdoGameCatalogStats($db);
+    if ($stats->available()) {
+        $stats->refreshStale(300);
+        $games = catalog_all(
+            $db,
+            'SELECT g.id,g.name,g.slug,g.description,p.engine_key profile_engine,'
+            . 'COALESCE(s.file_count,0) file_count,COALESCE(s.total_size,0) total_size,'
+            . 'COALESCE(s.missing_dependency_count,0) missing_dependency_count,'
+            . 'COALESCE(s.missing_base_game_dependency_count,0) missing_base_game_dependency_count '
+            . 'FROM ue_games g '
+            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id '
+            . 'ORDER BY g.name'
+        );
+    } else {
+        $baseGameDependencySql = base_game_dependency_is_official_sql('df', 'd');
+        $games = catalog_all(
+            $db,
+            'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, '
+            . 'COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size, '
+            . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id) missing_dependency_count, '
+            . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id AND ' . $baseGameDependencySql . ') missing_base_game_dependency_count '
+            . 'FROM ue_games g '
+            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'LEFT JOIN ue_files f ON f.game_id=g.id '
+            . 'GROUP BY g.id, p.id ORDER BY g.name'
+        );
+    }
 
     catalog_head('Games');
     echo CatalogUi::pageHeader(
