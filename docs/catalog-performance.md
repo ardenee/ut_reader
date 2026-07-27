@@ -102,6 +102,12 @@ The Parent request-status API accepts optional request-list cursor, direction an
 
 Status, peer, event and base-game visibility filters form part of each cursor context. Changing a filter invalidates the previous token and restarts at the newest page.
 
+### Specialist diagnostics
+
+Federation identity conflicts now use signed First/Previous/Next/Last cursors instead of a fixed 1,000-row cap. The stable tuple is peer ID, peer package, peer filename, peer inventory row ID and local file ID. The cursor context includes peer selection, base-game policy and page size, while the exact conflict count remains visible.
+
+The Background Jobs page keeps its existing live renderer and bulk actions, but its database list requests are routed through a cursor endpoint ordered by descending job ID. A small compatibility bridge maps the existing page-number controls to opaque previous/next cursors and persists the active cursor in the URL for reloads. The original `job-status.php` endpoint remains in place for single-job upload polling and JSONL event streams, which already read bounded byte-offset batches.
+
 ### Maintenance projection reconciliation
 
 Direct writes that change package identity, aliases, verification state, GUIDs or game contents enqueue `catalog.reconcile_catalog_projections`. The job carries old and new game/package context so it can remove stale provider, search and dependency-summary rows even after an authoritative file row has been deleted or replaced.
@@ -126,6 +132,7 @@ Apply during a maintenance window with the worker stopped:
 8. `202607270008_source_file_fingerprints.php`
 9. `202607270009_federation_history_pagination.php`
 10. `202607270010_missing_object_pagination.php`
+11. `202607270011_specialist_diagnostics_pagination.php`
 
 The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
 
@@ -136,6 +143,8 @@ Migration `202607270008` creates an empty source-fingerprint cache. It does not 
 Migration `202607270009` adds only secondary request, request-item, transfer and log indexes matching the new `(created_at, id)` history cursors. It performs no application-level data backfill or backup; MySQL may use its normal temporary space while creating the indexes.
 
 Migration `202607270010` adds only dependency indexes for package- and file-scoped missing-object cursors. It performs no data backfill or application-level backup.
+
+Migration `202607270011` adds only Background Jobs and federation conflict navigation indexes. It performs no application-level data backfill or backup.
 
 The chunked package-examination phase requires no schema migration because the existing unique `(file_id, name/import/export index)` keys already support bounded range reads.
 
@@ -151,6 +160,9 @@ Collect `EXPLAIN` plans and duration samples for:
 - newest, older, newer and oldest Parent/Child request history pages;
 - newest and oldest transfer pages for every status tab;
 - federation log pages with level, peer and event filters;
+- first, middle, previous and last identity-conflict pages with all peers and one selected peer;
+- first, middle, previous and last Background Jobs pages for each status and page size;
+- Background Jobs reloads on a cursor page while live polling continues;
 - first, middle and last Names, Imports and Exports pages on small and very large packages;
 - direct cross-reference links to rows on later package-table pages;
 - full CSV and JSON exports for very large packages;
@@ -171,13 +183,9 @@ Collect `EXPLAIN` plans and duration samples for:
 
 Record database statement counts as well as elapsed time. The batching change should reduce parser-table and dependency insert statements approximately from one per row to one per 250 rows. Import response time should no longer include rebuilding existing affected files or rebuilding search documents.
 
-## Next structural phases
+## Next structural phase
 
-### 1. Remaining specialist diagnostics
-
-Identity-conflict drill-down and any background-job event views that telemetry shows growing beyond a normal page should adopt the shared cursor helper without changing their remediation actions.
-
-### 2. Exact-count telemetry
+### Exact-count telemetry
 
 Cursor retrieval is bounded, but exact totals remain intentionally available for page-number displays. Measure count-query cost on production-scale catalogues before considering approximate or asynchronously cached totals.
 
@@ -185,6 +193,6 @@ Cursor retrieval is bounded, but exact totals remain intentionally available for
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact total counts are still calculated for page-number display; cursor retrieval itself no longer grows with the requested page depth.
-- Identity-conflict diagnostics remain capped while their join cardinality and remediation workflow are measured.
+- Background-job free-text search still scans JSON/text fields within the selected queue; retain it for administration until telemetry justifies a compact search projection.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports and dependency tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
