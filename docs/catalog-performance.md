@@ -68,6 +68,16 @@ The summary projection stores one representative missing object path per file/pa
 
 Parent and Child inventory lists use HMAC-protected cursors bound to the selected peer, tab, base-game policy and page size. Request submission reconstructs the signed current page before accepting selected package keys, while the receiving Parent API remains authoritative for base-game policy and request lifecycle validation.
 
+### Chunked package examination
+
+`file-examine.php` loads only the selected Names, Imports or Exports page. Supported page sizes are 100, 250, 500 and 1,000 rows. The query uses the package table's `(file_id, table_index)` key and a bounded index range rather than loading all three tables before rendering the first tab.
+
+Cross-reference URLs include the destination table and calculated page, so an import/export outer reference or Name usage link opens the page containing the exact target row. Name usage and dependency information are calculated only for rows visible on the current page.
+
+Full Names, Imports and Exports downloads are available as CSV or JSON. The export endpoint walks the table in 1,000-row index batches and streams output rather than holding the complete result in PHP memory.
+
+Stored package-header inspection remains bounded to the first MiB of the package. Raw header fields are collapsed by default and capped at 500 displayed rows.
+
 ### Upload progress
 
 Progress persistence is throttled except for terminal states. Expired temporary progress files are cleaned separately from durable incoming job sources.
@@ -88,6 +98,8 @@ The search-document migration performs a one-time server-side backfill from veri
 
 The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. The keyset migrations add stable file and federation inventory indexes. Migration `202607270007` also backfills one representative object path per dependency-summary row. Large catalogues can require temporary InnoDB space and substantial disk I/O.
 
+The chunked package-examination phase requires no schema migration because the existing unique `(file_id, name/import/export index)` keys already support bounded range reads.
+
 ## Operational validation
 
 Collect `EXPLAIN` plans and duration samples for:
@@ -96,6 +108,9 @@ Collect `EXPLAIN` plans and duration samples for:
 - first, middle and last Files with missing dependencies cursor pages;
 - first, middle, previous and last Parent/Child federation inventory cursor pages;
 - Child request generation with the base-game policy enabled and disabled;
+- first, middle and last Names, Imports and Exports pages on small and very large packages;
+- direct cross-reference links to rows on later package-table pages;
+- full CSV and JSON exports for very large packages;
 - package, file-name, import-object and export-object searches within one game;
 - administrator all-game searches;
 - import of packages with small and very large N/I/E tables;
@@ -111,24 +126,23 @@ Record database statement counts as well as elapsed time. The batching change sh
 
 ## Next structural phases
 
-### 1. Chunked Examine views
-
-Names, Imports and Exports pages should load bounded chunks rather than rendering every parser row. Provide downloadable JSON/CSV exports for full-table inspection.
-
-### 2. Source fingerprint cache
+### 1. Source fingerprint cache
 
 Persist source path, size, modification time and a trusted quick fingerprint. Re-hash a source file only when those signals change, while retaining full MD5/SHA verification before accepting a new catalogue identity.
 
-### 3. Remaining request/history pagination
+### 2. Remaining request/history pagination
 
 Convert long request history, transfer history and diagnostics tables to the same stable cursor helper where telemetry shows meaningful page depth.
+
+### 3. Maintenance reconciliation hooks
+
+Direct maintenance operations that rewrite package identity should enqueue search-document, dependency-summary and game-statistics reconciliation consistently.
 
 ## Scale limits that remain
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact total counts are still calculated for page-number display; cursor retrieval itself no longer grows with the requested page depth.
-- Selected-package object drill-down on Missing Files still reads authoritative detailed rows and should be chunked with the Examine phase.
+- Selected-package object drill-down on Missing Files still reads authoritative detailed rows and should receive its own bounded object-page pass.
 - Request history, transfer history and diagnostics lists may still use offsets until their dedicated conversion pass.
-- Direct maintenance operations that rewrite package identity should enqueue a search-index reconciliation in a later maintenance-hook pass.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
