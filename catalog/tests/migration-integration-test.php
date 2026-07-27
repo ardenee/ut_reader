@@ -24,12 +24,15 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 24;
+$expectedMigrations = 25;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
 migration_test_expect(count($status) === $expectedMigrations, 'Unexpected migration count.');
-migration_test_expect(count(array_filter($status, static fn(array $row): bool => $row['state'] === 'pending')) === $expectedMigrations, 'Legacy baseline did not report all migrations pending.');
+migration_test_expect(
+    count(array_filter($status, static fn(array $row): bool => $row['state'] === 'pending')) === $expectedMigrations,
+    'Legacy baseline did not report all migrations pending.'
+);
 
 $preview = $runner->migrate(true);
 migration_test_expect(count($preview) === $expectedMigrations, 'Dry-run did not report all pending migrations.');
@@ -38,36 +41,85 @@ migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Dry-run mu
 $applied = $runner->migrate();
 migration_test_expect(count($applied) === $expectedMigrations, 'Migration runner did not apply every pending migration.');
 migration_test_expect($schema->tableExists('ue_schema_migrations'), 'Migration metadata table was not created.');
-migration_test_expect((int)$db->query('SELECT COUNT(*) FROM ue_schema_migrations')->fetchColumn() === $expectedMigrations, 'Applied migrations were not recorded.');
+migration_test_expect(
+    (int)$db->query('SELECT COUNT(*) FROM ue_schema_migrations')->fetchColumn() === $expectedMigrations,
+    'Applied migrations were not recorded.'
+);
 
-migration_test_expect($schema->tableExists('ue_remember_tokens'), 'Remember-token migration is missing.');
-migration_test_expect($schema->tableExists('ue_file_package_aliases'), 'Package-alias migration is missing.');
-migration_test_expect($schema->tableExists('ue_package_providers'), 'Package-provider migration is missing.');
-migration_test_expect($schema->indexExists('ue_package_providers', 'idx_ue_package_providers_lookup'), 'Package-provider lookup index is missing.');
-migration_test_expect($schema->indexExists('ue_package_providers', 'idx_ue_package_providers_file'), 'Package-provider file index is missing.');
-migration_test_expect($schema->tableExists('ue_search_documents'), 'Search-document migration is missing.');
-foreach (['idx_ue_search_game_primary', 'idx_ue_search_game_secondary', 'idx_ue_search_file', 'ft_ue_search_values'] as $index) {
-    migration_test_expect($schema->indexExists('ue_search_documents', $index), 'Search-document index is missing: ' . $index);
+foreach ([
+    'ue_remember_tokens',
+    'ue_file_package_aliases',
+    'ue_package_providers',
+    'ue_search_documents',
+    'ue_dependency_package_summaries',
+    'ue_game_catalog_stats',
+    'ue_source_file_fingerprints',
+    'ue_asset_registry_assets',
+    'ue_asset_registry_tags',
+    'ue_asset_registry_dependencies',
+    'ue_pak_archives',
+    'ue_pak_entries',
+    'ue_federation_join_requests',
+    'ue_exact_count_telemetry',
+    'ue_exact_count_query_plans',
+] as $table) {
+    migration_test_expect($schema->tableExists($table), 'Required migrated table is missing: ' . $table);
 }
-migration_test_expect($schema->tableExists('ue_dependency_package_summaries'), 'Dependency package summary migration is missing.');
-foreach (['idx_ue_dep_summary_game_status', 'idx_ue_dep_summary_package_game', 'idx_ue_dep_summary_provider'] as $index) {
-    migration_test_expect($schema->indexExists('ue_dependency_package_summaries', $index), 'Dependency package summary index is missing: ' . $index);
+
+foreach ([
+    ['ue_package_providers', 'idx_ue_package_providers_lookup'],
+    ['ue_package_providers', 'idx_ue_package_providers_file'],
+    ['ue_search_documents', 'idx_ue_search_game_primary'],
+    ['ue_search_documents', 'idx_ue_search_game_secondary'],
+    ['ue_search_documents', 'idx_ue_search_file'],
+    ['ue_search_documents', 'ft_ue_search_values'],
+    ['ue_dependency_package_summaries', 'idx_ue_dep_summary_game_status'],
+    ['ue_dependency_package_summaries', 'idx_ue_dep_summary_package_game'],
+    ['ue_dependency_package_summaries', 'idx_ue_dep_summary_provider'],
+    ['ue_dependency_package_summaries', 'idx_ue_dep_summary_game_package_missing'],
+    ['ue_federation_peer_files', 'idx_ue_peer_files_inventory_cursor'],
+    ['ue_game_catalog_stats', 'idx_ue_game_catalog_stats_updated'],
+    ['ue_source_file_fingerprints', 'uq_ue_source_fingerprint_path'],
+    ['ue_source_file_fingerprints', 'idx_ue_source_fingerprint_match'],
+    ['ue_source_file_fingerprints', 'idx_ue_source_fingerprint_seen'],
+    ['ue_federation_requests', 'idx_ue_federation_requests_history'],
+    ['ue_federation_requests', 'idx_ue_federation_requests_peer_history'],
+    ['ue_federation_request_items', 'idx_ue_federation_request_items_history'],
+    ['ue_federation_transfer_jobs', 'idx_ue_federation_transfer_history'],
+    ['ue_federation_transfer_jobs', 'idx_ue_federation_transfer_peer_history'],
+    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_history'],
+    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_level_history'],
+    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_peer_history'],
+    ['ue_dependencies', 'idx_ue_deps_resolution_source'],
+    ['ue_dependencies', 'idx_ue_deps_resolution_confidence'],
+    ['ue_dependencies', 'idx_ue_deps_missing_package_cursor'],
+    ['ue_dependencies', 'idx_ue_deps_missing_file_cursor'],
+    ['ue_files', 'idx_ue_files_game_status_package'],
+    ['ue_files', 'idx_ue_files_game_status_original'],
+    ['ue_file_package_aliases', 'idx_ue_file_alias_game_original'],
+    ['ue_imports', 'idx_ue_imports_root_file'],
+    ['ue_exports', 'idx_ue_exports_file_local'],
+    ['ue_dependencies', 'idx_ue_deps_required_file'],
+    ['ue_background_jobs', 'idx_ue_background_jobs_cancel'],
+    ['ue_background_jobs', 'idx_ue_background_jobs_dead_letter'],
+    ['ue_background_jobs', 'idx_ue_background_jobs_heartbeat'],
+    ['ue_background_jobs', 'idx_ue_background_jobs_resource'],
+    ['ue_background_jobs', 'idx_ue_background_jobs_concurrency'],
+    ['ue_background_jobs', 'idx_ue_background_jobs_queue_id'],
+    ['ue_background_jobs', 'idx_ue_background_jobs_queue_status_id'],
+    ['ue_federation_peer_files', 'idx_ue_peer_files_conflict_cursor'],
+    ['ue_exact_count_telemetry', 'uq_ue_exact_count_metric_context'],
+    ['ue_exact_count_telemetry', 'idx_ue_exact_count_last_seen'],
+    ['ue_exact_count_telemetry', 'idx_ue_exact_count_max_duration'],
+    ['ue_exact_count_telemetry', 'idx_ue_exact_count_metric'],
+    ['ue_exact_count_query_plans', 'uq_ue_exact_plan_metric_context'],
+    ['ue_exact_count_query_plans', 'idx_ue_exact_plan_assessment'],
+    ['ue_exact_count_query_plans', 'idx_ue_exact_plan_captured'],
+    ['ue_exact_count_query_plans', 'idx_ue_exact_plan_metric'],
+] as [$table, $index]) {
+    migration_test_expect($schema->indexExists($table, $index), 'Required migrated index is missing: ' . $table . '.' . $index);
 }
-migration_test_expect($schema->columnExists('ue_dependency_package_summaries', 'example_required_object_path'), 'Federation example dependency path column is missing.');
-migration_test_expect($schema->indexExists('ue_dependency_package_summaries', 'idx_ue_dep_summary_game_package_missing'), 'Federation dependency summary cursor index is missing.');
-migration_test_expect($schema->indexExists('ue_federation_peer_files', 'idx_ue_peer_files_inventory_cursor'), 'Federation peer inventory cursor index is missing.');
-migration_test_expect($schema->tableExists('ue_game_catalog_stats'), 'Game catalog stats migration is missing.');
-migration_test_expect($schema->indexExists('ue_game_catalog_stats', 'idx_ue_game_catalog_stats_updated'), 'Game catalog stats freshness index is missing.');
-foreach (['file_count', 'verified_count', 'missing_dependency_count', 'missing_base_game_dependency_count', 'updated_at'] as $column) {
-    migration_test_expect($schema->columnExists('ue_game_catalog_stats', $column), 'Game catalog stats column is missing: ' . $column);
-}
-migration_test_expect($schema->tableExists('ue_source_file_fingerprints'), 'Source fingerprint cache migration is missing.');
-foreach (['source_relative_path', 'file_size', 'modified_at', 'quick_fingerprint', 'work_name', 'content_md5', 'matched_file_id', 'last_seen_at'] as $column) {
-    migration_test_expect($schema->columnExists('ue_source_file_fingerprints', $column), 'Source fingerprint column is missing: ' . $column);
-}
-foreach (['uq_ue_source_fingerprint_path', 'idx_ue_source_fingerprint_match', 'idx_ue_source_fingerprint_seen'] as $index) {
-    migration_test_expect($schema->indexExists('ue_source_file_fingerprints', $index), 'Source fingerprint index is missing: ' . $index);
-}
+
 foreach ([
     'idx_ue_files_game_package_cursor',
     'idx_ue_files_game_original_cursor',
@@ -78,41 +130,25 @@ foreach ([
 ] as $index) {
     migration_test_expect($schema->indexExists('ue_files', $index), 'Keyset pagination index is missing: ' . $index);
 }
-foreach ([
-    ['ue_federation_requests', 'idx_ue_federation_requests_history'],
-    ['ue_federation_requests', 'idx_ue_federation_requests_peer_history'],
-    ['ue_federation_request_items', 'idx_ue_federation_request_items_history'],
-    ['ue_federation_transfer_jobs', 'idx_ue_federation_transfer_history'],
-    ['ue_federation_transfer_jobs', 'idx_ue_federation_transfer_peer_history'],
-    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_history'],
-    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_level_history'],
-    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_peer_history'],
-] as [$table, $index]) {
-    migration_test_expect($schema->indexExists($table, $index), 'Federation history cursor index is missing: ' . $index);
-}
-migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_source'), 'Dependency resolution_source column is missing.');
-migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_confidence'), 'Dependency resolution_confidence column is missing.');
-migration_test_expect($schema->indexExists('ue_dependencies', 'idx_ue_deps_resolution_source'), 'Dependency resolution_source index is missing.');
-migration_test_expect($schema->indexExists('ue_dependencies', 'idx_ue_deps_resolution_confidence'), 'Dependency resolution_confidence index is missing.');
-foreach (['idx_ue_deps_missing_package_cursor', 'idx_ue_deps_missing_file_cursor'] as $index) {
-    migration_test_expect($schema->indexExists('ue_dependencies', $index), 'Missing-object drill-down cursor index is missing: ' . $index);
-}
-migration_test_expect($schema->tableExists('ue_asset_registry_assets'), 'Asset-registry assets table is missing.');
-migration_test_expect($schema->tableExists('ue_asset_registry_tags'), 'Asset-registry tags table is missing.');
-migration_test_expect($schema->tableExists('ue_asset_registry_dependencies'), 'Asset-registry dependencies table is missing.');
-migration_test_expect($schema->tableExists('ue_pak_archives'), 'PAK archive table is missing.');
-migration_test_expect($schema->tableExists('ue_pak_entries'), 'PAK entry table is missing.');
-migration_test_expect($schema->tableExists('ue_federation_join_requests'), 'Federation join-request upgrade migration is missing.');
 
-foreach ([
-    ['ue_files', 'idx_ue_files_game_status_package'],
-    ['ue_files', 'idx_ue_files_game_status_original'],
-    ['ue_file_package_aliases', 'idx_ue_file_alias_game_original'],
-    ['ue_imports', 'idx_ue_imports_root_file'],
-    ['ue_exports', 'idx_ue_exports_file_local'],
-    ['ue_dependencies', 'idx_ue_deps_required_file'],
-] as [$table, $index]) {
-    migration_test_expect($schema->indexExists($table, $index), 'Missing catalog scale index: ' . $index);
+foreach (['file_count', 'verified_count', 'missing_dependency_count', 'missing_base_game_dependency_count', 'updated_at'] as $column) {
+    migration_test_expect($schema->columnExists('ue_game_catalog_stats', $column), 'Game catalog stats column is missing: ' . $column);
+}
+foreach (['source_relative_path', 'file_size', 'modified_at', 'quick_fingerprint', 'work_name', 'content_md5', 'matched_file_id', 'last_seen_at'] as $column) {
+    migration_test_expect($schema->columnExists('ue_source_file_fingerprints', $column), 'Source fingerprint column is missing: ' . $column);
+}
+foreach (['resolution_source', 'resolution_confidence'] as $column) {
+    migration_test_expect($schema->columnExists('ue_dependencies', $column), 'Dependency resolution column is missing: ' . $column);
+}
+migration_test_expect(
+    $schema->columnExists('ue_dependency_package_summaries', 'example_required_object_path'),
+    'Federation example dependency path column is missing.'
+);
+foreach (['metric_key', 'context_hash', 'sample_count', 'total_duration_us', 'max_duration_us', 'last_duration_us', 'slow_sample_count', 'last_result_count'] as $column) {
+    migration_test_expect($schema->columnExists('ue_exact_count_telemetry', $column), 'Exact-count telemetry column is missing: ' . $column);
+}
+foreach (['metric_key', 'context_hash', 'query_hash', 'query_sql', 'plan_json', 'estimated_rows', 'full_scan_rows', 'selected_keys', 'assessment', 'recommendation', 'captured_at'] as $column) {
+    migration_test_expect($schema->columnExists('ue_exact_count_query_plans', $column), 'Exact-count query-plan column is missing: ' . $column);
 }
 
 $ue5Profile = $db->query(
@@ -147,38 +183,17 @@ foreach (['uq_ue_files_unverified_queue_key', 'idx_ue_files_scan_status', 'idx_u
 
 $jobStatus = $schema->column('ue_background_jobs', 'status');
 migration_test_expect(is_array($jobStatus) && str_contains(strtolower((string)$jobStatus['COLUMN_TYPE']), "'dead_letter'"), 'Background job status does not support dead letters.');
-foreach (['progress_json', 'progress_updated_at', 'last_heartbeat_at', 'recovery_count', 'cancel_requested_at', 'cancel_requested_by', 'cancel_reason', 'dead_lettered_at'] as $column) {
-    migration_test_expect($schema->columnExists('ue_background_jobs', $column), 'Missing background-job reliability column: ' . $column);
-}
-foreach (['idx_ue_background_jobs_cancel', 'idx_ue_background_jobs_dead_letter', 'idx_ue_background_jobs_heartbeat'] as $index) {
-    migration_test_expect($schema->indexExists('ue_background_jobs', $index), 'Missing background-job reliability index: ' . $index);
-}
-foreach (['resource_class', 'resource_limit', 'concurrency_key'] as $column) {
-    migration_test_expect($schema->columnExists('ue_background_jobs', $column), 'Missing background-job resource column: ' . $column);
-}
-foreach (['idx_ue_background_jobs_resource', 'idx_ue_background_jobs_concurrency'] as $index) {
-    migration_test_expect($schema->indexExists('ue_background_jobs', $index), 'Missing background-job resource index: ' . $index);
-}
-foreach (['idx_ue_background_jobs_queue_id', 'idx_ue_background_jobs_queue_status_id'] as $index) {
-    migration_test_expect($schema->indexExists('ue_background_jobs', $index), 'Background-job history cursor index is missing: ' . $index);
-}
-migration_test_expect(
-    $schema->indexExists('ue_federation_peer_files', 'idx_ue_peer_files_conflict_cursor'),
-    'Federation conflict cursor index is missing.'
-);
-
-migration_test_expect($schema->tableExists('ue_exact_count_telemetry'), 'Exact-count telemetry table is missing.');
-foreach (['metric_key', 'context_hash', 'sample_count', 'total_duration_us', 'max_duration_us', 'last_duration_us', 'slow_sample_count', 'last_result_count'] as $column) {
-    migration_test_expect($schema->columnExists('ue_exact_count_telemetry', $column), 'Exact-count telemetry column is missing: ' . $column);
-}
-foreach (['uq_ue_exact_count_metric_context', 'idx_ue_exact_count_last_seen', 'idx_ue_exact_count_max_duration', 'idx_ue_exact_count_metric'] as $index) {
-    migration_test_expect($schema->indexExists('ue_exact_count_telemetry', $index), 'Exact-count telemetry index is missing: ' . $index);
+foreach (['progress_json', 'progress_updated_at', 'last_heartbeat_at', 'recovery_count', 'cancel_requested_at', 'cancel_requested_by', 'cancel_reason', 'dead_lettered_at', 'resource_class', 'resource_limit', 'concurrency_key'] as $column) {
+    migration_test_expect($schema->columnExists('ue_background_jobs', $column), 'Missing background-job column: ' . $column);
 }
 
 migration_test_expect($runner->migrate() === [], 'Second migration run was not idempotent.');
 $verified = $runner->status();
 $runner->assertNoDrift($verified);
-migration_test_expect(count(array_filter($verified, static fn(array $row): bool => $row['state'] === 'applied')) === $expectedMigrations, 'Migration status did not report every migration applied.');
+migration_test_expect(
+    count(array_filter($verified, static fn(array $row): bool => $row['state'] === 'applied')) === $expectedMigrations,
+    'Migration status did not report every migration applied.'
+);
 
 $first = $db->query('SELECT version, checksum FROM ue_schema_migrations ORDER BY version LIMIT 1')->fetch();
 migration_test_expect(is_array($first), 'Could not read an applied migration row.');
