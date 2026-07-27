@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 19;
+$expectedMigrations = 20;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -60,6 +60,13 @@ migration_test_expect($schema->tableExists('ue_game_catalog_stats'), 'Game catal
 migration_test_expect($schema->indexExists('ue_game_catalog_stats', 'idx_ue_game_catalog_stats_updated'), 'Game catalog stats freshness index is missing.');
 foreach (['file_count', 'verified_count', 'missing_dependency_count', 'missing_base_game_dependency_count', 'updated_at'] as $column) {
     migration_test_expect($schema->columnExists('ue_game_catalog_stats', $column), 'Game catalog stats column is missing: ' . $column);
+}
+migration_test_expect($schema->tableExists('ue_source_file_fingerprints'), 'Source fingerprint cache migration is missing.');
+foreach (['source_relative_path', 'file_size', 'modified_at', 'quick_fingerprint', 'work_name', 'content_md5', 'matched_file_id', 'last_seen_at'] as $column) {
+    migration_test_expect($schema->columnExists('ue_source_file_fingerprints', $column), 'Source fingerprint column is missing: ' . $column);
+}
+foreach (['uq_ue_source_fingerprint_path', 'idx_ue_source_fingerprint_match', 'idx_ue_source_fingerprint_seen'] as $index) {
+    migration_test_expect($schema->indexExists('ue_source_file_fingerprints', $index), 'Source fingerprint index is missing: ' . $index);
 }
 foreach ([
     'idx_ue_files_game_package_cursor',
