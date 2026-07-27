@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 22;
+$expectedMigrations = 23;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -159,6 +159,13 @@ foreach (['resource_class', 'resource_limit', 'concurrency_key'] as $column) {
 foreach (['idx_ue_background_jobs_resource', 'idx_ue_background_jobs_concurrency'] as $index) {
     migration_test_expect($schema->indexExists('ue_background_jobs', $index), 'Missing background-job resource index: ' . $index);
 }
+foreach (['idx_ue_background_jobs_queue_id', 'idx_ue_background_jobs_queue_status_id'] as $index) {
+    migration_test_expect($schema->indexExists('ue_background_jobs', $index), 'Background-job history cursor index is missing: ' . $index);
+}
+migration_test_expect(
+    $schema->indexExists('ue_federation_peer_files', 'idx_ue_peer_files_conflict_cursor'),
+    'Federation conflict cursor index is missing.'
+);
 
 migration_test_expect($runner->migrate() === [], 'Second migration run was not idempotent.');
 $verified = $runner->status();
