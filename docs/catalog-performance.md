@@ -78,6 +78,16 @@ Full Names, Imports and Exports downloads are available as CSV or JSON. The expo
 
 Stored package-header inspection remains bounded to the first MiB of the package. Raw header fields are collapsed by default and capped at 500 displayed rows.
 
+### Local source fingerprints
+
+`ue_source_file_fingerprints` stores one row per configured local source and relative path. It records source size, modification time, a SHA-256 fingerprint sampled from five 64 KiB windows, the normalized/decompressed work name, previous full hashes, package GUID and the last verified catalogue match.
+
+An unchanged file can bypass full hashing and package parsing only when its path, size, timestamp and sampled fingerprint all match and the stored catalogue identity still points to a currently verified file. MD5/SHA-backed matches are checked against the authoritative file hashes; GUID-backed matches require the same unique verified GUID.
+
+Changed or new source files follow the existing scanner path. A new catalogue identity is still accepted only after the normal importer performs full MD5 and SHA verification. Unchanged redirect archives can reuse their verified match without being decompressed again. Cache failures fall back to full scanning and are reported as counters instead of stopping the source job.
+
+The synchronous Source Scan page and durable Source Scan worker now use the same package scanning implementation, preventing separate cache and matching behaviour.
+
 ### Upload progress
 
 Progress persistence is throttled except for terminal states. Expired temporary progress files are cleaned separately from durable incoming job sources.
@@ -93,10 +103,13 @@ Apply during a maintenance window with the worker stopped:
 5. `202607270005_game_catalog_stats.php`
 6. `202607270006_keyset_pagination_indexes.php`
 7. `202607270007_federation_summary_pagination.php`
+8. `202607270008_source_file_fingerprints.php`
 
 The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
 
 The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. The keyset migrations add stable file and federation inventory indexes. Migration `202607270007` also backfills one representative object path per dependency-summary row. Large catalogues can require temporary InnoDB space and substantial disk I/O.
+
+Migration `202607270008` creates an empty source-fingerprint cache. It does not hash existing files during migration; rows are populated incrementally by later local-source scans.
 
 The chunked package-examination phase requires no schema migration because the existing unique `(file_id, name/import/export index)` keys already support bounded range reads.
 
@@ -111,6 +124,10 @@ Collect `EXPLAIN` plans and duration samples for:
 - first, middle and last Names, Imports and Exports pages on small and very large packages;
 - direct cross-reference links to rows on later package-table pages;
 - full CSV and JSON exports for very large packages;
+- first and second scans of an unchanged large local source;
+- unchanged redirect archives, confirming the second scan avoids decompression;
+- a same-size/same-timestamp source file changed inside a sampled region;
+- a cached file whose matched catalogue row was retired or deleted;
 - package, file-name, import-object and export-object searches within one game;
 - administrator all-game searches;
 - import of packages with small and very large N/I/E tables;
@@ -126,23 +143,23 @@ Record database statement counts as well as elapsed time. The batching change sh
 
 ## Next structural phases
 
-### 1. Source fingerprint cache
-
-Persist source path, size, modification time and a trusted quick fingerprint. Re-hash a source file only when those signals change, while retaining full MD5/SHA verification before accepting a new catalogue identity.
-
-### 2. Remaining request/history pagination
+### 1. Remaining request/history pagination
 
 Convert long request history, transfer history and diagnostics tables to the same stable cursor helper where telemetry shows meaningful page depth.
 
-### 3. Maintenance reconciliation hooks
+### 2. Maintenance reconciliation hooks
 
 Direct maintenance operations that rewrite package identity should enqueue search-document, dependency-summary and game-statistics reconciliation consistently.
+
+### 3. Bounded missing-object drill-down
+
+The selected-package object detail on Missing Files should use bounded pages rather than reading every authoritative dependency object row at once.
 
 ## Scale limits that remain
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact total counts are still calculated for page-number display; cursor retrieval itself no longer grows with the requested page depth.
-- Selected-package object drill-down on Missing Files still reads authoritative detailed rows and should receive its own bounded object-page pass.
+- Selected-package object drill-down on Missing Files still reads authoritative detailed rows until its dedicated bounded pass.
 - Request history, transfer history and diagnostics lists may still use offsets until their dedicated conversion pass.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
