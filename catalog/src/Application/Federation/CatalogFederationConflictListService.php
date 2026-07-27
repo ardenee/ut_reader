@@ -54,6 +54,14 @@ final class CatalogFederationConflictListService
             $move = 'first';
         }
 
+        if ($move === 'last') {
+            $total = self::count($db, $peerId, $ignoreBaseGame);
+            $remainder = $total % $limit;
+            if ($remainder > 0) {
+                $limit = $remainder;
+            }
+        }
+
         $columns = ['p.id', 'pf.package_name', 'pf.original_name', 'pf.id', 'f.id'];
         $directions = ['ASC', 'ASC', 'ASC', 'ASC', 'ASC'];
         $reverse = $move === 'previous' || $move === 'last';
