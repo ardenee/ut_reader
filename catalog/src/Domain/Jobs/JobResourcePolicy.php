@@ -28,6 +28,11 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
             ),
+            JobType::RECONCILE_CATALOG_PROJECTIONS => new JobResourceProfile(
+                self::DEPENDENCY_HEAVY,
+                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::projectionKey($payload)
+            ),
             JobType::REBUILD_FILE_SEARCH_INDEX => new JobResourceProfile(
                 self::SEARCH_HEAVY,
                 self::configuredLimit(self::SEARCH_HEAVY, 1),
@@ -99,6 +104,21 @@ final class JobResourcePolicy
         }
         $value = filter_var($raw, FILTER_VALIDATE_INT);
         return $value === false ? $default : max(1, min((int)$value, 100));
+    }
+
+    private static function projectionKey(array $payload): ?string
+    {
+        $fileId = (int)($payload['file_id'] ?? 0);
+        if ($fileId > 0) {
+            return 'projection:file:' . $fileId;
+        }
+        foreach ((array)($payload['game_ids'] ?? []) as $gameId) {
+            $gameId = (int)$gameId;
+            if ($gameId > 0) {
+                return 'projection:game:' . $gameId;
+            }
+        }
+        return 'projection:catalog';
     }
 
     private static function positiveKey(string $prefix, mixed $value): ?string
