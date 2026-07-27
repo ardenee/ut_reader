@@ -96,6 +96,11 @@ profiled_large_upload_expect(
     'Profiled upload queue does not report an existing active job.'
 );
 profiled_large_upload_expect(
+    str_contains($content['queue'], '->delete($stagedPath)')
+        && !str_contains($content['queue'], '->remove($stagedPath)'),
+    'An unused deduplicated incoming upload is retained as an orphaned file.'
+);
+profiled_large_upload_expect(
     str_contains($content['detached'], 'codeVersion')
         && str_contains($content['detached'], "'stale_code'"),
     'Detached workers cannot be identified as stale after a code update.'
