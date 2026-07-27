@@ -88,6 +88,14 @@ Changed or new source files follow the existing scanner path. A new catalogue id
 
 The synchronous Source Scan page and durable Source Scan worker now use the same package scanning implementation, preventing separate cache and matching behaviour.
 
+### Federation request, transfer and log history
+
+Federation request headers, Parent-pull history, Child download/import history, the main transfer queue and filtered federation logs use the shared HMAC-protected history cursor service. Newest/Newer/Older/Oldest navigation reads bounded pages ordered by `(created_at, id)` instead of fixed 300, 500 or 1,000 row windows.
+
+The Parent request-status API accepts optional request-list cursor, direction and page-size fields. Cursor tokens are signed by the Parent and treated as opaque by the Child, so the receiving Parent remains authoritative for peer identity, active/closed filtering and ordering. Older Children that omit cursor fields receive the newest page.
+
+Status, peer, event and base-game visibility filters form part of each cursor context. Changing a filter invalidates the previous token and restarts at the newest page.
+
 ### Upload progress
 
 Progress persistence is throttled except for terminal states. Expired temporary progress files are cleaned separately from durable incoming job sources.
@@ -104,12 +112,15 @@ Apply during a maintenance window with the worker stopped:
 6. `202607270006_keyset_pagination_indexes.php`
 7. `202607270007_federation_summary_pagination.php`
 8. `202607270008_source_file_fingerprints.php`
+9. `202607270009_federation_history_pagination.php`
 
 The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
 
 The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. The keyset migrations add stable file and federation inventory indexes. Migration `202607270007` also backfills one representative object path per dependency-summary row. Large catalogues can require temporary InnoDB space and substantial disk I/O.
 
 Migration `202607270008` creates an empty source-fingerprint cache. It does not hash existing files during migration; rows are populated incrementally by later local-source scans.
+
+Migration `202607270009` only adds request, request-item, transfer and log indexes matching the new `(created_at, id)` history cursors. It performs no data backfill or table copy.
 
 The chunked package-examination phase requires no schema migration because the existing unique `(file_id, name/import/export index)` keys already support bounded range reads.
 
@@ -121,6 +132,9 @@ Collect `EXPLAIN` plans and duration samples for:
 - first, middle and last Files with missing dependencies cursor pages;
 - first, middle, previous and last Parent/Child federation inventory cursor pages;
 - Child request generation with the base-game policy enabled and disabled;
+- newest, older, newer and oldest Parent/Child request history pages;
+- newest and oldest transfer pages for every status tab;
+- federation log pages with level, peer and event filters;
 - first, middle and last Names, Imports and Exports pages on small and very large packages;
 - direct cross-reference links to rows on later package-table pages;
 - full CSV and JSON exports for very large packages;
@@ -143,23 +157,23 @@ Record database statement counts as well as elapsed time. The batching change sh
 
 ## Next structural phases
 
-### 1. Remaining request/history pagination
-
-Convert long request history, transfer history and diagnostics tables to the same stable cursor helper where telemetry shows meaningful page depth.
-
-### 2. Maintenance reconciliation hooks
+### 1. Maintenance reconciliation hooks
 
 Direct maintenance operations that rewrite package identity should enqueue search-document, dependency-summary and game-statistics reconciliation consistently.
 
-### 3. Bounded missing-object drill-down
+### 2. Bounded missing-object drill-down
 
 The selected-package object detail on Missing Files should use bounded pages rather than reading every authoritative dependency object row at once.
+
+### 3. Remaining specialist diagnostics
+
+Identity-conflict drill-down and any background-job event views that telemetry shows growing beyond a normal page should adopt the shared cursor helper without changing their remediation actions.
 
 ## Scale limits that remain
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact total counts are still calculated for page-number display; cursor retrieval itself no longer grows with the requested page depth.
 - Selected-package object drill-down on Missing Files still reads authoritative detailed rows until its dedicated bounded pass.
-- Request history, transfer history and diagnostics lists may still use offsets until their dedicated conversion pass.
+- Identity-conflict diagnostics remain capped while their join cardinality and remediation workflow are measured.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
