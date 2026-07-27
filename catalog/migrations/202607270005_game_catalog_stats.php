@@ -9,6 +9,28 @@ return [
         $schema->requireTable('ue_files');
         $schema->requireTable('ue_dependency_package_summaries');
 
+        // Older installations could create this table lazily through the admin
+        // page. Ensure the cache backfill has the same authoritative source.
+        $schema->ensureTable(
+            'ue_base_game_files',
+            'CREATE TABLE ue_base_game_files ('
+            . 'id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,'
+            . 'game_id INT UNSIGNED NOT NULL,'
+            . 'package_guid VARCHAR(80) NOT NULL,'
+            . 'package_name VARCHAR(255) NULL,'
+            . 'original_name VARCHAR(255) NULL,'
+            . 'source_file_id BIGINT UNSIGNED NULL,'
+            . 'notes TEXT NULL,'
+            . 'created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,'
+            . 'updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,'
+            . 'PRIMARY KEY (id),'
+            . 'UNIQUE KEY uq_ue_base_game_files_game_guid (game_id,package_guid),'
+            . 'KEY idx_ue_base_game_files_game (game_id),'
+            . 'KEY idx_ue_base_game_files_guid (package_guid),'
+            . 'KEY idx_ue_base_game_files_source_file (source_file_id)'
+            . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+        );
+
         $schema->ensureTable(
             'ue_game_catalog_stats',
             'CREATE TABLE ue_game_catalog_stats ('
