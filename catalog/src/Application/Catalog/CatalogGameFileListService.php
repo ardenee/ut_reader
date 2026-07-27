@@ -128,9 +128,9 @@ final class CatalogGameFileListService
         $having = $cursorSql !== '' ? ' HAVING ' . $cursorSql : '';
         return \catalog_all(
             $db,
-            'SELECT f.id,COALESCE(SUM(s.missing_count),0) missing_count '
+            'SELECT f.id,f.package_name,f.original_name,COALESCE(SUM(s.missing_count),0) missing_count '
             . 'FROM ue_files f LEFT JOIN ue_dependency_package_summaries s ON s.file_id=f.id '
-            . $whereSql . ' GROUP BY f.id' . $having
+            . $whereSql . ' GROUP BY f.id,f.package_name,f.original_name' . $having
             . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
             . ' LIMIT ' . $limit,
             array_merge($whereArgs, $cursorArgs)
