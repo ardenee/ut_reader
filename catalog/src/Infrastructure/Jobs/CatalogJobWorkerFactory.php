@@ -66,6 +66,9 @@ final class CatalogJobWorkerFactory
                 new GeneratedPackageJobHandler($db, $config),
                 new GameBackupExportJobHandler($db, $config),
                 new GameBackupJobHandler($db, $trustedImportConfig),
+                // Affected dependency refreshes continue past individual file
+                // failures and report processed/failure counts in the job result.
+                new CatalogAffectedDependencyRefreshJobHandler($db, $config),
                 // CatalogMaintenanceJobHandler currently recognises every registered
                 // JobType before dispatching its own subset, so it must remain last.
                 new CatalogMaintenanceJobHandler($db, $config),
