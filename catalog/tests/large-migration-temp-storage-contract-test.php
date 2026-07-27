@@ -11,9 +11,10 @@ function large_migration_expect(bool $condition, string $message): void
 $migration = file_get_contents(__DIR__ . '/../migrations/202607270003_search_documents.php');
 large_migration_expect(is_string($migration), 'Search-document migration could not be read.');
 large_migration_expect(
-    hash('sha256', $migration) === '99494f3c0cfa76a0860265055ce1855d933aebbd54568294b0ba4c4dcdb86117'
-        || str_contains($migration, "'version' => '202607270003'"),
-    'Released search-document migration is unavailable.'
+    str_contains($migration, "'version' => '202607270003'")
+        && str_contains($migration, 'INSERT INTO ue_search_documents')
+        && !str_contains($migration, 'SearchDocumentMigrationExecutor'),
+    'Released search-document migration was replaced instead of using a checksum-preserving execution override.'
 );
 
 $executor = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/SearchDocumentMigrationExecutor.php');
@@ -47,7 +48,7 @@ large_migration_expect(is_string($cli), 'Migration CLI could not be read.');
 large_migration_expect(
     str_contains($cli, '--defer-search-indexes')
         && str_contains($cli, '--search-backfill-batch=25000')
-        && str_contains($cli, "['202607270003' => $searchExecutor]"),
+        && str_contains($cli, "'202607270003' => \$searchExecutor"),
     'Migration CLI does not activate the bounded search backfill and index deferral.'
 );
 
