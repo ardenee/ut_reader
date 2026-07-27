@@ -9,7 +9,7 @@ try {
     $db = catalog_db(catalog_config());
     $fileId = max(0, (int)($_GET['id'] ?? 0));
     $table = CatalogPackageTablePageService::normalizeTable((string)($_GET['table'] ?? 'names'));
-    $format = strtolower(trim((string)($_GET['format'] ?? 'csv')));
+    $format = strtolower(trim((string)($_GET['format'] ?? 'csv'));
     if (!in_array($format, ['csv', 'json'], true)) {
         throw new RuntimeException('Unsupported export format.');
     }
@@ -45,7 +45,7 @@ try {
             throw new RuntimeException('Could not open export output.');
         }
         fwrite($output, "\xEF\xBB\xBF");
-        fputcsv($output, $columns);
+        fputcsv($output, $columns, ',', '"', '');
         do {
             $statement->execute([$fileId, $after]);
             $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -54,7 +54,7 @@ try {
                 foreach ($columns as $column) {
                     $values[] = $row[$column] ?? null;
                 }
-                fputcsv($output, $values);
+                fputcsv($output, $values, ',', '"', '');
                 $after = (int)$row[$indexColumn];
             }
             fflush($output);
