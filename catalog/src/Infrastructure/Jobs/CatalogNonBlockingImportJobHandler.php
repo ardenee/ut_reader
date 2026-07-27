@@ -163,6 +163,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             },
             false
         );
+        $decoded = $this->normalizePreparedTemporaryPath($decoded);
 
         $context->checkpoint([
             'stage' => 'redirect_ready',
@@ -204,6 +205,40 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
         );
 
         return [$prepared, (string)$decoded['path'], $decoded];
+    }
+
+    /**
+     * Windows tempnam() keeps only the first three prefix characters. Rename the
+     * file inside the same temporary directory so the downstream containment
+     * guard can verify the full ue_redirect_ marker on every platform.
+     *
+     * @param array<string,mixed> $decoded
+     * @return array<string,mixed>
+     */
+    private function normalizePreparedTemporaryPath(array $decoded): array
+    {
+        $path = trim((string)($decoded['path'] ?? ''));
+        if ($path === '' || !is_file($path)) {
+            throw new \RuntimeException('Prepared redirect payload is unavailable.');
+        }
+        if (str_starts_with(basename($path), 'ue_redirect_')) {
+            return $decoded;
+        }
+
+        $directory = dirname($path);
+        for ($attempt = 0; $attempt < 5; $attempt++) {
+            $target = $directory . DIRECTORY_SEPARATOR . 'ue_redirect_' . bin2hex(random_bytes(16)) . '.tmp';
+            if (file_exists($target)) {
+                continue;
+            }
+            if (@rename($path, $target)) {
+                $decoded['path'] = $target;
+                return $decoded;
+            }
+        }
+
+        @unlink($path);
+        throw new \RuntimeException('Could not normalize prepared redirect temporary file.');
     }
 
     private function replaceRelativeFilename(string $relativePath, string $name): string
