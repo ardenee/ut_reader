@@ -8,6 +8,9 @@ use RuntimeException;
 
 final class SchemaInspector
 {
+    /** @var array<string,bool>|null */
+    private static ?array $deferredIndexes = null;
+
     public function __construct(private readonly PDO $db)
     {
     }
@@ -75,8 +78,38 @@ final class SchemaInspector
     public function ensureIndex(string $table, string $index, string $createSql): void
     {
         $this->requireTable($table);
-        if (!$this->indexExists($table, $index)) {
-            $this->db->exec($createSql);
+        if ($this->indexExists($table, $index) || $this->indexDeferred($table, $index)) {
+            return;
         }
+        $this->db->exec($createSql);
+    }
+
+    public function indexDeferred(string $table, string $index): bool
+    {
+        $deferred = self::deferredIndexes();
+        return isset($deferred[strtolower($index)])
+            || isset($deferred[strtolower($table . '.' . $index)]);
+    }
+
+    /** @return array<string,bool> */
+    private static function deferredIndexes(): array
+    {
+        if (self::$deferredIndexes !== null) {
+            return self::$deferredIndexes;
+        }
+
+        self::$deferredIndexes = [];
+        $raw = trim((string)(getenv('UNREALDB_DEFER_INDEXES') ?: ''));
+        if ($raw === '') {
+            return self::$deferredIndexes;
+        }
+
+        foreach (preg_split('/[\s,;]+/', $raw) ?: [] as $value) {
+            $value = strtolower(trim($value));
+            if ($value !== '') {
+                self::$deferredIndexes[$value] = true;
+            }
+        }
+        return self::$deferredIndexes;
     }
 }
