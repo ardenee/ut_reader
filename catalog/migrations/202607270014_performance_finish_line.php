@@ -35,13 +35,12 @@ return [
             . 'queue_name VARCHAR(80) NOT NULL,'
             . 'job_type VARCHAR(120) NOT NULL,'
             . 'source_status VARCHAR(32) NOT NULL,'
-            . 'search_text TEXT NOT NULL,'
+            . 'search_text MEDIUMTEXT NOT NULL,'
             . 'source_updated_at DATETIME NOT NULL,'
             . 'PRIMARY KEY (job_id),'
             . 'KEY idx_ue_job_search_queue_job (queue_name,job_id),'
             . 'KEY idx_ue_job_search_status_job (source_status,job_id),'
-            . 'KEY idx_ue_job_search_updated (source_updated_at),'
-            . 'FULLTEXT KEY ft_ue_job_search_text (search_text)'
+            . 'KEY idx_ue_job_search_updated (source_updated_at)'
             . ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
         );
 
@@ -77,6 +76,12 @@ return [
             . 'FROM ue_background_jobs j '
             . 'ON DUPLICATE KEY UPDATE queue_name=VALUES(queue_name),job_type=VALUES(job_type),source_status=VALUES(source_status),'
             . 'search_text=VALUES(search_text),source_updated_at=VALUES(source_updated_at)'
+        );
+
+        $schema->ensureIndex(
+            'ue_background_job_search',
+            'ft_ue_job_search_text',
+            'ALTER TABLE ue_background_job_search ADD FULLTEXT KEY ft_ue_job_search_text (search_text)'
         );
     },
 ];
