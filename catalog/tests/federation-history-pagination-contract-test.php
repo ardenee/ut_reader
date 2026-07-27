@@ -38,7 +38,7 @@ federation_history_expect(
 federation_history_expect(
     str_contains($api, "'request_page' => [")
         && str_contains($api, "'cursor' => (string)(\$payload['cursor'] ?? '')")
-        && str_contains($api, "'closed' => \$closed") === false
+        && str_contains($api, 'CatalogFederationHistoryPageService::fetch(')
         && !str_contains($api, 'ORDER BY created_at DESC,id DESC LIMIT 200'),
     'Parent request-status API does not expose cursor-paged request history.'
 );
