@@ -9,8 +9,8 @@ use Throwable;
 /**
  * Aggregates exact-count query timings into one bounded row per metric/context.
  *
- * Telemetry failures never change the page result. Before migration 202607270012
- * is applied, measure() simply returns the exact query result without recording.
+ * Telemetry failures never change the measured query result. Before migration
+ * 202607270012 is applied, samples are returned normally without persistence.
  */
 final class CatalogExactCountTelemetry
 {
@@ -26,36 +26,48 @@ final class CatalogExactCountTelemetry
      */
     public static function measure(PDO $db, string $metricKey, array $context, callable $query): int
     {
+        return self::sample($db, $metricKey, $context, $query)['result'];
+    }
+
+    /**
+     * @param array<string,mixed> $context
+     * @param callable():int $query
+     * @return array{metric_key:string,context:array<string,mixed>,result:int,duration_us:int,duration_ms:float,slow:bool,recorded:bool}
+     */
+    public static function sample(PDO $db, string $metricKey, array $context, callable $query): array
+    {
         $started = hrtime(true);
         $result = $query();
         $durationUs = max(0, (int)round((hrtime(true) - $started) / 1000));
+        $recorded = false;
 
-        if (!self::available($db)) {
-            return $result;
-        }
-
-        try {
-            self::record($db, $metricKey, $context, $durationUs, $result);
-        } catch (Throwable $error) {
-            if (!self::$recordFailureLogged) {
-                self::$recordFailureLogged = true;
-                error_log('[UnrealDB exact-count telemetry] ' . $error->getMessage());
+        if (self::available($db)) {
+            try {
+                self::record($db, $metricKey, $context, $durationUs, $result);
+                $recorded = true;
+            } catch (Throwable $error) {
+                if (!self::$recordFailureLogged) {
+                    self::$recordFailureLogged = true;
+                    error_log('[UnrealDB exact-count telemetry] ' . $error->getMessage());
+                }
             }
         }
 
-        return $result;
+        return [
+            'metric_key' => self::normalizeMetricKey($metricKey),
+            'context' => self::normalizeContext($context),
+            'result' => $result,
+            'duration_us' => $durationUs,
+            'duration_ms' => round($durationUs / 1000, 3),
+            'slow' => $durationUs >= self::SLOW_THRESHOLD_US,
+            'recorded' => $recorded,
+        ];
     }
 
     /** @param array<string,mixed> $context */
     private static function record(PDO $db, string $metricKey, array $context, int $durationUs, int $result): void
     {
-        $metricKey = strtolower(trim($metricKey));
-        $metricKey = preg_replace('/[^a-z0-9_.:-]+/', '_', $metricKey) ?? '';
-        $metricKey = substr(trim($metricKey, '_'), 0, 120);
-        if ($metricKey === '') {
-            throw new \InvalidArgumentException('An exact-count telemetry metric key is required.');
-        }
-
+        $metricKey = self::normalizeMetricKey($metricKey);
         $normalized = self::normalizeContext($context);
         $contextJson = json_encode(
             $normalized,
@@ -74,7 +86,7 @@ final class CatalogExactCountTelemetry
             'INSERT INTO ue_exact_count_telemetry('
             . 'metric_key,context_hash,context_json,sample_count,total_duration_us,max_duration_us,'
             . 'last_duration_us,slow_sample_count,last_result_count,first_seen_at,last_seen_at'
-            . ') VALUES(?,?,?,1,?,?,?, ?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) '
+            . ') VALUES(?,?,?,1,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP) '
             . 'ON DUPLICATE KEY UPDATE '
             . 'context_json=VALUES(context_json),sample_count=sample_count+1,'
             . 'total_duration_us=total_duration_us+VALUES(total_duration_us),'
@@ -93,6 +105,17 @@ final class CatalogExactCountTelemetry
             $slow,
             max(0, $result),
         ]);
+    }
+
+    private static function normalizeMetricKey(string $metricKey): string
+    {
+        $metricKey = strtolower(trim($metricKey));
+        $metricKey = preg_replace('/[^a-z0-9_.:-]+/', '_', $metricKey) ?? '';
+        $metricKey = substr(trim($metricKey, '_'), 0, 120);
+        if ($metricKey === '') {
+            throw new \InvalidArgumentException('An exact-count telemetry metric key is required.');
+        }
+        return $metricKey;
     }
 
     private static function available(PDO $db): bool
