@@ -171,11 +171,16 @@ final class CatalogMissingDetailListService
 
         $first = $rows !== [] ? $cursorValues($rows[0]) : null;
         $last = $rows !== [] ? $cursorValues($rows[count($rows) - 1]) : null;
-        $hasPrevious = $move === 'next' || $move === 'last' || ($move === 'prev' && $hasExtra);
-        $hasNext = $move === 'prev' || $move === 'first' ? $hasExtra : ($move === 'next' ? $hasExtra : false);
-        if ($move === 'last') {
-            $hasNext = false;
-        }
+        $hasPrevious = match ($move) {
+            'next', 'last' => $rows !== [],
+            'prev' => $hasExtra,
+            default => false,
+        };
+        $hasNext = match ($move) {
+            'first', 'next' => $hasExtra,
+            'prev' => $rows !== [],
+            default => false,
+        };
 
         return [
             'rows' => $rows,
