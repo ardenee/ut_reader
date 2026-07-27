@@ -24,15 +24,22 @@ final class CatalogFederationConflictListService
         return ['sql' => implode(' AND ', $where), 'args' => $args];
     }
 
-    public static function count(PDO $db, int $peerId, bool $ignoreBaseGame): int
+    /** @return array{sql:string,args:list<mixed>} */
+    public static function countQuery(int $peerId, bool $ignoreBaseGame): array
     {
         $filter = self::filter($peerId, $ignoreBaseGame);
         $sql = 'SELECT COUNT(*) c' . self::fromSql();
         if ($filter['sql'] !== '') {
             $sql .= ' AND ' . $filter['sql'];
         }
-        $statement = $db->prepare($sql);
-        $statement->execute($filter['args']);
+        return ['sql' => $sql, 'args' => $filter['args']];
+    }
+
+    public static function count(PDO $db, int $peerId, bool $ignoreBaseGame): int
+    {
+        $query = self::countQuery($peerId, $ignoreBaseGame);
+        $statement = $db->prepare($query['sql']);
+        $statement->execute($query['args']);
         return (int)$statement->fetchColumn();
     }
 
