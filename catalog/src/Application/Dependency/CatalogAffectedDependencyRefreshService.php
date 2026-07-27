@@ -35,8 +35,10 @@ final class CatalogAffectedDependencyRefreshService
             'SELECT DISTINCT d.file_id'
             . ' FROM ue_dependencies d'
             . ' JOIN ue_files f ON f.id=d.file_id'
-            . ' WHERE f.game_id=? AND d.file_id<>? AND d.required_package=?',
-            [$gameId, $newFileId, $packageName],
+            . ' WHERE d.required_package=? AND d.file_id<>?'
+            . ' AND f.game_id=? AND f.scan_status="verified"'
+            . ' ORDER BY d.file_id',
+            [$packageName, $newFileId, $gameId],
             $fileIds
         );
 
