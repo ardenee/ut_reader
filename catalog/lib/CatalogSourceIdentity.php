@@ -5,9 +5,6 @@ declare(strict_types=1);
  * UE4/UE5 canonical package identity is derived from the mounted source path.
  * Database package names, export full paths and alias rows are projections of
  * that source identity; they are never repaired in display code.
- *
- * UE1/UE2/UE3 package identity follows legacy filename/package semantics and is
- * deliberately excluded from this mounted-path repair service.
  */
 
 function catalog_source_identity_path(string $sourceRelativePath): string
@@ -16,8 +13,6 @@ function catalog_source_identity_path(string $sourceRelativePath): string
     if ($sourceRelativePath === '') {
         return '';
     }
-
-    /* Redirect-server files retain the real package filename before .uz/.uz2/.uz3. */
     return preg_replace('/\.(uz|uz2|uz3)$/i', '', $sourceRelativePath) ?? $sourceRelativePath;
 }
 
@@ -25,16 +20,11 @@ function catalog_source_identity_package_name(string $engineKey, string $sourceR
 {
     $engineKey = strtoupper(trim($engineKey));
     $sourceRelativePath = catalog_source_identity_path($sourceRelativePath);
-
     if (in_array($engineKey, ['UE4', 'UE5'], true)) {
         return scanner_ue_package_name_from_source_relative($sourceRelativePath);
     }
-
     $sourceOriginalName = scanner_original_name_from_source_relative($sourceRelativePath);
-    if ($sourceOriginalName === '') {
-        $sourceOriginalName = $originalName;
-    }
-    return scanner_logical_package_name($sourceOriginalName);
+    return scanner_logical_package_name($sourceOriginalName !== '' ? $sourceOriginalName : $originalName);
 }
 
 /** @return list<string> */
@@ -44,7 +34,7 @@ function catalog_source_identity_normalized_names(array $names): array
     foreach ($names as $name) {
         $name = trim((string)$name);
         if ($name !== '') {
-            $normalized[strtolower($name)] = $name;
+            $normalized[mb_strtolower($name, 'UTF-8')] = $name;
         }
     }
     ksort($normalized);
@@ -53,7 +43,7 @@ function catalog_source_identity_normalized_names(array $names): array
 
 /**
  * @param list<string> $previousPackageNames
- * @return array{changed:bool,file_id:int,old_package_name:string,new_package_name:string,alias_count:int,dependency_files_refreshed:int}
+ * @return array{changed:bool,file_id:int,old_package_name:string,new_package_name:string,alias_count:int,dependency_files_refreshed:int,reconciliation_job_id:int}
  */
 function catalog_source_identity_rebuild_file(
     PDO $db,
@@ -68,11 +58,9 @@ function catalog_source_identity_rebuild_file(
 
     $file = catalog_one(
         $db,
-        'SELECT f.*,p.engine_key profile_engine'
-        . ' FROM ue_files f'
-        . ' JOIN ue_games g ON g.id=f.game_id'
-        . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id'
-        . ' WHERE f.id=?',
+        'SELECT f.*,p.engine_key profile_engine FROM ue_files f '
+        . 'JOIN ue_games g ON g.id=f.game_id '
+        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE f.id=?',
         [$fileId]
     );
     if (!$file) {
@@ -121,12 +109,12 @@ function catalog_source_identity_rebuild_file(
 
     $sourcePaths = [];
     if ($primarySourcePath !== '') {
-        $sourcePaths[strtolower($primarySourcePath)] = $primarySourcePath;
+        $sourcePaths[mb_strtolower($primarySourcePath, 'UTF-8')] = $primarySourcePath;
     }
     foreach ($locations as $location) {
         $candidate = catalog_source_identity_path((string)($location['source_relative_path'] ?? ''));
         if ($candidate !== '') {
-            $sourcePaths[strtolower($candidate)] = $candidate;
+            $sourcePaths[mb_strtolower($candidate, 'UTF-8')] = $candidate;
         }
     }
 
@@ -140,7 +128,7 @@ function catalog_source_identity_rebuild_file(
         if ($packageName === '' || strcasecmp($packageName, $primaryPackageName) === 0) {
             continue;
         }
-        $derivedAliases[strtolower($packageName)] = [
+        $derivedAliases[mb_strtolower($packageName, 'UTF-8')] = [
             'package_name' => $packageName,
             'original_name' => scanner_original_name_from_source_relative($sourcePath),
         ];
@@ -155,7 +143,7 @@ function catalog_source_identity_rebuild_file(
         $name = trim((string)($alias['package_name'] ?? ''));
         if ($name !== '') {
             $oldPackageNames[] = $name;
-            $oldAliasKeys[] = strtolower($name);
+            $oldAliasKeys[] = mb_strtolower($name, 'UTF-8');
         }
     }
     sort($oldAliasKeys);
@@ -176,13 +164,11 @@ function catalog_source_identity_rebuild_file(
 
     $referringFileIds = [];
     if ($allPackageNames !== []) {
-        $sql = 'SELECT DISTINCT d.file_id'
-            . ' FROM ue_dependencies d'
-            . ' JOIN ue_files owner ON owner.id=d.file_id'
-            . ' WHERE owner.game_id=? AND d.file_id<>?'
-            . ' AND d.required_package IN (' . implode(',', array_fill(0, count($allPackageNames), '?')) . ')';
-        $args = [(int)$file['game_id'], $fileId, ...$allPackageNames];
-        foreach (catalog_all($db, $sql, $args) as $row) {
+        $sql = 'SELECT DISTINCT d.file_id FROM ue_dependencies d '
+            . 'JOIN ue_files owner ON owner.id=d.file_id '
+            . 'WHERE owner.game_id=? AND d.file_id<>? AND d.required_package IN ('
+            . implode(',', array_fill(0, count($allPackageNames), '?')) . ')';
+        foreach (catalog_all($db, $sql, [(int)$file['game_id'], $fileId, ...$allPackageNames]) as $row) {
             $referringFileIds[] = (int)$row['file_id'];
         }
     }
@@ -210,10 +196,10 @@ function catalog_source_identity_rebuild_file(
                 }
             }
 
-            /* Rebuild aliases exclusively from recorded mounted source locations. */
             $db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $insertAlias = $db->prepare(
-                'INSERT INTO ue_file_package_aliases(file_id,game_id,package_name,original_name,package_guid,md5,file_size) VALUES(?,?,?,?,?,?,?)'
+                'INSERT INTO ue_file_package_aliases(file_id,game_id,package_name,original_name,package_guid,md5,file_size) '
+                . 'VALUES(?,?,?,?,?,?,?)'
             );
             foreach ($derivedAliases as $alias) {
                 $insertAlias->execute([
@@ -226,7 +212,6 @@ function catalog_source_identity_rebuild_file(
                     (int)$file['file_size'],
                 ]);
             }
-
             $db->commit();
         } catch (Throwable $error) {
             if ($db->inTransaction()) {
@@ -265,6 +250,17 @@ function catalog_source_identity_rebuild_file(
         );
     }
 
+    $reconciliationJobId = 0;
+    if ($changed || $previousPackageNames !== []) {
+        $reconciliationJobId = \UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue::enqueue(
+            $db,
+            $fileId,
+            [(int)$file['game_id']],
+            $allPackageNames,
+            $config
+        );
+    }
+
     return [
         'changed' => $changed,
         'file_id' => $fileId,
@@ -272,5 +268,6 @@ function catalog_source_identity_rebuild_file(
         'new_package_name' => $primaryPackageName,
         'alias_count' => count($derivedAliases),
         'dependency_files_refreshed' => $refreshed,
+        'reconciliation_job_id' => $reconciliationJobId,
     ];
 }
