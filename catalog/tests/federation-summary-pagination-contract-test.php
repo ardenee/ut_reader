@@ -46,7 +46,7 @@ federation_summary_expect(
 );
 federation_summary_expect(
     str_contains($page, 'The selected packages are no longer eligible.')
-        && str_contains($page, "$byKey[fi_child_key($row)] = $row;"),
+        && str_contains($page, '$byKey[fi_child_key($row)] = $row;'),
     'Child request submission is not revalidated against the signed current cursor page.'
 );
 
