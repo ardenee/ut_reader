@@ -127,6 +127,7 @@ final class PdoSourceFileFingerprintCache
             $file = $statement->fetch(PDO::FETCH_ASSOC);
             if (is_array($file) && $this->identityAgrees($cached, $file)) {
                 $file['_cache_match_method'] = (string)($cached['match_method'] ?: 'md5');
+                $file['_cache_exact_match'] = true;
                 return $file;
             }
         }
@@ -141,6 +142,7 @@ final class PdoSourceFileFingerprintCache
             $file = $statement->fetch(PDO::FETCH_ASSOC);
             if (is_array($file)) {
                 $file['_cache_match_method'] = 'md5';
+                $file['_cache_exact_match'] = false;
                 return $file;
             }
         }
@@ -155,6 +157,7 @@ final class PdoSourceFileFingerprintCache
             $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
             if (count($rows) === 1) {
                 $rows[0]['_cache_match_method'] = 'guid';
+                $rows[0]['_cache_exact_match'] = false;
                 return $rows[0];
             }
         }
@@ -194,9 +197,14 @@ final class PdoSourceFileFingerprintCache
         if (!$this->isAvailable()) {
             return;
         }
+        if (is_array($file) && ($file['_cache_exact_match'] ?? false) === true) {
+            $this->touch($sourceId, $relativePath);
+            return;
+        }
+
         $normalizedPath = $this->normalizeRelativePath($relativePath);
         $contentMd5 = $this->nullableHash($contentMd5, 32);
-        $contentSha1 = $this->nullableHash($contentSha1, 40);
+        $contentSha1 = $matchMethod === 'guid' ? null : $this->nullableHash($contentSha1, 40);
         $packageGuid = trim((string)$packageGuid);
         $packageGuid = $packageGuid !== '' ? $packageGuid : null;
         $fileId = is_array($file) && (int)($file['id'] ?? 0) > 0 ? (int)$file['id'] : null;
