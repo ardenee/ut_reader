@@ -4,35 +4,45 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Application\Dashboard;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
-/**
- * Loads the live administrative dashboard counters.
- *
- * The application layer groups each table's related metrics, while existing
- * presentation code continues to decide labels, links, and display states.
- */
+/** Loads administrative dashboard counters with cached catalogue aggregates. */
 final class CatalogDashboardStats
 {
-    /**
-     * @return array<string, int>
-     */
+    /** @return array<string, int> */
     public static function load(PDO $db): array
     {
         $games = \catalog_one($db, 'SELECT COUNT(*) games FROM ue_games') ?? [];
-        $files = \catalog_one(
-            $db,
-            'SELECT COUNT(*) files, '
-            . "COALESCE(SUM(scan_status='verified'),0) verified, "
-            . "COALESCE(SUM(scan_status='failed'),0) failed "
-            . 'FROM ue_files'
-        ) ?? [];
-        $dependencies = \catalog_one(
-            $db,
-            'SELECT '
-            . "COALESCE(SUM(status='missing'),0) missing, "
-            . "COALESCE(SUM(status='resolved'),0) resolved "
-            . 'FROM ue_dependencies'
-        ) ?? [];
+        $catalogStats = new PdoGameCatalogStats($db);
+        if ($catalogStats->available()) {
+            $catalogStats->refreshStale(300);
+            $global = $catalogStats->global();
+            $files = [
+                'files' => (int)($global['file_count'] ?? 0),
+                'verified' => (int)($global['verified_count'] ?? 0),
+                'failed' => (int)($global['failed_count'] ?? 0),
+            ];
+            $dependencies = [
+                'missing' => (int)($global['missing_dependency_count'] ?? 0),
+                'resolved' => (int)($global['resolved_dependency_count'] ?? 0),
+            ];
+        } else {
+            $files = \catalog_one(
+                $db,
+                'SELECT COUNT(*) files, '
+                . "COALESCE(SUM(scan_status='verified'),0) verified, "
+                . "COALESCE(SUM(scan_status='failed'),0) failed "
+                . 'FROM ue_files'
+            ) ?? [];
+            $dependencies = \catalog_one(
+                $db,
+                'SELECT '
+                . "COALESCE(SUM(status='missing'),0) missing, "
+                . "COALESCE(SUM(status='resolved'),0) resolved "
+                . 'FROM ue_dependencies'
+            ) ?? [];
+        }
+
         $transfers = \catalog_one(
             $db,
             'SELECT '
