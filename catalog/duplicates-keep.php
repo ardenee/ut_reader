@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+
 catalog_start_session();
 
 const DUPLICATES_KEEP_MAX_RETIRE = 950;
@@ -82,11 +84,12 @@ function duplicates_keep_groups(PDO $db, array $canonicalIds): array
     return $groups;
 }
 
-function duplicates_keep_retire_file(PDO $db, int $canonicalId, int $duplicateId): void
+/** @return array{game_id:int,file_ids:list<int>,package_names:list<string>} */
+function duplicates_keep_retire_file(PDO $db, int $canonicalId, int $duplicateId): array
 {
     $rows = catalog_all(
         $db,
-        'SELECT id,game_id,package_guid FROM ue_files WHERE id IN (?,?) AND scan_status="verified"',
+        'SELECT id,game_id,package_guid,package_name FROM ue_files WHERE id IN (?,?) AND scan_status="verified"',
         [$canonicalId, $duplicateId]
     );
     if (count($rows) !== 2) {
@@ -154,6 +157,15 @@ function duplicates_keep_retire_file(PDO $db, int $canonicalId, int $duplicateId
         "\nRetired as duplicate of file ID " . $canonicalId . ' on ' . date('Y-m-d H:i:s'),
         $duplicateId,
     ]);
+
+    return [
+        'game_id' => (int)$canonical['game_id'],
+        'file_ids' => [$canonicalId, $duplicateId],
+        'package_names' => array_values(array_unique([
+            (string)$canonical['package_name'],
+            (string)$duplicate['package_name'],
+        ])),
+    ];
 }
 
 $returnUrl = duplicates_keep_return_url();
@@ -173,7 +185,8 @@ try {
         throw new RuntimeException('Select at least one file to Keep.');
     }
 
-    $db = catalog_db(catalog_config());
+    $config = catalog_config();
+    $db = catalog_db($config);
     $groups = duplicates_keep_groups($db, $canonicalIds);
     if ($groups === []) {
         throw new RuntimeException('The selected GUID group no longer has another active duplicate to retire.');
@@ -190,17 +203,38 @@ try {
         );
     }
 
+    $reconciliation = [];
     $db->beginTransaction();
     try {
         foreach ($groups as $group) {
             foreach ($group['duplicate_ids'] as $duplicateId) {
-                duplicates_keep_retire_file($db, $group['canonical_id'], $duplicateId);
+                $context = duplicates_keep_retire_file($db, $group['canonical_id'], $duplicateId);
+                $key = (string)$context['game_id'];
+                $reconciliation[$key]['game_id'] = $context['game_id'];
+                foreach ($context['file_ids'] as $id) {
+                    $reconciliation[$key]['file_ids'][$id] = true;
+                }
+                foreach ($context['package_names'] as $name) {
+                    $reconciliation[$key]['package_names'][strtolower($name)] = $name;
+                }
             }
         }
         $db->commit();
     } catch (Throwable $error) {
         $db->rollBack();
         throw $error;
+    }
+
+    foreach ($reconciliation as $context) {
+        foreach (array_keys((array)($context['file_ids'] ?? [])) as $fileId) {
+            CatalogProjectionReconciliationQueue::enqueue(
+                $db,
+                (int)$fileId,
+                [(int)$context['game_id']],
+                array_values((array)($context['package_names'] ?? [])),
+                $config
+            );
+        }
     }
 
     $_SESSION['flash_duplicates'] = 'Kept ' . count($groups) . ' primary file(s) and retired '
