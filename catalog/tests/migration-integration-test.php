@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 23;
+$expectedMigrations = 24;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -166,6 +166,14 @@ migration_test_expect(
     $schema->indexExists('ue_federation_peer_files', 'idx_ue_peer_files_conflict_cursor'),
     'Federation conflict cursor index is missing.'
 );
+
+migration_test_expect($schema->tableExists('ue_exact_count_telemetry'), 'Exact-count telemetry table is missing.');
+foreach (['metric_key', 'context_hash', 'sample_count', 'total_duration_us', 'max_duration_us', 'last_duration_us', 'slow_sample_count', 'last_result_count'] as $column) {
+    migration_test_expect($schema->columnExists('ue_exact_count_telemetry', $column), 'Exact-count telemetry column is missing: ' . $column);
+}
+foreach (['uq_ue_exact_count_metric_context', 'idx_ue_exact_count_last_seen', 'idx_ue_exact_count_max_duration', 'idx_ue_exact_count_metric'] as $index) {
+    migration_test_expect($schema->indexExists('ue_exact_count_telemetry', $index), 'Exact-count telemetry index is missing: ' . $index);
+}
 
 migration_test_expect($runner->migrate() === [], 'Second migration run was not idempotent.');
 $verified = $runner->status();
