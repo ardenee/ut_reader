@@ -57,6 +57,37 @@ final class PdoPackageProviderRepository
         )->execute([$aliasId]);
     }
 
+    /** Rebuild all primary and alias provider rows owned by one file. */
+    public function reconcileFile(int $fileId): void
+    {
+        if ($fileId < 1) {
+            return;
+        }
+
+        $this->removeFile($fileId);
+        $this->syncFile($fileId);
+        $this->db->prepare(
+            'INSERT INTO ue_package_providers('
+            . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
+            . ') '
+            . 'SELECT "alias",a.id,a.game_id,a.package_name,a.file_id,a.created_at '
+            . 'FROM ue_file_package_aliases a '
+            . 'JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id '
+            . 'WHERE a.file_id=? AND f.scan_status="verified" '
+            . 'ON DUPLICATE KEY UPDATE '
+            . 'game_id=VALUES(game_id),package_name=VALUES(package_name),'
+            . 'file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at)'
+        )->execute([$fileId]);
+    }
+
+    public function removeFile(int $fileId): void
+    {
+        if ($fileId < 1) {
+            return;
+        }
+        $this->db->prepare('DELETE FROM ue_package_providers WHERE file_id=?')->execute([$fileId]);
+    }
+
     public function removeAlias(int $aliasId): void
     {
         if ($aliasId < 1) {
