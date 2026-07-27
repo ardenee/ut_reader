@@ -49,8 +49,9 @@ return [
         );
 
         // Some installations may have partially executed the earlier trigger-based
-        // form of this pending migration. Remove any such triggers so the migration
-        // is safe under binary logging without SUPER/TRIGGER privileges.
+        // form of this pending migration. Cleanup is optional because the original
+        // 1419 failure occurs before the first trigger is created, and restricted
+        // database accounts may also be unable to execute DROP TRIGGER.
         foreach ([
             'trg_ue_files_package_provider_ai',
             'trg_ue_files_package_provider_au',
@@ -61,11 +62,7 @@ return [
             try {
                 $db->exec('DROP TRIGGER IF EXISTS ' . $trigger);
             } catch (PDOException $error) {
-                // DROP TRIGGER itself may be restricted on shared hosting. It is
-                // harmless when no trigger was created before the original failure.
-                if ((string)$error->getCode() !== '42000') {
-                    throw $error;
-                }
+                error_log('[UnrealDB migration 202607270002] optional trigger cleanup failed for ' . $trigger . ': ' . $error->getMessage());
             }
         }
     },
