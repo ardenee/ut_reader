@@ -175,13 +175,19 @@ try {
         $query = trim((string)($_GET['q'] ?? ''));
         $games = catalog_all($db, 'SELECT id,name FROM ue_games ORDER BY name');
         $gameId = catalog_search_game_id($games);
-        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form"><input type="hidden" name="page" value="search"><label>Search <input name="q" value="' . catalog_h($query) . '" placeholder="GUID, MD5, SHA1, package, object, file name"></label><label>Game <select name="game_id"><option value="">All games</option>';
+        $adminSearch = catalog_support_is_admin();
+        echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form"><input type="hidden" name="page" value="search"><label>Search <input name="q" value="' . catalog_h($query) . '" placeholder="GUID, MD5, SHA1, package, object, file name"></label><label>Game <select name="game_id"' . (!$adminSearch ? ' required' : '') . '>';
+        echo $adminSearch
+            ? '<option value="">All games</option>'
+            : '<option value="">Choose game</option>';
         foreach ($games as $game) {
             echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $gameId ? ' selected' : '') . '>' . catalog_h($game['name']) . '</option>';
         }
-        echo '</select></label><button>Search</button></form><p class="muted small">Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Broad searches require at least three characters and return at most 200 files.</p></div>';
+        echo '</select></label><button>Search</button></form><p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Broad searches require at least three characters and return at most 200 files.</p></div>';
         if ($query !== '') {
-            if (mb_strlen($query, 'UTF-8') < 3 && preg_match('/^[A-Fa-f0-9]{32,40}$/', $query) !== 1) {
+            if (!$adminSearch && $gameId < 1) {
+                echo '<div class="card"><p class="muted">Choose a game before searching.</p></div>';
+            } elseif (mb_strlen($query, 'UTF-8') < 3 && preg_match('/^[A-Fa-f0-9]{32,40}$/', $query) !== 1) {
                 echo '<div class="card"><p class="muted">Enter at least three characters.</p></div>';
             } else {
                 catalog_public_search_rate_limit();
