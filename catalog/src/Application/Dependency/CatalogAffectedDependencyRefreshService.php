@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Application\Dependency;
 use PDO;
 use PDOException;
 use Throwable;
+use UnrealDb\Catalog\Application\Search\CatalogSearchIndexQueue;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
@@ -15,9 +16,10 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
  * Finds dependency owners whose exact package/object resolution can change after
  * a package is imported.
  *
- * Normal imports enqueue this potentially expensive refresh and return quickly.
- * The matching durable worker job calls this service again while its queue row is
- * running; only that execution loads and returns the affected file IDs.
+ * Normal imports enqueue search indexing and the potentially expensive affected
+ * dependency refresh, then return quickly. The matching durable dependency job
+ * calls this service again while its queue row is running; only that execution
+ * loads and returns the affected file IDs.
  */
 final class CatalogAffectedDependencyRefreshService
 {
@@ -30,7 +32,13 @@ final class CatalogAffectedDependencyRefreshService
             return [];
         }
 
-        if (!self::isActiveRefreshJob($db, $newFileId)) {
+        $activeRefresh = self::isActiveRefreshJob($db, $newFileId);
+        if (!$activeRefresh) {
+            $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $newFileId);
+            if ($searchJobId > 0) {
+                $GLOBALS['catalog_search_index_job_id'] = $searchJobId;
+            }
+
             if (!self::hasAffectedFiles($db, $gameId, $newFileId, $packageName)) {
                 return [];
             }
