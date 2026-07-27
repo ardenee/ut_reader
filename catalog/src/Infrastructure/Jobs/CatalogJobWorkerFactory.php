@@ -66,8 +66,12 @@ final class CatalogJobWorkerFactory
                 new GeneratedPackageJobHandler($db, $config),
                 new GameBackupExportJobHandler($db, $config),
                 new GameBackupJobHandler($db, $trustedImportConfig),
-                // Search documents are maintained outside the import transaction.
+                // Search documents and the imported file's package summary are
+                // maintained outside the package import transaction.
                 new CatalogSearchIndexJobHandler($db),
+                // Manual file/game rebuilds maintain detailed and summary rows in
+                // one worker pass instead of creating a second queue per file.
+                new CatalogDependencyRefreshJobHandler($db, $config),
                 // Affected dependency refreshes continue past individual file
                 // failures and report processed/failure counts in the job result.
                 new CatalogAffectedDependencyRefreshJobHandler($db, $config),
