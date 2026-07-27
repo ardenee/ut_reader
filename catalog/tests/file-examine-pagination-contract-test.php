@@ -40,7 +40,7 @@ foreach ([
 $service = file_get_contents(__DIR__ . '/../src/Application/Catalog/CatalogPackageTablePageService.php');
 examine_paging_expect(is_string($service), 'Package table page service could not be read.');
 examine_paging_expect(
-    str_contains($service, "'name_index'>=?") === false
+    str_contains($service, " . ' WHERE file_id=? AND '")
         && str_contains($service, " . '>=? AND '")
         && str_contains($service, " . '<?'")
         && str_contains($service, 'normalizePageSize(')
@@ -58,7 +58,7 @@ $export = file_get_contents(__DIR__ . '/../file-examine-export.php');
 examine_paging_expect(is_string($export), 'Package table export endpoint could not be read.');
 examine_paging_expect(
     str_contains($export, '$batchSize = 1000;')
-        && str_contains($export, $indexColumn . '>?')
+        && str_contains($export, " . ' WHERE file_id=? AND ' . \$indexColumn . '>?'")
         && str_contains($export, 'Content-Disposition: attachment;')
         && str_contains($export, "fputcsv(\$output, \$columns, ',', '\"', '');"),
     'Full table exports are not streamed in bounded index batches.'
