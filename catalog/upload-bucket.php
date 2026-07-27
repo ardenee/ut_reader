@@ -88,6 +88,10 @@ try {
     $bucketDir = uvf_upload_bucket_dir($config, true);
     $bucketStats = upload_bucket_stats($bucketDir);
     $allowedExtensions = upload_bucket_allowed_extensions($db, $config);
+    $allowedExtensionJson = json_encode(
+        array_values($allowedExtensions),
+        JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+    );
     $chunkBytes = upload_bucket_chunk_bytes($config);
     $processingUrl = 'background-jobs.php?queue=catalog%3Abucket-processing';
 
@@ -109,7 +113,7 @@ try {
 .bucket-result-message { color:var(--muted); white-space:normal; }
 .bucket-result-bucketed .bucket-result-badge,.bucket-result-decompressed .bucket-result-badge,.bucket-result-uploaded .bucket-result-badge,.bucket-result-ready .bucket-result-badge { color:#a7f3d0; }
 .bucket-result-queued .bucket-result-badge { color:#bfdbfe; }
-.bucket-result-duplicate .bucket-result-badge,.bucket-result-waiting .bucket-result-badge { color:#fde68a; }
+.bucket-result-duplicate .bucket-result-badge,.bucket-result-waiting .bucket-result-badge,.bucket-result-skipped .bucket-result-badge { color:#fde68a; }
 .bucket-result-retrying .bucket-result-badge { color:#fdba74; }
 .bucket-result-failed .bucket-result-badge { color:#fecdd3; }
 .bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
@@ -143,13 +147,15 @@ CSS;
         . '</div></div><div class="ui-section__body">';
     echo '<ol class="bucket-phases">'
         . '<li>Request a cooperative pause of old and new Upload Bucket processing queues; the current job is not cancelled.</li>'
+        . '<li>Skip files whose extension is not allowed by any active game profile before hashing, preflight or transfer.</li>'
         . '<li>For uncompressed files, calculate MD5 and SHA-1 locally and check size + MD5 + SHA-1 against physical Upload Bucket and catalog files.</li>'
         . '<li>Skip confirmed physical duplicates before transfer. Metadata-only matches do not count as duplicates.</li>'
         . '<li>Upload .uz/.uz2/.uz3 wrappers without comparing wrapper hashes to package records.</li>'
         . '<li>After every transfer finishes, create the processing jobs and start the Upload Bucket worker once.</li>'
         . '<li>Open Background Jobs automatically to show decompression, duplicate checks, inventory and indexing progress.</li>'
         . '</ol>';
-    echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data">';
+    echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data" data-allowed-extensions="'
+        . catalog_h($allowedExtensionJson) . '">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
     echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
@@ -178,12 +184,15 @@ CSS;
         . '<a class="button secondary" href="unverified-files.php">Review all queues</a></p>';
     echo '</div></section>';
 
+    $filterScriptPath = __DIR__ . '/assets/upload-bucket-extension-filter.js';
+    $filterScriptVersion = is_file($filterScriptPath) ? (string)(filemtime($filterScriptPath) ?: 1) : '1';
     $hashScriptPath = __DIR__ . '/assets/upload-file-hash.js';
     $hashScriptVersion = is_file($hashScriptPath) ? (string)(filemtime($hashScriptPath) ?: 1) : '1';
     $scriptPath = __DIR__ . '/assets/upload-bucket.js';
     $scriptVersion = is_file($scriptPath) ? (string)(filemtime($scriptPath) ?: 1) : '1';
     $followScriptPath = __DIR__ . '/assets/upload-bucket-follow.js';
     $followScriptVersion = is_file($followScriptPath) ? (string)(filemtime($followScriptPath) ?: 1) : '1';
+    echo '<script src="assets/upload-bucket-extension-filter.js?v=' . catalog_h($filterScriptVersion) . '"></script>';
     echo '<script src="assets/upload-file-hash.js?v=' . catalog_h($hashScriptVersion) . '"></script>';
     echo '<script src="assets/upload-bucket.js?v=' . catalog_h($scriptVersion) . '"></script>';
     echo '<script src="assets/upload-bucket-follow.js?v=' . catalog_h($followScriptVersion) . '"></script>';
