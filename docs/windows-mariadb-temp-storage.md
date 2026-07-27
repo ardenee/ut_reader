@@ -1,70 +1,23 @@
-# Windows MySQL/MariaDB temporary storage for large catalogue migrations
+# Windows MySQL/MariaDB storage during large catalogue migrations
 
-Large `ALTER TABLE`, index-build and server-side backfill operations use the database server's temporary directories. Changing PHP's `upload_tmp_dir`, `sys_temp_dir`, `TEMP` or `TMP` in the PowerShell session does not redirect an already-running Windows MySQL service.
+The Windows parent keeps MySQL entirely on `C:`:
 
-This procedure does **not** move the MySQL database. The MySQL `datadir` remains on `C:`. Only disposable temporary sort and work files are redirected to `L:`.
+- `datadir` remains on `C:`.
+- MySQL `tmpdir` remains on `C:`.
+- MySQL `innodb_tmpdir` remains on `C:`.
+- Normal UnrealDB application operation does not use `L:` for database work.
 
-## Inspect the active MySQL paths
+`L:` is reserved only for explicit files created by UnrealDB maintenance operations, such as a requested database dump, exported report, archive, or other migration backup. Migration `202607270003` does not create such a backup file, so it does not use `L:`.
 
-Run in MySQL/phpMyAdmin:
+## Why migration 202607270003 consumed substantial space
 
-```sql
-SELECT
-    @@global.tmpdir AS tmpdir,
-    @@global.innodb_tmpdir AS innodb_tmpdir,
-    @@global.datadir AS datadir;
-```
+The original migration performed four large `INSERT ... SELECT` operations and then built several indexes, including a FULLTEXT index. MySQL can create large internal temporary files while processing those statements. Those files are controlled by MySQL and remain in its configured storage locations on `C:`.
 
-Expected layout for the Windows parent server:
+The migration runner now replaces the large data copy with bounded, restart-safe source-ID batches. This reduces peak temporary pressure and allows a failed migration to be rerun without deleting the partially populated `ue_search_documents` table.
 
-- `tmpdir`: `L:/MySQLTemp`
-- `innodb_tmpdir`: `L:/MySQLTemp`
-- `datadir`: unchanged on `C:`
+## Inspect the configured paths
 
-`tmpdir` and `innodb_tmpdir` are temporary work locations. `datadir` is where the real database tables and completed indexes remain permanently.
-
-MySQL can still require some free space inside `datadir` for the completed table/index and, for some online DDL operations, an intermediate table file. Redirecting temporary work to `L:` prevents sort/temp files from consuming `C:\Windows\ServiceProfiles\...\Temp`; it does not eliminate normal permanent database growth on `C:`.
-
-## Identify the Windows MySQL service account and option file
-
-Run PowerShell as Administrator:
-
-```powershell
-$mysqlService = Get-CimInstance Win32_Service |
-    Where-Object { $_.PathName -match 'mysqld|mariadbd' } |
-    Select-Object -First 1
-
-$mysqlService | Format-List Name, StartName, State, PathName
-```
-
-The account shown under `StartName` needs Modify permission on the temporary directory. The `PathName` may contain `--defaults-file=...`, which identifies the active `my.ini`.
-
-## Create the L: temporary directory
-
-```powershell
-New-Item -ItemType Directory -Path 'L:\MySQLTemp' -Force
-icacls 'L:\MySQLTemp' /grant "$($mysqlService.StartName):(OI)(CI)M"
-```
-
-## Configure MySQL
-
-Add these settings under the existing `[mysqld]` section in the active `my.ini`:
-
-```ini
-[mysqld]
-tmpdir=L:/MySQLTemp
-innodb_tmpdir=L:/MySQLTemp
-```
-
-Use forward slashes in the Windows option file. `innodb_tmpdir` must differ from the MySQL `datadir`.
-
-Restart only the MySQL service:
-
-```powershell
-Restart-Service -Name $mysqlService.Name
-```
-
-Verify the active paths again:
+Run in MySQL or phpMyAdmin:
 
 ```sql
 SELECT
@@ -73,47 +26,35 @@ SELECT
     @@global.datadir AS datadir;
 ```
 
-A configuration edit has not taken effect until `@@global.tmpdir` reports `L:/MySQLTemp`. The `datadir` should remain unchanged on `C:`.
+These values are informational. The migration tools do not require them to be moved.
 
-## Recover system-drive space after a failed migration
+## Resume migration 202607270003
 
-A failed server statement normally removes its temporary file, but an open MySQL process can retain the file or its disk allocation until the service stops.
-
-1. Stop the MySQL service.
-2. Inspect the exact temporary directory reported in the SQL error.
-3. Delete only the named failed-migration file and other clearly related temporary files created at the same migration time.
-4. Do not delete `ibdata1`, redo logs, undo files, `ibtmp1`, database folders or anything inside `@@global.datadir`.
-5. Start MySQL and verify the database before continuing.
-
-Example:
+Stop imports and the detached worker first. Pull the latest code, then run:
 
 ```powershell
-Stop-Service -Name $mysqlService.Name
+git pull
 
-Get-ChildItem 'C:\Windows\ServiceProfiles\NetworkService\AppData\Local\Temp' -File |
-    Sort-Object Length -Descending |
-    Select-Object -First 20 FullName, Length, CreationTime, LastWriteTime
-
-# Remove only the exact failed temporary file after checking its path and timestamp.
-Remove-Item 'C:\Windows\ServiceProfiles\NetworkService\AppData\Local\Temp\MLdhst0p3m7e23z88p' -Force
-
-Start-Service -Name $mysqlService.Name
+php -l catalog\bin\migrate.php
+php -l catalog\bin\search-document-indexes.php
+php -l catalog\src\Infrastructure\Persistence\SearchDocumentMigrationExecutor.php
+php catalog\tests\large-migration-temp-storage-contract-test.php
 ```
 
-## Resume migration 202607270003 safely
-
-The migration CLI uses bounded source-ID batches for migration `202607270003`. It is safe to rerun after a partial failure because each batch upserts its document rows.
-
-Complete the data migrations while postponing the large search index builds:
+Complete the data migrations with 10,000-source-ID batches while postponing the large search index builds:
 
 ```powershell
 php catalog\bin\migrate.php migrate --search-backfill-batch=10000 --defer-search-indexes
 php catalog\bin\migrate.php verify
 ```
 
-The deferred indexes are optional for correctness. Search uses the compact document-table `LIKE` fallback until they are built.
+The command is restart-safe. Existing rows are updated through `ON DUPLICATE KEY UPDATE`, so a prior partial run does not require the table to be dropped.
 
-After MySQL reports `L:/MySQLTemp` for its temporary directories:
+Search remains correct while the indexes are deferred. It uses the bounded search-document `LIKE` fallback until the indexes are built.
+
+## Build deferred indexes
+
+With adequate free space available on `C:`, inspect and build each missing index separately:
 
 ```powershell
 php catalog\bin\search-document-indexes.php status
@@ -121,4 +62,16 @@ php catalog\bin\search-document-indexes.php build
 php catalog\bin\search-document-indexes.php status
 ```
 
-The build command creates each missing index separately. It checks only MySQL's temporary paths; it does not require or attempt to move the database `datadir` from `C:`.
+The index command reports MySQL's configured paths for information only. It does not refuse the system drive and does not attempt to move any MySQL files.
+
+## Failed temporary-file cleanup
+
+A failed MySQL statement normally removes its temporary file. If a file remains allocated after a failure:
+
+1. Stop the MySQL service.
+2. Inspect the exact path named in the error.
+3. Delete only the named failed temporary file after confirming its timestamp.
+4. Do not delete `ibdata1`, redo logs, undo files, `ibtmp1`, database folders, or anything in the MySQL data directory.
+5. Start MySQL and verify the database.
+
+`L:` should be used only when a future UnrealDB maintenance task explicitly creates a backup or export file and clearly identifies that output path.
