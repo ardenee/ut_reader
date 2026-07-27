@@ -1,8 +1,9 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
+
+use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
 
 catalog_start_session();
 
@@ -33,7 +34,6 @@ function guid_normalize_candidate_from_path(string $path): string
     if ($tag !== 0x9E2A83C1) {
         return '';
     }
-
     $parts = [
         (int)(unpack('V', substr($bytes, 36, 4))[1] ?? 0),
         (int)(unpack('V', substr($bytes, 40, 4))[1] ?? 0),
@@ -43,7 +43,6 @@ function guid_normalize_candidate_from_path(string $path): string
     if ($parts === [0, 0, 0, 0]) {
         return '';
     }
-
     return sprintf('%08X-%08X-%08X-%08X', $parts[0], $parts[1], $parts[2], $parts[3]);
 }
 
@@ -66,25 +65,23 @@ function guid_normalize_candidate_for_file(array $config, array $file): string
 /** @return list<array<string,mixed>> */
 function guid_normalize_rows(PDO $db, array $config, int $gameId): array
 {
-    $sql = 'SELECT f.id, f.game_id, g.name game_name, f.package_name, f.original_name, f.extension, f.package_guid, f.md5, f.file_size, f.relative_path, f.uploaded_at
-            FROM ue_files f
-            JOIN ue_games g ON g.id=f.game_id
-            WHERE f.scan_status="verified" AND (f.package_guid IS NULL OR f.package_guid="" OR f.package_guid="00000000-00000000-00000000-00000000")';
+    $sql = 'SELECT f.id,f.game_id,g.name game_name,f.package_name,f.original_name,f.extension,f.package_guid,f.md5,f.file_size,f.relative_path,f.uploaded_at '
+        . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
+        . 'WHERE f.scan_status="verified" AND (f.package_guid IS NULL OR f.package_guid="" OR f.package_guid="00000000-00000000-00000000-00000000")';
     $args = [];
     if ($gameId > 0) {
         $sql .= ' AND f.game_id=?';
         $args[] = $gameId;
     }
-    $sql .= ' ORDER BY g.name, f.package_name, f.original_name, f.id LIMIT ' . GUID_NORMALIZE_MAX_ROWS;
+    $sql .= ' ORDER BY g.name,f.package_name,f.original_name,f.id LIMIT ' . GUID_NORMALIZE_MAX_ROWS;
 
     $rows = [];
     foreach (catalog_all($db, $sql, $args) as $row) {
         $candidate = guid_normalize_candidate_for_file($config, $row);
-        if ($candidate === '') {
-            continue;
+        if ($candidate !== '') {
+            $row['candidate_guid'] = $candidate;
+            $rows[] = $row;
         }
-        $row['candidate_guid'] = $candidate;
-        $rows[] = $row;
     }
     return $rows;
 }
@@ -96,7 +93,7 @@ try {
         exit;
     }
 
-    $games = catalog_all($db, 'SELECT id, name FROM ue_games ORDER BY name');
+    $games = catalog_all($db, 'SELECT id,name FROM ue_games ORDER BY name');
     $gameId = guid_normalize_int('game_id', 0, 0, PHP_INT_MAX);
     $knownGameIds = array_map(static fn(array $game): int => (int)$game['id'], $games);
     if ($gameId > 0 && !in_array($gameId, $knownGameIds, true)) {
@@ -105,10 +102,7 @@ try {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('guid-normalize');
-        $ids = $_POST['file_ids'] ?? [];
-        if (!is_array($ids)) {
-            $ids = [];
-        }
+        $ids = is_array($_POST['file_ids'] ?? null) ? $_POST['file_ids'] : [];
         $ids = array_values(array_filter(array_unique(array_map('intval', $ids)), static fn(int $id): bool => $id > 0));
         if ($ids === []) {
             throw new RuntimeException('Select at least one file to repair.');
@@ -119,8 +113,13 @@ try {
 
         $fixed = 0;
         $skipped = 0;
+        $contexts = [];
         foreach ($ids as $id) {
-            $file = catalog_one($db, 'SELECT id, package_guid, relative_path FROM ue_files WHERE id=?', [$id]);
+            $file = catalog_one(
+                $db,
+                'SELECT id,game_id,package_name,package_guid,relative_path FROM ue_files WHERE id=?',
+                [$id]
+            );
             if (!$file || !guid_normalize_is_zero((string)($file['package_guid'] ?? ''))) {
                 $skipped++;
                 continue;
@@ -131,7 +130,22 @@ try {
                 continue;
             }
             $db->prepare('UPDATE ue_files SET package_guid=? WHERE id=?')->execute([$candidate, $id]);
+            $contexts[] = [
+                'file_id' => $id,
+                'game_id' => (int)$file['game_id'],
+                'package_name' => (string)$file['package_name'],
+            ];
             $fixed++;
+        }
+
+        foreach ($contexts as $context) {
+            CatalogProjectionReconciliationQueue::enqueue(
+                $db,
+                (int)$context['file_id'],
+                [(int)$context['game_id']],
+                [(string)$context['package_name']],
+                $config
+            );
         }
 
         $_SESSION['guid_normalize_flash'] = 'Fixed ' . $fixed . ' zero GUID row(s). Skipped=' . $skipped . '.';
@@ -140,7 +154,6 @@ try {
     }
 
     $rows = guid_normalize_rows($db, $config, $gameId);
-
     catalog_head('Zero GUID repair');
     catalog_flash($_SESSION['guid_normalize_flash'] ?? null);
     unset($_SESSION['guid_normalize_flash']);
