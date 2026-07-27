@@ -60,6 +60,14 @@ Imports, search-index jobs, affected dependency refreshes and manual file/game d
 
 Global catalogue counters are calculated by summing the small per-game table and adding unassigned Upload Bucket/unverified file rows directly, so files with `game_id IS NULL` are not lost.
 
+### Federation inventories and request generation
+
+Parent inventory matching now counts requiring files from `ue_dependency_package_summaries` rather than running a correlated detailed-dependency query for every peer file. Child request generation also groups the compact summaries, preserving missing-object and requiring-file counts.
+
+The summary projection stores one representative missing object path per file/package so the Child request table retains its example-object column without reading detailed rows during page loads. Older code-before-migration deployments safely show an empty example until migration `202607270007` is applied.
+
+Parent and Child inventory lists use HMAC-protected cursors bound to the selected peer, tab, base-game policy and page size. Request submission reconstructs the signed current page before accepting selected package keys, while the receiving Parent API remains authoritative for base-game policy and request lifecycle validation.
+
 ### Upload progress
 
 Progress persistence is throttled except for terminal states. Expired temporary progress files are cleaned separately from durable incoming job sources.
@@ -74,10 +82,11 @@ Apply during a maintenance window with the worker stopped:
 4. `202607270004_dependency_package_summaries.php`
 5. `202607270005_game_catalog_stats.php`
 6. `202607270006_keyset_pagination_indexes.php`
+7. `202607270007_federation_summary_pagination.php`
 
 The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
 
-The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. The keyset migration adds game-scoped composite indexes for each supported file sort. Large catalogues can require temporary InnoDB space and substantial disk I/O.
+The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. The keyset migrations add stable file and federation inventory indexes. Migration `202607270007` also backfills one representative object path per dependency-summary row. Large catalogues can require temporary InnoDB space and substantial disk I/O.
 
 ## Operational validation
 
@@ -85,6 +94,8 @@ Collect `EXPLAIN` plans and duration samples for:
 
 - first, middle, previous and last game-file cursor pages for every sort;
 - first, middle and last Files with missing dependencies cursor pages;
+- first, middle, previous and last Parent/Child federation inventory cursor pages;
+- Child request generation with the base-game policy enabled and disabled;
 - package, file-name, import-object and export-object searches within one game;
 - administrator all-game searches;
 - import of packages with small and very large N/I/E tables;
@@ -100,24 +111,24 @@ Record database statement counts as well as elapsed time. The batching change sh
 
 ## Next structural phases
 
-### 1. Federation cursor pagination and summary conversion
-
-Convert parent/child inventory and request-generation lists from deep offsets and detailed dependency rows to package summaries plus stable cursors, while preserving parent-controlled base-game policy and request lifecycle semantics.
-
-### 2. Chunked Examine views
+### 1. Chunked Examine views
 
 Names, Imports and Exports pages should load bounded chunks rather than rendering every parser row. Provide downloadable JSON/CSV exports for full-table inspection.
 
-### 3. Source fingerprint cache
+### 2. Source fingerprint cache
 
 Persist source path, size, modification time and a trusted quick fingerprint. Re-hash a source file only when those signals change, while retaining full MD5/SHA verification before accepting a new catalogue identity.
+
+### 3. Remaining request/history pagination
+
+Convert long request history, transfer history and diagnostics tables to the same stable cursor helper where telemetry shows meaningful page depth.
 
 ## Scale limits that remain
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact total counts are still calculated for page-number display; cursor retrieval itself no longer grows with the requested page depth.
 - Selected-package object drill-down on Missing Files still reads authoritative detailed rows and should be chunked with the Examine phase.
-- Federation inventory/request pages still use offsets and some detailed dependency queries until their dedicated conversion pass.
+- Request history, transfer history and diagnostics lists may still use offsets until their dedicated conversion pass.
 - Direct maintenance operations that rewrite package identity should enqueue a search-index reconciliation in a later maintenance-hook pass.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
