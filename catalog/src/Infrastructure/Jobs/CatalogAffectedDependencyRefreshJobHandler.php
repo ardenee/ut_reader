@@ -12,6 +12,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
 /** Rebuilds existing files affected by one newly available package. */
 final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
@@ -67,7 +68,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'stage' => 'dependencies',
             'done' => 0,
             'total' => max(1, $total),
-            'percent' => $total === 0 ? 100 : 0,
+            'percent' => $total === 0 ? 90 : 0,
             'message' => $total === 0
                 ? 'No existing files require an affected dependency refresh.'
                 : 'Refreshing ' . $total . ' affected file(s) for ' . $packageName . '.',
@@ -87,7 +88,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                             'stage' => 'dependencies',
                             'done' => $position - 1,
                             'total' => max(1, $total),
-                            'percent' => (int)floor((($position - 1) * 100) / max(1, $total)),
+                            'percent' => (int)floor((($position - 1) * 90) / max(1, $total)),
                             'message' => 'Refreshing affected file ' . $position . '/' . $total . ' for ' . $packageName
                                 . (!empty($progress['message']) ? ' — ' . (string)$progress['message'] : ''),
                             'package_name' => $packageName,
@@ -122,7 +123,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                 'stage' => 'dependencies',
                 'done' => $position,
                 'total' => max(1, $total),
-                'percent' => (int)floor(($position * 100) / max(1, $total)),
+                'percent' => (int)floor(($position * 90) / max(1, $total)),
                 'message' => 'Processed affected file ' . $position . '/' . $total . ' for ' . $packageName . '.',
                 'package_name' => $packageName,
                 'processed' => $processed,
@@ -130,6 +131,16 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                 'dependency_summary_rows' => $summaryRows,
             ]);
         }
+
+        $context->checkpoint([
+            'stage' => 'game_stats',
+            'done' => max(1, $total),
+            'total' => max(1, $total),
+            'percent' => 95,
+            'message' => 'Refreshing cached game counters.',
+            'game_id' => $gameId,
+        ]);
+        $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame($gameId);
 
         return [
             'operation' => 'rebuild_affected_dependencies',
@@ -140,6 +151,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'affected_files' => $total,
             'processed_files' => $processed,
             'dependency_summary_rows' => $summaryRows,
+            'game_stats_refreshed' => $gameStats !== null,
             'failure_count' => $failureCount,
             'failures' => $failures,
             'failures_truncated' => $failureCount > count($failures),
