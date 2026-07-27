@@ -215,6 +215,9 @@ try {
 
     echo '</div></div></section>';
 
+    $bridge = __DIR__ . '/assets/background-jobs-cursor-bridge.js';
+    $bridgeVersion = is_file($bridge) ? (string)filemtime($bridge) : '1';
+    echo '<script src="assets/background-jobs-cursor-bridge.js?v=' . catalog_h($bridgeVersion) . '"></script>';
     $script = __DIR__ . '/assets/background-jobs-stable.js';
     $version = is_file($script) ? (string)filemtime($script) : '1';
     echo '<script src="assets/background-jobs-stable.js?v=' . catalog_h($version) . '"></script>';
