@@ -1,32 +1,55 @@
 <?php
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+
 $parent = fr_parent($db);
 $error = '';
 $remote = [];
+$closed = $tab === 'closed';
 try {
-    $remote = fr_child_call($db, $parent, ['list' => true]);
+    $remote = fr_child_call($db, $parent, [
+        'list' => true,
+        'closed' => $closed,
+        'page_size' => min(100, $historyPageSize),
+        'cursor' => (string)($_GET['request_cursor'] ?? ''),
+        'move' => (string)($_GET['request_move'] ?? 'first'),
+    ]);
 } catch (Throwable $exception) {
     $error = $exception->getMessage();
 }
 $requests = is_array($remote['requests'] ?? null) ? $remote['requests'] : [];
-$closed = $tab === 'closed';
-$requests = array_values(array_filter($requests, static fn(array $request): bool => $closed
-    ? in_array((string)$request['status'], ['completed', 'cancelled', 'denied'], true)
-    : !in_array((string)$request['status'], ['completed', 'cancelled', 'denied'], true)));
+$requestPage = is_array($remote['request_page'] ?? null) ? $remote['request_page'] : [
+    'has_previous' => false,
+    'has_next' => false,
+    'previous_cursor' => '',
+    'next_cursor' => '',
+];
 $requestId = (int)($_GET['request_id'] ?? ($requests[0]['id'] ?? 0));
+$listParams = ['tab' => $tab, 'page_size' => $historyPageSize];
 
 echo '<div class="card"><h2>' . ($closed ? 'Completed / Closed' : 'Requests to Parent') . '</h2>';
+if ($error === '') {
+    echo fr_page_links($listParams, $requestPage, 'request_cursor', 'request_move');
+}
 if ($error !== '') {
     echo CatalogUi::alert('warning', $error, 'Parent request status unavailable');
 } elseif (!$requests) {
-    echo '<p class="muted">No matching outgoing requests.</p>';
+    echo '<p class="muted">No matching outgoing requests on this page.</p>';
 } else {
     echo '<table><tr><th>ID</th><th>Status</th><th>Title</th><th>Items</th><th>Summary</th><th>Submitted</th><th>Open</th></tr>';
     foreach ($requests as $request) {
-        echo '<tr><td>' . (int)$request['id'] . '</td><td>' . catalog_h($request['status']) . '</td><td>' . catalog_h($request['title']) . '</td><td>' . (int)$request['item_count'] . '</td><td class="mono small">' . catalog_h(json_encode($request['status_counts'] ?? [])) . '</td><td>' . catalog_h($request['submitted_at']) . '</td><td><a href="requests.php?tab=' . $tab . '&request_id=' . (int)$request['id'] . '">open</a></td></tr>';
+        $openParams = $listParams + ['request_id' => (int)$request['id']];
+        if ((string)($_GET['request_cursor'] ?? '') !== '') {
+            $openParams['request_cursor'] = (string)$_GET['request_cursor'];
+            $openParams['request_move'] = (string)($_GET['request_move'] ?? 'first');
+        }
+        echo '<tr><td>' . (int)$request['id'] . '</td><td>' . catalog_h($request['status']) . '</td><td>' . catalog_h($request['title']) . '</td><td>' . (int)$request['item_count'] . '</td><td class="mono small">' . catalog_h(json_encode($request['status_counts'] ?? [])) . '</td><td>' . catalog_h($request['submitted_at']) . '</td><td><a href="requests.php?' . catalog_h(http_build_query($openParams)) . '">open</a></td></tr>';
     }
     echo '</table>';
+}
+if ($error === '') {
+    echo fr_page_links($listParams, $requestPage, 'request_cursor', 'request_move');
 }
 echo '</div>';
 
@@ -66,16 +89,29 @@ if ($requestId > 0) {
     echo '</div>';
 }
 
-$jobs = catalog_all(
+$transferPage = CatalogFederationHistoryPageService::fetch(
     $db,
-    'SELECT j.* FROM ue_federation_transfer_jobs j
-     WHERE j.peer_id=? AND j.direction="download_from_parent" AND ' . $visibleJobs . '
-     ORDER BY j.created_at DESC,j.id DESC LIMIT 300',
-    [(int)$parent['id']]
+    $config,
+    'federation-requests-child-transfers|peer=' . (int)$parent['id'] . '|' . $visibleJobs,
+    'SELECT j.*,j.created_at cursor_created_at,j.id cursor_id FROM ue_federation_transfer_jobs j',
+    'j.peer_id=? AND j.direction="download_from_parent" AND ' . $visibleJobs,
+    [(int)$parent['id']],
+    ['j.created_at', 'j.id'],
+    ['cursor_created_at', 'cursor_id'],
+    ['DESC', 'DESC'],
+    $historyPageSize,
+    (string)($_GET['transfer_cursor'] ?? ''),
+    (string)($_GET['transfer_move'] ?? 'first')
 );
+$jobs = $transferPage['rows'];
+$transferParams = ['tab' => $tab, 'page_size' => $historyPageSize];
+if ($requestId > 0) {
+    $transferParams['request_id'] = $requestId;
+}
 echo '<div class="card"><h2>Download and Import Status</h2>';
+echo fr_page_links($transferParams, $transferPage, 'transfer_cursor', 'transfer_move');
 if (!$jobs) {
-    echo '<p class="muted">No Parent-approved downloads yet.</p>';
+    echo '<p class="muted">No Parent-approved downloads on this page.</p>';
 } else {
     echo '<table><tr><th>ID</th><th>Request item</th><th>Status</th><th>Progress</th><th>Local file</th><th>Message</th><th>Created</th></tr>';
     foreach ($jobs as $job) {
@@ -84,4 +120,5 @@ if (!$jobs) {
     }
     echo '</table>';
 }
+echo fr_page_links($transferParams, $transferPage, 'transfer_cursor', 'transfer_move');
 echo '</div>';
