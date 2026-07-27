@@ -9,8 +9,9 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
-/** Rebuilds file/game dependencies and their compact package summaries together. */
+/** Rebuilds file/game dependencies and their compact projections together. */
 final class CatalogDependencyRefreshJobHandler implements JobHandler
 {
     /** @param array<string,mixed> $config */
@@ -55,19 +56,20 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 $context->heartbeatIfDue($progress);
             },
             0,
-            90,
+            85,
             'Refreshing file dependency links'
         );
         $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
         $context->checkpoint([
-            'stage' => 'dependency_summary',
+            'stage' => 'game_stats',
             'done' => 1,
             'total' => 1,
-            'percent' => 100,
-            'message' => 'Dependency links and package summary refreshed.',
+            'percent' => 95,
+            'message' => 'Refreshing cached game counters.',
             'file_id' => $fileId,
             'dependency_summary_rows' => (int)$summary['summary_rows'],
         ]);
+        $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame((int)$file['game_id']);
 
         return [
             'operation' => 'rebuild_file_dependencies',
@@ -76,6 +78,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'package_name' => (string)$file['package_name'],
             'original_name' => (string)$file['original_name'],
             'dependency_summary_rows' => (int)$summary['summary_rows'],
+            'game_stats_refreshed' => $gameStats !== null,
             'stats' => $this->stats([$fileId]),
         ];
     }
@@ -105,7 +108,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'stage' => 'dependencies',
                 'done' => 1,
                 'total' => 1,
-                'percent' => 100,
+                'percent' => 90,
                 'message' => 'No verified files were found for the selected game and offset.',
             ]);
         }
@@ -120,8 +123,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 static function (array $progress) use ($context): void {
                     $context->heartbeatIfDue($progress);
                 },
-                (int)floor(($index * 95) / max(1, $total)),
-                (int)floor(($position * 95) / max(1, $total)),
+                (int)floor(($index * 90) / max(1, $total)),
+                (int)floor(($position * 90) / max(1, $total)),
                 'Refreshing game dependency links ' . $position . '/' . $total . ' (' . (string)$file['package_name'] . ')'
             );
             $summary = $summaryWriter->rebuildFile($fileId);
@@ -131,11 +134,21 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'stage' => 'dependency_summary',
                 'done' => $position,
                 'total' => max(1, $total),
-                'percent' => (int)floor(($position * 100) / max(1, $total)),
+                'percent' => (int)floor(($position * 90) / max(1, $total)),
                 'message' => 'Processed dependency file ' . $position . '/' . $total . '.',
                 'dependency_summary_rows' => $summaryRows,
             ]);
         }
+
+        $context->checkpoint([
+            'stage' => 'game_stats',
+            'done' => max(1, $total),
+            'total' => max(1, $total),
+            'percent' => 95,
+            'message' => 'Refreshing cached game counters.',
+            'game_id' => $gameId,
+        ]);
+        $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame($gameId);
 
         return [
             'operation' => 'rebuild_game_dependencies',
@@ -144,6 +157,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'offset' => $offset,
             'processed_files' => $total,
             'dependency_summary_rows' => $summaryRows,
+            'game_stats_refreshed' => $gameStats !== null,
             'stats' => $this->stats($processedIds),
         ];
     }
