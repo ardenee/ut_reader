@@ -11,6 +11,8 @@ require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
+use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+
 function diagnostics_tab(mixed $value): string
 {
     $tab = strtolower(trim((string)$value));
@@ -37,6 +39,26 @@ function diagnostics_worker(PDO $db, array $config): array
         if (!empty($run['skipped'])) break;
     }
     return $result;
+}
+
+/** @param array<string,mixed> $page */
+function diagnostics_log_links(array $filters, array $page): string
+{
+    $link = static function (string $label, string $move, string $cursor = '') use ($filters): string {
+        $query = $filters + ['tab' => 'logs', 'log_move' => $move];
+        if ($cursor !== '') {
+            $query['log_cursor'] = $cursor;
+        }
+        return '<a class="button" href="diagnostics.php?' . catalog_h(http_build_query($query)) . '">' . catalog_h($label) . '</a>';
+    };
+    $html = '<p class="page-links">' . $link('Newest', 'first');
+    if (!empty($page['has_previous']) && (string)($page['previous_cursor'] ?? '') !== '') {
+        $html .= ' ' . $link('Newer', 'previous', (string)$page['previous_cursor']);
+    }
+    if (!empty($page['has_next']) && (string)($page['next_cursor'] ?? '') !== '') {
+        $html .= ' ' . $link('Older', 'next', (string)$page['next_cursor']);
+    }
+    return $html . ' ' . $link('Oldest', 'last') . '</p>';
 }
 
 try {
@@ -93,24 +115,47 @@ try {
         $level = strtoupper(trim((string)($_GET['level'] ?? '')));
         $peerId = (int)($_GET['peer_id'] ?? 0);
         $event = trim((string)($_GET['event'] ?? ''));
+        $pageSize = CatalogFederationHistoryPageService::normalizePageSize((int)($_GET['page_size'] ?? 100));
         $where=[]; $args=[];
         if ($level !== '') { $where[]='l.level=?'; $args[]=$level; }
         if ($peerId > 0) { $where[]='l.peer_id=?'; $args[]=$peerId; }
         if ($event !== '') { $where[]='l.event LIKE ?'; $args[]='%'.$event.'%'; }
-        $rows = catalog_all($db, 'SELECT l.*,p.site_name peer_name FROM ue_federation_transfer_logs l LEFT JOIN ue_federation_peers p ON p.id=l.peer_id' . ($where ? ' WHERE '.implode(' AND ',$where) : '') . ' ORDER BY l.created_at DESC,l.id DESC LIMIT 1000', $args);
+        $context = 'federation-diagnostics-logs|level=' . $level . '|peer=' . $peerId . '|event=' . strtolower($event);
+        $page = CatalogFederationHistoryPageService::fetch(
+            $db,
+            $config,
+            $context,
+            'SELECT l.*,p.site_name peer_name,l.created_at cursor_created_at,l.id cursor_id
+             FROM ue_federation_transfer_logs l
+             LEFT JOIN ue_federation_peers p ON p.id=l.peer_id',
+            implode(' AND ', $where),
+            $args,
+            ['l.created_at', 'l.id'],
+            ['cursor_created_at', 'cursor_id'],
+            ['DESC', 'DESC'],
+            $pageSize,
+            (string)($_GET['log_cursor'] ?? ''),
+            (string)($_GET['log_move'] ?? 'first')
+        );
+        $rows = $page['rows'];
         $peers = catalog_all($db, 'SELECT id,site_name,peer_role FROM ue_federation_peers ORDER BY peer_role,site_name');
         echo '<div class="card"><h2>Log filters</h2><form method="get"><input type="hidden" name="tab" value="logs"><label>Level <select name="level"><option value="">All</option>';
         foreach (['INFO','WARNING','ERROR','CRITICAL'] as $v) echo '<option'.($level===$v?' selected':'').'>' . $v . '</option>';
         echo '</select></label> <label>Peer <select name="peer_id"><option value="0">All</option>';
         foreach ($peers as $p) echo '<option value="'.(int)$p['id'].'"'.((int)$p['id']===$peerId?' selected':'').'>' . catalog_h($p['peer_role'].' - '.$p['site_name']) . '</option>';
-        echo '</select></label> <label>Event <input name="event" value="'.catalog_h($event).'"></label> <button>Filter</button></form></div>';
+        echo '</select></label> <label>Event <input name="event" value="'.catalog_h($event).'"></label> <label>Rows <select name="page_size">';
+        foreach ([50,100,250,500] as $option) echo '<option value="'.$option.'"'.($pageSize===$option?' selected':'').'>'.$option.'</option>';
+        echo '</select></label> <button>Filter</button></form></div>';
+        $filters = ['level' => $level, 'peer_id' => $peerId, 'event' => $event, 'page_size' => $pageSize];
         echo '<div class="card"><h2>Federation Logs</h2>';
-        if (!$rows) echo '<p class="muted">No matching logs.</p>';
+        echo diagnostics_log_links($filters, $page);
+        if (!$rows) echo '<p class="muted">No matching logs on this page.</p>';
         else {
             echo '<table><tr><th>Time</th><th>Level</th><th>Peer</th><th>Job</th><th>Event</th><th>Details</th></tr>';
-            foreach ($rows as $row) echo '<tr><td class="nowrap">'.catalog_h($row['created_at']).'</td><td>'.catalog_h($row['level']).'</td><td>'.catalog_h($row['peer_name']??'').'</td><td class="mono">'.catalog_h($row['job_id']??'').'</td><td class="mono">'.catalog_h($row['event']).'</td><td class="path">'.catalog_h($row['details']).'</td></tr>';
+            foreach ($rows as $row) echo '<tr><td class="nowrap">'.catalog_h($row['created_at']).'</td><td>'.catalog_h($row['level']).'</td><td>'.catalog_h($row['peer_name']??'').'</td><td class="mono">'.catalog_h($row['job_id']??$row['transfer_job_id']??'').'</td><td class="mono">'.catalog_h($row['event']).'</td><td class="path">'.catalog_h($row['details']).'</td></tr>';
             echo '</table>';
         }
+        echo diagnostics_log_links($filters, $page);
         echo '</div>';
     } elseif ($tab === 'cleanup') {
         $nonceCount = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_nonces');
