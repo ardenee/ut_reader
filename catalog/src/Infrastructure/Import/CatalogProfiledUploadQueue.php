@@ -122,10 +122,10 @@ final class CatalogProfiledUploadQueue
             $storedPayload = json_decode((string)($row->fetchColumn() ?: ''), true);
             $storedPath = is_array($storedPayload) ? (string)($storedPayload['staged_path'] ?? '') : '';
             // A second conventional upload created a different durable object;
-            // remove only that unused copy. A resumed chunk upload shares the
+            // delete only that unused copy. A resumed chunk upload shares the
             // active job's path and must remain intact.
             if ($storedPath !== '' && $storedPath !== $stagedPath) {
-                (new CatalogIncomingFileStore($this->config))->remove($stagedPath);
+                (new CatalogIncomingFileStore($this->config))->delete($stagedPath);
             }
         }
 
@@ -203,7 +203,7 @@ final class CatalogProfiledUploadQueue
         $size = filesize($real);
         $mtime = filemtime($real);
         if ($size === false || $size < 1 || (int)$size > $this->containerLimitBytes()) {
-            throw new \RuntimeException('Local PAK exceeds the configured container upload limit.');
+            throw new \RuntimeException('Local PAK exceeds the configured container limit.');
         }
         $payload = [
             'game_id' => $gameId,
