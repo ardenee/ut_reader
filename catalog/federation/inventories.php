@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Federation\CatalogFederationInventoryListService;
+use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
+
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationPeerSecret.php';
@@ -20,6 +23,12 @@ function fi_page(mixed $value): int
     return max(1, (int)$value);
 }
 
+function fi_cursor_move(mixed $value): string
+{
+    $move = strtolower(trim((string)$value));
+    return in_array($move, ['first', 'next', 'prev', 'last'], true) ? $move : 'first';
+}
+
 function fi_local_presence_sql(string $alias = 'pf'): string
 {
     return 'EXISTS (
@@ -30,18 +39,6 @@ function fi_local_presence_sql(string $alias = 'pf'): string
     )';
 }
 
-function fi_parent_need_count_sql(string $alias = 'pf'): string
-{
-    return '(SELECT COUNT(DISTINCT needer.id)
-        FROM ue_dependencies d
-        JOIN ue_files needer ON needer.id=d.file_id
-        JOIN ue_games ng ON ng.id=needer.game_id
-        WHERE d.status="missing" AND needer.scan_status="verified"
-          AND LOWER(d.required_package)=LOWER(' . $alias . '.package_name)
-          AND ((COALESCE(' . $alias . '.remote_game_name,"")<>"" AND ng.name=' . $alias . '.remote_game_name)
-            OR (COALESCE(' . $alias . '.remote_game_name,"")="" AND ' . $alias . '.game_id IS NOT NULL AND needer.game_id=' . $alias . '.game_id)))';
-}
-
 function fi_identity(array $row): string
 {
     return '<div class="mono small nowrap"><strong>GUID:</strong> ' . catalog_h((string)($row['package_guid'] ?: '—')) . '</div>'
@@ -49,81 +46,87 @@ function fi_identity(array $row): string
         . '<div class="mono small nowrap"><strong>SHA1:</strong> ' . catalog_h((string)($row['sha1'] ?: '—')) . '</div>';
 }
 
-function fi_parent_url(int $peerId, string $tab, int $page = 1): string
+/** @param array<string,mixed> $params */
+function fi_parent_url(int $peerId, string $tab, array $params = []): string
 {
-    return 'inventories.php?' . http_build_query(['peer_id' => $peerId, 'tab' => $tab, 'page' => $page]);
+    return 'inventories.php?' . http_build_query(array_merge(['peer_id' => $peerId, 'tab' => $tab], $params));
 }
 
-function fi_child_url(int $peerId, int $page = 1): string
+/** @param array<string,mixed> $params */
+function fi_child_url(int $peerId, array $params = []): string
 {
-    return 'inventories.php?' . http_build_query(['peer_id' => $peerId, 'page' => $page]);
+    return 'inventories.php?' . http_build_query(array_merge(['peer_id' => $peerId], $params));
 }
 
-function fi_pagination(int $page, int $pages, callable $url): void
+/** @return array{cursor:string,cursor_move:string,cursor_page:int} */
+function fi_post_cursor_state(): array
 {
+    return [
+        'cursor' => trim((string)($_POST['cursor'] ?? '')),
+        'cursor_move' => fi_cursor_move($_POST['cursor_move'] ?? 'first'),
+        'cursor_page' => fi_page($_POST['cursor_page'] ?? 1),
+    ];
+}
+
+/** @param array<string,mixed> $config */
+function fi_decode_cursor(array $config, string $context, string $token, string &$move, int &$page): ?array
+{
+    if ($token === '') {
+        return null;
+    }
+    $cursor = CatalogKeysetPaginator::decode($config, $context, $token);
+    if ($cursor === null) {
+        $move = 'first';
+        $page = 1;
+    }
+    return $cursor;
+}
+
+function fi_cursor_context(string $view, int $peerId, string $tab, bool $ignoreBaseGame, int $limit): string
+{
+    return json_encode([
+        'page' => 'federation-inventories',
+        'view' => $view,
+        'peer_id' => $peerId,
+        'tab' => $tab,
+        'ignore_base_game' => $ignoreBaseGame,
+        'limit' => $limit,
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+}
+
+/**
+ * @param callable(array<string,mixed>):string $url
+ */
+function fi_pagination(
+    int $page,
+    int $pages,
+    bool $hasPrevious,
+    bool $hasNext,
+    string $previousCursor,
+    string $nextCursor,
+    callable $url
+): void {
     if ($pages <= 1) {
         return;
     }
     echo '<p class="page-links">';
-    if ($page > 1) {
-        echo '<a class="button" href="' . catalog_h($url($page - 1)) . '">Previous</a> ';
+    if ($hasPrevious) {
+        echo '<a class="button" href="' . catalog_h($url(['cursor' => null, 'cursor_move' => null, 'cursor_page' => null])) . '">First</a> ';
+        echo '<a class="button" href="' . catalog_h($url(['cursor' => $previousCursor, 'cursor_move' => 'prev', 'cursor_page' => max(1, $page - 1)])) . '">Previous</a> ';
     }
     echo '<span>Page ' . $page . ' of ' . $pages . '</span> ';
-    if ($page < $pages) {
-        echo '<a class="button" href="' . catalog_h($url($page + 1)) . '">Next</a>';
+    if ($hasNext) {
+        echo '<a class="button" href="' . catalog_h($url(['cursor' => $nextCursor, 'cursor_move' => 'next', 'cursor_page' => min($pages, $page + 1)])) . '">Next</a> ';
+        echo '<a class="button" href="' . catalog_h($url(['cursor' => null, 'cursor_move' => 'last', 'cursor_page' => $pages])) . '">Last</a>';
     }
     echo '</p>';
 }
 
-/** @return list<array<string,mixed>> */
-function fi_child_missing_rows(PDO $db, int $peerId, int $page, bool $ignoreBaseGame): array
+function fi_cursor_hidden(string $token, string $move, int $page): string
 {
-    $offset = ($page - 1) * FI_CHILD_PAGE_SIZE;
-    $baseGameSql = federation_dependency_is_base_game_sql('f', 'd');
-    $policySql = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
-    return catalog_all(
-        $db,
-        'SELECT f.game_id,g.name game_name,COALESCE(gp.engine_key,"") engine_key,d.required_package,
-                MIN(d.required_object_path) required_object_path,
-                COUNT(DISTINCT d.required_object_path) object_count,
-                COUNT(DISTINCT d.file_id) use_count,
-                MAX(CASE WHEN ' . $baseGameSql . ' THEN 1 ELSE 0 END) is_base_game,
-                MAX(CASE WHEN pf.id IS NOT NULL THEN 1 ELSE 0 END) parent_available,
-                MAX(pf.id) parent_peer_file_id,
-                MAX(pf.original_name) parent_file,
-                MAX(pf.file_size) parent_file_size
-         FROM ue_dependencies d
-         JOIN ue_files f ON f.id=d.file_id
-         JOIN ue_games g ON g.id=f.game_id
-         LEFT JOIN ue_game_profiles gp ON gp.id=g.profile_id AND gp.is_active=1
-         LEFT JOIN ue_federation_peer_files pf
-           ON pf.peer_id=? AND LOWER(pf.package_name)=LOWER(d.required_package)
-          AND (pf.game_id=f.game_id OR pf.remote_game_name=g.name)
-          ' . ($ignoreBaseGame ? 'AND COALESCE(pf.is_base_game,0)=0' : '') . '
-         WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""'
-            . $policySql . '
-         GROUP BY f.game_id,g.name,gp.engine_key,d.required_package
-         ORDER BY g.name,use_count DESC,d.required_package
-         LIMIT ' . FI_CHILD_PAGE_SIZE . ' OFFSET ' . $offset,
-        [$peerId]
-    );
-}
-
-function fi_child_missing_total(PDO $db, bool $ignoreBaseGame): int
-{
-    $baseGameSql = federation_dependency_is_base_game_sql('f', 'd');
-    $policySql = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
-    return (int)(catalog_one(
-        $db,
-        'SELECT COUNT(*) c FROM (
-            SELECT f.game_id,d.required_package
-            FROM ue_dependencies d
-            JOIN ue_files f ON f.id=d.file_id
-            WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package<>""'
-                . $policySql . '
-            GROUP BY f.game_id,d.required_package
-         ) x'
-    )['c'] ?? 0);
+    return '<input type="hidden" name="cursor" value="' . catalog_h($token) . '">'
+        . '<input type="hidden" name="cursor_move" value="' . catalog_h($move) . '">'
+        . '<input type="hidden" name="cursor_page" value="' . $page . '">';
 }
 
 function fi_child_key(array $row): string
@@ -150,7 +153,8 @@ function fi_child_request_statuses(PDO $db, array $parent): array
 }
 
 try {
-    $db = catalog_db(catalog_config());
+    $config = catalog_config();
+    $db = catalog_db($config);
     base_game_ensure($db);
     $role = federation_reconcile_site_role($db);
     $ignoreBaseGame = federation_ignore_base_game_files($db);
@@ -166,6 +170,7 @@ try {
         if (!$peer) {
             throw new RuntimeException('Active federation peer not found.');
         }
+        $cursorState = fi_post_cursor_state();
 
         if ($action === 'refresh') {
             $result = federation_pull_inventory_from_peer($db, $peerId);
@@ -176,6 +181,7 @@ try {
                 $push = federation_push_inventory_to_parent($db, $peerId);
                 $_SESSION['fed_inventory_flash'] = 'Parent inventory refreshed and local inventory pushed: ' . (!empty($push['ok']) ? 'success' : 'failed') . '.';
             }
+            $cursorState = ['cursor' => '', 'cursor_move' => 'first', 'cursor_page' => 1];
         } elseif ($action === 'queue_parent_pull') {
             if ($role !== 'parent' || (string)$peer['peer_role'] !== 'child') {
                 throw new RuntimeException('Only a Parent may download selected files from a child inventory.');
@@ -187,15 +193,15 @@ try {
             $placeholders = implode(',', array_fill(0, count($ids), '?'));
             $rows = catalog_all(
                 $db,
-                'SELECT pf.* FROM ue_federation_peer_files pf
-                 WHERE pf.peer_id=? AND pf.id IN (' . $placeholders . ')
-                   AND NOT (' . fi_local_presence_sql('pf') . ')'
-                    . ($ignoreBaseGame ? ' AND COALESCE(pf.is_base_game,0)=0' : ''),
+                'SELECT pf.* FROM ue_federation_peer_files pf '
+                . 'WHERE pf.peer_id=? AND pf.id IN (' . $placeholders . ') '
+                . 'AND NOT (' . fi_local_presence_sql('pf') . ')'
+                . ($ignoreBaseGame ? ' AND COALESCE(pf.is_base_game,0)=0' : ''),
                 array_merge([$peerId], $ids)
             );
             $insert = $db->prepare(
-                'INSERT INTO ue_federation_transfer_jobs(peer_id,direction,remote_file_id,status,speed_limit_kbps,wait_after_seconds,bytes_total)
-                 VALUES(?,"parent_pull_from_child",?,"queued",?,?,?)'
+                'INSERT INTO ue_federation_transfer_jobs(peer_id,direction,remote_file_id,status,speed_limit_kbps,wait_after_seconds,bytes_total) '
+                . 'VALUES(?,"parent_pull_from_child",?,"queued",?,?,?)'
             );
             $queued = 0;
             foreach ($rows as $row) {
@@ -218,12 +224,22 @@ try {
             if ($role !== 'child' || (string)$peer['peer_role'] !== 'parent') {
                 throw new RuntimeException('Only a Child may request missing dependency files from its Parent.');
             }
-            $page = fi_page($_POST['page'] ?? 1);
-            $activeStatuses = fi_child_request_statuses($db, $peer);
             $ignoreBaseGame = federation_ignore_base_game_files($db, $peer);
-            $rows = fi_child_missing_rows($db, $peerId, $page, $ignoreBaseGame);
+            $context = fi_cursor_context('child', $peerId, 'required', $ignoreBaseGame, FI_CHILD_PAGE_SIZE);
+            $move = $cursorState['cursor_move'];
+            $pageNumber = $cursorState['cursor_page'];
+            $cursor = fi_decode_cursor($config, $context, $cursorState['cursor'], $move, $pageNumber);
+            $page = CatalogFederationInventoryListService::childCursorPage(
+                $db,
+                $peerId,
+                $ignoreBaseGame,
+                FI_CHILD_PAGE_SIZE,
+                $cursor,
+                $move
+            );
+            $activeStatuses = fi_child_request_statuses($db, $peer);
             $byKey = [];
-            foreach ($rows as $row) {
+            foreach ($page['rows'] as $row) {
                 $existing = $activeStatuses[strtolower(trim((string)$row['required_package']))] ?? null;
                 if (is_array($existing) && in_array((string)($existing['item_status'] ?? ''), ['requested', 'approved', 'queued', 'downloading', 'downloaded'], true)) {
                     continue;
@@ -250,7 +266,7 @@ try {
                 ];
             }
             if (!$items) {
-                throw new RuntimeException('The selected packages are no longer eligible. The Parent policy or request status changed; reload the list and select from the remaining packages.');
+                throw new RuntimeException('The selected packages are no longer eligible. The Parent policy, request status, or current cursor page changed; reload the list and select again.');
             }
             $siteLabel = fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: 'child';
             try {
@@ -268,7 +284,7 @@ try {
             } catch (RuntimeException $requestError) {
                 if (str_contains($requestError->getMessage(), 'Every selected package is excluded by the parent Ignore base-game files policy.')) {
                     $_SESSION['fed_inventory_flash'] = 'The Parent base-game policy changed or was refreshed. Excluded base-game packages were removed from the request list.';
-                    header('Location: ' . fi_child_url($peerId, $page));
+                    header('Location: ' . fi_child_url($peerId));
                     exit;
                 }
                 throw $requestError;
@@ -287,8 +303,9 @@ try {
         }
 
         $tab = strtolower(trim((string)($_POST['tab'] ?? 'required')));
-        $page = fi_page($_POST['page'] ?? 1);
-        header('Location: ' . ($role === 'parent' ? fi_parent_url($peerId, $tab, $page) : fi_child_url($peerId, $page)));
+        $tab = in_array($tab, ['required', 'missing'], true) ? $tab : 'required';
+        $params = array_filter($cursorState, static fn(mixed $value): bool => $value !== '' && $value !== null && $value !== 1);
+        header('Location: ' . ($role === 'parent' ? fi_parent_url($peerId, $tab, $params) : fi_child_url($peerId, $params)));
         exit;
     }
 
@@ -325,12 +342,30 @@ try {
         $peerId = (int)$peer['id'];
         $tab = strtolower(trim((string)($_GET['tab'] ?? 'required')));
         $tab = in_array($tab, ['required', 'missing'], true) ? $tab : 'required';
-        $page = fi_page($_GET['page'] ?? 1);
-        $absence = 'NOT (' . fi_local_presence_sql('pf') . ')';
-        $needCount = fi_parent_need_count_sql('pf');
-        $policy = $ignoreBaseGame ? ' AND COALESCE(pf.is_base_game,0)=0' : '';
-        $requiredCount = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files pf WHERE pf.peer_id=? AND ' . $absence . ' AND ' . $needCount . '>0' . $policy, [$peerId])['c'] ?? 0);
-        $missingCount = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_peer_files pf WHERE pf.peer_id=? AND ' . $absence . $policy, [$peerId])['c'] ?? 0);
+        $counts = CatalogFederationInventoryListService::parentCounts($db, $peerId, $ignoreBaseGame);
+        $total = $tab === 'required' ? $counts['required'] : $counts['missing'];
+        $pages = max(1, (int)ceil($total / FI_PARENT_PAGE_SIZE));
+        $move = fi_cursor_move($_GET['cursor_move'] ?? 'first');
+        $pageNumber = fi_page($_GET['cursor_page'] ?? ($move === 'last' ? $pages : 1));
+        $pageNumber = min($pageNumber, $pages);
+        if ($move === 'first') {
+            $pageNumber = 1;
+        } elseif ($move === 'last') {
+            $pageNumber = $pages;
+        }
+        $context = fi_cursor_context('parent', $peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE);
+        $cursorToken = trim((string)($_GET['cursor'] ?? ''));
+        $cursor = fi_decode_cursor($config, $context, $cursorToken, $move, $pageNumber);
+        $page = CatalogFederationInventoryListService::parentCursorPage($db, $peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE, $cursor, $move);
+        if ($page['rows'] === [] && $total > 0 && $move !== 'first') {
+            $move = 'first';
+            $pageNumber = 1;
+            $cursorToken = '';
+            $page = CatalogFederationInventoryListService::parentCursorPage($db, $peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE, null, 'first');
+        }
+        $previousCursor = is_array($page['first_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['first_cursor']) : '';
+        $nextCursor = is_array($page['last_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['last_cursor']) : '';
+        $rows = $page['rows'];
 
         echo '<div class="card"><h2>Selected child</h2><form method="get"><label>Child<br><select name="peer_id" onchange="this.form.submit()">';
         foreach ($children as $child) {
@@ -340,35 +375,27 @@ try {
         echo '<p><strong>Last contact:</strong> ' . catalog_h((string)($peer['last_seen_at'] ?? 'never')) . '</p>';
         echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_inventories')) . '"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="tab" value="' . catalog_h($tab) . '"><button name="action" value="refresh">Refresh both inventories now</button></form></div>';
 
-        echo '<div class="card"><p class="page-links"><a class="button" href="' . catalog_h(fi_parent_url($peerId, 'required')) . '">Required by Parent (' . $requiredCount . ')</a> <a class="button" href="' . catalog_h(fi_parent_url($peerId, 'missing')) . '">Missing from Parent (' . $missingCount . ')</a></p></div>';
-
-        $filter = ' AND ' . $absence . $policy . ($tab === 'required' ? ' AND ' . $needCount . '>0' : '');
-        $total = $tab === 'required' ? $requiredCount : $missingCount;
-        $pages = max(1, (int)ceil($total / FI_PARENT_PAGE_SIZE));
-        $page = min($page, $pages);
-        $offset = ($page - 1) * FI_PARENT_PAGE_SIZE;
-        $rows = catalog_all(
-            $db,
-            'SELECT pf.*,COALESCE(NULLIF(pf.remote_game_name,""),g.name) display_game,' . $needCount . ' needed_by_parent_files
-             FROM ue_federation_peer_files pf
-             LEFT JOIN ue_games g ON g.id=pf.game_id
-             WHERE pf.peer_id=?' . $filter . '
-             ORDER BY needed_by_parent_files DESC,display_game,pf.package_name,pf.original_name
-             LIMIT ' . FI_PARENT_PAGE_SIZE . ' OFFSET ' . $offset,
-            [$peerId]
-        );
+        echo '<div class="card"><p class="page-links"><a class="button" href="' . catalog_h(fi_parent_url($peerId, 'required')) . '">Required by Parent (' . $counts['required'] . ')</a> <a class="button" href="' . catalog_h(fi_parent_url($peerId, 'missing')) . '">Missing from Parent (' . $counts['missing'] . ')</a></p></div>';
         echo '<div class="card"><h2>' . ($tab === 'required' ? 'Required by Parent' : 'Missing from Parent') . '</h2><p>Showing <strong>' . count($rows) . '</strong> of <strong>' . $total . '</strong> files.</p>';
         if (!$rows) {
             echo '<p class="muted">No matching files.</p>';
         } else {
-            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_inventories')) . '"><input type="hidden" name="action" value="queue_parent_pull"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="tab" value="' . catalog_h($tab) . '"><input type="hidden" name="page" value="' . $page . '">';
+            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_inventories')) . '"><input type="hidden" name="action" value="queue_parent_pull"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="tab" value="' . catalog_h($tab) . '">' . fi_cursor_hidden($cursorToken, $move, $pageNumber);
             echo '<p><label><input type="checkbox" data-check-all="inventory-files"> Check all files on this page</label> <button>Download selected files from child</button></p>';
             echo '<table><tr><th>Select</th><th>Game</th><th>Needed by Parent files</th><th>Package</th><th>Child file</th><th>N/I/E</th><th>GUID / MD5 / SHA1</th><th>Size</th></tr>';
             foreach ($rows as $row) {
                 echo '<tr><td><input type="checkbox" data-check-group="inventory-files" name="peer_file_ids[]" value="' . (int)$row['id'] . '"></td><td>' . catalog_h((string)$row['display_game']) . '</td><td>' . (int)$row['needed_by_parent_files'] . '</td><td class="mono">' . catalog_h($row['package_name']) . '</td><td>' . catalog_h($row['original_name']) . '</td><td class="nowrap">0 / ' . (int)$row['import_count'] . ' / ' . (int)$row['export_count'] . '</td><td>' . fi_identity($row) . '</td><td class="nowrap">' . catalog_h(catalog_bytes((int)$row['file_size'])) . '</td></tr>';
             }
             echo '</table><p><button>Download selected files from child</button></p></form>';
-            fi_pagination($page, $pages, fn(int $p): string => fi_parent_url($peerId, $tab, $p));
+            fi_pagination(
+                $pageNumber,
+                $pages,
+                (bool)$page['has_previous'],
+                (bool)$page['has_next'],
+                $previousCursor,
+                $nextCursor,
+                static fn(array $params): string => fi_parent_url($peerId, $tab, $params)
+            );
         }
         echo '</div>';
     } else {
@@ -379,7 +406,6 @@ try {
             exit;
         }
         $peerId = (int)$parent['id'];
-        $page = fi_page($_GET['page'] ?? 1);
         $requestStatuses = [];
         $requestStatusError = '';
         try {
@@ -388,10 +414,29 @@ try {
             $requestStatusError = $statusError->getMessage();
         }
         $ignoreBaseGame = federation_ignore_base_game_files($db, $parent);
-        $total = fi_child_missing_total($db, $ignoreBaseGame);
+        $total = CatalogFederationInventoryListService::childMissingTotal($db, $ignoreBaseGame);
         $pages = max(1, (int)ceil($total / FI_CHILD_PAGE_SIZE));
-        $page = min($page, $pages);
-        $rows = fi_child_missing_rows($db, $peerId, $page, $ignoreBaseGame);
+        $move = fi_cursor_move($_GET['cursor_move'] ?? 'first');
+        $pageNumber = fi_page($_GET['cursor_page'] ?? ($move === 'last' ? $pages : 1));
+        $pageNumber = min($pageNumber, $pages);
+        if ($move === 'first') {
+            $pageNumber = 1;
+        } elseif ($move === 'last') {
+            $pageNumber = $pages;
+        }
+        $context = fi_cursor_context('child', $peerId, 'required', $ignoreBaseGame, FI_CHILD_PAGE_SIZE);
+        $cursorToken = trim((string)($_GET['cursor'] ?? ''));
+        $cursor = fi_decode_cursor($config, $context, $cursorToken, $move, $pageNumber);
+        $page = CatalogFederationInventoryListService::childCursorPage($db, $peerId, $ignoreBaseGame, FI_CHILD_PAGE_SIZE, $cursor, $move);
+        if ($page['rows'] === [] && $total > 0 && $move !== 'first') {
+            $move = 'first';
+            $pageNumber = 1;
+            $cursorToken = '';
+            $page = CatalogFederationInventoryListService::childCursorPage($db, $peerId, $ignoreBaseGame, FI_CHILD_PAGE_SIZE, null, 'first');
+        }
+        $previousCursor = is_array($page['first_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['first_cursor']) : '';
+        $nextCursor = is_array($page['last_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['last_cursor']) : '';
+        $rows = $page['rows'];
         foreach ($rows as &$row) {
             $row['item_key'] = fi_child_key($row);
             $row['request_state'] = $requestStatuses[strtolower(trim((string)$row['required_package']))] ?? null;
@@ -408,7 +453,7 @@ try {
         if (!$rows) {
             echo '<p class="muted">No eligible missing dependency packages.</p>';
         } else {
-            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_inventories')) . '"><input type="hidden" name="action" value="submit_child_request"><input type="hidden" name="peer_id" value="' . $peerId . '"><input type="hidden" name="page" value="' . $page . '">';
+            echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_inventories')) . '"><input type="hidden" name="action" value="submit_child_request"><input type="hidden" name="peer_id" value="' . $peerId . '">' . fi_cursor_hidden($cursorToken, $move, $pageNumber);
             echo '<p><label><input type="checkbox" data-check-all="required-packages"> Check all packages on this page</label> <button>Request selected files from Parent</button></p>';
             echo '<table><tr><th>Select</th><th>Game</th><th>Required package</th><th>Example missing object</th><th>Missing objects</th><th>Required by files</th><th>Parent availability</th><th>Request status</th><th>Parent file</th></tr>';
             foreach ($rows as $row) {
@@ -421,10 +466,19 @@ try {
                 $requestDisplay = $requestState
                     ? '<a href="requests.php?request_id=' . (int)$requestState['request_id'] . '">' . catalog_h((string)$requestState['item_status']) . '</a>'
                     : '<span class="muted">not requested</span>';
-                echo '<tr><td>' . $select . '</td><td>' . catalog_h($row['game_name']) . '</td><td class="mono">' . catalog_h($row['required_package']) . '</td><td class="mono path">' . catalog_h($row['required_object_path']) . '</td><td>' . (int)$row['object_count'] . '</td><td>' . (int)$row['use_count'] . '</td><td>' . ($available ? '<span class="pill green">available</span>' : '<span class="pill amber">not currently held</span>') . '</td><td>' . $requestDisplay . '</td><td>' . catalog_h($available ? (string)$row['parent_file'] . ' (' . catalog_bytes((int)$row['parent_file_size']) . ')' : 'Request may remain waiting until Parent imports it') . '</td></tr>';
+                $exampleObject = trim((string)$row['required_object_path']) !== '' ? (string)$row['required_object_path'] : '—';
+                echo '<tr><td>' . $select . '</td><td>' . catalog_h($row['game_name']) . '</td><td class="mono">' . catalog_h($row['required_package']) . '</td><td class="mono path">' . catalog_h($exampleObject) . '</td><td>' . (int)$row['object_count'] . '</td><td>' . (int)$row['use_count'] . '</td><td>' . ($available ? '<span class="pill green">available</span>' : '<span class="pill amber">not currently held</span>') . '</td><td>' . $requestDisplay . '</td><td>' . catalog_h($available ? (string)$row['parent_file'] . ' (' . catalog_bytes((int)$row['parent_file_size']) . ')' : 'Request may remain waiting until Parent imports it') . '</td></tr>';
             }
             echo '</table><p><button>Request selected files from Parent</button></p></form>';
-            fi_pagination($page, $pages, fn(int $p): string => fi_child_url($peerId, $p));
+            fi_pagination(
+                $pageNumber,
+                $pages,
+                (bool)$page['has_previous'],
+                (bool)$page['has_next'],
+                $previousCursor,
+                $nextCursor,
+                static fn(array $params): string => fi_child_url($peerId, $params)
+            );
         }
         echo '</div>';
     }
