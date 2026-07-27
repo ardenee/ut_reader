@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Application\Dependency;
 
 use PDO;
+use PDOException;
 
 /**
  * Resolves one file's import table against the catalogue in bounded batches.
@@ -11,7 +12,9 @@ use PDO;
  * Resolution follows Unreal's serialized package/object identity model. Package
  * providers are read from the materialized ue_package_providers table, which
  * combines verified primary package names and aliases into one indexed lookup.
- * Object resolution remains exact against serialized export paths.
+ * Exact authoritative-table fallbacks preserve correctness while the provider
+ * cache is being migrated or reconciled. Object resolution remains exact against
+ * serialized export paths.
  */
 final class CatalogDependencyResolver
 {
@@ -147,33 +150,105 @@ final class CatalogDependencyResolver
             }
 
             $placeholders = self::placeholders(count($chunk));
-            $rows = \catalog_all(
-                $db,
-                'SELECT p.package_name lookup_value,p.file_id,p.source_kind'
-                . ' FROM ue_package_providers p'
-                . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
-                . ' WHERE p.game_id=? AND f.scan_status="verified"'
-                . ' AND p.package_name IN (' . $placeholders . ')'
-                . ' ORDER BY p.package_name,(p.source_kind="primary") DESC,'
-                . ' (p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
-                array_merge([$gameId], $chunk, [$fileId])
-            );
+            try {
+                $rows = \catalog_all(
+                    $db,
+                    'SELECT p.package_name lookup_value,p.file_id,p.source_kind'
+                    . ' FROM ue_package_providers p'
+                    . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
+                    . ' LEFT JOIN ue_file_package_aliases a'
+                    . ' ON p.source_kind="alias" AND a.id=p.source_id'
+                    . ' AND a.file_id=p.file_id AND a.game_id=p.game_id'
+                    . ' AND a.package_name=p.package_name'
+                    . ' WHERE p.game_id=? AND f.scan_status="verified"'
+                    . ' AND p.package_name IN (' . $placeholders . ')'
+                    . ' AND ((p.source_kind="primary" AND f.package_name=p.package_name)'
+                    . ' OR (p.source_kind="alias" AND a.id IS NOT NULL))'
+                    . ' ORDER BY p.package_name,(p.source_kind="primary") DESC,'
+                    . ' (p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
+                    array_merge([$gameId], $chunk, [$fileId])
+                );
+            } catch (PDOException) {
+                $rows = [];
+            }
 
             foreach ($rows as $row) {
-                $lookupKey = self::normalizeLookup((string)$row['lookup_value']);
-                if ($lookupKey === '' || isset($matches[$lookupKey])) {
-                    continue;
-                }
-                $matches[$lookupKey] = [
-                    'file_id' => (int)$row['file_id'],
-                    'source' => (string)$row['source_kind'] === 'alias'
-                        ? 'exact_package_alias'
-                        : 'exact_package',
-                ];
+                self::collectPackageMatch($row, $matches);
+            }
+
+            $missing = self::missingLookupValues($chunk, $matches);
+            if ($missing === []) {
+                continue;
+            }
+
+            $primaryRows = \catalog_all(
+                $db,
+                'SELECT f.package_name lookup_value,f.id file_id,"primary" source_kind'
+                . ' FROM ue_files f'
+                . ' WHERE f.game_id=? AND f.scan_status="verified"'
+                . ' AND f.package_name IN (' . self::placeholders(count($missing)) . ')'
+                . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC',
+                array_merge([$gameId], $missing, [$fileId])
+            );
+            foreach ($primaryRows as $row) {
+                self::collectPackageMatch($row, $matches);
+            }
+
+            $missing = self::missingLookupValues($missing, $matches);
+            if ($missing === []) {
+                continue;
+            }
+
+            $aliasRows = \catalog_all(
+                $db,
+                'SELECT a.package_name lookup_value,a.file_id,"alias" source_kind'
+                . ' FROM ue_file_package_aliases a'
+                . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
+                . ' WHERE a.game_id=? AND f.scan_status="verified"'
+                . ' AND a.package_name IN (' . self::placeholders(count($missing)) . ')'
+                . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,a.id ASC',
+                array_merge([$gameId], $missing, [$fileId])
+            );
+            foreach ($aliasRows as $row) {
+                self::collectPackageMatch($row, $matches);
             }
         }
 
         return $matches;
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @param array<string, array{file_id:int, source:string}> $matches
+     */
+    private static function collectPackageMatch(array $row, array &$matches): void
+    {
+        $lookupKey = self::normalizeLookup((string)($row['lookup_value'] ?? ''));
+        if ($lookupKey === '' || isset($matches[$lookupKey])) {
+            return;
+        }
+        $matches[$lookupKey] = [
+            'file_id' => (int)$row['file_id'],
+            'source' => (string)($row['source_kind'] ?? '') === 'alias'
+                ? 'exact_package_alias'
+                : 'exact_package',
+        ];
+    }
+
+    /**
+     * @param list<string> $values
+     * @param array<string,mixed> $matches
+     * @return list<string>
+     */
+    private static function missingLookupValues(array $values, array $matches): array
+    {
+        $missing = [];
+        foreach ($values as $value) {
+            if (!isset($matches[self::normalizeLookup($value)])) {
+                $missing[] = $value;
+            }
+        }
+        return $missing;
     }
 
     /**
