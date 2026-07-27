@@ -140,7 +140,7 @@ try {
         $rows = $page['rows'];
         $peers = catalog_all($db, 'SELECT id,site_name,peer_role FROM ue_federation_peers ORDER BY peer_role,site_name');
         echo '<div class="card"><h2>Log filters</h2><form method="get"><input type="hidden" name="tab" value="logs"><label>Level <select name="level"><option value="">All</option>';
-        foreach (['INFO','WARNING','ERROR','CRITICAL'] as $v) echo '<option'.($level===$v?' selected':'').'>' . $v . '</option>';
+        foreach (['INFO','WARN','ERROR'] as $v) echo '<option'.($level===$v?' selected':'').'>' . $v . '</option>';
         echo '</select></label> <label>Peer <select name="peer_id"><option value="0">All</option>';
         foreach ($peers as $p) echo '<option value="'.(int)$p['id'].'"'.((int)$p['id']===$peerId?' selected':'').'>' . catalog_h($p['peer_role'].' - '.$p['site_name']) . '</option>';
         echo '</select></label> <label>Event <input name="event" value="'.catalog_h($event).'"></label> <label>Rows <select name="page_size">';
@@ -152,7 +152,7 @@ try {
         if (!$rows) echo '<p class="muted">No matching logs on this page.</p>';
         else {
             echo '<table><tr><th>Time</th><th>Level</th><th>Peer</th><th>Job</th><th>Event</th><th>Details</th></tr>';
-            foreach ($rows as $row) echo '<tr><td class="nowrap">'.catalog_h($row['created_at']).'</td><td>'.catalog_h($row['level']).'</td><td>'.catalog_h($row['peer_name']??'').'</td><td class="mono">'.catalog_h($row['job_id']??$row['transfer_job_id']??'').'</td><td class="mono">'.catalog_h($row['event']).'</td><td class="path">'.catalog_h($row['details']).'</td></tr>';
+            foreach ($rows as $row) echo '<tr><td class="nowrap">'.catalog_h($row['created_at']).'</td><td>'.catalog_h($row['level']).'</td><td>'.catalog_h($row['peer_name']??'').'</td><td class="mono">'.catalog_h($row['transfer_job_id']??'').'</td><td class="mono">'.catalog_h($row['event']).'</td><td class="path">'.catalog_h($row['details']).'</td></tr>';
             echo '</table>';
         }
         echo diagnostics_log_links($filters, $page);
