@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 15;
+$expectedMigrations = 16;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -48,6 +48,10 @@ migration_test_expect($schema->indexExists('ue_package_providers', 'idx_ue_packa
 migration_test_expect($schema->tableExists('ue_search_documents'), 'Search-document migration is missing.');
 foreach (['idx_ue_search_game_primary', 'idx_ue_search_game_secondary', 'idx_ue_search_file', 'ft_ue_search_values'] as $index) {
     migration_test_expect($schema->indexExists('ue_search_documents', $index), 'Search-document index is missing: ' . $index);
+}
+migration_test_expect($schema->tableExists('ue_dependency_package_summaries'), 'Dependency package summary migration is missing.');
+foreach (['idx_ue_dep_summary_game_status', 'idx_ue_dep_summary_package_game', 'idx_ue_dep_summary_provider'] as $index) {
+    migration_test_expect($schema->indexExists('ue_dependency_package_summaries', $index), 'Dependency package summary index is missing: ' . $index);
 }
 migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_source'), 'Dependency resolution_source column is missing.');
 migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_confidence'), 'Dependency resolution_confidence column is missing.');
