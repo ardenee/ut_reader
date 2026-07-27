@@ -323,6 +323,39 @@ function scanner_range_percent(int $start, int $end, int $done, int $total): int
     return $start + (int)floor((($end - $start) * $done) / $total);
 }
 
+/** @param list<string> $columns @param list<list<mixed>> $rows */
+function scanner_bulk_insert(PDO $db, string $table, array $columns, array $rows): void
+{
+    if ($rows === []) {
+        return;
+    }
+    if (preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1 || $columns === []) {
+        throw new InvalidArgumentException('Invalid bulk insert target.');
+    }
+    foreach ($columns as $column) {
+        if (preg_match('/^[A-Za-z0-9_]+$/', $column) !== 1) {
+            throw new InvalidArgumentException('Invalid bulk insert column.');
+        }
+    }
+
+    $columnCount = count($columns);
+    $tuple = '(' . implode(',', array_fill(0, $columnCount, '?')) . ')';
+    $values = [];
+    $args = [];
+    foreach ($rows as $row) {
+        if (count($row) !== $columnCount) {
+            throw new InvalidArgumentException('Bulk insert row has the wrong column count.');
+        }
+        $values[] = $tuple;
+        array_push($args, ...$row);
+    }
+
+    $statement = $db->prepare(
+        'INSERT INTO ' . $table . '(' . implode(',', $columns) . ') VALUES ' . implode(',', $values)
+    );
+    $statement->execute($args);
+}
+
 function scanner_load_reader_class(array $config, string $engineKey): string
 {
     return CatalogReaderResolver::resolve($config, $engineKey, 'Reader not found for package engine', 'Reader file loaded for package engine ', ['UE4', 'UE5']);
@@ -394,24 +427,61 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?call
         return;
     }
 
-    $imports = catalog_all($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index', [$fileId]);
-    $resolutions = CatalogDependencyResolver::resolve($db, (int)$file['game_id'], $fileId, $imports);
-    $total = max(1, count($imports));
-    $insert = $db->prepare('INSERT INTO ue_dependencies(file_id,import_id,required_package,required_object_path,resolved_file_id,resolved_export_id,status,resolution_source,resolution_confidence) VALUES(?,?,?,?,?,?,?,?,?)');
+    $imports = catalog_all(
+        $db,
+        'SELECT id,root_package,full_path,relative_object_path,is_common FROM ue_imports WHERE file_id=? ORDER BY import_index',
+        [$fileId]
+    );
+    if ($imports === []) {
+        scanner_emit_percent($progress, 'dependencies', $endPercent, $prefix . ': no imports');
+        return;
+    }
 
+    $resolutions = CatalogDependencyResolver::resolve($db, (int)$file['game_id'], $fileId, $imports);
+    $total = count($imports);
+    $batch = [];
     foreach ($imports as $i => $imp) {
-        $resolution = $resolutions[(int)$imp['id']] ?? ['status' => 'missing', 'resolved_file_id' => null, 'resolved_export_id' => null, 'source' => 'none', 'confidence' => 'missing'];
-        $insert->execute([$fileId, $imp['id'], $imp['root_package'], $imp['full_path'], $resolution['resolved_file_id'], $resolution['resolved_export_id'], $resolution['status'], $resolution['source'] ?? 'unknown', $resolution['confidence'] ?? 'unknown']);
+        $resolution = $resolutions[(int)$imp['id']] ?? [
+            'status' => 'missing',
+            'resolved_file_id' => null,
+            'resolved_export_id' => null,
+            'source' => 'none',
+            'confidence' => 'missing',
+        ];
+        $batch[] = [
+            $fileId,
+            (int)$imp['id'],
+            (string)$imp['root_package'],
+            (string)$imp['full_path'],
+            $resolution['resolved_file_id'],
+            $resolution['resolved_export_id'],
+            (string)$resolution['status'],
+            (string)($resolution['source'] ?? 'unknown'),
+            (string)($resolution['confidence'] ?? 'unknown'),
+        ];
+
         $done = $i + 1;
-        if (($done % 10) === 0 || $done === $total) {
-            scanner_emit_percent($progress, 'dependencies', scanner_range_percent($startPercent, $endPercent, $done, $total), $prefix . ': import ' . $done . '/' . $total);
+        if (count($batch) >= 250 || $done === $total) {
+            scanner_bulk_insert(
+                $db,
+                'ue_dependencies',
+                ['file_id', 'import_id', 'required_package', 'required_object_path', 'resolved_file_id', 'resolved_export_id', 'status', 'resolution_source', 'resolution_confidence'],
+                $batch
+            );
+            $batch = [];
+            scanner_emit_percent(
+                $progress,
+                'dependencies',
+                scanner_range_percent($startPercent, $endPercent, $done, $total),
+                $prefix . ': import ' . $done . '/' . $total
+            );
         }
     }
 }
 
 function scanner_rebuild_game(PDO $db, array $config, int $gameId, ?callable $progress = null, int $startPercent = 56, int $endPercent = 99): void
 {
-    $files = catalog_all($db, 'SELECT id, package_name FROM ue_files WHERE game_id=? ORDER BY package_name, id', [$gameId]);
+    $files = catalog_all($db, 'SELECT id, package_name FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY package_name, id', [$gameId]);
     $total = max(1, count($files));
     if (!$files) {
         scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing game dependency links: no files');
@@ -645,18 +715,21 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         $fileId = (int)$db->lastInsertId();
         $progressDb('Writing file row');
 
-        $stmt = $db->prepare('INSERT INTO ue_names(file_id,name_index,name_text,flags) VALUES(?,?,?,?)');
+        $batch = [];
         foreach ($names as $i => $name) {
-            $stmt->execute([$fileId, $i, (string)($name['name'] ?? $name['text'] ?? ''), isset($name['flags']) ? (int)$name['flags'] : null]);
+            $batch[] = [$fileId, $i, (string)($name['name'] ?? $name['text'] ?? ''), isset($name['flags']) ? (int)$name['flags'] : null];
             $done = $i + 1;
-            if (($done % 10) === 0 || $done === $nameCount) {
-                $progressDb('Writing names table ' . $done . '/' . $nameCount, 10);
+            if (count($batch) >= 250 || $done === $nameCount) {
+                $batchCount = count($batch);
+                scanner_bulk_insert($db, 'ue_names', ['file_id', 'name_index', 'name_text', 'flags'], $batch);
+                $batch = [];
+                $progressDb('Writing names table ' . $done . '/' . $nameCount, $batchCount);
             }
         }
 
         $cache = [];
         $common = array_map('strtolower', $config['common_packages'] ?? []);
-        $stmt = $db->prepare('INSERT INTO ue_imports(file_id,import_index,class_package,class_name,object_name,outer_index,full_path,root_package,relative_object_path,is_common) VALUES(?,?,?,?,?,?,?,?,?,?)');
+        $batch = [];
         foreach ($imports as $i => $imp) {
             $full = scanner_ref_path(-($i + 1), $imports, $exports, $cache);
             $parts = $full !== '' ? explode('.', $full) : [];
@@ -666,23 +739,39 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             $classPackage = (string)($imp['classPackageText'] ?? ($imp['ClassPackage']['text'] ?? ''));
             $className = (string)($imp['classNameText'] ?? ($imp['ClassName']['text'] ?? ''));
             $outer = (int)($imp['outerIndex'] ?? $imp['OuterIndex'] ?? $imp['outer'] ?? 0);
-            $stmt->execute([$fileId, $i, $classPackage, $className, $object, $outer, $full, $root, $relative, in_array(strtolower($root), $common, true) ? 1 : 0]);
+            $batch[] = [$fileId, $i, $classPackage, $className, $object, $outer, $full, $root, $relative, in_array(strtolower($root), $common, true) ? 1 : 0];
             $done = $i + 1;
-            if (($done % 10) === 0 || $done === $importCount) {
-                $progressDb('Writing imports table ' . $done . '/' . $importCount, 10);
+            if (count($batch) >= 250 || $done === $importCount) {
+                $batchCount = count($batch);
+                scanner_bulk_insert(
+                    $db,
+                    'ue_imports',
+                    ['file_id', 'import_index', 'class_package', 'class_name', 'object_name', 'outer_index', 'full_path', 'root_package', 'relative_object_path', 'is_common'],
+                    $batch
+                );
+                $batch = [];
+                $progressDb('Writing imports table ' . $done . '/' . $importCount, $batchCount);
             }
         }
 
-        $stmt = $db->prepare('INSERT INTO ue_exports(file_id,export_index,class_name,object_name,outer_index,local_path,full_path,object_flags,serial_size,serial_offset) VALUES(?,?,?,?,?,?,?,?,?,?)');
+        $batch = [];
         foreach ($exports as $i => $exp) {
             $local = scanner_ref_path($i + 1, $imports, $exports, $cache);
             $classRef = (int)($exp['classIndex'] ?? $exp['class'] ?? 0);
             $className = $classRef ? scanner_ref_path($classRef, $imports, $exports, $cache) : '';
             $outer = (int)($exp['outerIndex'] ?? $exp['packageIndex'] ?? $exp['outer'] ?? 0);
-            $stmt->execute([$fileId, $i, $className, (string)($exp['objectNameText'] ?? ''), $outer, $local, scanner_join_path_parts([$packageName, $local]), isset($exp['objectFlags']) ? (int)$exp['objectFlags'] : null, isset($exp['serialSize']) ? (int)$exp['serialSize'] : null, isset($exp['serialOffset']) ? (int)$exp['serialOffset'] : null]);
+            $batch[] = [$fileId, $i, $className, (string)($exp['objectNameText'] ?? ''), $outer, $local, scanner_join_path_parts([$packageName, $local]), isset($exp['objectFlags']) ? (int)$exp['objectFlags'] : null, isset($exp['serialSize']) ? (int)$exp['serialSize'] : null, isset($exp['serialOffset']) ? (int)$exp['serialOffset'] : null];
             $done = $i + 1;
-            if (($done % 10) === 0 || $done === $exportCount) {
-                $progressDb('Writing exports table ' . $done . '/' . $exportCount, 10);
+            if (count($batch) >= 250 || $done === $exportCount) {
+                $batchCount = count($batch);
+                scanner_bulk_insert(
+                    $db,
+                    'ue_exports',
+                    ['file_id', 'export_index', 'class_name', 'object_name', 'outer_index', 'local_path', 'full_path', 'object_flags', 'serial_size', 'serial_offset'],
+                    $batch
+                );
+                $batch = [];
+                $progressDb('Writing exports table ' . $done . '/' . $exportCount, $batchCount);
             }
         }
 
