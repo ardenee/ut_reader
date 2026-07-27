@@ -77,6 +77,17 @@ final class PdoPackageAliasRepository implements PackageAliasRepository
             throw $exception;
         }
 
+        $aliasId = (int)$this->db->lastInsertId();
+        if ($aliasId > 0) {
+            try {
+                (new PdoPackageProviderRepository($this->db))->syncAlias($aliasId);
+            } catch (PDOException $exception) {
+                // The alias remains authoritative. Dependency resolution has an
+                // exact-table fallback and maintenance can reconcile the cache.
+                error_log('[UnrealDB package provider] alias_id=' . $aliasId . ' sync failed: ' . $exception->getMessage());
+            }
+        }
+
         return true;
     }
 }
