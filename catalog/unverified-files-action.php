@@ -490,7 +490,7 @@ try {
             'package_guid' => $guid,
         ];
         $statusLabel = match (strtolower((string)$result['status'])) {
-            'verified' => 'Verified',
+            'verified' => 'Imported',
             'duplicate' => 'Duplicate',
             'alias' => 'Alias added',
             default => ucfirst((string)$result['status']),
