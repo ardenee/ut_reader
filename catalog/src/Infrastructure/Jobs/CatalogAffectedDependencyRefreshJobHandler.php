@@ -11,6 +11,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 
 /** Rebuilds existing files affected by one newly available package. */
 final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
@@ -46,6 +47,8 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
 
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
 
+        $summaryWriter = new PdoDependencyPackageSummary($this->db);
+        $sourceSummary = $summaryWriter->rebuildFile($fileId);
         $gameId = (int)$file['game_id'];
         $packageName = (string)$file['package_name'];
         $affectedIds = CatalogAffectedDependencyRefreshService::findAffectedFileIds(
@@ -56,6 +59,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         );
         $total = count($affectedIds);
         $processed = 0;
+        $summaryRows = (int)$sourceSummary['summary_rows'];
         $failureCount = 0;
         $failures = [];
 
@@ -94,6 +98,8 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                     100,
                     'Refreshing affected file ' . $position . '/' . $total
                 );
+                $summary = $summaryWriter->rebuildFile($affectedFileId);
+                $summaryRows += (int)$summary['summary_rows'];
                 $processed++;
             } catch (JobCancellationRequested $error) {
                 throw $error;
@@ -121,6 +127,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                 'package_name' => $packageName,
                 'processed' => $processed,
                 'failures' => $failureCount,
+                'dependency_summary_rows' => $summaryRows,
             ]);
         }
 
@@ -132,6 +139,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'original_name' => (string)$file['original_name'],
             'affected_files' => $total,
             'processed_files' => $processed,
+            'dependency_summary_rows' => $summaryRows,
             'failure_count' => $failureCount,
             'failures' => $failures,
             'failures_truncated' => $failureCount > count($failures),
