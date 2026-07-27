@@ -41,7 +41,15 @@ catalog_scale_expect(
 );
 catalog_scale_expect(
     !str_contains($search, 'catalog_package_aliases_ensure($db);'),
-    'Read-only search still performs package-alias schema DDL checks.'
+    'Read-only search still performs package-alias schema checks.'
+);
+
+$aliasRepository = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/PdoPackageAliasRepository.php');
+catalog_scale_expect(is_string($aliasRepository), 'Package alias repository could not be read.');
+catalog_scale_expect(
+    !str_contains($aliasRepository, 'CREATE TABLE IF NOT EXISTS ue_file_package_aliases')
+        && str_contains($aliasRepository, 'Migration 202607180002 creates and verifies this table.'),
+    'Normal package-alias access still executes runtime schema DDL.'
 );
 
 $affected = file_get_contents(__DIR__ . '/../src/Application/Dependency/CatalogAffectedDependencyRefreshService.php');
