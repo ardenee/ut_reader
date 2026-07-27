@@ -51,7 +51,9 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             $this->db,
             $this->config,
             $fileId,
-            static fn(array $progress) => $context->heartbeatIfDue($progress),
+            static function (array $progress) use ($context): void {
+                $context->heartbeatIfDue($progress);
+            },
             0,
             90,
             'Refreshing file dependency links'
@@ -115,7 +117,9 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 $this->db,
                 $this->config,
                 $fileId,
-                static fn(array $progress) => $context->heartbeatIfDue($progress),
+                static function (array $progress) use ($context): void {
+                    $context->heartbeatIfDue($progress);
+                },
                 (int)floor(($index * 95) / max(1, $total)),
                 (int)floor(($position * 95) / max(1, $total)),
                 'Refreshing game dependency links ' . $position . '/' . $total . ' (' . (string)$file['package_name'] . ')'
