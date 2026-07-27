@@ -4,9 +4,17 @@
 
 ### Game file listing
 
-The file list selects the requested page of file IDs before calculating dependency summaries. For normal sorts, dependency aggregation is restricted to the visible page rather than every file matching the filter. Dependency-count sorting remains aggregate-first because the count is part of its sort order.
+The game file list uses context-bound keyset cursors rather than deep SQL offsets. Every sort tuple ends with the file ID, so equal package names, versions, sizes, compression flags and timestamps remain stable without skipped or duplicated rows.
 
-The list query selects only columns rendered by the page. Scanner notes, storage paths, hashes not displayed by the page, and other text columns are no longer transferred for every row.
+First and Last pages are fetched by reading the selected sort in its natural or fully reversed direction. Previous pages use the inverse cursor predicate and reverse the small returned page in PHP. Dependency sorting reads the compact package-summary table rather than grouping detailed dependency object rows.
+
+The list query selects only the requested page of file IDs before loading visible fields and dependency counts. Scanner notes, storage paths and other unrendered text columns are not transferred for every row.
+
+### Missing-file listing
+
+The main Files with missing dependencies table also uses keyset cursors. Its stable tuple is missing object count, missing package count, game, package, filename and file ID. The page continues to show exact total/page counts, but retrieving a later page no longer discards all earlier aggregate rows with `OFFSET`.
+
+Cursor tokens are HMAC-protected and bound to their active game, filters, page size and sort. Changing any of those values invalidates the old cursor and safely returns to the first page.
 
 ### Public and administrator search
 
@@ -65,16 +73,18 @@ Apply during a maintenance window with the worker stopped:
 3. `202607270003_search_documents.php`
 4. `202607270004_dependency_package_summaries.php`
 5. `202607270005_game_catalog_stats.php`
+6. `202607270006_keyset_pagination_indexes.php`
 
 The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
 
-The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. Large catalogues can require temporary InnoDB space and substantial disk I/O.
+The dependency-summary migration performs one grouped backfill from `ue_dependencies`. The game-statistics migration then aggregates the compact summaries and file table once per configured game. The keyset migration adds game-scoped composite indexes for each supported file sort. Large catalogues can require temporary InnoDB space and substantial disk I/O.
 
 ## Operational validation
 
 Collect `EXPLAIN` plans and duration samples for:
 
-- default and deeply paged game file lists;
+- first, middle, previous and last game-file cursor pages for every sort;
+- first, middle and last Files with missing dependencies cursor pages;
 - package, file-name, import-object and export-object searches within one game;
 - administrator all-game searches;
 - import of packages with small and very large N/I/E tables;
@@ -90,9 +100,9 @@ Record database statement counts as well as elapsed time. The batching change sh
 
 ## Next structural phases
 
-### 1. Keyset pagination
+### 1. Federation cursor pagination and summary conversion
 
-Replace deep `OFFSET` pagination on large file, dependency and search lists with stable keyset cursors based on the selected sort plus file ID. Keep exact total counts optional on public pages because full counts can be more expensive than retrieving the page itself.
+Convert parent/child inventory and request-generation lists from deep offsets and detailed dependency rows to package summaries plus stable cursors, while preserving parent-controlled base-game policy and request lifecycle semantics.
 
 ### 2. Chunked Examine views
 
@@ -102,15 +112,12 @@ Names, Imports and Exports pages should load bounded chunks rather than renderin
 
 Persist source path, size, modification time and a trusted quick fingerprint. Re-hash a source file only when those signals change, while retaining full MD5/SHA verification before accepting a new catalogue identity.
 
-### 4. Federation summary conversion
-
-Convert remaining federation inventory/request queries that still inspect detailed dependency rows to package summaries while preserving parent-controlled base-game policy and request lifecycle semantics.
-
 ## Scale limits that remain
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
-- Exact counts and dependency-count sorting can still require broad aggregation.
-- Some federation inventory/request pages still use detailed dependency rows until their base-game-policy queries are converted in a separate pass.
+- Exact total counts are still calculated for page-number display; cursor retrieval itself no longer grows with the requested page depth.
+- Selected-package object drill-down on Missing Files still reads authoritative detailed rows and should be chunked with the Examine phase.
+- Federation inventory/request pages still use offsets and some detailed dependency queries until their dedicated conversion pass.
 - Direct maintenance operations that rewrite package identity should enqueue a search-index reconciliation in a later maintenance-hook pass.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
