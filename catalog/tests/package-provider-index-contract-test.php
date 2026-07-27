@@ -39,9 +39,9 @@ package_provider_expect(
 );
 package_provider_expect(
     str_contains($resolver, '(p.source_kind="primary") DESC')
-        && str_contains($resolver, 'requestedValueMap(')
-        && str_contains($resolver, 'normalizeLookup('),
-    'Provider precedence or case-insensitive lookup-key preservation is missing.'
+        && str_contains($resolver, '$packageMatches[self::normalizeLookup($rootPackage)]')
+        && str_contains($resolver, '$exportMatches[self::normalizeLookup($fullPath)]'),
+    'Provider precedence or case-insensitive lookup-key normalization is missing.'
 );
 
 fwrite(STDOUT, "Package provider index contract tests passed.\n");
