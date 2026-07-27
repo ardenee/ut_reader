@@ -16,6 +16,12 @@ The main Files with missing dependencies table also uses keyset cursors. Its sta
 
 Cursor tokens are HMAC-protected and bound to their active game, filters, page size and sort. Changing any of those values invalidates the old cursor and safely returns to the first page.
 
+### Missing-object drill-down
+
+The Missing Files package-object, file-object and requiring-file drill-downs read bounded 200-row pages. Package-object tuples end in dependency ID after game, requiring package/file identity and object path; file-object tuples end in dependency ID after required package and object path. Requiring-file tuples end in file ID after missing count, game and filename identity.
+
+Each drill-down retains an exact total and First/Previous/Next/Last navigation. Its signed cursor context includes the selected package or file, detail mode, page size and dependency-summary availability, so a cursor cannot be replayed against another package or tab. Detailed object rows remain authoritative in `ue_dependencies`; the requiring-file view uses `ue_dependency_package_summaries` when available and retains a grouped fallback while migrations are pending.
+
 ### Public and administrator search
 
 Public broad search requires one selected game. Logged-in administrators may still search all games when maintenance or cross-game investigation requires it.
@@ -98,13 +104,9 @@ Status, peer, event and base-game visibility filters form part of each cursor co
 
 ### Maintenance projection reconciliation
 
-Direct changes to package identity, aliases, GUIDs, verification state or game contents enqueue one durable `catalog.reconcile_catalog_projections` job carrying the old and current game/package context. This covers alias creation, duplicate retirement, UE4/UE5 source-identity repair, legacy package normalization, zero-GUID repair, file re-import/removal and game reset.
+Direct writes that change package identity, aliases, verification state, GUIDs or game contents enqueue `catalog.reconcile_catalog_projections`. The job carries old and new game/package context so it can remove stale provider, search and dependency-summary rows even after an authoritative file row has been deleted or replaced.
 
-The reconciliation worker rebuilds or removes package-provider rows, search documents and the changed file's dependency summary. It then refreshes verified files that depend on any old or new package name and rebuilds cached game statistics. Deleted files are supported because the queue payload retains the context that is no longer available from `ue_files`.
-
-Projection reconciliation shares the single-concurrency dependency-heavy worker class and acquires the existing catalog-maintenance advisory lock. It therefore runs only after the direct write and alias restoration are complete and does not overlap another dependency-heavy repair. Completed jobs release their dedupe key so a later change to the same file can queue another reconciliation.
-
-Normal search-index jobs now reconcile all primary and alias provider rows as well, repairing provider drift during ordinary imports without requiring a separate maintenance action.
+The worker shares the exclusive dependency-heavy resource class and acquires the catalogue-maintenance advisory lock before reading identity state. It reconciles package providers, search documents and the changed file's dependency summary, rebuilds dependency owners referring to old or new package names, and refreshes cached game counters. Duplicate retirement, alias creation, source-identity repair, legacy package normalization, zero-GUID repair, file re-import/removal and game reset all use the same queue.
 
 ### Upload progress
 
@@ -123,6 +125,7 @@ Apply during a maintenance window with the worker stopped:
 7. `202607270007_federation_summary_pagination.php`
 8. `202607270008_source_file_fingerprints.php`
 9. `202607270009_federation_history_pagination.php`
+10. `202607270010_missing_object_pagination.php`
 
 The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill.
 
@@ -132,7 +135,9 @@ Migration `202607270008` creates an empty source-fingerprint cache. It does not 
 
 Migration `202607270009` adds only secondary request, request-item, transfer and log indexes matching the new `(created_at, id)` history cursors. It performs no application-level data backfill or backup; MySQL may use its normal temporary space while creating the indexes.
 
-The chunked package-examination and maintenance-reconciliation phases require no schema migration.
+Migration `202607270010` adds only dependency indexes for package- and file-scoped missing-object cursors. It performs no data backfill or application-level backup.
+
+The chunked package-examination phase requires no schema migration because the existing unique `(file_id, name/import/export index)` keys already support bounded range reads.
 
 ## Operational validation
 
@@ -140,6 +145,7 @@ Collect `EXPLAIN` plans and duration samples for:
 
 - first, middle, previous and last game-file cursor pages for every sort;
 - first, middle and last Files with missing dependencies cursor pages;
+- first, middle, previous and last package-object, file-object and requiring-file drill-down pages;
 - first, middle, previous and last Parent/Child federation inventory cursor pages;
 - Child request generation with the base-game policy enabled and disabled;
 - newest, older, newer and oldest Parent/Child request history pages;
@@ -152,12 +158,6 @@ Collect `EXPLAIN` plans and duration samples for:
 - unchanged redirect archives, confirming the second scan avoids decompression;
 - a same-size/same-timestamp source file changed inside a sampled region;
 - a cached file whose matched catalogue row was retired or deleted;
-- alias creation followed by package search and missing-dependency checks;
-- duplicate retirement followed by search, provider and cached-count checks;
-- legacy and UE4/UE5 identity repair using both old and new package names;
-- zero-GUID repair where dependencies previously matched by another identity;
-- file re-import/removal after preserved aliases are restored;
-- game reset, confirming cached counts return to zero after optimisation;
 - package, file-name, import-object and export-object searches within one game;
 - administrator all-game searches;
 - import of packages with small and very large N/I/E tables;
@@ -166,29 +166,25 @@ Collect `EXPLAIN` plans and duration samples for:
 - search-index jobs for files with small and very large parser tables;
 - Missing Files totals and package/file lists;
 - Dashboard, Games and Library page loads before and after cache warm-up;
+- alias creation for a package with many dependent files;
 - full-game dependency rebuilds.
 
 Record database statement counts as well as elapsed time. The batching change should reduce parser-table and dependency insert statements approximately from one per row to one per 250 rows. Import response time should no longer include rebuilding existing affected files or rebuilding search documents.
 
 ## Next structural phases
 
-### 1. Bounded missing-object drill-down
-
-The selected-package object detail on Missing Files should use bounded pages rather than reading every authoritative dependency object row at once.
-
-### 2. Remaining specialist diagnostics
+### 1. Remaining specialist diagnostics
 
 Identity-conflict drill-down and any background-job event views that telemetry shows growing beyond a normal page should adopt the shared cursor helper without changing their remediation actions.
 
-### 3. Reconciliation observability
+### 2. Exact-count telemetry
 
-Expose projection-reconciliation counts and failures in maintenance diagnostics if operational telemetry shows that administrators need a dedicated view beyond the existing background-job details.
+Cursor retrieval is bounded, but exact totals remain intentionally available for page-number displays. Measure count-query cost on production-scale catalogues before considering approximate or asynchronously cached totals.
 
 ## Scale limits that remain
 
 - Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact total counts are still calculated for page-number display; cursor retrieval itself no longer grows with the requested page depth.
-- Selected-package object drill-down on Missing Files still reads authoritative detailed rows until its dedicated bounded pass.
 - Identity-conflict diagnostics remain capped while their join cardinality and remediation workflow are measured.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
-- The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
+- The authoritative raw Names/Imports/Exports and dependency tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
