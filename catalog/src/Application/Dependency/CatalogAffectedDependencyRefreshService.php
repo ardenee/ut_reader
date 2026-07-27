@@ -28,17 +28,19 @@ final class CatalogAffectedDependencyRefreshService
     {
         self::syncProvider($db, $newFileId);
 
-        if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
-            return [];
-        }
-
         $activeRefresh = self::isActiveRefreshJob($db, $newFileId);
         if (!$activeRefresh) {
             $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $newFileId);
             if ($searchJobId > 0) {
                 $GLOBALS['catalog_search_index_job_id'] = $searchJobId;
             }
+        }
 
+        if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
+            return [];
+        }
+
+        if (!$activeRefresh) {
             if (!self::hasAffectedFiles($db, $gameId, $newFileId, $packageName)) {
                 return [];
             }
