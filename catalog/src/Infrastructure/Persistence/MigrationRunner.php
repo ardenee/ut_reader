@@ -11,11 +11,19 @@ final class MigrationRunner
 {
     private const TABLE = 'ue_schema_migrations';
 
+    /** @var array<string,callable(PDO,SchemaInspector,array<string,mixed>):void> */
+    private array $executionOverrides;
+
+    /**
+     * @param array<string,callable(PDO,SchemaInspector,array<string,mixed>):void> $executionOverrides
+     */
     public function __construct(
         private readonly PDO $db,
         private readonly string $migrationDirectory,
-        private readonly int $lockTimeoutSeconds = 30
+        private readonly int $lockTimeoutSeconds = 30,
+        array $executionOverrides = []
     ) {
+        $this->executionOverrides = $executionOverrides;
     }
 
     /** @return list<array{version:string,name:string,description:string,checksum:string,path:string,up:callable}> */
@@ -164,7 +172,12 @@ final class MigrationRunner
 
                 $started = hrtime(true);
                 try {
-                    ($migration['up'])($this->db, $inspector);
+                    $override = $this->executionOverrides[$migration['version']] ?? null;
+                    if (is_callable($override)) {
+                        $override($this->db, $inspector, $migration);
+                    } else {
+                        ($migration['up'])($this->db, $inspector);
+                    }
                 } catch (Throwable $error) {
                     throw new RuntimeException(
                         'Migration ' . $migration['version'] . ' failed: ' . $error->getMessage(),
