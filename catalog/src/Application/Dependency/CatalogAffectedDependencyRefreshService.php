@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Application\Dependency;
 
 use PDO;
+use PDOException;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
 /**
  * Finds dependency owners whose exact package/object resolution can change after
@@ -17,6 +19,14 @@ final class CatalogAffectedDependencyRefreshService
      */
     public static function findAffectedFileIds(PDO $db, int $gameId, int $newFileId, string $packageName): array
     {
+        try {
+            (new PdoPackageProviderRepository($db))->syncFile($newFileId);
+        } catch (PDOException $exception) {
+            // The authoritative ue_files row remains valid. The resolver keeps an
+            // exact fallback and maintenance can reconcile the provider cache.
+            error_log('[UnrealDB package provider] file_id=' . $newFileId . ' sync failed: ' . $exception->getMessage());
+        }
+
         if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
             return [];
         }
