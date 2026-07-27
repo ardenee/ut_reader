@@ -37,17 +37,25 @@ final class CatalogDependencyResolver
 
             $rootPackage = trim((string)($import['root_package'] ?? ''));
             if ($rootPackage !== '') {
-                $packageNames[$rootPackage] = true;
+                $packageKey = self::normalizeLookup($rootPackage);
+                if ($packageKey !== '' && !isset($packageNames[$packageKey])) {
+                    // Keep the authoritative string as the value. Numeric-looking
+                    // package names become integer array keys in PHP otherwise.
+                    $packageNames[$packageKey] = $rootPackage;
+                }
             }
 
             $relativeObjectPath = trim((string)($import['relative_object_path'] ?? ''));
             $fullPath = trim((string)($import['full_path'] ?? ''));
             if ($rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
-                $objectLookups[$fullPath] = [
-                    'lookup_value' => $fullPath,
-                    'package_name' => $rootPackage,
-                    'local_path' => $relativeObjectPath,
-                ];
+                $lookupKey = self::normalizeLookup($fullPath);
+                if ($lookupKey !== '' && !isset($objectLookups[$lookupKey])) {
+                    $objectLookups[$lookupKey] = [
+                        'lookup_value' => $fullPath,
+                        'package_name' => $rootPackage,
+                        'local_path' => $relativeObjectPath,
+                    ];
+                }
             }
         }
 
@@ -55,7 +63,7 @@ final class CatalogDependencyResolver
             $db,
             $gameId,
             $fileId,
-            array_keys($packageNames)
+            array_values($packageNames)
         );
         $exportMatches = self::loadExportMatches(
             $db,
@@ -236,7 +244,7 @@ final class CatalogDependencyResolver
     }
 
     /**
-     * @param list<string> $values
+     * @param list<string|int> $values
      * @param array<string,mixed> $matches
      * @return list<string>
      */
@@ -244,8 +252,9 @@ final class CatalogDependencyResolver
     {
         $missing = [];
         foreach ($values as $value) {
-            if (!isset($matches[self::normalizeLookup($value)])) {
-                $missing[] = $value;
+            $stringValue = (string)$value;
+            if (!isset($matches[self::normalizeLookup($stringValue)])) {
+                $missing[] = $stringValue;
             }
         }
         return $missing;
@@ -332,9 +341,9 @@ final class CatalogDependencyResolver
         }
     }
 
-    private static function normalizeLookup(string $value): string
+    private static function normalizeLookup(string|int $value): string
     {
-        return mb_strtolower($value, 'UTF-8');
+        return mb_strtolower((string)$value, 'UTF-8');
     }
 
     private static function placeholders(int $count): string
