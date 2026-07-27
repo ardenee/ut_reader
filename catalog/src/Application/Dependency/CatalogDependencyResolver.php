@@ -6,22 +6,17 @@ namespace UnrealDb\Catalog\Application\Dependency;
 use PDO;
 
 /**
- * Resolves one file's import table against the catalog in batches.
+ * Resolves one file's import table against the catalogue in bounded batches.
  *
- * This deliberately follows the loader/linker identity model used by Unreal:
- * an import is resolved by its serialized package/object identity. The resolver
- * therefore uses exact package-name matches and exact full object-path matches
- * only, including mounted source identities preserved as verified package
- * aliases. It does not use AssetRegistry rows, byte-scan soft reference
- * candidates, same-folder/same-object guesses, or inferred package/object-name
- * variants.
- *
- * Known redirectors should only affect resolution after their serialized target
- * can be parsed and represented explicitly; they are not guessed here.
+ * Resolution follows Unreal's serialized package/object identity model. Package
+ * providers are read from the materialized ue_package_providers table, which
+ * combines verified primary package names and aliases into one indexed lookup.
+ * Object resolution remains exact against serialized export paths.
  */
 final class CatalogDependencyResolver
 {
     private const MAX_VALUES_PER_QUERY = 500;
+    private const MAX_OBJECT_PAIRS_PER_QUERY = 250;
 
     /**
      * @param list<array<string, mixed>> $imports
@@ -29,10 +24,6 @@ final class CatalogDependencyResolver
      */
     public static function resolve(PDO $db, int $gameId, int $fileId, array $imports): array
     {
-        if (\function_exists('catalog_package_aliases_ensure')) {
-            \catalog_package_aliases_ensure($db);
-        }
-
         $packageNames = [];
         $objectLookups = [];
 
@@ -41,21 +32,19 @@ final class CatalogDependencyResolver
                 continue;
             }
 
-            $rootPackage = (string)($import['root_package'] ?? '');
+            $rootPackage = trim((string)($import['root_package'] ?? ''));
             if ($rootPackage !== '') {
-                $packageNames[] = $rootPackage;
+                $packageNames[$rootPackage] = true;
             }
 
-            $relativeObjectPath = (string)($import['relative_object_path'] ?? '');
-            if ($relativeObjectPath !== '') {
-                $fullPath = (string)($import['full_path'] ?? '');
-                if ($fullPath !== '' && $rootPackage !== '') {
-                    $objectLookups[$fullPath] = [
-                        'lookup_value' => $fullPath,
-                        'package_name' => $rootPackage,
-                        'local_path' => $relativeObjectPath,
-                    ];
-                }
+            $relativeObjectPath = trim((string)($import['relative_object_path'] ?? ''));
+            $fullPath = trim((string)($import['full_path'] ?? ''));
+            if ($rootPackage !== '' && $relativeObjectPath !== '' && $fullPath !== '') {
+                $objectLookups[$fullPath] = [
+                    'lookup_value' => $fullPath,
+                    'package_name' => $rootPackage,
+                    'local_path' => $relativeObjectPath,
+                ];
             }
         }
 
@@ -63,7 +52,7 @@ final class CatalogDependencyResolver
             $db,
             $gameId,
             $fileId,
-            array_values(array_unique($packageNames, SORT_STRING))
+            array_keys($packageNames)
         );
         $exportMatches = self::loadExportMatches(
             $db,
@@ -74,7 +63,11 @@ final class CatalogDependencyResolver
 
         $resolved = [];
         foreach ($imports as $import) {
-            $importId = (int)$import['id'];
+            $importId = (int)($import['id'] ?? 0);
+            if ($importId < 1) {
+                continue;
+            }
+
             $rootPackage = (string)($import['root_package'] ?? '');
             $fullPath = (string)($import['full_path'] ?? '');
             $isObjectImport = (string)($import['relative_object_path'] ?? '') !== '';
@@ -96,7 +89,7 @@ final class CatalogDependencyResolver
                         'resolved_file_id' => $packageMatch['file_id'],
                         'resolved_export_id' => null,
                         'source' => $packageMatch['source'],
-                        'confidence' => $packageMatch['confidence'],
+                        'confidence' => 'exact',
                     ];
                 }
             } else {
@@ -107,7 +100,7 @@ final class CatalogDependencyResolver
                         'resolved_file_id' => $exportMatch['file_id'],
                         'resolved_export_id' => $exportMatch['export_id'],
                         'source' => $exportMatch['source'],
-                        'confidence' => $exportMatch['confidence'],
+                        'confidence' => 'exact',
                     ];
                 }
             }
@@ -143,7 +136,7 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<string> $packageNames
-     * @return array<string, array{file_id:int, source:string, confidence:string}>
+     * @return array<string, array{file_id:int, source:string}>
      */
     private static function loadPackageMatches(PDO $db, int $gameId, int $fileId, array $packageNames): array
     {
@@ -153,46 +146,30 @@ final class CatalogDependencyResolver
                 continue;
             }
 
-            [$valuesSql, $valueArgs] = self::valuesTableSql($chunk);
+            $placeholders = self::placeholders(count($chunk));
             $rows = \catalog_all(
                 $db,
-                'SELECT requested.lookup_value, f.id'
-                . ' FROM (' . $valuesSql . ') requested'
-                . ' JOIN ue_files f ON f.game_id=? AND f.package_name=requested.lookup_value AND f.scan_status="verified"'
-                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, f.uploaded_at DESC',
-                array_merge($valueArgs, [$gameId, $fileId])
+                'SELECT p.package_name lookup_value,p.file_id,p.source_kind'
+                . ' FROM ue_package_providers p'
+                . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
+                . ' WHERE p.game_id=? AND f.scan_status="verified"'
+                . ' AND p.package_name IN (' . $placeholders . ')'
+                . ' ORDER BY p.package_name,(p.file_id=?) DESC,p.provider_created_at DESC,'
+                . ' (p.source_kind="primary") DESC,p.source_id ASC',
+                array_merge([$gameId], $chunk, [$fileId])
             );
 
             foreach ($rows as $row) {
                 $lookupValue = (string)$row['lookup_value'];
-                if (!isset($matches[$lookupValue])) {
-                    $matches[$lookupValue] = [
-                        'file_id' => (int)$row['id'],
-                        'source' => 'exact_package',
-                        'confidence' => 'exact',
-                    ];
+                if ($lookupValue === '' || isset($matches[$lookupValue])) {
+                    continue;
                 }
-            }
-
-            $aliasRows = \catalog_all(
-                $db,
-                'SELECT requested.lookup_value, f.id'
-                . ' FROM (' . $valuesSql . ') requested'
-                . ' JOIN ue_file_package_aliases a ON a.game_id=? AND a.package_name=requested.lookup_value'
-                . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id AND f.scan_status="verified"'
-                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, f.uploaded_at DESC, a.id ASC',
-                array_merge($valueArgs, [$gameId, $fileId])
-            );
-
-            foreach ($aliasRows as $row) {
-                $lookupValue = (string)$row['lookup_value'];
-                if (!isset($matches[$lookupValue])) {
-                    $matches[$lookupValue] = [
-                        'file_id' => (int)$row['id'],
-                        'source' => 'exact_package_alias',
-                        'confidence' => 'exact',
-                    ];
-                }
+                $matches[$lookupValue] = [
+                    'file_id' => (int)$row['file_id'],
+                    'source' => (string)$row['source_kind'] === 'alias'
+                        ? 'exact_package_alias'
+                        : 'exact_package',
+                ];
             }
         }
 
@@ -201,7 +178,7 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<array{lookup_value:string, package_name:string, local_path:string}> $objectLookups
-     * @return array<string, array{file_id:int, export_id:int, source:string, confidence:string}>
+     * @return array<string, array{file_id:int, export_id:int, source:string}>
      */
     private static function loadExportMatches(PDO $db, int $gameId, int $fileId, array $objectLookups): array
     {
@@ -211,87 +188,77 @@ final class CatalogDependencyResolver
                 continue;
             }
 
-            [$valuesSql, $valueArgs] = self::objectValuesTableSql($chunk);
+            $fullPaths = array_values(array_map(
+                static fn(array $lookup): string => $lookup['lookup_value'],
+                $chunk
+            ));
             $rows = \catalog_all(
                 $db,
-                'SELECT requested.lookup_value, e.id export_id, f.id file_id'
-                . ' FROM (' . $valuesSql . ') requested'
-                . ' JOIN ue_exports e ON e.full_path=requested.lookup_value'
-                . ' JOIN ue_files f ON f.id=e.file_id AND f.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, f.uploaded_at DESC, e.export_index ASC',
-                array_merge($valueArgs, [$gameId, $fileId])
+                'SELECT e.full_path lookup_value,e.id export_id,f.id file_id'
+                . ' FROM ue_exports e'
+                . ' JOIN ue_files f ON f.id=e.file_id'
+                . ' WHERE f.game_id=? AND f.scan_status="verified"'
+                . ' AND e.full_path IN (' . self::placeholders(count($fullPaths)) . ')'
+                . ' ORDER BY e.full_path,(f.id=?) DESC,f.uploaded_at DESC,e.export_index ASC',
+                array_merge([$gameId], $fullPaths, [$fileId])
             );
+            self::collectExportMatches($rows, 'exact_object', $matches);
+        }
 
-            foreach ($rows as $row) {
-                $lookupValue = (string)$row['lookup_value'];
-                if (!isset($matches[$lookupValue])) {
-                    $matches[$lookupValue] = [
-                        'file_id' => (int)$row['file_id'],
-                        'export_id' => (int)$row['export_id'],
-                        'source' => 'exact_object',
-                        'confidence' => 'exact',
-                    ];
-                }
+        foreach (array_chunk($objectLookups, self::MAX_OBJECT_PAIRS_PER_QUERY) as $chunk) {
+            if ($chunk === []) {
+                continue;
             }
 
-            $aliasRows = \catalog_all(
+            $pairSql = [];
+            $args = [$gameId];
+            foreach ($chunk as $lookup) {
+                $pairSql[] = '(a.package_name=? AND e.local_path=?)';
+                $args[] = $lookup['package_name'];
+                $args[] = $lookup['local_path'];
+            }
+            $args[] = $fileId;
+
+            $rows = \catalog_all(
                 $db,
-                'SELECT requested.lookup_value, e.id export_id, f.id file_id'
-                . ' FROM (' . $valuesSql . ') requested'
-                . ' JOIN ue_file_package_aliases a ON a.game_id=? AND a.package_name=requested.package_name'
-                . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id AND f.scan_status="verified"'
-                . ' JOIN ue_exports e ON e.file_id=f.id AND e.local_path=requested.local_path'
-                . ' ORDER BY requested.lookup_value, (f.id=?) DESC, f.uploaded_at DESC, e.export_index ASC, a.id ASC',
-                array_merge($valueArgs, [$gameId, $fileId])
+                'SELECT CONCAT(a.package_name,".",e.local_path) lookup_value,'
+                . ' e.id export_id,f.id file_id'
+                . ' FROM ue_file_package_aliases a'
+                . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
+                . ' JOIN ue_exports e ON e.file_id=f.id'
+                . ' WHERE a.game_id=? AND f.scan_status="verified" AND ('
+                . implode(' OR ', $pairSql) . ')'
+                . ' ORDER BY lookup_value,(f.id=?) DESC,f.uploaded_at DESC,'
+                . ' e.export_index ASC,a.id ASC',
+                $args
             );
-
-            foreach ($aliasRows as $row) {
-                $lookupValue = (string)$row['lookup_value'];
-                if (!isset($matches[$lookupValue])) {
-                    $matches[$lookupValue] = [
-                        'file_id' => (int)$row['file_id'],
-                        'export_id' => (int)$row['export_id'],
-                        'source' => 'exact_object_alias',
-                        'confidence' => 'exact',
-                    ];
-                }
-            }
+            self::collectExportMatches($rows, 'exact_object_alias', $matches);
         }
 
         return $matches;
     }
 
     /**
-     * @param list<string> $values
-     * @return array{0:string,1:list<string>}
+     * @param list<array<string,mixed>> $rows
+     * @param array<string, array{file_id:int, export_id:int, source:string}> $matches
      */
-    private static function valuesTableSql(array $values): array
+    private static function collectExportMatches(array $rows, string $source, array &$matches): void
     {
-        $parts = [];
-        foreach ($values as $index => $value) {
-            $parts[] = $index === 0 ? 'SELECT ? AS lookup_value' : 'SELECT ?';
+        foreach ($rows as $row) {
+            $lookupValue = (string)($row['lookup_value'] ?? '');
+            if ($lookupValue === '' || isset($matches[$lookupValue])) {
+                continue;
+            }
+            $matches[$lookupValue] = [
+                'file_id' => (int)$row['file_id'],
+                'export_id' => (int)$row['export_id'],
+                'source' => $source,
+            ];
         }
-
-        return [implode(' UNION ALL ', $parts), $values];
     }
 
-    /**
-     * @param list<array{lookup_value:string, package_name:string, local_path:string}> $values
-     * @return array{0:string,1:list<string>}
-     */
-    private static function objectValuesTableSql(array $values): array
+    private static function placeholders(int $count): string
     {
-        $parts = [];
-        $args = [];
-        foreach ($values as $index => $value) {
-            $parts[] = $index === 0
-                ? 'SELECT ? AS lookup_value, ? AS package_name, ? AS local_path'
-                : 'SELECT ?, ?, ?';
-            $args[] = $value['lookup_value'];
-            $args[] = $value['package_name'];
-            $args[] = $value['local_path'];
-        }
-
-        return [implode(' UNION ALL ', $parts), $args];
+        return implode(',', array_fill(0, max(1, $count), '?'));
     }
 }
