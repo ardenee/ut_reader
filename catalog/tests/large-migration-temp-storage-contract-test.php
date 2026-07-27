@@ -57,8 +57,10 @@ large_migration_expect(is_string($indexCli), 'Search-document index CLI could no
 large_migration_expect(
     str_contains($indexCli, '@@global.tmpdir')
         && str_contains($indexCli, '@@global.innodb_tmpdir')
-        && str_contains($indexCli, 'Refusing to build large search indexes'),
-    'Search-document index builds are not guarded against system-drive temporary storage.'
+        && str_contains($indexCli, 'informational only')
+        && !str_contains($indexCli, 'Refusing to build large search indexes')
+        && !str_contains($indexCli, '--allow-system-temp'),
+    'Search-document index builds must use the configured MySQL paths without forcing storage relocation.'
 );
 
 fwrite(STDOUT, "Large migration temp-storage contract tests passed.\n");
