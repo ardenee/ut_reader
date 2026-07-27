@@ -12,9 +12,13 @@ The list query selects only columns rendered by the page. Scanner notes, storage
 
 Public broad search requires one selected game. Logged-in administrators may still search all games when maintenance or cross-game investigation requires it.
 
-Search executes cheaper identity and prefix stages first and stops launching later stages once the result limit is satisfied. Game-scoped import/export searches are driven from verified files in the selected game. Final hydration selects only the columns rendered by the result page.
+Exact GUID, MD5 and SHA1 searches remain direct indexed lookups. Package, alias and filename prefixes also remain direct B-tree lookups so common searches finish without entering the broad-search stages.
 
-Exact GUID, MD5 and SHA1 queries remain direct indexed lookups. Leading-wildcard object/path queries remain bounded but still require scans until the dedicated search-document phase is implemented.
+`ue_search_documents` stores one compact row per verified file, alias, import or export. Each row has a primary and secondary searchable value, so object names and full paths remain distinguishable without storing two document rows for every parser row. Alias-export combinations are deliberately not materialized because multiplying every alias by every export would create unbounded index growth.
+
+Broad search uses the search-document FULLTEXT index first. If FULLTEXT does not provide enough candidates, the fallback scans only the selected game's compact search documents rather than joining and wildcard-scanning the raw Imports and Exports tables. Exact alias export paths use a targeted alias-package plus local-export-path query.
+
+Search documents are rebuilt after imports and alias creation by deduplicated single-concurrency background jobs. The migration backfills all existing verified files. Final result hydration still reads only the columns rendered by the page.
 
 ### Upload/import writes
 
@@ -42,8 +46,9 @@ Apply during a maintenance window with the worker stopped:
 
 1. `202607270001_catalog_scale_indexes.php`
 2. `202607270002_package_provider_index.php`
+3. `202607270003_search_documents.php`
 
-The package-provider migration backfills the materialized lookup. Index creation and backfill can generate substantial disk I/O on a large existing database. No additional migration is required for asynchronous affected dependency refresh.
+The search-document migration performs a one-time server-side backfill from verified files, aliases, Imports and Exports. It creates secondary and FULLTEXT indexes only after the data copy, avoiding row-by-row index maintenance during the backfill. Large catalogues require temporary InnoDB space and substantial disk I/O.
 
 ## Operational validation
 
@@ -55,45 +60,41 @@ Collect `EXPLAIN` plans and duration samples for:
 - import of packages with small and very large N/I/E tables;
 - import of a package that resolves existing missing dependencies;
 - affected dependency refresh jobs with zero, few, and many dependent files;
+- search-index jobs for files with small and very large parser tables;
 - alias creation for a package with many dependent files;
 - full-game dependency rebuilds.
 
-Record database statement counts as well as elapsed time. The batching change should reduce parser-table and dependency insert statements approximately from one per row to one per 250 rows. Import response time should no longer include rebuilding existing affected files.
+Record database statement counts as well as elapsed time. The batching change should reduce parser-table and dependency insert statements approximately from one per row to one per 250 rows. Import response time should no longer include rebuilding existing affected files or rebuilding search documents.
 
 ## Next structural phases
 
-### 1. Dedicated search documents
-
-Create a game-scoped search-document table maintained asynchronously from file, alias, import and export changes. Use FULLTEXT where supported, with a deterministic fallback index for MariaDB/MySQL variants. Public search should query this table rather than raw parser tables.
-
-Do not add triggers for every import/export object row: that would move search cost back into the import transaction. Search documents should be built by jobs after import.
-
-### 2. Dependency package summaries
+### 1. Dependency package summaries
 
 Add one summary row per requiring file and required package, including import count and resolved/missing counts. Missing-package pages, federation requirement generation and affected-file discovery can then query summaries instead of the full dependency row set.
 
 The detailed `ue_dependencies` rows remain the source of truth for object-level inspection.
 
-### 3. Cached game counters
+### 2. Cached game counters
 
 Maintain file count, storage size, unresolved dependency count and parser-row totals per game. Dashboard and home pages should read the cache. Reconciliation jobs should periodically compare cached totals with authoritative tables.
 
-### 4. Keyset pagination
+### 3. Keyset pagination
 
 Replace deep `OFFSET` pagination on large file, dependency and search lists with stable keyset cursors based on the selected sort plus file ID. Keep exact total counts optional on public pages because full counts can be more expensive than retrieving the page itself.
 
-### 5. Chunked Examine views
+### 4. Chunked Examine views
 
 Names, Imports and Exports pages should load bounded chunks rather than rendering every parser row. Provide downloadable JSON/CSV exports for full-table inspection.
 
-### 6. Source fingerprint cache
+### 5. Source fingerprint cache
 
 Persist source path, size, modification time and a trusted quick fingerprint. Re-hash a source file only when those signals change, while retaining full MD5/SHA verification before accepting a new catalogue identity.
 
 ## Scale limits that remain
 
-- Administrator all-game wildcard search remains intentionally more expensive than public game-scoped search.
+- Administrator all-game wildcard fallback search remains intentionally more expensive than public game-scoped search.
 - Exact counts and dependency-count sorting can still require broad aggregation.
 - Alias-created affected dependency refreshes still use their existing synchronous package refresh path and should move to a package-keyed durable job in a later pass.
+- Direct maintenance operations that rewrite package identity should enqueue a search-index reconciliation in a later maintenance-hook pass.
 - Large migrations and index builds require free disk space for temporary InnoDB structures.
 - The authoritative raw Names/Imports/Exports tables will continue to grow; archive or partition strategies should only be introduced after query telemetry shows a concrete need.
