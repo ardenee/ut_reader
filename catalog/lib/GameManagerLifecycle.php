@@ -233,7 +233,10 @@ function gm_lifecycle_cleanup_game(
 function gm_lifecycle_reset_game(PDO $db, array $config, int $gameId, ?callable $progress = null): array
 {
     $result = gm_lifecycle_cleanup_game($db, $config, $gameId, $progress, 1, 76);
-    gm_emit($progress, 'reconcile', 0, 1, 78, 'Queueing zero-state catalogue projection reconciliation…');
+    $optimise = gm_lifecycle_optimise_tables($db, gm_lifecycle_optimise_table_list(false), $progress, 78, 96);
+    $result['optimised_tables'] = $optimise['optimised'];
+    $result['optimise_failures'] = $optimise['failed'];
+    gm_emit($progress, 'reconcile', 0, 1, 98, 'Queueing zero-state catalogue projection reconciliation…');
     $result['reconciliation_job_id'] = \UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue::enqueue(
         $db,
         0,
@@ -241,10 +244,7 @@ function gm_lifecycle_reset_game(PDO $db, array $config, int $gameId, ?callable 
         [],
         $config
     );
-    $optimise = gm_lifecycle_optimise_tables($db, gm_lifecycle_optimise_table_list(false), $progress, 80, 99);
-    $result['optimised_tables'] = $optimise['optimised'];
-    $result['optimise_failures'] = $optimise['failed'];
-    gm_emit($progress, 'done', 1, 1, 100, 'Game reset, projection reconciliation and database optimisation complete.');
+    gm_emit($progress, 'done', 1, 1, 100, 'Game reset, database optimisation and projection reconciliation complete.');
     return $result;
 }
 
