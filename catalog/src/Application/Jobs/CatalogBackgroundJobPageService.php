@@ -35,6 +35,24 @@ final class CatalogBackgroundJobPageService
         $reverse = $move === 'previous' || $move === 'last';
         $conditions = trim($whereSql);
         $args = $params;
+
+        // A reversed LIMIT normally returns a full final window. When the total
+        // is not divisible by the selected page size that would overlap the
+        // preceding page. Count only for an explicit Last request and reduce
+        // the read to the exact remainder.
+        if ($move === 'last') {
+            $countSql = 'SELECT COUNT(*) FROM (' . $selectSql
+                . ($conditions !== '' ? ' WHERE ' . $conditions : '')
+                . ') background_job_cursor_count';
+            $count = $db->prepare($countSql);
+            $count->execute($args);
+            $total = (int)$count->fetchColumn();
+            $remainder = $total % $limit;
+            if ($remainder > 0) {
+                $limit = $remainder;
+            }
+        }
+
         if ($cursor !== null && ($move === 'next' || $move === 'previous')) {
             $comparison = CatalogKeysetPaginator::comparison(['j.id'], ['DESC'], $cursor, $move === 'next');
             $conditions = $conditions === '' ? $comparison['sql'] : '(' . $conditions . ') AND ' . $comparison['sql'];
