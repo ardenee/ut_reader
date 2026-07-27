@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 20;
+$expectedMigrations = 21;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -77,6 +77,18 @@ foreach ([
     'idx_ue_files_game_uploaded_cursor',
 ] as $index) {
     migration_test_expect($schema->indexExists('ue_files', $index), 'Keyset pagination index is missing: ' . $index);
+}
+foreach ([
+    ['ue_federation_requests', 'idx_ue_federation_requests_history'],
+    ['ue_federation_requests', 'idx_ue_federation_requests_peer_history'],
+    ['ue_federation_request_items', 'idx_ue_federation_request_items_history'],
+    ['ue_federation_transfer_jobs', 'idx_ue_federation_transfer_history'],
+    ['ue_federation_transfer_jobs', 'idx_ue_federation_transfer_peer_history'],
+    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_history'],
+    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_level_history'],
+    ['ue_federation_transfer_logs', 'idx_ue_federation_logs_peer_history'],
+] as [$table, $index]) {
+    migration_test_expect($schema->indexExists($table, $index), 'Federation history cursor index is missing: ' . $index);
 }
 migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_source'), 'Dependency resolution_source column is missing.');
 migration_test_expect($schema->columnExists('ue_dependencies', 'resolution_confidence'), 'Dependency resolution_confidence column is missing.');
