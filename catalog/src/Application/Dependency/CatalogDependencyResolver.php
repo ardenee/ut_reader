@@ -146,6 +146,7 @@ final class CatalogDependencyResolver
                 continue;
             }
 
+            $requested = self::requestedValueMap($chunk);
             $placeholders = self::placeholders(count($chunk));
             $rows = \catalog_all(
                 $db,
@@ -154,13 +155,14 @@ final class CatalogDependencyResolver
                 . ' JOIN ue_files f ON f.id=p.file_id AND f.game_id=p.game_id'
                 . ' WHERE p.game_id=? AND f.scan_status="verified"'
                 . ' AND p.package_name IN (' . $placeholders . ')'
-                . ' ORDER BY p.package_name,(p.file_id=?) DESC,p.provider_created_at DESC,'
-                . ' (p.source_kind="primary") DESC,p.source_id ASC',
+                . ' ORDER BY p.package_name,(p.source_kind="primary") DESC,'
+                . ' (p.file_id=?) DESC,p.provider_created_at DESC,p.source_id ASC',
                 array_merge([$gameId], $chunk, [$fileId])
             );
 
             foreach ($rows as $row) {
-                $lookupValue = (string)$row['lookup_value'];
+                $storedValue = (string)$row['lookup_value'];
+                $lookupValue = $requested[self::normalizeLookup($storedValue)] ?? $storedValue;
                 if ($lookupValue === '' || isset($matches[$lookupValue])) {
                     continue;
                 }
@@ -192,6 +194,7 @@ final class CatalogDependencyResolver
                 static fn(array $lookup): string => $lookup['lookup_value'],
                 $chunk
             ));
+            $requested = self::requestedValueMap($fullPaths);
             $rows = \catalog_all(
                 $db,
                 'SELECT e.full_path lookup_value,e.id export_id,f.id file_id'
@@ -202,7 +205,7 @@ final class CatalogDependencyResolver
                 . ' ORDER BY e.full_path,(f.id=?) DESC,f.uploaded_at DESC,e.export_index ASC',
                 array_merge([$gameId], $fullPaths, [$fileId])
             );
-            self::collectExportMatches($rows, 'exact_object', $matches);
+            self::collectExportMatches($rows, 'exact_object', $requested, $matches);
         }
 
         foreach (array_chunk($objectLookups, self::MAX_OBJECT_PAIRS_PER_QUERY) as $chunk) {
@@ -212,10 +215,12 @@ final class CatalogDependencyResolver
 
             $pairSql = [];
             $args = [$gameId];
+            $requestedValues = [];
             foreach ($chunk as $lookup) {
                 $pairSql[] = '(a.package_name=? AND e.local_path=?)';
                 $args[] = $lookup['package_name'];
                 $args[] = $lookup['local_path'];
+                $requestedValues[] = $lookup['lookup_value'];
             }
             $args[] = $fileId;
 
@@ -232,7 +237,12 @@ final class CatalogDependencyResolver
                 . ' e.export_index ASC,a.id ASC',
                 $args
             );
-            self::collectExportMatches($rows, 'exact_object_alias', $matches);
+            self::collectExportMatches(
+                $rows,
+                'exact_object_alias',
+                self::requestedValueMap($requestedValues),
+                $matches
+            );
         }
 
         return $matches;
@@ -240,12 +250,14 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<array<string,mixed>> $rows
+     * @param array<string,string> $requested
      * @param array<string, array{file_id:int, export_id:int, source:string}> $matches
      */
-    private static function collectExportMatches(array $rows, string $source, array &$matches): void
+    private static function collectExportMatches(array $rows, string $source, array $requested, array &$matches): void
     {
         foreach ($rows as $row) {
-            $lookupValue = (string)($row['lookup_value'] ?? '');
+            $storedValue = (string)($row['lookup_value'] ?? '');
+            $lookupValue = $requested[self::normalizeLookup($storedValue)] ?? $storedValue;
             if ($lookupValue === '' || isset($matches[$lookupValue])) {
                 continue;
             }
@@ -255,6 +267,21 @@ final class CatalogDependencyResolver
                 'source' => $source,
             ];
         }
+    }
+
+    /** @param list<string> $values @return array<string,string> */
+    private static function requestedValueMap(array $values): array
+    {
+        $map = [];
+        foreach ($values as $value) {
+            $map[self::normalizeLookup($value)] ??= $value;
+        }
+        return $map;
+    }
+
+    private static function normalizeLookup(string $value): string
+    {
+        return mb_strtolower($value, 'UTF-8');
     }
 
     private static function placeholders(int $count): string
