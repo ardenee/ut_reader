@@ -168,7 +168,7 @@ final class CatalogFederationInventoryListService
         $baseGameSql = \federation_base_game_package_exists_sql('s.required_package', 's.game_id');
         $policy = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
         $examplePath = self::hasExamplePathColumn($db)
-            ? 'MIN(COALESCE(s.example_required_object_path,""))'
+            ? 'COALESCE(MIN(NULLIF(s.example_required_object_path,"")),"")'
             : '""';
         return 'SELECT s.game_id,g.name game_name,COALESCE(gp.engine_key,"") engine_key,s.required_package,'
             . $examplePath . ' required_object_path,'
