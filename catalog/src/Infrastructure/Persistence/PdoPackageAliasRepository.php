@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use PDOException;
 use UnrealDb\Catalog\Application\PackageAlias\PackageAliasRepository;
+use UnrealDb\Catalog\Application\Search\CatalogSearchIndexQueue;
 
 /** PDO implementation of logical package alias persistence. */
 final class PdoPackageAliasRepository implements PackageAliasRepository
@@ -88,6 +89,7 @@ final class PdoPackageAliasRepository implements PackageAliasRepository
             }
         }
 
+        CatalogSearchIndexQueue::enqueueFile($this->db, $fileId);
         return true;
     }
 }
