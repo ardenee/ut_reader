@@ -18,6 +18,8 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoSearchDocumentIndexer;
 /** Reconciles all materialized catalogue projections after direct maintenance writes. */
 final class CatalogProjectionReconciliationJobHandler implements JobHandler
 {
+    private const MAINTENANCE_LOCK = 'unrealdb_catalog_maintenance_write_v1';
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -32,6 +34,27 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
+        $lock = $this->db->prepare('SELECT GET_LOCK(?,45)');
+        $lock->execute([self::MAINTENANCE_LOCK]);
+        if ((int)$lock->fetchColumn() !== 1) {
+            throw new \RuntimeException('Catalogue maintenance is still writing identity data; projection reconciliation will retry.');
+        }
+
+        try {
+            return $this->reconcile($job, $context);
+        } finally {
+            try {
+                $release = $this->db->prepare('SELECT RELEASE_LOCK(?)');
+                $release->execute([self::MAINTENANCE_LOCK]);
+            } catch (Throwable) {
+                // Closing the worker connection also releases the advisory lock.
+            }
+        }
+    }
+
+    /** @return array<string,mixed> */
+    private function reconcile(ClaimedJob $job, JobExecutionContext $context): array
+    {
         $fileId = max(0, (int)($job->payload['file_id'] ?? 0));
         $gameIds = $this->positiveIds((array)($job->payload['game_ids'] ?? []));
         $packageNames = $this->packageNames((array)($job->payload['package_names'] ?? []));
@@ -41,9 +64,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
 
         $file = null;
         if ($fileId > 0) {
-            $statement = $this->db->prepare(
-                'SELECT id,game_id,package_name,scan_status FROM ue_files WHERE id=?'
-            );
+            $statement = $this->db->prepare('SELECT id,game_id,package_name,scan_status FROM ue_files WHERE id=?');
             $statement->execute([$fileId]);
             $row = $statement->fetch(PDO::FETCH_ASSOC);
             $file = is_array($row) ? $row : null;
@@ -55,9 +76,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 $gameIds[] = $currentGameId;
             }
             $packageNames[] = (string)($file['package_name'] ?? '');
-            $aliasStatement = $this->db->prepare(
-                'SELECT package_name FROM ue_file_package_aliases WHERE file_id=? ORDER BY id'
-            );
+            $aliasStatement = $this->db->prepare('SELECT package_name FROM ue_file_package_aliases WHERE file_id=? ORDER BY id');
             $aliasStatement->execute([$fileId]);
             foreach ($aliasStatement->fetchAll(PDO::FETCH_COLUMN) as $aliasName) {
                 $packageNames[] = (string)$aliasName;
@@ -100,6 +119,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
         $affectedIds = $this->affectedFileIds($gameIds, $packageNames, $fileId, $summaries->available());
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         $processed = 0;
+        $failureCount = 0;
         $failures = [];
         foreach ($affectedIds as $index => $affectedFileId) {
             try {
@@ -125,6 +145,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             } catch (JobCancellationRequested $error) {
                 throw $error;
             } catch (Throwable $error) {
+                $failureCount++;
                 if (count($failures) < 100) {
                     $failures[] = ['file_id' => $affectedFileId, 'error' => $error->getMessage()];
                 }
@@ -155,7 +176,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             'percent' => 100,
             'message' => 'Catalogue projections reconciled.',
             'affected_files' => count($affectedIds),
-            'failures' => count($failures),
+            'failures' => $failureCount,
         ]);
 
         return [
@@ -169,8 +190,9 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             'affected_files' => count($affectedIds),
             'processed_files' => $processed,
             'stats_refreshed' => $statsRefreshed,
-            'failure_count' => count($failures),
+            'failure_count' => $failureCount,
             'failures' => $failures,
+            'failures_truncated' => $failureCount > count($failures),
         ];
     }
 
@@ -197,7 +219,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 }
                 $args = [$gameId, ...$chunk];
                 if ($excludeFileId > 0) {
-                    $sql .= ($summaryAvailable ? ' AND s.file_id<>?' : ' AND d.file_id<>?');
+                    $sql .= $summaryAvailable ? ' AND s.file_id<>?' : ' AND d.file_id<>?';
                     $args[] = $excludeFileId;
                 }
                 $statement = $this->db->prepare($sql);
