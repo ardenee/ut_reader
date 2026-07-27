@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Dependency\CatalogMissingFileListService;
+use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 
 catalog_start_session();
@@ -41,6 +43,38 @@ function missing_import_class(string $classPackage, string $className): string
     return implode('.', array_values(array_filter([$classPackage, $className], static fn(string $part): bool => $part !== '')));
 }
 
+function missing_files_pagination(
+    int $pageNo,
+    int $totalPages,
+    int $totalFiles,
+    bool $hasPrevious,
+    bool $hasNext,
+    string $previousCursor,
+    string $nextCursor
+): string {
+    $html = '<div class="missing-pagination"><span class="muted">Page ' . $pageNo . ' of ' . $totalPages . ' (' . $totalFiles . ' files)</span>';
+    if ($hasPrevious) {
+        $html .= '<a class="button secondary" href="' . catalog_h(missing_page_url()) . '">First</a>';
+        $html .= '<a class="button secondary" href="' . catalog_h(missing_page_url([
+            'files_cursor' => $previousCursor,
+            'files_move' => 'prev',
+            'files_page' => max(1, $pageNo - 1),
+        ])) . '">Previous</a>';
+    }
+    if ($hasNext) {
+        $html .= '<a class="button secondary" href="' . catalog_h(missing_page_url([
+            'files_cursor' => $nextCursor,
+            'files_move' => 'next',
+            'files_page' => min($totalPages, $pageNo + 1),
+        ])) . '">Next</a>';
+        $html .= '<a class="button secondary" href="' . catalog_h(missing_page_url([
+            'files_move' => 'last',
+            'files_page' => $totalPages,
+        ])) . '">Last</a>';
+    }
+    return $html . '</div>';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -67,8 +101,51 @@ try {
     }
 
     $filePageCount = max(1, (int)ceil($filesWithMissing / $perPage));
-    $filePage = max(1, min($filePageCount, missing_page_int('files_page', 1)));
-    $fileOffset = ($filePage - 1) * $perPage;
+    $filesMove = strtolower(trim((string)($_GET['files_move'] ?? 'first')));
+    $filesMove = in_array($filesMove, ['first', 'next', 'prev', 'last'], true) ? $filesMove : 'first';
+    $filePage = max(1, min($filePageCount, missing_page_int('files_page', $filesMove === 'last' ? $filePageCount : 1)));
+    if ($filesMove === 'first') {
+        $filePage = 1;
+    } elseif ($filesMove === 'last') {
+        $filePage = $filePageCount;
+    }
+
+    $cursorContext = json_encode([
+        'page' => 'missing-files',
+        'limit' => $perPage,
+        'summary' => $summaryAvailable,
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    $cursorToken = trim((string)($_GET['files_cursor'] ?? ''));
+    $cursor = $cursorToken !== '' ? CatalogKeysetPaginator::decode($config, $cursorContext, $cursorToken) : null;
+    if ($cursorToken !== '' && $cursor === null) {
+        $filesMove = 'first';
+        $filePage = 1;
+    }
+
+    $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $summaryAvailable, $perPage, $cursor, $filesMove);
+    $affectedFiles = $fileListPage['rows'];
+    if ($affectedFiles === [] && $filesWithMissing > 0 && $filesMove !== 'first') {
+        $filesMove = 'first';
+        $filePage = 1;
+        $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $summaryAvailable, $perPage, null, 'first');
+        $affectedFiles = $fileListPage['rows'];
+    }
+    $previousCursor = is_array($fileListPage['first_cursor'])
+        ? CatalogKeysetPaginator::encode($config, $cursorContext, $fileListPage['first_cursor'])
+        : '';
+    $nextCursor = is_array($fileListPage['last_cursor'])
+        ? CatalogKeysetPaginator::encode($config, $cursorContext, $fileListPage['last_cursor'])
+        : '';
+    $filePagination = missing_files_pagination(
+        $filePage,
+        $filePageCount,
+        $filesWithMissing,
+        (bool)$fileListPage['has_previous'],
+        (bool)$fileListPage['has_next'],
+        $previousCursor,
+        $nextCursor
+    );
+
     $approved = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_request_items WHERE status="approved"');
     $imported = catalog_count($db, 'SELECT COUNT(*) c FROM ue_federation_request_items WHERE status="imported"');
 
@@ -129,7 +206,7 @@ CSS;
             [$selectedFileId]
         );
         echo '<div class="card"><h2>Missing dependency objects for file</h2>';
-        echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage])) . '">Clear object list</a></p>';
+        echo '<p class="missing-detail-links"><a class="button secondary" href="missing.php">Clear object list</a></p>';
         if ($fileDetailRows === []) {
             echo '<p class="muted">No missing dependency rows currently match this file.</p>';
         } else {
@@ -173,7 +250,7 @@ CSS;
                 );
             }
             echo '<div class="card"><h2>Files requiring package: <span class="mono">' . catalog_h($selectedPackage) . '</span></h2>';
-            echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['package' => $selectedPackage, 'view' => 'objects'])) . '">View missing object rows</a> <a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage])) . '">Clear package detail</a></p>';
+            echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['package' => $selectedPackage, 'view' => 'objects'])) . '">View missing object rows</a> <a class="button secondary" href="missing.php">Clear package detail</a></p>';
             if ($detailRows === []) {
                 echo '<p class="muted">No missing dependency rows currently match this package name.</p>';
             } else {
@@ -199,7 +276,7 @@ CSS;
                 [$selectedPackage]
             );
             echo '<div class="card"><h2>Missing objects for package: <span class="mono">' . catalog_h($selectedPackage) . '</span></h2>';
-            echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['package' => $selectedPackage, 'view' => 'files'])) . '">View requiring files</a> <a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage])) . '">Clear package detail</a></p>';
+            echo '<p class="missing-detail-links"><a class="button secondary" href="' . catalog_h(missing_page_url(['package' => $selectedPackage, 'view' => 'files'])) . '">View requiring files</a> <a class="button secondary" href="missing.php">Clear package detail</a></p>';
             if ($detailRows === []) {
                 echo '<p class="muted">No missing dependency rows currently match this package name.</p>';
             } else {
@@ -216,30 +293,6 @@ CSS;
             }
             echo '</div>';
         }
-    }
-
-    if ($summaryAvailable) {
-        $affectedFiles = catalog_all(
-            $db,
-            'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
-            . 'SUM(s.missing_count) missing_object_rows,COUNT(*) missing_package_count,'
-            . 'GROUP_CONCAT(s.required_package ORDER BY s.required_package SEPARATOR ", ") missing_package_names '
-            . 'FROM ue_dependency_package_summaries s JOIN ue_files f ON f.id=s.file_id JOIN ue_games g ON g.id=s.game_id '
-            . 'WHERE s.missing_count>0 GROUP BY f.id,f.package_name,f.original_name,g.id,g.name '
-            . 'ORDER BY missing_object_rows DESC,missing_package_count DESC,g.name,f.package_name,f.original_name '
-            . 'LIMIT ' . $perPage . ' OFFSET ' . $fileOffset
-        );
-    } else {
-        $affectedFiles = catalog_all(
-            $db,
-            'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
-            . 'COUNT(d.id) missing_object_rows,COUNT(DISTINCT d.required_package) missing_package_count,'
-            . 'GROUP_CONCAT(DISTINCT d.required_package ORDER BY d.required_package SEPARATOR ", ") missing_package_names '
-            . 'FROM ue_dependencies d JOIN ue_files f ON f.id=d.file_id JOIN ue_games g ON g.id=f.game_id '
-            . 'WHERE d.status="missing" GROUP BY f.id,f.package_name,f.original_name,g.id,g.name '
-            . 'ORDER BY missing_object_rows DESC,missing_package_count DESC,g.name,f.package_name,f.original_name '
-            . 'LIMIT ' . $perPage . ' OFFSET ' . $fileOffset
-        );
     }
 
     echo '<div class="card"><h2>Files with missing dependencies</h2>';
@@ -264,14 +317,7 @@ CSS;
         }
         echo '</tbody></table></div>';
         if ($filePageCount > 1) {
-            echo '<div class="missing-pagination"><span class="muted">Page ' . $filePage . ' of ' . $filePageCount . ' (' . $filesWithMissing . ' files)</span>';
-            if ($filePage > 1) {
-                echo '<a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage - 1])) . '">Previous</a>';
-            }
-            if ($filePage < $filePageCount) {
-                echo '<a class="button secondary" href="' . catalog_h(missing_page_url(['files_page' => $filePage + 1])) . '">Next</a>';
-            }
-            echo '</div>';
+            echo $filePagination;
         }
     }
     echo '</div>';
