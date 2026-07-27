@@ -290,7 +290,7 @@ try {
     $licensee = uv_page_text('licensee');
     $indexedFilter = uv_page_text('indexed');
     $page = max(1, uv_page_int('queue_page', 1));
-    $limit = max(25, min(250, uv_page_int('limit', 100)));
+    $limit = max(50, min(1000, uv_page_int('limit', 100)));
 
     $games = catalog_all(
         $db,
@@ -443,7 +443,7 @@ CSS;
         . '<option value="no"' . ($indexedFilter === 'no' ? ' selected' : '') . '>Not indexed</option>'
         . '</select></label>';
     echo '<label>Rows<select name="limit">';
-    foreach ([25, 50, 100, 250] as $value) {
+    foreach ([50, 100, 250, 500, 1000] as $value) {
         echo '<option value="' . $value . '"' . ($limit === $value ? ' selected' : '') . '>' . $value . '</option>';
     }
     echo '</select></label><div><button type="submit">Apply</button> '
