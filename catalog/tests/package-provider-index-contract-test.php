@@ -37,5 +37,11 @@ package_provider_expect(
         && str_contains($resolver, '(a.package_name=? AND e.local_path=?)'),
     'Exact primary and alias object resolution are not using bounded indexed predicates.'
 );
+package_provider_expect(
+    str_contains($resolver, '(p.source_kind="primary") DESC')
+        && str_contains($resolver, 'requestedValueMap(')
+        && str_contains($resolver, 'normalizeLookup('),
+    'Provider precedence or case-insensitive lookup-key preservation is missing.'
+);
 
 fwrite(STDOUT, "Package provider index contract tests passed.\n");
