@@ -69,6 +69,9 @@ final class CatalogJobWorkerFactory
                 // Search documents and the imported file's package summary are
                 // maintained outside the package import transaction.
                 new CatalogSearchIndexJobHandler($db),
+                // Direct identity, alias, status and delete operations carry their
+                // old/new game and package context into this durable reconciliation.
+                new CatalogProjectionReconciliationJobHandler($db, $config),
                 // Manual file/game rebuilds maintain detailed and summary rows in
                 // one worker pass instead of creating a second queue per file.
                 new CatalogDependencyRefreshJobHandler($db, $config),
