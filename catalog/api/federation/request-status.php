@@ -8,6 +8,8 @@ require_once __DIR__ . '/../../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
 require_once __DIR__ . '/../../lib/FederationRequestLifecycle.php';
 
+use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+
 /** @return list<array<string,mixed>> */
 function request_status_items(PDO $db, int $requestId, bool $ignoreBaseGame): array
 {
@@ -59,7 +61,8 @@ function request_status_items(PDO $db, int $requestId, bool $ignoreBaseGame): ar
 }
 
 try {
-    $db = catalog_db(catalog_config());
+    $config = catalog_config();
+    $db = catalog_db($config);
     base_game_ensure($db);
     $body = file_get_contents('php://input') ?: '';
     $peer = fed_require_signed_peer($db, $body);
@@ -107,15 +110,28 @@ try {
     }
 
     if (!empty($payload['list'])) {
-        $rows = catalog_all(
+        $closed = filter_var($payload['closed'] ?? false, FILTER_VALIDATE_BOOL);
+        $pageSize = min(100, CatalogFederationHistoryPageService::normalizePageSize((int)($payload['page_size'] ?? 100)));
+        $statusSql = $closed
+            ? 'r.status IN ("completed","cancelled","denied")'
+            : 'r.status NOT IN ("completed","cancelled","denied")';
+        $requestPage = CatalogFederationHistoryPageService::fetch(
             $db,
-            'SELECT * FROM ue_federation_requests
-             WHERE peer_id=? AND direction="child_to_parent"
-             ORDER BY created_at DESC,id DESC LIMIT 200',
-            [(int)$peer['id']]
+            $config,
+            'federation-request-status-api|peer=' . (int)$peer['id'] . '|closed=' . ($closed ? '1' : '0'),
+            'SELECT r.*,r.created_at cursor_created_at,r.id cursor_id FROM ue_federation_requests r',
+            'r.peer_id=? AND r.direction="child_to_parent" AND ' . $statusSql,
+            [(int)$peer['id']],
+            ['r.created_at', 'r.id'],
+            ['cursor_created_at', 'cursor_id'],
+            ['DESC', 'DESC'],
+            $pageSize,
+            (string)($payload['cursor'] ?? ''),
+            (string)($payload['move'] ?? 'first')
         );
+
         $requests = [];
-        foreach ($rows as $request) {
+        foreach ($requestPage['rows'] as $request) {
             federation_refresh_request_matches($db, (int)$request['id']);
             $items = request_status_items($db, (int)$request['id'], $ignoreBaseGame);
             if (!$items) {
@@ -140,6 +156,13 @@ try {
             'ok' => true,
             'policy' => federation_parent_base_game_policy($db),
             'requests' => $requests,
+            'request_page' => [
+                'has_previous' => (bool)$requestPage['has_previous'],
+                'has_next' => (bool)$requestPage['has_next'],
+                'previous_cursor' => (string)$requestPage['previous_cursor'],
+                'next_cursor' => (string)$requestPage['next_cursor'],
+                'page_size' => (int)$requestPage['page_size'],
+            ],
         ]);
     }
 
