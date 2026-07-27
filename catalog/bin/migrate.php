@@ -194,10 +194,10 @@ try {
     )) > 0;
     if ($searchMigrationPending && !$arguments['dry_run']) {
         $paths = migration_database_paths($db);
-        fwrite(STDOUT, "MariaDB temporary/data paths before search backfill:\n");
+        fwrite(STDOUT, "MySQL/MariaDB temporary/data paths before search backfill:\n");
         fwrite(STDOUT, '  tmpdir:        ' . ($paths['tmpdir'] !== '' ? $paths['tmpdir'] : '(server default)') . "\n");
         fwrite(STDOUT, '  innodb_tmpdir: ' . ($paths['innodb_tmpdir'] !== '' ? $paths['innodb_tmpdir'] : '(uses tmpdir)') . "\n");
-        fwrite(STDOUT, '  datadir:       ' . ($paths['datadir'] !== '' ? $paths['datadir'] : '(unknown)') . "\n");
+        fwrite(STDOUT, '  datadir:       ' . ($paths['datadir'] !== '' ? $paths['datadir'] : '(unknown)') . " (database remains here)\n");
         if ($arguments['defer_search_indexes']) {
             fwrite(STDOUT, "Search-document secondary/FULLTEXT indexes are deferred for this run.\n");
         }
@@ -218,7 +218,7 @@ try {
     migration_print_status($changed);
     fwrite(STDOUT, count($changed) . " migration(s) applied.\n");
     if ($arguments['defer_search_indexes']) {
-        fwrite(STDOUT, "Search-document indexes remain deferred. Build them after moving MariaDB temporary work to a drive with adequate free space:\n");
+        fwrite(STDOUT, "Search-document indexes remain deferred. Keep the database datadir where it is; move only MySQL temporary work to a drive with adequate free space before building them:\n");
         fwrite(STDOUT, "  php catalog/bin/search-document-indexes.php status\n");
         fwrite(STDOUT, "  php catalog/bin/search-document-indexes.php build\n");
     }
