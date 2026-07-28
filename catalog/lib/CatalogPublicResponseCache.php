@@ -98,6 +98,25 @@ function catalog_public_cache_directory(array $config): string
     return rtrim($base, '/\\') . DIRECTORY_SEPARATOR . 'public-pages';
 }
 
+function catalog_public_cache_prune_directory(string $directory): void
+{
+    if (random_int(1, 100) !== 1) {
+        return;
+    }
+    $cutoff = time() - 7200;
+    $checked = 0;
+    foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
+        if (++$checked > 2000 || !$entry instanceof SplFileInfo || !$entry->isFile()) {
+            continue;
+        }
+        $name = $entry->getFilename();
+        if (($entry->getMTime() < $cutoff && str_ends_with($name, '.htmlcache'))
+            || ($entry->getMTime() < time() - 3600 && str_ends_with($name, '.lock'))) {
+            @unlink($entry->getPathname());
+        }
+    }
+}
+
 function catalog_public_cache_read(string $path): ?array
 {
     $stream = @fopen($path, 'rb');
@@ -149,7 +168,9 @@ function catalog_public_cache_bootstrap(array $config): void
         return;
     }
 
-    $script = strtolower(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')));
+    catalog_public_cache_prune_directory($directory);
+
+    $script = strtolower(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
     $query = catalog_public_cache_query_string();
     if ($query === '' && $_GET !== []) {
         return;
@@ -210,7 +231,9 @@ function catalog_public_cache_finish(): void
         if (!is_string($body) || $body === '' || strlen($body) > (int)$state['max_bytes']) {
             return;
         }
-        if ((int)http_response_code() !== 200 || session_status() === PHP_SESSION_ACTIVE) {
+        if ((int)http_response_code() !== 200
+            || session_status() === PHP_SESSION_ACTIVE
+            || !empty($GLOBALS['catalog_public_cache_abort'])) {
             return;
         }
         foreach (headers_list() as $header) {
