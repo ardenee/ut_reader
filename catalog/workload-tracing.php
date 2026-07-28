@@ -94,8 +94,8 @@ try {
         catalog_check_csrf('workload-tracing');
         $action = strtolower(trim((string)($_POST['action'] ?? '')));
         if ($action === 'reset_application_trace') {
-            $db->exec('TRUNCATE TABLE ue_request_resource_performance');
-            $db->exec('TRUNCATE TABLE ue_request_performance');
+            $db->exec('DELETE FROM ue_request_resource_performance');
+            $db->exec('DELETE FROM ue_request_performance');
             $message = 'Application request tracing counters were reset.';
         } elseif ($action === 'clear_public_cache') {
             $removed = workload_prune_public_cache($config);
@@ -250,7 +250,10 @@ try {
         echo '<tr><td class="mono">' . catalog_h($name) . '</td><td>' . catalog_h($current) . '</td><td>' . catalog_h($target) . '</td><td><span class="pill ' . ($good ? 'green' : 'amber') . '">' . ($good ? 'ready' : 'change') . '</span></td></tr>';
     }
     echo '<tr><td class="mono">Apache ThreadsPerChild</td><td>Read from httpd.conf</td><td>' . $targetApacheThreads . '</td><td><span class="pill amber">manual check</span></td></tr>';
-    echo '<tr><td class="mono">opcache.memory_consumption</td><td>' . catalog_h((string)($opcacheDirectives['opcache.memory_consumption'] ?? 'unavailable')) . '</td><td>' . $targetOpcacheMemory . ' MiB</td><td><span class="pill amber">verify php.ini</span></td></tr>';
+    $opcacheMemory = isset($opcacheDirectives['opcache.memory_consumption'])
+        ? catalog_bytes((int)$opcacheDirectives['opcache.memory_consumption'])
+        : 'unavailable';
+    echo '<tr><td class="mono">opcache.memory_consumption</td><td>' . catalog_h($opcacheMemory) . '</td><td>' . $targetOpcacheMemory . ' MiB</td><td><span class="pill amber">verify php.ini</span></td></tr>';
     echo '<tr><td class="mono">opcache.max_accelerated_files</td><td>' . catalog_h((string)($opcacheDirectives['opcache.max_accelerated_files'] ?? 'unavailable')) . '</td><td>' . $targetOpcacheFiles . '</td><td><span class="pill amber">verify php.ini</span></td></tr>';
     echo '</tbody></table></div></section>';
 
