@@ -313,9 +313,6 @@ function catalog_redirect_archive_encode_native_codec(
     if (!in_array($signature, [1234, 5678], true)) {
         throw new InvalidArgumentException('Native Unreal redirect signature must be 1234 or 5678.');
     }
-    if (!catalog_redirect_archive_has_package_tag($packageData)) {
-        throw new RuntimeException('Source data is not an Unreal package.');
-    }
 
     $packageFilename = catalog_clean_unreal_filename(basename(str_replace('\\', '/', $packageFilename)));
     if ($packageFilename === '' || strlen($packageFilename) > 1023 || str_contains($packageFilename, "\0")) {
@@ -358,9 +355,6 @@ function catalog_redirect_archive_encode_native_codec(
 /** @return array{data:string,encoder:string,chunks:int} */
 function catalog_redirect_archive_encode_epic_uz2(string $packageData, int $compressionLevel = 9): array
 {
-    if (!catalog_redirect_archive_has_package_tag($packageData)) {
-        throw new RuntimeException('Source data is not an Unreal package.');
-    }
     if ($compressionLevel < -1 || $compressionLevel > 9) {
         throw new InvalidArgumentException('Zlib compression level must be between -1 and 9.');
     }
@@ -388,9 +382,6 @@ function catalog_redirect_archive_encode_epic_uz2(string $packageData, int $comp
 /** @return array{data:string,encoder:string,chunks:int,wrapper_signature:int} */
 function catalog_redirect_archive_encode_epic_uz3(string $packageData, int $compressionLevel = 9): array
 {
-    if (!catalog_redirect_archive_has_package_tag($packageData)) {
-        throw new RuntimeException('Source data is not an Unreal package.');
-    }
     if ($compressionLevel < -1 || $compressionLevel > 9) {
         throw new InvalidArgumentException('Zlib compression level must be between -1 and 9.');
     }
@@ -425,7 +416,7 @@ function catalog_redirect_archive_decompress_data(
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
 
     if ($extension === 'uz') {
-        $decoded = catalog_legacy_uz_decode($archiveData, $limit);
+        $decoded = catalog_redirect_archive_legacy_payload($archiveData, $limit);
         if (is_array($decoded) && (int)($decoded['wrapper_signature'] ?? 0) === 5678) {
             $decoded['decoder'] = 'epic-uz-5678-huffman+rle+mtf+bwt+rle';
         } elseif (is_array($decoded)) {
