@@ -134,20 +134,58 @@ function catalog_mark_authenticated_session(): void
         return;
     }
 
-    catalog_start_session();
+    catalog_start_session(true);
     $now = time();
     $_SESSION['catalog_auth_started_at'] = $now;
     $_SESSION['catalog_auth_last_activity_at'] = $now;
     unset($_SESSION['catalog_auth_expired']);
 }
 
-function catalog_start_session(): void
+function catalog_session_cookie_present(): bool
+{
+    $name = session_name();
+    return $name !== '' && isset($_COOKIE[$name]) && trim((string)$_COOKIE[$name]) !== '';
+}
+
+/**
+ * Anonymous read-only requests do not need a session and therefore do not need
+ * a PHP session-file lock. POSTs, login/setup forms and remembered/admin users
+ * still start the normal shared session.
+ */
+function catalog_session_request_needs_state(): bool
+{
+    if (catalog_session_cookie_present() || isset($_COOKIE['UNREALDB_REMEMBER'])) {
+        return true;
+    }
+
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    if (!in_array($method, ['GET', 'HEAD'], true)) {
+        return true;
+    }
+
+    $script = strtolower(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')));
+    if ($script === 'setup.php') {
+        return true;
+    }
+    if ($script === 'index.php') {
+        $page = strtolower(trim((string)($_GET['page'] ?? 'home')));
+        return in_array($page, ['login', 'logout'], true);
+    }
+
+    return false;
+}
+
+function catalog_start_session(bool $force = false): void
 {
     if (PHP_SAPI === 'cli') {
         return;
     }
 
     if (session_status() !== PHP_SESSION_ACTIVE) {
+        if (!$force && !catalog_session_request_needs_state()) {
+            return;
+        }
+
         $lifetime = catalog_session_lifetime_seconds();
         ini_set('session.gc_maxlifetime', (string)$lifetime);
         ini_set('session.use_strict_mode', '1');
@@ -178,7 +216,7 @@ function catalog_destroy_session(): void
         return;
     }
 
-    catalog_start_session();
+    catalog_start_session(true);
     $_SESSION = [];
 
     $params = session_get_cookie_params();
