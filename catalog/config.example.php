@@ -58,6 +58,34 @@ return [
         'path' => __DIR__ . '/storage/cache',
         // Keep zero until a page explicitly opts into bounded staleness.
         'dashboard_ttl_seconds' => 0,
+        // Anonymous GET pages in the explicit public allow-list use this small
+        // shared response cache. Logged-in, remembered and POST requests bypass it.
+        'public_response_enabled' => true,
+        'public_response_stale_seconds' => 300,
+        'public_response_max_bytes' => 8 * 1024 * 1024,
+        'public_route_ttl_seconds' => [
+            'games.php' => 120,
+            'library.php' => 120,
+            'game-page.php' => 120,
+            'game-files.php' => 60,
+            'file-info.php' => 300,
+            'file-examine.php' => 300,
+            'game-paks.php' => 120,
+            'game-upks.php' => 120,
+            'pak-info.php' => 300,
+            'upk-info.php' => 300,
+        ],
+    ],
+    // Targets shown by Maintenance -> Workload Tracing. These defaults are for
+    // the current 64 GB Windows host running Apache, PHP and MySQL together.
+    'performance' => [
+        'host_memory_gb' => 64,
+        'mysql_buffer_pool_bytes' => 36 * 1024 * 1024 * 1024,
+        'mysql_max_connections' => 120,
+        'mysql_thread_cache_size' => 50,
+        'apache_threads_per_child' => 100,
+        'opcache_memory_mb' => 256,
+        'opcache_max_accelerated_files' => 32531,
     ],
     'pak' => [
         // Admin-only full-container extraction limits for large UE4/UE5 PAKs.
