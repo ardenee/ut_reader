@@ -50,7 +50,7 @@ function catalog_session_absolute_timeout_seconds(): int
 
 function catalog_session_cookie_secure(): bool
 {
-    $configured = strtolower(trim((string)(getenv('UNREALDB_SESSION_COOKIE_SECURE') ?: ''));
+    $configured = strtolower(trim((string)(getenv('UNREALDB_SESSION_COOKIE_SECURE') ?: '')));
     if (in_array($configured, ['1', 'true', 'yes', 'on'], true)) {
         return true;
     }
