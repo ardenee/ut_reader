@@ -164,13 +164,16 @@ function catalog_public_cache_bootstrap(array $config): void
     }
 
     $directory = catalog_public_cache_directory($config);
-    if ((!is_dir($directory) && !@mkdir($directory, 0775, true)) || !is_writable($directory)) {
+    if (!is_dir($directory)) {
+        @mkdir($directory, 0775, true);
+    }
+    if (!is_dir($directory) || !is_writable($directory)) {
         return;
     }
 
     catalog_public_cache_prune_directory($directory);
 
-    $script = strtolower(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    $script = strtolower(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
     $query = catalog_public_cache_query_string();
     if ($query === '' && $_GET !== []) {
         return;
