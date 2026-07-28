@@ -3,10 +3,41 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogRedirectArchive.php';
 
+/** @return array{data:string,decoder:string}|null */
+function catalog_redirect_archive_uncompress_epic_zlib(string $payload, int $limit, int $expectedBytes): ?array
+{
+    if ($payload === '' || $expectedBytes <= 0 || $expectedBytes > $limit) {
+        return null;
+    }
+
+    // Epic's UE2 and UE3 implementations call zlib uncompress(). PHP's
+    // gzuncompress() is the direct zlib-wrapper equivalent.
+    if (function_exists('gzuncompress')) {
+        try {
+            $decoded = @gzuncompress($payload, $expectedBytes);
+        } catch (Throwable) {
+            $decoded = false;
+        }
+        if (is_string($decoded) && strlen($decoded) === $expectedBytes) {
+            return ['data' => $decoded, 'decoder' => 'zlib-uncompress'];
+        }
+    }
+
+    // Same zlib wrapper through PHP's incremental API when gzuncompress() is
+    // unavailable. Raw deflate and gzip are deliberately not accepted.
+    $strict = catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expectedBytes);
+    if ($strict !== null) {
+        return ['data' => (string)$strict['data'], 'decoder' => 'zlib-inflate'];
+    }
+
+    return null;
+}
+
 /**
- * Decode exact, signed Unreal redirect formats without assuming the payload is
- * an Unreal package. Redirect servers also distribute text files, native
- * libraries and other game support files.
+ * Decode Epic's UE1 FCodec redirect wrapper. Signature 1234 is the normal
+ * UCC .uz format. Some historical UE1 builds used signature 5678 with an
+ * additional RLE stage; that legacy variant is still a .uz wrapper, not UE3
+ * .uz3.
  *
  * @return array{
  *   data:string,
@@ -46,8 +77,8 @@ function catalog_redirect_archive_legacy_payload(string $data, int $maxOutputByt
         return [
             'data' => $output,
             'decoder' => $header['signature'] === 5678
-                ? 'epic-uz3-huffman+rle+mtf+bwt+rle'
-                : 'legacy-uz-huffman+mtf+bwt+rle',
+                ? 'legacy-uz-newver-huffman+rle+mtf+bwt+rle'
+                : 'epic-uz-huffman+mtf+bwt+rle',
             'chunks' => (int)$bwt['chunks'],
             'expected_bytes' => strlen($output),
             'embedded_filename' => (string)$header['filename'],
@@ -59,7 +90,8 @@ function catalog_redirect_archive_legacy_payload(string $data, int $maxOutputByt
 }
 
 /**
- * Decode Epic's exact UE2 UZ2 record stream without requiring package magic.
+ * Decode Epic's exact UE2 UZ2 record stream. Every record is little-endian
+ * [compressed size, uncompressed size, zlib compress() payload].
  *
  * @return array{data:string,decoder:string,chunks:int,expected_bytes:int}|null
  */
@@ -69,6 +101,7 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
     $length = strlen($data);
     $output = '';
     $chunks = 0;
+    $decoder = '';
 
     while ($position < $length) {
         if ($position + 8 > $length) {
@@ -92,7 +125,7 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
 
         $payload = substr($data, $position, $compressed);
         $position += $compressed;
-        $decoded = catalog_redirect_archive_inflate_epic_zlib(
+        $decoded = catalog_redirect_archive_uncompress_epic_zlib(
             $payload,
             $limit - strlen($output),
             $uncompressed
@@ -102,6 +135,7 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
         }
 
         $output .= $decoded['data'];
+        $decoder = (string)$decoded['decoder'];
         $chunks++;
     }
 
@@ -111,9 +145,44 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
 
     return [
         'data' => $output,
-        'decoder' => 'epic-uz2-zlib',
+        'decoder' => 'epic-uz2-' . $decoder,
         'chunks' => $chunks,
         'expected_bytes' => strlen($output),
+    ];
+}
+
+/**
+ * Decode Epic's UE3 UZ3 wrapper: little-endian tag 5678, little-endian total
+ * uncompressed size, then one zlib compress() stream for the complete file.
+ *
+ * @return array{data:string,decoder:string,chunks:int,expected_bytes:int,wrapper_signature:int}|null
+ */
+function catalog_redirect_archive_epic_uz3_payload(string $data, int $limit): ?array
+{
+    if (strlen($data) <= 8 || catalog_redirect_archive_read_u32($data, 0, 'le') !== 5678) {
+        return null;
+    }
+
+    $expectedBytes = catalog_redirect_archive_read_u32($data, 4, 'le');
+    if ($expectedBytes <= 0 || $expectedBytes > $limit) {
+        return null;
+    }
+
+    $decoded = catalog_redirect_archive_uncompress_epic_zlib(
+        substr($data, 8),
+        $limit,
+        $expectedBytes
+    );
+    if ($decoded === null) {
+        return null;
+    }
+
+    return [
+        'data' => $decoded['data'],
+        'decoder' => 'epic-uz3-' . $decoded['decoder'],
+        'chunks' => 1,
+        'expected_bytes' => $expectedBytes,
+        'wrapper_signature' => 5678,
     ];
 }
 
@@ -126,25 +195,15 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
 
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
 
-    // Signatures 1234 and 5678 are self-identifying and include an embedded
-    // filename, so they can safely contain package or non-package payloads.
-    $legacy = catalog_redirect_archive_legacy_payload($data, $limit);
-    if ($legacy !== null) {
-        return $legacy;
-    }
-
-    // UZ2 is an exact sequence of bounded records whose zlib streams and
-    // declared lengths must all match, so package magic is not needed.
-    if ($sourceExtension === 'uz2') {
-        $uz2 = catalog_redirect_archive_epic_uz2_payload($data, $limit);
-        if ($uz2 !== null) {
-            return $uz2;
-        }
-    }
-
-    // Keep the existing package-oriented compatibility decoders for ambiguous
-    // historical wrappers. Those heuristics still require Unreal package magic.
-    return catalog_redirect_archive_decode_data($data, $limit);
+    // Production dispatch is extension-specific. A numeric 5678 at byte zero
+    // means the legacy UE1 NewVer FCodec wrapper for .uz, but the UE3 tag and
+    // total-size header for .uz3. Do not guess between those formats.
+    return match ($sourceExtension) {
+        'uz' => catalog_redirect_archive_legacy_payload($data, $limit),
+        'uz2' => catalog_redirect_archive_epic_uz2_payload($data, $limit),
+        'uz3' => catalog_redirect_archive_epic_uz3_payload($data, $limit),
+        default => null,
+    };
 }
 
 /**
@@ -202,8 +261,6 @@ function catalog_redirect_archive_decompress_payload_to_temp(
         }
     }
 
-    // The decompressed bytes are already resident here. Calculate the package
-    // identity before writing them instead of reopening the temporary file.
     $md5 = md5($output);
     $sha1 = sha1($output);
     $tmp = tempnam(sys_get_temp_dir(), 'ue_redirect_');
