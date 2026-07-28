@@ -24,7 +24,7 @@ $db = new PDO($dsn, $user, $password, [
 
 $runner = new MigrationRunner($db, __DIR__ . '/../migrations', 5);
 $schema = new SchemaInspector($db);
-$expectedMigrations = 26;
+$expectedMigrations = 27;
 
 migration_test_expect(!$schema->tableExists('ue_schema_migrations'), 'Legacy baseline unexpectedly contains migration metadata.');
 $status = $runner->status();
@@ -65,6 +65,7 @@ foreach ([
     'ue_exact_count_cache',
     'ue_background_job_search',
     'ue_request_performance',
+    'ue_request_resource_performance',
 ] as $table) {
     migration_test_expect($schema->tableExists($table), 'Required migrated table is missing: ' . $table);
 }
@@ -128,6 +129,10 @@ foreach ([
     ['ue_request_performance', 'uq_ue_request_performance_route'],
     ['ue_request_performance', 'idx_ue_request_performance_slow'],
     ['ue_request_performance', 'idx_ue_request_performance_seen'],
+    ['ue_request_resource_performance', 'uq_ue_request_resource_route'],
+    ['ue_request_resource_performance', 'idx_ue_request_resource_cpu'],
+    ['ue_request_resource_performance', 'idx_ue_request_resource_memory'],
+    ['ue_request_resource_performance', 'idx_ue_request_resource_seen'],
 ] as [$table, $index]) {
     migration_test_expect($schema->indexExists($table, $index), 'Required migrated index is missing: ' . $table . '.' . $index);
 }
@@ -170,6 +175,9 @@ foreach (['job_id', 'queue_name', 'job_type', 'source_status', 'search_text', 's
 }
 foreach (['route_key', 'method', 'sample_count', 'total_duration_us', 'total_sql_us', 'max_duration_us', 'last_query_count', 'last_status'] as $column) {
     migration_test_expect($schema->columnExists('ue_request_performance', $column), 'Request-performance column is missing: ' . $column);
+}
+foreach (['route_key', 'method', 'audience', 'sample_count', 'total_duration_us', 'total_sql_us', 'total_cpu_us', 'max_cpu_us', 'max_peak_memory_bytes', 'last_slowest_query_hash', 'last_seen_at'] as $column) {
+    migration_test_expect($schema->columnExists('ue_request_resource_performance', $column), 'Request-resource column is missing: ' . $column);
 }
 
 $ue5Profile = $db->query(
