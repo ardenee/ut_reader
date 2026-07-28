@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/CatalogRedirectArchive.php';
+require_once __DIR__ . '/CatalogRedirectArchivePayload.php';
 
 const CATALOG_REDIRECT_BWT_ENCODE_BLOCK_BYTES = 0x40000;
 
@@ -333,11 +333,11 @@ function catalog_redirect_archive_encode_native_codec(
         unset($mtf);
         $payload = catalog_redirect_archive_encode_huffman($secondRle);
         unset($secondRle);
-        $encoder = 'epic-uz3-rle+bwt+mtf+rle+huffman';
+        $encoder = 'epic-uz-5678-rle+bwt+mtf+rle+huffman';
     } else {
         $payload = catalog_redirect_archive_encode_huffman($mtf);
         unset($mtf);
-        $encoder = 'legacy-uz-rle+bwt+mtf+huffman';
+        $encoder = 'epic-uz-1234-rle+bwt+mtf+huffman';
     }
 
     $filename = $packageFilename . "\0";
@@ -385,8 +385,34 @@ function catalog_redirect_archive_encode_epic_uz2(string $packageData, int $comp
     return ['data' => $output, 'encoder' => 'epic-uz2-zlib', 'chunks' => $chunks];
 }
 
+/** @return array{data:string,encoder:string,chunks:int,wrapper_signature:int} */
+function catalog_redirect_archive_encode_epic_uz3(string $packageData, int $compressionLevel = 9): array
+{
+    if (!catalog_redirect_archive_has_package_tag($packageData)) {
+        throw new RuntimeException('Source data is not an Unreal package.');
+    }
+    if ($compressionLevel < -1 || $compressionLevel > 9) {
+        throw new InvalidArgumentException('Zlib compression level must be between -1 and 9.');
+    }
+
+    $compressed = gzcompress($packageData, $compressionLevel);
+    if (!is_string($compressed)) {
+        throw new RuntimeException('Could not zlib-compress an Epic UZ3 file.');
+    }
+
+    return [
+        'data' => pack('V2', 5678, strlen($packageData)) . $compressed,
+        'encoder' => 'epic-uz3-zlib',
+        'chunks' => 1,
+        'wrapper_signature' => 5678,
+    ];
+}
+
 /**
  * Strict extension-aware decompression entry point.
+ *
+ * `.uz` accepts the standard 1234 and newer 5678 FCodec wrappers. `.uz3`
+ * uses a different 5678 header followed by total size and one zlib stream.
  *
  * @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename?:string,wrapper_signature?:int}|null
  */
@@ -397,10 +423,20 @@ function catalog_redirect_archive_decompress_data(
 ): ?array {
     $extension = catalog_redirect_archive_normalize_extension($sourceExtension);
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
+
+    if ($extension === 'uz') {
+        $decoded = catalog_legacy_uz_decode($archiveData, $limit);
+        if (is_array($decoded) && (int)($decoded['wrapper_signature'] ?? 0) === 5678) {
+            $decoded['decoder'] = 'epic-uz-5678-huffman+rle+mtf+bwt+rle';
+        } elseif (is_array($decoded)) {
+            $decoded['decoder'] = 'epic-uz-1234-huffman+mtf+bwt+rle';
+        }
+        return $decoded;
+    }
+
     return match ($extension) {
-        'uz' => catalog_legacy_uz_decode($archiveData, $limit, 1234),
-        'uz2' => catalog_redirect_archive_epic_uz2($archiveData, $limit),
-        'uz3' => catalog_legacy_uz_decode($archiveData, $limit, 5678),
+        'uz2' => catalog_redirect_archive_epic_uz2_payload($archiveData, $limit),
+        'uz3' => catalog_redirect_archive_epic_uz3_payload($archiveData, $limit),
         default => null,
     };
 }
@@ -423,13 +459,18 @@ function catalog_redirect_archive_compress_data(
     string $packageFilename,
     string $targetExtension,
     int $compressionLevel = 9,
-    int $bwtBlockBytes = CATALOG_REDIRECT_BWT_ENCODE_BLOCK_BYTES
+    int $bwtBlockBytes = CATALOG_REDIRECT_BWT_ENCODE_BLOCK_BYTES,
+    int $uzSignature = 1234
 ): array {
     $extension = catalog_redirect_archive_normalize_extension($targetExtension);
+    if ($extension === 'uz' && !in_array($uzSignature, [1234, 5678], true)) {
+        throw new InvalidArgumentException('UZ signature must be 1234 or 5678.');
+    }
+
     $encoded = match ($extension) {
-        'uz' => catalog_redirect_archive_encode_native_codec($packageData, $packageFilename, 1234, $bwtBlockBytes),
+        'uz' => catalog_redirect_archive_encode_native_codec($packageData, $packageFilename, $uzSignature, $bwtBlockBytes),
         'uz2' => catalog_redirect_archive_encode_epic_uz2($packageData, $compressionLevel),
-        'uz3' => catalog_redirect_archive_encode_native_codec($packageData, $packageFilename, 5678, $bwtBlockBytes),
+        'uz3' => catalog_redirect_archive_encode_epic_uz3($packageData, $compressionLevel),
         default => throw new InvalidArgumentException('Unsupported Unreal redirect extension: ' . $targetExtension),
     };
 
@@ -463,7 +504,8 @@ function catalog_redirect_archive_compress_to_temp(
     string $sourceName,
     string $targetExtension,
     int $compressionLevel = 9,
-    int $bwtBlockBytes = CATALOG_REDIRECT_BWT_ENCODE_BLOCK_BYTES
+    int $bwtBlockBytes = CATALOG_REDIRECT_BWT_ENCODE_BLOCK_BYTES,
+    int $uzSignature = 1234
 ): array {
     if (!is_file($sourcePath)) {
         throw new RuntimeException('Unreal package source file is missing.');
@@ -478,7 +520,8 @@ function catalog_redirect_archive_compress_to_temp(
         $sourceName,
         $targetExtension,
         $compressionLevel,
-        $bwtBlockBytes
+        $bwtBlockBytes,
+        $uzSignature
     );
     $archiveData = (string)$result['data'];
     $tmp = tempnam(sys_get_temp_dir(), 'ue_redirect_compress_');
