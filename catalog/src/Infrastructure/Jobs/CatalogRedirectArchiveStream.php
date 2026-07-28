@@ -58,7 +58,7 @@ final class CatalogRedirectArchiveStream
         $writtenBytes = 0;
         $chunks = 0;
         $isUnrealPackage = false;
-        $decoders = [];
+        $decoder = '';
         $md5Context = hash_init('md5');
         $sha1Context = hash_init('sha1');
 
@@ -100,7 +100,7 @@ final class CatalogRedirectArchiveStream
                 );
                 if ($decoded === null) {
                     throw new \RuntimeException(
-                        'Epic UZ2 decompression failed at record ' . $recordNumber
+                        'Epic UZ2 zlib uncompress failed at record ' . $recordNumber
                         . ' (compressed=' . $compressed
                         . ', uncompressed=' . $uncompressed
                         . ', offset=' . $recordOffset
@@ -111,7 +111,7 @@ final class CatalogRedirectArchiveStream
                 }
 
                 $block = $decoded['data'];
-                $decoders[$decoded['decoder']] = true;
+                $decoder = (string)$decoded['decoder'];
                 if ($chunks === 0) {
                     $isUnrealPackage = \catalog_redirect_archive_has_package_tag(substr($block, 0, 4));
                     if ($requirePackageTag && !$isUnrealPackage) {
@@ -174,7 +174,7 @@ final class CatalogRedirectArchiveStream
             'bytes' => $writtenBytes,
             'compressed_bytes' => (int)$compressedBytes,
             'source_extension' => 'uz2',
-            'decoder' => 'epic-uz2-' . implode('+', array_keys($decoders)) . '-stream',
+            'decoder' => 'epic-uz2-' . $decoder . '-stream',
             'chunks' => $chunks,
             'expected_bytes' => $writtenBytes,
             'md5' => hash_final($md5Context),
@@ -184,40 +184,33 @@ final class CatalogRedirectArchiveStream
     }
 
     /**
-     * Try the strict Epic zlib path first, then PHP's compatible zlib/gzip/raw
-     * helpers. Every accepted fallback must still produce the exact record size
-     * declared by the archive.
+     * Epic UE2 calls zlib uncompress() for every record. PHP's gzuncompress()
+     * is the direct zlib-wrapper equivalent. The inflate API is retained only
+     * as a zlib-wrapper implementation fallback; raw deflate and gzip are not
+     * valid UZ2 record formats.
      *
      * @return array{data:string,decoder:string}|null
      */
     private static function decodeRecord(string $payload, int $limit, int $expectedBytes): ?array
     {
-        $strict = \catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expectedBytes);
-        if ($strict !== null) {
-            return ['data' => (string)$strict['data'], 'decoder' => 'zlib-strict'];
+        if ($payload === '' || $expectedBytes <= 0 || $expectedBytes > $limit) {
+            return null;
         }
 
-        foreach (['zlib_decode', 'gzuncompress', 'gzinflate', 'gzdecode'] as $function) {
-            if (!function_exists($function)) {
-                continue;
-            }
-
+        if (function_exists('gzuncompress')) {
             try {
-                $decoded = match ($function) {
-                    'zlib_decode', 'gzuncompress', 'gzinflate' => @$function($payload, $expectedBytes),
-                    default => @$function($payload),
-                };
+                $decoded = @gzuncompress($payload, $expectedBytes);
             } catch (\Throwable) {
                 $decoded = false;
             }
-
-            if (
-                is_string($decoded)
-                && strlen($decoded) === $expectedBytes
-                && strlen($decoded) <= $limit
-            ) {
-                return ['data' => $decoded, 'decoder' => $function];
+            if (is_string($decoded) && strlen($decoded) === $expectedBytes) {
+                return ['data' => $decoded, 'decoder' => 'zlib-uncompress'];
             }
+        }
+
+        $strict = \catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expectedBytes);
+        if ($strict !== null) {
+            return ['data' => (string)$strict['data'], 'decoder' => 'zlib-inflate'];
         }
 
         return null;
@@ -226,7 +219,7 @@ final class CatalogRedirectArchiveStream
     private static function availableDecoders(): string
     {
         $available = [];
-        foreach (['inflate_init', 'inflate_add', 'zlib_decode', 'gzuncompress', 'gzinflate', 'gzdecode'] as $function) {
+        foreach (['gzuncompress', 'inflate_init', 'inflate_add'] as $function) {
             if (function_exists($function)) {
                 $available[] = $function;
             }
