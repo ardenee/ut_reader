@@ -118,13 +118,29 @@ try {
 }
 redirect_codec_test_assert($badSignatureRejected, 'Invalid UZ signature was accepted.');
 
-$badSourceRejected = false;
-try {
-    catalog_redirect_archive_compress_data('not an Unreal package', 'bad.u', 'uz3');
-} catch (RuntimeException) {
-    $badSourceRejected = true;
+$plainData = "plain redirect payload\0with binary bytes\x01\x02";
+foreach ([
+    ['uz', 1234],
+    ['uz', 5678],
+    ['uz2', 1234],
+    ['uz3', 1234],
+] as [$extension, $signature]) {
+    $plainCompressed = catalog_redirect_archive_compress_data(
+        $plainData,
+        'ReadMe.txt',
+        $extension,
+        9,
+        4096,
+        $signature
+    );
+    $plainDecoded = catalog_redirect_archive_decompress_data(
+        (string)$plainCompressed['data'],
+        $extension,
+        1024 * 1024
+    );
+    redirect_codec_test_assert(is_array($plainDecoded), $extension . ' rejected a non-package redirect payload.');
+    redirect_codec_test_assert(hash_equals($plainData, (string)$plainDecoded['data']), $extension . ' changed non-package payload bytes.');
 }
-redirect_codec_test_assert($badSourceRejected, 'Non-package input was accepted for compression.');
 
 $badExtensionRejected = false;
 try {
