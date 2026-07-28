@@ -50,7 +50,7 @@ function catalog_session_absolute_timeout_seconds(): int
 
 function catalog_session_cookie_secure(): bool
 {
-    $configured = strtolower(trim((string)(getenv('UNREALDB_SESSION_COOKIE_SECURE') ?: '')));
+    $configured = strtolower(trim((string)(getenv('UNREALDB_SESSION_COOKIE_SECURE') ?: ''));
     if (in_array($configured, ['1', 'true', 'yes', 'on'], true)) {
         return true;
     }
@@ -252,5 +252,6 @@ function catalog_request_id(): string
 
 function catalog_public_error_message(): string
 {
+    $GLOBALS['catalog_public_cache_abort'] = true;
     return 'The request could not be completed. Reference: ' . catalog_request_id();
 }
