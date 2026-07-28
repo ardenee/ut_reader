@@ -58,11 +58,14 @@ final class CatalogRedirectArchiveStream
         $writtenBytes = 0;
         $chunks = 0;
         $isUnrealPackage = false;
+        $decoders = [];
         $md5Context = hash_init('md5');
         $sha1Context = hash_init('sha1');
 
         try {
             while ($readBytes < $compressedBytes) {
+                $recordNumber = $chunks + 1;
+                $recordOffset = $readBytes;
                 $header = self::readExact($input, 8);
                 $readBytes += 8;
                 $sizes = unpack('Vcompressed/Vuncompressed', $header);
@@ -77,26 +80,45 @@ final class CatalogRedirectArchiveStream
                     || $compressed > $compressedBytes - $readBytes
                     || $uncompressed > $limit - $writtenBytes
                 ) {
-                    throw new \RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
+                    throw new \RuntimeException(
+                        'Invalid Epic UZ2 record ' . $recordNumber
+                        . ' (compressed=' . $compressed
+                        . ', uncompressed=' . $uncompressed
+                        . ', offset=' . $recordOffset
+                        . ', remaining=' . max(0, $compressedBytes - $readBytes)
+                        . ') in ' . basename($sourceName) . '.'
+                    );
                 }
 
                 $payload = self::readExact($input, $compressed);
                 $readBytes += $compressed;
 
-                $decoded = \catalog_redirect_archive_inflate_epic_zlib(
+                $decoded = self::decodeRecord(
                     $payload,
                     $limit - $writtenBytes,
                     $uncompressed
                 );
                 if ($decoded === null) {
-                    throw new \RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
+                    throw new \RuntimeException(
+                        'Epic UZ2 decompression failed at record ' . $recordNumber
+                        . ' (compressed=' . $compressed
+                        . ', uncompressed=' . $uncompressed
+                        . ', offset=' . $recordOffset
+                        . ', payload=' . bin2hex(substr($payload, 0, 8))
+                        . ') in ' . basename($sourceName)
+                        . '; available decoders: ' . self::availableDecoders() . '.'
+                    );
                 }
 
-                $block = (string)$decoded['data'];
+                $block = $decoded['data'];
+                $decoders[$decoded['decoder']] = true;
                 if ($chunks === 0) {
                     $isUnrealPackage = \catalog_redirect_archive_has_package_tag(substr($block, 0, 4));
                     if ($requirePackageTag && !$isUnrealPackage) {
-                        throw new \RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
+                        throw new \RuntimeException(
+                            'Epic UZ2 record stream decoded, but its output does not begin with an Unreal package tag: '
+                            . basename($sourceName) . '.'
+                        );
                     }
                 }
                 hash_update($md5Context, $block);
@@ -124,7 +146,12 @@ final class CatalogRedirectArchiveStream
             }
 
             if ($chunks < 1 || $readBytes !== $compressedBytes || $writtenBytes < 1 || $writtenBytes > $limit) {
-                throw new \RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
+                throw new \RuntimeException(
+                    'Incomplete Epic UZ2 record stream in ' . basename($sourceName)
+                    . ' (records=' . $chunks
+                    . ', compressed_read=' . $readBytes . '/' . $compressedBytes
+                    . ', output=' . $writtenBytes . ').'
+                );
             }
         } catch (\Throwable $error) {
             fclose($input);
@@ -147,13 +174,64 @@ final class CatalogRedirectArchiveStream
             'bytes' => $writtenBytes,
             'compressed_bytes' => (int)$compressedBytes,
             'source_extension' => 'uz2',
-            'decoder' => 'epic-uz2-zlib-stream',
+            'decoder' => 'epic-uz2-' . implode('+', array_keys($decoders)) . '-stream',
             'chunks' => $chunks,
             'expected_bytes' => $writtenBytes,
             'md5' => hash_final($md5Context),
             'sha1' => hash_final($sha1Context),
             'is_unreal_package' => $isUnrealPackage,
         ];
+    }
+
+    /**
+     * Try the strict Epic zlib path first, then PHP's compatible zlib/gzip/raw
+     * helpers. Every accepted fallback must still produce the exact record size
+     * declared by the archive.
+     *
+     * @return array{data:string,decoder:string}|null
+     */
+    private static function decodeRecord(string $payload, int $limit, int $expectedBytes): ?array
+    {
+        $strict = \catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expectedBytes);
+        if ($strict !== null) {
+            return ['data' => (string)$strict['data'], 'decoder' => 'zlib-strict'];
+        }
+
+        foreach (['zlib_decode', 'gzuncompress', 'gzinflate', 'gzdecode'] as $function) {
+            if (!function_exists($function)) {
+                continue;
+            }
+
+            try {
+                $decoded = match ($function) {
+                    'zlib_decode', 'gzuncompress', 'gzinflate' => @$function($payload, $expectedBytes),
+                    default => @$function($payload),
+                };
+            } catch (\Throwable) {
+                $decoded = false;
+            }
+
+            if (
+                is_string($decoded)
+                && strlen($decoded) === $expectedBytes
+                && strlen($decoded) <= $limit
+            ) {
+                return ['data' => $decoded, 'decoder' => $function];
+            }
+        }
+
+        return null;
+    }
+
+    private static function availableDecoders(): string
+    {
+        $available = [];
+        foreach (['inflate_init', 'inflate_add', 'zlib_decode', 'gzuncompress', 'gzinflate', 'gzdecode'] as $function) {
+            if (function_exists($function)) {
+                $available[] = $function;
+            }
+        }
+        return $available === [] ? 'none' : implode(', ', $available);
     }
 
     /** @param resource $stream */
