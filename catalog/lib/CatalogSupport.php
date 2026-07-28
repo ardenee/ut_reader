@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupportCore.php';
 require_once __DIR__ . '/../bootstrap/autoload.php';
+require_once __DIR__ . '/CatalogResourceTracing.php';
+require_once __DIR__ . '/CatalogPublicResponseCache.php';
 
 \UnrealDb\Catalog\Presentation\Http\LegacySupportHooks::register();
 
@@ -18,6 +20,16 @@ if (in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['upload-bucket.
     if ($redirectLimit <= 0) {
         putenv('UNREALDB_REDIRECT_MAX_OUTPUT_BYTES=' . (PHP_INT_SIZE >= 8 ? '2147483647' : (string)PHP_INT_MAX));
     }
+}
+
+/*
+ * Serve explicitly approved anonymous GET pages before they open a database
+ * connection. Logged-in, remembered, POST and CSRF-bearing requests bypass it.
+ */
+try {
+    catalog_public_cache_bootstrap(catalog_config());
+} catch (Throwable $error) {
+    error_log('[UnrealDB public cache] bootstrap skipped: ' . $error->getMessage());
 }
 
 /*

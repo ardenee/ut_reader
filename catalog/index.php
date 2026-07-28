@@ -8,8 +8,6 @@ require_once __DIR__ . '/lib/CatalogMfa.php';
 
 use UnrealDb\Catalog\Infrastructure\Security\FileLoginRateLimiter;
 
-catalog_start_session();
-
 function redirect_to(string $url): never
 {
     header('Location: ' . $url, true, 303);
@@ -63,12 +61,15 @@ function catalog_login_rate_limiter(array $config): FileLoginRateLimiter
     );
 }
 
-function catalog_render_search_results(array $rows, string $query): void
+function catalog_render_search_results(array $rows, string $query, bool $truncated = false): void
 {
     echo '<div class="card"><h2>Results</h2>';
     if ($rows === []) {
         echo '<p class="muted">No matching files found.</p></div>';
         return;
+    }
+    if ($truncated) {
+        echo '<p class="muted small">Showing the first matching files without calculating an expensive exact total. Refine the search to narrow the result set.</p>';
     }
     echo '<table id="catalog-search-results" data-sortable-table><thead><tr><th>Game</th><th>Package</th><th>File</th><th>Matched Field</th><th>Tables (N/I/E)</th><th>Size</th><th>Identity</th></tr></thead><tbody>';
     foreach ($rows as $row) {
@@ -165,7 +166,12 @@ try {
 
     catalog_head((string)($config['site_name'] ?? 'UnrealDB'));
     if ($page === 'home') {
-        $games = catalog_all($db, 'SELECT g.*,p.engine_key profile_engine,COUNT(f.id) file_count,COALESCE(SUM(f.file_size),0) total_size FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 LEFT JOIN ue_files f ON f.game_id=g.id AND f.scan_status="verified" GROUP BY g.id,p.id ORDER BY g.name');
+        $games = catalog_all(
+            $db,
+            'SELECT g.*,p.engine_key profile_engine,COALESCE(s.verified_count,0) file_count,COALESCE(s.verified_size,0) total_size '
+            . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id ORDER BY g.name'
+        );
         echo '<div class="card hero"><h1>Unreal Games</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and file identities.</p></div><div class="grid">';
         foreach ($games as $game) {
             echo '<a class="stat tool-card" href="game-files.php?id=' . (int)$game['id'] . '"><h2>' . catalog_h($game['name']) . '</h2><p>' . catalog_h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</p></a>';
@@ -176,6 +182,7 @@ try {
         $games = catalog_all($db, 'SELECT id,name FROM ue_games ORDER BY name');
         $gameId = catalog_search_game_id($games);
         $adminSearch = catalog_support_is_admin();
+        $resultLimit = $adminSearch ? 200 : 100;
         echo '<div class="card hero"><h1>Search</h1><form class="catalog-search-form"><input type="hidden" name="page" value="search"><label>Search <input name="q" value="' . catalog_h($query) . '" placeholder="GUID, MD5, SHA1, package, object, file name"></label><label>Game <select name="game_id"' . (!$adminSearch ? ' required' : '') . '>';
         echo $adminSearch
             ? '<option value="">All games</option>'
@@ -183,7 +190,7 @@ try {
         foreach ($games as $game) {
             echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $gameId ? ' selected' : '') . '>' . catalog_h($game['name']) . '</option>';
         }
-        echo '</select></label><button>Search</button></form><p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Broad searches require at least three characters and return at most 200 files.</p></div>';
+        echo '</select></label><button>Search</button></form><p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Broad public searches return at most 100 files and do not calculate an exact result total.</p></div>';
         if ($query !== '') {
             if (!$adminSearch && $gameId < 1) {
                 echo '<div class="card"><p class="muted">Choose a game before searching.</p></div>';
@@ -192,7 +199,12 @@ try {
             } else {
                 catalog_public_search_rate_limit();
                 try {
-                    catalog_render_search_results(CatalogSearchService::findFiles($db, $query, 200, $gameId ?: null), $query);
+                    $rows = CatalogSearchService::findFiles($db, $query, $resultLimit + 1, $gameId ?: null);
+                    $truncated = count($rows) > $resultLimit;
+                    if ($truncated) {
+                        array_pop($rows);
+                    }
+                    catalog_render_search_results($rows, $query, $truncated);
                 } catch (CatalogSearchUnavailableException) {
                     echo '<div class="card"><h2>Search temporarily unavailable</h2><p class="muted">Retry with a more specific term.</p></div>';
                 }
