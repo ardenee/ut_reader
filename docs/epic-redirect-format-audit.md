@@ -1,22 +1,42 @@
 # Epic redirect format source audit
 
-This document records the engine-defined redirect formats used by UnrealDB's production decoder. Format selection is based on the wrapper extension; numeric values such as `5678` are not sufficient because they have different meanings in historical UE1 `.uz` and UE3 `.uz3` files.
+This document records the engine-defined redirect formats used by UnrealDB's production decoder and shared compression API. Format selection is based on the wrapper extension and complete header layout. The numeric value `5678` alone is not sufficient because it appears in two incompatible formats.
 
 ## UE1 `.uz`
 
-Authoritative code reviewed:
+Authoritative material reviewed:
 
 - `ardenee/UT99src/Core/Inc/FCodec.h`
+- UnrealDeps/uzLib v0.1.0 source and its `UZ File Version` selector
 - UnrealDB: `catalog/lib/CatalogLegacyUz.php`
+- UnrealDB: `catalog/lib/CatalogRedirectCodec.php`
 
-The normal UCC wrapper starts with little-endian signature `1234`, serializes the original filename, and decodes through Epic's FCodec stages in reverse order:
+UZ has two FCodec wrapper versions. Both serialize the original filename immediately after the little-endian signature.
+
+### Version 1234 — standard
+
+Decode order:
 
 1. Huffman
 2. Move-to-front
 3. Burrows-Wheeler transform
 4. Run-length encoding
 
-A historical UE1 NewVer wrapper uses signature `5678` and adds an RLE stage between Huffman and MTF. It remains a `.uz` FCodec wrapper and must not be treated as UE3 `.uz3`.
+Encode order is the reverse: RLE -> BWT -> MTF -> Huffman.
+
+### Version 5678 — newer
+
+This is still a `.uz` wrapper. It adds another RLE stage between Huffman and MTF during decoding:
+
+1. Huffman
+2. Run-length encoding
+3. Move-to-front
+4. Burrows-Wheeler transform
+5. Run-length encoding
+
+Encode order is the reverse: RLE -> BWT -> MTF -> RLE -> Huffman.
+
+UnrealDB accepts both signatures when the wrapper extension is `.uz`. Compression defaults to 1234 and can explicitly request 5678.
 
 ## UE2 `.uz2`
 
@@ -25,6 +45,7 @@ Authoritative code reviewed:
 - `ardenee/UT2004src/IpDrv/Src/UCompressCommandlet.cpp`
 - `ardenee/UT2004src/Core/Inc/FFileManagerGeneric.h`
 - UnrealDB: `catalog/src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php`
+- UnrealDB: `catalog/lib/CatalogRedirectCodec.php`
 
 The commandlet delegates to `FILECOPY_Compress`/`FILECOPY_Decompress`. The file manager uses:
 
@@ -39,16 +60,30 @@ Raw deflate, gzip and verbatim equal-size records are not UZ2 formats. Equal com
 
 ## UE3 `.uz3`
 
-UnrealDB production layout:
+Authoritative material reviewed:
+
+- UnrealDeps/uzLib v0.1.0 source
+- Unreal Wiki UZ3 format description
+- UnrealDB: `catalog/lib/CatalogRedirectArchivePayload.php`
+- UnrealDB: `catalog/lib/CatalogRedirectCodec.php`
+
+UZ3 has this layout:
 
 - little-endian tag `5678` (`0x162E`)
 - little-endian total uncompressed file size
 - one zlib `compress()` stream containing the complete file
 - zlib `uncompress()` with an exact output-size check
 
-Unlike UE1 `.uz`, UZ3 has no serialized original filename and does not use the FCodec Huffman/RLE/MTF/BWT chain. The output name is the wrapper filename with `.uz3` removed.
+Unlike both UZ versions, UZ3 has no serialized original filename and does not use Huffman, RLE, MTF or BWT. The output name is the wrapper filename with `.uz3` removed.
 
-The private `ardenee/UE3src` repository was supplied for the audit, but its code-search index was unavailable during this review. The layout above was checked against the established UE3 UZ3 format documentation and locked into executable regression tests. The direct UE3 commandlet source path should be added here when the private repository index becomes available.
+## The two `5678` formats
+
+They are distinguished by the wrapper extension and complete header structure:
+
+- `.uz` + `5678`: compact-index filename followed by the newer FCodec stream
+- `.uz3` + `5678`: four-byte total uncompressed size followed by one zlib stream
+
+A `.uz` 5678 wrapper must not be accepted as `.uz3`, and a `.uz3` wrapper must not be accepted as `.uz`.
 
 ## UE4
 
@@ -56,8 +91,9 @@ UE4 does not introduce a fourth redirect wrapper handled by this decoder. UE4/UE
 
 ## Production rules
 
-- `.uz` invokes only the UE1 FCodec decoder.
+- `.uz` accepts only the signed FCodec 1234 or 5678 layouts.
 - `.uz2` invokes only the UE2 record-zlib decoder.
 - `.uz3` invokes only the UE3 tagged whole-file-zlib decoder.
-- Production dispatch does not guess another format after an exact decoder rejects a wrapper.
+- Production dispatch does not guess another extension's format after the selected decoder rejects a wrapper.
 - Raw-deflate and gzip compatibility decoding is not permitted for UZ2 or UZ3.
+- Compression and decompression use the same format definitions and regression fixtures.
