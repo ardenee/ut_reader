@@ -29,7 +29,15 @@ try {
         JsonResponse::error('invalid_uploads', 'Upload Bucket source identifiers must be an array.', 400);
     }
     if (count($rawIds) > 10000) {
-        JsonResponse::error('too_many_uploads', 'Finalize no more than 10,000 uploaded files at once.', 400);
+        JsonResponse::error('too_many_uploads', 'Finalize no more than 10,000 uploaded files per request.', 400);
+    }
+
+    $startWorker = true;
+    if (array_key_exists('start_worker', $payload)) {
+        if (!is_bool($payload['start_worker'])) {
+            JsonResponse::error('invalid_start_worker', 'start_worker must be a JSON boolean.', 400);
+        }
+        $startWorker = $payload['start_worker'];
     }
 
     $uploadIds = [];
@@ -149,7 +157,7 @@ try {
     );
     $worker = null;
     $workerError = '';
-    if ($pendingJobs > 0) {
+    if ($startWorker && $pendingJobs > 0) {
         try {
             // A second recovery closes the small race between the initial queue
             // inspection and the worker launch at the end of batch finalisation.
@@ -172,6 +180,7 @@ try {
             'failed' => $failed,
             'legacy_migrated' => $legacyMigrated,
             'pending_jobs' => $pendingJobs,
+            'start_worker' => $startWorker,
             'job_ids' => array_values($jobIds),
             'worker' => $worker,
             'worker_error' => $workerError,
