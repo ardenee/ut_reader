@@ -9,15 +9,7 @@ declare(strict_types=1);
  */
 function catalog_admin_navigation_groups(string $root): array
 {
-    static $clientNavigationLoaded = false;
-    if (!$clientNavigationLoaded && function_exists('catalog_h')) {
-        $scriptPath = __DIR__ . '/../assets/catalog-navigation.js';
-        $scriptVersion = is_file($scriptPath) ? (string)filemtime($scriptPath) : '1';
-        echo '<script src="' . catalog_h($root . 'assets/catalog-navigation.js?v=' . $scriptVersion) . '"></script>';
-        $clientNavigationLoaded = true;
-    }
-
-    return [
+    $groups = [
         'Admin' => [
             'Dashboard' => $root . 'dashboard.php',
             'Setup' => $root . 'setup.php',
@@ -83,4 +75,22 @@ function catalog_admin_navigation_groups(string $root): array
             'Diagnostics' => $root . 'federation/diagnostics.php',
         ],
     ];
+
+    static $clientNavigationLoaded = false;
+    if (!$clientNavigationLoaded && function_exists('catalog_h')) {
+        $scriptPath = __DIR__ . '/../assets/catalog-navigation.js';
+        $scriptVersion = is_file($scriptPath) ? (string)filemtime($scriptPath) : '1';
+        $encodedGroups = json_encode(
+            $groups,
+            JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES
+        );
+        if (!is_string($encodedGroups)) {
+            $encodedGroups = '{}';
+        }
+        echo '<script>window.UnrealDbAdminNavigation=' . $encodedGroups . ';</script>';
+        echo '<script src="' . catalog_h($root . 'assets/catalog-navigation.js?v=' . $scriptVersion) . '"></script>';
+        $clientNavigationLoaded = true;
+    }
+
+    return $groups;
 }
