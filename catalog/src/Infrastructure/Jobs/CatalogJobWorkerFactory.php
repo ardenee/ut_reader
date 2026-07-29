@@ -65,6 +65,10 @@ final class CatalogJobWorkerFactory
                 new UnverifiedDuplicateCleanupJobHandler($db, $config),
                 new GeneratedPackageJobHandler($db, $config),
                 new GameBackupExportJobHandler($db, $config),
+                // Backup restore is a complete validation operation. This dedicated
+                // handler records every file failure with no truncation and must be
+                // registered before the legacy combined backup handler.
+                new GameBackupImportJobHandler($db, $trustedImportConfig),
                 new GameBackupJobHandler($db, $trustedImportConfig),
                 // Search documents and the imported file's package summary are
                 // maintained outside the package import transaction.
