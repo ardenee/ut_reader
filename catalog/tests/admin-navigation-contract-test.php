@@ -54,6 +54,8 @@ admin_navigation_expect(str_contains($core, 'foreach (catalog_admin_navigation_g
 
 $navigationSource = file_get_contents(__DIR__ . '/../lib/CatalogNavigation.php');
 admin_navigation_expect(is_string($navigationSource) && str_contains($navigationSource, 'window.UnrealDbAdminNavigation='), 'Centralized navigation is not exported to the browser.');
+admin_navigation_expect(str_contains($navigationSource, "\$currentScript === 'game-backups.php'"), 'Game Backups does not load its result-detail client.');
+admin_navigation_expect(str_contains($navigationSource, 'assets/game-backup-results.js?v='), 'Game Backups result-detail script is not cache-versioned.');
 
 $script = file_get_contents(__DIR__ . '/../assets/catalog-navigation.js');
 admin_navigation_expect(is_string($script), 'Could not read catalog-navigation.js.');
@@ -63,4 +65,16 @@ foreach ($obsolete as $page) {
     admin_navigation_expect(!str_contains($script, $page), 'Client navigation still contains obsolete federation page: ' . $page);
 }
 
- echo "Admin navigation contract tests passed.\n";
+$backupResults = file_get_contents(__DIR__ . '/../assets/game-backup-results.js');
+admin_navigation_expect(is_string($backupResults), 'Could not read game-backup-results.js.');
+foreach ([
+    'api/v1/job-status.php',
+    'result.errors',
+    'failed filenames + errors',
+    'filename and exact error',
+    'exported_relative_path',
+] as $required) {
+    admin_navigation_expect(str_contains($backupResults, $required), 'Game backup result details are missing: ' . $required);
+}
+
+echo "Admin navigation contract tests passed.\n";
