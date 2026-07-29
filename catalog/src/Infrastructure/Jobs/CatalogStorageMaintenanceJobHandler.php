@@ -8,7 +8,6 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 
 final class CatalogStorageMaintenanceJobHandler implements JobHandler
@@ -135,7 +134,15 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
 
     private function pruneArtifacts(ClaimedJob $job, JobExecutionContext $context): array
     {
-        $incomingAge = max(3600, min((int)($job->payload['incoming_max_age_seconds'] ?? 172800), 30 * 86400));
+        $minimumAge = max(
+            60,
+            min(
+                (int)($job->payload['orphan_min_age_seconds']
+                    ?? $job->payload['incoming_max_age_seconds']
+                    ?? 172800),
+                30 * 86400
+            )
+        );
         $context->checkpoint([
             'stage' => 'prune_artifacts',
             'done' => 0,
@@ -149,10 +156,10 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
             'done' => 1,
             'total' => 2,
             'percent' => 50,
-            'message' => 'Pruning abandoned staged imports.',
+            'message' => 'Pruning unreferenced incoming sources and abandoned backup restore working copies.',
             'generated' => $generated,
         ]);
-        $incoming = (new CatalogIncomingFileStore($this->config))->prune($incomingAge);
+        $jobStorage = (new CatalogJobStorageCleanup($this->db, $this->config))->prune($minimumAge);
         $context->checkpoint([
             'stage' => 'complete',
             'done' => 2,
@@ -160,13 +167,13 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
             'percent' => 100,
             'message' => 'Stale artifact cleanup complete.',
             'generated' => $generated,
-            'incoming' => $incoming,
+            'job_storage' => $jobStorage,
         ]);
         return [
             'operation' => 'prune_stale_artifacts',
             'generated' => $generated,
-            'incoming' => $incoming,
-            'incoming_max_age_seconds' => $incomingAge,
+            'job_storage' => $jobStorage,
+            'orphan_min_age_seconds' => $minimumAge,
         ];
     }
 }

@@ -145,7 +145,6 @@ final class GameBackupImportJobHandler implements JobHandler
                         'defer_dependency_rebuild' => true,
                     ]
                 );
-                $temporary = '';
 
                 $status = (string)($result[0] ?? 'imported');
                 if ($status === 'duplicate') {
