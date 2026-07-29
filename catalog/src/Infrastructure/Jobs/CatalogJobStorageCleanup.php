@@ -111,7 +111,7 @@ final class CatalogJobStorageCleanup
             $result['scanned']++;
             $name = $entry->getFilename();
             $jobId = preg_match('/^restore-([0-9]+)-/i', $name, $match) === 1 ? (int)$match[1] : 0;
-            if ($jobId > 0 && isset($activeJobs[$jobId])) {
+            if (($jobId > 0 && isset($activeJobs[$jobId])) || ($jobId === 0 && $activeJobs !== [])) {
                 $result['active']++;
                 continue;
             }
