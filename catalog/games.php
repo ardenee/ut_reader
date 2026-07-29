@@ -69,12 +69,20 @@ try {
         $baseGameMissingCount = (int)($game['missing_base_game_dependency_count'] ?? 0);
         $missingBadge = CatalogUi::badge(number_format($missingCount), $missingCount > 0 ? 'warning' : 'success');
         $baseGameMissingBadge = CatalogUi::badge(number_format($baseGameMissingCount), $baseGameMissingCount > 0 ? 'warning' : 'success');
+        $missingUrl = 'game-missing.php?' . http_build_query([
+            'game_id' => (int)$game['id'],
+            'dependency_type' => 'all',
+        ]);
+        $baseGameMissingUrl = 'game-missing.php?' . http_build_query([
+            'game_id' => (int)$game['id'],
+            'dependency_type' => 'base_game',
+        ]);
         $rows .= '<tr>';
         $rows .= '<td><strong>' . catalog_h($game['name']) . '</strong><br><span class="muted small">' . catalog_h($game['slug']) . '</span></td>';
         $rows .= '<td>' . $engineBadge . '</td>';
         $rows .= '<td data-sort-value="' . (int)$game['file_count'] . '">' . number_format((int)$game['file_count']) . '</td>';
-        $rows .= '<td data-sort-value="' . $missingCount . '"><a href="missing.php" title="All missing dependency object rows, including base-game dependencies">' . $missingBadge . '</a></td>';
-        $rows .= '<td data-sort-value="' . $baseGameMissingCount . '"><a href="missing.php" title="Missing dependency rows that reference official base-game packages">' . $baseGameMissingBadge . '</a></td>';
+        $rows .= '<td data-sort-value="' . $missingCount . '"><a href="' . catalog_h($missingUrl) . '" title="Show all missing dependency object rows for this game">' . $missingBadge . '</a></td>';
+        $rows .= '<td data-sort-value="' . $baseGameMissingCount . '"><a href="' . catalog_h($baseGameMissingUrl) . '" title="Show missing official base-game dependency rows for this game">' . $baseGameMissingBadge . '</a></td>';
         $rows .= '<td data-sort-value="' . (int)$game['total_size'] . '">' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</td>';
         $rows .= '<td>' . CatalogUi::button('Open files', [
             'href' => 'game-files.php?id=' . (int)$game['id'],
