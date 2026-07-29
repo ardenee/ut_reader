@@ -32,20 +32,34 @@
         return '';
     }
 
-    async function readJson(url) {
-        const response = await fetch(url, {cache: 'no-store', credentials: 'same-origin'});
-        let body;
-        try {
-            body = await response.json();
-        } catch (error) {
-            throw new Error('The server returned invalid JSON (HTTP ' + response.status + ').');
-        }
-        if (!response.ok) {
-            throw new Error(body && body.error && body.error.message
-                ? String(body.error.message)
-                : 'The request failed with HTTP ' + response.status + '.');
-        }
-        return body;
+    function readJson(url) {
+        return new Promise(function (resolve, reject) {
+            const request = new XMLHttpRequest();
+            request.open('GET', url, true);
+            request.withCredentials = true;
+            request.setRequestHeader('Cache-Control', 'no-cache');
+            request.onreadystatechange = function () {
+                if (request.readyState !== 4) return;
+                let body;
+                try {
+                    body = JSON.parse(request.responseText || '');
+                } catch (error) {
+                    reject(new Error('The server returned invalid JSON (HTTP ' + request.status + ').'));
+                    return;
+                }
+                if (request.status < 200 || request.status >= 300) {
+                    reject(new Error(body && body.error && body.error.message
+                        ? String(body.error.message)
+                        : 'The request failed with HTTP ' + request.status + '.'));
+                    return;
+                }
+                resolve(body);
+            };
+            request.onerror = function () {
+                reject(new Error('The request could not reach the background-job API.'));
+            };
+            request.send();
+        });
     }
 
     async function loadAll(progress) {
