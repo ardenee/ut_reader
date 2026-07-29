@@ -34,7 +34,7 @@ complete_backup_validation_expect(
     'The completed backup report does not explicitly guarantee complete validation and error retention.'
 );
 complete_backup_validation_expect(
-    str_contains($handler, '(\$imported + \$duplicates + \$aliases + \$failed) !== \$total'),
+    str_contains($handler, "(\$imported + \$duplicates + \$aliases + \$failed) !== \$total"),
     'Game-backup validation does not verify that every manifest entry was classified.'
 );
 complete_backup_validation_expect(
