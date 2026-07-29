@@ -27,23 +27,23 @@ complete_backup_validation_expect(
     'Game-backup validation does not retain each failed file.'
 );
 complete_backup_validation_expect(
-    str_contains($handler, "'validated' => $total")
+    str_contains($handler, "'validated' => \$total")
     && str_contains($handler, "'validation_complete' => true")
     && str_contains($handler, "'errors_complete' => true")
     && str_contains($handler, "'errors_truncated' => false"),
     'The completed backup report does not explicitly guarantee complete validation and error retention.'
 );
 complete_backup_validation_expect(
-    str_contains($handler, '($imported + $duplicates + $aliases + $failed) !== $total'),
+    str_contains($handler, '(\$imported + \$duplicates + \$aliases + \$failed) !== \$total'),
     'Game-backup validation does not verify that every manifest entry was classified.'
 );
 complete_backup_validation_expect(
-    str_contains($handler, "'index' => $index + 1")
-    && str_contains($handler, "'file' => $originalName")
-    && str_contains($handler, "'exported_relative_path' => $relative")
-    && str_contains($handler, "'source_relative_path' => $sourceRelative")
-    && str_contains($handler, "'error_type' => get_class($error)")
-    && str_contains($handler, "'error' => $this->shortError($error)"),
+    str_contains($handler, "'index' => \$index + 1")
+    && str_contains($handler, "'file' => \$originalName")
+    && str_contains($handler, "'exported_relative_path' => \$relative")
+    && str_contains($handler, "'source_relative_path' => \$sourceRelative")
+    && str_contains($handler, "'error_type' => get_class(\$error)")
+    && str_contains($handler, "'error' => \$this->shortError(\$error)"),
     'Complete validation failures do not retain their full file and error context.'
 );
 
