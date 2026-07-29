@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-$root = dirname(__DIR__, 2);
+$root = dirname(__DIR__);
 $bridge = file_get_contents($root . '/assets/background-jobs-cursor-bridge.js');
 $export = file_get_contents($root . '/assets/background-jobs-failure-export.js');
 
