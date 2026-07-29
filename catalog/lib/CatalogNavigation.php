@@ -95,6 +95,10 @@ function catalog_admin_navigation_groups(string $root): array
             $backupResultScript = __DIR__ . '/../assets/game-backup-results.js';
             $backupResultVersion = is_file($backupResultScript) ? (string)filemtime($backupResultScript) : '1';
             echo '<script src="' . catalog_h($root . 'assets/game-backup-results.js?v=' . $backupResultVersion) . '"></script>';
+
+            $backupGameScript = __DIR__ . '/../assets/game-backup-job-game.js';
+            $backupGameVersion = is_file($backupGameScript) ? (string)filemtime($backupGameScript) : '1';
+            echo '<script src="' . catalog_h($root . 'assets/game-backup-job-game.js?v=' . $backupGameVersion) . '"></script>';
         }
         $clientNavigationLoaded = true;
     }
