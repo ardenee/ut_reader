@@ -89,6 +89,13 @@ function catalog_admin_navigation_groups(string $root): array
         }
         echo '<script>window.UnrealDbAdminNavigation=' . $encodedGroups . ';</script>';
         echo '<script src="' . catalog_h($root . 'assets/catalog-navigation.js?v=' . $scriptVersion) . '"></script>';
+
+        $currentScript = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
+        if ($currentScript === 'game-backups.php') {
+            $backupResultScript = __DIR__ . '/../assets/game-backup-results.js';
+            $backupResultVersion = is_file($backupResultScript) ? (string)filemtime($backupResultScript) : '1';
+            echo '<script src="' . catalog_h($root . 'assets/game-backup-results.js?v=' . $backupResultVersion) . '"></script>';
+        }
         $clientNavigationLoaded = true;
     }
 
