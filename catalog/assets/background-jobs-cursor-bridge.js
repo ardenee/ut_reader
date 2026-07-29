@@ -106,4 +106,13 @@
 
         return response;
     };
+
+    const exportScript = document.createElement('script');
+    const currentScript = document.currentScript;
+    const version = currentScript && currentScript.src
+        ? new URL(currentScript.src, window.location.href).search
+        : '';
+    exportScript.src = 'assets/background-jobs-failure-export.js' + version;
+    exportScript.defer = true;
+    document.head.appendChild(exportScript);
 }());
