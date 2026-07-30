@@ -1,45 +1,46 @@
 <?php
 declare(strict_types=1);
 
-function upload_bucket_preparation_progress_expect(bool $condition, string $message): void
+function upload_bucket_progress_expect(bool $condition, string $message): void
 {
     if (!$condition) {
         throw new RuntimeException($message);
     }
 }
 
-$script = file_get_contents(__DIR__ . '/../assets/upload-bucket-follow.js');
-upload_bucket_preparation_progress_expect(is_string($script), 'Could not read Upload Bucket follow/progress script.');
+$script = file_get_contents(__DIR__ . '/../assets/upload-bucket-coordinator.js');
+upload_bucket_progress_expect(is_string($script) && $script !== '', 'Could not read Upload Bucket coordinator.');
 
 foreach ([
-    'Phase 1 of 3 — Prepare durable staging and pause processing',
-    'Phase 2 of 3 — Check identities and upload files',
-    'Phase 3 of 3 — Finalise batch and create processing jobs',
-    'no selected-file bytes transferred yet',
-    'Scanning stale incomplete chunk staging',
-    'The active Upload Bucket job is finishing normally',
-    'elapsedText()',
-    "bar.removeAttribute('value')",
-    "new MutationObserver(inspect)",
+    "overallLabel.textContent = 'Uploading selected files to durable staging'",
+    "currentLabel.textContent = 'Calculating MD5 and SHA-1 for '",
+    "currentLabel.textContent = 'Uploading '",
+    "currentLabel.textContent = 'Verifying durable staged file '",
+    "currentLabel.textContent = 'Transfers are complete. Waiting for '",
+    "overallLabel.textContent = 'Queuing staged files one at a time'",
+    "currentLabel.textContent = 'Validating and queuing staged file '",
+    "overallLabel.textContent = 'Upload and file-by-file finalisation complete'",
+    'workerDescription(processing)',
+    'result.retained',
 ] as $fragment) {
-    upload_bucket_preparation_progress_expect(
+    upload_bucket_progress_expect(
         str_contains($script, $fragment),
-        'Upload Bucket preparation progress is missing: ' . $fragment
+        'Upload Bucket state-based progress is missing: ' . $fragment
     );
 }
 
-upload_bucket_preparation_progress_expect(
-    str_contains($script, "if (/^Preparing durable upload staging/i.test(text))")
-    && str_contains($script, "if (/^Waiting for the current Upload Bucket job/i.test(text))")
-    && str_contains($script, "beginTimedPhase('prepare'")
-    && str_contains($script, "beginTimedPhase(\n                'finalize'"),
-    'Upload Bucket preparation/finalisation messages are not mapped into visible phases.'
+upload_bucket_progress_expect(
+    !str_contains($script, 'elapsedText()')
+        && !str_contains($script, 'setInterval(')
+        && !str_contains($script, 'Opening the processing queue in 3 seconds'),
+    'Upload Bucket progress still depends on elapsed-time or countdown presentation.'
 );
 
-upload_bucket_preparation_progress_expect(
-    str_contains($script, 'showHandoff()')
-    && str_contains($script, 'Opening the processing queue in 3 seconds'),
-    'The existing automatic processing-queue handoff was lost.'
+upload_bucket_progress_expect(
+    str_contains($script, 'const pausePromise = processingState(\'begin_batch\')')
+        && str_contains($script, 'await waitUntilPaused(pausePromise)')
+        && str_contains($script, 'No newly uploaded file is being processed yet.'),
+    'Worker pause is not performed in parallel with durable file transfer.'
 );
 
-echo "Upload Bucket preparation progress contract tests passed.\n";
+fwrite(STDOUT, "Upload Bucket state-based progress contract tests passed.\n");
