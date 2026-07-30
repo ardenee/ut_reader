@@ -86,8 +86,6 @@ try {
         );
     }
 
-    // Legacy migration and orphan recovery are one-time batch preparation work.
-    // Subsequent 50-file groups skip them, keeping each request short.
     $legacyMigrated = $prepareQueue ? $queue->migrateLegacyQueuedJobs() : 0;
 
     $messages = [];
@@ -169,7 +167,6 @@ try {
     $workerError = '';
     if ($startWorker && $pendingJobs > 0) {
         try {
-            // The final group performs one recovery immediately before launch.
             (new CatalogOrphanedJobRecovery($application->db, $application->config))
                 ->recoverInactiveQueue($queue->queueName());
             $worker = $launcher->start($queue->queueName(), 10000);
@@ -179,6 +176,9 @@ try {
         }
     }
 
+    // A failed uploaded file is a file result, not a failed HTTP operation.
+    // Returning it normally lets the browser record that exact file and continue
+    // finalising every later staged file.
     JsonResponse::send([
         'ok' => true,
         'data' => [
@@ -197,7 +197,7 @@ try {
             'orphan_recovery' => $orphanRecovery,
             'messages' => $messages,
         ],
-    ], $failed > 0 && $queued === 0 && $duplicates === 0 && $legacyMigrated === 0 ? 500 : 200);
+    ], 200);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     $errorMessage = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
