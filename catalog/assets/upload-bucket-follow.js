@@ -23,8 +23,15 @@
     let phaseDetail = '';
     let operationActive = false;
 
-    function sleep(milliseconds) {
-        return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+    function sleep(ms) {
+        return new Promise(function (resolve) { window.setTimeout(resolve, ms); });
+    }
+
+    function elapsedText() {
+        if (!phaseStarted) return '0s';
+        const seconds = Math.max(0, Math.floor((Date.now() - phaseStarted) / 1000));
+        if (seconds < 60) return seconds + 's';
+        return Math.floor(seconds / 60) + 'm ' + String(seconds % 60).padStart(2, '0') + 's';
     }
 
     function appendStatus(status, file, message) {
@@ -48,57 +55,40 @@
         log.scrollTop = log.scrollHeight;
     }
 
-    function elapsedText() {
-        if (!phaseStarted) return '0s';
-        const seconds = Math.max(0, Math.floor((Date.now() - phaseStarted) / 1000));
-        if (seconds < 60) return seconds + 's';
-        const minutes = Math.floor(seconds / 60);
-        const remainder = seconds % 60;
-        return minutes + 'm ' + String(remainder).padStart(2, '0') + 's';
-    }
-
-    function setIndeterminate(bar) {
-        bar.removeAttribute('value');
-    }
-
-    function stopPhaseTimer() {
+    function stopTimer() {
         if (phaseTimer) window.clearInterval(phaseTimer);
         phaseTimer = 0;
     }
 
-    function renderTimedPhase() {
+    function renderTimer() {
         const elapsed = elapsedText();
         if (activePhase === 'prepare') {
             overallLabel.textContent = 'Phase 1 of 3 — Pause Upload Bucket processing';
             overallCount.textContent = phaseDetail + ' · ' + elapsed + ' elapsed · no selected-file bytes transferred yet';
             currentSpeed.textContent = elapsed + ' elapsed';
-            setIndeterminate(overallBar);
-            setIndeterminate(currentBar);
-        } else if (activePhase === 'finalize_wait') {
+            overallBar.removeAttribute('value');
+            currentBar.removeAttribute('value');
+        } else if (activePhase === 'finalize') {
             currentSpeed.textContent = elapsed + ' elapsed';
         }
     }
 
     function beginTimedPhase(name, detail) {
         if (activePhase !== name) {
-            stopPhaseTimer();
+            stopTimer();
             activePhase = name;
             phaseStarted = Date.now();
-            phaseTimer = window.setInterval(renderTimedPhase, 1000);
+            phaseTimer = window.setInterval(renderTimer, 1000);
         }
         phaseDetail = detail;
-        renderTimedPhase();
+        renderTimer();
     }
 
     function beginTransferPhase() {
-        if (activePhase === 'transfer') {
-            overallLabel.textContent = 'Phase 2 of 3 — Check identities and upload files';
-            return;
-        }
-        stopPhaseTimer();
+        if (activePhase === 'transfer') return;
+        stopTimer();
         activePhase = 'transfer';
         phaseStarted = 0;
-        phaseDetail = '';
         currentSpeed.textContent = '';
         if (!currentBar.hasAttribute('value')) currentBar.value = 0;
         if (!overallBar.hasAttribute('value')) overallBar.value = 0;
@@ -106,10 +96,9 @@
     }
 
     function finishPhases(success) {
-        stopPhaseTimer();
+        stopTimer();
         activePhase = 'complete';
         phaseStarted = 0;
-        phaseDetail = '';
         currentSpeed.textContent = '';
         operationActive = false;
         if (!currentBar.hasAttribute('value')) currentBar.value = success ? 100 : 0;
@@ -124,29 +113,36 @@
         return fallback;
     }
 
-    function installGroupedBatchFinalization() {
+    function installGroupedFinalization() {
         if (window.__unrealDbUploadBucketGroupedFinalization || !window.fetch || !window.Response) return;
         window.__unrealDbUploadBucketGroupedFinalization = true;
         const nativeFetch = window.fetch.bind(window);
 
         function isBatchRequest(input, init) {
             if (!init || String(init.method || 'GET').toUpperCase() !== 'POST') return false;
-            const requestUrl = typeof input === 'string' ? input : String((input && input.url) || '');
-            return requestUrl === batchUrl || requestUrl.endsWith('/' + batchUrl);
+            const url = typeof input === 'string' ? input : String((input && input.url) || '');
+            return url === batchUrl || url.endsWith('/' + batchUrl);
         }
 
-        function mergedResponse(data) {
+        function combinedResponse(data) {
             return new Response(JSON.stringify({ok: true, data: data}), {
                 status: 200,
                 headers: {'Content-Type': 'application/json; charset=utf-8'}
             });
         }
 
-        async function requestGroup(input, init, payload, groupNumber, groupTotal) {
+        async function requestGroup(input, init, payload, number, total) {
             let lastError = null;
             for (let attempt = 1; attempt <= 3; attempt++) {
+                const groupInit = Object.assign({}, init, {body: JSON.stringify(payload)});
+                // The parent uploader has one five-minute timer for the full batch.
+                // Grouped finalisation uses a fresh timeout for each short request.
+                delete groupInit.signal;
+                const controller = window.AbortController ? new AbortController() : null;
+                const timeout = controller ? window.setTimeout(function () { controller.abort(); }, 120000) : 0;
+                if (controller) groupInit.signal = controller.signal;
                 try {
-                    const response = await nativeFetch(input, Object.assign({}, init, {body: JSON.stringify(payload)}));
+                    const response = await nativeFetch(input, groupInit);
                     let body;
                     try {
                         body = await response.clone().json();
@@ -158,23 +154,27 @@
                     }
                     return body.data || {};
                 } catch (error) {
-                    lastError = error;
+                    lastError = error && error.name === 'AbortError'
+                        ? new Error('Finalisation group timed out after 120 seconds.')
+                        : error;
                     if (attempt >= 3) break;
-                    appendStatus('retrying', 'Finalisation group ' + groupNumber + '/' + groupTotal,
-                        'Retrying finalisation group after attempt ' + attempt + ' failed: ' + (error.message || 'Unknown error'));
-                    label.textContent = 'Retrying finalisation group ' + groupNumber + ' of ' + groupTotal
+                    appendStatus('retrying', 'Finalisation group ' + number + '/' + total,
+                        'Retrying finalisation group after attempt ' + attempt + ' failed: ' + (lastError.message || 'Unknown error'));
+                    label.textContent = 'Retrying finalisation group ' + number + ' of ' + total
                         + ' after a temporary failure (attempt ' + (attempt + 1) + ' of 3)...';
                     await sleep(attempt * 1000);
+                } finally {
+                    if (timeout) window.clearTimeout(timeout);
                 }
             }
             throw lastError || new Error('Finalisation group failed.');
         }
 
         async function finalizeGroups(input, init, payload) {
-            const uploadIds = Array.isArray(payload.upload_ids) ? payload.upload_ids : [];
-            if (uploadIds.length <= FINALIZE_GROUP_SIZE) return nativeFetch(input, init);
+            const idsAll = Array.isArray(payload.upload_ids) ? payload.upload_ids : [];
+            if (idsAll.length <= FINALIZE_GROUP_SIZE) return nativeFetch(input, init);
 
-            const groups = Math.ceil(uploadIds.length / FINALIZE_GROUP_SIZE);
+            const groupCount = Math.ceil(idsAll.length / FINALIZE_GROUP_SIZE);
             const totals = {
                 queue: '', requested: 0, queued: 0, duplicates: 0, failed: 0,
                 legacy_migrated: 0, pending_jobs: 0, job_ids: [], worker: null,
@@ -182,26 +182,25 @@
             };
             const jobIds = new Set();
             operationActive = true;
-            activePhase = 'finalize_wait';
+            stopTimer();
+            activePhase = 'finalize';
             phaseStarted = Date.now();
-            stopPhaseTimer();
-            phaseTimer = window.setInterval(renderTimedPhase, 1000);
+            phaseTimer = window.setInterval(renderTimer, 1000);
             overallLabel.textContent = 'Phase 3 of 3 — Finalising uploaded files';
             overallBar.value = 0;
             currentBar.value = 0;
 
-            for (let groupIndex = 0; groupIndex < groups; groupIndex++) {
+            for (let groupIndex = 0; groupIndex < groupCount; groupIndex++) {
                 const start = groupIndex * FINALIZE_GROUP_SIZE;
-                const ids = uploadIds.slice(start, start + FINALIZE_GROUP_SIZE);
-                const isFinalGroup = groupIndex === groups - 1;
-                const first = start + 1;
+                const ids = idsAll.slice(start, start + FINALIZE_GROUP_SIZE);
                 const last = start + ids.length;
-                const percentBefore = Math.floor((start * 100) / Math.max(1, uploadIds.length));
-                currentBar.value = percentBefore;
-                overallBar.value = percentBefore;
-                label.textContent = 'Finalising batch group ' + (groupIndex + 1) + ' of ' + groups
-                    + ' — uploaded files ' + first + '–' + last + ' of ' + uploadIds.length + '...';
-                overallCount.textContent = start + ' of ' + uploadIds.length + ' finalised · '
+                const isFinalGroup = groupIndex === groupCount - 1;
+                const before = Math.floor((start * 100) / Math.max(1, idsAll.length));
+                currentBar.value = before;
+                overallBar.value = before;
+                label.textContent = 'Finalising batch group ' + (groupIndex + 1) + ' of ' + groupCount
+                    + ' — uploaded files ' + (start + 1) + '–' + last + ' of ' + idsAll.length + '...';
+                overallCount.textContent = start + ' of ' + idsAll.length + ' finalised · '
                     + totals.queued + ' queued so far · ' + totals.duplicates + ' duplicate(s) · '
                     + totals.failed + ' failed · ' + elapsedText() + ' elapsed';
 
@@ -210,7 +209,7 @@
                     prepare_queue: groupIndex === 0,
                     start_worker: isFinalGroup
                 });
-                const data = await requestGroup(input, init, groupPayload, groupIndex + 1, groups);
+                const data = await requestGroup(input, init, groupPayload, groupIndex + 1, groupCount);
                 totals.queue = String(data.queue || totals.queue);
                 totals.requested += Number(data.requested || 0);
                 totals.queued += Number(data.queued || 0);
@@ -237,15 +236,14 @@
                         }
                     });
                 }
-                appendStatus('ready', 'Finalisation group ' + (groupIndex + 1) + '/' + groups,
-                    ids.length + ' uploaded file(s) checked; cumulative: ' + totals.queued + ' queued, '
+                appendStatus('ready', 'Finalisation group ' + (groupIndex + 1) + '/' + groupCount,
+                    ids.length + ' file(s) checked; cumulative: ' + totals.queued + ' queued, '
                     + totals.duplicates + ' duplicate(s), ' + totals.failed + ' failed.');
 
-                const done = last;
-                const percent = Math.floor((done * 100) / Math.max(1, uploadIds.length));
+                const percent = Math.floor((last * 100) / Math.max(1, idsAll.length));
                 currentBar.value = percent;
                 overallBar.value = percent;
-                overallCount.textContent = done + ' of ' + uploadIds.length + ' finalised · '
+                overallCount.textContent = last + ' of ' + idsAll.length + ' finalised · '
                     + totals.queued + ' queued so far · ' + totals.duplicates + ' duplicate(s) · '
                     + totals.failed + ' failed · ' + elapsedText() + ' elapsed';
                 await sleep(25);
@@ -253,7 +251,7 @@
 
             totals.job_ids = Array.from(jobIds);
             totals.messages = [];
-            return mergedResponse(totals);
+            return combinedResponse(totals);
         }
 
         window.fetch = function (input, init) {
@@ -276,7 +274,7 @@
         panel.className = 'bucket-next-phase';
         panel.innerHTML = '<strong>Upload phase complete.</strong> '
             + '<span data-countdown>Opening the processing queue in 3 seconds…</span> '
-            + '<a class="button" data-open href="' + queueUrl.replace(/"/g, '&quot;') + '">Open processing queue now</a> '
+            + '<a class="button" href="' + queueUrl.replace(/"/g, '&quot;') + '">Open processing queue now</a> '
             + '<button type="button" class="button secondary" data-stay>Stay on this page</button>';
         progress.appendChild(panel);
         const countdown = panel.querySelector('[data-countdown]');
@@ -291,7 +289,6 @@
             seconds--;
             if (seconds <= 0) {
                 window.clearInterval(handoffTimer);
-                countdown.textContent = 'Opening the processing queue…';
                 window.location.assign(queueUrl);
                 return;
             }
@@ -302,7 +299,7 @@
     function inspect() {
         const text = String(label.textContent || '').trim();
         if (/^Preparing durable upload staging/i.test(text)) {
-            beginTimedPhase('prepare', 'Sending a short cooperative pause request; stale staging cleanup runs separately as background maintenance');
+            beginTimedPhase('prepare', 'Sending a short cooperative pause request; stale cleanup runs separately as background maintenance');
             return;
         }
         if (/^Waiting for the current Upload Bucket job/i.test(text)) {
@@ -329,7 +326,7 @@
         }
     }
 
-    installGroupedBatchFinalization();
+    installGroupedFinalization();
     if (form) {
         form.addEventListener('submit', function () {
             handled = false;
