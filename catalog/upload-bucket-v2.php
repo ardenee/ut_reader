@@ -107,17 +107,18 @@ try {
 .bucket-progress progress { width:100%; height:18px; }
 .bucket-progress .progress-row + progress { margin-bottom:10px; }
 .bucket-progress-note { margin:8px 0 0; color:var(--muted); }
-.bucket-log { max-height:420px; overflow:auto; margin-top:10px; font-family:Consolas,ui-monospace,monospace; font-size:12px; color:var(--muted); }
-.bucket-result { display:flex; gap:8px; align-items:baseline; padding:3px 0; white-space:nowrap; }
-.bucket-result-badge { min-width:98px; font-weight:700; text-transform:uppercase; }
-.bucket-result-file { color:var(--text); }
-.bucket-result-message { color:var(--muted); white-space:normal; }
-.bucket-result-uploaded .bucket-result-badge,.bucket-result-ready .bucket-result-badge,.bucket-result-queued .bucket-result-badge,.bucket-result-checked .bucket-result-badge { color:#a7f3d0; }
-.bucket-result-duplicate .bucket-result-badge,.bucket-result-waiting .bucket-result-badge,.bucket-result-skipped .bucket-result-badge { color:#fde68a; }
-.bucket-result-retrying .bucket-result-badge { color:#fdba74; }
-.bucket-result-failed .bucket-result-badge,.bucket-result-stopped .bucket-result-badge { color:#fecdd3; }
+.bucket-log { position:relative; height:420px; overflow:auto; margin-top:10px; border-top:1px solid var(--line); font-family:Consolas,ui-monospace,monospace; font-size:12px; line-height:22px; color:var(--muted); contain:strict; }
+.bucket-log-spacer { width:1px; opacity:0; pointer-events:none; }
+.bucket-log-viewport { position:absolute; top:0; left:0; min-width:100%; }
+.bucket-log-line { height:22px; white-space:pre; padding:0 4px; box-sizing:border-box; }
+.bucket-log-line-checked,.bucket-log-line-ready,.bucket-log-line-uploaded,.bucket-log-line-queued { color:#a7f3d0; }
+.bucket-log-line-duplicate,.bucket-log-line-skipped { color:#fde68a; }
+.bucket-log-line-failed,.bucket-log-line-stopped { color:#fecdd3; }
 .bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.bucket-submit-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.bucket-submit-row,.bucket-folder-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.bucket-folder-summary { color:var(--muted); }
+.bucket-folder-fallback { margin:8px 0 12px; }
+.bucket-folder-fallback summary { cursor:pointer; color:var(--muted); }
 .bucket-stop { border-color:#ef4444; color:#fecaca; }
 .bucket-phases { margin:0 0 16px; padding-left:22px; }
 .bucket-phases li + li { margin-top:5px; }
@@ -129,7 +130,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket (New)',
-        'A single browser worker inspects one file, uploads one file, and queues that file before the next file starts. The browser never hashes or uploads multiple selected files concurrently.',
+        'One file is inspected, uploaded and queued at a time. Large Chrome folder selections use incremental directory discovery instead of constructing and copying one enormous FileList.',
         [
             'Legacy Upload Bucket' => 'upload-bucket.php',
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
@@ -145,28 +146,32 @@ CSS;
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
-        . '<p>Client-side extension, Unreal header and duplicate checks run before the server receives ordinary package data.</p>'
+        . '<p>Folder discovery, file inspection and progress rendering yield back to Chrome so the page remains usable with very large folders.</p>'
         . '</div></div><div class="ui-section__body">';
     echo '<ol class="bucket-phases">'
-        . '<li>Request the existing Upload Bucket processor to stop cooperatively after its current file.</li>'
-        . '<li>Use one Web Worker to inspect the selected file header and calculate MD5/SHA-1 without blocking the page.</li>'
-        . '<li>Ask the API whether that exact physical file already exists. Duplicates are skipped before transfer.</li>'
-        . '<li>Upload only that file in resumable chunks, validate its durable staged copy and queue its result.</li>'
-        . '<li>Move to the next selected file only after the current file has succeeded, failed or been skipped.</li>'
-        . '<li>The Stop button aborts the active browser request and prevents every later file from starting. Completed files remain queued; partial chunks remain resumable.</li>'
+        . '<li>Use the recommended folder button in Chrome to discover subfolders incrementally without creating a 70,000-file browser FileList.</li>'
+        . '<li>Validate the extension and inspect only the active file in the reusable Web Worker.</li>'
+        . '<li>Ask the API whether that physical file already exists, then upload it in resumable chunks only when needed.</li>'
+        . '<li>Validate and queue that file before moving to the next file.</li>'
+        . '<li>Keep one compact status line per file. Only the visible log rows are rendered, preventing the page from becoming white or unresponsive as the list grows.</li>'
+        . '<li>The Stop button works during folder discovery, hashing, transfer and queue finalisation.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data" data-allowed-extensions="'
         . catalog_h($allowedExtensionJson) . '">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
-    echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
-    echo '<p><label>Choose folder / subfolders<br><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
+    echo '<p><label>Choose individual files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
+    echo '<div class="bucket-folder-row"><button id="upload-bucket-folder-button" class="secondary" type="button">Choose folder / subfolders</button>'
+        . '<span id="upload-bucket-folder-summary" class="bucket-folder-summary">No folder selected</span></div>';
+    echo '<details class="bucket-folder-fallback"><summary>Fallback folder selector for browsers without direct folder access</summary>'
+        . '<p><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></p>'
+        . '<p class="muted">Chrome users should use the button above. The fallback browser control may pause while Chrome constructs a very large FileList.</p></details>';
     echo '<p class="bucket-submit-row"><button id="upload-bucket-button" type="submit">Check and upload files</button>'
         . '<button id="upload-bucket-stop" class="secondary bucket-stop" type="button" hidden disabled>Stop</button></p>';
     echo '<p class="muted"><strong>Allowed by active game profiles:</strong> '
         . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured')
         . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
     echo '<p class="muted"><strong>Redirect archives:</strong> .uz/.uz2/.uz3 are transferred in their compressed wrapper form. Server processing then decompresses the wrapper, calculates the real package MD5/SHA-1, runs the duplicate check and stores the uncompressed package in the Upload Bucket.</p>';
-    echo '<p class="muted"><strong>Client header checks:</strong> Unreal package magic is checked for package formats, the footer magic is checked for .pak, and the appropriate redirect header is checked for .uz/.uz2/.uz3. Server-side validation remains authoritative.</p>';
+    echo '<p class="muted"><strong>Status format:</strong> each file keeps one line, for example CHECKED : READY : UPLOADED : QUEUED : UPLOADED : path/file.uz : 513.62 KB.</p>';
     echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total batch-size limit is applied. Only one file is active and it is split into chunks of up to '
         . catalog_h(catalog_bytes($chunkBytes))
         . '; the server may reduce the effective chunk size to fit PHP upload_max_filesize and post_max_size.</p>';
@@ -184,21 +189,18 @@ CSS;
         . ' data-chunk-bytes="' . $chunkBytes . '">';
     echo '<div class="progress-row"><span id="bucket-overall-progress-label">Waiting to start</span><span id="bucket-overall-progress-count"></span></div>'
         . '<progress id="bucket-overall-progress-bar" value="0" max="100"></progress>';
-    echo '<div class="progress-row"><span id="bucket-progress-label">Choose files and start the upload.</span><span id="bucket-progress-speed"></span></div>'
+    echo '<div class="progress-row"><span id="bucket-progress-label">Choose files or a folder and start the upload.</span><span id="bucket-progress-speed"></span></div>'
         . '<progress id="bucket-progress-bar" value="0" max="100"></progress>';
-    echo '<p class="bucket-progress-note">The active file is the only file being read or uploaded. You may press Stop at any stage; do not close or reload the page unless you intend to abandon the visible session.</p>';
-    echo '<div id="bucket-log" class="bucket-log"></div></div>';
+    echo '<p class="bucket-progress-note">The active file is the only file being read or uploaded. Progress paints are throttled to the browser display cycle and the file log is virtualised.</p>';
+    echo '<div id="bucket-log" class="bucket-log" role="log" aria-label="Upload results"></div></div>';
     echo '</form>';
     echo '<p class="bucket-actions"><a class="button" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
         . '<a class="button secondary" href="' . catalog_h($processingUrl) . '">Processing jobs</a>'
         . '<a class="button secondary" href="upload-bucket.php">Legacy upload page</a></p>';
     echo '</div></section>';
 
-    $filterScriptPath = __DIR__ . '/assets/upload-bucket-extension-filter.js';
-    $filterScriptVersion = is_file($filterScriptPath) ? (string)(filemtime($filterScriptPath) ?: 1) : '1';
     $coordinatorPath = __DIR__ . '/assets/upload-bucket-v2-coordinator.js';
     $coordinatorVersion = is_file($coordinatorPath) ? (string)(filemtime($coordinatorPath) ?: 1) : '1';
-    echo '<script src="assets/upload-bucket-extension-filter.js?v=' . catalog_h($filterScriptVersion) . '"></script>';
     echo '<script src="assets/upload-bucket-v2-coordinator.js?v=' . catalog_h($coordinatorVersion) . '"></script>';
 
     catalog_foot();
