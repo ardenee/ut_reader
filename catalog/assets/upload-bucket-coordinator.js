@@ -199,12 +199,13 @@
     }
 
     async function waitUntilPaused(initialPromise) {
+        const initial = await initialPromise;
         let body;
-        try {
-            body = await initialPromise;
-        } catch (error) {
-            addLog({status: 'retrying', file: 'Upload batch', message: 'The initial worker pause request failed and will be issued again: ' + error.message});
+        if (initial.error) {
+            addLog({status: 'retrying', file: 'Upload batch', message: 'The initial worker pause request failed and will be issued again: ' + initial.error.message});
             body = await processingState('begin_batch');
+        } else {
+            body = initial.body;
         }
         let processing = body.processing || {};
         while (!processing.ready) {
@@ -349,9 +350,19 @@
                 totals.queue = String(data.queue || totals.queue);
                 totals.queued += Number(data.queued || 0);
                 totals.duplicates += Number(data.duplicates || 0);
-                totals.failed += Number(data.failed || 0);
+                const fileFailures = Number(data.failed || 0);
+                totals.failed += fileFailures;
+                totals.retained += fileFailures;
                 totals.pending_jobs = Number(data.pending_jobs || totals.pending_jobs);
-                if (Array.isArray(data.messages)) data.messages.forEach(addLog);
+                if (Array.isArray(data.messages)) {
+                    data.messages.forEach(function (entry) {
+                        const normalized = Object.assign({}, entry);
+                        if (!normalized.file || /^[a-f0-9]{64}$/i.test(String(normalized.file))) {
+                            normalized.file = item.name;
+                        }
+                        addLog(normalized);
+                    });
+                }
             } catch (error) {
                 totals.retained++;
                 addLog({
@@ -396,7 +407,7 @@
             + transferFailures + ' transfer failure(s).' + workerText;
         overallLabel.textContent = 'Upload and file-by-file finalisation complete';
         overallCount.textContent = result.retained > 0
-            ? result.retained + ' complete staged file(s) still need finalisation; reselect the same files to retry without retransferring stored chunks.'
+            ? result.retained + ' complete staged file(s) remain available for retry; reselect the same files to reuse the durable upload.'
             : 'Every successfully transferred file received a final queue result.';
 
         const panel = document.createElement('div');
@@ -405,6 +416,21 @@
             + '<a class="button" href="' + queueUrl.replace(/"/g, '&quot;') + '">Open processing jobs</a> '
             + '<a class="button secondary" href="unverified-files.php?source_game_id=-1">Review Upload Bucket</a>';
         progressBox.appendChild(panel);
+    }
+
+    function showTerminalFailure(error) {
+        operationActive = false;
+        button.disabled = false;
+        currentSpeed.textContent = '';
+        if (!currentBar.hasAttribute('value')) currentBar.value = 0;
+        currentLabel.textContent = 'Upload coordination stopped safely: ' + (error.message || 'Unknown error');
+        overallLabel.textContent = 'Upload coordination requires attention';
+        overallCount.textContent = 'Any file already marked uploaded remains complete in durable staging. Reselect the same files to resume without retransferring stored chunks.';
+        addLog({
+            status: 'failed',
+            file: 'Upload batch',
+            message: (error.message || 'Upload coordination failed.') + ' Completed staged files were retained.'
+        });
     }
 
     form.addEventListener('submit', async function (event) {
@@ -431,8 +457,12 @@
         overallLabel.textContent = 'Uploading selected files to durable staging';
         overallCount.textContent = '0 of ' + files.length + ' files checked';
 
-        // Request a cooperative stop immediately, but never block file transfer on it.
-        const pausePromise = processingState('begin_batch');
+        // Capture either outcome so a pause-request failure cannot become an
+        // unhandled rejection while file transfer continues.
+        const pausePromise = processingState('begin_batch').then(
+            function (body) { return {body: body, error: null}; },
+            function (error) { return {body: null, error: error}; }
+        );
         addLog({status: 'ready', file: 'Upload batch', message: 'Worker pause requested in parallel. File transfer is starting immediately.'});
 
         const totalBytes = Math.max(1, files.reduce(function (sum, file) { return sum + Math.max(0, Number(file.size || 0)); }, 0));
@@ -441,24 +471,28 @@
         let transferFailures = 0;
         let preflightDuplicates = 0;
 
-        for (let index = 0; index < files.length; index++) {
-            const file = files[index];
-            try {
-                const result = await uploadFile(file, index + 1, files.length, uploadedBytes, totalBytes);
-                if (result.duplicate) preflightDuplicates++;
-                else completed.push(result);
-            } catch (error) {
-                transferFailures++;
-                addLog({status: 'failed', file: displayName(file), message: error.message || 'Transfer failed.', file_size_text: fmtBytes(file.size)});
+        try {
+            for (let index = 0; index < files.length; index++) {
+                const file = files[index];
+                try {
+                    const result = await uploadFile(file, index + 1, files.length, uploadedBytes, totalBytes);
+                    if (result.duplicate) preflightDuplicates++;
+                    else completed.push(result);
+                } catch (error) {
+                    transferFailures++;
+                    addLog({status: 'failed', file: displayName(file), message: error.message || 'Transfer failed.', file_size_text: fmtBytes(file.size)});
+                }
+                uploadedBytes += Math.max(0, Number(file.size || 0));
+                overallBar.value = Math.floor((uploadedBytes * 100) / totalBytes);
+                overallCount.textContent = (index + 1) + ' of ' + files.length + ' checked · ' + fmtBytes(uploadedBytes) + ' of ' + fmtBytes(totalBytes);
             }
-            uploadedBytes += Math.max(0, Number(file.size || 0));
-            overallBar.value = Math.floor((uploadedBytes * 100) / totalBytes);
-            overallCount.textContent = (index + 1) + ' of ' + files.length + ' checked · ' + fmtBytes(uploadedBytes) + ' of ' + fmtBytes(totalBytes);
-        }
 
-        await waitUntilPaused(pausePromise);
-        const result = await finalizeFiles(completed);
-        showComplete(result, transferFailures, preflightDuplicates);
+            await waitUntilPaused(pausePromise);
+            const result = await finalizeFiles(completed);
+            showComplete(result, transferFailures, preflightDuplicates);
+        } catch (error) {
+            showTerminalFailure(error);
+        }
     });
 
     window.addEventListener('beforeunload', function (event) {
