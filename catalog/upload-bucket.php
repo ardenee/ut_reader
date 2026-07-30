@@ -106,6 +106,7 @@ try {
 .bucket-progress { margin-top:12px; border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.03); }
 .bucket-progress progress { width:100%; height:18px; }
 .bucket-progress .progress-row + progress { margin-bottom:10px; }
+.bucket-progress-note { margin:8px 0 0; color:var(--muted); }
 .bucket-log { max-height:420px; overflow:auto; margin-top:10px; font-family:Consolas,ui-monospace,monospace; font-size:12px; color:var(--muted); }
 .bucket-result { display:flex; gap:8px; align-items:baseline; padding:3px 0; white-space:nowrap; }
 .bucket-result-badge { min-width:98px; font-weight:700; text-transform:uppercase; }
@@ -127,7 +128,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Files are transferred and staged first. After the complete batch is queued, this page automatically opens Background Jobs so the processing phase and live progress are visible.',
+        'Files are transferred to durable staging first. Preparation and finalisation now use short, visible coordination requests so the page can continue reporting progress instead of appearing frozen.',
         [
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
             'Processing Jobs' => $processingUrl,
@@ -143,16 +144,14 @@ CSS;
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
-        . '<p>The upload phase completes first. UnrealDB then creates the processing queue and opens its live view automatically.</p>'
+        . '<p>The page remains responsive through preparation, transfer and finalisation, with elapsed time and completed/remaining counts shown throughout.</p>'
         . '</div></div><div class="ui-section__body">';
     echo '<ol class="bucket-phases">'
-        . '<li>Request a cooperative pause of old and new Upload Bucket processing queues; the current job is not cancelled.</li>'
-        . '<li>Skip files whose extension is not allowed by any active game profile before hashing, preflight or transfer.</li>'
-        . '<li>For uncompressed files, calculate MD5 and SHA-1 locally and check size + MD5 + SHA-1 against physical Upload Bucket and catalog files.</li>'
-        . '<li>Skip confirmed physical duplicates before transfer. Metadata-only matches do not count as duplicates.</li>'
-        . '<li>Upload .uz/.uz2/.uz3 wrappers without comparing wrapper hashes to package records.</li>'
-        . '<li>After every transfer finishes, create the processing jobs and start the Upload Bucket worker once.</li>'
-        . '<li>Open Background Jobs automatically to show decompression, duplicate checks, inventory and indexing progress.</li>'
+        . '<li><strong>Phase 1:</strong> send a short cooperative pause request. Any current Upload Bucket job finishes normally; stale staging cleanup is handled separately by background maintenance.</li>'
+        . '<li><strong>Phase 2:</strong> filter extensions, calculate MD5/SHA-1 for ordinary files, check physical duplicates and transfer resumable chunks.</li>'
+        . '<li><strong>Phase 3:</strong> finalise uploaded sources in groups of 50, report cumulative queued/duplicate/failed counts, retry temporary group failures and start the worker only after the final group.</li>'
+        . '<li>Redirect wrappers are checked against their real decompressed package identity during background processing.</li>'
+        . '<li>After successful finalisation, Background Jobs opens automatically for decompression, validation, inventory and indexing progress.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data" data-allowed-extensions="'
         . catalog_h($allowedExtensionJson) . '">';
@@ -173,10 +172,11 @@ CSS;
         . ' data-processing-url="' . catalog_h($processingUrl) . '"'
         . ' data-chunk-csrf="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '"'
         . ' data-chunk-bytes="' . $chunkBytes . '">';
-    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Check / upload phase</span><span id="bucket-overall-progress-count"></span></div>'
+    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Waiting to start</span><span id="bucket-overall-progress-count"></span></div>'
         . '<progress id="bucket-overall-progress-bar" value="0" max="100"></progress>';
-    echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-speed"></span></div>'
+    echo '<div class="progress-row"><span id="bucket-progress-label">Choose files and submit the batch.</span><span id="bucket-progress-speed"></span></div>'
         . '<progress id="bucket-progress-bar" value="0" max="100"></progress>';
+    echo '<p class="bucket-progress-note">Do not close or reload this page while a batch is active. Completed chunks remain durable, but the live batch coordination state belongs to this page.</p>';
     echo '<div id="bucket-log" class="bucket-log"></div></div>';
     echo '</form>';
     echo '<p class="bucket-actions"><a class="button" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
