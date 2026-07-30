@@ -26,32 +26,66 @@ ub_v2_expect(
 
 ub_v2_expect(
     str_contains($page, 'id="upload-bucket-stop"')
+        && str_contains($page, 'id="upload-bucket-folder-button"')
         && str_contains($page, 'data-inspector-worker-url=')
         && str_contains($page, 'upload-file-inspector-worker.js')
         && str_contains($page, 'upload-bucket-v2-coordinator.js')
-        && str_contains($page, 'transferred in their compressed wrapper form')
-        && str_contains($page, 'stores the uncompressed package'),
-    'The new Upload Bucket page does not expose the worker, Stop control or redirect-wrapper policy.'
+        && !str_contains($page, 'upload-bucket-extension-filter.js')
+        && str_contains($page, 'stores the uncompressed package')
+        && str_contains($page, 'CHECKED : READY : UPLOADED : QUEUED : UPLOADED'),
+    'The new Upload Bucket page does not expose incremental folder selection, compact status or redirect policy.'
 );
 
 ub_v2_expect(
-    str_contains($coordinator, "const worker = new Worker(workerUrl)")
-        && str_contains($coordinator, 'await inspectFile(file, index + 1, files.length)')
-        && str_contains($coordinator, 'await preflight(file, inspection)')
-        && str_contains($coordinator, 'await uploadFile(file, inspection, index + 1, files.length)')
-        && str_contains($coordinator, 'await finalizeOne(uploaded)')
-        && str_contains($coordinator, 'for (let index = 0; index < files.length; index++)')
+    str_contains($coordinator, 'window.showDirectoryPicker')
+        && str_contains($coordinator, 'async function* walkDirectory')
+        && str_contains($coordinator, 'await yieldToBrowser()')
+        && str_contains($coordinator, 'pickedDirectoryEntries.push(entry)')
+        && !str_contains($coordinator, 'Array.from(fileInput.files')
+        && !str_contains($coordinator, 'new window.DataTransfer()'),
+    'Large-folder discovery still constructs or copies a complete FileList on the page thread.'
+);
+
+ub_v2_expect(
+    str_contains($coordinator, 'const logLines = []')
+        && str_contains($coordinator, 'bucket-log-spacer')
+        && str_contains($coordinator, 'bucket-log-viewport')
+        && str_contains($coordinator, 'const start = Math.max(0, Math.floor(log.scrollTop / LOG_ROW_HEIGHT)')
+        && str_contains($coordinator, 'window.requestAnimationFrame')
+        && str_contains($coordinator, 'document.addEventListener(\'visibilitychange\'')
+        && !str_contains($coordinator, 'log.appendChild(row)'),
+    'The file log is not virtualised and display updates are not frame-throttled.'
+);
+
+ub_v2_expect(
+    str_contains($coordinator, 'const worker = new Worker(workerUrl)')
+        && str_contains($coordinator, 'const inspection = await inspectFile(file, name, index + 1, totalFiles, lineId)')
+        && str_contains($coordinator, 'const checked = await preflight(file, name, inspection, lineId)')
+        && str_contains($coordinator, 'const uploaded = await uploadFile(file, name, inspection, index + 1, totalFiles, lineId)')
+        && str_contains($coordinator, 'const finalized = await finalizeOne(uploaded, lineId)')
+        && str_contains($coordinator, 'for (let index = 0; index < totalFiles; index++)')
         && !str_contains($coordinator, 'Promise.all('),
-    'The new coordinator is not a strict inspect/preflight/upload/finalise one-file pipeline.'
+    'The coordinator is not a strict one-file inspect/preflight/upload/finalise pipeline.'
+);
+
+ub_v2_expect(
+    str_contains($coordinator, "appendStage(lineId, 'CHECKED'")
+        && str_contains($coordinator, "appendStage(lineId, 'READY'")
+        && str_contains($coordinator, "appendStage(lineId, 'UPLOADED'")
+        && str_contains($coordinator, "appendStage(lineId, 'QUEUED'")
+        && str_contains($coordinator, "finishLine(lineId, 'UPLOADED'")
+        && str_contains($coordinator, "finishLine(lineId, 'SKIPPED'")
+        && str_contains($coordinator, "finishLine(lineId, 'FAILED'"),
+    'One per-file line does not accumulate the requested status stages and final result.'
 );
 
 ub_v2_expect(
     str_contains($coordinator, "stopButton.addEventListener('click'")
-        && str_contains($coordinator, 'activeInspector.terminate()')
+        && str_contains($coordinator, 'terminateInspector()')
         && str_contains($coordinator, 'activeXhr.abort()')
         && str_contains($coordinator, 'activeFetchController.abort()')
-        && str_contains($coordinator, 'No later file will be inspected or uploaded'),
-    'The Stop control does not abort the active browser work and prevent later files.'
+        && str_contains($coordinator, 'directoryScanActive'),
+    'The Stop control does not cover folder discovery and active browser/server work.'
 );
 
 ub_v2_expect(
@@ -66,4 +100,4 @@ ub_v2_expect(
     'The file-inspection worker is missing hash or Unreal header checks.'
 );
 
-fwrite(STDOUT, "Upload Bucket v2 contract tests passed.\n");
+fwrite(STDOUT, "Upload Bucket v2 large-folder and compact-log contract tests passed.\n");
