@@ -12,11 +12,11 @@ $root = dirname(__DIR__);
 $page = file_get_contents($root . '/background-jobs.php');
 $jobs = file_get_contents($root . '/assets/background-jobs-stable.js');
 $uploadPage = file_get_contents($root . '/upload-bucket.php');
-$handoff = file_get_contents($root . '/assets/upload-bucket-follow.js');
+$coordinator = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
 $workerQueue = file_get_contents($root . '/src/Infrastructure/Persistence/WorkerJobQueue.php');
 $statusApi = file_get_contents($root . '/api/v1/job-status.php');
 
-foreach (compact('page', 'jobs', 'uploadPage', 'handoff', 'workerQueue', 'statusApi') as $name => $source) {
+foreach (compact('page', 'jobs', 'uploadPage', 'coordinator', 'workerQueue', 'statusApi') as $name => $source) {
     live_layout_expect(is_string($source), $name . ' source is missing.');
 }
 
@@ -64,10 +64,11 @@ live_layout_expect(
 
 live_layout_expect(
     str_contains($uploadPage, 'data-processing-url=')
-        && str_contains($uploadPage, 'upload-bucket-follow.js')
-        && str_contains($handoff, 'Opening the processing queue in 3 seconds')
-        && str_contains($handoff, 'window.location.assign(queueUrl)'),
-    'Upload Bucket does not automatically hand completed batches to the processing queue.'
+        && str_contains($uploadPage, 'upload-bucket-coordinator.js')
+        && str_contains($coordinator, 'Open processing jobs')
+        && str_contains($coordinator, 'Review Upload Bucket')
+        && !str_contains($coordinator, 'window.location.assign(queueUrl)'),
+    'Upload Bucket does not provide an explicit, non-timed handoff to processing jobs.'
 );
 
-echo "Background Jobs live-layout, per-job runtime, result-isolation and single-message contract tests passed.\n";
+echo "Background Jobs live-layout, per-job runtime, result-isolation and Upload Bucket handoff contract tests passed.\n";

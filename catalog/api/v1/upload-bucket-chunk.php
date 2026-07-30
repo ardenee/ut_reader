@@ -7,7 +7,6 @@ require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchQueue;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadIdentityStore;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadDuplicateDetector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
@@ -139,11 +138,33 @@ function bucket_chunk_processing_state(PDO $db, array $config, bool $requestPaus
         if ($active) {
             $ready = false;
         }
+        $runningJob = catalog_one(
+            $db,
+            'SELECT id,job_type,progress_json,updated_at FROM ue_background_jobs WHERE queue_name=? AND status="running" ORDER BY id LIMIT 1',
+            [$queueName]
+        );
+        $progress = [];
+        if ($runningJob && trim((string)($runningJob['progress_json'] ?? '')) !== '') {
+            try {
+                $decoded = json_decode((string)$runningJob['progress_json'], true, 128, JSON_THROW_ON_ERROR);
+                $progress = is_array($decoded) ? $decoded : [];
+            } catch (JsonException) {
+                $progress = [];
+            }
+        }
         $workers[] = [
             'queue' => $queueName,
             'active' => $active,
             'stop_requested' => !empty($status['stop_requested']),
             'state' => is_array($status['state'] ?? null) ? $status['state'] : [],
+            'running_job' => $runningJob ? [
+                'id' => (int)$runningJob['id'],
+                'job_type' => (string)$runningJob['job_type'],
+                'percent' => (int)($progress['percent'] ?? 0),
+                'message' => trim((string)($progress['message'] ?? '')),
+                'file' => trim((string)($progress['file'] ?? $progress['original_name'] ?? $progress['source_relative_path'] ?? '')),
+                'updated_at' => (string)($runningJob['updated_at'] ?? ''),
+            ] : null,
         ];
     }
 
@@ -169,9 +190,15 @@ try {
     $allowedExtensions = bucket_chunk_allowed_extensions($application->db, $application->config);
 
     if ($action === 'begin_batch') {
-        $pruned = (new CatalogChunkedUploadCleanup($application->config))->pruneIncomplete();
+        // Stale chunk-directory cleanup is maintenance work, not an interactive
+        // upload prerequisite. Keeping it out of this request makes Phase 1 a
+        // short worker-pause request instead of an unbounded filesystem scan.
         $processing = bucket_chunk_processing_state($application->db, $application->config, true);
-        JsonResponse::send(['ok' => true, 'cleanup' => $pruned, 'processing' => $processing], 200);
+        JsonResponse::send([
+            'ok' => true,
+            'cleanup_deferred' => true,
+            'processing' => $processing,
+        ], 200);
     }
 
     if ($action === 'batch_status') {

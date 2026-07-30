@@ -18,7 +18,7 @@ $paths = [
     'page' => 'upload-bucket.php',
     'endpoint' => 'api/v1/upload-bucket-chunk.php',
     'batch_endpoint' => 'api/v1/upload-bucket-batch.php',
-    'javascript' => 'assets/upload-bucket.js',
+    'javascript' => 'assets/upload-bucket-coordinator.js',
     'hash_javascript' => 'assets/upload-file-hash.js',
     'library' => 'lib/CatalogRedirectArchive.php',
     'redirect_payload' => 'lib/CatalogRedirectArchivePayload.php',
@@ -48,29 +48,32 @@ bucket_policy_expect(
     'Upload Bucket page still performs package processing inside web PHP.'
 );
 bucket_policy_expect(
-    str_contains($content['page'], 'Uncompressed files are hashed in the browser')
-        && str_contains($content['page'], '.uz/.uz2/.uz3 wrappers are uploaded without package duplicate rejection')
-        && str_contains($content['page'], 'cooperative pause')
+    str_contains($content['page'], 'calculate MD5/SHA-1 for ordinary files')
+        && str_contains($content['page'], 'Redirect wrappers are checked only after decompression')
+        && str_contains($content['page'], 'stop cooperatively')
         && str_contains($content['page'], 'whole-file fallback processing has been disabled')
-        && str_contains($content['page'], 'official base-game records whose physical file is absent'),
+        && str_contains($content['page'], 'official base-game metadata without a stored source remains uploadable'),
     'Upload Bucket page does not explain the ordinary-versus-redirect duplicate policy.'
 );
 
-bucket_policy_expect(str_contains($content['javascript'], 'async function chunkedUpload'), 'Browser client lacks chunked uploads.');
+bucket_policy_expect(str_contains($content['javascript'], 'async function uploadFile'), 'Browser client lacks chunked file uploads.');
 bucket_policy_expect(str_contains($content['javascript'], 'file.slice(start, end)'), 'Browser client does not send bounded chunks.');
 bucket_policy_expect(str_contains($content['javascript'], 'received_chunks'), 'Browser client cannot resume chunks.');
 bucket_policy_expect(!str_contains($content['javascript'], 'wholeFileUpload('), 'Browser client still routes files through whole-file POST.');
 bucket_policy_expect(
-    str_contains($content['javascript'], 'await beginBatch()')
-        && str_contains($content['javascript'], "processingState('batch_status')")
-        && str_contains($content['javascript'], 'completedUploads.push')
-        && str_contains($content['javascript'], 'await finalizeBatch('),
-    'Browser client does not pause existing processing and finish the complete transfer phase before finalisation.'
+    str_contains($content['javascript'], "const pausePromise = processingState('begin_batch')")
+        && str_contains($content['javascript'], 'await uploadFile(file')
+        && str_contains($content['javascript'], 'await waitUntilPaused(pausePromise)')
+        && str_contains($content['javascript'], 'async function finalizeFiles(files)')
+        && str_contains($content['javascript'], 'upload_ids: [item.uploadId]')
+        && str_contains($content['javascript'], 'start_worker: false')
+        && str_contains($content['javascript'], 'start_worker: true'),
+    'Browser client does not transfer immediately and finalise completed staged files individually.'
 );
 bucket_policy_expect(
     str_contains($content['hash_javascript'], 'class Md5')
         && str_contains($content['hash_javascript'], 'class Sha1')
-        && str_contains($content['javascript'], 'isRedirectWrapper(file)')
+        && str_contains($content['javascript'], 'isRedirect(file)')
         && str_contains($content['javascript'], 'identity = await calculateIdentity')
         && str_contains($content['javascript'], 'if (identity)'),
     'Browser client does not hash only ordinary files while leaving wrappers unhashed.'
@@ -78,8 +81,14 @@ bucket_policy_expect(
 bucket_policy_expect(
     str_contains($content['javascript'], 'xhr.timeout')
         && str_contains($content['javascript'], 'xhr.ontimeout')
-        && str_contains($content['javascript'], 'requestReference'),
-    'Browser upload reporting can still wait forever or omit request references.'
+        && str_contains($content['javascript'], 'errorText(body'),
+    'Individual browser requests can still wait forever or hide their server error.'
+);
+bucket_policy_expect(
+    !str_contains($content['javascript'], 'elapsedText()')
+        && !str_contains($content['javascript'], 'setInterval(')
+        && !str_contains($content['javascript'], 'FINALIZE_GROUP_SIZE'),
+    'Active Upload Bucket progress still relies on timers or grouped finalisation.'
 );
 
 bucket_policy_expect(
@@ -87,7 +96,7 @@ bucket_policy_expect(
         && !str_contains($content['endpoint'], 'LegacyUnverifiedFileStager')
         && !str_contains($content['endpoint'], 'CatalogBucketUploadProcessor')
         && !str_contains($content['endpoint'], '->start('),
-    'Per-file chunk completion still starts or performs processing before the batch is complete.'
+    'Per-file chunk completion still starts or performs processing before queue release.'
 );
 bucket_policy_expect(
     str_contains($content['endpoint'], "if (\$action === 'begin_batch')")
@@ -95,7 +104,8 @@ bucket_policy_expect(
         && str_contains($content['endpoint'], 'requestStop($queueName)')
         && str_contains($content['endpoint'], "if (\$action === 'preflight')")
         && str_contains($content['endpoint'], "if (\$action === 'complete')")
-        && str_contains($content['endpoint'], 'retained in durable staging'),
+        && str_contains($content['endpoint'], 'retained in durable staging')
+        && str_contains($content['endpoint'], "'cleanup_deferred' => true"),
     'Chunk endpoint does not pause processing, preflight identities and provide transfer-only completion.'
 );
 bucket_policy_expect(
@@ -109,10 +119,12 @@ bucket_policy_expect(
 bucket_policy_expect(
     str_contains($content['batch_endpoint'], 'CatalogBucketBatchQueue')
         && str_contains($content['batch_endpoint'], 'foreach ($uploadIds as $uploadId)')
+        && str_contains($content['batch_endpoint'], 'if ($prepareQueue || $startWorker)')
         && str_contains($content['batch_endpoint'], 'migrateLegacyQueuedJobs()')
         && str_contains($content['batch_endpoint'], 'CatalogDetachedWorker')
-        && str_contains($content['batch_endpoint'], 'start($queue->queueName(), 10000)'),
-    'Batch endpoint does not consolidate and queue all completed sources before starting one worker.'
+        && str_contains($content['batch_endpoint'], 'start($queue->queueName(), 10000)')
+        && str_contains($content['batch_endpoint'], 'A failed uploaded file is a file result'),
+    'File finalisation cannot prepare the queue once, return each file result and start one worker.'
 );
 bucket_policy_expect(
     str_contains($content['batch_queue'], "':bucket-processing'")
@@ -224,7 +236,7 @@ bucket_policy_expect(
 bucket_policy_expect(str_contains($content['page'], 'function upload_bucket_stats'), 'Upload bucket physical-folder statistics are missing.');
 bucket_policy_expect(!str_contains($content['page'], 'uvf_list($db, $config, 0)'), 'Upload bucket hashes every queued file while rendering totals.');
 bucket_policy_expect(str_contains($content['endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'Chunk endpoint lacks CSRF protection.');
-bucket_policy_expect(str_contains($content['batch_endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'Batch endpoint lacks CSRF protection.');
+bucket_policy_expect(str_contains($content['batch_endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'File-finalisation endpoint lacks CSRF protection.');
 bucket_policy_expect(str_contains($content['endpoint'], "['max_upload_bytes'] = PHP_INT_MAX"), 'Bucket chunk endpoint applies the ordinary upload limit.');
 
-echo "Paused transfer-first Upload Bucket architecture contract tests passed.\n";
+echo "File-by-file transfer-first Upload Bucket architecture contract tests passed.\n";

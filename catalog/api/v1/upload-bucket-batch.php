@@ -40,6 +40,14 @@ try {
         $startWorker = $payload['start_worker'];
     }
 
+    $prepareQueue = true;
+    if (array_key_exists('prepare_queue', $payload)) {
+        if (!is_bool($payload['prepare_queue'])) {
+            JsonResponse::error('invalid_prepare_queue', 'prepare_queue must be a JSON boolean.', 400);
+        }
+        $prepareQueue = $payload['prepare_queue'];
+    }
+
     $uploadIds = [];
     foreach ($rawIds as $rawId) {
         $uploadId = strtolower(trim((string)$rawId));
@@ -53,32 +61,38 @@ try {
     $queue = new CatalogBucketBatchQueue($application->db, $application->config);
     $launcher = new CatalogDetachedWorker($application->config);
     $orphanRecovery = [];
-    $activeQueues = [];
-    foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
-        $workerStatus = $launcher->status($queueName, false);
-        if (empty($workerStatus['active'])) {
-            $recovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
-                ->recoverInactiveQueue($queueName);
-            if (!empty($recovery['recovered'])) {
-                $orphanRecovery[$queueName] = $recovery;
-            }
+
+    // The first file establishes a safe paused queue and the final empty request
+    // starts the worker. Intermediate one-file requests do not repeat worker
+    // inspection or code-version hashing.
+    if ($prepareQueue || $startWorker) {
+        $activeQueues = [];
+        foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
             $workerStatus = $launcher->status($queueName, false);
+            if ($prepareQueue && empty($workerStatus['active'])) {
+                $recovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
+                    ->recoverInactiveQueue($queueName);
+                if (!empty($recovery['recovered'])) {
+                    $orphanRecovery[$queueName] = $recovery;
+                }
+                $workerStatus = $launcher->status($queueName, false);
+            }
+            if (!empty($workerStatus['active'])) {
+                $activeQueues[] = $queueName;
+            }
         }
-        if (!empty($workerStatus['active'])) {
-            $activeQueues[] = $queueName;
+        if ($activeQueues !== []) {
+            JsonResponse::error(
+                'bucket_processing_not_paused',
+                'Upload Bucket processing is still active in ' . implode(', ', $activeQueues)
+                    . '. Wait for the current job to finish or stop that job, then retry file finalisation.',
+                409,
+                ['active_queues' => $activeQueues]
+            );
         }
-    }
-    if ($activeQueues !== []) {
-        JsonResponse::error(
-            'bucket_processing_not_paused',
-            'Upload Bucket processing is still active in ' . implode(', ', $activeQueues)
-                . '. Wait for the current job to finish or stop that job, then retry batch finalisation.',
-            409,
-            ['active_queues' => $activeQueues]
-        );
     }
 
-    $legacyMigrated = $queue->migrateLegacyQueuedJobs();
+    $legacyMigrated = $prepareQueue ? $queue->migrateLegacyQueuedJobs() : 0;
 
     $messages = [];
     $jobIds = [];
@@ -134,14 +148,14 @@ try {
                     ? 'Upload completed, retained its pre-calculated package MD5/SHA-1 and passed the final physical duplicate check. Processing job #' . $jobId . ' was created.'
                     : 'Redirect wrapper upload completed. Processing job #' . $jobId . ' will decompress it, calculate the real package MD5/SHA-1 and then run the physical duplicate check.',
                 'file_size' => (int)$result['size'],
-                'file_size_text' => catalog_bytes((int)$result['size']),
+                'file_size_text' => catalog_bytes((int)($result['size'] ?? 0)),
                 'job_id' => $jobId,
             ];
         } catch (Throwable $error) {
             $failed++;
             $requestId = catalog_request_id();
             $errorMessage = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
-            error_log('[UnrealDB][' . $requestId . '] bucket batch source ' . $uploadId . ' failed: ' . get_class($error) . ': ' . $errorMessage);
+            error_log('[UnrealDB][' . $requestId . '] bucket file ' . $uploadId . ' failed: ' . get_class($error) . ': ' . $errorMessage);
             $messages[] = [
                 'status' => 'failed',
                 'file' => $uploadId,
@@ -159,17 +173,18 @@ try {
     $workerError = '';
     if ($startWorker && $pendingJobs > 0) {
         try {
-            // A second recovery closes the small race between the initial queue
-            // inspection and the worker launch at the end of batch finalisation.
             (new CatalogOrphanedJobRecovery($application->db, $application->config))
                 ->recoverInactiveQueue($queue->queueName());
             $worker = $launcher->start($queue->queueName(), 10000);
         } catch (Throwable $error) {
             $workerError = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
-            error_log('[UnrealDB bucket batch worker] ' . get_class($error) . ': ' . $workerError);
+            error_log('[UnrealDB bucket worker] ' . get_class($error) . ': ' . $workerError);
         }
     }
 
+    // A failed uploaded file is a file result, not a failed HTTP operation.
+    // Returning it normally lets the browser record that exact file and continue
+    // finalising every later staged file.
     JsonResponse::send([
         'ok' => true,
         'data' => [
@@ -180,6 +195,7 @@ try {
             'failed' => $failed,
             'legacy_migrated' => $legacyMigrated,
             'pending_jobs' => $pendingJobs,
+            'prepare_queue' => $prepareQueue,
             'start_worker' => $startWorker,
             'job_ids' => array_values($jobIds),
             'worker' => $worker,
@@ -187,13 +203,13 @@ try {
             'orphan_recovery' => $orphanRecovery,
             'messages' => $messages,
         ],
-    ], $failed > 0 && $queued === 0 && $duplicates === 0 && $legacyMigrated === 0 ? 500 : 200);
+    ], 200);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     $errorMessage = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
-    error_log('[UnrealDB][' . $requestId . '] bucket batch finalization failed: ' . get_class($error) . ': ' . $errorMessage);
+    error_log('[UnrealDB][' . $requestId . '] bucket file finalization failed: ' . get_class($error) . ': ' . $errorMessage);
     JsonResponse::error(
-        'bucket_batch_failed',
+        'bucket_file_finalization_failed',
         $errorMessage,
         500,
         ['request_id' => $requestId]

@@ -9,7 +9,7 @@ function upload_bucket_throughput_expect(bool $condition, string $message): void
 }
 
 $root = dirname(__DIR__);
-$client = file_get_contents($root . '/assets/upload-bucket.js');
+$client = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
 $hashClient = file_get_contents($root . '/assets/upload-file-hash.js');
 $chunkApi = file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
 $batchApi = file_get_contents($root . '/api/v1/upload-bucket-batch.php');
@@ -33,11 +33,14 @@ foreach (compact('client', 'hashClient', 'chunkApi', 'batchApi', 'batchQueue', '
 }
 
 upload_bucket_throughput_expect(
-    str_contains($client, "action', 'begin_batch'")
-        && str_contains($client, "processingState('batch_status')")
-        && str_contains($client, 'completedUploads.push')
-        && str_contains($client, 'finalizeBatch(completedUploads.map'),
-    'The browser does not pause processing and transfer the complete batch before finalisation.'
+    str_contains($client, "const pausePromise = processingState('begin_batch')")
+        && str_contains($client, 'await uploadFile(file')
+        && str_contains($client, 'await waitUntilPaused(pausePromise)')
+        && str_contains($client, 'upload_ids: [item.uploadId]')
+        && str_contains($client, 'start_worker: false')
+        && str_contains($client, "upload_ids: [],")
+        && str_contains($client, 'start_worker: true'),
+    'Browser does not transfer immediately, then finalise each staged file before one worker start.'
 );
 upload_bucket_throughput_expect(
     str_contains($hashClient, 'class Md5')
@@ -46,11 +49,11 @@ upload_bucket_throughput_expect(
     'The browser does not calculate MD5 and SHA-1 before an ordinary file upload.'
 );
 upload_bucket_throughput_expect(
-    str_contains($client, "action', 'preflight'")
+    str_contains($client, "data.append('action', 'preflight')")
         && str_contains($client, 'if (checked.duplicate)')
         && str_contains($client, "initData.append('md5'")
         && str_contains($client, "initData.append('sha1'")
-        && str_contains($client, 'isRedirectWrapper(file)'),
+        && str_contains($client, 'isRedirect(file)'),
     'The browser does not separate ordinary physical preflight from redirect wrapper transfer.'
 );
 upload_bucket_throughput_expect(
@@ -71,10 +74,12 @@ upload_bucket_throughput_expect(
 );
 upload_bucket_throughput_expect(
     str_contains($batchApi, 'foreach ($uploadIds as $uploadId)')
+        && str_contains($batchApi, 'if ($prepareQueue || $startWorker)')
         && str_contains($batchApi, 'migrateLegacyQueuedJobs()')
         && str_contains($batchApi, 'CatalogDetachedWorker')
-        && str_contains($batchApi, 'start($queue->queueName(), 10000)'),
-    'Batch finalisation does not consolidate and create all jobs before starting one worker.'
+        && str_contains($batchApi, 'start($queue->queueName(), 10000)')
+        && str_contains($batchApi, 'A failed uploaded file is a file result'),
+    'Per-file finalisation cannot prepare once, continue after file errors and start one worker.'
 );
 upload_bucket_throughput_expect(
     str_contains($batchQueue, "':bucket-processing'")
@@ -166,8 +171,14 @@ upload_bucket_throughput_expect(
 upload_bucket_throughput_expect(
     str_contains($client, 'xhr.timeout')
         && str_contains($client, 'xhr.ontimeout')
-        && str_contains($client, 'requestReference'),
-    'Upload requests can still wait forever or hide their server reference.'
+        && str_contains($client, 'The file remains complete in durable staging'),
+    'Individual requests can wait forever or a failed final queue request discards the staged file.'
+);
+upload_bucket_throughput_expect(
+    !str_contains($client, 'elapsedText()')
+        && !str_contains($client, 'setInterval(')
+        && !str_contains($client, 'FINALIZE_GROUP_SIZE'),
+    'Active Upload Bucket progress still uses timer estimates or grouped batch finalisation.'
 );
 upload_bucket_throughput_expect(
     str_contains($manager, 'Stop job') && str_contains($manager, 'launchAfterStop'),
@@ -211,4 +222,4 @@ upload_bucket_throughput_expect(
     'Background Jobs still loads competing control scripts.'
 );
 
-echo "Paused deferred Upload Bucket throughput contract tests passed.\n";
+echo "File-by-file Upload Bucket throughput contract tests passed.\n";

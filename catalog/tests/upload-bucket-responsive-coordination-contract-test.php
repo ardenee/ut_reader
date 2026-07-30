@@ -1,0 +1,62 @@
+<?php
+declare(strict_types=1);
+
+function ub_responsive_expect(bool $condition, string $message): void
+{
+    if (!$condition) {
+        throw new RuntimeException($message);
+    }
+}
+
+$root = dirname(__DIR__);
+$chunk = file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
+$batch = file_get_contents($root . '/api/v1/upload-bucket-batch.php');
+$coordinator = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
+$page = file_get_contents($root . '/upload-bucket.php');
+$maintenance = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogStorageMaintenanceJobHandler.php');
+
+foreach (compact('chunk', 'batch', 'coordinator', 'page', 'maintenance') as $name => $source) {
+    ub_responsive_expect(is_string($source) && $source !== '', $name . ' source is missing.');
+}
+
+ub_responsive_expect(
+    !str_contains($chunk, "if (\$action === 'begin_batch') {\n        \$pruned = (new CatalogChunkedUploadCleanup")
+        && str_contains($chunk, "'cleanup_deferred' => true")
+        && str_contains($chunk, "'running_job' => \$runningJob ? ["),
+    'Interactive upload start still performs stale-directory cleanup or omits current-job identity.'
+);
+
+ub_responsive_expect(
+    str_contains($coordinator, "const pausePromise = processingState('begin_batch')")
+        && str_contains($coordinator, "await uploadFile(file")
+        && str_contains($coordinator, 'await waitUntilPaused(pausePromise)')
+        && str_contains($coordinator, 'upload_ids: [item.uploadId]')
+        && str_contains($coordinator, 'start_worker: false')
+        && str_contains($coordinator, "upload_ids: [],")
+        && str_contains($coordinator, 'start_worker: true')
+        && str_contains($coordinator, 'The file remains complete in durable staging')
+        && !str_contains($coordinator, 'FINALIZE_GROUP_SIZE')
+        && !str_contains($coordinator, 'elapsedText()'),
+    'Upload Bucket is not using actual file states and one-file finalisation.'
+);
+
+ub_responsive_expect(
+    str_contains($batch, "\$prepareQueue = true")
+        && str_contains($batch, "'prepare_queue'")
+        && str_contains($batch, 'if ($startWorker && $pendingJobs > 0)')
+        && str_contains($batch, 'A failed uploaded file is a file result')
+        && str_contains($batch, '], 200);'),
+    'Per-file validation failure can still abort the finalisation operation.'
+);
+
+ub_responsive_expect(
+    str_contains($maintenance, 'CatalogChunkedUploadCleanup')
+        && str_contains($maintenance, "'chunked_uploads' => \$chunkedUploads")
+        && str_contains($page, 'Validate and queue each completed staged file separately')
+        && str_contains($page, 'upload-bucket-coordinator.js')
+        && !str_contains($page, 'upload-bucket-follow.js?v=')
+        && !str_contains($page, 'assets/upload-bucket.js?v='),
+    'The page still loads the batch-wide coordinator or stale cleanup was not moved to maintenance.'
+);
+
+fwrite(STDOUT, "Upload Bucket file-by-file coordination contract tests passed.\n");

@@ -106,13 +106,13 @@ try {
 .bucket-progress { margin-top:12px; border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.03); }
 .bucket-progress progress { width:100%; height:18px; }
 .bucket-progress .progress-row + progress { margin-bottom:10px; }
+.bucket-progress-note { margin:8px 0 0; color:var(--muted); }
 .bucket-log { max-height:420px; overflow:auto; margin-top:10px; font-family:Consolas,ui-monospace,monospace; font-size:12px; color:var(--muted); }
 .bucket-result { display:flex; gap:8px; align-items:baseline; padding:3px 0; white-space:nowrap; }
 .bucket-result-badge { min-width:98px; font-weight:700; text-transform:uppercase; }
 .bucket-result-file { color:var(--text); }
 .bucket-result-message { color:var(--muted); white-space:normal; }
-.bucket-result-bucketed .bucket-result-badge,.bucket-result-decompressed .bucket-result-badge,.bucket-result-uploaded .bucket-result-badge,.bucket-result-ready .bucket-result-badge { color:#a7f3d0; }
-.bucket-result-queued .bucket-result-badge { color:#bfdbfe; }
+.bucket-result-uploaded .bucket-result-badge,.bucket-result-ready .bucket-result-badge,.bucket-result-queued .bucket-result-badge { color:#a7f3d0; }
 .bucket-result-duplicate .bucket-result-badge,.bucket-result-waiting .bucket-result-badge,.bucket-result-skipped .bucket-result-badge { color:#fde68a; }
 .bucket-result-retrying .bucket-result-badge { color:#fdba74; }
 .bucket-result-failed .bucket-result-badge { color:#fecdd3; }
@@ -127,7 +127,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'Files are transferred and staged first. After the complete batch is queued, this page automatically opens Background Jobs so the processing phase and live progress are visible.',
+        'Each file is transferred completely into durable staging, then validated and queued individually. No batch-wide start or finalisation request has to finish before the page can continue.',
         [
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
             'Processing Jobs' => $processingUrl,
@@ -143,23 +143,22 @@ CSS;
     echo '</div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
-        . '<p>The upload phase completes first. UnrealDB then creates the processing queue and opens its live view automatically.</p>'
+        . '<p>Progress is based on actual file states and server results, not elapsed-time estimates.</p>'
         . '</div></div><div class="ui-section__body">';
     echo '<ol class="bucket-phases">'
-        . '<li>Request a cooperative pause of old and new Upload Bucket processing queues; the current job is not cancelled.</li>'
-        . '<li>Skip files whose extension is not allowed by any active game profile before hashing, preflight or transfer.</li>'
-        . '<li>For uncompressed files, calculate MD5 and SHA-1 locally and check size + MD5 + SHA-1 against physical Upload Bucket and catalog files.</li>'
-        . '<li>Skip confirmed physical duplicates before transfer. Metadata-only matches do not count as duplicates.</li>'
-        . '<li>Upload .uz/.uz2/.uz3 wrappers without comparing wrapper hashes to package records.</li>'
-        . '<li>After every transfer finishes, create the processing jobs and start the Upload Bucket worker once.</li>'
-        . '<li>Open Background Jobs automatically to show decompression, duplicate checks, inventory and indexing progress.</li>'
+        . '<li>Request the existing Upload Bucket worker to stop cooperatively, but begin transferring selected files immediately.</li>'
+        . '<li>Filter extensions, calculate MD5/SHA-1 for ordinary files, check physical duplicates and write resumable chunks to durable staging.</li>'
+        . '<li>After transfers complete, wait only if an identified previous processing job is still finishing its current file.</li>'
+        . '<li>Validate and queue each completed staged file separately. One file failure cannot prevent later files from being handled.</li>'
+        . '<li>Files whose final queue request fails remain complete in durable staging and can be retried without retransferring stored chunks.</li>'
+        . '<li>Start the processing worker after all staged files have received an individual result.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data" data-allowed-extensions="'
         . catalog_h($allowedExtensionJson) . '">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
     echo '<p><label>Choose files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
-    echo '<p><button id="upload-bucket-button" type="submit">Check and upload complete batch</button></p>';
+    echo '<p><button id="upload-bucket-button" type="submit">Check and upload files</button></p>';
     echo '<p class="muted"><strong>Allowed by active game profiles:</strong> '
         . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured')
         . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
@@ -173,10 +172,11 @@ CSS;
         . ' data-processing-url="' . catalog_h($processingUrl) . '"'
         . ' data-chunk-csrf="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '"'
         . ' data-chunk-bytes="' . $chunkBytes . '">';
-    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Check / upload phase</span><span id="bucket-overall-progress-count"></span></div>'
+    echo '<div class="progress-row"><span id="bucket-overall-progress-label">Waiting to start</span><span id="bucket-overall-progress-count"></span></div>'
         . '<progress id="bucket-overall-progress-bar" value="0" max="100"></progress>';
-    echo '<div class="progress-row"><span id="bucket-progress-label">Waiting...</span><span id="bucket-progress-speed"></span></div>'
+    echo '<div class="progress-row"><span id="bucket-progress-label">Choose files and start the upload.</span><span id="bucket-progress-speed"></span></div>'
         . '<progress id="bucket-progress-bar" value="0" max="100"></progress>';
+    echo '<p class="bucket-progress-note">Do not close or reload this page while files are being transferred or queued. Completed chunks remain durable and are reused when the same files are selected again.</p>';
     echo '<div id="bucket-log" class="bucket-log"></div></div>';
     echo '</form>';
     echo '<p class="bucket-actions"><a class="button" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
@@ -188,14 +188,11 @@ CSS;
     $filterScriptVersion = is_file($filterScriptPath) ? (string)(filemtime($filterScriptPath) ?: 1) : '1';
     $hashScriptPath = __DIR__ . '/assets/upload-file-hash.js';
     $hashScriptVersion = is_file($hashScriptPath) ? (string)(filemtime($hashScriptPath) ?: 1) : '1';
-    $scriptPath = __DIR__ . '/assets/upload-bucket.js';
-    $scriptVersion = is_file($scriptPath) ? (string)(filemtime($scriptPath) ?: 1) : '1';
-    $followScriptPath = __DIR__ . '/assets/upload-bucket-follow.js';
-    $followScriptVersion = is_file($followScriptPath) ? (string)(filemtime($followScriptPath) ?: 1) : '1';
+    $coordinatorPath = __DIR__ . '/assets/upload-bucket-coordinator.js';
+    $coordinatorVersion = is_file($coordinatorPath) ? (string)(filemtime($coordinatorPath) ?: 1) : '1';
     echo '<script src="assets/upload-bucket-extension-filter.js?v=' . catalog_h($filterScriptVersion) . '"></script>';
     echo '<script src="assets/upload-file-hash.js?v=' . catalog_h($hashScriptVersion) . '"></script>';
-    echo '<script src="assets/upload-bucket.js?v=' . catalog_h($scriptVersion) . '"></script>';
-    echo '<script src="assets/upload-bucket-follow.js?v=' . catalog_h($followScriptVersion) . '"></script>';
+    echo '<script src="assets/upload-bucket-coordinator.js?v=' . catalog_h($coordinatorVersion) . '"></script>';
 
     catalog_foot();
 } catch (Throwable $error) {
