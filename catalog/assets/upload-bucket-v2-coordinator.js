@@ -4,6 +4,8 @@
     const form = document.getElementById('upload-bucket-form');
     const fileInput = document.getElementById('upload-bucket-files');
     const folderInput = document.getElementById('upload-bucket-folder');
+    const folderButton = document.getElementById('upload-bucket-folder-button');
+    const folderSummary = document.getElementById('upload-bucket-folder-summary');
     const startButton = document.getElementById('upload-bucket-button');
     const stopButton = document.getElementById('upload-bucket-stop');
     const progressBox = document.getElementById('bucket-progress');
@@ -14,7 +16,8 @@
     const overallLabel = document.getElementById('bucket-overall-progress-label');
     const overallCount = document.getElementById('bucket-overall-progress-count');
     const log = document.getElementById('bucket-log');
-    if (!form || !fileInput || !startButton || !stopButton || !progressBox || !window.XMLHttpRequest || !window.fetch || !window.Worker) return;
+    if (!form || !fileInput || !startButton || !stopButton || !progressBox || !log
+        || !window.XMLHttpRequest || !window.fetch || !window.Worker) return;
 
     const chunkUrl = progressBox.dataset.chunkUrl || 'api/v1/upload-bucket-chunk.php';
     const batchUrl = progressBox.dataset.batchUrl || 'api/v1/upload-bucket-batch.php';
@@ -22,8 +25,22 @@
     const queueUrl = progressBox.dataset.processingUrl || 'background-jobs.php?queue=catalog%3Abucket-processing';
     const csrf = progressBox.dataset.chunkCsrf || '';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
+    const LOG_ROW_HEIGHT = 22;
+    const LOG_OVERSCAN = 12;
+
+    let configuredExtensions = [];
+    try {
+        configuredExtensions = JSON.parse(form.dataset.allowedExtensions || '[]');
+    } catch (error) {
+        configuredExtensions = [];
+    }
+    const allowedExtensions = new Set(configuredExtensions.map(function (extension) {
+        return String(extension || '').trim().toLowerCase().replace(/^\.+/, '');
+    }).filter(Boolean));
+    ['uz', 'uz2', 'uz3'].forEach(function (extension) { allowedExtensions.add(extension); });
 
     let operationActive = false;
+    let directoryScanActive = false;
     let stopRequested = false;
     let activeXhr = null;
     let activeFetchController = null;
@@ -31,6 +48,22 @@
     let activeInspectorReject = null;
     let activeUploadId = '';
     let queuePrepared = false;
+    let pickedDirectoryEntries = [];
+    let activeLineId = -1;
+
+    const logLines = [];
+    let logFrame = 0;
+    let followLogTail = true;
+    const logSpacer = document.createElement('div');
+    const logViewport = document.createElement('div');
+    logSpacer.className = 'bucket-log-spacer';
+    logViewport.className = 'bucket-log-viewport';
+    log.textContent = '';
+    log.appendChild(logSpacer);
+    log.appendChild(logViewport);
+
+    let progressFrame = 0;
+    let pendingProgress = null;
 
     function stoppedError() {
         const error = new Error('Stopped by user.');
@@ -42,83 +75,8 @@
         return stopRequested || (error && error.name === 'AbortError');
     }
 
-    function fileKey(file) {
-        return [file.name, file.size, file.lastModified || 0, file.webkitRelativePath || file.name].join('|');
-    }
-
-    function selectedFiles() {
-        const unique = new Map();
-        Array.from(fileInput.files || [])
-            .concat(folderInput ? Array.from(folderInput.files || []) : [])
-            .forEach(function (file) {
-                const key = fileKey(file);
-                if (!unique.has(key)) unique.set(key, file);
-            });
-        return Array.from(unique.values());
-    }
-
-    function displayName(file) {
-        return file.webkitRelativePath || file.name;
-    }
-
-    function isRedirect(file) {
-        return /\.(?:uz|uz2|uz3)$/i.test(String(file && file.name ? file.name : ''));
-    }
-
-    function fmtBytes(bytes) {
-        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        let value = Number(bytes || 0);
-        let unit = 0;
-        while (value >= 1024 && unit < units.length - 1) {
-            value /= 1024;
-            unit++;
-        }
-        return (unit ? value.toFixed(2) : String(Math.round(value))) + ' ' + units[unit];
-    }
-
-    function addLog(entry) {
-        entry = entry || {};
-        const status = String(entry.status || 'info').toLowerCase();
-        const row = document.createElement('div');
-        row.className = 'bucket-result bucket-result-' + status.replace(/[^a-z0-9_-]+/g, '-');
-
-        const badge = document.createElement('span');
-        badge.className = 'bucket-result-badge';
-        badge.textContent = status.replace(/_/g, ' ');
-        row.appendChild(badge);
-
-        const file = entry.file_id ? document.createElement('a') : document.createElement('span');
-        file.className = 'bucket-result-file';
-        file.textContent = String(entry.file || 'Upload batch');
-        if (entry.file_id) file.href = 'file-examine.php?id=' + encodeURIComponent(entry.file_id);
-        row.appendChild(file);
-
-        const message = document.createElement('span');
-        message.className = 'bucket-result-message';
-        message.textContent = String(entry.message || '')
-            + (entry.file_size_text ? ' | size: ' + String(entry.file_size_text) : '');
-        row.appendChild(message);
-
-        log.appendChild(row);
-        log.scrollTop = log.scrollHeight;
-    }
-
-    function errorText(body, fallback) {
-        if (body && typeof body.error === 'string' && body.error) return body.error;
-        if (body && body.error && typeof body.error.message === 'string') return body.error.message;
-        if (body && typeof body.message === 'string' && body.message) return body.message;
-        return fallback;
-    }
-
-    function parseJson(text, status, contentType, label) {
-        try {
-            return JSON.parse(text || '{}');
-        } catch (error) {
-            if (/^\s*(?:<!doctype\s+html|<html\b)/i.test(text || '') || /text\/html/i.test(contentType || '')) {
-                throw new Error(label + ' returned an HTML error page (HTTP ' + status + ').');
-            }
-            throw new Error(label + ' returned invalid JSON (HTTP ' + status + ').');
-        }
+    function yieldToBrowser() {
+        return new Promise(function (resolve) { window.setTimeout(resolve, 0); });
     }
 
     function delay(milliseconds) {
@@ -143,6 +101,292 @@
         });
     }
 
+    function fmtBytes(bytes) {
+        const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        let value = Number(bytes || 0);
+        let unit = 0;
+        while (value >= 1024 && unit < units.length - 1) {
+            value /= 1024;
+            unit++;
+        }
+        return (unit ? value.toFixed(2) : String(Math.round(value))) + ' ' + units[unit];
+    }
+
+    function extensionOf(name) {
+        const clean = String(name || '').replace(/\\/g, '/').split('/').pop() || '';
+        const position = clean.lastIndexOf('.');
+        return position >= 0 ? clean.slice(position + 1).trim().toLowerCase() : '';
+    }
+
+    function isAllowedName(name) {
+        const extension = extensionOf(name);
+        return extension !== '' && allowedExtensions.has(extension);
+    }
+
+    function isRedirectName(name) {
+        return /\.(?:uz|uz2|uz3)$/i.test(String(name || ''));
+    }
+
+    function fileKey(file, relativePath) {
+        return [file.name, file.size, file.lastModified || 0, relativePath || file.name].join('|');
+    }
+
+    function lineText(line) {
+        const tokens = line.steps.slice();
+        if (line.transient) tokens.push(line.transient);
+        if (line.detail) tokens.push(line.detail);
+        tokens.push(line.name || 'Unnamed file');
+        tokens.push(line.sizeText || '0 B');
+        return tokens.join(' : ');
+    }
+
+    function lineClass(line) {
+        const outcome = String(line.outcome || '').toLowerCase();
+        return 'bucket-log-line' + (outcome ? ' bucket-log-line-' + outcome.replace(/[^a-z0-9_-]+/g, '-') : '');
+    }
+
+    function renderLogNow(forceTail) {
+        logFrame = 0;
+        if (document.hidden) return;
+        const wasNearBottom = log.scrollTop + log.clientHeight >= log.scrollHeight - (LOG_ROW_HEIGHT * 3);
+        if (forceTail || followLogTail) {
+            log.scrollTop = Math.max(0, logLines.length * LOG_ROW_HEIGHT - log.clientHeight);
+        }
+        logSpacer.style.height = (logLines.length * LOG_ROW_HEIGHT) + 'px';
+        const start = Math.max(0, Math.floor(log.scrollTop / LOG_ROW_HEIGHT) - LOG_OVERSCAN);
+        const visibleCount = Math.ceil(Math.max(LOG_ROW_HEIGHT, log.clientHeight) / LOG_ROW_HEIGHT) + (LOG_OVERSCAN * 2);
+        const end = Math.min(logLines.length, start + visibleCount);
+        const fragment = document.createDocumentFragment();
+        for (let index = start; index < end; index++) {
+            const row = document.createElement('div');
+            row.className = lineClass(logLines[index]);
+            row.textContent = lineText(logLines[index]);
+            row.style.height = LOG_ROW_HEIGHT + 'px';
+            fragment.appendChild(row);
+        }
+        logViewport.textContent = '';
+        logViewport.style.transform = 'translateY(' + (start * LOG_ROW_HEIGHT) + 'px)';
+        logViewport.appendChild(fragment);
+        if (forceTail || (followLogTail && wasNearBottom)) {
+            log.scrollTop = Math.max(0, logLines.length * LOG_ROW_HEIGHT - log.clientHeight);
+        }
+    }
+
+    function scheduleLogRender(forceTail) {
+        if (forceTail) followLogTail = true;
+        if (logFrame || document.hidden) return;
+        logFrame = window.requestAnimationFrame(function () { renderLogNow(Boolean(forceTail)); });
+    }
+
+    function resetLog() {
+        logLines.length = 0;
+        logSpacer.style.height = '0px';
+        logViewport.textContent = '';
+        log.scrollTop = 0;
+        followLogTail = true;
+    }
+
+    function beginFileLine(name, size) {
+        const line = {
+            steps: [],
+            transient: 'CHECKING',
+            detail: '',
+            name: String(name || 'Unnamed file'),
+            sizeText: fmtBytes(size),
+            outcome: ''
+        };
+        logLines.push(line);
+        const lineId = logLines.length - 1;
+        activeLineId = lineId;
+        scheduleLogRender(true);
+        return lineId;
+    }
+
+    function appendStage(lineId, stage, outcome) {
+        const line = logLines[lineId];
+        if (!line) return;
+        line.transient = '';
+        line.detail = '';
+        line.steps.push(String(stage || '').toUpperCase());
+        if (outcome) line.outcome = String(outcome).toLowerCase();
+        scheduleLogRender(true);
+    }
+
+    function setLineTransient(lineId, status) {
+        const line = logLines[lineId];
+        if (!line) return;
+        line.transient = String(status || '').toUpperCase();
+        scheduleLogRender(true);
+    }
+
+    function finishLine(lineId, finalStage, outcome, detail) {
+        const line = logLines[lineId];
+        if (!line) return;
+        line.transient = '';
+        line.detail = detail ? String(detail) : '';
+        line.steps.push(String(finalStage || '').toUpperCase());
+        line.outcome = String(outcome || finalStage || '').toLowerCase();
+        scheduleLogRender(true);
+        if (activeLineId === lineId) activeLineId = -1;
+    }
+
+    log.addEventListener('scroll', function () {
+        followLogTail = log.scrollTop + log.clientHeight >= log.scrollHeight - (LOG_ROW_HEIGHT * 3);
+        scheduleLogRender(false);
+    }, {passive: true});
+
+    function flushProgress() {
+        progressFrame = 0;
+        if (!pendingProgress || document.hidden) return;
+        const update = pendingProgress;
+        pendingProgress = null;
+        if (update.indeterminate) currentBar.removeAttribute('value');
+        else currentBar.value = Math.max(0, Math.min(100, Number(update.percent || 0)));
+        if (update.label !== undefined) currentLabel.textContent = String(update.label || '');
+        if (update.speed !== undefined) currentSpeed.textContent = String(update.speed || '');
+    }
+
+    function scheduleProgress(percent, label, speed, indeterminate) {
+        pendingProgress = {percent: percent, label: label, speed: speed, indeterminate: Boolean(indeterminate)};
+        if (progressFrame || document.hidden) return;
+        progressFrame = window.requestAnimationFrame(flushProgress);
+    }
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+            flushProgress();
+            renderLogNow(false);
+        }
+    });
+
+    function setBusy(active) {
+        startButton.disabled = active;
+        fileInput.disabled = active;
+        if (folderInput) folderInput.disabled = active;
+        if (folderButton) folderButton.disabled = active;
+        stopButton.disabled = !active;
+        stopButton.hidden = !active;
+    }
+
+    async function* walkDirectory(directoryHandle, prefix) {
+        for await (const entry of directoryHandle.values()) {
+            if (stopRequested) throw stoppedError();
+            const relativePath = prefix ? prefix + '/' + entry.name : entry.name;
+            if (entry.kind === 'file') {
+                yield {handle: entry, relativePath: relativePath};
+            } else if (entry.kind === 'directory') {
+                yield* walkDirectory(entry, relativePath);
+            }
+        }
+    }
+
+    async function chooseDirectory() {
+        if (operationActive || directoryScanActive) return;
+        if (typeof window.showDirectoryPicker !== 'function') {
+            if (folderInput) folderInput.click();
+            return;
+        }
+        stopRequested = false;
+        directoryScanActive = true;
+        pickedDirectoryEntries = [];
+        setBusy(true);
+        progressBox.hidden = false;
+        overallBar.removeAttribute('value');
+        overallLabel.textContent = 'Discovering folder without building a browser FileList';
+        overallCount.textContent = '0 files found';
+        scheduleProgress(0, 'Choose a folder in the browser prompt.', '', true);
+        try {
+            const rootHandle = await window.showDirectoryPicker({mode: 'read'});
+            let count = 0;
+            for await (const entry of walkDirectory(rootHandle, rootHandle.name)) {
+                pickedDirectoryEntries.push(entry);
+                count++;
+                if (count % 200 === 0) {
+                    overallCount.textContent = count.toLocaleString() + ' files found';
+                    scheduleProgress(0, 'Scanning ' + rootHandle.name + ': ' + count.toLocaleString() + ' files found.', '', true);
+                    await yieldToBrowser();
+                }
+            }
+            overallBar.value = 0;
+            overallLabel.textContent = 'Folder ready';
+            overallCount.textContent = count.toLocaleString() + ' files selected';
+            scheduleProgress(0, 'Folder discovery complete. Press Check and upload files to start.', '', false);
+            if (folderSummary) folderSummary.textContent = rootHandle.name + ' · ' + count.toLocaleString() + ' files';
+        } catch (error) {
+            pickedDirectoryEntries = [];
+            overallBar.value = 0;
+            if (isStopped(error)) {
+                overallLabel.textContent = 'Folder discovery stopped';
+                overallCount.textContent = 'No folder files retained';
+                scheduleProgress(0, 'Folder discovery was stopped.', '', false);
+            } else if (error && error.name === 'AbortError') {
+                overallLabel.textContent = 'Folder selection cancelled';
+                overallCount.textContent = '';
+                scheduleProgress(0, 'No folder was selected.', '', false);
+            } else {
+                overallLabel.textContent = 'Folder discovery failed';
+                overallCount.textContent = '';
+                scheduleProgress(0, error && error.message ? error.message : 'The folder could not be read.', '', false);
+            }
+            if (folderSummary) folderSummary.textContent = 'No folder selected';
+        } finally {
+            stopRequested = false;
+            directoryScanActive = false;
+            setBusy(false);
+        }
+    }
+
+    if (folderButton) folderButton.addEventListener('click', chooseDirectory);
+    if (folderInput) {
+        folderInput.addEventListener('change', function () {
+            const count = Number(folderInput.files ? folderInput.files.length : 0);
+            if (folderSummary) folderSummary.textContent = count ? count.toLocaleString() + ' fallback folder files' : 'No folder selected';
+        });
+    }
+
+    function selectionCount() {
+        return Number(fileInput.files ? fileInput.files.length : 0)
+            + Number(folderInput && folderInput.files ? folderInput.files.length : 0)
+            + pickedDirectoryEntries.length;
+    }
+
+    async function selectionAt(index) {
+        const directCount = Number(fileInput.files ? fileInput.files.length : 0);
+        if (index < directCount) {
+            const file = fileInput.files[index];
+            return {file: file, relativePath: file.webkitRelativePath || file.name};
+        }
+        index -= directCount;
+        const fallbackCount = Number(folderInput && folderInput.files ? folderInput.files.length : 0);
+        if (index < fallbackCount) {
+            const file = folderInput.files[index];
+            return {file: file, relativePath: file.webkitRelativePath || file.name};
+        }
+        index -= fallbackCount;
+        const picked = pickedDirectoryEntries[index];
+        if (!picked) throw new Error('The selected file list changed while it was being processed.');
+        const file = await picked.handle.getFile();
+        return {file: file, relativePath: picked.relativePath};
+    }
+
+    function errorText(body, fallback) {
+        if (body && typeof body.error === 'string' && body.error) return body.error;
+        if (body && body.error && typeof body.error.message === 'string') return body.error.message;
+        if (body && typeof body.message === 'string' && body.message) return body.message;
+        return fallback;
+    }
+
+    function parseJson(text, status, contentType, label) {
+        try {
+            return JSON.parse(text || '{}');
+        } catch (error) {
+            if (/^\s*(?:<!doctype\s+html|<html\b)/i.test(text || '') || /text\/html/i.test(contentType || '')) {
+                throw new Error(label + ' returned an HTML error page (HTTP ' + status + ').');
+            }
+            throw new Error(label + ' returned invalid JSON (HTTP ' + status + ').');
+        }
+    }
+
     function requestForm(data, onProgress, timeoutMs) {
         if (stopRequested) return Promise.reject(stoppedError());
         return new Promise(function (resolve, reject) {
@@ -153,11 +397,7 @@
             xhr.setRequestHeader('Accept', 'application/json');
             if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
             if (typeof onProgress === 'function') xhr.upload.onprogress = onProgress;
-
-            function finish() {
-                if (activeXhr === xhr) activeXhr = null;
-            }
-
+            function finish() { if (activeXhr === xhr) activeXhr = null; }
             xhr.onload = function () {
                 finish();
                 let body;
@@ -180,24 +420,27 @@
         });
     }
 
-    async function requestFormRetry(data, onProgress, fileName, operation, timeoutMs) {
+    async function requestFormRetry(data, onProgress, fileName, operation, timeoutMs, lineId) {
         let lastError = null;
         for (let attempt = 1; attempt <= 4; attempt++) {
             if (stopRequested) throw stoppedError();
             try {
-                return await requestForm(data, onProgress, timeoutMs);
+                const result = await requestForm(data, onProgress, timeoutMs);
+                if (lineId >= 0) setLineTransient(lineId, '');
+                return result;
             } catch (error) {
                 if (isStopped(error)) throw stoppedError();
                 lastError = error;
                 if (attempt >= 4) break;
-                addLog({status: 'retrying', file: fileName, message: operation + ' failed; retry ' + (attempt + 1) + ' of 4: ' + error.message});
+                if (lineId >= 0) setLineTransient(lineId, 'RETRYING ' + (attempt + 1) + '/4');
+                scheduleProgress(0, operation + ' retry ' + (attempt + 1) + ' of 4: ' + fileName, '', false);
                 await sleep(attempt * 750);
             }
         }
         throw lastError || new Error(operation + ' failed.');
     }
 
-    async function postBatch(payload, operation, fileName, allowWhenStopped) {
+    async function postBatch(payload, operation, fileName, allowWhenStopped, lineId) {
         let lastError = null;
         for (let attempt = 1; attempt <= 4; attempt++) {
             if (stopRequested && !allowWhenStopped) throw stoppedError();
@@ -221,13 +464,14 @@
                 if (!response.ok || !body.ok) {
                     throw new Error(errorText(body, operation + ' failed with HTTP ' + response.status + '.'));
                 }
+                if (lineId >= 0) setLineTransient(lineId, '');
                 return body.data || {};
             } catch (error) {
                 if (activeFetchController === controller) activeFetchController = null;
                 if ((stopRequested && !allowWhenStopped) || error.name === 'AbortError') throw stoppedError();
                 lastError = error;
                 if (attempt >= 4) break;
-                addLog({status: 'retrying', file: fileName, message: operation + ' failed; retry ' + (attempt + 1) + ' of 4: ' + error.message});
+                if (lineId >= 0) setLineTransient(lineId, 'RETRYING ' + (attempt + 1) + '/4');
                 await (allowWhenStopped ? delay(attempt * 750) : sleep(attempt * 750));
             }
         }
@@ -237,7 +481,7 @@
     async function processingState(action) {
         const data = new FormData();
         data.append('action', action);
-        return requestFormRetry(data, null, 'Upload batch', action === 'begin_batch' ? 'Worker pause request' : 'Worker status check', 120000);
+        return requestFormRetry(data, null, 'Upload batch', action === 'begin_batch' ? 'Worker pause request' : 'Worker status check', 120000, -1);
     }
 
     function workerDescription(processing) {
@@ -253,99 +497,103 @@
         return parts.length ? parts.join(' · ') : String(active.queue || 'Upload Bucket worker');
     }
 
-    async function waitUntilPaused(initialBody) {
+    async function waitUntilPaused(initialBody, lineId) {
         let body = initialBody;
         let processing = body && body.processing ? body.processing : {};
         while (!processing.ready) {
             if (stopRequested) throw stoppedError();
-            currentBar.removeAttribute('value');
-            currentLabel.textContent = 'Waiting for ' + workerDescription(processing) + ' to finish its current file.';
+            setLineTransient(lineId, 'WAITING');
+            scheduleProgress(0, 'Waiting for ' + workerDescription(processing) + ' to finish its current file.', '', true);
             await sleep(1000);
             body = await processingState('batch_status');
             processing = body.processing || {};
         }
-        currentBar.value = 100;
+        setLineTransient(lineId, '');
+        scheduleProgress(100, 'Previous Upload Bucket processing is paused.', '', false);
     }
 
-    function inspectFile(file, index, total) {
+    function ensureInspectorWorker() {
+        if (activeInspector) return activeInspector;
+        const worker = new Worker(workerUrl);
+        activeInspector = worker;
+        return worker;
+    }
+
+    function terminateInspector() {
+        if (activeInspector) activeInspector.terminate();
+        activeInspector = null;
+        activeInspectorReject = null;
+    }
+
+    function inspectFile(file, relativePath, index, total, lineId) {
         if (stopRequested) return Promise.reject(stoppedError());
         return new Promise(function (resolve, reject) {
-            const worker = new Worker(workerUrl);
-            activeInspector = worker;
+            const worker = ensureInspectorWorker();
             const requestId = String(Date.now()) + '-' + String(index);
             activeInspectorReject = reject;
-            currentBar.value = 0;
-            currentSpeed.textContent = '';
-            currentLabel.textContent = 'Inspecting header for ' + index + ' of ' + total + ': ' + displayName(file);
-
-            function finish() {
-                if (activeInspector === worker) activeInspector = null;
-                activeInspectorReject = null;
-                worker.terminate();
-            }
-
-            worker.addEventListener('message', function (event) {
+            scheduleProgress(0, 'Inspecting header for ' + index + ' of ' + total + ': ' + relativePath, '', false);
+            setLineTransient(lineId, 'CHECKING');
+            worker.onmessage = function (event) {
                 const data = event.data || {};
                 if (String(data.id || '') !== requestId) return;
                 if (data.type === 'progress') {
                     const loaded = Math.max(0, Number(data.loaded || 0));
                     const size = Math.max(1, Number(data.total || file.size || 1));
-                    currentBar.value = Math.floor((loaded * 100) / size);
-                    if (data.phase === 'hash') {
-                        currentLabel.textContent = 'Calculating MD5 and SHA-1 for ' + index + ' of ' + total + ': ' + displayName(file);
-                    } else {
-                        currentLabel.textContent = 'Checking Unreal file header for ' + index + ' of ' + total + ': ' + displayName(file);
-                    }
+                    const label = data.phase === 'hash'
+                        ? 'Calculating MD5 and SHA-1 for ' + index + ' of ' + total + ': ' + relativePath
+                        : 'Checking Unreal file header for ' + index + ' of ' + total + ': ' + relativePath;
+                    scheduleProgress(Math.floor((loaded * 100) / size), label, '', false);
                     return;
                 }
                 if (data.type === 'result') {
-                    finish();
+                    activeInspectorReject = null;
                     resolve(data.result || {});
                     return;
                 }
                 if (data.type === 'error') {
-                    finish();
+                    activeInspectorReject = null;
                     reject(new Error(String(data.message || 'File inspection failed.')));
                 }
-            });
-            worker.addEventListener('error', function () {
-                finish();
+            };
+            worker.onerror = function () {
+                activeInspectorReject = null;
+                terminateInspector();
                 reject(new Error('The browser file-inspection worker failed.'));
-            });
+            };
             worker.postMessage({type: 'inspect', id: requestId, file: file});
         });
     }
 
-    async function preflight(file, inspection) {
+    async function preflight(file, relativePath, inspection, lineId) {
         const data = new FormData();
         data.append('action', 'preflight');
         data.append('original_name', file.name);
-        data.append('relative_path', displayName(file));
+        data.append('relative_path', relativePath);
         data.append('file_size', String(file.size || 0));
         if (inspection && inspection.md5 && inspection.sha1) {
             data.append('md5', inspection.md5);
             data.append('sha1', inspection.sha1);
         }
-        currentBar.value = 0;
-        currentLabel.textContent = 'Checking database identity: ' + displayName(file);
-        return requestFormRetry(data, null, displayName(file), 'Duplicate check', 120000);
+        setLineTransient(lineId, 'CHECKING DATABASE');
+        scheduleProgress(0, 'Checking database identity: ' + relativePath, '', false);
+        return requestFormRetry(data, null, relativePath, 'Duplicate check', 120000, lineId);
     }
 
-    async function uploadFile(file, inspection, index, total) {
-        const name = displayName(file);
+    async function uploadFile(file, relativePath, inspection, index, total, lineId) {
         const identity = inspection && inspection.md5 && inspection.sha1 ? inspection : null;
         const initData = new FormData();
         initData.append('action', 'init');
-        initData.append('client_key', fileKey(file));
+        initData.append('client_key', fileKey(file, relativePath));
         initData.append('original_name', file.name);
-        initData.append('relative_path', name);
+        initData.append('relative_path', relativePath);
         initData.append('file_size', String(file.size || 0));
         if (identity) {
             initData.append('md5', identity.md5);
             initData.append('sha1', identity.sha1);
         }
-        currentLabel.textContent = 'Opening durable staging for ' + index + ' of ' + total + ': ' + name;
-        const initialized = await requestFormRetry(initData, null, name, 'Upload initialisation', 120000);
+        setLineTransient(lineId, 'OPENING');
+        scheduleProgress(0, 'Opening durable staging for ' + index + ' of ' + total + ': ' + relativePath, '', false);
+        const initialized = await requestFormRetry(initData, null, relativePath, 'Upload initialisation', 120000, lineId);
         const upload = initialized.upload || {};
         const uploadId = String(upload.upload_id || '');
         if (!uploadId) throw new Error('Upload initialisation did not return an upload ID.');
@@ -355,16 +603,16 @@
         const totalChunks = Math.max(1, Number(upload.total_chunks || Math.ceil(file.size / chunkBytes)));
         const received = new Set((upload.received_chunks || []).map(Number));
         let acknowledged = Math.max(0, Number(upload.received_bytes || 0));
-        if (received.size) addLog({status: 'uploading', file: name, message: 'Resuming ' + received.size + ' already stored chunk(s).'});
+        setLineTransient(lineId, received.size ? 'RESUMING' : 'UPLOADING');
 
-        currentBar.value = Math.floor((acknowledged * 100) / Math.max(1, file.size));
         for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
             if (stopRequested) throw stoppedError();
             const start = chunkIndex * chunkBytes;
             const end = Math.min(file.size, start + chunkBytes);
             if (received.has(chunkIndex)) {
                 acknowledged = Math.max(acknowledged, end);
-                currentBar.value = Math.floor((acknowledged * 100) / Math.max(1, file.size));
+                scheduleProgress(Math.floor((acknowledged * 100) / Math.max(1, file.size)),
+                    'Resuming ' + index + ' of ' + total + ': ' + relativePath, '', false);
                 continue;
             }
             const data = new FormData();
@@ -378,68 +626,53 @@
                 if (!event.lengthComputable) return;
                 const current = Math.min(file.size, base + event.loaded);
                 const elapsed = Math.max(0.25, (Date.now() - startedAt) / 1000);
-                currentBar.value = Math.floor((current * 100) / Math.max(1, file.size));
-                currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + name
-                    + ' · chunk ' + (chunkIndex + 1) + '/' + totalChunks;
-                currentSpeed.textContent = fmtBytes(event.loaded / elapsed) + '/s';
-            }, name, 'Chunk ' + (chunkIndex + 1) + '/' + totalChunks, 180000);
+                scheduleProgress(
+                    Math.floor((current * 100) / Math.max(1, file.size)),
+                    'Uploading ' + index + ' of ' + total + ': ' + relativePath + ' · chunk ' + (chunkIndex + 1) + '/' + totalChunks,
+                    fmtBytes(event.loaded / elapsed) + '/s',
+                    false
+                );
+            }, relativePath, 'Chunk ' + (chunkIndex + 1) + '/' + totalChunks, 180000, lineId);
             acknowledged += end - start;
         }
 
         const completeData = new FormData();
         completeData.append('action', 'complete');
         completeData.append('upload_id', uploadId);
-        currentSpeed.textContent = '';
-        currentLabel.textContent = 'Verifying staged file ' + index + ' of ' + total + ': ' + name;
-        const completed = await requestFormRetry(completeData, null, name, 'Upload completion', 120000);
-        if (Array.isArray(completed.messages)) completed.messages.forEach(addLog);
+        setLineTransient(lineId, 'VERIFYING');
+        scheduleProgress(100, 'Verifying staged file ' + index + ' of ' + total + ': ' + relativePath, '', false);
+        const completed = await requestFormRetry(completeData, null, relativePath, 'Upload completion', 120000, lineId);
         activeUploadId = '';
-        currentBar.value = 100;
-        return {uploadId: String(completed.upload_id || uploadId), name: name, size: Number(file.size || 0)};
+        scheduleProgress(100, 'Staged upload verified: ' + relativePath, '', false);
+        return {uploadId: String(completed.upload_id || uploadId), name: relativePath, size: Number(file.size || 0)};
     }
 
-    async function finalizeOne(item) {
-        currentBar.value = 0;
-        currentLabel.textContent = 'Validating and queuing: ' + item.name;
+    async function finalizeOne(item, lineId) {
+        setLineTransient(lineId, 'QUEUING');
+        scheduleProgress(0, 'Validating and queuing: ' + item.name, '', false);
         const data = await postBatch({
             upload_ids: [item.uploadId],
             prepare_queue: !queuePrepared,
             start_worker: false
-        }, 'File finalisation', item.name, false);
+        }, 'File finalisation', item.name, false, lineId);
         queuePrepared = true;
-        if (Array.isArray(data.messages)) {
-            data.messages.forEach(function (entry) {
-                const normalized = Object.assign({}, entry);
-                if (!normalized.file || /^[a-f0-9]{64}$/i.test(String(normalized.file))) normalized.file = item.name;
-                addLog(normalized);
-            });
-        }
-        currentBar.value = 100;
+        scheduleProgress(100, 'Queue result received: ' + item.name, '', false);
         return data;
     }
 
     async function startProcessing(allowWhenStopped) {
         if (!queuePrepared) return {pending_jobs: 0, worker_error: ''};
-        currentLabel.textContent = 'Starting Upload Bucket processing for queued files...';
-        return postBatch({
-            upload_ids: [],
-            prepare_queue: false,
-            start_worker: true
-        }, 'Processing worker start', 'Upload batch', Boolean(allowWhenStopped));
-    }
-
-    function setButtons(active) {
-        startButton.disabled = active;
-        stopButton.disabled = !active;
-        stopButton.hidden = !active;
+        scheduleProgress(0, 'Starting Upload Bucket processing for queued files...', '', true);
+        return postBatch({upload_ids: [], prepare_queue: false, start_worker: true},
+            'Processing worker start', 'Upload batch', Boolean(allowWhenStopped), -1);
     }
 
     function updateOverall(done, total, totals) {
         overallBar.value = Math.floor((done * 100) / Math.max(1, total));
         overallLabel.textContent = done < total ? 'Processing file ' + (done + 1) + ' of ' + total : 'Selected files complete';
-        overallCount.textContent = done + ' of ' + total + ' finished · '
-            + totals.queued + ' queued · ' + totals.duplicates + ' duplicate(s) · '
-            + totals.failed + ' failed · ' + totals.stopped + ' stopped';
+        overallCount.textContent = done.toLocaleString() + ' of ' + total.toLocaleString() + ' finished · '
+            + totals.queued.toLocaleString() + ' queued · ' + totals.duplicates.toLocaleString() + ' duplicate(s) · '
+            + totals.skipped.toLocaleString() + ' skipped · ' + totals.failed.toLocaleString() + ' failed';
     }
 
     function addCompletionPanel() {
@@ -458,14 +691,11 @@
         try {
             workerResult = await startProcessing(stopped);
         } catch (error) {
-            if (!isStopped(error)) {
-                workerResult.worker_error = error.message || 'Worker start failed.';
-                addLog({status: 'failed', file: 'Upload batch', message: 'Queued files remain available, but the processing worker did not start: ' + workerResult.worker_error});
-            }
+            if (!isStopped(error)) workerResult.worker_error = error.message || 'Worker start failed.';
         }
-
         operationActive = false;
-        setButtons(false);
+        terminateInspector();
+        setBusy(false);
         currentSpeed.textContent = '';
         if (stopped) {
             overallLabel.textContent = 'Stopped by user';
@@ -477,41 +707,41 @@
             currentBar.value = 100;
             overallLabel.textContent = 'Upload queue complete';
             currentLabel.textContent = 'Finished: ' + totals.queued + ' queued, ' + totals.duplicates + ' duplicate(s), '
-                + totals.failed + ' failed.';
+                + totals.skipped + ' skipped, ' + totals.failed + ' failed.';
         }
         const workerText = workerResult.worker_error
             ? ' Worker start failed: ' + workerResult.worker_error
             : (Number(workerResult.pending_jobs || 0) > 0 ? ' Processing jobs are running or queued.' : ' No processing jobs remain.');
-        overallCount.textContent = totals.finished + ' of ' + totalFiles + ' finished · '
-            + totals.queued + ' queued · ' + totals.duplicates + ' duplicate(s) · '
-            + totals.failed + ' failed.' + workerText;
+        overallCount.textContent = totals.finished.toLocaleString() + ' of ' + totalFiles.toLocaleString() + ' finished · '
+            + totals.queued.toLocaleString() + ' queued · ' + totals.duplicates.toLocaleString() + ' duplicate(s) · '
+            + totals.skipped.toLocaleString() + ' skipped · ' + totals.failed.toLocaleString() + ' failed.' + workerText;
         addCompletionPanel();
+        renderLogNow(true);
     }
 
     stopButton.addEventListener('click', function () {
-        if (!operationActive || stopRequested) return;
+        if ((!operationActive && !directoryScanActive) || stopRequested) return;
         stopRequested = true;
         stopButton.disabled = true;
-        currentLabel.textContent = 'Stopping after the active browser/server operation is aborted...';
-        if (activeInspector) {
-            activeInspector.terminate();
-            activeInspector = null;
-        }
+        scheduleProgress(0, directoryScanActive
+            ? 'Stopping folder discovery...'
+            : 'Stopping after the active browser/server operation is aborted...', '', true);
         if (activeInspectorReject) {
             const reject = activeInspectorReject;
             activeInspectorReject = null;
             reject(stoppedError());
         }
+        terminateInspector();
         if (activeXhr) activeXhr.abort();
         if (activeFetchController) activeFetchController.abort();
-        addLog({status: 'stopped', file: 'Upload batch', message: 'Stop requested. No later file will be inspected or uploaded.'});
+        if (activeLineId >= 0) finishLine(activeLineId, 'STOPPED', 'stopped', 'STOPPED BY USER');
     });
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
-        if (operationActive) return;
-        const files = selectedFiles();
-        if (!files.length) {
+        if (operationActive || directoryScanActive) return;
+        const totalFiles = selectionCount();
+        if (!totalFiles) {
             window.alert('Choose one or more supported files or a folder first.');
             return;
         }
@@ -524,106 +754,139 @@
         stopRequested = false;
         activeUploadId = '';
         queuePrepared = false;
-        setButtons(true);
+        activeLineId = -1;
+        setBusy(true);
         progressBox.hidden = false;
-        log.textContent = '';
+        resetLog();
         const oldPanel = progressBox.querySelector('.bucket-next-phase');
         if (oldPanel) oldPanel.remove();
         currentBar.value = 0;
         overallBar.value = 0;
         currentSpeed.textContent = '';
 
-        const totals = {finished: 0, queued: 0, duplicates: 0, failed: 0, stopped: 0};
-        updateOverall(0, files.length, totals);
+        const totals = {finished: 0, queued: 0, duplicates: 0, skipped: 0, failed: 0, stopped: 0};
+        updateOverall(0, totalFiles, totals);
 
         let initialProcessing;
         try {
-            currentLabel.textContent = 'Requesting the existing Upload Bucket worker to stop after its current file...';
+            scheduleProgress(0, 'Requesting the existing Upload Bucket worker to stop after its current file...', '', true);
             initialProcessing = await processingState('begin_batch');
         } catch (error) {
             if (isStopped(error)) {
-                totals.stopped = files.length;
-                await finishOperation(totals, files.length, true);
+                totals.stopped = totalFiles;
+                await finishOperation(totals, totalFiles, true);
                 return;
             }
-            addLog({status: 'failed', file: 'Upload batch', message: 'Could not request a safe processing pause: ' + error.message});
-            totals.failed = files.length;
-            totals.finished = files.length;
-            await finishOperation(totals, files.length, false);
+            totals.failed = totalFiles;
+            totals.finished = totalFiles;
+            currentLabel.textContent = 'Could not request a safe processing pause: ' + error.message;
+            await finishOperation(totals, totalFiles, false);
             return;
         }
 
         let pauseConfirmed = Boolean(initialProcessing.processing && initialProcessing.processing.ready);
+        const seen = new Set();
 
-        for (let index = 0; index < files.length; index++) {
+        for (let index = 0; index < totalFiles; index++) {
             if (stopRequested) {
-                totals.stopped += files.length - index;
+                totals.stopped += totalFiles - index;
                 break;
             }
-            const file = files[index];
-            const name = displayName(file);
-            overallLabel.textContent = 'Processing file ' + (index + 1) + ' of ' + files.length;
-            overallCount.textContent = totals.finished + ' finished · current: ' + name;
-            try {
-                const inspection = await inspectFile(file, index + 1, files.length);
-                addLog({
-                    status: 'checked',
-                    file: name,
-                    message: inspection.header && inspection.header.description
-                        ? 'Client-side header check passed: ' + inspection.header.description + '.'
-                        : 'Client-side inspection passed.'
-                });
 
-                const checked = await preflight(file, inspection);
-                if (checked.duplicate) {
-                    const match = checked.match || {};
-                    totals.duplicates++;
-                    addLog({
-                        status: 'duplicate', file: name, file_id: Number(match.file_id || 0),
-                        message: String(checked.message || 'Identical physical file already exists.'),
-                        file_size_text: fmtBytes(file.size)
-                    });
+            let source;
+            try {
+                source = await selectionAt(index);
+            } catch (error) {
+                totals.failed++;
+                totals.finished++;
+                updateOverall(totals.finished, totalFiles, totals);
+                continue;
+            }
+
+            const file = source.file;
+            const name = source.relativePath || file.name;
+            const lineId = beginFileLine(name, file.size);
+            overallLabel.textContent = 'Processing file ' + (index + 1).toLocaleString() + ' of ' + totalFiles.toLocaleString();
+            overallCount.textContent = totals.finished.toLocaleString() + ' finished · current: ' + name;
+
+            try {
+                const key = fileKey(file, name);
+                if (seen.has(key)) {
+                    totals.skipped++;
+                    finishLine(lineId, 'SKIPPED', 'skipped', 'DUPLICATE SELECTION');
+                } else if (!isAllowedName(name)) {
+                    seen.add(key);
+                    totals.skipped++;
+                    finishLine(lineId, 'SKIPPED', 'skipped', 'EXTENSION NOT ALLOWED');
                 } else {
-                    if (isRedirect(file)) {
-                        addLog({status: 'ready', file: name, message: 'The compressed redirect wrapper will be uploaded as-is; server processing will decompress it and compare/store the uncompressed package.'});
+                    seen.add(key);
+                    const inspection = await inspectFile(file, name, index + 1, totalFiles, lineId);
+                    appendStage(lineId, 'CHECKED', 'checked');
+
+                    const checked = await preflight(file, name, inspection, lineId);
+                    if (checked.duplicate) {
+                        totals.duplicates++;
+                        appendStage(lineId, 'DUPLICATE', 'duplicate');
+                        finishLine(lineId, 'SKIPPED', 'skipped', 'ALREADY EXISTS');
+                    } else {
+                        appendStage(lineId, 'READY', 'ready');
+                        const uploaded = await uploadFile(file, name, inspection, index + 1, totalFiles, lineId);
+                        appendStage(lineId, 'UPLOADED', 'uploaded');
+                        if (!pauseConfirmed) {
+                            await waitUntilPaused(initialProcessing, lineId);
+                            pauseConfirmed = true;
+                        }
+                        const finalized = await finalizeOne(uploaded, lineId);
+                        const queued = Number(finalized.queued || 0);
+                        const duplicates = Number(finalized.duplicates || 0);
+                        const failed = Number(finalized.failed || 0);
+                        if (queued > 0) {
+                            totals.queued += queued;
+                            appendStage(lineId, 'QUEUED', 'queued');
+                            finishLine(lineId, 'UPLOADED', 'uploaded', '');
+                        } else if (duplicates > 0) {
+                            totals.duplicates += duplicates;
+                            appendStage(lineId, 'DUPLICATE', 'duplicate');
+                            finishLine(lineId, 'SKIPPED', 'skipped', 'DUPLICATE AFTER UPLOAD');
+                        } else {
+                            totals.failed += Math.max(1, failed);
+                            const message = Array.isArray(finalized.messages) && finalized.messages[0]
+                                ? String(finalized.messages[0].message || '') : 'QUEUE RESULT FAILED';
+                            finishLine(lineId, 'FAILED', 'failed', message);
+                        }
                     }
-                    const uploaded = await uploadFile(file, inspection, index + 1, files.length);
-                    if (!pauseConfirmed) {
-                        await waitUntilPaused(initialProcessing);
-                        pauseConfirmed = true;
-                    }
-                    const finalized = await finalizeOne(uploaded);
-                    totals.queued += Number(finalized.queued || 0);
-                    totals.duplicates += Number(finalized.duplicates || 0);
-                    totals.failed += Number(finalized.failed || 0);
                 }
             } catch (error) {
                 if (isStopped(error)) {
-                    totals.stopped += files.length - index;
+                    if (activeLineId === lineId) finishLine(lineId, 'STOPPED', 'stopped', 'STOPPED BY USER');
+                    totals.stopped += totalFiles - index;
                     break;
                 }
                 totals.failed++;
-                addLog({status: 'failed', file: name, message: error.message || 'File handling failed.', file_size_text: fmtBytes(file.size)});
+                finishLine(lineId, 'FAILED', 'failed', error.message || 'FILE HANDLING FAILED');
             }
+
             totals.finished++;
             activeUploadId = '';
-            updateOverall(totals.finished, files.length, totals);
+            activeLineId = -1;
+            updateOverall(totals.finished, totalFiles, totals);
+            if ((index + 1) % 100 === 0) await yieldToBrowser();
         }
 
         if (stopRequested) {
-            totals.finished = files.length - totals.stopped;
-            updateOverall(totals.finished, files.length, totals);
-            await finishOperation(totals, files.length, true);
+            totals.finished = totalFiles - totals.stopped;
+            updateOverall(totals.finished, totalFiles, totals);
+            await finishOperation(totals, totalFiles, true);
             return;
         }
 
-        totals.finished = files.length;
-        updateOverall(totals.finished, files.length, totals);
-        await finishOperation(totals, files.length, false);
+        totals.finished = totalFiles;
+        updateOverall(totals.finished, totalFiles, totals);
+        await finishOperation(totals, totalFiles, false);
     });
 
     window.addEventListener('beforeunload', function (event) {
-        if (!operationActive) return;
+        if (!operationActive && !directoryScanActive) return;
         event.preventDefault();
         event.returnValue = '';
     });
