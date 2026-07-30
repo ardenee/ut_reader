@@ -315,7 +315,7 @@
         } catch (error) {
             pickedDirectoryEntries = [];
             overallBar.value = 0;
-            if (isStopped(error)) {
+            if (stopRequested) {
                 overallLabel.textContent = 'Folder discovery stopped';
                 overallCount.textContent = 'No folder files retained';
                 scheduleProgress(0, 'Folder discovery was stopped.', '', false);
