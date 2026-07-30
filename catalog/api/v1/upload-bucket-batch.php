@@ -40,6 +40,14 @@ try {
         $startWorker = $payload['start_worker'];
     }
 
+    $prepareQueue = true;
+    if (array_key_exists('prepare_queue', $payload)) {
+        if (!is_bool($payload['prepare_queue'])) {
+            JsonResponse::error('invalid_prepare_queue', 'prepare_queue must be a JSON boolean.', 400);
+        }
+        $prepareQueue = $payload['prepare_queue'];
+    }
+
     $uploadIds = [];
     foreach ($rawIds as $rawId) {
         $uploadId = strtolower(trim((string)$rawId));
@@ -56,7 +64,7 @@ try {
     $activeQueues = [];
     foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
         $workerStatus = $launcher->status($queueName, false);
-        if (empty($workerStatus['active'])) {
+        if ($prepareQueue && empty($workerStatus['active'])) {
             $recovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
                 ->recoverInactiveQueue($queueName);
             if (!empty($recovery['recovered'])) {
@@ -78,7 +86,9 @@ try {
         );
     }
 
-    $legacyMigrated = $queue->migrateLegacyQueuedJobs();
+    // Legacy migration and orphan recovery are one-time batch preparation work.
+    // Subsequent 50-file groups skip them, keeping each request short.
+    $legacyMigrated = $prepareQueue ? $queue->migrateLegacyQueuedJobs() : 0;
 
     $messages = [];
     $jobIds = [];
@@ -159,8 +169,7 @@ try {
     $workerError = '';
     if ($startWorker && $pendingJobs > 0) {
         try {
-            // A second recovery closes the small race between the initial queue
-            // inspection and the worker launch at the end of batch finalisation.
+            // The final group performs one recovery immediately before launch.
             (new CatalogOrphanedJobRecovery($application->db, $application->config))
                 ->recoverInactiveQueue($queue->queueName());
             $worker = $launcher->start($queue->queueName(), 10000);
@@ -180,6 +189,7 @@ try {
             'failed' => $failed,
             'legacy_migrated' => $legacyMigrated,
             'pending_jobs' => $pendingJobs,
+            'prepare_queue' => $prepareQueue,
             'start_worker' => $startWorker,
             'job_ids' => array_values($jobIds),
             'worker' => $worker,
