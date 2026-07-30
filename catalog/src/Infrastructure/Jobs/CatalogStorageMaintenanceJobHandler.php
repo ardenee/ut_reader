@@ -8,6 +8,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 
 final class CatalogStorageMaintenanceJobHandler implements JobHandler
@@ -146,7 +147,7 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
         $context->checkpoint([
             'stage' => 'prune_artifacts',
             'done' => 0,
-            'total' => 2,
+            'total' => 3,
             'percent' => 0,
             'message' => 'Pruning generated package artifacts.',
         ]);
@@ -154,24 +155,36 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
         $context->checkpoint([
             'stage' => 'prune_artifacts',
             'done' => 1,
-            'total' => 2,
-            'percent' => 50,
+            'total' => 3,
+            'percent' => 33,
+            'message' => 'Pruning stale incomplete chunk uploads outside the interactive upload path.',
+            'generated' => $generated,
+        ]);
+        $chunkedUploads = (new CatalogChunkedUploadCleanup($this->config))->pruneIncomplete();
+        $context->checkpoint([
+            'stage' => 'prune_artifacts',
+            'done' => 2,
+            'total' => 3,
+            'percent' => 66,
             'message' => 'Pruning unreferenced incoming sources and abandoned backup restore working copies.',
             'generated' => $generated,
+            'chunked_uploads' => $chunkedUploads,
         ]);
         $jobStorage = (new CatalogJobStorageCleanup($this->db, $this->config))->prune($minimumAge);
         $context->checkpoint([
             'stage' => 'complete',
-            'done' => 2,
-            'total' => 2,
+            'done' => 3,
+            'total' => 3,
             'percent' => 100,
             'message' => 'Stale artifact cleanup complete.',
             'generated' => $generated,
+            'chunked_uploads' => $chunkedUploads,
             'job_storage' => $jobStorage,
         ]);
         return [
             'operation' => 'prune_stale_artifacts',
             'generated' => $generated,
+            'chunked_uploads' => $chunkedUploads,
             'job_storage' => $jobStorage,
             'orphan_min_age_seconds' => $minimumAge,
         ];
