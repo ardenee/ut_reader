@@ -63,6 +63,7 @@ function catalog_admin_navigation_groups(string $root): array
         ],
         'Downloads' => [
             'Transfers' => $root . 'transfers.php',
+            'Download Logs' => $root . 'download-logs.php',
             'Download Administration' => $root . 'download-admin.php',
             'Public Access & Mail' => $root . 'public-access-settings.php',
             'Package Download Settings' => $root . 'download-package-settings.php',
