@@ -39,6 +39,7 @@ function catalog_admin_navigation_groups(string $root): array
             'HTTP Source Scan' => $root . 'http-source-scan.php',
             'Upload Files' => $root . 'profiled-upload.php',
             'Upload Bucket (New)' => $root . 'upload-bucket-v2.php',
+            'Upload Issues' => $root . 'upload-issues.php',
             'Upload Bucket (Legacy)' => $root . 'upload-bucket.php',
             'PAK Import' => $root . 'pak-import.php',
             'PAK Archives' => $root . 'paks.php',
@@ -47,6 +48,7 @@ function catalog_admin_navigation_groups(string $root): array
         ],
         'Maintenance' => [
             'Background Jobs' => $root . 'background-jobs.php',
+            'System Errors' => $root . 'system-errors.php',
             'Exact Count Telemetry' => $root . 'query-telemetry.php',
             'Performance Readiness' => $root . 'performance-readiness.php',
             'Workload Tracing' => $root . 'workload-tracing.php',
@@ -90,6 +92,10 @@ function catalog_admin_navigation_groups(string $root): array
         }
         echo '<script>window.UnrealDbAdminNavigation=' . $encodedGroups . ';</script>';
         echo '<script src="' . catalog_h($root . 'assets/catalog-navigation.js?v=' . $scriptVersion) . '"></script>';
+
+        $errorScriptPath = __DIR__ . '/../assets/catalog-system-errors.js';
+        $errorScriptVersion = is_file($errorScriptPath) ? (string)filemtime($errorScriptPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/catalog-system-errors.js?v=' . $errorScriptVersion) . '" defer></script>';
 
         $currentScript = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
         if ($currentScript === 'game-backups.php') {

@@ -107,10 +107,14 @@ try {
 .bucket-progress progress { width:100%; height:18px; }
 .bucket-progress .progress-row + progress { margin-bottom:10px; }
 .bucket-progress-note { margin:8px 0 0; color:var(--muted); }
+.bucket-log-filter { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+.bucket-log-filter label { font-weight:700; }
+.bucket-log-filter a { margin-left:auto; }
 .bucket-log { position:relative; height:420px; overflow:auto; margin-top:10px; border-top:1px solid var(--line); font-family:Consolas,ui-monospace,monospace; font-size:12px; line-height:22px; color:var(--muted); contain:strict; }
 .bucket-log-spacer { width:1px; opacity:0; pointer-events:none; }
 .bucket-log-viewport { position:absolute; top:0; left:0; min-width:100%; }
 .bucket-log-line { height:22px; white-space:pre; padding:0 4px; box-sizing:border-box; }
+.bucket-log-line-empty { color:var(--muted); }
 .bucket-log-line-checked,.bucket-log-line-ready,.bucket-log-line-uploaded,.bucket-log-line-queued { color:#a7f3d0; }
 .bucket-log-line-duplicate,.bucket-log-line-skipped { color:#fde68a; }
 .bucket-log-line-failed,.bucket-log-line-stopped { color:#fecdd3; }
@@ -124,7 +128,7 @@ try {
 .bucket-phases li + li { margin-top:5px; }
 .bucket-next-phase { margin-top:12px; padding:12px; border:1px solid rgba(96,165,250,.65); border-radius:10px; background:rgba(96,165,250,.08); }
 .bucket-next-phase .button { margin-left:8px; }
-@media (max-width:900px) { .bucket-stats { grid-template-columns:1fr; } }
+@media (max-width:900px) { .bucket-stats { grid-template-columns:1fr; } .bucket-log-filter a { margin-left:0; } }
 </style>
 CSS;
 
@@ -132,6 +136,8 @@ CSS;
         'Upload Bucket (New)',
         'One file is inspected, uploaded and queued at a time. Large Chrome folder selections use incremental directory discovery instead of constructing and copying one enormous FileList.',
         [
+            'Upload Issues' => 'upload-issues.php',
+            'System Errors' => 'system-errors.php',
             'Legacy Upload Bucket' => 'upload-bucket.php',
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
             'Processing Jobs' => $processingUrl,
@@ -153,7 +159,8 @@ CSS;
         . '<li>Validate the extension and inspect only the active file in the reusable Web Worker.</li>'
         . '<li>Ask the API whether that physical file already exists, then upload it in resumable chunks only when needed.</li>'
         . '<li>Validate and queue that file before moving to the next file.</li>'
-        . '<li>Keep one compact status line per file. Only the visible log rows are rendered, preventing the page from becoming white or unresponsive as the list grows.</li>'
+        . '<li>Keep one compact status line per file. The default view shows errors only; uncheck it to see the complete live status.</li>'
+        . '<li>Persist only failed validation, transfer and finalisation results to Upload Issues so they remain reviewable after this page is closed.</li>'
         . '<li>The Stop button works during folder discovery, hashing, transfer and queue finalisation.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data" data-allowed-extensions="'
@@ -170,19 +177,20 @@ CSS;
     echo '<p class="muted"><strong>Allowed by active game profiles:</strong> '
         . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured')
         . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
-    echo '<p class="muted"><strong>Redirect archives:</strong> .uz/.uz2/.uz3 are transferred in their compressed wrapper form. Server processing then decompresses the wrapper, calculates the real package MD5/SHA-1, runs the duplicate check and stores the uncompressed package in the Upload Bucket.</p>';
-    echo '<p class="muted"><strong>Status format:</strong> each file keeps one line, for example CHECKED : READY : UPLOADED : QUEUED : UPLOADED : path/file.uz : 513.62 KB.</p>';
+    echo '<p class="muted"><strong>Redirect archives:</strong> .uz accepts both historic 1234 and 5678 FCodec signatures. .uz/.uz2/.uz3 are transferred in their compressed wrapper form. Server processing then decompresses the wrapper, calculates the real package MD5/SHA-1, runs the duplicate check and stores the uncompressed package in the Upload Bucket.</p>';
+    echo '<p class="muted"><strong>Status format:</strong> each file keeps one line, for example CHECKED : READY : UPLOADED : QUEUED : UPLOADED : path/file.uz : 513.62 KB. Only errors are written to <a href="upload-issues.php">Upload Issues</a>.</p>';
     echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total batch-size limit is applied. Only one file is active and it is split into chunks of up to '
         . catalog_h(catalog_bytes($chunkBytes))
         . '; the server may reduce the effective chunk size to fit PHP upload_max_filesize and post_max_size.</p>';
 
-    $workerScriptPath = __DIR__ . '/assets/upload-file-inspector-worker.js';
+    $workerScriptPath = __DIR__ . '/assets/upload-file-inspector-worker-compatible.js';
     $workerScriptVersion = is_file($workerScriptPath) ? (string)(filemtime($workerScriptPath) ?: 1) : '1';
-    $workerUrl = 'assets/upload-file-inspector-worker.js?v=' . rawurlencode($workerScriptVersion);
+    $workerUrl = 'assets/upload-file-inspector-worker-compatible.js?v=' . rawurlencode($workerScriptVersion);
 
     echo '<div id="bucket-progress" class="bucket-progress" hidden'
         . ' data-chunk-url="api/v1/upload-bucket-chunk.php"'
         . ' data-batch-url="api/v1/upload-bucket-batch.php"'
+        . ' data-issue-url="api/v1/upload-bucket-issue.php"'
         . ' data-inspector-worker-url="' . catalog_h($workerUrl) . '"'
         . ' data-processing-url="' . catalog_h($processingUrl) . '"'
         . ' data-chunk-csrf="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '"'
@@ -191,20 +199,33 @@ CSS;
         . '<progress id="bucket-overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="bucket-progress-label">Choose files or a folder and start the upload.</span><span id="bucket-progress-speed"></span></div>'
         . '<progress id="bucket-progress-bar" value="0" max="100"></progress>';
-    echo '<p class="bucket-progress-note">The active file is the only file being read or uploaded. Progress paints are throttled to the browser display cycle and the file log is virtualised.</p>';
-    echo '<div id="bucket-log" class="bucket-log" role="log" aria-label="Upload results"></div></div>';
+    echo '<p class="bucket-progress-note">The active file is the only file being read or uploaded. Progress paints are throttled to the browser display cycle and both status views are virtualised.</p>';
+    echo '<div class="bucket-log-filter">'
+        . '<label><input id="upload-bucket-errors-only" type="checkbox" checked> Show errors only</label>'
+        . '<span id="upload-bucket-error-count" class="muted">0 errors</span>'
+        . '<a href="upload-issues.php">Review saved errors</a>'
+        . '</div>';
+    echo '<div id="bucket-error-log" class="bucket-log" role="log" aria-label="Upload errors"></div>';
+    echo '<div id="bucket-log" class="bucket-log" role="log" aria-label="All upload results"></div></div>';
     echo '</form>';
-    echo '<p class="bucket-actions"><a class="button" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
+    echo '<p class="bucket-actions"><a class="button" href="upload-issues.php">Review upload issues</a>'
+        . '<a class="button secondary" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
         . '<a class="button secondary" href="' . catalog_h($processingUrl) . '">Processing jobs</a>'
         . '<a class="button secondary" href="upload-bucket.php">Legacy upload page</a></p>';
     echo '</div></section>';
 
+    $issueRecorderPath = __DIR__ . '/assets/upload-bucket-v2-issue-recorder.js';
+    $issueRecorderVersion = is_file($issueRecorderPath) ? (string)(filemtime($issueRecorderPath) ?: 1) : '1';
     $coordinatorPath = __DIR__ . '/assets/upload-bucket-v2-coordinator.js';
     $coordinatorVersion = is_file($coordinatorPath) ? (string)(filemtime($coordinatorPath) ?: 1) : '1';
+    echo '<script src="assets/upload-bucket-v2-issue-recorder.js?v=' . catalog_h($issueRecorderVersion) . '"></script>';
     echo '<script src="assets/upload-bucket-v2-coordinator.js?v=' . catalog_h($coordinatorVersion) . '"></script>';
 
     catalog_foot();
 } catch (Throwable $error) {
+    if (function_exists('catalog_system_error_record_exception')) {
+        catalog_system_error_record_exception($error, 'upload_bucket_v2_page');
+    }
     $message = upload_bucket_v2_short_error($error);
     $requestId = catalog_request_id();
     error_log('[UnrealDB][' . $requestId . '] new upload bucket request failed: ' . get_class($error) . ': ' . $error->getMessage());
