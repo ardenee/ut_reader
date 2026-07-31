@@ -9,6 +9,116 @@ require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 
+/** @return array{start:int,end:int,length:int,partial:bool} */
+function catalog_generated_package_range(string $header, int $size): array
+{
+    if ($size < 1 || trim($header) === '') {
+        return ['start' => 0, 'end' => max(0, $size - 1), 'length' => $size, 'partial' => false];
+    }
+
+    $header = trim($header);
+    if (!preg_match('/^bytes=(\d*)-(\d*)$/i', $header, $matches)) {
+        throw new RuntimeException('Only one valid byte range may be requested.');
+    }
+
+    $first = (string)$matches[1];
+    $last = (string)$matches[2];
+    if ($first === '' && $last === '') {
+        throw new RuntimeException('The requested byte range is empty.');
+    }
+
+    if ($first === '') {
+        $suffix = (int)$last;
+        if ($suffix < 1) {
+            throw new RuntimeException('The requested suffix range is invalid.');
+        }
+        $length = min($size, $suffix);
+        $start = $size - $length;
+        $end = $size - 1;
+    } else {
+        $start = (int)$first;
+        $end = $last === '' ? $size - 1 : min($size - 1, (int)$last);
+        if ($start < 0 || $start >= $size || $end < $start) {
+            throw new RuntimeException('The requested byte range is outside the generated package.');
+        }
+        $length = $end - $start + 1;
+    }
+
+    return ['start' => $start, 'end' => $end, 'length' => $length, 'partial' => true];
+}
+
+function catalog_generated_package_prepare_binary_output(): void
+{
+    @ini_set('zlib.output_compression', '0');
+    @ini_set('output_buffering', '0');
+    if (function_exists('apache_setenv')) {
+        @apache_setenv('no-gzip', '1');
+        @apache_setenv('dont-vary', '1');
+    }
+    while (ob_get_level() > 0) {
+        if (!@ob_end_clean()) {
+            break;
+        }
+    }
+    if (function_exists('header_remove')) {
+        header_remove('Content-Encoding');
+    }
+}
+
+function catalog_generated_package_stream(
+    string $path,
+    int $start,
+    int $length,
+    int $bytesPerSecond = 0
+): never {
+    $handle = @fopen($path, 'rb');
+    if (!is_resource($handle)) {
+        throw new RuntimeException('The generated package could not be opened.');
+    }
+    if ($start > 0 && fseek($handle, $start, SEEK_SET) !== 0) {
+        fclose($handle);
+        throw new RuntimeException('The generated package could not be positioned for download.');
+    }
+
+    @set_time_limit(0);
+    $chunkSize = $bytesPerSecond > 0
+        ? max(4096, min(256 * 1024, intdiv($bytesPerSecond, 4) ?: 4096))
+        : 256 * 1024;
+    $remaining = max(0, $length);
+    $sent = 0;
+    $startedAt = microtime(true);
+
+    try {
+        while ($remaining > 0 && !connection_aborted()) {
+            $chunk = fread($handle, min($chunkSize, $remaining));
+            if ($chunk === false || $chunk === '') {
+                error_log('[UnrealDB generated package] Binary stream ended before the requested range was complete.');
+                break;
+            }
+
+            echo $chunk;
+            $written = strlen($chunk);
+            $remaining -= $written;
+            $sent += $written;
+            flush();
+
+            if ($bytesPerSecond > 0) {
+                $expectedElapsed = $sent / $bytesPerSecond;
+                while (!connection_aborted()) {
+                    $delay = $expectedElapsed - (microtime(true) - $startedAt);
+                    if ($delay <= 0) {
+                        break;
+                    }
+                    usleep((int)min($delay * 1000000, 250000));
+                }
+            }
+        }
+    } finally {
+        fclose($handle);
+    }
+    exit;
+}
+
 try {
     catalog_start_session();
     $config = catalog_config();
@@ -54,24 +164,57 @@ try {
     if ($size === false || (int)$size !== (int)($result['artifact_size'] ?? -1)) {
         throw new RuntimeException('The generated package artifact failed its size check.');
     }
+    $expectedSha256 = strtolower(trim((string)($result['artifact_sha256'] ?? '')));
+    $actualSha256 = hash_file('sha256', $path);
+    if ($expectedSha256 === '' || !is_string($actualSha256) || !hash_equals($expectedSha256, strtolower($actualSha256))) {
+        throw new RuntimeException('The generated package artifact failed its integrity check. Build it again.');
+    }
+
+    $etag = '"' . $actualSha256 . '"';
+    $rangeHeader = trim((string)($_SERVER['HTTP_RANGE'] ?? ''));
+    $ifRange = trim((string)($_SERVER['HTTP_IF_RANGE'] ?? ''));
+    if ($ifRange !== '' && !hash_equals($etag, $ifRange)) {
+        $rangeHeader = '';
+    }
+
+    try {
+        $range = catalog_generated_package_range($rangeHeader, (int)$size);
+    } catch (Throwable $rangeError) {
+        http_response_code(416);
+        header('Content-Range: bytes */' . (int)$size);
+        throw $rangeError;
+    }
 
     $downloadName = catalog_clean_unreal_filename((string)($result['download_name'] ?? basename($path)));
     $contentType = (string)($result['content_type'] ?? 'application/octet-stream');
     $speedBytes = catalog_public_download_speed_bytes($db);
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
 
+    catalog_generated_package_prepare_binary_output();
+    if ($range['partial']) {
+        http_response_code(206);
+        header('Content-Range: bytes ' . $range['start'] . '-' . $range['end'] . '/' . (int)$size);
+    }
     header('Content-Type: ' . $contentType);
-    header('Content-Length: ' . (int)$size);
+    header('Content-Length: ' . $range['length']);
     header('Content-Disposition: attachment; filename="' . addcslashes($downloadName, "\\\"")
         . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
+    header('Accept-Ranges: bytes');
+    header('ETag: ' . $etag);
     header('X-Content-Type-Options: nosniff');
-    header('Cache-Control: private, no-store');
+    header('X-Accel-Buffering: no');
+    header('Cache-Control: private, no-store, no-transform');
     if ($speedBytes > 0) {
         header('X-UnrealDB-Rate-Limit: ' . $speedBytes . ' bytes/second');
     }
-    catalog_public_stream_file($path, $speedBytes);
+
+    if ($method === 'HEAD') {
+        exit;
+    }
+    catalog_generated_package_stream($path, $range['start'], $range['length'], $speedBytes);
 } catch (Throwable $error) {
     $status = http_response_code();
     if ($status < 400) {
