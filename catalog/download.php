@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogPublicRateLimit.php';
+require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
 
@@ -29,17 +29,16 @@ function public_download_original_name(array $file): string
         : catalog_clean_unreal_filename((string)($file['package_name'] ?? 'package'));
 }
 
-function public_download_send_local(array $config, array $file): void
+function public_download_send_local(array $config, PDO $db, array $file): void
 {
     $path = public_download_storage_path($config, $file);
     $downloadName = public_download_original_name($file);
-    // The legacy filename parameter remains filesystem-safe. RFC 5987 filename*
-    // carries the preserved UTF-8 source name used by modern browsers.
     $fallbackName = catalog_clean_unreal_filename($downloadName);
     $size = filesize($path);
     if ($size === false) {
         throw new RuntimeException('Stored file size is unavailable.');
     }
+    $speedBytes = catalog_public_download_speed_bytes($db);
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
@@ -50,15 +49,16 @@ function public_download_send_local(array $config, array $file): void
         . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
     header('X-Content-Type-Options: nosniff');
     header('Cache-Control: private, no-store');
-    readfile($path);
-    exit;
+    if ($speedBytes > 0) {
+        header('X-UnrealDB-Rate-Limit: ' . $speedBytes . ' bytes/second');
+    }
+    catalog_public_stream_file($path, $speedBytes);
 }
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
     base_game_ensure($db);
-    catalog_public_download_rate_limit();
     $id = (int)($_GET['id'] ?? 0);
     $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="verified"', [$id]);
     if (!$file) {
@@ -72,13 +72,22 @@ try {
         exit;
     }
 
-    $decision = external_public_download_decision($db, $id, $_SESSION['user']['id'] ?? null, catalog_client_ip());
+    $decision = external_public_download_decision($db, $id, $_SESSION['user']['id'] ?? null, catalog_public_access_client_ip());
+    if (in_array((string)($decision['type'] ?? ''), ['local_direct', 'external_link'], true)) {
+        catalog_public_download_limit($db);
+    }
     if (($decision['type'] ?? '') === 'local_direct') {
-        public_download_send_local($config, $file);
+        public_download_send_local($config, $db, $file);
     }
 
+    $access = catalog_public_access_settings($db, $config);
     catalog_head('Download');
     echo '<div class="card"><h1>Download</h1><p><strong>' . catalog_h($file['package_name']) . '</strong><br>' . catalog_h(public_download_original_name($file)) . '</p><p class="muted">Public download mode: <span class="mono">' . catalog_h(external_public_download_mode($db)) . '</span></p></div>';
+    echo '<div class="card"><h2>Public download restrictions</h2><p>This IP address may download up to <strong>' . (int)$access['public_download_max_files'] . '</strong> individual files per ' . catalog_h(catalog_public_access_window_label((int)$access['public_download_window_seconds'])) . '.</p><p class="muted">Rapid link opening or automated crawling can trigger a temporary ' . (int)$access['public_burst_block_seconds'] . '-second block.';
+    if ((int)$access['public_download_speed_kbps'] > 0) {
+        echo ' Local transfers are limited to ' . (int)$access['public_download_speed_kbps'] . ' KB/s.';
+    }
+    echo '</p></div>';
 
     if (($decision['type'] ?? '') === 'external_link') {
         $link = $decision['link'];
@@ -103,9 +112,14 @@ try {
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] public download failed: ' . get_class($error) . ': ' . $error->getMessage());
+    $status = http_response_code();
     if (!headers_sent()) {
+        if ($status < 400) {
+            http_response_code(503);
+        }
         catalog_head('Download error');
     }
-    echo '<div class="card"><h1>Download unavailable</h1><p>' . catalog_h(catalog_public_error_message()) . '</p></div>';
+    $publicMessage = $status === 429 ? $error->getMessage() : catalog_public_error_message();
+    echo '<div class="card"><h1>Download unavailable</h1><p>' . catalog_h($publicMessage) . '</p><p><a class="button" href="index.php">Return to UnrealDB</a></p></div>';
     catalog_foot();
 }

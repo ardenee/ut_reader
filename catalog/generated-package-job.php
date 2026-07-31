@@ -6,13 +6,13 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, private');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/ModPackageBuilder.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
-use UnrealDb\Catalog\Infrastructure\Security\FileRequestRateLimiter;
 
 function generated_package_reply(array $payload, int $status = 200): never
 {
@@ -69,7 +69,7 @@ function generated_package_start_worker(array $config, string $queueName, int $j
 
     try {
         return [
-            'worker' => (new CatalogDetachedWorker($config))->start($queueName, 10000),
+            'worker' => (new CatalogDetachedWorker($config))->start($queueName, 1000000),
             'worker_error' => '',
         ];
     } catch (Throwable $error) {
@@ -134,18 +134,6 @@ try {
         generated_package_reply(['ok' => false, 'error' => 'Unsupported package generation action.'], 400);
     }
 
-    $rateDirectory = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR)
-        . DIRECTORY_SEPARATOR . '.security' . DIRECTORY_SEPARATOR . 'request-rate-limits';
-    $maxRequests = max(1, min((int)(getenv('UNREALDB_PACKAGE_GENERATION_MAX_REQUESTS') ?: 3), 50));
-    $windowSeconds = max(60, min((int)(getenv('UNREALDB_PACKAGE_GENERATION_WINDOW_SECONDS') ?: 600), 86400));
-    $clientIp = trim((string)($_SERVER['REMOTE_ADDR'] ?? 'unknown')) ?: 'unknown';
-    $retryAfter = (new FileRequestRateLimiter($rateDirectory, $maxRequests, $windowSeconds))
-        ->consume('package-generation', $clientIp);
-    if ($retryAfter > 0) {
-        header('Retry-After: ' . $retryAfter);
-        generated_package_reply(['ok' => false, 'error' => 'Too many package generation requests. Try again later.'], 429);
-    }
-
     $fileId = max(0, (int)($_POST['file_id'] ?? 0));
     $file = $fileId > 0
         ? catalog_one($db, 'SELECT id,game_id FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId])
@@ -183,6 +171,9 @@ try {
         'options' => ['name' => $name, 'version' => $version, 'author' => $author],
         'access_token_hash' => hash('sha256', $token),
     ];
+    // Count only a valid package build that is about to be queued. Invalid or
+    // unavailable requests do not consume the visitor's hourly allowance.
+    catalog_public_package_limit($db);
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     $jobId = $queue->enqueue($queueName, JobType::GENERATE_MOD_PACKAGE, $payload, 30, null, null, $userId, 2);
 
@@ -202,6 +193,11 @@ try {
         'type' => JobType::GENERATE_MOD_PACKAGE,
     ] + $workerState, 202);
 } catch (Throwable $error) {
-    error_log('[UnrealDB package jobs] ' . $error->getMessage());
-    generated_package_reply(['ok' => false, 'error' => 'Package generation is temporarily unavailable.'], 503);
+    error_log('[UnrealDB package jobs] ' . get_class($error) . ': ' . $error->getMessage());
+    $status = http_response_code();
+    if ($status < 400) {
+        $status = 503;
+    }
+    $message = $status === 429 ? $error->getMessage() : 'Package generation is temporarily unavailable.';
+    generated_package_reply(['ok' => false, 'error' => $message], $status);
 }

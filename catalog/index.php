@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogSearchService.php';
 require_once __DIR__ . '/lib/CatalogPublicRateLimit.php';
+require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/CatalogMfa.php';
 
 use UnrealDb\Catalog\Infrastructure\Security\FileLoginRateLimiter;
@@ -114,6 +115,7 @@ try {
     if ($page === 'examine') redirect_to('file-examine.php?id=' . (int)($_GET['id'] ?? 0));
     if ($page === 'upload') redirect_to('profiled-upload.php');
     if ($page === 'download') redirect_to('download.php?id=' . (int)($_GET['id'] ?? 0));
+    if ($page === 'feedback') redirect_to('feedback.php');
     if ($page === 'admin') redirect_to(catalog_support_is_admin() ? 'dashboard.php' : 'index.php?page=login');
 
     if ($page === 'logout') {
@@ -166,13 +168,28 @@ try {
 
     catalog_head((string)($config['site_name'] ?? 'UnrealDB'));
     if ($page === 'home') {
+        $public = catalog_public_access_settings($db, $config);
         $games = catalog_all(
             $db,
             'SELECT g.*,p.engine_key profile_engine,COALESCE(s.verified_count,0) file_count,COALESCE(s.verified_size,0) total_size '
             . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
             . 'LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id ORDER BY g.name'
         );
-        echo '<div class="card hero"><h1>Unreal Games</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and file identities.</p></div><div class="grid">';
+        echo '<div class="card hero"><h1>UnrealDB</h1><p class="muted">Browse verified Unreal packages, dependencies, imports, exports and file identities.</p>';
+        if ($public['feedback_enabled']) {
+            echo '<p><a class="button primary" href="feedback.php">Send feedback</a></p>';
+        }
+        echo '</div>';
+        if ($public['site_development_mode']) {
+            echo '<div class="card"><h2>' . catalog_h($public['site_development_title']) . '</h2><p>' . nl2br(catalog_h($public['site_development_message'])) . '</p><p class="muted">The catalog has been made available during development so users can explore verified file information and see the features that will become available as work continues.</p></div>';
+        }
+        echo '<div class="card"><h2>Public access restrictions</h2><div class="grid">';
+        catalog_stat_card('Individual downloads per IP', (int)$public['public_download_max_files'], 'Per ' . catalog_public_access_window_label((int)$public['public_download_window_seconds']));
+        catalog_stat_card('Generated packages per IP', (int)$public['public_package_max_builds'], 'Per ' . catalog_public_access_window_label((int)$public['public_package_window_seconds']));
+        catalog_stat_card('Rapid-link block', (int)$public['public_burst_block_seconds'] . ' seconds', 'Triggered after more than ' . (int)$public['public_burst_max_requests'] . ' requests in ' . (int)$public['public_burst_window_seconds'] . ' seconds');
+        catalog_stat_card('Local transfer speed', (int)$public['public_download_speed_kbps'] > 0 ? (int)$public['public_download_speed_kbps'] . ' KB/s' : 'Unlimited', 'External mirror speeds are controlled by the provider');
+        echo '</div><p class="muted small">Known crawlers and automated bulk-link tools are ' . ($public['public_block_crawlers'] ? 'blocked' : 'not currently blocked') . '. Opening too many pages or download links rapidly can temporarily block the IP address.</p></div>';
+        echo '<div class="grid">';
         foreach ($games as $game) {
             echo '<a class="stat tool-card" href="game-files.php?id=' . (int)$game['id'] . '"><h2>' . catalog_h($game['name']) . '</h2><p>' . catalog_h($game['profile_engine'] ?? 'no active profile') . '</p><p>' . (int)$game['file_count'] . ' files / ' . catalog_h(catalog_bytes((int)$game['total_size'])) . '</p></a>';
         }
@@ -226,8 +243,10 @@ try {
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] ' . get_class($error) . ': ' . $error->getMessage());
+    $status = http_response_code();
     if (!headers_sent()) catalog_head('Catalog Error');
-    echo '<div class="msg err"><strong>Request failed.</strong> ' . catalog_h(catalog_public_error_message()) . '</div>';
+    $message = $status === 429 ? $error->getMessage() : catalog_public_error_message();
+    echo '<div class="msg err"><strong>Request failed.</strong> ' . catalog_h($message) . '</div>';
     echo '<div class="card"><h2>Request failed</h2><p class="muted">Check the request and try again. Administrators can inspect the server error log using the reference above.</p></div>';
     catalog_foot();
 }

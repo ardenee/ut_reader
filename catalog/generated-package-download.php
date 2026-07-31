@@ -4,6 +4,7 @@ declare(strict_types=1);
 ini_set('display_errors', '0');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
@@ -56,6 +57,7 @@ try {
 
     $downloadName = catalog_clean_unreal_filename((string)($result['download_name'] ?? basename($path)));
     $contentType = (string)($result['content_type'] ?? 'application/octet-stream');
+    $speedBytes = catalog_public_download_speed_bytes($db);
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
@@ -66,10 +68,16 @@ try {
         . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
     header('X-Content-Type-Options: nosniff');
     header('Cache-Control: private, no-store');
-    readfile($path);
-    exit;
+    if ($speedBytes > 0) {
+        header('X-UnrealDB-Rate-Limit: ' . $speedBytes . ' bytes/second');
+    }
+    catalog_public_stream_file($path, $speedBytes);
 } catch (Throwable $error) {
-    http_response_code(str_contains(strtolower($error->getMessage()), 'expired') ? 410 : 404);
+    $status = http_response_code();
+    if ($status < 400) {
+        $status = str_contains(strtolower($error->getMessage()), 'expired') ? 410 : 404;
+    }
+    http_response_code($status);
     if (!headers_sent()) {
         catalog_head('Generated package unavailable');
     }

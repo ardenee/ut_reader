@@ -21,6 +21,7 @@ function catalog_admin_navigation_groups(string $root): array
             'PAK Archives' => $root . 'paks.php',
             'UPK Packages' => $root . 'upks.php',
             'Game Profiles' => $root . 'game-profiles.php',
+            'Public Access & Mail' => $root . 'public-access-settings.php',
             'Administrator Security' => $root . 'admin-security.php',
         ],
         'Catalog' => [
@@ -63,6 +64,7 @@ function catalog_admin_navigation_groups(string $root): array
         'Downloads' => [
             'Transfers' => $root . 'transfers.php',
             'Download Administration' => $root . 'download-admin.php',
+            'Public Access & Mail' => $root . 'public-access-settings.php',
             'Package Download Settings' => $root . 'download-package-settings.php',
             'Mirror Providers' => $root . 'mirror-providers.php',
             'Mirror Links' => $root . 'mirror-links.php',
