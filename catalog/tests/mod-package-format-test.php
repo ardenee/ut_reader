@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/lib/ModPackageBuilder.php';
+require_once dirname(__DIR__) . '/lib/LegacyUmodPackageBuilder.php';
 
 $tmp = sys_get_temp_dir() . '/unrealdb-modpkg-test-' . bin2hex(random_bytes(4));
 if (!mkdir($tmp, 0700, true) && !is_dir($tmp)) {
@@ -9,6 +10,10 @@ if (!mkdir($tmp, 0700, true) && !is_dir($tmp)) {
 }
 
 try {
+    if (modpkg_unreal_mem_crc('123456789') !== 0xFC891918) {
+        throw new RuntimeException('Legacy Unreal appMemCrc test vector failed.');
+    }
+
     $payload = $tmp . '/DM-Test.ut2';
     file_put_contents($payload, "UnrealDB package writer test\n");
     $size = filesize($payload);
@@ -41,9 +46,21 @@ try {
     $options = ['name' => 'DM-Test', 'version' => '1.0', 'author' => 'UnrealDB'];
 
     $umod = $tmp . '/DM-Test.ut2mod';
-    $umodResult = modpkg_write_umod($umod, $plan, $options);
+    $umodResult = modpkg_write_compatible_umod($umod, $plan, $options);
     if (!$umodResult['ok'] || !is_file($umod)) {
         throw new RuntimeException('UMOD test failed.');
+    }
+    $umodEntries = [];
+    foreach ($umodResult['entries'] as $entry) {
+        $umodEntries[strtolower((string)$entry['filename'])] = $entry;
+    }
+    foreach (['system\\manifest.ini', 'system\\manifest.int'] as $manifest) {
+        if (!isset($umodEntries[$manifest]) || (int)$umodEntries[$manifest]['flags'] !== 3) {
+            throw new RuntimeException('UMOD manifest flags or path separators are invalid: ' . $manifest);
+        }
+    }
+    if (!isset($umodEntries['maps\\dm-test.ut2'])) {
+        throw new RuntimeException('UMOD payload path is not using Unreal-compatible separators.');
     }
 
     $plan['format'] = MODPKG_FORMAT_UT4_PAK;
