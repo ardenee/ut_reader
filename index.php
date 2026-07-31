@@ -1,10 +1,13 @@
 <?php
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/catalog/lib/CatalogSupport.php';
 
 catalog_start_session();
+
+$requestHost = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+$requestHost = preg_replace('/:\d+$/', '', $requestHost) ?? $requestHost;
+$isDirectIpAccess = filter_var($requestHost, FILTER_VALIDATE_IP) !== false;
 
 catalog_head('UnrealDB - Unreal File Catalog');
 ?>
@@ -23,6 +26,18 @@ catalog_head('UnrealDB - Unreal File Catalog');
     <a class="button" href="catalog/games.php">Browse Games</a>
     <a class="button" href="catalog/index.php?page=search">Search</a>
   </p>
+</section>
+
+<section class="card">
+  <h2>Site migration and development notice</h2>
+  <?php if ($isDirectIpAccess): ?>
+    <p>You are viewing the new UnrealDB server directly. The DNS records for <strong>unrealdb.com</strong> were recently updated and may still be propagating through Internet providers and cached DNS resolvers.</p>
+    <p><a class="button" href="https://unrealdb.com/">Try unrealdb.com</a></p>
+  <?php else: ?>
+    <p>The UnrealDB website has moved to a new server. DNS records were recently updated, and some visitors may temporarily continue reaching the previous server while cached records expire.</p>
+    <p>If the domain has not updated for you yet, the new server can be opened directly at <a href="http://79.97.31.36/">http://79.97.31.36/</a>.</p>
+  <?php endif; ?>
+  <p class="muted">UnrealDB is currently under active development and has been made publicly available as an early preview. Some functions are incomplete, unavailable, or may change while development continues.</p>
 </section>
 
 <section class="grid">
