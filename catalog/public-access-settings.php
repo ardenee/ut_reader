@@ -51,6 +51,9 @@ try {
         $smtpFromName = substr(trim((string)($_POST['smtp_from_name'] ?? 'UnrealDB')), 0, 180);
         $smtpTimeout = (string)catalog_public_access_int($_POST['smtp_timeout_seconds'] ?? null, 20, 3, 120);
 
+        if ($publicSettings['feedback_enabled'] && $smtpEnabled !== '1') {
+            throw new RuntimeException('Enable SMTP delivery before enabling the public feedback form.');
+        }
         if ($smtpEnabled === '1') {
             if ($smtpHost === '') {
                 throw new RuntimeException('SMTP host is required when SMTP is enabled.');
