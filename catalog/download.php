@@ -5,6 +5,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
+require_once __DIR__ . '/lib/DownloadActivity.php';
 
 use UnrealDb\Catalog\Infrastructure\Storage\LocalStoragePathGuard;
 
@@ -39,20 +40,51 @@ function public_download_send_local(array $config, PDO $db, array $file): void
         throw new RuntimeException('Stored file size is unavailable.');
     }
     $speedBytes = catalog_public_download_speed_bytes($db);
+    $auditId = catalog_download_audit_start($db, [
+        'download_type' => 'individual_file',
+        'file_id' => (int)$file['id'],
+        'game_id' => (int)$file['game_id'],
+        'user_id' => isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null,
+        'ip_address' => catalog_public_access_client_ip(),
+        'user_agent' => catalog_download_audit_user_agent(),
+        'download_name' => $downloadName,
+        'artifact_size' => (int)$size,
+        'range_start' => 0,
+        'range_end' => max(0, (int)$size - 1),
+        'bytes_requested' => (int)$size,
+        'status' => 'started',
+        'http_status' => 200,
+    ]);
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
+    @ini_set('zlib.output_compression', '0');
+    @ini_set('output_buffering', '0');
+    if (function_exists('apache_setenv')) {
+        @apache_setenv('no-gzip', '1');
+        @apache_setenv('dont-vary', '1');
+    }
+    while (ob_get_level() > 0) {
+        if (!@ob_end_clean()) {
+            break;
+        }
+    }
+    if (function_exists('header_remove')) {
+        header_remove('Content-Encoding');
+    }
+
     header('Content-Type: application/octet-stream');
     header('Content-Length: ' . $size);
     header('Content-Disposition: attachment; filename="' . addcslashes($fallbackName, "\\\"")
         . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
     header('X-Content-Type-Options: nosniff');
-    header('Cache-Control: private, no-store');
+    header('X-Accel-Buffering: no');
+    header('Cache-Control: private, no-store, no-transform');
     if ($speedBytes > 0) {
         header('X-UnrealDB-Rate-Limit: ' . $speedBytes . ' bytes/second');
     }
-    catalog_public_stream_file($path, $speedBytes);
+    catalog_download_audit_stream($db, $auditId, $path, 0, (int)$size, $speedBytes);
 }
 
 try {
