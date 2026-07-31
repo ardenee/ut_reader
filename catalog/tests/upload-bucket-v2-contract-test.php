@@ -12,9 +12,10 @@ $root = dirname(__DIR__);
 $page = file_get_contents($root . '/upload-bucket-v2.php');
 $coordinator = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
 $worker = file_get_contents($root . '/assets/upload-file-inspector-worker.js');
+$workerCompatibility = file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
 $navigation = file_get_contents($root . '/lib/CatalogNavigation.php');
 
-foreach (compact('page', 'coordinator', 'worker', 'navigation') as $name => $source) {
+foreach (compact('page', 'coordinator', 'worker', 'workerCompatibility', 'navigation') as $name => $source) {
     ub_v2_expect(is_string($source) && $source !== '', $name . ' source is missing.');
 }
 
@@ -27,13 +28,16 @@ ub_v2_expect(
 ub_v2_expect(
     str_contains($page, 'id="upload-bucket-stop"')
         && str_contains($page, 'id="upload-bucket-folder-button"')
+        && str_contains($page, 'id="upload-bucket-errors-only" type="checkbox" checked')
+        && str_contains($page, 'id="bucket-error-log"')
         && str_contains($page, 'data-inspector-worker-url=')
-        && str_contains($page, 'upload-file-inspector-worker.js')
+        && str_contains($page, 'upload-file-inspector-worker-compatible.js')
         && str_contains($page, 'upload-bucket-v2-coordinator.js')
         && !str_contains($page, 'upload-bucket-extension-filter.js')
         && str_contains($page, 'stores the uncompressed package')
-        && str_contains($page, 'CHECKED : READY : UPLOADED : QUEUED : UPLOADED'),
-    'The new Upload Bucket page does not expose incremental folder selection, compact status or redirect policy.'
+        && str_contains($page, 'CHECKED : READY : UPLOADED : QUEUED : UPLOADED')
+        && str_contains($page, '.uz accepts both historic 1234 and 5678'),
+    'The new Upload Bucket page does not expose incremental folder selection, errors-only status, compact status or redirect policy.'
 );
 
 ub_v2_expect(
@@ -54,7 +58,7 @@ ub_v2_expect(
         && str_contains($coordinator, 'window.requestAnimationFrame')
         && str_contains($coordinator, 'document.addEventListener(\'visibilitychange\'')
         && !str_contains($coordinator, 'log.appendChild(row)'),
-    'The file log is not virtualised and display updates are not frame-throttled.'
+    'The complete file log is not virtualised and display updates are not frame-throttled.'
 );
 
 ub_v2_expect(
@@ -92,12 +96,12 @@ ub_v2_expect(
     str_contains($worker, 'class Md5')
         && str_contains($worker, 'class Sha1')
         && str_contains($worker, "extension === 'uz2'")
-        && str_contains($worker, 'signature !== 1234')
-        && str_contains($worker, 'signature !== 5678')
         && str_contains($worker, "extension === 'pak'")
         && str_contains($worker, 'Unreal package magic is missing')
-        && str_contains($worker, "self.addEventListener('message'"),
-    'The file-inspection worker is missing hash or Unreal header checks.'
+        && str_contains($worker, "self.addEventListener('message'")
+        && str_contains($workerCompatibility, "signature !== 1234 && signature !== 5678")
+        && str_contains($workerCompatibility, "importScripts('upload-file-inspector-worker.js')"),
+    'The file-inspection worker is missing hash, Unreal header or dual .uz signature checks.'
 );
 
-fwrite(STDOUT, "Upload Bucket v2 large-folder and compact-log contract tests passed.\n");
+fwrite(STDOUT, "Upload Bucket v2 large-folder, compact-log, errors-only and dual-signature contract tests passed.\n");
