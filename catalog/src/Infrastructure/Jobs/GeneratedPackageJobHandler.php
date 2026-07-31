@@ -29,6 +29,7 @@ final class GeneratedPackageJobHandler implements JobHandler
     {
         require_once __DIR__ . '/../../../lib/ExternalMirrors.php';
         require_once __DIR__ . '/../../../lib/ModPackageBuilder.php';
+        require_once __DIR__ . '/../../../lib/LegacyUmodPackageBuilder.php';
 
         $fileId = $this->positiveInt($job->payload, 'file_id');
         $format = strtolower(trim((string)($job->payload['format'] ?? '')));
@@ -65,8 +66,12 @@ final class GeneratedPackageJobHandler implements JobHandler
             $settings
         );
 
-        if (in_array($format, [\MODPKG_FORMAT_UMOD, \MODPKG_FORMAT_UT2MOD, \MODPKG_FORMAT_UT4MOD], true)
-            && (int)$plan['total_bytes'] > 2000 * 1024 * 1024) {
+        $umodFamily = in_array(
+            $format,
+            [\MODPKG_FORMAT_UMOD, \MODPKG_FORMAT_UT2MOD, \MODPKG_FORMAT_UT4MOD],
+            true
+        );
+        if ($umodFamily && (int)$plan['total_bytes'] > 2000 * 1024 * 1024) {
             throw new \RuntimeException('UMOD-family archives are limited to a 2000 MB payload.');
         }
 
@@ -99,7 +104,9 @@ final class GeneratedPackageJobHandler implements JobHandler
                 'format' => $format,
             ]);
 
-            $validation = \modpkg_build($temporaryPath, $plan, $options, $settings);
+            $validation = $umodFamily
+                ? \modpkg_write_compatible_umod($temporaryPath, $plan, $options)
+                : \modpkg_build($temporaryPath, $plan, $options, $settings);
             if (empty($validation['ok'])) {
                 throw new \RuntimeException('Generated package did not pass validation.');
             }
