@@ -9,7 +9,7 @@ function catalog_public_access_defaults(): array
         'site_development_mode' => true,
         'site_development_title' => 'UnrealDB is under active development',
         'site_development_message' => 'Not every function is available yet. The site is public so visitors can explore the verified-file catalog and see what will be possible soon.',
-        'feedback_enabled' => true,
+        'feedback_enabled' => false,
         'feedback_recipient' => 'info@unrealdb.com',
         'public_download_max_files' => 10,
         'public_download_window_seconds' => 3600,
@@ -173,20 +173,20 @@ function catalog_public_access_exempt(): bool
     if (session_status() === PHP_SESSION_ACTIVE && (($_SESSION['user']['role'] ?? '') === 'admin')) {
         return true;
     }
-    // A valid remember token is verified later by CatalogSupport. Bypass only the
-    // anonymous burst/crawler gate so a timed-out administrator session is not
-    // blocked before the remember-token restoration can run.
-    if (!empty($_COOKIE['UNREALDB_REMEMBER'])) {
-        return true;
-    }
+    // Never trust the presence of a remember cookie by itself: any visitor can
+    // create a cookie with that name. Restore and verify the administrator token
+    // through the normal authentication path before granting an exemption.
     $sessionCookie = session_name();
-    if ($sessionCookie !== '' && isset($_COOKIE[$sessionCookie]) && function_exists('catalog_start_session')) {
+    $hasSessionCookie = $sessionCookie !== ''
+        && isset($_COOKIE[$sessionCookie])
+        && trim((string)$_COOKIE[$sessionCookie]) !== '';
+    $hasRememberCookie = !empty($_COOKIE['UNREALDB_REMEMBER']);
+    if (($hasSessionCookie || $hasRememberCookie) && function_exists('catalog_support_is_admin')) {
         try {
-            catalog_start_session();
-        } catch (Throwable) {
-            return false;
+            return catalog_support_is_admin();
+        } catch (Throwable $error) {
+            error_log('[UnrealDB public access] administrator exemption check failed: ' . $error->getMessage());
         }
-        return (($_SESSION['user']['role'] ?? '') === 'admin');
     }
     return false;
 }

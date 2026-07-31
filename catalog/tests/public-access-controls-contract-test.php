@@ -22,6 +22,7 @@ $files = [
     'navigation' => $root . '/lib/CatalogNavigation.php',
     'download_admin' => $root . '/download-admin.php',
     'migration' => $root . '/migrations/202607310004_public_access_feedback.php',
+    'safety_migration' => $root . '/migrations/202607310005_feedback_smtp_safety.php',
 ];
 $sources = [];
 foreach ($files as $name => $path) {
@@ -50,6 +51,7 @@ foreach (['smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_pa
 }
 public_access_expect(
     str_contains($sources['admin'], 'Save and send SMTP test')
+        && str_contains($sources['admin'], 'Enable SMTP delivery before enabling the public feedback form.')
         && str_contains($sources['admin'], 'public_download_max_files')
         && str_contains($sources['admin'], 'public_burst_block_seconds'),
     'The admin page does not control/test mail and public access restrictions.'
@@ -68,7 +70,9 @@ public_access_expect(
         && str_contains($sources['access'], "'public_burst_block_seconds' => 600")
         && str_contains($sources['access'], 'catalog_public_access_known_crawler')
         && str_contains($sources['access'], 'catalog_public_stream_file')
-        && str_contains($sources['access'], 'while (!connection_aborted())'),
+        && str_contains($sources['access'], 'while (!connection_aborted())')
+        && !str_contains($sources['access'], "if (!empty(\$_COOKIE['UNREALDB_REMEMBER'])) {\n        return true;")
+        && str_contains($sources['access'], 'return catalog_support_is_admin();'),
     'The default 10-per-hour limits, ten-minute block, crawler detection or speed-controlled stream are missing.'
 );
 
@@ -100,7 +104,10 @@ public_access_expect(
     str_contains($sources['migration'], "'version' => '202607310004'")
         && str_contains($sources['migration'], "'feedback_recipient' => 'info@unrealdb.com'")
         && str_contains($sources['migration'], "'public_download_max_files' => '10'")
-        && str_contains($sources['migration'], "'public_package_max_builds' => '10'"),
+        && str_contains($sources['migration'], "'public_package_max_builds' => '10'")
+        && str_contains($sources['migration'], "'feedback_enabled' => '0'")
+        && str_contains($sources['safety_migration'], "'version' => '202607310005'")
+        && str_contains($sources['safety_migration'], 'smtp_enabled'),
     'The migration does not seed the public feedback and access defaults.'
 );
 

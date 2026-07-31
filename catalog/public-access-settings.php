@@ -37,7 +37,7 @@ try {
             'feedback_max_requests' => (string)($_POST['feedback_max_requests'] ?? '5'),
             'feedback_window_seconds' => (string)($_POST['feedback_window_seconds'] ?? '3600'),
         ];
-        $publicSettings = catalog_public_access_save($db, $config, $publicValues);
+        $publicSettings = catalog_public_access_normalize($publicValues);
 
         $smtpEnabled = isset($_POST['smtp_enabled']) ? '1' : '0';
         $smtpHost = substr(trim((string)($_POST['smtp_host'] ?? '')), 0, 255);
@@ -51,6 +51,9 @@ try {
         $smtpFromName = substr(trim((string)($_POST['smtp_from_name'] ?? 'UnrealDB')), 0, 180);
         $smtpTimeout = (string)catalog_public_access_int($_POST['smtp_timeout_seconds'] ?? null, 20, 3, 120);
 
+        if ($publicSettings['feedback_enabled'] && $smtpEnabled !== '1') {
+            throw new RuntimeException('Enable SMTP delivery before enabling the public feedback form.');
+        }
         if ($smtpEnabled === '1') {
             if ($smtpHost === '') {
                 throw new RuntimeException('SMTP host is required when SMTP is enabled.');
@@ -58,6 +61,11 @@ try {
             catalog_smtp_address($smtpFromEmail, 'SMTP From address');
             catalog_smtp_address((string)$publicSettings['feedback_recipient'], 'Feedback recipient');
         }
+
+        // Validate the complete form before changing either public or SMTP settings.
+        // This prevents a rejected submission from leaving feedback enabled while
+        // mail delivery remains disabled or incomplete.
+        $publicSettings = catalog_public_access_save($db, $config, $publicSettings);
 
         foreach ([
             'smtp_enabled' => $smtpEnabled,
