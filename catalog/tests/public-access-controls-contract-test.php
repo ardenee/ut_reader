@@ -55,9 +55,10 @@ public_access_expect(
     'The admin page does not control/test mail and public access restrictions.'
 );
 
+$guardPosition = strpos($sources['support'], 'catalog_public_access_guard_request();');
+$cachePosition = strpos($sources['support'], 'catalog_public_cache_bootstrap');
 public_access_expect(
-    strpos($sources['support'], 'catalog_public_access_guard_request();')
-        < strpos($sources['support'], 'catalog_public_cache_bootstrap'),
+    $guardPosition !== false && $cachePosition !== false && $guardPosition < $cachePosition,
     'The crawler/burst guard does not run before public response-cache lookup.'
 );
 
@@ -66,7 +67,8 @@ public_access_expect(
         && str_contains($sources['access'], "'public_package_max_builds' => 10")
         && str_contains($sources['access'], "'public_burst_block_seconds' => 600")
         && str_contains($sources['access'], 'catalog_public_access_known_crawler')
-        && str_contains($sources['access'], 'catalog_public_stream_file'),
+        && str_contains($sources['access'], 'catalog_public_stream_file')
+        && str_contains($sources['access'], 'while (!connection_aborted())'),
     'The default 10-per-hour limits, ten-minute block, crawler detection or speed-controlled stream are missing.'
 );
 
