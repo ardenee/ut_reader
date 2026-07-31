@@ -218,6 +218,99 @@ function catalog_brand_mark(string $root): string
     return '<span class="brand-mark"><img src="' . catalog_h($root . 'assets/unreal-file-catalog-icon-32x32.png') . '" alt="" width="32" height="32"></span>';
 }
 
+function catalog_public_feedback_enabled(): bool
+{
+    if (!function_exists('catalog_public_access_settings')) {
+        return false;
+    }
+    try {
+        $settings = catalog_public_access_settings();
+        return !empty($settings['feedback_enabled']);
+    } catch (Throwable $error) {
+        error_log('[UnrealDB public navigation] feedback setting could not be read: ' . $error->getMessage());
+        return false;
+    }
+}
+
+function catalog_public_safe_return_path(mixed $candidate): string
+{
+    $value = trim(html_entity_decode((string)$candidate, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    if ($value === '' || strlen($value) > 4096 || preg_match('/[\x00-\x1F\x7F\\]/', $value) === 1) {
+        return 'index.php';
+    }
+
+    $parts = parse_url($value);
+    if (!is_array($parts)) {
+        return 'index.php';
+    }
+    if (isset($parts['user']) || isset($parts['pass'])) {
+        return 'index.php';
+    }
+    if (isset($parts['host'])) {
+        $currentHost = strtolower((string)(preg_replace('/:\d+$/', '', trim((string)($_SERVER['HTTP_HOST'] ?? ''))) ?? ''));
+        $candidateHost = strtolower(trim((string)$parts['host']));
+        if ($currentHost === '' || $candidateHost === '' || !hash_equals($currentHost, $candidateHost)) {
+            return 'index.php';
+        }
+    }
+
+    $path = rawurldecode((string)($parts['path'] ?? ''));
+    $path = str_replace('\\', '/', $path);
+    if (str_starts_with($path, '/')) {
+        $marker = '/catalog/';
+        $position = strpos(strtolower($path), $marker);
+        if ($position === false) {
+            return 'index.php';
+        }
+        $path = substr($path, $position + strlen($marker));
+    }
+    $path = ltrim($path, '/');
+    if ($path === '') {
+        $path = 'index.php';
+    }
+
+    foreach (explode('/', $path) as $segment) {
+        if ($segment === '' || $segment === '.' || $segment === '..') {
+            return 'index.php';
+        }
+    }
+    if (strtolower(basename($path)) === 'feedback.php') {
+        return 'index.php';
+    }
+
+    $query = trim((string)($parts['query'] ?? ''));
+    if (strlen($query) > 2048) {
+        $query = '';
+    }
+    return $path . ($query !== '' ? '?' . $query : '');
+}
+
+function catalog_public_current_return_path(): string
+{
+    $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    $marker = '/catalog/';
+    $position = strpos(strtolower($script), $marker);
+    $relative = $position === false
+        ? basename($script)
+        : substr($script, $position + strlen($marker));
+    if ($relative === '' || strtolower(basename($relative)) === 'feedback.php') {
+        return 'index.php';
+    }
+
+    $query = $_GET;
+    foreach (array_keys($query) as $key) {
+        $name = strtolower((string)$key);
+        if ($name === 'return_to' || preg_match('/(?:csrf|token|secret|password|key)/', $name) === 1) {
+            unset($query[$key]);
+        }
+    }
+    $encoded = http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+    if (strlen($encoded) > 2048) {
+        $encoded = '';
+    }
+    return catalog_public_safe_return_path($relative . ($encoded !== '' ? '?' . $encoded : ''));
+}
+
 function catalog_admin_nav(): void
 {
     $root = catalog_support_root_prefix();
@@ -225,6 +318,12 @@ function catalog_admin_nav(): void
     echo '<header class="site-header"><div class="brand"><a href="' . catalog_h($brandHref) . '">' . catalog_brand_mark($root) . '<span><strong>UnrealDB</strong><small>package catalog</small></span></a></div><nav class="primary-nav">';
     catalog_nav_link('Games', $root . 'games.php');
     catalog_nav_link('Search', $root . 'index.php?page=search');
+    if (catalog_public_feedback_enabled()) {
+        catalog_nav_link(
+            'Feedback',
+            $root . 'feedback.php?return_to=' . rawurlencode(catalog_public_current_return_path())
+        );
+    }
 
     if (catalog_support_is_admin()) {
         echo '<span class="nav-sep"></span>';
@@ -355,6 +454,10 @@ function catalog_head(string $title): void
     echo '</head><body>';
     catalog_admin_nav();
     echo '<main>';
+    if (isset($_SESSION['catalog_global_flash'])) {
+        catalog_flash((string)$_SESSION['catalog_global_flash']);
+        unset($_SESSION['catalog_global_flash']);
+    }
 }
 
 function catalog_foot(): void
