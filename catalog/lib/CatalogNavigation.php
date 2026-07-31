@@ -93,6 +93,10 @@ function catalog_admin_navigation_groups(string $root): array
         echo '<script>window.UnrealDbAdminNavigation=' . $encodedGroups . ';</script>';
         echo '<script src="' . catalog_h($root . 'assets/catalog-navigation.js?v=' . $scriptVersion) . '"></script>';
 
+        $errorScriptPath = __DIR__ . '/../assets/catalog-system-errors.js';
+        $errorScriptVersion = is_file($errorScriptPath) ? (string)filemtime($errorScriptPath) : '1';
+        echo '<script src="' . catalog_h($root . 'assets/catalog-system-errors.js?v=' . $errorScriptVersion) . '" defer></script>';
+
         $currentScript = basename(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
         if ($currentScript === 'game-backups.php') {
             $backupResultScript = __DIR__ . '/../assets/game-backup-results.js';
