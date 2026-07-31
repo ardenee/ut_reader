@@ -27,6 +27,7 @@ try {
         'error_type' => (string)($payload['error_type'] ?? 'javascript_error'),
         'message' => $message,
         'route' => (string)($payload['route'] ?? ''),
+        'http_status' => max(0, min(599, (int)($payload['http_status'] ?? 0))),
         'source_file' => (string)($payload['source_file'] ?? ''),
         'source_line' => (int)($payload['source_line'] ?? 0),
         'trace_text' => (string)($payload['trace_text'] ?? ''),
