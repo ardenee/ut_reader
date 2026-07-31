@@ -7,16 +7,22 @@ require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/CatalogSmtpMailer.php';
 
 catalog_start_session();
+$returnTo = 'index.php';
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
     $settings = catalog_public_access_settings($db, $config);
 
+    $returnCandidate = $_SERVER['REQUEST_METHOD'] === 'POST'
+        ? ($_POST['return_to'] ?? '')
+        : ($_GET['return_to'] ?? ($_SERVER['HTTP_REFERER'] ?? ''));
+    $returnTo = catalog_public_safe_return_path($returnCandidate);
+
     if (!$settings['feedback_enabled']) {
         http_response_code(503);
         catalog_head('Feedback unavailable');
-        echo '<div class="card hero"><h1>Feedback is temporarily unavailable</h1><p class="muted">The public feedback form is currently disabled.</p><p><a class="button" href="index.php">Return to UnrealDB</a></p></div>';
+        echo '<div class="card hero"><h1>Feedback is temporarily unavailable</h1><p class="muted">The public feedback form is currently disabled.</p><p><a class="button" href="' . catalog_h($returnTo) . '">Return to UnrealDB</a></p></div>';
         catalog_foot();
         exit;
     }
@@ -28,8 +34,8 @@ try {
         // A hidden field catches simple form bots without confirming that their
         // submission was detected.
         if (trim((string)($_POST['website'] ?? '')) !== '') {
-            $_SESSION['feedback_flash'] = 'Thank you. Your feedback has been submitted.';
-            header('Location: feedback.php', true, 303);
+            $_SESSION['catalog_global_flash'] = 'Thank you. Your feedback has been submitted.';
+            header('Location: ' . $returnTo, true, 303);
             exit;
         }
 
@@ -83,18 +89,14 @@ try {
                 'headers' => ['X-UnrealDB-Feedback-Reference' => $reference],
             ]
         );
-        $_SESSION['feedback_flash'] = 'Thank you. Your feedback has been sent to the UnrealDB team.';
-        header('Location: feedback.php', true, 303);
+        $_SESSION['catalog_global_flash'] = 'Thank you. Your feedback has been sent to the UnrealDB team.';
+        header('Location: ' . $returnTo, true, 303);
         exit;
     }
 
     catalog_head('Feedback');
     echo '<div class="card hero"><h1>Send feedback</h1><p class="muted">UnrealDB is under active development. Report a broken function, incorrect file information, missing dependency or suggestion for the public service.</p></div>';
-    if (isset($_SESSION['feedback_flash'])) {
-        catalog_flash((string)$_SESSION['feedback_flash']);
-        unset($_SESSION['feedback_flash']);
-    }
-    echo '<form method="post" class="card"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('public_feedback')) . '">';
+    echo '<form method="post" class="card"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('public_feedback')) . '"><input type="hidden" name="return_to" value="' . catalog_h($returnTo) . '">';
     echo '<div aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>';
     echo '<p><label>Name (optional)<br><input name="name" maxlength="120" autocomplete="name" style="min-width:360px"></label></p>';
     echo '<p><label>Email (optional, used only to reply)<br><input type="email" name="email" maxlength="254" autocomplete="email" style="min-width:360px"></label></p>';
@@ -112,7 +114,7 @@ try {
     echo '<p><label>Related page URL (optional)<br><input type="url" name="page_url" maxlength="1000" placeholder="https://unrealdb.com/catalog/..." style="width:100%;max-width:720px"></label></p>';
     echo '<p><label>Feedback<br><textarea name="message" required minlength="20" maxlength="10000" rows="10" style="width:100%;max-width:720px"></textarea></label></p>';
     echo '<p class="muted small">Submissions are limited to ' . (int)$settings['feedback_max_requests'] . ' per ' . catalog_h(catalog_public_access_window_label((int)$settings['feedback_window_seconds'])) . ' for each IP address. Do not include passwords, private keys or other secrets.</p>';
-    echo '<p><button class="primary" type="submit">Send feedback</button> <a class="button" href="index.php">Cancel</a></p></form>';
+    echo '<p><button class="primary" type="submit">Send feedback</button> <a class="button" href="' . catalog_h($returnTo) . '">Cancel</a></p></form>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB][' . catalog_request_id() . '] feedback submission failed: ' . get_class($error) . ': ' . $error->getMessage());
@@ -124,6 +126,6 @@ try {
         ? $error->getMessage()
         : 'Feedback could not be sent at this time. Please try again later.';
     echo CatalogUi::alert('danger', $message, 'Feedback could not be sent');
-    echo '<p><a class="button" href="feedback.php">Return to feedback form</a></p>';
+    echo '<p><a class="button" href="feedback.php?return_to=' . rawurlencode($returnTo) . '">Return to feedback form</a> <a class="button" href="' . catalog_h($returnTo) . '">Cancel</a></p>';
     catalog_foot();
 }
