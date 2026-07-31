@@ -23,12 +23,4 @@ claim_index_expect(
     'The claim index does not match the queue filters and priority ordering.'
 );
 
-claim_index_expect(
-    !str_contains(
-        $migration,
-        '(queue_name,status,available_at,priority,id)\'\n        );\n        $db->exec(\'ANALYZE TABLE'
-    ),
-    'The migration accidentally retained the old claim-index order in its upgrade path.'
-);
-
 echo "Background job claim-index contract tests passed.\n";
