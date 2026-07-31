@@ -37,7 +37,7 @@ try {
             'feedback_max_requests' => (string)($_POST['feedback_max_requests'] ?? '5'),
             'feedback_window_seconds' => (string)($_POST['feedback_window_seconds'] ?? '3600'),
         ];
-        $publicSettings = catalog_public_access_save($db, $config, $publicValues);
+        $publicSettings = catalog_public_access_normalize($publicValues);
 
         $smtpEnabled = isset($_POST['smtp_enabled']) ? '1' : '0';
         $smtpHost = substr(trim((string)($_POST['smtp_host'] ?? '')), 0, 255);
@@ -61,6 +61,11 @@ try {
             catalog_smtp_address($smtpFromEmail, 'SMTP From address');
             catalog_smtp_address((string)$publicSettings['feedback_recipient'], 'Feedback recipient');
         }
+
+        // Validate the complete form before changing either public or SMTP settings.
+        // This prevents a rejected submission from leaving feedback enabled while
+        // mail delivery remains disabled or incomplete.
+        $publicSettings = catalog_public_access_save($db, $config, $publicSettings);
 
         foreach ([
             'smtp_enabled' => $smtpEnabled,
