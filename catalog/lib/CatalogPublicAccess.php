@@ -375,7 +375,9 @@ function catalog_public_stream_file(string $path, int $bytesPerSecond = 0): neve
         session_write_close();
     }
     @set_time_limit(0);
-    $chunkSize = 64 * 1024;
+    $chunkSize = $bytesPerSecond > 0
+        ? max(1024, min(64 * 1024, intdiv($bytesPerSecond, 4) ?: 1024))
+        : 64 * 1024;
     $startedAt = microtime(true);
     $sent = 0;
     try {
@@ -399,10 +401,12 @@ function catalog_public_stream_file(string $path, int $bytesPerSecond = 0): neve
             }
             if ($bytesPerSecond > 0) {
                 $expectedElapsed = $sent / $bytesPerSecond;
-                $actualElapsed = microtime(true) - $startedAt;
-                $delay = $expectedElapsed - $actualElapsed;
-                if ($delay > 0) {
-                    usleep((int)min($delay * 1000000, 1000000));
+                while (!connection_aborted()) {
+                    $delay = $expectedElapsed - (microtime(true) - $startedAt);
+                    if ($delay <= 0) {
+                        break;
+                    }
+                    usleep((int)min($delay * 1000000, 250000));
                 }
             }
         }
