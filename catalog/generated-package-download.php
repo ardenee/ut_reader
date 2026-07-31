@@ -5,6 +5,7 @@ ini_set('display_errors', '0');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPublicAccess.php';
+require_once __DIR__ . '/lib/DownloadActivity.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
@@ -65,60 +66,7 @@ function catalog_generated_package_prepare_binary_output(): void
     }
 }
 
-function catalog_generated_package_stream(
-    string $path,
-    int $start,
-    int $length,
-    int $bytesPerSecond = 0
-): never {
-    $handle = @fopen($path, 'rb');
-    if (!is_resource($handle)) {
-        throw new RuntimeException('The generated package could not be opened.');
-    }
-    if ($start > 0 && fseek($handle, $start, SEEK_SET) !== 0) {
-        fclose($handle);
-        throw new RuntimeException('The generated package could not be positioned for download.');
-    }
-
-    @set_time_limit(0);
-    $chunkSize = $bytesPerSecond > 0
-        ? max(4096, min(256 * 1024, intdiv($bytesPerSecond, 4) ?: 4096))
-        : 256 * 1024;
-    $remaining = max(0, $length);
-    $sent = 0;
-    $startedAt = microtime(true);
-
-    try {
-        while ($remaining > 0 && !connection_aborted()) {
-            $chunk = fread($handle, min($chunkSize, $remaining));
-            if ($chunk === false || $chunk === '') {
-                error_log('[UnrealDB generated package] Binary stream ended before the requested range was complete.');
-                break;
-            }
-
-            echo $chunk;
-            $written = strlen($chunk);
-            $remaining -= $written;
-            $sent += $written;
-            flush();
-
-            if ($bytesPerSecond > 0) {
-                $expectedElapsed = $sent / $bytesPerSecond;
-                while (!connection_aborted()) {
-                    $delay = $expectedElapsed - (microtime(true) - $startedAt);
-                    if ($delay <= 0) {
-                        break;
-                    }
-                    usleep((int)min($delay * 1000000, 250000));
-                }
-            }
-        }
-    } finally {
-        fclose($handle);
-    }
-    exit;
-}
-
+$auditId = null;
 try {
     catalog_start_session();
     $config = catalog_config();
@@ -189,6 +137,31 @@ try {
     $contentType = (string)($result['content_type'] ?? 'application/octet-stream');
     $speedBytes = catalog_public_download_speed_bytes($db);
     $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    $fileId = max(0, (int)($result['file_id'] ?? (is_array($payload) ? ($payload['file_id'] ?? 0) : 0)));
+    $fileRow = $fileId > 0 ? catalog_one($db, 'SELECT game_id FROM ue_files WHERE id=?', [$fileId]) : null;
+    $gameId = $fileRow ? (int)$fileRow['game_id'] : null;
+    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+
+    if ($method !== 'HEAD') {
+        $auditId = catalog_download_audit_start($db, [
+            'download_type' => 'generated_package',
+            'file_id' => $fileId,
+            'game_id' => $gameId,
+            'job_id' => $jobId,
+            'user_id' => $userId,
+            'ip_address' => catalog_public_access_client_ip(),
+            'user_agent' => catalog_download_audit_user_agent(),
+            'download_name' => $downloadName,
+            'package_format' => (string)($result['format'] ?? (is_array($payload) ? ($payload['format'] ?? '') : '')),
+            'artifact_size' => (int)$size,
+            'range_start' => $range['start'],
+            'range_end' => $range['end'],
+            'bytes_requested' => $range['length'],
+            'status' => 'started',
+            'http_status' => $range['partial'] ? 206 : 200,
+        ]);
+    }
+
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
@@ -214,11 +187,14 @@ try {
     if ($method === 'HEAD') {
         exit;
     }
-    catalog_generated_package_stream($path, $range['start'], $range['length'], $speedBytes);
+    catalog_download_audit_stream($db, $auditId, $path, $range['start'], $range['length'], $speedBytes);
 } catch (Throwable $error) {
     $status = http_response_code();
     if ($status < 400) {
         $status = str_contains(strtolower($error->getMessage()), 'expired') ? 410 : 404;
+    }
+    if (isset($db) && $db instanceof PDO) {
+        catalog_download_audit_finish($db, $auditId, 'failed', 0, $error->getMessage(), $status);
     }
     http_response_code($status);
     if (!headers_sent()) {

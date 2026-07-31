@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once dirname(__DIR__) . '/lib/ModPackageBuilder.php';
 require_once dirname(__DIR__) . '/lib/LegacyUmodPackageBuilder.php';
+require_once dirname(__DIR__) . '/lib/GeneratedPackageBuilder.php';
 
 $tmp = sys_get_temp_dir() . '/unrealdb-modpkg-test-' . bin2hex(random_bytes(4));
 if (!mkdir($tmp, 0700, true) && !is_dir($tmp)) {
@@ -46,9 +47,13 @@ try {
     $options = ['name' => 'DM-Test', 'version' => '1.0', 'author' => 'UnrealDB'];
 
     $umod = $tmp . '/DM-Test.ut2mod';
-    $umodResult = modpkg_write_compatible_umod($umod, $plan, $options);
+    $umodResult = modpkg_write_generated_umod($umod, $plan, $options);
     if (!$umodResult['ok'] || !is_file($umod)) {
         throw new RuntimeException('UMOD test failed.');
+    }
+    $umodData = file_get_contents($umod);
+    if (!is_string($umodData)) {
+        throw new RuntimeException('Could not read generated UMOD.');
     }
     $umodEntries = [];
     foreach ($umodResult['entries'] as $entry) {
@@ -62,6 +67,34 @@ try {
     if (!isset($umodEntries['maps\\dm-test.ut2'])) {
         throw new RuntimeException('UMOD payload path is not using Unreal-compatible separators.');
     }
+    $manifestEntry = $umodEntries['system\\manifest.ini'];
+    $manifestText = substr($umodData, (int)$manifestEntry['offset'], (int)$manifestEntry['size']);
+    if (!str_contains($manifestText, "\r\nVersion=1.0\r\n") || str_contains($manifestText, "\r\nVersion=10\r\n")) {
+        throw new RuntimeException('UMOD version text was changed instead of being preserved.');
+    }
+
+    $plan['format'] = MODPKG_FORMAT_DEPENDENCY_ZIP;
+    $zipPath = $tmp . '/DM-Test.zip';
+    $zipResult = modpkg_write_payload_zip($zipPath, $plan);
+    if (!$zipResult['ok'] || !is_file($zipPath)) {
+        throw new RuntimeException('Payload ZIP test failed.');
+    }
+    $zip = new ZipArchive();
+    if ($zip->open($zipPath) !== true) {
+        throw new RuntimeException('Could not inspect payload ZIP.');
+    }
+    try {
+        if ($zip->numFiles !== 1 || $zip->locateName('Maps/DM-Test.ut2') === false) {
+            throw new RuntimeException('Payload ZIP contains an unexpected file list.');
+        }
+        foreach (['UnrealDB-Mod.json', 'Readme.txt'] as $unwanted) {
+            if ($zip->locateName($unwanted, ZipArchive::FL_NOCASE) !== false) {
+                throw new RuntimeException('Payload ZIP contains ' . $unwanted . '.');
+            }
+        }
+    } finally {
+        $zip->close();
+    }
 
     $plan['format'] = MODPKG_FORMAT_UT4_PAK;
     $plan['game'] = ['id' => 2, 'name' => 'Unreal Tournament', 'slug' => 'ut4', 'engine_key' => 'UE4', 'profile_name' => 'UT4'];
@@ -73,6 +106,7 @@ try {
     }
 
     echo "UMOD entries: " . $umodResult['file_count'] . PHP_EOL;
+    echo "ZIP entries: " . $zipResult['file_count'] . PHP_EOL;
     echo "PAK entries: " . $pakResult['file_count'] . PHP_EOL;
     echo "OK" . PHP_EOL;
 } finally {

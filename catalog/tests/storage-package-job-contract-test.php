@@ -41,20 +41,40 @@ storage_package_expect(!str_contains($downloadPage, 'readfile('), 'Package downl
 
 $packageEndpoint = file_get_contents(__DIR__ . '/../generated-package-job.php');
 storage_package_expect(is_string($packageEndpoint), 'generated-package-job.php could not be read.');
-foreach (['FileRequestRateLimiter', "catalog_check_csrf('package-generation')", 'access_token_hash', "scan_status=\"verified\""] as $fragment) {
+foreach (["catalog_check_csrf('package-generation')", 'access_token_hash', "scan_status=\"verified\"", 'catalog_download_audit_generation_queued'] as $fragment) {
     storage_package_expect(str_contains($packageEndpoint, $fragment), 'Package job endpoint is missing ' . $fragment);
 }
 
 $downloadEndpoint = file_get_contents(__DIR__ . '/../generated-package-download.php');
 storage_package_expect(is_string($downloadEndpoint), 'generated-package-download.php could not be read.');
-foreach (['generated_package_jobs', 'hash_equals', 'GeneratedPackageStore', 'expires_at', 'artifact_size'] as $fragment) {
+foreach (['generated_package_jobs', 'hash_equals', 'GeneratedPackageStore', 'expires_at', 'artifact_size', 'catalog_download_audit_start', 'catalog_download_audit_stream'] as $fragment) {
     storage_package_expect(str_contains($downloadEndpoint, $fragment), 'Generated artifact download is missing ' . $fragment);
 }
 
 $packageHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/GeneratedPackageJobHandler.php');
 storage_package_expect(is_string($packageHandler), 'GeneratedPackageJobHandler.php could not be read.');
-foreach (['modpkg_build(', 'publish(', 'checkpoint(', 'delete($publishedPath)', 'delete($temporaryPath)'] as $fragment) {
+foreach (['modpkg_build_generated_package(', 'publish(', 'checkpoint(', 'delete($publishedPath)', 'delete($temporaryPath)', "'completed'", "'failed'"] as $fragment) {
     storage_package_expect(str_contains($packageHandler, $fragment), 'Package handler is missing lifecycle boundary ' . $fragment);
+}
+
+$generatedBuilder = file_get_contents(__DIR__ . '/../lib/GeneratedPackageBuilder.php');
+storage_package_expect(is_string($generatedBuilder), 'GeneratedPackageBuilder.php could not be read.');
+foreach (['modpkg_generated_version', 'Version=', 'modpkg_write_payload_zip', 'modpkg_write_generated_umod'] as $fragment) {
+    storage_package_expect(str_contains($generatedBuilder, $fragment), 'Generated package builder is missing ' . $fragment);
+}
+storage_package_expect(!str_contains($generatedBuilder, "addFromString('UnrealDB-Mod.json'"), 'Payload ZIP still adds UnrealDB-Mod.json.');
+storage_package_expect(!str_contains($generatedBuilder, "addFromString('Readme.txt'"), 'Payload ZIP still adds Readme.txt.');
+
+$downloadAudit = file_get_contents(__DIR__ . '/../lib/DownloadActivity.php');
+storage_package_expect(is_string($downloadAudit), 'DownloadActivity.php could not be read.');
+foreach (['ue_generated_package_audit', 'ue_download_audit', 'inet_pton', 'catalog_download_audit_stream'] as $fragment) {
+    storage_package_expect(str_contains($downloadAudit, $fragment), 'Download audit helper is missing ' . $fragment);
+}
+
+$auditMigration = file_get_contents(__DIR__ . '/../migrations/202607310007_generated_package_download_audit.php');
+storage_package_expect(is_string($auditMigration), 'Generated package audit migration could not be read.');
+foreach (["'version' => '202607310007'", 'CREATE TABLE IF NOT EXISTS ue_generated_package_audit', 'CREATE TABLE IF NOT EXISTS ue_download_audit', 'VARBINARY(16)'] as $fragment) {
+    storage_package_expect(str_contains($auditMigration, $fragment), 'Generated package audit migration is missing ' . $fragment);
 }
 
 $duplicateHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/UnverifiedDuplicateCleanupJobHandler.php');

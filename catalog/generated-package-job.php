@@ -9,6 +9,8 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/ModPackageBuilder.php';
+require_once __DIR__ . '/lib/GeneratedPackageBuilder.php';
+require_once __DIR__ . '/lib/DownloadActivity.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
@@ -127,6 +129,7 @@ try {
         }
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
         $status = $queue->requestCancellation($jobId, $userId, 'Cancelled from generated package download.');
+        catalog_download_audit_generation_status($db, $jobId, 'cancelled');
         generated_package_reply(['ok' => true, 'job_id' => $jobId, 'status' => $status]);
     }
 
@@ -136,7 +139,7 @@ try {
 
     $fileId = max(0, (int)($_POST['file_id'] ?? 0));
     $file = $fileId > 0
-        ? catalog_one($db, 'SELECT id,game_id FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId])
+        ? catalog_one($db, 'SELECT id,game_id,package_name FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId])
         : null;
     if (!$file) {
         generated_package_reply(['ok' => false, 'error' => 'A valid verified file is required.'], 400);
@@ -158,7 +161,10 @@ try {
     }
 
     $name = substr(trim((string)($_POST['name'] ?? '')), 0, 160);
-    $version = substr(trim((string)($_POST['version'] ?? '1.0')), 0, 80);
+    if ($name === '') {
+        $name = catalog_clean_unreal_package_stem((string)$file['package_name']);
+    }
+    $version = modpkg_generated_version($_POST['version'] ?? '1.0');
     $author = substr(trim((string)($_POST['author'] ?? $settings['default_author'])), 0, 160);
     $includeDependencies = (string)($_POST['dependencies'] ?? '1') !== '0';
     $allowIncomplete = (string)($_POST['allow_incomplete'] ?? '0') === '1';
@@ -176,6 +182,20 @@ try {
     catalog_public_package_limit($db);
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     $jobId = $queue->enqueue($queueName, JobType::GENERATE_MOD_PACKAGE, $payload, 30, null, null, $userId, 2);
+
+    catalog_download_audit_generation_queued($db, [
+        'job_id' => $jobId,
+        'file_id' => $fileId,
+        'game_id' => (int)$file['game_id'],
+        'user_id' => $userId,
+        'ip_address' => catalog_public_access_client_ip(),
+        'user_agent' => catalog_download_audit_user_agent(),
+        'package_format' => $format,
+        'package_name' => $name,
+        'package_version' => $version,
+        'include_dependencies' => $includeDependencies,
+        'allow_incomplete' => $allowIncomplete,
+    ]);
 
     if (!isset($_SESSION['generated_package_jobs']) || !is_array($_SESSION['generated_package_jobs'])) {
         $_SESSION['generated_package_jobs'] = [];
