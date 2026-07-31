@@ -51,7 +51,13 @@ final class CatalogUploadBucketIssueStore
         $message = self::cleanMessage((string)($issue['error_message'] ?? 'Unknown upload failure.'));
         $sourceKind = self::cleanIdentifier((string)($issue['source_kind'] ?? 'upload_bucket_v2'), 32, 'upload_bucket_v2');
         $sessionId = self::cleanText((string)($issue['upload_session_id'] ?? ''), 64);
-        $issueKey = hash('sha256', mb_strtolower($relativePath, 'UTF-8') . "\n" . mb_strtolower($sizeText, 'UTF-8'));
+        $fingerprintMessage = preg_replace('/\b[0-9a-f]{12,64}\b/i', '{id}', mb_strtolower($message, 'UTF-8')) ?? $message;
+        $issueKey = hash('sha256', implode("\n", [
+            mb_strtolower($relativePath, 'UTF-8'),
+            mb_strtolower($sizeText, 'UTF-8'),
+            $stage,
+            $fingerprintMessage,
+        ]));
         $now = gmdate('Y-m-d H:i:s');
 
         $statement = $this->db->prepare(
