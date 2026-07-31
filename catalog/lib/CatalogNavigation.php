@@ -48,6 +48,7 @@ function catalog_admin_navigation_groups(string $root): array
         ],
         'Maintenance' => [
             'Background Jobs' => $root . 'background-jobs.php',
+            'System Errors' => $root . 'system-errors.php',
             'Exact Count Telemetry' => $root . 'query-telemetry.php',
             'Performance Readiness' => $root . 'performance-readiness.php',
             'Workload Tracing' => $root . 'workload-tracing.php',
