@@ -22,7 +22,7 @@ remember_expiry_expect(
     str_contains($security, "UNREALDB_CATALOG_SESSION_IDLE_SECONDS', 1800")
         && str_contains($security, "UNREALDB_CATALOG_SESSION_ABSOLUTE_SECONDS', 43200")
         && str_contains($remember, "['auth']['remember_days'] ?? 30"),
-    'The documented 30-minute idle, 12-hour absolute and 30-day remember defaults changed unexpectedly.'
+    'The 30-minute idle, 12-hour absolute and 30-day remember defaults changed unexpectedly.'
 );
 
 remember_expiry_expect(
@@ -42,15 +42,16 @@ remember_expiry_expect(
 );
 
 remember_expiry_expect(
-    str_contains($remember, 'catalog_remember_clear_cookie();')
+    str_contains($login, "if (\$page === 'logout')")
         && str_contains($login, 'catalog_remember_clear($db);')
-        && str_contains($remember, 'catalog_mfa_enabled_at') === false,
-    'Explicit logout or remember-token revocation coverage changed unexpectedly.'
+        && str_contains($remember, 'DELETE FROM ue_remember_tokens WHERE selector=?')
+        && str_contains($remember, 'catalog_remember_clear_cookie();'),
+    'Explicit logout must continue to revoke the remember token and cookie.'
 );
 
 remember_expiry_expect(
     str_contains($remember, "if (!empty(\$user['mfa_enabled_at'])")
-        && str_contains($remember, "DELETE FROM ue_remember_tokens WHERE user_id=?")
+        && str_contains($remember, 'DELETE FROM ue_remember_tokens WHERE user_id=?')
         && str_contains($remember, 'catalog_remember_clear_cookie();'),
     'Enabling MFA must continue to revoke persistent login tokens.'
 );
