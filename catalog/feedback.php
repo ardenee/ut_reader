@@ -109,8 +109,8 @@ try {
         echo '<option value="' . catalog_h($value) . '">' . catalog_h($label) . '</option>';
     }
     echo '</select></label></p>';
-    echo '<p><label>Related page URL (optional)<br><input type="url" name="page_url" maxlength="1000" placeholder="https://unrealdb.com/catalog/..." style="min-width:620px"></label></p>';
-    echo '<p><label>Feedback<br><textarea name="message" required minlength="20" maxlength="10000" rows="10" style="min-width:720px;max-width:100%"></textarea></label></p>';
+    echo '<p><label>Related page URL (optional)<br><input type="url" name="page_url" maxlength="1000" placeholder="https://unrealdb.com/catalog/..." style="width:100%;max-width:720px"></label></p>';
+    echo '<p><label>Feedback<br><textarea name="message" required minlength="20" maxlength="10000" rows="10" style="width:100%;max-width:720px"></textarea></label></p>';
     echo '<p class="muted small">Submissions are limited to ' . (int)$settings['feedback_max_requests'] . ' per ' . catalog_h(catalog_public_access_window_label((int)$settings['feedback_window_seconds'])) . ' for each IP address. Do not include passwords, private keys or other secrets.</p>';
     echo '<p><button class="primary" type="submit">Send feedback</button> <a class="button" href="index.php">Cancel</a></p></form>';
     catalog_foot();
