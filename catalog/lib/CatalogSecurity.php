@@ -82,22 +82,6 @@ function catalog_apply_runtime_safeguards(): void
     }
 }
 
-function catalog_clear_remember_cookie_after_session_expiry(): void
-{
-    if (headers_sent()) {
-        return;
-    }
-
-    setcookie('UNREALDB_REMEMBER', '', [
-        'expires' => time() - 3600,
-        'path' => '/',
-        'secure' => catalog_session_cookie_secure(),
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
-    unset($_COOKIE['UNREALDB_REMEMBER']);
-}
-
 function catalog_enforce_authenticated_session_limits(): void
 {
     if (PHP_SAPI === 'cli' || session_status() !== PHP_SESSION_ACTIVE) {
@@ -118,7 +102,13 @@ function catalog_enforce_authenticated_session_limits(): void
     if ($idleExpired || $absoluteExpired) {
         unset($_SESSION['user'], $_SESSION['catalog_auth_started_at'], $_SESSION['catalog_auth_last_activity_at']);
         $_SESSION['catalog_auth_expired'] = true;
-        catalog_clear_remember_cookie_after_session_expiry();
+
+        /*
+         * Expire only the short-lived authenticated session. A valid rotating
+         * UNREALDB_REMEMBER token must survive so catalog_support_is_admin()
+         * can restore the administrator immediately on this same request.
+         * Explicit logout, invalid tokens and enabling MFA still revoke it.
+         */
         session_regenerate_id(true);
         return;
     }
