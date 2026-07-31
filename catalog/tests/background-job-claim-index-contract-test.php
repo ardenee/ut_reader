@@ -18,9 +18,15 @@ claim_index_expect(
             $migration,
             '(queue_name,status,cancel_requested_at,priority,available_at,id)'
         )
-        && str_contains($migration, 'DROP INDEX idx_ue_background_jobs_claim')
+        && str_contains($migration, "\$current !== \$wanted")
         && str_contains($migration, 'ANALYZE TABLE ue_background_jobs'),
-    'The claim index does not match the queue filters and priority ordering.'
+    'The claim index does not match the queue filters and priority ordering or is not idempotent.'
+);
+
+claim_index_expect(
+    substr_count($migration, 'fetchAll(PDO::FETCH_ASSOC)') === 2
+        && substr_count($migration, 'closeCursor()') >= 3,
+    'The migration leaves an ANALYZE or metadata result set unread.'
 );
 
 echo "Background job claim-index contract tests passed.\n";
