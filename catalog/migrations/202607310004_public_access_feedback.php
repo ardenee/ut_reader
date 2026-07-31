@@ -12,7 +12,7 @@ return [
             'site_development_mode' => '1',
             'site_development_title' => 'UnrealDB is under active development',
             'site_development_message' => 'Not every function is available yet. The site is public so visitors can explore the verified-file catalog and see what will be possible soon.',
-            'feedback_enabled' => '1',
+            'feedback_enabled' => '0',
             'feedback_recipient' => 'info@unrealdb.com',
             'feedback_max_requests' => '5',
             'feedback_window_seconds' => '3600',
