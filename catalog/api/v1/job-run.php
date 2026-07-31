@@ -23,13 +23,20 @@ try {
     if (!in_array($mode, ['next', 'drain'], true)) {
         JsonResponse::error('invalid_mode', 'Worker mode must be next or drain.', 400);
     }
+    if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
+        JsonResponse::error('invalid_queue', 'A valid queue name is required.', 400);
+    }
+
+    $launcher = new CatalogDetachedWorker($application->config);
+    $workerCount = $launcher->normalizeWorkerCount(
+        (int)($payload['workers'] ?? $launcher->configuredWorkerCount())
+    );
     $maxJobs = $mode === 'next' ? 1 : 10000;
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
 
-    $launcher = new CatalogDetachedWorker($application->config);
     $before = $launcher->status($queueName, true);
     $orphanRecovery = null;
     if (empty($before['active'])) {
@@ -45,18 +52,19 @@ try {
         if (empty($restart['restarted'])) {
             JsonResponse::error(
                 'stale_worker_restart_failed',
-                'The detached worker is running old code and could not be restarted automatically. Use Stop worker, then Start queued.',
+                'The detached worker pool is running old code and could not be restarted automatically. Use Stop workers, then Start queued.',
                 409,
                 ['worker' => $before, 'restart' => $restart]
             );
         }
     }
 
-    $result = $launcher->start($queueName, $maxJobs);
+    $result = $launcher->start($queueName, $maxJobs, $workerCount);
     JsonResponse::send([
         'data' => [
             'queue' => $queueName,
             'mode' => $mode,
+            'workers' => $workerCount,
             'orphan_recovery' => $orphanRecovery,
             'stale_restart' => $restart,
         ] + $result,
@@ -68,7 +76,7 @@ try {
     error_log('[UnrealDB][' . $requestId . '] detached job launcher failed: ' . get_class($exception) . ': ' . $exception->getMessage());
     JsonResponse::error(
         'launch_failed',
-        trim($exception->getMessage()) ?: 'The detached queue worker could not be launched.',
+        trim($exception->getMessage()) ?: 'The detached queue worker pool could not be launched.',
         500,
         ['request_id' => $requestId]
     );

@@ -8,6 +8,7 @@ final class JobResourcePolicy
     public const DEPENDENCY_HEAVY = 'dependency-heavy';
     public const SEARCH_HEAVY = 'search-heavy';
     public const IMPORT_HEAVY = 'import-heavy';
+    public const BUCKET_PROCESSING = 'bucket-processing';
     public const STORAGE_HEAVY = 'storage-heavy';
     public const PACKAGE_HEAVY = 'package-heavy';
     public const HOUSEKEEPING = 'housekeeping';
@@ -48,21 +49,19 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('source-identity:game:', $payload['game_id'] ?? null)
             ),
-            JobType::IMPORT_STAGED_PACKAGE,
-            JobType::IMPORT_STAGED_PAK,
             JobType::PREPARE_BUCKET_REDIRECT,
             JobType::PROCESS_BUCKET_UPLOAD,
-            JobType::REPAIR_UNVERIFIED_METADATA,
+            JobType::REPAIR_UNVERIFIED_METADATA => new JobResourceProfile(
+                self::BUCKET_PROCESSING,
+                self::configuredLimit(self::BUCKET_PROCESSING, 8),
+                self::bucketFileKey($payload)
+            ),
+            JobType::IMPORT_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PAK,
             JobType::IMPORT_GAME_BACKUP => new JobResourceProfile(
                 self::IMPORT_HEAVY,
                 self::configuredLimit(self::IMPORT_HEAVY, 1),
-                in_array($jobType, [
-                    JobType::PREPARE_BUCKET_REDIRECT,
-                    JobType::PROCESS_BUCKET_UPLOAD,
-                    JobType::REPAIR_UNVERIFIED_METADATA,
-                ], true)
-                    ? 'bucket-processing'
-                    : self::positiveKey('import:game:', $payload['game_id'] ?? null)
+                self::positiveKey('import:game:', $payload['game_id'] ?? null)
             ),
             JobType::EXPORT_GAME_BACKUP => new JobResourceProfile(
                 self::STORAGE_HEAVY,
@@ -104,6 +103,26 @@ final class JobResourcePolicy
         }
         $value = filter_var($raw, FILTER_VALIDATE_INT);
         return $value === false ? $default : max(1, min((int)$value, 100));
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function bucketFileKey(array $payload): string
+    {
+        $fileId = (int)($payload['file_id'] ?? 0);
+        if ($fileId > 0) {
+            return 'bucket:file-id:' . $fileId;
+        }
+
+        foreach (['upload_id', 'staged_path', 'source_relative_path', 'original_name'] as $field) {
+            $value = strtolower(trim(str_replace('\\', '/', (string)($payload[$field] ?? ''))));
+            if ($value !== '') {
+                return 'bucket:file:' . substr(hash('sha256', $field . ':' . $value), 0, 48);
+            }
+        }
+
+        // Jobs without a file identity remain serialized rather than being given
+        // a shared null key that could permit unsafe concurrent maintenance.
+        return 'bucket:unidentified';
     }
 
     private static function projectionKey(array $payload): ?string

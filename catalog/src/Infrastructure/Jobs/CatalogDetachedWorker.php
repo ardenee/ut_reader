@@ -5,356 +5,354 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 final class CatalogDetachedWorker
 {
-    private string $storageRoot;
-    private string $runtimeDirectory;
+    public const DEFAULT_WORKERS = 4;
+    public const MAX_WORKERS = 8;
+
+    private string $runtime;
     private string $catalogRoot;
-    private ?string $cachedCodeVersion = null;
+    private ?string $version = null;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly array $config)
     {
-        $storageRoot = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
-        if ($storageRoot === '') {
+        $storage = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
+        if ($storage === '') {
             throw new \InvalidArgumentException('A catalog storage path is required.');
         }
-        $this->storageRoot = $storageRoot;
-        $this->runtimeDirectory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'worker';
+        $this->runtime = $storage . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'worker';
         $this->catalogRoot = dirname(__DIR__, 3);
     }
 
-    /** @return array<string,mixed> */
-    public function start(string $queueName, int $maxJobs = 10000): array
+    public function configuredWorkerCount(): int
     {
-        $queueName = $this->queueName($queueName);
-        $maxJobs = max(1, min($maxJobs, 10000));
-        $this->ensureRuntimeDirectory();
+        $value = (int)($this->config['queue']['worker_processes'] ?? 0);
+        if ($value < 1) {
+            $value = (int)(getenv('UNREALDB_WORKER_PROCESSES') ?: self::DEFAULT_WORKERS);
+        }
+        return $this->normalizeWorkerCount($value);
+    }
 
-        $status = $this->status($queueName);
-        if (!empty($status['active'])) {
-            return [
-                'started' => false,
-                'reason' => !empty($status['stale_code']) ? 'stale_worker_running' : 'already_running',
-                'worker' => $status,
-            ];
+    public function normalizeWorkerCount(int $count): int
+    {
+        return max(1, min(self::MAX_WORKERS, $count));
+    }
+
+    /** @return array<string,mixed> */
+    public function start(string $queue, int $maxJobs = 10000, int $workerCount = 0): array
+    {
+        $queue = $this->queue($queue);
+        $workerCount = $this->normalizeWorkerCount($workerCount > 0 ? $workerCount : $this->configuredWorkerCount());
+        $maxJobs = max(1, min(10000, $maxJobs));
+        $this->ensureRuntime();
+
+        $before = $this->status($queue);
+        if (!empty($before['stale_code'])) {
+            return ['started' => false, 'reason' => 'stale_worker_running', 'requested_workers' => $workerCount,
+                'started_workers' => 0, 'stopping_workers' => 0, 'worker' => $before];
         }
 
-        $this->clearStopRequest($queueName);
-        $leaseSeconds = max(15, min((int)($this->config['queue']['lease_seconds'] ?? 120), 3600));
-        $phpBinary = $this->phpBinary();
+        $this->writeJson($this->path($queue, 'pool'), [
+            'queue' => $queue, 'desired_count' => $workerCount, 'updated_at' => gmdate('c'),
+        ]);
+        $this->clearQueueStopRequest($queue);
+
+        $stopping = 0;
+        for ($slot = $workerCount + 1; $slot <= self::MAX_WORKERS; $slot++) {
+            if (!empty($this->statusSlot($queue, $slot)['active'])) {
+                $this->requestSlotStop($queue, $slot);
+                $stopping++;
+            } else {
+                $this->clearSlotStopRequest($queue, $slot);
+            }
+        }
+
         $script = $this->catalogRoot . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'catalog-worker-detached.php';
         if (!is_file($script)) {
             throw new \RuntimeException('Detached worker script is missing.');
         }
-
-        $arguments = [
-            '--queue=' . $queueName,
-            '--max-jobs=' . $maxJobs,
-            '--sleep-ms=250',
-            '--lease-seconds=' . $leaseSeconds,
-        ];
-        $logPath = $this->logPath($queueName);
-        $this->writeState($queueName, [
-            'status' => 'launching',
-            'queue' => $queueName,
-            'max_jobs' => $maxJobs,
-            'code_version' => $this->codeVersion(),
-            'requested_at' => gmdate('c'),
-        ]);
-
-        $this->spawn($phpBinary, $script, $arguments, $logPath);
+        $lease = max(15, min(3600, (int)($this->config['queue']['lease_seconds'] ?? 120)));
+        $started = 0;
+        for ($slot = 1; $slot <= $workerCount; $slot++) {
+            if (!empty($this->statusSlot($queue, $slot)['active'])) {
+                continue;
+            }
+            $this->clearSlotStopRequest($queue, $slot);
+            $this->writeState($queue, [
+                'status' => 'launching', 'queue' => $queue, 'worker_count' => $workerCount,
+                'max_jobs' => $maxJobs, 'code_version' => $this->codeVersion(), 'requested_at' => gmdate('c'),
+            ], $slot);
+            $this->spawn($this->phpBinary(), $script, [
+                '--queue=' . $queue, '--max-jobs=' . $maxJobs, '--sleep-ms=250', '--lease-seconds=' . $lease,
+                '--worker-slot=' . $slot, '--worker-count=' . $workerCount,
+            ], $this->path($queue, 'log', $slot));
+            $started++;
+        }
         usleep(100000);
-
-        return [
-            'started' => true,
-            'reason' => 'launched',
-            'worker' => $this->status($queueName),
-        ];
+        $reason = $started > 0 ? (!empty($before['active']) ? 'pool_expanded' : 'launched')
+            : ($stopping > 0 ? 'pool_reduced' : 'already_running');
+        return ['started' => $started > 0, 'reason' => $reason, 'requested_workers' => $workerCount,
+            'started_workers' => $started, 'stopping_workers' => $stopping, 'worker' => $this->status($queue)];
     }
 
     /** @return array<string,mixed> */
-    public function status(string $queueName, bool $includeLog = false): array
+    public function status(string $queue, bool $includeLog = false): array
     {
-        $queueName = $this->queueName($queueName);
-        $this->ensureRuntimeDirectory();
-        $state = $this->readJson($this->statePath($queueName));
-        $active = $this->lockIsHeld($queueName);
-
-        if (!$active && (string)($state['status'] ?? '') === 'launching') {
-            $requestedAt = strtotime((string)($state['requested_at'] ?? ''));
-            if ($requestedAt !== false && $requestedAt >= time() - 10) {
-                $active = true;
+        $queue = $this->queue($queue);
+        $this->ensureRuntime();
+        $pool = $this->readJson($this->path($queue, 'pool'));
+        $desired = $this->normalizeWorkerCount((int)($pool['desired_count'] ?? $this->configuredWorkerCount()));
+        $current = $this->codeVersion(true);
+        $workers = $logs = $versions = [];
+        $active = $processed = $latestAt = 0;
+        $stale = false;
+        $primary = [];
+        for ($slot = 1; $slot <= self::MAX_WORKERS; $slot++) {
+            $worker = $this->statusSlot($queue, $slot, $includeLog, $current);
+            $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+            if ($slot > $desired && empty($worker['active']) && $state === []) {
+                continue;
+            }
+            $workers[] = $worker;
+            $active += !empty($worker['active']) ? 1 : 0;
+            $processed += max(0, (int)($state['processed'] ?? 0));
+            $stale = $stale || !empty($worker['stale_code']);
+            $running = trim((string)($worker['code_version_running'] ?? ''));
+            if ($running !== '') $versions[$running] = true;
+            $updated = strtotime((string)($state['updated_at'] ?? $state['ended_at'] ?? $state['started_at'] ?? '')) ?: 0;
+            if (!empty($worker['active']) || $updated >= $latestAt) {
+                $primary = $state;
+                $latestAt = $updated;
+            }
+            if ($includeLog && trim((string)($worker['log_tail'] ?? '')) !== '') {
+                $logs[] = '[worker ' . $slot . '] ' . trim((string)$worker['log_tail']);
             }
         }
-
-        $currentVersion = $this->codeVersion();
-        $runningVersion = trim((string)($state['code_version'] ?? ''));
-        $staleCode = $active && ($runningVersion === '' || !hash_equals($currentVersion, $runningVersion));
+        $primary = array_merge($primary, [
+            'status' => $active > 0 ? 'running' : (string)($primary['status'] ?? 'stopped'),
+            'queue' => $queue, 'worker_count' => $desired, 'active_workers' => $active, 'processed' => $processed,
+        ]);
         $result = [
-            'active' => $active,
-            'queue' => $queueName,
-            'stop_requested' => is_file($this->stopPath($queueName)),
-            'state' => $state,
-            'code_version_current' => $currentVersion,
-            'code_version_running' => $runningVersion,
-            'stale_code' => $staleCode,
-            'log_file' => basename($this->logPath($queueName)),
+            'active' => $active > 0, 'active_count' => $active, 'desired_count' => $desired,
+            'max_workers' => self::MAX_WORKERS, 'queue' => $queue,
+            'stop_requested' => is_file($this->path($queue, 'queue-stop')), 'state' => $primary,
+            'workers' => $workers, 'code_version_current' => $current,
+            'code_version_running' => count($versions) === 1 ? (string)array_key_first($versions) : (count($versions) > 1 ? 'mixed' : ''),
+            'stale_code' => $stale, 'log_file' => $this->key($queue) . '.worker-*.log',
         ];
-        if ($includeLog) {
-            $result['log_tail'] = $this->tailLog($queueName);
-        }
+        if ($includeLog) $result['log_tail'] = implode("\n\n", $logs);
         return $result;
     }
 
-    public function codeVersion(): string
+    /** @return array<string,mixed> */
+    public function statusSlot(string $queue, int $slot, bool $includeLog = false, ?string $current = null): array
     {
-        if ($this->cachedCodeVersion !== null) {
-            return $this->cachedCodeVersion;
+        $queue = $this->queue($queue);
+        $slot = $this->slot($slot);
+        $state = $this->readJson($this->path($queue, 'state', $slot));
+        $active = $this->lockHeld($queue, $slot);
+        if (!$active && (string)($state['status'] ?? '') === 'launching') {
+            $requested = strtotime((string)($state['requested_at'] ?? ''));
+            $active = $requested !== false && $requested >= time() - 10;
         }
+        $current ??= $this->codeVersion(true);
+        $running = trim((string)($state['code_version'] ?? ''));
+        $result = [
+            'slot' => $slot, 'active' => $active,
+            'stop_requested' => is_file($this->path($queue, 'queue-stop')) || is_file($this->path($queue, 'slot-stop', $slot)),
+            'state' => $state, 'code_version_current' => $current, 'code_version_running' => $running,
+            'stale_code' => $active && ($running === '' || !hash_equals($current, $running)),
+            'log_file' => basename($this->path($queue, 'log', $slot)),
+        ];
+        if ($includeLog) $result['log_tail'] = $this->tailLog($queue, 16384, $slot);
+        return $result;
+    }
 
+    public function codeVersion(bool $refresh = false): string
+    {
+        if (!$refresh && $this->version !== null) return $this->version;
         $paths = [
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'catalog-worker-detached.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchive.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchivePayload.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Application' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobWorker.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Application' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobExecutionContext.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Domain' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobType.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Domain' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'JobResourcePolicy.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Persistence' . DIRECTORY_SEPARATOR . 'WorkerJobQueue.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Import' . DIRECTORY_SEPARATOR . 'CatalogBucketUploadQueue.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Import' . DIRECTORY_SEPARATOR . 'CatalogBucketBatchQueue.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Import' . DIRECTORY_SEPARATOR . 'CatalogBucketUploadProcessor.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Import' . DIRECTORY_SEPARATOR . 'CatalogBucketUploadIdentityStore.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Import' . DIRECTORY_SEPARATOR . 'CatalogBucketIdentityProcessor.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Import' . DIRECTORY_SEPARATOR . 'CatalogUploadDuplicateDetector.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogJobWorkerFactory.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogBucketUploadJobHandler.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogBucketRedirectJobHandler.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogNonBlockingImportJobHandler.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogStagedImportJobHandler.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Jobs' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchiveStream.php',
-            $this->catalogRoot . DIRECTORY_SEPARATOR . 'src' . DIRECTORY_SEPARATOR . 'Infrastructure' . DIRECTORY_SEPARATOR . 'Redirect' . DIRECTORY_SEPARATOR . 'CatalogRedirectArchiveProcessor.php',
+            $this->catalogRoot . '/bin/catalog-worker-detached.php', __FILE__,
+            $this->catalogRoot . '/src/Domain/Jobs/JobResourcePolicy.php',
+            $this->catalogRoot . '/src/Application/Jobs/JobWorker.php',
+            $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobQueue.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
         ];
         $parts = [];
         foreach ($paths as $path) {
-            if (!is_file($path)) {
-                $parts[] = str_replace('\\', '/', $path) . ':missing';
-                continue;
-            }
-            $hash = hash_file('sha256', $path);
-            $parts[] = str_replace('\\', '/', $path) . ':' . (is_string($hash) ? $hash : 'unreadable');
+            $parts[] = str_replace('\\', '/', $path) . ':' . (is_file($path) ? (string)filemtime($path) . ':' . (string)filesize($path) : 'missing');
         }
-        $this->cachedCodeVersion = substr(hash('sha256', implode("\n", $parts)), 0, 24);
-        return $this->cachedCodeVersion;
+        return $this->version = substr(hash('sha256', implode("\n", $parts)), 0, 24);
     }
 
-    public function tailLog(string $queueName, int $maximumBytes = 16384): string
+    public function tailLog(string $queue, int $maximumBytes = 16384, int $slot = 1): string
     {
-        $queueName = $this->queueName($queueName);
-        $path = $this->logPath($queueName);
-        if (!is_file($path) || !is_readable($path)) {
-            return '';
-        }
-        $maximumBytes = max(1024, min($maximumBytes, 131072));
-        $size = filesize($path);
-        if ($size === false || $size < 1) {
-            return '';
-        }
+        $path = $this->path($this->queue($queue), 'log', $this->slot($slot));
+        if (!is_file($path) || !is_readable($path) || ($size = filesize($path)) === false || $size < 1) return '';
+        $maximumBytes = max(1024, min(131072, $maximumBytes));
         $handle = fopen($path, 'rb');
-        if (!is_resource($handle)) {
-            return '';
-        }
+        if (!is_resource($handle)) return '';
         try {
-            $offset = max(0, (int)$size - $maximumBytes);
-            if ($offset > 0) {
-                fseek($handle, $offset);
-                fgets($handle);
-            }
+            $offset = max(0, $size - $maximumBytes);
+            if ($offset > 0) { fseek($handle, $offset); fgets($handle); }
             $data = stream_get_contents($handle);
             return is_string($data) ? trim($data) : '';
-        } finally {
-            fclose($handle);
-        }
+        } finally { fclose($handle); }
     }
 
     /** @return array<string,mixed> */
-    public function requestStop(string $queueName): array
+    public function requestStop(string $queue): array
     {
-        $queueName = $this->queueName($queueName);
-        $this->ensureRuntimeDirectory();
-        $this->writeJson($this->stopPath($queueName), [
-            'queue' => $queueName,
-            'requested_at' => gmdate('c'),
-        ]);
-        return $this->status($queueName);
+        $queue = $this->queue($queue);
+        $this->ensureRuntime();
+        $this->writeJson($this->path($queue, 'queue-stop'), ['queue' => $queue, 'requested_at' => gmdate('c')]);
+        return $this->status($queue);
     }
 
-    public function stopRequested(string $queueName): bool
+    public function requestSlotStop(string $queue, int $slot): void
     {
-        return is_file($this->stopPath($this->queueName($queueName)));
+        $queue = $this->queue($queue); $slot = $this->slot($slot); $this->ensureRuntime();
+        $this->writeJson($this->path($queue, 'slot-stop', $slot), ['queue' => $queue, 'worker_slot' => $slot, 'requested_at' => gmdate('c')]);
     }
 
-    public function clearStopRequest(string $queueName): void
+    public function stopRequested(string $queue, int $slot = 0): bool
     {
-        @unlink($this->stopPath($this->queueName($queueName)));
+        $queue = $this->queue($queue);
+        return is_file($this->path($queue, 'queue-stop'))
+            || ($slot > 0 && is_file($this->path($queue, 'slot-stop', $this->slot($slot))));
     }
+
+    public function clearStopRequest(string $queue): void
+    {
+        $queue = $this->queue($queue); $this->clearQueueStopRequest($queue);
+        for ($slot = 1; $slot <= self::MAX_WORKERS; $slot++) $this->clearSlotStopRequest($queue, $slot);
+    }
+
+    public function clearQueueStopRequest(string $queue): void { @unlink($this->path($this->queue($queue), 'queue-stop')); }
+    public function clearSlotStopRequest(string $queue, int $slot): void { @unlink($this->path($this->queue($queue), 'slot-stop', $this->slot($slot))); }
 
     /** @return resource|false */
-    public function acquireWorkerLock(string $queueName)
+    public function acquireWorkerLock(string $queue, int $slot = 1)
     {
-        $queueName = $this->queueName($queueName);
-        $this->ensureRuntimeDirectory();
-        $handle = fopen($this->lockPath($queueName), 'c+');
-        if (!is_resource($handle)) {
-            throw new \RuntimeException('Could not open the detached worker lock file.');
-        }
-        if (!flock($handle, LOCK_EX | LOCK_NB)) {
-            fclose($handle);
-            return false;
-        }
-        ftruncate($handle, 0);
-        fwrite($handle, (string)getmypid());
-        fflush($handle);
+        $queue = $this->queue($queue); $slot = $this->slot($slot); $this->ensureRuntime();
+        $handle = fopen($this->path($queue, 'lock', $slot), 'c+');
+        if (!is_resource($handle)) throw new \RuntimeException('Could not open the detached worker lock file.');
+        if (!flock($handle, LOCK_EX | LOCK_NB)) { fclose($handle); return false; }
+        ftruncate($handle, 0); fwrite($handle, (string)getmypid()); fflush($handle);
         return $handle;
     }
 
     /** @param array<string,mixed> $state */
-    public function writeState(string $queueName, array $state): void
+    public function writeState(string $queue, array $state, int $slot = 1): void
     {
-        $queueName = $this->queueName($queueName);
-        $state['updated_at'] = gmdate('c');
-        $this->writeJson($this->statePath($queueName), $state);
+        $queue = $this->queue($queue); $slot = $this->slot($slot);
+        $state['worker_slot'] = $slot; $state['updated_at'] = gmdate('c');
+        $this->writeJson($this->path($queue, 'state', $slot), $state);
     }
 
-    private function lockIsHeld(string $queueName): bool
+    /** @return array<string,mixed> */
+    public function workerForId(string $queue, string $workerId): array
     {
-        $handle = fopen($this->lockPath($queueName), 'c+');
-        if (!is_resource($handle)) {
-            return false;
+        $workerId = trim($workerId);
+        if ($workerId === '') return [];
+        foreach ((array)($this->status($queue)['workers'] ?? []) as $worker) {
+            $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+            $candidate = trim((string)($state['worker_id'] ?? ''));
+            if ($candidate !== '' && hash_equals($candidate, $workerId)) return is_array($worker) ? $worker : [];
         }
+        return [];
+    }
+
+    private function lockHeld(string $queue, int $slot): bool
+    {
+        $handle = fopen($this->path($queue, 'lock', $slot), 'c+');
+        if (!is_resource($handle)) return false;
         $acquired = flock($handle, LOCK_EX | LOCK_NB);
-        if ($acquired) {
-            flock($handle, LOCK_UN);
-        }
+        if ($acquired) flock($handle, LOCK_UN);
         fclose($handle);
         return !$acquired;
     }
 
     /** @param list<string> $arguments */
-    private function spawn(string $phpBinary, string $script, array $arguments, string $logPath): void
+    private function spawn(string $php, string $script, array $arguments, string $log): void
     {
-        $parts = [escapeshellarg($phpBinary), escapeshellarg($script)];
-        foreach ($arguments as $argument) {
-            $parts[] = escapeshellarg($argument);
-        }
+        $parts = [escapeshellarg($php), escapeshellarg($script)];
+        foreach ($arguments as $argument) $parts[] = escapeshellarg($argument);
         $program = implode(' ', $parts);
-
-        if (PHP_OS_FAMILY === 'Windows') {
-            $command = 'start "" /B ' . $program . ' >> ' . escapeshellarg($logPath) . ' 2>&1';
-            $handle = @popen($command, 'r');
-            if (!is_resource($handle)) {
-                throw new \RuntimeException('Could not launch the detached Windows worker process.');
-            }
-            pclose($handle);
-            return;
-        }
-
-        $command = 'nohup ' . $program . ' >> ' . escapeshellarg($logPath) . ' 2>&1 < /dev/null &';
+        $command = PHP_OS_FAMILY === 'Windows'
+            ? 'start "" /B ' . $program . ' >> ' . escapeshellarg($log) . ' 2>&1'
+            : 'nohup ' . $program . ' >> ' . escapeshellarg($log) . ' 2>&1 < /dev/null &';
         $handle = @popen($command, 'r');
-        if (!is_resource($handle)) {
-            throw new \RuntimeException('Could not launch the detached worker process.');
-        }
+        if (!is_resource($handle)) throw new \RuntimeException('Could not launch the detached worker process.');
         pclose($handle);
     }
 
     private function phpBinary(): string
     {
-        $configured = trim((string)($this->config['queue']['worker_php_binary'] ?? ''));
-        if ($configured === '') {
-            $configured = trim((string)(getenv('UNREALDB_WORKER_PHP_BINARY') ?: ''));
-        }
-        if ($configured !== '') {
-            return $configured;
-        }
-
-        $candidate = rtrim(PHP_BINDIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
-            . (PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php');
-        if (is_file($candidate)) {
-            return $candidate;
-        }
-
-        if (is_file(PHP_BINARY) && preg_match('/^php(?:\.exe)?$/i', basename(PHP_BINARY)) === 1) {
-            return PHP_BINARY;
-        }
-
-        return PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php';
+        $value = trim((string)($this->config['queue']['worker_php_binary'] ?? ''));
+        if ($value === '') $value = trim((string)(getenv('UNREALDB_WORKER_PHP_BINARY') ?: ''));
+        if ($value !== '') return $value;
+        $candidate = rtrim(PHP_BINDIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . (PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php');
+        if (is_file($candidate)) return $candidate;
+        return is_file(PHP_BINARY) && preg_match('/^php(?:\.exe)?$/i', basename(PHP_BINARY)) === 1
+            ? PHP_BINARY : (PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php');
     }
 
-    private function queueName(string $queueName): string
+    private function queue(string $queue): string
     {
-        $queueName = trim($queueName);
-        if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
+        $queue = trim($queue);
+        if ($queue === '' || strlen($queue) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queue) !== 1) {
             throw new \InvalidArgumentException('A valid queue name is required.');
         }
-        return $queueName;
+        return $queue;
     }
 
-    private function ensureRuntimeDirectory(): void
+    private function slot(int $slot): int
     {
-        if (!is_dir($this->runtimeDirectory)
-            && !mkdir($this->runtimeDirectory, 0750, true)
-            && !is_dir($this->runtimeDirectory)) {
+        if ($slot < 1 || $slot > self::MAX_WORKERS) throw new \InvalidArgumentException('Worker slot must be between 1 and ' . self::MAX_WORKERS . '.');
+        return $slot;
+    }
+
+    private function ensureRuntime(): void
+    {
+        if (!is_dir($this->runtime) && !mkdir($this->runtime, 0750, true) && !is_dir($this->runtime)) {
             throw new \RuntimeException('Could not create detached worker runtime storage.');
         }
     }
 
-    private function queueKey(string $queueName): string
-    {
-        return preg_replace('/[^A-Za-z0-9._-]+/', '_', $queueName) ?: 'catalog';
-    }
+    private function key(string $queue): string { return preg_replace('/[^A-Za-z0-9._-]+/', '_', $queue) ?: 'catalog'; }
 
-    private function lockPath(string $queueName): string
+    private function path(string $queue, string $kind, int $slot = 0): string
     {
-        return $this->runtimeDirectory . DIRECTORY_SEPARATOR . $this->queueKey($queueName) . '.lock';
-    }
-
-    private function statePath(string $queueName): string
-    {
-        return $this->runtimeDirectory . DIRECTORY_SEPARATOR . $this->queueKey($queueName) . '.state.json';
-    }
-
-    private function stopPath(string $queueName): string
-    {
-        return $this->runtimeDirectory . DIRECTORY_SEPARATOR . $this->queueKey($queueName) . '.stop.json';
-    }
-
-    private function logPath(string $queueName): string
-    {
-        return $this->runtimeDirectory . DIRECTORY_SEPARATOR . $this->queueKey($queueName) . '.log';
+        $base = $this->runtime . DIRECTORY_SEPARATOR . $this->key($queue);
+        if (in_array($kind, ['lock', 'state', 'log', 'slot-stop'], true)) {
+            $slot = $this->slot($slot);
+            $base .= $slot === 1 ? '' : '.worker-' . $slot;
+        }
+        return $base . match ($kind) {
+            'lock' => '.lock', 'state' => '.state.json', 'log' => '.log',
+            'queue-stop' => '.stop.json', 'slot-stop' => '.slot-stop.json', 'pool' => '.pool.json',
+            default => throw new \InvalidArgumentException('Unknown detached worker runtime path.'),
+        };
     }
 
     /** @return array<string,mixed> */
     private function readJson(string $path): array
     {
-        if (!is_file($path)) {
-            return [];
-        }
-        $raw = @file_get_contents($path);
-        if (!is_string($raw) || trim($raw) === '') {
-            return [];
-        }
-        $decoded = json_decode($raw, true);
+        $raw = is_file($path) ? @file_get_contents($path) : false;
+        $decoded = is_string($raw) && trim($raw) !== '' ? json_decode($raw, true) : null;
         return is_array($decoded) ? $decoded : [];
     }
 
     /** @param array<string,mixed> $value */
     private function writeJson(string $path, array $value): void
     {
+        $this->ensureRuntime();
         $temporary = $path . '.tmp-' . bin2hex(random_bytes(5));
         $json = json_encode($value, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        if (file_put_contents($temporary, $json . PHP_EOL, LOCK_EX) === false || !@rename($temporary, $path)) {
-            @unlink($temporary);
-            throw new \RuntimeException('Could not update detached worker state.');
-        }
-        @chmod($path, 0640);
+        if (file_put_contents($temporary, $json, LOCK_EX) === false) throw new \RuntimeException('Could not write detached worker runtime state.');
+        if (PHP_OS_FAMILY === 'Windows' && is_file($path)) @unlink($path);
+        if (!@rename($temporary, $path)) { @unlink($temporary); throw new \RuntimeException('Could not publish detached worker runtime state.'); }
     }
 }
