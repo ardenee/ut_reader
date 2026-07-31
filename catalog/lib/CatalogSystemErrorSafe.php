@@ -203,7 +203,7 @@ function catalog_system_error_record_http(string $code, string $message, int $st
 function catalog_system_error_normalize(array $data): array
 {
     $sourceKind = catalog_system_error_identifier((string)($data['source_kind'] ?? 'php'), 32, 'php');
-    $severity = strtolower(trim((string)($data['severity'] ?? 'error'));
+    $severity = strtolower(trim((string)($data['severity'] ?? 'error')));
     if (!in_array($severity, ['debug', 'info', 'warning', 'error', 'critical'], true)) {
         $severity = 'error';
     }
