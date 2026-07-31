@@ -5,12 +5,19 @@
     const progressBox = document.getElementById('bucket-progress');
     const currentLabel = document.getElementById('bucket-progress-label');
     const overallCount = document.getElementById('bucket-overall-progress-count');
-    if (!form || !progressBox) return;
+    const fullLog = document.getElementById('bucket-log');
+    const errorLog = document.getElementById('bucket-error-log');
+    const errorsOnly = document.getElementById('upload-bucket-errors-only');
+    const errorCount = document.getElementById('upload-bucket-error-count');
+    if (!form || !progressBox || !fullLog || !errorLog || !errorsOnly) return;
 
     const issueUrl = progressBox.dataset.issueUrl || 'api/v1/upload-bucket-issue.php';
     const csrf = progressBox.dataset.chunkCsrf || '';
     const storageKey = 'unrealdb.uploadBucketV2.pendingIssues';
     const nativePush = Array.prototype.push;
+    const ERROR_ROW_HEIGHT = 22;
+    const ERROR_OVERSCAN = 12;
+
     let capturedLines = null;
     let pushPatched = false;
     let uploadSessionId = '';
@@ -18,7 +25,20 @@
     let flushing = false;
     let batchPauseRecorded = false;
     let workerStartRecorded = false;
+    let nextInspectIndex = 0;
+    let errorFrame = 0;
+    let followErrorTail = true;
     const terminalSignatures = new Map();
+    const originalToErrorIndex = new Map();
+    const errorLines = [];
+
+    const errorSpacer = document.createElement('div');
+    const errorViewport = document.createElement('div');
+    errorSpacer.className = 'bucket-log-spacer';
+    errorViewport.className = 'bucket-log-viewport';
+    errorLog.textContent = '';
+    errorLog.appendChild(errorSpacer);
+    errorLog.appendChild(errorViewport);
 
     function randomSessionId() {
         if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -39,6 +59,15 @@
             && Object.prototype.hasOwnProperty.call(value, 'name')
             && Object.prototype.hasOwnProperty.call(value, 'sizeText')
             && Object.prototype.hasOwnProperty.call(value, 'outcome');
+    }
+
+    function lineText(line) {
+        const tokens = Array.isArray(line.steps) ? line.steps.slice() : [];
+        if (line.transient) tokens.push(String(line.transient));
+        if (line.detail) tokens.push(String(line.detail));
+        tokens.push(String(line.name || 'Unnamed file'));
+        tokens.push(String(line.sizeText || '0 B'));
+        return tokens.join(' : ');
     }
 
     function restorePush() {
@@ -63,6 +92,9 @@
             }
             return result;
         };
+        window.setTimeout(function () {
+            if (!capturedLines) restorePush();
+        }, 5000);
     }
 
     function loadPending() {
@@ -117,9 +149,8 @@
             const remaining = pending.slice();
             let sent = 0;
             while (remaining.length && sent < 100) {
-                const payload = remaining[0];
                 try {
-                    await sendIssue(payload);
+                    await sendIssue(remaining[0]);
                 } catch (error) {
                     break;
                 }
@@ -135,7 +166,7 @@
     function stageForLine(line) {
         const detail = String(line.detail || '').toUpperCase();
         const steps = Array.isArray(line.steps) ? line.steps.map(function (step) { return String(step || '').toUpperCase(); }) : [];
-        if (detail.indexOf('EXTENSION NOT ALLOWED') >= 0 || detail.indexOf('DUPLICATE SELECTION') >= 0) return 'selection';
+        if (detail.indexOf('EXTENSION NOT ALLOWED') >= 0) return 'selection';
         if (steps.indexOf('UPLOADED') >= 0 && steps.indexOf('QUEUED') < 0) return 'finalisation';
         if (steps.indexOf('READY') >= 0) return 'upload';
         if (steps.indexOf('CHECKED') >= 0) return 'preflight';
@@ -153,7 +184,6 @@
         const path = String(line.name || 'Unnamed file');
         const normalized = path.replace(/\\/g, '/');
         const parts = normalized.split('/');
-        const message = String(line.detail || 'File handling failed.');
         queueIssue({
             action: 'record',
             source_kind: 'upload_bucket_v2',
@@ -162,25 +192,98 @@
             original_name: parts.pop() || path,
             file_size_text: String(line.sizeText || ''),
             stage: stageForLine(line),
-            error_message: message
+            error_message: String(line.detail || 'File handling failed.')
         });
+    }
+
+    function updateErrorCount() {
+        if (errorCount) {
+            errorCount.textContent = errorLines.length.toLocaleString() + ' error' + (errorLines.length === 1 ? '' : 's');
+        }
+    }
+
+    function renderErrorNow(forceTail) {
+        errorFrame = 0;
+        if (errorLog.hidden || document.hidden) return;
+        updateErrorCount();
+        if (!errorLines.length) {
+            errorSpacer.style.height = '22px';
+            errorViewport.style.transform = 'translateY(0)';
+            errorViewport.innerHTML = '<div class="bucket-log-line bucket-log-line-empty">No errors recorded.</div>';
+            return;
+        }
+        const wasNearBottom = errorLog.scrollTop + errorLog.clientHeight >= errorLog.scrollHeight - (ERROR_ROW_HEIGHT * 3);
+        if (forceTail || followErrorTail) {
+            errorLog.scrollTop = Math.max(0, errorLines.length * ERROR_ROW_HEIGHT - errorLog.clientHeight);
+        }
+        errorSpacer.style.height = (errorLines.length * ERROR_ROW_HEIGHT) + 'px';
+        const start = Math.max(0, Math.floor(errorLog.scrollTop / ERROR_ROW_HEIGHT) - ERROR_OVERSCAN);
+        const visibleCount = Math.ceil(Math.max(ERROR_ROW_HEIGHT, errorLog.clientHeight) / ERROR_ROW_HEIGHT) + (ERROR_OVERSCAN * 2);
+        const end = Math.min(errorLines.length, start + visibleCount);
+        const fragment = document.createDocumentFragment();
+        for (let index = start; index < end; index++) {
+            const row = document.createElement('div');
+            row.className = 'bucket-log-line bucket-log-line-failed';
+            row.textContent = errorLines[index];
+            row.style.height = ERROR_ROW_HEIGHT + 'px';
+            fragment.appendChild(row);
+        }
+        errorViewport.textContent = '';
+        errorViewport.style.transform = 'translateY(' + (start * ERROR_ROW_HEIGHT) + 'px)';
+        errorViewport.appendChild(fragment);
+        if (forceTail || (followErrorTail && wasNearBottom)) {
+            errorLog.scrollTop = Math.max(0, errorLines.length * ERROR_ROW_HEIGHT - errorLog.clientHeight);
+        }
+    }
+
+    function scheduleErrorRender(forceTail) {
+        if (forceTail) followErrorTail = true;
+        if (errorFrame || errorLog.hidden || document.hidden) return;
+        errorFrame = window.requestAnimationFrame(function () { renderErrorNow(Boolean(forceTail)); });
+    }
+
+    function addOrUpdateErrorLine(originalIndex, text) {
+        if (originalToErrorIndex.has(originalIndex)) {
+            errorLines[originalToErrorIndex.get(originalIndex)] = text;
+        } else {
+            originalToErrorIndex.set(originalIndex, errorLines.length);
+            errorLines.push(text);
+        }
+        scheduleErrorRender(true);
+    }
+
+    function addBatchError(text) {
+        errorLines.push(String(text || 'Upload batch failed.'));
+        scheduleErrorRender(true);
     }
 
     function inspectLines() {
         if (!capturedLines) return;
-        for (let index = 0; index < capturedLines.length; index++) {
+        const start = Math.max(0, nextInspectIndex - 1);
+        for (let index = start; index < capturedLines.length; index++) {
             const line = capturedLines[index];
             if (!isUploadLogLine(line)) continue;
             const outcome = String(line.outcome || '').toLowerCase();
-            if (!['failed', 'skipped', 'uploaded', 'stopped'].includes(outcome)) continue;
+            const terminal = ['failed', 'skipped', 'uploaded', 'stopped'].includes(outcome);
+            if (!terminal) {
+                nextInspectIndex = index;
+                break;
+            }
             const signature = outcome + '|' + String(line.detail || '') + '|' + String(line.name || '') + '|' + String(line.sizeText || '');
-            if (terminalSignatures.get(index) === signature) continue;
-            terminalSignatures.set(index, signature);
-            if (shouldRecordLine(line)) recordLine(line);
+            if (terminalSignatures.get(index) !== signature) {
+                terminalSignatures.set(index, signature);
+                if (shouldRecordLine(line)) {
+                    addOrUpdateErrorLine(index, lineText(line));
+                    recordLine(line);
+                }
+            }
+            nextInspectIndex = index + 1;
         }
     }
 
     function recordBatch(stage, message) {
+        const text = String(message || 'Upload batch failed.');
+        addBatchError('FAILED : ' + text + ' : Upload batch : 0 B');
         queueIssue({
             action: 'record',
             source_kind: 'upload_bucket_v2',
@@ -189,7 +292,7 @@
             original_name: 'Upload batch',
             file_size_text: '',
             stage: stage,
-            error_message: message
+            error_message: text
         });
     }
 
@@ -197,6 +300,7 @@
         const current = currentLabel ? String(currentLabel.textContent || '') : '';
         if (!batchPauseRecorded && current.indexOf('Could not request a safe processing pause:') === 0) {
             batchPauseRecorded = true;
+            restorePush();
             recordBatch('worker_pause', current);
         }
         const overall = overallCount ? String(overallCount.textContent || '') : '';
@@ -213,20 +317,46 @@
         monitorTimer = window.setInterval(function () {
             inspectLines();
             inspectBatchMessages();
-        }, 400);
+        }, 300);
     }
+
+    function applyLogFilter() {
+        const onlyErrors = Boolean(errorsOnly.checked);
+        fullLog.hidden = onlyErrors;
+        errorLog.hidden = !onlyErrors;
+        if (onlyErrors) {
+            renderErrorNow(false);
+        } else {
+            fullLog.dispatchEvent(new Event('scroll'));
+        }
+    }
+
+    errorLog.addEventListener('scroll', function () {
+        followErrorTail = errorLog.scrollTop + errorLog.clientHeight >= errorLog.scrollHeight - (ERROR_ROW_HEIGHT * 3);
+        scheduleErrorRender(false);
+    }, {passive: true});
+    errorsOnly.addEventListener('change', applyLogFilter);
 
     form.addEventListener('submit', function () {
         uploadSessionId = randomSessionId();
         capturedLines = null;
         terminalSignatures.clear();
+        originalToErrorIndex.clear();
+        errorLines.length = 0;
+        nextInspectIndex = 0;
         batchPauseRecorded = false;
         workerStartRecorded = false;
+        errorLog.scrollTop = 0;
+        updateErrorCount();
+        renderErrorNow(false);
         captureCoordinatorLog();
         startMonitor();
         flushPending();
     }, true);
 
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) renderErrorNow(false);
+    });
     window.addEventListener('online', flushPending);
     window.addEventListener('beforeunload', function () {
         inspectLines();
@@ -234,5 +364,7 @@
         restorePush();
     });
 
+    applyLogFilter();
+    renderErrorNow(false);
     flushPending();
 }());
