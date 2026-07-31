@@ -58,19 +58,22 @@ worker_pool_expect(
         && str_contains($workerScript, 'acquireWorkerLock($queueName, $workerSlot)')
         && str_contains($workerScript, 'stopRequested($queueName, $workerSlot)')
         && str_contains($workerScript, 'Do not sleep after a completed job')
-        && substr_count($workerScript, 'usleep($sleepMs * 1000)') === 1,
+        && substr_count($workerScript, 'usleep($sleepMs * 1000)') === 1
+        && str_contains($workerScript, '$requestedMaxJobs >= 10000 ? 1000000'),
     'The CLI runner is not a per-slot worker or still delays every completed job.'
 );
 
 worker_pool_expect(
     str_contains($launcher, "(\$payload['workers'] ?? \$launcher->configuredWorkerCount())")
-        && str_contains($launcher, '$launcher->start($queueName, $maxJobs, $workerCount)'),
+        && str_contains($launcher, '$launcher->start($queueName, $maxJobs, $workerCount)')
+        && str_contains($launcher, "\$mode === 'next' ? 1 : 1000000"),
     'The job-run endpoint does not accept a bounded worker count.'
 );
 
 worker_pool_expect(
     (str_contains($statusApi, "'active_count'") || str_contains($statusApi, "worker['active_count']"))
-        && str_contains($workerAction, "'terminated_workers'"),
+        && str_contains($workerAction, "'terminated_workers'")
+        && str_contains($statusApi, 'Keep the selected pool size healthy'),
     'Worker pool status/stop APIs do not report multiple processes.'
 );
 

@@ -28,10 +28,10 @@ try {
     }
 
     $launcher = new CatalogDetachedWorker($application->config);
-    $workerCount = $launcher->normalizeWorkerCount(
-        (int)($payload['workers'] ?? $launcher->configuredWorkerCount())
-    );
-    $maxJobs = $mode === 'next' ? 1 : 10000;
+    $workerCount = $mode === 'next'
+        ? 1
+        : $launcher->normalizeWorkerCount((int)($payload['workers'] ?? $launcher->configuredWorkerCount()));
+    $maxJobs = $mode === 'next' ? 1 : 1000000;
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();

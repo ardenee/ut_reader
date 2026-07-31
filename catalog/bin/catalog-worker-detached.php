@@ -23,7 +23,8 @@ $options = getopt('', [
 ]);
 $application = catalog_bootstrap();
 $queueName = trim((string)($options['queue'] ?? ($application->config['queue']['name'] ?? 'catalog')));
-$maxJobs = max(1, min((int)($options['max-jobs'] ?? 10000), 10000));
+$requestedMaxJobs = (int)($options['max-jobs'] ?? 1000000);
+$maxJobs = $requestedMaxJobs >= 10000 ? 1000000 : max(1, min($requestedMaxJobs, 1000000));
 $sleepMs = max(50, min((int)($options['sleep-ms'] ?? 250), 60000));
 $leaseSeconds = max(15, min((int)($options['lease-seconds'] ?? ($application->config['queue']['lease_seconds'] ?? 120)), 3600));
 $workerSlot = max(1, min((int)($options['worker-slot'] ?? 1), CatalogDetachedWorker::MAX_WORKERS));

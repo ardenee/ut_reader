@@ -61,7 +61,7 @@ try {
             try {
                 $autoStart = $launcher->start(
                     $queueName,
-                    10000,
+                    1000000,
                     (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount())
                 );
             } catch (Throwable $error) {
@@ -81,7 +81,7 @@ try {
         try {
             $autoStart = $launcher->start(
                 $queueName,
-                10000,
+                1000000,
                 (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount())
             );
         } catch (Throwable $error) {
@@ -95,6 +95,22 @@ try {
     $active = !empty($worker['active']);
     $activeCount = max(0, (int)($worker['active_count'] ?? 0));
     $desiredCount = max(1, (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount()));
+
+    // Keep the selected pool size healthy. A stopped/crashed/killed slot is
+    // replaced while queued work remains, without disturbing active workers.
+    if ($counts['queued'] > 0 && !$worker['stale_code'] && $activeCount < $desiredCount) {
+        try {
+            $autoStart = $launcher->start($queueName, 1000000, $desiredCount);
+        } catch (Throwable $error) {
+            $autoStartError = trim($error->getMessage()) ?: 'A missing worker slot could not be restarted.';
+            error_log('[UnrealDB worker-pool auto-heal] ' . get_class($error) . ': ' . $autoStartError);
+        }
+        $worker = $launcher->status($queueName, true);
+        $counts = job_worker_status_counts($application->db, $queueName);
+        $active = !empty($worker['active']);
+        $activeCount = max(0, (int)($worker['active_count'] ?? 0));
+        $desiredCount = max(1, (int)($worker['desired_count'] ?? $desiredCount));
+    }
     if ($active) {
         $authoritative = 'running';
         $message = $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.';
