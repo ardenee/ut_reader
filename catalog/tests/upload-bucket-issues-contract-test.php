@@ -13,11 +13,12 @@ $migration = file_get_contents($root . '/migrations/202607310001_upload_bucket_i
 $store = file_get_contents($root . '/src/Infrastructure/Import/CatalogUploadBucketIssueStore.php');
 $api = file_get_contents($root . '/api/v1/upload-bucket-issue.php');
 $recorder = file_get_contents($root . '/assets/upload-bucket-v2-issue-recorder.js');
+$workerCompatibility = file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
 $uploader = file_get_contents($root . '/upload-bucket-v2.php');
 $review = file_get_contents($root . '/upload-issues.php');
 $navigation = file_get_contents($root . '/lib/CatalogNavigation.php');
 
-foreach (compact('migration', 'store', 'api', 'recorder', 'uploader', 'review', 'navigation') as $name => $source) {
+foreach (compact('migration', 'store', 'api', 'recorder', 'workerCompatibility', 'uploader', 'review', 'navigation') as $name => $source) {
     upload_issues_expect(is_string($source) && $source !== '', $name . ' source is missing.');
 }
 
@@ -50,22 +51,37 @@ upload_issues_expect(
 upload_issues_expect(
     str_contains($recorder, 'captureCoordinatorLog')
         && str_contains($recorder, 'shouldRecordLine')
-        && str_contains($recorder, "outcome === 'failed'")
-        && str_contains($recorder, 'EXTENSION NOT ALLOWED')
+        && str_contains($recorder, "if (outcome === 'failed') return true")
+        && str_contains($recorder, "outcome === 'skipped' && detail.indexOf('EXTENSION NOT ALLOWED')")
+        && !str_contains($recorder, "outcome === 'uploaded' &&")
         && str_contains($recorder, 'window.localStorage')
         && str_contains($recorder, 'flushPending')
+        && str_contains($recorder, 'nextInspectIndex')
+        && str_contains($recorder, 'originalToErrorIndex')
+        && str_contains($recorder, 'applyLogFilter')
         && str_contains($recorder, "recordBatch('worker_pause'")
         && str_contains($recorder, "recordBatch('worker_start'"),
-    'The browser recorder does not retain failed file and batch issues for server persistence.'
+    'The browser recorder does not retain only actual errors or provide the default errors-only view.'
+);
+
+upload_issues_expect(
+    str_contains($workerCompatibility, "signature !== 1234 && signature !== 5678")
+        && str_contains($workerCompatibility, 'Expected 1234 or 5678')
+        && str_contains($workerCompatibility, "replace(/\\.uz$/i, '.uz3')")
+        && str_contains($workerCompatibility, "importScripts('upload-file-inspector-worker.js')"),
+    'The browser inspector does not accept both historic signatures for .uz files.'
 );
 
 upload_issues_expect(
     str_contains($uploader, 'data-issue-url="api/v1/upload-bucket-issue.php"')
         && str_contains($uploader, 'upload-bucket-v2-issue-recorder.js')
         && strpos($uploader, 'upload-bucket-v2-issue-recorder.js') < strpos($uploader, 'upload-bucket-v2-coordinator.js')
+        && str_contains($uploader, 'id="upload-bucket-errors-only" type="checkbox" checked')
+        && str_contains($uploader, 'id="bucket-error-log"')
+        && str_contains($uploader, 'upload-file-inspector-worker-compatible.js')
         && str_contains($uploader, "'Upload Issues' => 'upload-issues.php'")
-        && str_contains($uploader, 'Failed files and their reasons are also saved'),
-    'Upload Bucket v2 does not expose persistent issue recording and review.'
+        && str_contains($uploader, 'Only errors are written to'),
+    'Upload Bucket v2 does not expose persistent error recording, signature compatibility and errors-only review.'
 );
 
 upload_issues_expect(
@@ -80,4 +96,4 @@ upload_issues_expect(
     'The persistent issue review and resolution workflow is incomplete.'
 );
 
-fwrite(STDOUT, "Persistent Upload Bucket issue review contract tests passed.\n");
+fwrite(STDOUT, "Persistent Upload Bucket error review and errors-only display contract tests passed.\n");
