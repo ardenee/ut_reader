@@ -39,6 +39,7 @@ function catalog_admin_navigation_groups(string $root): array
             'HTTP Source Scan' => $root . 'http-source-scan.php',
             'Upload Files' => $root . 'profiled-upload.php',
             'Upload Bucket (New)' => $root . 'upload-bucket-v2.php',
+            'Upload Issues' => $root . 'upload-issues.php',
             'Upload Bucket (Legacy)' => $root . 'upload-bucket.php',
             'PAK Import' => $root . 'pak-import.php',
             'PAK Archives' => $root . 'paks.php',
