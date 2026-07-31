@@ -94,6 +94,11 @@ try {
             }
         }
 
+        // The landing page and navigation contain these settings. Remove every
+        // shared anonymous-page entry so the new notice/Feedback state appears
+        // on the next request instead of waiting for an older cache entry.
+        catalog_public_cache_invalidate($config);
+
         if ($action === 'test_mail') {
             catalog_smtp_send(
                 $db,
@@ -103,7 +108,7 @@ try {
             );
             $_SESSION['public_access_flash'] = 'Settings saved and the SMTP test message was accepted by the mail server.';
         } else {
-            $_SESSION['public_access_flash'] = 'Public access, feedback and SMTP settings saved.';
+            $_SESSION['public_access_flash'] = 'Public access, feedback and SMTP settings saved. Public pages were refreshed.';
         }
         header('Location: public-access-settings.php', true, 303);
         exit;

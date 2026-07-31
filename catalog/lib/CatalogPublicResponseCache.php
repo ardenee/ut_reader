@@ -25,7 +25,9 @@ function catalog_public_cache_route_ttl(array $config): int
 
     if ($script === 'index.php') {
         if ($page === '' || $page === 'home') {
-            return 120;
+            // The development notice and public limits are administrator-editable.
+            // Do not let a browser or shared page cache hide those updates.
+            return 0;
         }
         if ($page === 'search') {
             return 60;
@@ -96,6 +98,29 @@ function catalog_public_cache_directory(array $config): string
             . DIRECTORY_SEPARATOR . 'cache';
     }
     return rtrim($base, '/\\') . DIRECTORY_SEPARATOR . 'public-pages';
+}
+
+function catalog_public_cache_invalidate(array $config): int
+{
+    $directory = catalog_public_cache_directory($config);
+    if (!is_dir($directory)) {
+        return 0;
+    }
+
+    $removed = 0;
+    foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
+        if (!$entry instanceof SplFileInfo || !$entry->isFile()) {
+            continue;
+        }
+        $name = $entry->getFilename();
+        if (!str_ends_with($name, '.htmlcache')) {
+            continue;
+        }
+        if (@unlink($entry->getPathname())) {
+            $removed++;
+        }
+    }
+    return $removed;
 }
 
 function catalog_public_cache_prune_directory(string $directory): void
