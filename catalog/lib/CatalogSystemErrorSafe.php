@@ -72,6 +72,47 @@ function catalog_system_error_register(): void
     });
 }
 
+function catalog_system_error_connection(): ?PDO
+{
+    static $connection = null;
+    static $attempted = false;
+    if ($connection instanceof PDO) {
+        return $connection;
+    }
+    if ($attempted || !function_exists('catalog_config')) {
+        return null;
+    }
+    $attempted = true;
+    try {
+        $config = catalog_config();
+        $database = is_array($config['db'] ?? null) ? $config['db'] : [];
+        $host = trim((string)($database['host'] ?? ''));
+        $name = trim((string)($database['database'] ?? ''));
+        $username = (string)($database['username'] ?? '');
+        if ($host === '' || $name === '' || $username === '') {
+            return null;
+        }
+        $port = max(1, min(65535, (int)($database['port'] ?? 3306)));
+        $charset = preg_match('/^[A-Za-z0-9_]+$/', (string)($database['charset'] ?? 'utf8mb4')) === 1
+            ? (string)($database['charset'] ?? 'utf8mb4')
+            : 'utf8mb4';
+        $connection = new PDO(
+            'mysql:host=' . $host . ';port=' . $port . ';dbname=' . $name . ';charset=' . $charset,
+            $username,
+            (string)($database['password'] ?? ''),
+            [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_TIMEOUT => 2,
+            ]
+        );
+        return $connection;
+    } catch (Throwable) {
+        return null;
+    }
+}
+
 /** @param array<string,mixed> $data */
 function catalog_system_error_record(array $data): void
 {
@@ -83,12 +124,12 @@ function catalog_system_error_record(array $data): void
     $busy = true;
     try {
         $normalized = catalog_system_error_normalize($data);
-        if (!function_exists('catalog_config') || !function_exists('catalog_db')) {
-            catalog_system_error_fallback($normalized, 'database helpers unavailable');
+        $db = catalog_system_error_connection();
+        if (!$db instanceof PDO) {
+            catalog_system_error_fallback($normalized, 'independent error-log database connection unavailable');
             return;
         }
         try {
-            $db = catalog_db(catalog_config());
             if ($tableAvailable === null) {
                 $statement = $db->query(
                     'SELECT COUNT(*) FROM information_schema.TABLES '
