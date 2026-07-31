@@ -5,8 +5,20 @@ require_once __DIR__ . '/CatalogSupportCore.php';
 require_once __DIR__ . '/../bootstrap/autoload.php';
 require_once __DIR__ . '/CatalogResourceTracing.php';
 require_once __DIR__ . '/CatalogPublicResponseCache.php';
+require_once __DIR__ . '/CatalogPublicAccess.php';
 
 \UnrealDb\Catalog\Presentation\Http\LegacySupportHooks::register();
+
+/*
+ * Apply the anonymous crawler and rapid-link guard before public response-cache
+ * lookup. This prevents a cached page from becoming a bypass for automated
+ * bulk traversal. Logged-in administrators and non-GET requests are exempt.
+ */
+try {
+    catalog_public_access_guard_request();
+} catch (Throwable $error) {
+    error_log('[UnrealDB public access] guard failed open: ' . $error->getMessage());
+}
 
 /*
  * Upload Bucket advertises no UnrealDB total-file-size cap. Redirect archives
