@@ -6,6 +6,7 @@
         ? new URL('../api/v1/system-error.php', script.src).toString()
         : 'api/v1/system-error.php';
     const storageKey = 'unrealdb.systemErrors.pending';
+    const seenRenderedErrors = new Set();
     let flushing = false;
     let reporting = false;
 
@@ -94,6 +95,33 @@
         };
     }
 
+    function reportRenderedErrors(root) {
+        const scope = root && root.querySelectorAll ? root : document;
+        const selectors = '.msg.err,.ui-alert--danger,.alert-danger,[role="alert"].error,[role="alert"].danger';
+        const nodes = [];
+        if (root && root.nodeType === 1 && root.matches && root.matches(selectors)) nodes.push(root);
+        scope.querySelectorAll(selectors).forEach(function (node) { nodes.push(node); });
+        nodes.forEach(function (node) {
+            const text = clean(node.textContent || '', 8000);
+            if (!text) return;
+            const signature = location.pathname + '|' + text;
+            if (seenRenderedErrors.has(signature)) return;
+            seenRenderedErrors.add(signature);
+            enqueue(basePayload('rendered_application_error', text));
+        });
+    }
+
+    function reportNavigationStatus() {
+        if (!window.performance || typeof performance.getEntriesByType !== 'function') return;
+        const navigation = performance.getEntriesByType('navigation')[0];
+        const status = navigation ? Number(navigation.responseStatus || 0) : 0;
+        if (status < 400) return;
+        const payload = basePayload('document_http_error', 'Page navigation returned HTTP ' + status + '.');
+        payload.source_line = 0;
+        payload.http_status = status;
+        enqueue(payload);
+    }
+
     window.addEventListener('error', function (event) {
         if (reporting) return;
         const target = event.target;
@@ -121,6 +149,25 @@
         enqueue(payload);
     });
 
+    function startRenderedErrorObserver() {
+        reportRenderedErrors(document);
+        reportNavigationStatus();
+        if (!window.MutationObserver || !document.body) return;
+        const observer = new MutationObserver(function (mutations) {
+            mutations.forEach(function (mutation) {
+                mutation.addedNodes.forEach(function (node) {
+                    if (node && node.nodeType === 1) reportRenderedErrors(node);
+                });
+            });
+        });
+        observer.observe(document.body, {childList: true, subtree: true});
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', startRenderedErrorObserver, {once: true});
+    } else {
+        startRenderedErrorObserver();
+    }
     window.addEventListener('online', flush);
     window.setTimeout(flush, 0);
 }());
