@@ -134,8 +134,6 @@ try {
         generated_package_reply(['ok' => false, 'error' => 'Unsupported package generation action.'], 400);
     }
 
-    catalog_public_package_limit($db);
-
     $fileId = max(0, (int)($_POST['file_id'] ?? 0));
     $file = $fileId > 0
         ? catalog_one($db, 'SELECT id,game_id FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId])
@@ -173,6 +171,9 @@ try {
         'options' => ['name' => $name, 'version' => $version, 'author' => $author],
         'access_token_hash' => hash('sha256', $token),
     ];
+    // Count only a valid package build that is about to be queued. Invalid or
+    // unavailable requests do not consume the visitor's hourly allowance.
+    catalog_public_package_limit($db);
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     $jobId = $queue->enqueue($queueName, JobType::GENERATE_MOD_PACKAGE, $payload, 30, null, null, $userId, 2);
 
