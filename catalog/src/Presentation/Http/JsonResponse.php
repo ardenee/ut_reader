@@ -31,6 +31,11 @@ final class JsonResponse
      */
     public static function error(string $code, string $message, int $status, array $details = []): never
     {
+        if (function_exists('catalog_system_error_record_http')) {
+            \catalog_system_error_record_http($code, $message, $status, [
+                'detail_keys' => array_values(array_map('strval', array_keys($details))),
+            ]);
+        }
         self::send([
             'error' => [
                 'code' => $code,
