@@ -7,9 +7,8 @@ use PDO;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /**
- * Stops the one detached worker owned by the web launcher. Cancellation remains
- * cooperative for external/supervised workers, but an unresponsive detached PHP
- * process can be terminated and its database lease cleared immediately.
+ * Stops one worker slot or a complete detached worker pool. Each PHP process has
+ * an independent lock/state/log file, while queue-stop requests remain shared.
  */
 final class CatalogDetachedWorkerStop
 {
@@ -35,13 +34,11 @@ final class CatalogDetachedWorkerStop
         }
 
         $queueName = (string)$row['queue_name'];
-        $launcher = new CatalogDetachedWorker($this->config);
-        $worker = $launcher->status($queueName);
-        $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
         $jobWorkerId = trim((string)($row['worker_id'] ?? ''));
-        $stateWorkerId = trim((string)($state['worker_id'] ?? ''));
+        $launcher = new CatalogDetachedWorker($this->config);
+        $worker = $launcher->workerForId($queueName, $jobWorkerId);
 
-        if (empty($worker['active'])) {
+        if ($worker === []) {
             if (str_starts_with($jobWorkerId, 'detached:')) {
                 $this->forceCancelJob($jobId, $requestedBy, $reason);
                 return ['status' => 'cancelled', 'terminated' => false, 'worker_inactive' => true];
@@ -49,22 +46,33 @@ final class CatalogDetachedWorkerStop
             return ['status' => 'cancel_requested', 'terminated' => false, 'worker_inactive' => true];
         }
 
-        if ($jobWorkerId === '' || $stateWorkerId === '' || !hash_equals($stateWorkerId, $jobWorkerId)) {
-            return ['status' => 'cancel_requested', 'terminated' => false, 'worker_inactive' => false];
+        $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+        $slot = max(1, (int)($worker['slot'] ?? $state['worker_slot'] ?? 1));
+        $pid = max(0, (int)($state['pid'] ?? 0));
+        if (empty($worker['active'])) {
+            $this->forceCancelJob($jobId, $requestedBy, $reason);
+            return [
+                'status' => 'cancelled',
+                'terminated' => false,
+                'worker_inactive' => true,
+                'worker_slot' => $slot,
+                'pid' => $pid,
+            ];
         }
 
-        $launcher->requestStop($queueName);
-        $pid = max(0, (int)($state['pid'] ?? 0));
+        $launcher->requestSlotStop($queueName, $slot);
         $terminated = $pid > 0 && $this->terminateExpectedWorker($pid);
-        $inactive = $terminated || $this->waitUntilInactive($launcher, $queueName, 2500);
+        $inactive = $terminated || $this->waitUntilSlotInactive($launcher, $queueName, $slot, 2500);
 
         if ($inactive) {
             $this->forceCancelJob($jobId, $requestedBy, $reason);
-            $this->markStopped($launcher, $queueName, $state, $pid, 'job_stop');
+            $this->markStopped($launcher, $queueName, $state, $pid, 'job_stop', $slot);
+            $launcher->clearSlotStopRequest($queueName, $slot);
             return [
                 'status' => 'cancelled',
                 'terminated' => $terminated,
                 'worker_inactive' => true,
+                'worker_slot' => $slot,
                 'pid' => $pid,
             ];
         }
@@ -73,6 +81,7 @@ final class CatalogDetachedWorkerStop
             'status' => 'cancel_requested',
             'terminated' => false,
             'worker_inactive' => false,
+            'worker_slot' => $slot,
             'pid' => $pid,
         ];
     }
@@ -81,21 +90,41 @@ final class CatalogDetachedWorkerStop
     public function stopQueue(string $queueName, ?int $requestedBy, string $reason): array
     {
         $launcher = new CatalogDetachedWorker($this->config);
-        $worker = $launcher->requestStop($queueName);
-        $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
-        $stateWorkerId = trim((string)($state['worker_id'] ?? ''));
-        $pid = max(0, (int)($state['pid'] ?? 0));
-        $wasActive = !empty($worker['active']);
-        $terminated = $wasActive && $pid > 0 && $this->terminateExpectedWorker($pid);
-        $inactive = !$wasActive || $terminated || $this->waitUntilInactive($launcher, $queueName, 2500);
+        $before = $launcher->requestStop($queueName);
+        $ownedWorkerIds = [];
+        $pids = [];
+        $terminatedPids = [];
 
+        foreach ((array)($before['workers'] ?? []) as $worker) {
+            if (!is_array($worker)) {
+                continue;
+            }
+            $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+            $workerId = trim((string)($state['worker_id'] ?? ''));
+            if ($workerId !== '') {
+                $ownedWorkerIds[$workerId] = true;
+            }
+            if (empty($worker['active'])) {
+                continue;
+            }
+            $pid = max(0, (int)($state['pid'] ?? 0));
+            if ($pid > 0) {
+                $pids[] = $pid;
+                if ($this->terminateExpectedWorker($pid)) {
+                    $terminatedPids[] = $pid;
+                }
+            }
+        }
+
+        $inactive = empty($before['active']) || $this->waitUntilInactive($launcher, $queueName, 4000);
         $queue = new PdoJobQueue($this->db);
         $cancelled = 0;
         $cooperative = 0;
+
         foreach ($this->runningJobs($queueName) as $row) {
             $rowWorkerId = trim((string)($row['worker_id'] ?? ''));
-            $ownedByDetached = $stateWorkerId !== '' && $rowWorkerId !== '' && hash_equals($stateWorkerId, $rowWorkerId);
-            if ($inactive && $ownedByDetached) {
+            $ownedByPool = $rowWorkerId !== '' && isset($ownedWorkerIds[$rowWorkerId]);
+            if ($inactive && $ownedByPool) {
                 $cancelled += $this->forceCancelJob((int)$row['id'], $requestedBy, $reason);
                 continue;
             }
@@ -105,14 +134,35 @@ final class CatalogDetachedWorkerStop
             }
         }
 
-        if ($inactive && ($wasActive || $stateWorkerId !== '')) {
-            $this->markStopped($launcher, $queueName, $state, $pid, 'queue_stop');
+        if ($inactive) {
+            foreach ((array)($before['workers'] ?? []) as $worker) {
+                if (!is_array($worker)) {
+                    continue;
+                }
+                $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+                if ($state === []) {
+                    continue;
+                }
+                $slot = max(1, (int)($worker['slot'] ?? $state['worker_slot'] ?? 1));
+                $this->markStopped(
+                    $launcher,
+                    $queueName,
+                    $state,
+                    max(0, (int)($state['pid'] ?? 0)),
+                    'queue_stop',
+                    $slot
+                );
+            }
+            $launcher->clearStopRequest($queueName);
         }
 
         return [
             'worker' => $launcher->status($queueName),
-            'terminated' => $terminated,
-            'pid' => $pid,
+            'terminated' => $terminatedPids !== [],
+            'terminated_workers' => count($terminatedPids),
+            'worker_pids' => $pids,
+            'terminated_pids' => $terminatedPids,
+            'pid' => (int)($pids[0] ?? 0),
             'cancelled_jobs' => $cancelled,
             'cooperative_jobs' => $cooperative,
         ];
@@ -133,45 +183,80 @@ final class CatalogDetachedWorkerStop
             ];
         }
 
-        $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
-        $stateWorkerId = trim((string)($state['worker_id'] ?? ''));
-        $pid = max(0, (int)($state['pid'] ?? 0));
-        if ($stateWorkerId === '' || !str_starts_with($stateWorkerId, 'detached:')) {
-            return [
-                'restarted' => false,
-                'reason' => 'worker_identity_unavailable',
-                'requeued_jobs' => 0,
-                'cancelled_jobs' => 0,
-                'worker' => $worker,
-            ];
+        $desiredWorkers = max(1, (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount()));
+        $launcher->requestStop($queueName);
+        $workerIds = [];
+        $pids = [];
+        $terminatedPids = [];
+        foreach ((array)($worker['workers'] ?? []) as $slotWorker) {
+            if (!is_array($slotWorker)) {
+                continue;
+            }
+            $state = is_array($slotWorker['state'] ?? null) ? $slotWorker['state'] : [];
+            $workerId = trim((string)($state['worker_id'] ?? ''));
+            if ($workerId !== '') {
+                $workerIds[$workerId] = true;
+            }
+            if (empty($slotWorker['active'])) {
+                continue;
+            }
+            $pid = max(0, (int)($state['pid'] ?? 0));
+            if ($pid > 0) {
+                $pids[] = $pid;
+                if ($this->terminateExpectedWorker($pid)) {
+                    $terminatedPids[] = $pid;
+                }
+            }
         }
 
-        $launcher->requestStop($queueName);
-        $terminated = $pid > 0 && $this->terminateExpectedWorker($pid);
-        $inactive = $terminated || $this->waitUntilInactive($launcher, $queueName, 3500);
+        $inactive = $this->waitUntilInactive($launcher, $queueName, 4500);
         if (!$inactive) {
             return [
                 'restarted' => false,
                 'reason' => 'worker_would_not_stop',
                 'terminated' => false,
-                'pid' => $pid,
+                'worker_pids' => $pids,
                 'requeued_jobs' => 0,
                 'cancelled_jobs' => 0,
                 'worker' => $launcher->status($queueName, true),
             ];
         }
 
-        $cancelled = $this->cancelRequestedWorkerJobs($queueName, $stateWorkerId);
-        $requeued = $this->requeueWorkerJobs($queueName, $stateWorkerId);
-        $this->markStopped($launcher, $queueName, $state, $pid, 'stale_code_restart');
+        $cancelled = 0;
+        $requeued = 0;
+        foreach (array_keys($workerIds) as $workerId) {
+            $cancelled += $this->cancelRequestedWorkerJobs($queueName, $workerId);
+            $requeued += $this->requeueWorkerJobs($queueName, $workerId);
+        }
+        foreach ((array)($worker['workers'] ?? []) as $slotWorker) {
+            if (!is_array($slotWorker)) {
+                continue;
+            }
+            $state = is_array($slotWorker['state'] ?? null) ? $slotWorker['state'] : [];
+            if ($state === []) {
+                continue;
+            }
+            $slot = max(1, (int)($slotWorker['slot'] ?? $state['worker_slot'] ?? 1));
+            $this->markStopped(
+                $launcher,
+                $queueName,
+                $state,
+                max(0, (int)($state['pid'] ?? 0)),
+                'stale_code_restart',
+                $slot
+            );
+        }
+        $launcher->clearStopRequest($queueName);
 
         return [
             'restarted' => true,
             'reason' => 'stale_code',
-            'terminated' => $terminated,
-            'pid' => $pid,
+            'terminated' => $terminatedPids !== [],
+            'terminated_workers' => count($terminatedPids),
+            'worker_pids' => $pids,
             'requeued_jobs' => $requeued,
             'cancelled_jobs' => $cancelled,
+            'desired_workers' => $desiredWorkers,
             'previous_code_version' => (string)($worker['code_version_running'] ?? ''),
             'current_code_version' => (string)($worker['code_version_current'] ?? ''),
             'worker' => $launcher->status($queueName, true),
@@ -243,7 +328,7 @@ final class CatalogDetachedWorkerStop
             'UPDATE ue_background_jobs SET status="queued", attempts=GREATEST(attempts-1,0), available_at=?, '
             . 'worker_id=NULL, lease_token=NULL, leased_at=NULL, lease_expires_at=NULL, last_heartbeat_at=NULL, '
             . 'progress_json=NULL, progress_updated_at=NULL, '
-            . 'last_error="Detached worker was restarted after a code update; import requeued without consuming an attempt.", '
+            . 'last_error="Detached worker pool was restarted after a code update; job requeued without consuming an attempt.", '
             . 'updated_at=? WHERE queue_name=? AND status="running" AND worker_id=? AND cancel_requested_at IS NULL'
         );
         $statement->execute([$timestamp, $timestamp, $queueName, $workerId]);
@@ -262,23 +347,40 @@ final class CatalogDetachedWorkerStop
         return false;
     }
 
+    private function waitUntilSlotInactive(
+        CatalogDetachedWorker $launcher,
+        string $queueName,
+        int $slot,
+        int $milliseconds
+    ): bool {
+        $deadline = microtime(true) + max(0, $milliseconds) / 1000;
+        do {
+            usleep(100000);
+            if (empty($launcher->statusSlot($queueName, $slot)['active'])) {
+                return true;
+            }
+        } while (microtime(true) < $deadline);
+        return false;
+    }
+
     /** @param array<string,mixed> $previousState */
     private function markStopped(
         CatalogDetachedWorker $launcher,
         string $queueName,
         array $previousState,
         int $pid,
-        string $reason
+        string $reason,
+        int $slot
     ): void {
         $launcher->writeState($queueName, array_merge($previousState, [
             'status' => 'stopped',
             'queue' => $queueName,
+            'worker_slot' => $slot,
             'pid' => $pid,
             'ended_at' => gmdate('c'),
             'exit_reason' => $reason,
             'forced' => true,
-        ]));
-        $launcher->clearStopRequest($queueName);
+        ]), $slot);
     }
 
     private function terminateExpectedWorker(int $pid): bool

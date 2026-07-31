@@ -21,7 +21,7 @@ try {
     if ($action !== 'stop') {
         JsonResponse::error('invalid_action', 'Supported worker action is stop.', 400);
     }
-    if ($queueName === '' || strlen($queueName) > 80) {
+    if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
         JsonResponse::error('invalid_queue', 'A valid queue name is required.', 400);
     }
 
@@ -31,19 +31,19 @@ try {
     $result = $stopper->stopQueue(
         $queueName,
         $userId,
-        $cancelRunning ? 'Stopped from Background Jobs.' : 'Detached worker stop requested.'
+        $cancelRunning ? 'Stopped from Background Jobs.' : 'Detached worker-pool stop requested.'
     );
 
     $worker = is_array($result['worker'] ?? null) ? $result['worker'] : [];
     if (!empty($worker['active'])) {
         JsonResponse::error(
             'worker_stop_incomplete',
-            'The stop request was written, but the detached worker is still running. The current job was not reported as stopped.',
+            'The stop request was written, but one or more detached PHP workers are still running.',
             409,
             [
                 'queue' => $queueName,
-                'worker_pid' => (int)($result['pid'] ?? 0),
-                'worker_terminated' => !empty($result['terminated']),
+                'worker_pids' => (array)($result['worker_pids'] ?? []),
+                'terminated_workers' => (int)($result['terminated_workers'] ?? 0),
                 'worker' => $worker,
             ]
         );
@@ -54,8 +54,9 @@ try {
             'queue' => $queueName,
             'stop_requested' => true,
             'stop_completed' => true,
-            'worker_terminated' => !empty($result['terminated']),
-            'worker_pid' => (int)($result['pid'] ?? 0),
+            'terminated_workers' => (int)($result['terminated_workers'] ?? 0),
+            'worker_pids' => array_values((array)($result['worker_pids'] ?? [])),
+            'terminated_pids' => array_values((array)($result['terminated_pids'] ?? [])),
             'running_jobs_notified' => (int)($result['cancelled_jobs'] ?? 0) + (int)($result['cooperative_jobs'] ?? 0),
             'running_jobs_cancelled' => (int)($result['cancelled_jobs'] ?? 0),
             'worker' => $worker,

@@ -12,19 +12,37 @@ use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobWorkerFactory;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
 
-$options = getopt('', ['queue::', 'max-jobs::', 'sleep-ms::', 'worker-id::', 'lease-seconds::']);
+$options = getopt('', [
+    'queue::',
+    'max-jobs::',
+    'sleep-ms::',
+    'worker-id::',
+    'lease-seconds::',
+    'worker-slot::',
+    'worker-count::',
+]);
 $application = catalog_bootstrap();
 $queueName = trim((string)($options['queue'] ?? ($application->config['queue']['name'] ?? 'catalog')));
-$maxJobs = max(1, min((int)($options['max-jobs'] ?? 10000), 10000));
+$requestedMaxJobs = (int)($options['max-jobs'] ?? 1000000);
+$maxJobs = $requestedMaxJobs >= 10000 ? 1000000 : max(1, min($requestedMaxJobs, 1000000));
 $sleepMs = max(50, min((int)($options['sleep-ms'] ?? 250), 60000));
 $leaseSeconds = max(15, min((int)($options['lease-seconds'] ?? ($application->config['queue']['lease_seconds'] ?? 120)), 3600));
-$workerId = trim((string)($options['worker-id'] ?? ('detached:' . (gethostname() ?: 'host') . ':' . getmypid())));
+$workerSlot = max(1, min((int)($options['worker-slot'] ?? 1), CatalogDetachedWorker::MAX_WORKERS));
+$workerCount = max(1, min((int)($options['worker-count'] ?? CatalogDetachedWorker::DEFAULT_WORKERS), CatalogDetachedWorker::MAX_WORKERS));
+$workerId = trim((string)($options['worker-id'] ?? (
+    'detached:' . (gethostname() ?: 'host') . ':' . preg_replace('/[^A-Za-z0-9._-]+/', '_', $queueName)
+    . ':slot-' . $workerSlot . ':' . getmypid()
+)));
 
 $controller = new CatalogDetachedWorker($application->config);
-$codeVersion = $controller->codeVersion();
-$lock = $controller->acquireWorkerLock($queueName);
+$codeVersion = $controller->codeVersion(true);
+$lock = $controller->acquireWorkerLock($queueName, $workerSlot);
 if (!is_resource($lock)) {
-    fwrite(STDOUT, json_encode(['status' => 'already_running', 'queue' => $queueName], JSON_UNESCAPED_SLASHES) . PHP_EOL);
+    fwrite(STDOUT, json_encode([
+        'status' => 'already_running',
+        'queue' => $queueName,
+        'worker_slot' => $workerSlot,
+    ], JSON_UNESCAPED_SLASHES) . PHP_EOL);
     exit(0);
 }
 
@@ -34,7 +52,7 @@ $lastResult = null;
 $idlePasses = 0;
 $startedAt = gmdate('c');
 $normalExit = false;
-// Keep enough memory available for the shutdown recorder after memory exhaustion.
+$nextCodeCheckAt = microtime(true) + 5.0;
 $shutdownReserve = str_repeat('R', 1024 * 1024);
 
 register_shutdown_function(static function () use (
@@ -44,6 +62,8 @@ register_shutdown_function(static function () use (
     $controller,
     $queueName,
     $workerId,
+    $workerSlot,
+    $workerCount,
     $codeVersion,
     $startedAt,
     &$processed
@@ -82,6 +102,8 @@ register_shutdown_function(static function () use (
             'status' => 'failed',
             'queue' => $queueName,
             'worker_id' => $workerId,
+            'worker_slot' => $workerSlot,
+            'worker_count' => $workerCount,
             'pid' => getmypid(),
             'processed' => $processed,
             'code_version' => $codeVersion,
@@ -92,11 +114,11 @@ register_shutdown_function(static function () use (
             'error_file' => $file,
             'error_line' => $line,
             'crash_recovery' => $recovery,
-        ]);
+        ], $workerSlot);
     } catch (Throwable $stateError) {
         error_log('[UnrealDB worker shutdown state] ' . get_class($stateError) . ': ' . $stateError->getMessage());
     }
-    error_log('[UnrealDB worker fatal] ' . $error);
+    error_log('[UnrealDB worker fatal][slot ' . $workerSlot . '] ' . $error);
 });
 
 try {
@@ -104,12 +126,14 @@ try {
         'status' => 'running',
         'queue' => $queueName,
         'worker_id' => $workerId,
+        'worker_slot' => $workerSlot,
+        'worker_count' => $workerCount,
         'pid' => getmypid(),
         'max_jobs' => $maxJobs,
         'processed' => 0,
         'code_version' => $codeVersion,
         'started_at' => $startedAt,
-    ]);
+    ], $workerSlot);
 
     $worker = CatalogJobWorkerFactory::create(
         $application->db,
@@ -120,13 +144,16 @@ try {
     );
 
     for ($index = 0; $index < $maxJobs; $index++) {
-        if ($controller->stopRequested($queueName)) {
+        if ($controller->stopRequested($queueName, $workerSlot)) {
             $exitReason = 'stop_requested';
             break;
         }
-        if (!hash_equals($codeVersion, $controller->codeVersion())) {
-            $exitReason = 'code_changed';
-            break;
+        if (microtime(true) >= $nextCodeCheckAt) {
+            $nextCodeCheckAt = microtime(true) + 5.0;
+            if (!hash_equals($codeVersion, $controller->codeVersion(true))) {
+                $exitReason = 'code_changed';
+                break;
+            }
         }
 
         $lastResult = $worker->runOne();
@@ -147,27 +174,30 @@ try {
             'status' => 'running',
             'queue' => $queueName,
             'worker_id' => $workerId,
+            'worker_slot' => $workerSlot,
+            'worker_count' => $workerCount,
             'pid' => getmypid(),
             'max_jobs' => $maxJobs,
             'processed' => $processed,
             'code_version' => $codeVersion,
             'started_at' => $startedAt,
             'last_result' => $lastResult,
-        ]);
+        ], $workerSlot);
 
         if ($processed >= $maxJobs) {
             $exitReason = 'max_jobs_reached';
             break;
         }
-        if ($sleepMs > 0) {
-            usleep($sleepMs * 1000);
-        }
+        // Do not sleep after a completed job. The previous 250 ms delay was
+        // multiplied by every file and made large upload queues unnecessarily slow.
     }
 
     $controller->writeState($queueName, [
         'status' => 'stopped',
         'queue' => $queueName,
         'worker_id' => $workerId,
+        'worker_slot' => $workerSlot,
+        'worker_count' => $workerCount,
         'pid' => getmypid(),
         'max_jobs' => $maxJobs,
         'processed' => $processed,
@@ -176,11 +206,12 @@ try {
         'ended_at' => gmdate('c'),
         'exit_reason' => $exitReason,
         'last_result' => $lastResult,
-    ]);
-    $controller->clearStopRequest($queueName);
+    ], $workerSlot);
+    $controller->clearSlotStopRequest($queueName, $workerSlot);
     fwrite(STDOUT, json_encode([
         'status' => 'stopped',
         'queue' => $queueName,
+        'worker_slot' => $workerSlot,
         'processed' => $processed,
         'exit_reason' => $exitReason,
         'code_version' => $codeVersion,
@@ -206,6 +237,8 @@ try {
         'status' => 'failed',
         'queue' => $queueName,
         'worker_id' => $workerId,
+        'worker_slot' => $workerSlot,
+        'worker_count' => $workerCount,
         'pid' => getmypid(),
         'processed' => $processed,
         'code_version' => $codeVersion,
@@ -216,10 +249,11 @@ try {
         'error_file' => $file,
         'error_line' => $error->getLine(),
         'crash_recovery' => $recovery,
-    ]);
+    ], $workerSlot);
     fwrite(STDERR, json_encode([
         'status' => 'failed',
         'queue' => $queueName,
+        'worker_slot' => $workerSlot,
         'error' => $errorText,
         'error_file' => $file,
         'error_line' => $error->getLine(),

@@ -50,9 +50,7 @@ try {
     $autoStart = null;
     $autoStartError = '';
 
-    // The detached lock is the authoritative process state. When it is absent,
-    // rows owned by detached:* workers cannot still be executing. Recover them
-    // immediately so the page never leaves a queue blocked behind an orphan.
+    // No slot lock means no detached process can still own a detached:* lease.
     if (empty($worker['active']) && $counts['running'] > 0) {
         $autoRecovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
             ->recoverInactiveQueue($queueName);
@@ -61,9 +59,13 @@ try {
 
         if ($counts['queued'] > 0) {
             try {
-                $autoStart = $launcher->start($queueName, 10000);
+                $autoStart = $launcher->start(
+                    $queueName,
+                    1000000,
+                    (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount())
+                );
             } catch (Throwable $error) {
-                $autoStartError = trim($error->getMessage()) ?: 'Recovered jobs are queued, but the worker could not restart.';
+                $autoStartError = trim($error->getMessage()) ?: 'Recovered jobs are queued, but the worker pool could not restart.';
                 error_log('[UnrealDB orphan auto-start] ' . get_class($error) . ': ' . $autoStartError);
             }
         }
@@ -71,19 +73,19 @@ try {
         $counts = job_worker_status_counts($application->db, $queueName);
     }
 
-    // A fatal-shutdown recorder may already have moved the claimed row back to
-    // queued before the page polls. Resume only when the worker state explicitly
-    // proves that the queue stopped because of a crash; a deliberate pause remains
-    // stopped until the administrator resumes it.
     $workerState = is_array($worker['state'] ?? null) ? $worker['state'] : [];
     $exitReason = strtolower(trim((string)($workerState['exit_reason'] ?? '')));
     $crashStopped = in_array($exitReason, ['fatal_shutdown', 'uncaught_exception', 'orphan_recovery'], true)
         || strtolower(trim((string)($workerState['status'] ?? ''))) === 'failed';
     if (empty($worker['active']) && $counts['running'] === 0 && $counts['queued'] > 0 && $crashStopped) {
         try {
-            $autoStart = $launcher->start($queueName, 10000);
+            $autoStart = $launcher->start(
+                $queueName,
+                1000000,
+                (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount())
+            );
         } catch (Throwable $error) {
-            $autoStartError = trim($error->getMessage()) ?: 'Crash-recovered jobs are queued, but the worker could not restart.';
+            $autoStartError = trim($error->getMessage()) ?: 'Crash-recovered jobs are queued, but the worker pool could not restart.';
             error_log('[UnrealDB crash queue auto-start] ' . get_class($error) . ': ' . $autoStartError);
         }
         $worker = $launcher->status($queueName, true);
@@ -91,18 +93,36 @@ try {
     }
 
     $active = !empty($worker['active']);
+    $activeCount = max(0, (int)($worker['active_count'] ?? 0));
+    $desiredCount = max(1, (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount()));
+
+    // Keep the selected pool size healthy. A stopped/crashed/killed slot is
+    // replaced while queued work remains, without disturbing active workers.
+    if ($counts['queued'] > 0 && !$worker['stale_code'] && $activeCount < $desiredCount) {
+        try {
+            $autoStart = $launcher->start($queueName, 1000000, $desiredCount);
+        } catch (Throwable $error) {
+            $autoStartError = trim($error->getMessage()) ?: 'A missing worker slot could not be restarted.';
+            error_log('[UnrealDB worker-pool auto-heal] ' . get_class($error) . ': ' . $autoStartError);
+        }
+        $worker = $launcher->status($queueName, true);
+        $counts = job_worker_status_counts($application->db, $queueName);
+        $active = !empty($worker['active']);
+        $activeCount = max(0, (int)($worker['active_count'] ?? 0));
+        $desiredCount = max(1, (int)($worker['desired_count'] ?? $desiredCount));
+    }
     if ($active) {
         $authoritative = 'running';
-        $message = 'Worker process is running.';
+        $message = $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.';
     } elseif ($counts['running'] > 0) {
         $authoritative = 'orphaned';
         $message = $counts['running'] . ' database job(s) still say running, but no detached worker process owns this queue.';
     } elseif ($counts['queued'] > 0) {
         $authoritative = 'stopped_with_queue';
-        $message = 'Worker is stopped with ' . $counts['queued'] . ' queued job(s).';
+        $message = 'Worker pool is stopped with ' . $counts['queued'] . ' queued job(s).';
     } else {
         $authoritative = 'stopped';
-        $message = 'Worker is stopped and the queue has no active work.';
+        $message = 'Worker pool is stopped and the queue has no active work.';
     }
 
     $worker['authoritative_status'] = $authoritative;
