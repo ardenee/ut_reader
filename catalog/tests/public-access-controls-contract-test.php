@@ -13,6 +13,8 @@ $files = [
     'access' => $root . '/lib/CatalogPublicAccess.php',
     'smtp' => $root . '/lib/CatalogSmtpMailer.php',
     'support' => $root . '/lib/CatalogSupport.php',
+    'support_core' => $root . '/lib/CatalogSupportCore.php',
+    'public_cache' => $root . '/lib/CatalogPublicResponseCache.php',
     'landing' => $root . '/index.php',
     'feedback' => $root . '/feedback.php',
     'admin' => $root . '/public-access-settings.php',
@@ -41,9 +43,12 @@ public_access_expect(
 public_access_expect(
     str_contains($sources['feedback'], 'catalog_smtp_send(')
         && str_contains($sources['feedback'], 'catalog_public_feedback_limit($db)')
+        && str_contains($sources['feedback'], 'name="return_to"')
+        && str_contains($sources['feedback'], "header('Location: ' . \$returnTo, true, 303)")
+        && str_contains($sources['feedback'], "\$_SERVER['HTTP_REFERER']")
         && !str_contains($sources['feedback'], 'smtp_host')
         && !str_contains($sources['feedback'], 'smtp_password'),
-    'The feedback form exposes SMTP settings or does not use the configured mail/rate controls.'
+    'The feedback form exposes SMTP settings, omits rate controls, or does not return to the previous safe page.'
 );
 
 foreach (['smtp_host', 'smtp_port', 'smtp_encryption', 'smtp_username', 'smtp_password', 'smtp_from_email'] as $field) {
@@ -53,8 +58,9 @@ public_access_expect(
     str_contains($sources['admin'], 'Save and send SMTP test')
         && str_contains($sources['admin'], 'Enable SMTP delivery before enabling the public feedback form.')
         && str_contains($sources['admin'], 'public_download_max_files')
-        && str_contains($sources['admin'], 'public_burst_block_seconds'),
-    'The admin page does not control/test mail and public access restrictions.'
+        && str_contains($sources['admin'], 'public_burst_block_seconds')
+        && str_contains($sources['admin'], 'catalog_public_cache_invalidate($config)'),
+    'The admin page does not control/test mail, public restrictions, or refresh public pages after saving.'
 );
 
 $guardPosition = strpos($sources['support'], 'catalog_public_access_guard_request();');
@@ -62,6 +68,23 @@ $cachePosition = strpos($sources['support'], 'catalog_public_cache_bootstrap');
 public_access_expect(
     $guardPosition !== false && $cachePosition !== false && $guardPosition < $cachePosition,
     'The crawler/burst guard does not run before public response-cache lookup.'
+);
+
+public_access_expect(
+    str_contains($sources['support_core'], "catalog_nav_link('Search'")
+        && str_contains($sources['support_core'], "'Feedback',")
+        && str_contains($sources['support_core'], 'catalog_public_feedback_enabled()')
+        && str_contains($sources['support_core'], 'catalog_public_current_return_path()')
+        && str_contains($sources['support_core'], 'catalog_public_safe_return_path')
+        && str_contains($sources['support_core'], "\$_SESSION['catalog_global_flash']"),
+    'The public header does not place an enabled Feedback link beside Search or preserve a safe return target.'
+);
+
+public_access_expect(
+    str_contains($sources['public_cache'], 'function catalog_public_cache_invalidate')
+        && str_contains($sources['public_cache'], "if (\$page === '' || \$page === 'home')")
+        && str_contains($sources['public_cache'], 'return 0;'),
+    'The landing page can remain stale after the development notice or feedback settings change.'
 );
 
 public_access_expect(
