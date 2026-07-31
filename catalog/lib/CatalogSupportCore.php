@@ -235,15 +235,25 @@ function catalog_public_feedback_enabled(): bool
 function catalog_public_safe_return_path(mixed $candidate): string
 {
     $value = trim(html_entity_decode((string)$candidate, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
-    if ($value === '' || strlen($value) > 4096 || preg_match('/[\x00-\x1F\x7F\\]/', $value) === 1) {
+    if (
+        $value === ''
+        || strlen($value) > 4096
+        || str_contains($value, '\\')
+        || preg_match('/[\x00-\x1F\x7F]/', $value) === 1
+    ) {
         return 'index.php';
     }
 
     $parts = parse_url($value);
-    if (!is_array($parts)) {
+    if (!is_array($parts) || isset($parts['user']) || isset($parts['pass'])) {
         return 'index.php';
     }
-    if (isset($parts['user']) || isset($parts['pass'])) {
+
+    $scheme = strtolower(trim((string)($parts['scheme'] ?? '')));
+    if ($scheme !== '' && !in_array($scheme, ['http', 'https'], true)) {
+        return 'index.php';
+    }
+    if ($scheme !== '' && !isset($parts['host'])) {
         return 'index.php';
     }
     if (isset($parts['host'])) {
@@ -255,7 +265,9 @@ function catalog_public_safe_return_path(mixed $candidate): string
     }
 
     $path = rawurldecode((string)($parts['path'] ?? ''));
-    $path = str_replace('\\', '/', $path);
+    if (str_contains($path, '\\')) {
+        return 'index.php';
+    }
     if (str_starts_with($path, '/')) {
         $marker = '/catalog/';
         $position = strpos(strtolower($path), $marker);
@@ -274,12 +286,15 @@ function catalog_public_safe_return_path(mixed $candidate): string
             return 'index.php';
         }
     }
-    if (strtolower(basename($path)) === 'feedback.php') {
+    if (
+        preg_match('/^[A-Za-z0-9._\/-]+\.php$/', $path) !== 1
+        || strtolower(basename($path)) === 'feedback.php'
+    ) {
         return 'index.php';
     }
 
     $query = trim((string)($parts['query'] ?? ''));
-    if (strlen($query) > 2048) {
+    if (strlen($query) > 2048 || preg_match('/[\x00-\x1F\x7F]/', $query) === 1) {
         $query = '';
     }
     return $path . ($query !== '' ? '?' . $query : '');
