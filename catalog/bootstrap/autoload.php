@@ -31,5 +31,5 @@ declare(strict_types=1);
     });
 })();
 
-require_once dirname(__DIR__) . '/lib/CatalogSystemError.php';
+require_once dirname(__DIR__) . '/lib/CatalogSystemErrorSafe.php';
 catalog_system_error_register();
