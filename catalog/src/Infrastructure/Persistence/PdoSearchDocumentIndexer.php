@@ -6,9 +6,11 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use Throwable;
 
-/** Rebuilds the compact materialized search rows for one authoritative file. */
+/** Rebuilds materialized search rows when the legacy projection is installed. */
 final class PdoSearchDocumentIndexer
 {
+    private ?bool $available = null;
+
     public function __construct(private readonly PDO $db)
     {
     }
@@ -18,6 +20,10 @@ final class PdoSearchDocumentIndexer
     {
         if ($fileId < 1) {
             throw new \InvalidArgumentException('Search indexing requires a positive file ID.');
+        }
+
+        if (!$this->available()) {
+            return $this->emptyResult($fileId);
         }
 
         $ownsTransaction = !$this->db->inTransaction();
@@ -34,15 +40,7 @@ final class PdoSearchDocumentIndexer
                 if ($ownsTransaction) {
                     $this->db->commit();
                 }
-                return [
-                    'file_id' => $fileId,
-                    'indexed' => false,
-                    'file' => 0,
-                    'aliases' => 0,
-                    'imports' => 0,
-                    'exports' => 0,
-                    'total' => 0,
-                ];
+                return $this->emptyResult($fileId);
             }
 
             $insertFile = $this->db->prepare(
@@ -101,6 +99,34 @@ final class PdoSearchDocumentIndexer
             }
             throw $error;
         }
+    }
+
+    private function available(): bool
+    {
+        if ($this->available !== null) {
+            return $this->available;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT COUNT(*) FROM information_schema.TABLES '
+            . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_search_documents"'
+        );
+        $statement->execute();
+        return $this->available = (int)$statement->fetchColumn() > 0;
+    }
+
+    /** @return array{file_id:int,indexed:bool,file:int,aliases:int,imports:int,exports:int,total:int} */
+    private function emptyResult(int $fileId): array
+    {
+        return [
+            'file_id' => $fileId,
+            'indexed' => false,
+            'file' => 0,
+            'aliases' => 0,
+            'imports' => 0,
+            'exports' => 0,
+            'total' => 0,
+        ];
     }
 
     /** @return array<string,mixed>|null */
