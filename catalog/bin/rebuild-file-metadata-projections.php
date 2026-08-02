@@ -2,7 +2,9 @@
 <?php
 declare(strict_types=1);
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedFileMetadataConverter;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\CompressedMetadataLegacySnapshot;
+use UnrealDb\Catalog\Infrastructure\Metadata\CompressedMetadataLookupWriter;
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This command may only run from the PHP CLI.\n");
@@ -21,10 +23,15 @@ function metadata_projection_rebuild_arguments(array $arguments): array
         'continue_on_error' => false,
         'dry_run' => false,
     ];
+
     foreach ($arguments as $argument) {
         $argument = trim((string)$argument);
         if (in_array($argument, ['--help', '-h', 'help'], true)) {
-            fwrite(STDOUT, "Usage: php catalog/bin/rebuild-file-metadata-projections.php [--limit=500] [--start-after=0] [--continue-on-error] [--dry-run]\n");
+            fwrite(
+                STDOUT,
+                "Usage: php catalog/bin/rebuild-file-metadata-projections.php "
+                . "[--limit=500] [--start-after=0] [--continue-on-error] [--dry-run]\n"
+            );
             exit(0);
         }
         if ($argument === '--continue-on-error') {
@@ -44,6 +51,7 @@ function metadata_projection_rebuild_arguments(array $arguments): array
         }
         throw new InvalidArgumentException('Unknown argument: ' . $argument);
     }
+
     $result['limit'] = max(1, min(10000, (int)$result['limit']));
     $result['start_after'] = max(0, (int)$result['start_after']);
     return $result;
@@ -56,15 +64,21 @@ try {
     if ($storagePath === '') {
         throw new RuntimeException('catalog storage_path is not configured.');
     }
+
     $db = catalog_db($config);
     $statement = $db->prepare(
-        'SELECT f.id,f.game_id,f.original_name,f.name_count,f.import_count,f.export_count '
+        'SELECT f.id,f.game_id,f.original_name,f.name_count,f.import_count,f.export_count,'
+        . 'm.format_version metadata_version,m.codec metadata_codec,'
+        . 'm.compressed_size metadata_compressed_size,'
+        . 'm.uncompressed_size metadata_uncompressed_size,'
+        . 'm.payload_sha256 metadata_sha256 '
         . 'FROM ue_file_metadata m JOIN ue_files f ON f.id=m.file_id '
         . 'WHERE m.format_version=2 AND f.scan_status="verified" AND f.id>? '
         . 'ORDER BY f.id LIMIT ' . (int)$arguments['limit']
     );
     $statement->execute([$arguments['start_after']]);
     $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
     if ($files === []) {
         fwrite(STDOUT, "No matching version-2 metadata files require projection rebuilding.\n");
         exit(0);
@@ -85,11 +99,13 @@ try {
         exit(0);
     }
 
-    $converter = new BlockedCompressedFileMetadataConverter($db, $storagePath);
+    $snapshotLoader = new CompressedMetadataLegacySnapshot($db);
+    $lookupWriter = new CompressedMetadataLookupWriter($db);
     $completed = 0;
     $failed = 0;
     $lastFileId = 0;
     $startedAt = microtime(true);
+
     foreach ($files as $position => $file) {
         $fileId = (int)$file['id'];
         $lastFileId = $fileId;
@@ -101,14 +117,57 @@ try {
             $fileId,
             (string)$file['original_name']
         ));
+
         try {
-            $result = $converter->convert($fileId);
+            $metadataPath = BlockedCompressedMetadataContainer::path(
+                $storagePath,
+                (int)$file['game_id'],
+                $fileId
+            );
+            $storedBytes = file_get_contents($metadataPath);
+            if (!is_string($storedBytes)) {
+                throw new RuntimeException('Could not read blocked metadata container: ' . $metadataPath);
+            }
+            if (strlen($storedBytes) !== (int)$file['metadata_compressed_size']) {
+                throw new RuntimeException('Blocked metadata container size mismatch for file #' . $fileId . '.');
+            }
+            if (!hash_equals((string)$file['metadata_sha256'], hash('sha256', $storedBytes, true))) {
+                throw new RuntimeException('Blocked metadata container SHA-256 mismatch for file #' . $fileId . '.');
+            }
+            $verified = BlockedCompressedMetadataContainer::verifyBytes($storedBytes, $fileId);
+            $snapshot = $snapshotLoader->capture($fileId);
+
+            $sqlBatches = 0;
+            $db->beginTransaction();
+            try {
+                $lookupWriter->writeVersioned(
+                    $snapshot,
+                    $storedBytes,
+                    (int)$file['metadata_uncompressed_size'],
+                    (int)$file['metadata_version'],
+                    (int)$file['metadata_codec'],
+                    $sqlBatches
+                );
+                $db->commit();
+            } catch (Throwable $error) {
+                if ($db->inTransaction()) {
+                    $db->rollBack();
+                }
+                throw $error;
+            }
+
+            if ($sqlBatches < 1) {
+                throw new RuntimeException(
+                    'Projection rebuild performed no SQL writes for file #' . $fileId . '.'
+                );
+            }
+
             $completed++;
             fwrite(STDOUT, sprintf(
                 "  OK %.2fs, blocks=%d, SQL batches=%d\n",
                 microtime(true) - $fileStartedAt,
-                (int)($result['block_count'] ?? 0),
-                (int)($result['sql_batches'] ?? 0)
+                (int)($verified['block_count'] ?? 0),
+                $sqlBatches
             ));
         } catch (Throwable $error) {
             $failed++;
