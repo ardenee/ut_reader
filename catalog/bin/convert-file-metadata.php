@@ -2,7 +2,7 @@
 <?php
 declare(strict_types=1);
 
-use UnrealDb\Catalog\Infrastructure\Metadata\CompressedFileMetadataConverter;
+use UnrealDb\Catalog\Infrastructure\Metadata\BatchedCompressedFileMetadataConverter;
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This command may only run from the PHP CLI.\n");
@@ -55,7 +55,7 @@ try {
         throw new RuntimeException('catalog storage_path is not configured.');
     }
 
-    $converter = new CompressedFileMetadataConverter(catalog_db($config), $storagePath);
+    $converter = new BatchedCompressedFileMetadataConverter(catalog_db($config), $storagePath);
     $result = $arguments['file_id'] > 0
         ? $converter->convert($arguments['file_id'])
         : $converter->verify($arguments['verify_file_id']);
