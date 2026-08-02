@@ -80,6 +80,13 @@ final class CompactSearchProjectionWriter
             $exportTerms,
             $sqlBatches
         );
+
+        $this->assertTermProjectionCounts(
+            $fileId,
+            count($imports),
+            count($exports),
+            $sqlBatches
+        );
     }
 
     private function assertSchema(): void
@@ -126,6 +133,38 @@ final class CompactSearchProjectionWriter
             throw new RuntimeException(
                 'Compact Export row count mismatch for file #' . $fileId
                 . ': expected ' . $expectedExports . ', found ' . (int)($row['export_rows'] ?? -1) . '.'
+            );
+        }
+    }
+
+    private function assertTermProjectionCounts(
+        int $fileId,
+        int $expectedImports,
+        int $expectedExports,
+        int &$sqlBatches
+    ): void {
+        $statement = $this->db->prepare(
+            'SELECT '
+            . '(SELECT COUNT(*) FROM ue_dependency_links '
+            . 'WHERE file_id=? AND import_object_term_id IS NOT NULL) import_term_rows,'
+            . '(SELECT COUNT(*) FROM ue_export_lookup '
+            . 'WHERE file_id=? AND local_path_term_id IS NOT NULL) export_term_rows'
+        );
+        $statement->execute([$fileId, $fileId]);
+        $sqlBatches++;
+        $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        $actualImports = (int)($row['import_term_rows'] ?? -1);
+        $actualExports = (int)($row['export_term_rows'] ?? -1);
+        if ($actualImports !== $expectedImports) {
+            throw new RuntimeException(
+                'Compact Import search-term count mismatch for file #' . $fileId
+                . ': expected ' . $expectedImports . ', found ' . $actualImports . '.'
+            );
+        }
+        if ($actualExports !== $expectedExports) {
+            throw new RuntimeException(
+                'Compact Export search-term count mismatch for file #' . $fileId
+                . ': expected ' . $expectedExports . ', found ' . $actualExports . '.'
             );
         }
     }
