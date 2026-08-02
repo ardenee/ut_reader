@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\CompactSearchProjectionWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompressedMetadataLegacySnapshot;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompressedMetadataLookupWriter;
 
@@ -101,6 +102,7 @@ try {
 
     $snapshotLoader = new CompressedMetadataLegacySnapshot($db);
     $lookupWriter = new CompressedMetadataLookupWriter($db);
+    $searchWriter = new CompactSearchProjectionWriter($db);
     $completed = 0;
     $failed = 0;
     $lastFileId = 0;
@@ -148,6 +150,7 @@ try {
                     (int)$file['metadata_codec'],
                     $sqlBatches
                 );
+                $searchWriter->write($snapshot, $sqlBatches);
                 $db->commit();
             } catch (Throwable $error) {
                 if ($db->inTransaction()) {
