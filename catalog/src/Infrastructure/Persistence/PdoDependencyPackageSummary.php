@@ -5,6 +5,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 
 /** Maintains compact package-level projections of authoritative dependency rows. */
 final class PdoDependencyPackageSummary
@@ -70,11 +71,12 @@ final class PdoDependencyPackageSummary
                 . 'WHEN SUM(d.status IN ("resolved","package_only"))=COUNT(*) THEN "package_only" '
                 . 'ELSE "mixed" END summary_status,'
                 . 'CASE WHEN COUNT(DISTINCT d.resolved_file_id)=1 THEN MAX(d.resolved_file_id) ELSE NULL END provider_file_id ';
+            $dependencySource = CatalogDependencyReadSource::sql($this->db);
 
             $insert = $this->db->prepare(
                 'INSERT INTO ue_dependency_package_summaries(' . $insertColumns . ') '
                 . 'SELECT ' . $selectColumns
-                . 'FROM ue_dependencies d JOIN ue_files f ON f.id=d.file_id '
+                . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
                 . 'WHERE d.file_id=? AND f.scan_status="verified" '
                 . 'AND d.required_package IS NOT NULL AND d.required_package<>"" '
                 . 'GROUP BY f.game_id,d.file_id,d.required_package'
