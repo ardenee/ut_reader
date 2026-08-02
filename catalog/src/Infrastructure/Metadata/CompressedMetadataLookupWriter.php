@@ -43,11 +43,19 @@ final class CompressedMetadataLookupWriter
         int &$sqlBatches
     ): void {
         $file = (array)$snapshot['file'];
+        $imports = (array)$snapshot['imports'];
         $exports = (array)$snapshot['exports'];
         $dependencies = (array)$snapshot['dependencies'];
         $paths = (array)$snapshot['paths'];
         $fileId = (int)$file['id'];
         $resolutionLabels = $this->dependencyResolutionLabels($fileId, $dependencies, $sqlBatches);
+
+        $importsByIndex = [];
+        foreach ($imports as $row) {
+            if (is_array($row)) {
+                $importsByIndex[(int)$row['import_index']] = $row;
+            }
+        }
 
         $values = [];
         foreach ($exports as $row) {
@@ -66,12 +74,25 @@ final class CompressedMetadataLookupWriter
             }
             $index = (int)$row['import_index'];
             $labels = $resolutionLabels[$index] ?? null;
+            $import = $importsByIndex[$index] ?? null;
             if (!is_array($labels)) {
                 throw new RuntimeException('Missing dependency resolution labels for import index ' . $index . '.');
             }
+            if (!is_array($import)) {
+                throw new RuntimeException('Missing import metadata for dependency import index ' . $index . '.');
+            }
             $values[] = (string)$row['required_package'];
+            $values[] = (string)$row['required_object_path'];
             $values[] = (string)$labels['source'];
             $values[] = (string)$labels['confidence'];
+            $classPackage = trim((string)($import['class_package'] ?? ''));
+            $className = trim((string)($import['class_name'] ?? ''));
+            if ($classPackage !== '') {
+                $values[] = $classPackage;
+            }
+            if ($className !== '') {
+                $values[] = $className;
+            }
         }
         $termIds = $this->resolveTermIds($values, $sqlBatches);
 
@@ -108,19 +129,29 @@ final class CompressedMetadataLookupWriter
             }
             $index = (int)$row['import_index'];
             $labels = $resolutionLabels[$index] ?? null;
+            $import = $importsByIndex[$index] ?? null;
             if (!is_array($labels)) {
                 throw new RuntimeException('Missing dependency resolution labels for import index ' . $index . '.');
+            }
+            if (!is_array($import)) {
+                throw new RuntimeException('Missing import metadata for dependency import index ' . $index . '.');
             }
             [$status, $sourceCode, $confidenceCode] = CompressedMetadataLegacySnapshot::dependencyCodes(
                 strtolower(trim((string)$row['status']))
             );
             $source = (string)$labels['source'];
             $confidence = (string)$labels['confidence'];
+            $requiredObject = (string)$row['required_object_path'];
+            $classPackage = trim((string)($import['class_package'] ?? ''));
+            $className = trim((string)($import['class_name'] ?? ''));
             $dependencyRows[] = [
                 $fileId,
                 $index,
                 $termIds[$this->termKey((string)$row['required_package'])],
                 md5((string)$paths['imports'][$index]['relative'], true),
+                $termIds[$this->termKey($requiredObject)],
+                $classPackage !== '' ? $termIds[$this->termKey($classPackage)] : null,
+                $className !== '' ? $termIds[$this->termKey($className)] : null,
                 $row['resolved_file_id'] !== null ? (int)$row['resolved_file_id'] : null,
                 $row['resolved_export_index'] !== null ? (int)$row['resolved_export_index'] : null,
                 $status,
@@ -134,6 +165,7 @@ final class CompressedMetadataLookupWriter
             'ue_dependency_links',
             [
                 'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
+                'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
                 'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
                 'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
             ],
