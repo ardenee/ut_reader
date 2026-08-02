@@ -23,6 +23,25 @@ final class CompressedMetadataLookupWriter
         string $json,
         int &$sqlBatches
     ): void {
+        $this->writeVersioned(
+            $snapshot,
+            $compressed,
+            strlen($json),
+            BatchedCompressedFileMetadataConverter::FORMAT_VERSION,
+            BatchedCompressedFileMetadataConverter::CODEC_GZIP,
+            $sqlBatches
+        );
+    }
+
+    /** @param array<string,mixed> $snapshot */
+    public function writeVersioned(
+        array $snapshot,
+        string $storedBytes,
+        int $uncompressedSize,
+        int $formatVersion,
+        int $codec,
+        int &$sqlBatches
+    ): void {
         $file = (array)$snapshot['file'];
         $exports = (array)$snapshot['exports'];
         $dependencies = (array)$snapshot['dependencies'];
@@ -109,15 +128,21 @@ final class CompressedMetadataLookupWriter
             'INSERT INTO ue_file_metadata('
             . 'file_id,format_version,codec,compressed_size,uncompressed_size,payload_sha256,'
             . 'name_count,import_count,export_count,created_at,updated_at'
-            . ') VALUES(?,?,?,?,?,?,?,?,?,?,?)'
+            . ') VALUES(?,?,?,?,?,?,?,?,?,?,?) '
+            . 'ON DUPLICATE KEY UPDATE '
+            . 'format_version=VALUES(format_version),codec=VALUES(codec),'
+            . 'compressed_size=VALUES(compressed_size),uncompressed_size=VALUES(uncompressed_size),'
+            . 'payload_sha256=VALUES(payload_sha256),name_count=VALUES(name_count),'
+            . 'import_count=VALUES(import_count),export_count=VALUES(export_count),'
+            . 'updated_at=VALUES(updated_at)'
         );
         $statement->execute([
             $fileId,
-            BatchedCompressedFileMetadataConverter::FORMAT_VERSION,
-            BatchedCompressedFileMetadataConverter::CODEC_GZIP,
-            strlen($compressed),
-            strlen($json),
-            hash('sha256', $compressed, true),
+            $formatVersion,
+            $codec,
+            strlen($storedBytes),
+            $uncompressedSize,
+            hash('sha256', $storedBytes, true),
             count((array)$snapshot['names']),
             count((array)$snapshot['imports']),
             count((array)$snapshot['exports']),
