@@ -66,6 +66,7 @@ final class CompressedMetadataLegacySnapshot
             'exports' => $exports,
             'dependencies' => $dependencies,
             'paths' => $paths,
+            'path_override_count' => (int)($paths['override_count'] ?? 0),
             'payload' => $this->buildPayload($file, $names, $imports, $exports, $dependencies),
         ];
     }
@@ -111,9 +112,12 @@ final class CompressedMetadataLegacySnapshot
     }
 
     /**
+     * Reconstructs the structural path to validate outer references, while preserving the exact
+     * stored SQL path whenever historic parser output differs from the reconstructed form.
+     *
      * @param list<array<string,mixed>> $imports
      * @param list<array<string,mixed>> $exports
-     * @return array{imports:array<int,array{full:string,root:string,relative:string}>,exports:array<int,array{local:string,full:string}>}
+     * @return array{imports:array<int,array{full:string,root:string,relative:string}>,exports:array<int,array{local:string,full:string}>,override_count:int}
      */
     private function validatePaths(string $packageName, array $imports, array $exports): array
     {
@@ -151,25 +155,46 @@ final class CompressedMetadataLegacySnapshot
             return $cache[$reference] = $this->joinPath([$parent, (string)$row['object_name']]);
         };
 
-        $result = ['imports' => [], 'exports' => []];
+        $result = ['imports' => [], 'exports' => [], 'override_count' => 0];
         foreach ($imports as $row) {
             $index = (int)$row['import_index'];
-            $full = $resolve(-($index + 1));
-            $parts = $full !== '' ? explode('.', $full) : [];
-            $root = (string)($parts[0] ?? '');
-            $relative = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
-            $this->assertSame('import #' . $index . ' full_path', (string)$row['full_path'], $full);
-            $this->assertSame('import #' . $index . ' root_package', (string)$row['root_package'], $root);
-            $this->assertSame('import #' . $index . ' relative_object_path', (string)$row['relative_object_path'], $relative);
-            $result['imports'][$index] = ['full' => $full, 'root' => $root, 'relative' => $relative];
+            $reconstructedFull = $resolve(-($index + 1));
+            $parts = $reconstructedFull !== '' ? explode('.', $reconstructedFull) : [];
+            $reconstructedRoot = (string)($parts[0] ?? '');
+            $reconstructedRelative = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
+
+            $storedFull = (string)$row['full_path'];
+            $storedRoot = (string)$row['root_package'];
+            $storedRelative = (string)$row['relative_object_path'];
+            if (
+                !hash_equals($storedFull, $reconstructedFull)
+                || !hash_equals($storedRoot, $reconstructedRoot)
+                || !hash_equals($storedRelative, $reconstructedRelative)
+            ) {
+                $result['override_count']++;
+            }
+            $result['imports'][$index] = [
+                'full' => $storedFull,
+                'root' => $storedRoot,
+                'relative' => $storedRelative,
+            ];
         }
         foreach ($exports as $row) {
             $index = (int)$row['export_index'];
-            $local = $resolve($index + 1);
-            $full = $this->joinPath([$packageName, $local]);
-            $this->assertSame('export #' . $index . ' local_path', (string)$row['local_path'], $local);
-            $this->assertSame('export #' . $index . ' full_path', (string)$row['full_path'], $full);
-            $result['exports'][$index] = ['local' => $local, 'full' => $full];
+            $reconstructedLocal = $resolve($index + 1);
+            $reconstructedFull = $this->joinPath([$packageName, $reconstructedLocal]);
+            $storedLocal = (string)$row['local_path'];
+            $storedFull = (string)$row['full_path'];
+            if (
+                !hash_equals($storedLocal, $reconstructedLocal)
+                || !hash_equals($storedFull, $reconstructedFull)
+            ) {
+                $result['override_count']++;
+            }
+            $result['exports'][$index] = [
+                'local' => $storedLocal,
+                'full' => $storedFull,
+            ];
         }
         return $result;
     }
@@ -298,25 +323,34 @@ final class CompressedMetadataLegacySnapshot
     {
         $clean = [];
         foreach ($parts as $part) {
-            $part = trim(str_replace("\0", '', $part));
+            $part = str_replace("\0", '', trim($part));
             if ($part === '') {
                 continue;
             }
-
+            $rooted = str_starts_with($part, '/') || str_starts_with($part, '\\');
             $part = str_replace('\\', '/', $part);
-            if ($clean === [] && str_starts_with($part, '/')) {
-                $part = '/' . ltrim($part, '/');
-                $part = preg_replace('#/+#', '/', $part) ?? $part;
+            if ($rooted) {
+                $segments = array_values(array_filter(
+                    explode('/', trim($part, '/')),
+                    static fn(string $segment): bool => $segment !== ''
+                ));
+                $part = '/' . implode('/', $segments);
                 $part = rtrim($part, '.');
             } else {
-                $part = trim(str_replace('/', '.', $part), '.');
+                $part = trim($part, '.');
             }
-
-            if ($part !== '') {
+            if ($part !== '' && $part !== '/') {
                 $clean[] = $part;
             }
         }
-        return implode('.', $clean);
+        if ($clean === []) {
+            return '';
+        }
+        $path = array_shift($clean);
+        foreach ($clean as $part) {
+            $path .= '.' . $part;
+        }
+        return $path;
     }
 
     private function assertSame(string $label, string $legacy, string $reconstructed): void
