@@ -47,6 +47,7 @@ final class CompressedMetadataLookupWriter
         $dependencies = (array)$snapshot['dependencies'];
         $paths = (array)$snapshot['paths'];
         $fileId = (int)$file['id'];
+        $resolutionLabels = $this->dependencyResolutionLabels($fileId, $dependencies, $sqlBatches);
 
         $values = [];
         foreach ($exports as $row) {
@@ -60,9 +61,17 @@ final class CompressedMetadataLookupWriter
             }
         }
         foreach ($dependencies as $row) {
-            if (is_array($row)) {
-                $values[] = (string)$row['required_package'];
+            if (!is_array($row)) {
+                continue;
             }
+            $index = (int)$row['import_index'];
+            $labels = $resolutionLabels[$index] ?? null;
+            if (!is_array($labels)) {
+                throw new RuntimeException('Missing dependency resolution labels for import index ' . $index . '.');
+            }
+            $values[] = (string)$row['required_package'];
+            $values[] = (string)$labels['source'];
+            $values[] = (string)$labels['confidence'];
         }
         $termIds = $this->resolveTermIds($values, $sqlBatches);
 
@@ -98,9 +107,15 @@ final class CompressedMetadataLookupWriter
                 continue;
             }
             $index = (int)$row['import_index'];
-            [$status, $source, $confidence] = CompressedMetadataLegacySnapshot::dependencyCodes(
+            $labels = $resolutionLabels[$index] ?? null;
+            if (!is_array($labels)) {
+                throw new RuntimeException('Missing dependency resolution labels for import index ' . $index . '.');
+            }
+            [$status, $sourceCode, $confidenceCode] = CompressedMetadataLegacySnapshot::dependencyCodes(
                 strtolower(trim((string)$row['status']))
             );
+            $source = (string)$labels['source'];
+            $confidence = (string)$labels['confidence'];
             $dependencyRows[] = [
                 $fileId,
                 $index,
@@ -109,8 +124,10 @@ final class CompressedMetadataLookupWriter
                 $row['resolved_file_id'] !== null ? (int)$row['resolved_file_id'] : null,
                 $row['resolved_export_index'] !== null ? (int)$row['resolved_export_index'] : null,
                 $status,
-                $source,
-                $confidence,
+                $sourceCode,
+                $confidenceCode,
+                $termIds[$this->termKey($source)],
+                $termIds[$this->termKey($confidence)],
             ];
         }
         $sqlBatches += $this->bulkInsert(
@@ -118,7 +135,7 @@ final class CompressedMetadataLookupWriter
             [
                 'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
                 'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
-                'resolution_confidence',
+                'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
             ],
             $dependencyRows
         );
@@ -150,6 +167,40 @@ final class CompressedMetadataLookupWriter
             $timestamp,
         ]);
         $sqlBatches++;
+    }
+
+    /**
+     * @param array<int,mixed> $dependencies
+     * @return array<int,array{source:string,confidence:string}>
+     */
+    private function dependencyResolutionLabels(int $fileId, array $dependencies, int &$sqlBatches): array
+    {
+        if ($dependencies === []) {
+            return [];
+        }
+        $statement = $this->db->prepare(
+            'SELECT i.import_index,d.resolution_source,d.resolution_confidence '
+            . 'FROM ue_dependencies d JOIN ue_imports i ON i.id=d.import_id '
+            . 'WHERE d.file_id=? ORDER BY i.import_index'
+        );
+        $statement->execute([$fileId]);
+        $sqlBatches++;
+        $labels = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $source = trim((string)($row['resolution_source'] ?? ''));
+            $confidence = trim((string)($row['resolution_confidence'] ?? ''));
+            $labels[(int)$row['import_index']] = [
+                'source' => $source !== '' ? $source : 'unknown',
+                'confidence' => $confidence !== '' ? $confidence : 'unknown',
+            ];
+        }
+        if (count($labels) !== count($dependencies)) {
+            throw new RuntimeException(
+                'Dependency resolution label count mismatch for file #' . $fileId
+                . ': expected ' . count($dependencies) . ', found ' . count($labels) . '.'
+            );
+        }
+        return $labels;
     }
 
     /** @param list<string> $values @return array<string,int> */
