@@ -298,7 +298,20 @@ final class CompressedMetadataLegacySnapshot
     {
         $clean = [];
         foreach ($parts as $part) {
-            $part = trim(str_replace(["\0", '/', '\\'], ['', '.', '.'], $part));
+            $part = trim(str_replace("\0", '', $part));
+            if ($part === '') {
+                continue;
+            }
+
+            $part = str_replace('\\', '/', $part);
+            if ($clean === [] && str_starts_with($part, '/')) {
+                $part = '/' . ltrim($part, '/');
+                $part = preg_replace('#/+#', '/', $part) ?? $part;
+                $part = rtrim($part, '.');
+            } else {
+                $part = trim(str_replace('/', '.', $part), '.');
+            }
+
             if ($part !== '') {
                 $clean[] = $part;
             }
