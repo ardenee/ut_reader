@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogDependencySchema.php';
+require_once __DIR__ . '/lib/CatalogCompactDependencies.php';
 
 function file_info_type_from_extension(string $ext): array
 {
@@ -27,7 +28,9 @@ function file_info_source_label(string $source): string
 {
     return match ($source) {
         'exact_package' => 'exact package',
+        'exact_package_alias' => 'exact package alias',
         'exact_object' => 'exact object',
+        'exact_object_alias' => 'exact object alias',
         'package_alias' => 'package alias',
         'package_alias_object' => 'alias object',
         'ue_asset_object_path' => 'UE asset path',
@@ -74,7 +77,7 @@ try {
         throw new RuntimeException('File not found');
     }
 
-    $deps = catalog_all($db, 'SELECT d.*, rf.package_name resolved_package, rf.original_name resolved_file, rf.id resolved_id FROM ue_dependencies d LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? ORDER BY FIELD(d.status,"missing","package_only","resolved","common"), d.resolution_confidence, d.resolution_source, d.required_package, d.required_object_path', [$id]);
+    $deps = catalog_dependency_rows($db, $config, $id);
     $dependencyStatuses = [
         'missing' => 'Missing',
         'package_only' => 'Package only',
@@ -253,7 +256,7 @@ CSS;
     }
     echo '</div>';
 
-    $usedBy = catalog_all($db, 'SELECT DISTINCT src.id, src.package_name, src.original_name, src.package_guid, src.md5, src.file_size FROM ue_dependencies d JOIN ue_files src ON src.id=d.file_id WHERE d.resolved_file_id=? ORDER BY src.package_name, src.original_name LIMIT 200', [$id]);
+    $usedBy = catalog_dependency_used_by_rows($db, $id, 200);
     echo '<div class="card"><h2>Used by</h2>';
     if (!$usedBy) {
         echo '<p class="muted">No resolved reverse links yet.</p>';
