@@ -15,6 +15,8 @@ final class CatalogDependencyReadSource
     /** @var array<int,bool> */
     private static array $availability = [];
 
+    private const TEXT_COLLATION = 'utf8mb4_unicode_ci';
+
     public static function compactAvailable(PDO $db): bool
     {
         $key = spl_object_id($db);
@@ -61,20 +63,24 @@ final class CatalogDependencyReadSource
             return '(' . self::legacySelect(false) . ')';
         }
 
+        $collation = self::TEXT_COLLATION;
         $compact =
             'SELECT '
             . 'CAST((l.file_id * 4294967296) + l.import_index AS UNSIGNED) id,'
             . 'l.file_id,l.import_index,'
-            . 'CONVERT(package_term.value_prefix USING utf8mb4) required_package,'
-            . 'CONVERT(object_term.value_prefix USING utf8mb4) required_object_path,'
+            . '(CONVERT(package_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ') required_package,'
+            . '(CONVERT(object_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ') required_object_path,'
             . 'l.resolved_file_id,'
-            . 'CASE l.status '
+            . '(CAST(CASE l.status '
             . 'WHEN 1 THEN "resolved" WHEN 2 THEN "package_only" '
-            . 'WHEN 3 THEN "common" ELSE "missing" END status,'
-            . 'COALESCE(CONVERT(class_package_term.value_prefix USING utf8mb4),"") class_package,'
-            . 'COALESCE(CONVERT(class_name_term.value_prefix USING utf8mb4),"") class_name,'
-            . 'CONVERT(object_term.value_prefix USING utf8mb4) import_full_path,'
-            . '"compact" metadata_source '
+            . 'WHEN 3 THEN "common" ELSE "missing" END AS CHAR CHARACTER SET utf8mb4) '
+            . 'COLLATE ' . $collation . ') status,'
+            . '(CAST(COALESCE(CONVERT(class_package_term.value_prefix USING utf8mb4),"") '
+            . 'AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') class_package,'
+            . '(CAST(COALESCE(CONVERT(class_name_term.value_prefix USING utf8mb4),"") '
+            . 'AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') class_name,'
+            . '(CONVERT(object_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ') import_full_path,'
+            . '(CAST("compact" AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') metadata_source '
             . 'FROM ue_dependency_links l '
             . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
             . 'JOIN ue_terms package_term ON package_term.id=l.required_package_term_id '
@@ -87,13 +93,20 @@ final class CatalogDependencyReadSource
 
     private static function legacySelect(bool $excludeFormatTwo): string
     {
+        $collation = self::TEXT_COLLATION;
         $sql =
-            'SELECT d.id,d.file_id,i.import_index,d.required_package,d.required_object_path,'
-            . 'd.resolved_file_id,d.status,'
-            . 'COALESCE(i.class_package,"") class_package,'
-            . 'COALESCE(i.class_name,"") class_name,'
-            . 'COALESCE(i.full_path,d.required_object_path) import_full_path,'
-            . '"legacy" metadata_source '
+            'SELECT d.id,d.file_id,i.import_index,'
+            . '(CAST(d.required_package AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') required_package,'
+            . '(CAST(d.required_object_path AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') required_object_path,'
+            . 'd.resolved_file_id,'
+            . '(CAST(d.status AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') status,'
+            . '(CAST(COALESCE(i.class_package,"") AS CHAR CHARACTER SET utf8mb4) '
+            . 'COLLATE ' . $collation . ') class_package,'
+            . '(CAST(COALESCE(i.class_name,"") AS CHAR CHARACTER SET utf8mb4) '
+            . 'COLLATE ' . $collation . ') class_name,'
+            . '(CAST(COALESCE(i.full_path,d.required_object_path) AS CHAR CHARACTER SET utf8mb4) '
+            . 'COLLATE ' . $collation . ') import_full_path,'
+            . '(CAST("legacy" AS CHAR CHARACTER SET utf8mb4) COLLATE ' . $collation . ') metadata_source '
             . 'FROM ue_dependencies d '
             . 'LEFT JOIN ue_imports i ON i.id=d.import_id';
 
