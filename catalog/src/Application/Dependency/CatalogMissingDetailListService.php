@@ -17,13 +17,14 @@ final class CatalogMissingDetailListService
         ?array $cursor,
         string $move
     ): array {
+        $dependencySource = CatalogDependencyReadSource::sql($db);
         $columns = ['g.name', 'f.package_name', 'f.original_name', 'd.required_object_path', 'd.id'];
         $directions = ['ASC', 'ASC', 'ASC', 'ASC', 'ASC'];
         $select = 'SELECT d.id dependency_id,d.required_object_path,d.required_package,'
             . 'f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
-            . 'g.id game_id,g.name game_name,i.class_package,i.class_name,i.full_path import_full_path '
-            . 'FROM ue_dependencies d JOIN ue_files f ON f.id=d.file_id '
-            . 'JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_imports i ON i.id=d.import_id '
+            . 'g.id game_id,g.name game_name,d.class_package,d.class_name,d.import_full_path '
+            . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
+            . 'JOIN ue_games g ON g.id=f.game_id '
             . 'WHERE d.status="missing" AND d.required_package=?';
 
         return self::fetch(
@@ -53,13 +54,14 @@ final class CatalogMissingDetailListService
         ?array $cursor,
         string $move
     ): array {
+        $dependencySource = CatalogDependencyReadSource::sql($db);
         $columns = ['d.required_package', 'd.required_object_path', 'd.id'];
         $directions = ['ASC', 'ASC', 'ASC'];
         $select = 'SELECT d.id dependency_id,d.required_package,d.required_object_path,'
             . 'f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
-            . 'g.id game_id,g.name game_name,i.class_package,i.class_name,i.full_path import_full_path '
-            . 'FROM ue_dependencies d JOIN ue_files f ON f.id=d.file_id '
-            . 'JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_imports i ON i.id=d.import_id '
+            . 'g.id game_id,g.name game_name,d.class_package,d.class_name,d.import_full_path '
+            . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
+            . 'JOIN ue_games g ON g.id=f.game_id '
             . 'WHERE d.status="missing" AND d.file_id=?';
 
         return self::fetch(
@@ -97,11 +99,12 @@ final class CatalogMissingDetailListService
                 . 'JOIN ue_games g ON g.id=s.game_id '
                 . 'WHERE s.required_package=? AND s.missing_count>0';
         } else {
+            $dependencySource = CatalogDependencyReadSource::sql($db);
             $columns = ['x.missing_object_rows', 'x.game_name', 'x.owner_package_name', 'x.owner_original_name', 'x.file_id'];
             $select = 'SELECT x.* FROM ('
                 . 'SELECT f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
                 . 'g.id game_id,g.name game_name,COUNT(d.id) missing_object_rows '
-                . 'FROM ue_dependencies d JOIN ue_files f ON f.id=d.file_id '
+                . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
                 . 'JOIN ue_games g ON g.id=f.game_id '
                 . 'WHERE d.status="missing" AND d.required_package=? '
                 . 'GROUP BY f.id,f.package_name,f.original_name,g.id,g.name'
