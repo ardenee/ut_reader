@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPackageAliases.php';
 require_once __DIR__ . '/lib/CatalogDependencySchema.php';
+require_once __DIR__ . '/lib/CatalogCompactDependencies.php';
 
 function fd_json(array $payload, int $status = 200): never
 {
@@ -121,16 +122,7 @@ try {
     }
 
     catalog_package_aliases_ensure($db);
-    $dependencies = catalog_all(
-        $db,
-        'SELECT d.*, rf.id resolved_id, rf.package_name resolved_package, rf.original_name resolved_file,'
-        . ' rf.package_guid resolved_guid, rf.md5 resolved_md5, rf.file_size resolved_size'
-        . ' FROM ue_dependencies d'
-        . ' LEFT JOIN ue_files rf ON rf.id=d.resolved_file_id'
-        . ' WHERE d.file_id=?'
-        . ' ORDER BY d.required_package, d.required_object_path, d.id',
-        [$fileId]
-    );
+    $dependencies = catalog_dependency_rows($db, $config, $fileId);
 
     $unresolvedNames = [];
     foreach ($dependencies as $dependency) {
@@ -196,38 +188,32 @@ try {
     foreach ($identityRows as $identityRow) {
         $identityNames[] = (string)$identityRow['package_name'];
     }
-    [$identitySql, $identityNames] = fd_in_values($identityNames);
 
     $requiredBy = [];
-    if ($identityNames !== []) {
-        $reverseRows = catalog_all(
-            $db,
-            'SELECT d.id dependency_id, d.file_id source_file_id, d.required_package, d.required_object_path, d.status, d.resolved_file_id,'
-            . ' src.id, src.package_name, src.original_name, src.package_guid, src.md5, src.file_size'
-            . ' FROM ue_dependencies d'
-            . ' JOIN ue_files src ON src.id=d.file_id AND src.game_id=? AND src.scan_status=\'verified\''
-            . ' WHERE src.id<>? AND (d.resolved_file_id=? OR d.required_package IN (' . $identitySql . '))'
-            . ' ORDER BY src.original_name, d.id',
-            array_merge([(int)$file['game_id'], $fileId, $fileId], $identityNames)
-        );
+    $reverseRows = catalog_reverse_dependency_rows(
+        $db,
+        $config,
+        (int)$file['game_id'],
+        $fileId,
+        $identityNames
+    );
 
-        $reverseNames = [];
-        foreach ($reverseRows as $row) {
-            if ((int)($row['resolved_file_id'] ?? 0) === 0 && (string)($row['status'] ?? '') !== 'common') {
-                $reverseNames[] = (string)$row['required_package'];
-            }
+    $reverseNames = [];
+    foreach ($reverseRows as $row) {
+        if ((int)($row['resolved_file_id'] ?? 0) === 0 && (string)($row['status'] ?? '') !== 'common') {
+            $reverseNames[] = (string)$row['required_package'];
         }
-        $reverseCandidates = fd_package_candidates($db, (int)$file['game_id'], $reverseNames);
+    }
+    $reverseCandidates = fd_package_candidates($db, (int)$file['game_id'], $reverseNames);
 
-        foreach ($reverseRows as $row) {
-            $targetId = (int)($row['resolved_file_id'] ?? 0);
-            if ($targetId === 0 && (string)($row['status'] ?? '') !== 'common') {
-                $candidate = fd_select_candidate($reverseCandidates, (string)$row['required_package'], (int)$row['source_file_id']);
-                $targetId = $candidate !== null ? (int)$candidate['id'] : 0;
-            }
-            if ($targetId === $fileId) {
-                $requiredBy[(int)$row['id']] = fd_file_payload($row);
-            }
+    foreach ($reverseRows as $row) {
+        $targetId = (int)($row['resolved_file_id'] ?? 0);
+        if ($targetId === 0 && (string)($row['status'] ?? '') !== 'common') {
+            $candidate = fd_select_candidate($reverseCandidates, (string)$row['required_package'], (int)$row['source_file_id']);
+            $targetId = $candidate !== null ? (int)$candidate['id'] : 0;
+        }
+        if ($targetId === $fileId) {
+            $requiredBy[(int)$row['id']] = fd_file_payload($row);
         }
     }
 
