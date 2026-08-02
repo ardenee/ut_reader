@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/../src/Application/Search/CatalogSearchService.php';
+require_once __DIR__ . '/../src/Application/Search/CatalogCompactSearchService.php';
 
 class_alias('UnrealDb\\Catalog\\Application\\Search\\CatalogSearchUnavailableException', 'CatalogSearchUnavailableException');
 
@@ -23,7 +24,12 @@ final class CatalogSearchService
         $gameId = $gameId !== null && $gameId > 0 ? $gameId : null;
 
         if ($gameId !== null || self::isExactIdentity($query)) {
-            return \UnrealDb\Catalog\Application\Search\CatalogSearchService::findFiles($db, $query, $limit, $gameId);
+            return \UnrealDb\Catalog\Application\Search\CatalogCompactSearchService::findFiles(
+                $db,
+                $query,
+                $limit,
+                $gameId
+            );
         }
 
         $games = catalog_all(
@@ -44,7 +50,7 @@ final class CatalogSearchService
                 break;
             }
             $gameLimit = min($remaining, $quota);
-            foreach (\UnrealDb\Catalog\Application\Search\CatalogSearchService::findFiles(
+            foreach (\UnrealDb\Catalog\Application\Search\CatalogCompactSearchService::findFiles(
                 $db,
                 $query,
                 $gameLimit,
