@@ -54,17 +54,17 @@ final class CompressedFileMetadataReader
         if (!is_array($row)) {
             throw new RuntimeException('File #' . $fileId . ' has no compressed metadata row.');
         }
-        if ((int)$row['format_version'] !== CompressedFileMetadataConverter::FORMAT_VERSION) {
+        if ((int)$row['format_version'] !== BatchedCompressedFileMetadataConverter::FORMAT_VERSION) {
             throw new RuntimeException(
                 'Unsupported compressed metadata format version ' . (int)$row['format_version']
                 . ' for file #' . $fileId . '.'
             );
         }
-        if ((int)$row['codec'] !== CompressedFileMetadataConverter::CODEC_GZIP) {
+        if ((int)$row['codec'] !== BatchedCompressedFileMetadataConverter::CODEC_GZIP) {
             throw new RuntimeException('Unsupported compressed metadata codec for file #' . $fileId . '.');
         }
 
-        $path = CompressedFileMetadataConverter::metadataPath(
+        $path = BatchedCompressedFileMetadataConverter::metadataPath(
             $this->storageRoot,
             (int)$row['game_id'],
             $fileId
