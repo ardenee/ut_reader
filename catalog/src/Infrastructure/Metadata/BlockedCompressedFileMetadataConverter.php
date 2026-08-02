@@ -83,6 +83,7 @@ final class BlockedCompressedFileMetadataConverter
                 BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP,
                 $sqlBatches
             );
+            (new CompactSearchProjectionWriter($this->db))->write($snapshot, $sqlBatches);
             $this->db->commit();
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {
@@ -112,6 +113,82 @@ final class BlockedCompressedFileMetadataConverter
             'sql_batches' => $sqlBatches,
             'already_converted' => false,
             'upgraded_from_version' => $upgradedFrom,
+            'legacy_rows_deleted' => false,
+        ]);
+    }
+
+    /**
+     * Rebuilds only the compact MySQL projections for an existing version-2 container.
+     * The container bytes are verified and preserved unchanged.
+     *
+     * @return array<string,mixed>
+     */
+    public function rebuildProjections(int $fileId): array
+    {
+        if ($fileId < 1) {
+            throw new RuntimeException('A positive file ID is required.');
+        }
+        $this->assertSchema();
+        $existing = $this->metadataRow($fileId);
+        if (!is_array($existing)) {
+            throw new RuntimeException('File #' . $fileId . ' has no compressed metadata row.');
+        }
+        if ((int)$existing['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+            throw new RuntimeException(
+                'File #' . $fileId . ' is not using metadata format version '
+                . BlockedCompressedMetadataContainer::FORMAT_VERSION . '.'
+            );
+        }
+        if ((int)$existing['codec'] !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
+            throw new RuntimeException('File #' . $fileId . ' uses an unsupported metadata codec.');
+        }
+
+        $snapshot = (new CompressedMetadataLegacySnapshot($this->db))->capture($fileId);
+        $file = (array)$snapshot['file'];
+        $path = BlockedCompressedMetadataContainer::path(
+            $this->storageRoot,
+            (int)$file['game_id'],
+            $fileId
+        );
+        $bytes = file_get_contents($path);
+        if (!is_string($bytes)) {
+            throw new RuntimeException('Could not read blocked metadata container: ' . $path);
+        }
+        if (strlen($bytes) !== (int)$existing['compressed_size']) {
+            throw new RuntimeException('Blocked metadata container size does not match ue_file_metadata.');
+        }
+        if (!hash_equals((string)$existing['payload_sha256'], hash('sha256', $bytes, true))) {
+            throw new RuntimeException('Blocked metadata container SHA-256 does not match ue_file_metadata.');
+        }
+        BlockedCompressedMetadataContainer::verifyBytes($bytes, $fileId);
+
+        $sqlBatches = 0;
+        $this->db->beginTransaction();
+        try {
+            (new CompressedMetadataLookupWriter($this->db))->writeVersioned(
+                $snapshot,
+                $bytes,
+                (int)$existing['uncompressed_size'],
+                BlockedCompressedMetadataContainer::FORMAT_VERSION,
+                BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP,
+                $sqlBatches
+            );
+            (new CompactSearchProjectionWriter($this->db))->write($snapshot, $sqlBatches);
+            $this->db->commit();
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
+
+        return array_merge($this->verify($fileId), [
+            'game_id' => (int)$file['game_id'],
+            'package_name' => (string)$file['package_name'],
+            'dependency_count' => count((array)$snapshot['dependencies']),
+            'sql_batches' => $sqlBatches,
+            'projection_rebuilt' => true,
+            'container_rewritten' => false,
             'legacy_rows_deleted' => false,
         ]);
     }
