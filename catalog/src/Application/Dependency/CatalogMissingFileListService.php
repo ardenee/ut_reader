@@ -54,12 +54,13 @@ final class CatalogMissingFileListService
                 $args
             );
         } else {
+            $dependencySource = CatalogDependencyReadSource::sql($db);
             $rows = \catalog_all(
                 $db,
                 'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
                 . 'COUNT(d.id) missing_object_rows,COUNT(DISTINCT d.required_package) missing_package_count,'
                 . 'GROUP_CONCAT(DISTINCT d.required_package ORDER BY d.required_package SEPARATOR ", ") missing_package_names '
-                . 'FROM ue_dependencies d '
+                . 'FROM ' . $dependencySource . ' d '
                 . 'JOIN ue_files f ON f.id=d.file_id JOIN ue_games g ON g.id=f.game_id '
                 . 'WHERE d.status="missing" GROUP BY f.id,f.package_name,f.original_name,g.id,g.name'
                 . $having . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
