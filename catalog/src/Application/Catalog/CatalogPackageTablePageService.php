@@ -4,11 +4,18 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Application\Catalog;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 
-/** Loads bounded Names/Imports/Exports pages for one catalog file. */
+/** Loads bounded Names/Imports/Exports pages from version-2 metadata or legacy SQL. */
 final class CatalogPackageTablePageService
 {
     public const DEFAULT_PAGE_SIZE = 250;
+
+    /** @var array<string,int> */
+    private static array $formatCache = [];
+
+    /** @var array<string,BlockedCompressedMetadataReader> */
+    private static array $readerCache = [];
 
     /** @return array{table:string,index_column:string,count_column:string,columns:list<string>} */
     public static function definition(string $table): array
@@ -76,19 +83,25 @@ final class CatalogPackageTablePageService
         $pages = max(1, (int)ceil($total / $pageSize));
         $page = max(1, min($page, $pages));
         $start = ($page - 1) * $pageSize;
-        $through = $start + $pageSize;
 
-        $statement = $db->prepare(
-            'SELECT ' . implode(',', $definition['columns'])
-            . ' FROM ' . $definition['table']
-            . ' WHERE file_id=? AND ' . $definition['index_column'] . '>=? AND ' . $definition['index_column'] . '<?'
-            . ' ORDER BY ' . $definition['index_column']
-        );
-        $statement->execute([(int)$file['id'], $start, $through]);
-        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        $reader = self::blockedReader($db, (int)$file['id']);
+        if ($reader !== null) {
+            $rows = $reader->page((int)$file['id'], $table, $start, $pageSize);
+        } else {
+            $through = $start + $pageSize;
+            $statement = $db->prepare(
+                'SELECT ' . implode(',', $definition['columns'])
+                . ' FROM ' . $definition['table']
+                . ' WHERE file_id=? AND ' . $definition['index_column'] . '>=? AND ' . $definition['index_column'] . '<?'
+                . ' ORDER BY ' . $definition['index_column']
+            );
+            $statement->execute([(int)$file['id'], $start, $through]);
+            $fetched = $statement->fetchAll(PDO::FETCH_ASSOC);
+            $rows = is_array($fetched) ? $fetched : [];
+        }
 
         return [
-            'rows' => is_array($rows) ? $rows : [],
+            'rows' => $rows,
             'page' => $page,
             'pages' => $pages,
             'total' => $total,
@@ -105,6 +118,11 @@ final class CatalogPackageTablePageService
         if ($values === []) {
             return [];
         }
+        $reader = self::blockedReader($db, $fileId);
+        if ($reader !== null) {
+            return $reader->findNameIndexes($fileId, $values);
+        }
+
         $lookup = [];
         foreach (array_chunk($values, 200) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
@@ -126,6 +144,11 @@ final class CatalogPackageTablePageService
     public static function nameUsage(PDO $db, int $fileId, array $names): array
     {
         $names = self::uniqueValues($names);
+        $reader = self::blockedReader($db, $fileId);
+        if ($reader !== null) {
+            return $reader->nameUsage($fileId, $names);
+        }
+
         $usage = [];
         foreach ($names as $name) {
             $usage[self::key($name)] = [
@@ -182,6 +205,23 @@ final class CatalogPackageTablePageService
     /** @param list<array<string,mixed>> $imports @return array<int,array<string,mixed>> */
     public static function dependencyMap(PDO $db, int $fileId, array $imports): array
     {
+        $reader = self::blockedReader($db, $fileId);
+        if ($reader !== null) {
+            $indexes = array_values(array_map(
+                static fn(array $row): int => (int)($row['import_index'] ?? -1),
+                $imports
+            ));
+            $byIndex = $reader->dependenciesForImportIndexes($fileId, $indexes);
+            $map = [];
+            foreach ($imports as $row) {
+                $index = (int)($row['import_index'] ?? -1);
+                if (isset($byIndex[$index])) {
+                    $map[(int)($row['id'] ?? ($index + 1))] = $byIndex[$index];
+                }
+            }
+            return $map;
+        }
+
         $ids = array_values(array_filter(array_map(static fn(array $row): int => (int)($row['id'] ?? 0), $imports)));
         if ($ids === []) {
             return [];
@@ -197,6 +237,43 @@ final class CatalogPackageTablePageService
             $map[(int)$row['import_id']] = $row;
         }
         return $map;
+    }
+
+    private static function blockedReader(PDO $db, int $fileId): ?BlockedCompressedMetadataReader
+    {
+        if ($fileId < 1 || self::metadataFormat($db, $fileId) < 2) {
+            return null;
+        }
+        $storageRoot = self::storageRoot();
+        if ($storageRoot === '') {
+            return null;
+        }
+        $key = spl_object_id($db) . ':' . $storageRoot;
+        return self::$readerCache[$key] ??= new BlockedCompressedMetadataReader($db, $storageRoot);
+    }
+
+    private static function metadataFormat(PDO $db, int $fileId): int
+    {
+        $key = spl_object_id($db) . ':' . $fileId;
+        if (array_key_exists($key, self::$formatCache)) {
+            return self::$formatCache[$key];
+        }
+        $statement = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
+        $statement->execute([$fileId]);
+        return self::$formatCache[$key] = (int)($statement->fetchColumn() ?: 0);
+    }
+
+    private static function storageRoot(): string
+    {
+        if (!function_exists('catalog_config')) {
+            return '';
+        }
+        try {
+            $config = \catalog_config();
+        } catch (\Throwable) {
+            return '';
+        }
+        return is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
     }
 
     /** @param list<string> $values @return list<string> */
