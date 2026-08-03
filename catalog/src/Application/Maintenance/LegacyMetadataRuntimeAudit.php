@@ -30,6 +30,7 @@ final class LegacyMetadataRuntimeAudit
         'lib/CatalogScanner.php',
         'lib/CatalogCompactDependencies.php',
         'lib/CatalogCompactMetadataCompatibility.php',
+        'lib/CatalogCompactMetadataMutation.php',
         'lib/CatalogLegacyDataAudit.php',
         'lib/CatalogPerformance.php',
         'lib/CatalogRuntimeSqlCompatibility.php',
