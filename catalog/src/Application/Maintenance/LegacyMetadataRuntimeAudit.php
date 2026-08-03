@@ -19,23 +19,79 @@ final class LegacyMetadataRuntimeAudit
     ];
 
     /**
-     * Files that intentionally provide bounded conversion/staging or guarded
-     * compatibility fallback while the empty legacy tables remain installed.
+     * Files that intentionally provide conversion, verification, schema,
+     * unverified-file inventory, transient import staging, or compact-first
+     * fallback. The legacy table schemas remain installed after verified rows
+     * are purged, so these paths remain valid.
      *
      * @var list<string>
      */
     private const ALLOWED_FILES = [
         'lib/CatalogScanner.php',
         'lib/CatalogCompactDependencies.php',
+        'lib/CatalogCompactMetadataCompatibility.php',
+        'lib/CatalogLegacyDataAudit.php',
+        'lib/CatalogPerformance.php',
+        'lib/CatalogRuntimeSqlCompatibility.php',
+        'lib/CatalogUnverifiedIndex.php',
+        'lib/GameManagerLifecycle.php',
+        'unverified-file-details.php',
+        'unverified-files-action.php',
+        'federation/docs.php',
+        'src/Application/Catalog/CatalogPackageTablePageService.php',
         'src/Application/Dependency/CatalogDependencyReadSource.php',
+        'src/Application/Dependency/CatalogDependencyResolver.php',
+        'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
+        'src/Application/Search/CatalogSearchService.php',
+        'src/Infrastructure/Import/CatalogBucketUploadProcessor.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
+        'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
+        'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
         'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
         'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
+        'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
+        'src/Infrastructure/Persistence/PdoSearchDocumentIndexer.php',
+        'src/Infrastructure/Persistence/SearchDocumentMigrationExecutor.php',
+        'lib/UnverifiedMetadataRepair.php',
         'bin/convert-file-metadata-batch.php',
         'bin/verify-compact-dependency-resolver.php',
+        'bin/verify-compact-maintenance-restore.php',
+        'bin/verify-compact-search-projections.php',
+        'bin/verify-compact-summary-refresh.php',
         'bin/verify-mixed-dependency-read-source.php',
+        'bin/verify-runtime-dependency-sql-compatibility.php',
         'bin/verify-scanner-compact-dependency-rebuild.php',
         'bin/check-compact-metadata-deletion-readiness.php',
+        'bin/audit-legacy-runtime-references.php',
+    ];
+
+    /**
+     * Read-only dependency SQL in these files is executed through catalog_one,
+     * catalog_all or catalog_count and is therefore rewritten centrally to the
+     * compact mixed dependency source. Mutations in the same file are not
+     * approved by this list.
+     *
+     * @var list<string>
+     */
+    private const CENTRAL_DEPENDENCY_READ_FILES = [
+        'download-info.php',
+        'duplicates-keep.php',
+        'duplicates.php',
+        'federation/missing-files.php',
+        'federation/peer-inventory.php',
+        'federation/request-generate.php',
+        'game-page.php',
+        'lib/CatalogSourceIdentity.php',
+        'lib/CatalogUnverifiedGameMatches.php',
+        'lib/FederationDependencyDownloads.php',
+        'lib/FederationWorker.php',
+        'lib/ModPackageBuilder.php',
+        'lib/UnverifiedFileManager.php',
+        'lib/UnverifiedObjectCheck.php',
+        'library.php',
+        'missing.php',
+        'src/Application/Dashboard/CatalogDashboardStats.php',
+        'src/Application/Telemetry/CatalogExactCountQueryCatalog.php',
     ];
 
     /** @return array{files:int,references:int,matches:list<array<string,mixed>>} */
@@ -79,12 +135,16 @@ final class LegacyMetadataRuntimeAudit
                     if (!preg_match('/\b' . preg_quote($table, '/') . '\b/i', $line)) {
                         continue;
                     }
+                    $operation = self::operation($line);
+                    if (self::approvedMatch($relative, $table, $operation)) {
+                        continue;
+                    }
                     $files[$relative] = true;
                     $matches[] = [
                         'file' => $relative,
                         'line' => $index + 1,
                         'table' => $table,
-                        'operation' => self::operation($line),
+                        'operation' => $operation,
                         'snippet' => mb_substr(trim($line), 0, 300),
                     ];
                 }
@@ -115,6 +175,13 @@ final class LegacyMetadataRuntimeAudit
             }
         }
         return false;
+    }
+
+    private static function approvedMatch(string $relative, string $table, string $operation): bool
+    {
+        return $table === 'ue_dependencies'
+            && $operation === 'read'
+            && in_array($relative, self::CENTRAL_DEPENDENCY_READ_FILES, true);
     }
 
     private static function operation(string $line): string
