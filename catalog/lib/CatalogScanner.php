@@ -807,12 +807,8 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             }
         }
 
-        if ($deferDependencyRebuild) {
-            scanner_emit_percent($progress, 'dependencies', 55, 'Dependency rebuild deferred to the final Full Sync pass');
-        } else {
-            scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
-            scanner_rebuild_dependencies($db, $config, $fileId, $progress, 36, 55, 'Imported file dependency links');
-        }
+        scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
+        scanner_rebuild_dependencies($db, $config, $fileId, $progress, 36, 55, 'Imported file dependency links');
         $db->commit();
     } catch (Throwable $e) {
         if ($db->inTransaction()) {
@@ -824,9 +820,36 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
         throw $e;
     }
 
+    $resultLabel = ($classification['compatibility_status'] ?? 'native') === 'legacy_compatible'
+        ? ('; ' . (string)($classification['compatibility_label'] ?? 'legacy-compatible'))
+        : '';
+    $result = [
+        'verified',
+        $fileId,
+        'Imported. Profile=' . $profileEngine . ', reader=' . $readerEngine
+            . ', detection=' . $classification['confidence'] . $resultLabel
+            . ', size=' . catalog_bytes((int)$size)
+            . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount,
+        $classification,
+        [
+            'file_id' => $fileId,
+            'package_name' => $packageName,
+            'package_guid' => $packageGuid,
+            'file_size' => (int)$size,
+            'file_size_text' => catalog_bytes((int)$size),
+            'source_relative_path' => $sourceRelativePath,
+        ],
+    ];
+    $result = \UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer::finalize(
+        $db,
+        $config,
+        $result,
+        null
+    );
+
     $refreshWarning = '';
     if ($deferDependencyRebuild) {
-        scanner_emit_percent($progress, 'dependencies', 99, 'Dependency refresh deferred to the final Full Sync pass');
+        scanner_emit_percent($progress, 'dependencies', 99, 'Affected dependency refresh deferred to the final Full Sync pass');
     } else {
         try {
             scanner_rebuild_affected_dependencies($db, $config, $fileId, $progress, 56, 99);
@@ -835,8 +858,10 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             $refreshWarning = '; dependency refresh warning logged for maintenance';
         }
     }
+    if ($refreshWarning !== '') {
+        $result[2] = (string)$result[2] . $refreshWarning;
+    }
 
-    scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports');
-    $resultLabel = ($classification['compatibility_status'] ?? 'native') === 'legacy_compatible' ? ('; ' . (string)($classification['compatibility_label'] ?? 'legacy-compatible')) : '';
-    return ['verified', $fileId, 'Imported. Profile=' . $profileEngine . ', reader=' . $readerEngine . ', detection=' . $classification['confidence'] . $resultLabel . ', size=' . catalog_bytes((int)$size) . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount . $refreshWarning, $classification, ['file_id' => $fileId, 'package_name' => $packageName, 'package_guid' => $packageGuid, 'file_size' => (int)$size, 'file_size_text' => catalog_bytes((int)$size), 'source_relative_path' => $sourceRelativePath]];
+    scanner_emit_percent($progress, 'done', 100, 'Imported ' . $nameCount . ' names, ' . $importCount . ' imports, ' . $exportCount . ' exports with compact metadata');
+    return $result;
 }
