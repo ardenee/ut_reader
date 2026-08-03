@@ -68,13 +68,14 @@ final class CatalogAffectedDependencyRefreshService
         } else {
             self::collectFileIds(
                 $db,
-                'SELECT DISTINCT d.file_id'
-                . ' FROM ue_dependencies d'
-                . ' JOIN ue_files f ON f.id=d.file_id'
-                . ' WHERE d.required_package=? AND d.file_id<>?'
-                . ' AND f.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY d.file_id',
-                [$packageName, $newFileId, $gameId],
+                'SELECT DISTINCT l.file_id'
+                . ' FROM ue_dependency_links l'
+                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+                . ' JOIN ue_files f ON f.id=l.file_id'
+                . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
+                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
+                . ' ORDER BY l.file_id',
+                [md5($packageName, true), strlen($packageName), substr($packageName, 0, 200), $newFileId, $gameId],
                 $fileIds
             );
         }
@@ -107,15 +108,24 @@ final class CatalogAffectedDependencyRefreshService
                 . ' WHERE s.required_package=? AND s.file_id<>?'
                 . ' AND s.game_id=? AND f.scan_status="verified" LIMIT 1'
             );
+            $arguments = [$packageName, $newFileId, $gameId];
         } else {
             $statement = $db->prepare(
-                'SELECT 1 FROM ue_dependencies d'
-                . ' JOIN ue_files f ON f.id=d.file_id'
-                . ' WHERE d.required_package=? AND d.file_id<>?'
-                . ' AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
+                'SELECT 1 FROM ue_dependency_links l'
+                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+                . ' JOIN ue_files f ON f.id=l.file_id'
+                . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
+                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
             );
+            $arguments = [
+                md5($packageName, true),
+                strlen($packageName),
+                substr($packageName, 0, 200),
+                $newFileId,
+                $gameId,
+            ];
         }
-        $statement->execute([$packageName, $newFileId, $gameId]);
+        $statement->execute($arguments);
         return $statement->fetchColumn() !== false;
     }
 
