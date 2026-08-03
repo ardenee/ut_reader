@@ -140,6 +140,10 @@ try {
         . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
         . 'WHERE l.import_object_term_id IS NULL'
     );
+    $overflowTerms = compact_readiness_scalar(
+        $db,
+        'SELECT COUNT(*) FROM ue_terms WHERE is_overflow=1'
+    );
 
     $dataBlockers = [];
     if ($missingFormat2 !== 0) {
@@ -159,6 +163,9 @@ try {
     }
     if ($missingImportTerms !== 0) {
         $dataBlockers[] = $missingImportTerms . ' dependency projection row(s) have no Import object term.';
+    }
+    if ($overflowTerms !== 0) {
+        $dataBlockers[] = $overflowTerms . ' compact term(s) exceed the stored prefix. Full overflow reconstruction must be implemented before verified legacy rows are removed.';
     }
 
     $runtimeAudit = LegacyMetadataRuntimeAudit::scan(dirname(__DIR__));
@@ -185,6 +192,7 @@ try {
         'expected_imports' => $expectedImports,
         'actual_dependency_link_rows' => $actualDependencies,
         'missing_import_object_terms' => $missingImportTerms,
+        'overflow_terms' => $overflowTerms,
         'legacy_rows' => compact_readiness_legacy_counts($db),
         'data_ready' => $dataReady,
         'compact_write_ready' => $writeReady,
