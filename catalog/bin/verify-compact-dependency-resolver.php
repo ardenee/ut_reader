@@ -31,26 +31,32 @@ try {
     $where = $requestedFileId > 0 ? ' AND l.file_id=?' : '';
     $statement = $db->prepare(
         'SELECT l.file_id,l.import_index,l.resolved_file_id,l.resolved_export_index,'
-        . 'f.game_id,i.id import_id,i.root_package,i.full_path,i.relative_object_path,i.is_common '
+        . 'f.game_id,i.id import_id,i.root_package,i.full_path,i.relative_object_path,i.is_common,'
+        . 'e.id legacy_export_id,'
+        . '(SELECT COUNT(*) FROM ue_dependencies rd WHERE rd.resolved_export_id=e.id) legacy_reference_count '
         . 'FROM ue_dependency_links l '
         . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
         . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
         . 'JOIN ue_imports i ON i.file_id=l.file_id AND i.import_index=l.import_index '
+        . 'JOIN ue_exports e ON e.file_id=l.resolved_file_id AND e.export_index=l.resolved_export_index '
         . 'WHERE l.status=1 AND l.resolved_file_id IS NOT NULL AND l.resolved_export_index IS NOT NULL'
         . $where
-        . ' ORDER BY l.file_id,l.import_index LIMIT 1'
+        . ' HAVING legacy_reference_count BETWEEN 1 AND 10 '
+        . 'ORDER BY legacy_reference_count,l.file_id,l.import_index LIMIT 1'
     );
     $statement->execute($requestedFileId > 0 ? [$requestedFileId] : []);
     $fixture = $statement->fetch(PDO::FETCH_ASSOC);
     if (!is_array($fixture)) {
-        throw new RuntimeException('No resolved dependency fixture was found' . ($requestedFileId > 0 ? ' for file #' . $requestedFileId : '') . '.');
+        throw new RuntimeException(
+            'No resolved dependency fixture with 1-10 legacy references was found'
+            . ($requestedFileId > 0 ? ' for file #' . $requestedFileId : '') . '.'
+        );
     }
 
-    $target = $db->prepare('SELECT id FROM ue_exports WHERE file_id=? AND export_index=? LIMIT 1');
-    $target->execute([(int)$fixture['resolved_file_id'], (int)$fixture['resolved_export_index']]);
-    $legacyExportId = (int)($target->fetchColumn() ?: 0);
-    if ($legacyExportId < 1) {
-        throw new RuntimeException('The selected fixture has no legacy Export row to hide for the rollback test.');
+    $legacyExportId = (int)$fixture['legacy_export_id'];
+    $legacyReferenceCount = (int)$fixture['legacy_reference_count'];
+    if ($legacyExportId < 1 || $legacyReferenceCount < 1 || $legacyReferenceCount > 10) {
+        throw new RuntimeException('The selected rollback fixture is outside the safe reference bound.');
     }
 
     $import = [
@@ -102,6 +108,7 @@ try {
             'target_file_id' => (int)$fixture['resolved_file_id'],
             'target_export_index' => (int)$fixture['resolved_export_index'],
             'hidden_legacy_export_id' => $legacyExportId,
+            'hidden_export_reference_count' => $legacyReferenceCount,
             'resolution_source' => (string)$actual['source'],
             'transaction_rolled_back' => true,
         ];
