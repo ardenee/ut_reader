@@ -6,6 +6,8 @@ declare(strict_types=1);
  * application autoloader so CatalogSupportCore can load it during bootstrap.
  */
 
+require_once __DIR__ . '/CatalogRuntimeSqlCompatibility.php';
+
 function catalog_performance_register(): void
 {
     if (!isset($GLOBALS['catalog_performance_state'])) {
@@ -34,13 +36,14 @@ function catalog_performance_remember_db(PDO $db): void
 function catalog_performance_statement(PDO $db, string $sql, array $args = []): PDOStatement
 {
     catalog_performance_remember_db($db);
+    $runtimeSql = catalog_runtime_sql_compat_rewrite($db, $sql);
     $started = hrtime(true);
     try {
-        $statement = $db->prepare($sql);
+        $statement = $db->prepare($runtimeSql);
         $statement->execute($args);
         return $statement;
     } finally {
-        catalog_performance_record_query($sql, hrtime(true) - $started);
+        catalog_performance_record_query($runtimeSql, hrtime(true) - $started);
     }
 }
 
