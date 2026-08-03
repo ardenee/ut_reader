@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/CatalogCompactMetadataMutation.php';
 
 use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
 
@@ -62,7 +63,7 @@ function package_normalize_export_dirty_count(PDO $db, int $fileId, string $clea
 }
 
 /** @return array{changed:bool,file_id:int,game_id:int,old_package:string,new_package:string,old_original:string,new_original:string,export_rows:int} */
-function package_normalize_file(PDO $db, int $fileId): array
+function package_normalize_file(PDO $db, array $config, int $fileId): array
 {
     $file = catalog_one(
         $db,
@@ -86,9 +87,18 @@ function package_normalize_file(PDO $db, int $fileId): array
     if ($changed) {
         $db->prepare('UPDATE ue_files SET package_name=?,original_name=? WHERE id=?')
             ->execute([$cleanPackage, $cleanOriginal, $fileId]);
-        $db->prepare(
-            'UPDATE ue_exports SET full_path=CASE WHEN local_path<>"" THEN CONCAT(?, ".", local_path) ELSE ? END WHERE file_id=?'
-        )->execute([$cleanPackage, $cleanPackage, $fileId]);
+        try {
+            $exportDirty = catalog_compact_metadata_rewrite_package_identity(
+                $db,
+                $config,
+                $fileId,
+                $cleanPackage
+            );
+        } catch (Throwable $error) {
+            $db->prepare('UPDATE ue_files SET package_name=?,original_name=? WHERE id=?')
+                ->execute([$oldPackage, $oldOriginal, $fileId]);
+            throw $error;
+        }
     }
 
     return [
@@ -173,30 +183,21 @@ try {
 
         $changed = [];
         $affectedPackages = [];
-        $db->beginTransaction();
-        try {
-            foreach ($ids as $fileId) {
-                $result = package_normalize_file($db, $fileId);
-                if (!$result['changed']) {
-                    continue;
-                }
-                $changed[] = $result;
-                foreach ([$result['old_package'], $result['new_package']] as $packageName) {
-                    $packageName = trim((string)$packageName);
-                    if ($packageName !== '') {
-                        $affectedPackages[(int)$result['game_id'] . ':' . mb_strtolower($packageName, 'UTF-8')] = [
-                            (int)$result['game_id'],
-                            $packageName,
-                        ];
-                    }
+        foreach ($ids as $fileId) {
+            $result = package_normalize_file($db, $config, $fileId);
+            if (!$result['changed']) {
+                continue;
+            }
+            $changed[] = $result;
+            foreach ([$result['old_package'], $result['new_package']] as $packageName) {
+                $packageName = trim((string)$packageName);
+                if ($packageName !== '') {
+                    $affectedPackages[(int)$result['game_id'] . ':' . mb_strtolower($packageName, 'UTF-8')] = [
+                        (int)$result['game_id'],
+                        $packageName,
+                    ];
                 }
             }
-            $db->commit();
-        } catch (Throwable $error) {
-            if ($db->inTransaction()) {
-                $db->rollBack();
-            }
-            throw $error;
         }
 
         foreach ($changed as $result) {
