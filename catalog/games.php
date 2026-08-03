@@ -2,18 +2,17 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/BaseGameProtection.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    base_game_ensure($db);
 
     $stats = new PdoGameCatalogStats($db);
     if ($stats->available()) {
-        $stats->refreshStale(300);
+        // Public requests must only read the compact cache. Rebuilding stale rows can
+        // take many seconds on a large catalogue and belongs in CLI/background work.
         $games = catalog_all(
             $db,
             'SELECT g.id,g.name,g.slug,g.description,p.engine_key profile_engine,'
@@ -26,17 +25,18 @@ try {
             . 'ORDER BY g.name'
         );
     } else {
-        $baseGameDependencySql = base_game_dependency_is_official_sql('df', 'd');
+        // Keep the page usable without scanning the large dependency tables. Missing
+        // counters remain unavailable until the compact statistics table is restored.
         $games = catalog_all(
             $db,
-            'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, '
-            . 'COUNT(f.id) file_count, COALESCE(SUM(f.file_size),0) total_size, '
-            . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id) missing_dependency_count, '
-            . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id AND ' . $baseGameDependencySql . ') missing_base_game_dependency_count '
+            'SELECT g.id,g.name,g.slug,g.description,p.engine_key profile_engine,'
+            . 'COUNT(f.id) file_count,COALESCE(SUM(f.file_size),0) total_size,'
+            . 'NULL missing_dependency_count,NULL missing_base_game_dependency_count '
             . 'FROM ue_games g '
             . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
             . 'LEFT JOIN ue_files f ON f.game_id=g.id '
-            . 'GROUP BY g.id, p.id ORDER BY g.name'
+            . 'GROUP BY g.id,g.name,g.slug,g.description,p.id,p.engine_key '
+            . 'ORDER BY g.name'
         );
     }
 
@@ -65,10 +65,16 @@ try {
     foreach ($games as $game) {
         $engine = trim((string)($game['profile_engine'] ?? ''));
         $engineBadge = CatalogUi::badge($engine !== '' ? $engine : 'no profile', $engine !== '' ? 'success' : 'warning');
-        $missingCount = (int)($game['missing_dependency_count'] ?? 0);
-        $baseGameMissingCount = (int)($game['missing_base_game_dependency_count'] ?? 0);
-        $missingBadge = CatalogUi::badge(number_format($missingCount), $missingCount > 0 ? 'warning' : 'success');
-        $baseGameMissingBadge = CatalogUi::badge(number_format($baseGameMissingCount), $baseGameMissingCount > 0 ? 'warning' : 'success');
+        $missingAvailable = $game['missing_dependency_count'] !== null;
+        $baseGameMissingAvailable = $game['missing_base_game_dependency_count'] !== null;
+        $missingCount = $missingAvailable ? (int)$game['missing_dependency_count'] : 0;
+        $baseGameMissingCount = $baseGameMissingAvailable ? (int)$game['missing_base_game_dependency_count'] : 0;
+        $missingBadge = $missingAvailable
+            ? CatalogUi::badge(number_format($missingCount), $missingCount > 0 ? 'warning' : 'success')
+            : CatalogUi::badge('Unavailable', 'warning');
+        $baseGameMissingBadge = $baseGameMissingAvailable
+            ? CatalogUi::badge(number_format($baseGameMissingCount), $baseGameMissingCount > 0 ? 'warning' : 'success')
+            : CatalogUi::badge('Unavailable', 'warning');
         $missingUrl = 'game-missing.php?' . http_build_query([
             'game_id' => (int)$game['id'],
             'dependency_type' => 'all',
