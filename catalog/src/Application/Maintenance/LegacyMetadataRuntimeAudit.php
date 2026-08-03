@@ -83,6 +83,7 @@ final class LegacyMetadataRuntimeAudit
         'federation/missing-files.php',
         'federation/peer-inventory.php',
         'federation/request-generate.php',
+        'file-examine-core.php',
         'game-page.php',
         'lib/CatalogSourceIdentity.php',
         'lib/FederationDependencyDownloads.php',
