@@ -55,6 +55,8 @@ final class VerifiedFileCompactMetadataFinalizer
             ) {
                 throw new RuntimeException('Compact metadata verification did not return format version 2.');
             }
+
+            $legacyRowsRemoved = self::removeLegacyStagingRows($db, $fileId);
         } catch (Throwable $error) {
             self::recordFailure($db, $fileId, $error->getMessage());
             throw new RuntimeException(
@@ -76,10 +78,43 @@ final class VerifiedFileCompactMetadataFinalizer
         $details['metadata_block_count'] = (int)($conversion['block_count'] ?? 0);
         $details['metadata_compressed_size'] = (int)($conversion['compressed_size'] ?? 0);
         $details['metadata_already_compact'] = !empty($conversion['already_compact']);
+        $details['legacy_staging_rows_removed'] = $legacyRowsRemoved;
         $result[4] = $details;
 
         self::emit($progress, 100, 'Verified compact metadata for file #' . $fileId);
         return $result;
+    }
+
+    /** @return array<string,int> */
+    private static function removeLegacyStagingRows(PDO $db, int $fileId): array
+    {
+        if ($db->inTransaction()) {
+            throw new RuntimeException('Legacy staging cleanup requires ownership of the database transaction.');
+        }
+
+        $removed = [
+            'ue_dependencies' => 0,
+            'ue_imports' => 0,
+            'ue_exports' => 0,
+            'ue_names' => 0,
+        ];
+
+        $db->beginTransaction();
+        try {
+            foreach (array_keys($removed) as $table) {
+                $statement = $db->prepare('DELETE FROM ' . $table . ' WHERE file_id=?');
+                $statement->execute([$fileId]);
+                $removed[$table] = $statement->rowCount();
+            }
+            $db->commit();
+        } catch (Throwable $error) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $error;
+        }
+
+        return $removed;
     }
 
     private static function recordFailure(PDO $db, int $fileId, string $message): void
