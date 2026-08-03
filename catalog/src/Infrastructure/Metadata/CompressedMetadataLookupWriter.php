@@ -210,6 +210,30 @@ final class CompressedMetadataLookupWriter
         if ($dependencies === []) {
             return [];
         }
+
+        $inline = [];
+        $inlineComplete = true;
+        foreach ($dependencies as $row) {
+            if (!is_array($row)) {
+                $inlineComplete = false;
+                break;
+            }
+            $index = (int)($row['import_index'] ?? -1);
+            $source = trim((string)($row['resolution_source'] ?? ''));
+            $confidence = trim((string)($row['resolution_confidence'] ?? ''));
+            if ($index < 0 || $source === '' || $confidence === '') {
+                $inlineComplete = false;
+                break;
+            }
+            $inline[$index] = [
+                'source' => $source,
+                'confidence' => $confidence,
+            ];
+        }
+        if ($inlineComplete && count($inline) === count($dependencies)) {
+            return $inline;
+        }
+
         $statement = $this->db->prepare(
             'SELECT i.import_index,d.resolution_source,d.resolution_confidence '
             . 'FROM ue_dependencies d JOIN ue_imports i ON i.id=d.import_id '
