@@ -67,6 +67,7 @@ final class CompressedMetadataLegacySnapshot
             'dependencies' => $dependencies,
             'paths' => $paths,
             'path_override_count' => (int)($paths['override_count'] ?? 0),
+            'structural_anomaly_count' => (int)($paths['structural_anomaly_count'] ?? 0),
             'payload' => $this->buildPayload($file, $names, $imports, $exports, $dependencies),
         ];
     }
@@ -112,12 +113,17 @@ final class CompressedMetadataLegacySnapshot
     }
 
     /**
-     * Reconstructs the structural path to validate outer references, while preserving the exact
-     * stored SQL path whenever historic parser output differs from the reconstructed form.
+     * Reconstructs paths when the outer-reference chain is valid, while preserving exact stored
+     * SQL paths for historic parser differences and structurally invalid legacy references.
      *
      * @param list<array<string,mixed>> $imports
      * @param list<array<string,mixed>> $exports
-     * @return array{imports:array<int,array{full:string,root:string,relative:string}>,exports:array<int,array{local:string,full:string}>,override_count:int}
+     * @return array{
+     *   imports:array<int,array{full:string,root:string,relative:string}>,
+     *   exports:array<int,array{local:string,full:string}>,
+     *   override_count:int,
+     *   structural_anomaly_count:int
+     * }
      */
     private function validatePaths(string $packageName, array $imports, array $exports): array
     {
@@ -129,16 +135,27 @@ final class CompressedMetadataLegacySnapshot
         foreach ($exports as $row) {
             $exportMap[(int)$row['export_index']] = $row;
         }
+
+        /** @var array<int,string|null> $cache */
         $cache = [];
-        $resolve = function (int $reference, array $seen = []) use (&$resolve, &$cache, $importMap, $exportMap): string {
+        /** @var array<string,bool> $structuralAnomalies */
+        $structuralAnomalies = [];
+        $resolve = function (int $reference, array $seen = []) use (
+            &$resolve,
+            &$cache,
+            &$structuralAnomalies,
+            $importMap,
+            $exportMap
+        ): ?string {
             if ($reference === 0) {
                 return '';
             }
-            if (isset($cache[$reference])) {
+            if (array_key_exists($reference, $cache)) {
                 return $cache[$reference];
             }
             if (isset($seen[$reference])) {
-                throw new RuntimeException('Cycle detected while reconstructing package path reference ' . $reference . '.');
+                $structuralAnomalies['cycle:' . $reference] = true;
+                return $cache[$reference] = null;
             }
             $seen[$reference] = true;
             if ($reference < 0) {
@@ -149,30 +166,44 @@ final class CompressedMetadataLegacySnapshot
                 $row = $exportMap[$index] ?? null;
             }
             if (!is_array($row)) {
-                throw new RuntimeException('Package reference ' . $reference . ' points to a missing row.');
+                $structuralAnomalies['missing:' . $reference] = true;
+                return $cache[$reference] = null;
             }
             $parent = $resolve((int)$row['outer_index'], $seen);
+            if ($parent === null) {
+                return $cache[$reference] = null;
+            }
             return $cache[$reference] = $this->joinPath([$parent, (string)$row['object_name']]);
         };
 
-        $result = ['imports' => [], 'exports' => [], 'override_count' => 0];
+        $result = [
+            'imports' => [],
+            'exports' => [],
+            'override_count' => 0,
+            'structural_anomaly_count' => 0,
+        ];
         foreach ($imports as $row) {
             $index = (int)$row['import_index'];
             $reconstructedFull = $resolve(-($index + 1));
-            $parts = $reconstructedFull !== '' ? explode('.', $reconstructedFull) : [];
-            $reconstructedRoot = (string)($parts[0] ?? '');
-            $reconstructedRelative = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
-
             $storedFull = (string)$row['full_path'];
             $storedRoot = (string)$row['root_package'];
             $storedRelative = (string)$row['relative_object_path'];
-            if (
-                !hash_equals($storedFull, $reconstructedFull)
-                || !hash_equals($storedRoot, $reconstructedRoot)
-                || !hash_equals($storedRelative, $reconstructedRelative)
-            ) {
+
+            if ($reconstructedFull === null) {
                 $result['override_count']++;
+            } else {
+                $parts = $reconstructedFull !== '' ? explode('.', $reconstructedFull) : [];
+                $reconstructedRoot = (string)($parts[0] ?? '');
+                $reconstructedRelative = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
+                if (
+                    !hash_equals($storedFull, $reconstructedFull)
+                    || !hash_equals($storedRoot, $reconstructedRoot)
+                    || !hash_equals($storedRelative, $reconstructedRelative)
+                ) {
+                    $result['override_count']++;
+                }
             }
+
             $result['imports'][$index] = [
                 'full' => $storedFull,
                 'root' => $storedRoot,
@@ -182,20 +213,27 @@ final class CompressedMetadataLegacySnapshot
         foreach ($exports as $row) {
             $index = (int)$row['export_index'];
             $reconstructedLocal = $resolve($index + 1);
-            $reconstructedFull = $this->joinPath([$packageName, $reconstructedLocal]);
             $storedLocal = (string)$row['local_path'];
             $storedFull = (string)$row['full_path'];
-            if (
-                !hash_equals($storedLocal, $reconstructedLocal)
-                || !hash_equals($storedFull, $reconstructedFull)
-            ) {
+
+            if ($reconstructedLocal === null) {
                 $result['override_count']++;
+            } else {
+                $reconstructedFull = $this->joinPath([$packageName, $reconstructedLocal]);
+                if (
+                    !hash_equals($storedLocal, $reconstructedLocal)
+                    || !hash_equals($storedFull, $reconstructedFull)
+                ) {
+                    $result['override_count']++;
+                }
             }
+
             $result['exports'][$index] = [
                 'local' => $storedLocal,
                 'full' => $storedFull,
             ];
         }
+        $result['structural_anomaly_count'] = count($structuralAnomalies);
         return $result;
     }
 
