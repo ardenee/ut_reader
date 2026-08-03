@@ -138,11 +138,9 @@ try {
      * test. The deletion command will consume this same gate before removing rows.
      */
     $runtimeBlockers = [
-        'CatalogScanner dependency rebuild still reads ue_imports and writes ue_dependencies.',
-        'CatalogDependencyResolver object matching still depends on ue_exports identifiers.',
+        'Direct scanner callers outside the central package importer still require guaranteed compact finalisation.',
         'CatalogFileMaintenance snapshot/rollback still reads and restores legacy metadata rows.',
         'Legacy CatalogImport path still writes Names/Imports/Exports/dependencies directly.',
-        'Unverified promotion and metadata repair paths still require compact finalisation coverage.',
         'Game backup import/export paths still include legacy metadata-table assumptions.',
     ];
 
