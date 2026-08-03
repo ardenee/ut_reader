@@ -15,6 +15,31 @@ function compact_term_backfill_scalar(PDO $db, string $sql): int
     return (int)($db->query($sql)->fetchColumn() ?: 0);
 }
 
+/** @param array<string,string> $updates @param array<string,int> $changed */
+function compact_term_backfill_run(PDO $db, array $updates, array &$changed): void
+{
+    foreach ($updates as $name => $sql) {
+        $started = microtime(true);
+        $count = $db->exec($sql);
+        $changed[$name] = max(0, (int)$count);
+        fwrite(
+            STDERR,
+            $name . ': changed=' . $changed[$name]
+            . ', elapsed=' . number_format(microtime(true) - $started, 2) . "s\n"
+        );
+    }
+}
+
+function compact_term_backfill_remaining(PDO $db): int
+{
+    return compact_term_backfill_scalar(
+        $db,
+        'SELECT COUNT(*) FROM ue_terms '
+        . 'WHERE is_overflow=1 AND ('
+        . 'OCTET_LENGTH(value_prefix)<>value_length OR value_hash<>UNHEX(MD5(value_prefix)))'
+    );
+}
+
 try {
     set_time_limit(0);
     $config = catalog_config();
@@ -31,14 +56,9 @@ try {
         );
     }
 
-    $initial = compact_term_backfill_scalar(
-        $db,
-        'SELECT COUNT(*) FROM ue_terms '
-        . 'WHERE is_overflow=1 AND ('
-        . 'OCTET_LENGTH(value_prefix)<>value_length OR value_hash<>UNHEX(MD5(value_prefix)))'
-    );
+    $initial = compact_term_backfill_remaining($db);
 
-    $updates = [
+    $indexedUpdates = [
         'export_object' =>
             'UPDATE ue_terms t '
             . 'JOIN ue_export_lookup l ON l.object_term_id=t.id '
@@ -79,6 +99,9 @@ try {
             . 'WHERE t.is_overflow=1 AND OCTET_LENGTH(t.value_prefix)<>t.value_length '
             . 'AND t.value_length=OCTET_LENGTH(i.object_name) '
             . 'AND t.value_hash=UNHEX(MD5(i.object_name))',
+    ];
+
+    $fallbackUpdates = [
         'export_class' =>
             'UPDATE ue_terms t '
             . 'JOIN ue_export_lookup l ON l.class_term_id=t.id '
@@ -124,23 +147,19 @@ try {
     ];
 
     $changed = [];
-    foreach ($updates as $name => $sql) {
-        $started = microtime(true);
-        $count = $db->exec($sql);
-        $changed[$name] = max(0, (int)$count);
+    compact_term_backfill_run($db, $indexedUpdates, $changed);
+    $remainingAfterIndexed = compact_term_backfill_remaining($db);
+
+    if ($remainingAfterIndexed > 0) {
         fwrite(
             STDERR,
-            $name . ': changed=' . $changed[$name]
-            . ', elapsed=' . number_format(microtime(true) - $started, 2) . "s\n"
+            'Indexed sources left ' . $remainingAfterIndexed
+            . " term(s); running bounded fallback scans.\n"
         );
+        compact_term_backfill_run($db, $fallbackUpdates, $changed);
     }
 
-    $remaining = compact_term_backfill_scalar(
-        $db,
-        'SELECT COUNT(*) FROM ue_terms '
-        . 'WHERE is_overflow=1 AND ('
-        . 'OCTET_LENGTH(value_prefix)<>value_length OR value_hash<>UNHEX(MD5(value_prefix)))'
-    );
+    $remaining = compact_term_backfill_remaining($db);
     $sample = [];
     if ($remaining > 0) {
         $sample = $db->query(
@@ -154,6 +173,8 @@ try {
     $output = [
         'verified' => $remaining === 0,
         'initial_incomplete_overflow_terms' => $initial,
+        'remaining_after_indexed_sources' => $remainingAfterIndexed,
+        'fallback_scans_ran' => $remainingAfterIndexed > 0,
         'changed_by_source' => $changed,
         'remaining_incomplete_overflow_terms' => $remaining,
         'remaining_sample' => $sample,
