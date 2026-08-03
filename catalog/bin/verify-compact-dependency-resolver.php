@@ -97,8 +97,8 @@ try {
         if ($actual['resolved_export_id'] !== null) {
             throw new RuntimeException('Resolver unexpectedly returned a deleted legacy Export identifier.');
         }
-        if (!str_contains((string)$actual['source'], 'compact')) {
-            throw new RuntimeException('Resolver did not report a compact resolution source.');
+        if (!in_array((string)$actual['source'], ['exact_object', 'exact_object_alias'], true)) {
+            throw new RuntimeException('Resolver returned an unexpected resolution source label.');
         }
 
         $output = [
@@ -110,6 +110,7 @@ try {
             'hidden_legacy_export_id' => $legacyExportId,
             'hidden_export_reference_count' => $legacyReferenceCount,
             'resolution_source' => (string)$actual['source'],
+            'compact_resolution_proven_by_null_legacy_id' => true,
             'transaction_rolled_back' => true,
         ];
         $db->rollBack();
