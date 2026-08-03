@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/CatalogCompactMetadataMutation.php';
+
 /**
  * UE4/UE5 canonical package identity is derived from the mounted source path.
  * Database package names, export full paths and alias rows are projections of
@@ -185,17 +187,6 @@ function catalog_source_identity_rebuild_file(
                     $fileId,
                 ]);
 
-            if ($primaryChanged) {
-                $exports = catalog_all($db, 'SELECT id,local_path FROM ue_exports WHERE file_id=? ORDER BY export_index', [$fileId]);
-                $updateExport = $db->prepare('UPDATE ue_exports SET full_path=? WHERE id=?');
-                foreach ($exports as $export) {
-                    $updateExport->execute([
-                        scanner_join_path_parts([$primaryPackageName, (string)$export['local_path']]),
-                        (int)$export['id'],
-                    ]);
-                }
-            }
-
             $db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$fileId]);
             $insertAlias = $db->prepare(
                 'INSERT INTO ue_file_package_aliases(file_id,game_id,package_name,original_name,package_guid,md5,file_size) '
@@ -218,6 +209,25 @@ function catalog_source_identity_rebuild_file(
                 $db->rollBack();
             }
             throw $error;
+        }
+
+        if ($primaryChanged) {
+            try {
+                catalog_compact_metadata_rewrite_package_identity(
+                    $db,
+                    $config,
+                    $fileId,
+                    $primaryPackageName
+                );
+            } catch (Throwable $error) {
+                $db->prepare(
+                    'UPDATE ue_files SET scan_notes=CONCAT_WS("\n",NULLIF(scan_notes,""),?) WHERE id=?'
+                )->execute([
+                    'Compact source identity publication failed: ' . $error->getMessage(),
+                    $fileId,
+                ]);
+                throw $error;
+            }
         }
     }
 
