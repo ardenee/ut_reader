@@ -84,7 +84,15 @@ function legacy_purge_preflight(PDO $db): array
         . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
         . 'WHERE l.import_object_term_id IS NULL'
     );
-    $overflowTerms = legacy_purge_scalar($db, 'SELECT COUNT(*) FROM ue_terms WHERE is_overflow=1');
+    $totalOverflowTerms = legacy_purge_scalar(
+        $db,
+        'SELECT COUNT(*) FROM ue_terms WHERE is_overflow=1'
+    );
+    $incompleteOverflowTerms = legacy_purge_scalar(
+        $db,
+        'SELECT COUNT(*) FROM ue_terms WHERE is_overflow=1 AND ('
+        . 'OCTET_LENGTH(value_prefix)<>value_length OR value_hash<>UNHEX(MD5(value_prefix)))'
+    );
 
     if ($missingFormat2 !== 0) {
         $blockers[] = $missingFormat2 . ' verified file(s) are missing format-2 metadata.';
@@ -101,8 +109,9 @@ function legacy_purge_preflight(PDO $db): array
     if ($missingExportTerms !== 0 || $missingImportTerms !== 0) {
         $blockers[] = 'Required compact search terms are missing.';
     }
-    if ($overflowTerms !== 0) {
-        $blockers[] = $overflowTerms . ' compact term(s) require overflow reconstruction.';
+    if ($incompleteOverflowTerms !== 0) {
+        $blockers[] = $incompleteOverflowTerms
+            . ' compact overflow term(s) are truncated or fail their stored hash.';
     }
 
     $audit = LegacyMetadataRuntimeAudit::scan(dirname(__DIR__));
@@ -149,7 +158,8 @@ function legacy_purge_preflight(PDO $db): array
         'candidate_files' => $candidateFiles,
         'expected_verified_rows' => array_map('intval', $expectedRows),
         'legacy_table_rows' => legacy_purge_total_counts($db),
-        'overflow_terms' => $overflowTerms,
+        'overflow_terms_total' => $totalOverflowTerms,
+        'overflow_terms_incomplete' => $incompleteOverflowTerms,
         'runtime_references' => (int)$audit['references'],
         'running_jobs' => $runningJobs,
     ];
