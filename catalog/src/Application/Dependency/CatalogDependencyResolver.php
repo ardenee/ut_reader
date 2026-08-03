@@ -372,11 +372,12 @@ final class CatalogDependencyResolver
             try {
                 $rows = \catalog_all(
                     $db,
-                    'SELECT f.package_name,l.file_id,l.export_index,t.value_hash,t.value_length'
+                    'SELECT f.package_name,l.file_id,l.export_index,t.value_hash,t.value_length,le.id export_id'
                     . ' FROM ue_export_lookup l'
                     . ' JOIN ue_files f ON f.id=l.file_id'
                     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
                     . ' JOIN ue_terms t ON t.id=l.local_path_term_id'
+                    . ' LEFT JOIN ue_exports le ON le.file_id=l.file_id AND le.export_index=l.export_index'
                     . ' WHERE f.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
                     . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC',
                     $args
@@ -434,12 +435,13 @@ final class CatalogDependencyResolver
             try {
                 $rows = \catalog_all(
                     $db,
-                    'SELECT a.package_name,l.file_id,l.export_index,t.value_hash,t.value_length'
+                    'SELECT a.package_name,l.file_id,l.export_index,t.value_hash,t.value_length,le.id export_id'
                     . ' FROM ue_file_package_aliases a'
                     . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
                     . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
                     . ' JOIN ue_export_lookup l ON l.file_id=f.id'
                     . ' JOIN ue_terms t ON t.id=l.local_path_term_id'
+                    . ' LEFT JOIN ue_exports le ON le.file_id=l.file_id AND le.export_index=l.export_index'
                     . ' WHERE a.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
                     . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC,a.id ASC',
                     $args
@@ -479,7 +481,7 @@ final class CatalogDependencyResolver
         }
         $matches[$lookupKey] = [
             'file_id' => (int)$row['file_id'],
-            'export_id' => null,
+            'export_id' => isset($row['export_id']) && $row['export_id'] !== null ? (int)$row['export_id'] : null,
             'export_index' => (int)$row['export_index'],
             'source' => $source,
         ];
