@@ -9,12 +9,10 @@ use PDOException;
 /**
  * Resolves one file's import table against the catalogue in bounded batches.
  *
- * Resolution follows Unreal's serialized package/object identity model. Package
- * providers are read from the materialized ue_package_providers table, which
- * combines verified primary package names and aliases into one indexed lookup.
- * Exact authoritative-table fallbacks preserve correctness while the provider
- * cache is being migrated or reconciled. Object resolution remains exact against
- * serialized export paths.
+ * Package providers are read from the materialized provider table with exact
+ * authoritative fallbacks. Object resolution prefers compact Export projections
+ * and returns Unreal's serialized export_index; the legacy ue_exports identifier
+ * is retained only while transition rows still exist.
  */
 final class CatalogDependencyResolver
 {
@@ -23,7 +21,14 @@ final class CatalogDependencyResolver
 
     /**
      * @param list<array<string, mixed>> $imports
-     * @return array<int, array{status:string, resolved_file_id:?int, resolved_export_id:?int, source:string, confidence:string}>
+     * @return array<int, array{
+     *   status:string,
+     *   resolved_file_id:?int,
+     *   resolved_export_id:?int,
+     *   resolved_export_index:?int,
+     *   source:string,
+     *   confidence:string
+     * }>
      */
     public static function resolve(PDO $db, int $gameId, int $fileId, array $imports): array
     {
@@ -39,8 +44,6 @@ final class CatalogDependencyResolver
             if ($rootPackage !== '') {
                 $packageKey = self::normalizeLookup($rootPackage);
                 if ($packageKey !== '' && !isset($packageNames[$packageKey])) {
-                    // Keep the authoritative string as the value. Numeric-looking
-                    // package names become integer array keys in PHP otherwise.
                     $packageNames[$packageKey] = $rootPackage;
                 }
             }
@@ -89,6 +92,7 @@ final class CatalogDependencyResolver
                     'status' => 'common',
                     'resolved_file_id' => null,
                     'resolved_export_id' => null,
+                    'resolved_export_index' => null,
                     'source' => 'common_script',
                     'confidence' => 'common',
                 ];
@@ -99,6 +103,7 @@ final class CatalogDependencyResolver
                         'status' => 'package_only',
                         'resolved_file_id' => $packageMatch['file_id'],
                         'resolved_export_id' => null,
+                        'resolved_export_index' => null,
                         'source' => $packageMatch['source'],
                         'confidence' => 'exact',
                     ];
@@ -110,6 +115,7 @@ final class CatalogDependencyResolver
                         'status' => 'resolved',
                         'resolved_file_id' => $exportMatch['file_id'],
                         'resolved_export_id' => $exportMatch['export_id'],
+                        'resolved_export_index' => $exportMatch['export_index'],
                         'source' => $exportMatch['source'],
                         'confidence' => 'exact',
                     ];
@@ -122,13 +128,14 @@ final class CatalogDependencyResolver
         return $resolved;
     }
 
-    /** @return array{status:string, resolved_file_id:?int, resolved_export_id:?int, source:string, confidence:string} */
+    /** @return array{status:string,resolved_file_id:?int,resolved_export_id:?int,resolved_export_index:?int,source:string,confidence:string} */
     private static function missing(): array
     {
         return [
             'status' => 'missing',
             'resolved_file_id' => null,
             'resolved_export_id' => null,
+            'resolved_export_index' => null,
             'source' => 'none',
             'confidence' => 'missing',
         ];
@@ -261,13 +268,22 @@ final class CatalogDependencyResolver
     }
 
     /**
-     * @param list<array{lookup_value:string, package_name:string, local_path:string}> $objectLookups
-     * @return array<string, array{file_id:int, export_id:int, source:string}>
+     * @param list<array{lookup_value:string,package_name:string,local_path:string}> $objectLookups
+     * @return array<string, array{file_id:int,export_id:?int,export_index:int,source:string}>
      */
     private static function loadExportMatches(PDO $db, int $gameId, int $fileId, array $objectLookups): array
     {
         $matches = [];
-        foreach (array_chunk($objectLookups, self::MAX_VALUES_PER_QUERY) as $chunk) {
+
+        self::loadCompactPrimaryExportMatches($db, $gameId, $fileId, $objectLookups, $matches);
+        self::loadCompactAliasExportMatches($db, $gameId, $fileId, $objectLookups, $matches);
+
+        $missingLookups = array_values(array_filter(
+            $objectLookups,
+            static fn(array $lookup): bool => !isset($matches[self::normalizeLookup($lookup['lookup_value'])])
+        ));
+
+        foreach (array_chunk($missingLookups, self::MAX_VALUES_PER_QUERY) as $chunk) {
             if ($chunk === []) {
                 continue;
             }
@@ -278,7 +294,7 @@ final class CatalogDependencyResolver
             ));
             $rows = \catalog_all(
                 $db,
-                'SELECT e.full_path lookup_value,e.id export_id,f.id file_id'
+                'SELECT e.full_path lookup_value,e.id export_id,e.export_index,f.id file_id'
                 . ' FROM ue_exports e'
                 . ' JOIN ue_files f ON f.id=e.file_id'
                 . ' WHERE f.game_id=? AND f.scan_status="verified"'
@@ -286,10 +302,14 @@ final class CatalogDependencyResolver
                 . ' ORDER BY e.full_path,(f.id=?) DESC,f.uploaded_at DESC,e.export_index ASC',
                 array_merge([$gameId], $fullPaths, [$fileId])
             );
-            self::collectExportMatches($rows, 'exact_object', $matches);
+            self::collectExportMatches($rows, 'exact_object_legacy', $matches);
         }
 
-        foreach (array_chunk($objectLookups, self::MAX_OBJECT_PAIRS_PER_QUERY) as $chunk) {
+        $missingLookups = array_values(array_filter(
+            $objectLookups,
+            static fn(array $lookup): bool => !isset($matches[self::normalizeLookup($lookup['lookup_value'])])
+        ));
+        foreach (array_chunk($missingLookups, self::MAX_OBJECT_PAIRS_PER_QUERY) as $chunk) {
             if ($chunk === []) {
                 continue;
             }
@@ -306,7 +326,7 @@ final class CatalogDependencyResolver
             $rows = \catalog_all(
                 $db,
                 'SELECT CONCAT(a.package_name,".",e.local_path) lookup_value,'
-                . ' e.id export_id,f.id file_id'
+                . ' e.id export_id,e.export_index,f.id file_id'
                 . ' FROM ue_file_package_aliases a'
                 . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
                 . ' JOIN ue_exports e ON e.file_id=f.id'
@@ -316,15 +336,158 @@ final class CatalogDependencyResolver
                 . ' e.export_index ASC,a.id ASC',
                 $args
             );
-            self::collectExportMatches($rows, 'exact_object_alias', $matches);
+            self::collectExportMatches($rows, 'exact_object_alias_legacy', $matches);
         }
 
         return $matches;
     }
 
     /**
+     * @param list<array{lookup_value:string,package_name:string,local_path:string}> $objectLookups
+     * @param array<string,array{file_id:int,export_id:?int,export_index:int,source:string}> $matches
+     */
+    private static function loadCompactPrimaryExportMatches(
+        PDO $db,
+        int $gameId,
+        int $fileId,
+        array $objectLookups,
+        array &$matches
+    ): void {
+        foreach (array_chunk($objectLookups, self::MAX_OBJECT_PAIRS_PER_QUERY) as $chunk) {
+            if ($chunk === []) {
+                continue;
+            }
+
+            $pairSql = [];
+            $args = [$gameId];
+            $keys = [];
+            foreach ($chunk as $lookup) {
+                $localPath = $lookup['local_path'];
+                $pairSql[] = '(f.package_name=? AND t.value_hash=? AND t.value_length=? AND t.value_prefix=?)';
+                array_push($args, $lookup['package_name'], md5($localPath, true), strlen($localPath), substr($localPath, 0, 200));
+                $keys[self::compactPairKey($lookup['package_name'], $localPath)] = $lookup['lookup_value'];
+            }
+            $args[] = $fileId;
+
+            try {
+                $rows = \catalog_all(
+                    $db,
+                    'SELECT f.package_name,l.file_id,l.export_index,t.value_hash,t.value_length'
+                    . ' FROM ue_export_lookup l'
+                    . ' JOIN ue_files f ON f.id=l.file_id'
+                    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
+                    . ' JOIN ue_terms t ON t.id=l.local_path_term_id'
+                    . ' WHERE f.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
+                    . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC',
+                    $args
+                );
+            } catch (PDOException) {
+                $rows = [];
+            }
+
+            foreach ($rows as $row) {
+                $pairKey = self::compactPairKeyFromHash(
+                    (string)$row['package_name'],
+                    (string)$row['value_hash'],
+                    (int)$row['value_length']
+                );
+                $lookupValue = $keys[$pairKey] ?? null;
+                if ($lookupValue === null) {
+                    continue;
+                }
+                self::collectCompactExportMatch($lookupValue, $row, 'exact_object_compact', $matches);
+            }
+        }
+    }
+
+    /**
+     * @param list<array{lookup_value:string,package_name:string,local_path:string}> $objectLookups
+     * @param array<string,array{file_id:int,export_id:?int,export_index:int,source:string}> $matches
+     */
+    private static function loadCompactAliasExportMatches(
+        PDO $db,
+        int $gameId,
+        int $fileId,
+        array $objectLookups,
+        array &$matches
+    ): void {
+        $missing = array_values(array_filter(
+            $objectLookups,
+            static fn(array $lookup): bool => !isset($matches[self::normalizeLookup($lookup['lookup_value'])])
+        ));
+        foreach (array_chunk($missing, self::MAX_OBJECT_PAIRS_PER_QUERY) as $chunk) {
+            if ($chunk === []) {
+                continue;
+            }
+
+            $pairSql = [];
+            $args = [$gameId];
+            $keys = [];
+            foreach ($chunk as $lookup) {
+                $localPath = $lookup['local_path'];
+                $pairSql[] = '(a.package_name=? AND t.value_hash=? AND t.value_length=? AND t.value_prefix=?)';
+                array_push($args, $lookup['package_name'], md5($localPath, true), strlen($localPath), substr($localPath, 0, 200));
+                $keys[self::compactPairKey($lookup['package_name'], $localPath)] = $lookup['lookup_value'];
+            }
+            $args[] = $fileId;
+
+            try {
+                $rows = \catalog_all(
+                    $db,
+                    'SELECT a.package_name,l.file_id,l.export_index,t.value_hash,t.value_length'
+                    . ' FROM ue_file_package_aliases a'
+                    . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
+                    . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
+                    . ' JOIN ue_export_lookup l ON l.file_id=f.id'
+                    . ' JOIN ue_terms t ON t.id=l.local_path_term_id'
+                    . ' WHERE a.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
+                    . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC,a.id ASC',
+                    $args
+                );
+            } catch (PDOException) {
+                $rows = [];
+            }
+
+            foreach ($rows as $row) {
+                $pairKey = self::compactPairKeyFromHash(
+                    (string)$row['package_name'],
+                    (string)$row['value_hash'],
+                    (int)$row['value_length']
+                );
+                $lookupValue = $keys[$pairKey] ?? null;
+                if ($lookupValue === null) {
+                    continue;
+                }
+                self::collectCompactExportMatch($lookupValue, $row, 'exact_object_alias_compact', $matches);
+            }
+        }
+    }
+
+    /**
+     * @param array<string,mixed> $row
+     * @param array<string,array{file_id:int,export_id:?int,export_index:int,source:string}> $matches
+     */
+    private static function collectCompactExportMatch(
+        string $lookupValue,
+        array $row,
+        string $source,
+        array &$matches
+    ): void {
+        $lookupKey = self::normalizeLookup($lookupValue);
+        if ($lookupKey === '' || isset($matches[$lookupKey])) {
+            return;
+        }
+        $matches[$lookupKey] = [
+            'file_id' => (int)$row['file_id'],
+            'export_id' => null,
+            'export_index' => (int)$row['export_index'],
+            'source' => $source,
+        ];
+    }
+
+    /**
      * @param list<array<string,mixed>> $rows
-     * @param array<string, array{file_id:int, export_id:int, source:string}> $matches
+     * @param array<string,array{file_id:int,export_id:?int,export_index:int,source:string}> $matches
      */
     private static function collectExportMatches(array $rows, string $source, array &$matches): void
     {
@@ -335,10 +498,21 @@ final class CatalogDependencyResolver
             }
             $matches[$lookupKey] = [
                 'file_id' => (int)$row['file_id'],
-                'export_id' => (int)$row['export_id'],
+                'export_id' => isset($row['export_id']) ? (int)$row['export_id'] : null,
+                'export_index' => (int)($row['export_index'] ?? 0),
                 'source' => $source,
             ];
         }
+    }
+
+    private static function compactPairKey(string $packageName, string $localPath): string
+    {
+        return self::normalizeLookup($packageName) . "\0" . md5($localPath) . ':' . strlen($localPath);
+    }
+
+    private static function compactPairKeyFromHash(string $packageName, string $hash, int $length): string
+    {
+        return self::normalizeLookup($packageName) . "\0" . bin2hex($hash) . ':' . $length;
     }
 
     private static function normalizeLookup(string|int $value): string
