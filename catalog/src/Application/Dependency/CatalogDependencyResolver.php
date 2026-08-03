@@ -302,7 +302,7 @@ final class CatalogDependencyResolver
                 . ' ORDER BY e.full_path,(f.id=?) DESC,f.uploaded_at DESC,e.export_index ASC',
                 array_merge([$gameId], $fullPaths, [$fileId])
             );
-            self::collectExportMatches($rows, 'exact_object_legacy', $matches);
+            self::collectExportMatches($rows, 'exact_object', $matches);
         }
 
         $missingLookups = array_values(array_filter(
@@ -336,7 +336,7 @@ final class CatalogDependencyResolver
                 . ' e.export_index ASC,a.id ASC',
                 $args
             );
-            self::collectExportMatches($rows, 'exact_object_alias_legacy', $matches);
+            self::collectExportMatches($rows, 'exact_object_alias', $matches);
         }
 
         return $matches;
@@ -396,7 +396,7 @@ final class CatalogDependencyResolver
                 if ($lookupValue === null) {
                     continue;
                 }
-                self::collectCompactExportMatch($lookupValue, $row, 'exact_object_compact', $matches);
+                self::collectCompactExportMatch($lookupValue, $row, 'exact_object', $matches);
             }
         }
     }
@@ -460,7 +460,7 @@ final class CatalogDependencyResolver
                 if ($lookupValue === null) {
                     continue;
                 }
-                self::collectCompactExportMatch($lookupValue, $row, 'exact_object_alias_compact', $matches);
+                self::collectCompactExportMatch($lookupValue, $row, 'exact_object_alias', $matches);
             }
         }
     }
