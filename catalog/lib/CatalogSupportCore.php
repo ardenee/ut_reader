@@ -6,6 +6,7 @@ require_once __DIR__ . '/CatalogRememberMe.php';
 require_once __DIR__ . '/CatalogUi.php';
 require_once __DIR__ . '/CatalogNavigation.php';
 require_once __DIR__ . '/CatalogPerformance.php';
+require_once __DIR__ . '/CatalogCompactMetadataCompatibility.php';
 
 catalog_apply_runtime_safeguards();
 
@@ -39,6 +40,11 @@ function catalog_db(array $config): PDO
 
 function catalog_one(PDO $db, string $sql, array $args = []): ?array
 {
+    $compat = catalog_metadata_compat_query($db, 'one', $sql, $args);
+    if (!empty($compat['handled'])) {
+        return is_array($compat['value']) ? $compat['value'] : null;
+    }
+
     $stmt = catalog_performance_statement($db, $sql, $args);
     $row = $stmt->fetch();
     return $row ?: null;
@@ -46,11 +52,21 @@ function catalog_one(PDO $db, string $sql, array $args = []): ?array
 
 function catalog_all(PDO $db, string $sql, array $args = []): array
 {
+    $compat = catalog_metadata_compat_query($db, 'all', $sql, $args);
+    if (!empty($compat['handled'])) {
+        return is_array($compat['value']) ? $compat['value'] : [];
+    }
+
     return catalog_performance_statement($db, $sql, $args)->fetchAll();
 }
 
 function catalog_count(PDO $db, string $sql, array $args = []): int
 {
+    $compat = catalog_metadata_compat_query($db, 'one', $sql, $args);
+    if (!empty($compat['handled']) && is_array($compat['value'])) {
+        return (int)($compat['value']['c'] ?? 0);
+    }
+
     return catalog_performance_count($db, $sql, $args);
 }
 
