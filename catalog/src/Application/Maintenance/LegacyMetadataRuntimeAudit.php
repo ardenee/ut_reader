@@ -65,6 +65,7 @@ final class LegacyMetadataRuntimeAudit
         'bin/verify-scanner-compact-dependency-rebuild.php',
         'bin/check-compact-metadata-deletion-readiness.php',
         'bin/audit-legacy-runtime-references.php',
+        'bin/purge-verified-format2-legacy-metadata.php',
     ];
 
     /**
