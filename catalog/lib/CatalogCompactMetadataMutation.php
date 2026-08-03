@@ -42,7 +42,15 @@ function catalog_compact_metadata_rewrite_package_identity(
         throw new RuntimeException('Catalog storage_path is required for compact metadata rewriting.');
     }
 
+    $fileStatement = $db->prepare('SELECT * FROM ue_files WHERE id=?');
+    $fileStatement->execute([$fileId]);
+    $currentFile = $fileStatement->fetch(PDO::FETCH_ASSOC);
+    if (!is_array($currentFile)) {
+        throw new RuntimeException('The catalog file disappeared before compact identity rewriting.');
+    }
+
     $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($fileId);
+    $snapshot['file'] = $currentFile;
     $snapshot['file']['package_name'] = $packageName;
     $exports = array_values((array)$snapshot['exports']);
     $paths = (array)($snapshot['paths'] ?? []);
