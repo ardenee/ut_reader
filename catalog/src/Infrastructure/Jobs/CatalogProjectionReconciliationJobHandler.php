@@ -5,6 +5,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
@@ -212,7 +213,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                         . 'WHERE s.game_id=? AND s.required_package IN (' . $placeholders . ') '
                         . 'AND f.scan_status="verified"';
                 } else {
-                    $sql = 'SELECT DISTINCT d.file_id FROM ue_dependencies d '
+                    $sql = 'SELECT DISTINCT d.file_id FROM ' . CatalogDependencyReadSource::sql($this->db) . ' d '
                         . 'JOIN ue_files f ON f.id=d.file_id '
                         . 'WHERE f.game_id=? AND d.required_package IN (' . $placeholders . ') '
                         . 'AND f.scan_status="verified"';
