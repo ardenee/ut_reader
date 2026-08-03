@@ -5,6 +5,8 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/ModPackageBuilder.php';
 
+use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
+
 function render_availability(PDO $db, int $fileId): string
 {
     $locations = catalog_all($db, 'SELECT s.name source_name, s.source_type, l.source_relative_path FROM ue_file_locations l JOIN ue_sources s ON s.id=l.source_id WHERE l.file_id=? AND l.exists_in_source=1 ORDER BY s.name, l.source_relative_path', [$fileId]);
@@ -59,7 +61,14 @@ try {
         $defaultFormat = $formats[0] ?? '';
     }
 
-    $depCount = (int)(catalog_one($db, 'SELECT COUNT(DISTINCT rf.id) c FROM ue_dependencies d JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? AND d.status IN ("resolved","package_only")', [$id])['c'] ?? 0);
+    $dependencySource = CatalogDependencyReadSource::sql($db);
+    $depCount = (int)(catalog_one(
+        $db,
+        'SELECT COUNT(DISTINCT rf.id) c FROM ' . $dependencySource . ' d '
+        . 'JOIN ue_files rf ON rf.id=d.resolved_file_id '
+        . 'WHERE d.file_id=? AND d.status IN ("resolved","package_only")',
+        [$id]
+    )['c'] ?? 0);
 
     catalog_head('Download');
     catalog_page_header(
@@ -135,7 +144,15 @@ try {
     echo '<div class="card"><h2>Selected file availability</h2><table><tr><th>Package</th><th>File</th><th>Public download</th><th>Availability</th></tr>';
     echo '<tr><td class="mono"><a href="file-info.php?id=' . (int)$file['id'] . '">' . catalog_h($file['package_name']) . '</a></td><td><a href="file-examine.php?id=' . (int)$file['id'] . '">' . catalog_h(catalog_clean_unreal_filename((string)$file['original_name'])) . '</a></td><td>' . render_public_download_status($db, (int)$file['id']) . '</td><td>' . render_availability($db, (int)$file['id']) . '</td></tr></table></div>';
 
-    $deps = catalog_all($db, 'SELECT DISTINCT rf.id, rf.package_name, rf.original_name, rf.file_size, rf.md5, rf.sha1, rf.package_guid, rf.is_compressed, d.status FROM ue_dependencies d JOIN ue_files rf ON rf.id=d.resolved_file_id WHERE d.file_id=? AND d.status IN ("resolved","package_only") ORDER BY rf.package_name, rf.original_name', [$id]);
+    $deps = catalog_all(
+        $db,
+        'SELECT DISTINCT rf.id,rf.package_name,rf.original_name,rf.file_size,rf.md5,rf.sha1,'
+        . 'rf.package_guid,rf.is_compressed,d.status FROM ' . $dependencySource . ' d '
+        . 'JOIN ue_files rf ON rf.id=d.resolved_file_id '
+        . 'WHERE d.file_id=? AND d.status IN ("resolved","package_only") '
+        . 'ORDER BY rf.package_name,rf.original_name',
+        [$id]
+    );
     echo '<div class="card"><h2>Resolved dependency files (' . $depCount . ')</h2>';
     if (!$deps) {
         echo '<p class="muted">No resolved dependency files are available for this package yet.</p>';
@@ -153,7 +170,13 @@ try {
     }
     echo '</div>';
 
-    $missing = catalog_all($db, 'SELECT required_package, required_object_path, status FROM ue_dependencies WHERE file_id=? AND status IN ("missing","package_only") ORDER BY required_package, required_object_path LIMIT 500', [$id]);
+    $missing = catalog_all(
+        $db,
+        'SELECT required_package,required_object_path,status FROM ' . $dependencySource . ' d '
+        . 'WHERE d.file_id=? AND d.status IN ("missing","package_only") '
+        . 'ORDER BY required_package,required_object_path LIMIT 500',
+        [$id]
+    );
     echo '<div class="card"><h2>Missing or package-only dependency objects</h2>';
     if (!$missing) {
         echo '<p class="muted">No missing or package-only dependency objects.</p>';
