@@ -5,6 +5,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
@@ -356,7 +357,8 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         }
 
         $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ue_dependencies WHERE file_id IN ('
+            'SELECT status,COUNT(*) c FROM ' . CatalogDependencyReadSource::sql($this->db) . ' dependencies '
+            . 'WHERE dependencies.file_id IN ('
             . implode(',', array_fill(0, count($fileIds), '?'))
             . ') GROUP BY status'
         );
