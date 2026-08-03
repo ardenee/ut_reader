@@ -87,6 +87,7 @@ final class CompactSearchProjectionWriter
             count($exports),
             $sqlBatches
         );
+        (new CompactTermOverflowWriter($this->db))->write($snapshot, $sqlBatches);
     }
 
     private function assertSchema(): void
@@ -264,10 +265,12 @@ final class CompactSearchProjectionWriter
                 if (!is_array($expected)) {
                     continue;
                 }
-                if (
-                    !hash_equals((string)$row['value_prefix'], (string)$expected['prefix'])
-                    || (int)$row['is_overflow'] !== (int)$expected['overflow']
-                ) {
+                $stored = (string)$row['value_prefix'];
+                $expectedPrefix = (string)$expected['prefix'];
+                $matches = (int)$row['is_overflow'] === 1
+                    ? str_starts_with($stored, $expectedPrefix)
+                    : hash_equals($stored, $expectedPrefix);
+                if (!$matches || (int)$row['is_overflow'] !== (int)$expected['overflow']) {
                     throw new RuntimeException('Compact search term hash collision or stored-prefix mismatch.');
                 }
                 $resolved[$key] = (int)$row['id'];
