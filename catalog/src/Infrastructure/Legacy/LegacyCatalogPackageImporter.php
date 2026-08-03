@@ -5,6 +5,7 @@ namespace UnrealDb\Catalog\Infrastructure\Legacy;
 
 use PDO;
 use UnrealDb\Catalog\Application\Upload\Contract\CatalogPackageImporter;
+use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer;
 
 /**
  * Compatibility adapter for the established scanner and reader stack.
@@ -31,7 +32,7 @@ final class LegacyCatalogPackageImporter implements CatalogPackageImporter
         bool $strictProfile,
         ?callable $progress
     ): array {
-        return \scanner_scan_uploaded_file(
+        $result = \scanner_scan_uploaded_file(
             $db,
             $config,
             $gameId,
@@ -39,6 +40,13 @@ final class LegacyCatalogPackageImporter implements CatalogPackageImporter
             $originalName,
             $userId,
             $strictProfile,
+            $progress
+        );
+
+        return VerifiedFileCompactMetadataFinalizer::finalize(
+            $db,
+            $config,
+            $result,
             $progress
         );
     }
