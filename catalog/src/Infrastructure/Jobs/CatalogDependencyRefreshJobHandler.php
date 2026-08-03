@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
+use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -191,7 +192,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         $statement = $this->db->prepare(
             'SELECT COUNT(*) total,SUM(status="resolved") resolved,SUM(status="missing") missing,'
             . 'SUM(status="package_only") package_only,SUM(status="common") common '
-            . 'FROM ue_dependencies WHERE file_id IN (' . $placeholders . ')'
+            . 'FROM ' . CatalogDependencyReadSource::sql($this->db) . ' dependencies '
+            . 'WHERE dependencies.file_id IN (' . $placeholders . ')'
         );
         $statement->execute($fileIds);
         $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
