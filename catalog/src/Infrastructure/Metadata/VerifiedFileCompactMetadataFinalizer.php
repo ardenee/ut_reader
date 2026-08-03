@@ -37,7 +37,18 @@ final class VerifiedFileCompactMetadataFinalizer
         self::emit($progress, 99, 'Building compact metadata for verified file #' . $fileId);
 
         try {
-            $conversion = (new BlockedCompressedFileMetadataConverter($db, $storageRoot))->convert($fileId);
+            $statement = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
+            $statement->execute([$fileId]);
+            $existingVersion = (int)($statement->fetchColumn() ?: 0);
+
+            if ($existingVersion === BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+                $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
+                $conversion['already_compact'] = true;
+            } else {
+                $conversion = (new BlockedCompressedFileMetadataConverter($db, $storageRoot))->convert($fileId);
+                $conversion['already_compact'] = false;
+            }
+
             if (
                 empty($conversion['verified'])
                 || (int)($conversion['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION
@@ -56,12 +67,15 @@ final class VerifiedFileCompactMetadataFinalizer
 
         $message = trim((string)($result[2] ?? ''));
         $suffix = 'compact metadata=v2, blocks=' . (int)($conversion['block_count'] ?? 0);
-        $result[2] = $message !== '' ? $message . '; ' . $suffix : $suffix;
+        if ($message === '' || !str_contains($message, 'compact metadata=v2')) {
+            $result[2] = $message !== '' ? $message . '; ' . $suffix : $suffix;
+        }
 
         $details = is_array($result[4] ?? null) ? $result[4] : [];
         $details['metadata_format_version'] = BlockedCompressedMetadataContainer::FORMAT_VERSION;
         $details['metadata_block_count'] = (int)($conversion['block_count'] ?? 0);
         $details['metadata_compressed_size'] = (int)($conversion['compressed_size'] ?? 0);
+        $details['metadata_already_compact'] = !empty($conversion['already_compact']);
         $result[4] = $details;
 
         self::emit($progress, 100, 'Verified compact metadata for file #' . $fileId);
