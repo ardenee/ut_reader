@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+
 catalog_start_session();
 
 const DUPLICATES_MAX_PAGE_LIMIT = 950;
@@ -92,13 +94,29 @@ function duplicates_same_group(PDO $db, int $canonicalId, int $duplicateId): boo
         && $guidA === $guidB;
 }
 
-function duplicates_retire_file(PDO $db, int $canonicalId, int $duplicateId): void
+/** @return array{game_id:int,file_ids:list<int>,package_names:list<string>} */
+function duplicates_retire_file(PDO $db, int $canonicalId, int $duplicateId): array
 {
     if ($canonicalId === $duplicateId) {
-        return;
+        throw new RuntimeException('The canonical and duplicate file IDs must differ.');
     }
     if (!duplicates_same_group($db, $canonicalId, $duplicateId)) {
         throw new RuntimeException('File ' . $duplicateId . ' is not in the same valid GUID group as canonical file ' . $canonicalId);
+    }
+
+    $files = catalog_all(
+        $db,
+        'SELECT id,game_id,package_name FROM ue_files WHERE id IN (?,?)',
+        [$canonicalId, $duplicateId]
+    );
+    $byId = [];
+    foreach ($files as $file) {
+        $byId[(int)$file['id']] = $file;
+    }
+    $canonical = $byId[$canonicalId] ?? null;
+    $duplicate = $byId[$duplicateId] ?? null;
+    if (!$canonical || !$duplicate) {
+        throw new RuntimeException('The selected duplicate files disappeared before retirement.');
     }
 
     $locations = catalog_all($db, 'SELECT * FROM ue_file_locations WHERE file_id=?', [$duplicateId]);
@@ -107,15 +125,17 @@ function duplicates_retire_file(PDO $db, int $canonicalId, int $duplicateId): vo
         $insertLocation->execute([$canonicalId, (int)$loc['source_id'], (string)$loc['source_relative_path'], (int)$loc['exists_in_source'], $loc['last_seen_at']]);
     }
 
-    $deps = catalog_all($db, 'SELECT id, required_object_path FROM ue_dependencies WHERE resolved_file_id=?', [$duplicateId]);
-    $updateDep = $db->prepare('UPDATE ue_dependencies SET resolved_file_id=?, resolved_export_id=?, status=? WHERE id=?');
-    foreach ($deps as $dep) {
-        $export = catalog_one($db, 'SELECT id FROM ue_exports WHERE file_id=? AND full_path=? LIMIT 1', [$canonicalId, (string)$dep['required_object_path']]);
-        $updateDep->execute([$canonicalId, $export ? (int)$export['id'] : null, $export ? 'resolved' : 'package_only', (int)$dep['id']]);
-    }
-
     $db->prepare('UPDATE ue_files SET scan_status="duplicate", scan_notes=CONCAT(COALESCE(scan_notes,""), ? ) WHERE id=?')
         ->execute(["\nRetired as duplicate of file ID " . $canonicalId . " on " . date('Y-m-d H:i:s'), $duplicateId]);
+
+    return [
+        'game_id' => (int)$canonical['game_id'],
+        'file_ids' => [$canonicalId, $duplicateId],
+        'package_names' => array_values(array_unique([
+            (string)$canonical['package_name'],
+            (string)$duplicate['package_name'],
+        ])),
+    ];
 }
 
 /** @return list<array{canonical_id:int,duplicate_ids:list<int>}> */
@@ -184,17 +204,38 @@ try {
             throw new RuntimeException('Too many duplicate files selected. Process at most ' . DUPLICATES_MAX_PAGE_LIMIT . ' rows at once.');
         }
 
+        $reconciliation = [];
         $db->beginTransaction();
         try {
             foreach ($postedGroups as $postedGroup) {
                 foreach ($postedGroup['duplicate_ids'] as $duplicateId) {
-                    duplicates_retire_file($db, $postedGroup['canonical_id'], $duplicateId);
+                    $context = duplicates_retire_file($db, $postedGroup['canonical_id'], $duplicateId);
+                    $key = (string)$context['game_id'];
+                    $reconciliation[$key]['game_id'] = $context['game_id'];
+                    foreach ($context['file_ids'] as $id) {
+                        $reconciliation[$key]['file_ids'][$id] = true;
+                    }
+                    foreach ($context['package_names'] as $name) {
+                        $reconciliation[$key]['package_names'][strtolower($name)] = $name;
+                    }
                 }
             }
             $db->commit();
         } catch (Throwable $error) {
             $db->rollBack();
             throw $error;
+        }
+
+        foreach ($reconciliation as $context) {
+            foreach (array_keys((array)($context['file_ids'] ?? [])) as $fileId) {
+                CatalogProjectionReconciliationQueue::enqueue(
+                    $db,
+                    (int)$fileId,
+                    [(int)$context['game_id']],
+                    array_values((array)($context['package_names'] ?? [])),
+                    $config
+                );
+            }
         }
 
         $_SESSION['flash_duplicates'] = 'Retired ' . $totalSelected . ' duplicate file(s) into ' . count($postedGroups) . ' canonical group(s).';
@@ -297,7 +338,7 @@ try {
     catalog_page_header('GUID duplicate manager', 'Find active verified packages with the same valid Unreal package GUID in the same game. All-zero placeholder GUIDs are excluded.', ['Games' => 'games.php', 'Zero GUID repair' => 'guid-normalize.php', 'Source Scanner' => 'source-scan.php', 'Sources' => 'sources.php']);
 
     echo '<div class="card duplicates-help"><h2>What this page does</h2>';
-    echo '<p><strong>Keep</strong> means the file row you want to keep as the active catalog record for this GUID group. <strong>Retire</strong> marks the selected duplicate row as <span class="mono">scan_status=duplicate</span>, moves its source locations onto the kept file, and redirects dependency rows that previously resolved to the duplicate so they point at the kept file where possible.</p>';
+    echo '<p><strong>Keep</strong> means the file row you want to keep as the active catalog record for this GUID group. <strong>Retire</strong> marks the selected duplicate row as <span class="mono">scan_status=duplicate</span>, moves its source locations onto the kept file, and queues compact dependency reconciliation for the old and new package identities.</p>';
     echo '<p class="muted">Blank and all-zero GUIDs are invalid placeholders, not package identities. They are excluded here and can be reviewed through Zero GUID repair.</p></div>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Filters</h2><p>Hard page limit is ' . DUPLICATES_MAX_PAGE_LIMIT . ' visible file rows to stay below common PHP post variable limits.</p></div></div><div class="ui-section__body">';
