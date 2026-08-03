@@ -211,23 +211,21 @@ function catalog_source_identity_rebuild_file(
             throw $error;
         }
 
-        if ($primaryChanged) {
-            try {
-                catalog_compact_metadata_rewrite_package_identity(
-                    $db,
-                    $config,
-                    $fileId,
-                    $primaryPackageName
-                );
-            } catch (Throwable $error) {
-                $db->prepare(
-                    'UPDATE ue_files SET scan_notes=CONCAT_WS("\n",NULLIF(scan_notes,""),?) WHERE id=?'
-                )->execute([
-                    'Compact source identity publication failed: ' . $error->getMessage(),
-                    $fileId,
-                ]);
-                throw $error;
-            }
+        try {
+            catalog_compact_metadata_rewrite_package_identity(
+                $db,
+                $config,
+                $fileId,
+                $primaryPackageName
+            );
+        } catch (Throwable $error) {
+            $db->prepare(
+                'UPDATE ue_files SET scan_notes=CONCAT_WS("\n",NULLIF(scan_notes,""),?) WHERE id=?'
+            )->execute([
+                'Compact source identity publication failed: ' . $error->getMessage(),
+                $fileId,
+            ]);
+            throw $error;
         }
     }
 
