@@ -33,6 +33,7 @@ final class LegacyMetadataRuntimeAudit
         'lib/CatalogLegacyDataAudit.php',
         'lib/CatalogPerformance.php',
         'lib/CatalogRuntimeSqlCompatibility.php',
+        'lib/CatalogUnverifiedGameMatches.php',
         'lib/CatalogUnverifiedIndex.php',
         'lib/GameManagerLifecycle.php',
         'unverified-file-details.php',
@@ -82,7 +83,6 @@ final class LegacyMetadataRuntimeAudit
         'federation/request-generate.php',
         'game-page.php',
         'lib/CatalogSourceIdentity.php',
-        'lib/CatalogUnverifiedGameMatches.php',
         'lib/FederationDependencyDownloads.php',
         'lib/FederationWorker.php',
         'lib/ModPackageBuilder.php',
@@ -92,6 +92,23 @@ final class LegacyMetadataRuntimeAudit
         'missing.php',
         'src/Application/Dashboard/CatalogDashboardStats.php',
         'src/Application/Telemetry/CatalogExactCountQueryCatalog.php',
+    ];
+
+    /**
+     * Read-only Names/Imports/Exports SQL in these files is routed through
+     * CatalogCompactMetadataCompatibility by catalog_one/catalog_all/catalog_count.
+     *
+     * @var list<string>
+     */
+    private const CENTRAL_METADATA_READ_FILES = [
+        'duplicates-keep.php',
+        'duplicates.php',
+        'file-examine-core.php',
+        'game-upks.php',
+        'lib/CatalogAssetMetadata.php',
+        'lib/CatalogSourceIdentity.php',
+        'package-normalize.php',
+        'upk-info.php',
     ];
 
     /** @return array{files:int,references:int,matches:list<array<string,mixed>>} */
@@ -179,9 +196,16 @@ final class LegacyMetadataRuntimeAudit
 
     private static function approvedMatch(string $relative, string $table, string $operation): bool
     {
-        return $table === 'ue_dependencies'
-            && $operation === 'read'
-            && in_array($relative, self::CENTRAL_DEPENDENCY_READ_FILES, true);
+        if ($operation !== 'read') {
+            return false;
+        }
+        if ($table === 'ue_dependencies') {
+            return in_array($relative, self::CENTRAL_DEPENDENCY_READ_FILES, true);
+        }
+        if (in_array($table, ['ue_names', 'ue_imports', 'ue_exports'], true)) {
+            return in_array($relative, self::CENTRAL_METADATA_READ_FILES, true);
+        }
+        return false;
     }
 
     private static function operation(string $line): string
