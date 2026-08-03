@@ -2,6 +2,8 @@
 <?php
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit;
+
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This command may only run from the PHP CLI.\n");
     exit(1);
@@ -26,6 +28,33 @@ function compact_readiness_legacy_counts(PDO $db): array
         $counts[$table] = compact_readiness_scalar($db, 'SELECT COUNT(*) FROM ' . $table);
     }
     return $counts;
+}
+
+/** @param list<array<string,mixed>> $matches @return list<string> */
+function compact_readiness_runtime_blockers(array $matches): array
+{
+    $byFile = [];
+    foreach ($matches as $match) {
+        $file = (string)($match['file'] ?? 'unknown');
+        $table = (string)($match['table'] ?? 'unknown');
+        $operation = (string)($match['operation'] ?? 'read');
+        $byFile[$file]['count'] = (int)($byFile[$file]['count'] ?? 0) + 1;
+        $byFile[$file]['tables'][$table] = true;
+        $byFile[$file]['operations'][$operation] = true;
+    }
+
+    ksort($byFile, SORT_NATURAL | SORT_FLAG_CASE);
+    $blockers = [];
+    foreach ($byFile as $file => $details) {
+        $tables = array_keys((array)$details['tables']);
+        $operations = array_keys((array)$details['operations']);
+        sort($tables, SORT_NATURAL | SORT_FLAG_CASE);
+        sort($operations, SORT_NATURAL | SORT_FLAG_CASE);
+        $blockers[] = $file . ' contains ' . (int)$details['count']
+            . ' unapproved legacy metadata reference(s): '
+            . implode(', ', $tables) . ' [' . implode(', ', $operations) . '].';
+    }
+    return $blockers;
 }
 
 try {
@@ -132,21 +161,19 @@ try {
         $dataBlockers[] = $missingImportTerms . ' dependency projection row(s) have no Import object term.';
     }
 
-    /*
-     * These are explicit runtime gates, not a best-effort source grep. Remove an
-     * entry only after the named path is compact-native and covered by a contract
-     * test. The deletion command will consume this same gate before removing rows.
-     */
-    $runtimeBlockers = [
-        'Direct scanner callers outside the central package importer still require guaranteed compact finalisation.',
-        'CatalogFileMaintenance snapshot/rollback still reads and restores legacy metadata rows.',
-        'Legacy CatalogImport path still writes Names/Imports/Exports/dependencies directly.',
-        'Game backup import/export paths still include legacy metadata-table assumptions.',
-    ];
+    $runtimeAudit = LegacyMetadataRuntimeAudit::scan(dirname(__DIR__));
+    $runtimeMatches = (array)$runtimeAudit['matches'];
+    $runtimeBlockers = compact_readiness_runtime_blockers($runtimeMatches);
+    $runtimeWriteReferences = count(array_filter(
+        $runtimeMatches,
+        static fn(array $match): bool => (string)($match['operation'] ?? 'read') !== 'read'
+    ));
+    $runtimeReadReferences = count($runtimeMatches) - $runtimeWriteReferences;
 
     $dataReady = $dataBlockers === [];
-    $writeReady = $runtimeBlockers === [];
-    $safeToDelete = $dataReady && $writeReady;
+    $writeReady = $runtimeWriteReferences === 0;
+    $readReady = $runtimeReadReferences === 0;
+    $safeToDelete = $dataReady && $writeReady && $readReady;
 
     $output = [
         'verified_files' => $verifiedFiles,
@@ -161,9 +188,15 @@ try {
         'legacy_rows' => compact_readiness_legacy_counts($db),
         'data_ready' => $dataReady,
         'compact_write_ready' => $writeReady,
+        'compact_read_ready' => $readReady,
         'safe_to_delete_legacy_rows' => $safeToDelete,
+        'runtime_legacy_reference_files' => (int)$runtimeAudit['files'],
+        'runtime_legacy_references' => (int)$runtimeAudit['references'],
+        'runtime_legacy_read_references' => $runtimeReadReferences,
+        'runtime_legacy_write_references' => $runtimeWriteReferences,
         'data_blockers' => $dataBlockers,
         'runtime_blockers' => $runtimeBlockers,
+        'runtime_reference_matches' => $runtimeMatches,
     ];
 
     fwrite(STDOUT, json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
