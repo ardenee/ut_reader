@@ -62,8 +62,35 @@ try {
     if ((int)($paths['override_count'] ?? 0) !== 1) {
         throw new RuntimeException('Expected exactly one legacy path override.');
     }
+    if ((int)($paths['structural_anomaly_count'] ?? 0) !== 0) {
+        throw new RuntimeException('Unexpected structural anomaly for the path-override fixture.');
+    }
 
-    echo "Compressed metadata rooted-path and override contract passed.\n";
+    $broken = $validatePaths->invoke(
+        $snapshot,
+        'DM-Roghinery2k4T',
+        [],
+        [
+            [
+                'export_index' => 0,
+                'object_name' => 'BrokenActor',
+                'outer_index' => 17920,
+                'local_path' => 'PersistentLevel.BrokenActor',
+                'full_path' => 'DM-Roghinery2k4T.PersistentLevel.BrokenActor',
+            ],
+        ]
+    );
+    if (($broken['exports'][0]['local'] ?? null) !== 'PersistentLevel.BrokenActor') {
+        throw new RuntimeException('Broken-reference Export local path was not preserved.');
+    }
+    if (($broken['exports'][0]['full'] ?? null) !== 'DM-Roghinery2k4T.PersistentLevel.BrokenActor') {
+        throw new RuntimeException('Broken-reference Export full path was not preserved.');
+    }
+    if ((int)($broken['structural_anomaly_count'] ?? 0) !== 1) {
+        throw new RuntimeException('Expected exactly one missing-reference structural anomaly.');
+    }
+
+    echo "Compressed metadata rooted-path, override and structural-anomaly contract passed.\n";
     exit(0);
 } catch (Throwable $error) {
     fwrite(STDERR, 'Compressed metadata rooted-path contract failed: ' . $error->getMessage() . PHP_EOL);
