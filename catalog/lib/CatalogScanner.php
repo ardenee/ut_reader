@@ -417,6 +417,30 @@ function scanner_ref_path(int $ref, array $imports, array $exports, array &$cach
 
 function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?callable $progress = null, int $startPercent = 0, int $endPercent = 100, string $prefix = 'Rebuilding dependencies'): void
 {
+    $metadata = catalog_one($db, 'SELECT format_version FROM ue_file_metadata WHERE file_id=?', [$fileId]);
+    if ((int)($metadata['format_version'] ?? 0) >= 2) {
+        if ($db->inTransaction()) {
+            throw new RuntimeException('Compact dependency rebuilding cannot run inside an existing database transaction.');
+        }
+        $storageRoot = trim((string)($config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
+        }
+        scanner_emit_percent($progress, 'dependencies', $startPercent, $prefix . ': loading compact metadata');
+        $result = (new \UnrealDb\Catalog\Infrastructure\Metadata\CompactDependencyRebuilder(
+            $db,
+            $storageRoot
+        ))->rebuild($fileId);
+        scanner_emit_percent(
+            $progress,
+            'dependencies',
+            $endPercent,
+            $prefix . ': compact imports=' . (int)($result['imports_processed'] ?? 0)
+            . ', changed=' . (int)($result['dependencies_changed'] ?? 0)
+        );
+        return;
+    }
+
     catalog_dependency_schema_ensure($db);
     scanner_emit_percent($progress, 'dependencies', $startPercent, $prefix . ': clearing old links');
     $db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
@@ -505,21 +529,29 @@ function scanner_rebuild_affected_dependencies(PDO $db, array $config, int $newF
         scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing affected dependency links: no existing files affected');
         return;
     }
-    foreach ($affectedFileIds as $index => $fileId) {
-        scanner_rebuild_dependencies($db, $config, $fileId, $progress, scanner_range_percent($startPercent, $endPercent, $index, $total), scanner_range_percent($startPercent, $endPercent, $index + 1, $total), 'Refreshing affected dependency links ' . ($index + 1) . '/' . $total);
+    foreach ($affectedFileIds as $index => $affectedFileId) {
+        scanner_rebuild_dependencies($db, $config, $affectedFileId, $progress, scanner_range_percent($startPercent, $endPercent, $index, $total), scanner_range_percent($startPercent, $endPercent, $index + 1, $total), 'Refreshing affected dependency links ' . ($index + 1) . '/' . $total);
     }
 }
 
-function scanner_rebuild_affected_dependencies_for_package(PDO $db, array $config, int $gameId, string $packageName, ?callable $progress = null, int $startPercent = 56, int $endPercent = 99): void
+function scanner_rebuild_affected_dependencies_for_package(PDO $db, array $config, int $gameId, string $packageName, ?callable $progress = null, int $startPercent = 56, int $endPercent = 99, int $providerFileId = 0): void
 {
-    $files = catalog_all($db, 'SELECT DISTINCT f.id, f.package_name FROM ue_files f JOIN ue_imports i ON i.file_id=f.id WHERE f.game_id=? AND f.scan_status="verified" AND i.root_package=? ORDER BY f.package_name, f.id', [$gameId, $packageName]);
-    $total = count($files);
+    if ($providerFileId < 1) {
+        throw new RuntimeException('Alias dependency refresh requires the provider file ID.');
+    }
+    $affectedFileIds = CatalogAffectedDependencyRefreshService::findAffectedFileIds(
+        $db,
+        $gameId,
+        $providerFileId,
+        $packageName
+    );
+    $total = count($affectedFileIds);
     if ($total === 0) {
         scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing alias dependency links: no existing files affected');
         return;
     }
-    foreach ($files as $index => $file) {
-        scanner_rebuild_dependencies($db, $config, (int)$file['id'], $progress, scanner_range_percent($startPercent, $endPercent, $index, $total), scanner_range_percent($startPercent, $endPercent, $index + 1, $total), 'Refreshing alias dependency links ' . ($index + 1) . '/' . $total . ' (' . $packageName . ')');
+    foreach ($affectedFileIds as $index => $affectedFileId) {
+        scanner_rebuild_dependencies($db, $config, $affectedFileId, $progress, scanner_range_percent($startPercent, $endPercent, $index, $total), scanner_range_percent($startPercent, $endPercent, $index + 1, $total), 'Refreshing alias dependency links ' . ($index + 1) . '/' . $total . ' (' . $packageName . ')');
     }
 }
 
@@ -640,7 +672,7 @@ function scanner_scan_uploaded_file(PDO $db, array $config, int $gameId, string 
             scanner_emit_percent($progress, 'dependencies', 99, 'Alias dependency refresh deferred to the final Full Sync pass');
         } else {
             try {
-                scanner_rebuild_affected_dependencies_for_package($db, $config, $gameId, $packageName, $progress, 56, 99);
+                scanner_rebuild_affected_dependencies_for_package($db, $config, $gameId, $packageName, $progress, 56, 99, $duplicateFileId);
             } catch (Throwable $refreshError) {
                 error_log('[UnrealDB dependency refresh] alias_package=' . $packageName . ' file_id=' . $duplicateFileId . ' error=' . $refreshError->getMessage());
                 $refreshWarning = '; dependency refresh warning logged for maintenance';
