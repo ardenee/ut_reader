@@ -153,14 +153,22 @@ function catalog_maintenance_referring_file_ids(PDO $db, int $gameId, array $pac
         return [];
     }
 
-    $sql = 'SELECT DISTINCT d.file_id'
-        . ' FROM ue_dependencies d'
-        . ' JOIN ue_files owner ON owner.id=d.file_id'
-        . ' WHERE owner.game_id=?'
-        . ' AND d.required_package IN (' . implode(',', array_fill(0, count($packageNames), '?')) . ')';
-    $args = [$gameId, ...$packageNames];
+    $conditions = [];
+    $args = [$gameId];
+    foreach ($packageNames as $packageName) {
+        $conditions[] = '(t.value_hash=? AND t.value_length=? AND t.value_prefix=?)';
+        $args[] = md5($packageName, true);
+        $args[] = strlen($packageName);
+        $args[] = substr($packageName, 0, 200);
+    }
+
+    $sql = 'SELECT DISTINCT l.file_id'
+        . ' FROM ue_dependency_links l'
+        . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+        . ' JOIN ue_files owner ON owner.id=l.file_id'
+        . ' WHERE owner.game_id=? AND (' . implode(' OR ', $conditions) . ')';
     if ($excludeFileId > 0) {
-        $sql .= ' AND d.file_id<>?';
+        $sql .= ' AND l.file_id<>?';
         $args[] = $excludeFileId;
     }
 
@@ -277,7 +285,7 @@ function catalog_maintenance_reimport_with_identity_refresh(PDO $db, array $conf
             'file_id' => null,
             'game_id' => (int)$removed['game_id'],
             'original_name' => (string)$removed['original_name'],
-            'message' => 'Stored package was missing; removed its catalog record, aliases, tables, locations, and dependency references.',
+            'message' => 'Stored package was missing; removed its catalog record, aliases, compact metadata, locations, and dependency references.',
         ];
     }
 
