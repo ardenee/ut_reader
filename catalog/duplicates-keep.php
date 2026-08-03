@@ -129,28 +129,6 @@ function duplicates_keep_retire_file(PDO $db, int $canonicalId, int $duplicateId
         ]);
     }
 
-    $dependencies = catalog_all(
-        $db,
-        'SELECT id,required_object_path FROM ue_dependencies WHERE resolved_file_id=?',
-        [$duplicateId]
-    );
-    $updateDependency = $db->prepare(
-        'UPDATE ue_dependencies SET resolved_file_id=?,resolved_export_id=?,status=? WHERE id=?'
-    );
-    foreach ($dependencies as $dependency) {
-        $export = catalog_one(
-            $db,
-            'SELECT id FROM ue_exports WHERE file_id=? AND full_path=? LIMIT 1',
-            [$canonicalId, (string)$dependency['required_object_path']]
-        );
-        $updateDependency->execute([
-            $canonicalId,
-            $export ? (int)$export['id'] : null,
-            $export ? 'resolved' : 'package_only',
-            (int)$dependency['id'],
-        ]);
-    }
-
     $db->prepare(
         'UPDATE ue_files SET scan_status="duplicate",scan_notes=CONCAT(COALESCE(scan_notes,""),?) WHERE id=?'
     )->execute([
