@@ -55,6 +55,7 @@ final class LegacyMetadataRuntimeAudit
         'src/Infrastructure/Persistence/PdoSearchDocumentIndexer.php',
         'src/Infrastructure/Persistence/SearchDocumentMigrationExecutor.php',
         'lib/UnverifiedMetadataRepair.php',
+        'bin/backfill-full-compact-terms.php',
         'bin/convert-file-metadata-batch.php',
         'bin/verify-compact-dependency-resolver.php',
         'bin/verify-compact-maintenance-restore.php',
