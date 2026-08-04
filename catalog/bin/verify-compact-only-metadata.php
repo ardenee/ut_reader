@@ -66,27 +66,29 @@ try {
         throw new RuntimeException('Catalog storage_path is required for compact-only verification.');
     }
 
-    $statement = $db->query(
+    $files = $db->query(
         'SELECT f.id,f.game_id,f.name_count,f.import_count,f.export_count,'
-        . 'm.format_version,m.compressed_size,m.payload_sha256 '
-        . 'FROM ue_files f '
-        . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+        . 'm.format_version,m.compressed_size,m.payload_sha256,'
+        . 'm.name_count metadata_name_count,m.import_count metadata_import_count,'
+        . 'm.export_count metadata_export_count '
+        . 'FROM ue_files f LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
         . 'WHERE f.scan_status="verified" ORDER BY f.id'
-    );
-    $files = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
-    $verifiedFiles = count($files);
+    )->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
-    $missingFormat2 = 0;
-    $metadataCountMismatches = 0;
+    $verifiedFiles = count($files);
     $expectedNames = 0;
     $expectedImports = 0;
     $expectedExports = 0;
-    $missingContainers = [];
-    $containerSizeMismatches = [];
-    $sampleIndexes = compact_only_sample_indexes($verifiedFiles, $hashSample);
-    $sampledContainers = 0;
-    $hashMismatches = [];
+    $missingFormat2 = 0;
+    $metadataCountMismatches = 0;
+    $missingContainerCount = 0;
+    $containerSizeMismatchCount = 0;
+    $missingContainerSample = [];
+    $containerSizeMismatchSample = [];
+    $hashMismatchFileIds = [];
     $containerVerificationFailures = [];
+    $sampledContainers = 0;
+    $sampleIndexes = compact_only_sample_indexes($verifiedFiles, $hashSample);
 
     foreach ($files as $index => $file) {
         $fileId = (int)$file['id'];
@@ -100,24 +102,26 @@ try {
             continue;
         }
         if (
-            (int)$file['name_count'] < 0
-            || (int)$file['import_count'] < 0
-            || (int)$file['export_count'] < 0
+            (int)$file['metadata_name_count'] !== (int)$file['name_count']
+            || (int)$file['metadata_import_count'] !== (int)$file['import_count']
+            || (int)$file['metadata_export_count'] !== (int)$file['export_count']
         ) {
             $metadataCountMismatches++;
         }
 
         $path = BlockedCompressedMetadataContainer::path($storageRoot, $gameId, $fileId);
         if (!is_file($path)) {
-            if (count($missingContainers) < 25) {
-                $missingContainers[] = ['file_id' => $fileId, 'path' => $path];
+            $missingContainerCount++;
+            if (count($missingContainerSample) < 25) {
+                $missingContainerSample[] = ['file_id' => $fileId, 'path' => $path];
             }
             continue;
         }
         $actualSize = filesize($path);
-        if ($actualSize === false || $actualSize !== (int)$file['compressed_size']) {
-            if (count($containerSizeMismatches) < 25) {
-                $containerSizeMismatches[] = [
+        if ($actualSize === false || (int)$actualSize !== (int)$file['compressed_size']) {
+            $containerSizeMismatchCount++;
+            if (count($containerSizeMismatchSample) < 25) {
+                $containerSizeMismatchSample[] = [
                     'file_id' => $fileId,
                     'expected' => (int)$file['compressed_size'],
                     'actual' => $actualSize === false ? null : (int)$actualSize,
@@ -125,10 +129,10 @@ try {
             }
             continue;
         }
-
         if (!isset($sampleIndexes[$index])) {
             continue;
         }
+
         $sampledContainers++;
         $bytes = file_get_contents($path);
         if (!is_string($bytes)) {
@@ -136,7 +140,7 @@ try {
             continue;
         }
         if (!hash_equals((string)$file['payload_sha256'], hash('sha256', $bytes, true))) {
-            $hashMismatches[] = $fileId;
+            $hashMismatchFileIds[] = $fileId;
             continue;
         }
         try {
@@ -183,7 +187,7 @@ try {
         $blockers[] = $missingFormat2 . ' verified file(s) are missing format-2 metadata.';
     }
     if ($metadataCountMismatches !== 0) {
-        $blockers[] = $metadataCountMismatches . ' verified file(s) have invalid metadata counts.';
+        $blockers[] = $metadataCountMismatches . ' verified file(s) have metadata count mismatches.';
     }
     if ($actualExportLookup !== $expectedExports) {
         $blockers[] = 'Export projection count mismatch.';
@@ -203,13 +207,13 @@ try {
     if ((int)$runtimeAudit['references'] !== 0) {
         $blockers[] = (int)$runtimeAudit['references'] . ' unapproved runtime legacy reference(s) remain.';
     }
-    if ($missingContainers !== []) {
-        $blockers[] = 'One or more compact metadata containers are missing.';
+    if ($missingContainerCount !== 0) {
+        $blockers[] = $missingContainerCount . ' compact metadata container(s) are missing.';
     }
-    if ($containerSizeMismatches !== []) {
-        $blockers[] = 'One or more compact metadata container sizes do not match the database.';
+    if ($containerSizeMismatchCount !== 0) {
+        $blockers[] = $containerSizeMismatchCount . ' compact metadata container size(s) do not match.';
     }
-    if ($hashMismatches !== [] || $containerVerificationFailures !== []) {
+    if ($hashMismatchFileIds !== [] || $containerVerificationFailures !== []) {
         $blockers[] = 'One or more sampled compact metadata containers failed integrity verification.';
     }
 
@@ -234,10 +238,12 @@ try {
         'verified_format2_legacy_rows' => $legacyVerifiedRows,
         'runtime_legacy_references' => (int)$runtimeAudit['references'],
         'containers_checked_for_presence_and_size' => $verifiedFiles - $missingFormat2,
+        'missing_container_count' => $missingContainerCount,
+        'container_size_mismatch_count' => $containerSizeMismatchCount,
         'containers_integrity_sampled' => $sampledContainers,
-        'missing_container_sample' => $missingContainers,
-        'container_size_mismatch_sample' => $containerSizeMismatches,
-        'hash_mismatch_file_ids' => array_slice($hashMismatches, 0, 25),
+        'missing_container_sample' => $missingContainerSample,
+        'container_size_mismatch_sample' => $containerSizeMismatchSample,
+        'hash_mismatch_file_ids' => array_slice($hashMismatchFileIds, 0, 25),
         'container_verification_failures' => array_slice($containerVerificationFailures, 0, 25),
         'blockers' => $blockers,
     ];
