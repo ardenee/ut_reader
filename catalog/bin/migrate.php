@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Infrastructure\Persistence\MigrationRunner;
-use UnrealDb\Catalog\Infrastructure\Persistence\SearchDocumentMigrationExecutor;
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This command may only run from the PHP CLI.\n");
@@ -16,40 +15,22 @@ function migration_usage(): void
 {
     fwrite(STDOUT, "Usage:\n");
     fwrite(STDOUT, "  php catalog/bin/migrate.php status\n");
-    fwrite(STDOUT, "  php catalog/bin/migrate.php migrate [--dry-run] [--lock-timeout=30] [--search-backfill-batch=25000] [--defer-search-indexes]\n");
+    fwrite(STDOUT, "  php catalog/bin/migrate.php migrate [--dry-run] [--lock-timeout=30]\n");
     fwrite(STDOUT, "  php catalog/bin/migrate.php verify\n");
 }
 
-/** @return array{command:string,dry_run:bool,lock_timeout:int,search_backfill_batch:int,defer_search_indexes:bool} */
+/** @return array{command:string,dry_run:bool,lock_timeout:int} */
 function migration_parse_arguments(array $arguments): array
 {
     $command = 'status';
     $commandSet = false;
     $dryRun = false;
-    $deferSearchIndexes = false;
     $timeout = (int)(getenv('UNREALDB_MIGRATION_LOCK_TIMEOUT') ?: 30);
-    $searchBackfillBatch = (int)(getenv('UNREALDB_SEARCH_BACKFILL_BATCH') ?: 25000);
 
     for ($index = 0, $count = count($arguments); $index < $count; $index++) {
         $argument = (string)$arguments[$index];
         if ($argument === '--dry-run') {
             $dryRun = true;
-            continue;
-        }
-        if ($argument === '--defer-search-indexes') {
-            $deferSearchIndexes = true;
-            continue;
-        }
-        if (str_starts_with($argument, '--search-backfill-batch=')) {
-            $searchBackfillBatch = (int)substr($argument, strlen('--search-backfill-batch='));
-            continue;
-        }
-        if ($argument === '--search-backfill-batch') {
-            $index++;
-            if ($index >= $count) {
-                throw new InvalidArgumentException('--search-backfill-batch requires a value.');
-            }
-            $searchBackfillBatch = (int)$arguments[$index];
             continue;
         }
         if (str_starts_with($argument, '--lock-timeout=')) {
@@ -78,8 +59,6 @@ function migration_parse_arguments(array $arguments): array
         'command' => $command,
         'dry_run' => $dryRun,
         'lock_timeout' => max(0, min($timeout, 300)),
-        'search_backfill_batch' => max(1000, min($searchBackfillBatch, 250000)),
-        'defer_search_indexes' => $deferSearchIndexes,
     ];
 }
 
@@ -87,7 +66,7 @@ function migration_parse_arguments(array $arguments): array
 function migration_print_status(array $rows): void
 {
     if ($rows === []) {
-        fwrite(STDOUT, "No migration files found.\n");
+        fwrite(STDOUT, "No pending migration files found.\n");
         return;
     }
 
@@ -105,19 +84,6 @@ function migration_print_status(array $rows): void
     }
 }
 
-/** @return array{tmpdir:string,innodb_tmpdir:string,datadir:string} */
-function migration_database_paths(PDO $db): array
-{
-    $row = $db->query(
-        'SELECT @@global.tmpdir tmpdir,@@global.innodb_tmpdir innodb_tmpdir,@@global.datadir datadir'
-    )->fetch(PDO::FETCH_ASSOC);
-    return [
-        'tmpdir' => trim((string)($row['tmpdir'] ?? '')),
-        'innodb_tmpdir' => trim((string)($row['innodb_tmpdir'] ?? '')),
-        'datadir' => trim((string)($row['datadir'] ?? '')),
-    ];
-}
-
 try {
     $arguments = migration_parse_arguments(array_slice($argv, 1));
     $command = $arguments['command'];
@@ -131,39 +97,10 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
-
-    if ($arguments['defer_search_indexes']) {
-        putenv('UNREALDB_DEFER_INDEXES=' . implode(',', [
-            'idx_ue_search_game_primary',
-            'idx_ue_search_game_secondary',
-            'idx_ue_search_file',
-            'ft_ue_search_values',
-        ]));
-    }
-
-    $lastProgress = [];
-    $searchExecutor = static function (PDO $database, $schema, array $migration) use ($arguments, &$lastProgress): void {
-        fwrite(STDOUT, "Running migration 202607270003 with bounded, restart-safe source-ID batches.\n");
-        SearchDocumentMigrationExecutor::execute(
-            $database,
-            $schema,
-            $arguments['search_backfill_batch'],
-            static function (string $source, int $completed, int $maximum) use (&$lastProgress): void {
-                $percent = $maximum > 0 ? (int)floor(($completed / $maximum) * 100) : 100;
-                $previous = (int)($lastProgress[$source] ?? -5);
-                if ($completed >= $maximum || $percent >= $previous + 5) {
-                    $lastProgress[$source] = $percent;
-                    fwrite(STDOUT, sprintf("  %-8s %3d%% (%d / %d source IDs)\n", $source, $percent, $completed, $maximum));
-                }
-            }
-        );
-    };
-
     $runner = new MigrationRunner(
         $db,
         __DIR__ . '/../migrations',
-        $arguments['lock_timeout'],
-        ['202607270003' => $searchExecutor]
+        $arguments['lock_timeout']
     );
 
     if ($command === 'status') {
@@ -187,22 +124,6 @@ try {
         exit(0);
     }
 
-    $statusBefore = $runner->status();
-    $searchMigrationPending = count(array_filter(
-        $statusBefore,
-        static fn(array $row): bool => (string)$row['version'] === '202607270003' && (string)$row['state'] === 'pending'
-    )) > 0;
-    if ($searchMigrationPending && !$arguments['dry_run']) {
-        $paths = migration_database_paths($db);
-        fwrite(STDOUT, "MySQL/MariaDB paths before search backfill (informational only):\n");
-        fwrite(STDOUT, '  tmpdir:        ' . ($paths['tmpdir'] !== '' ? $paths['tmpdir'] : '(server default)') . "\n");
-        fwrite(STDOUT, '  innodb_tmpdir: ' . ($paths['innodb_tmpdir'] !== '' ? $paths['innodb_tmpdir'] : '(uses tmpdir)') . "\n");
-        fwrite(STDOUT, '  datadir:       ' . ($paths['datadir'] !== '' ? $paths['datadir'] : '(unknown)') . "\n");
-        if ($arguments['defer_search_indexes']) {
-            fwrite(STDOUT, "Search-document secondary/FULLTEXT indexes are deferred for this run.\n");
-        }
-    }
-
     $changed = $runner->migrate($arguments['dry_run']);
     if ($arguments['dry_run']) {
         migration_print_status($changed);
@@ -217,11 +138,6 @@ try {
 
     migration_print_status($changed);
     fwrite(STDOUT, count($changed) . " migration(s) applied.\n");
-    if ($arguments['defer_search_indexes']) {
-        fwrite(STDOUT, "Search-document indexes remain deferred. Build them separately when ready:\n");
-        fwrite(STDOUT, "  php catalog/bin/search-document-indexes.php status\n");
-        fwrite(STDOUT, "  php catalog/bin/search-document-indexes.php build\n");
-    }
     exit(0);
 } catch (Throwable $exception) {
     error_log('[UnrealDB migrations] ' . get_class($exception) . ': ' . $exception->getMessage());

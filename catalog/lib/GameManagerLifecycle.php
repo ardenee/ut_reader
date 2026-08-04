@@ -21,7 +21,6 @@ function gm_lifecycle_optimise_table_list(bool $deleteGame): array
         'ue_asset_registry_assets',
         'ue_dependency_package_summaries',
         'ue_dependencies',
-        'ue_search_documents',
         'ue_package_providers',
         'ue_exports',
         'ue_imports',

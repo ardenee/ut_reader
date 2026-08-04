@@ -64,7 +64,6 @@ try {
 
     $requiredTables = [
         'ue_game_catalog_stats',
-        'ue_search_documents',
         'ue_dependency_package_summaries',
         'ue_exact_count_telemetry',
         'ue_exact_count_query_plans',

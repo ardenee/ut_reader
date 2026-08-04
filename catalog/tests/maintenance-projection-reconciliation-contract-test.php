@@ -61,15 +61,27 @@ maintenance_projection_expect(
         && str_contains($handler, "'stats_refreshed' => \$statsRefreshed"),
     'Projection handler does not support deleted files and game-only zero-state reconciliation.'
 );
+maintenance_projection_expect(
+    !str_contains($handler, 'ue_search_documents')
+        && !str_contains($handler, 'PdoSearchDocumentIndexer'),
+    'Projection reconciliation still references the retired search-document projection.'
+);
 
 $provider = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/PdoPackageProviderRepository.php');
-$searchHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogSearchIndexJobHandler.php');
-maintenance_projection_expect(is_string($provider) && is_string($searchHandler), 'Provider/search reconciliation sources could not be read.');
+$refreshHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogSearchIndexJobHandler.php');
+maintenance_projection_expect(is_string($provider) && is_string($refreshHandler), 'Provider refresh sources could not be read.');
 maintenance_projection_expect(
     str_contains($provider, 'function reconcileFile(')
         && str_contains($provider, 'DELETE FROM ue_package_providers WHERE file_id=?')
-        && str_contains($searchHandler, 'reconcileFile($fileId)'),
-    'Normal search projection refresh does not fully reconcile provider rows.'
+        && str_contains($refreshHandler, 'reconcileFile($fileId)')
+        && str_contains($refreshHandler, 'PdoDependencyPackageSummary')
+        && str_contains($refreshHandler, 'PdoGameCatalogStats'),
+    'The retained file-projection job does not refresh all compact provider and summary rows.'
+);
+maintenance_projection_expect(
+    !str_contains($refreshHandler, 'ue_search_documents')
+        && !str_contains($refreshHandler, 'PdoSearchDocumentIndexer'),
+    'The retained file-projection job still uses the retired search-document indexer.'
 );
 
 $hooks = [
@@ -79,11 +91,20 @@ $hooks = [
     '../package-normalize.php' => ['CatalogProjectionReconciliationQueue::enqueue(', "\$result['old_package']", "\$result['new_package']"],
     '../guid-normalize.php' => ['CatalogProjectionReconciliationQueue::enqueue(', "'package_name' => (string)\$file['package_name']"],
     '../lib/CatalogFileMaintenance.php' => ['CatalogProjectionReconciliationQueue::enqueue(', '$oldPackageName', '$newPackageName'],
-    '../lib/GameManagerLifecycle.php' => ['CatalogProjectionReconciliationQueue::enqueue(', "'ue_search_documents'", "'ue_package_providers'", "'ue_game_catalog_stats'"],
+    '../lib/GameManagerLifecycle.php' => [
+        'CatalogProjectionReconciliationQueue::enqueue(',
+        "'ue_dependency_package_summaries'",
+        "'ue_package_providers'",
+        "'ue_game_catalog_stats'",
+    ],
 ];
 foreach ($hooks as $relative => $fragments) {
     $source = file_get_contents(__DIR__ . '/' . $relative);
     maintenance_projection_expect(is_string($source), 'Maintenance hook source could not be read: ' . $relative);
+    maintenance_projection_expect(
+        !str_contains($source, 'ue_search_documents'),
+        $relative . ' still references the retired search-document table.'
+    );
     foreach ($fragments as $fragment) {
         maintenance_projection_expect(str_contains($source, $fragment), $relative . ' is missing reconciliation fragment: ' . $fragment);
     }

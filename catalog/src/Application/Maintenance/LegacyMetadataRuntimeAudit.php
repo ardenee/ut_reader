@@ -16,13 +16,16 @@ final class LegacyMetadataRuntimeAudit
         'ue_imports',
         'ue_exports',
         'ue_dependencies',
+        'ue_search_documents',
     ];
 
     /**
-     * Files that intentionally provide conversion, verification, schema,
-     * unverified-file inventory, transient import staging, or compact-first
-     * fallback. The legacy table schemas remain installed after verified rows
-     * are purged, so these paths remain valid.
+     * Files that intentionally provide schema, unverified-file inventory,
+     * transient import staging, or compact-first fallback. Verified catalogue
+     * reads must otherwise use compact compatibility sources.
+     *
+     * The retired ue_search_documents table is never approved, including in
+     * these files.
      *
      * @var list<string>
      */
@@ -44,7 +47,6 @@ final class LegacyMetadataRuntimeAudit
         'src/Application/Dependency/CatalogDependencyReadSource.php',
         'src/Application/Dependency/CatalogDependencyResolver.php',
         'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
-        'src/Application/Search/CatalogSearchService.php',
         'src/Infrastructure/Import/CatalogBucketUploadProcessor.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
         'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
@@ -52,32 +54,17 @@ final class LegacyMetadataRuntimeAudit
         'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
         'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
         'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
-        'src/Infrastructure/Persistence/PdoSearchDocumentIndexer.php',
-        'src/Infrastructure/Persistence/SearchDocumentMigrationExecutor.php',
         'lib/UnverifiedMetadataRepair.php',
-        'bin/backfill-full-compact-terms.php',
-        'bin/convert-file-metadata-batch.php',
         'bin/plan-legacy-table-space-reclaim.php',
         'bin/plan-mysql-space-release.php',
         'bin/reclaim-legacy-table-space.php',
-        'bin/verify-compact-dependency-resolver.php',
-        'bin/verify-compact-maintenance-restore.php',
-        'bin/verify-compact-only-metadata.php',
-        'bin/verify-compact-search-projections.php',
-        'bin/verify-compact-summary-refresh.php',
-        'bin/verify-mixed-dependency-read-source.php',
-        'bin/verify-runtime-dependency-sql-compatibility.php',
-        'bin/verify-scanner-compact-dependency-rebuild.php',
-        'bin/check-compact-metadata-deletion-readiness.php',
         'bin/audit-legacy-runtime-references.php',
-        'bin/purge-verified-format2-legacy-metadata.php',
     ];
 
     /**
      * Read-only dependency SQL in these files is executed through catalog_one,
-     * catalog_all or catalog_count and is therefore rewritten centrally to the
-     * compact mixed dependency source. Mutations in the same file are not
-     * approved by this list.
+     * catalog_all or catalog_count and is rewritten centrally to the compact
+     * mixed dependency source. Mutations are not approved by this list.
      *
      * @var list<string>
      */
@@ -104,7 +91,7 @@ final class LegacyMetadataRuntimeAudit
 
     /**
      * Read-only Names/Imports/Exports SQL in these files is routed through
-     * CatalogCompactMetadataCompatibility by catalog_one/catalog_all/catalog_count.
+     * CatalogCompactMetadataCompatibility by shared query helpers.
      *
      * @var list<string>
      */
@@ -191,9 +178,6 @@ final class LegacyMetadataRuntimeAudit
 
     private static function excluded(string $relative): bool
     {
-        if (in_array($relative, self::ALLOWED_FILES, true)) {
-            return true;
-        }
         foreach (['migrations/', 'tests/', 'storage/', 'vendor/'] as $prefix) {
             if (str_starts_with($relative, $prefix)) {
                 return true;
@@ -204,6 +188,12 @@ final class LegacyMetadataRuntimeAudit
 
     private static function approvedMatch(string $relative, string $table, string $operation): bool
     {
+        if ($table === 'ue_search_documents') {
+            return false;
+        }
+        if (in_array($relative, self::ALLOWED_FILES, true)) {
+            return true;
+        }
         if ($operation !== 'read') {
             return false;
         }
