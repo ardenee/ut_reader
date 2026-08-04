@@ -24,6 +24,9 @@ final class LegacyMetadataRuntimeAudit
      * transient import staging, or compact-first fallback. Verified catalogue
      * reads must otherwise use compact compatibility sources.
      *
+     * The retired ue_search_documents table is never approved, including in
+     * these files.
+     *
      * @var list<string>
      */
     private const ALLOWED_FILES = [
@@ -175,9 +178,6 @@ final class LegacyMetadataRuntimeAudit
 
     private static function excluded(string $relative): bool
     {
-        if (in_array($relative, self::ALLOWED_FILES, true)) {
-            return true;
-        }
         foreach (['migrations/', 'tests/', 'storage/', 'vendor/'] as $prefix) {
             if (str_starts_with($relative, $prefix)) {
                 return true;
@@ -188,7 +188,13 @@ final class LegacyMetadataRuntimeAudit
 
     private static function approvedMatch(string $relative, string $table, string $operation): bool
     {
-        if ($table === 'ue_search_documents' || $operation !== 'read') {
+        if ($table === 'ue_search_documents') {
+            return false;
+        }
+        if (in_array($relative, self::ALLOWED_FILES, true)) {
+            return true;
+        }
+        if ($operation !== 'read') {
             return false;
         }
         if ($table === 'ue_dependencies') {
