@@ -7,10 +7,10 @@ from pathlib import Path
 root = Path(__file__).resolve().parent
 parts = [root / f'cleanup.part{index}' for index in range(1, 7)]
 encoded = ''.join(part.read_text(encoding='ascii').strip() for part in parts)
-if hashlib.sha256(encoded.encode('ascii')).hexdigest() != '4ca611308709cd22d14f1f95a2ca8ec8398d44abaad920fb1155e424e661307b':
+if hashlib.sha256(encoded.encode('ascii')).hexdigest() != '6038e0a191afe50bcffc6b5cc0e9f91ca680727fadab5df79537d06a61611783':
     raise RuntimeError('Cleanup payload checksum mismatch.')
 payload = zlib.decompress(base64.b64decode(encoded, validate=True))
-if hashlib.sha256(payload).hexdigest() != 'db4b6d76f0f5e229e4e39a3dc112c57c66477398334e4f13b96953d64455486e':
+if hashlib.sha256(payload).hexdigest() != 'fff81951ecb02159d83b7b16d5e6194f19314c7e14f08df1f18ba8cf1d8a383d':
     raise RuntimeError('Cleanup source checksum mismatch.')
 exec(compile(payload, str(Path(__file__)), 'exec'))
 for part in parts:
