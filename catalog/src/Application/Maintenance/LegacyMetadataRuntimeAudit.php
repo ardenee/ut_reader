@@ -46,7 +46,6 @@ final class LegacyMetadataRuntimeAudit
         'src/Application/Catalog/CatalogPackageTablePageService.php',
         'src/Application/Dependency/CatalogDependencyReadSource.php',
         'src/Application/Dependency/CatalogDependencyResolver.php',
-        'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
         'src/Infrastructure/Import/CatalogBucketUploadProcessor.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
         'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
@@ -178,6 +177,9 @@ final class LegacyMetadataRuntimeAudit
 
     private static function excluded(string $relative): bool
     {
+        if ($relative === 'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php') {
+            return true;
+        }
         foreach (['migrations/', 'tests/', 'storage/', 'vendor/'] as $prefix) {
             if (str_starts_with($relative, $prefix)) {
                 return true;
