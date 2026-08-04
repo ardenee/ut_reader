@@ -59,6 +59,7 @@ final class LegacyMetadataRuntimeAudit
         'bin/convert-file-metadata-batch.php',
         'bin/verify-compact-dependency-resolver.php',
         'bin/verify-compact-maintenance-restore.php',
+        'bin/verify-compact-only-metadata.php',
         'bin/verify-compact-search-projections.php',
         'bin/verify-compact-summary-refresh.php',
         'bin/verify-mixed-dependency-read-source.php',
