@@ -15,8 +15,10 @@
     var download = document.getElementById('package-job-download');
     var jobId = Number(form.dataset.resumeJobId || 0);
     var pollTimer = null;
+    var downloadReadyTimer = null;
     var workerWarning = '';
     var terminal = ['completed', 'cancelled', 'failed', 'dead_letter'];
+    var downloadReadyDelayMs = 5000;
 
     function fmt(value) {
         return Number(value || 0).toLocaleString();
@@ -83,6 +85,51 @@
         cancel.hidden = true;
     }
 
+    function disableDownload() {
+        download.removeAttribute('href');
+        download.removeAttribute('download');
+        download.setAttribute('aria-disabled', 'true');
+        download.style.pointerEvents = 'none';
+        download.style.opacity = '0.55';
+    }
+
+    function enableDownload(job, result) {
+        download.href = downloadEndpoint + '?job_id=' + encodeURIComponent(String(job.id));
+        download.download = String(result.download_name || '');
+        download.removeAttribute('aria-disabled');
+        download.style.pointerEvents = '';
+        download.style.opacity = '';
+        download.textContent = 'Download generated package';
+        title.textContent = 'Generated package ready';
+        message.textContent = 'The generated package is ready to download.';
+        download.focus();
+    }
+
+    function startDownloadReadyDelay(job, result) {
+        window.clearTimeout(downloadReadyTimer);
+        var readyAt = Date.now() + downloadReadyDelayMs;
+        download.hidden = false;
+        disableDownload();
+
+        function updateCountdown() {
+            var remainingMs = readyAt - Date.now();
+            if (remainingMs <= 0) {
+                enableDownload(job, result);
+                return;
+            }
+
+            var seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+            title.textContent = 'Finalizing generated package';
+            message.textContent = 'Package generation completed. Waiting ' + seconds
+                + ' second' + (seconds === 1 ? '' : 's')
+                + ' before enabling the download.';
+            download.textContent = 'Download available in ' + seconds + 's';
+            downloadReadyTimer = window.setTimeout(updateCountdown, 250);
+        }
+
+        updateCountdown();
+    }
+
     function render(job) {
         var state = String(job.status || 'queued');
         var progress = job.progress && typeof job.progress === 'object' ? job.progress : {};
@@ -115,10 +162,7 @@
                 + ' · Missing=' + fmt(result.missing_dependencies)
                 + ' · Package-only=' + fmt(result.package_only_dependencies)
                 + '\nExpires=' + String(result.expires_at || '');
-            download.href = downloadEndpoint + '?job_id=' + encodeURIComponent(String(job.id));
-            download.download = String(result.download_name || '');
-            download.hidden = false;
-            download.focus();
+            startDownloadReadyDelay(job, result);
             return state;
         }
         if (state === 'cancelled') {
@@ -178,6 +222,12 @@
             cancel.disabled = false;
             summary.textContent = error.message || 'Cancellation request failed.';
         });
+    });
+
+    download.addEventListener('click', function (event) {
+        if (download.getAttribute('aria-disabled') === 'true') {
+            event.preventDefault();
+        }
     });
 
     if (jobId > 0) {
