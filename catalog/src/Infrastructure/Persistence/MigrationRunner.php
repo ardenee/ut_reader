@@ -10,6 +10,7 @@ use Throwable;
 final class MigrationRunner
 {
     private const TABLE = 'ue_schema_migrations';
+    private const BASELINE_VERSION = '202608030001';
 
     /** @var array<string,callable(PDO,SchemaInspector,array<string,mixed>):void> */
     private array $executionOverrides;
@@ -109,14 +110,17 @@ final class MigrationRunner
             if (isset($known[$version])) {
                 continue;
             }
+            $archived = self::isBaselineVersion((string)$version);
             $status[] = [
                 'version' => $version,
                 'name' => (string)$row['migration'],
-                'description' => 'Applied migration file is missing from this release.',
+                'description' => $archived
+                    ? 'Migration is included in the consolidated install.sql baseline.'
+                    : 'Applied migration file is missing from this release.',
                 'checksum' => (string)$row['checksum'],
                 'path' => '',
                 'up' => null,
-                'state' => 'orphaned',
+                'state' => $archived ? 'archived' : 'orphaned',
                 'batch' => (int)$row['batch'],
                 'execution_ms' => (int)$row['execution_ms'],
                 'applied_at' => (string)$row['applied_at'],
@@ -219,6 +223,13 @@ final class MigrationRunner
                 throw new RuntimeException('Applied migration file is missing: ' . $row['version']);
             }
         }
+    }
+
+    private static function isBaselineVersion(string $version): bool
+    {
+        $normalized = str_pad($version, 20, '0', STR_PAD_LEFT);
+        $baseline = str_pad(self::BASELINE_VERSION, 20, '0', STR_PAD_LEFT);
+        return strcmp($normalized, $baseline) <= 0;
     }
 
     public function ensureMetadataTable(): void
