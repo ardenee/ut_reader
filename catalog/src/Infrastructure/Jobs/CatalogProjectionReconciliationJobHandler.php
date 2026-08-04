@@ -14,7 +14,6 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoSearchDocumentIndexer;
 
 /** Reconciles all materialized catalogue projections after direct maintenance writes. */
 final class CatalogProjectionReconciliationJobHandler implements JobHandler
@@ -91,20 +90,17 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             'done' => 0,
             'total' => 4,
             'percent' => 0,
-            'message' => 'Reconciling package providers and search documents.',
+            'message' => 'Reconciling package providers and compact dependency summaries.',
             'file_id' => $fileId,
             'game_ids' => $gameIds,
         ]);
 
         $providers = new PdoPackageProviderRepository($this->db);
-        $search = new PdoSearchDocumentIndexer($this->db);
         $summaries = new PdoDependencyPackageSummary($this->db);
         if ($fileId > 0) {
             $providers->reconcileFile($fileId);
-            $searchResult = $search->rebuildFile($fileId);
             $summaryResult = $summaries->rebuildFile($fileId);
         } else {
-            $searchResult = ['total' => 0, 'indexed' => false];
             $summaryResult = ['summary_rows' => 0, 'available' => $summaries->available()];
         }
 
@@ -186,7 +182,6 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             'file_exists' => $file !== null,
             'game_ids' => $gameIds,
             'package_names' => $packageNames,
-            'search_documents' => (int)($searchResult['total'] ?? 0),
             'dependency_summary_rows' => (int)($summaryResult['summary_rows'] ?? 0),
             'affected_files' => count($affectedIds),
             'processed_files' => $processed,

@@ -11,9 +11,13 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoSearchDocumentIndexer;
 
-/** Rebuilds compact provider, search, dependency and game-stat projections after a file changes. */
+/**
+ * Rebuilds compact provider, dependency-summary and game-stat projections.
+ *
+ * The historical job type is retained so already queued jobs continue to run
+ * after the retired search projection is removed.
+ */
 final class CatalogSearchIndexJobHandler implements JobHandler
 {
     public function __construct(private readonly PDO $db)
@@ -29,7 +33,7 @@ final class CatalogSearchIndexJobHandler implements JobHandler
     {
         $fileId = (int)($job->payload['file_id'] ?? 0);
         if ($fileId < 1) {
-            throw new \RuntimeException('Search index refresh requires a positive file_id.');
+            throw new \RuntimeException('Projection refresh requires a positive file_id.');
         }
 
         $gameStatement = $this->db->prepare('SELECT game_id FROM ue_files WHERE id=?');
@@ -39,7 +43,7 @@ final class CatalogSearchIndexJobHandler implements JobHandler
         $context->checkpoint([
             'stage' => 'package_providers',
             'done' => 0,
-            'total' => 4,
+            'total' => 3,
             'percent' => 0,
             'message' => 'Reconciling package provider rows.',
             'file_id' => $fileId,
@@ -47,34 +51,22 @@ final class CatalogSearchIndexJobHandler implements JobHandler
         (new PdoPackageProviderRepository($this->db))->reconcileFile($fileId);
 
         $context->checkpoint([
-            'stage' => 'search_index',
-            'done' => 1,
-            'total' => 4,
-            'percent' => 25,
-            'message' => 'Rebuilding file search documents.',
-            'file_id' => $fileId,
-        ]);
-
-        $result = (new PdoSearchDocumentIndexer($this->db))->rebuildFile($fileId);
-        $context->checkpoint([
             'stage' => 'dependency_summary',
-            'done' => 2,
-            'total' => 4,
-            'percent' => 50,
-            'message' => 'Rebuilding package dependency summary.',
+            'done' => 1,
+            'total' => 3,
+            'percent' => 34,
+            'message' => 'Rebuilding compact package dependency summary.',
             'file_id' => $fileId,
-            'documents' => (int)$result['total'],
         ]);
         $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
 
         $context->checkpoint([
             'stage' => 'game_stats',
-            'done' => 3,
-            'total' => 4,
-            'percent' => 75,
+            'done' => 2,
+            'total' => 3,
+            'percent' => 67,
             'message' => 'Refreshing cached game counters.',
             'file_id' => $fileId,
-            'documents' => (int)$result['total'],
             'dependency_summary_rows' => (int)$summary['summary_rows'],
         ]);
         $gameStats = $gameId > 0
@@ -82,25 +74,25 @@ final class CatalogSearchIndexJobHandler implements JobHandler
             : null;
 
         $context->checkpoint([
-            'stage' => 'search_index',
-            'done' => 4,
-            'total' => 4,
+            'stage' => 'complete',
+            'done' => 3,
+            'total' => 3,
             'percent' => 100,
-            'message' => !empty($result['indexed'])
-                ? 'Provider, search, dependency and game-counter projections rebuilt.'
-                : 'Provider, search and dependency projections removed; game counters reconciled.',
+            'message' => 'Compact provider, dependency and game-counter projections rebuilt.',
             'file_id' => $fileId,
-            'documents' => (int)$result['total'],
             'dependency_summary_rows' => (int)$summary['summary_rows'],
             'game_id' => $gameId,
         ]);
 
-        return ['operation' => 'rebuild_file_search_index'] + $result + [
+        return [
+            'operation' => 'rebuild_file_search_index',
+            'file_id' => $fileId,
             'package_providers_reconciled' => true,
             'dependency_summary_rows' => (int)$summary['summary_rows'],
             'dependency_summary_available' => (bool)$summary['available'],
             'game_id' => $gameId,
             'game_stats_refreshed' => $gameStats !== null,
+            'compact_search_source' => true,
         ];
     }
 }
