@@ -1,23 +1,39 @@
-# Windows MySQL/MariaDB storage during large catalogue migrations
+# Windows MySQL/MariaDB storage during catalogue maintenance
 
-The Windows parent keeps MySQL entirely on `C:`:
+The Windows parent keeps the live MySQL database on `C:`:
 
 - `datadir` remains on `C:`.
-- MySQL `tmpdir` remains on `C:`.
-- MySQL `innodb_tmpdir` remains on `C:`.
-- Normal UnrealDB application operation does not use `L:` for database work.
+- MySQL `tmpdir` and `innodb_tmpdir` remain under MySQL control.
+- Normal UnrealDB application work does not use `L:` for database storage.
 
-`L:` is reserved only for explicit files created by UnrealDB maintenance operations, such as a requested database dump, exported report, archive, or other migration backup. Migration `202607270003` does not create such a backup file, so it does not use `L:`.
+`L:` is reserved for explicit temporary maintenance output such as a requested dump, export, archive or migration backup. It is not the application data drive and the database must not be moved there.
 
-## Why migration 202607270003 consumed substantial space
+## Consolidated baseline
 
-The original migration performed four large `INSERT ... SELECT` operations and then built several indexes, including a FULLTEXT index. MySQL can create large internal temporary files while processing those statements. Those files are controlled by MySQL and remain in its configured storage locations on `C:`.
+Historical migrations through `202608030001` are consolidated into `catalog/install.sql`. The retired search-document migration, table, backfill and deferred-index commands no longer exist.
 
-The migration runner now replaces the large data copy with bounded, restart-safe source-ID batches. This reduces peak temporary pressure and allows a failed migration to be rerun without deleting the partially populated `ue_search_documents` table.
+`catalog/install.sql` is for a new empty database only. Do not import it over the populated catalogue.
 
-## Inspect the configured paths
+Existing installations should use:
 
-Run in MySQL or phpMyAdmin:
+```powershell
+php catalog\bin\migrate.php status
+php catalog\bin\migrate.php migrate
+php catalog\bin\migrate.php verify
+```
+
+Applied migration records at or below `202608030001` are retained as archived history even though their individual PHP files have been removed.
+
+## Before a future large migration
+
+1. Stop imports and detached workers.
+2. Confirm a recent database backup exists.
+3. Check free space on `C:` for MySQL internal temporary files.
+4. Use `L:` only when the maintenance command explicitly creates a named backup or export there.
+5. Run `status`, then `migrate`, then `verify`.
+6. Restart workers only after verification succeeds.
+
+Inspect MySQL's configured paths with:
 
 ```sql
 SELECT
@@ -26,52 +42,16 @@ SELECT
     @@global.datadir AS datadir;
 ```
 
-These values are informational. The migration tools do not require them to be moved.
-
-## Resume migration 202607270003
-
-Stop imports and the detached worker first. Pull the latest code, then run:
-
-```powershell
-git pull
-
-php -l catalog\bin\migrate.php
-php -l catalog\bin\search-document-indexes.php
-php -l catalog\src\Infrastructure\Persistence\SearchDocumentMigrationExecutor.php
-php catalog\tests\large-migration-temp-storage-contract-test.php
-```
-
-Complete the data migrations with 10,000-source-ID batches while postponing the large search index builds:
-
-```powershell
-php catalog\bin\migrate.php migrate --search-backfill-batch=10000 --defer-search-indexes
-php catalog\bin\migrate.php verify
-```
-
-The command is restart-safe. Existing rows are updated through `ON DUPLICATE KEY UPDATE`, so a prior partial run does not require the table to be dropped.
-
-Search remains correct while the indexes are deferred. It uses the bounded search-document `LIKE` fallback until the indexes are built.
-
-## Build deferred indexes
-
-With adequate free space available on `C:`, inspect and build each missing index separately:
-
-```powershell
-php catalog\bin\search-document-indexes.php status
-php catalog\bin\search-document-indexes.php build
-php catalog\bin\search-document-indexes.php status
-```
-
-The index command reports MySQL's configured paths for information only. It does not refuse the system drive and does not attempt to move any MySQL files.
+These settings are informational. UnrealDB does not silently relocate MySQL files.
 
 ## Failed temporary-file cleanup
 
-A failed MySQL statement normally removes its temporary file. If a file remains allocated after a failure:
+A failed MySQL statement normally removes its temporary file. When an error names a leftover file:
 
 1. Stop the MySQL service.
-2. Inspect the exact path named in the error.
-3. Delete only the named failed temporary file after confirming its timestamp.
-4. Do not delete `ibdata1`, redo logs, undo files, `ibtmp1`, database folders, or anything in the MySQL data directory.
-5. Start MySQL and verify the database.
+2. Confirm the exact path and timestamp from the error.
+3. Remove only that confirmed failed temporary file.
+4. Never delete `ibdata1`, redo logs, undo files, `ibtmp1`, database folders or unidentified files in the data directory.
+5. Start MySQL and run database verification.
 
-`L:` should be used only when a future UnrealDB maintenance task explicitly creates a backup or export file and clearly identifies that output path.
+Keep at least one validated backup before any manual cleanup.
