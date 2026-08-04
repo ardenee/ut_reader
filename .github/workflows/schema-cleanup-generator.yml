@@ -1,132 +1,13 @@
 name: Generate consolidated schema cleanup
 
 on:
-  push:
-    branches:
-      - agent/complete-db-cleanup
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
   generate:
-    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.4
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: unrealdb_build
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=12
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: agent/complete-db-cleanup
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.3'
-          extensions: pdo_mysql, curl, mbstring, openssl, sodium, zip
-          coverage: none
-
-      - name: Build the fully migrated schema
-        run: |
-          cat > catalog/config.php <<'PHP'
-          <?php
-          declare(strict_types=1);
-          return [
-              'db' => [
-                  'host' => '127.0.0.1',
-                  'port' => 3306,
-                  'database' => 'unrealdb_build',
-                  'username' => 'root',
-                  'password' => 'root',
-                  'charset' => 'utf8mb4',
-              ],
-              'storage_path' => __DIR__ . '/storage',
-          ];
-          PHP
-          mysql -h 127.0.0.1 -uroot -proot unrealdb_build < catalog/install.sql
-          php catalog/bin/migrate.php migrate --lock-timeout=60
-          mysql -h 127.0.0.1 -uroot -proot unrealdb_build <<'SQL'
-          DROP TABLE IF EXISTS ue_search_documents;
-          TRUNCATE TABLE ue_schema_migrations;
-          SQL
-          {
-            printf '%s\n' '-- UnrealDB consolidated installation schema'
-            printf '%s\n' '-- Baseline: 202608030001'
-            printf '%s\n\n' '-- Generated from catalog/install.sql plus every historical migration.'
-            mysqldump -h 127.0.0.1 -uroot -proot \
-              --no-tablespaces --skip-comments --hex-blob --single-transaction \
-              --routines --events --triggers unrealdb_build
-          } > catalog/install.sql.new
-          mv catalog/install.sql.new catalog/install.sql
-
-      - name: Apply source and file cleanup
-        run: python3 .github/scripts/run-complete-db-cleanup.py
-
-      - name: Validate PHP and runtime SQL boundaries
-        run: |
-          find . -type f -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
-          php catalog/bin/audit-legacy-runtime-references.php
-          if grep -RIn --include='*.php' --exclude-dir=tests --exclude-dir=vendor \
-              --exclude=LegacyMetadataRuntimeAudit.php '\bue_search_documents\b' catalog; then
-            echo 'Obsolete ue_search_documents runtime reference remains.'
-            exit 1
-          fi
-          if grep -RInE --include='*.php' --exclude-dir=tests --exclude-dir=vendor \
-              '\b(mysql_query|mysql_connect|mysqli_)\b' catalog; then
-            echo 'Legacy database API usage remains.'
-            exit 1
-          fi
-
-      - name: Validate consolidated install on an empty database
-        env:
-          UNREALDB_TEST_DSN: mysql:host=127.0.0.1;port=3306;dbname=unrealdb_verify;charset=utf8mb4
-          UNREALDB_TEST_DB_USER: root
-          UNREALDB_TEST_DB_PASSWORD: root
-        run: |
-          mysql -h 127.0.0.1 -uroot -proot -e 'CREATE DATABASE unrealdb_verify CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
-          mysql -h 127.0.0.1 -uroot -proot unrealdb_verify < catalog/install.sql
-          php catalog/tests/migration-integration-test.php
-          for table in ue_file_metadata ue_terms ue_export_lookup ue_dependency_links ue_package_providers ue_dependency_package_summaries ue_game_catalog_stats; do
-            mysql -h 127.0.0.1 -uroot -proot unrealdb_verify \
-              -Nse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='unrealdb_verify' AND table_name='$table'" \
-              | grep -qx '1'
-          done
-          mysql -h 127.0.0.1 -uroot -proot unrealdb_verify \
-            -Nse "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='unrealdb_verify' AND table_name='ue_search_documents'" \
-            | grep -qx '0'
-
-      - name: Run retained contract tests
-        run: |
-          for test in catalog/tests/*.php; do
-            case "$test" in
-              *-integration-test.php) continue ;;
-            esac
-            php "$test"
-          done
-
-      - name: Commit generated cleanup
-        run: |
-          rm -f catalog/config.php .github/scripts/cleanup.trigger
-          echo "Retained catalog tests: $(find catalog/tests -maxdepth 1 -type f -name '*.php' | wc -l)"
-          echo "Remaining migration PHP files: $(find catalog/migrations -maxdepth 1 -type f -name '*.php' | wc -l)"
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A
-          git status --short
-          git commit -m 'Squash database schema and remove legacy artifacts'
-          git push origin HEAD:agent/complete-db-cleanup
+      - run: echo 'Temporarily disabled while the cleanup payload is updated.'
