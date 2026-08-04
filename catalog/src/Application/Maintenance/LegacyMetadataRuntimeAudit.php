@@ -58,6 +58,7 @@ final class LegacyMetadataRuntimeAudit
         'bin/backfill-full-compact-terms.php',
         'bin/convert-file-metadata-batch.php',
         'bin/plan-legacy-table-space-reclaim.php',
+        'bin/reclaim-legacy-table-space.php',
         'bin/verify-compact-dependency-resolver.php',
         'bin/verify-compact-maintenance-restore.php',
         'bin/verify-compact-only-metadata.php',
