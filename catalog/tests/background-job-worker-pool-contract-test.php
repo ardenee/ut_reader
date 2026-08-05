@@ -47,9 +47,9 @@ $statusApi = file_get_contents(__DIR__ . '/../api/v1/job-worker-status.php');
 $workerAction = file_get_contents(__DIR__ . '/../api/v1/job-worker-action.php');
 $policy = file_get_contents(__DIR__ . '/../src/Domain/Jobs/JobResourcePolicy.php');
 $bridge = file_get_contents(__DIR__ . '/../assets/background-jobs-cursor-bridge.js');
-$migration = file_get_contents(__DIR__ . '/../migrations/202607310003_background_job_worker_pool.php');
+$baseline = file_get_contents(__DIR__ . '/../install.sql');
 
-foreach (compact('workerScript', 'launcher', 'statusApi', 'workerAction', 'policy', 'bridge', 'migration') as $name => $source) {
+foreach (compact('workerScript', 'launcher', 'statusApi', 'workerAction', 'policy', 'bridge', 'baseline') as $name => $source) {
     worker_pool_expect(is_string($source) && $source !== '', $name . ' source is missing.');
 }
 
@@ -94,11 +94,10 @@ worker_pool_expect(
 );
 
 worker_pool_expect(
-    str_contains($migration, "'version' => '202607310003'")
-        && str_contains($migration, 'resource_class="bucket-processing"')
-        && str_contains($migration, 'resource_limit=8')
-        && str_contains($migration, 'SHA2('),
-    'Existing queued Upload Bucket jobs are not migrated to per-file concurrency.'
+    str_contains($baseline, 'resource_class')
+        && str_contains($baseline, 'resource_limit')
+        && str_contains($baseline, 'concurrency_key'),
+    'The consolidated baseline does not include background-job resource controls.'
 );
 
 $runtime = $root . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'worker';

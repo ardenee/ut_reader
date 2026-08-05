@@ -56,7 +56,11 @@ final class JobResourcePolicy
                 self::configuredLimit(self::BUCKET_PROCESSING, 8),
                 self::bucketFileKey($payload)
             ),
-            JobType::IMPORT_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PACKAGE => new JobResourceProfile(
+                self::IMPORT_HEAVY,
+                self::configuredLimit(self::IMPORT_HEAVY, 8),
+                self::importFileKey($payload)
+            ),
             JobType::IMPORT_STAGED_PAK,
             JobType::IMPORT_GAME_BACKUP => new JobResourceProfile(
                 self::IMPORT_HEAVY,
@@ -123,6 +127,24 @@ final class JobResourcePolicy
         // Jobs without a file identity remain serialized rather than being given
         // a shared null key that could permit unsafe concurrent maintenance.
         return 'bucket:unidentified';
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function importFileKey(array $payload): string
+    {
+        $fileId = (int)($payload['file_id'] ?? 0);
+        if ($fileId > 0) {
+            return 'import:file-id:' . $fileId;
+        }
+
+        foreach (['sha256', 'staged_path', 'source_relative_path', 'original_name'] as $field) {
+            $value = strtolower(trim(str_replace('\\', '/', (string)($payload[$field] ?? ''))));
+            if ($value !== '') {
+                return 'import:file:' . substr(hash('sha256', $field . ':' . $value), 0, 48);
+            }
+        }
+
+        return 'import:unidentified';
     }
 
     private static function projectionKey(array $payload): ?string
