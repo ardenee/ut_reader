@@ -12,6 +12,7 @@ $dashboardStats = file_get_contents(__DIR__ . '/../src/Application/Dashboard/Cat
 $dashboard = file_get_contents(__DIR__ . '/../dashboard.php');
 $library = file_get_contents(__DIR__ . '/../library.php');
 $missingCounts = file_get_contents(__DIR__ . '/../api/v1/game-missing-counts.php');
+$resourceTracing = file_get_contents(__DIR__ . '/../lib/CatalogResourceTracing.php');
 $audit = file_get_contents(__DIR__ . '/../basic-performance-audit.php');
 $navigation = file_get_contents(__DIR__ . '/../lib/CatalogNavigation.php');
 
@@ -20,6 +21,7 @@ foreach ([
     'dashboard' => $dashboard,
     'library' => $library,
     'game missing-count API' => $missingCounts,
+    'resource tracing' => $resourceTracing,
     'audit page' => $audit,
     'navigation' => $navigation,
 ] as $name => $source) {
@@ -45,6 +47,14 @@ basic_performance_expect(
 basic_performance_expect(
     str_contains($library, 'session_write_close()'),
     'Library must release the PHP session lock before catalogue reads.'
+);
+basic_performance_expect(
+    str_contains($resourceTracing, "(\$_SESSION['user']['role'] ?? '') === 'admin'"),
+    'Resource tracing must preserve admin attribution after session_write_close().' 
+);
+basic_performance_expect(
+    !str_contains($resourceTracing, "session_status() === PHP_SESSION_ACTIVE && ((\$_SESSION['user']['role'] ?? '') === 'admin')"),
+    'Resource tracing must not require the admin session lock to remain active.'
 );
 basic_performance_expect(
     str_contains($audit, 'UnrealDbBasicAuditTargets'),
