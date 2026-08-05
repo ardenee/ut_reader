@@ -55,7 +55,7 @@ basic_performance_expect(
     'Basic page audit must fail bounded requests rather than waiting indefinitely.'
 );
 basic_performance_expect(
-    str_contains($navigation, "'Basic Page Audit' => $root . 'basic-performance-audit.php'"),
+    str_contains($navigation, "'Basic Page Audit' => \$root . 'basic-performance-audit.php'"),
     'Basic Page Audit must be linked from Maintenance.'
 );
 
