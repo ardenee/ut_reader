@@ -11,6 +11,23 @@ function catalog_api_application()
     return catalog_bootstrap();
 }
 
+/**
+ * Authenticated GET requests only need the session long enough to verify the
+ * administrator. Release PHP's session-file lock immediately afterwards so a
+ * slow status/report query cannot block navigation or another AJAX request in
+ * the same browser session.
+ */
+function catalog_api_release_read_session(): void
+{
+    $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+    if (!in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
+        return;
+    }
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+}
+
 function catalog_api_require_admin(bool $requireRecentAuthentication = true): void
 {
     if (!catalog_support_is_admin()) {
@@ -27,6 +44,8 @@ function catalog_api_require_admin(bool $requireRecentAuthentication = true): vo
             ['reauthentication_url' => '../../admin-security.php']
         );
     }
+
+    catalog_api_release_read_session();
 }
 
 function catalog_api_require_csrf(string $scope): void
