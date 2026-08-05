@@ -15,6 +15,15 @@ try {
         exit;
     }
 
+    /*
+     * Dashboard statistics are read-only. Release the PHP session-file lock
+     * before touching catalogue tables so another tab is never held behind a
+     * slow dashboard query or a database stall.
+     */
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     $stats = CatalogDashboardStats::load($db);
     catalog_page_header(
         'Dashboard',

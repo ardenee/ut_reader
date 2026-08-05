@@ -14,9 +14,14 @@ try {
     base_game_ensure($db);
     catalog_head('Library');
 
+    /* This page is read-only after the header has consumed any flash state. */
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     $stats = new PdoGameCatalogStats($db);
     if ($stats->available()) {
-        $stats->refreshStale(300);
+        /* Projection rebuilding belongs to import/maintenance jobs, not page loads. */
         $games = catalog_all(
             $db,
             'SELECT g.id,g.name,g.slug,g.description,p.engine_key profile_engine,'

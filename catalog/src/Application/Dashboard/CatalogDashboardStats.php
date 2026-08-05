@@ -6,7 +6,7 @@ namespace UnrealDb\Catalog\Application\Dashboard;
 use PDO;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
-/** Loads administrative dashboard counters with cached catalogue aggregates. */
+/** Loads administrative dashboard counters from compact cached aggregates. */
 final class CatalogDashboardStats
 {
     /** @return array<string, int> */
@@ -15,7 +15,11 @@ final class CatalogDashboardStats
         $games = \catalog_one($db, 'SELECT COUNT(*) games FROM ue_games') ?? [];
         $catalogStats = new PdoGameCatalogStats($db);
         if ($catalogStats->available()) {
-            $catalogStats->refreshStale(300);
+            /*
+             * Never rebuild catalogue projections from an interactive request.
+             * Imports and maintenance jobs keep ue_game_catalog_stats current;
+             * the dedicated rebuild command is available for explicit repair.
+             */
             $global = $catalogStats->global();
             $files = [
                 'files' => (int)($global['file_count'] ?? 0),
