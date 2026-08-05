@@ -36,8 +36,8 @@ game_manager_read_expect(
     'Game Manager still uses the unindexable OR file join.'
 );
 game_manager_read_expect(
-    substr_count($page, "catalog_csrf('game_manager')") === 2,
-    'Game Manager should validate POST once and precompute one GET CSRF token.'
+    substr_count($page, "catalog_csrf('game_manager')") === 1,
+    'Game Manager should precompute one GET CSRF token and reuse it in every form.'
 );
 
 $headPosition = strpos($page, "catalog_head('Game Admin');");
