@@ -235,6 +235,10 @@
 
     function scan(root) {
         if (root instanceof HTMLTableElement) bind(root);
+        if (root instanceof Element) {
+            var containingTable = root.closest('table');
+            if (containingTable) bind(containingTable);
+        }
         if (!(root instanceof Element || root instanceof Document)) return;
         root.querySelectorAll('table').forEach(bind);
     }
