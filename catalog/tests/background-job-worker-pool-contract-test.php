@@ -22,6 +22,7 @@ $controller = new CatalogDetachedWorker([
 worker_pool_expect($controller->configuredWorkerCount() === 4, 'The worker pool does not default to four processes.');
 worker_pool_expect($controller->normalizeWorkerCount(0) === 1, 'Worker count lower bound is not one.');
 worker_pool_expect($controller->normalizeWorkerCount(99) === 8, 'Worker count upper bound is not eight.');
+worker_pool_expect(trim($controller->resolvedPhpBinary()) !== '', 'The detached worker PHP binary could not be resolved.');
 
 $first = $controller->acquireWorkerLock('catalog', 1);
 $second = $controller->acquireWorkerLock('catalog', 2);
@@ -41,15 +42,25 @@ fclose($first);
 flock($second, LOCK_UN);
 fclose($second);
 
+$controller->writeState('catalog', [
+    'status' => 'launching',
+    'requested_at' => gmdate('c'),
+    'code_version' => $controller->codeVersion(true),
+], 3);
+$launching = $controller->status('catalog');
+worker_pool_expect((int)$launching['active_count'] === 0, 'A state file without a held process lock was reported as an active worker.');
+worker_pool_expect((int)$launching['launching_count'] === 1, 'A recent launch request was not reported separately from an active process.');
+
 $workerScript = file_get_contents(__DIR__ . '/../bin/catalog-worker-detached.php');
 $launcher = file_get_contents(__DIR__ . '/../api/v1/job-run.php');
 $statusApi = file_get_contents(__DIR__ . '/../api/v1/job-worker-status.php');
 $workerAction = file_get_contents(__DIR__ . '/../api/v1/job-worker-action.php');
 $policy = file_get_contents(__DIR__ . '/../src/Domain/Jobs/JobResourcePolicy.php');
 $bridge = file_get_contents(__DIR__ . '/../assets/background-jobs-cursor-bridge.js');
+$detachedWorker = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogDetachedWorker.php');
 $baseline = file_get_contents(__DIR__ . '/../install.sql');
 
-foreach (compact('workerScript', 'launcher', 'statusApi', 'workerAction', 'policy', 'bridge', 'baseline') as $name => $source) {
+foreach (compact('workerScript', 'launcher', 'statusApi', 'workerAction', 'policy', 'bridge', 'detachedWorker', 'baseline') as $name => $source) {
     worker_pool_expect(is_string($source) && $source !== '', $name . ' source is missing.');
 }
 
@@ -73,8 +84,18 @@ worker_pool_expect(
 worker_pool_expect(
     (str_contains($statusApi, "'active_count'") || str_contains($statusApi, "worker['active_count']"))
         && str_contains($workerAction, "'terminated_workers'")
-        && str_contains($statusApi, 'Keep the selected pool size healthy'),
-    'Worker pool status/stop APIs do not report multiple processes.'
+        && str_contains($statusApi, 'Status polling must never start, stop, recover or otherwise mutate the queue')
+        && !str_contains($statusApi, '$launcher->start(')
+        && !str_contains($statusApi, 'recoverInactiveQueue('),
+    'Worker status is not read-only or worker pool status/stop APIs do not report multiple processes.'
+);
+
+worker_pool_expect(
+    str_contains($detachedWorker, 'php_ini_loaded_file()')
+        && str_contains($detachedWorker, "ini_get('extension_dir')")
+        && str_contains($detachedWorker, "'launching_count'")
+        && str_contains($detachedWorker, 'assertPhpBinary($php)'),
+    'Detached worker launch does not resolve the current PHP installation or distinguish launching from active.'
 );
 
 worker_pool_expect(
