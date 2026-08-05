@@ -37,6 +37,11 @@ final class CatalogDetachedWorker
         return max(1, min(self::MAX_WORKERS, $count));
     }
 
+    public function resolvedPhpBinary(): string
+    {
+        return $this->phpBinary();
+    }
+
     /** @return array<string,mixed> */
     public function start(string $queue, int $maxJobs = 10000, int $workerCount = 0): array
     {
@@ -52,6 +57,9 @@ final class CatalogDetachedWorker
             return ['started' => false, 'reason' => 'stale_worker_running', 'requested_workers' => $workerCount,
                 'started_workers' => 0, 'stopping_workers' => 0, 'worker' => $before];
         }
+
+        $php = $this->phpBinary();
+        $this->assertPhpBinary($php);
 
         $this->writeJson($this->path($queue, 'pool'), [
             'queue' => $queue, 'desired_count' => $workerCount, 'updated_at' => gmdate('c'),
@@ -74,6 +82,7 @@ final class CatalogDetachedWorker
         }
         $lease = max(15, min(3600, (int)($this->config['queue']['lease_seconds'] ?? 120)));
         $started = 0;
+        $launchedSlots = [];
         for ($slot = 1; $slot <= $workerCount; $slot++) {
             if (!empty($this->statusSlot($queue, $slot)['active'])) {
                 continue;
@@ -82,18 +91,79 @@ final class CatalogDetachedWorker
             $this->writeState($queue, [
                 'status' => 'launching', 'queue' => $queue, 'worker_count' => $workerCount,
                 'max_jobs' => $maxJobs, 'code_version' => $this->codeVersion(), 'requested_at' => gmdate('c'),
+                'php_binary' => $php,
             ], $slot);
-            $this->spawn($this->phpBinary(), $script, [
+            $this->spawn($php, $script, [
                 '--queue=' . $queue, '--max-jobs=' . $maxJobs, '--sleep-ms=250', '--lease-seconds=' . $lease,
                 '--worker-slot=' . $slot, '--worker-count=' . $workerCount,
             ], $this->path($queue, 'log', $slot));
             $started++;
+            $launchedSlots[] = $slot;
         }
-        usleep(100000);
+
+        $after = $this->status($queue, true);
+        if ($launchedSlots !== []) {
+            $deadline = microtime(true) + 2.0;
+            do {
+                $activeLaunched = 0;
+                $terminalLaunched = 0;
+                foreach ((array)($after['workers'] ?? []) as $worker) {
+                    $slot = (int)($worker['slot'] ?? 0);
+                    if (!in_array($slot, $launchedSlots, true)) {
+                        continue;
+                    }
+                    if (!empty($worker['active'])) {
+                        $activeLaunched++;
+                    }
+                    $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+                    if (in_array(strtolower((string)($state['status'] ?? '')), ['failed', 'stopped'], true)) {
+                        $terminalLaunched++;
+                    }
+                }
+                if ($activeLaunched > 0 || $terminalLaunched === count($launchedSlots) || microtime(true) >= $deadline) {
+                    break;
+                }
+                usleep(100000);
+                $after = $this->status($queue, true);
+            } while (true);
+
+            $launchErrors = [];
+            $stillLaunching = [];
+            foreach ((array)($after['workers'] ?? []) as $worker) {
+                $slot = (int)($worker['slot'] ?? 0);
+                if (!in_array($slot, $launchedSlots, true) || !empty($worker['active'])) {
+                    continue;
+                }
+                $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+                $stateStatus = strtolower(trim((string)($state['status'] ?? '')));
+                $error = trim((string)($state['error'] ?? ''));
+                if ($stateStatus === 'failed') {
+                    $launchErrors[] = 'worker ' . $slot . ': ' . ($error !== '' ? $error : 'worker process failed during startup');
+                } elseif ($stateStatus === 'launching') {
+                    $stillLaunching[] = $slot;
+                }
+            }
+            if ($launchErrors !== []) {
+                throw new \RuntimeException(
+                    'Detached worker startup failed using ' . $php . ': ' . implode(' | ', array_slice($launchErrors, 0, 3))
+                );
+            }
+            if ($stillLaunching !== []) {
+                $tail = trim((string)($after['log_tail'] ?? ''));
+                $message = 'Detached worker process did not acquire its runtime lock using ' . $php
+                    . ' for slot(s) ' . implode(', ', $stillLaunching) . '.';
+                if ($tail !== '') {
+                    $message .= ' Worker log: ' . substr(preg_replace('/\s+/', ' ', $tail) ?? $tail, -1200);
+                }
+                throw new \RuntimeException($message);
+            }
+        }
+
         $reason = $started > 0 ? (!empty($before['active']) ? 'pool_expanded' : 'launched')
             : ($stopping > 0 ? 'pool_reduced' : 'already_running');
         return ['started' => $started > 0, 'reason' => $reason, 'requested_workers' => $workerCount,
-            'started_workers' => $started, 'stopping_workers' => $stopping, 'worker' => $this->status($queue)];
+            'started_workers' => $started, 'stopping_workers' => $stopping, 'php_binary' => $php,
+            'worker' => $after];
     }
 
     /** @return array<string,mixed> */
@@ -105,17 +175,18 @@ final class CatalogDetachedWorker
         $desired = $this->normalizeWorkerCount((int)($pool['desired_count'] ?? $this->configuredWorkerCount()));
         $current = $this->codeVersion(true);
         $workers = $logs = $versions = [];
-        $active = $processed = $latestAt = 0;
+        $active = $launching = $processed = $latestAt = 0;
         $stale = false;
         $primary = [];
         for ($slot = 1; $slot <= self::MAX_WORKERS; $slot++) {
             $worker = $this->statusSlot($queue, $slot, $includeLog, $current);
             $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
-            if ($slot > $desired && empty($worker['active']) && $state === []) {
+            if ($slot > $desired && empty($worker['active']) && empty($worker['launching']) && $state === []) {
                 continue;
             }
             $workers[] = $worker;
             $active += !empty($worker['active']) ? 1 : 0;
+            $launching += !empty($worker['launching']) ? 1 : 0;
             $processed += max(0, (int)($state['processed'] ?? 0));
             $stale = $stale || !empty($worker['stale_code']);
             $running = trim((string)($worker['code_version_running'] ?? ''));
@@ -130,12 +201,13 @@ final class CatalogDetachedWorker
             }
         }
         $primary = array_merge($primary, [
-            'status' => $active > 0 ? 'running' : (string)($primary['status'] ?? 'stopped'),
+            'status' => $active > 0 ? 'running' : ($launching > 0 ? 'launching' : (string)($primary['status'] ?? 'stopped')),
             'queue' => $queue, 'worker_count' => $desired, 'active_workers' => $active, 'processed' => $processed,
         ]);
         $result = [
-            'active' => $active > 0, 'active_count' => $active, 'desired_count' => $desired,
-            'max_workers' => self::MAX_WORKERS, 'queue' => $queue,
+            'active' => $active > 0, 'active_count' => $active, 'launching_count' => $launching,
+            'desired_count' => $desired, 'max_workers' => self::MAX_WORKERS, 'queue' => $queue,
+            'php_binary' => $this->phpBinary(),
             'stop_requested' => is_file($this->path($queue, 'queue-stop')), 'state' => $primary,
             'workers' => $workers, 'code_version_current' => $current,
             'code_version_running' => count($versions) === 1 ? (string)array_key_first($versions) : (count($versions) > 1 ? 'mixed' : ''),
@@ -152,14 +224,15 @@ final class CatalogDetachedWorker
         $slot = $this->slot($slot);
         $state = $this->readJson($this->path($queue, 'state', $slot));
         $active = $this->lockHeld($queue, $slot);
+        $launching = false;
         if (!$active && (string)($state['status'] ?? '') === 'launching') {
             $requested = strtotime((string)($state['requested_at'] ?? ''));
-            $active = $requested !== false && $requested >= time() - 10;
+            $launching = $requested !== false && $requested >= time() - 3;
         }
         $current ??= $this->codeVersion(true);
         $running = trim((string)($state['code_version'] ?? ''));
         $result = [
-            'slot' => $slot, 'active' => $active,
+            'slot' => $slot, 'active' => $active, 'launching' => $launching,
             'stop_requested' => is_file($this->path($queue, 'queue-stop')) || is_file($this->path($queue, 'slot-stop', $slot)),
             'state' => $state, 'code_version_current' => $current, 'code_version_running' => $running,
             'stale_code' => $active && ($running === '' || !hash_equals($current, $running)),
@@ -293,12 +366,59 @@ final class CatalogDetachedWorker
     private function phpBinary(): string
     {
         $value = trim((string)($this->config['queue']['worker_php_binary'] ?? ''));
-        if ($value === '') $value = trim((string)(getenv('UNREALDB_WORKER_PHP_BINARY') ?: ''));
-        if ($value !== '') return $value;
-        $candidate = rtrim(PHP_BINDIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . (PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php');
-        if (is_file($candidate)) return $candidate;
-        return is_file(PHP_BINARY) && preg_match('/^php(?:\.exe)?$/i', basename(PHP_BINARY)) === 1
-            ? PHP_BINARY : (PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php');
+        if ($value === '') {
+            $value = trim((string)(getenv('UNREALDB_WORKER_PHP_BINARY') ?: ''));
+        }
+        if ($value !== '') {
+            return $value;
+        }
+
+        $executable = PHP_OS_FAMILY === 'Windows' ? 'php.exe' : 'php';
+        $candidates = [];
+        $loadedIni = php_ini_loaded_file();
+        if (is_string($loadedIni) && $loadedIni !== '') {
+            $candidates[] = dirname($loadedIni) . DIRECTORY_SEPARATOR . $executable;
+        }
+        $extensionDir = trim((string)ini_get('extension_dir'));
+        if ($extensionDir !== '') {
+            $candidates[] = dirname(rtrim($extensionDir, '/\\')) . DIRECTORY_SEPARATOR . $executable;
+        }
+        $candidates[] = rtrim(PHP_BINDIR, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . $executable;
+        if (is_file(PHP_BINARY) && preg_match('/^php(?:\.exe)?$/i', basename(PHP_BINARY)) === 1) {
+            $candidates[] = PHP_BINARY;
+        }
+        $path = (string)(getenv('PATH') ?: '');
+        foreach (explode(PATH_SEPARATOR, $path) as $directory) {
+            $directory = trim($directory, " \t\n\r\0\x0B\"");
+            if ($directory !== '') {
+                $candidates[] = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . $executable;
+            }
+        }
+
+        foreach (array_values(array_unique($candidates)) as $candidate) {
+            if (is_file($candidate)) {
+                $resolved = realpath($candidate);
+                return is_string($resolved) && $resolved !== '' ? $resolved : $candidate;
+            }
+        }
+        return $executable;
+    }
+
+    private function assertPhpBinary(string $php): void
+    {
+        $hasPath = str_contains($php, '/') || str_contains($php, '\\') || preg_match('/^[A-Za-z]:/', $php) === 1;
+        if ($hasPath && !is_file($php)) {
+            throw new \RuntimeException(
+                'Configured detached-worker PHP binary does not exist: ' . $php
+                . '. Update queue.worker_php_binary in catalog/config.php.'
+            );
+        }
+        if (PHP_OS_FAMILY === 'Windows' && !$hasPath) {
+            throw new \RuntimeException(
+                'Could not resolve the PHP CLI executable for detached workers. Set queue.worker_php_binary '
+                . 'in catalog/config.php, for example D:/php8.5/php.exe.'
+            );
+        }
     }
 
     private function queue(string $queue): string
