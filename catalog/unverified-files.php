@@ -28,6 +28,29 @@ function uv_list_detected(array $row): string
         . ' / lic ' . (int)($row['detected_licensee_version'] ?? 0);
 }
 
+/** @param list<array{game_id:int,game_name:string,owner_count:int,import_count:int}> $matches */
+function uv_list_possible_games(array $matches): string
+{
+    if ($matches === []) {
+        return '';
+    }
+
+    $html = '<div class="uv-game-links">';
+    foreach ($matches as $match) {
+        $links = max(0, (int)($match['import_count'] ?? 0));
+        if ($links < 1) {
+            continue;
+        }
+        $owners = max(0, (int)($match['owner_count'] ?? 0));
+        $html .= '<div><a href="game-files.php?id=' . (int)$match['game_id'] . '"><strong>'
+            . catalog_h((string)$match['game_name']) . '</strong></a>'
+            . '<small>' . number_format($links) . ' possible package link' . ($links === 1 ? '' : 's')
+            . ($owners > 0 ? ' from ' . number_format($owners) . ' file' . ($owners === 1 ? '' : 's') : '')
+            . '</small></div>';
+    }
+    return $html . '</div>';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -116,6 +139,15 @@ try {
         $args
     );
 
+    /* One package-reference query for the visible page; no per-file review analysis. */
+    $referenceMatches = uvf_reference_matches(
+        $db,
+        array_values(array_unique(array_map(
+            static fn(array $item): string => trim((string)($item['package_name'] ?? '')),
+            $items
+        )))
+    );
+
     $summary = catalog_one(
         $db,
         'SELECT COUNT(*) indexed_count,COALESCE(SUM(file_size),0) indexed_bytes,'
@@ -146,13 +178,13 @@ try {
     catalog_head('Unverified Files');
     echo <<<'CSS'
 <style>
-.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1350px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
+.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:7px;min-width:210px}.uv-game-links div{padding-bottom:6px;border-bottom:1px solid var(--line2)}.uv-game-links div:last-child{padding-bottom:0;border-bottom:0}.uv-game-links small{display:block;color:var(--muted)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 CSS;
 
     echo CatalogUi::pageHeader(
         'Unverified Files',
-        'This list is database-paginated. Physical queue discovery and indexing are handled separately so normal and filtered page loads do not scan every queue directory.',
+        'This list is database-paginated. Possible games are shown only when verified files reference the staged package name.',
         [
             'Index existing queue files' => 'unverified-database-import.php',
             'Upload bucket' => 'upload-bucket.php',
@@ -233,7 +265,7 @@ CSS;
     } else {
         echo '<div class="table-wrap"><table class="uv-table"><thead><tr>'
             . '<th></th><th>Physical queue</th><th>File</th><th>Identity</th><th>Database</th>'
-            . '<th>Detected</th><th>Size</th><th>Review</th></tr></thead><tbody>';
+            . '<th>Detected</th><th>Size</th><th>Possible games</th></tr></thead><tbody>';
 
         foreach ($items as $item) {
             $queueGameId = (int)($item['unverified_queue_game_id'] ?? 0);
@@ -248,6 +280,9 @@ CSS;
             $path = $dir . DIRECTORY_SEPARATOR . $queueName;
             $exists = $queueName !== '' && is_file($path) && !is_link($path) && uvf_path_inside($path, $dir);
             $token = uvf_token($queueGameId, $queueName);
+            $detailsUrl = 'unverified-file-details.php?id=' . (int)$item['id'];
+            $packageKey = strtolower(trim((string)($item['package_name'] ?? '')));
+            $possibleGames = $referenceMatches[$packageKey] ?? [];
 
             echo '<tr>';
             echo '<td><input class="unverified-select" type="checkbox" name="tokens[]" value="'
@@ -257,19 +292,20 @@ CSS;
                 . '<small class="muted">' . catalog_h((string)$queueGame['slug']) . '/unverified</small><br>'
                 . ($exists ? '<span class="uv-badge good">Present</span>' : '<span class="uv-badge bad">Missing physical file</span>')
                 . '</td>';
-            echo '<td class="uv-file"><strong>' . catalog_h((string)$item['original_name']) . '</strong>'
+            echo '<td class="uv-file"><strong><a href="' . catalog_h($detailsUrl) . '">'
+                . catalog_h((string)$item['original_name']) . '</a></strong>'
                 . '<span>Package: <span class="mono">' . catalog_h((string)$item['package_name']) . '</span></span>'
                 . '<small>Queue name: ' . catalog_h($queueName) . '</small></td>';
             echo '<td><span class="mono small">MD5: ' . catalog_h((string)$item['md5']) . '</span><br>'
                 . '<span class="mono small">GUID: ' . catalog_h((string)($item['package_guid'] ?? '')) . '</span></td>';
             echo '<td><span class="uv-badge good">Indexed</span>'
-                . '<div><a href="unverified-file-info.php?id=' . (int)$item['id'] . '">DB file #' . (int)$item['id'] . '</a></div>'
+                . '<div><a href="' . catalog_h($detailsUrl) . '">DB file #' . (int)$item['id'] . '</a></div>'
                 . '<small>Game assignment: none (NULL)</small><small>'
                 . (int)$item['name_count'] . ' / ' . (int)$item['import_count'] . ' / '
                 . (int)$item['export_count'] . ' N/I/E</small></td>';
             echo '<td class="mono">' . catalog_h(uv_list_detected($item)) . '</td>'
                 . '<td>' . catalog_h(catalog_bytes((int)$item['file_size'])) . '</td>'
-                . '<td><a class="button secondary" href="unverified-file-info.php?id=' . (int)$item['id'] . '">Review details</a></td></tr>';
+                . '<td>' . uv_list_possible_games($possibleGames) . '</td></tr>';
 
             if (trim((string)($item['unverified_reason'] ?? '')) !== '') {
                 echo '<tr class="uv-note-row"><td></td><td colspan="7"><div class="uv-note">'

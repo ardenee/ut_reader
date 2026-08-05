@@ -98,7 +98,7 @@ try {
     catalog_head('Unverified ' . (string)$file['package_name']);
     echo <<<'CSS'
 <style>
-.ufd-hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,.8fr);gap:14px}.ufd-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.ufd-stat{padding:10px;border:1px solid var(--line2);border-radius:8px}.ufd-stat strong{display:block;font-size:17px}.ufd-stat span{display:block;color:var(--muted);font-size:12px}.ufd-decision{padding:13px;border:1px solid var(--line2);border-radius:9px;background:rgba(72,132,255,.08)}.ufd-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.ufd-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.ufd-badge.warn{color:#ffe1a0;background:rgba(246,196,83,.14)}.ufd-badge.info{color:#b8d7ff;background:rgba(72,132,255,.15)}.ufd-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.ufd-games{min-width:1050px}.ufd-games td{vertical-align:top}.ufd-games small{display:block;color:var(--muted)}.ufd-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}.ufd-tabs a{padding:7px 10px;border:1px solid var(--line2);border-radius:8px}.ufd-tabs a.active{background:rgba(72,132,255,.18);border-color:var(--blue)}.ufd-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.ufd-table{min-width:1100px}.ufd-table td{vertical-align:top}.ufd-path{overflow-wrap:anywhere}.ufd-note{white-space:pre-wrap}.mono-block{display:block;font-family:Consolas,ui-monospace,monospace;overflow-wrap:anywhere}@media(max-width:1000px){.ufd-hero{grid-template-columns:1fr}.ufd-grid{grid-template-columns:repeat(3,1fr)}}
+.ufd-hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,.8fr);gap:14px}.ufd-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.ufd-stat{padding:10px;border:1px solid var(--line2);border-radius:8px}.ufd-stat strong{display:block;font-size:17px}.ufd-stat span{display:block;color:var(--muted);font-size:12px}.ufd-decision{padding:13px;border:1px solid var(--line2);border-radius:9px;background:rgba(72,132,255,.08)}.ufd-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.ufd-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.ufd-badge.warn{color:#ffe1a0;background:rgba(246,196,83,.14)}.ufd-badge.info{color:#b8d7ff;background:rgba(72,132,255,.15)}.ufd-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.ufd-rename-form{display:grid;grid-template-columns:minmax(260px,560px) auto;gap:10px;align-items:end}.ufd-rename-form label{display:grid;gap:5px}.ufd-games{min-width:1050px}.ufd-games td{vertical-align:top}.ufd-games small{display:block;color:var(--muted)}.ufd-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}.ufd-tabs a{padding:7px 10px;border:1px solid var(--line2);border-radius:8px}.ufd-tabs a.active{background:rgba(72,132,255,.18);border-color:var(--blue)}.ufd-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.ufd-table{min-width:1100px}.ufd-table td{vertical-align:top}.ufd-path{overflow-wrap:anywhere}.ufd-note{white-space:pre-wrap}.mono-block{display:block;font-family:Consolas,ui-monospace,monospace;overflow-wrap:anywhere}@media(max-width:1000px){.ufd-hero{grid-template-columns:1fr}.ufd-grid{grid-template-columns:repeat(3,1fr)}.ufd-rename-form{grid-template-columns:1fr}}
 </style>
 CSS;
 
@@ -107,6 +107,20 @@ CSS;
         'Database-staged package tables. This row is not assigned to a game and is hidden from verified game listings.',
         ['Back to Unverified Files' => 'unverified-files.php']
     );
+    catalog_flash($_SESSION['flash_unverified_rename'] ?? null);
+    unset($_SESSION['flash_unverified_rename']);
+
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Rename staged file</h2>'
+        . '<p>Correct a poor uploaded filename before importing it. For .uz, .uz2 and .uz3 uploads, the physical redirect wrapper is preserved automatically.</p>'
+        . '</div></div><div class="ui-section__body">';
+    echo '<form class="ufd-rename-form" method="post" action="unverified-file-rename.php" onsubmit="return confirm(\'Rename this staged file and update its package identity?\')">';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('unverified-file-rename')) . '">';
+    echo '<input type="hidden" name="id" value="' . $id . '">';
+    echo '<label for="ufd-new-name">Correct filename<input id="ufd-new-name" name="new_name" required value="'
+        . catalog_h((string)$file['original_name']) . '" autocomplete="off" spellcheck="false"></label>';
+    echo '<button type="submit">Rename file</button></form>';
+    echo '<p class="muted small">Example: <span class="mono">ram_by_nya_shibo.umx.bak</span> → <span class="mono">ram_by_nya_shibo.umx</span>. Enter the final Unreal filename without a redirect wrapper suffix.</p>';
+    echo '</div></section>';
 
     echo '<div class="ufd-hero">';
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Staging identity</h2></div></div><div class="ui-section__body">';
