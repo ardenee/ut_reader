@@ -4,6 +4,7 @@
     if (!window.fetch) return;
     const originalFetch = window.fetch.bind(window);
     const pageState = new Map();
+    const activeStatusControllers = new Set();
     const app = document.getElementById('background-jobs-app');
     const queue = app ? String(app.dataset.queue || 'catalog') : 'catalog';
     const csrf = app ? String(app.dataset.csrf || '') : '';
@@ -11,12 +12,67 @@
     let workerCountSelect = null;
     let applyWorkersButton = null;
     let poolState = null;
+    let pageLeaving = false;
+
+    function abortStatusRequests() {
+        pageLeaving = true;
+        activeStatusControllers.forEach(function (controller) {
+            controller.abort();
+        });
+        activeStatusControllers.clear();
+    }
+
+    window.addEventListener('pagehide', abortStatusRequests, {once: true});
+    window.addEventListener('beforeunload', abortStatusRequests, {once: true});
 
     function requestUrl(input) {
         try {
             return new URL(typeof input === 'string' ? input : input.url, window.location.href);
         } catch (error) {
             return null;
+        }
+    }
+
+    async function statusFetch(input, options) {
+        if (pageLeaving) {
+            throw new DOMException('The page is being unloaded.', 'AbortError');
+        }
+
+        const requestOptions = Object.assign({}, options || {});
+        const externalSignal = requestOptions.signal || null;
+        const controller = new AbortController();
+        let externalAbort = null;
+        let timedOut = false;
+
+        if (externalSignal) {
+            externalAbort = function () { controller.abort(); };
+            if (externalSignal.aborted) {
+                controller.abort();
+            } else {
+                externalSignal.addEventListener('abort', externalAbort, {once: true});
+            }
+        }
+
+        requestOptions.signal = controller.signal;
+        activeStatusControllers.add(controller);
+        const timeout = window.setTimeout(function () {
+            timedOut = true;
+            controller.abort();
+        }, 15000);
+
+        try {
+            return await originalFetch(input, requestOptions);
+        } catch (error) {
+            if (timedOut && !pageLeaving) {
+                throw new Error('Background job status request exceeded 15 seconds and was cancelled.');
+            }
+            throw error;
+        } finally {
+            window.clearTimeout(timeout);
+            activeStatusControllers.delete(controller);
+            if (externalSignal && externalAbort) {
+                externalSignal.removeEventListener('abort', externalAbort);
+            }
         }
     }
 
@@ -211,7 +267,7 @@
         if (descriptor.cursor) url.searchParams.set('cursor', descriptor.cursor);
         else url.searchParams.delete('cursor');
 
-        const response = await originalFetch(url.toString(), options);
+        const response = await statusFetch(url.toString(), options);
         if (!response.ok) return response;
 
         try {
@@ -244,7 +300,9 @@
             return backgroundJobListRequest(url, requestOptions);
         }
 
-        const response = await originalFetch(input, requestOptions);
+        const response = isWorkerStatus(url, requestOptions)
+            ? await statusFetch(input, requestOptions)
+            : await originalFetch(input, requestOptions);
         if (isWorkerStatus(url, requestOptions) && response.ok) {
             response.clone().json().then(function (body) {
                 const worker = body && body.data ? body.data.worker : null;
