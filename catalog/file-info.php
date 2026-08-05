@@ -10,7 +10,7 @@ function file_info_type_from_extension(string $ext): array
     $ext = strtolower(trim($ext, '. '));
 
     return match ($ext) {
-        'unr', 'ut2', 'ut3', 'umap' => ['map', 'type-map'],
+        'unr', 'un2', 'ut2', 'ut3', 'umap' => ['map', 'type-map'],
         'umx' => ['music', 'type-music'],
         'uax' => ['sound', 'type-sound'],
         'utx' => ['texture', 'type-texture'],
@@ -19,7 +19,7 @@ function file_info_type_from_extension(string $ext): array
         'upx' => ['particle/effect', 'type-particle-effect'],
         'ugx' => ['gui', 'type-gui'],
         'con' => ['content', 'type-content'],
-        'u', 'un2', 'upk', 'uasset' => ['package', 'type-package'],
+        'u', 'upk', 'uasset' => ['package', 'type-package'],
         default => [$ext !== '' ? $ext : 'unknown', 'type-unknown'],
     };
 }
