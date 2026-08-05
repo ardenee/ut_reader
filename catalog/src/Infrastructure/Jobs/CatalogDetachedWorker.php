@@ -41,11 +41,13 @@ final class CatalogDetachedWorker
     public function start(string $queue, int $maxJobs = 10000, int $workerCount = 0): array
     {
         $queue = $this->queue($queue);
-        $workerCount = $this->normalizeWorkerCount($workerCount > 0 ? $workerCount : $this->configuredWorkerCount());
         $maxJobs = max(1, min(10000, $maxJobs));
         $this->ensureRuntime();
 
         $before = $this->status($queue);
+        $workerCount = $workerCount > 0
+            ? $this->normalizeWorkerCount($workerCount)
+            : $this->normalizeWorkerCount((int)($before['desired_count'] ?? $this->configuredWorkerCount()));
         if (!empty($before['stale_code'])) {
             return ['started' => false, 'reason' => 'stale_worker_running', 'requested_workers' => $workerCount,
                 'started_workers' => 0, 'stopping_workers' => 0, 'worker' => $before];
