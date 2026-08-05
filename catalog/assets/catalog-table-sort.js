@@ -9,9 +9,9 @@
             'table[data-sortable-table] th.catalog-sortable-column { cursor: pointer; user-select: none; }',
             'table[data-sortable-table] th.catalog-sortable-column:hover { background: rgba(118, 169, 255, .12); }',
             'table[data-sortable-table] th.catalog-sortable-column:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }',
-            'table[data-sortable-table] th.catalog-sortable-column::after { content: "↕"; display: inline-block; margin-left: 7px; font-size: 10px; opacity: .45; }',
-            'table[data-sortable-table] th.catalog-sortable-column.is-sort-ascending::after { content: "▲"; opacity: 1; color: var(--blue); }',
-            'table[data-sortable-table] th.catalog-sortable-column.is-sort-descending::after { content: "▼"; opacity: 1; color: var(--blue); }'
+            'table[data-sortable-table] th.catalog-sortable-column::after { content: "↕" !important; display: inline-block !important; margin-left: 7px !important; font-size: 10px !important; opacity: .45 !important; }',
+            'table[data-sortable-table] th.catalog-sortable-column.is-sort-ascending::after { content: "▲" !important; opacity: 1 !important; color: var(--blue) !important; }',
+            'table[data-sortable-table] th.catalog-sortable-column.is-sort-descending::after { content: "▼" !important; opacity: 1 !important; color: var(--blue) !important; }'
         ].join('\n');
         document.head.appendChild(style);
     }
@@ -198,6 +198,12 @@
         if (!headerRow || sortableRows(table, headerRow).length < 1) return;
 
         if (table.dataset.catalogSortBound === '1' && table.dataset.packageRefMoved !== '1') {
+            table.setAttribute('data-sortable-table', '');
+            Array.from(headerRow.cells).forEach(function (header) {
+                if (header.dataset.sortableColumn !== 'false' && !header.classList.contains('no-sort')) {
+                    header.classList.add('catalog-sortable-column');
+                }
+            });
             return;
         }
         if (table.dataset.globalTableSortBound === '1' && headerRow.dataset.globalTableSortHeader === '1') {
