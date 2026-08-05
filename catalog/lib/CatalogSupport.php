@@ -8,6 +8,7 @@ require_once __DIR__ . '/CatalogPublicResponseCache.php';
 require_once __DIR__ . '/CatalogPublicAccess.php';
 
 \UnrealDb\Catalog\Presentation\Http\LegacySupportHooks::register();
+\UnrealDb\Catalog\Presentation\Http\CatalogTableSortAssets::register();
 
 /*
  * Apply the anonymous crawler and rapid-link guard before public response-cache
