@@ -16,7 +16,7 @@ try {
 
     $stats = new PdoGameCatalogStats($application->db);
     if ($stats->available()) {
-        $stats->refreshStale(300);
+        /* Never rebuild all game projections from an interactive API request. */
         $rows = catalog_all(
             $application->db,
             'SELECT g.id game_id,COALESCE(s.missing_dependency_count,0) missing_dependency_count '
