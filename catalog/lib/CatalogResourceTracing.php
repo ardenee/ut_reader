@@ -68,7 +68,14 @@ function catalog_resource_trace_finish(): void
     $route = catalog_resource_trace_route_key();
     $method = substr(strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'CLI')), 0, 10);
     $status = function_exists('http_response_code') ? (int)http_response_code() : 0;
-    $audience = session_status() === PHP_SESSION_ACTIVE && (($_SESSION['user']['role'] ?? '') === 'admin')
+
+    /*
+     * session_write_close() releases the session-file lock but intentionally
+     * leaves the authenticated data available in $_SESSION for this request.
+     * Do not require PHP_SESSION_ACTIVE here or optimized admin pages would be
+     * misclassified as public after releasing their lock.
+     */
+    $audience = (($_SESSION['user']['role'] ?? '') === 'admin')
         ? 'admin'
         : (PHP_SAPI === 'cli' ? 'cli' : 'public');
     $slowThresholdUs = max(250000, (int)(getenv('UNREALDB_SLOW_REQUEST_MS') ?: 1000) * 1000);
