@@ -84,9 +84,8 @@
         var amount = Number(match[1].replace(/,/g, ''));
         if (!Number.isFinite(amount)) return null;
         var unit = match[2].toUpperCase();
-        var binary = unit.indexOf('I') >= 0;
         var power = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'].indexOf(unit.replace('I', ''));
-        return power < 0 ? null : amount * Math.pow(binary ? 1024 : 1000, power);
+        return power < 0 ? null : amount * Math.pow(1024, power);
     }
 
     function numericValue(value) {
@@ -132,18 +131,20 @@
         return { empty: false, type: 'text', value: value.toLocaleLowerCase() };
     }
 
-    function comparison(left, right, header) {
+    function comparison(left, right, header, ascending) {
         var a = parsedValue(left, header);
         var b = parsedValue(right, header);
         if (a.empty || b.empty) {
             if (a.empty && b.empty) return 0;
             return a.empty ? 1 : -1;
         }
-        if (a.type === 'number' && b.type === 'number') return a.value - b.value;
-        return String(a.value).localeCompare(String(b.value), undefined, {
-            numeric: true,
-            sensitivity: 'base'
-        });
+        var result = a.type === 'number' && b.type === 'number'
+            ? a.value - b.value
+            : String(a.value).localeCompare(String(b.value), undefined, {
+                numeric: true,
+                sensitivity: 'base'
+            });
+        return ascending ? result : -result;
     }
 
     function updateHeaders(headerRow, activeIndex, ascending) {
@@ -172,9 +173,13 @@
         var ordered = rows.map(function (row, originalIndex) {
             return { row: row, originalIndex: originalIndex };
         }).sort(function (left, right) {
-            var result = comparison(left.row.cells[columnIndex], right.row.cells[columnIndex], header);
-            if (result === 0) result = left.originalIndex - right.originalIndex;
-            return ascending ? result : -result;
+            var result = comparison(
+                left.row.cells[columnIndex],
+                right.row.cells[columnIndex],
+                header,
+                ascending
+            );
+            return result === 0 ? left.originalIndex - right.originalIndex : result;
         });
 
         var anchor = rows[rows.length - 1].nextSibling;
