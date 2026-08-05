@@ -68,8 +68,15 @@ try {
     $stateStatus = strtolower(trim((string)($workerState['status'] ?? '')));
     $exitReason = strtolower(trim((string)($workerState['exit_reason'] ?? '')));
     $lastError = trim((string)($workerState['error'] ?? ''));
+    $stateTimestamp = strtotime((string)($workerState['updated_at'] ?? $workerState['started_at'] ?? '')) ?: 0;
+    $stateAge = $stateTimestamp > 0 ? max(0, time() - $stateTimestamp) : PHP_INT_MAX;
+    $restartRecommended = $active && $counts['ready'] > 0 && $counts['running'] === 0 && $stateAge >= 5;
 
-    if ($active) {
+    if ($restartRecommended) {
+        $authoritative = 'stopped_with_queue';
+        $message = $activeCount . ' detached worker process(es) exist, but no ready job has been claimed for '
+            . $stateAge . ' second(s). Restart the worker pool.';
+    } elseif ($active) {
         $authoritative = 'running';
         $message = $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.';
     } elseif ($counts['running'] > 0) {
@@ -99,6 +106,7 @@ try {
     $worker['authoritative_status'] = $authoritative;
     $worker['authoritative_message'] = $message;
     $worker['queue_counts'] = $counts;
+    $worker['restart_recommended'] = $restartRecommended;
     $worker['status_read_only'] = true;
     $worker['auto_recovery'] = null;
     $worker['auto_start'] = null;
