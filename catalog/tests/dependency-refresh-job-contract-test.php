@@ -60,8 +60,10 @@ foreach ([
     'isActiveRefreshJob(',
     'existingRefreshJobId(',
     'hasAffectedFiles(',
+    'concurrency_key=?',
     'new CatalogDetachedWorker($config)',
     'using synchronous fallback',
+    'queued job remains durable',
 ] as $fragment) {
     dependency_refresh_contract_expect(str_contains($service, $fragment), 'Automatic affected dependency refresh is missing ' . $fragment);
 }
@@ -70,6 +72,12 @@ dependency_refresh_contract_expect(
         && str_contains($service, 'status IN ("queued","running")')
         && str_contains($service, 'return [];'),
     'Normal imports do not defer to running refreshes or reuse queued continuation jobs.'
+);
+dependency_refresh_contract_expect(
+    str_contains($service, "if (empty(\$worker['active'])")
+        && str_contains($service, "(int)(\$worker['launching_count'] ?? 0) === 0")
+        && str_contains($service, 'return $jobId;'),
+    'Foreground imports still reconcile an active worker pool or discard a successfully queued refresh after launcher failure.'
 );
 
 $compatibility = file_get_contents(__DIR__ . '/../lib/CatalogCompactMetadataCompatibility.php');
