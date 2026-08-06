@@ -123,7 +123,7 @@ final class CatalogJobResourceLimitStore
                 'ready' => $ready,
                 'available_slots' => $slots,
                 'class_blocked' => $blocked,
-                'is_limiting' => $ready > 0 && $running >= $limit,
+                'is_limiting' => $blocked > 0,
             ];
         }
 
