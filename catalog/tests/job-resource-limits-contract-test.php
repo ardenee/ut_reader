@@ -43,10 +43,14 @@ foreach (compact('store', 'application', 'support', 'page', 'navigation', 'migra
 
 job_limit_expect(
     str_contains($store, 'ue_job_resource_limits')
-        && str_contains($store, 'status IN ("queued","running")')
-        && str_contains($store, 'resource_limit=?')
+        && str_contains($store, 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?')
+        && str_contains($store, 'WHERE queue_name=? AND status IN ("queued","running") GROUP BY resource_class')
         && str_contains($store, 'class_blocked'),
-    'Saved limits do not update the current durable queue or expose limiting pressure.'
+    'Saved limits do not use the existing queue/status/resource index or expose limiting pressure.'
+);
+job_limit_expect(
+    !str_contains($store, 'WHERE resource_class=? AND status IN ("queued","running")'),
+    'The resource-limit save still performs an unscoped full-table update across running rows.'
 );
 job_limit_expect(
     str_contains($application, 'JobResourcePolicy::setLimitResolver')
@@ -60,10 +64,11 @@ job_limit_expect(
     'Legacy administrator pages that construct queues directly do not load the saved database limits.'
 );
 job_limit_expect(
-    str_contains($page, 'Save limits and update current jobs')
+    str_contains($page, 'Save limits and update queued jobs')
+        && str_contains($page, 'new CatalogJobResourceLimitStore($db, $queueName)')
         && str_contains($page, 'CatalogDetachedWorker')
         && str_contains($page, 'class_blocked'),
-    'The administrator page cannot save limits, update current work and refill the worker pool.'
+    'The administrator page does not save indexed queued-job updates and refill the worker pool.'
 );
 job_limit_expect(
     str_contains($navigation, "'Job Resource Limits' => \$root . 'job-resource-limits.php'"),
@@ -74,7 +79,7 @@ job_limit_expect(
         && str_contains($migration, 'archive-import-heavy')
         && str_contains($migration, 'JOIN ue_job_resource_limits')
         && str_contains($migration, 'status IN ("queued","running")'),
-    'The migration does not create settings or update the existing active queue.'
+    'The original immutable migration does not create settings or initialize the existing active queue.'
 );
 
 echo "Job resource limits contract tests passed.\n";
