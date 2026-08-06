@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
+use UnrealDb\Catalog\Application\Dependency\CatalogAffectedDependencyRefreshService;
 use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
@@ -11,6 +12,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
 /** Rebuilds file/game dependencies and their compact projections together. */
 final class CatalogDependencyRefreshJobHandler implements JobHandler
@@ -57,20 +59,77 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 $context->heartbeatIfDue($progress);
             },
             0,
-            85,
+            70,
             'Refreshing file dependency links'
         );
-        $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
+
         $context->checkpoint([
-            'stage' => 'game_stats',
+            'stage' => 'package_provider',
             'done' => 1,
-            'total' => 1,
-            'percent' => 95,
-            'message' => 'Refreshing cached game counters.',
+            'total' => 4,
+            'percent' => 74,
+            'message' => 'Reconciling the imported package provider.',
             'file_id' => $fileId,
-            'dependency_summary_rows' => (int)$summary['summary_rows'],
         ]);
-        $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame((int)$file['game_id']);
+        (new PdoPackageProviderRepository($this->db))->reconcileFile($fileId);
+
+        $context->checkpoint([
+            'stage' => 'dependency_summary',
+            'done' => 2,
+            'total' => 4,
+            'percent' => 82,
+            'message' => 'Rebuilding the imported file dependency summary.',
+            'file_id' => $fileId,
+        ]);
+        $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
+
+        $affectedJobId = 0;
+        $postImport = !empty($job->payload['post_import']);
+        if ($postImport) {
+            $context->checkpoint([
+                'stage' => 'affected_detection',
+                'done' => 3,
+                'total' => 4,
+                'percent' => 90,
+                'message' => 'Checking whether existing files reference the imported package.',
+                'file_id' => $fileId,
+                'dependency_summary_rows' => (int)$summary['summary_rows'],
+            ]);
+            $affectedJobId = CatalogAffectedDependencyRefreshService::enqueueIfNeeded(
+                $this->db,
+                (int)$file['game_id'],
+                $fileId,
+                (string)$file['package_name'],
+                true,
+                true
+            );
+        }
+
+        $gameStats = null;
+        if ($affectedJobId < 1) {
+            $context->checkpoint([
+                'stage' => 'game_stats',
+                'done' => 4,
+                'total' => 4,
+                'percent' => 95,
+                'message' => 'Refreshing cached game counters.',
+                'file_id' => $fileId,
+                'dependency_summary_rows' => (int)$summary['summary_rows'],
+            ]);
+            $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame((int)$file['game_id']);
+        } else {
+            $context->checkpoint([
+                'stage' => 'affected_queued',
+                'done' => 4,
+                'total' => 4,
+                'percent' => 100,
+                'message' => 'Queued affected-file refresh job #' . $affectedJobId
+                    . '; that chain will publish final game counters.',
+                'file_id' => $fileId,
+                'affected_job_id' => $affectedJobId,
+                'dependency_summary_rows' => (int)$summary['summary_rows'],
+            ]);
+        }
 
         return [
             'operation' => 'rebuild_file_dependencies',
@@ -78,7 +137,10 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'game_id' => (int)$file['game_id'],
             'package_name' => (string)$file['package_name'],
             'original_name' => (string)$file['original_name'],
+            'post_import' => $postImport,
+            'package_provider_reconciled' => true,
             'dependency_summary_rows' => (int)$summary['summary_rows'],
+            'affected_job_id' => $affectedJobId,
             'game_stats_refreshed' => $gameStats !== null,
             'stats' => $this->stats([$fileId]),
         ];
@@ -103,6 +165,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         $processedIds = [];
         $summaryRows = 0;
         $summaryWriter = new PdoDependencyPackageSummary($this->db);
+        $providerWriter = new PdoPackageProviderRepository($this->db);
 
         if ($total === 0) {
             $context->checkpoint([
@@ -128,6 +191,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 (int)floor(($position * 90) / max(1, $total)),
                 'Refreshing game dependency links ' . $position . '/' . $total . ' (' . (string)$file['package_name'] . ')'
             );
+            $providerWriter->reconcileFile($fileId);
             $summary = $summaryWriter->rebuildFile($fileId);
             $summaryRows += (int)$summary['summary_rows'];
             $processedIds[] = $fileId;
