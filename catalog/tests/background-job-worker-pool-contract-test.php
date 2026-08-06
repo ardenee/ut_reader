@@ -94,8 +94,12 @@ worker_pool_expect(
     str_contains($detachedWorker, 'php_ini_loaded_file()')
         && str_contains($detachedWorker, "ini_get('extension_dir')")
         && str_contains($detachedWorker, "'launching_count'")
-        && str_contains($detachedWorker, 'assertPhpBinary($php)'),
-    'Detached worker launch does not resolve the current PHP installation or distinguish launching from active.'
+        && str_contains($detachedWorker, 'assertPhpBinary($php)')
+        && str_contains($detachedWorker, 'Start-Process -FilePath')
+        && str_contains($detachedWorker, 'RedirectStandardError')
+        && str_contains($detachedWorker, 'microtime(true) + 10.0')
+        && !str_contains($detachedWorker, 'start "" /B'),
+    'Detached worker launch does not resolve the current PHP installation or reliably detach on Windows.'
 );
 
 worker_pool_expect(
