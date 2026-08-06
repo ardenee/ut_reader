@@ -27,7 +27,12 @@ final class CatalogApplication
 
         $config = \catalog_config();
         $db = \catalog_db($config);
-        $resourceLimits = new CatalogJobResourceLimitStore($db);
+        $storage = rtrim((string)($config['storage_path'] ?? ''), '/\\');
+        $settingsFile = $storage !== ''
+            ? $storage . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'resource-limits.json'
+            : null;
+        JobResourcePolicy::setLimitFile($settingsFile);
+        $resourceLimits = new CatalogJobResourceLimitStore($db, $settingsFile);
         JobResourcePolicy::setLimitResolver(
             static fn(string $resourceClass, int $fallback): int => $resourceLimits->resolve($resourceClass, $fallback)
         );
