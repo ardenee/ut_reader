@@ -6,10 +6,8 @@ namespace UnrealDb\Catalog\Application\Dependency;
 use PDO;
 use PDOException;
 use Throwable;
-use UnrealDb\Catalog\Application\Search\CatalogSearchIndexQueue;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
@@ -17,10 +15,10 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
  * Finds dependency owners whose exact package/object resolution can change after
  * a package is imported.
  *
- * Normal imports enqueue search indexing and the potentially expensive affected
- * dependency refresh, then return quickly. The matching durable dependency job
- * calls this service again while its queue row is running; only that execution
- * loads and returns the affected file IDs.
+ * Foreground imports never load affected IDs. The exact-file dependency worker
+ * first makes the new provider and its own dependency rows authoritative, then
+ * calls enqueueIfNeeded(). The affected worker calls findAffectedFileIds() while
+ * its durable queue row is running.
  */
 final class CatalogAffectedDependencyRefreshService
 {
@@ -29,58 +27,70 @@ final class CatalogAffectedDependencyRefreshService
     {
         self::syncProvider($db, $newFileId);
 
-        $activeRefresh = self::isActiveRefreshJob($db, $newFileId);
-        if (!$activeRefresh) {
-            $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $newFileId);
-            if ($searchJobId > 0) {
-                $GLOBALS['catalog_search_index_job_id'] = $searchJobId;
-            }
-        }
-
         if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
             return [];
         }
 
+        $activeRefresh = self::isActiveRefreshJob($db, $newFileId);
         if (!$activeRefresh) {
-            if (!self::hasAffectedFiles($db, $gameId, $newFileId, $packageName)) {
-                return [];
-            }
-
-            $jobId = self::enqueueRefresh($db, $newFileId, $gameId, $packageName);
+            $jobId = self::enqueueIfNeeded($db, $gameId, $newFileId, $packageName, true, true);
             if ($jobId > 0) {
                 $GLOBALS['catalog_affected_dependency_refresh_job_id'] = $jobId;
                 return [];
             }
         }
 
+        // Affected-file discovery must use the authoritative dependency links,
+        // never the package-summary projection that may be partway through a
+        // rebuild. The term identity columns are indexed and avoid a text scan.
         $fileIds = [];
-        if (self::summaryAvailable($db)) {
-            self::collectFileIds(
-                $db,
-                'SELECT s.file_id FROM ue_dependency_package_summaries s'
-                . ' JOIN ue_files f ON f.id=s.file_id'
-                . ' WHERE s.required_package=? AND s.file_id<>?'
-                . ' AND s.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY s.file_id',
-                [$packageName, $newFileId, $gameId],
-                $fileIds
-            );
-        } else {
-            self::collectFileIds(
-                $db,
-                'SELECT DISTINCT l.file_id'
-                . ' FROM ue_dependency_links l'
-                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-                . ' JOIN ue_files f ON f.id=l.file_id'
-                . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
-                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY l.file_id',
-                [md5($packageName, true), strlen($packageName), substr($packageName, 0, 200), $newFileId, $gameId],
-                $fileIds
-            );
-        }
+        self::collectFileIds(
+            $db,
+            'SELECT DISTINCT l.file_id'
+            . ' FROM ue_dependency_links l'
+            . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+            . ' JOIN ue_files f ON f.id=l.file_id'
+            . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
+            . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
+            . ' ORDER BY l.file_id',
+            [md5($packageName, true), strlen($packageName), substr($packageName, 0, 200), $newFileId, $gameId],
+            $fileIds
+        );
 
         return array_map('intval', array_keys($fileIds));
+    }
+
+    public static function enqueueIfNeeded(
+        PDO $db,
+        int $gameId,
+        int $newFileId,
+        string $packageName,
+        bool $sourceSummaryReady = false,
+        bool $providerReady = false
+    ): int {
+        if ($gameId < 1 || $newFileId < 1 || trim($packageName) === '') {
+            return 0;
+        }
+
+        if (!$providerReady) {
+            self::syncProvider($db, $newFileId);
+        }
+
+        $existingJobId = self::existingRefreshJobId($db, $newFileId);
+        if ($existingJobId > 0) {
+            return $existingJobId;
+        }
+        if (!self::hasAffectedFiles($db, $gameId, $newFileId, $packageName)) {
+            return 0;
+        }
+
+        return self::enqueueRefresh(
+            $db,
+            $newFileId,
+            $gameId,
+            $packageName,
+            $sourceSummaryReady
+        );
     }
 
     private static function syncProvider(PDO $db, int $fileId): void
@@ -94,38 +104,22 @@ final class CatalogAffectedDependencyRefreshService
         }
     }
 
-    private static function summaryAvailable(PDO $db): bool
-    {
-        return (new PdoDependencyPackageSummary($db))->available();
-    }
-
     private static function hasAffectedFiles(PDO $db, int $gameId, int $newFileId, string $packageName): bool
     {
-        if (self::summaryAvailable($db)) {
-            $statement = $db->prepare(
-                'SELECT 1 FROM ue_dependency_package_summaries s'
-                . ' JOIN ue_files f ON f.id=s.file_id'
-                . ' WHERE s.required_package=? AND s.file_id<>?'
-                . ' AND s.game_id=? AND f.scan_status="verified" LIMIT 1'
-            );
-            $arguments = [$packageName, $newFileId, $gameId];
-        } else {
-            $statement = $db->prepare(
-                'SELECT 1 FROM ue_dependency_links l'
-                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-                . ' JOIN ue_files f ON f.id=l.file_id'
-                . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
-                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
-            );
-            $arguments = [
-                md5($packageName, true),
-                strlen($packageName),
-                substr($packageName, 0, 200),
-                $newFileId,
-                $gameId,
-            ];
-        }
-        $statement->execute($arguments);
+        $statement = $db->prepare(
+            'SELECT 1 FROM ue_dependency_links l'
+            . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+            . ' JOIN ue_files f ON f.id=l.file_id'
+            . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
+            . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([
+            md5($packageName, true),
+            strlen($packageName),
+            substr($packageName, 0, 200),
+            $newFileId,
+            $gameId,
+        ]);
         return $statement->fetchColumn() !== false;
     }
 
@@ -145,7 +139,7 @@ final class CatalogAffectedDependencyRefreshService
             ]);
             return $statement->fetchColumn() !== false;
         } catch (Throwable) {
-            // Missing/legacy queue infrastructure falls back to synchronous work.
+            // Missing/legacy queue infrastructure leaves no active chain.
         }
 
         return false;
@@ -168,14 +162,19 @@ final class CatalogAffectedDependencyRefreshService
             ]);
             return max(0, (int)($statement->fetchColumn() ?: 0));
         } catch (Throwable) {
-            // Continue to the durable enqueue path when queue inspection fails.
+            // Continue to durable enqueue when queue inspection fails.
         }
 
         return 0;
     }
 
-    private static function enqueueRefresh(PDO $db, int $fileId, int $gameId, string $packageName): int
-    {
+    private static function enqueueRefresh(
+        PDO $db,
+        int $fileId,
+        int $gameId,
+        string $packageName,
+        bool $sourceSummaryReady
+    ): int {
         $config = function_exists('catalog_config') ? \catalog_config() : [];
         $queueName = trim((string)($config['queue']['name'] ?? 'catalog'));
         if ($queueName === '') {
@@ -183,11 +182,6 @@ final class CatalogAffectedDependencyRefreshService
         }
 
         try {
-            $existingJobId = self::existingRefreshJobId($db, $fileId);
-            if ($existingJobId > 0) {
-                return $existingJobId;
-            }
-
             $jobId = (new PdoJobQueue($db))->enqueue(
                 $queueName,
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
@@ -195,6 +189,7 @@ final class CatalogAffectedDependencyRefreshService
                     'file_id' => $fileId,
                     'game_id' => $gameId,
                     'package_name' => $packageName,
+                    'source_summary_ready' => $sourceSummaryReady,
                 ],
                 40,
                 null,
@@ -204,20 +199,10 @@ final class CatalogAffectedDependencyRefreshService
             );
         } catch (Throwable $error) {
             error_log('[UnrealDB dependency refresh queue] file_id=' . $fileId
-                . ' enqueue failed; using synchronous fallback: ' . $error->getMessage());
+                . ' enqueue failed: ' . $error->getMessage());
             return 0;
         }
 
-        /*
-         * The import request must not repeatedly expand or reconcile an already
-         * running worker pool. CatalogDetachedWorker::start() can wait up to ten
-         * seconds for missing slots; calling it once per imported file made bulk
-         * unverified imports pause on every item when the pool stayed at 2/4.
-         *
-         * Only bootstrap a completely inactive queue. Once the durable row has
-         * been inserted, worker startup failure must never turn the same work into
-         * a synchronous foreground rebuild or duplicate the queued job.
-         */
         if ($config !== []) {
             try {
                 $launcher = new CatalogDetachedWorker($config);
