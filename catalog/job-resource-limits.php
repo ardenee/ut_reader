@@ -16,6 +16,7 @@ try {
         exit;
     }
 
+    $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
     $store = new CatalogJobResourceLimitStore($db);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('job_resource_limits');
@@ -39,7 +40,6 @@ try {
 
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
         $result = $store->save($limits, $userId);
-        $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
         $workerMessage = '';
         try {
             $launch = (new CatalogDetachedWorker($config))->start($queueName, 10000);
@@ -61,6 +61,10 @@ try {
     }
 
     $rows = $store->summaries();
+    $workerStatus = (new CatalogDetachedWorker($config))->status($queueName);
+    $activeWorkers = max(0, (int)($workerStatus['active_count'] ?? 0));
+    $desiredWorkers = max(1, (int)($workerStatus['desired_count'] ?? CatalogDetachedWorker::DEFAULT_WORKERS));
+    $maximumWorkers = max(1, (int)($workerStatus['max_workers'] ?? CatalogDetachedWorker::MAX_WORKERS));
 
     catalog_head('Job Resource Limits');
     catalog_page_header(
@@ -89,7 +93,9 @@ try {
     echo '<div class="card">'
         . '<h2>How the limits work</h2>'
         . '<p>A worker can claim a ready job only while the number of running jobs in the same resource class is below that class limit. Per-file and per-game concurrency keys still prevent two workers from changing the same target.</p>'
-        . '<p class="muted">Raising a limit lets idle worker slots claim more work immediately. Lowering a limit does not terminate work already running; it prevents further claims until the active count falls below the new limit.</p>'
+        . '<p><strong>Current detached worker pool:</strong> ' . $activeWorkers . ' active / ' . $desiredWorkers
+        . ' configured, maximum ' . $maximumWorkers . '.</p>'
+        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Raising a workload limit lets idle worker slots claim more work immediately. Lowering a limit does not terminate work already running; it prevents further claims until the active count falls below the new limit.</p>'
         . '</div>';
 
     echo '<form method="post">'
