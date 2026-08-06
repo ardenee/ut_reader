@@ -170,7 +170,7 @@ try {
         $leaseSeconds
     );
 
-    for ($index = 0; $index < $maxJobs; $index++) {
+    while ($processed < $maxJobs) {
         if ($controller->stopRequested($queueName, $workerSlot)) {
             $exitReason = 'stop_requested';
             break;
@@ -188,15 +188,14 @@ try {
         if ($status === 'idle') {
             if (catalog_detached_queue_has_pending_work($application->db, $queueName)) {
                 $idlePasses = 0;
-                usleep($sleepMs * 1000);
-                continue;
+            } else {
+                $idlePasses++;
+                if ($idlePasses >= 4) {
+                    $exitReason = 'queue_empty';
+                    break;
+                }
             }
 
-            $idlePasses++;
-            if ($idlePasses >= 4) {
-                $exitReason = 'queue_empty';
-                break;
-            }
             usleep($sleepMs * 1000);
             continue;
         }
