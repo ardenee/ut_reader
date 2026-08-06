@@ -26,6 +26,102 @@ function catalog_job_run_queue_counts(PDO $db, string $queueName): array
     ];
 }
 
+/** @param array<string,mixed> $worker */
+function catalog_job_run_slot_summary(array $worker, int $desiredWorkers): string
+{
+    $slots = [];
+    foreach ((array)($worker['workers'] ?? []) as $slotWorker) {
+        if (!is_array($slotWorker)) {
+            continue;
+        }
+        $slot = max(1, (int)($slotWorker['slot'] ?? 1));
+        if ($slot > $desiredWorkers) {
+            continue;
+        }
+        $state = is_array($slotWorker['state'] ?? null) ? $slotWorker['state'] : [];
+        $status = !empty($slotWorker['active'])
+            ? 'running'
+            : (!empty($slotWorker['launching']) ? 'launching' : strtolower(trim((string)($state['status'] ?? 'stopped'))));
+        $reason = strtolower(trim((string)($state['exit_reason'] ?? '')));
+        $error = trim((string)($state['error'] ?? ''));
+        $detail = 'slot ' . $slot . '=' . ($status !== '' ? $status : 'stopped');
+        if ($reason !== '') {
+            $detail .= '(' . $reason . ')';
+        } elseif ($error !== '') {
+            $detail .= '(' . mb_substr($error, 0, 160, 'UTF-8') . ')';
+        }
+        $slots[$slot] = $detail;
+    }
+
+    for ($slot = 1; $slot <= $desiredWorkers; $slot++) {
+        if (!isset($slots[$slot])) {
+            $slots[$slot] = 'slot ' . $slot . '=missing';
+        }
+    }
+    ksort($slots);
+    return implode('; ', $slots);
+}
+
+/** @return array<string,mixed> */
+function catalog_job_run_reconcile_pool(
+    CatalogDetachedWorker $launcher,
+    string $queueName,
+    int $maxJobs,
+    int $workerCount
+): array {
+    $deadline = microtime(true) + 10.0;
+    $launchAttempts = 0;
+    $lastResult = [];
+
+    do {
+        $worker = $launcher->status($queueName, true);
+        $active = max(0, (int)($worker['active_count'] ?? 0));
+        $launching = max(0, (int)($worker['launching_count'] ?? 0));
+        if ($active >= $workerCount) {
+            return array_merge($lastResult, [
+                'started' => !empty($lastResult['started']),
+                'reason' => (string)($lastResult['reason'] ?? 'pool_already_satisfied'),
+                'requested_workers' => $workerCount,
+                'started_workers' => (int)($lastResult['started_workers'] ?? 0),
+                'stopping_workers' => (int)($lastResult['stopping_workers'] ?? 0),
+                'worker' => $worker,
+                'pool_satisfied' => true,
+                'reconcile_attempts' => $launchAttempts,
+            ]);
+        }
+
+        if ($active + $launching < $workerCount) {
+            $lastResult = $launcher->start($queueName, $maxJobs, $workerCount);
+            $launchAttempts++;
+            $worker = is_array($lastResult['worker'] ?? null)
+                ? $lastResult['worker']
+                : $launcher->status($queueName, true);
+            if (max(0, (int)($worker['active_count'] ?? 0)) >= $workerCount) {
+                return array_merge($lastResult, [
+                    'worker' => $worker,
+                    'pool_satisfied' => true,
+                    'reconcile_attempts' => $launchAttempts,
+                ]);
+            }
+        }
+
+        usleep(250000);
+    } while (microtime(true) < $deadline);
+
+    $worker = $launcher->status($queueName, true);
+    return array_merge($lastResult, [
+        'started' => !empty($lastResult['started']),
+        'reason' => (string)($lastResult['reason'] ?? 'pool_not_satisfied'),
+        'requested_workers' => $workerCount,
+        'started_workers' => (int)($lastResult['started_workers'] ?? 0),
+        'stopping_workers' => (int)($lastResult['stopping_workers'] ?? 0),
+        'worker' => $worker,
+        'pool_satisfied' => max(0, (int)($worker['active_count'] ?? 0)) >= $workerCount,
+        'reconcile_attempts' => $launchAttempts,
+        'slot_summary' => catalog_job_run_slot_summary($worker, $workerCount),
+    ]);
+}
+
 try {
     $application = catalog_api_application();
     catalog_api_require_admin(false);
@@ -97,7 +193,20 @@ try {
         }
     }
 
-    $result = $launcher->start($queueName, $maxJobs, $workerCount);
+    $result = catalog_job_run_reconcile_pool($launcher, $queueName, $maxJobs, $workerCount);
+    if (empty($result['pool_satisfied'])) {
+        $worker = is_array($result['worker'] ?? null) ? $result['worker'] : [];
+        $active = max(0, (int)($worker['active_count'] ?? 0));
+        $summary = trim((string)($result['slot_summary'] ?? catalog_job_run_slot_summary($worker, $workerCount)));
+        JsonResponse::error(
+            'worker_pool_incomplete',
+            'Requested ' . $workerCount . ' detached workers, but only ' . $active
+                . ' acquired worker locks after reconciliation.' . ($summary !== '' ? ' ' . $summary : ''),
+            409,
+            ['worker' => $worker, 'reconciliation' => $result]
+        );
+    }
+
     JsonResponse::send([
         'data' => [
             'queue' => $queueName,
