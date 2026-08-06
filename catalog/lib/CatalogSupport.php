@@ -11,6 +11,23 @@ require_once __DIR__ . '/CatalogPublicAccess.php';
 \UnrealDb\Catalog\Presentation\Http\CatalogTableSortAssets::register();
 
 /*
+ * Many administrator pages still construct PdoJobQueue directly instead of
+ * booting CatalogApplication. Give those paths the same saved resource limits
+ * through the atomic projection written by job-resource-limits.php.
+ */
+try {
+    $jobLimitConfig = catalog_config();
+    $jobLimitStorage = rtrim((string)($jobLimitConfig['storage_path'] ?? ''), '/\\');
+    if ($jobLimitStorage !== '') {
+        \UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy::setLimitFile(
+            $jobLimitStorage . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'resource-limits.json'
+        );
+    }
+} catch (Throwable) {
+    // Setup and incomplete installations may not have a readable config yet.
+}
+
+/*
  * Apply the anonymous crawler and rapid-link guard before public response-cache
  * lookup. This prevents a cached page from becoming a bypass for automated
  * bulk traversal. Logged-in administrators and non-GET requests are exempt.
