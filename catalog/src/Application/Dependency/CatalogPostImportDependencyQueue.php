@@ -4,18 +4,16 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Application\Dependency;
 
 use PDO;
-use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /**
  * Queues one ordered post-import pipeline.
  *
- * The exact-file dependency job now reconciles the provider projection, rebuilds
- * the source summary and conditionally queues affected-file work after the source
- * dependency rows are authoritative. This avoids three independent jobs racing
- * to publish the same summary and game counters.
+ * The exact-file dependency job reconciles the provider projection, rebuilds the
+ * source summary and conditionally queues affected-file work after the source
+ * dependency rows are authoritative. Worker lifecycle is deliberately excluded
+ * from the HTTP import request so a stopped or partial pool cannot delay files.
  */
 final class CatalogPostImportDependencyQueue
 {
@@ -56,29 +54,12 @@ final class CatalogPostImportDependencyQueue
             3
         );
 
-        $workerStarted = false;
-        $workerError = '';
-        try {
-            $launcher = new CatalogDetachedWorker($config);
-            $status = $launcher->status($queueName);
-            if ((int)($status['active_count'] ?? 0) + (int)($status['launching_count'] ?? 0) === 0) {
-                $start = $launcher->start($queueName, 1000000);
-                $workerStarted = !empty($start['started']);
-            }
-        } catch (Throwable $error) {
-            // The exact-file pipeline is already durable. Worker lifecycle can be
-            // repaired from Background Jobs without delaying or failing import.
-            $workerError = trim($error->getMessage());
-            error_log('[UnrealDB post-import pipeline] file_id=' . $fileId
-                . ' worker bootstrap failed: ' . $workerError);
-        }
-
         return [
             'search_job_id' => 0,
             'file_job_id' => $fileJobId,
             'affected_job_id' => 0,
-            'worker_started' => $workerStarted,
-            'worker_error' => $workerError,
+            'worker_started' => false,
+            'worker_error' => '',
         ];
     }
 }
