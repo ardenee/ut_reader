@@ -134,11 +134,11 @@ final class CatalogAffectedDependencyRefreshService
         try {
             $statement = $db->prepare(
                 'SELECT 1 FROM ue_background_jobs'
-                . ' WHERE job_type=? AND status="running" AND concurrency_key=? LIMIT 1'
+                . ' WHERE job_type=? AND status="running" AND dedupe_key=? LIMIT 1'
             );
             $statement->execute([
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
-                self::concurrencyKey($fileId),
+                self::dedupeKey($fileId),
             ]);
             return $statement->fetchColumn() !== false;
         } catch (Throwable) {
@@ -153,12 +153,12 @@ final class CatalogAffectedDependencyRefreshService
         try {
             $statement = $db->prepare(
                 'SELECT id FROM ue_background_jobs'
-                . ' WHERE job_type=? AND status IN ("queued","running") AND concurrency_key=?'
+                . ' WHERE job_type=? AND status IN ("queued","running") AND dedupe_key=?'
                 . ' ORDER BY id DESC LIMIT 1'
             );
             $statement->execute([
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
-                self::concurrencyKey($fileId),
+                self::dedupeKey($fileId),
             ]);
             return max(0, (int)($statement->fetchColumn() ?: 0));
         } catch (Throwable) {
@@ -192,7 +192,7 @@ final class CatalogAffectedDependencyRefreshService
                 ],
                 40,
                 null,
-                'rebuild-affected-file:' . $fileId,
+                self::dedupeKey($fileId),
                 null,
                 3
             );
@@ -228,9 +228,9 @@ final class CatalogAffectedDependencyRefreshService
         return $jobId;
     }
 
-    private static function concurrencyKey(int $fileId): string
+    private static function dedupeKey(int $fileId): string
     {
-        return 'dependency:file:' . max(1, $fileId);
+        return 'rebuild-affected-file:' . max(1, $fileId);
     }
 
     /**
