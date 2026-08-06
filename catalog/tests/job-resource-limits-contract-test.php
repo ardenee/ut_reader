@@ -22,21 +22,13 @@ JobResourcePolicy::setLimitResolver(
 );
 $dependency = JobResourcePolicy::for(JobType::REBUILD_FILE_DEPENDENCIES, ['file_id' => 42]);
 job_limit_expect($dependency->limit === 6, 'The saved limit resolver does not control newly queued dependency jobs.');
-JobResourcePolicy::setLimitResolver(null);
-
-$limitFile = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'unrealdb-job-limits-' . bin2hex(random_bytes(5)) . '.json';
-file_put_contents($limitFile, json_encode(['version' => 1, 'limits' => ['dependency-heavy' => 9]], JSON_THROW_ON_ERROR));
-JobResourcePolicy::setLimitFile($limitFile);
-$fileDependency = JobResourcePolicy::for(JobType::REBUILD_FILE_DEPENDENCIES, ['file_id' => 43]);
-job_limit_expect($fileDependency->limit === 9, 'Direct queue creation does not use the saved limit projection.');
-JobResourcePolicy::setLimitFile(null);
-@unlink($limitFile);
 
 $archive = JobResourcePolicy::for(JobType::IMPORT_STAGED_PAK, ['game_id' => 7]);
 job_limit_expect(
     $archive->resourceClass === JobResourcePolicy::ARCHIVE_IMPORT_HEAVY && $archive->limit === 1,
     'Full archive imports are not isolated from normal staged package imports.'
 );
+JobResourcePolicy::setLimitResolver(null);
 
 $store = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php');
 $application = file_get_contents(__DIR__ . '/../src/Presentation/Http/CatalogApplication.php');
@@ -53,26 +45,23 @@ job_limit_expect(
     str_contains($store, 'ue_job_resource_limits')
         && str_contains($store, 'status IN ("queued","running")')
         && str_contains($store, 'resource_limit=?')
-        && str_contains($store, 'resource-limits.json') === false
-        && str_contains($store, 'writeSettingsFile')
         && str_contains($store, 'class_blocked'),
-    'Saved limits do not update the current queue, publish the enqueue projection or expose limiting pressure.'
+    'Saved limits do not update the current durable queue or expose limiting pressure.'
 );
 job_limit_expect(
     str_contains($application, 'JobResourcePolicy::setLimitResolver')
-        && str_contains($application, 'JobResourcePolicy::setLimitFile')
         && str_contains($application, 'CatalogJobResourceLimitStore'),
     'Application boot does not apply saved limits to future jobs.'
 );
 job_limit_expect(
-    str_contains($support, 'JobResourcePolicy::setLimitFile')
-        && str_contains($support, 'resource-limits.json'),
-    'Legacy administrator pages that construct queues directly do not load the saved limits.'
+    str_contains($support, 'JobResourcePolicy::setLimitResolver')
+        && str_contains($support, 'CatalogJobResourceLimitStore')
+        && str_contains($support, 'catalog_db($config)'),
+    'Legacy administrator pages that construct queues directly do not load the saved database limits.'
 );
 job_limit_expect(
     str_contains($page, 'Save limits and update current jobs')
         && str_contains($page, 'CatalogDetachedWorker')
-        && str_contains($page, 'resource-limits.json')
         && str_contains($page, 'class_blocked'),
     'The administrator page cannot save limits, update current work and refill the worker pool.'
 );
