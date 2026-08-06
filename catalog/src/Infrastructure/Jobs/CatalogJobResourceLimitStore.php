@@ -163,6 +163,24 @@ final class CatalogJobResourceLimitStore
             throw new \InvalidArgumentException('At least one job resource limit is required.');
         }
 
+        // The form contains every resource class, but most saves change only
+        // one value. Compare against the persisted settings first so unchanged
+        // classes do not issue redundant UPDATE statements against the queue.
+        $this->reload();
+        $changed = [];
+        foreach ($normalized as $class => $limit) {
+            if (!array_key_exists($class, $this->limits) || $this->limits[$class] !== $limit) {
+                $changed[$class] = $limit;
+            }
+        }
+        if ($changed === []) {
+            return [
+                'updated_jobs' => 0,
+                'updated_settings' => 0,
+                'per_class' => [],
+            ];
+        }
+
         $this->db->beginTransaction();
         try {
             $upsert = $this->db->prepare(
@@ -181,19 +199,19 @@ final class CatalogJobResourceLimitStore
 
             $updatedJobs = 0;
             $perClass = [];
-            foreach ($normalized as $class => $limit) {
+            foreach ($changed as $class => $limit) {
                 $upsert->execute([$class, $limit, $updatedBy !== null && $updatedBy > 0 ? $updatedBy : null]);
                 $updateJobs->execute([$limit, $this->queueName, $class, $limit]);
                 $perClass[$class] = $updateJobs->rowCount();
                 $updatedJobs += $perClass[$class];
             }
             $this->db->commit();
-            $this->limits = $normalized + $this->limits;
+            $this->limits = $changed + $this->limits;
             $this->loadedAt = microtime(true);
 
             return [
                 'updated_jobs' => $updatedJobs,
-                'updated_settings' => count($normalized),
+                'updated_settings' => count($changed),
                 'per_class' => $perClass,
             ];
         } catch (Throwable $error) {
