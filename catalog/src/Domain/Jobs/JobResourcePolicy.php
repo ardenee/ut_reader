@@ -18,7 +18,13 @@ final class JobResourcePolicy
     public const HOUSEKEEPING = 'housekeeping';
     public const DEFAULT = 'default';
 
+    private const LIMIT_FILE_CACHE_SECONDS = 5.0;
+
     private static ?Closure $limitResolver = null;
+    private static ?string $limitFile = null;
+    /** @var array<string,int> */
+    private static array $fileLimits = [];
+    private static float $fileLimitsLoadedAt = 0.0;
 
     /**
      * @param callable(string,int):int|null $resolver
@@ -26,6 +32,14 @@ final class JobResourcePolicy
     public static function setLimitResolver(?callable $resolver): void
     {
         self::$limitResolver = $resolver === null ? null : Closure::fromCallable($resolver);
+    }
+
+    public static function setLimitFile(?string $path): void
+    {
+        $path = trim((string)$path);
+        self::$limitFile = $path !== '' ? $path : null;
+        self::$fileLimits = [];
+        self::$fileLimitsLoadedAt = 0.0;
     }
 
     /**
@@ -177,12 +191,13 @@ final class JobResourcePolicy
                 $limit = (int)$value;
             }
         }
-        $limit = max(1, min($limit, 100));
+        $limit = self::limit($limit);
+        $limit = self::fileLimit($resourceClass, $limit);
 
         if (self::$limitResolver !== null) {
             try {
                 $resolved = (self::$limitResolver)($resourceClass, $limit);
-                $limit = max(1, min((int)$resolved, 100));
+                $limit = self::limit((int)$resolved);
             } catch (Throwable $error) {
                 error_log('[UnrealDB jobs] Could not resolve saved resource limit for '
                     . $resourceClass . ': ' . $error->getMessage());
@@ -190,6 +205,46 @@ final class JobResourcePolicy
         }
 
         return $limit;
+    }
+
+    private static function fileLimit(string $resourceClass, int $fallback): int
+    {
+        $path = self::$limitFile;
+        if ($path === null) {
+            return $fallback;
+        }
+
+        if (self::$fileLimitsLoadedAt <= 0.0
+            || microtime(true) - self::$fileLimitsLoadedAt >= self::LIMIT_FILE_CACHE_SECONDS) {
+            $limits = [];
+            if (is_file($path) && is_readable($path)) {
+                try {
+                    $raw = file_get_contents($path);
+                    $decoded = is_string($raw) ? json_decode($raw, true, 32, JSON_THROW_ON_ERROR) : null;
+                    $saved = is_array($decoded) && is_array($decoded['limits'] ?? null)
+                        ? $decoded['limits']
+                        : [];
+                    foreach ($saved as $class => $value) {
+                        $class = trim((string)$class);
+                        if ($class !== '' && is_numeric($value)) {
+                            $limits[$class] = self::limit((int)$value);
+                        }
+                    }
+                } catch (Throwable $error) {
+                    error_log('[UnrealDB jobs] Could not read the saved resource-limit file: '
+                        . $error->getMessage());
+                }
+            }
+            self::$fileLimits = $limits;
+            self::$fileLimitsLoadedAt = microtime(true);
+        }
+
+        return self::$fileLimits[$resourceClass] ?? $fallback;
+    }
+
+    private static function limit(int $value): int
+    {
+        return max(1, min($value, 100));
     }
 
     /** @param array<string,mixed> $payload */
