@@ -17,7 +17,7 @@ try {
     }
 
     $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
-    $store = new CatalogJobResourceLimitStore($db);
+    $store = new CatalogJobResourceLimitStore($db, $queueName);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('job_resource_limits');
         $posted = $_POST['limits'] ?? [];
@@ -55,7 +55,7 @@ try {
 
         $_SESSION['job_resource_limits_flash'] = 'Saved ' . (int)$result['updated_settings']
             . ' resource limits and updated ' . (int)$result['updated_jobs']
-            . ' current queued/running job rows.' . $workerMessage;
+            . ' current queued job rows.' . $workerMessage;
         header('Location: job-resource-limits.php', true, 303);
         exit;
     }
@@ -69,7 +69,7 @@ try {
     catalog_head('Job Resource Limits');
     catalog_page_header(
         'Job Resource Limits',
-        'Control how many jobs from each workload class may run concurrently. Saved changes apply to new jobs and immediately update every current queued or running row in that class.',
+        'Control how many jobs from each workload class may run concurrently. Saved changes apply to new jobs and immediately update every current queued row in that class.',
         ['Background Jobs' => 'background-jobs.php', 'Performance Readiness' => 'performance-readiness.php']
     );
 
@@ -95,7 +95,7 @@ try {
         . '<p>A worker can claim a ready job only while the number of running jobs in the same resource class is below that class limit. Per-file and per-game concurrency keys still prevent two workers from changing the same target.</p>'
         . '<p><strong>Current detached worker pool:</strong> ' . $activeWorkers . ' active / ' . $desiredWorkers
         . ' configured, maximum ' . $maximumWorkers . '.</p>'
-        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Raising a workload limit lets idle worker slots claim more work immediately. Lowering a limit does not terminate work already running; it prevents further claims until the active count falls below the new limit.</p>'
+        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Saving updates queued rows immediately. Already-running jobs are allowed to finish; reducing a limit prevents further claims until the active count falls below it.</p>'
         . '</div>';
 
     echo '<form method="post">'
@@ -128,7 +128,7 @@ try {
     echo '</tbody></table></div>'
         . '<p class="muted small">“Class blocked” is the number of ready rows beyond the class capacity. A concurrency key may additionally serialize jobs that target the same file or game.</p>'
         . '</div>'
-        . '<p><button class="primary" type="submit">Save limits and update current jobs</button> '
+        . '<p><button class="primary" type="submit">Save limits and update queued jobs</button> '
         . '<a class="button" href="background-jobs.php">Open Background Jobs</a></p>'
         . '</form>';
 
