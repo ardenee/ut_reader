@@ -5,12 +5,18 @@ namespace UnrealDb\Catalog\Application\Dependency;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Application\Search\CatalogSearchIndexQueue;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
-/** Queues post-import projection and dependency work without blocking the foreground request. */
+/**
+ * Queues one ordered post-import pipeline.
+ *
+ * The exact-file dependency job now reconciles the provider projection, rebuilds
+ * the source summary and conditionally queues affected-file work after the source
+ * dependency rows are authoritative. This avoids three independent jobs racing
+ * to publish the same summary and game counters.
+ */
 final class CatalogPostImportDependencyQueue
 {
     /**
@@ -34,39 +40,18 @@ final class CatalogPostImportDependencyQueue
             $queueName = 'catalog';
         }
 
-        // Search enqueue normally performs its own worker bootstrap. Defer that
-        // here so this grouped post-import enqueue checks the pool only once.
-        $searchConfig = $config;
-        $searchConfig['queue'] = is_array($searchConfig['queue'] ?? null) ? $searchConfig['queue'] : [];
-        $searchConfig['queue']['defer_worker_start'] = true;
-        $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $fileId, $searchConfig, $createdBy);
-
-        $queue = new PdoJobQueue($db);
-        $fileJobId = $queue->enqueue(
+        $fileJobId = (new PdoJobQueue($db))->enqueue(
             $queueName,
             JobType::REBUILD_FILE_DEPENDENCIES,
             [
                 'file_id' => $fileId,
                 'game_id' => $gameId,
                 'package_name' => $packageName,
+                'post_import' => true,
             ],
             20,
             null,
             'rebuild-file-dependencies:' . $fileId,
-            $createdBy,
-            3
-        );
-        $affectedJobId = $queue->enqueue(
-            $queueName,
-            JobType::REBUILD_AFFECTED_DEPENDENCIES,
-            [
-                'file_id' => $fileId,
-                'game_id' => $gameId,
-                'package_name' => $packageName,
-            ],
-            40,
-            null,
-            'rebuild-affected-file:' . $fileId,
             $createdBy,
             3
         );
@@ -81,17 +66,17 @@ final class CatalogPostImportDependencyQueue
                 $workerStarted = !empty($start['started']);
             }
         } catch (Throwable $error) {
-            // The jobs are already durable. Worker lifecycle can be repaired from
-            // Background Jobs without making the import request fail or wait.
+            // The exact-file pipeline is already durable. Worker lifecycle can be
+            // repaired from Background Jobs without delaying or failing import.
             $workerError = trim($error->getMessage());
-            error_log('[UnrealDB post-import dependencies] file_id=' . $fileId
+            error_log('[UnrealDB post-import pipeline] file_id=' . $fileId
                 . ' worker bootstrap failed: ' . $workerError);
         }
 
         return [
-            'search_job_id' => $searchJobId,
+            'search_job_id' => 0,
             'file_job_id' => $fileJobId,
-            'affected_job_id' => $affectedJobId,
+            'affected_job_id' => 0,
             'worker_started' => $workerStarted,
             'worker_error' => $workerError,
         ];
