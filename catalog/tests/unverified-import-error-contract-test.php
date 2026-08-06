@@ -47,7 +47,8 @@ unverified_import_error_expect(
     'Unverified import still performs dependency-heavy work in the foreground request.'
 );
 unverified_import_error_expect(
-    str_contains($queue, 'CatalogSearchIndexQueue::enqueueFile($db, $fileId, $config, $createdBy)')
+    str_contains($queue, "defer_worker_start")
+        && str_contains($queue, 'CatalogSearchIndexQueue::enqueueFile($db, $fileId, $searchConfig, $createdBy)')
         && str_contains($queue, 'JobType::REBUILD_FILE_DEPENDENCIES')
         && str_contains($queue, 'JobType::REBUILD_AFFECTED_DEPENDENCIES')
         && str_contains($queue, "'search_job_id'")
@@ -56,10 +57,11 @@ unverified_import_error_expect(
         && str_contains($queue, "active_count")
         && str_contains($queue, "launching_count")
         && str_contains($queue, 'The jobs are already durable.'),
-    'Post-import projection/dependency work is not durably queued without foreground worker-pool reconciliation.'
+    'Post-import projection/dependency work is not durably queued with one bounded worker-pool check.'
 );
 unverified_import_error_expect(
-    str_contains($searchQueue, "active_count")
+    str_contains($searchQueue, "defer_worker_start")
+        && str_contains($searchQueue, "active_count")
         && str_contains($searchQueue, "launching_count")
         && str_contains($searchQueue, 'queued job remains durable')
         && !str_contains($searchQueue, '(new CatalogDetachedWorker($config))->start('),
