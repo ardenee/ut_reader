@@ -42,11 +42,11 @@ unverified_import_error_expect(
         && str_contains($queue, "'post_import' => true")
         && str_contains($queue, "'search_job_id' => 0")
         && str_contains($queue, "'affected_job_id' => 0")
-        && str_contains($queue, 'active_count')
-        && str_contains($queue, 'launching_count')
+        && str_contains($queue, "'worker_started' => false")
+        && !str_contains($queue, 'CatalogDetachedWorker')
         && !str_contains($queue, 'CatalogSearchIndexQueue::enqueueFile(')
         && !str_contains($queue, 'JobType::REBUILD_AFFECTED_DEPENDENCIES'),
-    'Post-import maintenance is not one ordered exact-file pipeline.'
+    'Post-import maintenance is not one ordered job without HTTP worker lifecycle work.'
 );
 
 $sessionClose = strpos($action, 'session_write_close();', strpos($action, "catalog_check_csrf('unverified-files')"));
