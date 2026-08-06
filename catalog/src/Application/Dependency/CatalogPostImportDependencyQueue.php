@@ -34,7 +34,7 @@ final class CatalogPostImportDependencyQueue
             $queueName = 'catalog';
         }
 
-        $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $fileId, $createdBy);
+        $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $fileId, $config, $createdBy);
         $queue = new PdoJobQueue($db);
         $fileJobId = $queue->enqueue(
             $queueName,
