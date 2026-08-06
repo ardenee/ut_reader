@@ -60,8 +60,16 @@ final class CatalogJobDisplayStatus
             throw new \InvalidArgumentException('Unsupported job status filter.');
         }
 
-        $displayStatus = self::sqlExpression($alias);
         $prefix = self::prefix($alias);
+
+        // These visible statuses are identical to the persisted queue status.
+        // Avoid JSON extraction and a full CASE expression so MySQL can use the
+        // queue/status indexes during large bulk actions and status counts.
+        if (in_array($status, ['queued', 'running', 'dead_letter', 'cancelled'], true)) {
+            return ['sql' => $prefix . 'status=?', 'params' => [$status]];
+        }
+
+        $displayStatus = self::sqlExpression($alias);
         if ($status === 'failed') {
             return [
                 'sql' => $displayStatus . ' IN ("failed","rejected","unverified")',
@@ -70,7 +78,7 @@ final class CatalogJobDisplayStatus
         }
         if ($status === 'completed') {
             return [
-                'sql' => 'LOWER(' . $prefix . 'status)="completed" AND '
+                'sql' => $prefix . 'status="completed" AND '
                     . $displayStatus . ' NOT IN ("failed","rejected","unverified")',
                 'params' => [],
             ];
