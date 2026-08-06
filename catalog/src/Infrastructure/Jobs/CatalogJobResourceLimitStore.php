@@ -21,9 +21,15 @@ final class CatalogJobResourceLimitStore
     private array $limits = [];
     private float $loadedAt = 0.0;
     private ?bool $available = null;
+    private string $queueName;
 
-    public function __construct(private readonly PDO $db)
+    public function __construct(private readonly PDO $db, string $queueName = 'catalog')
     {
+        $queueName = trim($queueName);
+        if ($queueName === '' || strlen($queueName) > 80) {
+            throw new \InvalidArgumentException('Invalid background-job queue name.');
+        }
+        $this->queueName = $queueName;
     }
 
     public function isAvailable(): bool
@@ -73,13 +79,15 @@ final class CatalogJobResourceLimitStore
 
         $this->reload();
         $metrics = [];
-        $statement = $this->db->query(
+        $statement = $this->db->prepare(
             'SELECT resource_class,'
             . 'SUM(status="running") running_jobs,'
             . 'SUM(status="queued") queued_jobs,'
             . 'SUM(status="queued" AND cancel_requested_at IS NULL AND available_at<=UTC_TIMESTAMP()) ready_jobs '
-            . 'FROM ue_background_jobs WHERE status IN ("queued","running") GROUP BY resource_class'
+            . 'FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status IN ("queued","running") GROUP BY resource_class'
         );
+        $statement->execute([$this->queueName]);
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
             $class = trim((string)($row['resource_class'] ?? ''));
             if ($class === '') {
@@ -161,16 +169,21 @@ final class CatalogJobResourceLimitStore
                 'INSERT INTO ' . self::TABLE . ' (resource_class,limit_value,updated_by) VALUES (?,?,?) '
                 . 'ON DUPLICATE KEY UPDATE limit_value=VALUES(limit_value),updated_by=VALUES(updated_by),updated_at=CURRENT_TIMESTAMP'
             );
+
+            // The existing queue index is (queue_name,status,resource_class).
+            // Scope updates to queued rows in the active queue so the save is a
+            // small indexed operation. Running work already owns its lease and
+            // cannot be made more or less concurrent by rewriting its row.
             $updateJobs = $this->db->prepare(
-                'UPDATE ue_background_jobs SET resource_limit=?,updated_at=updated_at '
-                . 'WHERE resource_class=? AND status IN ("queued","running")'
+                'UPDATE ue_background_jobs SET resource_limit=? '
+                . 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?'
             );
 
             $updatedJobs = 0;
             $perClass = [];
             foreach ($normalized as $class => $limit) {
                 $upsert->execute([$class, $limit, $updatedBy !== null && $updatedBy > 0 ? $updatedBy : null]);
-                $updateJobs->execute([$limit, $class]);
+                $updateJobs->execute([$limit, $this->queueName, $class, $limit]);
                 $perClass[$class] = $updateJobs->rowCount();
                 $updatedJobs += $perClass[$class];
             }
