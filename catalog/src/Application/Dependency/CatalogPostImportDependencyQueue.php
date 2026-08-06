@@ -34,7 +34,13 @@ final class CatalogPostImportDependencyQueue
             $queueName = 'catalog';
         }
 
-        $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $fileId, $config, $createdBy);
+        // Search enqueue normally performs its own worker bootstrap. Defer that
+        // here so this grouped post-import enqueue checks the pool only once.
+        $searchConfig = $config;
+        $searchConfig['queue'] = is_array($searchConfig['queue'] ?? null) ? $searchConfig['queue'] : [];
+        $searchConfig['queue']['defer_worker_start'] = true;
+        $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $fileId, $searchConfig, $createdBy);
+
         $queue = new PdoJobQueue($db);
         $fileJobId = $queue->enqueue(
             $queueName,
