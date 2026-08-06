@@ -14,6 +14,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
 /** Rebuilds existing files affected by one newly available package. */
 final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
@@ -73,6 +74,27 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         $summaryRows = max(0, (int)($job->payload['summary_rows_total'] ?? 0));
         $sourceSummaryReady = !empty($job->payload['source_summary_ready']);
         if ($resumeOffset === 0 && !$sourceSummaryReady) {
+            // Compatibility for affected jobs queued by older code: make the
+            // source package authoritative before touching any dependent file.
+            \scanner_rebuild_dependencies(
+                $this->db,
+                $this->config,
+                $fileId,
+                static function (array $progress) use ($context, $packageName): void {
+                    $context->heartbeatIfDue([
+                        'stage' => 'source_dependencies',
+                        'done' => 0,
+                        'total' => 1,
+                        'percent' => 0,
+                        'message' => 'Preparing source dependencies for ' . $packageName
+                            . (!empty($progress['message']) ? ' — ' . (string)$progress['message'] : ''),
+                    ]);
+                },
+                0,
+                100,
+                'Preparing source dependency links'
+            );
+            (new PdoPackageProviderRepository($this->db))->reconcileFile($fileId);
             $sourceSummary = $summaryWriter->rebuildFile($fileId);
             $summaryRows += (int)$sourceSummary['summary_rows'];
             $sourceSummaryReady = true;
