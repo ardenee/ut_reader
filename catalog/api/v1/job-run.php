@@ -69,40 +69,57 @@ function catalog_job_run_reconcile_pool(
     int $maxJobs,
     int $workerCount
 ): array {
-    $deadline = microtime(true) + 10.0;
+    /*
+     * Windows can take several seconds to create each hidden PHP process. The
+     * detached launcher historically returned as soon as the first requested
+     * slot acquired its lock, leaving Apply workers to finish at 1/4 or 2/4.
+     * Keep reconciling until every requested slot has remained active for one
+     * full second. Expired launching states are retried within the same request.
+     */
+    $deadline = microtime(true) + (PHP_OS_FAMILY === 'Windows' ? 45.0 : 25.0);
     $launchAttempts = 0;
     $lastResult = [];
+    $launchErrors = [];
+    $satisfiedSince = null;
 
     do {
         $worker = $launcher->status($queueName, true);
         $active = max(0, (int)($worker['active_count'] ?? 0));
         $launching = max(0, (int)($worker['launching_count'] ?? 0));
-        if ($active >= $workerCount) {
-            return array_merge($lastResult, [
-                'started' => !empty($lastResult['started']),
-                'reason' => (string)($lastResult['reason'] ?? 'pool_already_satisfied'),
-                'requested_workers' => $workerCount,
-                'started_workers' => (int)($lastResult['started_workers'] ?? 0),
-                'stopping_workers' => (int)($lastResult['stopping_workers'] ?? 0),
-                'worker' => $worker,
-                'pool_satisfied' => true,
-                'reconcile_attempts' => $launchAttempts,
-            ]);
-        }
 
-        if ($active + $launching < $workerCount) {
-            $lastResult = $launcher->start($queueName, $maxJobs, $workerCount);
-            $launchAttempts++;
-            $worker = is_array($lastResult['worker'] ?? null)
-                ? $lastResult['worker']
-                : $launcher->status($queueName, true);
-            if (max(0, (int)($worker['active_count'] ?? 0)) >= $workerCount) {
+        if ($active >= $workerCount) {
+            $satisfiedSince ??= microtime(true);
+            if (microtime(true) - $satisfiedSince >= 1.0) {
                 return array_merge($lastResult, [
+                    'started' => !empty($lastResult['started']),
+                    'reason' => (string)($lastResult['reason'] ?? 'pool_already_satisfied'),
+                    'requested_workers' => $workerCount,
+                    'started_workers' => (int)($lastResult['started_workers'] ?? 0),
+                    'stopping_workers' => (int)($lastResult['stopping_workers'] ?? 0),
                     'worker' => $worker,
                     'pool_satisfied' => true,
                     'reconcile_attempts' => $launchAttempts,
+                    'launch_errors' => array_slice($launchErrors, -5),
                 ]);
             }
+        } else {
+            $satisfiedSince = null;
+        }
+
+        if ($active + $launching < $workerCount) {
+            try {
+                $lastResult = $launcher->start($queueName, $maxJobs, $workerCount);
+            } catch (Throwable $error) {
+                /*
+                 * A partial Windows launch can throw while the remaining PHP
+                 * processes are still starting. Preserve the diagnostic, but do
+                 * not abandon reconciliation until the full deadline expires.
+                 */
+                $launchErrors[] = trim($error->getMessage()) !== ''
+                    ? trim($error->getMessage())
+                    : get_class($error);
+            }
+            $launchAttempts++;
         }
 
         usleep(250000);
@@ -119,6 +136,7 @@ function catalog_job_run_reconcile_pool(
         'pool_satisfied' => max(0, (int)($worker['active_count'] ?? 0)) >= $workerCount,
         'reconcile_attempts' => $launchAttempts,
         'slot_summary' => catalog_job_run_slot_summary($worker, $workerCount),
+        'launch_errors' => array_slice($launchErrors, -5),
     ]);
 }
 
@@ -198,10 +216,17 @@ try {
         $worker = is_array($result['worker'] ?? null) ? $result['worker'] : [];
         $active = max(0, (int)($worker['active_count'] ?? 0));
         $summary = trim((string)($result['slot_summary'] ?? catalog_job_run_slot_summary($worker, $workerCount)));
+        $launchErrors = array_values(array_filter(array_map(
+            static fn(mixed $value): string => trim((string)$value),
+            (array)($result['launch_errors'] ?? [])
+        )));
+        $lastLaunchError = $launchErrors !== [] ? end($launchErrors) : '';
         JsonResponse::error(
             'worker_pool_incomplete',
             'Requested ' . $workerCount . ' detached workers, but only ' . $active
-                . ' acquired worker locks after reconciliation.' . ($summary !== '' ? ' ' . $summary : ''),
+                . ' acquired stable worker locks after reconciliation.'
+                . ($summary !== '' ? ' ' . $summary : '')
+                . ($lastLaunchError !== '' ? ' Last launch error: ' . mb_substr($lastLaunchError, 0, 500, 'UTF-8') : ''),
             409,
             ['worker' => $worker, 'reconciliation' => $result]
         );
