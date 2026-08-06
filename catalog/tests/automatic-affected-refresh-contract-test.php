@@ -16,8 +16,11 @@ foreach ([
     "'rebuild-affected-file:' . \$fileId",
     'hasAffectedFiles(',
     'isActiveRefreshJob(',
+    'existingRefreshJobId(',
+    'concurrency_key=?',
     'new CatalogDetachedWorker($config)',
     'using synchronous fallback',
+    'queued job remains durable',
 ] as $fragment) {
     automatic_affected_refresh_expect(
         str_contains($service, $fragment),
@@ -26,9 +29,16 @@ foreach ([
 }
 
 automatic_affected_refresh_expect(
-    str_contains($service, "status=\"running\"")
+    str_contains($service, 'status="running"')
+        && str_contains($service, 'status IN ("queued","running")')
         && str_contains($service, "\$GLOBALS['catalog_affected_dependency_refresh_job_id']"),
-    'Normal imports do not hand affected dependency work to a running durable job.'
+    'Normal imports do not hand affected dependency work to a running/queued durable job.'
+);
+automatic_affected_refresh_expect(
+    str_contains($service, "if (empty(\$worker['active'])")
+        && str_contains($service, "(int)(\$worker['launching_count'] ?? 0) === 0")
+        && str_contains($service, 'return $jobId;'),
+    'Normal imports can still reconcile an already active worker pool or lose a durable job after launch failure.'
 );
 
 $handler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php');
