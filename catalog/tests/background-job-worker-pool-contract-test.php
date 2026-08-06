@@ -84,7 +84,7 @@ worker_pool_expect(
 worker_pool_expect(
     (str_contains($statusApi, "'active_count'") || str_contains($statusApi, "worker['active_count']"))
         && str_contains($workerAction, "'terminated_workers'")
-        && str_contains($statusApi, 'Status polling must never start, stop, recover or otherwise mutate the queue')
+        && str_contains($statusApi, "\$worker['status_read_only'] = true")
         && !str_contains($statusApi, '$launcher->start(')
         && !str_contains($statusApi, 'recoverInactiveQueue('),
     'Worker status is not read-only or worker pool status/stop APIs do not report multiple processes.'
