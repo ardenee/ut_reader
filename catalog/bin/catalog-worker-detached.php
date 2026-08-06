@@ -34,6 +34,33 @@ $workerId = trim((string)($options['worker-id'] ?? (
     . ':slot-' . $workerSlot . ':' . getmypid()
 )));
 
+/**
+ * An unsuccessful claim does not prove the queue is empty. Ready jobs may be
+ * temporarily blocked by a resource-class limit or a concurrency key while
+ * another worker is still processing related work.
+ */
+function catalog_detached_queue_has_pending_work(PDO $db, string $queueName): bool
+{
+    try {
+        $statement = $db->prepare(
+            'SELECT EXISTS('
+            . 'SELECT 1 FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status IN ("queued","running") LIMIT 1'
+            . ')'
+        );
+        $statement->execute([$queueName]);
+        return (int)$statement->fetchColumn() === 1;
+    } catch (Throwable $error) {
+        error_log(
+            '[UnrealDB worker pending-work check] '
+            . get_class($error) . ': ' . $error->getMessage()
+        );
+
+        // A transient status-query failure must not collapse the configured pool.
+        return true;
+    }
+}
+
 $controller = new CatalogDetachedWorker($application->config);
 $codeVersion = $controller->codeVersion(true);
 $lock = $controller->acquireWorkerLock($queueName, $workerSlot);
@@ -159,6 +186,12 @@ try {
         $lastResult = $worker->runOne();
         $status = (string)($lastResult['status'] ?? 'unknown');
         if ($status === 'idle') {
+            if (catalog_detached_queue_has_pending_work($application->db, $queueName)) {
+                $idlePasses = 0;
+                usleep($sleepMs * 1000);
+                continue;
+            }
+
             $idlePasses++;
             if ($idlePasses >= 4) {
                 $exitReason = 'queue_empty';
