@@ -34,6 +34,23 @@ dependency_refresh_contract_expect(str_contains($handler, 'JobType::REBUILD_AFFE
 dependency_refresh_contract_expect(str_contains($handler, '\\scanner_rebuild_dependencies('), 'The exact file job no longer rebuilds the selected file itself.');
 dependency_refresh_contract_expect(str_contains($handler, "job->payload['offset']"), 'The queued game refresh no longer preserves start offsets.');
 
+$affectedHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php');
+dependency_refresh_contract_expect(is_string($affectedHandler), 'CatalogAffectedDependencyRefreshJobHandler.php could not be read.');
+foreach ([
+    "job->payload['resume_offset']",
+    "affected_dependency_chunk_size",
+    'array_slice($affectedIds, $resumeOffset, $chunkSize)',
+    'new PdoJobQueue($this->db)',
+    "'rebuild-affected-file:' . \$fileId . ':offset:' . \$nextOffset",
+    "'continuation_job_id'",
+    'gc_collect_cycles()',
+] as $fragment) {
+    dependency_refresh_contract_expect(
+        str_contains($affectedHandler, $fragment),
+        'Affected dependency refresh is not bounded/resumable: ' . $fragment
+    );
+}
+
 $service = file_get_contents(__DIR__ . '/../src/Application/Dependency/CatalogAffectedDependencyRefreshService.php');
 dependency_refresh_contract_expect(is_string($service), 'CatalogAffectedDependencyRefreshService.php could not be read.');
 foreach ([
@@ -48,8 +65,17 @@ foreach ([
     dependency_refresh_contract_expect(str_contains($service, $fragment), 'Automatic affected dependency refresh is missing ' . $fragment);
 }
 dependency_refresh_contract_expect(
-    str_contains($service, "status=\"running\"") && str_contains($service, "return [];") ,
-    'Normal imports do not defer affected-file rebuilding to the active worker job.'
+    str_contains($service, 'status IN ("queued","running")') && str_contains($service, 'return [];'),
+    'Normal imports do not recognize active/queued affected-file refresh chains.'
+);
+
+$compatibility = file_get_contents(__DIR__ . '/../lib/CatalogCompactMetadataCompatibility.php');
+dependency_refresh_contract_expect(is_string($compatibility), 'CatalogCompactMetadataCompatibility.php could not be read.');
+dependency_refresh_contract_expect(
+    str_contains($compatibility, 'unset($cache[$connectionId])')
+        && str_contains($compatibility, "'file_id' => \$fileId, 'snapshot' => \$result")
+        && !str_contains($compatibility, "spl_object_id(\$db) . ':' . \$fileId"),
+    'Compact metadata compatibility snapshots are still retained without a worker-safe bound.'
 );
 
 $action = file_get_contents(__DIR__ . '/../api/v1/job-action.php');
