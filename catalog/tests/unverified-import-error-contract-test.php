@@ -10,11 +10,13 @@ function unverified_import_error_expect(bool $condition, string $message): void
 
 $action = file_get_contents(__DIR__ . '/../unverified-files-action.php');
 $queue = file_get_contents(__DIR__ . '/../src/Application/Dependency/CatalogPostImportDependencyQueue.php');
+$searchQueue = file_get_contents(__DIR__ . '/../src/Application/Search/CatalogSearchIndexQueue.php');
 $client = file_get_contents(__DIR__ . '/../assets/unverified-file-actions.js');
 $timeoutRecovery = file_get_contents(__DIR__ . '/../assets/unverified-import-timeout-recovery.js');
 $supportCore = file_get_contents(__DIR__ . '/../lib/CatalogSupportCore.php');
 unverified_import_error_expect(is_string($action), 'Unverified action endpoint could not be read.');
 unverified_import_error_expect(is_string($queue), 'Post-import dependency queue could not be read.');
+unverified_import_error_expect(is_string($searchQueue), 'Search projection queue could not be read.');
 unverified_import_error_expect(is_string($client), 'Unverified action client could not be read.');
 unverified_import_error_expect(is_string($timeoutRecovery), 'Unverified timeout recovery client could not be read.');
 unverified_import_error_expect(is_string($supportCore), 'Catalog support core could not be read.');
@@ -45,14 +47,23 @@ unverified_import_error_expect(
     'Unverified import still performs dependency-heavy work in the foreground request.'
 );
 unverified_import_error_expect(
-    str_contains($queue, 'JobType::REBUILD_FILE_DEPENDENCIES')
+    str_contains($queue, 'CatalogSearchIndexQueue::enqueueFile($db, $fileId, $config, $createdBy)')
+        && str_contains($queue, 'JobType::REBUILD_FILE_DEPENDENCIES')
         && str_contains($queue, 'JobType::REBUILD_AFFECTED_DEPENDENCIES')
+        && str_contains($queue, "'search_job_id'")
         && str_contains($queue, "'rebuild-file-dependencies:' . \$fileId")
         && str_contains($queue, "'rebuild-affected-file:' . \$fileId")
         && str_contains($queue, "active_count")
         && str_contains($queue, "launching_count")
         && str_contains($queue, 'The jobs are already durable.'),
-    'Post-import dependency work is not durably queued without foreground worker-pool reconciliation.'
+    'Post-import projection/dependency work is not durably queued without foreground worker-pool reconciliation.'
+);
+unverified_import_error_expect(
+    str_contains($searchQueue, "active_count")
+        && str_contains($searchQueue, "launching_count")
+        && str_contains($searchQueue, 'queued job remains durable')
+        && !str_contains($searchQueue, '(new CatalogDetachedWorker($config))->start('),
+    'Search-index enqueue still reconciles an already active detached worker pool.'
 );
 unverified_import_error_expect(
     str_contains($action, 'SET SESSION innodb_lock_wait_timeout=5')
