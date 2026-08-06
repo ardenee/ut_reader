@@ -150,9 +150,35 @@ final class CatalogAffectedDependencyRefreshService
         return false;
     }
 
+    private static function existingRefreshJobId(PDO $db, int $fileId): int
+    {
+        try {
+            $statement = $db->prepare(
+                'SELECT id,payload_json FROM ue_background_jobs'
+                . ' WHERE job_type=? AND status IN ("queued","running") ORDER BY id DESC'
+            );
+            $statement->execute([JobType::REBUILD_AFFECTED_DEPENDENCIES]);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $payload = json_decode((string)($row['payload_json'] ?? ''), true);
+                if (is_array($payload) && (int)($payload['file_id'] ?? 0) === $fileId) {
+                    return (int)($row['id'] ?? 0);
+                }
+            }
+        } catch (Throwable) {
+            // Continue to the durable enqueue path when queue inspection fails.
+        }
+
+        return 0;
+    }
+
     private static function enqueueRefresh(PDO $db, int $fileId, int $gameId, string $packageName): int
     {
         try {
+            $existingJobId = self::existingRefreshJobId($db, $fileId);
+            if ($existingJobId > 0) {
+                return $existingJobId;
+            }
+
             $config = function_exists('catalog_config') ? \catalog_config() : [];
             $queueName = trim((string)($config['queue']['name'] ?? 'catalog'));
             if ($queueName === '') {

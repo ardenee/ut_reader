@@ -3,9 +3,46 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
+
+/** @param array<string,mixed> $row */
+function catalog_job_bulk_resume_payload(array $row): ?string
+{
+    if ((string)($row['job_type'] ?? '') !== JobType::REBUILD_AFFECTED_DEPENDENCIES) {
+        return null;
+    }
+
+    $payload = json_decode((string)($row['payload_json'] ?? ''), true);
+    if (!is_array($payload)) {
+        return null;
+    }
+
+    $resumeOffset = max(0, (int)($payload['resume_offset'] ?? 0));
+    $progress = json_decode((string)($row['progress_json'] ?? ''), true);
+    if (is_array($progress)) {
+        $resumeOffset = max($resumeOffset, (int)($progress['done'] ?? 0));
+        $message = trim((string)($progress['message'] ?? ''));
+        if (preg_match('/Processed affected file\s+(\d+)\/\d+/i', $message, $match) === 1) {
+            $resumeOffset = max($resumeOffset, (int)$match[1]);
+        }
+    }
+
+    $lastError = trim((string)($row['last_error'] ?? ''));
+    if (preg_match('/Processed affected file\s+(\d+)\/\d+/i', $lastError, $match) === 1) {
+        $resumeOffset = max($resumeOffset, (int)$match[1]);
+    }
+    if ($resumeOffset < 1) {
+        return null;
+    }
+
+    $payload['resume_offset'] = $resumeOffset;
+    $payload['processed_total'] = max($resumeOffset, (int)($payload['processed_total'] ?? 0));
+    $encoded = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    return is_string($encoded) ? $encoded : null;
+}
 
 try {
     $application = catalog_api_application();
@@ -128,6 +165,25 @@ try {
 
     if ($action === 'restart' && $eligibleIds !== []) {
         $idSql = implode(',', array_fill(0, count($eligibleIds), '?'));
+
+        // Affected-dependency jobs can run for hours. Preserve their last durable
+        // file position in the payload before the generic restart reset clears
+        // progress/error fields, so a fatal worker exit does not start at zero.
+        $resumeSelect = $application->db->prepare(
+            'SELECT id,job_type,payload_json,progress_json,last_error FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND job_type=? AND id IN (' . $idSql . ')'
+        );
+        $resumeSelect->execute(array_merge([$queueName, JobType::REBUILD_AFFECTED_DEPENDENCIES], $eligibleIds));
+        $resumeUpdate = $application->db->prepare(
+            'UPDATE ue_background_jobs SET payload_json=? WHERE queue_name=? AND id=?'
+        );
+        foreach ($resumeSelect->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $resumePayload = catalog_job_bulk_resume_payload($row);
+            if ($resumePayload !== null) {
+                $resumeUpdate->execute([$resumePayload, $queueName, (int)$row['id']]);
+            }
+        }
+
         $statement = $application->db->prepare(
             'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,worker_id=NULL,lease_token=NULL,'
             . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=NULL,result_json=NULL,'

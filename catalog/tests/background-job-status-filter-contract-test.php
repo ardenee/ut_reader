@@ -44,6 +44,10 @@ foreach ([
     '$limit = 10000;',
     'SELECT id FROM ue_background_jobs WHERE ',
     "'worker_start_required'",
+    'catalog_job_bulk_resume_payload(',
+    'JobType::REBUILD_AFFECTED_DEPENDENCIES',
+    "payload['resume_offset']",
+    'Processed affected file\\s+(\\d+)\\/\\d+',
 ] as $fragment) {
     job_status_filter_expect(str_contains($bulkEndpoint, $fragment), 'Bulk job endpoint is missing: ' . $fragment);
 }

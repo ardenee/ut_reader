@@ -13,6 +13,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /** Rebuilds existing files affected by one newly available package. */
 final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
@@ -49,7 +50,6 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
 
         $summaryWriter = new PdoDependencyPackageSummary($this->db);
-        $sourceSummary = $summaryWriter->rebuildFile($fileId);
         $gameId = (int)$file['game_id'];
         $packageName = (string)$file['package_name'];
         $affectedIds = CatalogAffectedDependencyRefreshService::findAffectedFileIds(
@@ -59,31 +59,47 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             $packageName
         );
         $total = count($affectedIds);
+        $resumeOffset = max(0, min($total, (int)($job->payload['resume_offset'] ?? 0)));
+        $chunkSize = max(50, min(
+            5000,
+            (int)($this->config['queue']['affected_dependency_chunk_size'] ?? 500)
+        ));
+        $chunkIds = array_slice($affectedIds, $resumeOffset, $chunkSize);
         $processed = 0;
-        $summaryRows = (int)$sourceSummary['summary_rows'];
+        $processedTotal = max(0, (int)($job->payload['processed_total'] ?? $resumeOffset));
         $failureCount = 0;
+        $failureTotal = max(0, (int)($job->payload['failure_total'] ?? 0));
         $failures = [];
+        $summaryRows = max(0, (int)($job->payload['summary_rows_total'] ?? 0));
+        if ($resumeOffset === 0) {
+            $sourceSummary = $summaryWriter->rebuildFile($fileId);
+            $summaryRows += (int)$sourceSummary['summary_rows'];
+        }
 
         $context->checkpoint([
             'stage' => 'dependencies',
-            'done' => 0,
+            'done' => $resumeOffset,
             'total' => max(1, $total),
-            'percent' => $total === 0 ? 90 : 0,
+            'percent' => $total === 0 ? 90 : (int)floor(($resumeOffset * 90) / max(1, $total)),
             'message' => $total === 0
                 ? 'No existing files require an affected dependency refresh.'
-                : 'Refreshing ' . $total . ' affected file(s) for ' . $packageName . '.',
+                : 'Refreshing affected files ' . ($resumeOffset + 1) . '-'
+                    . min($total, $resumeOffset + count($chunkIds)) . ' of ' . $total
+                    . ' for ' . $packageName . '.',
             'package_name' => $packageName,
-            'failures' => 0,
+            'resume_offset' => $resumeOffset,
+            'chunk_size' => count($chunkIds),
+            'failures' => $failureTotal,
         ]);
 
-        foreach ($affectedIds as $index => $affectedFileId) {
-            $position = $index + 1;
+        foreach ($chunkIds as $index => $affectedFileId) {
+            $position = $resumeOffset + $index + 1;
             try {
                 \scanner_rebuild_dependencies(
                     $this->db,
                     $this->config,
                     $affectedFileId,
-                    static function (array $progress) use ($context, $position, $total, $packageName, $failureCount): void {
+                    static function (array $progress) use ($context, $position, $total, $packageName, $failureTotal): void {
                         $context->heartbeatIfDue([
                             'stage' => 'dependencies',
                             'done' => $position - 1,
@@ -92,7 +108,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                             'message' => 'Refreshing affected file ' . $position . '/' . $total . ' for ' . $packageName
                                 . (!empty($progress['message']) ? ' — ' . (string)$progress['message'] : ''),
                             'package_name' => $packageName,
-                            'failures' => $failureCount,
+                            'failures' => $failureTotal,
                         ]);
                     },
                     0,
@@ -102,10 +118,12 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                 $summary = $summaryWriter->rebuildFile($affectedFileId);
                 $summaryRows += (int)$summary['summary_rows'];
                 $processed++;
+                $processedTotal++;
             } catch (JobCancellationRequested $error) {
                 throw $error;
             } catch (Throwable $error) {
                 $failureCount++;
+                $failureTotal++;
                 if (count($failures) < 100) {
                     $failures[] = [
                         'file_id' => $affectedFileId,
@@ -126,21 +144,66 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                 'percent' => (int)floor(($position * 90) / max(1, $total)),
                 'message' => 'Processed affected file ' . $position . '/' . $total . ' for ' . $packageName . '.',
                 'package_name' => $packageName,
-                'processed' => $processed,
-                'failures' => $failureCount,
+                'processed' => $processedTotal,
+                'failures' => $failureTotal,
                 'dependency_summary_rows' => $summaryRows,
+            ]);
+
+            if (($position % 50) === 0 && function_exists('gc_collect_cycles')) {
+                gc_collect_cycles();
+            }
+        }
+
+        $nextOffset = min($total, $resumeOffset + count($chunkIds));
+        $continuationJobId = 0;
+        if ($nextOffset < $total) {
+            $queueName = trim((string)($this->config['queue']['name'] ?? $job->queue));
+            if ($queueName === '') {
+                $queueName = $job->queue;
+            }
+            $continuationJobId = (new PdoJobQueue($this->db))->enqueue(
+                $queueName,
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                [
+                    'file_id' => $fileId,
+                    'game_id' => $gameId,
+                    'package_name' => $packageName,
+                    'resume_offset' => $nextOffset,
+                    'processed_total' => $processedTotal,
+                    'failure_total' => $failureTotal,
+                    'summary_rows_total' => $summaryRows,
+                ],
+                40,
+                null,
+                'rebuild-affected-file:' . $fileId . ':offset:' . $nextOffset,
+                null,
+                3
+            );
+
+            $context->checkpoint([
+                'stage' => 'continuation',
+                'done' => $nextOffset,
+                'total' => max(1, $total),
+                'percent' => (int)floor(($nextOffset * 90) / max(1, $total)),
+                'message' => 'Completed affected dependency chunk through ' . $nextOffset . '/' . $total
+                    . '; queued continuation job #' . $continuationJobId . '.',
+                'package_name' => $packageName,
+                'continuation_job_id' => $continuationJobId,
             ]);
         }
 
-        $context->checkpoint([
-            'stage' => 'game_stats',
-            'done' => max(1, $total),
-            'total' => max(1, $total),
-            'percent' => 95,
-            'message' => 'Refreshing cached game counters.',
-            'game_id' => $gameId,
-        ]);
-        $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame($gameId);
+        $gameStats = null;
+        if ($nextOffset >= $total) {
+            $context->checkpoint([
+                'stage' => 'game_stats',
+                'done' => max(1, $total),
+                'total' => max(1, $total),
+                'percent' => 95,
+                'message' => 'Refreshing cached game counters.',
+                'game_id' => $gameId,
+            ]);
+            $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame($gameId);
+        }
 
         return [
             'operation' => 'rebuild_affected_dependencies',
@@ -149,10 +212,16 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'package_name' => $packageName,
             'original_name' => (string)$file['original_name'],
             'affected_files' => $total,
+            'resume_offset' => $resumeOffset,
+            'next_offset' => $nextOffset,
+            'chunk_size' => count($chunkIds),
             'processed_files' => $processed,
+            'processed_total' => $processedTotal,
             'dependency_summary_rows' => $summaryRows,
             'game_stats_refreshed' => $gameStats !== null,
+            'continuation_job_id' => $continuationJobId,
             'failure_count' => $failureCount,
+            'failure_total' => $failureTotal,
             'failures' => $failures,
             'failures_truncated' => $failureCount > count($failures),
         ];

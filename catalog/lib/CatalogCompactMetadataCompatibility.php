@@ -17,6 +17,10 @@ function catalog_metadata_compat_direct_rows(PDO $db, string $sql, array $args):
  * Read one file's metadata in the legacy row shape. Format-2 files are loaded
  * from the blocked container; unconverted/unverified files retain SQL fallback.
  *
+ * Keep only the most recently used snapshot for each PDO connection. Long-lived
+ * workers can process tens of thousands of files, and retaining every expanded
+ * compact snapshot permanently makes memory usage grow without bound.
+ *
  * @return array{names:list<array<string,mixed>>,imports:list<array<string,mixed>>,exports:list<array<string,mixed>>,dependencies:list<array<string,mixed>>,source:string}
  */
 function catalog_metadata_compat_snapshot(PDO $db, array $config, int $fileId): array
@@ -26,10 +30,15 @@ function catalog_metadata_compat_snapshot(PDO $db, array $config, int $fileId): 
     }
 
     static $cache = [];
-    $cacheKey = spl_object_id($db) . ':' . $fileId;
-    if (isset($cache[$cacheKey])) {
-        return $cache[$cacheKey];
+    $connectionId = spl_object_id($db);
+    if ((int)($cache[$connectionId]['file_id'] ?? 0) === $fileId
+        && is_array($cache[$connectionId]['snapshot'] ?? null)) {
+        return $cache[$connectionId]['snapshot'];
     }
+
+    // Release the previous expanded snapshot before loading the next one so the
+    // peak does not include two potentially large package inventories.
+    unset($cache[$connectionId]);
 
     $registration = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
     $registration->execute([$fileId]);
@@ -76,22 +85,26 @@ function catalog_metadata_compat_snapshot(PDO $db, array $config, int $fileId): 
             $dependencies[] = $row;
         }
 
-        return $cache[$cacheKey] = [
+        $result = [
             'names' => $names,
             'imports' => $imports,
             'exports' => $exports,
             'dependencies' => $dependencies,
             'source' => 'compact',
         ];
+        $cache[$connectionId] = ['file_id' => $fileId, 'snapshot' => $result];
+        return $result;
     }
 
-    return $cache[$cacheKey] = [
+    $result = [
         'names' => catalog_metadata_compat_direct_rows($db, 'SELECT * FROM ue_names WHERE file_id=? ORDER BY name_index', [$fileId]),
         'imports' => catalog_metadata_compat_direct_rows($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index', [$fileId]),
         'exports' => catalog_metadata_compat_direct_rows($db, 'SELECT * FROM ue_exports WHERE file_id=? ORDER BY export_index', [$fileId]),
         'dependencies' => catalog_metadata_compat_direct_rows($db, 'SELECT * FROM ue_dependencies WHERE file_id=? ORDER BY id', [$fileId]),
         'source' => 'legacy',
     ];
+    $cache[$connectionId] = ['file_id' => $fileId, 'snapshot' => $result];
+    return $result;
 }
 
 function catalog_metadata_compat_id(int $fileId, int $index): int
