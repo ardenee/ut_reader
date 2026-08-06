@@ -99,7 +99,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                     $this->db,
                     $this->config,
                     $affectedFileId,
-                    static function (array $progress) use ($context, $position, $total, $packageName, $failureTotal, $failureCount): void {
+                    static function (array $progress) use ($context, $position, $total, $packageName, $failureTotal): void {
                         $context->heartbeatIfDue([
                             'stage' => 'dependencies',
                             'done' => $position - 1,
@@ -108,7 +108,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                             'message' => 'Refreshing affected file ' . $position . '/' . $total . ' for ' . $packageName
                                 . (!empty($progress['message']) ? ' — ' . (string)$progress['message'] : ''),
                             'package_name' => $packageName,
-                            'failures' => $failureTotal + $failureCount,
+                            'failures' => $failureTotal,
                         ]);
                     },
                     0,
