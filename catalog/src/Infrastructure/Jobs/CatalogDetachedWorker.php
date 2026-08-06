@@ -103,7 +103,7 @@ final class CatalogDetachedWorker
 
         $after = $this->status($queue, true);
         if ($launchedSlots !== []) {
-            $deadline = microtime(true) + 2.0;
+            $deadline = microtime(true) + 10.0;
             do {
                 $activeLaunched = 0;
                 $terminalLaunched = 0;
@@ -153,7 +153,7 @@ final class CatalogDetachedWorker
                 $message = 'Detached worker process did not acquire its runtime lock using ' . $php
                     . ' for slot(s) ' . implode(', ', $stillLaunching) . '.';
                 if ($tail !== '') {
-                    $message .= ' Worker log: ' . substr(preg_replace('/\s+/', ' ', $tail) ?? $tail, -1200);
+                    $message .= ' Current launch log: ' . substr(preg_replace('/\s+/', ' ', $tail) ?? $tail, -1200);
                 }
                 throw new \RuntimeException($message);
             }
@@ -227,7 +227,7 @@ final class CatalogDetachedWorker
         $launching = false;
         if (!$active && (string)($state['status'] ?? '') === 'launching') {
             $requested = strtotime((string)($state['requested_at'] ?? ''));
-            $launching = $requested !== false && $requested >= time() - 3;
+            $launching = $requested !== false && $requested >= time() - 15;
         }
         $current ??= $this->codeVersion(true);
         $running = trim((string)($state['code_version'] ?? ''));
@@ -264,16 +264,15 @@ final class CatalogDetachedWorker
     public function tailLog(string $queue, int $maximumBytes = 16384, int $slot = 1): string
     {
         $path = $this->path($this->queue($queue), 'log', $this->slot($slot));
-        if (!is_file($path) || !is_readable($path) || ($size = filesize($path)) === false || $size < 1) return '';
         $maximumBytes = max(1024, min(131072, $maximumBytes));
-        $handle = fopen($path, 'rb');
-        if (!is_resource($handle)) return '';
-        try {
-            $offset = max(0, $size - $maximumBytes);
-            if ($offset > 0) { fseek($handle, $offset); fgets($handle); }
-            $data = stream_get_contents($handle);
-            return is_string($data) ? trim($data) : '';
-        } finally { fclose($handle); }
+        $parts = [];
+        foreach ([['stdout', $path], ['stderr', $path . '.error.log']] as [$label, $candidate]) {
+            $tail = $this->tailFile($candidate, $maximumBytes);
+            if ($tail !== '') {
+                $parts[] = '[' . $label . '] ' . $tail;
+            }
+        }
+        return implode("\n", $parts);
     }
 
     /** @return array<string,mixed> */
@@ -352,15 +351,88 @@ final class CatalogDetachedWorker
     /** @param list<string> $arguments */
     private function spawn(string $php, string $script, array $arguments, string $log): void
     {
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->spawnWindows($php, $script, $arguments, $log);
+            return;
+        }
+
         $parts = [escapeshellarg($php), escapeshellarg($script)];
         foreach ($arguments as $argument) $parts[] = escapeshellarg($argument);
         $program = implode(' ', $parts);
-        $command = PHP_OS_FAMILY === 'Windows'
-            ? 'start "" /B ' . $program . ' >> ' . escapeshellarg($log) . ' 2>&1'
-            : 'nohup ' . $program . ' >> ' . escapeshellarg($log) . ' 2>&1 < /dev/null &';
+        $command = 'nohup ' . $program . ' >> ' . escapeshellarg($log) . ' 2>&1 < /dev/null &';
         $handle = @popen($command, 'r');
         if (!is_resource($handle)) throw new \RuntimeException('Could not launch the detached worker process.');
         pclose($handle);
+    }
+
+    /** @param list<string> $arguments */
+    private function spawnWindows(string $php, string $script, array $arguments, string $log): void
+    {
+        $errorLog = $log . '.error.log';
+        @unlink($log);
+        @unlink($errorLog);
+
+        $launcher = $log . '.launch-' . bin2hex(random_bytes(5)) . '.ps1';
+        $argumentLiterals = array_map(
+            static fn(string $argument): string => self::powershellLiteral($argument),
+            array_merge([$script], $arguments)
+        );
+        $source = "$ErrorActionPreference = 'Stop'\r\n"
+            . '$process = Start-Process -FilePath ' . self::powershellLiteral($php)
+            . ' -ArgumentList @(' . implode(', ', $argumentLiterals) . ')'
+            . ' -WorkingDirectory ' . self::powershellLiteral($this->catalogRoot)
+            . ' -WindowStyle Hidden'
+            . ' -RedirectStandardOutput ' . self::powershellLiteral($log)
+            . ' -RedirectStandardError ' . self::powershellLiteral($errorLog)
+            . " -PassThru\r\n"
+            . "Write-Output $process.Id\r\n";
+        if (file_put_contents($launcher, $source, LOCK_EX) === false) {
+            throw new \RuntimeException('Could not write the Windows detached-worker launcher script.');
+        }
+
+        $systemRoot = trim((string)(getenv('SystemRoot') ?: 'C:\\Windows'));
+        $powershell = rtrim($systemRoot, '/\\') . '\\System32\\WindowsPowerShell\\v1.0\\powershell.exe';
+        if (!is_file($powershell)) {
+            $powershell = 'powershell.exe';
+        }
+        $command = escapeshellarg($powershell)
+            . ' -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File '
+            . escapeshellarg($launcher) . ' 2>&1';
+
+        $handle = @popen($command, 'r');
+        if (!is_resource($handle)) {
+            @unlink($launcher);
+            throw new \RuntimeException('Could not invoke PowerShell to launch the detached worker process.');
+        }
+        $output = stream_get_contents($handle);
+        $exitCode = pclose($handle);
+        @unlink($launcher);
+
+        $output = is_string($output) ? trim($output) : '';
+        if ($exitCode !== 0 || preg_match('/(?:^|\R)\s*\d+\s*(?:\R|$)/', $output) !== 1) {
+            throw new \RuntimeException(
+                'PowerShell could not start the detached PHP worker'
+                . ($output !== '' ? ': ' . substr(preg_replace('/\s+/', ' ', $output) ?? $output, -1200) : '.')
+            );
+        }
+    }
+
+    private static function powershellLiteral(string $value): string
+    {
+        return "'" . str_replace("'", "''", $value) . "'";
+    }
+
+    private function tailFile(string $path, int $maximumBytes): string
+    {
+        if (!is_file($path) || !is_readable($path) || ($size = filesize($path)) === false || $size < 1) return '';
+        $handle = fopen($path, 'rb');
+        if (!is_resource($handle)) return '';
+        try {
+            $offset = max(0, $size - $maximumBytes);
+            if ($offset > 0) { fseek($handle, $offset); fgets($handle); }
+            $data = stream_get_contents($handle);
+            return is_string($data) ? trim($data) : '';
+        } finally { fclose($handle); }
     }
 
     private function phpBinary(): string
