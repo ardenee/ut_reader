@@ -41,7 +41,8 @@ final class CatalogSearchIndexQueue
                 3
             );
 
-            if ($config !== []) {
+            $deferWorkerStart = !empty($config['queue']['defer_worker_start']);
+            if ($config !== [] && !$deferWorkerStart) {
                 try {
                     $launcher = new CatalogDetachedWorker($config);
                     $worker = $launcher->status($queueName);
