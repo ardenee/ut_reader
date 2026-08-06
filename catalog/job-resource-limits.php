@@ -16,7 +16,11 @@ try {
         exit;
     }
 
-    $store = new CatalogJobResourceLimitStore($db);
+    $storage = rtrim((string)($config['storage_path'] ?? ''), '/\\');
+    $settingsFile = $storage !== ''
+        ? $storage . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'resource-limits.json'
+        : null;
+    $store = new CatalogJobResourceLimitStore($db, $settingsFile);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('job_resource_limits');
         $posted = $_POST['limits'] ?? [];
