@@ -132,9 +132,12 @@ final class CatalogAffectedDependencyRefreshService
     private static function isActiveRefreshJob(PDO $db, int $fileId): bool
     {
         try {
+            // A queued continuation is part of the same logical refresh. Treat it
+            // as active so a later import cannot create a second overlapping chain
+            // while the current chunk is between worker claims.
             $statement = $db->prepare(
                 'SELECT payload_json FROM ue_background_jobs'
-                . ' WHERE job_type=? AND status="running" ORDER BY id DESC LIMIT 20'
+                . ' WHERE job_type=? AND status IN ("queued","running") ORDER BY id DESC'
             );
             $statement->execute([JobType::REBUILD_AFFECTED_DEPENDENCIES]);
             while (($payloadJson = $statement->fetchColumn()) !== false) {
