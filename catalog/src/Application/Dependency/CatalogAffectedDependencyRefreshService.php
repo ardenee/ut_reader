@@ -133,16 +133,14 @@ final class CatalogAffectedDependencyRefreshService
     {
         try {
             $statement = $db->prepare(
-                'SELECT payload_json FROM ue_background_jobs'
-                . ' WHERE job_type=? AND status="running" ORDER BY id DESC LIMIT 20'
+                'SELECT 1 FROM ue_background_jobs'
+                . ' WHERE job_type=? AND status="running" AND concurrency_key=? LIMIT 1'
             );
-            $statement->execute([JobType::REBUILD_AFFECTED_DEPENDENCIES]);
-            while (($payloadJson = $statement->fetchColumn()) !== false) {
-                $payload = json_decode((string)$payloadJson, true);
-                if (is_array($payload) && (int)($payload['file_id'] ?? 0) === $fileId) {
-                    return true;
-                }
-            }
+            $statement->execute([
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                self::concurrencyKey($fileId),
+            ]);
+            return $statement->fetchColumn() !== false;
         } catch (Throwable) {
             // Missing/legacy queue infrastructure falls back to synchronous work.
         }
@@ -154,16 +152,15 @@ final class CatalogAffectedDependencyRefreshService
     {
         try {
             $statement = $db->prepare(
-                'SELECT id,payload_json FROM ue_background_jobs'
-                . ' WHERE job_type=? AND status IN ("queued","running") ORDER BY id DESC'
+                'SELECT id FROM ue_background_jobs'
+                . ' WHERE job_type=? AND status IN ("queued","running") AND concurrency_key=?'
+                . ' ORDER BY id DESC LIMIT 1'
             );
-            $statement->execute([JobType::REBUILD_AFFECTED_DEPENDENCIES]);
-            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                $payload = json_decode((string)($row['payload_json'] ?? ''), true);
-                if (is_array($payload) && (int)($payload['file_id'] ?? 0) === $fileId) {
-                    return (int)($row['id'] ?? 0);
-                }
-            }
+            $statement->execute([
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                self::concurrencyKey($fileId),
+            ]);
+            return max(0, (int)($statement->fetchColumn() ?: 0));
         } catch (Throwable) {
             // Continue to the durable enqueue path when queue inspection fails.
         }
@@ -173,16 +170,16 @@ final class CatalogAffectedDependencyRefreshService
 
     private static function enqueueRefresh(PDO $db, int $fileId, int $gameId, string $packageName): int
     {
+        $config = function_exists('catalog_config') ? \catalog_config() : [];
+        $queueName = trim((string)($config['queue']['name'] ?? 'catalog'));
+        if ($queueName === '') {
+            $queueName = 'catalog';
+        }
+
         try {
             $existingJobId = self::existingRefreshJobId($db, $fileId);
             if ($existingJobId > 0) {
                 return $existingJobId;
-            }
-
-            $config = function_exists('catalog_config') ? \catalog_config() : [];
-            $queueName = trim((string)($config['queue']['name'] ?? 'catalog'));
-            if ($queueName === '') {
-                $queueName = 'catalog';
             }
 
             $jobId = (new PdoJobQueue($db))->enqueue(
@@ -199,20 +196,41 @@ final class CatalogAffectedDependencyRefreshService
                 null,
                 3
             );
-
-            if ($config !== []) {
-                try {
-                    (new CatalogDetachedWorker($config))->start($queueName, 10000);
-                } catch (Throwable $workerError) {
-                    error_log('[UnrealDB dependency refresh worker] job_id=' . $jobId . ' launch failed: ' . $workerError->getMessage());
-                }
-            }
-
-            return $jobId;
         } catch (Throwable $error) {
-            error_log('[UnrealDB dependency refresh queue] file_id=' . $fileId . ' enqueue failed; using synchronous fallback: ' . $error->getMessage());
+            error_log('[UnrealDB dependency refresh queue] file_id=' . $fileId
+                . ' enqueue failed; using synchronous fallback: ' . $error->getMessage());
             return 0;
         }
+
+        /*
+         * The import request must not repeatedly expand or reconcile an already
+         * running worker pool. CatalogDetachedWorker::start() can wait up to ten
+         * seconds for missing slots; calling it once per imported file made bulk
+         * unverified imports pause on every item when the pool stayed at 2/4.
+         *
+         * Only bootstrap a completely inactive queue. Once the durable row has
+         * been inserted, worker startup failure must never turn the same work into
+         * a synchronous foreground rebuild or duplicate the queued job.
+         */
+        if ($config !== []) {
+            try {
+                $launcher = new CatalogDetachedWorker($config);
+                $worker = $launcher->status($queueName);
+                if (empty($worker['active']) && (int)($worker['launching_count'] ?? 0) === 0) {
+                    $launcher->start($queueName, 10000);
+                }
+            } catch (Throwable $workerError) {
+                error_log('[UnrealDB dependency refresh worker] job_id=' . $jobId
+                    . ' launch failed; queued job remains durable: ' . $workerError->getMessage());
+            }
+        }
+
+        return $jobId;
+    }
+
+    private static function concurrencyKey(int $fileId): string
+    {
+        return 'dependency:file:' . max(1, $fileId);
     }
 
     /**
