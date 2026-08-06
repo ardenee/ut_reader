@@ -1,1 +1,0 @@
-Validate on Windows with PHP 8.5 by launching the worker pool from catalog/background-jobs.php and confirming that at least one slot acquires a worker lock and the queued count decreases.
