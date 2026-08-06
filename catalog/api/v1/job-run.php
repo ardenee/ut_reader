@@ -78,7 +78,7 @@ function catalog_job_run_reconcile_pool(
         $active = max(0, (int)($worker['active_count'] ?? 0));
         $launching = max(0, (int)($worker['launching_count'] ?? 0));
         if ($active >= $workerCount) {
-            return $lastResult + [
+            return array_merge($lastResult, [
                 'started' => !empty($lastResult['started']),
                 'reason' => (string)($lastResult['reason'] ?? 'pool_already_satisfied'),
                 'requested_workers' => $workerCount,
@@ -87,7 +87,7 @@ function catalog_job_run_reconcile_pool(
                 'worker' => $worker,
                 'pool_satisfied' => true,
                 'reconcile_attempts' => $launchAttempts,
-            ];
+            ]);
         }
 
         if ($active + $launching < $workerCount) {
@@ -97,11 +97,11 @@ function catalog_job_run_reconcile_pool(
                 ? $lastResult['worker']
                 : $launcher->status($queueName, true);
             if (max(0, (int)($worker['active_count'] ?? 0)) >= $workerCount) {
-                return $lastResult + [
+                return array_merge($lastResult, [
                     'worker' => $worker,
                     'pool_satisfied' => true,
                     'reconcile_attempts' => $launchAttempts,
-                ];
+                ]);
             }
         }
 
@@ -109,7 +109,7 @@ function catalog_job_run_reconcile_pool(
     } while (microtime(true) < $deadline);
 
     $worker = $launcher->status($queueName, true);
-    return $lastResult + [
+    return array_merge($lastResult, [
         'started' => !empty($lastResult['started']),
         'reason' => (string)($lastResult['reason'] ?? 'pool_not_satisfied'),
         'requested_workers' => $workerCount,
@@ -119,7 +119,7 @@ function catalog_job_run_reconcile_pool(
         'pool_satisfied' => max(0, (int)($worker['active_count'] ?? 0)) >= $workerCount,
         'reconcile_attempts' => $launchAttempts,
         'slot_summary' => catalog_job_run_slot_summary($worker, $workerCount),
-    ];
+    ]);
 }
 
 try {
