@@ -5,16 +5,17 @@ namespace UnrealDb\Catalog\Application\Dependency;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Application\Search\CatalogSearchIndexQueue;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
-/** Queues post-import dependency work without blocking the foreground request. */
+/** Queues post-import projection and dependency work without blocking the foreground request. */
 final class CatalogPostImportDependencyQueue
 {
     /**
      * @param array<string,mixed> $config
-     * @return array{file_job_id:int,affected_job_id:int,worker_started:bool,worker_error:string}
+     * @return array{search_job_id:int,file_job_id:int,affected_job_id:int,worker_started:bool,worker_error:string}
      */
     public static function enqueue(
         PDO $db,
@@ -33,6 +34,7 @@ final class CatalogPostImportDependencyQueue
             $queueName = 'catalog';
         }
 
+        $searchJobId = CatalogSearchIndexQueue::enqueueFile($db, $fileId, $createdBy);
         $queue = new PdoJobQueue($db);
         $fileJobId = $queue->enqueue(
             $queueName,
@@ -81,6 +83,7 @@ final class CatalogPostImportDependencyQueue
         }
 
         return [
+            'search_job_id' => $searchJobId,
             'file_job_id' => $fileJobId,
             'affected_job_id' => $affectedJobId,
             'worker_started' => $workerStarted,
