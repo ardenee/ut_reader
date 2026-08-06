@@ -58,6 +58,7 @@ foreach ([
     'JobType::REBUILD_AFFECTED_DEPENDENCIES',
     "'rebuild-affected-file:' . \$fileId",
     'isActiveRefreshJob(',
+    'existingRefreshJobId(',
     'hasAffectedFiles(',
     'new CatalogDetachedWorker($config)',
     'using synchronous fallback',
@@ -65,8 +66,10 @@ foreach ([
     dependency_refresh_contract_expect(str_contains($service, $fragment), 'Automatic affected dependency refresh is missing ' . $fragment);
 }
 dependency_refresh_contract_expect(
-    str_contains($service, 'status IN ("queued","running")') && str_contains($service, 'return [];'),
-    'Normal imports do not recognize active/queued affected-file refresh chains.'
+    str_contains($service, 'status="running"')
+        && str_contains($service, 'status IN ("queued","running")')
+        && str_contains($service, 'return [];'),
+    'Normal imports do not defer to running refreshes or reuse queued continuation jobs.'
 );
 
 $compatibility = file_get_contents(__DIR__ . '/../lib/CatalogCompactMetadataCompatibility.php');
