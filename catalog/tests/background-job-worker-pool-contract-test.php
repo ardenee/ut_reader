@@ -81,9 +81,13 @@ worker_pool_expect(
 
 worker_pool_expect(
     str_contains($launcher, "(\$payload['workers'] ?? \$launcher->configuredWorkerCount())")
+        && str_contains($launcher, 'catalog_job_run_reconcile_pool(')
+        && str_contains($launcher, '$active + $launching < $workerCount')
         && str_contains($launcher, '$launcher->start($queueName, $maxJobs, $workerCount)')
+        && str_contains($launcher, "'worker_pool_incomplete'")
+        && str_contains($launcher, 'catalog_job_run_slot_summary(')
         && str_contains($launcher, "\$mode === 'next' ? 1 : 1000000"),
-    'The job-run endpoint does not accept a bounded worker count.'
+    'The job-run endpoint does not reconcile the requested worker count or report incomplete worker slots.'
 );
 
 worker_pool_expect(
