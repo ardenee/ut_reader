@@ -35,13 +35,13 @@ unverified_import_error_expect(
     str_contains($action, 'DELETE d FROM ue_dependencies d INNER JOIN ue_imports i ON i.id=d.import_id WHERE i.file_id=?')
         && str_contains($action, 'DELETE FROM ue_dependencies WHERE import_id=?')
         && str_contains($action, 'uq_ue_deps_import'),
-    'Stale dependency/import collisions are not cleaned before or after promotion.'
+    'Stale dependency/import collision recovery is unavailable.'
 );
 unverified_import_error_expect(
     str_contains($action, 'unverified_action_queue_dependency_refresh(')
         && str_contains($action, 'CatalogPostImportDependencyQueue::enqueue(')
         && str_contains($action, "'dependency_jobs'")
-        && str_contains($action, 'Import complete; dependency scans queued')
+        && str_contains($action, 'Import complete; background scans queued')
         && !str_contains($action, 'scanner_rebuild_dependencies($db, $config, (int)$row[\'id\']')
         && !str_contains($action, 'scanner_rebuild_affected_dependencies($db, $config, (int)$row[\'id\']'),
     'Unverified import still performs dependency-heavy work in the foreground request.'
@@ -67,10 +67,39 @@ unverified_import_error_expect(
         && !str_contains($searchQueue, '(new CatalogDetachedWorker($config))->start('),
     'Search-index enqueue still reconciles an already active detached worker pool.'
 );
+
+$sessionClose = strpos($action, 'session_write_close();', strpos($action, "catalog_check_csrf('unverified-files')"));
+$configLoad = strpos($action, '$config = catalog_config();', strpos($action, "catalog_check_csrf('unverified-files')"));
+unverified_import_error_expect(
+    $sessionClose !== false && $configLoad !== false && $sessionClose < $configLoad,
+    'The import request still holds the administrator session during database or filesystem work.'
+);
 unverified_import_error_expect(
     str_contains($action, 'SET SESSION innodb_lock_wait_timeout=5')
-        && str_contains($action, 'SET SESSION lock_wait_timeout=5'),
-    'Unverified actions can still wait indefinitely on a database lock.'
+        && str_contains($action, 'SET SESSION lock_wait_timeout=5')
+        && str_contains($action, 'TRANSACTION ISOLATION LEVEL READ COMMITTED'),
+    'Interactive unverified actions can still wait indefinitely or use an unnecessarily lock-retaining isolation level.'
+);
+unverified_import_error_expect(
+    !str_contains($action, "catalog_unverified_schema_ensure(\$db);")
+        && !str_contains($action, "\$staged = catalog_unverified_find(")
+        && !str_contains($action, "'dependency_cleanup'")
+        && str_contains($action, "'row' => is_array(\$row) ? \$row : null")
+        && str_contains($action, "\$row = is_array(\$source['row'] ?? null) ? \$source['row'] : null"),
+    'The import hot path still repeats schema inspection, staged-row lookup or dependency cleanup.'
+);
+unverified_import_error_expect(
+    str_contains($action, 'function unverified_action_package_identity(')
+        && str_contains($action, '$storedSize === $size && $validMd5 && $validSha1')
+        && str_contains($action, "'reused' => true")
+        && str_contains($action, "'identity_reused'")
+        && str_contains($action, "'elapsed_ms'"),
+    'The import hot path does not reuse durable staged hashes or expose useful elapsed-time diagnostics.'
+);
+unverified_import_error_expect(
+    str_contains($action, 'FROM ue_files WHERE game_id=? AND md5=? AND scan_status="verified" LIMIT 1')
+        && !str_contains($action, 'scan_status="verified" AND package_guid=? AND md5=?'),
+    'Duplicate detection is not using the existing game/MD5 identity key directly.'
 );
 unverified_import_error_expect(
     str_contains($action, "require_once __DIR__ . '/lib/UploadProgress.php';")
