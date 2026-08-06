@@ -45,8 +45,10 @@ job_limit_expect(
     str_contains($store, 'ue_job_resource_limits')
         && str_contains($store, 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?')
         && str_contains($store, 'WHERE queue_name=? AND status IN ("queued","running") GROUP BY resource_class')
+        && str_contains($store, '$changed = []')
+        && str_contains($store, 'if ($changed === [])')
         && str_contains($store, 'class_blocked'),
-    'Saved limits do not use the existing queue/status/resource index or expose limiting pressure.'
+    'Saved limits do not restrict queue updates to changed, indexed classes or expose limiting pressure.'
 );
 job_limit_expect(
     !str_contains($store, 'WHERE resource_class=? AND status IN ("queued","running")'),
@@ -66,9 +68,10 @@ job_limit_expect(
 job_limit_expect(
     str_contains($page, 'Save limits and update queued jobs')
         && str_contains($page, 'new CatalogJobResourceLimitStore($db, $queueName)')
-        && str_contains($page, 'CatalogDetachedWorker')
+        && str_contains($page, 'header(\'Location: job-resource-limits.php\', true, 303)')
+        && !str_contains($page, '->start($queueName')
         && str_contains($page, 'class_blocked'),
-    'The administrator page does not save indexed queued-job updates and refill the worker pool.'
+    'The administrator POST does not return immediately after the indexed queue update.'
 );
 job_limit_expect(
     str_contains($navigation, "'Job Resource Limits' => \$root . 'job-resource-limits.php'"),

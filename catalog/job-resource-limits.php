@@ -40,22 +40,14 @@ try {
 
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
         $result = $store->save($limits, $userId);
-        $workerMessage = '';
-        try {
-            $launch = (new CatalogDetachedWorker($config))->start($queueName, 10000);
-            $started = max(0, (int)($launch['started_workers'] ?? 0));
-            if ($started > 0) {
-                $workerMessage = ' Started ' . $started . ' additional worker process' . ($started === 1 ? '' : 'es') . '.';
-            }
-        } catch (Throwable $workerError) {
-            $workerMessage = ' Limits were saved, but the worker pool could not be expanded automatically: '
-                . trim($workerError->getMessage());
-            error_log('[UnrealDB job resource limits] Worker expansion failed: ' . $workerError->getMessage());
-        }
 
+        // Saving resource limits must remain a short database operation. Worker
+        // process lifecycle belongs to Background Jobs; attempting a detached
+        // launch here can leave the settings request waiting after the database
+        // transaction has already committed.
         $_SESSION['job_resource_limits_flash'] = 'Saved ' . (int)$result['updated_settings']
-            . ' resource limits and updated ' . (int)$result['updated_jobs']
-            . ' current queued job rows.' . $workerMessage;
+            . ' changed resource limit' . ((int)$result['updated_settings'] === 1 ? '' : 's')
+            . ' and updated ' . (int)$result['updated_jobs'] . ' current queued job rows.';
         header('Location: job-resource-limits.php', true, 303);
         exit;
     }
@@ -95,7 +87,7 @@ try {
         . '<p>A worker can claim a ready job only while the number of running jobs in the same resource class is below that class limit. Per-file and per-game concurrency keys still prevent two workers from changing the same target.</p>'
         . '<p><strong>Current detached worker pool:</strong> ' . $activeWorkers . ' active / ' . $desiredWorkers
         . ' configured, maximum ' . $maximumWorkers . '.</p>'
-        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Saving updates queued rows immediately. Already-running jobs are allowed to finish; reducing a limit prevents further claims until the active count falls below it.</p>'
+        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Saving updates queued rows immediately. Already-running jobs are allowed to finish; reducing a limit prevents further claims until the active count falls below it. Use Background Jobs to change or restart worker processes.</p>'
         . '</div>';
 
     echo '<form method="post">'
