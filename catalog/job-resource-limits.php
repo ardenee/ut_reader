@@ -39,8 +39,18 @@ try {
         }
 
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        try {
+            $db->exec('SET SESSION innodb_lock_wait_timeout=5');
+            $db->exec('SET SESSION lock_wait_timeout=5');
+        } catch (Throwable) {
+            // Compatible servers may expose only one of these variables.
+        }
         $result = $store->save($limits, $userId);
 
+        catalog_start_session();
         // Saving resource limits must remain a short database operation. Worker
         // process lifecycle belongs to Background Jobs; attempting a detached
         // launch here can leave the settings request waiting after the database
@@ -49,6 +59,7 @@ try {
             . ' changed resource limit' . ((int)$result['updated_settings'] === 1 ? '' : 's')
             . ', updated ' . (int)$result['updated_jobs'] . ' current queued limit row(s), and rekeyed '
             . (int)($result['rekeyed_jobs'] ?? 0) . ' affected-dependency job(s) for per-game serialization.';
+        session_write_close();
         header('Location: job-resource-limits.php', true, 303);
         exit;
     }
