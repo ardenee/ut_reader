@@ -9,8 +9,8 @@ use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
 
 /**
  * Persists administrator-selected job-class limits and applies them to the
- * durable queue. A small JSON projection lets legacy pages that construct a
- * queue directly use the same limits without opening another settings query.
+ * durable queue. The small in-process cache avoids one settings query for
+ * every file in a large enqueue batch while still refreshing regularly.
  */
 final class CatalogJobResourceLimitStore
 {
@@ -22,10 +22,8 @@ final class CatalogJobResourceLimitStore
     private float $loadedAt = 0.0;
     private ?bool $available = null;
 
-    public function __construct(
-        private readonly PDO $db,
-        private readonly ?string $settingsFile = null
-    ) {
+    public function __construct(private readonly PDO $db)
+    {
     }
 
     public function isAvailable(): bool
@@ -179,7 +177,6 @@ final class CatalogJobResourceLimitStore
             $this->db->commit();
             $this->limits = $normalized + $this->limits;
             $this->loadedAt = microtime(true);
-            $this->writeSettingsFile($this->limits);
 
             return [
                 'updated_jobs' => $updatedJobs,
@@ -211,38 +208,6 @@ final class CatalogJobResourceLimitStore
         }
         $this->limits = $limits;
         $this->loadedAt = microtime(true);
-    }
-
-    /** @param array<string,int> $limits */
-    private function writeSettingsFile(array $limits): void
-    {
-        $path = trim((string)$this->settingsFile);
-        if ($path === '') {
-            return;
-        }
-
-        $directory = dirname($path);
-        if (!is_dir($directory) && !mkdir($directory, 0750, true) && !is_dir($directory)) {
-            throw new \RuntimeException('Could not create the job resource-limit settings directory: ' . $directory);
-        }
-
-        ksort($limits, SORT_STRING);
-        $json = json_encode([
-            'version' => 1,
-            'updated_at' => gmdate(DATE_ATOM),
-            'limits' => $limits,
-        ], JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-        $temporary = $path . '.tmp-' . bin2hex(random_bytes(5));
-        if (file_put_contents($temporary, $json . PHP_EOL, LOCK_EX) === false) {
-            throw new \RuntimeException('Could not write the job resource-limit settings file.');
-        }
-        if (PHP_OS_FAMILY === 'Windows' && is_file($path)) {
-            @unlink($path);
-        }
-        if (!@rename($temporary, $path)) {
-            @unlink($temporary);
-            throw new \RuntimeException('Could not publish the job resource-limit settings file.');
-        }
     }
 
     private static function limit(int $value): int
