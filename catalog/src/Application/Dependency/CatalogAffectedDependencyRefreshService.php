@@ -8,7 +8,6 @@ use PDOException;
 use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
@@ -41,32 +40,22 @@ final class CatalogAffectedDependencyRefreshService
             }
         }
 
+        // Affected-file discovery must use the authoritative dependency links,
+        // never the package-summary projection that may be partway through a
+        // rebuild. The term identity columns are indexed and avoid a text scan.
         $fileIds = [];
-        if (self::summaryAvailable($db)) {
-            self::collectFileIds(
-                $db,
-                'SELECT s.file_id FROM ue_dependency_package_summaries s'
-                . ' JOIN ue_files f ON f.id=s.file_id'
-                . ' WHERE s.required_package=? AND s.file_id<>?'
-                . ' AND s.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY s.file_id',
-                [$packageName, $newFileId, $gameId],
-                $fileIds
-            );
-        } else {
-            self::collectFileIds(
-                $db,
-                'SELECT DISTINCT l.file_id'
-                . ' FROM ue_dependency_links l'
-                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-                . ' JOIN ue_files f ON f.id=l.file_id'
-                . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
-                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
-                . ' ORDER BY l.file_id',
-                [md5($packageName, true), strlen($packageName), substr($packageName, 0, 200), $newFileId, $gameId],
-                $fileIds
-            );
-        }
+        self::collectFileIds(
+            $db,
+            'SELECT DISTINCT l.file_id'
+            . ' FROM ue_dependency_links l'
+            . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+            . ' JOIN ue_files f ON f.id=l.file_id'
+            . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
+            . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
+            . ' ORDER BY l.file_id',
+            [md5($packageName, true), strlen($packageName), substr($packageName, 0, 200), $newFileId, $gameId],
+            $fileIds
+        );
 
         return array_map('intval', array_keys($fileIds));
     }
@@ -115,38 +104,22 @@ final class CatalogAffectedDependencyRefreshService
         }
     }
 
-    private static function summaryAvailable(PDO $db): bool
-    {
-        return (new PdoDependencyPackageSummary($db))->available();
-    }
-
     private static function hasAffectedFiles(PDO $db, int $gameId, int $newFileId, string $packageName): bool
     {
-        if (self::summaryAvailable($db)) {
-            $statement = $db->prepare(
-                'SELECT 1 FROM ue_dependency_package_summaries s'
-                . ' JOIN ue_files f ON f.id=s.file_id'
-                . ' WHERE s.required_package=? AND s.file_id<>?'
-                . ' AND s.game_id=? AND f.scan_status="verified" LIMIT 1'
-            );
-            $arguments = [$packageName, $newFileId, $gameId];
-        } else {
-            $statement = $db->prepare(
-                'SELECT 1 FROM ue_dependency_links l'
-                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-                . ' JOIN ue_files f ON f.id=l.file_id'
-                . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
-                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
-            );
-            $arguments = [
-                md5($packageName, true),
-                strlen($packageName),
-                substr($packageName, 0, 200),
-                $newFileId,
-                $gameId,
-            ];
-        }
-        $statement->execute($arguments);
+        $statement = $db->prepare(
+            'SELECT 1 FROM ue_dependency_links l'
+            . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+            . ' JOIN ue_files f ON f.id=l.file_id'
+            . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
+            . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([
+            md5($packageName, true),
+            strlen($packageName),
+            substr($packageName, 0, 200),
+            $newFileId,
+            $gameId,
+        ]);
         return $statement->fetchColumn() !== false;
     }
 
