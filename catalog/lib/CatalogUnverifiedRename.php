@@ -199,14 +199,12 @@ function catalog_unverified_rename_file(PDO $db, array $config, int $fileId, str
             }
 
             if (strcasecmp((string)$row['package_name'], $newPackageName) !== 0) {
-                $exports = catalog_all($db, 'SELECT id,local_path FROM ue_exports WHERE file_id=?', [$fileId]);
-                $updateExport = $db->prepare('UPDATE ue_exports SET full_path=? WHERE id=?');
-                foreach ($exports as $export) {
-                    $updateExport->execute([
-                        scanner_join_path_parts([$newPackageName, (string)$export['local_path']]),
-                        (int)$export['id'],
-                    ]);
-                }
+                $updateExports = $db->prepare(
+                    'UPDATE ue_exports SET full_path=CASE '
+                    . 'WHEN local_path IS NOT NULL AND local_path<>"" THEN CONCAT(?,".",local_path) '
+                    . 'ELSE ? END WHERE file_id=?'
+                );
+                $updateExports->execute([$newPackageName, $newPackageName, $fileId]);
             }
             $db->commit();
         } catch (Throwable $error) {
