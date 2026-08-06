@@ -11,6 +11,25 @@ require_once __DIR__ . '/CatalogPublicAccess.php';
 \UnrealDb\Catalog\Presentation\Http\CatalogTableSortAssets::register();
 
 /*
+ * Many administrator pages construct PdoJobQueue directly rather than booting
+ * CatalogApplication. Install a lazy resolver so those enqueue paths use the
+ * same database-backed administrator limits without opening a connection until
+ * a job is actually being queued.
+ */
+\UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy::setLimitResolver(
+    static function (string $resourceClass, int $fallback): int {
+        static $store = null;
+        if (!$store instanceof \UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitStore) {
+            $config = catalog_config();
+            $store = new \UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitStore(
+                catalog_db($config)
+            );
+        }
+        return $store->resolve($resourceClass, $fallback);
+    }
+);
+
+/*
  * Apply the anonymous crawler and rapid-link guard before public response-cache
  * lookup. This prevents a cached page from becoming a bypass for automated
  * bulk traversal. Logged-in administrators and non-GET requests are exempt.
