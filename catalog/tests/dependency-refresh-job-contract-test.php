@@ -56,11 +56,11 @@ dependency_refresh_contract_expect(is_string($service), 'CatalogAffectedDependen
 foreach ([
     'new PdoJobQueue($db)',
     'JobType::REBUILD_AFFECTED_DEPENDENCIES',
-    "'rebuild-affected-file:' . \$fileId",
+    "'rebuild-affected-file:' . max(1, \$fileId)",
     'isActiveRefreshJob(',
     'existingRefreshJobId(',
     'hasAffectedFiles(',
-    'concurrency_key=?',
+    'dedupe_key=?',
     'new CatalogDetachedWorker($config)',
     'using synchronous fallback',
     'queued job remains durable',
