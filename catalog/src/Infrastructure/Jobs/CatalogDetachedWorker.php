@@ -377,7 +377,7 @@ final class CatalogDetachedWorker
             static fn(string $argument): string => self::powershellLiteral($argument),
             array_merge([$script], $arguments)
         );
-        $source = "$ErrorActionPreference = 'Stop'\r\n"
+        $source = "\$ErrorActionPreference = 'Stop'\r\n"
             . '$process = Start-Process -FilePath ' . self::powershellLiteral($php)
             . ' -ArgumentList @(' . implode(', ', $argumentLiterals) . ')'
             . ' -WorkingDirectory ' . self::powershellLiteral($this->catalogRoot)
@@ -385,7 +385,7 @@ final class CatalogDetachedWorker
             . ' -RedirectStandardOutput ' . self::powershellLiteral($log)
             . ' -RedirectStandardError ' . self::powershellLiteral($errorLog)
             . " -PassThru\r\n"
-            . "Write-Output $process.Id\r\n";
+            . "Write-Output \$process.Id\r\n";
         if (file_put_contents($launcher, $source, LOCK_EX) === false) {
             throw new \RuntimeException('Could not write the Windows detached-worker launcher script.');
         }
