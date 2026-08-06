@@ -25,9 +25,20 @@ unverified_rename_links_expect(str_contains($list, 'possible package link'), 'Po
 unverified_rename_links_expect(str_contains($details, 'action="unverified-file-rename.php"'), 'Details must expose the rename form.');
 unverified_rename_links_expect(str_contains($details, "catalog_csrf('unverified-file-rename')"), 'Rename form must use a dedicated CSRF token.');
 unverified_rename_links_expect(str_contains($action, "catalog_check_csrf('unverified-file-rename')"), 'Rename action must verify the CSRF token.');
+unverified_rename_links_expect(
+    str_contains($action, 'session_write_close()')
+        && str_contains($action, 'SET SESSION innodb_lock_wait_timeout=5')
+        && str_contains($action, 'SET SESSION lock_wait_timeout=5'),
+    'Rename action still holds the administrator session or waits indefinitely on a database lock.'
+);
 unverified_rename_links_expect(str_contains($rename, "preg_match('/(\\.uz(?:2|3)?)$/i'"), 'Rename helper must preserve redirect wrapper suffixes.');
 unverified_rename_links_expect(str_contains($rename, 'unverified_queue_key=?'), 'Rename helper must reject queue-key collisions.');
 unverified_rename_links_expect(str_contains($rename, 'UPDATE ue_files SET package_name=?'), 'Rename helper must update package and filename metadata.');
-unverified_rename_links_expect(str_contains($rename, 'UPDATE ue_exports SET full_path=?'), 'Package-root changes must update staged export paths.');
+unverified_rename_links_expect(
+    str_contains($rename, 'UPDATE ue_exports SET full_path=CASE')
+        && str_contains($rename, 'WHERE file_id=?')
+        && !str_contains($rename, "SELECT id,local_path FROM ue_exports WHERE file_id=?"),
+    'Package-root changes still load and update staged exports one row at a time.'
+);
 
 echo "Unverified rename and possible-link contract tests passed.\n";
