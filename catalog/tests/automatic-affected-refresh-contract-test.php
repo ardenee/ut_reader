@@ -13,11 +13,11 @@ automatic_affected_refresh_expect(is_string($service), 'Affected refresh service
 foreach ([
     'new PdoJobQueue($db)',
     'JobType::REBUILD_AFFECTED_DEPENDENCIES',
-    "'rebuild-affected-file:' . \$fileId",
+    "'rebuild-affected-file:' . max(1, \$fileId)",
     'hasAffectedFiles(',
     'isActiveRefreshJob(',
     'existingRefreshJobId(',
-    'concurrency_key=?',
+    'dedupe_key=?',
     'new CatalogDetachedWorker($config)',
     'using synchronous fallback',
     'queued job remains durable',

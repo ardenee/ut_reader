@@ -6,6 +6,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 /**
  * Persists administrator-selected job-class limits and applies them to the
@@ -140,7 +141,7 @@ final class CatalogJobResourceLimitStore
 
     /**
      * @param array<string,int> $limits
-     * @return array{updated_jobs:int,updated_settings:int,per_class:array<string,int>}
+     * @return array{updated_jobs:int,updated_settings:int,rekeyed_jobs:int,per_class:array<string,int>}
      */
     public function save(array $limits, ?int $updatedBy): array
     {
@@ -173,13 +174,6 @@ final class CatalogJobResourceLimitStore
                 $changed[$class] = $limit;
             }
         }
-        if ($changed === []) {
-            return [
-                'updated_jobs' => 0,
-                'updated_settings' => 0,
-                'per_class' => [],
-            ];
-        }
 
         $this->db->beginTransaction();
         try {
@@ -205,13 +199,18 @@ final class CatalogJobResourceLimitStore
                 $perClass[$class] = $updateJobs->rowCount();
                 $updatedJobs += $perClass[$class];
             }
+
+            $rekeyedJobs = $this->rekeyQueuedAffectedDependencyJobs();
             $this->db->commit();
-            $this->limits = $changed + $this->limits;
-            $this->loadedAt = microtime(true);
+            if ($changed !== []) {
+                $this->limits = $changed + $this->limits;
+                $this->loadedAt = microtime(true);
+            }
 
             return [
                 'updated_jobs' => $updatedJobs,
                 'updated_settings' => count($changed),
+                'rekeyed_jobs' => $rekeyedJobs,
                 'per_class' => $perClass,
             ];
         } catch (Throwable $error) {
@@ -220,6 +219,20 @@ final class CatalogJobResourceLimitStore
             }
             throw $error;
         }
+    }
+
+    private function rekeyQueuedAffectedDependencyJobs(): int
+    {
+        $gameIdExpression = 'CAST(JSON_UNQUOTE(JSON_EXTRACT(payload_json,"$.game_id")) AS UNSIGNED)';
+        $expectedKey = 'CONCAT("dependency:affected-game:",' . $gameIdExpression . ')';
+        $statement = $this->db->prepare(
+            'UPDATE ue_background_jobs SET concurrency_key=' . $expectedKey . ' '
+            . 'WHERE queue_name=? AND status="queued" AND job_type=? '
+            . 'AND JSON_VALID(payload_json) AND ' . $gameIdExpression . '>0 '
+            . 'AND (concurrency_key IS NULL OR concurrency_key<>' . $expectedKey . ')'
+        );
+        $statement->execute([$this->queueName, JobType::REBUILD_AFFECTED_DEPENDENCIES]);
+        return $statement->rowCount();
     }
 
     private function reload(): void

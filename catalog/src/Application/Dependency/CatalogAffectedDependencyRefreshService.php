@@ -132,13 +132,16 @@ final class CatalogAffectedDependencyRefreshService
     private static function isActiveRefreshJob(PDO $db, int $fileId): bool
     {
         try {
+            [$dedupeKey, $continuationPattern] = self::chainKeys($fileId);
             $statement = $db->prepare(
                 'SELECT 1 FROM ue_background_jobs'
-                . ' WHERE job_type=? AND status="running" AND concurrency_key=? LIMIT 1'
+                . ' WHERE job_type=? AND status="running"'
+                . ' AND (dedupe_key=? OR dedupe_key LIKE ?) LIMIT 1'
             );
             $statement->execute([
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
-                self::concurrencyKey($fileId),
+                $dedupeKey,
+                $continuationPattern,
             ]);
             return $statement->fetchColumn() !== false;
         } catch (Throwable) {
@@ -151,14 +154,17 @@ final class CatalogAffectedDependencyRefreshService
     private static function existingRefreshJobId(PDO $db, int $fileId): int
     {
         try {
+            [$dedupeKey, $continuationPattern] = self::chainKeys($fileId);
             $statement = $db->prepare(
                 'SELECT id FROM ue_background_jobs'
-                . ' WHERE job_type=? AND status IN ("queued","running") AND concurrency_key=?'
+                . ' WHERE job_type=? AND status IN ("queued","running")'
+                . ' AND (dedupe_key=? OR dedupe_key LIKE ?)'
                 . ' ORDER BY id DESC LIMIT 1'
             );
             $statement->execute([
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
-                self::concurrencyKey($fileId),
+                $dedupeKey,
+                $continuationPattern,
             ]);
             return max(0, (int)($statement->fetchColumn() ?: 0));
         } catch (Throwable) {
@@ -192,7 +198,7 @@ final class CatalogAffectedDependencyRefreshService
                 ],
                 40,
                 null,
-                'rebuild-affected-file:' . $fileId,
+                self::dedupeKey($fileId),
                 null,
                 3
             );
@@ -228,9 +234,16 @@ final class CatalogAffectedDependencyRefreshService
         return $jobId;
     }
 
-    private static function concurrencyKey(int $fileId): string
+    /** @return array{0:string,1:string} */
+    private static function chainKeys(int $fileId): array
     {
-        return 'dependency:file:' . max(1, $fileId);
+        $dedupeKey = self::dedupeKey($fileId);
+        return [$dedupeKey, $dedupeKey . ':offset:%'];
+    }
+
+    private static function dedupeKey(int $fileId): string
+    {
+        return 'rebuild-affected-file:' . max(1, $fileId);
     }
 
     /**

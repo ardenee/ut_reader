@@ -91,11 +91,15 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('dependency:game:', $payload['game_id'] ?? null)
             ),
-            JobType::REBUILD_FILE_DEPENDENCIES,
-            JobType::REBUILD_AFFECTED_DEPENDENCIES => new JobResourceProfile(
+            JobType::REBUILD_FILE_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
+            ),
+            JobType::REBUILD_AFFECTED_DEPENDENCIES => new JobResourceProfile(
+                self::DEPENDENCY_HEAVY,
+                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::affectedDependencyKey($payload)
             ),
             JobType::RECONCILE_CATALOG_PROJECTIONS => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
@@ -190,6 +194,16 @@ final class JobResourcePolicy
         }
 
         return $limit;
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function affectedDependencyKey(array $payload): ?string
+    {
+        $gameKey = self::positiveKey('dependency:affected-game:', $payload['game_id'] ?? null);
+        if ($gameKey !== null) {
+            return $gameKey;
+        }
+        return self::positiveKey('dependency:affected-file:', $payload['file_id'] ?? null);
     }
 
     /** @param array<string,mixed> $payload */

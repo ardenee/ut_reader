@@ -85,11 +85,38 @@ function unverified_action_clear_file_dependencies(PDO $db, int $fileId): int
     return $removed;
 }
 
+/** @return array{file_job_id:int,affected_job_id:int,worker_started:bool,worker_error:string} */
+function unverified_action_queue_dependency_refresh(
+    PDO $db,
+    array $config,
+    int $fileId,
+    ?int $userId
+): array {
+    $file = catalog_one(
+        $db,
+        'SELECT id,game_id,package_name FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
+        [$fileId]
+    );
+    if (!$file || (int)($file['game_id'] ?? 0) < 1) {
+        throw new RuntimeException('The verified file is unavailable for queued dependency processing.');
+    }
+
+    return \UnrealDb\Catalog\Application\Dependency\CatalogPostImportDependencyQueue::enqueue(
+        $db,
+        $config,
+        $fileId,
+        (int)$file['game_id'],
+        (string)$file['package_name'],
+        $userId
+    );
+}
+
 function unverified_action_recover_verified_dependencies(
     PDO $db,
     array $config,
     int $fileId,
     Throwable $initialError,
+    ?int $userId = null,
     ?callable $progress = null
 ): array {
     $error = $initialError;
@@ -108,12 +135,12 @@ function unverified_action_recover_verified_dependencies(
         $removed += unverified_action_clear_file_dependencies($db, $fileId);
 
         try {
-            scanner_rebuild_dependencies($db, $config, $fileId, $progress, 60, 72, 'Rebuilding imported file dependencies');
-            scanner_rebuild_affected_dependencies($db, $config, $fileId, $progress, 72, 99);
+            $jobs = unverified_action_queue_dependency_refresh($db, $config, $fileId, $userId);
             return [
                 'recovered' => true,
                 'removed' => $removed,
-                'message' => 'Removed a stale duplicate dependency link and rebuilt dependency data successfully.',
+                'jobs' => $jobs,
+                'message' => 'Removed a stale duplicate dependency link and queued a fresh dependency scan.',
             ];
         } catch (Throwable $retryError) {
             $error = $retryError;
@@ -191,7 +218,7 @@ function unverified_action_resolve_source(PDO $db, array $config, string $token)
     ];
 }
 
-/** @return array{status:string,file_id:int,original_name:string,target_game:string,message:string} */
+/** @return array<string,mixed> */
 function unverified_action_promote_item(
     PDO $db,
     array $config,
@@ -295,11 +322,12 @@ function unverified_action_promote_item(
             $notes = trim((string)$row['scan_notes'] . "\nVerified from unverified queue for " . (string)$target['name'] . '.');
             $db->prepare('UPDATE ue_files SET game_id=?,package_name=?,stored_name=?,relative_path=?,detected_engine_key=?,detected_package_version=?,detected_licensee_version=?,detection_confidence=?,compatibility_status=?,compatibility_label=?,detection_notes=?,file_size=?,md5=?,sha1=?,scan_status="verified",scan_notes=?,uploaded_by=COALESCE(?,uploaded_by),unverified_queue_key=NULL,unverified_queue_game_id=NULL,unverified_queue_name=NULL,unverified_reason=NULL WHERE id=?')->execute([$targetGameId, $packageName, $storedName, 'storage/games/' . scanner_slug_text((string)$target['slug']) . '/verified/' . $storedName, $classification['detected_engine'], $classification['package_version'], $classification['licensee_version'], $classification['confidence'], $classification['compatibility_status'] ?? 'native', $classification['compatibility_label'] ?? null, implode("\n", (array)$classification['notes']), (int)(filesize($dest) ?: 0), strtolower($md5), strtolower($sha1), $notes, $userId, (int)$row['id']]);
             if ($packageName !== (string)$row['package_name']) {
-                $exports = catalog_all($db, 'SELECT id,local_path FROM ue_exports WHERE file_id=?', [(int)$row['id']]);
-                $update = $db->prepare('UPDATE ue_exports SET full_path=? WHERE id=?');
-                foreach ($exports as $export) {
-                    $update->execute([scanner_join_path_parts([$packageName, (string)$export['local_path']]), (int)$export['id']]);
-                }
+                $updateExports = $db->prepare(
+                    'UPDATE ue_exports SET full_path=CASE '
+                    . 'WHEN local_path IS NOT NULL AND local_path<>"" THEN CONCAT(?,".",local_path) '
+                    . 'ELSE ? END WHERE file_id=?'
+                );
+                $updateExports->execute([$packageName, $packageName, (int)$row['id']]);
             }
             $db->commit();
         } catch (Throwable $error) {
@@ -316,10 +344,22 @@ function unverified_action_promote_item(
             @unlink((string)$source['reason_path']);
         }
 
-        scanner_rebuild_dependencies($db, $config, (int)$row['id'], $progress, 52, 68, 'Rebuilding imported file dependencies');
-        scanner_rebuild_affected_dependencies($db, $config, (int)$row['id'], $progress, 68, 99);
-        unverified_action_emit($progress, 'done', 100, 'Import and dependency refresh complete');
-        return ['status' => 'verified', 'file_id' => (int)$row['id'], 'original_name' => (string)$row['original_name'], 'target_game' => (string)$target['name'], 'message' => 'Promoted existing unverified database row to verified; package tables were reused.'];
+        unverified_action_emit($progress, 'dependency_queue', 70, 'Queueing dependency scans');
+        $dependencyJobs = unverified_action_queue_dependency_refresh(
+            $db,
+            $config,
+            (int)$row['id'],
+            $userId
+        );
+        unverified_action_emit($progress, 'done', 100, 'Import complete; dependency scans queued');
+        return [
+            'status' => 'verified',
+            'file_id' => (int)$row['id'],
+            'original_name' => (string)$row['original_name'],
+            'target_game' => (string)$target['name'],
+            'message' => 'Promoted existing unverified database row to verified; package tables were reused.',
+            'dependency_jobs' => $dependencyJobs,
+        ];
     } finally {
         if ($prepared['temporary'] && is_file($prepared['path'])) {
             @unlink($prepared['path']);
@@ -386,6 +426,12 @@ try {
     catalog_check_csrf('unverified-files');
     $config = catalog_config();
     $db = catalog_db($config);
+    try {
+        $db->exec('SET SESSION innodb_lock_wait_timeout=5');
+        $db->exec('SET SESSION lock_wait_timeout=5');
+    } catch (Throwable) {
+        // Compatible servers may expose only one of these session variables.
+    }
     catalog_unverified_schema_ensure($db);
 
     $action = trim((string)($_POST['action'] ?? ''));
@@ -459,7 +505,7 @@ try {
                 'file_id' => (int)$verified['id'],
                 'original_name' => (string)$verified['original_name'],
                 'target_game' => (string)($target['name'] ?? 'selected game'),
-                'message' => 'The file was verified before a follow-up dependency refresh failed.',
+                'message' => 'The file was verified before dependency jobs could be queued.',
             ];
 
             $recovery = unverified_action_recover_verified_dependencies(
@@ -467,13 +513,16 @@ try {
                 $trustedImportConfig,
                 (int)$verified['id'],
                 $promotionError,
+                $userId,
                 $progress
             );
             if (empty($recovery['recovered'])) {
-                $warning = 'File verification completed, but dependency refresh failed: '
+                $warning = 'File verification completed, but dependency jobs could not be queued: '
                     . (string)$recovery['message']
                     . ' Use File Maintenance to rebuild dependencies for file #'
                     . (int)$verified['id'] . '.';
+            } elseif (is_array($recovery['jobs'] ?? null)) {
+                $result['dependency_jobs'] = $recovery['jobs'];
             }
         }
 
@@ -498,6 +547,13 @@ try {
         $message = $statusLabel . ' ' . $result['original_name'] . ' for ' . $result['target_game']
             . '. N/I/E: ' . $importDetails['name_count'] . '/' . $importDetails['import_count'] . '/' . $importDetails['export_count']
             . ' | GUID: ' . ($guid !== '' ? $guid : 'N/A') . '.';
+        $dependencyJobs = is_array($result['dependency_jobs'] ?? null) ? $result['dependency_jobs'] : [];
+        if ((int)($dependencyJobs['file_job_id'] ?? 0) > 0) {
+            $message .= ' Dependency scan queued as job #' . (int)$dependencyJobs['file_job_id'] . '.';
+        }
+        if ((int)($dependencyJobs['affected_job_id'] ?? 0) > 0) {
+            $message .= ' Affected-file refresh queued as job #' . (int)$dependencyJobs['affected_job_id'] . '.';
+        }
         if (is_array($recovery) && !empty($recovery['recovered'])) {
             $message .= ' Dependency repair: ' . (string)$recovery['message'];
         }
@@ -520,6 +576,7 @@ try {
         'details' => $importDetails,
         'warning' => $warning !== '' ? $warning : null,
         'recovery' => $recovery,
+        'dependency_jobs' => is_array($result['dependency_jobs'] ?? null) ? $result['dependency_jobs'] : null,
         'message' => $message,
     ]);
 } catch (Throwable $error) {

@@ -39,15 +39,27 @@ try {
         }
 
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        try {
+            $db->exec('SET SESSION innodb_lock_wait_timeout=5');
+            $db->exec('SET SESSION lock_wait_timeout=5');
+        } catch (Throwable) {
+            // Compatible servers may expose only one of these variables.
+        }
         $result = $store->save($limits, $userId);
 
+        catalog_start_session();
         // Saving resource limits must remain a short database operation. Worker
         // process lifecycle belongs to Background Jobs; attempting a detached
         // launch here can leave the settings request waiting after the database
         // transaction has already committed.
         $_SESSION['job_resource_limits_flash'] = 'Saved ' . (int)$result['updated_settings']
             . ' changed resource limit' . ((int)$result['updated_settings'] === 1 ? '' : 's')
-            . ' and updated ' . (int)$result['updated_jobs'] . ' current queued job rows.';
+            . ', updated ' . (int)$result['updated_jobs'] . ' current queued limit row(s), and rekeyed '
+            . (int)($result['rekeyed_jobs'] ?? 0) . ' affected-dependency job(s) for per-game serialization.';
+        session_write_close();
         header('Location: job-resource-limits.php', true, 303);
         exit;
     }
@@ -87,7 +99,7 @@ try {
         . '<p>A worker can claim a ready job only while the number of running jobs in the same resource class is below that class limit. Per-file and per-game concurrency keys still prevent two workers from changing the same target.</p>'
         . '<p><strong>Current detached worker pool:</strong> ' . $activeWorkers . ' active / ' . $desiredWorkers
         . ' configured, maximum ' . $maximumWorkers . '.</p>'
-        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Saving updates queued rows immediately. Already-running jobs are allowed to finish; reducing a limit prevents further claims until the active count falls below it. Use Background Jobs to change or restart worker processes.</p>'
+        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Saving updates queued rows immediately. Already-running jobs are allowed to finish; reducing a limit prevents further claims until the active count falls below it. Affected-dependency jobs for the same game are serialized because they otherwise rewrite overlapping files and compete with normal site requests. Use Background Jobs to change or restart worker processes.</p>'
         . '</div>';
 
     echo '<form method="post">'

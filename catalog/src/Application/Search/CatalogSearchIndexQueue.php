@@ -41,13 +41,18 @@ final class CatalogSearchIndexQueue
                 3
             );
 
-            if ($config !== []) {
+            $deferWorkerStart = !empty($config['queue']['defer_worker_start']);
+            if ($config !== [] && !$deferWorkerStart) {
                 try {
-                    (new CatalogDetachedWorker($config))->start($queueName, 10000);
+                    $launcher = new CatalogDetachedWorker($config);
+                    $worker = $launcher->status($queueName);
+                    if ((int)($worker['active_count'] ?? 0) + (int)($worker['launching_count'] ?? 0) === 0) {
+                        $launcher->start($queueName, 10000);
+                    }
                 } catch (Throwable $workerError) {
                     error_log(
                         '[UnrealDB search index worker] job_id=' . $jobId
-                        . ' launch failed: ' . $workerError->getMessage()
+                        . ' launch failed; queued job remains durable: ' . $workerError->getMessage()
                     );
                 }
             }

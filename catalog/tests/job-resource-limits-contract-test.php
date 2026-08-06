@@ -20,8 +20,17 @@ JobResourcePolicy::setLimitResolver(
         ? 6
         : $fallback
 );
-$dependency = JobResourcePolicy::for(JobType::REBUILD_FILE_DEPENDENCIES, ['file_id' => 42]);
+$dependency = JobResourcePolicy::for(JobType::REBUILD_FILE_DEPENDENCIES, ['file_id' => 42, 'game_id' => 7]);
 job_limit_expect($dependency->limit === 6, 'The saved limit resolver does not control newly queued dependency jobs.');
+job_limit_expect(
+    $dependency->concurrencyKey === 'dependency:file:42',
+    'Exact-file dependency work is no longer protected by its file key.'
+);
+$affected = JobResourcePolicy::for(JobType::REBUILD_AFFECTED_DEPENDENCIES, ['file_id' => 42, 'game_id' => 7]);
+job_limit_expect(
+    $affected->concurrencyKey === 'dependency:affected-game:7',
+    'Affected dependency refreshes for one game can still overlap and rewrite the same files concurrently.'
+);
 
 $archive = JobResourcePolicy::for(JobType::IMPORT_STAGED_PAK, ['game_id' => 7]);
 job_limit_expect(
@@ -46,9 +55,13 @@ job_limit_expect(
         && str_contains($store, 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?')
         && str_contains($store, 'WHERE queue_name=? AND status IN ("queued","running") GROUP BY resource_class')
         && str_contains($store, '$changed = []')
-        && str_contains($store, 'if ($changed === [])')
+        && str_contains($store, 'rekeyQueuedAffectedDependencyJobs')
+        && str_contains($store, 'JobType::REBUILD_AFFECTED_DEPENDENCIES')
+        && str_contains($store, 'JSON_EXTRACT(payload_json,"$.game_id")')
+        && str_contains($store, 'dependency:affected-game:')
+        && str_contains($store, "'rekeyed_jobs'")
         && str_contains($store, 'class_blocked'),
-    'Saved limits do not restrict queue updates to changed, indexed classes or expose limiting pressure.'
+    'Saved limits do not restrict queue updates or rekey affected dependency work for safe per-game serialization.'
 );
 job_limit_expect(
     !str_contains($store, 'WHERE resource_class=? AND status IN ("queued","running")'),
@@ -70,8 +83,10 @@ job_limit_expect(
         && str_contains($page, 'new CatalogJobResourceLimitStore($db, $queueName)')
         && str_contains($page, 'header(\'Location: job-resource-limits.php\', true, 303)')
         && !str_contains($page, '->start($queueName')
+        && str_contains($page, 'rekeyed_jobs')
+        && str_contains($page, 'per-game serialization')
         && str_contains($page, 'class_blocked'),
-    'The administrator POST does not return immediately after the indexed queue update.'
+    'The administrator POST does not return immediately after updating limits and queue safety keys.'
 );
 job_limit_expect(
     str_contains($navigation, "'Job Resource Limits' => \$root . 'job-resource-limits.php'"),

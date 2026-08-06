@@ -22,16 +22,38 @@ try {
         throw new RuntimeException('Invalid unverified file ID.');
     }
 
+    // Never hold the administrator's PHP session lock while waiting for the
+    // filesystem or MySQL. Otherwise every page opened in the same browser waits
+    // behind this rename request even when the other page needs no related data.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    try {
+        $db->exec('SET SESSION innodb_lock_wait_timeout=5');
+        $db->exec('SET SESSION lock_wait_timeout=5');
+    } catch (Throwable) {
+        // Compatible servers may expose only one of these session variables.
+    }
+
     $result = catalog_unverified_rename_file($db, $config, (int)$fileId, $newName);
+
+    catalog_start_session();
     $_SESSION['flash_unverified_rename'] = 'Renamed '
         . ((string)$result['old_name'] !== '' ? (string)$result['old_name'] : (string)$result['old_queue_name'])
         . ' to ' . (string)$result['new_name'] . '.';
+    session_write_close();
+
     header('Location: unverified-file-details.php?id=' . (int)$result['file_id'], true, 303);
     exit;
 } catch (Throwable $error) {
     $fileId = max(0, (int)($_POST['id'] ?? 0));
-    if (session_status() === PHP_SESSION_ACTIVE) {
+    try {
+        catalog_start_session();
         $_SESSION['flash_unverified_rename'] = 'Rename failed: ' . trim($error->getMessage());
+        session_write_close();
+    } catch (Throwable) {
+        // Preserve the original rename error when session recovery also fails.
     }
     if ($fileId > 0 && !headers_sent()) {
         header('Location: unverified-file-details.php?id=' . $fileId, true, 303);
