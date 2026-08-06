@@ -71,9 +71,11 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         $failureTotal = max(0, (int)($job->payload['failure_total'] ?? 0));
         $failures = [];
         $summaryRows = max(0, (int)($job->payload['summary_rows_total'] ?? 0));
-        if ($resumeOffset === 0) {
+        $sourceSummaryReady = !empty($job->payload['source_summary_ready']);
+        if ($resumeOffset === 0 && !$sourceSummaryReady) {
             $sourceSummary = $summaryWriter->rebuildFile($fileId);
             $summaryRows += (int)$sourceSummary['summary_rows'];
+            $sourceSummaryReady = true;
         }
 
         $context->checkpoint([
@@ -90,6 +92,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'resume_offset' => $resumeOffset,
             'chunk_size' => count($chunkIds),
             'failures' => $failureTotal,
+            'source_summary_ready' => $sourceSummaryReady,
         ]);
 
         foreach ($chunkIds as $index => $affectedFileId) {
@@ -172,6 +175,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                     'processed_total' => $processedTotal,
                     'failure_total' => $failureTotal,
                     'summary_rows_total' => $summaryRows,
+                    'source_summary_ready' => true,
                 ],
                 40,
                 null,
@@ -218,6 +222,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'processed_files' => $processed,
             'processed_total' => $processedTotal,
             'dependency_summary_rows' => $summaryRows,
+            'source_summary_ready' => $sourceSummaryReady,
             'game_stats_refreshed' => $gameStats !== null,
             'continuation_job_id' => $continuationJobId,
             'failure_count' => $failureCount,
