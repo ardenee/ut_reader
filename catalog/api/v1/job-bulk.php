@@ -4,7 +4,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -62,6 +61,19 @@ try {
         }
     }
 
+    // Release the administrator session before any database work. A slow or
+    // blocked bulk action must not freeze every other request from this browser.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    // Fail a lock wait promptly instead of leaving the page spinning forever.
+    try {
+        $application->db->exec('SET SESSION innodb_lock_wait_timeout=5');
+    } catch (Throwable) {
+        // Some compatible servers may not expose this session setting.
+    }
+
     $where = ['queue_name=?'];
     $params = [$queueName];
     if ($scope === 'selected') {
@@ -99,48 +111,45 @@ try {
         $params
     );
 
+    // Never perform an unbounded UPDATE from an HTTP request. Large matching
+    // sets are handled in repeatable 10,000-row batches and the UI already tells
+    // the administrator to apply again for any remainder.
+    $limit = 10000;
+    $select = $application->db->prepare(
+        'SELECT id FROM ue_background_jobs WHERE ' . $whereSql . ' ORDER BY id ASC LIMIT ' . $limit
+    );
+    $select->execute($params);
+    $eligibleIds = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN));
+
     $affected = 0;
     $deletedStagedFiles = 0;
-    $limited = false;
-    $worker = null;
-    $workerError = '';
+    $limited = $requested > count($eligibleIds);
     $now = gmdate('Y-m-d H:i:s');
 
-    if ($action === 'restart') {
+    if ($action === 'restart' && $eligibleIds !== []) {
+        $idSql = implode(',', array_fill(0, count($eligibleIds), '?'));
         $statement = $application->db->prepare(
             'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,worker_id=NULL,lease_token=NULL,'
             . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=NULL,result_json=NULL,'
             . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,progress_json=NULL,'
-            . 'progress_updated_at=NULL,dead_lettered_at=NULL,completed_at=NULL,updated_at=? WHERE ' . $whereSql
+            . 'progress_updated_at=NULL,dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
+            . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND ' . $actionCondition
         );
-        $statement->execute(array_merge([$now, $now], $params));
+        $statement->execute(array_merge([$now, $now, $queueName], $eligibleIds));
         $affected = $statement->rowCount();
-        if ($affected > 0) {
-            try {
-                $worker = (new CatalogDetachedWorker($application->config))->start($queueName, 10000);
-            } catch (Throwable $error) {
-                $workerError = trim($error->getMessage());
-                error_log('[UnrealDB bulk restart worker] ' . $error->getMessage());
-            }
-        }
-    } elseif ($action === 'cancel') {
+    } elseif ($action === 'cancel' && $eligibleIds !== []) {
         $reason = 'Cancelled in bulk from Background Jobs.';
+        $idSql = implode(',', array_fill(0, count($eligibleIds), '?'));
         $statement = $application->db->prepare(
             'UPDATE ue_background_jobs SET status="cancelled",dedupe_key=NULL,cancel_requested_at=?,'
-            . 'cancel_requested_by=?,cancel_reason=?,completed_at=?,updated_at=? WHERE ' . $whereSql
+            . 'cancel_requested_by=?,cancel_reason=?,completed_at=?,updated_at=? '
+            . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND status="queued"'
         );
-        $statement->execute(array_merge([$now, $userId, $reason, $now, $now], $params));
+        $statement->execute(array_merge([$now, $userId, $reason, $now, $now, $queueName], $eligibleIds));
         $affected = $statement->rowCount();
-    } else {
-        $limit = 10000;
-        $statement = $application->db->prepare(
-            'SELECT id FROM ue_background_jobs WHERE ' . $whereSql . ' ORDER BY id DESC LIMIT ' . $limit
-        );
-        $statement->execute($params);
-        $ids = array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
-        $limited = $requested > count($ids);
+    } elseif ($action === 'delete' && $eligibleIds !== []) {
         $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
-            ->deleteTerminalJobs($ids, $queueName);
+            ->deleteTerminalJobs($eligibleIds, $queueName);
         $affected = (int)($result['deleted_jobs'] ?? 0);
         $deletedStagedFiles = (int)($result['deleted_staged_files'] ?? 0);
     }
@@ -152,14 +161,16 @@ try {
             'queue' => $queueName,
             'requested' => $requested,
             'affected' => $affected,
-            'skipped' => max(0, $requested - $affected),
+            'skipped' => max(0, min($requested, count($eligibleIds)) - $affected),
             'deleted_staged_files' => $deletedStagedFiles,
             'limited' => $limited,
-            'worker' => $worker,
-            'worker_error' => $workerError,
+            'batch_limit' => $limit,
+            'worker' => null,
+            'worker_error' => '',
+            'worker_start_required' => $action === 'restart' && $affected > 0,
         ],
     ]);
 } catch (Throwable $error) {
-    error_log('[UnrealDB job bulk API] ' . $error->getMessage());
+    error_log('[UnrealDB job bulk API] ' . get_class($error) . ': ' . $error->getMessage());
     JsonResponse::error('unavailable', catalog_public_error_message(), 500);
 }

@@ -17,6 +17,8 @@ foreach ([
     'public static function filterCondition(',
     "private const FAILED_OUTCOMES = ['failed', 'rejected', 'unverified']",
     "return \$resultStatus === 'verified' ? 'imported' : \$resultStatus;",
+    "if (in_array(\$status, ['queued', 'running', 'dead_letter', 'cancelled'], true))",
+    "return ['sql' => \$prefix . 'status=?', 'params' => [\$status]];",
     "if (\$status === 'failed')",
     "if (\$status === 'completed')",
 ] as $fragment) {
@@ -33,6 +35,27 @@ foreach ([
 ] as $fragment) {
     job_status_filter_expect(str_contains($statusEndpoint, $fragment), 'Job status endpoint is missing: ' . $fragment);
 }
+
+$bulkEndpoint = file_get_contents(__DIR__ . '/../api/v1/job-bulk.php');
+job_status_filter_expect(is_string($bulkEndpoint), 'Could not read bulk job endpoint.');
+foreach ([
+    'session_write_close()',
+    "SET SESSION innodb_lock_wait_timeout=5",
+    '$limit = 10000;',
+    'SELECT id FROM ue_background_jobs WHERE ',
+    "'worker_start_required'",
+] as $fragment) {
+    job_status_filter_expect(str_contains($bulkEndpoint, $fragment), 'Bulk job endpoint is missing: ' . $fragment);
+}
+job_status_filter_expect(
+    !str_contains($bulkEndpoint, 'new CatalogDetachedWorker('),
+    'Bulk restart still launches detached workers inside the HTTP request.'
+);
+job_status_filter_expect(
+    !str_contains($bulkEndpoint, 'UPDATE ue_background_jobs SET status="queued"')
+        || str_contains($bulkEndpoint, 'id IN ('),
+    'Bulk restart is not bounded to a selected ID batch.'
+);
 
 $page = file_get_contents(__DIR__ . '/../background-jobs.php');
 job_status_filter_expect(is_string($page), 'Could not read Background Jobs page.');
