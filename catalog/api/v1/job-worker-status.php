@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Application\Jobs\CatalogWorkerStatusPolicy;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -74,54 +75,16 @@ try {
     $launcher = new CatalogDetachedWorker($application->config);
     $worker = $launcher->status($queueName, false);
     $counts = job_worker_status_counts($application->db, $queueName);
+    $status = CatalogWorkerStatusPolicy::evaluate(
+        $worker,
+        $counts,
+        $launcher->configuredWorkerCount()
+    );
 
-    $active = !empty($worker['active']);
-    $activeCount = max(0, (int)($worker['active_count'] ?? 0));
-    $launchingCount = max(0, (int)($worker['launching_count'] ?? 0));
-    $desiredCount = max(1, (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount()));
-    $workerState = is_array($worker['state'] ?? null) ? $worker['state'] : [];
-    $stateStatus = strtolower(trim((string)($workerState['status'] ?? '')));
-    $exitReason = strtolower(trim((string)($workerState['exit_reason'] ?? '')));
-    $lastError = trim((string)($workerState['error'] ?? ''));
-    $stateTimestamp = strtotime((string)($workerState['updated_at'] ?? $workerState['started_at'] ?? '')) ?: 0;
-    $stateAge = $stateTimestamp > 0 ? max(0, time() - $stateTimestamp) : PHP_INT_MAX;
-    $restartRecommended = $active && $counts['ready'] > 0 && $counts['running'] === 0 && $stateAge >= 5;
-
-    if ($restartRecommended) {
-        $authoritative = 'stopped_with_queue';
-        $message = $activeCount . ' detached worker process(es) exist, but no ready job has been claimed for '
-            . $stateAge . ' second(s). Restart the worker pool.';
-    } elseif ($active) {
-        $authoritative = 'running';
-        $message = $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.';
-    } elseif ($counts['running'] > 0) {
-        $authoritative = 'orphaned';
-        $message = $counts['running'] . ' database job(s) still say running, but no detached worker process owns this queue.';
-    } elseif ($counts['queued'] > 0) {
-        $authoritative = 'stopped_with_queue';
-        if ($stateStatus === 'failed' || in_array($exitReason, ['fatal_shutdown', 'uncaught_exception'], true)) {
-            $message = 'Worker pool stopped after a failure with ' . $counts['queued'] . ' queued job(s).';
-            if ($lastError !== '') {
-                $message .= ' ' . $lastError;
-            }
-        } elseif ($counts['ready'] === 0) {
-            $message = 'Worker pool is stopped with ' . $counts['queued'] . ' queued job(s), but none is ready yet.';
-        } elseif ($exitReason === 'queue_empty') {
-            $message = 'Worker pool exited without claiming any of the ' . $counts['ready'] . ' ready queued job(s). Review the worker log and restart explicitly.';
-        } elseif ($launchingCount > 0) {
-            $message = 'A worker launch was requested but no process owns a worker lock.';
-        } else {
-            $message = 'Worker pool is stopped with ' . $counts['queued'] . ' queued job(s).';
-        }
-    } else {
-        $authoritative = 'stopped';
-        $message = 'Worker pool is stopped and the queue has no active work.';
-    }
-
-    $worker['authoritative_status'] = $authoritative;
-    $worker['authoritative_message'] = $message;
+    $worker['authoritative_status'] = $status['authoritative_status'];
+    $worker['authoritative_message'] = $status['authoritative_message'];
     $worker['queue_counts'] = $counts;
-    $worker['restart_recommended'] = $restartRecommended;
+    $worker['restart_recommended'] = $status['restart_recommended'];
     $worker['status_read_only'] = true;
     $worker['auto_recovery'] = null;
     $worker['auto_start'] = null;
