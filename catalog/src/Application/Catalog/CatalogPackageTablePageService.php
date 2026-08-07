@@ -1,149 +1,58 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Defines the application class `CatalogPackageTablePageService` for catalog package table page service.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Stable application-facing package-table paging API.
+ *
+ * Persistence and compact/legacy metadata reads are implemented by
+ * PdoPackageTablePageQuery. Keep this facade only while legacy examine pages
+ * still reference the original application class.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Application\Catalog;
 
 use PDO;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
 
-/** Loads bounded Names/Imports/Exports pages from version-2 metadata or legacy SQL. */
 final class CatalogPackageTablePageService
 {
-    public const DEFAULT_PAGE_SIZE = 250;
-
-    /** @var array<string,int> */
-    private static array $formatCache = [];
-
-    /** @var array<string,BlockedCompressedMetadataReader> */
-    private static array $readerCache = [];
+    public const DEFAULT_PAGE_SIZE = PdoPackageTablePageQuery::DEFAULT_PAGE_SIZE;
 
     /** @return array{table:string,index_column:string,count_column:string,columns:list<string>} */
     public static function definition(string $table): array
     {
-        return match (strtolower(trim($table))) {
-            'imports' => [
-                'table' => 'ue_imports',
-                'index_column' => 'import_index',
-                'count_column' => 'import_count',
-                'columns' => ['id','import_index','class_package','class_name','object_name','outer_index','full_path','root_package','relative_object_path','is_common'],
-            ],
-            'exports' => [
-                'table' => 'ue_exports',
-                'index_column' => 'export_index',
-                'count_column' => 'export_count',
-                'columns' => ['id','export_index','class_name','object_name','outer_index','local_path','full_path','object_flags','serial_size','serial_offset'],
-            ],
-            default => [
-                'table' => 'ue_names',
-                'index_column' => 'name_index',
-                'count_column' => 'name_count',
-                'columns' => ['id','name_index','name_text','flags'],
-            ],
-        };
+        return PdoPackageTablePageQuery::definition($table);
     }
 
     public static function normalizeTable(string $table): string
     {
-        $table = strtolower(trim($table));
-        return in_array($table, ['names', 'imports', 'exports'], true) ? $table : 'names';
+        return PdoPackageTablePageQuery::normalizeTable($table);
     }
 
     public static function normalizePageSize(int $size): int
     {
-        return in_array($size, [100, 250, 500, 1000], true) ? $size : self::DEFAULT_PAGE_SIZE;
+        return PdoPackageTablePageQuery::normalizePageSize($size);
     }
 
     public static function targetIndex(string $target, string $table): ?int
     {
-        $table = self::normalizeTable($table);
-        $prefix = match ($table) {
-            'imports' => 'import-',
-            'exports' => 'export-',
-            default => 'name-',
-        };
-        if (!str_starts_with($target, $prefix)) {
-            return null;
-        }
-        $value = substr($target, strlen($prefix));
-        return preg_match('/^\d+$/', $value) === 1 ? (int)$value : null;
+        return PdoPackageTablePageQuery::targetIndex($target, $table);
     }
 
     public static function pageForIndex(int $index, int $pageSize): int
     {
-        return max(1, intdiv(max(0, $index), self::normalizePageSize($pageSize)) + 1);
+        return PdoPackageTablePageQuery::pageForIndex($index, $pageSize);
     }
 
     /** @return array{rows:list<array<string,mixed>>,page:int,pages:int,total:int,page_size:int,start:int,end:int} */
     public static function fetchPage(PDO $db, array $file, string $table, int $page, int $pageSize): array
     {
-        $table = self::normalizeTable($table);
-        $definition = self::definition($table);
-        $pageSize = self::normalizePageSize($pageSize);
-        $total = max(0, (int)($file[$definition['count_column']] ?? 0));
-        $pages = max(1, (int)ceil($total / $pageSize));
-        $page = max(1, min($page, $pages));
-        $start = ($page - 1) * $pageSize;
-
-        $reader = self::blockedReader($db, (int)$file['id']);
-        if ($reader !== null) {
-            $rows = $reader->page((int)$file['id'], $table, $start, $pageSize);
-        } else {
-            $through = $start + $pageSize;
-            $statement = $db->prepare(
-                'SELECT ' . implode(',', $definition['columns'])
-                . ' FROM ' . $definition['table']
-                . ' WHERE file_id=? AND ' . $definition['index_column'] . '>=? AND ' . $definition['index_column'] . '<?'
-                . ' ORDER BY ' . $definition['index_column']
-            );
-            $statement->execute([(int)$file['id'], $start, $through]);
-            $fetched = $statement->fetchAll(PDO::FETCH_ASSOC);
-            $rows = is_array($fetched) ? $fetched : [];
-        }
-
-        return [
-            'rows' => $rows,
-            'page' => $page,
-            'pages' => $pages,
-            'total' => $total,
-            'page_size' => $pageSize,
-            'start' => $total > 0 ? $start + 1 : 0,
-            'end' => min($total, $start + count($rows)),
-        ];
+        return PdoPackageTablePageQuery::fetchPage($db, $file, $table, $page, $pageSize);
     }
 
     /** @param list<string> $values @return array<string,int> */
     public static function nameLookup(PDO $db, int $fileId, array $values): array
     {
-        $values = self::uniqueValues($values);
-        if ($values === []) {
-            return [];
-        }
-        $reader = self::blockedReader($db, $fileId);
-        if ($reader !== null) {
-            return $reader->findNameIndexes($fileId, $values);
-        }
-
-        $lookup = [];
-        foreach (array_chunk($values, 200) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $statement = $db->prepare(
-                'SELECT name_index,name_text FROM ue_names WHERE file_id=? AND name_text IN (' . $placeholders . ')'
-            );
-            $statement->execute(array_merge([$fileId], $chunk));
-            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-                $lookup[self::key((string)$row['name_text'])] = (int)$row['name_index'];
-            }
-        }
-        return $lookup;
+        return PdoPackageTablePageQuery::nameLookup($db, $fileId, $values);
     }
 
     /**
@@ -152,154 +61,12 @@ final class CatalogPackageTablePageService
      */
     public static function nameUsage(PDO $db, int $fileId, array $names): array
     {
-        $names = self::uniqueValues($names);
-        $reader = self::blockedReader($db, $fileId);
-        if ($reader !== null) {
-            return $reader->nameUsage($fileId, $names);
-        }
-
-        $usage = [];
-        foreach ($names as $name) {
-            $usage[self::key($name)] = [
-                'imports_count' => 0,
-                'imports_target' => '',
-                'exports_count' => 0,
-                'exports_target' => '',
-            ];
-        }
-        if ($names === []) {
-            return $usage;
-        }
-
-        foreach (array_chunk($names, 150) as $chunk) {
-            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
-            $importSql = 'SELECT value,COUNT(DISTINCT row_index) row_count,MIN(row_index) first_index FROM ('
-                . 'SELECT class_package value,import_index row_index FROM ue_imports WHERE file_id=? AND class_package IN (' . $placeholders . ') '
-                . 'UNION ALL SELECT class_name value,import_index row_index FROM ue_imports WHERE file_id=? AND class_name IN (' . $placeholders . ') '
-                . 'UNION ALL SELECT object_name value,import_index row_index FROM ue_imports WHERE file_id=? AND object_name IN (' . $placeholders . ')'
-                . ') x GROUP BY value';
-            $args = array_merge([$fileId], $chunk, [$fileId], $chunk, [$fileId], $chunk);
-            $statement = $db->prepare($importSql);
-            $statement->execute($args);
-            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-                $key = self::key((string)$row['value']);
-                if (isset($usage[$key])) {
-                    $usage[$key]['imports_count'] += (int)$row['row_count'];
-                    if ($usage[$key]['imports_target'] === '') {
-                        $usage[$key]['imports_target'] = 'import-' . (int)$row['first_index'];
-                    }
-                }
-            }
-
-            $exportSql = 'SELECT value,COUNT(DISTINCT row_index) row_count,MIN(row_index) first_index FROM ('
-                . 'SELECT class_name value,export_index row_index FROM ue_exports WHERE file_id=? AND class_name IN (' . $placeholders . ') '
-                . 'UNION ALL SELECT object_name value,export_index row_index FROM ue_exports WHERE file_id=? AND object_name IN (' . $placeholders . ')'
-                . ') x GROUP BY value';
-            $args = array_merge([$fileId], $chunk, [$fileId], $chunk);
-            $statement = $db->prepare($exportSql);
-            $statement->execute($args);
-            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-                $key = self::key((string)$row['value']);
-                if (isset($usage[$key])) {
-                    $usage[$key]['exports_count'] += (int)$row['row_count'];
-                    if ($usage[$key]['exports_target'] === '') {
-                        $usage[$key]['exports_target'] = 'export-' . (int)$row['first_index'];
-                    }
-                }
-            }
-        }
-        return $usage;
+        return PdoPackageTablePageQuery::nameUsage($db, $fileId, $names);
     }
 
     /** @param list<array<string,mixed>> $imports @return array<int,array<string,mixed>> */
     public static function dependencyMap(PDO $db, int $fileId, array $imports): array
     {
-        $reader = self::blockedReader($db, $fileId);
-        if ($reader !== null) {
-            $indexes = array_values(array_map(
-                static fn(array $row): int => (int)($row['import_index'] ?? -1),
-                $imports
-            ));
-            $byIndex = $reader->dependenciesForImportIndexes($fileId, $indexes);
-            $map = [];
-            foreach ($imports as $row) {
-                $index = (int)($row['import_index'] ?? -1);
-                if (isset($byIndex[$index])) {
-                    $map[(int)($row['id'] ?? ($index + 1))] = $byIndex[$index];
-                }
-            }
-            return $map;
-        }
-
-        $ids = array_values(array_filter(array_map(static fn(array $row): int => (int)($row['id'] ?? 0), $imports)));
-        if ($ids === []) {
-            return [];
-        }
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $statement = $db->prepare(
-            'SELECT import_id,status,resolution_source,resolution_confidence,required_package,required_object_path '
-            . 'FROM ue_dependencies WHERE file_id=? AND import_id IN (' . $placeholders . ')'
-        );
-        $statement->execute(array_merge([$fileId], $ids));
-        $map = [];
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $row) {
-            $map[(int)$row['import_id']] = $row;
-        }
-        return $map;
-    }
-
-    private static function blockedReader(PDO $db, int $fileId): ?BlockedCompressedMetadataReader
-    {
-        if ($fileId < 1 || self::metadataFormat($db, $fileId) < 2) {
-            return null;
-        }
-        $storageRoot = self::storageRoot();
-        if ($storageRoot === '') {
-            return null;
-        }
-        $key = spl_object_id($db) . ':' . $storageRoot;
-        return self::$readerCache[$key] ??= new BlockedCompressedMetadataReader($db, $storageRoot);
-    }
-
-    private static function metadataFormat(PDO $db, int $fileId): int
-    {
-        $key = spl_object_id($db) . ':' . $fileId;
-        if (array_key_exists($key, self::$formatCache)) {
-            return self::$formatCache[$key];
-        }
-        $statement = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
-        $statement->execute([$fileId]);
-        return self::$formatCache[$key] = (int)($statement->fetchColumn() ?: 0);
-    }
-
-    private static function storageRoot(): string
-    {
-        if (!function_exists('catalog_config')) {
-            return '';
-        }
-        try {
-            $config = \catalog_config();
-        } catch (\Throwable) {
-            return '';
-        }
-        return is_array($config) ? trim((string)($config['storage_path'] ?? '')) : '';
-    }
-
-    /** @param list<string> $values @return list<string> */
-    private static function uniqueValues(array $values): array
-    {
-        $out = [];
-        foreach ($values as $value) {
-            $value = trim($value);
-            if ($value !== '') {
-                $out[$value] = true;
-            }
-        }
-        return array_keys($out);
-    }
-
-    private static function key(string $value): string
-    {
-        return mb_strtolower(trim($value), 'UTF-8');
+        return PdoPackageTablePageQuery::dependencyMap($db, $fileId, $imports);
     }
 }
