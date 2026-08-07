@@ -24,10 +24,8 @@ maintenance_projection_expect(
 );
 maintenance_projection_expect(
     str_contains($policy, 'JobType::RECONCILE_CATALOG_PROJECTIONS')
-        && str_contains($policy, 'self::DEPENDENCY_HEAVY')
-        && str_contains($policy, "'projection:file:'")
-        && str_contains($policy, "'projection:game:'"),
-    'Projection reconciliation is not serialized as dependency-heavy work.'
+        && str_contains($policy, 'self::DEPENDENCY_HEAVY'),
+    'Projection reconciliation is not classified as dependency-heavy work.'
 );
 maintenance_projection_expect(
     str_contains($factory, 'new CatalogProjectionReconciliationJobHandler($db, $config)')
@@ -36,11 +34,14 @@ maintenance_projection_expect(
 );
 maintenance_projection_expect(
     str_contains($queue, 'PdoJobQueue')
-        && str_contains($queue, 'CatalogDetachedWorker')
+        && str_contains($queue, "CONCURRENCY_KEY = 'projection:catalog-maintenance'")
+        && str_contains($queue, 'CatalogJobResourceLimitStore')
+        && str_contains($queue, 'JobResourcePolicy::DEPENDENCY_HEAVY')
+        && !str_contains($queue, 'CatalogDetachedWorker')
         && str_contains($queue, 'catalog-projections:')
         && str_contains($queue, "'game_ids' => \$gameIds")
         && str_contains($queue, "'package_names' => \$packageNames"),
-    'Projection reconciliation queue does not preserve old/new game and package context.'
+    'Projection reconciliation queue is not globally serialized or still launches workers from the foreground request.'
 );
 
 foreach ([
