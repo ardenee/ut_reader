@@ -8,20 +8,23 @@ function queue_reporting_expect(bool $condition, string $message): void
     }
 }
 
-$status = file_get_contents(__DIR__ . '/../api/v1/job-worker-status.php');
+$workerScript = file_get_contents(__DIR__ . '/../bin/catalog-worker-detached.php');
 $run = file_get_contents(__DIR__ . '/../api/v1/job-run.php');
 $store = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php');
 $projectionQueue = file_get_contents(__DIR__ . '/../src/Application/Maintenance/CatalogProjectionReconciliationQueue.php');
-foreach (compact('status', 'run', 'store', 'projectionQueue') as $name => $source) {
+foreach (compact('workerScript', 'run', 'store', 'projectionQueue') as $name => $source) {
     queue_reporting_expect(is_string($source) && $source !== '', $name . ' source is missing.');
 }
 
 queue_reporting_expect(
-    str_contains($status, "\$workerState['attempted'] = \$attempted")
-        && str_contains($status, "\$workerState['processed'] = \$completedSinceStart")
-        && str_contains($status, 'status="completed" AND completed_at>=?')
-        && str_contains($status, 'job_worker_status_pool_started_at'),
-    'Worker status still reports attempts/retries as completed processing.'
+    str_contains($workerScript, '$attempted = 0;')
+        && str_contains($workerScript, 'while ($attempted < $maxJobs)')
+        && str_contains($workerScript, '$attempted++;')
+        && str_contains($workerScript, "if (\$status === 'completed')")
+        && str_contains($workerScript, '$processed++;')
+        && str_contains($workerScript, "'attempted' => \$attempted")
+        && !str_contains($workerScript, 'while ($processed < $maxJobs)'),
+    'Worker processed count still includes retries, cancellations or other non-completed attempts.'
 );
 
 queue_reporting_expect(
