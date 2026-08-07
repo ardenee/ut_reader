@@ -1,7 +1,7 @@
 Options -Indexes
 
-# The top-level UE readers and new/ viewer are development tools. PHP can still
-# include their reader classes from the catalog application, but HTTP requests
-# must never execute their unauthenticated upload/viewer scripts.
+# The top-level UE readers are development tools. PHP can still include their
+# reader classes from the catalog application, but HTTP requests must never
+# execute their unauthenticated upload/viewer scripts.
 RewriteEngine On
-RewriteRule ^(?:new|UE1|UE2|UE3|UE4|UE5)(?:/|$) - [F,L]
+RewriteRule ^(?:UE1|UE2|UE3|UE4|UE5)(?:/|$) - [F,L]

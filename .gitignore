@@ -13,7 +13,6 @@ config.local.*
 /UE3/uploads/
 /UE4/uploads/
 /UE5/uploads/
-/new/uploads/
 
 /output/
 /tmp/
