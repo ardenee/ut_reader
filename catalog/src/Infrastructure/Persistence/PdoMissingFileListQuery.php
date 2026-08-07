@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 
 final class PdoMissingFileListQuery
@@ -60,7 +59,7 @@ final class PdoMissingFileListQuery
                 $args
             );
         } else {
-            $dependencySource = CatalogDependencyReadSource::sql($this->db);
+            $dependencySource = PdoDependencyReadSource::sql($this->db);
             $rows = \catalog_all(
                 $this->db,
                 'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
