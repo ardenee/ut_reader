@@ -1,14 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogProjectionReconciliationJobHandler` for catalog projection
- *          reconciliation job handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Reconciles materialized catalogue projections after direct maintenance writes.
+ * Why: Provider changes can affect many dependency owners; reconciliation must target only relevant Imports and avoid no-op rewrites.
+ * Role: Infrastructure durable-job handler for catalog.reconcile_catalog_projections.
  */
 declare(strict_types=1);
 
@@ -16,13 +11,14 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Metadata\CompactDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
@@ -125,31 +121,82 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
         ]);
 
         $affectedIds = $this->affectedFileIds($gameIds, $packageNames, $fileId, $summaries->available());
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
+        $affectedTotal = count($affectedIds);
         $processed = 0;
         $failureCount = 0;
         $failures = [];
+        $dependencyFilesChanged = 0;
+        $compactNoopFiles = 0;
+        $targetedImports = 0;
+        $summaryRefreshIds = [];
+
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        $compactRebuilder = $storageRoot !== ''
+            ? new CompactDependencyRebuilder($this->db, $storageRoot)
+            : null;
+        $formatStatement = $this->db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
+        $legacyScannerLoaded = false;
+
         foreach ($affectedIds as $index => $affectedFileId) {
             try {
-                \scanner_rebuild_dependencies(
-                    $this->db,
-                    $this->config,
-                    $affectedFileId,
-                    static function (array $progress) use ($context, $index, $affectedIds): void {
-                        $context->heartbeatIfDue([
-                            'stage' => 'dependencies',
-                            'done' => $index,
-                            'total' => max(1, count($affectedIds)),
-                            'percent' => 25 + (int)floor(($index * 50) / max(1, count($affectedIds))),
-                            'message' => (string)($progress['message'] ?? 'Refreshing affected dependency owner.'),
-                        ]);
-                    },
-                    0,
-                    100,
-                    'Reconciling dependency owner ' . ($index + 1) . '/' . count($affectedIds)
-                );
-                $summaries->rebuildFile($affectedFileId);
+                $formatStatement->execute([$affectedFileId]);
+                $formatVersion = (int)$formatStatement->fetchColumn();
+                $message = 'Reconciling dependency owner ' . ($index + 1) . '/' . $affectedTotal;
+
+                if ($formatVersion >= 2) {
+                    if ($compactRebuilder === null) {
+                        throw new \RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
+                    }
+                    $result = $compactRebuilder->rebuildForPackages($affectedFileId, $packageNames);
+                    $changed = (int)($result['dependencies_changed'] ?? 0);
+                    $targeted = (int)($result['imports_processed'] ?? 0);
+                    $importsTotal = (int)($result['imports_total'] ?? $targeted);
+                    $targetedImports += $targeted;
+                    $message .= ': targeted compact imports=' . $targeted . '/' . $importsTotal
+                        . ', changed=' . $changed;
+                    if ($changed === 0) {
+                        $compactNoopFiles++;
+                    } else {
+                        $dependencyFilesChanged++;
+                        $summaryRefreshIds[] = $affectedFileId;
+                    }
+                } else {
+                    if (!$legacyScannerLoaded) {
+                        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
+                        $legacyScannerLoaded = true;
+                    }
+                    \scanner_rebuild_dependencies(
+                        $this->db,
+                        $this->config,
+                        $affectedFileId,
+                        static function (array $progress) use ($context, $index, $affectedTotal): void {
+                            $context->heartbeatIfDue([
+                                'stage' => 'dependencies',
+                                'done' => $index,
+                                'total' => max(1, $affectedTotal),
+                                'percent' => 25 + (int)floor(($index * 50) / max(1, $affectedTotal)),
+                                'message' => (string)($progress['message'] ?? 'Refreshing affected dependency owner.'),
+                            ]);
+                        },
+                        0,
+                        100,
+                        $message
+                    );
+                    $dependencyFilesChanged++;
+                    $summaryRefreshIds[] = $affectedFileId;
+                    $message .= ': legacy dependency rows rebuilt';
+                }
+
                 $processed++;
+                $context->heartbeatIfDue([
+                    'stage' => 'dependencies',
+                    'done' => $index + 1,
+                    'total' => max(1, $affectedTotal),
+                    'percent' => 25 + (int)floor((($index + 1) * 50) / max(1, $affectedTotal)),
+                    'message' => $message,
+                    'changed_files' => $dependencyFilesChanged,
+                    'no_op_files' => $compactNoopFiles,
+                ]);
             } catch (JobCancellationRequested $error) {
                 throw $error;
             } catch (Throwable $error) {
@@ -159,6 +206,19 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 }
                 error_log('[UnrealDB projection reconciliation] affected_file_id=' . $affectedFileId . ' failed: ' . $error->getMessage());
             }
+        }
+
+        $summaryFilesRefreshed = 0;
+        if ($summaryRefreshIds !== []) {
+            $context->checkpoint([
+                'stage' => 'dependencies',
+                'done' => max(1, $affectedTotal),
+                'total' => max(1, $affectedTotal),
+                'percent' => 76,
+                'message' => 'Refreshing package summaries for ' . count($summaryRefreshIds) . ' changed dependency owner(s).',
+            ]);
+            $bulkSummary = $summaries->rebuildFiles($summaryRefreshIds);
+            $summaryFilesRefreshed = (int)($bulkSummary['files'] ?? 0);
         }
 
         $context->checkpoint([
@@ -183,7 +243,9 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             'total' => 4,
             'percent' => 100,
             'message' => 'Catalogue projections reconciled.',
-            'affected_files' => count($affectedIds),
+            'affected_files' => $affectedTotal,
+            'changed_files' => $dependencyFilesChanged,
+            'no_op_files' => $compactNoopFiles,
             'failures' => $failureCount,
         ]);
 
@@ -194,8 +256,12 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             'game_ids' => $gameIds,
             'package_names' => $packageNames,
             'dependency_summary_rows' => (int)($summaryResult['summary_rows'] ?? 0),
-            'affected_files' => count($affectedIds),
+            'affected_files' => $affectedTotal,
             'processed_files' => $processed,
+            'dependency_files_changed' => $dependencyFilesChanged,
+            'compact_no_op_files' => $compactNoopFiles,
+            'targeted_imports_processed' => $targetedImports,
+            'summary_files_refreshed' => $summaryFilesRefreshed,
             'stats_refreshed' => $statsRefreshed,
             'failure_count' => $failureCount,
             'failures' => $failures,
@@ -219,7 +285,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                         . 'WHERE s.game_id=? AND s.required_package IN (' . $placeholders . ') '
                         . 'AND f.scan_status="verified"';
                 } else {
-                    $sql = 'SELECT DISTINCT d.file_id FROM ' . CatalogDependencyReadSource::sql($this->db) . ' d '
+                    $sql = 'SELECT DISTINCT d.file_id FROM ' . PdoDependencyReadSource::sql($this->db) . ' d '
                         . 'JOIN ue_files f ON f.id=d.file_id '
                         . 'WHERE f.game_id=? AND d.required_package IN (' . $placeholders . ') '
                         . 'AND f.scan_status="verified"';
