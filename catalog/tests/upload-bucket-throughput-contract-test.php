@@ -16,8 +16,8 @@ function upload_bucket_throughput_expect(bool $condition, string $message): void
 }
 
 $root = dirname(__DIR__);
-$client = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
-$hashClient = file_get_contents($root . '/assets/upload-file-hash.js');
+$client = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
+$hashClient = file_get_contents($root . '/assets/upload-file-inspector-worker.js');
 $chunkApi = file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
 $batchApi = file_get_contents($root . '/api/v1/upload-bucket-batch.php');
 $batchQueue = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketBatchQueue.php');
@@ -28,7 +28,7 @@ $identityProcessor = file_get_contents($root . '/src/Infrastructure/Import/Catal
 $duplicateDetector = file_get_contents($root . '/src/Infrastructure/Import/CatalogUploadDuplicateDetector.php');
 $redirectStream = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php');
 $redirectPayload = file_get_contents($root . '/lib/CatalogRedirectArchivePayload.php');
-$manager = file_get_contents($root . '/assets/background-jobs.js');
+$manager = file_get_contents($root . '/assets/background-jobs-stable.js');
 $bulkApi = file_get_contents($root . '/api/v1/job-bulk.php');
 $statusApi = file_get_contents($root . '/api/v1/job-status.php');
 $workerStatusApi = file_get_contents($root . '/api/v1/job-worker-status.php');
@@ -40,9 +40,9 @@ foreach (compact('client', 'hashClient', 'chunkApi', 'batchApi', 'batchQueue', '
 }
 
 upload_bucket_throughput_expect(
-    str_contains($client, "const pausePromise = processingState('begin_batch')")
+    str_contains($client, "initialProcessing = await processingState('begin_batch')")
         && str_contains($client, 'await uploadFile(file')
-        && str_contains($client, 'await waitUntilPaused(pausePromise)')
+        && str_contains($client, 'await waitUntilPaused(initialProcessing, lineId)')
         && str_contains($client, 'upload_ids: [item.uploadId]')
         && str_contains($client, 'start_worker: false')
         && str_contains($client, "upload_ids: [],")
@@ -52,7 +52,9 @@ upload_bucket_throughput_expect(
 upload_bucket_throughput_expect(
     str_contains($hashClient, 'class Md5')
         && str_contains($hashClient, 'class Sha1')
-        && str_contains($hashClient, 'hashFile'),
+        && str_contains($hashClient, 'async function inspectFile(id, file)')
+        && str_contains($hashClient, 'md5.digestHex()')
+        && str_contains($hashClient, 'sha1.digestHex()'),
     'The browser does not calculate MD5 and SHA-1 before an ordinary file upload.'
 );
 upload_bucket_throughput_expect(
@@ -60,7 +62,8 @@ upload_bucket_throughput_expect(
         && str_contains($client, 'if (checked.duplicate)')
         && str_contains($client, "initData.append('md5'")
         && str_contains($client, "initData.append('sha1'")
-        && str_contains($client, 'isRedirect(file)'),
+        && str_contains($hashClient, "if (extension === 'uz' || extension === 'uz2' || extension === 'uz3')")
+        && str_contains($hashClient, "return {md5: '', sha1: '', extension: extension, redirect: true"),
     'The browser does not separate ordinary physical preflight from redirect wrapper transfer.'
 );
 upload_bucket_throughput_expect(
@@ -178,7 +181,7 @@ upload_bucket_throughput_expect(
 upload_bucket_throughput_expect(
     str_contains($client, 'xhr.timeout')
         && str_contains($client, 'xhr.ontimeout')
-        && str_contains($client, 'The file remains complete in durable staging'),
+        && str_contains($client, 'partial upload remains in durable staging'),
     'Individual requests can wait forever or a failed final queue request discards the staged file.'
 );
 upload_bucket_throughput_expect(
@@ -222,7 +225,8 @@ upload_bucket_throughput_expect(
     'Background Jobs does not use real pagination up to 1,000 rows.'
 );
 upload_bucket_throughput_expect(
-    substr_count($page, 'assets/background-jobs.js') === 1
+    str_contains($page, 'assets/background-jobs-stable.js?v=')
+        && !str_contains($page, 'assets/background-jobs.js?v=')
         && !str_contains($page, 'background-jobs-authority.js')
         && !str_contains($page, 'background-jobs-running-controls.js')
         && !str_contains($page, 'background-jobs-stale-worker.js'),

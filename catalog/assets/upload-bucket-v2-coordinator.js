@@ -123,10 +123,6 @@
         return extension !== '' && allowedExtensions.has(extension);
     }
 
-    function isRedirectName(name) {
-        return /\.(?:uz|uz2|uz3)$/i.test(String(name || ''));
-    }
-
     function fileKey(file, relativePath) {
         return [file.name, file.size, file.lastModified || 0, relativePath || file.name].join('|');
     }

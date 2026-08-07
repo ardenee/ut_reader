@@ -16,7 +16,7 @@ function upload_bucket_finalize_expect(bool $condition, string $message): void
 }
 
 $root = dirname(__DIR__);
-$coordinator = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
+$coordinator = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
 $endpoint = file_get_contents($root . '/api/v1/upload-bucket-batch.php');
 $bootstrap = file_get_contents($root . '/api/v1/_bootstrap.php');
 
@@ -25,15 +25,13 @@ foreach (compact('coordinator', 'endpoint', 'bootstrap') as $name => $source) {
 }
 
 upload_bucket_finalize_expect(
-    str_contains($coordinator, 'async function finalizeFiles(files)')
-        && str_contains($coordinator, 'for (let index = 0; index < files.length; index++)')
+    str_contains($coordinator, 'async function finalizeOne(item, lineId)')
         && str_contains($coordinator, 'upload_ids: [item.uploadId]')
         && str_contains($coordinator, 'prepare_queue: !queuePrepared')
         && str_contains($coordinator, 'start_worker: false')
         && str_contains($coordinator, "upload_ids: [],")
         && str_contains($coordinator, 'start_worker: true')
-        && str_contains($coordinator, 'totals.retained++')
-        && str_contains($coordinator, 'Retry this batch to finalise it')
+        && str_contains($coordinator, 'queuePrepared = true;')
         && !str_contains($coordinator, 'JSON.stringify({upload_ids: uploadIds})'),
     'Browser finalisation is not performed and recorded one staged file at a time.'
 );

@@ -196,7 +196,7 @@ CSS;
         'This list is database-paginated. Possible games are shown only when verified files reference the staged package name.',
         [
             'Index existing queue files' => 'unverified-database-import.php',
-            'Upload bucket' => 'upload-bucket.php',
+            'Upload bucket' => 'upload-bucket-v2.php',
             'Upload to game' => 'profiled-upload.php',
         ]
     );

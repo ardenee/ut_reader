@@ -57,7 +57,7 @@ try {
  * the extension-specific Epic UZ/UZ2/UZ3 decoders remain responsible for the
  * actual format validation.
  */
-if (in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['upload-bucket.php', 'upload-bucket-chunk.php'], true)) {
+if (in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['upload-bucket-chunk.php'], true)) {
     $redirectLimit = (int)(getenv('UNREALDB_REDIRECT_MAX_OUTPUT_BYTES') ?: 0);
     if ($redirectLimit <= 0) {
         putenv('UNREALDB_REDIRECT_MAX_OUTPUT_BYTES=' . (PHP_INT_SIZE >= 8 ? '2147483647' : (string)PHP_INT_MAX));

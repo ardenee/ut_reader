@@ -18,8 +18,8 @@ function live_layout_expect(bool $condition, string $message): void
 $root = dirname(__DIR__);
 $page = file_get_contents($root . '/background-jobs.php');
 $jobs = file_get_contents($root . '/assets/background-jobs-stable.js');
-$uploadPage = file_get_contents($root . '/upload-bucket.php');
-$coordinator = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
+$uploadPage = file_get_contents($root . '/upload-bucket-v2.php');
+$coordinator = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
 $workerQueue = file_get_contents($root . '/src/Infrastructure/Persistence/WorkerJobQueue.php');
 $statusApi = file_get_contents($root . '/api/v1/job-status.php');
 
@@ -71,7 +71,7 @@ live_layout_expect(
 
 live_layout_expect(
     str_contains($uploadPage, 'data-processing-url=')
-        && str_contains($uploadPage, 'upload-bucket-coordinator.js')
+        && str_contains($uploadPage, 'upload-bucket-v2-coordinator.js')
         && str_contains($coordinator, 'Open processing jobs')
         && str_contains($coordinator, 'Review Upload Bucket')
         && !str_contains($coordinator, 'window.location.assign(queueUrl)'),

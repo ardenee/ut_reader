@@ -21,7 +21,7 @@ $redirectProcessor = file_get_contents($root . '/src/Infrastructure/Redirect/Cat
 $legacyQueue = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketUploadQueue.php');
 $batchHandler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $legacyHandler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php');
-$client = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
+$client = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
 $manager = file_get_contents($root . '/assets/background-jobs.js');
 
 foreach (compact('stream', 'redirectProcessor', 'legacyQueue', 'batchHandler', 'legacyHandler', 'client', 'manager') as $name => $source) {

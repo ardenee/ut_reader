@@ -1,11 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders the newer Upload Bucket interface that uses the JavaScript/API resumable uploader.
- * Why: It exists to evolve the upload workflow without immediately removing the established Upload Bucket route.
- * Role: New upload UI linked separately as `Upload Bucket (New)` and covered by its own contract tests.
- * Audit: Parallel implementation with `upload-bucket.php`; substantial overlap exists and should be consolidated once
- *        the replacement is proven.
+ * Purpose: Renders the canonical Upload Bucket interface using the JavaScript/API resumable uploader.
+ * Why: This is the proven upload workflow and replaces the retired legacy uploader while retaining the same server APIs.
+ * Role: Primary Upload Bucket UI for unsorted files, resumable transfer, validation, and background queue handoff.
+ * Audit: Canonical implementation; keep `upload-bucket.php` only as a temporary compatibility redirect.
  */
 declare(strict_types=1);
 
@@ -83,7 +82,7 @@ function upload_bucket_v2_chunk_bytes(array $config): int
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    if (!catalog_require_admin_page('Upload Bucket (New)')) {
+    if (!catalog_require_admin_page('Upload Bucket')) {
         exit;
     }
 
@@ -103,7 +102,7 @@ try {
     $chunkBytes = upload_bucket_v2_chunk_bytes($config);
     $processingUrl = 'background-jobs.php?queue=catalog%3Abucket-processing';
 
-    catalog_head('Upload Bucket (New)');
+    catalog_head('Upload Bucket');
 
     echo <<<'CSS'
 <style>
@@ -141,12 +140,11 @@ try {
 CSS;
 
     echo CatalogUi::pageHeader(
-        'Upload Bucket (New)',
+        'Upload Bucket',
         'One file is inspected, uploaded and queued at a time. Large Chrome folder selections use incremental directory discovery instead of constructing and copying one enormous FileList.',
         [
             'Upload Issues' => 'upload-issues.php',
             'System Errors' => 'system-errors.php',
-            'Legacy Upload Bucket' => 'upload-bucket.php',
             'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
             'Processing Jobs' => $processingUrl,
             'Upload Files to Game' => 'profiled-upload.php',
@@ -219,7 +217,7 @@ CSS;
     echo '<p class="bucket-actions"><a class="button" href="upload-issues.php">Review upload issues</a>'
         . '<a class="button secondary" href="unverified-files.php?source_game_id=-1">Review bucket / assign files</a>'
         . '<a class="button secondary" href="' . catalog_h($processingUrl) . '">Processing jobs</a>'
-        . '<a class="button secondary" href="upload-bucket.php">Legacy upload page</a></p>';
+        . '</p>';
     echo '</div></section>';
 
     $issueRecorderPath = __DIR__ . '/assets/upload-bucket-v2-issue-recorder.js';

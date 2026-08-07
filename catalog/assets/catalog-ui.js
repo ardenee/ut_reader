@@ -71,7 +71,7 @@
                     ['Local Source Scan', 'source-scan.php'],
                     ['HTTP Source Scan', 'http-source-scan.php'],
                     ['Upload Files', 'profiled-upload.php'],
-                    ['Upload Bucket', 'upload-bucket.php'],
+                    ['Upload Bucket', 'upload-bucket-v2.php'],
                     ['PAK Import', 'pak-import.php'],
                     ['Storage Audit', 'storage-audit.php']
                 ]

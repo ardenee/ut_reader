@@ -17,19 +17,22 @@ function ub_v2_expect(bool $condition, string $message): void
 
 $root = dirname(__DIR__);
 $page = file_get_contents($root . '/upload-bucket-v2.php');
+$legacyRoute = file_get_contents($root . '/upload-bucket.php');
 $coordinator = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
 $worker = file_get_contents($root . '/assets/upload-file-inspector-worker.js');
 $workerCompatibility = file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
 $navigation = file_get_contents($root . '/lib/CatalogNavigation.php');
 
-foreach (compact('page', 'coordinator', 'worker', 'workerCompatibility', 'navigation') as $name => $source) {
+foreach (compact('page', 'legacyRoute', 'coordinator', 'worker', 'workerCompatibility', 'navigation') as $name => $source) {
     ub_v2_expect(is_string($source) && $source !== '', $name . ' source is missing.');
 }
 
 ub_v2_expect(
-    str_contains($navigation, "'Upload Bucket (New)' => \$root . 'upload-bucket-v2.php'")
-        && str_contains($navigation, "'Upload Bucket (Legacy)' => \$root . 'upload-bucket.php'"),
-    'The new and legacy Upload Bucket pages are not both available from navigation.'
+    str_contains($navigation, "'Upload Bucket' => \$root . 'upload-bucket-v2.php'")
+        && !str_contains($navigation, 'Upload Bucket (Legacy)')
+        && str_contains($legacyRoute, "header('Location: upload-bucket-v2.php', true, 302)")
+        && !str_contains($legacyRoute, 'upload-bucket-coordinator.js'),
+    'The canonical Upload Bucket route or legacy compatibility redirect is incorrect.'
 );
 
 ub_v2_expect(
@@ -44,7 +47,7 @@ ub_v2_expect(
         && str_contains($page, 'stores the uncompressed package')
         && str_contains($page, 'CHECKED : READY : UPLOADED : QUEUED : UPLOADED')
         && str_contains($page, '.uz accepts both historic 1234 and 5678'),
-    'The new Upload Bucket page does not expose incremental folder selection, errors-only status, compact status or redirect policy.'
+    'The canonical Upload Bucket page does not expose incremental folder selection, errors-only status, compact status or redirect policy.'
 );
 
 ub_v2_expect(

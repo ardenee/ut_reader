@@ -152,7 +152,7 @@ try {
         'Upload Issues',
         'Persistent failures from Upload Bucket v2 are retained here after the browser page is closed. Downstream processing failures remain authoritative Background Job records and are shown below.',
         [
-            'Upload Bucket (New)' => 'upload-bucket-v2.php',
+            'Upload Bucket' => 'upload-bucket-v2.php',
             'Review Unverified Files' => 'unverified-files.php?source_game_id=-1',
             'Background Jobs' => 'background-jobs.php?queue=' . rawurlencode($processingQueues[0]),
         ]

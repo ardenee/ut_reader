@@ -16,7 +16,7 @@ function upload_issues_expect(bool $condition, string $message): void
 }
 
 $root = dirname(__DIR__);
-$migration = file_get_contents($root . '/migrations/202607310001_upload_bucket_issue_review.php');
+$migration = file_get_contents($root . '/install.sql');
 $store = file_get_contents($root . '/src/Infrastructure/Import/CatalogUploadBucketIssueStore.php');
 $api = file_get_contents($root . '/api/v1/upload-bucket-issue.php');
 $recorder = file_get_contents($root . '/assets/upload-bucket-v2-issue-recorder.js');
@@ -30,8 +30,8 @@ foreach (compact('migration', 'store', 'api', 'recorder', 'workerCompatibility',
 }
 
 upload_issues_expect(
-    str_contains($migration, "'version' => '202607310001'")
-        && str_contains($migration, "'ue_upload_bucket_issues'")
+    str_contains($migration, '-- 202607310001: persistent Upload Bucket issues.')
+        && str_contains($migration, 'CREATE TABLE ue_upload_bucket_issues')
         && str_contains($migration, 'UNIQUE KEY uq_ue_upload_bucket_issues_key')
         && str_contains($migration, 'occurrence_count INT UNSIGNED NOT NULL DEFAULT 1')
         && str_contains($migration, 'resolution_note VARCHAR(500) NULL'),
@@ -88,7 +88,7 @@ upload_issues_expect(
         && str_contains($uploader, 'upload-file-inspector-worker-compatible.js')
         && str_contains($uploader, "'Upload Issues' => 'upload-issues.php'")
         && str_contains($uploader, 'Only errors are written to'),
-    'Upload Bucket v2 does not expose persistent error recording, signature compatibility and errors-only review.'
+    'Canonical Upload Bucket does not expose persistent error recording, signature compatibility and errors-only review.'
 );
 
 upload_issues_expect(

@@ -120,7 +120,7 @@ try {
         'Background Jobs',
         'Each job uses a fixed summary row plus a full-width live status row. Current file time is measured from that job’s own claim time. The worker banner describes the detached queue process separately.',
         [
-            'Upload Bucket' => 'upload-bucket.php',
+            'Upload Bucket' => 'upload-bucket-v2.php',
             'Upload Files' => 'profiled-upload.php',
             'PAK Import' => 'pak-import.php',
             'Dashboard' => 'dashboard.php',

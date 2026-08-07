@@ -22,11 +22,11 @@ function bucket_policy_expect(bool $condition, string $message): void
 
 $root = dirname(__DIR__);
 $paths = [
-    'page' => 'upload-bucket.php',
+    'page' => 'upload-bucket-v2.php',
     'endpoint' => 'api/v1/upload-bucket-chunk.php',
     'batch_endpoint' => 'api/v1/upload-bucket-batch.php',
-    'javascript' => 'assets/upload-bucket-coordinator.js',
-    'hash_javascript' => 'assets/upload-file-hash.js',
+    'javascript' => 'assets/upload-bucket-v2-coordinator.js',
+    'hash_javascript' => 'assets/upload-file-inspector-worker.js',
     'library' => 'lib/CatalogRedirectArchive.php',
     'redirect_payload' => 'lib/CatalogRedirectArchivePayload.php',
     'redirect_processor' => 'src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php',
@@ -55,11 +55,10 @@ bucket_policy_expect(
     'Upload Bucket page still performs package processing inside web PHP.'
 );
 bucket_policy_expect(
-    str_contains($content['page'], 'calculate MD5/SHA-1 for ordinary files')
-        && str_contains($content['page'], 'Redirect wrappers are checked only after decompression')
-        && str_contains($content['page'], 'stop cooperatively')
-        && str_contains($content['page'], 'whole-file fallback processing has been disabled')
-        && str_contains($content['page'], 'official base-game metadata without a stored source remains uploadable'),
+    str_contains($content['page'], 'inspect only the active file in the reusable Web Worker')
+        && str_contains($content['page'], '.uz/.uz2/.uz3 are transferred in their compressed wrapper form')
+        && str_contains($content['page'], 'calculates the real package MD5/SHA-1')
+        && str_contains($content['page'], 'The Stop button works during folder discovery'),
     'Upload Bucket page does not explain the ordinary-versus-redirect duplicate policy.'
 );
 
@@ -68,10 +67,10 @@ bucket_policy_expect(str_contains($content['javascript'], 'file.slice(start, end
 bucket_policy_expect(str_contains($content['javascript'], 'received_chunks'), 'Browser client cannot resume chunks.');
 bucket_policy_expect(!str_contains($content['javascript'], 'wholeFileUpload('), 'Browser client still routes files through whole-file POST.');
 bucket_policy_expect(
-    str_contains($content['javascript'], "const pausePromise = processingState('begin_batch')")
+    str_contains($content['javascript'], "initialProcessing = await processingState('begin_batch')")
         && str_contains($content['javascript'], 'await uploadFile(file')
-        && str_contains($content['javascript'], 'await waitUntilPaused(pausePromise)')
-        && str_contains($content['javascript'], 'async function finalizeFiles(files)')
+        && str_contains($content['javascript'], 'await waitUntilPaused(initialProcessing, lineId)')
+        && str_contains($content['javascript'], 'async function finalizeOne(item, lineId)')
         && str_contains($content['javascript'], 'upload_ids: [item.uploadId]')
         && str_contains($content['javascript'], 'start_worker: false')
         && str_contains($content['javascript'], 'start_worker: true'),
@@ -80,9 +79,9 @@ bucket_policy_expect(
 bucket_policy_expect(
     str_contains($content['hash_javascript'], 'class Md5')
         && str_contains($content['hash_javascript'], 'class Sha1')
-        && str_contains($content['javascript'], 'isRedirect(file)')
-        && str_contains($content['javascript'], 'identity = await calculateIdentity')
-        && str_contains($content['javascript'], 'if (identity)'),
+        && str_contains($content['hash_javascript'], "if (extension === 'uz' || extension === 'uz2' || extension === 'uz3')")
+        && str_contains($content['hash_javascript'], "return {md5: '', sha1: '', extension: extension, redirect: true")
+        && str_contains($content['javascript'], 'inspection && inspection.md5 && inspection.sha1'),
     'Browser client does not hash only ordinary files while leaving wrappers unhashed.'
 );
 bucket_policy_expect(
@@ -177,10 +176,14 @@ bucket_policy_expect(
     'Identity-aware processing still performs a second standalone hash read.'
 );
 bucket_policy_expect(
-    str_contains($content['duplicate_detector'], 'physicalPath')
-        && str_contains($content['duplicate_detector'], 'missing_base_game_matches')
-        && str_contains($content['duplicate_detector'], 'ue_base_game_files')
-        && str_contains($content['duplicate_detector'], 'LOWER(f.sha1)=?'),
+    str_contains($content['duplicate_detector'], 'missing_base_game_matches')
+        && str_contains($content['duplicate_detector'], 'physical_identity_mismatches')
+        && str_contains($content['duplicate_detector'], 'FROM ue_files f WHERE LOWER(f.md5)=?')
+        && str_contains($content['duplicate_detector'], 'filesize($physicalPath)')
+        && str_contains($content['duplicate_detector'], 'physicalIdentity')
+        && str_contains($content['duplicate_detector'], "hash_equals(\$md5, \$physicalIdentity['md5'])")
+        && str_contains($content['duplicate_detector'], "hash_equals(\$sha1, \$physicalIdentity['sha1'])")
+        && str_contains($content['duplicate_detector'], 'ue_base_game_files'),
     'Duplicate detection does not require a physical size/MD5/SHA-1 match or protect base-game metadata-only rows.'
 );
 bucket_policy_expect(
@@ -226,10 +229,10 @@ bucket_policy_expect(
 );
 
 bucket_policy_expect(
-    str_contains($content['stream'], 'catalog_redirect_archive_inflate_epic_zlib(')
-        && str_contains($content['stream'], 'CATALOG_EPIC_UZ2_BLOCK_BYTES')
-        && !str_contains($content['stream'], 'availableDecoders')
-        && !str_contains($content['stream'], 'decodePayload('),
+    str_contains($content['stream'], 'CATALOG_EPIC_UZ2_BLOCK_BYTES')
+        && str_contains($content['stream'], 'self::decodeRecord(')
+        && str_contains($content['stream'], "function_exists('gzuncompress')")
+        && str_contains($content['stream'], 'catalog_redirect_archive_inflate_epic_zlib('),
     'Known-good UZ2 stream decoder was replaced.'
 );
 
@@ -240,7 +243,7 @@ bucket_policy_expect(
     'New and legacy bucket job types are not both registered with the worker.'
 );
 
-bucket_policy_expect(str_contains($content['page'], 'function upload_bucket_stats'), 'Upload bucket physical-folder statistics are missing.');
+bucket_policy_expect(str_contains($content['page'], 'function upload_bucket_v2_stats'), 'Upload bucket physical-folder statistics are missing.');
 bucket_policy_expect(!str_contains($content['page'], 'uvf_list($db, $config, 0)'), 'Upload bucket hashes every queued file while rendering totals.');
 bucket_policy_expect(str_contains($content['endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'Chunk endpoint lacks CSRF protection.');
 bucket_policy_expect(str_contains($content['batch_endpoint'], "catalog_api_require_csrf('upload_bucket_chunk')"), 'File-finalisation endpoint lacks CSRF protection.');

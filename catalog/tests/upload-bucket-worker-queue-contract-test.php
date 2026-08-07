@@ -22,7 +22,7 @@ $batchEndpoint = file_get_contents($root . '/api/v1/upload-bucket-batch.php');
 $queue = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketBatchQueue.php');
 $workerStatus = file_get_contents($root . '/api/v1/job-worker-status.php');
 $manager = file_get_contents($root . '/assets/background-jobs.js');
-$uploadClient = file_get_contents($root . '/assets/upload-bucket-coordinator.js');
+$uploadClient = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
 
 foreach (compact('page', 'chunkEndpoint', 'batchEndpoint', 'queue', 'workerStatus', 'manager', 'uploadClient') as $name => $source) {
     bucket_worker_queue_expect(is_string($source), $name . ' is missing.');
@@ -30,13 +30,13 @@ foreach (compact('page', 'chunkEndpoint', 'batchEndpoint', 'queue', 'workerStatu
 
 bucket_worker_queue_expect(str_contains($page, '<strong>Queue</strong>'), 'Background Jobs has no queue selector.');
 bucket_worker_queue_expect(str_contains($page, 'queued_total'), 'Background Jobs does not discover active queues.');
-bucket_worker_queue_expect(str_contains($page, 'one authoritative worker state'), 'Background Jobs does not explain authoritative worker reporting.');
+bucket_worker_queue_expect(str_contains($page, 'Loading authoritative worker status'), 'Background Jobs does not explain authoritative worker reporting.');
 bucket_worker_queue_expect(str_contains($chunkEndpoint, 'requestStop($queueName)'), 'Upload start does not cooperatively pause existing Upload Bucket processing.');
 bucket_worker_queue_expect(!str_contains($chunkEndpoint, '->start('), 'Per-file transfer endpoint still starts a processing worker.');
 bucket_worker_queue_expect(
-    str_contains($uploadClient, "const pausePromise = processingState('begin_batch')")
+    str_contains($uploadClient, "initialProcessing = await processingState('begin_batch')")
         && str_contains($uploadClient, 'await uploadFile(file')
-        && str_contains($uploadClient, 'await waitUntilPaused(pausePromise)'),
+        && str_contains($uploadClient, 'await waitUntilPaused(initialProcessing, lineId)'),
     'Browser does not transfer files while the previous worker finishes and then wait before queue release.'
 );
 bucket_worker_queue_expect(

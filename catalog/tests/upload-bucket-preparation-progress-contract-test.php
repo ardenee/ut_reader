@@ -15,20 +15,18 @@ function upload_bucket_progress_expect(bool $condition, string $message): void
     }
 }
 
-$script = file_get_contents(__DIR__ . '/../assets/upload-bucket-coordinator.js');
+$script = file_get_contents(__DIR__ . '/../assets/upload-bucket-v2-coordinator.js');
 upload_bucket_progress_expect(is_string($script) && $script !== '', 'Could not read Upload Bucket coordinator.');
 
 foreach ([
-    "overallLabel.textContent = 'Uploading selected files to durable staging'",
-    "currentLabel.textContent = 'Calculating MD5 and SHA-1 for '",
-    "currentLabel.textContent = 'Uploading '",
-    "currentLabel.textContent = 'Verifying durable staged file '",
-    "currentLabel.textContent = 'Transfers are complete. Waiting for '",
-    "overallLabel.textContent = 'Queuing staged files one at a time'",
-    "currentLabel.textContent = 'Validating and queuing staged file '",
-    "overallLabel.textContent = 'Upload and file-by-file finalisation complete'",
+    "'Requesting the existing Upload Bucket worker to stop after its current file...'",
+    "'Calculating MD5 and SHA-1 for '",
+    "'Uploading '",
+    "'Verifying staged file '",
+    "'Waiting for ' + workerDescription(processing)",
+    "'Validating and queuing: '",
+    "overallLabel.textContent = 'Upload queue complete'",
     'workerDescription(processing)',
-    'result.retained',
 ] as $fragment) {
     upload_bucket_progress_expect(
         str_contains($script, $fragment),
@@ -44,10 +42,10 @@ upload_bucket_progress_expect(
 );
 
 upload_bucket_progress_expect(
-    str_contains($script, 'const pausePromise = processingState(\'begin_batch\')')
-        && str_contains($script, 'await waitUntilPaused(pausePromise)')
-        && str_contains($script, 'No newly uploaded file is being processed yet.'),
-    'Worker pause is not performed in parallel with durable file transfer.'
+    str_contains($script, "initialProcessing = await processingState('begin_batch')")
+        && str_contains($script, 'await waitUntilPaused(initialProcessing, lineId)')
+        && str_contains($script, 'await uploadFile(file, name, inspection'),
+    'Worker pause and durable file transfer are no longer coordinated through the one-file v2 pipeline.'
 );
 
 fwrite(STDOUT, "Upload Bucket state-based progress contract tests passed.\n");

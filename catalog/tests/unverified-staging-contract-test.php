@@ -15,31 +15,13 @@ function staging_contract_expect(bool $condition, string $message): void
     }
 }
 
-$bucketController = file_get_contents(__DIR__ . '/../upload-bucket.php');
-staging_contract_expect(is_string($bucketController), 'upload-bucket.php could not be read.');
+$bucketController = file_get_contents(__DIR__ . '/../upload-bucket-v2.php');
+staging_contract_expect(is_string($bucketController), 'upload-bucket-v2.php could not be read.');
 staging_contract_expect(
-    str_contains($bucketController, 'LegacyUnverifiedFileStager'),
-    'Upload Bucket is not composed with the explicit unverified stager.'
-);
-staging_contract_expect(
-    str_contains($bucketController, 'stageBucketUpload('),
-    'Upload Bucket does not stage the stored file during the request.'
-);
-staging_contract_expect(
-    str_contains($bucketController, "data.append('relative_path', shownName)"),
-    'Upload Bucket no longer preserves folder-relative identity context.'
-);
-staging_contract_expect(
-    str_contains($bucketController, "(string)(\$staged['status'] ?? '') === 'duplicate'"),
-    'Upload Bucket does not handle duplicate staging results separately.'
-);
-staging_contract_expect(
-    str_contains($bucketController, "'duplicates' => \$duplicates"),
-    'Upload Bucket does not report the duplicate count.'
-);
-staging_contract_expect(
-    str_contains($bucketController, 'Duplicate size+MD5 content already present in this bucket is reported and discarded.'),
-    'Upload Bucket does not explain duplicate disposal.'
+    !str_contains($bucketController, 'LegacyUnverifiedFileStager')
+        && str_contains($bucketController, 'data-chunk-url="api/v1/upload-bucket-chunk.php"')
+        && str_contains($bucketController, 'data-batch-url="api/v1/upload-bucket-batch.php"'),
+    'Canonical Upload Bucket no longer delegates durable staging and queue finalisation to its API workflow.'
 );
 
 staging_contract_expect(
@@ -71,8 +53,10 @@ staging_contract_expect(
 $profiledUpload = file_get_contents(__DIR__ . '/../profiled-upload.php');
 staging_contract_expect(is_string($profiledUpload), 'profiled-upload.php could not be read.');
 staging_contract_expect(
-    substr_count($profiledUpload, 'scanner_store_failed_upload(') >= 3,
-    'Profiled Upload no longer routes normal and PAK failures through the shared staging primitive.'
+    str_contains($profiledUpload, 'CatalogIncomingFileStore')
+        && str_contains($profiledUpload, 'CatalogProfiledUploadQueue')
+        && str_contains($profiledUpload, 'enqueueStaged('),
+    'Profiled Upload no longer stages incoming files before handing them to background import jobs.'
 );
 
 $httpScan = file_get_contents(__DIR__ . '/../http-source-scan.php');
@@ -83,10 +67,12 @@ staging_contract_expect(
 );
 
 $sourceScan = file_get_contents(__DIR__ . '/../source-scan.php');
-staging_contract_expect(is_string($sourceScan), 'source-scan.php could not be read.');
+$sourceScanShared = file_get_contents(__DIR__ . '/../lib/CatalogSourceScanNoContainers.php');
+staging_contract_expect(is_string($sourceScan) && is_string($sourceScanShared), 'Source scan sources could not be read.');
 staging_contract_expect(
-    str_contains($sourceScan, 'stageFailedCopy('),
-    'Local Source Scan does not use copy-preserving explicit staging.'
+    str_contains($sourceScan, 'catalog_source_scan_run_without_containers(')
+        && str_contains($sourceScanShared, 'catalog_source_scan_stage_failed('),
+    'Local Source Scan no longer delegates failed-package staging to the shared scan implementation.'
 );
 staging_contract_expect(
     !str_contains($sourceScan, 'catalog_unverified_index_path(')
