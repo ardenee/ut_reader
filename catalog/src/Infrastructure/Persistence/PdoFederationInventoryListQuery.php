@@ -1,33 +1,33 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `CatalogFederationInventoryListService` for catalog federation inventory
- *          list service.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Executes federation parent/child inventory read models through PDO.
+ * Why: Inventory counts, schema capability checks and keyset reads are persistence concerns rather than Application orchestration.
+ * Role: Infrastructure query adapter used by the federation inventory administration page.
+ * Audit: Preserve inventory eligibility, ordering, base-game filtering and cursor semantics while higher-level policy remains outside this adapter.
  */
 declare(strict_types=1);
 
-namespace UnrealDb\Catalog\Application\Federation;
+namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 
 /** Loads parent/child federation inventory pages from compact package summaries. */
-final class CatalogFederationInventoryListService
+final class PdoFederationInventoryListQuery
 {
-    /** @var array<int,bool> */
-    private static array $examplePathAvailability = [];
+    private ?bool $examplePathAvailable = null;
+
+    public function __construct(private PDO $db)
+    {
+    }
 
     /** @return array{required:int,missing:int} */
-    public static function parentCounts(PDO $db, int $peerId, bool $ignoreBaseGame): array
+    public function parentCounts(int $peerId, bool $ignoreBaseGame): array
     {
         $base = self::parentBaseSql($ignoreBaseGame);
         $row = \catalog_one(
-            $db,
+            $this->db,
             'SELECT COUNT(*) missing_count,COALESCE(SUM(inventory.needed_by_parent_files>0),0) required_count '
             . 'FROM (' . $base . ') inventory',
             [$peerId]
@@ -43,8 +43,7 @@ final class CatalogFederationInventoryListService
      * @param list<mixed>|null $cursor
      * @return array{rows:list<array<string,mixed>>,first_cursor:?array,last_cursor:?array,has_previous:bool,has_next:bool}
      */
-    public static function parentCursorPage(
-        PDO $db,
+    public function parentCursorPage(
         int $peerId,
         string $tab,
         bool $ignoreBaseGame,
@@ -67,7 +66,7 @@ final class CatalogFederationInventoryListService
         }
 
         $rows = \catalog_all(
-            $db,
+            $this->db,
             'SELECT inventory.* FROM (' . self::parentBaseSql($ignoreBaseGame) . ') inventory'
             . $where
             . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
@@ -84,11 +83,11 @@ final class CatalogFederationInventoryListService
         ], $move);
     }
 
-    public static function childMissingTotal(PDO $db, bool $ignoreBaseGame): int
+    public function childMissingTotal(bool $ignoreBaseGame): int
     {
         return (int)(\catalog_one(
-            $db,
-            'SELECT COUNT(*) c FROM (' . self::childNeedsSql($db, $ignoreBaseGame) . ') needs'
+            $this->db,
+            'SELECT COUNT(*) c FROM (' . $this->childNeedsSql( $ignoreBaseGame) . ') needs'
         )['c'] ?? 0);
     }
 
@@ -96,8 +95,7 @@ final class CatalogFederationInventoryListService
      * @param list<mixed>|null $cursor
      * @return array{rows:list<array<string,mixed>>,first_cursor:?array,last_cursor:?array,has_previous:bool,has_next:bool}
      */
-    public static function childCursorPage(
-        PDO $db,
+    public function childCursorPage(
         int $peerId,
         bool $ignoreBaseGame,
         int $limit,
@@ -119,13 +117,13 @@ final class CatalogFederationInventoryListService
 
         $peerPolicy = $ignoreBaseGame ? ' AND COALESCE(pf.is_base_game,0)=0' : '';
         $rows = \catalog_all(
-            $db,
+            $this->db,
             'SELECT inventory.* FROM ('
             . 'SELECT needs.game_id,needs.game_name,needs.engine_key,needs.required_package,'
             . 'needs.required_object_path,needs.object_count,needs.use_count,needs.is_base_game,'
             . 'MAX(CASE WHEN pf.id IS NOT NULL THEN 1 ELSE 0 END) parent_available,'
             . 'MAX(pf.id) parent_peer_file_id,MAX(pf.original_name) parent_file,MAX(pf.file_size) parent_file_size '
-            . 'FROM (' . self::childNeedsSql($db, $ignoreBaseGame) . ') needs '
+            . 'FROM (' . $this->childNeedsSql( $ignoreBaseGame) . ') needs '
             . 'LEFT JOIN ue_federation_peer_files pf ON pf.peer_id=? '
             . 'AND LOWER(TRIM(pf.package_name))=LOWER(TRIM(needs.required_package)) '
             . 'AND (pf.game_id=needs.game_id OR pf.remote_game_name=needs.game_name)'
@@ -173,11 +171,11 @@ final class CatalogFederationInventoryListService
             . ')' . $policy;
     }
 
-    private static function childNeedsSql(PDO $db, bool $ignoreBaseGame): string
+    private function childNeedsSql(bool $ignoreBaseGame): string
     {
         $baseGameSql = \federation_base_game_package_exists_sql('s.required_package', 's.game_id');
         $policy = $ignoreBaseGame ? ' AND NOT (' . $baseGameSql . ')' : '';
-        $examplePath = self::hasExamplePathColumn($db)
+        $examplePath = $this->hasExamplePathColumn()
             ? 'COALESCE(MIN(NULLIF(s.example_required_object_path,"")),"")'
             : '""';
         return 'SELECT s.game_id,g.name game_name,COALESCE(gp.engine_key,"") engine_key,s.required_package,'
@@ -192,23 +190,22 @@ final class CatalogFederationInventoryListService
             . 'GROUP BY s.game_id,g.name,gp.engine_key,s.required_package';
     }
 
-    private static function hasExamplePathColumn(PDO $db): bool
+    private function hasExamplePathColumn(): bool
     {
-        $connectionId = spl_object_id($db);
-        if (array_key_exists($connectionId, self::$examplePathAvailability)) {
-            return self::$examplePathAvailability[$connectionId];
+        if ($this->examplePathAvailable !== null) {
+            return $this->examplePathAvailable;
         }
         try {
-            $statement = $db->query(
+            $statement = $this->db->query(
                 'SELECT 1 FROM information_schema.columns WHERE table_schema=DATABASE() '
                 . 'AND table_name="ue_dependency_package_summaries" '
                 . 'AND column_name="example_required_object_path" LIMIT 1'
             );
-            self::$examplePathAvailability[$connectionId] = $statement !== false && $statement->fetchColumn() !== false;
+            $this->examplePathAvailable = $statement !== false && $statement->fetchColumn() !== false;
         } catch (\Throwable) {
-            self::$examplePathAvailability[$connectionId] = false;
+            $this->examplePathAvailable = false;
         }
-        return self::$examplePathAvailability[$connectionId];
+        return $this->examplePathAvailable;
     }
 
     private static function move(string $move): string

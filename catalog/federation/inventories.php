@@ -12,7 +12,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Application\Federation\CatalogFederationInventoryListService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationInventoryListQuery;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 
 catalog_start_session();
@@ -164,6 +164,7 @@ function fi_child_request_statuses(PDO $db, array $parent): array
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $inventoryQuery = new PdoFederationInventoryListQuery($db);
     base_game_ensure($db);
     $role = federation_reconcile_site_role($db);
     $ignoreBaseGame = federation_ignore_base_game_files($db);
@@ -238,9 +239,7 @@ try {
             $move = $cursorState['cursor_move'];
             $pageNumber = $cursorState['cursor_page'];
             $cursor = fi_decode_cursor($config, $context, $cursorState['cursor'], $move, $pageNumber);
-            $page = CatalogFederationInventoryListService::childCursorPage(
-                $db,
-                $peerId,
+            $page = $inventoryQuery->childCursorPage($peerId,
                 $ignoreBaseGame,
                 FI_CHILD_PAGE_SIZE,
                 $cursor,
@@ -351,7 +350,7 @@ try {
         $peerId = (int)$peer['id'];
         $tab = strtolower(trim((string)($_GET['tab'] ?? 'required')));
         $tab = in_array($tab, ['required', 'missing'], true) ? $tab : 'required';
-        $counts = CatalogFederationInventoryListService::parentCounts($db, $peerId, $ignoreBaseGame);
+        $counts = $inventoryQuery->parentCounts($peerId, $ignoreBaseGame);
         $total = $tab === 'required' ? $counts['required'] : $counts['missing'];
         $pages = max(1, (int)ceil($total / FI_PARENT_PAGE_SIZE));
         $move = fi_cursor_move($_GET['cursor_move'] ?? 'first');
@@ -365,12 +364,12 @@ try {
         $context = fi_cursor_context('parent', $peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE);
         $cursorToken = trim((string)($_GET['cursor'] ?? ''));
         $cursor = fi_decode_cursor($config, $context, $cursorToken, $move, $pageNumber);
-        $page = CatalogFederationInventoryListService::parentCursorPage($db, $peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE, $cursor, $move);
+        $page = $inventoryQuery->parentCursorPage($peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE, $cursor, $move);
         if ($page['rows'] === [] && $total > 0 && $move !== 'first') {
             $move = 'first';
             $pageNumber = 1;
             $cursorToken = '';
-            $page = CatalogFederationInventoryListService::parentCursorPage($db, $peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE, null, 'first');
+            $page = $inventoryQuery->parentCursorPage($peerId, $tab, $ignoreBaseGame, FI_PARENT_PAGE_SIZE, null, 'first');
         }
         $previousCursor = is_array($page['first_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['first_cursor']) : '';
         $nextCursor = is_array($page['last_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['last_cursor']) : '';
@@ -423,7 +422,7 @@ try {
             $requestStatusError = $statusError->getMessage();
         }
         $ignoreBaseGame = federation_ignore_base_game_files($db, $parent);
-        $total = CatalogFederationInventoryListService::childMissingTotal($db, $ignoreBaseGame);
+        $total = $inventoryQuery->childMissingTotal($ignoreBaseGame);
         $pages = max(1, (int)ceil($total / FI_CHILD_PAGE_SIZE));
         $move = fi_cursor_move($_GET['cursor_move'] ?? 'first');
         $pageNumber = fi_page($_GET['cursor_page'] ?? ($move === 'last' ? $pages : 1));
@@ -436,12 +435,12 @@ try {
         $context = fi_cursor_context('child', $peerId, 'required', $ignoreBaseGame, FI_CHILD_PAGE_SIZE);
         $cursorToken = trim((string)($_GET['cursor'] ?? ''));
         $cursor = fi_decode_cursor($config, $context, $cursorToken, $move, $pageNumber);
-        $page = CatalogFederationInventoryListService::childCursorPage($db, $peerId, $ignoreBaseGame, FI_CHILD_PAGE_SIZE, $cursor, $move);
+        $page = $inventoryQuery->childCursorPage($peerId, $ignoreBaseGame, FI_CHILD_PAGE_SIZE, $cursor, $move);
         if ($page['rows'] === [] && $total > 0 && $move !== 'first') {
             $move = 'first';
             $pageNumber = 1;
             $cursorToken = '';
-            $page = CatalogFederationInventoryListService::childCursorPage($db, $peerId, $ignoreBaseGame, FI_CHILD_PAGE_SIZE, null, 'first');
+            $page = $inventoryQuery->childCursorPage($peerId, $ignoreBaseGame, FI_CHILD_PAGE_SIZE, null, 'first');
         }
         $previousCursor = is_array($page['first_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['first_cursor']) : '';
         $nextCursor = is_array($page['last_cursor']) ? CatalogKeysetPaginator::encode($config, $context, $page['last_cursor']) : '';
