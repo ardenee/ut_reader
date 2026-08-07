@@ -1,12 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for game file maintenance progress.js.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Serves JavaScript that submits game-file maintenance actions asynchronously and displays/polls a live progress overlay.
+ * Why: It keeps long-running maintenance progress feedback responsive without embedding the polling implementation into each page.
+ * Role: Client-side progress/coordination asset for the game-file maintenance UI, returned as `application/javascript`.
+ * Audit: Not a normal PHP page; reuse this progress mechanism rather than creating parallel polling code in other maintenance screens.
  */
 declare(strict_types=1);
 

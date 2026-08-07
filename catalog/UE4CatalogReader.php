@@ -1,12 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for UE4 catalog reader.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Loads the standalone UE4 package reader and exposes its `UnrealPackageReader4` class under the generic `UnrealPackageReader` name expected by catalog callers.
+ * Why: It bridges the engine-specific UE4 reader into older catalog code without copying the reader implementation.
+ * Role: Compatibility adapter between `UE4/UnrealPackageReader.php` and catalog code that still expects the generic reader class name.
+ * Audit: Keep thin; remove only after all callers use the UE4-specific/namespaced reader directly.
  */
 declare(strict_types=1);
 

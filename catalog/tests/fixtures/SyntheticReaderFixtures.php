@@ -1,10 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Verifies synthetic reader fixtures behavior as an automated regression/contract test.
- * Why: It exists to catch regressions in this behavior without exposing a production route.
- * Role: Test-only verification code; not part of normal web, API, or worker execution.
- * Audit: Retain while the covered behavior exists; remove or rewrite only with the corresponding production behavior.
+ * Purpose: Builds small synthetic UE1-UE4 package binaries used by parser regression tests.
+ * Why: It provides deterministic test packages without storing or depending on retail game data.
+ * Role: Test-fixture provider consumed by reader tests; it is support code, not a production route or test runner itself.
+ * Audit: Retain while reader tests depend on these generated fixtures; extend this provider instead of adding opaque binary fixtures where practical.
  */
 declare(strict_types=1);
 

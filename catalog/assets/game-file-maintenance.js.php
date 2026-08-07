@@ -1,12 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for game file maintenance.js.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Serves dynamically generated JavaScript for game-file maintenance controls.
+ * Why: It lets PHP emit a same-origin, non-cached JavaScript resource used by the maintenance UI while keeping the client behavior out of the HTML page.
+ * Role: Client-side maintenance asset delivered with an `application/javascript` response.
+ * Audit: Not a normal PHP page; keep browser behavior here or migrate it to a static JS asset if server-side generation is no longer required.
  */
 declare(strict_types=1);
 

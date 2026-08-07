@@ -1,12 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for bootstrap.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Registers the `UnrealDb\Catalog` namespaced autoloader and boots the catalog HTTP application.
+ * Why: It provides one startup path so pages do not repeat namespace-to-file loading and application bootstrapping.
+ * Role: Core catalog bootstrap shared by entry points that use the namespaced application architecture.
+ * Audit: Foundational shared code; keep initialization here rather than duplicating autoload/bootstrap logic in pages.
  */
 declare(strict_types=1);
 

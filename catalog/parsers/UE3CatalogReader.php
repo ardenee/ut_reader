@@ -1,12 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for UE3 catalog reader.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Adapts the standalone UE3 reader for catalog use by loading its source, renaming the reader class, and substituting the catalog LZO decoder before evaluation.
+ * Why: The standalone UE3 reader cannot be loaded unchanged alongside catalog reader classes, so this adapter creates an isolated catalog-specific reader.
+ * Role: UE3 parser compatibility bridge used by the catalog reader-resolution path.
+ * Audit: Specialized adapter, not a UI page; consolidate only when the standalone UE3 reader can be consumed directly without runtime source rewriting.
  */
 declare(strict_types=1);
 
