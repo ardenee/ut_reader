@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameFileListQuery;
 
 catalog_start_session();
 require_once __DIR__ . '/lib/FederationAuth.php';
@@ -359,12 +360,13 @@ try {
         $pageNo = 1;
     }
 
-    $page = \UnrealDb\Catalog\Application\Catalog\CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, $cursor, $move);
+    $fileListQuery = new PdoGameFileListQuery($db);
+    $page = $fileListQuery->fetchCursorPage($where, $args, $sort, $dir, $limit, $cursor, $move);
     $files = $page['rows'];
     if ($files === [] && $totalRows > 0 && $move !== 'first') {
         $move = 'first';
         $pageNo = 1;
-        $page = \UnrealDb\Catalog\Application\Catalog\CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, null, 'first');
+        $page = $fileListQuery->fetchCursorPage($where, $args, $sort, $dir, $limit, null, 'first');
         $files = $page['rows'];
     }
 
