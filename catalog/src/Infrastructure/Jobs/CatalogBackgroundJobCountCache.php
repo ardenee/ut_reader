@@ -62,10 +62,13 @@ final class CatalogBackgroundJobCountCache
             }
 
             $counts = $loader();
-            $this->write($path, $counts, $now);
+            try {
+                $this->write($path, $counts, $now);
+            } catch (Throwable) {
+                // Cache publication is best-effort. The freshly queried counts are
+                // still authoritative for this response and must not be queried twice.
+            }
             return $counts;
-        } catch (Throwable) {
-            return $loader();
         } finally {
             @flock($lock, LOCK_UN);
             @fclose($lock);
@@ -77,7 +80,11 @@ final class CatalogBackgroundJobCountCache
         $cache = is_array($this->config['cache'] ?? null) ? $this->config['cache'] : [];
         $base = trim((string)($cache['path'] ?? ''));
         if ($base === '') {
-            $base = rtrim((string)($this->config['storage_path'] ?? ''), '/\\') . DIRECTORY_SEPARATOR . 'cache';
+            $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+            if ($storageRoot === '') {
+                return '';
+            }
+            $base = rtrim($storageRoot, '/\\') . DIRECTORY_SEPARATOR . 'cache';
         }
         return rtrim($base, '/\\') . DIRECTORY_SEPARATOR . 'background-jobs';
     }
