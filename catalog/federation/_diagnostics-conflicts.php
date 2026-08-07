@@ -53,7 +53,7 @@ $peers = catalog_all(
     $db,
     'SELECT id,site_name,peer_role FROM ue_federation_peers ORDER BY peer_role,site_name,id'
 );
-$total = \UnrealDb\Catalog\Application\Federation\CatalogFederationConflictListService::count(
+$total = \UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationConflictListQuery::count(
     $db,
     $peerId,
     $ignore
@@ -87,7 +87,7 @@ if ($cursorToken !== '' && $cursor === null) {
     $move = 'first';
     $pageNo = 1;
 }
-$page = \UnrealDb\Catalog\Application\Federation\CatalogFederationConflictListService::fetch(
+$page = \UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationConflictListQuery::fetch(
     $db,
     $peerId,
     $ignore,
@@ -98,7 +98,7 @@ $page = \UnrealDb\Catalog\Application\Federation\CatalogFederationConflictListSe
 if ($page['rows'] === [] && $total > 0 && $move !== 'first') {
     $move = 'first';
     $pageNo = 1;
-    $page = \UnrealDb\Catalog\Application\Federation\CatalogFederationConflictListService::fetch(
+    $page = \UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationConflictListQuery::fetch(
         $db,
         $peerId,
         $ignore,
