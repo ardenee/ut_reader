@@ -1,4 +1,13 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Renders or processes the federation interface for Federation Diagnostics.
+ * Why: It keeps parent/child federation administration, inventory, requests, and transfer workflows separate from
+ *      general catalog pages.
+ * Role: Federation UI/administration entry point backed by shared federation services.
+ * Audit: Federation-specific route; consolidate shared behavior into services rather than merging distinct
+ *        parent/child screens blindly.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';

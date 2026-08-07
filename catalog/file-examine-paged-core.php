@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Implements the current paginated names/imports/exports examination view used by `file-examine.php`.
+ * Why: It avoids loading very large package tables into one request and supersedes the older examination core.
+ * Role: Active package-inspection UI core backed by `CatalogPackageTablePageService`.
+ * Audit: Current implementation; keep shared pagination logic here rather than restoring the older core.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';

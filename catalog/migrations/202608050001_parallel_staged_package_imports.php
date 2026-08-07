@@ -1,4 +1,13 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Applies the database migration for 202608050001 parallel staged package imports.
+ * Why: It evolves an existing UnrealDB database between schema/application versions without putting migration SQL in
+ *      page requests.
+ * Role: Migration-only code executed by the catalog migration runner.
+ * Audit: Historical migrations may become archival after `install.sql` fully represents the current schema, but do
+ *        not delete until upgrade paths are intentionally retired.
+ */
 declare(strict_types=1);
 
 return [

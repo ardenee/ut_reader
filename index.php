@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Renders the public UnrealDB landing page and links visitors into the catalog application.
+ * Why: It provides the site-level entry point before users enter `/catalog/`.
+ * Role: Public landing page only; catalog functionality is delegated to the main application.
+ * Audit: Keep lightweight and avoid duplicating catalog-page logic here.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/catalog/lib/CatalogSupport.php';

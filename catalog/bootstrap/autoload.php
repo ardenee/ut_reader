@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Bootstraps catalog runtime behavior for autoload.
+ * Why: It centralizes startup/autoload configuration so entry points do not repeat the same initialization logic.
+ * Role: Shared bootstrap code loaded early by catalog pages, APIs, CLI tools, or workers.
+ * Audit: Core shared startup code; changes have wide impact and should reduce rather than duplicate bootstrap logic.
+ */
 declare(strict_types=1);
 
 /**

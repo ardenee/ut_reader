@@ -1,4 +1,14 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Defines the infrastructure class `LegacyUnverifiedQueueInventory` for legacy unverified queue inventory.
+ * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
+ *      entry points.
+ * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
+ *       services.
+ * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
+ *        same behavior.
+ */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Unverified;

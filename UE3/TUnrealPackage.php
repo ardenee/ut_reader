@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Provides `UE3` parser/viewer support for tunreal package, including `UE_LZX`.
+ * Why: It exists for `UE3` package-format inspection, experiments, or parser development separate from the main
+ *      catalog UI.
+ * Role: Legacy/reference parser tooling unless another file explicitly requires it.
+ * Audit: Legacy/reference area; verify active parser callers before deleting or folding it into shared reader code.
+ */
 // ============================================================
 // TUnrealPackage.php  —  Unified UE1 / UE2 / UE3 / UE4 reader
 // All export/import rows use NORMALISED field names so that

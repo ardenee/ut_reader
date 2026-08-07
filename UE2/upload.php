@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Accepts local package uploads for the standalone `UE2` reader/viewer.
+ * Why: It lets parser developers open sample packages without using the main catalog upload pipeline.
+ * Role: Legacy/reference upload helper outside the supported catalog application.
+ * Audit: Legacy/reference area; verify active parser callers before deleting or folding it into shared reader code.
+ */
 declare(strict_types=1);
 
 $uploadDir = __DIR__ . '/uploads';

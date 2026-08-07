@@ -1,4 +1,14 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Provides shared catalog helper functions for catalog unverified rename.
+ * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
+ *      that behavior at each call site.
+ * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
+ *       `catalog/src`.
+ * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
+ *        purpose.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';

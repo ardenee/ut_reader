@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Accepts local package uploads for the standalone `UE4` reader/viewer.
+ * Why: It lets parser developers open sample packages without using the main catalog upload pipeline.
+ * Role: Legacy/reference upload helper outside the supported catalog application.
+ * Audit: Exact duplicate in this snapshot of `UE5/upload.php`; consolidation candidate after confirming
+ *        route-specific behavior.
+ */
 declare(strict_types=1);
 
 $uploadDir = __DIR__ . '/uploads';

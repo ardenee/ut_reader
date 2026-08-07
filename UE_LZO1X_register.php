@@ -1,5 +1,13 @@
 <?php
 /**
+ * UnrealDB PHP File Audit
+ * Purpose: Provides project-level support for ue lzo1 x register.
+ * Why: It exists as shared, compatibility, or reference code outside the main catalog directory.
+ * Role: Project-level support/reference code; its callers should be verified before removal or consolidation.
+ * Audit: Review external/engine-reader callers before deleting; prefer one shared implementation when equivalent code
+ *        exists elsewhere.
+ */
+/**
  * Registers LZO1X decoder support for UE3 package chunks.
  *
  * TUnrealPackage.php defines UE_Decompress and UE_LZO1X. This file is included

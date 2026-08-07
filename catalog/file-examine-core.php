@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Contains the older non-paged implementation of the package names/imports/exports examination view.
+ * Why: It predates the paged examination core and remains in the tree for legacy/reference purposes.
+ * Role: Legacy examination implementation; `file-examine.php` now loads `file-examine-paged-core.php` instead.
+ * Audit: Removal candidate: no normal runtime include was found in this snapshot; retain only if direct legacy access
+ *        is still required.
+ */
 declare(strict_types=1);
 
 

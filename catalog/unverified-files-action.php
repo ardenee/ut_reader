@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Processes the state-changing browser action for unverified files.
+ * Why: It separates mutation/request handling from the corresponding display page.
+ * Role: Web action endpoint used by the catalog UI; reusable business rules should live in shared services.
+ * Audit: Keep request validation here, but consolidate duplicated business logic into shared application/service
+ *        classes.
+ */
 declare(strict_types=1);
 
 ini_set('display_errors', '0');

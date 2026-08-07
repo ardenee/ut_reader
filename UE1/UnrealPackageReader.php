@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Implements the standalone `UE1` Unreal package reader and its supporting binary/package structures.
+ * Why: It decodes `UE1` package formats for parser development and for catalog reader bridges that explicitly load
+ *      it.
+ * Role: Engine-specific parser/reference implementation; not itself a catalog UI page.
+ * Audit: Legacy/reference area; verify active parser callers before deleting or folding it into shared reader code.
+ */
 declare(strict_types=1);
 
 

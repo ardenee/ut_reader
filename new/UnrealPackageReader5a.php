@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Provides `new` parser/viewer support for unreal package reader5a, including `UEReader`.
+ * Why: It exists for `new` package-format inspection, experiments, or parser development separate from the main
+ *      catalog UI.
+ * Role: Legacy/reference parser tooling unless another file explicitly requires it.
+ * Audit: Legacy/reference area; verify active parser callers before deleting or folding it into shared reader code.
+ */
 declare(strict_types=1);
 
 final class UnrealPackageReader

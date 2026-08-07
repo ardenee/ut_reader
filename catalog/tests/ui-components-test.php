@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Verifies UI components behavior as an automated regression/contract test.
+ * Why: It exists to catch regressions in this behavior without exposing a production route.
+ * Role: Test-only verification code; not part of normal web, API, or worker execution.
+ * Audit: Retain while the covered behavior exists; remove or rewrite only with the corresponding production behavior.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/../bootstrap/autoload.php';

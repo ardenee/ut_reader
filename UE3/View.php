@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Supports the standalone `UE3` parser/viewer workflow for view.
+ * Why: It exists for `UE3` package-format inspection, experiments, or parser development separate from the main
+ *      catalog UI.
+ * Role: Legacy/reference parser tooling unless another file explicitly requires it.
+ * Audit: Legacy/reference area; verify active parser callers before deleting or folding it into shared reader code.
+ */
 require_once __DIR__ . '/TUnrealPackage.php';
 
 // ---- config ----

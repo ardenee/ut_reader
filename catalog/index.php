@@ -1,4 +1,13 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Serves the main catalog entry point for the public home/search views and administrator login/logout flow.
+ * Why: It centralizes the small set of top-level catalog routes before specialized workflows redirect to dedicated
+ *      pages.
+ * Role: Primary `/catalog/` web entry point for home, search, authentication, and compatibility redirects.
+ * Audit: Keep routing/authentication here, but continue moving reusable search, security, and rendering logic into
+ *        shared services.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';

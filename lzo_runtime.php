@@ -1,5 +1,13 @@
 <?php
 /**
+ * UnrealDB PHP File Audit
+ * Purpose: Provides project-level support for lzo runtime.
+ * Why: It exists as shared, compatibility, or reference code outside the main catalog directory.
+ * Role: Project-level support/reference code; its callers should be verified before removal or consolidation.
+ * Audit: Review external/engine-reader callers before deleting; prefer one shared implementation when equivalent code
+ *        exists elsewhere.
+ */
+/**
  * Optional native LZO runtime bridge using PHP FFI.
  *
  * This file defines lzo1x_decompress() when PHP FFI is available and a usable

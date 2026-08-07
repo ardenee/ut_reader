@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Handles the internal/administrator API operation for legacy data audit.
+ * Why: It keeps machine-readable action handling separate from the related HTML administration page.
+ * Role: Internal/admin HTTP endpoint supporting a catalog maintenance interface.
+ * Audit: Endpoint wrapper should stay thin; shared work belongs in reusable services.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';

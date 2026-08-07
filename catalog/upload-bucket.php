@@ -1,4 +1,14 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Renders the established Upload Bucket page for resumable staged uploads and background processing.
+ * Why: It remains available while the newer upload-bucket interface is developed and compared against existing
+ *      workflows.
+ * Role: Active legacy-labelled upload UI linked from navigation, unverified files, background jobs, and contract
+ *       tests.
+ * Audit: Parallel implementation with `upload-bucket-v2.php`; substantial overlap exists, so converge shared logic
+ *        before retiring either route.
+ */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';

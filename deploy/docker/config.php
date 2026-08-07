@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Provides deployment/runtime support for config.
+ * Why: It keeps deployment-specific configuration and bootstrap behavior separate from the web application.
+ * Role: Deployment support code used by container/server startup rather than normal site navigation.
+ * Audit: Operational file; consolidate only with the deployment mechanism that consumes it.
+ */
 declare(strict_types=1);
 
 $base = require dirname(__DIR__, 2) . '/catalog/config.example.php';

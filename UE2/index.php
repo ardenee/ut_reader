@@ -1,4 +1,12 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Renders a simple directory index for the standalone `UE2` parser/reference folder.
+ * Why: It is a developer convenience for browsing the files placed beside the standalone parser experiments.
+ * Role: Legacy/reference tooling outside the supported `/catalog/` application.
+ * Audit: Exact duplicate in this snapshot of `UE1/index.php`, `UE3/index.php`, `new/index.php`; consolidation
+ *        candidate after confirming route-specific behavior.
+ */
 
 $dir = __DIR__;
 $files = scandir($dir);

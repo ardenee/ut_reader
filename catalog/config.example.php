@@ -1,4 +1,11 @@
 <?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Provides the tracked template for UnrealDB runtime configuration.
+ * Why: It gives new installations a safe starting point for creating the ignored `catalog/config.php` file.
+ * Role: Installation/configuration template; not the live server configuration.
+ * Audit: Keep generic and credential-free so it can remain in source control.
+ */
 declare(strict_types=1);
 
 // Copy this file to config.php and edit the database settings.
