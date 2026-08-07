@@ -1,19 +1,16 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `CatalogExactCountBenchmark` for catalog exact count benchmark.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Runs representative exact-count benchmarks for administrator performance diagnostics.
+ * Why: Exact-count timing is database/telemetry infrastructure, not an application use case.
+ * Role: Infrastructure telemetry component used by the exact-count diagnostics page.
+ * Audit: Keep database execution and telemetry recording here rather than in Application services or page-local code.
  */
 declare(strict_types=1);
 
-namespace UnrealDb\Catalog\Application\Telemetry;
+namespace UnrealDb\Catalog\Infrastructure\Telemetry;
 
 use PDO;
-use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountTelemetry;
 
 /** Runs the exact count SQL used by the largest paginated administrator views. */
 final class CatalogExactCountBenchmark

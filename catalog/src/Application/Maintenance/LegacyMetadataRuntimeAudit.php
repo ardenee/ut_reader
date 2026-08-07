@@ -93,7 +93,7 @@ final class LegacyMetadataRuntimeAudit
         'library.php',
         'missing.php',
         'src/Application/Dashboard/CatalogDashboardStats.php',
-        'src/Application/Telemetry/CatalogExactCountQueryCatalog.php',
+        'src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php',
     ];
 
     /**

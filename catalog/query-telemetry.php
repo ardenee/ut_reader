@@ -13,8 +13,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/FederationBaseGamePolicy.php';
 
-use UnrealDb\Catalog\Application\Telemetry\CatalogExactCountBenchmark;
-use UnrealDb\Catalog\Application\Telemetry\CatalogExactCountQueryCatalog;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountBenchmark;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountQueryCatalog;
 use UnrealDb\Catalog\Infrastructure\Persistence\SchemaInspector;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountPlanCapture;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountTelemetry;

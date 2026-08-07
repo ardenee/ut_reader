@@ -1,16 +1,14 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `CatalogExactCountQueryCatalog` for catalog exact count query catalog.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Builds the representative exact-count query catalog used by timing and EXPLAIN diagnostics.
+ * Why: The catalog discovers database state and assembles persistence-specific SQL, so it belongs with telemetry infrastructure.
+ * Role: Infrastructure query catalog for administrator performance diagnostics.
+ * Audit: Keep representative SQL definitions centralized here; do not duplicate them in pages or Application services.
  */
 declare(strict_types=1);
 
-namespace UnrealDb\Catalog\Application\Telemetry;
+namespace UnrealDb\Catalog\Infrastructure\Telemetry;
 
 use PDO;
 use UnrealDb\Catalog\Application\Federation\CatalogFederationConflictListService;
