@@ -7,7 +7,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 
 final class PdoMissingDetailListQuery
@@ -23,7 +22,7 @@ final class PdoMissingDetailListQuery
         ?array $cursor,
         string $move
     ): array {
-        $dependencySource = CatalogDependencyReadSource::sql($this->db);
+        $dependencySource = PdoDependencyReadSource::sql($this->db);
         $columns = ['g.name', 'f.package_name', 'f.original_name', 'd.required_object_path', 'd.id'];
         $directions = ['ASC', 'ASC', 'ASC', 'ASC', 'ASC'];
         $select = 'SELECT d.id dependency_id,d.required_object_path,d.required_package,'
@@ -58,7 +57,7 @@ final class PdoMissingDetailListQuery
         ?array $cursor,
         string $move
     ): array {
-        $dependencySource = CatalogDependencyReadSource::sql($this->db);
+        $dependencySource = PdoDependencyReadSource::sql($this->db);
         $columns = ['d.required_package', 'd.required_object_path', 'd.id'];
         $directions = ['ASC', 'ASC', 'ASC'];
         $select = 'SELECT d.id dependency_id,d.required_package,d.required_object_path,'
@@ -101,7 +100,7 @@ final class PdoMissingDetailListQuery
                 . 'JOIN ue_games g ON g.id=s.game_id '
                 . 'WHERE s.required_package=? AND s.missing_count>0';
         } else {
-            $dependencySource = CatalogDependencyReadSource::sql($this->db);
+            $dependencySource = PdoDependencyReadSource::sql($this->db);
             $columns = ['x.missing_object_rows', 'x.game_name', 'x.owner_package_name', 'x.owner_original_name', 'x.file_id'];
             $select = 'SELECT x.* FROM ('
                 . 'SELECT f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
