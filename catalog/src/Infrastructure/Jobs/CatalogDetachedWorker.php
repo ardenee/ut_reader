@@ -81,29 +81,44 @@ final class CatalogDetachedWorker
             throw new \RuntimeException('Detached worker script is missing.');
         }
         $lease = max(15, min(3600, (int)($this->config['queue']['lease_seconds'] ?? 120)));
-        $started = 0;
-        $launchedSlots = [];
+        $launchSpecs = [];
         for ($slot = 1; $slot <= $workerCount; $slot++) {
-            if (!empty($this->statusSlot($queue, $slot)['active'])) {
+            $slotStatus = $this->statusSlot($queue, $slot);
+            if (!empty($slotStatus['active']) || !empty($slotStatus['launching'])) {
                 continue;
             }
             $this->clearSlotStopRequest($queue, $slot);
+            $arguments = [
+                '--queue=' . $queue, '--max-jobs=' . $maxJobs, '--sleep-ms=250', '--lease-seconds=' . $lease,
+                '--worker-slot=' . $slot, '--worker-count=' . $workerCount,
+            ];
+            $log = $this->path($queue, 'log', $slot);
             $this->writeState($queue, [
                 'status' => 'launching', 'queue' => $queue, 'worker_count' => $workerCount,
                 'max_jobs' => $maxJobs, 'code_version' => $this->codeVersion(), 'requested_at' => gmdate('c'),
                 'php_binary' => $php,
             ], $slot);
-            $this->spawn($php, $script, [
-                '--queue=' . $queue, '--max-jobs=' . $maxJobs, '--sleep-ms=250', '--lease-seconds=' . $lease,
-                '--worker-slot=' . $slot, '--worker-count=' . $workerCount,
-            ], $this->path($queue, 'log', $slot));
-            $started++;
-            $launchedSlots[] = $slot;
+            $launchSpecs[] = ['slot' => $slot, 'arguments' => $arguments, 'log' => $log];
         }
+
+        if ($launchSpecs !== []) {
+            if (PHP_OS_FAMILY === 'Windows') {
+                $this->spawnWindowsPool($php, $script, $launchSpecs);
+            } else {
+                foreach ($launchSpecs as $launch) {
+                    $this->spawn($php, $script, $launch['arguments'], $launch['log']);
+                }
+            }
+        }
+        $started = count($launchSpecs);
+        $launchedSlots = array_values(array_map(static fn(array $launch): int => (int)$launch['slot'], $launchSpecs));
 
         $after = $this->status($queue, true);
         if ($launchedSlots !== []) {
             $deadline = microtime(true) + 10.0;
+            if (PHP_OS_FAMILY === 'Windows') {
+                $deadline = microtime(true) + 45.0;
+            }
             do {
                 $activeLaunched = 0;
                 $terminalLaunched = 0;
@@ -120,7 +135,9 @@ final class CatalogDetachedWorker
                         $terminalLaunched++;
                     }
                 }
-                if ($activeLaunched > 0 || $terminalLaunched === count($launchedSlots) || microtime(true) >= $deadline) {
+                if ($activeLaunched === count($launchedSlots)
+                    || $terminalLaunched === count($launchedSlots)
+                    || microtime(true) >= $deadline) {
                     break;
                 }
                 usleep(100000);
@@ -129,6 +146,7 @@ final class CatalogDetachedWorker
 
             $launchErrors = [];
             $stillLaunching = [];
+            $notActive = [];
             foreach ((array)($after['workers'] ?? []) as $worker) {
                 $slot = (int)($worker['slot'] ?? 0);
                 if (!in_array($slot, $launchedSlots, true) || !empty($worker['active'])) {
@@ -141,6 +159,8 @@ final class CatalogDetachedWorker
                     $launchErrors[] = 'worker ' . $slot . ': ' . ($error !== '' ? $error : 'worker process failed during startup');
                 } elseif ($stateStatus === 'launching') {
                     $stillLaunching[] = $slot;
+                } else {
+                    $notActive[] = $slot;
                 }
             }
             if ($launchErrors !== []) {
@@ -148,10 +168,12 @@ final class CatalogDetachedWorker
                     'Detached worker startup failed using ' . $php . ': ' . implode(' | ', array_slice($launchErrors, 0, 3))
                 );
             }
-            if ($stillLaunching !== []) {
+            if ($stillLaunching !== [] || $notActive !== []) {
+                $missing = array_values(array_unique(array_merge($stillLaunching, $notActive)));
+                sort($missing);
                 $tail = trim((string)($after['log_tail'] ?? ''));
                 $message = 'Detached worker process did not acquire its runtime lock using ' . $php
-                    . ' for slot(s) ' . implode(', ', $stillLaunching) . '.';
+                    . ' for slot(s) ' . implode(', ', $missing) . '.';
                 if ($tail !== '') {
                     $message .= ' Current launch log: ' . substr(preg_replace('/\s+/', ' ', $tail) ?? $tail, -1200);
                 }
@@ -351,11 +373,6 @@ final class CatalogDetachedWorker
     /** @param list<string> $arguments */
     private function spawn(string $php, string $script, array $arguments, string $log): void
     {
-        if (PHP_OS_FAMILY === 'Windows') {
-            $this->spawnWindows($php, $script, $arguments, $log);
-            return;
-        }
-
         $parts = [escapeshellarg($php), escapeshellarg($script)];
         foreach ($arguments as $argument) $parts[] = escapeshellarg($argument);
         $program = implode(' ', $parts);
@@ -365,54 +382,86 @@ final class CatalogDetachedWorker
         pclose($handle);
     }
 
-    /** @param list<string> $arguments */
-    private function spawnWindows(string $php, string $script, array $arguments, string $log): void
+    /** @param list<array{slot:int,arguments:list<string>,log:string}> $launchSpecs */
+    private function spawnWindowsPool(string $php, string $script, array $launchSpecs): void
     {
-        $errorLog = $log . '.error.log';
-        @unlink($log);
-        @unlink($errorLog);
+        if ($launchSpecs === []) return;
 
-        $launcher = $log . '.launch-' . bin2hex(random_bytes(5)) . '.ps1';
-        $argumentLiterals = array_map(
-            static fn(string $argument): string => self::powershellLiteral($argument),
-            array_merge([$script], $arguments)
-        );
-        $source = "\$ErrorActionPreference = 'Stop'\r\n"
-            . '$process = Start-Process -FilePath ' . self::powershellLiteral($php)
-            . ' -ArgumentList @(' . implode(', ', $argumentLiterals) . ')'
-            . ' -WorkingDirectory ' . self::powershellLiteral($this->catalogRoot)
-            . ' -WindowStyle Hidden'
-            . ' -RedirectStandardOutput ' . self::powershellLiteral($log)
-            . ' -RedirectStandardError ' . self::powershellLiteral($errorLog)
-            . " -PassThru\r\n"
-            . "Write-Output \$process.Id\r\n";
+        $launcherBase = (string)$launchSpecs[0]['log'] . '.pool-launch-' . bin2hex(random_bytes(5));
+        $launcher = $launcherBase . '.ps1';
+        $outputFile = $launcherBase . '.out.log';
+        $errorFile = $launcherBase . '.error.log';
+        $source = "\$ErrorActionPreference = 'Stop'\r\n\$started = @()\r\n";
+
+        foreach ($launchSpecs as $launch) {
+            $slot = (int)$launch['slot'];
+            $log = (string)$launch['log'];
+            $errorLog = $log . '.error.log';
+            @unlink($log);
+            @unlink($errorLog);
+            $argumentLiterals = array_map(
+                static fn(string $argument): string => self::powershellLiteral($argument),
+                array_merge([$script], (array)$launch['arguments'])
+            );
+            $source .= '$process = Start-Process -FilePath ' . self::powershellLiteral($php)
+                . ' -ArgumentList @(' . implode(', ', $argumentLiterals) . ')'
+                . ' -WorkingDirectory ' . self::powershellLiteral($this->catalogRoot)
+                . ' -WindowStyle Hidden'
+                . ' -RedirectStandardOutput ' . self::powershellLiteral($log)
+                . ' -RedirectStandardError ' . self::powershellLiteral($errorLog)
+                . " -PassThru\r\n"
+                . '$started += "' . $slot . ':$($process.Id)"' . "\r\n";
+        }
+        $source .= "Write-Output (\$started -join ',')\r\n";
+
         if (file_put_contents($launcher, $source, LOCK_EX) === false) {
-            throw new \RuntimeException('Could not write the Windows detached-worker launcher script.');
+            throw new \RuntimeException('Could not write the Windows detached-worker pool launcher script.');
         }
 
         $systemRoot = trim((string)(getenv('SystemRoot') ?: 'C:\\Windows'));
         $powershell = rtrim($systemRoot, '/\\') . '\\System32\\WindowsPowerShell\\v1.0\\powershell.exe';
-        if (!is_file($powershell)) {
-            $powershell = 'powershell.exe';
-        }
-        $command = escapeshellarg($powershell)
-            . ' -NoLogo -NoProfile -NonInteractive -ExecutionPolicy Bypass -File '
-            . escapeshellarg($launcher) . ' 2>&1';
-
-        $handle = @popen($command, 'r');
-        if (!is_resource($handle)) {
+        if (!is_file($powershell)) $powershell = 'powershell.exe';
+        $command = [$powershell, '-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', $launcher];
+        $descriptors = [
+            0 => ['file', 'NUL', 'r'],
+            1 => ['file', $outputFile, 'w'],
+            2 => ['file', $errorFile, 'w'],
+        ];
+        $pipes = [];
+        $process = @proc_open($command, $descriptors, $pipes, $this->catalogRoot, null, [
+            'bypass_shell' => true,
+            'create_process_group' => true,
+        ]);
+        if (!is_resource($process)) {
             @unlink($launcher);
-            throw new \RuntimeException('Could not invoke PowerShell to launch the detached worker process.');
+            throw new \RuntimeException('Could not invoke PowerShell to launch the detached PHP worker pool.');
         }
-        $output = stream_get_contents($handle);
-        $exitCode = pclose($handle);
+        $exitCode = proc_close($process);
+        $output = is_file($outputFile) ? trim((string)@file_get_contents($outputFile)) : '';
+        $errorOutput = is_file($errorFile) ? trim((string)@file_get_contents($errorFile)) : '';
         @unlink($launcher);
+        @unlink($outputFile);
+        @unlink($errorFile);
 
-        $output = is_string($output) ? trim($output) : '';
-        if ($exitCode !== 0 || preg_match('/(?:^|\R)\s*\d+\s*(?:\R|$)/', $output) !== 1) {
+        if ($exitCode !== 0) {
+            $detail = trim($errorOutput . ($output !== '' ? ' ' . $output : ''));
             throw new \RuntimeException(
-                'PowerShell could not start the detached PHP worker'
-                . ($output !== '' ? ': ' . substr(preg_replace('/\s+/', ' ', $output) ?? $output, -1200) : '.')
+                'PowerShell could not start the detached PHP worker pool'
+                . ($detail !== '' ? ': ' . substr(preg_replace('/\s+/', ' ', $detail) ?? $detail, -1600) : '.')
+            );
+        }
+
+        $missingLaunches = [];
+        foreach ($launchSpecs as $launch) {
+            $slot = (int)$launch['slot'];
+            if (preg_match('/(?:^|,)\s*' . preg_quote((string)$slot, '/') . ':\d+\s*(?:,|$)/', $output) !== 1) {
+                $missingLaunches[] = $slot;
+            }
+        }
+        if ($missingLaunches !== []) {
+            throw new \RuntimeException(
+                'PowerShell returned without process IDs for worker slot(s) ' . implode(', ', $missingLaunches)
+                . ($output !== '' ? '. Launcher output: ' . substr($output, -1200) : '.')
             );
         }
     }

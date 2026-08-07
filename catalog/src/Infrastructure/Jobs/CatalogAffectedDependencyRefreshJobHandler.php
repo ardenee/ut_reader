@@ -45,7 +45,31 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         $statement->execute([$fileId]);
         $file = $statement->fetch(PDO::FETCH_ASSOC);
         if (!is_array($file)) {
-            throw new \RuntimeException('Verified source file no longer exists: ' . $fileId);
+            /*
+             * A source package can legitimately disappear after this durable job
+             * was queued (duplicate cleanup, replacement, administrator removal,
+             * etc.). Retrying can never make that old file ID valid again, so
+             * complete it as a stale no-op instead of burning all retry attempts.
+             */
+            $context->checkpoint([
+                'stage' => 'skipped',
+                'done' => 1,
+                'total' => 1,
+                'percent' => 100,
+                'message' => 'Skipped affected dependency refresh because source file #'
+                    . $fileId . ' no longer exists as a verified file.',
+                'file_id' => $fileId,
+                'skip_reason' => 'source_file_missing',
+            ]);
+            return [
+                'operation' => 'rebuild_affected_dependencies',
+                'file_id' => $fileId,
+                'skipped' => true,
+                'skip_reason' => 'source_file_missing',
+                'affected_files' => 0,
+                'processed_files' => 0,
+                'failure_count' => 0,
+            ];
         }
 
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
