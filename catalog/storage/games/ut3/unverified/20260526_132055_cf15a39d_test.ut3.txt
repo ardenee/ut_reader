@@ -1,8 +1,0 @@
-OutOfBoundsException: bad FString length=1667846239 pos=37847 remaining=4480487 File: /volume1/web/ut_reader/catalog/parsers/UE3CatalogReader.php(30) : eval()'d code:63 PHP: 8.2.28 Package: /volume1/@tmp/phpumPxMt Trace: #0 /volume1/web/ut_reader/catalog/parsers/UE3CatalogReader.php(30) : eval()'d code(57): UEFolderBinaryReader->stringByLength(1667846239)
-#1 /volume1/web/ut_reader/catalog/parsers/UE3CatalogReader.php(30) : eval()'d code(323): UEFolderBinaryReader->fstring32()
-#2 /volume1/web/ut_reader/catalog/parsers/UE3CatalogReader.php(30) : eval()'d code(207): CatalogUE3PackageReader->readUE3Names()
-#3 /volume1/web/ut_reader/catalog/parsers/UE3CatalogReader.php(30) : eval()'d code(132): CatalogUE3PackageReader->parseUE3(Object(UEFolderBinaryReader), 2653586369, 512, 512, 0)
-#4 /volume1/web/ut_reader/catalog/parsers/UE3CatalogReader.php(30) : eval()'d code(109): CatalogUE3PackageReader->parse()
-#5 /volume1/web/ut_reader/catalog/index.php(204): CatalogUE3PackageReader->__construct('/volume1/@tmp/p...')
-#6 /volume1/web/ut_reader/catalog/index.php(306): scan_uploaded_file(Object(PDO), Array, 3, '/volume1/@tmp/p...', 'test.ut3', 1)
-#7 {main}
