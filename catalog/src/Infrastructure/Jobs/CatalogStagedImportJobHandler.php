@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogStagedImportJobHandler` for catalog staged import job handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Imports one durable staged package while preserving progress, cancellation and unverified fallback behavior.
+ * Why: IMPORT_STAGED_PAK is owned by CatalogPakImportJobHandler; this handler now has one deterministic responsibility.
+ * Role: Infrastructure job handler for JobType::IMPORT_STAGED_PACKAGE.
  */
 declare(strict_types=1);
 
@@ -21,12 +17,11 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 
 final class CatalogStagedImportJobHandler implements JobHandler
 {
-    private const MAX_RESULT_MESSAGES = 200;
-
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -36,16 +31,15 @@ final class CatalogStagedImportJobHandler implements JobHandler
 
     public function supports(string $jobType): bool
     {
-        return in_array($jobType, [JobType::IMPORT_STAGED_PACKAGE, JobType::IMPORT_STAGED_PAK], true);
+        return $jobType === JobType::IMPORT_STAGED_PACKAGE;
     }
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
-        return match ($job->type) {
-            JobType::IMPORT_STAGED_PACKAGE => $this->importPackage($job, $context),
-            JobType::IMPORT_STAGED_PAK => $this->importPak($job, $context),
-            default => throw new \RuntimeException('Unsupported staged import job: ' . $job->type),
-        };
+        if ($job->type !== JobType::IMPORT_STAGED_PACKAGE) {
+            throw new \RuntimeException('Unsupported staged package import job: ' . $job->type);
+        }
+        return $this->importPackage($job, $context);
     }
 
     private function importPackage(ClaimedJob $job, JobExecutionContext $context): array
@@ -68,7 +62,6 @@ final class CatalogStagedImportJobHandler implements JobHandler
         }
 
         require_once __DIR__ . '/../../../lib/CatalogSupport.php';
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         require_once __DIR__ . '/../../../lib/CatalogRedirectArchive.php';
 
         $game = \catalog_one($this->db, 'SELECT id,name,slug FROM ue_games WHERE id=?', [$gameId]);
@@ -88,7 +81,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
         ]);
 
         $workingPath = '';
-        $workingName = \scanner_clean_original_filename($originalName);
+        $workingName = $this->cleanOriginalFilename($originalName);
         $decompressed = $redirectPrepared;
         $scanStart = $startPercent;
         try {
@@ -104,7 +97,10 @@ final class CatalogStagedImportJobHandler implements JobHandler
                         $originalName,
                         0,
                         static function (array $progress) use ($context): void {
-                            $percent = max(1, min(24, 1 + (int)floor(((int)($progress['percent'] ?? 0)) * 23 / 100)));
+                            $percent = max(
+                                1,
+                                min(24, 1 + (int)floor(((int)($progress['percent'] ?? 0)) * 23 / 100))
+                            );
                             $context->checkpoint([
                                 'stage' => 'decompress',
                                 'done' => (int)($progress['compressed_done'] ?? 0),
@@ -120,7 +116,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     $decoded = \catalog_redirect_archive_decompress_to_temp($sourcePath, $originalName);
                 }
                 $workingPath = (string)$decoded['path'];
-                $workingName = \scanner_clean_original_filename((string)$decoded['filename']);
+                $workingName = $this->cleanOriginalFilename((string)$decoded['filename']);
                 $sourceRelativePath = $this->replaceRelativeFilename($sourceRelativePath, $workingName);
                 $decompressed = true;
                 $scanStart = 25;
@@ -146,9 +142,8 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 'message' => 'Scanning package tables for ' . basename($workingName),
             ]);
 
-            $result = \scanner_scan_uploaded_file(
-                $this->db,
-                $this->config,
+            $importer = new PdoCatalogPackageImporter($this->db, $this->config);
+            $result = $importer->importUploadedFile(
                 $gameId,
                 $workingPath,
                 $workingName,
@@ -158,7 +153,10 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     $mapped = $progress;
                     if (array_key_exists('percent', $progress)) {
                         $sourcePercent = max(0, min(100, (int)$progress['percent']));
-                        $mapped['percent'] = min(99, $scanStart + (int)floor($sourcePercent * (99 - $scanStart) / 100));
+                        $mapped['percent'] = min(
+                            99,
+                            $scanStart + (int)floor($sourcePercent * (99 - $scanStart) / 100)
+                        );
                     }
                     $mapped['stage'] = (string)($progress['stage'] ?? 'scan');
                     if (trim((string)($mapped['message'] ?? '')) === '') {
@@ -236,167 +234,6 @@ final class CatalogStagedImportJobHandler implements JobHandler
         }
     }
 
-    private function importPak(ClaimedJob $job, JobExecutionContext $context): array
-    {
-        $payload = $job->payload;
-        $gameId = $this->positiveInt($payload, 'game_id');
-        $relativePath = $this->requiredString($payload, 'staged_path');
-        $originalName = $this->requiredString($payload, 'original_name');
-        $strict = !array_key_exists('strict_profile', $payload) || (bool)$payload['strict_profile'];
-        $userId = isset($payload['user_id']) && (int)$payload['user_id'] > 0 ? (int)$payload['user_id'] : null;
-        $store = new CatalogIncomingFileStore($this->config);
-        $sourcePath = $store->resolve($relativePath);
-        $this->verifyIdentity($sourcePath, $payload);
-
-        require_once __DIR__ . '/../../../lib/CatalogSupport.php';
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
-        require_once __DIR__ . '/../../../lib/CatalogPakArchive.php';
-        require_once __DIR__ . '/../../../lib/GameProfiles.php';
-
-        if (!\catalog_pak_archive_is_supported_filename($originalName)) {
-            throw new \RuntimeException('Staged file is not a supported PAK archive.');
-        }
-        $game = \catalog_one($this->db, 'SELECT id,name,slug FROM ue_games WHERE id=?', [$gameId]);
-        if (!$game) {
-            throw new \RuntimeException('Target game no longer exists: ' . $gameId);
-        }
-
-        $context->checkpoint([
-            'stage' => 'pak_extract',
-            'done' => 0,
-            'total' => 1,
-            'percent' => 1,
-            'message' => 'Extracting staged PAK ' . basename($originalName),
-        ]);
-
-        $extracted = null;
-        try {
-            $extracted = \catalog_pak_archive_extract_to_temp($this->config, $sourcePath, $originalName);
-            $profile = \gp_required_profile_for_game($this->db, $gameId);
-            $allowed = \scanner_profile_extensions($profile, $this->config);
-            $files = is_array($extracted['files'] ?? null) ? $extracted['files'] : [];
-            $total = count($files);
-            $imported = 0;
-            $duplicates = 0;
-            $aliases = 0;
-            $failed = 0;
-            $skipped = 0;
-            $messages = [];
-
-            foreach ($files as $index => $file) {
-                $display = trim(str_replace('\\', '/', (string)($file['relative'] ?? '')), '/');
-                if ($display === '') {
-                    $display = basename((string)($file['path'] ?? 'package.bin'));
-                }
-                $name = \catalog_clean_unreal_filename(basename($display));
-                $extension = \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION));
-                if ($extension === '' || in_array($extension, ['uexp', 'ubulk', 'uptnl', 'm_ubulk'], true) || !in_array($extension, $allowed, true)) {
-                    $skipped++;
-                    continue;
-                }
-
-                $context->checkpoint([
-                    'stage' => 'pak_import',
-                    'done' => $index,
-                    'total' => max(1, $total),
-                    'percent' => 5 + (int)floor(($index * 94) / max(1, $total)),
-                    'message' => 'Importing PAK entry ' . ($index + 1) . '/' . max(1, $total) . ': ' . $display,
-                    'imported' => $imported,
-                    'duplicates' => $duplicates,
-                    'aliases' => $aliases,
-                    'failed' => $failed,
-                    'skipped' => $skipped,
-                ]);
-
-                $path = (string)($file['path'] ?? '');
-                try {
-                    $result = \scanner_scan_uploaded_file(
-                        $this->db,
-                        $this->config,
-                        $gameId,
-                        $path,
-                        $name,
-                        $userId,
-                        $strict,
-                        static function (array $progress) use ($context): void {
-                            $context->heartbeatIfDue($progress);
-                        },
-                        false,
-                        ['source_relative_path' => $display]
-                    );
-                    $status = (string)($result[0] ?? 'verified');
-                    if ($status === 'duplicate') {
-                        $duplicates++;
-                    } elseif ($status === 'alias') {
-                        $aliases++;
-                    } else {
-                        $imported++;
-                    }
-                    if (count($messages) < self::MAX_RESULT_MESSAGES) {
-                        $messages[] = [
-                            'status' => $status,
-                            'file' => $display,
-                            'message' => (string)($result[2] ?? ''),
-                            'file_id' => (int)($result[1] ?? 0),
-                            'meta' => is_array($result[4] ?? null) ? $result[4] : [],
-                        ];
-                    }
-                } catch (JobCancellationRequested $error) {
-                    throw $error;
-                } catch (Throwable $error) {
-                    $failed++;
-                    $stager = new LegacyUnverifiedFileStager($this->db, $this->config);
-                    $staged = $stager->stageFailedUpload($gameId, $path, $name, 'PAK entry ' . $display . ': ' . $error->getMessage(), $userId, $display);
-                    if (count($messages) < self::MAX_RESULT_MESSAGES) {
-                        $messages[] = [
-                            'status' => $staged !== null ? 'unverified' : 'rejected',
-                            'file' => $display,
-                            'message' => $this->shortError($error),
-                            'file_id' => (int)($staged['file_id'] ?? 0),
-                        ];
-                    }
-                }
-            }
-
-            $store->remove($relativePath);
-            $context->checkpoint([
-                'stage' => 'complete',
-                'done' => max(1, $total),
-                'total' => max(1, $total),
-                'percent' => 100,
-                'message' => 'PAK extraction and package import complete.',
-                'imported' => $imported,
-                'duplicates' => $duplicates,
-                'aliases' => $aliases,
-                'failed' => $failed,
-                'skipped' => $skipped,
-            ]);
-            return [
-                'operation' => 'import_staged_pak',
-                'status' => 'completed',
-                'game_id' => $gameId,
-                'game_name' => (string)$game['name'],
-                'source_name' => $originalName,
-                'extracted_files' => $total,
-                'imported' => $imported,
-                'duplicates' => $duplicates,
-                'aliases' => $aliases,
-                'failed' => $failed,
-                'skipped' => $skipped,
-                'messages' => $messages,
-                'messages_truncated' => ($imported + $duplicates + $aliases + $failed) > count($messages),
-                'extract_log' => substr((string)($extracted['log'] ?? ''), 0, 20000),
-            ];
-        } catch (JobCancellationRequested $error) {
-            $store->remove($relativePath);
-            throw $error;
-        } finally {
-            if (is_array($extracted) && isset($extracted['dir'])) {
-                \catalog_pak_archive_delete_tree((string)$extracted['dir']);
-            }
-        }
-    }
-
     /** @param array<string,mixed> $payload */
     private function verifyIdentity(string $path, array $payload): void
     {
@@ -462,13 +299,17 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 $copied += $length;
                 if ($copied - $lastCheckpoint >= 32 * 1024 * 1024 || $copied >= (int)$size) {
                     $sourcePercent = (int)floor($copied * 100 / max(1, (int)$size));
-                    $percent = min($endPercent, $startPercent + (int)floor($sourcePercent * ($endPercent - $startPercent) / 100));
+                    $percent = min(
+                        $endPercent,
+                        $startPercent + (int)floor($sourcePercent * ($endPercent - $startPercent) / 100)
+                    );
                     $context->checkpoint([
                         'stage' => 'copy',
                         'done' => $copied,
                         'total' => max(1, (int)$size),
                         'percent' => $percent,
-                        'message' => 'Creating parser working copy: ' . $this->bytes($copied) . ' of ' . $this->bytes((int)$size),
+                        'message' => 'Creating parser working copy: '
+                            . $this->bytes($copied) . ' of ' . $this->bytes((int)$size),
                     ]);
                     $lastCheckpoint = $copied;
                 }
@@ -510,6 +351,16 @@ final class CatalogStagedImportJobHandler implements JobHandler
         $relativePath = trim(str_replace('\\', '/', $relativePath), '/');
         $directory = trim(str_replace('\\', '/', dirname($relativePath)), '. /');
         return ($directory !== '' ? $directory . '/' : '') . $name;
+    }
+
+    private function cleanOriginalFilename(string $originalName): string
+    {
+        $placeholder = '__UE_PACKAGE_PLUS__';
+        while (str_contains($originalName, $placeholder)) {
+            $placeholder .= '_';
+        }
+        $clean = \catalog_clean_unreal_filename(str_replace('+', $placeholder, $originalName));
+        return str_replace($placeholder, '+', $clean);
     }
 
     /** @param array<string,mixed> $payload */
