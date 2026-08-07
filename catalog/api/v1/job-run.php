@@ -5,6 +5,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -110,11 +111,6 @@ function catalog_job_run_reconcile_pool(
             try {
                 $lastResult = $launcher->start($queueName, $maxJobs, $workerCount);
             } catch (Throwable $error) {
-                /*
-                 * A partial Windows launch can throw while the remaining PHP
-                 * processes are still starting. Preserve the diagnostic, but do
-                 * not abandon reconciliation until the full deadline expires.
-                 */
                 $launchErrors[] = trim($error->getMessage()) !== ''
                     ? trim($error->getMessage())
                     : get_class($error);
@@ -174,11 +170,6 @@ try {
     $queueCounts = catalog_job_run_queue_counts($application->db, $queueName);
     $idleRestart = null;
 
-    /*
-     * The Start button is also the recovery action for a pool whose PHP
-     * processes still exist but have not claimed any ready database job. This
-     * is explicit POST behaviour; the read-only status poll never restarts it.
-     */
     if (!empty($before['active']) && $queueCounts['ready'] > 0 && $queueCounts['running'] === 0) {
         $state = is_array($before['state'] ?? null) ? $before['state'] : [];
         $updatedAt = strtotime((string)($state['updated_at'] ?? $state['started_at'] ?? '')) ?: 0;
@@ -209,7 +200,17 @@ try {
                 ['worker' => $before, 'restart' => $restart]
             );
         }
+        $before = $launcher->status($queueName, true);
     }
+
+    /*
+     * Reconcile persisted queue policy after stale workers have been requeued
+     * and before any new worker can claim them. This repairs old projection rows
+     * that were stored as search-heavy/per-file work even though the handler is
+     * protected by one global catalogue-maintenance lock.
+     */
+    $queuePolicySync = (new CatalogJobResourceLimitStore($application->db, $queueName))
+        ->synchronizeQueuedPolicies();
 
     $result = catalog_job_run_reconcile_pool($launcher, $queueName, $maxJobs, $workerCount);
     if (empty($result['pool_satisfied'])) {
@@ -240,6 +241,7 @@ try {
             'idle_restart' => $idleRestart,
             'orphan_recovery' => $orphanRecovery,
             'stale_restart' => $restart,
+            'queue_policy_sync' => $queuePolicySync,
         ] + $result,
     ], 202);
 } catch (InvalidArgumentException $exception) {
