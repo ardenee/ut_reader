@@ -17,8 +17,8 @@ foreach (compact('status', 'run', 'store', 'projectionQueue') as $name => $sourc
 }
 
 queue_reporting_expect(
-    str_contains($status, "'attempted' => \$attempted")
-        && str_contains($status, "'processed'] = \$completedSinceStart")
+    str_contains($status, "\$workerState['attempted'] = \$attempted")
+        && str_contains($status, "\$workerState['processed'] = \$completedSinceStart")
         && str_contains($status, 'status="completed" AND completed_at>=?')
         && str_contains($status, 'job_worker_status_pool_started_at'),
     'Worker status still reports attempts/retries as completed processing.'
