@@ -32,7 +32,8 @@ try {
         session_write_close();
     }
 
-    $stats = \UnrealDb\Catalog\Application\Dashboard\CatalogDashboardStats::load($db);
+    $statsQuery = new \UnrealDb\Catalog\Infrastructure\Persistence\PdoDashboardStatsQuery($db);
+    $stats = (new \UnrealDb\Catalog\Application\Dashboard\CatalogDashboardStats($statsQuery))->load();
     catalog_page_header(
         'Dashboard',
         'Start here: setup files, identify missing packages, create game backups, manage federation, request downloads, and monitor background work.',

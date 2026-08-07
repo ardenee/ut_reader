@@ -22,7 +22,6 @@ dependency_ratchet_expect(is_string($applicationRoot), 'Application source direc
 $legacyAllowed = array_fill_keys([
     'Catalog/CatalogGameFileListService.php',
     'Catalog/CatalogPackageTablePageService.php',
-    'Dashboard/CatalogDashboardStats.php',
     'Dependency/CatalogAffectedDependencyRefreshService.php',
     'Dependency/CatalogDependencyReadSource.php',
     'Dependency/CatalogDependencyResolver.php',
@@ -71,6 +70,12 @@ $newViolations = array_diff_key($violations, $legacyAllowed);
 dependency_ratchet_expect(
     $newViolations === [],
     'New Application-layer dependency violation(s): ' . implode(', ', array_keys($newViolations))
+);
+
+$staleAllowed = array_diff_key($legacyAllowed, $violations);
+dependency_ratchet_expect(
+    $staleAllowed === [],
+    'Resolved Application-layer violation(s) still listed in the ratchet: ' . implode(', ', array_keys($staleAllowed))
 );
 
 $domainRoot = realpath(__DIR__ . '/../src/Domain');
