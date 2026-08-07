@@ -15,7 +15,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
 use PDO;
 use RuntimeException;
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyResolver;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyResolver;
 
 /** Re-resolves one file's Imports and rewrites its compact dependency section. */
 final class CompactDependencyRebuilder
@@ -43,7 +43,7 @@ final class CompactDependencyRebuilder
             }
         }
 
-        $resolutions = CatalogDependencyResolver::resolve(
+        $resolutions = PdoDependencyResolver::resolve(
             $this->db,
             (int)$file['game_id'],
             $fileId,

@@ -1,16 +1,14 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `CatalogDependencyResolver` for catalog dependency resolver.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Resolves package/object imports against verified catalog providers and export projections.
+ * Why: Provider lookup, compact export lookup and legacy persistence fallback are database concerns.
+ * Role: Infrastructure persistence query used by dependency rebuilders.
+ * Audit: Primary dependency-resolution implementation; keep database lookup semantics here.
  */
 declare(strict_types=1);
 
-namespace UnrealDb\Catalog\Application\Dependency;
+namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use PDOException;
@@ -23,7 +21,7 @@ use PDOException;
  * and returns Unreal's serialized export_index; the legacy ue_exports identifier
  * is retained only while transition rows still exist.
  */
-final class CatalogDependencyResolver
+final class PdoDependencyResolver
 {
     private const MAX_VALUES_PER_QUERY = 500;
     private const MAX_OBJECT_PAIRS_PER_QUERY = 250;

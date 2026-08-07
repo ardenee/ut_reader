@@ -39,7 +39,7 @@ final class LegacyMetadataRuntimeAudit
      * @var list<string>
      */
     private const ALLOWED_FILES = [
-        'lib/CatalogScanner.php',
+        'lib/Scanner/CatalogScannerImport.php',
         'lib/CatalogCompactDependencies.php',
         'lib/CatalogCompactMetadataCompatibility.php',
         'lib/CatalogCompactMetadataMutation.php',
@@ -54,7 +54,8 @@ final class LegacyMetadataRuntimeAudit
         'federation/docs.php',
         'src/Infrastructure/Persistence/PdoPackageTablePageQuery.php',
         'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
-        'src/Application/Dependency/CatalogDependencyResolver.php',
+        'src/Infrastructure/Persistence/PdoDependencyResolver.php',
+        'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
         'src/Infrastructure/Import/CatalogBucketUploadProcessor.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
         'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
