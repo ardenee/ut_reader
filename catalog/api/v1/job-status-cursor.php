@@ -13,10 +13,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
-use UnrealDb\Catalog\Application\Jobs\CatalogBackgroundJobPageService;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobPageQuery;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 /** @param array<string,mixed> $result */
@@ -312,8 +312,8 @@ try {
         . 'j.cancel_requested_at,j.cancel_requested_by,j.cancel_reason,j.payload_json,j.progress_json,j.progress_updated_at,'
         . 'j.result_json,j.last_error,j.created_by,j.created_at,j.updated_at,j.completed_at,j.dead_lettered_at '
         . 'FROM ' . $fromSql;
-    $pageResult = CatalogBackgroundJobPageService::fetch(
-        $application->db,
+    $jobPageQuery = new PdoBackgroundJobPageQuery($application->db);
+    $pageResult = $jobPageQuery->fetch(
         $selectSql,
         $whereSql,
         $params,
@@ -324,8 +324,7 @@ try {
     if ($pageResult['rows'] === [] && $total > 0 && $move !== 'first') {
         $move = 'first';
         $requestedPage = 1;
-        $pageResult = CatalogBackgroundJobPageService::fetch(
-            $application->db,
+        $pageResult = $jobPageQuery->fetch(
             $selectSql,
             $whereSql,
             $params,
