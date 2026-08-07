@@ -52,9 +52,15 @@ foreach ([
     "'source_summary_ready' => true",
     "'continuation_job_id'",
     'gc_collect_cycles()',
+    "'skip_reason' => 'source_file_missing'",
 ] as $fragment) {
-    dependency_refresh_contract_expect(str_contains($affectedHandler, $fragment), 'Affected refresh is not bounded/resumable: ' . $fragment);
+    dependency_refresh_contract_expect(str_contains($affectedHandler, $fragment), 'Affected refresh is not bounded/resumable/stale-safe: ' . $fragment);
 }
+
+dependency_refresh_contract_expect(
+    !str_contains($affectedHandler, "throw new \\RuntimeException('Verified source file no longer exists:"),
+    'A deleted source file still burns retry attempts instead of completing as a stale no-op.'
+);
 
 foreach ([
     'public static function enqueueIfNeeded(',
