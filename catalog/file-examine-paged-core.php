@@ -3,14 +3,14 @@
  * UnrealDB PHP File Audit
  * Purpose: Implements the current paginated names/imports/exports examination view used by `file-examine.php`.
  * Why: It avoids loading very large package tables into one request and supersedes the older examination core.
- * Role: Active package-inspection UI core backed by `CatalogPackageTablePageService`.
+ * Role: Active package-inspection UI core backed by `PdoPackageTablePageQuery`.
  * Audit: Current implementation; keep shared pagination logic here rather than restoring the older core.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Application\Catalog\CatalogPackageTablePageService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
 
 catalog_start_session();
 
@@ -40,8 +40,8 @@ function examine_href(int $fileId, string $target, int $pageSize): string
 {
     $target = examine_target($target);
     $table = examine_target_table($target);
-    $index = CatalogPackageTablePageService::targetIndex($target, $table) ?? 0;
-    $page = CatalogPackageTablePageService::pageForIndex($index, $pageSize);
+    $index = PdoPackageTablePageQuery::targetIndex($target, $table) ?? 0;
+    $page = PdoPackageTablePageQuery::pageForIndex($index, $pageSize);
     return 'file-examine.php?' . http_build_query([
         'id' => $fileId,
         'tab' => $table,
@@ -55,7 +55,7 @@ function examine_tab_href(int $fileId, string $table, int $pageSize): string
 {
     return 'file-examine.php?' . http_build_query([
         'id' => $fileId,
-        'tab' => CatalogPackageTablePageService::normalizeTable($table),
+        'tab' => PdoPackageTablePageQuery::normalizeTable($table),
         'page_size' => $pageSize,
     ]) . '#package-tables';
 }
@@ -169,8 +169,8 @@ try {
     $db = catalog_db($config);
     $fileId = examine_int('id');
     $target = examine_target((string)($_GET['target'] ?? ''));
-    $table = CatalogPackageTablePageService::normalizeTable((string)($_GET['tab'] ?? ($target !== '' ? examine_target_table($target) : 'names')));
-    $pageSize = CatalogPackageTablePageService::normalizePageSize(examine_int('page_size', CatalogPackageTablePageService::DEFAULT_PAGE_SIZE));
+    $table = PdoPackageTablePageQuery::normalizeTable((string)($_GET['tab'] ?? ($target !== '' ? examine_target_table($target) : 'names')));
+    $pageSize = PdoPackageTablePageQuery::normalizePageSize(examine_int('page_size', PdoPackageTablePageQuery::DEFAULT_PAGE_SIZE));
     $requestedPage = max(1, examine_int('page', 1));
 
     $file = catalog_one(
@@ -188,14 +188,14 @@ try {
 
     if ($target !== '') {
         $targetTable = examine_target_table($target);
-        $targetIndex = CatalogPackageTablePageService::targetIndex($target, $targetTable);
+        $targetIndex = PdoPackageTablePageQuery::targetIndex($target, $targetTable);
         if ($targetIndex !== null) {
             $table = $targetTable;
-            $requestedPage = CatalogPackageTablePageService::pageForIndex($targetIndex, $pageSize);
+            $requestedPage = PdoPackageTablePageQuery::pageForIndex($targetIndex, $pageSize);
         }
     }
 
-    $page = CatalogPackageTablePageService::fetchPage($db, $file, $table, $requestedPage, $pageSize);
+    $page = PdoPackageTablePageQuery::fetchPage($db, $file, $table, $requestedPage, $pageSize);
     $rows = $page['rows'];
     $nameLookup = [];
     $usage = [];
@@ -203,7 +203,7 @@ try {
 
     if ($table === 'names') {
         $visibleNames = array_map(static fn(array $row): string => (string)$row['name_text'], $rows);
-        $usage = CatalogPackageTablePageService::nameUsage($db, $fileId, $visibleNames);
+        $usage = PdoPackageTablePageQuery::nameUsage($db, $fileId, $visibleNames);
     } elseif ($table === 'imports') {
         $values = [];
         foreach ($rows as $row) {
@@ -211,8 +211,8 @@ try {
                 $values[] = (string)($row[$column] ?? '');
             }
         }
-        $nameLookup = CatalogPackageTablePageService::nameLookup($db, $fileId, $values);
-        $dependencies = CatalogPackageTablePageService::dependencyMap($db, $fileId, $rows);
+        $nameLookup = PdoPackageTablePageQuery::nameLookup($db, $fileId, $values);
+        $dependencies = PdoPackageTablePageQuery::dependencyMap($db, $fileId, $rows);
     } else {
         $values = [];
         foreach ($rows as $row) {
@@ -220,7 +220,7 @@ try {
                 $values[] = (string)($row[$column] ?? '');
             }
         }
-        $nameLookup = CatalogPackageTablePageService::nameLookup($db, $fileId, $values);
+        $nameLookup = PdoPackageTablePageQuery::nameLookup($db, $fileId, $values);
     }
 
     $back = examine_back((int)$file['game_id']);
