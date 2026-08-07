@@ -59,12 +59,8 @@ return [
         'path' => '',
     ],
     'cache' => [
-        // File cache works on one shared filesystem. Bind CacheStore to Redis
-        // before running multiple independent web nodes.
-        'driver' => 'file',
+        // Shared filesystem directory used by the anonymous public-response cache.
         'path' => __DIR__ . '/storage/cache',
-        // Keep zero until a page explicitly opts into bounded staleness.
-        'dashboard_ttl_seconds' => 0,
         // Anonymous GET pages in the explicit public allow-list use this small
         // shared response cache. Logged-in, remembered and POST requests bypass it.
         'public_response_enabled' => true,
