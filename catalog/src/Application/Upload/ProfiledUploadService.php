@@ -80,8 +80,8 @@ final class ProfiledUploadService
 
                 $metadata = is_array($result[4] ?? null) ? $result[4] : $uploadMeta;
                 $aliasAlreadyExists = ($result[0] ?? '') === 'alias'
-                    && function_exists('catalog_package_alias_last_add_was_existing')
-                    && \catalog_package_alias_last_add_was_existing();
+                    && !empty($metadata['alias_already_exists']);
+                unset($metadata['alias_already_exists']);
 
                 if (($result[0] ?? '') === 'duplicate' || $aliasAlreadyExists) {
                     $duplicates++;

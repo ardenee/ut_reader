@@ -43,12 +43,21 @@ final class LegacyCatalogPackageImporter implements CatalogPackageImporter
             $progress
         );
 
-        return VerifiedFileCompactMetadataFinalizer::finalize(
+        $result = VerifiedFileCompactMetadataFinalizer::finalize(
             $this->db,
             $this->config,
             $result,
             $progress
         );
+
+        if (($result[0] ?? '') === 'alias') {
+            $metadata = is_array($result[4] ?? null) ? $result[4] : [];
+            $metadata['alias_already_exists'] = function_exists('catalog_package_alias_last_add_was_existing')
+                && \catalog_package_alias_last_add_was_existing();
+            $result[4] = $metadata;
+        }
+
+        return $result;
     }
 
     public function preserveFailedUpload(

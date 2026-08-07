@@ -39,6 +39,7 @@ final class ProfiledBoundaryImporter implements CatalogPackageImporter
     public int $imports = 0;
     public int $preserved = 0;
     public bool $fail = false;
+    public bool $existingAlias = false;
 
     public function import(
         int $gameId,
@@ -51,6 +52,9 @@ final class ProfiledBoundaryImporter implements CatalogPackageImporter
         $this->imports++;
         if ($this->fail) {
             throw new RuntimeException('synthetic import failure');
+        }
+        if ($this->existingAlias) {
+            return ['alias', 42, 'Alias', [], ['alias_already_exists' => true]];
         }
         return ['imported', 42, 'Imported', []];
     }
@@ -94,6 +98,12 @@ try {
     $result = $service->handle(2, true, $files, 7, null);
     profiled_boundary_expect($result['ok'] === 1 && $result['failed'] === 0, 'Successful import counts changed.');
     profiled_boundary_expect($importer->imports === 1, 'Application service did not invoke the package-import port exactly once.');
+
+    $importer->existingAlias = true;
+    $aliasResult = $service->handle(2, true, $files, 7, null);
+    profiled_boundary_expect($aliasResult['duplicate'] === 1 && $aliasResult['ok'] === 0, 'Existing alias classification changed.');
+    profiled_boundary_expect(!array_key_exists('alias_already_exists', $aliasResult['messages'][0] ?? []), 'Internal alias state leaked into the upload result.');
+    $importer->existingAlias = false;
 
     $importer->fail = true;
     $result = $service->handle(2, true, $files, 7, null);
