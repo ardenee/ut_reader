@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
-use ReflectionMethod;
 use Throwable;
 
 /**
@@ -25,20 +24,15 @@ use Throwable;
  */
 final class CatalogBucketIdentityProcessor
 {
-    private CatalogBucketUploadProcessor $processor;
-    private ReflectionMethod $storeMethod;
-    private ReflectionMethod $indexMethod;
+    private readonly CatalogBucketPackageOperations $operations;
 
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
-        private readonly array $config
+        private readonly array $config,
+        ?CatalogBucketPackageOperations $operations = null
     ) {
-        $this->processor = new CatalogBucketUploadProcessor($db, $config);
-        $this->storeMethod = new ReflectionMethod(CatalogBucketUploadProcessor::class, 'storeBucketUpload');
-        $this->indexMethod = new ReflectionMethod(CatalogBucketUploadProcessor::class, 'indexStored');
-        $this->storeMethod->setAccessible(true);
-        $this->indexMethod->setAccessible(true);
+        $this->operations = $operations ?? new LegacyCatalogBucketPackageOperations($db, $config);
     }
 
     /**
@@ -119,14 +113,11 @@ final class CatalogBucketIdentityProcessor
         }
 
         $this->emit($progress, 'bucket_store', 60, 'Moving the prepared package into Upload Bucket storage.');
-        /** @var array{queue_name:string,original_name:string,size:int,path:string} $stored */
-        $stored = $this->storeMethod->invoke($this->processor, $temporaryPath, $originalName, $reason);
+        $stored = $this->operations->store($temporaryPath, $originalName, $reason);
         $storedPath = (string)$stored['path'];
 
         try {
-            /** @var array<string,mixed> $indexed */
-            $indexed = $this->indexMethod->invoke(
-                $this->processor,
+            $indexed = $this->operations->index(
                 (string)$stored['queue_name'],
                 $storedPath,
                 (string)$stored['original_name'],

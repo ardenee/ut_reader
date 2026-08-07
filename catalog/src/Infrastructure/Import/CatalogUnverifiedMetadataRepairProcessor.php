@@ -15,7 +15,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
-use ReflectionMethod;
 
 /**
  * Rebuilds metadata for a package that is already physically stored in the
@@ -25,18 +24,12 @@ use ReflectionMethod;
  */
 final class CatalogUnverifiedMetadataRepairProcessor
 {
-    private CatalogBucketUploadProcessor $processor;
-    private ReflectionMethod $hashMethod;
-    private ReflectionMethod $indexMethod;
+    private readonly CatalogBucketPackageOperations $operations;
 
     /** @param array<string,mixed> $config */
-    public function __construct(PDO $db, array $config)
+    public function __construct(PDO $db, array $config, ?CatalogBucketPackageOperations $operations = null)
     {
-        $this->processor = new CatalogBucketUploadProcessor($db, $config);
-        $this->hashMethod = new ReflectionMethod(CatalogBucketUploadProcessor::class, 'hashIdentity');
-        $this->indexMethod = new ReflectionMethod(CatalogBucketUploadProcessor::class, 'indexStored');
-        $this->hashMethod->setAccessible(true);
-        $this->indexMethod->setAccessible(true);
+        $this->operations = $operations ?? new LegacyCatalogBucketPackageOperations($db, $config);
     }
 
     /**
@@ -61,17 +54,14 @@ final class CatalogUnverifiedMetadataRepairProcessor
             throw new \RuntimeException('The Upload Bucket package to repair is empty.');
         }
 
-        /** @var array{md5:string,sha1:string} $identity */
-        $identity = $this->hashMethod->invoke($this->processor, $path, $size, $progress);
+        $identity = $this->operations->hash($path, $size, $progress);
         $md5 = strtolower(trim((string)($identity['md5'] ?? '')));
         $sha1 = strtolower(trim((string)($identity['sha1'] ?? '')));
         if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
             throw new \RuntimeException('Metadata repair could not calculate the package MD5 and SHA-1.');
         }
 
-        /** @var array<string,mixed> $result */
-        $result = $this->indexMethod->invoke(
-            $this->processor,
+        $result = $this->operations->index(
             $queueName,
             $path,
             $originalName,

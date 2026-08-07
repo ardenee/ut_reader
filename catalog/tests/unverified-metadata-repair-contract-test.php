@@ -22,6 +22,8 @@ $context = file_get_contents($root . '/src/Application/Jobs/JobExecutionContext.
 $factory = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $handler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogUnverifiedMetadataRepairJobHandler.php');
 $processor = file_get_contents($root . '/src/Infrastructure/Import/CatalogUnverifiedMetadataRepairProcessor.php');
+$operations = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketPackageOperations.php');
+$operationsAdapter = file_get_contents($root . '/src/Infrastructure/Import/LegacyCatalogBucketPackageOperations.php');
 $library = file_get_contents($root . '/lib/UnverifiedMetadataRepair.php');
 $profiles = file_get_contents($root . '/lib/GameProfiles.php');
 $page = file_get_contents($root . '/unverified-database-import.php');
@@ -30,7 +32,7 @@ $jobsPage = file_get_contents($root . '/background-jobs.php');
 $statusApi = file_get_contents($root . '/api/v1/job-status.php');
 $ui = file_get_contents($root . '/src/Presentation/Ui/CatalogUi.php');
 
-foreach (compact('jobType', 'policy', 'context', 'factory', 'handler', 'processor', 'library', 'profiles', 'page', 'action', 'jobsPage', 'statusApi', 'ui') as $name => $source) {
+foreach (compact('jobType', 'policy', 'context', 'factory', 'handler', 'processor', 'operations', 'operationsAdapter', 'library', 'profiles', 'page', 'action', 'jobsPage', 'statusApi', 'ui') as $name => $source) {
     metadata_repair_expect(is_string($source), $name . ' source is missing.');
 }
 
@@ -68,10 +70,15 @@ metadata_repair_expect(
     'Repair jobs can loop unreadable files or are not registered for deduplicated queueing.'
 );
 metadata_repair_expect(
-    str_contains($processor, "new ReflectionMethod(CatalogBucketUploadProcessor::class, 'hashIdentity')")
-        && str_contains($processor, "new ReflectionMethod(CatalogBucketUploadProcessor::class, 'indexStored')")
+    str_contains($processor, 'CatalogBucketPackageOperations')
+        && str_contains($processor, '->hash(')
+        && str_contains($processor, '->index(')
+        && !str_contains($processor, 'ReflectionMethod')
+        && str_contains($operations, 'interface CatalogBucketPackageOperations')
+        && str_contains($operationsAdapter, 'final class LegacyCatalogBucketPackageOperations')
+        && str_contains($operationsAdapter, 'ReflectionMethod')
         && !str_contains($processor, 'rename('),
-    'Upload Bucket repair does not reuse the granular parser/database writer in place.'
+    'Upload Bucket repair does not use the explicit granular package-operations boundary.'
 );
 metadata_repair_expect(
     str_contains($handler, 'Part 1 of 4')
