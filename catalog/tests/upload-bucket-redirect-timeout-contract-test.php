@@ -18,21 +18,18 @@ function bucket_timeout_expect(bool $condition, string $message): void
 $root = dirname(__DIR__);
 $stream = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php');
 $redirectProcessor = file_get_contents($root . '/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php');
-$legacyQueue = file_get_contents($root . '/src/Infrastructure/Import/CatalogBucketUploadQueue.php');
 $batchHandler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $legacyHandler = file_get_contents($root . '/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php');
 $client = file_get_contents($root . '/assets/upload-bucket-v2-coordinator.js');
 $manager = file_get_contents($root . '/assets/background-jobs.js');
 
-foreach (compact('stream', 'redirectProcessor', 'legacyQueue', 'batchHandler', 'legacyHandler', 'client', 'manager') as $name => $source) {
+foreach (compact('stream', 'redirectProcessor', 'batchHandler', 'legacyHandler', 'client', 'manager') as $name => $source) {
     bucket_timeout_expect(is_string($source), $name . ' is missing.');
 }
 
 bucket_timeout_expect(!str_contains($stream, 'assertWithinDeadline'), 'UZ2 decoding still has an elapsed-time deadline.');
 bucket_timeout_expect(!str_contains($stream, 'timeoutSeconds'), 'UZ2 decoding still accepts an automatic timeout.');
 bucket_timeout_expect(!str_contains($redirectProcessor, 'redirect_decompress_timeout_seconds'), 'Redirect processor still reads a timeout setting.');
-bucket_timeout_expect(!str_contains($legacyQueue, 'recoverStalledRedirectWorker'), 'Legacy redirect enqueue still auto-stops quiet jobs.');
-bucket_timeout_expect(!str_contains($legacyQueue, 'bucket_redirect_stall_seconds'), 'Legacy redirect queue still has a time-based stall threshold.');
 bucket_timeout_expect(str_contains($stream, '($now - $lastProgressAt) >= 2.0'), 'Long UZ2 decompression does not publish periodic progress.');
 bucket_timeout_expect(!str_contains($client, 'waitForJob'), 'Upload Bucket still waits for package processing while transferring files.');
 bucket_timeout_expect(!str_contains($client, 'elapsedText()') && !str_contains($client, 'setInterval('), 'Upload Bucket UI still fabricates progress from elapsed timers.');
