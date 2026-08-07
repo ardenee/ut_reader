@@ -65,9 +65,14 @@ try {
      * queue. A browser GET runs every two seconds; allowing it to auto-heal a
      * failed launch hid the real error behind an endless launching state and
      * disabled the explicit Start button.
+     *
+     * This hot polling path also deliberately excludes worker log tails. Reading
+     * stdout/stderr for every worker slot every two seconds adds avoidable disk
+     * I/O (and is particularly expensive on Windows when worker logs are open).
+     * Explicit start/recovery/diagnostic operations can still request log tails.
      */
     $launcher = new CatalogDetachedWorker($application->config);
-    $worker = $launcher->status($queueName, true);
+    $worker = $launcher->status($queueName, false);
     $counts = job_worker_status_counts($application->db, $queueName);
 
     $active = !empty($worker['active']);
