@@ -15,7 +15,6 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
@@ -42,129 +41,21 @@ final class CatalogMaintenanceJobHandler implements JobHandler
 
     public function supports(string $jobType): bool
     {
-        return in_array($jobType, JobType::all(), true);
+        return in_array($jobType, [
+            JobType::REPAIR_SOURCE_IDENTITY_FILE,
+            JobType::REPAIR_SOURCE_IDENTITY_GAME,
+            JobType::PRUNE_UPLOAD_PROGRESS,
+        ], true);
     }
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
         return match ($job->type) {
-            JobType::REBUILD_GAME_DEPENDENCIES => $this->rebuildGame($job, $context),
-            JobType::REBUILD_FILE_DEPENDENCIES => $this->rebuildFile($job, $context),
-            JobType::REBUILD_AFFECTED_DEPENDENCIES => $this->rebuildAffected($job, $context),
             JobType::REPAIR_SOURCE_IDENTITY_FILE => $this->repairSourceIdentityFile($job, $context),
             JobType::REPAIR_SOURCE_IDENTITY_GAME => $this->repairSourceIdentityGame($job, $context),
             JobType::PRUNE_UPLOAD_PROGRESS => $this->pruneUploadProgress($job, $context),
             default => throw new \RuntimeException('Unsupported catalog maintenance job: ' . $job->type),
         };
-    }
-
-    private function rebuildGame(ClaimedJob $job, JobExecutionContext $context): array
-    {
-        $gameId = $this->requiredPositiveInt($job->payload, 'game_id');
-        $offset = max(0, (int)($job->payload['offset'] ?? 0));
-        $game = $this->fetchOne('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
-        if ($game === null) {
-            throw new \RuntimeException('Game no longer exists: ' . $gameId);
-        }
-
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
-        $statement = $this->db->prepare(
-            'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" '
-            . 'ORDER BY package_name,id LIMIT 18446744073709551615 OFFSET ' . $offset
-        );
-        $statement->execute([$gameId]);
-        $files = $statement->fetchAll(PDO::FETCH_ASSOC);
-        $total = count($files);
-        $processedIds = [];
-
-        if ($total === 0) {
-            $context->checkpoint([
-                'stage' => 'dependencies',
-                'done' => 1,
-                'total' => 1,
-                'percent' => 100,
-                'message' => 'No verified files were found for the selected game and offset.',
-            ]);
-        }
-
-        foreach ($files as $index => $file) {
-            $fileId = (int)$file['id'];
-            $processedIds[] = $fileId;
-            $start = (int)floor(($index * 100) / max(1, $total));
-            $end = (int)floor((($index + 1) * 100) / max(1, $total));
-            \scanner_rebuild_dependencies(
-                $this->db,
-                $this->config,
-                $fileId,
-                static function (array $progress) use ($context): void {
-                    $context->heartbeatIfDue($progress);
-                },
-                $start,
-                $end,
-                'Refreshing game dependency links ' . ($index + 1) . '/' . $total . ' (' . (string)$file['package_name'] . ')'
-            );
-        }
-
-        return [
-            'game_id' => $gameId,
-            'game_name' => (string)$game['name'],
-            'offset' => $offset,
-            'processed_files' => $total,
-            'operation' => 'rebuild_game_dependencies',
-            'stats' => $this->dependencyStatsForFileIds($processedIds),
-        ];
-    }
-
-    private function rebuildFile(ClaimedJob $job, JobExecutionContext $context): array
-    {
-        $fileId = $this->requiredPositiveInt($job->payload, 'file_id');
-        $file = $this->fetchOne(
-            'SELECT id,game_id,original_name,package_name FROM ue_files WHERE id=? AND scan_status="verified"',
-            [$fileId]
-        );
-        if ($file === null) {
-            throw new \RuntimeException('Verified file no longer exists: ' . $fileId);
-        }
-
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
-        \scanner_rebuild_dependencies(
-            $this->db,
-            $this->config,
-            $fileId,
-            static function (array $progress) use ($context): void {
-                $context->heartbeatIfDue($progress);
-            },
-            0,
-            100,
-            'Refreshing file dependency links'
-        );
-
-        return [
-            'file_id' => $fileId,
-            'game_id' => (int)$file['game_id'],
-            'original_name' => (string)$file['original_name'],
-            'package_name' => (string)$file['package_name'],
-            'operation' => 'rebuild_file_dependencies',
-            'stats' => $this->dependencyStatsForFileIds([$fileId]),
-        ];
-    }
-
-    private function rebuildAffected(ClaimedJob $job, JobExecutionContext $context): array
-    {
-        $fileId = $this->requiredPositiveInt($job->payload, 'file_id');
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
-        \scanner_rebuild_affected_dependencies(
-            $this->db,
-            $this->config,
-            $fileId,
-            static function (array $progress) use ($context): void {
-                $context->heartbeatIfDue($progress);
-            },
-            0,
-            100
-        );
-
-        return ['file_id' => $fileId, 'operation' => 'rebuild_affected_dependencies'];
     }
 
     private function repairSourceIdentityFile(ClaimedJob $job, JobExecutionContext $context): array
@@ -347,41 +238,6 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             'removed_files' => $removed,
             'operation' => 'prune_upload_progress',
         ];
-    }
-
-    /** @param list<int> $fileIds
-     *  @return array{total:int,resolved:int,missing:int,package_only:int,common:int}
-     */
-    private function dependencyStatsForFileIds(array $fileIds): array
-    {
-        $stats = [
-            'total' => 0,
-            'resolved' => 0,
-            'missing' => 0,
-            'package_only' => 0,
-            'common' => 0,
-        ];
-        $fileIds = array_values(array_unique(array_filter(array_map('intval', $fileIds), static fn(int $id): bool => $id > 0)));
-        if ($fileIds === []) {
-            return $stats;
-        }
-
-        $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ' . CatalogDependencyReadSource::sql($this->db) . ' dependencies '
-            . 'WHERE dependencies.file_id IN ('
-            . implode(',', array_fill(0, count($fileIds), '?'))
-            . ') GROUP BY status'
-        );
-        $statement->execute($fileIds);
-        while ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
-            $status = (string)($row['status'] ?? '');
-            $count = (int)($row['c'] ?? 0);
-            $stats['total'] += $count;
-            if (array_key_exists($status, $stats)) {
-                $stats[$status] += $count;
-            }
-        }
-        return $stats;
     }
 
     /** @return array<string,mixed>|null */
