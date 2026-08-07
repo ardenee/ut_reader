@@ -18,6 +18,7 @@ require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
 function ft_tab(mixed $value): string
 {
@@ -59,6 +60,7 @@ function ft_page_links(string $tab, int $pageSize, array $page): string
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $historyPageQuery = new PdoFederationHistoryPageQuery($db);
     $tab = ft_tab($_REQUEST['tab'] ?? 'active');
     $pageSize = CatalogFederationHistoryPageService::normalizePageSize((int)($_REQUEST['page_size'] ?? 100));
 
@@ -124,8 +126,7 @@ try {
 
     $statuses = ft_statuses($tab);
     $quoted = implode(',', array_map([$db, 'quote'], $statuses));
-    $page = CatalogFederationHistoryPageService::fetch(
-        $db,
+    $page = $historyPageQuery->fetch(
         $config,
         'federation-transfer-queue|tab=' . $tab . '|' . $visible,
         'SELECT j.*,p.site_name peer_name,p.peer_role,j.created_at cursor_created_at,j.id cursor_id

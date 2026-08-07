@@ -11,10 +11,12 @@
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
+
+$historyPageQuery = new PdoFederationHistoryPageQuery($db);
 
 if ($tab === 'parent_pulls') {
-    $transferPage = CatalogFederationHistoryPageService::fetch(
-        $db,
+    $transferPage = $historyPageQuery->fetch(
         $config,
         'federation-requests-parent-pulls|' . $visibleJobs,
         'SELECT j.*,p.site_name peer_name,pf.package_name,pf.original_name,j.created_at cursor_created_at,j.id cursor_id
@@ -63,8 +65,7 @@ $closed = $tab === 'closed';
 $statusSql = $closed
     ? 'r.status IN ("completed","cancelled","denied")'
     : 'r.status NOT IN ("completed","cancelled","denied")';
-$requestPage = CatalogFederationHistoryPageService::fetch(
-    $db,
+$requestPage = $historyPageQuery->fetch(
     $config,
     'federation-requests-parent|' . ($closed ? 'closed' : 'active'),
     'SELECT r.*,p.site_name peer_name,r.created_at cursor_created_at,r.id cursor_id

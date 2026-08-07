@@ -21,6 +21,7 @@ require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
 function diagnostics_tab(mixed $value): string
 {
@@ -73,6 +74,7 @@ function diagnostics_log_links(array $filters, array $page): string
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $historyPageQuery = new PdoFederationHistoryPageQuery($db);
     federation_reconcile_site_role($db);
     $tab = diagnostics_tab($_REQUEST['tab'] ?? 'logs');
 
@@ -130,8 +132,7 @@ try {
         if ($peerId > 0) { $where[]='l.peer_id=?'; $args[]=$peerId; }
         if ($event !== '') { $where[]='l.event LIKE ?'; $args[]='%'.$event.'%'; }
         $context = 'federation-diagnostics-logs|level=' . $level . '|peer=' . $peerId . '|event=' . strtolower($event);
-        $page = CatalogFederationHistoryPageService::fetch(
-            $db,
+        $page = $historyPageQuery->fetch(
             $config,
             $context,
             'SELECT l.*,p.site_name peer_name,l.created_at cursor_created_at,l.id cursor_id

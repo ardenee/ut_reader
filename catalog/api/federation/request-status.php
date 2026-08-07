@@ -19,6 +19,7 @@ require_once __DIR__ . '/../../lib/FederationPackageAvailability.php';
 require_once __DIR__ . '/../../lib/FederationRequestLifecycle.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
 /** @return list<array<string,mixed>> */
 function request_status_items(PDO $db, int $requestId, bool $ignoreBaseGame): array
@@ -73,6 +74,7 @@ function request_status_items(PDO $db, int $requestId, bool $ignoreBaseGame): ar
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $historyPageQuery = new PdoFederationHistoryPageQuery($db);
     base_game_ensure($db);
     $body = file_get_contents('php://input') ?: '';
     $peer = fed_require_signed_peer($db, $body);
@@ -125,8 +127,7 @@ try {
         $statusSql = $closed
             ? 'r.status IN ("completed","cancelled","denied")'
             : 'r.status NOT IN ("completed","cancelled","denied")';
-        $requestPage = CatalogFederationHistoryPageService::fetch(
-            $db,
+        $requestPage = $historyPageQuery->fetch(
             $config,
             'federation-request-status-api|peer=' . (int)$peer['id'] . '|closed=' . ($closed ? '1' : '0'),
             'SELECT r.*,r.created_at cursor_created_at,r.id cursor_id FROM ue_federation_requests r',

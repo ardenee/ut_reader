@@ -11,6 +11,9 @@
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
+
+$historyPageQuery = new PdoFederationHistoryPageQuery($db);
 
 $parent = fr_parent($db);
 $error = '';
@@ -100,8 +103,7 @@ if ($requestId > 0) {
     echo '</div>';
 }
 
-$transferPage = CatalogFederationHistoryPageService::fetch(
-    $db,
+$transferPage = $historyPageQuery->fetch(
     $config,
     'federation-requests-child-transfers|peer=' . (int)$parent['id'] . '|' . $visibleJobs,
     'SELECT j.*,j.created_at cursor_created_at,j.id cursor_id FROM ue_federation_transfer_jobs j',
