@@ -12,13 +12,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Application\Catalog\CatalogPackageTablePageService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageTablePageQuery;
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
     $fileId = max(0, (int)($_GET['id'] ?? 0));
-    $table = CatalogPackageTablePageService::normalizeTable((string)($_GET['table'] ?? 'names'));
+    $table = PdoPackageTablePageQuery::normalizeTable((string)($_GET['table'] ?? 'names'));
     $format = strtolower(trim((string)($_GET['format'] ?? 'csv')));
     if (!in_array($format, ['csv', 'json'], true)) {
         throw new RuntimeException('Unsupported export format.');
@@ -34,7 +34,7 @@ try {
         throw new RuntimeException('Verified file not found.');
     }
 
-    $definition = CatalogPackageTablePageService::definition($table);
+    $definition = PdoPackageTablePageQuery::definition($table);
     $columns = $definition['columns'];
     $safePackage = preg_replace('/[^A-Za-z0-9._-]+/', '_', (string)$file['package_name']) ?: 'package';
     $filename = $safePackage . '-' . $table . '.' . $format;
@@ -55,7 +55,7 @@ try {
         fwrite($output, "\xEF\xBB\xBF");
         fputcsv($output, $columns, ',', '"', '');
         do {
-            $page = CatalogPackageTablePageService::fetchPage(
+            $page = PdoPackageTablePageQuery::fetchPage(
                 $db,
                 $file,
                 $table,
@@ -82,7 +82,7 @@ try {
         . ',"rows":[';
     $first = true;
     do {
-        $page = CatalogPackageTablePageService::fetchPage(
+        $page = PdoPackageTablePageQuery::fetchPage(
             $db,
             $file,
             $table,
