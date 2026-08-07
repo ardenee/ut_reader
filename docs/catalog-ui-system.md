@@ -38,8 +38,7 @@ catalog/
 ├── lib/CatalogUi.php                 Legacy global class alias
 ├── assets/catalog-ui.css             Existing base component styles
 ├── assets/catalog-ui-components.css  Extended component styles and tokens
-├── assets/catalog-ui.js              Progressive enhancement
-└── tests/ui-components-test.php      Rendering and accessibility contracts
+└── assets/catalog-ui.js              Progressive enhancement
 ```
 
 Dependency direction:
@@ -61,7 +60,7 @@ Components never query MySQL, inspect request globals, start sessions, perform a
 4. **Navigation remains anchors.** Actions with `href` render links; state-changing operations render buttons.
 5. **Finite variants.** Tones, sizes, button variants, input types, and methods are validated against supported values.
 6. **Progressive enhancement.** Loading behavior improves submissions but does not replace native forms.
-7. **Compatibility first.** Existing pages may continue using `CatalogUi`; component implementations remain independently testable.
+7. **Compatibility first.** Existing pages may continue using `CatalogUi`; component implementations remain independently reusable and can be verified through the web interface.
 
 ## Component APIs
 
@@ -71,7 +70,7 @@ Components never query MySQL, inspect request globals, start sessions, perform a
 
 Actions may use the legacy `label => href` map or descriptor objects containing `label`, `href`, and an optional `variant`.
 
-The component creates a unique heading ID and connects the section with `aria-labelledby`. It is safe to render more than one page-style header in tests or embedded tools without duplicate IDs.
+The component creates a unique heading ID and connects the section with `aria-labelledby`. It is safe to render more than one page-style header in embedded tools without duplicate IDs.
 
 ### Button
 
@@ -261,14 +260,14 @@ No information is removed solely because the viewport is narrow.
 
 ## Usage examples
 
-Production examples are maintained in the component test and the Games page rather than copied into every controller. New pages should compose fields, buttons, filter bars, sections, empty states, table regions, and pagination through `CatalogUi`.
+Production examples are maintained in the Games page and other active catalog pages rather than copied into every controller. New pages should compose fields, buttons, filter bars, sections, empty states, table regions, and pagination through `CatalogUi`.
 
 When a new visual pattern is needed:
 
 1. confirm it appears on at least two pages or fills an accessibility gap;
 2. add an isolated component under `Presentation/Ui/Component`;
 3. expose it through `CatalogUi` only when broad compatibility is useful;
-4. add escaping, semantics, disabled-state, and edge-state tests;
+4. verify escaping, semantics, disabled-state, and edge states through the web interface;
 5. add shared responsive styling;
 6. migrate one reference page before broad adoption.
 
@@ -280,7 +279,7 @@ When a new visual pattern is needed:
 4. Preserve server-rendered content as the baseline experience.
 5. Use loading UI only during real work.
 6. Always provide a recovery path for filtered empty states.
-7. Test keyboard navigation, narrow viewports, long values, zero rows, one page, last page, and JavaScript-disabled submission.
-8. Keep component output deterministic so it can be protected with lightweight contract tests.
+7. Validate keyboard navigation, narrow viewports, long values, zero rows, one page, last page, and JavaScript-disabled submission through the web interface.
+8. Keep component output deterministic so behavior remains predictable across pages.
 9. Do not expose technical exception traces in alerts.
 10. Migrate incrementally; do not rewrite working pages solely to adopt newer markup.

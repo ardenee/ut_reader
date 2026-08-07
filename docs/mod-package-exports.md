@@ -68,7 +68,7 @@ The built-in writer currently creates:
 - per-entry SHA-1 hashes;
 - a configurable mount point, defaulting to `../../../UnrealTournament/Content/`.
 
-The generated PAK is structurally reopened and verified by UnrealDB. Live-game compatibility should still be confirmed with representative UT4 fixtures before broad public use.
+The generated PAK is structurally reopened and verified by UnrealDB. Live-game compatibility should still be confirmed with representative UT4 files through the web interface before broad public use.
 
 ## Administration
 
@@ -88,6 +88,4 @@ Generated packages require local catalog payloads. They are unavailable when pub
 
 ## Validation
 
-`catalog/tests/mod-package-format-test.php` builds and reopens representative UMOD-family and PAK outputs. The catalog quality workflow runs this test alongside PHP syntax checks.
-
-The test confirms container structure and hashes; it does not replace fixture testing in the original games.
+Package export validation is performed through the web interface using representative files from the target games. Generated archives are reopened and structurally checked by UnrealDB before they are served, while installation and live-game behavior should be confirmed in the intended game.
