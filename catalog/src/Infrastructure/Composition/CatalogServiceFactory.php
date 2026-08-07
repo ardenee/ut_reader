@@ -1,13 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogServiceFactory` for catalog service factory.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Composes catalog application services with their infrastructure adapters.
+ * Why: Controllers should receive fully wired use cases instead of constructing PDO, parser, filesystem and logging dependencies themselves.
+ * Role: Infrastructure composition root for application use cases.
+ * Audit: Keep concrete adapters here; Application classes must depend only on their ports.
  */
 declare(strict_types=1);
 
@@ -19,20 +16,13 @@ use UnrealDb\Catalog\Application\Upload\ProfiledUploadService;
 use UnrealDb\Catalog\Infrastructure\Filesystem\NativeUnverifiedFileSystem;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyCatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Logging\LegacyUploadFailureLogger;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoProfiledUploadGameCatalog;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUnverifiedRecordStore;
 use UnrealDb\Catalog\Infrastructure\Unverified\LegacyUnverifiedQueueInventory;
 
-/**
- * Composition root for application use cases.
- *
- * Controllers receive fully wired application services from here instead of
- * constructing PDO, parser, filesystem, and logging dependencies themselves.
- */
 final class CatalogServiceFactory
 {
-    /**
-     * @param array<string, mixed> $config
-     */
+    /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
@@ -42,9 +32,8 @@ final class CatalogServiceFactory
     public function profiledUpload(): ProfiledUploadService
     {
         return new ProfiledUploadService(
-            $this->db,
-            $this->config,
-            new LegacyCatalogPackageImporter(),
+            new PdoProfiledUploadGameCatalog($this->db),
+            new LegacyCatalogPackageImporter($this->db, $this->config),
             new LegacyUploadFailureLogger($this->db)
         );
     }

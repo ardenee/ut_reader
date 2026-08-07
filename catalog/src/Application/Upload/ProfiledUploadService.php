@@ -1,45 +1,32 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `ProfiledUploadService` for profiled upload service.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Orchestrates a profile-targeted package upload batch.
+ * Why: HTTP/session concerns belong in controllers while database, parser and filesystem details remain behind application ports.
+ * Role: Application use case for profile-targeted uploads.
+ * Audit: Keep this class free of PDO, SQL, runtime config and Infrastructure dependencies.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Application\Upload;
 
-use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Upload\Contract\CatalogPackageImporter;
+use UnrealDb\Catalog\Application\Upload\Contract\ProfiledUploadGameCatalog;
 use UnrealDb\Catalog\Application\Upload\Contract\UploadFailureLogger;
 
-/**
- * Application use case for a profile-targeted package upload batch.
- *
- * HTTP/session/CSRF handling remains in the page controller. Package parsing,
- * physical storage, and failed-file preservation remain behind the importer port.
- * Result formatting and concise error text are stable shared contracts.
- */
 final class ProfiledUploadService
 {
-    /**
-     * @param array<string, mixed> $config
-     */
     public function __construct(
-        private readonly PDO $db,
-        private readonly array $config,
+        private readonly ProfiledUploadGameCatalog $games,
         private readonly CatalogPackageImporter $importer,
         private readonly ?UploadFailureLogger $failureLogger = null
     ) {
     }
 
     /**
-     * @param array<string, mixed> $uploadedFiles
-     * @return array{ok:int,duplicate:int,failed:int,messages:list<array<string, mixed>>}
+     * @param array<string,mixed> $uploadedFiles
+     * @return array{ok:int,duplicate:int,failed:int,messages:list<array<string,mixed>>}
      */
     public function handle(
         int $gameId,
@@ -48,8 +35,8 @@ final class ProfiledUploadService
         ?int $userId,
         ?callable $progress
     ): array {
-        $game = \catalog_one($this->db, 'SELECT slug FROM ue_games WHERE id=?', [$gameId]);
-        if (!$game) {
+        $gameSlug = $this->games->slug($gameId);
+        if ($gameSlug === null || $gameSlug === '') {
             throw new \RuntimeException('Game not found');
         }
 
@@ -58,7 +45,6 @@ final class ProfiledUploadService
         $failed = 0;
         $messages = [];
         $temporaryPaths = $uploadedFiles['tmp_name'] ?? [];
-
         if (!is_array($temporaryPaths)) {
             $temporaryPaths = [];
         }
@@ -71,7 +57,7 @@ final class ProfiledUploadService
                 : 0;
             $uploadMeta = [
                 'file_size' => $uploadSize,
-                'file_size_text' => \catalog_bytes($uploadSize),
+                'file_size_text' => self::bytes($uploadSize),
             ];
 
             if ($uploadError !== UPLOAD_ERR_OK) {
@@ -84,8 +70,6 @@ final class ProfiledUploadService
 
             try {
                 $result = $this->importer->import(
-                    $this->db,
-                    $this->config,
                     $gameId,
                     (string)$temporaryPath,
                     $originalName,
@@ -104,12 +88,7 @@ final class ProfiledUploadService
                     $message = $aliasAlreadyExists
                         ? 'Package alias already exists for existing file identity'
                         : (string)($result[2] ?? 'Duplicate in selected game');
-                    $messages[] = UploadResult::create(
-                        'duplicate',
-                        $originalName,
-                        $message,
-                        $metadata
-                    );
+                    $messages[] = UploadResult::create('duplicate', $originalName, $message, $metadata);
                     continue;
                 }
 
@@ -125,18 +104,12 @@ final class ProfiledUploadService
                 $message = UploadErrorFormatter::concise($exception);
                 $this->logFailure($originalName, $exception);
                 $this->importer->preserveFailedUpload(
-                    $this->config,
                     (string)$temporaryPath,
                     $originalName,
-                    (string)$game['slug'],
+                    $gameSlug,
                     $exception->getMessage()
                 );
-                $messages[] = UploadResult::create(
-                    'failed',
-                    $originalName,
-                    $message,
-                    $uploadMeta
-                );
+                $messages[] = UploadResult::create('failed', $originalName, $message, $uploadMeta);
                 $this->emitFailureProgress($progress, $originalName, $message);
             }
         }
@@ -149,23 +122,29 @@ final class ProfiledUploadService
         ];
     }
 
-    /**
-     * @param array<string, mixed> $entry
-     */
+    /** @param array<string,mixed> $entry */
     public static function resultText(array $entry): string
     {
         return UploadResult::text($entry);
     }
 
-    private function emitFailureProgress(
-        ?callable $progress,
-        string $fileName,
-        string $message
-    ): void {
+    private static function bytes(int $bytes): string
+    {
+        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+        $value = $bytes;
+        $unit = 0;
+        while ($value >= 1024 && $unit < count($units) - 1) {
+            $value /= 1024;
+            $unit++;
+        }
+        return ($unit > 0 ? number_format($value, 2) : (string)$bytes) . ' ' . $units[$unit];
+    }
+
+    private function emitFailureProgress(?callable $progress, string $fileName, string $message): void
+    {
         if ($progress === null) {
             return;
         }
-
         $progress([
             'stage' => 'failed',
             'done' => 100,
@@ -181,25 +160,7 @@ final class ProfiledUploadService
             $this->failureLogger->log($filename, $exception);
             return;
         }
-
-        // Compatibility fallback for callers not yet composed through a factory.
-        $details = $filename
-            . ': '
-            . get_class($exception)
-            . ': '
-            . $exception->getMessage()
-            . "\n"
-            . $exception->getTraceAsString();
-        error_log('[UnrealDB upload] ' . $details);
-
-        if (!function_exists('fed_log')) {
-            return;
-        }
-
-        try {
-            \fed_log($this->db, null, null, 'ERROR', 'UPLOAD_SCAN_FAIL', $details);
-        } catch (Throwable) {
-            // A failure in optional audit logging must not break the upload flow.
-        }
+        error_log('[UnrealDB upload] ' . $filename . ': ' . get_class($exception) . ': '
+            . $exception->getMessage() . "\n" . $exception->getTraceAsString());
     }
 }

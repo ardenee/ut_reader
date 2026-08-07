@@ -37,8 +37,6 @@ $legacyAllowed = array_fill_keys([
     'Search/CatalogSearchService.php',
     'Telemetry/CatalogExactCountBenchmark.php',
     'Telemetry/CatalogExactCountQueryCatalog.php',
-    'Upload/Contract/CatalogPackageImporter.php',
-    'Upload/ProfiledUploadService.php',
 ], true);
 
 $violations = [];
