@@ -1,37 +1,23 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `CatalogBackgroundJobPageService` for catalog background job page service.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Defines the background-job keyset pagination policy used by cursor-based job listings.
+ * Why: Pagination rules belong in Application while database execution remains an Infrastructure concern.
+ * Role: Pure application service for move normalization, cursor comparisons, ordering, final-page sizing, and page metadata.
+ * Audit: Keep PDO and database execution out of this class; persistence adapters may depend on this policy.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Application\Jobs;
 
-use PDO;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 
-/** Reads stable background-job pages without discarding earlier rows with OFFSET. */
+/** Defines stable background-job cursor pagination without owning persistence. */
 final class CatalogBackgroundJobPageService
 {
-    /**
-     * @param list<mixed> $params
-     * @param list<mixed>|null $cursor
-     * @return array{rows:list<array<string,mixed>>,has_previous:bool,has_next:bool,first_cursor:?array,last_cursor:?array}
-     */
-    public static function fetch(
-        PDO $db,
-        string $selectSql,
-        string $whereSql,
-        array $params,
-        int $limit,
-        ?array $cursor,
-        string $move
-    ): array {
+    /** @return array{limit:int,move:string,reverse:bool} */
+    public static function window(int $limit, string $move): array
+    {
         $limit = max(1, min(1000, $limit));
         $move = strtolower(trim($move));
         if ($move === 'prev') {
@@ -41,43 +27,44 @@ final class CatalogBackgroundJobPageService
             $move = 'first';
         }
 
-        $reverse = $move === 'previous' || $move === 'last';
-        $conditions = trim($whereSql);
-        $args = $params;
+        return [
+            'limit' => $limit,
+            'move' => $move,
+            'reverse' => $move === 'previous' || $move === 'last',
+        ];
+    }
 
-        // A reversed LIMIT normally returns a full final window. When the total
-        // is not divisible by the selected page size that would overlap the
-        // preceding page. Count only for an explicit Last request and reduce
-        // the read to the exact remainder.
-        if ($move === 'last') {
-            $countSql = 'SELECT COUNT(*) FROM (' . $selectSql
-                . ($conditions !== '' ? ' WHERE ' . $conditions : '')
-                . ') background_job_cursor_count';
-            $count = $db->prepare($countSql);
-            $count->execute($args);
-            $total = (int)$count->fetchColumn();
-            $remainder = $total % $limit;
-            if ($remainder > 0) {
-                $limit = $remainder;
-            }
+    public static function lastPageLimit(int $limit, int $total, string $move): int
+    {
+        if ($move !== 'last') {
+            return $limit;
         }
 
-        if ($cursor !== null && ($move === 'next' || $move === 'previous')) {
-            $comparison = CatalogKeysetPaginator::comparison(['j.id'], ['DESC'], $cursor, $move === 'next');
-            $conditions = $conditions === '' ? $comparison['sql'] : '(' . $conditions . ') AND ' . $comparison['sql'];
-            array_push($args, ...$comparison['args']);
+        $remainder = $total % $limit;
+        return $remainder > 0 ? $remainder : $limit;
+    }
+
+    /** @param list<mixed>|null $cursor @return array{sql:string,args:list<mixed>}|null */
+    public static function cursorComparison(?array $cursor, string $move): ?array
+    {
+        if ($cursor === null || ($move !== 'next' && $move !== 'previous')) {
+            return null;
         }
 
-        $sql = $selectSql;
-        if ($conditions !== '') {
-            $sql .= ' WHERE ' . $conditions;
-        }
-        $sql .= ' ORDER BY ' . CatalogKeysetPaginator::order(['j.id'], ['DESC'], $reverse)
-            . ' LIMIT ' . ($limit + 1);
+        return CatalogKeysetPaginator::comparison(['j.id'], ['DESC'], $cursor, $move === 'next');
+    }
 
-        $statement = $db->prepare($sql);
-        $statement->execute($args);
-        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+    public static function order(bool $reverse): string
+    {
+        return CatalogKeysetPaginator::order(['j.id'], ['DESC'], $reverse);
+    }
+
+    /**
+     * @param list<array<string,mixed>> $rows
+     * @return array{rows:list<array<string,mixed>>,has_previous:bool,has_next:bool,first_cursor:?array,last_cursor:?array}
+     */
+    public static function finish(array $rows, int $limit, string $move, bool $reverse): array
+    {
         $hasExtra = count($rows) > $limit;
         if ($hasExtra) {
             array_pop($rows);
@@ -90,7 +77,7 @@ final class CatalogBackgroundJobPageService
         $last = $rows !== [] ? [(int)$rows[count($rows) - 1]['id']] : null;
 
         return [
-            'rows' => $rows,
+            'rows' => array_values($rows),
             'has_previous' => match ($move) {
                 'first' => false,
                 'next' => $rows !== [],
