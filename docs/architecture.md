@@ -1,10 +1,10 @@
 # UnrealDB Architecture Baseline
 
-This document describes the current runtime architecture and the intended refactoring direction. It is deliberately behavior-preserving: refactors should move responsibilities behind stable boundaries without changing file identity, queue semantics, import results, search results, federation behavior, or public routes.
+This document describes the current runtime architecture and the intended refactoring direction. Refactors are behavior-preserving unless explicitly stated: file identity, queue semantics, import results, search results, federation behaviour and public routes must remain stable.
 
 ## Runtime shape
 
-UnrealDB is a modular monolith in transition. The namespaced `catalog/src` tree provides Domain, Application, Infrastructure and Presentation layers, while a large legacy compatibility layer remains under `catalog/lib` and top-level PHP routes.
+UnrealDB is a modular monolith in transition. The namespaced `catalog/src` tree provides Domain, Application, Infrastructure and Presentation layers. Top-level PHP routes and a compatibility API remain under `catalog/lib`, but migrated implementations should not be duplicated there as backup code.
 
 ### Presentation / entry points
 
@@ -13,7 +13,7 @@ UnrealDB is a modular monolith in transition. The namespaced `catalog/src` tree 
 - CLI / workers: `catalog/bin/*.php`
 - Shared request bootstrap: `catalog/lib/CatalogSupport.php`, `catalog/bootstrap.php`, `catalog/src/Presentation/Http/*`
 
-Entry points should validate HTTP/CLI input, resolve dependencies at the composition boundary, invoke one application use case and render/serialize the result. They should not own SQL, filesystem policy, worker lifecycle or parser internals.
+Entry points should validate HTTP/CLI input, resolve dependencies at the composition boundary, invoke the appropriate use case/query and render/serialize the result. They should not own SQL, filesystem policy, worker lifecycle or parser internals.
 
 ### Domain
 
@@ -21,37 +21,54 @@ Entry points should validate HTTP/CLI input, resolve dependencies at the composi
 
 ### Application
 
-`catalog/src/Application` contains use-case orchestration and ports. Application code may depend on Domain and Application contracts. Existing direct PDO/Infrastructure dependencies are legacy debt and are being removed incrementally; the architecture dependency ratchet prevents new violations.
+`catalog/src/Application` contains use-case orchestration and contracts. It should depend on Domain/Application abstractions rather than constructing PDO/filesystem/process implementations. Remaining direct persistence dependencies are migration debt, not examples for new code.
 
 ### Infrastructure
 
-`catalog/src/Infrastructure` owns adapters for MySQL/PDO, filesystem storage, Unreal package readers, metadata projections, imports, job handlers, process launching and external integration.
+`catalog/src/Infrastructure` owns MySQL/PDO queries and repositories, filesystem storage, Unreal package readers, compact metadata, imports, job handlers, process launching and external integrations.
+
+Dependency resolution/rebuilding is now explicitly Infrastructure-owned:
+
+- `Persistence/PdoDependencyResolver.php`
+- `Persistence/PdoCatalogDependencyRebuilder.php`
+- `Persistence/PdoDependencyReadSource.php`
+- `Jobs/CatalogAffectedDependencyRefreshCoordinator.php`
+- `Metadata/CompactDependencyRebuilder.php`
 
 ### Legacy compatibility layer
 
-`catalog/lib` still contains a large procedural API used by old routes and by some newer infrastructure. These global functions are compatibility facades, not the target architecture. New business logic should go into namespaced services and old functions should become thin delegates until callers can be migrated.
+`catalog/lib` still exposes a procedural API used by older routes and some current workers. Compatibility functions should delegate to current namespaced implementations. Once all callers are migrated, the compatibility function/file should be deleted rather than retained as a fallback implementation.
+
+`CatalogScanner.php` is no longer a monolith. It is a thin include manifest for focused scanner compatibility modules:
+
+- `lib/Scanner/CatalogScannerPath.php`
+- `lib/Scanner/CatalogScannerSupport.php`
+- `lib/Scanner/CatalogScannerDependencies.php`
+- `lib/Scanner/CatalogScannerImport.php`
+
+The public `scanner_*` contracts remain stable while their implementations are migrated further.
 
 ## Primary data flows
 
 ### Upload Bucket v2
 
 1. `upload-bucket-v2.php` renders the canonical browser uploader.
-2. Browser code performs extension policy checks and ordinary-file hashing; redirect wrappers are transferred without pretending their compressed hash is the package identity.
+2. Browser code performs extension policy checks and ordinary-file hashing; redirect wrappers are transferred without pretending their compressed hash is package identity.
 3. `api/v1/upload-bucket-chunk.php` writes bounded resumable chunks to durable staging.
 4. `api/v1/upload-bucket-batch.php` finalizes staged files and queues durable work through `CatalogBucketBatchQueue`.
-5. `ue_background_jobs` holds the durable job.
-6. Detached workers claim the job and route the exact `JobType` to one handler.
-7. `CatalogBucketUploadProcessor` / redirect processing calculate authoritative identities, store physical files and create/update unverified catalog metadata.
+5. `ue_background_jobs` holds durable work.
+6. Detached workers claim jobs and route each exact `JobType` to one handler.
+7. Upload/redirect processors calculate authoritative identities, store physical files and create/update unverified catalog metadata.
 8. Unverified files are later assigned/imported into a game and post-import dependency work is queued.
 
 ### Profiled upload / staged import
 
 1. HTTP/API validates the selected game/profile and stages the file.
 2. A durable `IMPORT_STAGED_PACKAGE` or `IMPORT_STAGED_PAK` job is queued.
-3. Package jobs run through the non-blocking staged-import handler; PAK jobs use the PAK import handler.
+3. Package jobs run through staged-import handlers; PAK jobs use the PAK import handler.
 4. Unreal readers parse package metadata.
 5. Catalog rows and compact metadata projections are persisted.
-6. Dependency/search/projection maintenance is queued rather than extending the HTTP request.
+6. Dependency/search/projection maintenance runs through durable jobs rather than extending foreground requests unnecessarily.
 
 ### Local source scan
 
@@ -59,7 +76,17 @@ Entry points should validate HTTP/CLI input, resolve dependencies at the composi
 2. PAK containers are queued separately from ordinary package files.
 3. Package files are fingerprinted and compared with known physical/catalog identities.
 4. New/changed files are scanned/imported; failures are staged for review.
-5. Source-relative paths and file locations preserve the physical origin.
+5. Source-relative paths and file locations preserve physical origin and UE4/UE5 long-package identity.
+
+### Scanner package import
+
+1. `CatalogScanner.php` loads the focused scanner compatibility modules.
+2. Path/name policy determines physical filename and logical package identity.
+3. Reader/profile detection validates the package and reads Names/Imports/Exports.
+4. Physical storage and catalog rows are written using the existing import transaction semantics.
+5. `PdoCatalogDependencyRebuilder` performs dependency resolution through `PdoDependencyResolver`.
+6. Compact metadata finalization becomes authoritative for verified files.
+7. Affected-provider refresh work is coordinated through `CatalogAffectedDependencyRefreshCoordinator` unless deliberately deferred by Full Sync.
 
 ### Unverified promotion
 
@@ -68,12 +95,12 @@ Entry points should validate HTTP/CLI input, resolve dependencies at the composi
 3. Existing staged hashes and metadata are reused when valid.
 4. The selected game/profile and package identity are checked.
 5. The file is promoted to verified catalog state.
-6. Heavy dependency/projection work is queued after the foreground file operation.
+6. Heavy dependency/projection work is queued after the foreground operation.
 
 ### Durable background jobs
 
 1. Producers enqueue `JobType`, payload, priority, resource policy, dedupe key and retry policy.
-2. `PdoJobQueue` persists the durable job and leases work to workers.
+2. `PdoJobQueue` persists durable jobs and leases work to workers.
 3. `CatalogDetachedWorker` manages local worker processes/runtime state.
 4. `JobWorker` performs deterministic `JobType => JobHandler` dispatch.
 5. Handlers checkpoint/heartbeat while doing work.
@@ -89,82 +116,83 @@ Entry points should validate HTTP/CLI input, resolve dependencies at the composi
 
 ### Federation
 
-Federation uses the same catalog identities and storage model but currently contains significant page-local SQL/orchestration. Treat it as a bounded context: connection/authentication, inventory exchange, requests/transfers and reconciliation should be extracted behind application services without changing the wire protocol.
+Federation uses the same catalog identities and storage model but still contains page-local orchestration and SQL in older areas. Treat connection/authentication, inventory exchange, requests/transfers and reconciliation as a bounded context and migrate them behind stable query/use-case boundaries without changing the wire protocol.
 
 ## Critical architecture debt
 
-### 1. Legacy procedural kernel
+### 1. Legacy procedural compatibility API
 
-`catalog/lib` still exposes hundreds of global functions. `CatalogSupport.php` / `CatalogSupportCore.php` behave as a broad compatibility kernel/service locator. This obscures dependencies and makes request behavior depend on include order and global state.
+`catalog/lib` still exposes many global functions. Include order/global state can obscure dependencies.
 
-**Direction:** keep compatibility functions temporarily, but move implementations to namespaced services and make wrappers delegate.
+**Direction:** move real implementations into namespaced services; preserve only thin delegates while callers require them, then delete the delegates.
 
-### 2. Application layer depends outward
+### 2. Remaining outward dependencies from Application
 
-Multiple Application services still import PDO or Infrastructure adapters directly.
+Some Application services still directly depend on PDO or Infrastructure.
 
-**Direction:** define narrow Application ports (repositories, queues, readers, clocks) and construct PDO/filesystem/process adapters only in composition roots or entry-point factories. The dependency-ratchet test must shrink over time and must never gain new exceptions.
+**Direction:** remove these one service at a time. Persistence/query implementations belong in Infrastructure; Application should retain only genuine use-case policy/contracts.
 
-### 3. SQL ownership is widely distributed
+### 3. SQL ownership is still distributed
 
-Core tables such as `ue_files`, `ue_games` and `ue_background_jobs` are queried from many unrelated files. Query policy, projection semantics and transaction boundaries are therefore difficult to change safely.
+Core tables such as `ue_files`, `ue_games` and `ue_background_jobs` are queried from many older routes/helpers.
 
-**Direction:** migrate one bounded context at a time to repository/query objects. Avoid a single generic repository; use intent-specific interfaces.
+**Direction:** migrate bounded contexts to intent-specific query/repository objects rather than a single generic repository.
 
 ### 4. Worker claim scalability
 
-`PdoJobQueue::claim()` serializes claimers with a queue-wide MySQL advisory lock and performs resource/concurrency subqueries during every claim. This is safe but limits worker-pool scaling.
+`PdoJobQueue::claim()` still serializes claimers with a queue-wide MySQL advisory lock and performs resource/concurrency work during claim. This protects current semantics but can limit pool scaling.
 
-**Direction:** preserve the current lease contract while adding integration coverage, then move to row-level claim concurrency (`FOR UPDATE SKIP LOCKED` where supported) and separate expired-lease recovery from every claim attempt.
+**Direction:** preserve the lease/concurrency contract while measuring through the Background Jobs UI and worker runtime state. Move toward row-level claim concurrency (`FOR UPDATE SKIP LOCKED` where supported) only when equivalent behaviour can be demonstrated on the production-style MySQL setup.
 
 ### 5. Search contains queries do not scale
 
-Broad search includes leading-wildcard `LIKE` predicates and collation/conversion expressions. Normal B-tree indexes cannot efficiently satisfy these scans as compact term volume grows.
+Broad search still includes leading-wildcard `LIKE` predicates and collation/conversion expressions that normal B-tree indexes cannot efficiently satisfy.
 
-**Direction:** build a normalized search projection suitable for indexed prefix/full-text/ngram lookup, dual-run it against current search for result equivalence, then switch reads only after measured parity.
+**Direction:** build an indexed normalized search projection and compare its results against the current implementation before switching reads.
 
-### 6. Large orchestration classes/files
+### 6. Remaining large orchestration files
 
-High-risk examples include `CatalogScanner.php`, `CatalogDetachedWorker.php`, `CatalogBucketUploadProcessor.php`, `CatalogUnverifiedIndex.php`, `unverified-files-action.php`, backup handlers and federation pages.
+`CatalogScanner.php` itself has been decomposed, but large responsibilities remain in `CatalogScannerImport.php`, `CatalogDetachedWorker.php`, `CatalogBucketUploadProcessor.php`, `CatalogUnverifiedIndex.php`, `unverified-files-action.php`, backup handlers and federation pages.
 
-**Direction:** extract responsibilities, not arbitrary line ranges. Keep existing public functions/methods as delegates until callers migrate.
+**Direction:** extract real responsibilities rather than arbitrary line ranges. Delete obsolete parallel implementations when current callers have migrated.
 
-### 7. Reflection-based internal reuse
+### 7. Reflection-based upload reuse
 
-Some upload metadata/identity processors reuse private `CatalogBucketUploadProcessor` methods through reflection. This is hidden coupling and makes private implementation details an implicit API.
+Some upload metadata/identity paths still rely on a legacy bridge around private `CatalogBucketUploadProcessor` operations.
 
-**Direction:** extract the shared identity hashing, storage and indexing operations into explicit collaborators injected into each processor.
+**Direction:** extract identity hashing, physical storage and indexing into explicit collaborators, then delete the reflection bridge.
 
-### 8. Runtime schema mutation
+### 8. Runtime schema mutation / compatibility probing
 
-Some legacy helpers still create/alter tables at runtime. Request/worker execution should not own schema evolution.
+Some legacy areas still contain schema compatibility behaviour. Runtime request/worker code should not evolve schema.
 
-**Direction:** install/migration code owns DDL; runtime verifies a compatible schema version and fails with a clear administrator action when migration is required.
+**Direction:** install/migration code owns DDL; runtime may verify required schema and fail with a clear administrator action.
 
-### 9. Source-text contract tests
+### 9. Manual validation discipline
 
-A portion of the test suite asserts literal implementation fragments rather than externally observable behavior. These tests frequently become stale after safe refactors and reduce trust in the suite.
+The project currently has no automated PHP test suite by design; application behaviour is validated through the real web/admin workflows.
 
-**Direction:** keep source guards only for architecture/security invariants. Convert behavior contracts to service-level or database integration tests.
+**Direction:** every structural change should receive a full PHP syntax pass on changed files, precise diff/blob verification for large replacements, and focused web validation of the affected route/job flow. Do not add GitHub test workflows unless explicitly requested.
 
 ## Refactoring order
 
-1. **Architecture safety:** deterministic job routing, dependency ratchets, dead implementation removal.
-2. **Application dependency inversion:** remove PDO/Infrastructure imports from use cases one service at a time.
-3. **Upload/import collaborators:** eliminate reflection and duplicate identity/storage/index logic.
-4. **Scanner decomposition:** separate path/name policy, reader selection, scan orchestration, persistence and dependency scheduling.
-5. **Worker decomposition:** separate process launching, runtime-state storage, pool reconciliation and diagnostics.
-6. **Query ownership:** introduce bounded query/repository objects for catalog, dependencies, jobs, search and federation.
-7. **Performance changes with parity checks:** queue claiming and search projection changes only after integration/dual-read validation.
-8. **Runtime schema cleanup:** remove request-time DDL after installation/version checks are authoritative.
-9. **Thin controllers:** reduce top-level PHP routes to validation + use-case invocation + rendering.
-10. **Compatibility retirement:** remove legacy global facades only after all callers have migrated.
+1. **Remove dead/parallel implementations** once current routes/jobs have authoritative replacements.
+2. **Application dependency inversion:** continue moving PDO/Infrastructure implementation out of use-case classes.
+3. **Scanner migration:** move `CatalogScannerImport.php` and path/name policy into namespaced collaborators while keeping current `scanner_*` signatures until callers migrate.
+4. **Upload/import collaborators:** eliminate reflection/private-operation coupling and duplicate identity/storage/index logic.
+5. **Worker decomposition:** separate process launching, runtime-state storage, pool reconciliation and diagnostics while preserving Windows behaviour.
+6. **Query ownership:** continue bounded query/repository objects for catalog, dependencies, jobs, search and federation.
+7. **Performance changes with parity checks:** change queue claiming/search projections only after measured production-style equivalence.
+8. **Runtime schema cleanup:** remove request-time DDL/legacy compatibility paths once installation/version checks are authoritative.
+9. **Thin controllers:** reduce top-level PHP routes to validation + use-case/query invocation + rendering.
+10. **Compatibility retirement:** delete global facades when no active caller needs them.
 
 ## Non-negotiable behavior-preservation rules
 
-- No route, API payload, job type, queue name, dedupe key, retry policy or result shape changes as part of architecture-only commits.
-- No catalog identity/hash/GUID/package-name semantics change without dedicated migration and equivalence tests.
+- No route, API payload, job type, queue name, dedupe key, retry policy or result-shape changes as part of architecture-only commits.
+- No catalog identity/hash/GUID/package-name semantic change without an explicit behavioural migration.
 - No search-result semantic change during structural extraction.
 - No automatic cancellation/timeouts for legitimate long-running package work.
+- Preserve Windows detached-worker behaviour exactly during worker refactors.
 - No runtime DDL removal until installed schema compatibility is proven.
-- Prefer small commits with focused regression coverage and a clean full PHP syntax pass.
+- Validate changed PHP with syntax checks and exercise the affected web/job workflow manually.
