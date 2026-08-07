@@ -19,14 +19,14 @@ function source_fingerprint_expect(bool $condition, string $message): void
     }
 }
 
-$migration = file_get_contents(__DIR__ . '/../migrations/202607270008_source_file_fingerprints.php');
-source_fingerprint_expect(is_string($migration), 'Source fingerprint migration could not be read.');
+$installSchema = file_get_contents(__DIR__ . '/../install.sql');
+source_fingerprint_expect(is_string($installSchema), 'Consolidated install schema could not be read.');
 source_fingerprint_expect(
-    str_contains($migration, "'version' => '202607270008'")
-        && str_contains($migration, 'ue_source_file_fingerprints')
-        && str_contains($migration, 'quick_fingerprint')
-        && str_contains($migration, 'matched_file_id'),
-    'Source fingerprint migration does not create the required projection.'
+    str_contains($installSchema, '-- 202607270008: cached source-file fingerprints.')
+        && str_contains($installSchema, 'CREATE TABLE ue_source_file_fingerprints')
+        && str_contains($installSchema, 'quick_fingerprint CHAR(64) NOT NULL')
+        && str_contains($installSchema, 'matched_file_id BIGINT UNSIGNED NULL'),
+    'Consolidated install schema does not create the required source fingerprint projection.'
 );
 
 $classSource = file_get_contents(__DIR__ . '/../src/Infrastructure/Persistence/PdoSourceFileFingerprintCache.php');

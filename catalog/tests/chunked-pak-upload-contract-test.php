@@ -36,7 +36,7 @@ try {
     $store = new CatalogChunkedUploadStore($config);
     $size = (1024 * 1024) + 17;
     $state = $store->initialize(7, 'browser-key', 'LargeContainer.pak', 'Content/Paks/LargeContainer.pak', $size, 4, true);
-    chunked_pak_expect((int)$state['total_chunks'] === 2, 'Chunked upload did not split the PAK into bounded requests.');
+    chunked_pak_expect((int)$state['total_chunks'] === 2, 'Chunked upload did not split the PAK container into bounded requests.');
 
     $first = tempnam(sys_get_temp_dir(), 'chunk-a-');
     $second = tempnam(sys_get_temp_dir(), 'chunk-b-');
@@ -47,7 +47,7 @@ try {
     @unlink($first);
     @unlink($second);
 
-    $complete = $store->complete(7, (string)$state['upload_id']);
+    $complete = $store->complete(7, (string)$state['upload_id');
     chunked_pak_expect((string)$complete['status'] === 'complete', 'Chunked PAK was not marked complete.');
     $resolved = $store->resolveCompletedFile((string)$state['upload_id'], 7);
     chunked_pak_expect(is_file($resolved['path']) && filesize($resolved['path']) === $size, 'Completed PAK did not resolve from durable chunk storage.');
@@ -75,7 +75,7 @@ try {
     chunked_pak_expect(str_contains($endpoint, "catalog_api_require_admin(false)"), 'Chunked upload endpoint is not admin-only.');
     chunked_pak_expect(str_contains($endpoint, "catalog_api_require_csrf('profiled_upload_chunk')"), 'Chunked upload endpoint lacks CSRF protection.');
     chunked_pak_expect(str_contains($endpoint, 'enqueueStaged(') && str_contains($endpoint, "'chunk-upload:' . \$uploadId"), 'Large normal packages are not queued from durable chunk storage.');
-    chunked_pak_expect(str_contains($endpoint, "'upload_kind' => \$isPak ? 'pak' : 'package'"), 'Chunked endpoint does not distinguish packages from PAK containers.');
+    chunked_pak_expect(str_contains($endpoint, "\$state['upload_kind'] = \$isPak ? 'pak' : 'package'"), 'Chunked endpoint does not distinguish packages from PAK containers.');
     chunked_pak_expect(str_contains($javascript, 'shouldUseChunks(file)'), 'Browser upload does not select chunks for large normal files.');
     chunked_pak_expect(str_contains($javascript, 'Number(file.size || 0) > configuredChunkBytes'), 'Large normal files are not routed around whole-request PHP limits.');
     chunked_pak_expect(str_contains($javascript, 'file.slice(start, end)'), 'Browser upload does not send bounded chunks.');
