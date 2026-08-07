@@ -17,11 +17,10 @@ function unverified_import_error_expect(bool $condition, string $message): void
 
 $action = file_get_contents(__DIR__ . '/../unverified-files-action.php');
 $queue = file_get_contents(__DIR__ . '/../src/Application/Dependency/CatalogPostImportDependencyQueue.php');
-$searchQueue = file_get_contents(__DIR__ . '/../src/Application/Search/CatalogSearchIndexQueue.php');
 $client = file_get_contents(__DIR__ . '/../assets/unverified-file-actions.js');
 $timeoutRecovery = file_get_contents(__DIR__ . '/../assets/unverified-import-timeout-recovery.js');
 $supportCore = file_get_contents(__DIR__ . '/../lib/CatalogSupportCore.php');
-foreach (compact('action', 'queue', 'searchQueue', 'client', 'timeoutRecovery', 'supportCore') as $name => $source) {
+foreach (compact('action', 'queue', 'client', 'timeoutRecovery', 'supportCore') as $name => $source) {
     unverified_import_error_expect(is_string($source) && $source !== '', $name . ' source could not be read.');
 }
 
