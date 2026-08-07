@@ -15,8 +15,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
-use UnrealDb\Catalog\Application\Dependency\CatalogAffectedDependencyRefreshService;
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -106,7 +105,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'file_id' => $fileId,
                 'dependency_summary_rows' => (int)$summary['summary_rows'],
             ]);
-            $affectedJobId = CatalogAffectedDependencyRefreshService::enqueueIfNeeded(
+            $affectedJobId = CatalogAffectedDependencyRefreshCoordinator::enqueueIfNeeded(
                 $this->db,
                 (int)$file['game_id'],
                 $fileId,
@@ -267,7 +266,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         $statement = $this->db->prepare(
             'SELECT COUNT(*) total,SUM(status="resolved") resolved,SUM(status="missing") missing,'
             . 'SUM(status="package_only") package_only,SUM(status="common") common '
-            . 'FROM ' . CatalogDependencyReadSource::sql($this->db) . ' dependencies '
+            . 'FROM ' . PdoDependencyReadSource::sql($this->db) . ' dependencies '
             . 'WHERE dependencies.file_id IN (' . $placeholders . ')'
         );
         $statement->execute($fileIds);

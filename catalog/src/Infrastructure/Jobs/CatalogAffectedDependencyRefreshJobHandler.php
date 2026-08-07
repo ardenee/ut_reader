@@ -16,7 +16,6 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Application\Dependency\CatalogAffectedDependencyRefreshService;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
@@ -88,7 +87,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         $summaryWriter = new PdoDependencyPackageSummary($this->db);
         $gameId = (int)$file['game_id'];
         $packageName = (string)$file['package_name'];
-        $affectedIds = CatalogAffectedDependencyRefreshService::findAffectedFileIds(
+        $affectedIds = CatalogAffectedDependencyRefreshCoordinator::findAffectedFileIds(
             $this->db,
             $gameId,
             $fileId,
