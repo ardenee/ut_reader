@@ -42,6 +42,9 @@ final class CatalogAffectedDependencyRefreshCoordinator
             }
         }
 
+        // Affected-file discovery must use the authoritative dependency links,
+        // never the package-summary projection that may be partway through a
+        // rebuild. The term identity columns are indexed and avoid a text scan.
         $fileIds = [];
         self::collectFileIds(
             $db,
@@ -70,9 +73,11 @@ final class CatalogAffectedDependencyRefreshCoordinator
         if ($gameId < 1 || $newFileId < 1 || trim($packageName) === '') {
             return 0;
         }
+
         if (!$providerReady) {
             self::syncProvider($db, $newFileId);
         }
+
         $existingJobId = self::existingRefreshJobId($db, $newFileId);
         if ($existingJobId > 0) {
             return $existingJobId;
@@ -80,7 +85,14 @@ final class CatalogAffectedDependencyRefreshCoordinator
         if (!self::hasAffectedFiles($db, $gameId, $newFileId, $packageName)) {
             return 0;
         }
-        return self::enqueueRefresh($db, $newFileId, $gameId, $packageName, $sourceSummaryReady);
+
+        return self::enqueueRefresh(
+            $db,
+            $newFileId,
+            $gameId,
+            $packageName,
+            $sourceSummaryReady
+        );
     }
 
     private static function syncProvider(PDO $db, int $fileId): void
@@ -88,6 +100,8 @@ final class CatalogAffectedDependencyRefreshCoordinator
         try {
             (new PdoPackageProviderRepository($db))->syncFile($fileId);
         } catch (PDOException $exception) {
+            // The authoritative ue_files row remains valid. The resolver keeps an
+            // exact fallback and maintenance can reconcile the provider cache.
             error_log('[UnrealDB package provider] file_id=' . $fileId . ' sync failed: ' . $exception->getMessage());
         }
     }
@@ -116,14 +130,21 @@ final class CatalogAffectedDependencyRefreshCoordinator
         try {
             [$dedupeKey, $continuationPattern] = self::chainKeys($fileId);
             $statement = $db->prepare(
-                'SELECT 1 FROM ue_background_jobs WHERE job_type=? AND status="running"'
+                'SELECT 1 FROM ue_background_jobs'
+                . ' WHERE job_type=? AND status="running"'
                 . ' AND (dedupe_key=? OR dedupe_key LIKE ?) LIMIT 1'
             );
-            $statement->execute([JobType::REBUILD_AFFECTED_DEPENDENCIES, $dedupeKey, $continuationPattern]);
+            $statement->execute([
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                $dedupeKey,
+                $continuationPattern,
+            ]);
             return $statement->fetchColumn() !== false;
         } catch (Throwable) {
-            return false;
+            // Missing/legacy queue infrastructure leaves no active chain.
         }
+
+        return false;
     }
 
     private static function existingRefreshJobId(PDO $db, int $fileId): int
@@ -131,14 +152,22 @@ final class CatalogAffectedDependencyRefreshCoordinator
         try {
             [$dedupeKey, $continuationPattern] = self::chainKeys($fileId);
             $statement = $db->prepare(
-                'SELECT id FROM ue_background_jobs WHERE job_type=? AND status IN ("queued","running")'
-                . ' AND (dedupe_key=? OR dedupe_key LIKE ?) ORDER BY id DESC LIMIT 1'
+                'SELECT id FROM ue_background_jobs'
+                . ' WHERE job_type=? AND status IN ("queued","running")'
+                . ' AND (dedupe_key=? OR dedupe_key LIKE ?)'
+                . ' ORDER BY id DESC LIMIT 1'
             );
-            $statement->execute([JobType::REBUILD_AFFECTED_DEPENDENCIES, $dedupeKey, $continuationPattern]);
+            $statement->execute([
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                $dedupeKey,
+                $continuationPattern,
+            ]);
             return max(0, (int)($statement->fetchColumn() ?: 0));
         } catch (Throwable) {
-            return 0;
+            // Continue to durable enqueue when queue inspection fails.
         }
+
+        return 0;
     }
 
     private static function enqueueRefresh(
@@ -149,7 +178,11 @@ final class CatalogAffectedDependencyRefreshCoordinator
         bool $sourceSummaryReady
     ): int {
         $config = function_exists('catalog_config') ? \catalog_config() : [];
-        $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $queueName = trim((string)($config['queue']['name'] ?? 'catalog'));
+        if ($queueName === '') {
+            $queueName = 'catalog';
+        }
+
         try {
             $jobId = (new PdoJobQueue($db))->enqueue(
                 $queueName,
@@ -167,7 +200,8 @@ final class CatalogAffectedDependencyRefreshCoordinator
                 3
             );
         } catch (Throwable $error) {
-            error_log('[UnrealDB dependency refresh queue] file_id=' . $fileId . ' enqueue failed: ' . $error->getMessage());
+            error_log('[UnrealDB dependency refresh queue] file_id=' . $fileId
+                . ' enqueue failed: ' . $error->getMessage());
             return 0;
         }
 
@@ -183,6 +217,7 @@ final class CatalogAffectedDependencyRefreshCoordinator
                     . ' launch failed; queued job remains durable: ' . $workerError->getMessage());
             }
         }
+
         return $jobId;
     }
 
@@ -198,7 +233,10 @@ final class CatalogAffectedDependencyRefreshCoordinator
         return 'rebuild-affected-file:' . max(1, $fileId);
     }
 
-    /** @param list<mixed> $args @param array<int,true> $fileIds */
+    /**
+     * @param list<mixed> $args
+     * @param array<int, true> $fileIds
+     */
     private static function collectFileIds(PDO $db, string $sql, array $args, array &$fileIds): void
     {
         foreach (\catalog_all($db, $sql, $args) as $row) {
