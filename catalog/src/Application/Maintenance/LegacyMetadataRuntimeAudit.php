@@ -83,7 +83,6 @@ final class LegacyMetadataRuntimeAudit
         'federation/missing-files.php',
         'federation/peer-inventory.php',
         'federation/request-generate.php',
-        'file-examine-core.php',
         'game-page.php',
         'lib/CatalogSourceIdentity.php',
         'lib/FederationDependencyDownloads.php',
@@ -106,7 +105,6 @@ final class LegacyMetadataRuntimeAudit
     private const CENTRAL_METADATA_READ_FILES = [
         'duplicates-keep.php',
         'duplicates.php',
-        'file-examine-core.php',
         'game-upks.php',
         'lib/CatalogAssetMetadata.php',
         'lib/CatalogSourceIdentity.php',

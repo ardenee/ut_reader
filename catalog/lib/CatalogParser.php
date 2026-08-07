@@ -11,11 +11,11 @@
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/CatalogReaderResolver.php';
+require_once __DIR__ . '/../src/Infrastructure/Readers/CatalogReaderResolver.php';
 
 function catalog_load_reader_class(array $config, string $engineKey): string
 {
-    return CatalogReaderResolver::resolve(
+    return \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolve(
         $config,
         $engineKey,
         'Reader not found for',

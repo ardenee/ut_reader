@@ -11,7 +11,6 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogDashboardStats.php';
 
 try {
     $db = catalog_db(catalog_config());
@@ -33,7 +32,7 @@ try {
         session_write_close();
     }
 
-    $stats = CatalogDashboardStats::load($db);
+    $stats = \UnrealDb\Catalog\Application\Dashboard\CatalogDashboardStats::load($db);
     catalog_page_header(
         'Dashboard',
         'Start here: setup files, identify missing packages, create game backups, manage federation, request downloads, and monitor background work.',

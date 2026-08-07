@@ -16,7 +16,6 @@ use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 
 catalog_start_session();
 require_once __DIR__ . '/lib/FederationAuth.php';
-require_once __DIR__ . '/lib/CatalogGameFileListService.php';
 
 function game_files_int(string $key, int $default, int $min, int $max): int
 {
@@ -360,12 +359,12 @@ try {
         $pageNo = 1;
     }
 
-    $page = CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, $cursor, $move);
+    $page = \UnrealDb\Catalog\Application\Catalog\CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, $cursor, $move);
     $files = $page['rows'];
     if ($files === [] && $totalRows > 0 && $move !== 'first') {
         $move = 'first';
         $pageNo = 1;
-        $page = CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, null, 'first');
+        $page = \UnrealDb\Catalog\Application\Catalog\CatalogGameFileListService::fetchCursorPage($db, $where, $args, $sort, $dir, $limit, null, 'first');
         $files = $page['rows'];
     }
 

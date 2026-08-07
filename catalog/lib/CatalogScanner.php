@@ -13,10 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/GameProfiles.php';
-require_once __DIR__ . '/CatalogReaderResolver.php';
-require_once __DIR__ . '/CatalogDependencyResolver.php';
 require_once __DIR__ . '/CatalogDependencySchema.php';
-require_once __DIR__ . '/CatalogAffectedDependencyRefreshService.php';
 require_once __DIR__ . '/CatalogPackageAliases.php';
 require_once __DIR__ . '/CatalogUE4ParserProfile.php';
 
@@ -368,7 +365,7 @@ function scanner_bulk_insert(PDO $db, string $table, array $columns, array $rows
 
 function scanner_load_reader_class(array $config, string $engineKey): string
 {
-    return CatalogReaderResolver::resolve($config, $engineKey, 'Reader not found for package engine', 'Reader file loaded for package engine ', ['UE4', 'UE5']);
+    return \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolve($config, $engineKey, 'Reader not found for package engine', 'Reader file loaded for package engine ', ['UE4', 'UE5']);
 }
 
 function scanner_split_reader_issues(array $issues): array
@@ -471,7 +468,7 @@ function scanner_rebuild_dependencies(PDO $db, array $config, int $fileId, ?call
         return;
     }
 
-    $resolutions = CatalogDependencyResolver::resolve($db, (int)$file['game_id'], $fileId, $imports);
+    $resolutions = \UnrealDb\Catalog\Application\Dependency\CatalogDependencyResolver::resolve($db, (int)$file['game_id'], $fileId, $imports);
     $total = count($imports);
     $batch = [];
     foreach ($imports as $i => $imp) {
@@ -533,7 +530,7 @@ function scanner_rebuild_affected_dependencies(PDO $db, array $config, int $newF
         scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing affected dependency links: imported file missing');
         return;
     }
-    $affectedFileIds = CatalogAffectedDependencyRefreshService::findAffectedFileIds($db, (int)$file['game_id'], $newFileId, (string)$file['package_name']);
+    $affectedFileIds = \UnrealDb\Catalog\Application\Dependency\CatalogAffectedDependencyRefreshService::findAffectedFileIds($db, (int)$file['game_id'], $newFileId, (string)$file['package_name']);
     $total = count($affectedFileIds);
     if ($total === 0) {
         scanner_emit_percent($progress, 'dependencies', $endPercent, 'Refreshing affected dependency links: no existing files affected');
@@ -549,7 +546,7 @@ function scanner_rebuild_affected_dependencies_for_package(PDO $db, array $confi
     if ($providerFileId < 1) {
         throw new RuntimeException('Alias dependency refresh requires the provider file ID.');
     }
-    $affectedFileIds = CatalogAffectedDependencyRefreshService::findAffectedFileIds(
+    $affectedFileIds = \UnrealDb\Catalog\Application\Dependency\CatalogAffectedDependencyRefreshService::findAffectedFileIds(
         $db,
         $gameId,
         $providerFileId,

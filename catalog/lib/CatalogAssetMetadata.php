@@ -14,7 +14,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/CatalogDependencySchema.php';
 require_once __DIR__ . '/GameProfiles.php';
-require_once __DIR__ . '/CatalogReaderResolver.php';
 require_once __DIR__ . '/CatalogUE4ParserProfile.php';
 
 const CATALOG_ASSET_METADATA_MAX_SOFT_REFS = 2000;
@@ -122,7 +121,7 @@ function catalog_asset_meta_open_reader(PDO $db, array $config, array $file, ?st
         return null;
     }
 
-    $readerClass = CatalogReaderResolver::resolve(
+    $readerClass = \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolve(
         $config,
         $engine,
         'Reader not found for package engine',

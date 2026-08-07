@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             elseif ($tmp === '' || !is_uploaded_file($tmp)) $message = 'PHP did not provide a valid uploaded temp file.';
             else {
                 $target = $uploadDir . DIRECTORY_SEPARATOR . $name;
-                if (move_uploaded_file($tmp, $target)) { @chmod($target, 0664); header('Location: UE4.php?file=uploads/' . rawurlencode($name)); exit; }
+                if (move_uploaded_file($tmp, $target)) { @chmod($target, 0664); header('Location: UE5.php?file=uploads/' . rawurlencode($name)); exit; }
                 $last = error_get_last();
                 $message = 'Failed to move uploaded file into uploads folder. Target: ' . $target . "\nLast PHP error: " . (($last['message'] ?? '') !== '' ? $last['message'] : '');
             }
@@ -64,5 +64,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>Upload UE4 package</title><style>body{font-family:Segoe UI,Tahoma,Arial,sans-serif;background:#eef6f8;color:#071629;margin:0;padding:20px}.box{background:#fff;border:1px solid #cfd7df;max-width:820px;padding:18px}button{padding:6px 12px}.msg{white-space:pre-wrap;border:1px solid #d1242f;background:#fff8f8;padding:8px;margin-bottom:12px}.hint{color:#536471;margin-top:12px}code{background:#f6f8fa;padding:1px 4px}</style></head>
-<body><div class="box"><h1>Upload UE4 package</h1><?php if ($message !== ''): ?><div class="msg"><?= h($message) ?></div><?php endif; ?><form method="post" enctype="multipart/form-data"><input type="file" name="package_file" accept=".uasset,.umap,.uexp" required> <button type="submit">Upload and open</button></form><p class="hint">Files are saved to <code>UE4/uploads/</code> and then opened in <code>UE4.php</code>.</p><p><a href="UE4.php">Back to UE4 viewer</a></p></div></body></html>
+<head><meta charset="utf-8"><title>Upload UE5 package</title><style>body{font-family:Segoe UI,Tahoma,Arial,sans-serif;background:#eef6f8;color:#071629;margin:0;padding:20px}.box{background:#fff;border:1px solid #cfd7df;max-width:820px;padding:18px}button{padding:6px 12px}.msg{white-space:pre-wrap;border:1px solid #d1242f;background:#fff8f8;padding:8px;margin-bottom:12px}.hint{color:#536471;margin-top:12px}code{background:#f6f8fa;padding:1px 4px}</style></head>
+<body><div class="box"><h1>Upload UE5 package</h1><?php if ($message !== ''): ?><div class="msg"><?= h($message) ?></div><?php endif; ?><form method="post" enctype="multipart/form-data"><input type="file" name="package_file" accept=".uasset,.umap,.uexp" required> <button type="submit">Upload and open</button></form><p class="hint">Files are saved to <code>UE5/uploads/</code> and then opened in <code>UE5.php</code>.</p><p><a href="UE5.php">Back to UE5 viewer</a></p></div></body></html>
