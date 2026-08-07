@@ -17,6 +17,7 @@ final class CatalogJobResourceLimitStore
 {
     private const TABLE = 'ue_job_resource_limits';
     private const CACHE_SECONDS = 5.0;
+    private const PROJECTION_CONCURRENCY_KEY = 'projection:catalog-maintenance';
 
     /** @var array<string,int> */
     private array $limits = [];
@@ -140,8 +141,78 @@ final class CatalogJobResourceLimitStore
     }
 
     /**
+     * Rewrites current queued rows to the current saved limits and repairs
+     * policy changes that older queue rows cannot learn by themselves.
+     *
+     * Projection reconciliation uses one global MySQL maintenance lock. Older
+     * rows were persisted as search-heavy with per-file concurrency keys, so
+     * several workers could claim them even though only one could make progress.
+     * Normalize them to dependency-heavy and one global concurrency key before
+     * a worker pool is started or resized.
+     *
+     * @return array{updated_jobs:int,updated_limits:int,projection_rows:int,rekeyed_jobs:int,per_class:array<string,int>}
+     */
+    public function synchronizeQueuedPolicies(): array
+    {
+        if (!$this->isAvailable()) {
+            return [
+                'updated_jobs' => 0,
+                'updated_limits' => 0,
+                'projection_rows' => 0,
+                'rekeyed_jobs' => 0,
+                'per_class' => [],
+            ];
+        }
+
+        $this->reload();
+        $definitions = JobResourcePolicy::definitions();
+        $dependencyDefault = self::limit((int)($definitions[JobResourcePolicy::DEPENDENCY_HEAVY]['default'] ?? 1));
+        $dependencyLimit = $this->limits[JobResourcePolicy::DEPENDENCY_HEAVY] ?? $dependencyDefault;
+
+        $projection = $this->db->prepare(
+            'UPDATE ue_background_jobs SET resource_class=?,resource_limit=?,concurrency_key=? '
+            . 'WHERE queue_name=? AND status="queued" AND job_type=? '
+            . 'AND (resource_class<>? OR resource_limit<>? OR concurrency_key IS NULL OR concurrency_key<>?)'
+        );
+        $projection->execute([
+            JobResourcePolicy::DEPENDENCY_HEAVY,
+            $dependencyLimit,
+            self::PROJECTION_CONCURRENCY_KEY,
+            $this->queueName,
+            JobType::RECONCILE_CATALOG_PROJECTIONS,
+            JobResourcePolicy::DEPENDENCY_HEAVY,
+            $dependencyLimit,
+            self::PROJECTION_CONCURRENCY_KEY,
+        ]);
+        $projectionRows = $projection->rowCount();
+
+        $updateLimit = $this->db->prepare(
+            'UPDATE ue_background_jobs SET resource_limit=? '
+            . 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?'
+        );
+        $updatedLimits = 0;
+        $perClass = [];
+        foreach ($definitions as $class => $definition) {
+            $default = self::limit((int)($definition['default'] ?? 1));
+            $limit = $this->limits[$class] ?? $default;
+            $updateLimit->execute([$limit, $this->queueName, $class, $limit]);
+            $perClass[$class] = $updateLimit->rowCount();
+            $updatedLimits += $perClass[$class];
+        }
+
+        $rekeyedJobs = $this->rekeyQueuedAffectedDependencyJobs();
+        return [
+            'updated_jobs' => $projectionRows + $updatedLimits,
+            'updated_limits' => $updatedLimits,
+            'projection_rows' => $projectionRows,
+            'rekeyed_jobs' => $rekeyedJobs,
+            'per_class' => $perClass,
+        ];
+    }
+
+    /**
      * @param array<string,int> $limits
-     * @return array{updated_jobs:int,updated_settings:int,rekeyed_jobs:int,per_class:array<string,int>}
+     * @return array{updated_jobs:int,updated_settings:int,rekeyed_jobs:int,per_class:array<string,int>,projection_rows:int}
      */
     public function save(array $limits, ?int $updatedBy): array
     {
@@ -164,9 +235,6 @@ final class CatalogJobResourceLimitStore
             throw new \InvalidArgumentException('At least one job resource limit is required.');
         }
 
-        // The form contains every resource class, but most saves change only
-        // one value. Compare against the persisted settings first so unchanged
-        // classes do not issue redundant UPDATE statements against the queue.
         $this->reload();
         $changed = [];
         foreach ($normalized as $class => $limit) {
@@ -181,37 +249,27 @@ final class CatalogJobResourceLimitStore
                 'INSERT INTO ' . self::TABLE . ' (resource_class,limit_value,updated_by) VALUES (?,?,?) '
                 . 'ON DUPLICATE KEY UPDATE limit_value=VALUES(limit_value),updated_by=VALUES(updated_by),updated_at=CURRENT_TIMESTAMP'
             );
-
-            // The existing queue index is (queue_name,status,resource_class).
-            // Scope updates to queued rows in the active queue so the save is a
-            // small indexed operation. Running work already owns its lease and
-            // cannot be made more or less concurrent by rewriting its row.
-            $updateJobs = $this->db->prepare(
-                'UPDATE ue_background_jobs SET resource_limit=? '
-                . 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?'
-            );
-
-            $updatedJobs = 0;
-            $perClass = [];
             foreach ($changed as $class => $limit) {
                 $upsert->execute([$class, $limit, $updatedBy !== null && $updatedBy > 0 ? $updatedBy : null]);
-                $updateJobs->execute([$limit, $this->queueName, $class, $limit]);
-                $perClass[$class] = $updateJobs->rowCount();
-                $updatedJobs += $perClass[$class];
             }
 
-            $rekeyedJobs = $this->rekeyQueuedAffectedDependencyJobs();
+            // Always synchronize queued rows, even when the numeric setting did
+            // not change. Old rows may carry an obsolete class, concurrency key
+            // or persisted limit from code that pre-dates the current policy.
+            $sync = $this->synchronizeQueuedPolicies();
             $this->db->commit();
+
             if ($changed !== []) {
                 $this->limits = $changed + $this->limits;
                 $this->loadedAt = microtime(true);
             }
 
             return [
-                'updated_jobs' => $updatedJobs,
+                'updated_jobs' => (int)$sync['updated_jobs'],
                 'updated_settings' => count($changed),
-                'rekeyed_jobs' => $rekeyedJobs,
-                'per_class' => $perClass,
+                'rekeyed_jobs' => (int)$sync['rekeyed_jobs'],
+                'per_class' => (array)$sync['per_class'],
+                'projection_rows' => (int)$sync['projection_rows'],
             ];
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {
