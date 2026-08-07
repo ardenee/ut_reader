@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Application\Jobs;
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+
 /**
  * Executes one leased job at a time. The worker deliberately has no HTTP
  * concerns and can run under CLI, supervisor, cron, or a container process.
@@ -19,16 +21,17 @@ namespace UnrealDb\Catalog\Application\Jobs;
 final class JobWorker
 {
     /**
-     * @param list<JobHandler> $handlers
+     * @param array<string, JobHandler> $handlersByType Exact JobType => handler routes.
      */
     public function __construct(
         private readonly JobQueue $queue,
-        private readonly array $handlers,
+        private readonly array $handlersByType,
         private readonly string $queueName,
         private readonly string $workerId,
         private readonly int $leaseSeconds = 120,
         private readonly ?\Closure $eventAppender = null
     ) {
+        self::assertCompleteHandlerMap($handlersByType);
     }
 
     /**
@@ -129,13 +132,31 @@ final class JobWorker
 
     private function findHandler(string $type): ?JobHandler
     {
-        foreach ($this->handlers as $handler) {
-            if ($handler->supports($type)) {
-                return $handler;
-            }
+        return $this->handlersByType[$type] ?? null;
+    }
+
+    /** @param array<string, JobHandler> $handlersByType */
+    private static function assertCompleteHandlerMap(array $handlersByType): void
+    {
+        $knownTypes = array_fill_keys(JobType::all(), true);
+        $unknownTypes = array_values(array_diff(array_keys($handlersByType), array_keys($knownTypes)));
+        if ($unknownTypes !== []) {
+            throw new \LogicException('Unknown job handler route(s): ' . implode(', ', $unknownTypes));
         }
 
-        return null;
+        $missingTypes = array_values(array_diff(array_keys($knownTypes), array_keys($handlersByType)));
+        if ($missingTypes !== []) {
+            throw new \LogicException('Missing job handler route(s): ' . implode(', ', $missingTypes));
+        }
+
+        foreach ($handlersByType as $type => $handler) {
+            if (!$handler instanceof JobHandler) {
+                throw new \LogicException('Invalid job handler registered for type: ' . $type);
+            }
+            if (!$handler->supports($type)) {
+                throw new \LogicException(get_class($handler) . ' does not support routed job type: ' . $type);
+            }
+        }
     }
 
     private function diagnostic(

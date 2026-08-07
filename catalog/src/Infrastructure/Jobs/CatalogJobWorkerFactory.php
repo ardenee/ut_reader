@@ -15,6 +15,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\WorkerJobQueue;
 
 final class CatalogJobWorkerFactory
@@ -51,56 +52,57 @@ final class CatalogJobWorkerFactory
             $eventLog->append($jobId, $event);
         };
 
+        $bucketUpload = new CatalogBucketUploadJobHandler($db, $trustedImportConfig);
+        $metadataRepair = new CatalogUnverifiedMetadataRepairJobHandler($db, $trustedImportConfig);
+        $bucketRedirect = new CatalogBucketRedirectJobHandler($db, $trustedImportConfig);
+        $pakImport = new CatalogPakImportJobHandler($db, $trustedImportConfig);
+        $packageImport = new CatalogNonBlockingImportJobHandler(
+            new CatalogStagedImportJobHandler($db, $trustedImportConfig),
+            $trustedImportConfig
+        );
+        $sourceScan = new CatalogSourceScanJobHandler($db, $trustedImportConfig);
+        $storageMaintenance = new CatalogStorageMaintenanceJobHandler($db, $config);
+        $duplicateCleanup = new UnverifiedDuplicateCleanupJobHandler($db, $config);
+        $generatedPackage = new GeneratedPackageJobHandler($db, $config);
+        $backupExport = new GameBackupExportJobHandler($db, $config);
+        $backupImport = new GameBackupImportCleanupJobHandler(
+            new GameBackupImportJobHandler($db, $trustedImportConfig),
+            $trustedImportConfig
+        );
+        $searchIndex = new CatalogSearchIndexJobHandler($db);
+        $projectionReconciliation = new CatalogProjectionReconciliationJobHandler($db, $config);
+        $dependencyRefresh = new CatalogDependencyRefreshJobHandler($db, $config);
+        $affectedDependencyRefresh = new CatalogAffectedDependencyRefreshJobHandler($db, $config);
+        $maintenance = new CatalogMaintenanceJobHandler($db, $config);
+
+        // Route every durable job type explicitly. Worker dispatch must never
+        // depend on handler array order or on broad supports() fallbacks.
+        $handlersByType = [
+            JobType::REBUILD_GAME_DEPENDENCIES => $dependencyRefresh,
+            JobType::REBUILD_FILE_DEPENDENCIES => $dependencyRefresh,
+            JobType::REBUILD_AFFECTED_DEPENDENCIES => $affectedDependencyRefresh,
+            JobType::REBUILD_FILE_SEARCH_INDEX => $searchIndex,
+            JobType::RECONCILE_CATALOG_PROJECTIONS => $projectionReconciliation,
+            JobType::REPAIR_SOURCE_IDENTITY_FILE => $maintenance,
+            JobType::REPAIR_SOURCE_IDENTITY_GAME => $maintenance,
+            JobType::SOURCE_SCAN => $sourceScan,
+            JobType::CLEAN_UNVERIFIED_DUPLICATES => $duplicateCleanup,
+            JobType::REPAIR_UNVERIFIED_METADATA => $metadataRepair,
+            JobType::GENERATE_MOD_PACKAGE => $generatedPackage,
+            JobType::EXPORT_GAME_BACKUP => $backupExport,
+            JobType::IMPORT_GAME_BACKUP => $backupImport,
+            JobType::IMPORT_STAGED_PACKAGE => $packageImport,
+            JobType::IMPORT_STAGED_PAK => $pakImport,
+            JobType::PREPARE_BUCKET_REDIRECT => $bucketRedirect,
+            JobType::PROCESS_BUCKET_UPLOAD => $bucketUpload,
+            JobType::RECONCILE_UNVERIFIED_STORAGE => $storageMaintenance,
+            JobType::PRUNE_STALE_ARTIFACTS => $storageMaintenance,
+            JobType::PRUNE_UPLOAD_PROGRESS => $maintenance,
+        ];
+
         return new JobWorker(
             new WorkerJobQueue($db),
-            [
-                // New Upload Bucket batches transfer every file first, then this
-                // handler performs duplicate checks, decompression and inventory.
-                new CatalogBucketUploadJobHandler($db, $trustedImportConfig),
-                // Repair only incomplete Upload Bucket/unverified metadata without
-                // moving or re-uploading the physical file.
-                new CatalogUnverifiedMetadataRepairJobHandler($db, $trustedImportConfig),
-                // Legacy redirect jobs remain readable/restartable after upgrades.
-                new CatalogBucketRedirectJobHandler($db, $trustedImportConfig),
-                // PAK imports retain the original container and build entry/file
-                // relationships, so they must be claimed before the generic
-                // staged-import handler that also recognises IMPORT_STAGED_PAK.
-                new CatalogPakImportJobHandler($db, $trustedImportConfig),
-                new CatalogNonBlockingImportJobHandler(
-                    new CatalogStagedImportJobHandler($db, $trustedImportConfig),
-                    $trustedImportConfig
-                ),
-                new CatalogSourceScanJobHandler($db, $trustedImportConfig),
-                new CatalogStorageMaintenanceJobHandler($db, $config),
-                new UnverifiedDuplicateCleanupJobHandler($db, $config),
-                new GeneratedPackageJobHandler($db, $config),
-                new GameBackupExportJobHandler($db, $config),
-                // Backup restore is a complete validation operation. This dedicated
-                // handler records every file failure with no truncation and must be
-                // registered before the legacy combined backup handler. The wrapper
-                // removes disposable restore working copies even on duplicate/alias
-                // early returns or job failure.
-                new GameBackupImportCleanupJobHandler(
-                    new GameBackupImportJobHandler($db, $trustedImportConfig),
-                    $trustedImportConfig
-                ),
-                new GameBackupJobHandler($db, $trustedImportConfig),
-                // Search documents and the imported file's package summary are
-                // maintained outside the package import transaction.
-                new CatalogSearchIndexJobHandler($db),
-                // Direct identity, alias, status and delete operations carry their
-                // old/new game and package context into this durable reconciliation.
-                new CatalogProjectionReconciliationJobHandler($db, $config),
-                // Manual file/game rebuilds maintain detailed and summary rows in
-                // one worker pass instead of creating a second queue per file.
-                new CatalogDependencyRefreshJobHandler($db, $config),
-                // Affected dependency refreshes continue past individual file
-                // failures and report processed/failure counts in the job result.
-                new CatalogAffectedDependencyRefreshJobHandler($db, $config),
-                // CatalogMaintenanceJobHandler currently recognises every registered
-                // JobType before dispatching its own subset, so it must remain last.
-                new CatalogMaintenanceJobHandler($db, $config),
-            ],
+            $handlersByType,
             $queueName,
             $workerId,
             $leaseSeconds,

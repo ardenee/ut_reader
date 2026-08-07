@@ -59,10 +59,8 @@ complete_backup_validation_expect(is_string($factory), 'Could not read worker fa
 $completeImportPosition = strpos($factory, 'new GameBackupImportJobHandler(');
 $legacyBackupPosition = strpos($factory, 'new GameBackupJobHandler(');
 complete_backup_validation_expect(
-    $completeImportPosition !== false
-    && $legacyBackupPosition !== false
-    && $completeImportPosition < $legacyBackupPosition,
-    'The complete import handler is not registered before the legacy capped handler.'
+    $completeImportPosition !== false && $legacyBackupPosition === false,
+    'The worker must register only the complete game-backup import handler; the legacy overlapping handler is dead dispatch.'
 );
 
 $viewer = file_get_contents(__DIR__ . '/../assets/game-backup-results.js');

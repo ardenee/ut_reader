@@ -27,7 +27,7 @@ $store = new GameBackupStore([
 $created = $store->create('test-game-20260721');
 game_backup_expect(is_dir($created['files_path']), 'Game backup files directory was not created.');
 $relative = 'System/Test.u';
-$destination = $created['files_path'] . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+$destination = $created['files_path] . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
 game_backup_expect(mkdir(dirname($destination), 0777, true), 'Could not create test backup subdirectory.');
 game_backup_expect(file_put_contents($destination, 'backup-data') !== false, 'Could not create test backup file.');
 $store->publishManifest('test-game-20260721', [
@@ -47,10 +47,10 @@ game_backup_expect(!is_dir($created['path']), 'Backup deletion did not remove th
 @rmdir($store->root());
 @rmdir($root);
 
-$importHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/GameBackupJobHandler.php');
+$importHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/GameBackupImportJobHandler.php');
 game_backup_expect(is_string($importHandler), 'Could not read game backup import handler.');
-game_backup_expect(str_contains($importHandler, 'tempnam($tempDirectory'), 'Backup import does not create an independent working copy.');
-game_backup_expect(str_contains($importHandler, "'defer_dependency_rebuild' => true"), 'Backup import does not defer per-file dependency rebuilds.');
+game_backup_expect(str_contains($importHandler, 'tempnam($tempDirectory'), 'Backup miport does not create an independent working copy.');
+game_backup_expect(str_contains($importHandler, "'defer_dependency_rebuild' => true"), 'Backup miport does not defer per-file dependency rebuilds.');
 game_backup_expect(str_contains($importHandler, 'scanner_rebuild_game('), 'Backup import does not rebuild dependencies once after restore.');
 
 $exportHandler = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/GameBackupExportJobHandler.php');
@@ -60,10 +60,10 @@ game_backup_expect(!preg_match('/(?<![A-Za-z])link\s*\(/', $exportHandler), 'Gam
 game_backup_expect(str_contains($exportHandler, 'FROM ue_file_locations'), 'Game backup export ignores recorded source locations.');
 game_backup_expect(str_contains($exportHandler, 'selectRecordedPath'), 'Game backup export does not select the best recorded path.');
 game_backup_expect(str_contains($exportHandler, 'legacyFolderForExtension'), 'Game backup export has no legacy game-folder fallback.');
-game_backup_expect(str_contains($exportHandler, "'unr', 'ut2', 'un2' => 'Maps'"), 'Map packages are not routed to Maps.');
+game_backup_expect(str_contains($exportHandler, "'unr', 'ut2', 'un2' => 'Maps"), 'Map packages are not routed to Maps.');
 game_backup_expect(str_contains($exportHandler, "'u' => 'System'"), 'System packages are not routed to System.');
 game_backup_expect(str_contains($exportHandler, "'utx' => 'Textures'"), 'Texture packages are not routed to Textures.');
-game_backup_expect(str_contains($exportHandler, "'uax', 'est_uax', 'frt_uax', 'itt_uax' => 'Sounds'"), 'Sound packages are not routed to Sounds.');
+game_backup_expect(str_contains($exportHandler, "'uax', 'est_uax', 'frt_uax', 'itt_uax' => 'Sounds"), 'Sound packages are not routed to Sounds.');
 game_backup_expect(str_contains($exportHandler, "'umx' => 'Music'"), 'Music packages are not routed to Music.');
 game_backup_expect(str_contains($exportHandler, 'allocateUniqueRelativePath'), 'Same-name backup variations are not assigned unique filenames.');
 game_backup_expect(str_contains($exportHandler, "' (' . \$number . ')'"), 'Same-name backup variations do not use a numeric suffix before the extension.');
@@ -99,29 +99,11 @@ game_backup_expect(is_string($types)
 $factory = file_get_contents(__DIR__ . '/../src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 game_backup_expect(is_string($factory), 'Could not read the worker factory.');
 $exportPosition = strpos($factory, 'new GameBackupExportJobHandler(');
-$backupPosition = strpos($factory, 'new GameBackupJobHandler(');
-$maintenancePosition = strpos($factory, 'new CatalogMaintenanceJobHandler(');
+$importPosition = strpos($factory, 'new GameBackupImportJobHandler(');
+$legacyPosition = strpos($factory, 'new GameBackupJobHandler(');
 game_backup_expect(
-    $exportPosition !== false
-    && $backupPosition !== false
-    && $maintenancePosition !== false
-    && $exportPosition < $backupPosition
-    && $backupPosition < $maintenancePosition,
-    'Game backup export/import handlers are registered in the wrong order.'
+    $exportPosition !== false && $importPosition !== false && $legacyPosition === false,
+    'The worker must register the dedicated backup handlers without the overlapping legacy handler.'
 );
-
-foreach ([
-    'new CatalogStorageMaintenanceJobHandler(',
-    'new UnverifiedDuplicateCleanupJobHandler(',
-    'new GeneratedPackageJobHandler(',
-    'new GameBackupExportJobHandler(',
-    'new GameBackupJobHandler(',
-] as $specializedHandler) {
-    $position = strpos($factory, $specializedHandler);
-    game_backup_expect(
-        $position !== false && $maintenancePosition !== false && $position < $maintenancePosition,
-        'The catch-all maintenance handler intercepts specialized worker routing: ' . $specializedHandler
-    );
-}
 
 echo "Game backup contract tests passed.\n";
