@@ -14,7 +14,7 @@ use PDO;
 use UnrealDb\Catalog\Application\Unverified\UnverifiedDuplicateCleanupService;
 use UnrealDb\Catalog\Application\Upload\ProfiledUploadService;
 use UnrealDb\Catalog\Infrastructure\Filesystem\NativeUnverifiedFileSystem;
-use UnrealDb\Catalog\Infrastructure\Legacy\LegacyCatalogPackageImporter;
+use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Logging\LegacyUploadFailureLogger;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoProfiledUploadGameCatalog;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUnverifiedRecordStore;
@@ -33,7 +33,7 @@ final class CatalogServiceFactory
     {
         return new ProfiledUploadService(
             new PdoProfiledUploadGameCatalog($this->db),
-            new LegacyCatalogPackageImporter($this->db, $this->config),
+            new PdoCatalogPackageImporter($this->db, $this->config),
             new LegacyUploadFailureLogger($this->db)
         );
     }
