@@ -37,6 +37,42 @@ function job_worker_status_counts(PDO $db, string $queueName): array
     return $counts;
 }
 
+/** @param array<string,mixed> $worker */
+function job_worker_status_pool_started_at(array $worker): string
+{
+    $earliest = 0;
+    $value = '';
+    foreach ((array)($worker['workers'] ?? []) as $slotWorker) {
+        if (!is_array($slotWorker) || empty($slotWorker['active'])) {
+            continue;
+        }
+        $state = is_array($slotWorker['state'] ?? null) ? $slotWorker['state'] : [];
+        $startedAt = trim((string)($state['started_at'] ?? ''));
+        $timestamp = $startedAt !== '' ? strtotime($startedAt) : false;
+        if ($timestamp === false || $timestamp <= 0) {
+            continue;
+        }
+        if ($earliest === 0 || $timestamp < $earliest) {
+            $earliest = $timestamp;
+            $value = gmdate('Y-m-d H:i:s', $timestamp);
+        }
+    }
+    return $value;
+}
+
+function job_worker_status_completed_since(PDO $db, string $queueName, string $startedAt): int
+{
+    if ($startedAt === '') {
+        return 0;
+    }
+    return catalog_count(
+        $db,
+        'SELECT COUNT(*) c FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status="completed" AND completed_at>=?',
+        [$queueName, $startedAt]
+    );
+}
+
 try {
     $application = catalog_api_application();
     catalog_api_require_admin();
@@ -60,11 +96,28 @@ try {
     $worker = $launcher->status($queueName, true);
     $counts = job_worker_status_counts($application->db, $queueName);
 
+    /*
+     * CatalogDetachedWorker::state.processed is a count of non-idle worker
+     * attempts. It includes retries, cancellations and dead-letter transitions,
+     * so displaying it as "processed" made the number rise even when no queue
+     * row actually completed. Preserve that diagnostic as attempted and expose
+     * an authoritative completed-since-pool-start count to the existing UI.
+     */
+    $workerState = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+    $attempted = max(0, (int)($workerState['processed'] ?? 0));
+    $poolStartedAt = job_worker_status_pool_started_at($worker);
+    $completedSinceStart = job_worker_status_completed_since($application->db, $queueName, $poolStartedAt);
+    $workerState['attempted'] = $attempted;
+    $workerState['processed'] = $completedSinceStart;
+    $workerState['pool_started_at'] = $poolStartedAt;
+    $worker['state'] = $workerState;
+    $worker['attempted_since_pool_start'] = $attempted;
+    $worker['completed_since_pool_start'] = $completedSinceStart;
+
     $active = !empty($worker['active']);
     $activeCount = max(0, (int)($worker['active_count'] ?? 0));
     $launchingCount = max(0, (int)($worker['launching_count'] ?? 0));
     $desiredCount = max(1, (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount()));
-    $workerState = is_array($worker['state'] ?? null) ? $worker['state'] : [];
     $stateStatus = strtolower(trim((string)($workerState['status'] ?? '')));
     $exitReason = strtolower(trim((string)($workerState['exit_reason'] ?? '')));
     $lastError = trim((string)($workerState['error'] ?? ''));
