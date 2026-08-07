@@ -5,13 +5,16 @@ namespace UnrealDb\Catalog\Application\Maintenance;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitStore;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 /** Queues durable reconciliation after direct catalogue identity/status writes. */
 final class CatalogProjectionReconciliationQueue
 {
+    private const CONCURRENCY_KEY = 'projection:catalog-maintenance';
+
     /**
      * @param list<int> $gameIds
      * @param list<string> $packageNames
@@ -51,13 +54,31 @@ final class CatalogProjectionReconciliationQueue
                 3
             );
 
-            if ($config !== []) {
-                try {
-                    (new CatalogDetachedWorker($config))->start($queueName, 10000);
-                } catch (Throwable $workerError) {
-                    error_log('[UnrealDB projection reconciliation worker] job_id=' . $jobId . ' launch failed: ' . $workerError->getMessage());
-                }
-            }
+            /*
+             * Projection reconciliation takes one global catalogue-maintenance
+             * advisory lock. Giving each file its own concurrency key only lets
+             * several workers claim jobs that then wait on the same lock. Persist
+             * the real serialization rule on the queue row so only one projection
+             * job can be running while other workers remain free for other classes.
+             */
+            $dependencyLimit = (new CatalogJobResourceLimitStore($db, $queueName))->resolve(
+                JobResourcePolicy::DEPENDENCY_HEAVY,
+                1
+            );
+            $serialize = $db->prepare(
+                'UPDATE ue_background_jobs SET resource_class=?,resource_limit=?,concurrency_key=? '
+                . 'WHERE id=? AND status="queued"'
+            );
+            $serialize->execute([
+                JobResourcePolicy::DEPENDENCY_HEAVY,
+                $dependencyLimit,
+                self::CONCURRENCY_KEY,
+                $jobId,
+            ]);
+
+            // Queueing must remain a short foreground operation. Worker lifecycle
+            // is controlled from Background Jobs and must not delay maintenance,
+            // rename or other interactive requests that enqueue reconciliation.
             return $jobId;
         } catch (Throwable $error) {
             error_log('[UnrealDB projection reconciliation queue] file_id=' . $fileId . ' enqueue failed: ' . $error->getMessage());

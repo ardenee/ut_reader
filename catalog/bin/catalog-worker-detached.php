@@ -74,6 +74,7 @@ if (!is_resource($lock)) {
 }
 
 $processed = 0;
+$attempted = 0;
 $exitReason = 'queue_empty';
 $lastResult = null;
 $idlePasses = 0;
@@ -93,7 +94,8 @@ register_shutdown_function(static function () use (
     $workerCount,
     $codeVersion,
     $startedAt,
-    &$processed
+    &$processed,
+    &$attempted
 ): void {
     if ($normalExit) {
         return;
@@ -133,6 +135,7 @@ register_shutdown_function(static function () use (
             'worker_count' => $workerCount,
             'pid' => getmypid(),
             'processed' => $processed,
+            'attempted' => $attempted,
             'code_version' => $codeVersion,
             'started_at' => $startedAt,
             'ended_at' => gmdate('c'),
@@ -158,6 +161,7 @@ try {
         'pid' => getmypid(),
         'max_jobs' => $maxJobs,
         'processed' => 0,
+        'attempted' => 0,
         'code_version' => $codeVersion,
         'started_at' => $startedAt,
     ], $workerSlot);
@@ -170,7 +174,7 @@ try {
         $leaseSeconds
     );
 
-    while ($processed < $maxJobs) {
+    while ($attempted < $maxJobs) {
         if ($controller->stopRequested($queueName, $workerSlot)) {
             $exitReason = 'stop_requested';
             break;
@@ -201,7 +205,10 @@ try {
         }
 
         $idlePasses = 0;
-        $processed++;
+        $attempted++;
+        if ($status === 'completed') {
+            $processed++;
+        }
         $controller->writeState($queueName, [
             'status' => 'running',
             'queue' => $queueName,
@@ -211,17 +218,18 @@ try {
             'pid' => getmypid(),
             'max_jobs' => $maxJobs,
             'processed' => $processed,
+            'attempted' => $attempted,
             'code_version' => $codeVersion,
             'started_at' => $startedAt,
             'last_result' => $lastResult,
         ], $workerSlot);
 
-        if ($processed >= $maxJobs) {
+        if ($attempted >= $maxJobs) {
             $exitReason = 'max_jobs_reached';
             break;
         }
-        // Do not sleep after a completed job. The previous 250 ms delay was
-        // multiplied by every file and made large upload queues unnecessarily slow.
+        // Do not sleep after a completed or failed attempt. A delayed retry has
+        // its own available_at timestamp; idle claim scans already back off.
     }
 
     $controller->writeState($queueName, [
@@ -233,6 +241,7 @@ try {
         'pid' => getmypid(),
         'max_jobs' => $maxJobs,
         'processed' => $processed,
+        'attempted' => $attempted,
         'code_version' => $codeVersion,
         'started_at' => $startedAt,
         'ended_at' => gmdate('c'),
@@ -245,6 +254,7 @@ try {
         'queue' => $queueName,
         'worker_slot' => $workerSlot,
         'processed' => $processed,
+        'attempted' => $attempted,
         'exit_reason' => $exitReason,
         'code_version' => $codeVersion,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL);
@@ -273,6 +283,7 @@ try {
         'worker_count' => $workerCount,
         'pid' => getmypid(),
         'processed' => $processed,
+        'attempted' => $attempted,
         'code_version' => $codeVersion,
         'started_at' => $startedAt,
         'ended_at' => gmdate('c'),

@@ -71,12 +71,17 @@ worker_pool_expect(
         && str_contains($workerScript, 'catalog_detached_queue_has_pending_work')
         && str_contains($workerScript, 'status IN ("queued","running")')
         && str_contains($workerScript, 'if (catalog_detached_queue_has_pending_work($application->db, $queueName))')
-        && str_contains($workerScript, 'while ($processed < $maxJobs)')
+        && str_contains($workerScript, '$attempted = 0;')
+        && str_contains($workerScript, 'while ($attempted < $maxJobs)')
+        && str_contains($workerScript, '$attempted++;')
+        && str_contains($workerScript, "if (\$status === 'completed')")
+        && str_contains($workerScript, '$processed++;')
+        && str_contains($workerScript, "'attempted' => \$attempted")
+        && !str_contains($workerScript, 'while ($processed < $maxJobs)')
         && !str_contains($workerScript, 'for ($index = 0; $index < $maxJobs; $index++)')
-        && str_contains($workerScript, 'Do not sleep after a completed job')
         && substr_count($workerScript, 'usleep($sleepMs * 1000)') === 1
         && str_contains($workerScript, '$requestedMaxJobs >= 10000 ? 1000000'),
-    'The CLI runner does not preserve configured worker slots while blocked work remains or still delays completed jobs.'
+    'The CLI runner does not preserve blocked worker slots or distinguish completed jobs from attempts/retries.'
 );
 
 worker_pool_expect(
