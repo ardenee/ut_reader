@@ -23,7 +23,7 @@ foreach ([
     'new CatalogPakImportJobHandler($db, $trustedImportConfig)',
     'new CatalogStagedImportJobHandler($db, $trustedImportConfig)',
     'new CatalogSourceScanJobHandler($db, $trustedImportConfig)',
-    'new GameBackupJobHandler($db, $trustedImportConfig)',
+    'new GameBackupImportJobHandler($db, $trustedImportConfig)',
 ] as $fragment) {
     large_pak_entry_layout_expect(
         str_contains($factory, $fragment),
@@ -36,7 +36,7 @@ large_pak_entry_layout_expect(is_string($unverifiedAction), 'Could not read the 
 foreach ([
     '$trustedImportConfig = $config;',
     '$trustedImportConfig[\'max_upload_bytes\'] = PHP_INT_MAX;',
-    'catalog_unverified_promote_item($db, $trustedImportConfig,',
+    'unverified_action_promote_item(',
 ] as $fragment) {
     large_pak_entry_layout_expect(
         str_contains($unverifiedAction, $fragment),
@@ -61,7 +61,7 @@ foreach ([
     'pak-info-notes',
     'pak-info-nowrap',
     'white-space: nowrap !important',
-    'Database (N/I/E)',
+    '<th>Database</th>',
     'f.name_count,f.import_count,f.export_count',
     'title="Names / Imports / Exports"',
     '<a href="file-examine.php?id=',
