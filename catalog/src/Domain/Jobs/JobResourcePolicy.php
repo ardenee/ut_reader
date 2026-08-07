@@ -17,6 +17,7 @@ final class JobResourcePolicy
     public const PACKAGE_HEAVY = 'package-heavy';
     public const HOUSEKEEPING = 'housekeeping';
     public const DEFAULT = 'default';
+    public const PROJECTION_CONCURRENCY_KEY = 'projection:catalog-maintenance';
 
     private static ?Closure $limitResolver = null;
 
@@ -221,8 +222,6 @@ final class JobResourcePolicy
             }
         }
 
-        // Jobs without a file identity remain serialized rather than being given
-        // a shared null key that could permit unsafe concurrent maintenance.
         return 'bucket:unidentified';
     }
 
@@ -245,19 +244,9 @@ final class JobResourcePolicy
     }
 
     /** @param array<string,mixed> $payload */
-    private static function projectionKey(array $payload): ?string
+    private static function projectionKey(array $payload): string
     {
-        $fileId = (int)($payload['file_id'] ?? 0);
-        if ($fileId > 0) {
-            return 'projection:file:' . $fileId;
-        }
-        foreach ((array)($payload['game_ids'] ?? []) as $gameId) {
-            $gameId = (int)$gameId;
-            if ($gameId > 0) {
-                return 'projection:game:' . $gameId;
-            }
-        }
-        return 'projection:catalog';
+        return self::PROJECTION_CONCURRENCY_KEY;
     }
 
     private static function positiveKey(string $prefix, mixed $value): ?string
