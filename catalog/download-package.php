@@ -3,22 +3,21 @@
  * UnrealDB PHP File Audit
  * Purpose: Renders and/or processes the catalog page for Generate package for.
  * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Role: Web UI entry point over generated-package settings/format policy and durable job APIs.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
-require_once __DIR__ . '/lib/ModPackageBuilder.php';
+
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 
 try {
     catalog_start_session();
     $config = catalog_config();
     $db = catalog_db($config);
-    $settings = modpkg_settings($db);
+    $packageSettings = new CatalogPackageExportSettingsService($db);
+    $settings = $packageSettings->settings();
     $mode = external_public_download_mode($db);
     if ($mode === 'disabled') {
         throw new RuntimeException('Public downloads are disabled.');
@@ -35,16 +34,19 @@ try {
     if (!$file) {
         throw new RuntimeException('File not found.');
     }
-    $game = modpkg_game_row($db, (int)$file['game_id']);
+    $game = $packageSettings->game((int)$file['game_id']);
     if (!$game) {
         throw new RuntimeException('Game not found.');
     }
 
-    $available = modpkg_available_formats($game, $settings);
-    $format = strtolower(trim((string)($_GET['format'] ?? modpkg_default_format($game, $settings))));
+    $available = $packageSettings->availableFormats($game, $settings);
+    $format = strtolower(trim((string)(
+        $_GET['format'] ?? $packageSettings->defaultFormat($game, $settings)
+    )));
     if (!in_array($format, $available, true)) {
         throw new RuntimeException('The selected package format is not available for this game.');
     }
+    $formatLabels = $packageSettings->formatLabels();
 
     $includeDependencies = !isset($_GET['dependencies']) || (string)$_GET['dependencies'] !== '0';
     $allowIncomplete = $settings['allow_incomplete'] && (string)($_GET['allow_incomplete'] ?? '0') === '1';
@@ -56,7 +58,7 @@ try {
     catalog_head('Generate package');
     catalog_page_header(
         'Generate package for ' . catalog_clean_unreal_filename((string)$file['original_name']),
-        (string)$game['name'] . ' · ' . (modpkg_format_labels()[$format] ?? $format),
+        (string)$game['name'] . ' · ' . ($formatLabels[$format] ?? $format),
         ['Download options' => 'download-info.php?id=' . $id, 'File information' => 'file-info.php?id=' . $id]
     );
 
