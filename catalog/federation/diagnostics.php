@@ -13,14 +13,14 @@ declare(strict_types=1);
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
-require_once __DIR__ . '/../lib/FederationWorker.php';
-require_once __DIR__ . '/../lib/FederationStreamingWorker.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationImportWorker;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationPeerInventorySyncService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
 function diagnostics_tab(mixed $value): string
@@ -32,6 +32,8 @@ function diagnostics_tab(mixed $value): string
 function diagnostics_worker(PDO $db, array $config): array
 {
     $limit = max(1, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1));
+    $transferWorker = new CatalogFederationTransferWorker($db, $config);
+    $importWorker = new CatalogFederationImportWorker($db, $config);
     $result = [
         'inventory_sync' => (new CatalogFederationPeerInventorySyncService($db))->syncDueInventories(),
         'approved_downloads' => federation_queue_approved_dependency_downloads($db),
@@ -39,12 +41,12 @@ function diagnostics_worker(PDO $db, array $config): array
         'imports' => [],
     ];
     for ($i = 0; $i < $limit; $i++) {
-        $run = federation_streaming_run_one_transfer($db, $config);
+        $run = $transferWorker->runOne();
         $result['transfers'][] = $run;
         if (!empty($run['skipped'])) break;
     }
     for ($i = 0; $i < $limit; $i++) {
-        $run = federation_worker_run_one_import($db, $config);
+        $run = $importWorker->runOne();
         $result['imports'][] = $run;
         if (!empty($run['skipped'])) break;
     }
