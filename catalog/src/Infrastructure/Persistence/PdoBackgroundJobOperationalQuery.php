@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Provides small indexed operational reads for durable background jobs.
- * Why: Worker/status HTTP endpoints should not own queue SQL or rescan stable queue aggregates every two seconds.
+ * Why: Worker/status HTTP endpoints need exact live queued/running counts without rescanning terminal history every two seconds.
  * Role: Infrastructure query object for live worker/queue diagnostics.
  */
 declare(strict_types=1);
@@ -25,53 +25,53 @@ final class PdoBackgroundJobOperationalQuery
     public function queueCounts(string $queueName): array
     {
         $queueName = PdoJobQueueSupport::requiredIdentifier($queueName, 'queue');
-        $counts = (new CatalogBackgroundJobCountCache($this->config))->remember(
-            'worker-operational:' . $queueName,
-            fn(): array => $this->baseCounts($queueName)
-        );
-        $counts += ['queued' => 0, 'running' => 0, 'terminal' => 0, 'total' => 0];
-        $counts['ready'] = 0;
 
-        // Readiness depends on UTC_TIMESTAMP(), so keep this one small indexed
-        // query live even while queue-status aggregates are short-cached.
-        if ((int)$counts['queued'] > 0) {
-            $ready = $this->db->prepare(
+        // These values drive the live worker banner/restart decision and therefore
+        // must never be hidden behind a multi-second cache. Both are narrow
+        // queue/status index counts rather than a GROUP BY over queue history.
+        $queued = $this->statusCount($queueName, 'queued');
+        $running = $this->statusCount($queueName, 'running');
+
+        $ready = 0;
+        if ($queued > 0) {
+            $statement = $this->db->prepare(
                 'SELECT COUNT(*) FROM ue_background_jobs '
                 . 'WHERE queue_name=? AND status="queued" AND cancel_requested_at IS NULL AND available_at<=UTC_TIMESTAMP()'
             );
-            $ready->execute([$queueName]);
-            $counts['ready'] = (int)$ready->fetchColumn();
+            $statement->execute([$queueName]);
+            $ready = (int)$statement->fetchColumn();
         }
 
+        // Terminal history is not used for scheduling or the live banner, so it
+        // can share the short aggregate cache and avoid scanning old rows every poll.
+        $terminalCounts = (new CatalogBackgroundJobCountCache($this->config))->remember(
+            'worker-terminal:' . $queueName,
+            function () use ($queueName): array {
+                $statement = $this->db->prepare(
+                    'SELECT COUNT(*) FROM ue_background_jobs '
+                    . 'WHERE queue_name=? AND status IN ("completed","failed","dead_letter","cancelled")'
+                );
+                $statement->execute([$queueName]);
+                return ['terminal' => (int)$statement->fetchColumn()];
+            }
+        );
+        $terminal = max(0, (int)($terminalCounts['terminal'] ?? 0));
+
         return [
-            'queued' => (int)$counts['queued'],
-            'ready' => (int)$counts['ready'],
-            'running' => (int)$counts['running'],
-            'terminal' => (int)$counts['terminal'],
-            'total' => (int)$counts['total'],
+            'queued' => $queued,
+            'ready' => $ready,
+            'running' => $running,
+            'terminal' => $terminal,
+            'total' => $queued + $running + $terminal,
         ];
     }
 
-    /** @return array{queued:int,running:int,terminal:int,total:int} */
-    private function baseCounts(string $queueName): array
+    private function statusCount(string $queueName, string $status): int
     {
-        $counts = ['queued' => 0, 'running' => 0, 'terminal' => 0, 'total' => 0];
         $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) AS total FROM ue_background_jobs WHERE queue_name=? GROUP BY status'
+            'SELECT COUNT(*) FROM ue_background_jobs WHERE queue_name=? AND status=?'
         );
-        $statement->execute([$queueName]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $status = strtolower(trim((string)($row['status'] ?? '')));
-            $count = (int)($row['total'] ?? 0);
-            $counts['total'] += $count;
-            if ($status === 'queued') {
-                $counts['queued'] += $count;
-            } elseif ($status === 'running') {
-                $counts['running'] += $count;
-            } elseif (in_array($status, ['completed', 'failed', 'dead_letter', 'cancelled'], true)) {
-                $counts['terminal'] += $count;
-            }
-        }
-        return $counts;
+        $statement->execute([$queueName, $status]);
+        return (int)$statement->fetchColumn();
     }
 }
