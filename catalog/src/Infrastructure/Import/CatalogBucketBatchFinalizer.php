@@ -91,9 +91,8 @@ final class CatalogBucketBatchFinalizer
             }
         }
 
-        $counts = (new PdoBackgroundJobOperationalQuery($this->db, $this->config))
-            ->queueCounts($queue->queueName());
-        $pendingJobs = (int)$counts['queued'];
+        $pendingJobs = (new PdoBackgroundJobOperationalQuery($this->db, $this->config))
+            ->queuedCount($queue->queueName());
         $worker = null;
         $workerError = '';
         if ($startWorker && $pendingJobs > 0) {
