@@ -18,7 +18,6 @@ final class CatalogGameLifecycleService
 {
     private readonly PdoCatalogGameTableMaintenance $tables;
     private readonly CatalogGameStorageCleanup $storage;
-    private readonly CatalogGameManagedFileCleanup $managedFiles;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -28,7 +27,6 @@ final class CatalogGameLifecycleService
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->tables = new PdoCatalogGameTableMaintenance($db);
         $this->storage = new CatalogGameStorageCleanup($config);
-        $this->managedFiles = new CatalogGameManagedFileCleanup($db, $config);
     }
 
     /**
@@ -200,7 +198,8 @@ final class CatalogGameLifecycleService
                 );
             };
 
-        $result = $this->managedFiles->resetManagedFiles($gameId, $mappedProgress);
+        $result = (new CatalogGameManagedFileCleanup($this->db, $this->config))
+            ->resetManagedFiles($gameId, $mappedProgress);
         CatalogGameLifecycleProgress::emit(
             $progress,
             'database_cleanup',
