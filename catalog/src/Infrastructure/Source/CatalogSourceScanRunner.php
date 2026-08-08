@@ -20,7 +20,7 @@ final class CatalogSourceScanRunner
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/CatalogSourceScan.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogParser.php';
     }
 
     /**
@@ -74,7 +74,7 @@ final class CatalogSourceScanRunner
         $counters['containers_skipped'] = (int)$discovery['containers_skipped'];
 
         $total = count($files);
-        \catalog_source_scan_report($progress, [
+        CatalogSourceScanProgress::report($progress, [
             'stage' => 'scanning',
             'done' => 0,
             'total' => max(1, $total),
@@ -103,7 +103,7 @@ final class CatalogSourceScanRunner
                             (int)$cachedFile['id'],
                             $sourceId,
                             $relativePath,
-                            \catalog_source_scan_normalized_relative_path($relativePath, $work)
+                            CatalogSourceScanPathPolicy::normalizedRelativePath($relativePath, $work)
                         );
                         $method = (string)($cachedFile['_cache_match_method'] ?? $cached['match_method'] ?? 'md5');
                         if ($method === 'guid') {
@@ -131,7 +131,7 @@ final class CatalogSourceScanRunner
                     }
                 }
 
-                $work = \catalog_source_scan_work_file($path);
+                $work = CatalogSourceScanWorkFile::prepare($path);
                 if ($work['redirect']) {
                     $counters['redirect_archives']++;
                 }
@@ -146,7 +146,11 @@ final class CatalogSourceScanRunner
                 if ($md5 === false || $md5 === '') {
                     $counters['unknown']++;
                     if (count($unknownSamples) < 50) {
-                        $unknownSamples[] = \catalog_source_scan_sample($path, $work, 'could not hash file');
+                        $unknownSamples[] = CatalogSourceScanPathPolicy::sample(
+                            $path,
+                            $work,
+                            'could not hash file'
+                        );
                     }
                     continue;
                 }
@@ -157,7 +161,7 @@ final class CatalogSourceScanRunner
                         (int)$file['id'],
                         $sourceId,
                         $relativePath,
-                        \catalog_source_scan_normalized_relative_path($relativePath, $work)
+                        CatalogSourceScanPathPolicy::normalizedRelativePath($relativePath, $work)
                     );
                     $counters['matched_md5']++;
                     $counters['locations']++;
@@ -194,7 +198,7 @@ final class CatalogSourceScanRunner
                     if (!$importUnknown) {
                         $counters['parse_failed']++;
                         if (count($parseFailedSamples) < 50) {
-                            $parseFailedSamples[] = \catalog_source_scan_sample(
+                            $parseFailedSamples[] = CatalogSourceScanPathPolicy::sample(
                                 $path,
                                 $work,
                                 $parseError->getMessage()
@@ -222,7 +226,7 @@ final class CatalogSourceScanRunner
                         $counters['locations'] += $accounting['locations'];
                         $result = $attempt['result'];
                         if (is_array($result) && count($importSamples) < 50) {
-                            $importSamples[] = \catalog_source_scan_sample(
+                            $importSamples[] = CatalogSourceScanPathPolicy::sample(
                                 $path,
                                 $work,
                                 (string)($result[2] ?? '')
@@ -235,7 +239,7 @@ final class CatalogSourceScanRunner
                         }
                         $scanError = $attempt['error'];
                         if (count($parseFailedSamples) < 50) {
-                            $parseFailedSamples[] = \catalog_source_scan_sample(
+                            $parseFailedSamples[] = CatalogSourceScanPathPolicy::sample(
                                 $path,
                                 $work,
                                 'profiled import failed: '
@@ -255,7 +259,7 @@ final class CatalogSourceScanRunner
                             (int)$matches[0]['id'],
                             $sourceId,
                             $relativePath,
-                            \catalog_source_scan_normalized_relative_path($relativePath, $work)
+                            CatalogSourceScanPathPolicy::normalizedRelativePath($relativePath, $work)
                         );
                         $counters['matched_guid']++;
                         $counters['locations']++;
@@ -286,7 +290,7 @@ final class CatalogSourceScanRunner
                             null
                         );
                         if (count($unknownSamples) < 50) {
-                            $unknownSamples[] = \catalog_source_scan_sample(
+                            $unknownSamples[] = CatalogSourceScanPathPolicy::sample(
                                 $path,
                                 $work,
                                 'GUID matches multiple catalog files: ' . $guid
@@ -310,7 +314,7 @@ final class CatalogSourceScanRunner
                         null
                     );
                     if (count($unknownSamples) < 50) {
-                        $unknownSamples[] = \catalog_source_scan_sample(
+                        $unknownSamples[] = CatalogSourceScanPathPolicy::sample(
                             $path,
                             $work,
                             $guid === '' ? 'no GUID found' : 'GUID not in catalog: ' . $guid
@@ -338,7 +342,7 @@ final class CatalogSourceScanRunner
                     $counters['locations'] += $accounting['locations'];
                     $result = $attempt['result'];
                     if (is_array($result) && count($importSamples) < 50) {
-                        $importSamples[] = \catalog_source_scan_sample(
+                        $importSamples[] = CatalogSourceScanPathPolicy::sample(
                             $path,
                             $work,
                             (string)($result[2] ?? '')
@@ -351,7 +355,7 @@ final class CatalogSourceScanRunner
                     }
                     $scanError = $attempt['error'];
                     if (count($unknownSamples) < 50) {
-                        $unknownSamples[] = \catalog_source_scan_sample(
+                        $unknownSamples[] = CatalogSourceScanPathPolicy::sample(
                             $path,
                             $work,
                             ($guid === '' ? 'no GUID' : 'GUID not in catalog: ' . $guid)
@@ -378,11 +382,11 @@ final class CatalogSourceScanRunner
                 }
             } finally {
                 if (is_array($work)) {
-                    \catalog_source_scan_cleanup_work_file($work);
+                    CatalogSourceScanWorkFile::cleanup($work);
                 }
                 $fingerprints->applyCounters($counters);
                 $done = $index + 1;
-                \catalog_source_scan_report($progress, [
+                CatalogSourceScanProgress::report($progress, [
                     'stage' => 'scanning',
                     'done' => $done,
                     'total' => max(1, $total),
@@ -393,7 +397,7 @@ final class CatalogSourceScanRunner
         }
 
         $fingerprints->applyCounters($counters);
-        \catalog_source_scan_report($progress, [
+        CatalogSourceScanProgress::report($progress, [
             'stage' => 'complete',
             'done' => max(1, $total),
             'total' => max(1, $total),
