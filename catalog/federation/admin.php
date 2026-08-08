@@ -15,7 +15,8 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
-require_once __DIR__ . '/../lib/FederationState.php';
+
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
 
 try {
     $db = catalog_db(catalog_config());
@@ -23,12 +24,13 @@ try {
         exit;
     }
 
-    federation_reconcile_site_role($db);
+    $state = new CatalogFederationStateService($db);
+    $state->reconcileSiteRole();
     $identity = fed_ensure_identity($db);
-    $role = federation_site_role($db);
-    $displayRole = federation_display_role($db);
-    $parent = federation_parent_peer($db, true);
-    $children = federation_child_peers($db, true);
+    $role = $state->siteRole();
+    $displayRole = $state->displayRole();
+    $parent = $state->parentPeer(true);
+    $children = $state->childPeers(true);
     $pendingJoins = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_join_requests WHERE status="pending"')['c'] ?? 0);
     $visibleItems = federation_visible_request_item_sql($db, 'i');
     $visibleJobs = federation_visible_transfer_job_sql($db, 'j', $parent ?: null);
@@ -57,7 +59,7 @@ try {
     catalog_page_header(
         'Federation Overview',
         'Role, connection health, inventory activity, requests, transfers, worker state and administration shortcuts.',
-        federation_main_links()
+        CatalogFederationStateService::mainLinks()
     );
 
     echo '<div class="grid">';
@@ -82,7 +84,7 @@ try {
 
     echo '<div class="card"><h2>Connection summary</h2>';
     if ($role === 'standalone') {
-        if (federation_has_pending_parent_join($db)) {
+        if ($state->hasPendingParentJoin()) {
             echo '<p>A request to join <strong>' . catalog_h((string)fed_setting($db, 'main_parent_url', '')) . '</strong> is pending. This server remains Standalone until pairing completes.</p><p><a class="button" href="connections.php">Check or cancel request</a></p>';
         } else {
             echo '<p>This server is Standalone.</p><p><a class="button" href="connections.php">Connect to a Parent or accept Children</a></p>';
