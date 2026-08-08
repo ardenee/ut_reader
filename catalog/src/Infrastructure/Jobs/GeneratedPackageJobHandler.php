@@ -19,6 +19,8 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportFormatPolicy;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 
@@ -61,7 +63,7 @@ final class GeneratedPackageJobHandler implements JobHandler
                 throw new \RuntimeException('Generated packages require local catalogue payload access and are unavailable in external-mirror-only mode.');
             }
 
-            $settings = \modpkg_settings($this->db);
+            $settings = (new CatalogPackageExportSettingsService($this->db))->settings();
             if (!$settings['enabled']) {
                 throw new \RuntimeException('Package exports are disabled.');
             }
@@ -82,7 +84,11 @@ final class GeneratedPackageJobHandler implements JobHandler
 
             $umodFamily = in_array(
                 $format,
-                [\MODPKG_FORMAT_UMOD, \MODPKG_FORMAT_UT2MOD, \MODPKG_FORMAT_UT4MOD],
+                [
+                    CatalogPackageExportFormatPolicy::UMOD,
+                    CatalogPackageExportFormatPolicy::UT2MOD,
+                    CatalogPackageExportFormatPolicy::UT4MOD,
+                ],
                 true
             );
             if ($umodFamily && (int)$plan['total_bytes'] > 2000 * 1024 * 1024) {
