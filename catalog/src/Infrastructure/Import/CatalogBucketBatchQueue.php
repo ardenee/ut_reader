@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogBucketBatchQueue` for catalog bucket batch queue.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Converts completed browser uploads into durable Upload Bucket processing jobs after transfer completion.
+ * Why: Finalization owns durable source validation/deduplication and queue creation, not package parsing.
+ * Role: Infrastructure import queue orchestration.
  */
 declare(strict_types=1);
 
@@ -18,10 +14,6 @@ use Throwable;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
-/**
- * Converts completed browser uploads into processing jobs only after the whole
- * browser batch has finished transferring.
- */
 final class CatalogBucketBatchQueue
 {
     /** @param array<string,mixed> $config */
@@ -78,8 +70,11 @@ final class CatalogBucketBatchQueue
         $manifest = is_array($resolved['manifest'] ?? null) ? $resolved['manifest'] : [];
         $sourcePath = (string)($resolved['path'] ?? '');
         $size = (int)($manifest['file_size'] ?? 0);
-        $relativePath = $this->cleanRelativePath((string)($manifest['relative_path'] ?? ''));
-        $originalName = $this->requiredName(basename(str_replace('\\', '/', $relativePath)));
+        $relativePath = CatalogImportPathPolicy::relative((string)($manifest['relative_path'] ?? ''));
+        $originalName = CatalogImportPathPolicy::filename(
+            basename(str_replace('\\', '/', $relativePath)),
+            'Upload Bucket filename is missing.'
+        );
         $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
         $fingerprint = $this->fingerprint($manifest);
         if ($size < 1 || $relativePath === '' || $fingerprint === '' || !is_file($sourcePath)) {
@@ -118,8 +113,6 @@ final class CatalogBucketBatchQueue
                 throw new \RuntimeException('Upload hash identity size no longer matches the completed source.');
             }
 
-            // Recheck under server control after transfer. This closes the race
-            // where another batch stores the same file after browser preflight.
             $inspection = (new CatalogUploadDuplicateDetector($this->db, $this->config))
                 ->inspect($size, $md5, $sha1);
             $physical = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
@@ -148,9 +141,6 @@ final class CatalogBucketBatchQueue
         $existingSourceAvailable = false;
 
         if (!$redirect) {
-            // Completed job history is not physical storage and cannot suppress a
-            // re-upload. Active source dedupe is allowed only while that job's
-            // retained staged upload still exists and resolves successfully.
             $dedupeKey = 'bucket-upload-source:' . $fingerprint;
             $existing = $this->db->prepare(
                 'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
@@ -173,15 +163,11 @@ final class CatalogBucketBatchQueue
                 }
             }
             if ($existingId > 0 && !$existingSourceAvailable) {
-                // Do not let an orphaned job identity block replacement bytes.
                 $existingId = 0;
                 $existingUploadId = '';
                 $dedupeKey .= ':' . $uploadId;
             }
         } else {
-            // A redirect fingerprint identifies only compressed wrapper bytes.
-            // Never merge or discard it as a package duplicate; every wrapper must
-            // reach decompression so the real package identity can be checked.
             $dedupeKey = 'bucket-redirect-upload:' . $uploadId;
         }
 
@@ -274,32 +260,5 @@ final class CatalogBucketBatchQueue
     private function baseQueueName(): string
     {
         return trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
-    }
-
-    private function requiredName(string $name): string
-    {
-        $name = \catalog_clean_unreal_filename($name);
-        if ($name === '' || $name === '.' || $name === '..') {
-            throw new \InvalidArgumentException('Upload Bucket filename is missing.');
-        }
-        return $name;
-    }
-
-    private function cleanRelativePath(string $path): string
-    {
-        $parts = [];
-        foreach (explode('/', trim(str_replace(["\0", '\\'], ['', '/'], $path), '/')) as $part) {
-            if ($part === '' || $part === '.') {
-                continue;
-            }
-            if ($part === '..') {
-                if ($parts !== []) {
-                    array_pop($parts);
-                }
-                continue;
-            }
-            $parts[] = $part;
-        }
-        return implode('/', $parts);
     }
 }
