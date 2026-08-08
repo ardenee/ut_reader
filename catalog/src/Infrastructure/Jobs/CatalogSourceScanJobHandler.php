@@ -19,6 +19,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
+use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceScanRunner;
 
 final class CatalogSourceScanJobHandler implements JobHandler
 {
@@ -48,11 +49,7 @@ final class CatalogSourceScanJobHandler implements JobHandler
         $userId = (int)$userIdValue > 0 ? (int)$userIdValue : null;
 
         $containerResult = $this->queueLocalPaks($sourceId, $strictProfile, $userId, $context);
-        require_once __DIR__ . '/../../../lib/CatalogSourceScanNoContainers.php';
-
-        $result = \catalog_source_scan_run_without_containers(
-            $this->db,
-            $this->config,
+        $result = (new CatalogSourceScanRunner($this->db, $this->config))->run(
             $sourceId,
             $importUnknown,
             $strictProfile,
