@@ -113,8 +113,8 @@ $record(
     str_contains($discovery, 'FilesystemIterator::SKIP_DOTS | FilesystemIterator::FOLLOW_SYMLINKS')
         && str_contains($discovery, 'RecursiveIteratorIterator::SELF_FIRST')
         && str_contains($discovery, "pathinfo(\$path, PATHINFO_EXTENSION)) === 'pak'")
-        && str_contains($discovery, 'catalog_source_scan_allowed_file(')
-        && str_contains($discovery, 'catalog_source_scan_relative_path(')
+        && str_contains($discovery, 'CatalogSourceScanPathPolicy::allowedFile(')
+        && str_contains($discovery, 'CatalogSourceScanPathPolicy::relativePath(')
         && str_contains($discovery, '(count($files) % 250) === 0'),
     'discovery must preserve PAK exclusion, file policy, symlink traversal and progress cadence'
 );
