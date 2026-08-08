@@ -15,18 +15,20 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
-require_once __DIR__ . '/../lib/FederationState.php';
+
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
 
 try {
     $db = catalog_db(catalog_config());
-    federation_reconcile_site_role($db);
+    $state = new CatalogFederationStateService($db);
+    $state->reconcileSiteRole();
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required.');
         }
         catalog_check_csrf('fed_settings');
-        $role = federation_site_role($db);
+        $role = $state->siteRole();
         $allowed = [
             'site_name',
             'site_url',
@@ -81,8 +83,8 @@ try {
 
     $identity = fed_ensure_identity($db);
     $settings = fed_all_settings($db);
-    $role = federation_site_role($db);
-    $parent = federation_parent_peer($db, true);
+    $role = $state->siteRole();
+    $parent = $state->parentPeer(true);
     $effectiveIgnore = federation_ignore_base_game_files($db, $parent ?: null);
 
     catalog_head('Federation Settings');
@@ -91,13 +93,13 @@ try {
     catalog_page_header(
         'Federation Settings',
         'Configure identity, policy, synchronization, transfer limits, security and worker behaviour. Federation role is controlled from Connections.',
-        federation_main_links()
+        CatalogFederationStateService::mainLinks()
     );
 
     echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_settings')) . '">';
 
     echo '<div class="card"><h2>Identity and role</h2><table>';
-    echo '<tr><th>Current role</th><td><strong>' . catalog_h(federation_display_role($db)) . '</strong> <span class="muted">Managed by established connections.</span></td></tr>';
+    echo '<tr><th>Current role</th><td><strong>' . catalog_h($state->displayRole()) . '</strong> <span class="muted">Managed by established connections.</span></td></tr>';
     echo '<tr><th>Site ID</th><td class="mono">' . catalog_h($identity['site_id']) . '</td></tr>';
     echo '<tr><th>Fingerprint</th><td class="mono">' . catalog_h($identity['site_fingerprint']) . '</td></tr>';
     echo '<tr><th>Site name</th><td><input name="site_name" value="' . catalog_h($settings['site_name'] ?? '') . '" style="min-width:420px"></td></tr>';

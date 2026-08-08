@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Executes federation inventory refresh, parent-pull queueing and child request submission.
  * Why: Network protocol calls and transfer-job persistence must not be embedded in the Inventories rendering page.
- * Role: Infrastructure orchestration over federation inventory/query compatibility services.
+ * Role: Infrastructure orchestration over namespaced federation inventory/query services.
  */
 declare(strict_types=1);
 
@@ -21,6 +21,9 @@ final class CatalogFederationInventoryActions
     public const CHILD_PAGE_SIZE = 950;
 
     private readonly PdoFederationInventoryListQuery $inventory;
+    private readonly CatalogFederationPeerInventorySyncService $peerInventorySync;
+    private readonly CatalogFederationLocalInventoryService $localInventory;
+    private readonly CatalogFederationInventoryRefreshService $inventoryRefresh;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -28,13 +31,14 @@ final class CatalogFederationInventoryActions
         private readonly array $config
     ) {
         $this->inventory = new PdoFederationInventoryListQuery($db);
+        $this->peerInventorySync = new CatalogFederationPeerInventorySyncService($db);
+        $this->localInventory = new CatalogFederationLocalInventoryService($db);
+        $this->inventoryRefresh = new CatalogFederationInventoryRefreshService($db);
+
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/FederationAuth.php';
         require_once $root . '/lib/FederationPeerSecret.php';
-        require_once $root . '/lib/FederationInventory.php';
-        require_once $root . '/lib/FederationInventoryRefresh.php';
         require_once $root . '/lib/FederationBaseGamePolicy.php';
-        require_once $root . '/lib/FederationState.php';
     }
 
     /**
@@ -56,14 +60,14 @@ final class CatalogFederationInventoryActions
         $cursorState = $this->postCursorState($input);
 
         if ($action === 'refresh') {
-            $result = \federation_pull_inventory_from_peer($this->db, $peerId);
+            $result = $this->peerInventorySync->pullFromPeer($peerId);
             $flash = '';
             if ($role === 'parent' && (string)$peer['peer_role'] === 'child') {
-                $remote = \federation_request_child_refresh_parent_inventory($this->db, $peerId);
+                $remote = $this->inventoryRefresh->requestChildRefreshParentInventory($peerId);
                 $flash = 'Inventories refreshed: received ' . (int)($result['received'] ?? 0)
                     . ' child rows; child received ' . (int)($remote['received'] ?? 0) . ' parent rows.';
             } elseif ($role === 'child' && (string)$peer['peer_role'] === 'parent') {
-                $push = \federation_push_inventory_to_parent($this->db, $peerId);
+                $push = $this->localInventory->pushToParent($peerId);
                 $flash = 'Parent inventory refreshed and local inventory pushed: '
                     . (!empty($push['ok']) ? 'success' : 'failed') . '.';
             }

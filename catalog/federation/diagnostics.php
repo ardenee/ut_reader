@@ -16,11 +16,11 @@ require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationWorker.php';
 require_once __DIR__ . '/../lib/FederationStreamingWorker.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
-require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
-require_once __DIR__ . '/../lib/FederationState.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationPeerInventorySyncService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
 function diagnostics_tab(mixed $value): string
@@ -33,7 +33,7 @@ function diagnostics_worker(PDO $db, array $config): array
 {
     $limit = max(1, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1));
     $result = [
-        'inventory_sync' => federation_sync_due_inventories($db),
+        'inventory_sync' => (new CatalogFederationPeerInventorySyncService($db))->syncDueInventories(),
         'approved_downloads' => federation_queue_approved_dependency_downloads($db),
         'transfers' => [],
         'imports' => [],
@@ -74,8 +74,9 @@ function diagnostics_log_links(array $filters, array $page): string
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $state = new CatalogFederationStateService($db);
     $historyPageQuery = new PdoFederationHistoryPageQuery($db);
-    federation_reconcile_site_role($db);
+    $state->reconcileSiteRole();
     $tab = diagnostics_tab($_REQUEST['tab'] ?? 'logs');
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -114,7 +115,7 @@ try {
     catalog_head('Federation Diagnostics');
     catalog_flash($_SESSION['fed_diagnostics_flash'] ?? null);
     unset($_SESSION['fed_diagnostics_flash']);
-    catalog_page_header('Federation Diagnostics', 'Logs, cleanup, conflicts, worker controls and connection health.', federation_main_links());
+    catalog_page_header('Federation Diagnostics', 'Logs, cleanup, conflicts, worker controls and connection health.', CatalogFederationStateService::mainLinks());
 
     echo '<div class="card"><p class="page-links">';
     foreach (['logs'=>'Logs','cleanup'=>'Cleanup','conflicts'=>'Conflicts','worker'=>'Worker','connections'=>'Connection Diagnostics'] as $key=>$label) {

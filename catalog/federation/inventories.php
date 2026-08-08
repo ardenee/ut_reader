@@ -11,16 +11,14 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationInventoryActions;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationInventoryListQuery;
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationPeerSecret.php';
-require_once __DIR__ . '/../lib/FederationInventory.php';
-require_once __DIR__ . '/../lib/FederationInventoryRefresh.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/BaseGameProtection.php';
-require_once __DIR__ . '/../lib/FederationState.php';
 
 const FI_PARENT_PAGE_SIZE = 100;
 const FI_CHILD_PAGE_SIZE = 950;
@@ -122,10 +120,11 @@ function fi_child_key(array $row): string
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $state = new CatalogFederationStateService($db);
     $inventoryQuery = new PdoFederationInventoryListQuery($db);
     $inventoryActions = new CatalogFederationInventoryActions($db, $config);
     base_game_ensure($db);
-    $role = federation_reconcile_site_role($db);
+    $role = $state->reconcileSiteRole();
     $ignoreBaseGame = federation_ignore_base_game_files($db);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -153,7 +152,7 @@ try {
         $role === 'parent'
             ? 'Review files held by each child that satisfy Parent dependencies or are missing from the Parent.'
             : ($role === 'child' ? 'Only local missing dependency packages are shown. Select packages and submit a request to the Parent.' : 'Connect to a Parent or approve a Child before inventories are available.'),
-        federation_main_links()
+        CatalogFederationStateService::mainLinks()
     );
 
     if ($role === 'standalone') {
@@ -163,7 +162,7 @@ try {
     }
 
     if ($role === 'parent') {
-        $children = federation_child_peers($db, true);
+        $children = $state->childPeers(true);
         if (!$children) {
             echo '<div class="card"><h2>No connected children</h2><p>Approve a child connection before viewing inventories.</p></div>';
             catalog_foot();
@@ -231,7 +230,7 @@ try {
         }
         echo '</div>';
     } else {
-        $parent = federation_parent_peer($db, true);
+        $parent = $state->parentPeer(true);
         if (!$parent) {
             echo '<div class="card"><h2>No active Parent</h2><p>Reconnect to a Parent before requesting files.</p></div>';
             catalog_foot();

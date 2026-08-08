@@ -20,7 +20,6 @@ final class CatalogFederationTransferService
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
         require_once $root . '/lib/FederationBaseGamePolicy.php';
-        require_once $root . '/lib/FederationState.php';
     }
 
     /** @return list<string> */

@@ -11,10 +11,10 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
-require_once __DIR__ . '/../lib/FederationState.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationRequestService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
 
 /* Contract markers: Requests from Children; Downloads Requested from Children;
  * Requests to Parent; approve_all; status_message;
@@ -59,9 +59,10 @@ function fr_page_links(array $params, array $page, string $cursorKey, string $mo
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $state = new CatalogFederationStateService($db);
     $requestService = new CatalogFederationRequestService($db);
-    $role = federation_reconcile_site_role($db);
-    $activeParentForPolicy = federation_parent_peer($db, true);
+    $role = $state->reconcileSiteRole();
+    $activeParentForPolicy = $state->parentPeer(true);
     $visibleJobs = federation_visible_transfer_job_sql($db, 'j', $activeParentForPolicy ?: null);
     $tab = fr_tab($role, $_REQUEST['tab'] ?? '');
     $historyPageSize = fr_page_size($_REQUEST['page_size'] ?? CatalogFederationHistoryPageService::DEFAULT_PAGE_SIZE);
@@ -91,7 +92,7 @@ try {
         $role === 'parent'
             ? 'Review files requested by Children and track Parent pulls.'
             : ($role === 'child' ? 'Track requests sent to the Parent, approvals, downloads and imports.' : 'An established connection is required.'),
-        federation_main_links()
+        CatalogFederationStateService::mainLinks()
     );
 
     if ($role === 'standalone') {

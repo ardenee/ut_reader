@@ -14,8 +14,12 @@ use RuntimeException;
 
 final class CatalogFederationRequestService
 {
+    private readonly CatalogFederationStateService $state;
+
     public function __construct(private readonly PDO $db)
     {
+        $this->state = new CatalogFederationStateService($db);
+
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
@@ -24,7 +28,6 @@ final class CatalogFederationRequestService
         require_once $root . '/lib/FederationRequestLifecycle.php';
         require_once $root . '/lib/FederationDependencyDownloads.php';
         require_once $root . '/lib/FederationBaseGamePolicy.php';
-        require_once $root . '/lib/FederationState.php';
     }
 
     /**
@@ -113,7 +116,7 @@ final class CatalogFederationRequestService
     /** @return array<string,mixed> */
     public function parent(): array
     {
-        $parent = \federation_parent_peer($this->db, true);
+        $parent = $this->state->parentPeer(true);
         if (!$parent) {
             throw new RuntimeException('Active parent connection not found.');
         }
