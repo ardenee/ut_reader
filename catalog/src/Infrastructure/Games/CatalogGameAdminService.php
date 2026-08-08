@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Owns Game Admin reads, save validation, reset and delete lifecycle orchestration.
  * Why: Game/profile persistence and destructive catalog lifecycle operations should not live in the rendering controller.
- * Role: Infrastructure/application service over GameProfiles, GameManagerLifecycle and catalog statistics.
+ * Role: Infrastructure/application service over GameProfiles, CatalogGameLifecycleService and catalog statistics.
  */
 declare(strict_types=1);
 
@@ -15,6 +15,8 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 
 final class CatalogGameAdminService
 {
+    private readonly CatalogGameLifecycleService $lifecycle;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -23,7 +25,7 @@ final class CatalogGameAdminService
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/GameProfiles.php';
-        require_once $root . '/lib/GameManagerLifecycle.php';
+        $this->lifecycle = new CatalogGameLifecycleService($db, $config);
     }
 
     /** @return list<array<string,mixed>> */
@@ -76,7 +78,10 @@ final class CatalogGameAdminService
             'unverified_count'
         );
         $sourceCounts = $this->countMap(
-            \catalog_all($this->db, 'SELECT game_id,COUNT(*) source_count FROM ue_sources GROUP BY game_id'),
+            \catalog_all(
+                $this->db,
+                'SELECT game_id,COUNT(*) source_count FROM ue_sources GROUP BY game_id'
+            ),
             'game_id',
             'source_count'
         );
@@ -124,8 +129,9 @@ final class CatalogGameAdminService
         }
 
         if ($id > 0) {
-            $this->db->prepare('UPDATE ue_games SET name=?,slug=?,description=?,profile_id=? WHERE id=?')
-                ->execute([$name, $slug, $description ?: null, $profileId, $id]);
+            $this->db->prepare(
+                'UPDATE ue_games SET name=?,slug=?,description=?,profile_id=? WHERE id=?'
+            )->execute([$name, $slug, $description ?: null, $profileId, $id]);
             return $id;
         }
 
@@ -145,7 +151,7 @@ final class CatalogGameAdminService
         if ($gameId <= 0 || !$confirmed) {
             throw new RuntimeException('Game reset confirmation is required.');
         }
-        $result = \gm_lifecycle_reset_game($this->db, $this->config, $gameId, $progress);
+        $result = $this->lifecycle->reset($gameId, $progress);
         $message = 'Reset ' . $result['game_name'] . ': removed '
             . $result['catalog_records'] . ' catalog file record(s), '
             . $result['pak_archives'] . ' PAK archive record(s), deleted '
@@ -168,7 +174,7 @@ final class CatalogGameAdminService
         if ($gameId <= 0 || !$confirmed) {
             throw new RuntimeException('Game deletion confirmation is required.');
         }
-        $result = \gm_lifecycle_delete_game($this->db, $this->config, $gameId, $progress);
+        $result = $this->lifecycle->delete($gameId, $progress);
         $message = 'Deleted game ' . $result['game_name'] . ': removed '
             . $result['catalog_records'] . ' catalog file record(s), '
             . $result['pak_archives'] . ' PAK archive record(s), '
@@ -208,7 +214,8 @@ final class CatalogGameAdminService
         $optimised = count((array)($result['optimised_tables'] ?? []));
         $failed = count((array)($result['optimise_failures'] ?? []));
         if ($failed > 0) {
-            return ' Optimised ' . $optimised . ' table(s), with ' . $failed . ' optimisation warning(s).';
+            return ' Optimised ' . $optimised . ' table(s), with '
+                . $failed . ' optimisation warning(s).';
         }
         return ' Optimised ' . $optimised . ' table(s).';
     }
