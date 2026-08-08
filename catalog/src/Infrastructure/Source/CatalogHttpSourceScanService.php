@@ -12,9 +12,14 @@ namespace UnrealDb\Catalog\Infrastructure\Source;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Http\TrustedHttpCurlTransport;
+use UnrealDb\Catalog\Infrastructure\Http\TrustedHttpEndpointPolicy;
 
 final class CatalogHttpSourceScanService
 {
+    private readonly TrustedHttpEndpointPolicy $endpointPolicy;
+    private readonly TrustedHttpCurlTransport $http;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -24,7 +29,8 @@ final class CatalogHttpSourceScanService
         require_once $root . '/lib/CatalogParser.php';
         require_once $root . '/lib/CatalogScanner.php';
         require_once $root . '/lib/GameProfiles.php';
-        require_once $root . '/lib/TrustedHttpSourceClient.php';
+        $this->endpointPolicy = new TrustedHttpEndpointPolicy();
+        $this->http = new TrustedHttpCurlTransport(false);
     }
 
     /** @return array<string,mixed> */
@@ -55,9 +61,9 @@ final class CatalogHttpSourceScanService
         }
         $profile = \gp_required_profile_for_game($this->db, (int)$source['game_id']);
 
-        $target = \TrustedHttpSourceClient::source((string)$source['base_path']);
-        $manifestUrl = \TrustedHttpSourceClient::relativeUrl($target, $manifestName);
-        $manifest = \TrustedHttpSourceClient::bytes($target, $manifestUrl, 5 * 1024 * 1024, 'manifest');
+        $target = $this->endpointPolicy->source((string)$source['base_path'], false);
+        $manifestUrl = $this->endpointPolicy->relativeUrl($target, $manifestName);
+        $manifest = $this->http->bytes($target, $manifestUrl, 5 * 1024 * 1024, 'manifest');
         $paths = $this->extractManifestPaths($manifest, $profile);
         if (count($paths) > 50000) {
             throw new RuntimeException('Manifest contains more than the 50,000 allowed package entries.');
@@ -84,12 +90,12 @@ final class CatalogHttpSourceScanService
 
         foreach ($paths as $relativePath) {
             try {
-                $url = \TrustedHttpSourceClient::relativeUrl($target, $relativePath);
+                $url = $this->endpointPolicy->relativeUrl($target, $relativePath);
             } catch (Throwable) {
                 $result['invalid_paths']++;
                 continue;
             }
-            $remoteSize = $checkRemoteSize ? \TrustedHttpSourceClient::headSize($target, $url) : null;
+            $remoteSize = $checkRemoteSize ? $this->http->headSize($target, $url) : null;
             $match = $this->matchFile($source, $relativePath, $remoteSize);
 
             if (!$match && $deepScan && $deepUsed < $deepLimit) {
@@ -248,7 +254,7 @@ final class CatalogHttpSourceScanService
         @unlink($tmp);
 
         try {
-            \TrustedHttpSourceClient::toFile($target, $url, $tmp, $maxBytes, 'package');
+            $this->http->toFile($target, $url, $tmp, $maxBytes, 'package');
             $engine = \gp_engine_for_game($this->db, (int)$source['game_id']);
             $header = \catalog_try_read_package_header($this->config, $engine, $tmp);
             $guid = \catalog_header_guid($header);
