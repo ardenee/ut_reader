@@ -38,7 +38,8 @@ $fingerprints = $read('catalog/src/Infrastructure/Source/CatalogSourceFingerprin
 $identities = $read('catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php');
 $locations = $read('catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php');
 $profiledImport = $read('catalog/src/Infrastructure/Source/CatalogSourceProfiledImportService.php');
-$legacyFacade = $repoRoot . DIRECTORY_SEPARATOR . 'catalog' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogSourceScanNoContainers.php';
+$legacyRunnerFacade = $repoRoot . DIRECTORY_SEPARATOR . 'catalog' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogSourceScanNoContainers.php';
+$legacyHelperFacade = $repoRoot . DIRECTORY_SEPARATOR . 'catalog' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogSourceScan.php';
 
 $record(
     'presentation_uses_namespaced_scan_service',
@@ -59,9 +60,9 @@ $record(
 );
 
 $record(
-    'legacy_scan_facade_retired',
-    !is_file($legacyFacade),
-    'CatalogSourceScanNoContainers.php must not return after production callers moved to CatalogSourceScanService'
+    'legacy_scan_facades_retired',
+    !is_file($legacyRunnerFacade) && !is_file($legacyHelperFacade),
+    'procedural source-scan runner/helper facades must not return after production callers moved to namespaced collaborators'
 );
 
 $record(
@@ -167,7 +168,6 @@ $record(
 $criticalPhp = [
     'catalog/bin/verify-source-scan-boundaries.php',
     'catalog/source-scan.php',
-    'catalog/lib/CatalogSourceScan.php',
     'catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php',
     'catalog/src/Infrastructure/Source/CatalogSourceFingerprintSession.php',
     'catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php',
