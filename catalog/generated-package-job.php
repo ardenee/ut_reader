@@ -2,8 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Handles generated package job creation, polling and cancellation.
- * Why: The HTTP contract remains here while durable-job authorization and worker lifecycle are shared services.
- * Role: Presentation/action endpoint for generated package jobs.
+ * Why: The HTTP contract remains here while durable-job authorization, package policy and worker lifecycle are shared services.
+ * Role: Presentation/action endpoint for generated package jobs; archive writers are never loaded by this endpoint.
  */
 declare(strict_types=1);
 
@@ -14,11 +14,11 @@ header('Cache-Control: no-store, private');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
-require_once __DIR__ . '/lib/ModPackageBuilder.php';
-require_once __DIR__ . '/lib/GeneratedPackageBuilder.php';
 require_once __DIR__ . '/lib/DownloadActivity.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeneratedPackageDescriptor;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogGeneratedPackageJobAccess;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
@@ -138,8 +138,9 @@ try {
         generated_package_reply(['ok' => false, 'error' => 'A valid verified file is required.'], 400);
     }
 
-    $settings = modpkg_settings($db);
-    $game = modpkg_game_row($db, (int)$file['game_id']);
+    $packageSettings = new CatalogPackageExportSettingsService($db);
+    $settings = $packageSettings->settings();
+    $game = $packageSettings->game((int)$file['game_id']);
     if (!$game || !$settings['enabled']) {
         generated_package_reply(['ok' => false, 'error' => 'Generated packages are unavailable for this file.'], 409);
     }
@@ -148,8 +149,10 @@ try {
         generated_package_reply(['ok' => false, 'error' => 'Generated packages are unavailable in the current public download mode.'], 409);
     }
 
-    $format = strtolower(trim((string)($_POST['format'] ?? modpkg_default_format($game, $settings))));
-    if (!in_array($format, modpkg_available_formats($game, $settings), true)) {
+    $format = strtolower(trim((string)(
+        $_POST['format'] ?? $packageSettings->defaultFormat($game, $settings)
+    )));
+    if (!in_array($format, $packageSettings->availableFormats($game, $settings), true)) {
         generated_package_reply(['ok' => false, 'error' => 'The selected package format is not available for this game.'], 400);
     }
 
@@ -157,7 +160,7 @@ try {
     if ($name === '') {
         $name = catalog_clean_unreal_package_stem((string)$file['package_name']);
     }
-    $version = modpkg_generated_version($_POST['version'] ?? '1.0');
+    $version = CatalogGeneratedPackageDescriptor::generatedVersion($_POST['version'] ?? '1.0');
     $author = substr(trim((string)($_POST['author'] ?? $settings['default_author'])), 0, 160);
     $includeDependencies = (string)($_POST['dependencies'] ?? '1') !== '0';
     $allowIncomplete = (string)($_POST['allow_incomplete'] ?? '0') === '1';
