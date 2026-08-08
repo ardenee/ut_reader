@@ -31,7 +31,8 @@ final class CatalogFileMaintenanceReimportService
     public function reimport(
         int $fileId,
         ?int $userId,
-        ?callable $progress = null
+        ?callable $progress = null,
+        bool $deferDependencyRefresh = false
     ): array {
         $snapshot = \catalog_file_maintenance_snapshot($this->db, $fileId, $this->config);
         $file = (array)$snapshot['file'];
@@ -78,7 +79,8 @@ final class CatalogFileMaintenanceReimportService
                 $this->db,
                 $gameId,
                 $fileId,
-                $oldPackageName
+                $oldPackageName,
+                $deferDependencyRefresh
             );
             \catalog_file_maintenance_emit(
                 $progress,

@@ -335,7 +335,8 @@ final class CatalogFileMaintenanceActionService
             $this->config,
             $oldFileId,
             $this->userId,
-            $this->progress
+            $this->progress,
+            $operation === 'sync_reimport'
         );
         $newFileId = (int)$result['file_id'];
         $this->restoreIdentityRows($oldFileId, $newFileId, $oldAliases, $oldLocations);

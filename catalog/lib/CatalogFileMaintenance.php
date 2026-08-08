@@ -22,10 +22,11 @@ function catalog_file_maintenance_reimport(
     array $config,
     int $fileId,
     ?int $userId,
-    ?callable $progress = null
+    ?callable $progress = null,
+    bool $deferDependencyRefresh = false
 ): array {
     return (new CatalogFileMaintenanceReimportService($db, $config))
-        ->reimport($fileId, $userId, $progress);
+        ->reimport($fileId, $userId, $progress, $deferDependencyRefresh);
 }
 
 /**
