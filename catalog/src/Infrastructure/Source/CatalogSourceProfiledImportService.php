@@ -26,7 +26,6 @@ final class CatalogSourceProfiledImportService
         private readonly CatalogSourceLocationRecorder $locations,
         private readonly CatalogSourceFingerprintSession $fingerprints
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/CatalogSourceScan.php';
         $this->stager = new LegacyUnverifiedFileStager($db, $config);
     }
 
@@ -118,7 +117,7 @@ final class CatalogSourceProfiledImportService
             return false;
         }
 
-        $sourceRelativePath = \catalog_source_scan_normalized_relative_path($relativePath, $work);
+        $sourceRelativePath = CatalogSourceScanPathPolicy::normalizedRelativePath($relativePath, $work);
         $reason = 'Local Source Scan import failed for ' . $sourceRelativePath . ': ' . $error->getMessage();
         return $this->stager->stageFailedCopy(
             (int)$source['game_id'],
@@ -152,7 +151,7 @@ final class CatalogSourceProfiledImportService
             $strictProfile,
             null,
             false,
-            ['source_relative_path' => \catalog_source_scan_normalized_relative_path($relativePath, $work)]
+            ['source_relative_path' => CatalogSourceScanPathPolicy::normalizedRelativePath($relativePath, $work)]
         );
     }
 
