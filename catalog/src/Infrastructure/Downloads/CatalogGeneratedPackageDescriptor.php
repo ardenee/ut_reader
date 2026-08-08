@@ -37,6 +37,7 @@ final class CatalogGeneratedPackageDescriptor
     /** @param array<string,mixed> $plan @param array<string,mixed> $settings @param array<string,mixed> $input */
     public static function defaultOptions(array $plan, array $settings, array $input = []): array
     {
+        self::support();
         $rootStem = \catalog_clean_unreal_package_stem((string)$plan['root']['package_name']);
         $name = self::safeComponent((string)($input['name'] ?? $rootStem), $rootStem);
         $version = trim((string)($input['version'] ?? '1.0')) ?: '1.0';
@@ -72,32 +73,17 @@ final class CatalogGeneratedPackageDescriptor
     public static function umodRequirement(array $game, string $format): array
     {
         return match ($format) {
-            CatalogPackageExportFormatPolicy::UMOD => [
-                'section' => 'UnrealTournamentRequirement',
-                'product' => 'UnrealTournament',
-                'version' => '0',
-            ],
-            CatalogPackageExportFormatPolicy::UT2MOD => [
-                'section' => 'UT2003Requirement',
-                'product' => 'UT2003',
-                'version' => '0',
-            ],
-            CatalogPackageExportFormatPolicy::UT4MOD => [
-                'section' => 'UT2004Requirement',
-                'product' => 'UT2004',
-                'version' => '0',
-            ],
-            default => [
-                'section' => 'GameRequirement',
-                'product' => self::productKey((string)$game['name']),
-                'version' => '0',
-            ],
+            CatalogPackageExportFormatPolicy::UMOD => ['section' => 'UnrealTournamentRequirement','product' => 'UnrealTournament','version' => '0'],
+            CatalogPackageExportFormatPolicy::UT2MOD => ['section' => 'UT2003Requirement','product' => 'UT2003','version' => '0'],
+            CatalogPackageExportFormatPolicy::UT4MOD => ['section' => 'UT2004Requirement','product' => 'UT2004','version' => '0'],
+            default => ['section' => 'GameRequirement','product' => self::productKey((string)$game['name']),'version' => '0'],
         };
     }
 
     /** @param array<string,mixed> $plan @return list<array<string,mixed>> */
     public static function manifestFiles(array $plan): array
     {
+        self::support();
         $out = [];
         foreach ($plan['files'] as $file) {
             $out[] = [
@@ -152,6 +138,7 @@ final class CatalogGeneratedPackageDescriptor
     /** @param array<string,mixed> $plan @param array<string,mixed> $options */
     public static function readme(array $plan, array $options): string
     {
+        self::support();
         $lines = [
             (string)$options['name'],
             str_repeat('=', max(3, strlen((string)$options['name']))),
@@ -164,41 +151,32 @@ final class CatalogGeneratedPackageDescriptor
             'Files included: ' . (int)$plan['file_count'],
             'Total size: ' . \catalog_bytes((int)$plan['total_bytes']),
         ];
-
         if ($plan['format'] === CatalogPackageExportFormatPolicy::UT3_ZIP) {
-            $lines[] = '';
-            $lines[] = 'Installation';
-            $lines[] = '------------';
-            $lines[] = 'Copy the UTGame folder into your Unreal Tournament 3 user-data folder and merge the folders.';
+            $lines[] = '';$lines[] = 'Installation';$lines[] = '------------';$lines[] = 'Copy the UTGame folder into your Unreal Tournament 3 user-data folder and merge the folders.';
         } elseif ($plan['format'] === CatalogPackageExportFormatPolicy::DEPENDENCY_ZIP) {
-            $lines[] = '';
-            $lines[] = 'Installation';
-            $lines[] = '------------';
-            $lines[] = 'Copy each included top-level game folder into the matching game installation folder.';
+            $lines[] = '';$lines[] = 'Installation';$lines[] = '------------';$lines[] = 'Copy each included top-level game folder into the matching game installation folder.';
         }
-
         if ($plan['blocked']) {
-            $lines[] = '';
-            $lines[] = 'Official/base-game dependencies were not included. Install the original game content from your own copy.';
+            $lines[] = '';$lines[] = 'Official/base-game dependencies were not included. Install the original game content from your own copy.';
         }
         if ($plan['missing'] || $plan['package_only']) {
-            $lines[] = '';
-            $lines[] = 'Warning: this package has unresolved or package-only dependencies. Review UnrealDB-Mod.json before distributing it.';
+            $lines[] = '';$lines[] = 'Warning: this package has unresolved or package-only dependencies. Review UnrealDB-Mod.json before distributing it.';
         }
-
         return implode("\r\n", $lines) . "\r\n";
     }
 
     /** @param array<string,mixed> $data */
     public static function json(array $data): string
     {
-        $json = json_encode(
-            $data,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-        );
+        $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         if ($json === false) {
             throw new RuntimeException('Could not encode the package manifest.');
         }
         return $json . "\n";
+    }
+
+    private static function support(): void
+    {
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
     }
 }
