@@ -1,0 +1,37 @@
+name: Temporary Source Scan Verification
+
+on:
+  push:
+    branches:
+      - refactor/source-scan-discovery-20260808
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql, zip
+      - name: Source scan boundaries
+        run: php catalog/bin/verify-source-scan-boundaries.php
+      - name: Game lifecycle boundaries
+        run: php catalog/bin/verify-game-lifecycle-boundaries.php
+      - name: Legacy metadata runtime audit
+        run: php catalog/bin/audit-legacy-runtime-references.php
+      - name: Controller boundaries
+        run: php catalog/bin/verify-controller-boundaries.php
+      - name: Architecture refactor
+        run: php catalog/bin/verify-architecture-refactor.php
+      - name: Federation boundaries
+        run: php catalog/bin/verify-federation-boundaries.php
+      - name: Federation worker boundaries
+        run: php catalog/bin/verify-federation-worker-boundaries.php
+      - name: Package export boundaries
+        run: php catalog/bin/verify-package-export-boundaries.php
+      - name: Package writer boundaries
+        run: php catalog/bin/verify-package-writer-boundaries.php
+      - name: Upload worker contracts
+        run: php catalog/bin/verify-upload-worker-contracts.php
