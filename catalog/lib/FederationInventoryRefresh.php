@@ -7,6 +7,8 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/CatalogSupport.php';
+
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationInventoryRefreshService;
 
 /** @return array<string,mixed> */
