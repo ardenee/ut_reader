@@ -3,29 +3,33 @@
  * UnrealDB PHP File Audit
  * Purpose: Provides one explicit adapter for the established Unreal package/scanner and unverified-storage contracts.
  * Why: Namespaced import services should not scatter dependencies on procedural compatibility functions throughout their implementation.
- * Role: Infrastructure compatibility boundary; callers depend on methods, allowing the remaining procedural implementations to be replaced independently.
+ * Role: Infrastructure compatibility boundary; callers depend on methods, allowing remaining procedural scanner/storage code to be replaced independently.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
 final class CatalogUnverifiedPackageRuntime
 {
+    private readonly CatalogUnverifiedStagingIndex $staging;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/CatalogUnverifiedIndex.php';
         require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
         require_once dirname(__DIR__, 3) . '/lib/GameProfiles.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogScanner.php';
+        $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
     public function ensureSchema(): void
     {
-        \catalog_unverified_schema_ensure($this->db);
+        $this->staging->ensureSchema();
     }
 
     public function bucketDirectory(bool $create): string
@@ -55,7 +59,7 @@ final class CatalogUnverifiedPackageRuntime
 
     public function queueKey(int $queueGameId, string $queueName): string
     {
-        return \catalog_unverified_queue_key($queueGameId, $queueName);
+        return CatalogUnverifiedStagingIndex::queueKey($queueGameId, $queueName);
     }
 
     public function normalizeSourceRelativePath(string $path): string
@@ -66,9 +70,7 @@ final class CatalogUnverifiedPackageRuntime
     /** @return array{0:string,1:array<string,mixed>} */
     public function detectEngine(string $path, string $name): array
     {
-        /** @var array{0:string,1:array<string,mixed>} $result */
-        $result = \catalog_unverified_detect_engine($path, $name);
-        return $result;
+        return CatalogUnverifiedStagingIndex::detectEngine($path, $name);
     }
 
     public function uePackageNameFromSourceRelative(string $path): string
@@ -89,14 +91,12 @@ final class CatalogUnverifiedPackageRuntime
     /** @param array<int,mixed> $issues @return array{0:list<string>,1:list<string>} */
     public function splitReaderIssues(array $issues): array
     {
-        /** @var array{0:list<string>,1:list<string>} $result */
-        $result = \scanner_split_reader_issues($issues);
-        return $result;
+        return \scanner_split_reader_issues($issues);
     }
 
     public function storageRelative(string $path): string
     {
-        return \catalog_unverified_storage_relative($this->config, $path);
+        return CatalogUnverifiedStagingIndex::storageRelative($this->config, $path);
     }
 
     public function cleanExtension(string $extension): string

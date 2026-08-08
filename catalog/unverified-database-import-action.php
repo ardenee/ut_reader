@@ -1,9 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Processes the state-changing browser action for unverified database import.
- * Why: It separates mutation/request handling from the corresponding display page.
- * Role: Thin web action endpoint; metadata repair queuing and worker lifecycle are delegated to shared services.
+ * Purpose: Processes the state-changing browser action for unverified metadata repair.
+ * Why: HTTP/session/CSRF concerns stay here; candidate discovery and durable-job orchestration live in a service.
+ * Role: Thin web action endpoint for Repair Missing Unverified Metadata.
  */
 declare(strict_types=1);
 
@@ -12,9 +12,9 @@ header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/UnverifiedMetadataRepair.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataRepairService;
 
 function unverified_metadata_reply(array $payload, int $status = 200): never
 {
@@ -44,13 +44,15 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
-    catalog_unverified_schema_ensure($db);
     if ($sourceGameId > 0 && !catalog_one($db, 'SELECT id FROM ue_games WHERE id=?', [$sourceGameId])) {
         throw new RuntimeException('The selected source game no longer exists.');
     }
 
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
-    $result = catalog_queue_unverified_metadata_repairs($db, $config, $sourceGameId, $userId);
+    $result = (new CatalogUnverifiedMetadataRepairService($db, $config))->queueRepairs(
+        $sourceGameId,
+        $userId
+    );
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
@@ -81,7 +83,8 @@ try {
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     $message = trim($error->getMessage()) ?: 'The metadata repair jobs could not be queued.';
-    error_log('[UnrealDB][' . $requestId . '] unverified metadata repair failed: ' . get_class($error) . ': ' . $message);
+    error_log('[UnrealDB][' . $requestId . '] unverified metadata repair failed: '
+        . get_class($error) . ': ' . $message);
     unverified_metadata_reply([
         'ok' => false,
         'error' => $message,

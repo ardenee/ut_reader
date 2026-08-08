@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `LegacyUnverifiedFileStager` for legacy unverified file stager.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Implements the application unverified-file staging port for legacy/source/federation callers.
+ * Why: These callers still need the established physical queue contract while staging persistence is namespaced.
+ * Role: Compatibility infrastructure adapter; retain until all non-browser staging callers migrate.
  */
 declare(strict_types=1);
 
@@ -17,16 +13,20 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Application\Unverified\Contract\UnverifiedFileStager;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
 final class LegacyUnverifiedFileStager implements UnverifiedFileStager
 {
+    private readonly CatalogUnverifiedStagingIndex $staging;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
         require_once __DIR__ . '/../../../lib/UnverifiedFileManager.php';
-        require_once __DIR__ . '/../../../lib/CatalogUnverifiedIndex.php';
+        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
+        $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
     public function stageBucketUpload(
@@ -68,14 +68,14 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
                     'path' => (string)$duplicate['physical_path'],
                     'size' => (int)$duplicate['file_size'],
                     'message' => 'Duplicate size and MD5 already exist in the Upload Bucket as '
-                        . $existingName . ' (file #' . (int)$duplicate['id'] . ', MD5 ' . $md5 . '). Uploaded copy discarded.',
+                        . $existingName . ' (file #' . (int)$duplicate['id'] . ', MD5 ' . $md5
+                        . '). Uploaded copy discarded.',
                     'parse_error' => null,
                     'md5' => $md5,
                 ];
             }
 
             $stored = \uvf_store_bucket_upload($this->config, $temporaryPath, $originalName, $reason);
-
             $indexed = $this->indexStored(
                 0,
                 (string)$stored['queue_name'],
@@ -138,17 +138,13 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
     /** @return array<string,mixed>|null */
     private function findBucketDuplicate(int $size, string $md5): ?array
     {
-        \catalog_unverified_schema_ensure($this->db);
+        $this->staging->ensureSchema();
         $rows = \catalog_all(
             $this->db,
-            'SELECT id,original_name,unverified_queue_name,file_size,md5
-             FROM ue_files
-             WHERE scan_status="unverified"
-               AND unverified_queue_game_id=0
-               AND file_size=?
-               AND LOWER(md5)=?
-             ORDER BY id
-             LIMIT 50',
+            'SELECT id,original_name,unverified_queue_name,file_size,md5 '
+            . 'FROM ue_files '
+            . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
+            . 'AND file_size=? AND LOWER(md5)=? ORDER BY id LIMIT 50',
             [$size, $md5]
         );
         if ($rows === []) {
@@ -227,7 +223,6 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         }
 
         @file_put_contents($destination . '.txt', $reason);
-
         return $this->indexStored(
             $queueGameId,
             basename($destination),
@@ -254,9 +249,7 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         int $size
     ): array {
         try {
-            $indexed = \catalog_unverified_index_path(
-                $this->db,
-                $this->config,
+            $indexed = $this->staging->indexPath(
                 $queueGameId,
                 $queueName,
                 $path,

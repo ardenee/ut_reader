@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Owns physical move/delete mutations for database-backed unverified queue items.
- * Why: Active unverified actions should not depend on procedural action functions in CatalogUnverifiedIndex.php.
+ * Why: Active unverified actions should not depend on procedural action functions or staging persistence helpers.
  * Role: Infrastructure filesystem/persistence service preserving existing queue move and discard semantics.
  */
 declare(strict_types=1);
@@ -14,14 +14,15 @@ use RuntimeException;
 
 final class CatalogUnverifiedQueueMutationService
 {
+    private readonly CatalogUnverifiedStagingIndex $staging;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
-        $root = dirname(__DIR__, 3);
-        require_once $root . '/lib/UnverifiedFileManager.php';
-        require_once $root . '/lib/CatalogUnverifiedIndex.php';
+        require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
+        $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
     /** @param array<string,mixed> $source @return array{original_name:string,source_game:string,target_game:string} */
@@ -48,7 +49,13 @@ final class CatalogUnverifiedQueueMutationService
             @rename((string)$source['reason_path'], $destination . '.txt');
         }
 
-        $this->updateQueueRow($source, $targetGameId, basename($destination), $destination);
+        $this->staging->updateQueue(
+            $source,
+            $targetGameId,
+            basename($destination),
+            $destination
+        );
+
         return [
             'original_name' => (string)$source['original_name'],
             'source_game' => (string)$source['game']['name'],
@@ -66,47 +73,14 @@ final class CatalogUnverifiedQueueMutationService
             @unlink((string)$source['reason_path']);
         }
 
-        \catalog_unverified_schema_ensure($this->db);
-        $this->db->prepare(
-            'DELETE FROM ue_files WHERE scan_status="unverified" AND unverified_queue_key=?'
-        )->execute([
-            \catalog_unverified_queue_key(
-                (int)$source['game']['id'],
-                (string)$source['queue_name']
-            ),
-        ]);
+        $this->staging->deleteDatabaseRow(
+            (int)$source['game']['id'],
+            (string)$source['queue_name']
+        );
 
         return [
             'original_name' => (string)$source['original_name'],
             'source_game' => (string)$source['game']['name'],
         ];
-    }
-
-    /** @param array<string,mixed> $source */
-    private function updateQueueRow(
-        array $source,
-        int $newQueueGameId,
-        string $newQueueName,
-        string $newPath
-    ): void {
-        \catalog_unverified_schema_ensure($this->db);
-        $oldKey = \catalog_unverified_queue_key(
-            (int)$source['game']['id'],
-            (string)$source['queue_name']
-        );
-        $newKey = \catalog_unverified_queue_key($newQueueGameId, $newQueueName);
-        $this->db->prepare(
-            'UPDATE ue_files SET '
-            . 'unverified_queue_key=?,unverified_queue_game_id=?,unverified_queue_name=?,'
-            . 'stored_name=?,relative_path=? '
-            . 'WHERE scan_status="unverified" AND unverified_queue_key=?'
-        )->execute([
-            $newKey,
-            $newQueueGameId,
-            $newQueueName,
-            $newQueueName,
-            \catalog_unverified_storage_relative($this->config, $newPath),
-            $oldKey,
-        ]);
     }
 }

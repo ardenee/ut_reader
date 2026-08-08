@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Renames an indexed unverified file while preserving its queue wrapper, sidecar and database identity.
  * Why: Rename validation, filesystem rollback and staging-row updates are one infrastructure use case, not page logic.
- * Role: Infrastructure service replacing the legacy CatalogUnverifiedRename.php procedural implementation.
+ * Role: Infrastructure service replacing the legacy procedural rename implementation.
  */
 declare(strict_types=1);
 
@@ -15,6 +15,8 @@ use Throwable;
 
 final class CatalogUnverifiedRenameService
 {
+    private readonly CatalogUnverifiedStagingIndex $staging;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -23,7 +25,8 @@ final class CatalogUnverifiedRenameService
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/UnverifiedFileManager.php';
-        require_once $root . '/lib/CatalogUnverifiedIndex.php';
+        require_once $root . '/lib/CatalogScanner.php';
+        $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
     /**
@@ -35,7 +38,7 @@ final class CatalogUnverifiedRenameService
      */
     public function rename(int $fileId, string $requestedName): array
     {
-        \catalog_unverified_schema_ensure($this->db);
+        $this->staging->ensureSchema();
         if ($fileId < 1) {
             throw new RuntimeException('Invalid unverified file ID.');
         }
@@ -94,7 +97,7 @@ final class CatalogUnverifiedRenameService
             throw new RuntimeException('A queue note already exists for the corrected filename.');
         }
 
-        $newQueueKey = \catalog_unverified_queue_key($queueGameId, $newQueueName);
+        $newQueueKey = CatalogUnverifiedStagingIndex::queueKey($queueGameId, $newQueueName);
         $collision = \catalog_one(
             $this->db,
             'SELECT id FROM ue_files WHERE unverified_queue_key=? AND id<>? LIMIT 1',
@@ -148,7 +151,7 @@ final class CatalogUnverifiedRenameService
                 throw new RuntimeException('The corrected filename does not produce a valid package name.');
             }
 
-            $newRelativePath = \catalog_unverified_storage_relative($this->config, $newPath);
+            $newRelativePath = CatalogUnverifiedStagingIndex::storageRelative($this->config, $newPath);
             $newExtension = \catalog_clean_unreal_extension(
                 (string)pathinfo($newOriginalName, PATHINFO_EXTENSION)
             );

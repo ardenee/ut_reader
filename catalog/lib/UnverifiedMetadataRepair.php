@@ -1,133 +1,28 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for unverified metadata repair.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Compatibility facade for unverified metadata repair.
+ * Why: Existing procedural callers retain stable signatures while inventory and repair-job orchestration live under src/.
+ * Role: Transitional legacy facade; new code should use CatalogUnverifiedMetadataRepairService directly.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
-require_once __DIR__ . '/UnverifiedFileManager.php';
-require_once __DIR__ . '/CatalogUnverifiedIndex.php';
+require_once __DIR__ . '/GameProfiles.php';
 
-use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchQueue;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataRepairService;
 
-/**
- * Lightweight inventory used to find only physical unverified files whose
- * database identity or package-table inventory is incomplete. Candidate
- * discovery reads filesystem metadata and, for existing rows, at most the
- * 16-byte package summary used to verify stored engine/version classification.
- * It never reads package tables or hashes complete files.
- *
- * sourceGameId follows unverified-files.php semantics:
- *   0  = all queues
- *  -1  = Upload Bucket only
- *  >0  = one game's unverified queue
- *
- * @return list<array<string,mixed>>
- */
+/** @return list<array<string,mixed>> */
 function catalog_unverified_metadata_inventory(PDO $db, array $config, int $sourceGameId = -1): array
 {
-    catalog_unverified_schema_ensure($db);
-
-    $games = [];
-    if ($sourceGameId === 0 || $sourceGameId === -1) {
-        $games[] = uvf_bucket_game();
-    }
-    if ($sourceGameId !== -1) {
-        $sql = 'SELECT id,name,slug,profile_id FROM ue_games';
-        $args = [];
-        if ($sourceGameId > 0) {
-            $sql .= ' WHERE id=?';
-            $args[] = $sourceGameId;
-        }
-        $sql .= ' ORDER BY name';
-        foreach (catalog_all($db, $sql, $args) as $game) {
-            $games[] = $game;
-        }
-    }
-
-    $rowSql = 'SELECT f.*,'
-        . ' (SELECT COUNT(*) FROM ue_names n WHERE n.file_id=f.id) actual_name_count,'
-        . ' (SELECT COUNT(*) FROM ue_imports i WHERE i.file_id=f.id) actual_import_count,'
-        . ' (SELECT COUNT(*) FROM ue_exports e WHERE e.file_id=f.id) actual_export_count'
-        . ' FROM ue_files f WHERE f.scan_status="unverified"';
-    $rowArgs = [];
-    if ($sourceGameId === -1) {
-        $rowSql .= ' AND f.unverified_queue_game_id=0';
-    } elseif ($sourceGameId > 0) {
-        $rowSql .= ' AND f.unverified_queue_game_id=?';
-        $rowArgs[] = $sourceGameId;
-    }
-
-    $rowsByKey = [];
-    foreach (catalog_all($db, $rowSql, $rowArgs) as $row) {
-        $key = trim((string)($row['unverified_queue_key'] ?? ''));
-        if ($key !== '') {
-            $rowsByKey[$key] = $row;
-        }
-    }
-
-    $items = [];
-    foreach ($games as $game) {
-        $gameId = (int)($game['id'] ?? 0);
-        $directory = uvf_unverified_dir($config, $game, false);
-        if (!is_dir($directory) || !is_readable($directory)) {
-            continue;
-        }
-        $entries = scandir($directory);
-        if ($entries === false) {
-            continue;
-        }
-
-        foreach ($entries as $entry) {
-            if ($entry === '.' || $entry === '..' || str_starts_with($entry, '.') || str_ends_with(strtolower($entry), '.txt')) {
-                continue;
-            }
-            $path = $directory . DIRECTORY_SEPARATOR . $entry;
-            if (!is_file($path) || is_link($path) || !uvf_path_inside($path, $directory)) {
-                continue;
-            }
-
-            $size = (int)(filesize($path) ?: 0);
-            $key = catalog_unverified_queue_key($gameId, $entry);
-            $row = $rowsByKey[$key] ?? null;
-            $reasons = catalog_unverified_metadata_missing_reasons($row, $size, $path);
-            $items[] = [
-                'token' => uvf_token($gameId, $entry),
-                'queue_game_id' => $gameId,
-                'queue_name' => $entry,
-                'queue_key' => $key,
-                'queue_label' => (string)($game['name'] ?? ($gameId === 0 ? 'Upload Bucket' : 'Unknown queue')),
-                'original_name' => $row
-                    ? (string)($row['original_name'] ?? uvf_original_name_from_queue_name($entry))
-                    : uvf_original_name_from_queue_name($entry),
-                'path' => $path,
-                'size' => $size,
-                'file_id' => $row ? (int)$row['id'] : 0,
-                'row' => $row,
-                'missing_reasons' => $reasons,
-                'needs_repair' => $reasons !== [],
-            ];
-        }
-    }
-
-    usort($items, static function (array $left, array $right): int {
-        return strcasecmp((string)$left['original_name'], (string)$right['original_name']);
-    });
-    return $items;
+    return (new CatalogUnverifiedMetadataRepairService($db, $config))->inventory($sourceGameId);
 }
 
-/** @return list<string> */
+/** @param array<string,mixed>|null $row @return list<string> */
 function catalog_unverified_metadata_missing_reasons(?array $row, int $physicalSize, string $path = ''): array
 {
+    // Historical standalone helper retained for compatibility. Keep the exact
+    // completeness and tiny package-summary checks used before extraction.
     if ($row === null) {
         return ['Missing database inventory row'];
     }
@@ -156,28 +51,26 @@ function catalog_unverified_metadata_missing_reasons(?array $row, int $physicalS
         $reasons[] = 'File extension is missing';
     }
 
-    // Reader/detection fixes must be able to revisit an earlier completed repair.
-    // Compare only the tiny package summary, not the full file or package tables.
     if ($path !== '' && is_file($path)) {
         $summary = gp_read_legacy_summary($path);
         if (!empty($summary['ok'])) {
             $headerEngine = strtoupper(trim((string)($summary['engine_hint'] ?? '')));
             $headerVersion = $summary['version'] ?? null;
-            if ($headerEngine !== '' && $headerEngine !== 'UNKNOWN'
-                && $engine !== '' && $engine !== 'UNKNOWN'
+            if ($headerEngine !== ''
+                && $headerEngine !== 'UNKNOWN'
+                && $engine !== ''
+                && $engine !== 'UNKNOWN'
                 && $headerEngine !== $engine) {
                 $reasons[] = 'Stored engine ' . $engine . ' does not match package header ' . $headerEngine;
             }
-            if (is_numeric($headerVersion) && is_numeric($version)
+            if (is_numeric($headerVersion)
+                && is_numeric($version)
                 && (int)$headerVersion !== (int)$version) {
                 $reasons[] = 'Stored package version does not match the package header';
             }
         }
     }
 
-    // Retry unknown engine/version once with the current reader code. If the
-    // package remains unreadable, retain that recorded result rather than
-    // endlessly adding the same file back to the repair queue.
     if (!$alreadyAttempted) {
         if ($engine === '' || $engine === 'UNKNOWN') {
             $reasons[] = 'Detected engine is missing';
@@ -214,54 +107,15 @@ function catalog_unverified_metadata_missing_reasons(?array $row, int $physicalS
     return array_values(array_unique($reasons));
 }
 
-/**
- * @return array{scope_count:int,candidate_count:int,job_ids:list<int>,queue:string}
- */
+/** @return array{scope_count:int,candidate_count:int,job_ids:list<int>,queue:string} */
 function catalog_queue_unverified_metadata_repairs(
     PDO $db,
     array $config,
     int $sourceGameId,
     ?int $createdBy = null
 ): array {
-    $items = catalog_unverified_metadata_inventory($db, $config, $sourceGameId);
-    $queueName = (new CatalogBucketBatchQueue($db, $config))->queueName();
-    $queue = new PdoJobQueue($db);
-    $jobIds = [];
-
-    foreach ($items as $item) {
-        if (empty($item['needs_repair'])) {
-            continue;
-        }
-        // v2 deliberately permits one new job after the early-UE3 detection fix;
-        // the previous v1 dedupe key may belong to an already completed bad parse.
-        $dedupeKey = 'unverified-metadata-v2:' . substr(hash(
-            'sha256',
-            (int)$item['queue_game_id'] . "\0" . (string)$item['queue_name']
-        ), 0, 45);
-        $jobId = $queue->enqueue(
-            $queueName,
-            JobType::REPAIR_UNVERIFIED_METADATA,
-            [
-                'queue_game_id' => (int)$item['queue_game_id'],
-                'queue_name' => (string)$item['queue_name'],
-                'original_name' => (string)$item['original_name'],
-                'expected_size' => (int)$item['size'],
-                'missing_reasons' => array_values((array)$item['missing_reasons']),
-                'requested_by' => $createdBy,
-            ],
-            7,
-            null,
-            $dedupeKey,
-            $createdBy,
-            3
-        );
-        $jobIds[$jobId] = $jobId;
-    }
-
-    return [
-        'scope_count' => count($items),
-        'candidate_count' => count($jobIds),
-        'job_ids' => array_values($jobIds),
-        'queue' => $queueName,
-    ];
+    return (new CatalogUnverifiedMetadataRepairService($db, $config))->queueRepairs(
+        $sourceGameId,
+        $createdBy
+    );
 }
