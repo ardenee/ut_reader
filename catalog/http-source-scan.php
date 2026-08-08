@@ -1,214 +1,19 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for HTTP source scanner.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and runs the trusted HTTP source scanner.
+ * Why: Manifest parsing, trusted HTTP IO, matching heuristics, deep GUID inspection and source-location persistence
+ *      now live behind Infrastructure services.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogParser.php';
-require_once __DIR__ . '/lib/CatalogScanner.php';
-require_once __DIR__ . '/lib/GameProfiles.php';
-require_once __DIR__ . '/lib/TrustedHttpSourceClient.php';
+
+use UnrealDb\Catalog\Infrastructure\Source\CatalogHttpSourceScanService;
+use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceAdminService;
 
 catalog_start_session();
-
-function http_scan_allowed_extension(string $path, array $profile, array $config): bool
-{
-    $ext = catalog_clean_unreal_extension((string)pathinfo($path, PATHINFO_EXTENSION));
-    $extensions = gp_extensions($profile);
-    if ($extensions === []) {
-        $extensions = scanner_profile_extensions($profile, $config);
-    }
-    return in_array($ext, $extensions, true);
-}
-
-function http_scan_clean_manifest_line(string $line): string
-{
-    $line = trim($line);
-    if ($line === '' || str_starts_with($line, '#') || str_starts_with($line, ';')) {
-        return '';
-    }
-    if (str_contains($line, ',')) {
-        $parts = str_getcsv($line);
-        $line = trim((string)($parts[0] ?? ''));
-    }
-    return trim($line, " \t\r\n\"'");
-}
-
-function http_scan_extract_manifest_paths(string $manifestText, array $profile, array $config): array
-{
-    $paths = [];
-    $trimmed = trim($manifestText);
-    $json = json_decode($trimmed, true);
-    $items = is_array($json)
-        ? (array_is_list($json) ? $json : (is_array($json['files'] ?? null) ? $json['files'] : []))
-        : preg_split('/\R/', $manifestText);
-
-    foreach ($items ?: [] as $item) {
-        $path = is_array($item) ? (string)($item['path'] ?? $item['file'] ?? $item['name'] ?? '') : (string)$item;
-        $path = http_scan_clean_manifest_line($path);
-        if ($path !== '' && http_scan_allowed_extension($path, $profile, $config)) {
-            $paths[$path] = true;
-        }
-    }
-
-    return array_keys($paths);
-}
-
-function http_scan_match_file(PDO $db, array $source, string $relativePath, ?int $remoteSize): ?array
-{
-    $basename = basename($relativePath);
-    $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND original_name=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $basename]);
-    if (count($matches) === 1) {
-        return ['status' => 'matched_name', 'file' => $matches[0]];
-    }
-    if (count($matches) > 1 && $remoteSize === null) {
-        return ['status' => 'ambiguous', 'file' => null];
-    }
-
-    if ($remoteSize !== null) {
-        $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND original_name=? AND file_size=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $basename, $remoteSize]);
-        if (count($matches) === 1) {
-            return ['status' => 'matched_name_size', 'file' => $matches[0]];
-        }
-        if (count($matches) > 1) {
-            return ['status' => 'ambiguous', 'file' => null];
-        }
-    }
-
-    $sourcePackage = scanner_ue_package_name_from_source_relative($relativePath);
-    if ($sourcePackage !== '') {
-        $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND package_name=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $sourcePackage]);
-        if (count($matches) === 1) {
-            return ['status' => 'matched_source_package', 'file' => $matches[0]];
-        }
-        if (count($matches) > 1) {
-            return ['status' => 'ambiguous', 'file' => null];
-        }
-    }
-
-    $stem = pathinfo($basename, PATHINFO_FILENAME);
-    if ($stem !== '') {
-        $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND package_name=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $stem]);
-        if (count($matches) === 1) {
-            return ['status' => 'matched_package_name', 'file' => $matches[0]];
-        }
-        if (count($matches) > 1) {
-            return ['status' => 'ambiguous', 'file' => null];
-        }
-    }
-
-    return null;
-}
-
-function http_scan_deep_guid_match(PDO $db, array $config, array $source, array $target, string $url, int $maxBytes): ?array
-{
-    $tmp = tempnam(sys_get_temp_dir(), 'ue_http_scan_');
-    if ($tmp === false) {
-        throw new RuntimeException('Could not create a temporary deep-scan file.');
-    }
-    @unlink($tmp);
-
-    try {
-        TrustedHttpSourceClient::toFile($target, $url, $tmp, $maxBytes, 'package');
-        $engine = gp_engine_for_game($db, (int)$source['game_id']);
-        $header = catalog_try_read_package_header($config, $engine, $tmp);
-        $guid = catalog_header_guid($header);
-        if ($guid === '') {
-            return ['status' => 'no_guid', 'file' => null, 'guid' => ''];
-        }
-        $matches = catalog_all($db, 'SELECT id, package_name, original_name, file_size, md5, package_guid FROM ue_files WHERE game_id=? AND package_guid=? AND scan_status="verified" ORDER BY id', [(int)$source['game_id'], $guid]);
-        if (count($matches) === 1) {
-            return ['status' => 'matched_guid', 'file' => $matches[0], 'guid' => $guid];
-        }
-        if (count($matches) > 1) {
-            return ['status' => 'ambiguous_guid', 'file' => null, 'guid' => $guid];
-        }
-        return ['status' => 'unknown_guid', 'file' => null, 'guid' => $guid];
-    } finally {
-        @unlink($tmp);
-    }
-}
-
-function http_scan_source(PDO $db, array $config, int $sourceId, string $manifestName, bool $checkRemoteSize, bool $deepScan, int $maxDeepBytes): array
-{
-    $source = catalog_one($db, 'SELECT s.*, g.name game_name, p.engine_key profile_engine FROM ue_sources s JOIN ue_games g ON g.id=s.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE s.id=?', [$sourceId]);
-    if (!$source) {
-        throw new RuntimeException('Source not found.');
-    }
-    if (!in_array($source['source_type'], ['http_mirror', 'redirect_server'], true)) {
-        throw new RuntimeException('This scanner only accepts HTTP mirror and redirect-server sources.');
-    }
-    $profile = gp_required_profile_for_game($db, (int)$source['game_id']);
-
-    $target = TrustedHttpSourceClient::source((string)$source['base_path']);
-    $manifestUrl = TrustedHttpSourceClient::relativeUrl($target, $manifestName);
-    $manifest = TrustedHttpSourceClient::bytes($target, $manifestUrl, 5 * 1024 * 1024, 'manifest');
-    $paths = http_scan_extract_manifest_paths($manifest, $profile, $config);
-    if (count($paths) > 50000) {
-        throw new RuntimeException('Manifest contains more than the 50,000 allowed package entries.');
-    }
-
-    $upsert = $db->prepare('INSERT INTO ue_file_locations(file_id,source_id,source_relative_path,exists_in_source,last_seen_at) VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE exists_in_source=VALUES(exists_in_source), last_seen_at=NOW()');
-    $result = ['source' => $source, 'manifest_url' => $manifestUrl, 'path_count' => count($paths), 'matched' => 0, 'matched_guid' => 0, 'unknown' => 0, 'ambiguous' => 0, 'deep_failed' => 0, 'invalid_paths' => 0, 'samples' => []];
-    $deepLimit = 100;
-    $deepUsed = 0;
-
-    foreach ($paths as $relativePath) {
-        try {
-            $url = TrustedHttpSourceClient::relativeUrl($target, $relativePath);
-        } catch (Throwable) {
-            $result['invalid_paths']++;
-            continue;
-        }
-        $remoteSize = $checkRemoteSize ? TrustedHttpSourceClient::headSize($target, $url) : null;
-        $match = http_scan_match_file($db, $source, $relativePath, $remoteSize);
-
-        if (!$match && $deepScan && $deepUsed < $deepLimit) {
-            $deepUsed++;
-            try {
-                $match = http_scan_deep_guid_match($db, $config, $source, $target, $url, $maxDeepBytes);
-            } catch (Throwable $e) {
-                $result['deep_failed']++;
-                if (count($result['samples']) < 50) {
-                    $result['samples'][] = $relativePath . ' - deep scan failed';
-                }
-                continue;
-            }
-        }
-
-        if ($match && isset($match['file']) && is_array($match['file'])) {
-            $upsert->execute([(int)$match['file']['id'], $sourceId, $relativePath, 1]);
-            scanner_record_source_relative_path($db, (int)$match['file']['id'], $relativePath);
-            if (($match['status'] ?? '') === 'matched_guid') {
-                $result['matched_guid']++;
-            } else {
-                $result['matched']++;
-            }
-            continue;
-        }
-        if ($match && in_array($match['status'] ?? '', ['ambiguous', 'ambiguous_guid'], true)) {
-            $result['ambiguous']++;
-            if (count($result['samples']) < 50) {
-                $result['samples'][] = $relativePath . ' - ' . $match['status'];
-            }
-            continue;
-        }
-
-        $result['unknown']++;
-        if (count($result['samples']) < 50) {
-            $result['samples'][] = $relativePath . ' - ' . ($match['status'] ?? 'unknown');
-        }
-    }
-
-    return $result;
-}
 
 try {
     $config = catalog_config();
@@ -217,21 +22,26 @@ try {
         exit;
     }
 
+    $sourceAdmin = new CatalogSourceAdminService($db);
+    $scanner = new CatalogHttpSourceScanService($db, $config);
     $result = null;
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('http_source_scan');
-        $sourceId = (int)($_POST['source_id'] ?? 0);
-        $manifestName = trim((string)($_POST['manifest_name'] ?? 'files.txt'));
-        if ($manifestName === '') {
-            throw new RuntimeException('Manifest name/path is required.');
-        }
-        $checkRemoteSize = isset($_POST['check_remote_size']);
-        $deepScan = isset($_POST['deep_scan']);
-        $maxDeepBytes = max(1024 * 1024, min(256 * 1024 * 1024, (int)($_POST['max_deep_mb'] ?? 128) * 1024 * 1024));
-        $result = http_scan_source($db, $config, $sourceId, $manifestName, $checkRemoteSize, $deepScan, $maxDeepBytes);
+        $maxDeepBytes = max(
+            1024 * 1024,
+            min(256 * 1024 * 1024, (int)($_POST['max_deep_mb'] ?? 128) * 1024 * 1024)
+        );
+        $result = $scanner->run(
+            (int)($_POST['source_id'] ?? 0),
+            (string)($_POST['manifest_name'] ?? 'files.txt'),
+            isset($_POST['check_remote_size']),
+            isset($_POST['deep_scan']),
+            $maxDeepBytes
+        );
     }
 
-    $sources = catalog_all($db, 'SELECT s.id, s.name, s.source_type, s.base_path, g.name game_name FROM ue_sources s JOIN ue_games g ON g.id=s.game_id WHERE s.is_active=1 AND s.source_type IN ("http_mirror","redirect_server") ORDER BY g.name, s.name');
+    $sources = $sourceAdmin->activeHttpSources();
     catalog_head('HTTP source scan');
     catalog_page_header('HTTP source scanner', 'Scans a trusted HTTPS mirror manifest using the selected game profile extension list. Matched source-relative paths are preserved for UE4 package identity and later Full Sync reimports.', ['Sources' => 'sources.php', 'Local Source Scan' => 'source-scan.php', 'Unverified Files' => 'unverified-files.php', 'Games' => 'games.php']);
 

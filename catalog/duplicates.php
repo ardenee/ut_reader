@@ -1,18 +1,16 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for GUID duplicate manager.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders the GUID duplicate manager and accepts administrator selections.
+ * Why: Duplicate retirement mutations and large duplicate-list SQL now have dedicated service/query owners.
+ * Role: Presentation adapter for duplicate filtering, selection and rendering.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogDuplicateRetirementService;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDuplicateGroupListQuery;
 
 catalog_start_session();
 
@@ -45,12 +43,6 @@ function duplicates_return_url(): string
     return $path === 'duplicates.php' ? $url : 'duplicates.php';
 }
 
-function duplicates_valid_guid(string $guid): bool
-{
-    $compact = preg_replace('/[^A-Fa-f0-9]/', '', trim($guid)) ?? '';
-    return strlen($compact) === 32 && preg_match('/^0+$/', $compact) !== 1;
-}
-
 function duplicates_type_from_extension(string $ext): array
 {
     $ext = strtolower(trim($ext, '. '));
@@ -67,84 +59,6 @@ function duplicates_type_from_extension(string $ext): array
         'u', 'upk', 'uasset' => ['package', 'type-package'],
         default => [$ext !== '' ? $ext : 'unknown', 'type-unknown'],
     };
-}
-
-function duplicates_type_filter_sql(string $type): array
-{
-    $map = [
-        'map' => ['unr', 'un2', 'ut2', 'ut3', 'umap'],
-        'music' => ['umx'],
-        'sound' => ['uax'],
-        'texture' => ['utx'],
-        'static_mesh' => ['usx'],
-        'animation' => ['ukx'],
-        'particle_effect' => ['upx'],
-        'gui' => ['ugx'],
-        'content' => ['con'],
-        'package' => ['u', 'upk', 'uasset'],
-    ];
-    return $map[$type] ?? [];
-}
-
-function duplicates_same_group(PDO $db, int $canonicalId, int $duplicateId): bool
-{
-    $rows = catalog_all($db, 'SELECT id, game_id, package_guid FROM ue_files WHERE id IN (?,?)', [$canonicalId, $duplicateId]);
-    if (count($rows) !== 2) {
-        return false;
-    }
-
-    $a = $rows[0];
-    $b = $rows[1];
-    $guidA = (string)($a['package_guid'] ?? '');
-    $guidB = (string)($b['package_guid'] ?? '');
-
-    return (int)$a['game_id'] === (int)$b['game_id']
-        && duplicates_valid_guid($guidA)
-        && $guidA === $guidB;
-}
-
-/** @return array{game_id:int,file_ids:list<int>,package_names:list<string>} */
-function duplicates_retire_file(PDO $db, int $canonicalId, int $duplicateId): array
-{
-    if ($canonicalId === $duplicateId) {
-        throw new RuntimeException('The canonical and duplicate file IDs must differ.');
-    }
-    if (!duplicates_same_group($db, $canonicalId, $duplicateId)) {
-        throw new RuntimeException('File ' . $duplicateId . ' is not in the same valid GUID group as canonical file ' . $canonicalId);
-    }
-
-    $files = catalog_all(
-        $db,
-        'SELECT id,game_id,package_name FROM ue_files WHERE id IN (?,?)',
-        [$canonicalId, $duplicateId]
-    );
-    $byId = [];
-    foreach ($files as $file) {
-        $byId[(int)$file['id']] = $file;
-    }
-    $canonical = $byId[$canonicalId] ?? null;
-    $duplicate = $byId[$duplicateId] ?? null;
-    if (!$canonical || !$duplicate) {
-        throw new RuntimeException('The selected duplicate files disappeared before retirement.');
-    }
-
-    $locations = catalog_all($db, 'SELECT * FROM ue_file_locations WHERE file_id=?', [$duplicateId]);
-    $insertLocation = $db->prepare('INSERT INTO ue_file_locations(file_id,source_id,source_relative_path,exists_in_source,last_seen_at) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE exists_in_source=VALUES(exists_in_source), last_seen_at=VALUES(last_seen_at)');
-    foreach ($locations as $loc) {
-        $insertLocation->execute([$canonicalId, (int)$loc['source_id'], (string)$loc['source_relative_path'], (int)$loc['exists_in_source'], $loc['last_seen_at']]);
-    }
-
-    $db->prepare('UPDATE ue_files SET scan_status="duplicate", scan_notes=CONCAT(COALESCE(scan_notes,""), ? ) WHERE id=?')
-        ->execute(["\nRetired as duplicate of file ID " . $canonicalId . " on " . date('Y-m-d H:i:s'), $duplicateId]);
-
-    return [
-        'game_id' => (int)$canonical['game_id'],
-        'file_ids' => [$canonicalId, $duplicateId],
-        'package_names' => array_values(array_unique([
-            (string)$canonical['package_name'],
-            (string)$duplicate['package_name'],
-        ])),
-    ];
 }
 
 /** @return list<array{canonical_id:int,duplicate_ids:list<int>}> */
@@ -204,50 +118,11 @@ try {
         }
         catalog_check_csrf('duplicates');
         $postedGroups = duplicates_post_groups();
-        if ($postedGroups === []) {
-            throw new RuntimeException('Choose at least one canonical file and at least one duplicate file to retire.');
-        }
+        $result = (new CatalogDuplicateRetirementService($db, $config))
+            ->retireSelectedGroups($postedGroups, DUPLICATES_MAX_PAGE_LIMIT);
 
-        $totalSelected = array_sum(array_map(static fn(array $group): int => count($group['duplicate_ids']), $postedGroups));
-        if ($totalSelected > DUPLICATES_MAX_PAGE_LIMIT) {
-            throw new RuntimeException('Too many duplicate files selected. Process at most ' . DUPLICATES_MAX_PAGE_LIMIT . ' rows at once.');
-        }
-
-        $reconciliation = [];
-        $db->beginTransaction();
-        try {
-            foreach ($postedGroups as $postedGroup) {
-                foreach ($postedGroup['duplicate_ids'] as $duplicateId) {
-                    $context = duplicates_retire_file($db, $postedGroup['canonical_id'], $duplicateId);
-                    $key = (string)$context['game_id'];
-                    $reconciliation[$key]['game_id'] = $context['game_id'];
-                    foreach ($context['file_ids'] as $id) {
-                        $reconciliation[$key]['file_ids'][$id] = true;
-                    }
-                    foreach ($context['package_names'] as $name) {
-                        $reconciliation[$key]['package_names'][strtolower($name)] = $name;
-                    }
-                }
-            }
-            $db->commit();
-        } catch (Throwable $error) {
-            $db->rollBack();
-            throw $error;
-        }
-
-        foreach ($reconciliation as $context) {
-            foreach (array_keys((array)($context['file_ids'] ?? [])) as $fileId) {
-                CatalogProjectionReconciliationQueue::enqueue(
-                    $db,
-                    (int)$fileId,
-                    [(int)$context['game_id']],
-                    array_values((array)($context['package_names'] ?? [])),
-                    $config
-                );
-            }
-        }
-
-        $_SESSION['flash_duplicates'] = 'Retired ' . $totalSelected . ' duplicate file(s) into ' . count($postedGroups) . ' canonical group(s).';
+        $_SESSION['flash_duplicates'] = 'Retired ' . $result['retired'] . ' duplicate file(s) into '
+            . $result['groups'] . ' canonical group(s).';
         header('Location: ' . duplicates_return_url());
         exit;
     }
@@ -256,88 +131,30 @@ try {
         exit;
     }
 
-    $games = catalog_all($db, 'SELECT id, name FROM ue_games ORDER BY name');
-    $gameId = duplicates_int_get('game_id', 0, 0, PHP_INT_MAX);
-    $knownGameIds = array_map(static fn(array $game): int => (int)$game['id'], $games);
-    if ($gameId > 0 && !in_array($gameId, $knownGameIds, true)) {
-        $gameId = 0;
-    }
-
     $query = trim((string)($_GET['q'] ?? ''));
     $typeFilter = trim((string)($_GET['type_filter'] ?? ''));
     $compressionFilter = trim((string)($_GET['compression_filter'] ?? ''));
     $limit = duplicates_int_get('limit', 100, 10, DUPLICATES_MAX_PAGE_LIMIT);
-    $page = duplicates_int_get('page', 1, 1, PHP_INT_MAX);
+    $requestedPage = duplicates_int_get('page', 1, 1, PHP_INT_MAX);
+    $requestedGameId = duplicates_int_get('game_id', 0, 0, PHP_INT_MAX);
 
-    $duplicateGroupSql = 'SELECT game_id, package_guid, COUNT(*) duplicate_count FROM ue_files '
-        . 'WHERE package_guid IS NOT NULL AND package_guid<>"" '
-        . 'AND REPLACE(package_guid,"-","")<>REPEAT("0",32) '
-        . 'AND scan_status="verified" GROUP BY game_id, package_guid HAVING COUNT(*) > 1';
-    $where = 'WHERE f.scan_status="verified"';
-    $args = [];
-
-    if ($gameId > 0) {
-        $where .= ' AND f.game_id=?';
-        $args[] = $gameId;
-    }
-    if ($query !== '') {
-        $where .= ' AND (g.name LIKE ? OR f.package_name LIKE ? OR f.original_name LIKE ? OR f.md5 LIKE ? OR f.sha1 LIKE ? OR f.package_guid LIKE ?' . (ctype_digit($query) ? ' OR f.id=?' : '') . ')';
-        $like = '%' . $query . '%';
-        array_push($args, $like, $like, $like, $like, $like, $like);
-        if (ctype_digit($query)) {
-            $args[] = (int)$query;
-        }
-    }
-    $typeExts = duplicates_type_filter_sql($typeFilter);
-    if ($typeExts !== []) {
-        $where .= ' AND f.extension IN (' . implode(',', array_fill(0, count($typeExts), '?')) . ')';
-        array_push($args, ...$typeExts);
-    }
-    if ($compressionFilter === 'compressed') {
-        $where .= ' AND f.is_compressed=1';
-    } elseif ($compressionFilter === 'uncompressed') {
-        $where .= ' AND f.is_compressed=0';
-    }
-
-    $countSql = 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
-        . 'JOIN (' . $duplicateGroupSql . ') grp ON grp.game_id=f.game_id AND grp.package_guid=f.package_guid ' . $where;
-    $totalRows = (int)(catalog_one($db, 'SELECT COUNT(*) c ' . $countSql, $args)['c'] ?? 0);
-    $totalGroups = (int)(catalog_one($db, 'SELECT COUNT(DISTINCT f.game_id, f.package_guid) c ' . $countSql, $args)['c'] ?? 0);
-    $totalPages = max(1, (int)ceil($totalRows / $limit));
-    $page = min($page, $totalPages);
-    $offset = ($page - 1) * $limit;
-
-    $rows = catalog_all($db, '
-        SELECT f.id,f.game_id,g.name AS game_name,f.package_guid,grp.duplicate_count,
-               f.package_name,f.original_name,f.md5,f.sha1,f.extension,f.file_size,f.is_compressed,
-               f.uploaded_at,f.package_version,f.licensee_version,
-               COALESCE(f.name_count,0) AS name_count,
-               COALESCE(f.import_count,0) AS import_count,
-               COALESCE(f.export_count,0) AS export_count,
-               COALESCE(l.source_location_count,0) AS source_location_count
-        FROM ue_files f
-        JOIN ue_games g ON g.id=f.game_id
-        JOIN (' . $duplicateGroupSql . ') grp ON grp.game_id=f.game_id AND grp.package_guid=f.package_guid
-        LEFT JOIN (
-            SELECT file_id,COUNT(*) AS source_location_count
-            FROM ue_file_locations
-            WHERE exists_in_source=1
-            GROUP BY file_id
-        ) l ON l.file_id=f.id
-        ' . $where . '
-        ORDER BY g.name,f.package_guid,f.is_compressed ASC,f.file_size DESC,f.uploaded_at ASC,f.id ASC
-        LIMIT ' . $limit . ' OFFSET ' . $offset,
-        $args
+    $duplicateQuery = new PdoDuplicateGroupListQuery($db);
+    $games = $duplicateQuery->games();
+    $list = $duplicateQuery->fetch(
+        $requestedGameId,
+        $query,
+        $typeFilter,
+        $compressionFilter,
+        $limit,
+        $requestedPage
     );
-
-    $groups = [];
-    foreach ($rows as $row) {
-        $key = (int)$row['game_id'] . ':' . (string)$row['package_guid'];
-        $groups[$key]['game_name'] = (string)$row['game_name'];
-        $groups[$key]['package_guid'] = (string)$row['package_guid'];
-        $groups[$key]['duplicate_count'] = (int)$row['duplicate_count'];
-        $groups[$key]['rows'][] = $row;
-    }
+    $gameId = $list['game_id'];
+    $totalRows = $list['total_rows'];
+    $totalGroups = $list['total_groups'];
+    $totalPages = $list['total_pages'];
+    $page = $list['page'];
+    $offset = $list['offset'];
+    $groups = $list['groups'];
 
     catalog_head('GUID duplicates');
     echo duplicates_page_styles();

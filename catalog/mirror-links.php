@@ -1,49 +1,35 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for External Mirror Links.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes administrator-managed external mirror links.
+ * Why: Link mutation/read persistence belongs to the shared external mirror admin service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogExternalMirrorAdminService;
+
 catalog_start_session();
-require_once __DIR__ . '/lib/ExternalMirrors.php';
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $service = new CatalogExternalMirrorAdminService($db, $config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         catalog_check_csrf('mirror_links');
-        $action = (string)($_POST['action'] ?? 'add_manual');
-        if ($action === 'add_manual') {
-            $fileId = (int)($_POST['file_id'] ?? 0);
-            $providerId = (int)($_POST['provider_id'] ?? 0);
-            $url = trim((string)($_POST['external_url'] ?? ''));
-            $days = (int)($_POST['expiry_days'] ?? 7);
-            if ($fileId <= 0 || $providerId <= 0 || $url === '') {
-                throw new RuntimeException('File, provider and URL are required.');
-            }
-            external_create_manual_link($db, $fileId, $providerId, $url, $_SESSION['user']['id'] ?? null, $days);
-            $_SESSION['mirror_links_flash'] = 'Manual external mirror link added.';
-        } elseif ($action === 'expire') {
-            $id = (int)($_POST['id'] ?? 0);
-            $db->prepare('UPDATE ue_external_download_links SET status="expired" WHERE id=?')->execute([$id]);
-            $_SESSION['mirror_links_flash'] = 'Mirror link expired.';
-        } elseif ($action === 'mark_broken') {
-            $id = (int)($_POST['id'] ?? 0);
-            $db->prepare('UPDATE ue_external_download_links SET status="broken", error_message="Marked broken by admin." WHERE id=?')->execute([$id]);
-            $_SESSION['mirror_links_flash'] = 'Mirror link marked broken.';
+        $flash = $service->handleLinkAction(
+            (string)($_POST['action'] ?? 'add_manual'),
+            $_POST,
+            isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null
+        );
+        if ($flash !== '') {
+            $_SESSION['mirror_links_flash'] = $flash;
         }
         header('Location: mirror-links.php');
         exit;
@@ -59,8 +45,8 @@ try {
 
     $fileId = (int)($_GET['file_id'] ?? 0);
     catalog_page_header('External Mirror Links', 'Admin-managed external download cache. Active links are reused until expiry.', ['Catalog Admin' => 'dashboard.php', 'Providers' => 'mirror-providers.php', 'Mirror Queue' => 'mirror-queue.php', 'Downloads' => 'download-admin.php']);
-	
-    $providers = catalog_all($db, 'SELECT * FROM ue_external_download_providers WHERE is_active=1 ORDER BY priority, provider_name');
+
+    $providers = $service->providers(true);
     echo '<div class="card"><h2>Add manual external link</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_links')) . '"><input type="hidden" name="action" value="add_manual">';
     echo '<p><label>File ID<br><input name="file_id" value="' . ($fileId ?: '') . '" required style="width:120px"></label></p>';
     echo '<p><label>Provider<br><select name="provider_id">';
@@ -71,8 +57,7 @@ try {
     echo '<p><label>External URL<br><input name="external_url" required style="min-width:760px"></label></p>';
     echo '<p><label>Expiry days<br><input name="expiry_days" value="7" style="width:80px"></label></p><p><button>Add active mirror link</button></p></form></div>';
 
-    $where = $fileId > 0 ? 'WHERE l.file_id=' . $fileId : '';
-    $links = catalog_all($db, 'SELECT l.*, p.provider_name, p.provider_key, f.package_name, f.original_name, f.md5 FROM ue_external_download_links l JOIN ue_external_download_providers p ON p.id=l.provider_id JOIN ue_files f ON f.id=l.file_id ' . $where . ' ORDER BY l.created_at DESC LIMIT 500');
+    $links = $service->links($fileId, 500);
     echo '<div class="card"><h2>Mirror links</h2>';
     if (!$links) {
         echo '<p class="muted">No mirror links found.</p>';

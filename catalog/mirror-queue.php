@@ -1,43 +1,34 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for External Mirror Queue.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and controls the external mirror queue.
+ * Why: Mirror job lifecycle SQL is centralized in the mirror admin service instead of the page.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogExternalMirrorAdminService;
+
 catalog_start_session();
-require_once __DIR__ . '/lib/ExternalMirrors.php';
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $service = new CatalogExternalMirrorAdminService($db, $config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         catalog_check_csrf('mirror_queue');
-        $action = (string)($_POST['action'] ?? '');
-        $id = (int)($_POST['id'] ?? 0);
-        if ($action === 'approve') {
-            $db->prepare('UPDATE ue_external_mirror_jobs SET status="queued" WHERE id=? AND status="waiting_admin"')->execute([$id]);
-            $_SESSION['mirror_queue_flash'] = 'Mirror job approved/queued.';
-        } elseif ($action === 'cancel') {
-            $db->prepare('UPDATE ue_external_mirror_jobs SET status="cancelled", finished_at=NOW(), last_error="Cancelled by admin." WHERE id=? AND status IN ("queued","waiting_admin","failed")')->execute([$id]);
-            $_SESSION['mirror_queue_flash'] = 'Mirror job cancelled.';
-        } elseif ($action === 'retry') {
-            $db->prepare('UPDATE ue_external_mirror_jobs SET status="queued", attempts=0, started_at=NULL, finished_at=NULL, last_error=NULL WHERE id=? AND status IN ("failed","cancelled")')->execute([$id]);
-            $_SESSION['mirror_queue_flash'] = 'Mirror job retried.';
-        } elseif ($action === 'expire_old') {
-            $_SESSION['mirror_queue_flash'] = 'Expired ' . external_expire_old_links($db) . ' old active mirror link(s).';
+        $flash = $service->handleQueueAction(
+            (string)($_POST['action'] ?? ''),
+            (int)($_POST['id'] ?? 0)
+        );
+        if ($flash !== '') {
+            $_SESSION['mirror_queue_flash'] = $flash;
         }
         header('Location: mirror-queue.php');
         exit;
@@ -53,7 +44,7 @@ try {
 
     echo '<div class="card hero"><h1>External Mirror Queue</h1><p class="muted">Queued/pending mirror uploads. Manual provider jobs can be fulfilled by opening the job and pasting the external shared-provider link.</p><p><a class="button" href="dashboard.php">Catalog Admin</a> <a class="button" href="mirror-providers.php">Providers</a> <a class="button" href="mirror-links.php">Mirror Links</a></p><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('mirror_queue')) . '"><button name="action" value="expire_old">Expire old active links</button></form></div>';
 
-    $jobs = catalog_all($db, 'SELECT j.*, p.provider_name, p.provider_class, f.package_name, f.original_name, f.file_size, f.md5 FROM ue_external_mirror_jobs j LEFT JOIN ue_external_download_providers p ON p.id=j.provider_id JOIN ue_files f ON f.id=j.file_id ORDER BY FIELD(j.status,"waiting_admin","queued","uploading","failed","active","cancelled","expired"), j.created_at DESC LIMIT 500');
+    $jobs = $service->recentJobs(500);
     echo '<div class="card"><h2>Jobs</h2>';
     if (!$jobs) {
         echo '<p class="muted">No mirror jobs found.</p>';

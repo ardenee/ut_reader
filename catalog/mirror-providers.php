@@ -1,20 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for External Mirror Providers.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes External Mirror Providers administration.
+ * Why: Provider/settings persistence belongs to the shared external mirror admin service.
+ * Role: Presentation adapter; retains existing custom admin/CSRF behavior and HTML.
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogExternalMirrorAdminService;
+
 catalog_start_session();
-require_once __DIR__ . '/lib/FederationAuth.php';
 
 function mp_is_admin(): bool
 {
@@ -37,40 +34,16 @@ function mp_check_csrf(): void
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $service = new CatalogExternalMirrorAdminService($db, $config);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!mp_is_admin()) {
             throw new RuntimeException('Admin required');
         }
         mp_check_csrf();
-        $action = (string)($_POST['action'] ?? 'save_settings');
-
-        if ($action === 'save_settings') {
-            foreach (['public_download_mode','external_mirror_auto_queue','external_mirror_expiry_days','external_mirror_require_admin_approval','external_mirror_max_file_size_mb'] as $key) {
-                fed_set_setting($db, $key, trim((string)($_POST[$key] ?? '')));
-            }
-            $_SESSION['mirror_provider_flash'] = 'Public download settings saved.';
-        } elseif ($action === 'add_provider') {
-            $key = strtolower(trim((string)($_POST['provider_key'] ?? '')));
-            $name = trim((string)($_POST['provider_name'] ?? ''));
-            $class = trim((string)($_POST['provider_class'] ?? 'ManualProvider')) ?: 'ManualProvider';
-            if (!preg_match('/^[a-z0-9_-]+$/', $key)) {
-                throw new RuntimeException('Provider key may only use lowercase letters, numbers, underscore and dash.');
-            }
-            if ($name === '') {
-                throw new RuntimeException('Provider name required.');
-            }
-            $stmt = $db->prepare('INSERT INTO ue_external_download_providers(provider_key,provider_name,provider_class,is_active,config_json,max_file_size_mb,expiry_days,priority,notes) VALUES(?,?,?,?,?,?,?,?,?)');
-            $stmt->execute([$key, $name, $class, (int)($_POST['is_active'] ?? 1), trim((string)($_POST['config_json'] ?? '{}')) ?: '{}', (int)($_POST['max_file_size_mb'] ?? 1024), (int)($_POST['expiry_days'] ?? 7), (int)($_POST['priority'] ?? 100), trim((string)($_POST['notes'] ?? '')) ?: null]);
-            $_SESSION['mirror_provider_flash'] = 'Provider added.';
-        } elseif ($action === 'toggle_provider') {
-            $id = (int)($_POST['id'] ?? 0);
-            $row = catalog_one($db, 'SELECT * FROM ue_external_download_providers WHERE id=?', [$id]);
-            if (!$row) {
-                throw new RuntimeException('Provider not found.');
-            }
-            $db->prepare('UPDATE ue_external_download_providers SET is_active=? WHERE id=?')->execute([(int)$row['is_active'] ? 0 : 1, $id]);
-            $_SESSION['mirror_provider_flash'] = 'Provider toggled.';
+        $flash = $service->handleProviderAction((string)($_POST['action'] ?? 'save_settings'), $_POST);
+        if ($flash !== '') {
+            $_SESSION['mirror_provider_flash'] = $flash;
         }
         header('Location: mirror-providers.php');
         exit;
@@ -89,7 +62,7 @@ try {
         unset($_SESSION['mirror_provider_flash']);
     }
 
-    $settings = fed_all_settings($db);
+    $settings = $service->settings();
     echo '<div class="card"><h1>External Mirror Providers</h1><p class="muted">Site-wide public download control. Federation transfers bypass this completely.</p><p><a class="button" href="admin.php">Catalog Admin</a> <a class="button" href="mirror-links.php">Mirror Links</a> <a class="button" href="mirror-queue.php">Mirror Queue</a></p></div>';
 
     echo '<div class="card"><h2>Public download mode</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(mp_csrf()) . '"><input type="hidden" name="action" value="save_settings"><table>';
@@ -109,7 +82,7 @@ try {
     }
     echo '</table><p><button>Save public download settings</button></p></form></div>';
 
-    $providers = catalog_all($db, 'SELECT * FROM ue_external_download_providers ORDER BY priority, provider_name');
+    $providers = $service->providers();
     echo '<div class="card"><h2>Providers</h2>';
     if (!$providers) {
         echo '<p class="muted">No providers configured.</p>';

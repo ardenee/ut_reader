@@ -1,17 +1,16 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Source scanner.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and runs the direct package Source scanner.
+ * Why: Source selection reads and procedural scanner execution now have explicit namespaced owners.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogSourceScanNoContainers.php';
+
+use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceAdminService;
+use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceScanService;
 
 catalog_start_session();
 
@@ -21,6 +20,9 @@ try {
     if (!catalog_require_admin_page('Source scan')) {
         exit;
     }
+
+    $sourceAdmin = new CatalogSourceAdminService($db);
+    $scanner = new CatalogSourceScanService($db, $config);
 
     catalog_head('Source scan');
     catalog_page_header(
@@ -37,9 +39,7 @@ try {
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('source_scan');
         $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
-        $result = catalog_source_scan_run_without_containers(
-            $db,
-            $config,
+        $result = $scanner->run(
             (int)($_POST['source_id'] ?? 0),
             (string)($_POST['import_unknown'] ?? '0') === '1',
             (string)($_POST['strict_profile'] ?? '1') === '1',
@@ -94,13 +94,7 @@ try {
         }
     }
 
-    $sources = catalog_all(
-        $db,
-        'SELECT s.*,g.name game_name,p.engine_key profile_engine '
-        . 'FROM ue_sources s JOIN ue_games g ON g.id=s.game_id '
-        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-        . 'WHERE s.is_active=1 ORDER BY g.name,s.name'
-    );
+    $sources = $sourceAdmin->activeSources();
     echo '<div class="card"><h2>Run scan</h2>';
     if (!$sources) {
         echo '<p class="muted">No sources configured. Add one in <a href="sources.php">Game Sources</a>.</p>';
