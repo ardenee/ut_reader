@@ -56,7 +56,7 @@ final class LegacyMetadataRuntimeAudit
         'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
         'src/Infrastructure/Persistence/PdoDependencyResolver.php',
         'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
-        'src/Infrastructure/Import/CatalogBucketUploadProcessor.php',
+        'src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
         'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
         'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
