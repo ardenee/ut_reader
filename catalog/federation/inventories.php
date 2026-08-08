@@ -1,19 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders or processes the federation interface for Federation Inventories.
- * Why: It keeps parent/child federation administration, inventory, requests, and transfer workflows separate from
- *      general catalog pages.
- * Role: Federation UI/administration entry point backed by shared federation services.
- * Audit: Federation-specific route; consolidate shared behavior into services rather than merging distinct
- *        parent/child screens blindly.
+ * Purpose: Renders the federation inventory administration interface.
+ * Why: Pagination/rendering remain here while refresh, transfer queueing and remote request orchestration are delegated.
+ * Role: Federation UI entry point backed by bounded query and action services.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationInventoryListQuery;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationInventoryActions;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationInventoryListQuery;
 
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
@@ -38,16 +36,6 @@ function fi_cursor_move(mixed $value): string
     return in_array($move, ['first', 'next', 'prev', 'last'], true) ? $move : 'first';
 }
 
-function fi_local_presence_sql(string $alias = 'pf'): string
-{
-    return 'EXISTS (
-        SELECT 1 FROM ue_files local
-        WHERE local.scan_status="verified"
-          AND ((COALESCE(' . $alias . '.package_guid,"")<>"" AND local.package_guid=' . $alias . '.package_guid)
-            OR (COALESCE(' . $alias . '.md5,"")<>"" AND local.md5=' . $alias . '.md5))
-    )';
-}
-
 function fi_identity(array $row): string
 {
     return '<div class="mono small nowrap"><strong>GUID:</strong> ' . catalog_h((string)($row['package_guid'] ?: '—')) . '</div>'
@@ -65,16 +53,6 @@ function fi_parent_url(int $peerId, string $tab, array $params = []): string
 function fi_child_url(int $peerId, array $params = []): string
 {
     return 'inventories.php?' . http_build_query(array_merge(['peer_id' => $peerId], $params));
-}
-
-/** @return array{cursor:string,cursor_move:string,cursor_page:int} */
-function fi_post_cursor_state(): array
-{
-    return [
-        'cursor' => trim((string)($_POST['cursor'] ?? '')),
-        'cursor_move' => fi_cursor_move($_POST['cursor_move'] ?? 'first'),
-        'cursor_page' => fi_page($_POST['cursor_page'] ?? 1),
-    ];
 }
 
 /** @param array<string,mixed> $config */
@@ -103,9 +81,7 @@ function fi_cursor_context(string $view, int $peerId, string $tab, bool $ignoreB
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
 }
 
-/**
- * @param callable(array<string,mixed>):string $url
- */
+/** @param callable(array<string,mixed>):string $url */
 function fi_pagination(
     int $page,
     int $pages,
@@ -143,28 +119,11 @@ function fi_child_key(array $row): string
     return hash('sha256', (int)$row['game_id'] . "\0" . strtolower(trim((string)$row['required_package'])));
 }
 
-/** @return array<string,array<string,mixed>> */
-function fi_child_request_statuses(PDO $db, array $parent): array
-{
-    $result = fed_http_post_signed(
-        rtrim((string)$parent['site_url'], '/') . '/api/federation/request-status.php',
-        (string)fed_setting($db, 'site_id', ''),
-        federation_peer_stored_signing_secret($db, $parent),
-        ['package_statuses' => true]
-    );
-    if (is_array($result['policy'] ?? null)) {
-        federation_cache_parent_base_game_policy($db, (int)$parent['id'], $result['policy']);
-    }
-    if (empty($result['ok']) || !is_array($result['packages'] ?? null)) {
-        throw new RuntimeException('Parent request status check failed: ' . (string)($result['error'] ?? 'invalid response'));
-    }
-    return $result['packages'];
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
     $inventoryQuery = new PdoFederationInventoryListQuery($db);
+    $inventoryActions = new CatalogFederationInventoryActions($db, $config);
     base_game_ensure($db);
     $role = federation_reconcile_site_role($db);
     $ignoreBaseGame = federation_ignore_base_game_files($db);
@@ -174,146 +133,11 @@ try {
             throw new RuntimeException('Admin required.');
         }
         catalog_check_csrf('fed_inventories');
-        $action = strtolower(trim((string)($_POST['action'] ?? '')));
-        $peerId = (int)($_POST['peer_id'] ?? 0);
-        $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=? AND is_active=1', [$peerId]);
-        if (!$peer) {
-            throw new RuntimeException('Active federation peer not found.');
+        $actionResult = $inventoryActions->handle($_POST, $role, $ignoreBaseGame);
+        if ((string)$actionResult['flash'] !== '') {
+            $_SESSION['fed_inventory_flash'] = (string)$actionResult['flash'];
         }
-        $cursorState = fi_post_cursor_state();
-
-        if ($action === 'refresh') {
-            $result = federation_pull_inventory_from_peer($db, $peerId);
-            if ($role === 'parent' && (string)$peer['peer_role'] === 'child') {
-                $remote = federation_request_child_refresh_parent_inventory($db, $peerId);
-                $_SESSION['fed_inventory_flash'] = 'Inventories refreshed: received ' . (int)($result['received'] ?? 0) . ' child rows; child received ' . (int)($remote['received'] ?? 0) . ' parent rows.';
-            } elseif ($role === 'child' && (string)$peer['peer_role'] === 'parent') {
-                $push = federation_push_inventory_to_parent($db, $peerId);
-                $_SESSION['fed_inventory_flash'] = 'Parent inventory refreshed and local inventory pushed: ' . (!empty($push['ok']) ? 'success' : 'failed') . '.';
-            }
-            $cursorState = ['cursor' => '', 'cursor_move' => 'first', 'cursor_page' => 1];
-        } elseif ($action === 'queue_parent_pull') {
-            if ($role !== 'parent' || (string)$peer['peer_role'] !== 'child') {
-                throw new RuntimeException('Only a Parent may download selected files from a child inventory.');
-            }
-            $ids = array_values(array_unique(array_filter(array_map('intval', $_POST['peer_file_ids'] ?? []), static fn(int $id): bool => $id > 0)));
-            if (!$ids || count($ids) > FI_PARENT_PAGE_SIZE) {
-                throw new RuntimeException('Select between 1 and ' . FI_PARENT_PAGE_SIZE . ' files.');
-            }
-            $placeholders = implode(',', array_fill(0, count($ids), '?'));
-            $rows = catalog_all(
-                $db,
-                'SELECT pf.* FROM ue_federation_peer_files pf '
-                . 'WHERE pf.peer_id=? AND pf.id IN (' . $placeholders . ') '
-                . 'AND NOT (' . fi_local_presence_sql('pf') . ')'
-                . ($ignoreBaseGame ? ' AND COALESCE(pf.is_base_game,0)=0' : ''),
-                array_merge([$peerId], $ids)
-            );
-            $insert = $db->prepare(
-                'INSERT INTO ue_federation_transfer_jobs(peer_id,direction,remote_file_id,status,speed_limit_kbps,wait_after_seconds,bytes_total) '
-                . 'VALUES(?,"parent_pull_from_child",?,"queued",?,?,?)'
-            );
-            $queued = 0;
-            foreach ($rows as $row) {
-                $remoteFileId = (int)($row['remote_file_id'] ?? 0);
-                if ($remoteFileId <= 0 || catalog_one($db, 'SELECT id FROM ue_federation_transfer_jobs WHERE peer_id=? AND direction="parent_pull_from_child" AND remote_file_id=? AND status IN ("queued","running","downloaded") LIMIT 1', [$peerId, $remoteFileId])) {
-                    continue;
-                }
-                $insert->execute([
-                    $peerId,
-                    $remoteFileId,
-                    (int)fed_setting($db, 'max_download_kbps', '0'),
-                    (int)fed_setting($db, 'delay_between_downloads_seconds', '5'),
-                    (int)$row['file_size'],
-                ]);
-                $queued++;
-            }
-            fed_log($db, $peerId, null, 'INFO', 'PARENT_PULL_QUEUE', 'Queued ' . $queued . ' selected child inventory file(s).');
-            $_SESSION['fed_inventory_flash'] = 'Queued ' . $queued . ' file(s) from this child.';
-        } elseif ($action === 'submit_child_request') {
-            if ($role !== 'child' || (string)$peer['peer_role'] !== 'parent') {
-                throw new RuntimeException('Only a Child may request missing dependency files from its Parent.');
-            }
-            $ignoreBaseGame = federation_ignore_base_game_files($db, $peer);
-            $context = fi_cursor_context('child', $peerId, 'required', $ignoreBaseGame, FI_CHILD_PAGE_SIZE);
-            $move = $cursorState['cursor_move'];
-            $pageNumber = $cursorState['cursor_page'];
-            $cursor = fi_decode_cursor($config, $context, $cursorState['cursor'], $move, $pageNumber);
-            $page = $inventoryQuery->childCursorPage($peerId,
-                $ignoreBaseGame,
-                FI_CHILD_PAGE_SIZE,
-                $cursor,
-                $move
-            );
-            $activeStatuses = fi_child_request_statuses($db, $peer);
-            $byKey = [];
-            foreach ($page['rows'] as $row) {
-                $existing = $activeStatuses[strtolower(trim((string)$row['required_package']))] ?? null;
-                if (is_array($existing) && in_array((string)($existing['item_status'] ?? ''), ['requested', 'approved', 'queued', 'downloading', 'downloaded'], true)) {
-                    continue;
-                }
-                $byKey[fi_child_key($row)] = $row;
-            }
-            $keys = array_values(array_unique(array_filter(array_map('strval', $_POST['item_keys'] ?? []), static fn(string $key): bool => preg_match('/^[a-f0-9]{64}$/', $key) === 1)));
-            $items = [];
-            foreach ($keys as $key) {
-                $row = $byKey[$key] ?? null;
-                if (!$row) {
-                    continue;
-                }
-                $items[] = [
-                    'required_package' => (string)$row['required_package'],
-                    'required_object_path' => (string)$row['required_object_path'],
-                    'wanted_guid' => '',
-                    'wanted_md5' => '',
-                    'game_name' => (string)$row['game_name'],
-                    'engine_key' => (string)$row['engine_key'],
-                    'use_count' => (int)$row['use_count'],
-                    'object_count' => (int)$row['object_count'],
-                    'is_base_game_dependency' => !empty($row['is_base_game']),
-                ];
-            }
-            if (!$items) {
-                throw new RuntimeException('The selected packages are no longer eligible. The Parent policy, request status, or current cursor page changed; reload the list and select again.');
-            }
-            $siteLabel = fed_setting($db, 'site_name', '') ?: fed_setting($db, 'site_url', '') ?: 'child';
-            try {
-                $result = fed_http_post_signed(
-                    rtrim((string)$peer['site_url'], '/') . '/api/federation/request-submit.php',
-                    (string)fed_setting($db, 'site_id', ''),
-                    federation_peer_stored_signing_secret($db, $peer),
-                    [
-                        'title' => 'Missing file request from ' . $siteLabel,
-                        'notes' => 'Requested from the consolidated Parent Inventory page.',
-                        'generated_at' => date('c'),
-                        'items' => $items,
-                    ]
-                );
-            } catch (RuntimeException $requestError) {
-                if (str_contains($requestError->getMessage(), 'Every selected package is excluded by the parent Ignore base-game files policy.')) {
-                    $_SESSION['fed_inventory_flash'] = 'The Parent base-game policy changed or was refreshed. Excluded base-game packages were removed from the request list.';
-                    header('Location: ' . fi_child_url($peerId));
-                    exit;
-                }
-                throw $requestError;
-            }
-            if (is_array($result['policy'] ?? null)) {
-                federation_cache_parent_base_game_policy($db, $peerId, $result['policy']);
-            }
-            if (empty($result['ok'])) {
-                throw new RuntimeException('Request submission failed: ' . (string)($result['error'] ?? 'unknown error'));
-            }
-            fed_log($db, $peerId, null, 'INFO', 'REQUEST_SUBMIT_SEND', json_encode($result, JSON_UNESCAPED_SLASHES));
-            header('Location: requests.php?request_id=' . (int)($result['request_id'] ?? 0));
-            exit;
-        } else {
-            throw new RuntimeException('Unknown inventory action.');
-        }
-
-        $tab = strtolower(trim((string)($_POST['tab'] ?? 'required')));
-        $tab = in_array($tab, ['required', 'missing'], true) ? $tab : 'required';
-        $params = array_filter($cursorState, static fn(mixed $value): bool => $value !== '' && $value !== null && $value !== 1);
-        header('Location: ' . ($role === 'parent' ? fi_parent_url($peerId, $tab, $params) : fi_child_url($peerId, $params)));
+        header('Location: ' . (string)$actionResult['redirect']);
         exit;
     }
 
@@ -417,7 +241,7 @@ try {
         $requestStatuses = [];
         $requestStatusError = '';
         try {
-            $requestStatuses = fi_child_request_statuses($db, $parent);
+            $requestStatuses = $inventoryActions->childRequestStatuses($parent);
         } catch (Throwable $statusError) {
             $requestStatusError = $statusError->getMessage();
         }

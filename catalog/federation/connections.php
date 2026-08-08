@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders or processes the federation interface for Federation Connections.
- * Why: It keeps parent/child federation administration, inventory, requests, and transfer workflows separate from
- *      general catalog pages.
- * Role: Federation UI/administration entry point backed by shared federation services.
- * Audit: Federation-specific route; consolidate shared behavior into services rather than merging distinct
- *        parent/child screens blindly.
+ * Purpose: Renders the Federation Connections administration interface.
+ * Why: Request/session/rendering concerns remain here while pairing protocol, role transitions and persistence are delegated.
+ * Role: Federation UI entry point backed by shared federation services.
  */
 declare(strict_types=1);
 
@@ -20,156 +17,8 @@ require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/FederationInventoryRefresh.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
-const FED_OFFICIAL_PARENT_URL = 'https://unrealdb.com';
-
-function connections_parent_url(string $url): string
-{
-    $url = rtrim(trim($url), '/');
-    $parts = parse_url($url);
-    if (!is_array($parts)
-        || strtolower((string)($parts['scheme'] ?? '')) !== 'https'
-        || trim((string)($parts['host'] ?? '')) === ''
-        || isset($parts['user'])
-        || isset($parts['pass'])
-        || isset($parts['query'])
-        || isset($parts['fragment'])) {
-        throw new RuntimeException('Parent URL must be a plain HTTPS URL without credentials, query parameters, or a fragment.');
-    }
-    return $url;
-}
-
-/** @return array<string,mixed> */
-function connections_post_json(PDO $db, string $url, array $payload): array
-{
-    TrustedHttpSourceClient::configureFederationTesting(
-        (string)fed_setting($db, 'allow_self_signed_federation_certificates', '0') === '1'
-    );
-    return TrustedHttpSourceClient::postJson(
-        $url,
-        [
-            'Content-Type: application/json',
-            'Accept: application/json',
-            'User-Agent: UnrealFileCatalogFederation/2.0',
-        ],
-        json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR),
-        1048576,
-        60
-    );
-}
-
-function connections_store_join_result(PDO $db, array $result): void
-{
-    $status = strtolower(trim((string)($result['status'] ?? 'unknown')));
-    fed_set_setting($db, 'main_parent_join_status', $status !== '' ? $status : 'unknown');
-    fed_set_setting($db, 'main_parent_join_status_message', trim((string)($result['message'] ?? '')));
-    fed_set_setting($db, 'main_parent_join_admin_notes', trim((string)($result['admin_notes'] ?? '')));
-}
-
-/** @return array<string,mixed> */
-function connections_poll_parent(PDO $db): array
-{
-    $identity = fed_ensure_identity($db);
-    $parentUrl = connections_parent_url((string)fed_setting($db, 'main_parent_url', ''));
-    $requestId = (int)fed_setting($db, 'main_parent_join_request_id', '0');
-    $requestToken = trim((string)fed_setting($db, 'main_parent_join_request_token', ''));
-    if ($requestId <= 0 || $requestToken === '') {
-        throw new RuntimeException('No complete pending parent join request is stored.');
-    }
-
-    $result = connections_post_json($db, $parentUrl . '/api/federation/join-request-status.php', [
-        'request_id' => $requestId,
-        'site_id' => (string)$identity['site_id'],
-        'request_token' => $requestToken,
-    ]);
-    if (empty($result['ok'])) {
-        throw new RuntimeException('Parent status check failed: ' . (string)($result['error'] ?? 'unknown error'));
-    }
-
-    $status = strtolower(trim((string)($result['status'] ?? 'unknown')));
-    if (in_array($status, ['approved', 'claimed'], true) && !empty($result['claim_ready'])) {
-        $result = federation_auto_claim_parent($db, $parentUrl, $requestId, $requestToken);
-    } else {
-        connections_store_join_result($db, $result);
-    }
-    return $result;
-}
-
-function connections_approve_child(PDO $db, array $request): int
-{
-    if (!federation_can_accept_children($db)) {
-        throw new RuntimeException('This server cannot accept a child while connected to, or waiting to join, a parent.');
-    }
-    if ((string)$request['status'] !== 'pending') {
-        throw new RuntimeException('Only pending child join requests can be approved.');
-    }
-    if (catalog_one($db, 'SELECT id FROM ue_federation_peers WHERE peer_site_id=? LIMIT 1', [(string)$request['site_id']])) {
-        throw new RuntimeException('A federation connection already exists for this site ID.');
-    }
-
-    $sharedSecret = fed_random_secret();
-    $secretFields = fed_prepare_peer_secret($sharedSecret);
-    $ttl = max(600, (int)(fed_setting($db, 'join_claim_token_ttl_seconds', '86400') ?: 86400));
-    $permissions = json_encode([
-        'parent_is_master' => true,
-        'parent_inventory_read_without_child_approval' => true,
-        'parent_pull_without_child_approval' => true,
-        'child_download_requires_parent_approval' => true,
-        'child_download_scope' => 'missing_dependencies_only',
-        'created_by_join_request' => true,
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
-
-    $db->beginTransaction();
-    try {
-        $stmt = $db->prepare(
-            'INSERT INTO ue_federation_peers(
-                peer_role,site_name,site_url,peer_site_id,peer_fingerprint,
-                shared_secret_hash,shared_secret_plain,permissions_json,is_active
-             ) VALUES("child",?,?,?,?,?,?,?,1)'
-        );
-        $stmt->execute([
-            (string)$request['site_name'],
-            (string)$request['site_url'],
-            (string)$request['site_id'],
-            (string)$request['site_fingerprint'],
-            $secretFields['hash'],
-            $secretFields['stored'],
-            $permissions,
-        ]);
-        $peerId = (int)$db->lastInsertId();
-        $db->prepare(
-            'UPDATE ue_federation_join_requests
-             SET status="approved", admin_notes=?, claim_token_hash=request_token_hash,
-                 claim_expires_at=DATE_ADD(NOW(), INTERVAL ? SECOND), approved_at=NOW(),
-                 approved_by=?, created_peer_id=?
-             WHERE id=?'
-        )->execute([
-            trim((string)($_POST['admin_notes'] ?? 'Approved by parent administrator.')),
-            $ttl,
-            $_SESSION['user']['id'] ?? null,
-            $peerId,
-            (int)$request['id'],
-        ]);
-        federation_set_site_role($db, 'parent');
-        $db->commit();
-    } catch (Throwable $error) {
-        if ($db->inTransaction()) {
-            $db->rollBack();
-        }
-        throw $error;
-    }
-
-    fed_log($db, $peerId, null, 'INFO', 'JOIN_REQUEST_APPROVED', 'Child join request #' . (int)$request['id'] . ' approved; server role set to Parent.');
-    return $peerId;
-}
-
-function connections_peer(PDO $db, int $peerId): array
-{
-    $peer = catalog_one($db, 'SELECT * FROM ue_federation_peers WHERE id=?', [$peerId]);
-    if (!$peer) {
-        throw new RuntimeException('Federation connection not found.');
-    }
-    return $peer;
-}
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationConnectionActions;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationConnectionQuery;
 
 try {
     $config = catalog_config();
@@ -181,149 +30,9 @@ try {
             throw new RuntimeException('Admin required.');
         }
         catalog_check_csrf('fed_connections');
-        $action = strtolower(trim((string)($_POST['action'] ?? '')));
-
-        if ($action === 'submit_parent') {
-            if (!federation_can_join_parent($db)) {
-                throw new RuntimeException('Disconnect/remove all federation relationships before joining a parent.');
-            }
-            $identity = fed_ensure_identity($db);
-            $mode = strtolower(trim((string)($_POST['parent_mode'] ?? 'manual')));
-            $parentUrl = connections_parent_url($mode === 'official' ? FED_OFFICIAL_PARENT_URL : (string)($_POST['parent_url'] ?? ''));
-            if (rtrim(strtolower((string)$identity['site_url']), '/') === strtolower($parentUrl)) {
-                throw new RuntimeException('This deployment cannot join itself.');
-            }
-            $requestToken = fed_random_secret();
-            $result = connections_post_json($db, $parentUrl . '/api/federation/join-request-submit.php', [
-                'site_name' => (string)$identity['site_name'],
-                'site_url' => (string)$identity['site_url'],
-                'site_id' => (string)$identity['site_id'],
-                'site_fingerprint' => (string)$identity['site_fingerprint'],
-                'request_token' => $requestToken,
-                'contact_name' => trim((string)($_POST['contact_name'] ?? '')),
-                'contact_email' => trim((string)($_POST['contact_email'] ?? '')),
-                'notes' => trim((string)($_POST['notes'] ?? 'Request to join this federation parent.')),
-            ]);
-            if (empty($result['ok'])) {
-                throw new RuntimeException('Parent rejected join request: ' . (string)($result['error'] ?? 'unknown error'));
-            }
-            fed_set_setting($db, 'main_parent_url', $parentUrl);
-            fed_set_setting($db, 'main_parent_join_request_id', (string)($result['request_id'] ?? '0'));
-            fed_set_setting($db, 'main_parent_join_request_token', $requestToken);
-            connections_store_join_result($db, $result);
-            federation_set_site_role($db, 'standalone');
-            fed_log($db, null, null, 'INFO', 'PARENT_JOIN_SUBMITTED', 'Join request submitted to ' . $parentUrl . '; local role remains Standalone until pairing completes.');
-            $_SESSION['fed_connections_flash'] = 'Parent join request submitted. This server remains Standalone until the parent approves and pairing completes.';
-        } elseif ($action === 'poll_parent') {
-            $result = connections_poll_parent($db);
-            $_SESSION['fed_connections_flash'] = (string)($result['message'] ?? 'Parent join status refreshed.');
-        } elseif ($action === 'cancel_parent_join') {
-            $parentUrl = trim((string)fed_setting($db, 'main_parent_url', ''));
-            $requestId = (int)fed_setting($db, 'main_parent_join_request_id', '0');
-            $requestToken = trim((string)fed_setting($db, 'main_parent_join_request_token', ''));
-            $identity = fed_ensure_identity($db);
-            $remoteMessage = '';
-            if ($parentUrl !== '' && $requestId > 0 && $requestToken !== '') {
-                try {
-                    $remote = connections_post_json($db, connections_parent_url($parentUrl) . '/api/federation/join-request-cancel.php', [
-                        'request_id' => $requestId,
-                        'site_id' => (string)$identity['site_id'],
-                        'request_token' => $requestToken,
-                    ]);
-                    $remoteMessage = !empty($remote['ok']) ? ' The parent request was cancelled.' : ' The local request was cleared; parent cancellation returned an error.';
-                } catch (Throwable $ignored) {
-                    $remoteMessage = ' The local request was cleared; the parent could not be contacted.';
-                }
-            }
-            federation_clear_parent_join_state($db);
-            federation_set_site_role($db, 'standalone');
-            fed_log($db, null, null, 'INFO', 'PARENT_JOIN_CANCELLED', 'Pending parent join request cancelled locally.');
-            $_SESSION['fed_connections_flash'] = 'Pending parent join request removed.' . $remoteMessage;
-        } elseif ($action === 'set_join_requests') {
-            if (!federation_can_accept_children($db)) {
-                throw new RuntimeException('A Child or a server joining a Parent cannot accept child connections.');
-            }
-            $enabled = (string)($_POST['enabled'] ?? '0') === '1' ? '1' : '0';
-            fed_set_setting($db, 'join_requests_enabled', $enabled);
-            $_SESSION['fed_connections_flash'] = $enabled === '1' ? 'Child join requests enabled.' : 'Child join requests disabled.';
-        } elseif (in_array($action, ['approve_child', 'deny_child'], true)) {
-            $requestId = (int)($_POST['request_id'] ?? 0);
-            $request = catalog_one($db, 'SELECT * FROM ue_federation_join_requests WHERE id=?', [$requestId]);
-            if (!$request) {
-                throw new RuntimeException('Child join request not found.');
-            }
-            if ($action === 'approve_child') {
-                connections_approve_child($db, $request);
-                $_SESSION['fed_connections_flash'] = 'Child approved. This server is now a Parent.';
-            } else {
-                $db->prepare('UPDATE ue_federation_join_requests SET status="denied", admin_notes=?, claim_token_hash=NULL, claim_expires_at=NULL WHERE id=?')
-                    ->execute([trim((string)($_POST['admin_notes'] ?? 'Denied by parent administrator.')), $requestId]);
-                fed_log($db, null, null, 'INFO', 'JOIN_REQUEST_DENIED', 'Child join request #' . $requestId . ' denied.');
-                $_SESSION['fed_connections_flash'] = 'Child join request denied.';
-            }
-        } elseif (in_array($action, ['toggle_peer', 'update_child', 'remove_peer', 'test_peer', 'refresh_peer'], true)) {
-            $peer = connections_peer($db, (int)($_POST['peer_id'] ?? 0));
-            $role = federation_site_role($db);
-            if (($role === 'child' && (string)$peer['peer_role'] !== 'parent') || ($role === 'parent' && (string)$peer['peer_role'] !== 'child')) {
-                throw new RuntimeException('This connection does not belong to the current federation role.');
-            }
-            if ($action === 'toggle_peer') {
-                $newState = (int)$peer['is_active'] === 1 ? 0 : 1;
-                $db->prepare('UPDATE ue_federation_peers SET is_active=? WHERE id=?')->execute([$newState, (int)$peer['id']]);
-                $_SESSION['fed_connections_flash'] = $newState ? 'Connection enabled.' : 'Connection disabled.';
-            } elseif ($action === 'update_child') {
-                if ($role !== 'parent' || (string)$peer['peer_role'] !== 'child') {
-                    throw new RuntimeException('Only a Parent may edit an established child.');
-                }
-                $name = trim((string)($_POST['site_name'] ?? ''));
-                $url = rtrim(trim((string)($_POST['site_url'] ?? '')), '/');
-                if ($name === '' || $url === '') {
-                    throw new RuntimeException('Child name and URL are required.');
-                }
-                $db->prepare('UPDATE ue_federation_peers SET site_name=?, site_url=? WHERE id=?')->execute([$name, $url, (int)$peer['id']]);
-                $_SESSION['fed_connections_flash'] = 'Child connection updated.';
-            } elseif ($action === 'remove_peer') {
-                federation_remove_peer($db, $peer);
-                $_SESSION['fed_connections_flash'] = (string)$peer['peer_role'] === 'parent' ? 'Disconnected from parent.' : 'Child connection removed.';
-            } elseif ($action === 'test_peer') {
-                $result = fed_http_post_signed(
-                    rtrim((string)$peer['site_url'], '/') . '/api/federation/ping.php',
-                    (string)fed_setting($db, 'site_id', ''),
-                    federation_peer_stored_signing_secret($db, $peer),
-                    ['tested_at' => date('c')]
-                );
-                if (empty($result['ok'])) {
-                    throw new RuntimeException('Connection test failed: ' . (string)($result['error'] ?? 'unknown error'));
-                }
-                $_SESSION['fed_connections_flash'] = 'Connection test succeeded: ' . (string)($result['message'] ?? 'pong');
-            } else {
-                $local = federation_pull_inventory_from_peer($db, (int)$peer['id']);
-                if ((string)$peer['peer_role'] === 'child') {
-                    $remote = federation_request_child_refresh_parent_inventory($db, (int)$peer['id']);
-                    $_SESSION['fed_connections_flash'] = 'Inventories refreshed: received ' . (int)($local['received'] ?? 0) . ' child rows; child received ' . (int)($remote['received'] ?? 0) . ' parent rows.';
-                } else {
-                    $push = federation_push_inventory_to_parent($db, (int)$peer['id']);
-                    $_SESSION['fed_connections_flash'] = 'Parent inventory refreshed; local inventory push result: ' . (!empty($push['ok']) ? 'success' : 'failed') . '.';
-                }
-            }
-        } elseif ($action === 'stop_parent') {
-            if (federation_site_role($db) !== 'parent') {
-                throw new RuntimeException('This server is not a Parent.');
-            }
-            if (federation_child_peers($db, false) !== []) {
-                throw new RuntimeException('Remove all established children before leaving Parent mode.');
-            }
-            $pending = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_join_requests WHERE status IN ("pending","approved")')['c'] ?? 0);
-            if ($pending > 0) {
-                throw new RuntimeException('Deny or expire all pending/approved child requests before leaving Parent mode.');
-            }
-            fed_set_setting($db, 'join_requests_enabled', '0');
-            federation_set_site_role($db, 'standalone');
-            $_SESSION['fed_connections_flash'] = 'Parent mode disabled. This server is now Standalone.';
-        } else {
-            throw new RuntimeException('Unknown federation connection action.');
-        }
-
+        $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+        $_SESSION['fed_connections_flash'] = (new CatalogFederationConnectionActions($db))
+            ->handle($_POST, $userId);
         header('Location: connections.php');
         exit;
     }
@@ -339,10 +48,7 @@ try {
     $children = federation_child_peers($db, false);
     $joinStatus = federation_parent_join_status($db);
     $joinRequestsEnabled = (string)fed_setting($db, 'join_requests_enabled', '0') === '1';
-    $incoming = catalog_all(
-        $db,
-        'SELECT * FROM ue_federation_join_requests ORDER BY FIELD(status,"pending","approved","claimed","denied","expired"), created_at DESC, id DESC LIMIT 200'
-    );
+    $incoming = (new CatalogFederationConnectionQuery($db))->incomingJoinRequests(200);
 
     catalog_head('Federation Connections');
     catalog_flash($_SESSION['fed_connections_flash'] ?? null);
