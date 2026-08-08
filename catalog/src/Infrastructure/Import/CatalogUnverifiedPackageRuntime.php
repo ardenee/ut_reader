@@ -2,14 +2,15 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Provides one explicit adapter for the established Unreal package/scanner and unverified-storage contracts.
- * Why: Namespaced import services should not scatter dependencies on procedural compatibility functions throughout their implementation.
- * Role: Infrastructure compatibility boundary; callers depend on methods, allowing remaining procedural scanner/storage code to be replaced independently.
+ * Why: Namespaced import services should not scatter procedural compatibility dependencies throughout their implementation.
+ * Role: Infrastructure compatibility boundary for package parsing and unverified queue storage.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
 final class CatalogUnverifiedPackageRuntime
@@ -21,7 +22,7 @@ final class CatalogUnverifiedPackageRuntime
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         require_once dirname(__DIR__, 3) . '/lib/GameProfiles.php';
         require_once dirname(__DIR__, 3) . '/lib/CatalogScanner.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
@@ -34,12 +35,12 @@ final class CatalogUnverifiedPackageRuntime
 
     public function bucketDirectory(bool $create): string
     {
-        return \uvf_upload_bucket_dir($this->config, $create);
+        return CatalogUnverifiedQueueStorage::uploadBucketDirectory($this->config, $create);
     }
 
     public function pathInside(string $path, string $root): bool
     {
-        return \uvf_path_inside($path, $root);
+        return CatalogUnverifiedQueueStorage::pathInside($path, $root);
     }
 
     public function cleanFilename(string $name): string
@@ -49,12 +50,12 @@ final class CatalogUnverifiedPackageRuntime
 
     public function safeQueueName(string $name): string
     {
-        return \uvf_safe_queue_name($name);
+        return CatalogUnverifiedQueueStorage::safeQueueName($name);
     }
 
     public function uniqueDestination(string $directory, string $queueName): string
     {
-        return \uvf_unique_destination($directory, $queueName);
+        return CatalogUnverifiedQueueStorage::uniqueDestination($directory, $queueName);
     }
 
     public function queueKey(int $queueGameId, string $queueName): string

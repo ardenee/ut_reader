@@ -21,7 +21,6 @@ final class CatalogUnverifiedQueueMutationService
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
@@ -40,8 +39,11 @@ final class CatalogUnverifiedQueueMutationService
             throw new RuntimeException('The file is already in this game’s unverified queue.');
         }
 
-        $targetDir = \uvf_unverified_dir($this->config, $target, true);
-        $destination = \uvf_unique_destination($targetDir, (string)$source['queue_name']);
+        $targetDir = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $target, true);
+        $destination = CatalogUnverifiedQueueStorage::uniqueDestination(
+            $targetDir,
+            (string)$source['queue_name']
+        );
         if (!@rename((string)$source['path'], $destination)) {
             throw new RuntimeException('Could not move the unverified package to the target queue.');
         }

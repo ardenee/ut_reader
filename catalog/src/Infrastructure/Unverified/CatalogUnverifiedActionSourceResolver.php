@@ -14,19 +14,18 @@ use RuntimeException;
 
 final class CatalogUnverifiedActionSourceResolver
 {
-    /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         require_once dirname(__DIR__, 3) . '/lib/CatalogScanner.php';
     }
 
     /** @return array<string,mixed> */
     public function resolve(string $token): array
     {
-        $decoded = \uvf_base64url_decode($token);
+        $decoded = CatalogUnverifiedQueueStorage::base64UrlDecode($token);
         $payload = $decoded === null ? null : json_decode($decoded, true);
         if (!is_array($payload)) {
             throw new RuntimeException('Invalid unverified file reference.');
@@ -42,7 +41,7 @@ final class CatalogUnverifiedActionSourceResolver
         }
 
         if ($gameId === 0) {
-            $game = \uvf_bucket_game();
+            $game = CatalogUnverifiedQueueStorage::bucketGame();
         } else {
             $game = \catalog_one(
                 $this->db,
@@ -54,9 +53,9 @@ final class CatalogUnverifiedActionSourceResolver
             }
         }
 
-        $directory = \uvf_unverified_dir($this->config, $game);
+        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $game);
         $path = $directory . DIRECTORY_SEPARATOR . $queueName;
-        if (!is_file($path) || !\uvf_path_inside($path, $directory)) {
+        if (!is_file($path) || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
             throw new RuntimeException('The selected unverified file is no longer available.');
         }
 
@@ -67,12 +66,14 @@ final class CatalogUnverifiedActionSourceResolver
         );
         $originalName = trim((string)($row['original_name'] ?? ''));
         if ($originalName === '') {
-            $originalName = \uvf_original_name_from_queue_name($queueName);
+            $originalName = CatalogUnverifiedQueueStorage::originalNameFromQueueName($queueName);
         }
 
         $reasonPath = $path . '.txt';
         $reason = trim((string)($row['unverified_reason'] ?? ''));
-        if ($reason === '' && is_file($reasonPath) && \uvf_path_inside($reasonPath, $directory)) {
+        if ($reason === ''
+            && is_file($reasonPath)
+            && CatalogUnverifiedQueueStorage::pathInside($reasonPath, $directory)) {
             $reason = trim((string)@file_get_contents($reasonPath, false, null, 0, 65535));
         }
 

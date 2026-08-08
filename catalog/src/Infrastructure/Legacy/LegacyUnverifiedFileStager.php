@@ -13,6 +13,7 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Application\Unverified\Contract\UnverifiedFileStager;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
 final class LegacyUnverifiedFileStager implements UnverifiedFileStager
@@ -24,7 +25,7 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once __DIR__ . '/../../../lib/UnverifiedFileManager.php';
+        require_once __DIR__ . '/../../../lib/CatalogSupport.php';
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
@@ -75,7 +76,12 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
                 ];
             }
 
-            $stored = \uvf_store_bucket_upload($this->config, $temporaryPath, $originalName, $reason);
+            $stored = CatalogUnverifiedQueueStorage::storeBucketUpload(
+                $this->config,
+                $temporaryPath,
+                $originalName,
+                $reason
+            );
             $indexed = $this->indexStored(
                 0,
                 (string)$stored['queue_name'],
@@ -151,14 +157,14 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
             return null;
         }
 
-        $bucketRoot = \uvf_upload_bucket_dir($this->config, false);
+        $bucketRoot = CatalogUnverifiedQueueStorage::uploadBucketDirectory($this->config, false);
         foreach ($rows as $row) {
             $queueName = basename((string)($row['unverified_queue_name'] ?? ''));
             if ($queueName === '') {
                 continue;
             }
             $path = $bucketRoot . DIRECTORY_SEPARATOR . $queueName;
-            if (!is_file($path) || !\uvf_path_inside($path, $bucketRoot)) {
+            if (!is_file($path) || !CatalogUnverifiedQueueStorage::pathInside($path, $bucketRoot)) {
                 continue;
             }
             $physicalSize = filesize($path);
@@ -202,10 +208,10 @@ final class LegacyUnverifiedFileStager implements UnverifiedFileStager
             throw new RuntimeException('Target unverified queue game was not found.');
         }
 
-        $directory = \uvf_unverified_dir($this->config, $game, true);
+        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $game, true);
         $cleanName = \scanner_clean_original_filename($originalName);
-        $queueName = \uvf_safe_queue_name($cleanName);
-        $destination = \uvf_unique_destination($directory, $queueName);
+        $queueName = CatalogUnverifiedQueueStorage::safeQueueName($cleanName);
+        $destination = CatalogUnverifiedQueueStorage::uniqueDestination($directory, $queueName);
 
         if ($copySource) {
             $stored = @copy($sourcePath, $destination);
