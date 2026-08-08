@@ -100,9 +100,14 @@ function catalog_file_maintenance_source_relative_path(array $snapshot): string
 }
 
 /** @return list<int> */
-function catalog_file_maintenance_affected_ids(PDO $db, int $gameId, int $removedFileId, string $packageName): array
-{
-    if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
+function catalog_file_maintenance_affected_ids(
+    PDO $db,
+    int $gameId,
+    int $removedFileId,
+    string $packageName,
+    bool $deferDependencyRefresh = false
+): array {
+    if ($deferDependencyRefresh) {
         return [];
     }
 
