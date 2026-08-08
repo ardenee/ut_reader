@@ -13,6 +13,7 @@ use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCountCache;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobDisplayCountQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobPageQuery;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -253,46 +254,18 @@ try {
     $whereSql = implode(' AND ', $where);
     $baseWhereSql = implode(' AND ', $baseWhere);
 
-    // The UI polls every two seconds. These counters require grouping the whole
-    // selected queue and parsing result_json for completed outcome statuses, so
-    // short-cache them independently from the live page rows. The response shape
-    // remains identical; only aggregate freshness is bounded to 15 seconds.
+    // Aggregate tabs use the indexed generated display_status column. Result JSON
+    // is decoded only for the bounded rows that are actually rendered below.
     $countsCacheKey = json_encode(
         ['queue' => $queue, 'search' => $search],
         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
     );
+    $countQuery = new PdoBackgroundJobDisplayCountQuery($application->db);
     $counts = (new CatalogBackgroundJobCountCache($application->config))->remember(
         $countsCacheKey,
-        static function () use ($application, $fromSql, $baseWhereSql, $baseParams): array {
-            $counts = [
-                'all' => 0,
-                'queued' => 0,
-                'running' => 0,
-                'completed' => 0,
-                'failed' => 0,
-                'dead_letter' => 0,
-                'cancelled' => 0,
-            ];
-            $countSql = 'SELECT j.status,JSON_UNQUOTE(JSON_EXTRACT(j.result_json,"$.status")) result_status,COUNT(*) total '
-                . 'FROM ' . $fromSql . ($baseWhereSql !== '' ? ' WHERE ' . $baseWhereSql : '')
-                . ' GROUP BY j.status,result_status';
-            foreach (catalog_all($application->db, $countSql, $baseParams) as $countRow) {
-                $amount = (int)($countRow['total'] ?? 0);
-                $counts['all'] += $amount;
-                $group = CatalogJobDisplayStatus::group(
-                    (string)($countRow['status'] ?? ''),
-                    isset($countRow['result_status']) ? (string)$countRow['result_status'] : null
-                );
-                if (array_key_exists($group, $counts)) {
-                    $counts[$group] += $amount;
-                }
-            }
-            return $counts;
-        }
+        static fn(): array => $countQuery->counts($fromSql, $baseWhereSql, $baseParams)
     );
 
-    // The current filtered total is exactly one of the already-computed display
-    // groups, so do not issue a second COUNT(*) over the same queue on every poll.
     $totalKey = $status !== '' ? $status : 'all';
     $total = max(0, (int)($counts[$totalKey] ?? 0));
     $pages = max(1, (int)ceil($total / max(1, $perPage)));
@@ -318,7 +291,7 @@ try {
         $requestedPage = max(1, min($pages, $requestedPage));
     }
 
-    $displayStatusSql = CatalogJobDisplayStatus::sqlExpression();
+    $displayStatusSql = CatalogJobDisplayStatus::sqlExpression('j');
     $selectSql = 'SELECT j.id,j.queue_name,j.job_type,j.resource_class,j.resource_limit,j.concurrency_key,j.priority,j.status,'
         . $displayStatusSql . ' display_status,j.available_at,'
         . 'j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,j.last_heartbeat_at,j.recovery_count,'
