@@ -8,13 +8,13 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
-require_once __DIR__ . '/CatalogImport.php';
 
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationImportWorker;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferClient;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferStorage;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferWorker;
 use UnrealDb\Catalog\Infrastructure\Federation\PdoFederationTransferJobStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogPackageImportService;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 
 function federation_worker_incoming_dir(array $config): string
@@ -127,8 +127,7 @@ function federation_worker_stage_failed_import(
     $importWorker = new CatalogFederationImportWorker($db, $config);
     $queueGameId = $preferredGameId ?? $importWorker->preferredGameId($job);
     if ($queueGameId === null) {
-        $detected = catalog_import_detect_game(
-            $db,
+        $detected = (new CatalogPackageImportService($db, $config))->detectGame(
             (string)pathinfo($originalName, PATHINFO_EXTENSION)
         );
         $queueGameId = $detected ? (int)$detected['id'] : null;
