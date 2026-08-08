@@ -2,9 +2,9 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Defines the explicit internal operations shared by Upload Bucket identity-aware processing and metadata repair.
- * Why: These workflows previously reached private CatalogBucketUploadProcessor methods directly through ReflectionMethod.
- * Role: Infrastructure-only contract that decouples callers from private processor implementation details and makes the shared operations injectable/testable.
- * Audit: Keep this boundary internal to Infrastructure; remove the legacy adapter once the underlying hash/store/index responsibilities are extracted.
+ * Why: Hashing, physical storage and unverified indexing are separate production collaborators rather than private methods of a monolithic processor.
+ * Role: Infrastructure-only contract that keeps import orchestration injectable and testable.
+ * Audit: Authoritative Upload Bucket operations boundary; do not reintroduce reflection or parallel implementations.
  */
 declare(strict_types=1);
 
