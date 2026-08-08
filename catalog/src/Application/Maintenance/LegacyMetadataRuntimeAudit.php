@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `LegacyMetadataRuntimeAudit` for legacy metadata runtime audit.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Audits runtime references to retired/legacy metadata tables.
+ * Why: Verified catalogue reads must use compact metadata while explicitly identified unverified-staging paths may still use legacy projections.
+ * Role: Application maintenance audit enforcing the compact-metadata runtime boundary.
  */
 declare(strict_types=1);
 
@@ -46,23 +43,25 @@ final class LegacyMetadataRuntimeAudit
         'lib/CatalogLegacyDataAudit.php',
         'lib/CatalogPerformance.php',
         'lib/CatalogRuntimeSqlCompatibility.php',
-        'lib/CatalogUnverifiedGameMatches.php',
-        'lib/CatalogUnverifiedIndex.php',
         'lib/GameManagerLifecycle.php',
-        'unverified-file-details.php',
-        'unverified-files-action.php',
         'federation/docs.php',
         'src/Infrastructure/Persistence/PdoPackageTablePageQuery.php',
         'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
         'src/Infrastructure/Persistence/PdoDependencyResolver.php',
         'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
+        'src/Infrastructure/Persistence/PdoCatalogPackageTableWriter.php',
+        'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
         'src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
         'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
         'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
         'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
         'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
-        'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
+        'src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php',
+        'src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
+        'src/Infrastructure/Unverified/CatalogUnverifiedRenameService.php',
+        'src/Infrastructure/Unverified/PdoUnverifiedFileDetailsQuery.php',
+        'src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php',
         'lib/UnverifiedMetadataRepair.php',
         'bin/plan-legacy-table-space-reclaim.php',
         'bin/plan-mysql-space-release.php',
@@ -89,12 +88,12 @@ final class LegacyMetadataRuntimeAudit
         'lib/FederationDependencyDownloads.php',
         'lib/FederationWorker.php',
         'lib/ModPackageBuilder.php',
-        'lib/UnverifiedFileManager.php',
         'lib/UnverifiedObjectCheck.php',
         'library.php',
         'missing.php',
         'src/Application/Dashboard/CatalogDashboardStats.php',
         'src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php',
+        'src/Infrastructure/Unverified/CatalogUnverifiedQueueStorage.php',
     ];
 
     /**

@@ -12,9 +12,9 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadTransferStoreFactory;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
 
 catalog_start_session();
-require_once __DIR__ . '/lib/UnverifiedFileManager.php';
 
 function upload_bucket_v2_short_error(Throwable $error): string
 {
@@ -63,7 +63,7 @@ try {
         );
     }
 
-    $bucketDir = uvf_upload_bucket_dir($config, true);
+    $bucketDir = CatalogUnverifiedQueueStorage::uploadBucketDirectory($config, true);
     $bucketStats = upload_bucket_v2_stats($bucketDir);
     $allowedExtensions = (new CatalogUploadBucketFilePolicy($db, $config))->allowedExtensions();
     sort($allowedExtensions, SORT_NATURAL | SORT_FLAG_CASE);

@@ -1,17 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Repair Missing Unverified Metadata.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders Repair Missing Unverified Metadata.
+ * Why: Presentation selects a queue and renders candidates; inventory/schema policy lives in the repair service.
+ * Role: Thin admin UI over CatalogUnverifiedMetadataRepairService.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/UnverifiedMetadataRepair.php';
+
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataRepairService;
 
 try {
     $config = catalog_config();
@@ -19,7 +17,6 @@ try {
     if (!catalog_require_admin_page('Repair Missing Unverified Metadata')) {
         exit;
     }
-    catalog_unverified_schema_ensure($db);
 
     $sourceGameId = filter_input(INPUT_GET, 'source_game_id', FILTER_VALIDATE_INT);
     $sourceGameId = $sourceGameId === false || $sourceGameId === null ? -1 : (int)$sourceGameId;
@@ -28,11 +25,12 @@ try {
     }
 
     $games = catalog_all($db, 'SELECT id,name,slug FROM ue_games ORDER BY name');
-    if ($sourceGameId > 0 && !array_filter($games, static fn(array $game): bool => (int)$game['id'] === $sourceGameId)) {
+    if ($sourceGameId > 0
+        && !array_filter($games, static fn(array $game): bool => (int)$game['id'] === $sourceGameId)) {
         $sourceGameId = -1;
     }
 
-    $inventory = catalog_unverified_metadata_inventory($db, $config, $sourceGameId);
+    $inventory = (new CatalogUnverifiedMetadataRepairService($db, $config))->inventory($sourceGameId);
     $missing = array_values(array_filter(
         $inventory,
         static fn(array $item): bool => !empty($item['needs_repair'])
@@ -107,7 +105,8 @@ CSS;
             echo '</div></li>';
         }
         if (count($missing) > 500) {
-            echo '<li class="muted">+' . (count($missing) - 500) . ' additional incomplete files will also be queued.</li>';
+            echo '<li class="muted">+' . (count($missing) - 500)
+                . ' additional incomplete files will also be queued.</li>';
         }
         echo '</ol></div></section>';
     }

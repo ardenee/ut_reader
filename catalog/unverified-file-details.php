@@ -1,18 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Unverified:.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders details for one database-staged unverified package.
+ * Why: Presentation owns navigation/HTML while staged-row, match and table reads live in a dedicated query.
+ * Role: Thin Unverified File Details UI.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogUnverifiedIndex.php';
-require_once __DIR__ . '/lib/CatalogUnverifiedGameMatches.php';
+
+use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedFileDetailsQuery;
 
 function ufd_int(string $key, int $default = 0): int
 {
@@ -47,12 +44,14 @@ function ufd_match_text(array $row): string
     $rate = $row['match_percent'] === null
         ? ''
         : rtrim(rtrim(number_format((float)$row['match_percent'], 1), '0'), '.') . '%';
-    return (int)$row['exact_object_matches'] . ' / ' . $imports . ' exact' . ($rate !== '' ? ' (' . $rate . ')' : '');
+    return (int)$row['exact_object_matches'] . ' / ' . $imports . ' exact'
+        . ($rate !== '' ? ' (' . $rate . ')' : '');
 }
 
 function ufd_page_url(int $id, string $tab, int $page): string
 {
-    return 'unverified-file-details.php?' . http_build_query(['id' => $id, 'tab' => $tab, 'table_page' => $page]);
+    return 'unverified-file-details.php?'
+        . http_build_query(['id' => $id, 'tab' => $tab, 'table_page' => $page]);
 }
 
 try {
@@ -61,48 +60,27 @@ try {
     if (!catalog_require_admin_page('Unverified File Details')) {
         exit;
     }
-    catalog_unverified_schema_ensure($db);
 
     $id = ufd_int('id');
-    $tab = ufd_tab((string)($_GET['tab'] ?? ''));
-    $page = max(1, ufd_int('table_page', 1));
+    $requestedTab = ufd_tab((string)($_GET['tab'] ?? ''));
+    $requestedPage = max(1, ufd_int('table_page', 1));
     $limit = 250;
-
-    $file = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? AND scan_status="unverified" LIMIT 1', [$id]);
-    if (!$file) {
-        throw new RuntimeException('Unverified staging row not found.');
-    }
-
-    $queueName = (string)($file['unverified_queue_name'] ?? '');
-    $queueGameId = (int)($file['unverified_queue_game_id'] ?? 0);
-    $queueLabel = 'Upload Bucket';
-    if ($queueGameId > 0) {
-        $queueGame = catalog_one($db, 'SELECT name FROM ue_games WHERE id=?', [$queueGameId]);
-        $queueLabel = (string)($queueGame['name'] ?? ('Game #' . $queueGameId));
-    }
-
-    $matches = catalog_unverified_game_matches_v2($db, $id);
-    $possible = array_values(array_filter($matches, static fn(array $row): bool => (int)$row['rank'] <= 4));
-    $best = $possible[0] ?? null;
-
-    $tableName = match ($tab) {
-        'imports' => 'ue_imports',
-        'exports' => 'ue_exports',
-        default => 'ue_names',
-    };
-    $order = match ($tab) {
-        'imports' => 'import_index',
-        'exports' => 'export_index',
-        default => 'name_index',
-    };
-    $rowCount = catalog_count($db, 'SELECT COUNT(*) c FROM ' . $tableName . ' WHERE file_id=?', [$id]);
-    $pages = max(1, (int)ceil($rowCount / $limit));
-    $page = min($page, $pages);
-    $rows = catalog_all(
-        $db,
-        'SELECT * FROM ' . $tableName . ' WHERE file_id=? ORDER BY ' . $order . ' LIMIT ' . $limit . ' OFFSET ' . (($page - 1) * $limit),
-        [$id]
+    $model = (new PdoUnverifiedFileDetailsQuery($db, $config))->fetch(
+        $id,
+        $requestedTab,
+        $requestedPage,
+        $limit
     );
+    $file = $model['file'];
+    $queueName = (string)$model['queue_name'];
+    $queueLabel = (string)$model['queue_label'];
+    $matches = $model['matches'];
+    $best = $model['best'];
+    $rows = $model['rows'];
+    $rowCount = (int)$model['row_count'];
+    $pages = (int)$model['pages'];
+    $page = (int)$model['page'];
+    $tab = (string)$model['tab'];
 
     catalog_head('Unverified ' . (string)$file['package_name']);
     echo <<<'CSS'
@@ -149,7 +127,11 @@ CSS;
         [$label, $tone] = ufd_assessment($best);
         echo '<div class="ufd-decision"><span class="ufd-badge ' . catalog_h($tone) . '">' . catalog_h($label) . '</span><h2>' . catalog_h((string)$best['game_name']) . '</h2><p><strong>' . catalog_h(ufd_match_text($best)) . '</strong><br>' . (int)$best['owner_count'] . ' verified catalogue file(s) require this package.</p></div>';
     } else {
-        echo CatalogUi::alert('warning', 'No catalogue-backed target', 'No configured game has compatible profile evidence or imports requiring this exact package name.');
+        echo CatalogUi::alert(
+            'warning',
+            'No catalogue-backed target',
+            'No configured game has compatible profile evidence or imports requiring this exact package name.'
+        );
     }
     echo '</div></section></div>';
 
@@ -205,14 +187,25 @@ CSS;
         echo '</div></section>';
     }
 
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Stored package tables</h2><p>' . $rowCount . ' row(s) in ' . catalog_h(ucfirst($tab)) . '.</p></div></div><div class="ui-section__body">';
+    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Stored package tables</h2><p>'
+        . $rowCount . ' row(s) in ' . catalog_h(ucfirst($tab)) . '.</p></div></div><div class="ui-section__body">';
     echo '<nav class="ufd-tabs">';
-    foreach (['names' => (int)$file['name_count'], 'imports' => (int)$file['import_count'], 'exports' => (int)$file['export_count']] as $name => $count) {
-        echo '<a class="' . ($tab === $name ? 'active' : '') . '" href="' . catalog_h(ufd_page_url($id, $name, 1)) . '">' . catalog_h(ucfirst($name)) . ' (' . $count . ')</a>';
+    foreach ([
+        'names' => (int)$file['name_count'],
+        'imports' => (int)$file['import_count'],
+        'exports' => (int)$file['export_count'],
+    ] as $name => $count) {
+        echo '<a class="' . ($tab === $name ? 'active' : '') . '" href="'
+            . catalog_h(ufd_page_url($id, $name, 1)) . '">' . catalog_h(ucfirst($name))
+            . ' (' . $count . ')</a>';
     }
     echo '</nav>';
 
-    echo '<div class="ufd-pagination"><span>' . ($page > 1 ? '<a class="button secondary" href="' . catalog_h(ufd_page_url($id, $tab, $page - 1)) . '">Previous</a>' : '') . '</span><span>Page ' . $page . ' of ' . $pages . '</span><span>' . ($page < $pages ? '<a class="button secondary" href="' . catalog_h(ufd_page_url($id, $tab, $page + 1)) . '">Next</a>' : '') . '</span></div>';
+    echo '<div class="ufd-pagination"><span>'
+        . ($page > 1 ? '<a class="button secondary" href="' . catalog_h(ufd_page_url($id, $tab, $page - 1)) . '">Previous</a>' : '')
+        . '</span><span>Page ' . $page . ' of ' . $pages . '</span><span>'
+        . ($page < $pages ? '<a class="button secondary" href="' . catalog_h(ufd_page_url($id, $tab, $page + 1)) . '">Next</a>' : '')
+        . '</span></div>';
 
     if ($rows === []) {
         echo CatalogUi::emptyState('No stored rows', 'The package reader did not produce any rows for this table.');
@@ -229,11 +222,28 @@ CSS;
         foreach ($rows as $row) {
             echo '<tr>';
             if ($tab === 'names') {
-                echo '<td class="mono">' . (int)$row['name_index'] . '</td><td class="mono">' . catalog_h((string)$row['name_text']) . '</td><td class="mono">' . catalog_h((string)($row['flags'] ?? '')) . '</td>';
+                echo '<td class="mono">' . (int)$row['name_index'] . '</td><td class="mono">'
+                    . catalog_h((string)$row['name_text']) . '</td><td class="mono">'
+                    . catalog_h((string)($row['flags'] ?? '')) . '</td>';
             } elseif ($tab === 'imports') {
-                echo '<td class="mono">' . (int)$row['import_index'] . '</td><td class="mono">' . catalog_h((string)$row['class_package']) . '</td><td class="mono">' . catalog_h((string)$row['class_name']) . '</td><td class="mono">' . catalog_h((string)$row['object_name']) . '</td><td class="mono">' . (int)$row['outer_index'] . '</td><td class="mono">' . catalog_h((string)$row['root_package']) . '</td><td class="mono ufd-path">' . catalog_h((string)$row['relative_object_path']) . '</td><td class="mono ufd-path">' . catalog_h((string)$row['full_path']) . '</td>';
+                echo '<td class="mono">' . (int)$row['import_index'] . '</td><td class="mono">'
+                    . catalog_h((string)$row['class_package']) . '</td><td class="mono">'
+                    . catalog_h((string)$row['class_name']) . '</td><td class="mono">'
+                    . catalog_h((string)$row['object_name']) . '</td><td class="mono">'
+                    . (int)$row['outer_index'] . '</td><td class="mono">'
+                    . catalog_h((string)$row['root_package']) . '</td><td class="mono ufd-path">'
+                    . catalog_h((string)$row['relative_object_path']) . '</td><td class="mono ufd-path">'
+                    . catalog_h((string)$row['full_path']) . '</td>';
             } else {
-                echo '<td class="mono">' . (int)$row['export_index'] . '</td><td class="mono ufd-path">' . catalog_h((string)$row['class_name']) . '</td><td class="mono">' . catalog_h((string)$row['object_name']) . '</td><td class="mono">' . (int)$row['outer_index'] . '</td><td class="mono ufd-path">' . catalog_h((string)$row['local_path']) . '</td><td class="mono ufd-path">' . catalog_h((string)$row['full_path']) . '</td><td class="mono">' . catalog_h((string)($row['object_flags'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_size'] ?? '')) . '</td><td class="mono">' . catalog_h((string)($row['serial_offset'] ?? '')) . '</td>';
+                echo '<td class="mono">' . (int)$row['export_index'] . '</td><td class="mono ufd-path">'
+                    . catalog_h((string)$row['class_name']) . '</td><td class="mono">'
+                    . catalog_h((string)$row['object_name']) . '</td><td class="mono">'
+                    . (int)$row['outer_index'] . '</td><td class="mono ufd-path">'
+                    . catalog_h((string)$row['local_path']) . '</td><td class="mono ufd-path">'
+                    . catalog_h((string)$row['full_path']) . '</td><td class="mono">'
+                    . catalog_h((string)($row['object_flags'] ?? '')) . '</td><td class="mono">'
+                    . catalog_h((string)($row['serial_size'] ?? '')) . '</td><td class="mono">'
+                    . catalog_h((string)($row['serial_offset'] ?? '')) . '</td>';
             }
             echo '</tr>';
         }

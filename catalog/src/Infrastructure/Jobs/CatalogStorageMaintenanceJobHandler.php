@@ -1,14 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogStorageMaintenanceJobHandler` for catalog storage maintenance job
- *          handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Handles durable storage reconciliation and stale-artifact pruning jobs.
+ * Why: Storage maintenance belongs in namespaced infrastructure rather than procedural scanner/index facades.
+ * Role: Infrastructure job handler for unverified reconciliation and artifact pruning.
  */
 declare(strict_types=1);
 
@@ -21,19 +16,29 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
 final class CatalogStorageMaintenanceJobHandler implements JobHandler
 {
+    private readonly CatalogUnverifiedStagingIndex $staging;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
+        $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
     public function supports(string $jobType): bool
     {
-        return in_array($jobType, [JobType::RECONCILE_UNVERIFIED_STORAGE, JobType::PRUNE_STALE_ARTIFACTS], true);
+        return in_array(
+            $jobType,
+            [JobType::RECONCILE_UNVERIFIED_STORAGE, JobType::PRUNE_STALE_ARTIFACTS],
+            true
+        );
     }
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
@@ -47,24 +52,26 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
 
     private function reconcileUnverified(ClaimedJob $job, JobExecutionContext $context): array
     {
-        require_once __DIR__ . '/../../../lib/CatalogSupport.php';
-        require_once __DIR__ . '/../../../lib/CatalogUnverifiedIndex.php';
-
         $limit = max(1, min((int)($job->payload['max_files'] ?? 1000), 10000));
-        $storage = rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
-        $games = \catalog_all($this->db, 'SELECT id,name,slug FROM ue_games ORDER BY id');
+        $games = \catalog_all($this->db, 'SELECT id,name,slug,profile_id FROM ue_games ORDER BY id');
         $candidates = [];
         foreach ($games as $game) {
-            $directory = $storage . DIRECTORY_SEPARATOR . 'games' . DIRECTORY_SEPARATOR . (string)$game['slug'] . DIRECTORY_SEPARATOR . 'unverified';
-            if (!is_dir($directory)) {
+            $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory(
+                $this->config,
+                $game,
+                false
+            );
+            if (!is_dir($directory) || !is_readable($directory)) {
                 continue;
             }
             foreach (scandir($directory) ?: [] as $name) {
-                if ($name === '.' || $name === '..' || str_ends_with($name, '.txt')) {
+                if ($name === '.' || $name === '..' || str_ends_with(strtolower($name), '.txt')) {
                     continue;
                 }
                 $path = $directory . DIRECTORY_SEPARATOR . $name;
-                if (!is_file($path) || is_link($path)) {
+                if (!is_file($path)
+                    || is_link($path)
+                    || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
                     continue;
                 }
                 $candidates[] = ['game' => $game, 'name' => $name, 'path' => $path];
@@ -84,20 +91,22 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
             'done' => 0,
             'total' => max(1, $total),
             'percent' => 0,
-            'message' => $total > 0 ? 'Reconciling ' . $total . ' unverified files.' : 'No unverified files require reconciliation.',
+            'message' => $total > 0
+                ? 'Reconciling ' . $total . ' unverified files.'
+                : 'No unverified files require reconciliation.',
         ]);
 
         foreach ($candidates as $index => $candidate) {
             $game = $candidate['game'];
             $name = (string)$candidate['name'];
             $path = (string)$candidate['path'];
-            $originalName = preg_replace('/^\d{8}_\d{6}_[a-f0-9]{8}_/i', '', $name) ?: $name;
+            $originalName = CatalogUnverifiedQueueStorage::originalNameFromQueueName($name);
             $notePath = $path . '.txt';
-            $reason = is_file($notePath) ? trim((string)file_get_contents($notePath)) : 'Recovered from unverified filesystem reconciliation.';
+            $reason = is_file($notePath)
+                ? trim((string)file_get_contents($notePath))
+                : 'Recovered from unverified filesystem reconciliation.';
             try {
-                $result = \catalog_unverified_index_path(
-                    $this->db,
-                    $this->config,
+                $result = $this->staging->indexPath(
                     (int)$game['id'],
                     $name,
                     $path,

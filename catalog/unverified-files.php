@@ -1,18 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Unverified Files.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders the paginated Unverified Files administration page.
+ * Why: Presentation parses filters and renders rows; database/queue hydration belongs to the page query.
+ * Role: Web UI entry point over PdoUnverifiedFilesPageQuery.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/UnverifiedFileManager.php';
-require_once __DIR__ . '/lib/CatalogUnverifiedIndex.php';
+
+use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedFilesPageQuery;
 
 function uv_list_int(string $key, int $default = 0): int
 {
@@ -66,123 +63,34 @@ try {
     if (!catalog_require_admin_page('Unverified Files')) {
         exit;
     }
-    catalog_unverified_schema_ensure($db);
 
     $sourceGameId = uv_list_int('source_game_id', 0);
     $extension = strtolower(uv_list_text('extension'));
     $engine = strtoupper(uv_list_text('engine'));
     $version = uv_list_text('version');
     $licensee = uv_list_text('licensee');
-    $page = max(1, uv_list_int('queue_page', 1));
-    $limit = max(50, min(1000, uv_list_int('limit', 100)));
+    $requestedPage = max(1, uv_list_int('queue_page', 1));
+    $requestedLimit = max(50, min(1000, uv_list_int('limit', 100)));
 
-    $games = catalog_all(
-        $db,
-        'SELECT g.id,g.name,g.slug,g.profile_id,p.engine_key'
-        . ' FROM ue_games g'
-        . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1'
-        . ' ORDER BY g.name'
+    $model = (new PdoUnverifiedFilesPageQuery($db, $config))->fetch(
+        $sourceGameId,
+        $extension,
+        $engine,
+        $version,
+        $licensee,
+        $requestedPage,
+        $requestedLimit
     );
-    $gamesById = [];
-    foreach ($games as $game) {
-        $gamesById[(int)$game['id']] = $game;
-    }
-    $bucketGame = uvf_bucket_game();
-
-    $where = ['f.scan_status="unverified"'];
-    $args = [];
-    if ($sourceGameId === -1) {
-        $where[] = 'f.unverified_queue_game_id=0';
-    } elseif ($sourceGameId > 0) {
-        $where[] = 'f.unverified_queue_game_id=?';
-        $args[] = $sourceGameId;
-    }
-    if ($extension !== '') {
-        $where[] = 'f.extension=?';
-        $args[] = $extension;
-    }
-    if ($engine !== '') {
-        if ($engine === 'UNKNOWN') {
-            $where[] = '(f.detected_engine_key IS NULL OR f.detected_engine_key="")';
-        } else {
-            $where[] = 'f.detected_engine_key=?';
-            $args[] = $engine;
-        }
-    }
-    if ($version !== '') {
-        if (strtolower($version) === 'unknown') {
-            $where[] = 'f.detected_package_version IS NULL';
-        } elseif (preg_match('/^-?\d+$/', $version) === 1) {
-            $where[] = 'f.detected_package_version=?';
-            $args[] = (int)$version;
-        } else {
-            $where[] = '1=0';
-        }
-    }
-    if ($licensee !== '') {
-        if (strtolower($licensee) === 'unknown') {
-            $where[] = 'f.detected_licensee_version IS NULL';
-        } elseif (preg_match('/^-?\d+$/', $licensee) === 1) {
-            $where[] = 'f.detected_licensee_version=?';
-            $args[] = (int)$licensee;
-        } else {
-            $where[] = '1=0';
-        }
-    }
-    $whereSql = implode(' AND ', $where);
-
-    $countRow = catalog_one($db, 'SELECT COUNT(*) c FROM ue_files f WHERE ' . $whereSql, $args);
-    $total = (int)($countRow['c'] ?? 0);
-    $pages = max(1, (int)ceil($total / $limit));
-    $page = min($page, $pages);
-    $offset = ($page - 1) * $limit;
-
-    $items = catalog_all(
-        $db,
-        'SELECT f.id,f.package_name,f.original_name,f.stored_name,f.extension,f.md5,f.package_guid,'
-        . 'f.file_size,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
-        . 'f.name_count,f.import_count,f.export_count,f.unverified_queue_key,'
-        . 'f.unverified_queue_game_id,f.unverified_queue_name,f.unverified_reason'
-        . ' FROM ue_files f WHERE ' . $whereSql
-        . ' ORDER BY f.id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
-        $args
-    );
-
-    /* One package-reference query for the visible page; no per-file review analysis. */
-    $referenceMatches = uvf_reference_matches(
-        $db,
-        array_values(array_unique(array_map(
-            static fn(array $item): string => trim((string)($item['package_name'] ?? '')),
-            $items
-        )))
-    );
-
-    $summary = catalog_one(
-        $db,
-        'SELECT COUNT(*) indexed_count,COALESCE(SUM(file_size),0) indexed_bytes,'
-        . 'SUM(CASE WHEN unverified_queue_game_id=0 THEN 1 ELSE 0 END) bucket_count'
-        . ' FROM ue_files WHERE scan_status="unverified"'
-    ) ?: [];
-
-    $optionRows = catalog_all(
-        $db,
-        'SELECT extension,detected_engine_key FROM ue_files'
-        . ' WHERE scan_status="unverified" GROUP BY extension,detected_engine_key'
-    );
-    $extensionOptions = [];
-    $engineOptions = [];
-    foreach ($optionRows as $optionRow) {
-        $value = strtolower(trim((string)($optionRow['extension'] ?? '')));
-        if ($value !== '') {
-            $extensionOptions[$value] = true;
-        }
-        $value = strtoupper(trim((string)($optionRow['detected_engine_key'] ?? '')));
-        $engineOptions[$value !== '' ? $value : 'UNKNOWN'] = true;
-    }
-    $extensionOptions = array_keys($extensionOptions);
-    $engineOptions = array_keys($engineOptions);
-    sort($extensionOptions);
-    sort($engineOptions);
+    $games = $model['games'];
+    $total = (int)$model['total'];
+    $pages = (int)$model['pages'];
+    $page = (int)$model['page'];
+    $limit = (int)$model['limit'];
+    $items = $model['items'];
+    $referenceMatches = $model['reference_matches'];
+    $summary = $model['summary'];
+    $extensionOptions = $model['extension_options'];
+    $engineOptions = $model['engine_options'];
 
     catalog_head('Unverified Files');
     echo <<<'CSS'
@@ -270,25 +178,20 @@ CSS;
         . '</div>';
 
     if ($items === []) {
-        echo CatalogUi::emptyState('No indexed queued files', 'No indexed unverified files match the selected filters. Use Index existing queue files for physical files not yet recorded in the database.');
+        echo CatalogUi::emptyState(
+            'No indexed queued files',
+            'No indexed unverified files match the selected filters. Use Index existing queue files for physical files not yet recorded in the database.'
+        );
     } else {
         echo '<div class="table-wrap"><table class="uv-table"><thead><tr>'
             . '<th></th><th>Physical queue</th><th>File</th><th>Identity</th><th>Database</th>'
             . '<th>Detected</th><th>Size</th><th>Possible games</th></tr></thead><tbody>';
 
         foreach ($items as $item) {
-            $queueGameId = (int)($item['unverified_queue_game_id'] ?? 0);
-            $queueName = basename(trim((string)($item['unverified_queue_name'] ?? '')));
-            if ($queueName === '') {
-                $queueName = basename((string)($item['stored_name'] ?? $item['original_name'] ?? ''));
-            }
-            $queueGame = $queueGameId === 0
-                ? $bucketGame
-                : ($gamesById[$queueGameId] ?? ['name' => 'Unknown queue #' . $queueGameId, 'slug' => 'unknown-' . $queueGameId]);
-            $dir = uvf_unverified_dir($config, $queueGame, false);
-            $path = $dir . DIRECTORY_SEPARATOR . $queueName;
-            $exists = $queueName !== '' && is_file($path) && !is_link($path) && uvf_path_inside($path, $dir);
-            $token = uvf_token($queueGameId, $queueName);
+            $queueGame = is_array($item['queue_game'] ?? null) ? $item['queue_game'] : [];
+            $queueName = (string)($item['queue_name'] ?? '');
+            $exists = !empty($item['physical_exists']);
+            $token = (string)($item['queue_token'] ?? '');
             $detailsUrl = 'unverified-file-details.php?id=' . (int)$item['id'];
             $packageKey = strtolower(trim((string)($item['package_name'] ?? '')));
             $possibleGames = $referenceMatches[$packageKey] ?? [];
@@ -297,8 +200,8 @@ CSS;
             echo '<td><input class="unverified-select" type="checkbox" name="tokens[]" value="'
                 . catalog_h($token) . '" aria-label="Select ' . catalog_h((string)$item['original_name']) . '"'
                 . ($exists ? '' : ' disabled') . '></td>';
-            echo '<td><strong>' . catalog_h((string)$queueGame['name']) . '</strong>'
-                . '<small class="muted">' . catalog_h((string)$queueGame['slug']) . '/unverified</small><br>'
+            echo '<td><strong>' . catalog_h((string)($queueGame['name'] ?? 'Unknown queue')) . '</strong>'
+                . '<small class="muted">' . catalog_h((string)($queueGame['slug'] ?? 'unknown')) . '/unverified</small><br>'
                 . ($exists ? '<span class="uv-badge good">Present</span>' : '<span class="uv-badge bad">Missing physical file</span>')
                 . '</td>';
             echo '<td class="uv-file"><strong><a href="' . catalog_h($detailsUrl) . '">'
