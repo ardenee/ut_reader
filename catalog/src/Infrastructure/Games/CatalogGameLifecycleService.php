@@ -168,7 +168,7 @@ final class CatalogGameLifecycleService
         int $startPercent,
         int $endPercent
     ): array {
-        $unverifiedRows = $this->unverifiedRows($gameId);
+        $unverifiedRows = self::readUnverifiedRows($this->db, $gameId);
         $unverifiedBytes = array_sum(array_column($unverifiedRows, 'file_size'));
 
         $pakCount = 0;
@@ -260,21 +260,22 @@ final class CatalogGameLifecycleService
     }
 
     /** @return list<array{id:int,relative_path:string,file_size:int}> */
-    public function unverifiedRows(int $gameId): array
+    public static function readUnverifiedRows(PDO $db, int $gameId): array
     {
+        $statement = $db->prepare(
+            'SELECT id,relative_path,file_size FROM ue_files '
+                . 'WHERE game_id IS NULL AND scan_status="unverified" '
+                . 'AND unverified_queue_game_id=? ORDER BY id'
+        );
+        $statement->execute([$gameId]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
         return array_map(
             static fn(array $row): array => [
                 'id' => (int)$row['id'],
                 'relative_path' => (string)($row['relative_path'] ?? ''),
                 'file_size' => (int)($row['file_size'] ?? 0),
             ],
-            \catalog_all(
-                $this->db,
-                'SELECT id,relative_path,file_size FROM ue_files '
-                    . 'WHERE game_id IS NULL AND scan_status="unverified" '
-                    . 'AND unverified_queue_game_id=? ORDER BY id',
-                [$gameId]
-            )
+            is_array($rows) ? $rows : []
         );
     }
 }
