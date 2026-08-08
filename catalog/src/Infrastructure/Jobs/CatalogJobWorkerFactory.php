@@ -16,7 +16,7 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Persistence\WorkerJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogJobWorkerFactory
 {
@@ -101,7 +101,7 @@ final class CatalogJobWorkerFactory
         ];
 
         return new JobWorker(
-            new WorkerJobQueue($db),
+            new PdoJobQueue($db),
             $handlersByType,
             $queueName,
             $workerId,
