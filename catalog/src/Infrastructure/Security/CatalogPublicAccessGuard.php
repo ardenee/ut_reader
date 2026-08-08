@@ -15,12 +15,12 @@ use Throwable;
 
 final class CatalogPublicAccessGuard
 {
-    private readonly CatalogPublicAccessSettingsService $settings;
+    private readonly CatalogPublicAccessSettingsStore $settings;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly array $config)
     {
-        $this->settings = new CatalogPublicAccessSettingsService($config);
+        $this->settings = new CatalogPublicAccessSettingsStore($config);
     }
 
     public function clientIp(): string
