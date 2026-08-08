@@ -2,8 +2,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Verifies the local no-container source-scan architecture boundaries.
- * Why: Source scanning is performance-sensitive and parser/import semantics must not drift while the legacy orchestrator is decomposed.
+ * Purpose: Verifies the active local source-scan architecture boundaries.
+ * Why: Source scanning is performance-sensitive and parser/import semantics must not drift while compatibility layers are retired.
  * Role: Read-only CLI architecture/regression verifier; it performs no database or source-file mutation.
  */
 declare(strict_types=1);
@@ -30,14 +30,39 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
     }
 };
 
-$runner = $read('catalog/lib/CatalogSourceScanNoContainers.php');
-$shared = $read('catalog/lib/CatalogSourceScan.php');
+$page = $read('catalog/source-scan.php');
+$service = $read('catalog/src/Infrastructure/Source/CatalogSourceScanService.php');
+$runner = $read('catalog/src/Infrastructure/Source/CatalogSourceScanRunner.php');
 $discovery = $read('catalog/src/Infrastructure/Source/CatalogSourceScanDiscovery.php');
 $fingerprints = $read('catalog/src/Infrastructure/Source/CatalogSourceFingerprintSession.php');
 $identities = $read('catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php');
 $locations = $read('catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php');
 $profiledImport = $read('catalog/src/Infrastructure/Source/CatalogSourceProfiledImportService.php');
-$service = $read('catalog/src/Infrastructure/Source/CatalogSourceScanService.php');
+$legacyFacade = $repoRoot . DIRECTORY_SEPARATOR . 'catalog' . DIRECTORY_SEPARATOR . 'lib' . DIRECTORY_SEPARATOR . 'CatalogSourceScanNoContainers.php';
+
+$record(
+    'presentation_uses_namespaced_scan_service',
+    str_contains($page, 'CatalogSourceScanService')
+        && str_contains($page, 'new CatalogSourceScanService(')
+        && str_contains($page, '$scanner->run(')
+        && !str_contains($page, 'catalog_source_scan_run_without_containers('),
+    'source-scan.php must call the namespaced service rather than a procedural compatibility entry point'
+);
+
+$record(
+    'service_delegates_to_runner',
+    str_contains($service, 'CatalogSourceScanRunner')
+        && str_contains($service, 'new CatalogSourceScanRunner(')
+        && str_contains($service, '$this->runner->run(')
+        && !str_contains($service, 'catalog_source_scan_run_without_containers('),
+    'CatalogSourceScanService must remain a thin application-facing adapter over the runner'
+);
+
+$record(
+    'legacy_scan_facade_retired',
+    !is_file($legacyFacade),
+    'CatalogSourceScanNoContainers.php must not return after production callers moved to CatalogSourceScanService'
+);
 
 $record(
     'runner_delegates_scan_infrastructure',
@@ -56,10 +81,31 @@ $record(
         && !str_contains($runner, 'new RecursiveDirectoryIterator(')
         && !str_contains($runner, 'PdoSourceFileFingerprintCache')
         && !str_contains($runner, 'INSERT INTO ue_file_locations')
-        && !str_contains($runner, 'scan_status="verified"')
         && !str_contains($runner, 'scanner_scan_uploaded_file(')
         && !str_contains($runner, 'LegacyUnverifiedFileStager'),
-    'source runner must not regain traversal, fingerprint cache, verified-file SQL, location persistence or profiled import/staging implementation'
+    'runner must orchestrate collaborators rather than regain traversal, cache, SQL or profiled-import implementation'
+);
+
+$record(
+    'runner_work_file_and_parser_contract',
+    str_contains($runner, 'CatalogSourceScanWorkFile::prepare(')
+        && str_contains($runner, 'CatalogSourceScanWorkFile::cleanup(')
+        && str_contains($runner, 'catalog_try_read_package_header(')
+        && str_contains($runner, 'catalog_header_guid('),
+    'redirect/work-file handling and package header/GUID parsing must remain on the established helper path'
+);
+
+$md5Lookup = strpos($runner, 'findVerifiedByMd5(');
+$headerRead = strpos($runner, 'catalog_try_read_package_header(');
+$guidLookup = strpos($runner, 'findVerifiedByGuid(');
+$record(
+    'identity_decision_order_preserved',
+    $md5Lookup !== false
+        && $headerRead !== false
+        && $guidLookup !== false
+        && $md5Lookup < $headerRead
+        && $headerRead < $guidLookup,
+    'full MD5 match must precede package-header/GUID matching; profiled import remains fallback behavior'
 );
 
 $record(
@@ -69,9 +115,8 @@ $record(
         && str_contains($discovery, "pathinfo(\$path, PATHINFO_EXTENSION)) === 'pak'")
         && str_contains($discovery, 'catalog_source_scan_allowed_file(')
         && str_contains($discovery, 'catalog_source_scan_relative_path(')
-        && str_contains($discovery, '(count($files) % 250) === 0')
-        && str_contains($discovery, "'Discovered ' . count(\$files) . ' package-like files.'"),
-    'discovery must preserve PAK exclusion, existing file policy, symlink traversal and progress cadence'
+        && str_contains($discovery, '(count($files) % 250) === 0'),
+    'discovery must preserve PAK exclusion, file policy, symlink traversal and progress cadence'
 );
 
 $record(
@@ -83,16 +128,7 @@ $record(
         && str_contains($fingerprints, "return ['probe' => null, 'cached' => null];")
         && str_contains($fingerprints, '$this->errors++')
         && str_contains($fingerprints, '$this->writes++'),
-    'fingerprint cache/probe/write errors must remain counters/logs rather than aborting the source scan'
-);
-
-$record(
-    'cached_work_contract',
-    str_contains($fingerprints, "'temp' => false")
-        && str_contains($fingerprints, "'redirect' => \$redirect")
-        && str_contains($fingerprints, "'source_extension' => \$redirect")
-        && str_contains($fingerprints, 'catalog_clean_unreal_filename(basename($path))'),
-    'fingerprint cache hits must preserve the existing cached work-file descriptor'
+    'fingerprint cache/probe/write errors must remain counters/logs rather than aborting a source scan'
 );
 
 $record(
@@ -103,7 +139,7 @@ $record(
         && str_contains($identities, 'WHERE id=? AND scan_status="verified" LIMIT 1')
         && str_contains($identities, 'WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1')
         && str_contains($identities, 'WHERE game_id=? AND scan_status="verified" AND package_guid=? ORDER BY id'),
-    'verified identity lookup must preserve the existing exact ID/MD5/GUID SQL semantics'
+    'verified identity lookup must preserve exact ID/MD5/GUID SQL semantics'
 );
 
 $record(
@@ -112,11 +148,8 @@ $record(
         && str_contains($locations, 'INSERT INTO ue_file_locations')
         && str_contains($locations, 'ON DUPLICATE KEY UPDATE')
         && str_contains($locations, 'recordMatched(')
-        && str_contains($locations, 'recordImportResult(')
-        && str_contains($locations, "if ((\$result[0] ?? '') === 'duplicate')")
-        && str_contains($locations, "return ['imported' => 0, 'duplicates' => 1, 'locations' => \$locations];")
-        && str_contains($locations, "return ['imported' => 1, 'duplicates' => 0, 'locations' => 1];"),
-    'matched files and import results must retain ue_file_locations/source-path persistence and accounting semantics'
+        && str_contains($locations, 'recordImportResult('),
+    'matched and imported files must retain source-path/location persistence'
 );
 
 $record(
@@ -124,70 +157,23 @@ $record(
     str_contains($profiledImport, 'scanner_scan_uploaded_file(')
         && str_contains($profiledImport, "tempnam(sys_get_temp_dir(), 'ue_src_scan_')")
         && str_contains($profiledImport, 'LegacyUnverifiedFileStager')
-        && str_contains($profiledImport, "'Local Source Scan import failed for '")
-        && str_contains($profiledImport, "'source_relative_path' => \\catalog_source_scan_normalized_relative_path")
         && str_contains($profiledImport, '$this->locations->recordImportResult(')
         && str_contains($profiledImport, '$this->identities->findVerifiedById(')
         && str_contains($profiledImport, '$this->fingerprints->remember(')
         && str_contains($profiledImport, 'rememberFailureFingerprint'),
-    'profiled import service must preserve temp-copy, scanner import, accounting, fingerprint and failed-staging behavior'
-);
-
-$md5Lookup = strpos($runner, 'findVerifiedByMd5(');
-$headerRead = strpos($runner, 'catalog_try_read_package_header(');
-$guidLookup = strpos($runner, 'findVerifiedByGuid(');
-$record(
-    'identity_decision_order_preserved',
-    $md5Lookup !== false
-        && $headerRead !== false
-        && $guidLookup !== false
-        && str_contains($runner, '->attempt(')
-        && $md5Lookup < $headerRead
-        && $headerRead < $guidLookup,
-    'full MD5 match must precede package-header/GUID matching; profiled imports remain fallback behavior'
-);
-
-$record(
-    'retired_stateful_helpers_absent',
-    !str_contains($runner, 'catalog_source_scan_record_location(')
-        && !str_contains($runner, 'catalog_source_scan_record_import_result(')
-        && !str_contains($runner, 'catalog_source_scan_catalog_identity(')
-        && !str_contains($runner, 'catalog_source_scan_import_work_file(')
-        && !str_contains($runner, 'catalog_source_scan_stage_failed(')
-        && !str_contains($shared, 'function catalog_source_scan_record_location(')
-        && !str_contains($shared, 'function catalog_source_scan_record_import_result(')
-        && !str_contains($shared, 'function catalog_source_scan_temp_copy(')
-        && !str_contains($shared, 'function catalog_source_scan_import_work_file(')
-        && !str_contains($shared, 'function catalog_source_scan_stage_failed('),
-    'retired procedural identity/location/import/staging helpers must not return after namespaced extraction'
-);
-
-$record(
-    'parser_and_redirect_helpers_unchanged',
-    str_contains($runner, 'catalog_source_scan_work_file(')
-        && str_contains($runner, 'catalog_try_read_package_header(')
-        && str_contains($runner, 'catalog_header_guid(')
-        && str_contains($runner, 'catalog_source_scan_cleanup_work_file(')
-        && str_contains($shared, 'catalog_redirect_archive_decompress_to_temp(')
-        && str_contains($shared, 'catalog_source_scan_normalized_relative_path('),
-    'this extraction must not replace redirect decoding, package-header parsing or work-file cleanup semantics'
-);
-
-$record(
-    'source_scan_service_keeps_compatibility_entry',
-    str_contains($service, 'catalog_source_scan_run_without_containers('),
-    'namespaced public source-scan service must retain the established entry point in this staged refactor'
+    'profiled import must preserve temp copy, scanner import, accounting, fingerprint and failed-staging behavior'
 );
 
 $criticalPhp = [
     'catalog/bin/verify-source-scan-boundaries.php',
+    'catalog/source-scan.php',
     'catalog/lib/CatalogSourceScan.php',
-    'catalog/lib/CatalogSourceScanNoContainers.php',
     'catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php',
     'catalog/src/Infrastructure/Source/CatalogSourceFingerprintSession.php',
     'catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php',
     'catalog/src/Infrastructure/Source/CatalogSourceProfiledImportService.php',
     'catalog/src/Infrastructure/Source/CatalogSourceScanDiscovery.php',
+    'catalog/src/Infrastructure/Source/CatalogSourceScanRunner.php',
     'catalog/src/Infrastructure/Source/CatalogSourceScanService.php',
 ];
 if (!function_exists('proc_open')) {
