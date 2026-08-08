@@ -1,173 +1,81 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for base game protection.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *      `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Preserves the historical base-game protection helper API for existing callers.
+ * Why: Protection policy, lookups, schema verification and seeding now live in CatalogBaseGameProtectionService.
+ * Role: Thin compatibility/presentation facade; do not add base-game persistence or policy implementation here.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Games\CatalogBaseGameProtectionService;
+
 function base_game_ensure(PDO $db): void
 {
-    /** @var array<int,bool> $ensured */
-    static $ensured = [];
-    $connectionId = spl_object_id($db);
-    if (isset($ensured[$connectionId])) {
-        return;
-    }
-
-    // Runtime code is verification-only. Schema ownership belongs to install.sql
-    // and incremental migrations; normal requests/workers must never execute DDL.
-    $exists = catalog_one(
-        $db,
-        'SELECT 1 AS present FROM information_schema.tables '
-        . 'WHERE table_schema=DATABASE() AND table_name="ue_base_game_files" LIMIT 1'
-    );
-    if (!$exists) {
-        throw new RuntimeException(
-            'Base-game protection table is missing. Run the database migrations before processing protected files or transfers.'
-        );
-    }
-
-    $ensured[$connectionId] = true;
+    (new CatalogBaseGameProtectionService($db))->ensureSchema();
 }
 
 function base_game_normalize_guid(string $guid): string
 {
-    $guid = strtoupper(trim($guid));
-    $guid = preg_replace('/[^A-F0-9-]+/', '', $guid) ?? '';
-    return $guid;
+    return CatalogBaseGameProtectionService::normalizeGuid($guid);
 }
 
 function base_game_guid_is_usable(string $guid): bool
 {
-    $guid = base_game_normalize_guid($guid);
-    return $guid !== '' && $guid !== '00000000-00000000-00000000-00000000';
+    return CatalogBaseGameProtectionService::guidIsUsable($guid);
 }
 
-/**
- * SQL EXISTS expression matching a package name against the official base-game
- * package list. Names can come from the stored package name, original filename,
- * or the currently linked source file. Matching is scoped to a game when given.
- */
 function base_game_package_exists_sql(string $packageSql, ?string $gameIdSql = null): string
 {
-    $baseStem = '(CASE WHEN LOCATE(".",COALESCE(base_dep_bg.original_name,""))>0 '
-        . 'THEN LEFT(base_dep_bg.original_name,CHAR_LENGTH(base_dep_bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(base_dep_bg.original_name,".",-1))-1) '
-        . 'ELSE COALESCE(base_dep_bg.original_name,"") END)';
-    $sourceStem = '(CASE WHEN LOCATE(".",COALESCE(base_dep_src.original_name,""))>0 '
-        . 'THEN LEFT(base_dep_src.original_name,CHAR_LENGTH(base_dep_src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(base_dep_src.original_name,".",-1))-1) '
-        . 'ELSE COALESCE(base_dep_src.original_name,"") END)';
-    $gameSql = $gameIdSql !== null && trim($gameIdSql) !== ''
-        ? ' AND base_dep_bg.game_id=' . $gameIdSql
-        : '';
-
-    return 'EXISTS (
-        SELECT 1
-        FROM ue_base_game_files base_dep_bg
-        LEFT JOIN ue_files base_dep_src ON base_dep_src.id=base_dep_bg.source_file_id
-        WHERE (
-            LOWER(TRIM(COALESCE(base_dep_bg.package_name,"")))=LOWER(TRIM(' . $packageSql . '))
-            OR LOWER(TRIM(' . $baseStem . '))=LOWER(TRIM(' . $packageSql . '))
-            OR LOWER(TRIM(COALESCE(base_dep_src.package_name,"")))=LOWER(TRIM(' . $packageSql . '))
-            OR LOWER(TRIM(' . $sourceStem . '))=LOWER(TRIM(' . $packageSql . '))
-        )' . $gameSql . '
-    )';
+    return CatalogBaseGameProtectionService::packageExistsSql($packageSql, $gameIdSql);
 }
 
 function base_game_dependency_is_official_sql(string $fileAlias = 'f', string $dependencyAlias = 'd'): string
 {
-    return base_game_package_exists_sql($dependencyAlias . '.required_package', $fileAlias . '.game_id');
+    return CatalogBaseGameProtectionService::dependencyIsOfficialSql($fileAlias, $dependencyAlias);
 }
 
+/** @return array<string,mixed>|null */
 function base_game_lookup(PDO $db, int $gameId, string $packageGuid): ?array
 {
-    base_game_ensure($db);
-    $guid = base_game_normalize_guid($packageGuid);
-    if (!base_game_guid_is_usable($guid)) {
-        return null;
-    }
-    return catalog_one($db, 'SELECT b.*, g.name AS game_name FROM ue_base_game_files b JOIN ue_games g ON g.id=b.game_id WHERE b.game_id=? AND b.package_guid=? LIMIT 1', [$gameId, $guid]);
+    return (new CatalogBaseGameProtectionService($db))->lookup($gameId, $packageGuid);
 }
 
+/** @param array<string,mixed> $file */
 function base_game_file_is_protected(PDO $db, array $file): bool
 {
-    return base_game_lookup($db, (int)($file['game_id'] ?? 0), (string)($file['package_guid'] ?? '')) !== null;
+    return (new CatalogBaseGameProtectionService($db))->fileIsProtected($file);
 }
 
+/** @return array{file:array<string,mixed>,base:array<string,mixed>}|null */
 function base_game_file_protection(PDO $db, int $fileId): ?array
 {
-    base_game_ensure($db);
-    $file = catalog_one($db, 'SELECT f.*, g.name AS game_name FROM ue_files f JOIN ue_games g ON g.id=f.game_id WHERE f.id=?', [$fileId]);
-    if (!$file) {
-        return null;
-    }
-    $base = base_game_lookup($db, (int)$file['game_id'], (string)$file['package_guid']);
-    if (!$base) {
-        return null;
-    }
-    return ['file' => $file, 'base' => $base];
+    return (new CatalogBaseGameProtectionService($db))->fileProtection($fileId);
 }
 
+/** @param array<string,mixed>|null $file */
 function base_game_block_message(?array $file = null): string
 {
-    $name = $file ? catalog_clean_unreal_filename((string)($file['original_name'] ?? $file['package_name'] ?? 'this package')) : 'this package';
-    return $name . ' is an official base-game package. UnrealDB keeps its exports indexed so custom maps/mods can resolve dependencies, but the original game file remains excluded from public downloads, external mirrors, and bundle packaging. Ordinary federation inventory and parent-pull visibility follows the parent-controlled Ignore base-game files setting. An approved missing-dependency transfer remains allowed even when ordinary base-game files are ignored.';
+    return CatalogBaseGameProtectionService::blockMessage($file);
 }
 
+/** @param array<string,mixed>|null $file */
 function base_game_block_html(?array $file = null): string
 {
-    return '<div class="card"><h1>Download blocked</h1><p>' . catalog_h(base_game_block_message($file)) . '</p></div>';
+    return '<div class="card"><h1>Download blocked</h1><p>'
+        . catalog_h(CatalogBaseGameProtectionService::blockMessage($file))
+        . '</p></div>';
 }
 
+/** @param array<string,mixed> $file */
 function base_game_require_transfer_allowed(PDO $db, array $file, bool $dependencyException = false): void
 {
-    if (base_game_file_is_protected($db, $file) && !$dependencyException) {
-        throw new RuntimeException(base_game_block_message($file));
-    }
+    (new CatalogBaseGameProtectionService($db))->requireTransferAllowed($file, $dependencyException);
 }
 
+/** @return array{scanned:int,inserted:int,updated:int} */
 function base_game_seed_from_current_files(PDO $db, int $gameId, ?int $userId = null): array
 {
-    base_game_ensure($db);
-    $game = catalog_one($db, 'SELECT id, name FROM ue_games WHERE id=?', [$gameId]);
-    if (!$game) {
-        throw new RuntimeException('Game not found.');
-    }
-
-    $rows = catalog_all(
-        $db,
-        'SELECT id, game_id, package_guid, package_name, original_name
-         FROM ue_files
-         WHERE game_id=? AND scan_status="verified" AND package_guid IS NOT NULL AND package_guid<>"" AND package_guid<>"00000000-00000000-00000000-00000000"
-         ORDER BY package_name, original_name, id',
-        [$gameId]
-    );
-
-    $inserted = 0;
-    $updated = 0;
-    $stmt = $db->prepare('INSERT INTO ue_base_game_files(game_id, package_guid, package_name, original_name, source_file_id, notes) VALUES(?,?,?,?,?,?) ON DUPLICATE KEY UPDATE package_name=VALUES(package_name), original_name=VALUES(original_name), source_file_id=VALUES(source_file_id), updated_at=CURRENT_TIMESTAMP');
-    foreach ($rows as $row) {
-        $guid = base_game_normalize_guid((string)$row['package_guid']);
-        if (!base_game_guid_is_usable($guid)) {
-            continue;
-        }
-        $stmt->execute([
-            $gameId,
-            $guid,
-            (string)$row['package_name'],
-            catalog_clean_unreal_filename((string)$row['original_name']),
-            (int)$row['id'],
-            'Seeded from verified catalog files for ' . (string)$game['name'] . '.',
-        ]);
-        $stmt->rowCount() === 1 ? $inserted++ : $updated++;
-    }
-
-    return ['scanned' => count($rows), 'inserted' => $inserted, 'updated' => $updated];
+    return (new CatalogBaseGameProtectionService($db))->seedFromCurrentFiles($gameId, $userId);
 }
