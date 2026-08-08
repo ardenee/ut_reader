@@ -1,28 +1,18 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Game Admin.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders Game Admin, progress polling and lifecycle action responses.
+ * Why: Game persistence, aggregate reads, reset/delete orchestration and source reads now belong to a shared service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/lib/UploadProgress.php';
+
+use UnrealDb\Catalog\Infrastructure\Games\CatalogGameAdminService;
 
 catalog_start_session();
-require_once __DIR__ . '/lib/GameProfiles.php';
-require_once __DIR__ . '/lib/UploadProgress.php';
-require_once __DIR__ . '/lib/GameManagerLifecycle.php';
-
-function gm_slug(string $text): string
-{
-    $text = strtolower(trim($text));
-    $text = preg_replace('/[^a-z0-9]+/', '-', $text) ?? '';
-    return trim($text, '-') ?: 'game';
-}
 
 function gm_profile_label(array $profile): string
 {
@@ -60,97 +50,10 @@ function gm_long_action_context(): array
     return ['progress' => $progress, 'ajax' => $ajax];
 }
 
-function gm_optimise_message(array $result): string
-{
-    $optimised = count((array)($result['optimised_tables'] ?? []));
-    $failed = count((array)($result['optimise_failures'] ?? []));
-    if ($failed > 0) {
-        return ' Optimised ' . $optimised . ' table(s), with ' . $failed . ' optimisation warning(s).';
-    }
-    return ' Optimised ' . $optimised . ' table(s).';
-}
-
-/** @return array<int,int> */
-function gm_count_map(array $rows, string $idColumn, string $countColumn): array
-{
-    $counts = [];
-    foreach ($rows as $row) {
-        $id = (int)($row[$idColumn] ?? 0);
-        if ($id > 0) {
-            $counts[$id] = (int)($row[$countColumn] ?? 0);
-        }
-    }
-    return $counts;
-}
-
-/**
- * Load the Game Manager list without joining ue_files and ue_sources together.
- * The old COUNT(DISTINCT ...) query produced a files-by-sources intermediate
- * result and kept the database busy enough to delay otherwise lightweight pages.
- *
- * @return list<array<string,mixed>>
- */
-function gm_game_rows(PDO $db): array
-{
-    $stats = new \UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats($db);
-    $statsAvailable = $stats->available();
-
-    $sql = 'SELECT g.*,p.id profile_id,p.profile_name,p.engine_key profile_engine,'
-        . 'p.allowed_extensions_json,p.package_version_min,p.package_version_max,'
-        . 'p.licensee_version_min,p.licensee_version_max,p.confidence_policy,p.notes profile_notes,'
-        . ($statsAvailable ? 'COALESCE(gs.file_count,0)' : '0') . ' file_count '
-        . 'FROM ue_games g '
-        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-        . ($statsAvailable ? 'LEFT JOIN ue_game_catalog_stats gs ON gs.game_id=g.id ' : '')
-        . 'ORDER BY g.name';
-    $games = catalog_all($db, $sql);
-
-    $fileCounts = [];
-    if (!$statsAvailable) {
-        $fileCounts = gm_count_map(
-            catalog_all(
-                $db,
-                'SELECT game_id,COUNT(*) file_count FROM ue_files '
-                . 'WHERE game_id IS NOT NULL GROUP BY game_id'
-            ),
-            'game_id',
-            'file_count'
-        );
-    }
-
-    $unverifiedCounts = gm_count_map(
-        catalog_all(
-            $db,
-            'SELECT unverified_queue_game_id game_id,COUNT(*) unverified_count '
-            . 'FROM ue_files WHERE game_id IS NULL '
-            . 'AND unverified_queue_game_id IS NOT NULL '
-            . 'GROUP BY unverified_queue_game_id'
-        ),
-        'game_id',
-        'unverified_count'
-    );
-    $sourceCounts = gm_count_map(
-        catalog_all($db, 'SELECT game_id,COUNT(*) source_count FROM ue_sources GROUP BY game_id'),
-        'game_id',
-        'source_count'
-    );
-
-    foreach ($games as &$game) {
-        $gameId = (int)($game['id'] ?? 0);
-        $baseFiles = $statsAvailable
-            ? (int)($game['file_count'] ?? 0)
-            : (int)($fileCounts[$gameId] ?? 0);
-        $game['file_count'] = $baseFiles + (int)($unverifiedCounts[$gameId] ?? 0);
-        $game['source_count'] = (int)($sourceCounts[$gameId] ?? 0);
-    }
-    unset($game);
-
-    return $games;
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
+    $service = new CatalogGameAdminService($db, $config);
 
     if (isset($_GET['progress'])) {
         if (!catalog_support_is_admin()) {
@@ -170,97 +73,31 @@ try {
         catalog_check_csrf('game_manager');
         $action = (string)($_POST['action'] ?? 'save_game');
 
-        if ($action === 'reset_game_files') {
-            $gameId = (int)($_POST['game_id'] ?? 0);
-            $confirmed = (string)($_POST['confirm_reset'] ?? '') === 'yes';
-            if ($gameId <= 0 || !$confirmed) {
-                throw new RuntimeException('Game reset confirmation is required.');
-            }
-
+        if ($action === 'reset_game_files' || $action === 'delete_game') {
             $context = gm_long_action_context();
-            $result = gm_lifecycle_reset_game($db, $config, $gameId, $context['progress']);
-            $message = 'Reset ' . $result['game_name'] . ': removed '
-                . $result['catalog_records'] . ' catalog file record(s), '
-                . $result['pak_archives'] . ' PAK archive record(s), deleted '
-                . $result['stored_files'] . ' stored file(s), and cleared '
-                . catalog_bytes($result['total_size']) . ' of recorded file data.'
-                . gm_optimise_message($result);
-            $returnUrl = 'game-manager.php?game_id=' . (int)$result['game_id'];
+            $gameId = (int)($_POST['game_id'] ?? 0);
+            $response = $action === 'reset_game_files'
+                ? $service->reset($gameId, (string)($_POST['confirm_reset'] ?? '') === 'yes', $context['progress'])
+                : $service->delete($gameId, (string)($_POST['confirm_delete'] ?? '') === 'yes', $context['progress']);
 
             if ($context['ajax']) {
                 gm_json_reply([
                     'ok' => true,
-                    'message' => $message,
-                    'return_url' => $returnUrl,
-                    'result' => $result,
+                    'message' => $response['message'],
+                    'return_url' => $response['return_url'],
+                    'result' => $response['result'],
                 ]);
             }
 
             catalog_start_session();
-            $_SESSION['game_manager_flash'] = $message;
+            $_SESSION['game_manager_flash'] = $response['message'];
             session_write_close();
-            header('Location: ' . $returnUrl);
-            exit;
-        }
-
-        if ($action === 'delete_game') {
-            $gameId = (int)($_POST['game_id'] ?? 0);
-            $confirmed = (string)($_POST['confirm_delete'] ?? '') === 'yes';
-            if ($gameId <= 0 || !$confirmed) {
-                throw new RuntimeException('Game deletion confirmation is required.');
-            }
-
-            $context = gm_long_action_context();
-            $result = gm_lifecycle_delete_game($db, $config, $gameId, $context['progress']);
-            $message = 'Deleted game ' . $result['game_name'] . ': removed '
-                . $result['catalog_records'] . ' catalog file record(s), '
-                . $result['pak_archives'] . ' PAK archive record(s), '
-                . $result['sources'] . ' source definition(s), '
-                . $result['base_game_rows'] . ' base-game protection row(s), and '
-                . $result['stored_files'] . ' stored file(s).'
-                . gm_optimise_message($result);
-            $returnUrl = 'game-manager.php';
-
-            if ($context['ajax']) {
-                gm_json_reply([
-                    'ok' => true,
-                    'message' => $message,
-                    'return_url' => $returnUrl,
-                    'result' => $result,
-                ]);
-            }
-
-            catalog_start_session();
-            $_SESSION['game_manager_flash'] = $message;
-            session_write_close();
-            header('Location: ' . $returnUrl);
+            header('Location: ' . $response['return_url']);
             exit;
         }
 
         if ($action === 'save_game') {
-            $id = (int)($_POST['id'] ?? 0);
-            $name = trim((string)($_POST['name'] ?? ''));
-            $slug = gm_slug((string)($_POST['slug'] ?? $name));
-            $profileId = (int)($_POST['profile_id'] ?? 0);
-            $description = trim((string)($_POST['description'] ?? ''));
-            if ($name === '' || $profileId <= 0) {
-                throw new RuntimeException('Game name and game profile are required.');
-            }
-            $profile = catalog_one($db, 'SELECT id FROM ue_game_profiles WHERE id=? AND is_active=1', [$profileId]);
-            if (!$profile) {
-                throw new RuntimeException('Selected active game profile not found.');
-            }
-
-            if ($id > 0) {
-                $db->prepare('UPDATE ue_games SET name=?,slug=?,description=?,profile_id=? WHERE id=?')
-                    ->execute([$name, $slug, $description ?: null, $profileId, $id]);
-                $gameId = $id;
-            } else {
-                $statement = $db->prepare('INSERT INTO ue_games(name,slug,description,profile_id) VALUES(?,?,?,?)');
-                $statement->execute([$name, $slug, $description ?: null, $profileId]);
-                $gameId = (int)$db->lastInsertId();
-            }
-
+            $gameId = $service->save($_POST);
             $_SESSION['game_manager_flash'] = 'Game saved and profile assigned.';
             header('Location: game-manager.php?game_id=' . $gameId);
             exit;
@@ -272,14 +109,9 @@ try {
     $csrfToken = catalog_csrf('game_manager');
 
     catalog_head('Game Admin');
-
-    // Authentication, navigation, flash and CSRF state are now captured. Release
-    // the PHP session-file lock before any catalogue query so another browser tab
-    // from this administrator can continue independently.
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
-
     catalog_flash($flash);
 
     echo <<<'CSS'
@@ -291,12 +123,8 @@ try {
 </style>
 CSS;
 
-    $profileChoices = catalog_all(
-        $db,
-        'SELECT * FROM ue_game_profiles WHERE is_active=1 '
-        . 'ORDER BY COALESCE(profile_name,engine_key),engine_key,id'
-    );
-    $games = gm_game_rows($db);
+    $profileChoices = $service->profileChoices();
+    $games = $service->games();
     $editId = (int)($_GET['game_id'] ?? 0);
     $edit = null;
     foreach ($games as $row) {
@@ -517,7 +345,7 @@ JS;
         . '<a class="button" href="game-profiles.php">Manage profiles</a></p></form></div>';
 
     if ($edit) {
-        $sources = catalog_all($db, 'SELECT * FROM ue_sources WHERE game_id=? ORDER BY name', [(int)$edit['id']]);
+        $sources = $service->sourcesForGame((int)$edit['id']);
         echo '<div class="card"><div class="section-title"><h2>Sources for this game</h2><a class="button" href="sources.php?game_id=' . (int)$edit['id'] . '">Add source</a></div>';
         if ($sources === []) {
             echo '<p class="muted">No folders, redirect servers, or HTTP mirrors are tied to this game yet.</p>';

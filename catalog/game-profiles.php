@@ -1,56 +1,22 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Game Profiles.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes reusable Game Profiles administration.
+ * Why: Profile validation, persistence, deletion policy and assigned-game reads now belong to a shared service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-catalog_start_session();
-require_once __DIR__ . '/lib/GameProfiles.php';
+use UnrealDb\Catalog\Infrastructure\Games\CatalogGameProfileAdminService;
 
-function gprof_json_extensions(string $text): string
-{
-    $parts = preg_split('/[,\s]+/', strtolower(trim($text))) ?: [];
-    $parts = array_values(array_unique(array_filter(array_map(static fn($v) => trim($v, '. '), $parts), static fn($v) => $v !== '')));
-    return json_encode($parts, JSON_UNESCAPED_SLASHES);
-}
+catalog_start_session();
 
 function gprof_extension_text(?string $json): string
 {
     $exts = json_decode((string)($json ?? '[]'), true);
     return is_array($exts) ? implode(', ', $exts) : '';
-}
-
-function gprof_compatibility_rules_json(string $text): ?string
-{
-    $text = trim($text);
-    if ($text === '') {
-        return null;
-    }
-
-    $rules = json_decode($text, true);
-    if (!is_array($rules)) {
-        throw new RuntimeException('Compatibility rules must be valid JSON array data.');
-    }
-
-    foreach ($rules as $i => $rule) {
-        if (!is_array($rule) || trim((string)($rule['detected_engine'] ?? '')) === '') {
-            throw new RuntimeException('Compatibility rule #' . ($i + 1) . ' requires detected_engine.');
-        }
-        if (!isset($rule['extensions']) || !is_array($rule['extensions']) || !$rule['extensions']) {
-            throw new RuntimeException('Compatibility rule #' . ($i + 1) . ' requires one or more extensions.');
-        }
-    }
-
-    return json_encode($rules, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 }
 
 function gprof_compatibility_rules_text(?string $json): string
@@ -60,44 +26,6 @@ function gprof_compatibility_rules_text(?string $json): string
         return '';
     }
     return json_encode($rules, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: '';
-}
-
-function gprof_save(PDO $db, int $profileId, string $name, string $engine, string $extensions, string $compatibilityRules, string $versionMin, string $versionMax, string $licenseeMin, string $licenseeMax, string $policy, string $notes): int
-{
-    if ($name === '' || $engine === '') {
-        throw new RuntimeException('Profile name and engine key are required.');
-    }
-
-    $rulesJson = gprof_compatibility_rules_json($compatibilityRules);
-    if ($profileId > 0) {
-        $existing = catalog_one($db, 'SELECT id FROM ue_game_profiles WHERE id=?', [$profileId]);
-        if (!$existing) {
-            throw new RuntimeException('Profile not found.');
-        }
-        $stmt = $db->prepare('UPDATE ue_game_profiles SET profile_name=?, game_id=NULL, engine_key=?, allowed_extensions_json=?, compatibility_rules_json=?, package_version_min=?, package_version_max=?, licensee_version_min=?, licensee_version_max=?, confidence_policy=?, notes=?, is_active=1 WHERE id=?');
-        $stmt->execute([$name, $engine, gprof_json_extensions($extensions), $rulesJson, $versionMin === '' ? null : (int)$versionMin, $versionMax === '' ? null : (int)$versionMax, $licenseeMin === '' ? null : (int)$licenseeMin, $licenseeMax === '' ? null : (int)$licenseeMax, $policy, $notes ?: null, $profileId]);
-        return $profileId;
-    }
-
-    $stmt = $db->prepare('INSERT INTO ue_game_profiles(profile_name,game_id,engine_key,allowed_extensions_json,compatibility_rules_json,package_version_min,package_version_max,licensee_version_min,licensee_version_max,confidence_policy,notes,is_active) VALUES(?,NULL,?,?,?,?,?,?,?,?,?,1)');
-    $stmt->execute([$name, $engine, gprof_json_extensions($extensions), $rulesJson, $versionMin === '' ? null : (int)$versionMin, $versionMax === '' ? null : (int)$versionMax, $licenseeMin === '' ? null : (int)$licenseeMin, $licenseeMax === '' ? null : (int)$licenseeMax, $policy, $notes ?: null]);
-    return (int)$db->lastInsertId();
-}
-
-function gprof_delete(PDO $db, int $profileId): void
-{
-    $profile = catalog_one($db, 'SELECT id, profile_name, engine_key FROM ue_game_profiles WHERE id=?', [$profileId]);
-    if (!$profile) {
-        throw new RuntimeException('Profile not found.');
-    }
-
-    $games = catalog_all($db, 'SELECT name FROM ue_games WHERE profile_id=? ORDER BY name', [$profileId]);
-    if ($games) {
-        $names = implode(', ', array_map(static fn($g) => (string)$g['name'], $games));
-        throw new RuntimeException('This game profile is in use by: ' . $names . '. Remove or change the profile on those game(s) first, then delete it.');
-    }
-
-    $db->prepare('DELETE FROM ue_game_profiles WHERE id=?')->execute([$profileId]);
 }
 
 function gprof_form(?array $profile, string $mode): void
@@ -116,8 +44,8 @@ function gprof_form(?array $profile, string $mode): void
     echo '<tr><th>Package version min/max</th><td><input name="package_version_min" value="' . catalog_h((string)($profile['package_version_min'] ?? '')) . '" style="width:90px"> <input name="package_version_max" value="' . catalog_h((string)($profile['package_version_max'] ?? '')) . '" style="width:90px"></td></tr>';
     echo '<tr><th>Licensee version min/max</th><td><input name="licensee_version_min" value="' . catalog_h((string)($profile['licensee_version_min'] ?? '')) . '" style="width:90px"> <input name="licensee_version_max" value="' . catalog_h((string)($profile['licensee_version_max'] ?? '')) . '" style="width:90px"></td></tr>';
     echo '<tr><th>Confidence policy</th><td><select name="confidence_policy">';
-    foreach (['strict','normal','loose'] as $p) {
-        echo '<option value="' . catalog_h($p) . '"' . ($policy === $p ? ' selected' : '') . '>' . catalog_h($p) . '</option>';
+    foreach (['strict', 'normal', 'loose'] as $value) {
+        echo '<option value="' . catalog_h($value) . '"' . ($policy === $value ? ' selected' : '') . '>' . catalog_h($value) . '</option>';
     }
     echo '</select></td></tr>';
     echo '<tr><th>Notes</th><td><textarea name="notes" rows="4" style="width:100%">' . catalog_h($profile['notes'] ?? '') . '</textarea></td></tr>';
@@ -127,39 +55,23 @@ function gprof_form(?array $profile, string $mode): void
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-
     if (!catalog_require_admin_page('Game Profiles')) {
         exit;
     }
 
+    $service = new CatalogGameProfileAdminService($db);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             catalog_check_csrf('game_profiles');
             $action = (string)($_POST['action'] ?? '');
-
             if ($action === 'delete') {
-                gprof_delete($db, (int)($_POST['profile_id'] ?? 0));
+                $service->delete((int)($_POST['profile_id'] ?? 0));
                 $_SESSION['game_profiles_flash'] = 'Game profile deleted.';
                 header('Location: game-profiles.php');
                 exit;
             }
-
             if ($action === 'add' || $action === 'update') {
-                $profileId = $action === 'update' ? (int)($_POST['profile_id'] ?? 0) : 0;
-                $savedId = gprof_save(
-                    $db,
-                    $profileId,
-                    trim((string)($_POST['profile_name'] ?? '')),
-                    strtoupper(trim((string)($_POST['engine_key'] ?? ''))),
-                    (string)($_POST['extensions'] ?? ''),
-                    (string)($_POST['compatibility_rules_json'] ?? ''),
-                    trim((string)($_POST['package_version_min'] ?? '')),
-                    trim((string)($_POST['package_version_max'] ?? '')),
-                    trim((string)($_POST['licensee_version_min'] ?? '')),
-                    trim((string)($_POST['licensee_version_max'] ?? '')),
-                    in_array((string)($_POST['confidence_policy'] ?? 'normal'), ['strict','normal','loose'], true) ? (string)$_POST['confidence_policy'] : 'normal',
-                    trim((string)($_POST['notes'] ?? ''))
-                );
+                $savedId = $service->save($action, $_POST);
                 $_SESSION['game_profiles_flash'] = $action === 'add' ? 'Game profile added.' : 'Game profile updated.';
                 header('Location: ' . ($action === 'add' ? 'game-profiles.php' : 'game-profiles.php?profile_id=' . $savedId . '&mode=edit'));
                 exit;
@@ -175,7 +87,7 @@ try {
     catalog_flash($_SESSION['game_profiles_flash'] ?? null);
     unset($_SESSION['game_profiles_flash']);
 
-    $profiles = catalog_all($db, 'SELECT p.id profile_id, p.profile_name, p.engine_key profile_engine, p.allowed_extensions_json, p.compatibility_rules_json, p.package_version_min, p.package_version_max, p.licensee_version_min, p.licensee_version_max, p.confidence_policy, p.notes, COUNT(g.id) assigned_games FROM ue_game_profiles p LEFT JOIN ue_games g ON g.profile_id=p.id GROUP BY p.id ORDER BY COALESCE(p.profile_name, p.engine_key), p.id');
+    $profiles = $service->profiles();
     $mode = (string)($_GET['mode'] ?? '');
     $editProfileId = (int)($_GET['profile_id'] ?? 0);
     $edit = null;
