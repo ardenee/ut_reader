@@ -41,6 +41,18 @@ try {
         $launcher->configuredWorkerCount()
     );
 
+    /*
+     * Slot state files survive normal worker exits for diagnostics. The legacy
+     * aggregate in CatalogDetachedWorker therefore includes historical stopped
+     * slots. Preserve the existing state.processed response field, but expose
+     * only work completed by processes that currently own worker locks.
+     */
+    $activeProcessed = CatalogWorkerStatusPolicy::activeProcessed($worker);
+    $workerState = is_array($worker['state'] ?? null) ? $worker['state'] : [];
+    $workerState['processed'] = $activeProcessed;
+    $worker['state'] = $workerState;
+    $worker['active_processed'] = $activeProcessed;
+
     $worker['authoritative_status'] = $status['authoritative_status'];
     $worker['authoritative_message'] = $status['authoritative_message'];
     $worker['queue_counts'] = $counts;
@@ -55,7 +67,8 @@ try {
     JsonResponse::error('invalid_worker_request', $exception->getMessage(), 400);
 } catch (Throwable $exception) {
     $requestId = catalog_request_id();
-    error_log('[UnrealDB][' . $requestId . '] detached worker status failed: ' . get_class($exception) . ': ' . $exception->getMessage());
+    error_log('[UnrealDB][' . $requestId . '] detached worker status failed: '
+        . get_class($exception) . ': ' . $exception->getMessage());
     JsonResponse::error(
         'unavailable',
         trim($exception->getMessage()) ?: 'Detached worker status is unavailable.',

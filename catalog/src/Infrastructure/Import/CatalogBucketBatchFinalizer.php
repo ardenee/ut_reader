@@ -99,7 +99,11 @@ final class CatalogBucketBatchFinalizer
             try {
                 (new CatalogOrphanedJobRecovery($this->db, $this->config))
                     ->recoverInactiveQueue($queue->queueName());
-                $worker = $launcher->start($queue->queueName(), 10000);
+                $worker = $launcher->start(
+                    $queue->queueName(),
+                    10000,
+                    $launcher->configuredWorkerCount()
+                );
             } catch (Throwable $error) {
                 $workerError = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
                 error_log('[UnrealDB bucket worker] ' . get_class($error) . ': ' . $workerError);

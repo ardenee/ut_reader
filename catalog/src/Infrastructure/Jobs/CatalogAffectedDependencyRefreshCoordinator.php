@@ -208,9 +208,12 @@ final class CatalogAffectedDependencyRefreshCoordinator
         if ($config !== []) {
             try {
                 $launcher = new CatalogDetachedWorker($config);
-                $worker = $launcher->status($queueName);
-                if (empty($worker['active']) && (int)($worker['launching_count'] ?? 0) === 0) {
-                    $launcher->start($queueName, 10000);
+                $desiredWorkers = $launcher->configuredWorkerCount();
+                $worker = $launcher->status($queueName, false);
+                $activeOrLaunching = max(0, (int)($worker['active_count'] ?? 0))
+                    + max(0, (int)($worker['launching_count'] ?? 0));
+                if ($activeOrLaunching < $desiredWorkers) {
+                    $launcher->start($queueName, 10000, $desiredWorkers);
                 }
             } catch (Throwable $workerError) {
                 error_log('[UnrealDB dependency refresh worker] job_id=' . $jobId

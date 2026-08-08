@@ -11,6 +11,20 @@ namespace UnrealDb\Catalog\Application\Jobs;
 
 final class CatalogWorkerStatusPolicy
 {
+    /** @param array<string,mixed> $worker */
+    public static function activeProcessed(array $worker): int
+    {
+        $processed = 0;
+        foreach ((array)($worker['workers'] ?? []) as $slotWorker) {
+            if (!is_array($slotWorker) || empty($slotWorker['active'])) {
+                continue;
+            }
+            $state = is_array($slotWorker['state'] ?? null) ? $slotWorker['state'] : [];
+            $processed += max(0, (int)($state['processed'] ?? 0));
+        }
+        return $processed;
+    }
+
     /**
      * @param array<string,mixed> $worker
      * @param array{queued:int,ready:int,running:int,terminal:int,total:int} $counts

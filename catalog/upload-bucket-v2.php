@@ -10,9 +10,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadTransferStoreFactory;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
+
 catalog_start_session();
 require_once __DIR__ . '/lib/UnverifiedFileManager.php';
-require_once __DIR__ . '/lib/GameProfiles.php';
 
 function upload_bucket_v2_short_error(Throwable $error): string
 {
@@ -20,31 +22,6 @@ function upload_bucket_v2_short_error(Throwable $error): string
     $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
     $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
     return trim($message) !== '' ? trim($message) : 'Unknown error';
-}
-
-/** @return list<string> */
-function upload_bucket_v2_allowed_extensions(PDO $db, array $config): array
-{
-    $extensions = [];
-    foreach (gp_all_profiles($db) as $profile) {
-        foreach (gp_extensions($profile) as $extension) {
-            $extension = catalog_clean_unreal_extension((string)$extension);
-            if ($extension !== '') {
-                $extensions[$extension] = true;
-            }
-        }
-    }
-    if ($extensions === []) {
-        foreach (($config['allowed_extensions'] ?? []) as $extension) {
-            $extension = catalog_clean_unreal_extension((string)$extension);
-            if ($extension !== '') {
-                $extensions[$extension] = true;
-            }
-        }
-    }
-    $result = array_keys($extensions);
-    sort($result, SORT_NATURAL | SORT_FLAG_CASE);
-    return array_values($result);
 }
 
 /** @return array{count:int,bytes:int} */
@@ -73,12 +50,6 @@ function upload_bucket_v2_stats(string $bucketDir): array
     return ['count' => $count, 'bytes' => $bytes];
 }
 
-function upload_bucket_v2_chunk_bytes(array $config): int
-{
-    $chunkConfig = is_array($config['chunk_upload'] ?? null) ? $config['chunk_upload'] : [];
-    return max(1024 * 1024, min((int)($chunkConfig['chunk_bytes'] ?? (16 * 1024 * 1024)), 64 * 1024 * 1024));
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -94,12 +65,13 @@ try {
 
     $bucketDir = uvf_upload_bucket_dir($config, true);
     $bucketStats = upload_bucket_v2_stats($bucketDir);
-    $allowedExtensions = upload_bucket_v2_allowed_extensions($db, $config);
+    $allowedExtensions = (new CatalogUploadBucketFilePolicy($db, $config))->allowedExtensions();
+    sort($allowedExtensions, SORT_NATURAL | SORT_FLAG_CASE);
     $allowedExtensionJson = json_encode(
         array_values($allowedExtensions),
         JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
     );
-    $chunkBytes = upload_bucket_v2_chunk_bytes($config);
+    $chunkBytes = CatalogBucketUploadTransferStoreFactory::effectiveChunkBytes($config);
     $processingUrl = 'background-jobs.php?queue=catalog%3Abucket-processing';
 
     catalog_head('Upload Bucket');
