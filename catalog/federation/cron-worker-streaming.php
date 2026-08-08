@@ -1,22 +1,20 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders or processes the federation interface for cron worker streaming.
- * Why: It keeps parent/child federation administration, inventory, requests, and transfer workflows separate from
- *      general catalog pages.
- * Role: Federation UI/administration entry point backed by shared federation services.
- * Audit: Federation-specific route; consolidate shared behavior into services rather than merging distinct
- *        parent/child screens blindly.
+ * Purpose: Runs the authenticated streaming federation cron workflow.
+ * Why: The HTTP entry point should orchestrate shared federation services rather than depend on procedural worker facades.
+ * Role: Federation cron route over namespaced transfer/import workers plus existing inventory/mirror maintenance services.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
-require_once __DIR__ . '/../lib/FederationWorker.php';
-require_once __DIR__ . '/../lib/FederationStreamingWorker.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
 require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/ExternalMirrors.php';
+
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationImportWorker;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferWorker;
 
 function cron_stream_json(array $data, int $status = 200): void
 {
@@ -30,7 +28,11 @@ function cron_stream_json(array $data, int $status = 200): void
 
 function cron_stream_legacy_query_tokens_enabled(): bool
 {
-    return in_array(strtolower(trim((string)(getenv('UNREALDB_ALLOW_LEGACY_QUERY_TOKENS') ?: '0'))), ['1', 'true', 'yes', 'on'], true);
+    return in_array(
+        strtolower(trim((string)(getenv('UNREALDB_ALLOW_LEGACY_QUERY_TOKENS') ?: '0'))),
+        ['1', 'true', 'yes', 'on'],
+        true
+    );
 }
 
 try {
@@ -52,11 +54,16 @@ try {
             error_log('[UnrealDB][' . catalog_request_id() . '] deprecated streaming cron query token used');
         }
     }
-    if ($enabled !== '1' || $expectedToken === '' || $providedToken === '' || !hash_equals($expectedToken, $providedToken)) {
+    if ($enabled !== '1'
+        || $expectedToken === ''
+        || $providedToken === ''
+        || !hash_equals($expectedToken, $providedToken)) {
         cron_stream_json(['ok' => false, 'error' => 'Federation cron worker is unavailable.'], 403);
     }
 
     $limit = max(1, min(100, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1)));
+    $transferWorker = new CatalogFederationTransferWorker($db, $config);
+    $importWorker = new CatalogFederationImportWorker($db, $config);
     $result = [
         'ok' => true,
         'mode' => 'streaming',
@@ -69,14 +76,14 @@ try {
     ];
 
     for ($i = 0; $i < $limit; $i++) {
-        $transfer = federation_streaming_run_one_transfer($db, $config);
+        $transfer = $transferWorker->runOne();
         $result['transfers'][] = $transfer;
         if (!empty($transfer['skipped'])) {
             break;
         }
     }
     for ($i = 0; $i < $limit; $i++) {
-        $import = federation_worker_run_one_import($db, $config);
+        $import = $importWorker->runOne();
         $result['imports'][] = $import;
         if (!empty($import['skipped'])) {
             break;
@@ -99,6 +106,13 @@ try {
     );
     cron_stream_json($result);
 } catch (Throwable $error) {
-    error_log('[UnrealDB][' . catalog_request_id() . '] federation streaming cron failed: ' . get_class($error) . ': ' . $error->getMessage());
-    cron_stream_json(['ok' => false, 'error' => 'Federation streaming worker failed.', 'reference' => catalog_request_id()], 500);
+    error_log(
+        '[UnrealDB][' . catalog_request_id() . '] federation streaming cron failed: '
+        . get_class($error) . ': ' . $error->getMessage()
+    );
+    cron_stream_json([
+        'ok' => false,
+        'error' => 'Federation streaming worker failed.',
+        'reference' => catalog_request_id(),
+    ], 500);
 }
