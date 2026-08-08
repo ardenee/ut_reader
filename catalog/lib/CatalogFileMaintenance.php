@@ -8,9 +8,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogFileMaintenanceCompactCore.php';
-require_once __DIR__ . '/CatalogFileMaintenanceCompactDelete.php';
 
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceReimportService;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceRemovalService;
 
 /**
  * @param array<string,mixed> $config
@@ -26,4 +26,19 @@ function catalog_file_maintenance_reimport(
 ): array {
     return (new CatalogFileMaintenanceReimportService($db, $config))
         ->reimport($fileId, $userId, $progress);
+}
+
+/**
+ * @param array<string,mixed> $config
+ * @param null|callable(array<string,mixed>):void $progress
+ * @return array<string,mixed>
+ */
+function catalog_file_maintenance_remove(
+    PDO $db,
+    array $config,
+    int $fileId,
+    ?callable $progress = null
+): array {
+    return (new CatalogFileMaintenanceRemovalService($db, $config))
+        ->remove($fileId, $progress);
 }
