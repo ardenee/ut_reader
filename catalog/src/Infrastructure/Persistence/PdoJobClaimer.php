@@ -66,8 +66,8 @@ final class PdoJobClaimer
                 }
 
                 // Admission checks are serialized only for the relevant resource
-                // class/key, not for the entire queue. Their exact supporting
-                // indexes are installed by migration 202608080002.
+                // class/key, not for the entire queue. Existing resource and
+                // concurrency indexes from the durable-queue schema support these reads.
                 if ($this->runningResourceCount($queue, $resourceClass) >= $resourceLimit) {
                     $this->rollbackClaimTransaction();
                     $blockedClasses[$resourceClass] = true;
