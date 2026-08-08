@@ -2,29 +2,17 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Provides the compatibility entry point for the local source scan after PAK containers are queued separately.
- * Why: Package matching/import semantics remain stable while filesystem discovery and fingerprint bookkeeping move behind namespaced collaborators.
+ * Why: Package matching/import semantics remain stable while discovery, fingerprinting and identity persistence move behind namespaced collaborators.
  * Role: Transitional source-scan orchestration; parsing/import helpers remain in CatalogSourceScan.php during staged cleanup.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSourceScan.php';
 
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogSourceIdentityQuery;
 use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceFingerprintSession;
+use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceLocationRecorder;
 use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceScanDiscovery;
-
-/** @return array<string,mixed>|null */
-function catalog_source_scan_catalog_identity(PDO $db, int $fileId): ?array
-{
-    if ($fileId < 1) {
-        return null;
-    }
-    $row = catalog_one(
-        $db,
-        'SELECT id,md5,sha1,package_guid FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
-        [$fileId]
-    );
-    return is_array($row) ? $row : null;
-}
 
 /**
  * Local source scan variant used by the durable worker after PAK containers have
@@ -78,6 +66,8 @@ function catalog_source_scan_run_without_containers(
     $fingerprints = new CatalogSourceFingerprintSession($db);
     $fingerprints->applyCounters($counters);
     $fingerprintCacheAvailable = $fingerprints->available();
+    $identities = new PdoCatalogSourceIdentityQuery($db);
+    $locations = new CatalogSourceLocationRecorder($db);
 
     $discovery = (new CatalogSourceScanDiscovery())->discover(
         $basePath,
@@ -90,10 +80,6 @@ function catalog_source_scan_run_without_containers(
     $counters['containers_skipped'] = (int)$discovery['containers_skipped'];
 
     $total = count($files);
-    $upsert = $db->prepare(
-        'INSERT INTO ue_file_locations(file_id,source_id,source_relative_path,exists_in_source,last_seen_at) '
-        . 'VALUES(?,?,?,?,NOW()) ON DUPLICATE KEY UPDATE exists_in_source=VALUES(exists_in_source),last_seen_at=NOW()'
-    );
     catalog_source_scan_report($progress, [
         'stage' => 'scanning', 'done' => 0, 'total' => max(1, $total), 'percent' => 0,
         'message' => $total > 0 ? 'Scanning ' . $total . ' package-like files.' : 'No package-like files were found.',
@@ -113,10 +99,10 @@ function catalog_source_scan_run_without_containers(
                 $cachedFile = $fingerprints->resolveVerifiedFile($cached, (int)$source['game_id']);
                 if (is_array($cachedFile)) {
                     $work = $fingerprints->cachedWork($path, $cached);
-                    catalog_source_scan_record_location($upsert, (int)$cachedFile['id'], $sourceId, $relativePath);
-                    scanner_record_source_relative_path(
-                        $db,
+                    $locations->recordMatched(
                         (int)$cachedFile['id'],
+                        $sourceId,
+                        $relativePath,
                         catalog_source_scan_normalized_relative_path($relativePath, $work)
                     );
                     $method = (string)($cachedFile['_cache_match_method'] ?? $cached['match_method'] ?? 'md5');
@@ -165,17 +151,12 @@ function catalog_source_scan_run_without_containers(
                 continue;
             }
 
-            $file = catalog_one(
-                $db,
-                'SELECT id,md5,sha1,package_guid FROM ue_files '
-                . 'WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
-                [(int)$source['game_id'], $md5]
-            );
-            if ($file) {
-                catalog_source_scan_record_location($upsert, (int)$file['id'], $sourceId, $relativePath);
-                scanner_record_source_relative_path(
-                    $db,
+            $file = $identities->findVerifiedByMd5((int)$source['game_id'], $md5);
+            if (is_array($file)) {
+                $locations->recordMatched(
                     (int)$file['id'],
+                    $sourceId,
+                    $relativePath,
                     catalog_source_scan_normalized_relative_path($relativePath, $work)
                 );
                 $counters['matched_md5']++;
@@ -218,17 +199,20 @@ function catalog_source_scan_run_without_containers(
                     continue;
                 }
                 try {
-                    $result = catalog_source_scan_import_work_file($db, $config, $source, $work, $relativePath, $strictProfile, $userId);
-                    catalog_source_scan_record_import_result(
-                        $upsert,
-                        $sourceId,
+                    $result = catalog_source_scan_import_work_file(
+                        $db,
+                        $config,
+                        $source,
+                        $work,
                         $relativePath,
-                        $result,
-                        $counters['imported'],
-                        $counters['duplicates'],
-                        $counters['locations']
+                        $strictProfile,
+                        $userId
                     );
-                    $importedFile = catalog_source_scan_catalog_identity($db, (int)($result[1] ?? 0));
+                    $accounting = $locations->recordImportResult($sourceId, $relativePath, $result);
+                    $counters['imported'] += $accounting['imported'];
+                    $counters['duplicates'] += $accounting['duplicates'];
+                    $counters['locations'] += $accounting['locations'];
+                    $importedFile = $identities->findVerifiedById((int)($result[1] ?? 0));
                     $fingerprints->remember(
                         $sourceId,
                         $relativePath,
@@ -264,17 +248,12 @@ function catalog_source_scan_run_without_containers(
             }
 
             if ($guid !== '') {
-                $matches = catalog_all(
-                    $db,
-                    'SELECT id,md5,sha1,package_guid FROM ue_files '
-                    . 'WHERE game_id=? AND scan_status="verified" AND package_guid=? ORDER BY id',
-                    [(int)$source['game_id'], $guid]
-                );
+                $matches = $identities->findVerifiedByGuid((int)$source['game_id'], $guid);
                 if (count($matches) === 1) {
-                    catalog_source_scan_record_location($upsert, (int)$matches[0]['id'], $sourceId, $relativePath);
-                    scanner_record_source_relative_path(
-                        $db,
+                    $locations->recordMatched(
                         (int)$matches[0]['id'],
+                        $sourceId,
+                        $relativePath,
                         catalog_source_scan_normalized_relative_path($relativePath, $work)
                     );
                     $counters['matched_guid']++;
@@ -340,17 +319,20 @@ function catalog_source_scan_run_without_containers(
             }
 
             try {
-                $result = catalog_source_scan_import_work_file($db, $config, $source, $work, $relativePath, $strictProfile, $userId);
-                catalog_source_scan_record_import_result(
-                    $upsert,
-                    $sourceId,
+                $result = catalog_source_scan_import_work_file(
+                    $db,
+                    $config,
+                    $source,
+                    $work,
                     $relativePath,
-                    $result,
-                    $counters['imported'],
-                    $counters['duplicates'],
-                    $counters['locations']
+                    $strictProfile,
+                    $userId
                 );
-                $importedFile = catalog_source_scan_catalog_identity($db, (int)($result[1] ?? 0));
+                $accounting = $locations->recordImportResult($sourceId, $relativePath, $result);
+                $counters['imported'] += $accounting['imported'];
+                $counters['duplicates'] += $accounting['duplicates'];
+                $counters['locations'] += $accounting['locations'];
+                $importedFile = $identities->findVerifiedById((int)($result[1] ?? 0));
                 $fingerprints->remember(
                     $sourceId,
                     $relativePath,

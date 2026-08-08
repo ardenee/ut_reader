@@ -2,7 +2,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Verifies the local no-container source-scan discovery/fingerprint boundaries.
+ * Purpose: Verifies the local no-container source-scan architecture boundaries.
  * Why: Source scanning is performance-sensitive and parser/import semantics must not drift while the legacy orchestrator is decomposed.
  * Role: Read-only CLI architecture/regression verifier; it performs no database or source-file mutation.
  */
@@ -31,23 +31,30 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 };
 
 $runner = $read('catalog/lib/CatalogSourceScanNoContainers.php');
+$shared = $read('catalog/lib/CatalogSourceScan.php');
 $discovery = $read('catalog/src/Infrastructure/Source/CatalogSourceScanDiscovery.php');
 $fingerprints = $read('catalog/src/Infrastructure/Source/CatalogSourceFingerprintSession.php');
+$identities = $read('catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php');
+$locations = $read('catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php');
 $service = $read('catalog/src/Infrastructure/Source/CatalogSourceScanService.php');
 
 $record(
-    'runner_delegates_discovery_and_fingerprints',
+    'runner_delegates_scan_infrastructure',
     str_contains($runner, 'CatalogSourceScanDiscovery')
         && str_contains($runner, 'CatalogSourceFingerprintSession')
+        && str_contains($runner, 'PdoCatalogSourceIdentityQuery')
+        && str_contains($runner, 'CatalogSourceLocationRecorder')
         && str_contains($runner, '->discover(')
         && str_contains($runner, '->probeAndLookup(')
-        && str_contains($runner, '->remember(')
-        && str_contains($runner, '->applyCounters(')
+        && str_contains($runner, '->findVerifiedByMd5(')
+        && str_contains($runner, '->findVerifiedByGuid(')
+        && str_contains($runner, '->recordMatched(')
+        && str_contains($runner, '->recordImportResult(')
         && !str_contains($runner, 'new RecursiveDirectoryIterator(')
         && !str_contains($runner, 'PdoSourceFileFingerprintCache')
-        && !str_contains($runner, 'function catalog_source_scan_cached_work(')
-        && !str_contains($runner, 'function catalog_source_scan_remember_fingerprint('),
-    'source runner must not regain traversal or fingerprint cache policy'
+        && !str_contains($runner, 'INSERT INTO ue_file_locations')
+        && !str_contains($runner, 'scan_status="verified"'),
+    'source runner must not regain traversal, fingerprint cache, verified-file SQL or source-location persistence'
 );
 
 $record(
@@ -83,9 +90,33 @@ $record(
     'fingerprint cache hits must preserve the existing cached work-file descriptor'
 );
 
-$md5Lookup = strpos($runner, 'AND md5=? LIMIT 1');
+$record(
+    'identity_query_contract',
+    str_contains($identities, 'findVerifiedById(')
+        && str_contains($identities, 'findVerifiedByMd5(')
+        && str_contains($identities, 'findVerifiedByGuid(')
+        && str_contains($identities, 'WHERE id=? AND scan_status="verified" LIMIT 1')
+        && str_contains($identities, 'WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1')
+        && str_contains($identities, 'WHERE game_id=? AND scan_status="verified" AND package_guid=? ORDER BY id'),
+    'verified identity lookup must preserve the existing exact ID/MD5/GUID SQL semantics'
+);
+
+$record(
+    'location_persistence_contract',
+    str_contains($locations, 'PdoCatalogSourcePathStore')
+        && str_contains($locations, 'INSERT INTO ue_file_locations')
+        && str_contains($locations, 'ON DUPLICATE KEY UPDATE')
+        && str_contains($locations, 'recordMatched(')
+        && str_contains($locations, 'recordImportResult(')
+        && str_contains($locations, "if ((\$result[0] ?? '') === 'duplicate')")
+        && str_contains($locations, "return ['imported' => 0, 'duplicates' => 1, 'locations' => \$locations];")
+        && str_contains($locations, "return ['imported' => 1, 'duplicates' => 0, 'locations' => 1];"),
+    'matched files and import results must retain ue_file_locations/source-path persistence and accounting semantics'
+);
+
+$md5Lookup = strpos($runner, 'findVerifiedByMd5(');
 $headerRead = strpos($runner, 'catalog_try_read_package_header(');
-$guidLookup = strpos($runner, 'AND package_guid=? ORDER BY id');
+$guidLookup = strpos($runner, 'findVerifiedByGuid(');
 $importCall = strpos($runner, 'catalog_source_scan_import_work_file(');
 $record(
     'identity_decision_order_preserved',
@@ -96,6 +127,16 @@ $record(
         && $md5Lookup < $headerRead
         && $headerRead < $guidLookup,
     'full MD5 match must precede package-header/GUID matching; imports remain fallback behavior'
+);
+
+$record(
+    'retired_persistence_helpers_absent',
+    !str_contains($runner, 'catalog_source_scan_record_location(')
+        && !str_contains($runner, 'catalog_source_scan_record_import_result(')
+        && !str_contains($runner, 'catalog_source_scan_catalog_identity(')
+        && !str_contains($shared, 'function catalog_source_scan_record_location(')
+        && !str_contains($shared, 'function catalog_source_scan_record_import_result('),
+    'retired procedural identity/location helpers must not return after namespaced extraction'
 );
 
 $record(
@@ -117,8 +158,11 @@ $record(
 
 $criticalPhp = [
     'catalog/bin/verify-source-scan-boundaries.php',
+    'catalog/lib/CatalogSourceScan.php',
     'catalog/lib/CatalogSourceScanNoContainers.php',
+    'catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php',
     'catalog/src/Infrastructure/Source/CatalogSourceFingerprintSession.php',
+    'catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php',
     'catalog/src/Infrastructure/Source/CatalogSourceScanDiscovery.php',
     'catalog/src/Infrastructure/Source/CatalogSourceScanService.php',
 ];
