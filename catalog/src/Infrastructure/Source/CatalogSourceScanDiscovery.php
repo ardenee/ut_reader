@@ -16,11 +16,6 @@ use SplFileInfo;
 
 final class CatalogSourceScanDiscovery
 {
-    public function __construct()
-    {
-        require_once dirname(__DIR__, 3) . '/lib/CatalogSourceScan.php';
-    }
-
     /**
      * @param array<string,mixed> $profile
      * @param array<string,mixed> $config
@@ -35,7 +30,7 @@ final class CatalogSourceScanDiscovery
         array $counters,
         ?callable $progress = null
     ): array {
-        \catalog_source_scan_report($progress, [
+        CatalogSourceScanProgress::report($progress, [
             'stage' => 'discovering',
             'done' => 0,
             'total' => 0,
@@ -62,18 +57,18 @@ final class CatalogSourceScanDiscovery
                 $containersSkipped++;
                 continue;
             }
-            if (!\catalog_source_scan_allowed_file($path, $profile, $config)) {
+            if (!CatalogSourceScanPathPolicy::allowedFile($path, $profile, $config)) {
                 continue;
             }
 
             $files[] = [
                 $path,
-                \catalog_source_scan_relative_path($basePath, $path),
+                CatalogSourceScanPathPolicy::relativePath($basePath, $path),
             ];
             if ((count($files) % 250) === 0) {
                 $stateCounters = $counters;
                 $stateCounters['containers_skipped'] = $containersSkipped;
-                \catalog_source_scan_report($progress, [
+                CatalogSourceScanProgress::report($progress, [
                     'stage' => 'discovering',
                     'done' => count($files),
                     'total' => 0,
