@@ -1,17 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for unverified file rename.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Processes the administrator POST action for renaming one unverified file.
+ * Why: HTTP/session concerns remain here while rename validation, filesystem rollback and persistence are delegated.
+ * Role: Thin web action endpoint for the unverified rename use case.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogUnverifiedRename.php';
+
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedRenameService;
 
 try {
     $config = catalog_config();
@@ -45,11 +43,13 @@ try {
         // Compatible servers may expose only one of these session variables.
     }
 
-    $result = catalog_unverified_rename_file($db, $config, (int)$fileId, $newName);
+    $result = (new CatalogUnverifiedRenameService($db, $config))->rename((int)$fileId, $newName);
 
     catalog_start_session();
     $_SESSION['flash_unverified_rename'] = 'Renamed '
-        . ((string)$result['old_name'] !== '' ? (string)$result['old_name'] : (string)$result['old_queue_name'])
+        . ((string)$result['old_name'] !== ''
+            ? (string)$result['old_name']
+            : (string)$result['old_queue_name'])
         . ' to ' . (string)$result['new_name'] . '.';
     session_write_close();
 
