@@ -9,8 +9,9 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogLegacyDataAudit.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
+
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogLegacyDataAuditService;
 
 function legacy_data_audit_reply(array $payload, int $status = 200): never
 {
@@ -60,28 +61,15 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
+    $audit = new CatalogLegacyDataAuditService($db, $config);
 
     if ($operation === 'list_files') {
-        $gameId = legacy_data_audit_post_int('game_id');
-        $game = catalog_one(
-            $db,
-            'SELECT g.id,g.name,p.engine_key FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE g.id=?',
-            [$gameId]
-        );
-        if (!$game || !in_array(strtoupper((string)$game['engine_key']), ['UE1', 'UE2', 'UE3'], true)) {
-            throw new RuntimeException('Select a UE1, UE2 or UE3 game.');
-        }
-        $files = catalog_all(
-            $db,
-            'SELECT id,original_name,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY package_name,original_name,id',
-            [$gameId]
-        );
-        legacy_data_audit_reply(['ok' => true, 'game' => $game, 'files' => $files]);
+        $result = $audit->filesForGame(legacy_data_audit_post_int('game_id'));
+        legacy_data_audit_reply(['ok' => true] + $result);
     }
 
     if ($operation === 'audit_file') {
-        $fileId = legacy_data_audit_post_int('file_id');
-        $result = catalog_legacy_audit_file($db, $config, $fileId, $progress);
+        $result = $audit->auditFile(legacy_data_audit_post_int('file_id'), $progress);
         legacy_data_audit_reply(['ok' => true, 'result' => $result]);
     }
 

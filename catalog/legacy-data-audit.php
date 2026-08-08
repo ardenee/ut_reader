@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogLegacyDataAuditService;
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -19,15 +21,7 @@ try {
         exit;
     }
 
-    $games = catalog_all(
-        $db,
-        'SELECT g.id,g.name,p.engine_key,COUNT(f.id) file_count'
-        . ' FROM ue_games g'
-        . ' JOIN ue_game_profiles p ON p.id=g.profile_id'
-        . ' LEFT JOIN ue_files f ON f.game_id=g.id AND f.scan_status="verified"'
-        . ' WHERE UPPER(p.engine_key) IN ("UE1","UE2","UE3")'
-        . ' GROUP BY g.id,g.name,p.engine_key ORDER BY p.engine_key,g.name'
-    );
+    $games = (new CatalogLegacyDataAuditService($db, $config))->eligibleGames();
     $selectedGameId = filter_input(INPUT_GET, 'game_id', FILTER_VALIDATE_INT);
     $selectedGameId = ($selectedGameId === false || $selectedGameId === null || $selectedGameId < 1)
         ? (int)($games[0]['id'] ?? 0)
