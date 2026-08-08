@@ -209,7 +209,7 @@ $record(
 
 $legacyStager = $read('catalog/src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php');
 $legacyStagerCallers = [
-    'catalog/lib/CatalogSourceScan.php',
+    'catalog/src/Infrastructure/Source/CatalogSourceProfiledImportService.php',
     'catalog/lib/FederationWorker.php',
     'catalog/lib/Scanner/CatalogScannerSupport.php',
     'catalog/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php',
