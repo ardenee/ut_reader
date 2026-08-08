@@ -12,9 +12,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
-require_once __DIR__ . '/lib/ModPackageBuilder.php';
 
 use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
+use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
 
 function render_availability(PDO $db, int $fileId): string
 {
@@ -57,15 +58,17 @@ try {
     if (!$file) {
         throw new RuntimeException('File not found');
     }
-    $game = modpkg_game_row($db, (int)$file['game_id']);
+
+    $packageSettings = new CatalogPackageExportSettingsService($db);
+    $game = $packageSettings->game((int)$file['game_id']);
     if (!$game) {
         throw new RuntimeException('Game not found');
     }
 
-    $settings = modpkg_settings($db);
-    $formats = modpkg_available_formats($game, $settings);
-    $labels = modpkg_format_labels();
-    $defaultFormat = modpkg_default_format($game, $settings);
+    $settings = $packageSettings->settings();
+    $formats = $packageSettings->availableFormats($game, $settings);
+    $labels = $packageSettings->formatLabels();
+    $defaultFormat = $packageSettings->defaultFormat($game, $settings);
     if (!in_array($defaultFormat, $formats, true)) {
         $defaultFormat = $formats[0] ?? '';
     }
@@ -111,7 +114,12 @@ try {
         $preview = null;
         $previewError = null;
         try {
-            $preview = modpkg_plan($db, $config, $id, $defaultFormat, true, $settings);
+            $preview = (new PdoCatalogPackageExportPlanner($db, $config))->plan(
+                $id,
+                $defaultFormat,
+                true,
+                $settings
+            );
         } catch (Throwable $previewException) {
             $previewError = $previewException->getMessage();
         }
