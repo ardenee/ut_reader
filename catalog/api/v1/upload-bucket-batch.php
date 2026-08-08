@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Handles the catalog v1 HTTP endpoint for upload bucket batch.
- * Why: It exposes this operation as a narrowly scoped machine-readable request instead of mixing API behavior into
- *      HTML pages.
- * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated
- *       here.
- * Audit: Active API surface unless its callers/tests prove otherwise; preserve request/response compatibility when
- *        consolidating.
+ * Purpose: Handles the catalog v1 HTTP endpoint for Upload Bucket batch finalization.
+ * Why: HTTP validation and response formatting stay here while queue/worker orchestration is delegated.
+ * Role: Thin HTTP API entry point.
  */
 declare(strict_types=1);
 
@@ -15,9 +11,8 @@ require_once __DIR__ . '/_bootstrap.php';
 require_once dirname(__DIR__, 2) . '/lib/CatalogRedirectArchive.php';
 require_once dirname(__DIR__, 2) . '/lib/GameProfiles.php';
 
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchQueue;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketBatchFinalizer;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketProcessingActive;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -68,41 +63,21 @@ try {
     }
     $uploadIds = array_values($uploadIds);
 
-    $queue = new CatalogBucketBatchQueue($application->db, $application->config);
-    $launcher = new CatalogDetachedWorker($application->config);
-    $orphanRecovery = [];
-
-    // The first file establishes a safe paused queue and the final empty request
-    // starts the worker. Intermediate one-file requests do not repeat worker
-    // inspection or code-version hashing.
-    if ($prepareQueue || $startWorker) {
-        $activeQueues = [];
-        foreach ([$queue->queueName(), $queue->legacyQueueName()] as $queueName) {
-            $workerStatus = $launcher->status($queueName, false);
-            if ($prepareQueue && empty($workerStatus['active'])) {
-                $recovery = (new CatalogOrphanedJobRecovery($application->db, $application->config))
-                    ->recoverInactiveQueue($queueName);
-                if (!empty($recovery['recovered'])) {
-                    $orphanRecovery[$queueName] = $recovery;
-                }
-                $workerStatus = $launcher->status($queueName, false);
-            }
-            if (!empty($workerStatus['active'])) {
-                $activeQueues[] = $queueName;
-            }
-        }
-        if ($activeQueues !== []) {
-            JsonResponse::error(
-                'bucket_processing_not_paused',
-                'Upload Bucket processing is still active in ' . implode(', ', $activeQueues)
-                    . '. Wait for the current job to finish or stop that job, then retry file finalisation.',
-                409,
-                ['active_queues' => $activeQueues]
-            );
-        }
+    try {
+        $finalized = (new CatalogBucketBatchFinalizer($application->db, $application->config))->finalize(
+            $uploadIds,
+            $userId,
+            $prepareQueue,
+            $startWorker
+        );
+    } catch (CatalogBucketProcessingActive $blocked) {
+        JsonResponse::error(
+            'bucket_processing_not_paused',
+            $blocked->getMessage(),
+            409,
+            ['active_queues' => $blocked->activeQueues]
+        );
     }
-
-    $legacyMigrated = $prepareQueue ? $queue->migrateLegacyQueuedJobs() : 0;
 
     $messages = [];
     $jobIds = [];
@@ -110,107 +85,90 @@ try {
     $duplicates = 0;
     $failed = 0;
 
-    foreach ($uploadIds as $uploadId) {
-        try {
-            $result = $queue->enqueueCompletedUpload($uploadId, $userId);
-            $jobId = (int)($result['job_id'] ?? 0);
-            if ($jobId > 0) {
-                $jobIds[$jobId] = $jobId;
-            }
-
-            $md5 = trim((string)($result['md5'] ?? ''));
-            $sha1 = trim((string)($result['sha1'] ?? ''));
-            $identityText = $md5 !== '' && $sha1 !== ''
-                ? ' MD5: ' . $md5 . ' | SHA-1: ' . $sha1
-                : '';
-
-            if (!empty($result['deduplicated'])) {
-                $duplicates++;
-                $kind = (string)($result['duplicate_kind'] ?? '');
-                $duplicateFileId = (int)($result['duplicate_file_id'] ?? 0);
-                if (in_array($kind, ['upload_bucket', 'catalog_storage'], true)) {
-                    $message = 'An identical physical file already exists in '
-                        . ($kind === 'upload_bucket' ? 'the Upload Bucket' : 'catalog storage')
-                        . ' as file #' . $duplicateFileId . '.';
-                } else {
-                    $message = 'Exact uploaded source content already belongs to active processing job #' . $jobId . '.';
-                }
-                if (!empty($result['duplicate_source_removed'])) {
-                    $message .= ' The repeated staged upload was deleted before package processing.';
-                }
-                $messages[] = [
-                    'status' => 'duplicate',
-                    'file' => (string)$result['source_relative_path'],
-                    'file_id' => $duplicateFileId,
-                    'message' => $message . $identityText,
-                    'file_size' => (int)$result['size'],
-                    'file_size_text' => catalog_bytes((int)$result['size']),
-                    'job_id' => $jobId,
-                ];
-                continue;
-            }
-
-            $queued++;
-            $messages[] = [
-                'status' => 'queued',
-                'file' => (string)$result['source_relative_path'],
-                'message' => $identityText !== ''
-                    ? 'Upload completed, retained its pre-calculated package MD5/SHA-1 and passed the final physical duplicate check. Processing job #' . $jobId . ' was created.'
-                    : 'Redirect wrapper upload completed. Processing job #' . $jobId . ' will decompress it, calculate the real package MD5/SHA-1 and then run the physical duplicate check.',
-                'file_size' => (int)$result['size'],
-                'file_size_text' => catalog_bytes((int)($result['size'] ?? 0)),
-                'job_id' => $jobId,
-            ];
-        } catch (Throwable $error) {
+    foreach ($finalized['results'] as $item) {
+        $uploadId = (string)($item['upload_id'] ?? '');
+        $error = is_array($item['error'] ?? null) ? $item['error'] : null;
+        if ($error !== null) {
             $failed++;
             $requestId = catalog_request_id();
-            $errorMessage = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
-            error_log('[UnrealDB][' . $requestId . '] bucket file ' . $uploadId . ' failed: ' . get_class($error) . ': ' . $errorMessage);
+            $errorClass = trim((string)($error['class'] ?? 'RuntimeException')) ?: 'RuntimeException';
+            $errorMessage = trim((string)($error['message'] ?? '')) ?: $errorClass . ' was thrown without an error message.';
+            error_log('[UnrealDB][' . $requestId . '] bucket file ' . $uploadId . ' failed: ' . $errorClass . ': ' . $errorMessage);
             $messages[] = [
                 'status' => 'failed',
                 'file' => $uploadId,
                 'message' => $errorMessage . ' | reference: ' . $requestId,
             ];
+            continue;
         }
+
+        $result = is_array($item['result'] ?? null) ? $item['result'] : [];
+        $jobId = (int)($result['job_id'] ?? 0);
+        if ($jobId > 0) {
+            $jobIds[$jobId] = $jobId;
+        }
+
+        $md5 = trim((string)($result['md5'] ?? ''));
+        $sha1 = trim((string)($result['sha1'] ?? ''));
+        $identityText = $md5 !== '' && $sha1 !== ''
+            ? ' MD5: ' . $md5 . ' | SHA-1: ' . $sha1
+            : '';
+
+        if (!empty($result['deduplicated'])) {
+            $duplicates++;
+            $kind = (string)($result['duplicate_kind'] ?? '');
+            $duplicateFileId = (int)($result['duplicate_file_id'] ?? 0);
+            if (in_array($kind, ['upload_bucket', 'catalog_storage'], true)) {
+                $message = 'An identical physical file already exists in '
+                    . ($kind === 'upload_bucket' ? 'the Upload Bucket' : 'catalog storage')
+                    . ' as file #' . $duplicateFileId . '.';
+            } else {
+                $message = 'Exact uploaded source content already belongs to active processing job #' . $jobId . '.';
+            }
+            if (!empty($result['duplicate_source_removed'])) {
+                $message .= ' The repeated staged upload was deleted before package processing.';
+            }
+            $messages[] = [
+                'status' => 'duplicate',
+                'file' => (string)$result['source_relative_path'],
+                'file_id' => $duplicateFileId,
+                'message' => $message . $identityText,
+                'file_size' => (int)$result['size'],
+                'file_size_text' => catalog_bytes((int)$result['size']),
+                'job_id' => $jobId,
+            ];
+            continue;
+        }
+
+        $queued++;
+        $messages[] = [
+            'status' => 'queued',
+            'file' => (string)$result['source_relative_path'],
+            'message' => $identityText !== ''
+                ? 'Upload completed, retained its pre-calculated package MD5/SHA-1 and passed the final physical duplicate check. Processing job #' . $jobId . ' was created.'
+                : 'Redirect wrapper upload completed. Processing job #' . $jobId . ' will decompress it, calculate the real package MD5/SHA-1 and then run the physical duplicate check.',
+            'file_size' => (int)$result['size'],
+            'file_size_text' => catalog_bytes((int)($result['size'] ?? 0)),
+            'job_id' => $jobId,
+        ];
     }
 
-    $pendingJobs = catalog_count(
-        $application->db,
-        'SELECT COUNT(*) c FROM ue_background_jobs WHERE queue_name=? AND status="queued"',
-        [$queue->queueName()]
-    );
-    $worker = null;
-    $workerError = '';
-    if ($startWorker && $pendingJobs > 0) {
-        try {
-            (new CatalogOrphanedJobRecovery($application->db, $application->config))
-                ->recoverInactiveQueue($queue->queueName());
-            $worker = $launcher->start($queue->queueName(), 10000);
-        } catch (Throwable $error) {
-            $workerError = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
-            error_log('[UnrealDB bucket worker] ' . get_class($error) . ': ' . $workerError);
-        }
-    }
-
-    // A failed uploaded file is a file result, not a failed HTTP operation.
-    // Returning it normally lets the browser record that exact file and continue
-    // finalising every later staged file.
     JsonResponse::send([
         'ok' => true,
         'data' => [
-            'queue' => $queue->queueName(),
+            'queue' => (string)$finalized['queue'],
             'requested' => count($uploadIds),
             'queued' => $queued,
             'duplicates' => $duplicates,
             'failed' => $failed,
-            'legacy_migrated' => $legacyMigrated,
-            'pending_jobs' => $pendingJobs,
-            'prepare_queue' => $prepareQueue,
-            'start_worker' => $startWorker,
+            'legacy_migrated' => (int)$finalized['legacy_migrated'],
+            'pending_jobs' => (int)$finalized['pending_jobs'],
+            'prepare_queue' => (bool)$finalized['prepare_queue'],
+            'start_worker' => (bool)$finalized['start_worker'],
             'job_ids' => array_values($jobIds),
-            'worker' => $worker,
-            'worker_error' => $workerError,
-            'orphan_recovery' => $orphanRecovery,
+            'worker' => $finalized['worker'],
+            'worker_error' => (string)$finalized['worker_error'],
+            'orphan_recovery' => $finalized['orphan_recovery'],
             'messages' => $messages,
         ],
     ], 200);
