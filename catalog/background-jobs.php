@@ -1,16 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Background Jobs.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders the Background Jobs administrator page.
+ * Why: The page selects a queue/read model and renders the stable UI; durable-job SQL lives in Infrastructure.
+ * Role: Thin web UI entry point.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobQueueSummaryQuery;
 
 try {
     $config = catalog_config();
@@ -28,24 +27,7 @@ try {
         $requestedQueue = '';
     }
 
-    $queueRows = catalog_all(
-        $db,
-        'SELECT queue_name,COUNT(*) total,'
-            . 'SUM(status="queued") queued_total,SUM(status="running") running_total '
-            . 'FROM ue_background_jobs GROUP BY queue_name ORDER BY queue_name'
-    );
-    $queueOptions = [];
-    foreach ($queueRows as $row) {
-        $name = trim((string)($row['queue_name'] ?? ''));
-        if ($name === '') {
-            continue;
-        }
-        $queueOptions[$name] = [
-            'total' => (int)($row['total'] ?? 0),
-            'queued' => (int)($row['queued_total'] ?? 0),
-            'running' => (int)($row['running_total'] ?? 0),
-        ];
-    }
+    $queueOptions = (new PdoBackgroundJobQueueSummaryQuery($db))->all();
     if (!isset($queueOptions[$configuredQueue])) {
         $queueOptions[$configuredQueue] = ['total' => 0, 'queued' => 0, 'running' => 0];
     }
