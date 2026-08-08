@@ -100,10 +100,13 @@ $record(
     'outer cleanup must retain targeted unverified rows and ue_pak_archives accounting'
 );
 
+$resetOptimiseCall = "PdoCatalogGameTableMaintenance::tableList(false),\n"
+    . "            \$progress,\n"
+    . "            78,\n"
+    . "            96";
 $record(
     'reset_reconciliation_contract',
-    str_contains($lifecycle, 'PdoCatalogGameTableMaintenance::tableList(false)')
-        && str_contains($lifecycle, '$progress,\n            78,\n            96')
+    str_contains($lifecycle, $resetOptimiseCall)
         && str_contains($lifecycle, "'reconcile'")
         && str_contains($lifecycle, 'CatalogProjectionReconciliationQueue::enqueue(')
         && str_contains($lifecycle, "'reconciliation_job_id'")
@@ -111,9 +114,13 @@ $record(
     'reset must optimize, queue zero-state projection reconciliation and report completion'
 );
 
+$deleteOptimiseCall = "PdoCatalogGameTableMaintenance::tableList(true),\n"
+    . "            \$progress,\n"
+    . "            78,\n"
+    . "            99";
 $record(
     'delete_contract',
-    str_contains($lifecycle, 'PdoCatalogGameTableMaintenance::tableList(true)')
+    str_contains($lifecycle, $deleteOptimiseCall)
         && str_contains($lifecycle, 'DELETE FROM ue_base_game_files WHERE game_id=?')
         && str_contains($lifecycle, 'DELETE FROM ue_games WHERE id=?')
         && str_contains($lifecycle, "'deleted_game_id'")
