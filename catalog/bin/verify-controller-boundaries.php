@@ -37,6 +37,7 @@ $criticalPhp = [
     'src/Infrastructure/Jobs/CatalogQueueWorkerStarter.php',
     'src/Infrastructure/Jobs/CatalogGeneratedPackageJobAccess.php',
     'src/Infrastructure/Jobs/CatalogManualJobRecovery.php',
+    'src/Infrastructure/Unverified/CatalogUnverifiedActionService.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedActionSourceResolver.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
@@ -175,20 +176,27 @@ $record(
 );
 
 $unverifiedController = $read('unverified-files-action.php');
+$unverifiedAction = $read('src/Infrastructure/Unverified/CatalogUnverifiedActionService.php');
+$unverifiedImport = $read('src/Infrastructure/Unverified/CatalogUnverifiedImportService.php');
 $unverifiedPromotion = $read('src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php');
 $unverifiedRecovery = $read('src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php');
 $record(
     'unverified_promotion_boundary',
     $unverifiedController !== ''
         && str_contains($unverifiedController, 'CatalogUnverifiedActionSourceResolver')
-        && str_contains($unverifiedController, 'CatalogUnverifiedImportService')
+        && str_contains($unverifiedController, 'CatalogUnverifiedActionService')
+        && !str_contains($unverifiedController, 'CatalogUnverifiedImportService')
         && !str_contains($unverifiedController, 'beginTransaction()')
         && !str_contains($unverifiedController, 'md5_file(')
         && !str_contains($unverifiedController, 'ue_dependencies')
+        && str_contains($unverifiedAction, 'CatalogUnverifiedImportService')
+        && str_contains($unverifiedAction, 'CatalogUnverifiedQueueMutationService')
+        && str_contains($unverifiedImport, 'CatalogUnverifiedPromotion')
+        && str_contains($unverifiedImport, 'CatalogUnverifiedDependencyRecovery')
         && str_contains($unverifiedPromotion, 'beginTransaction()')
         && str_contains($unverifiedPromotion, 'packageIdentity')
         && str_contains($unverifiedRecovery, 'ue_dependencies'),
-    'HTTP action must delegate storage/identity/transaction/recovery work to the Unverified infrastructure services'
+    'HTTP action must delegate through action/import services before storage/identity/transaction/recovery infrastructure'
 );
 
 $result = [
