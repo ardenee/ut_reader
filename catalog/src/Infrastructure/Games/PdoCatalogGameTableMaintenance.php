@@ -33,7 +33,7 @@ final class PdoCatalogGameTableMaintenance
     }
 
     /** @return list<string> */
-    public function tableList(bool $deleteGame): array
+    public static function tableList(bool $deleteGame): array
     {
         $tables = [
             'ue_asset_registry_tags',
