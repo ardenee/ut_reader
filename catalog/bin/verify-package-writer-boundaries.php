@@ -38,6 +38,9 @@ $read = static function (string $relative) use ($repoRoot): string {
     $content = @file_get_contents($path);
     return is_string($content) ? $content : '';
 };
+$path = static function (string $relative) use ($repoRoot): string {
+    return $repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+};
 
 $roundTripValues = [0, 1, 63, 64, 127, 128, 8192, -1, -63, -64, -8192];
 $roundTripOk = true;
@@ -61,11 +64,7 @@ $record(
     'Unreal appMemCrc("123456789") must remain 0xFC891918, not PHP reflected CRC32'
 );
 
-$descriptorOptions = [
-    'name' => 'Test Package',
-    'version' => '1.2-beta',
-    'author' => 'UnrealDB',
-];
+$descriptorOptions = ['name' => 'Test Package', 'version' => '1.2-beta', 'author' => 'UnrealDB'];
 $record(
     'descriptor_contract',
     CatalogGeneratedPackageDescriptor::generatedVersion(" 1.2 beta\r\n") === '1.2beta'
@@ -89,7 +88,6 @@ try {
     $payload = "UnrealDB package writer verifier payload\n";
     file_put_contents($payloadPath, $payload);
     $payloadSize = strlen($payload);
-
     $baseFile = [
         'id' => 1,
         'install_path' => 'Maps/DM-Test.ut2',
@@ -105,10 +103,7 @@ try {
     ];
     $basePlan = [
         'format' => CatalogPackageExportFormatPolicy::UT4MOD,
-        'root' => [
-            'id' => 1,
-            'package_name' => 'DM-Test',
-        ],
+        'root' => ['id' => 1, 'package_name' => 'DM-Test'],
         'game' => [
             'id' => 1,
             'name' => 'Unreal Tournament 2004',
@@ -128,8 +123,11 @@ try {
     ];
 
     $umodPath = $tempRoot . DIRECTORY_SEPARATOR . 'test.ut4mod';
-    $umodWriter = new CatalogGeneratedUmodWriter();
-    $umodValidation = $umodWriter->write($umodPath, $basePlan, $descriptorOptions);
+    $umodValidation = (new CatalogGeneratedUmodWriter())->write(
+        $umodPath,
+        $basePlan,
+        $descriptorOptions
+    );
     $umodEntries = [];
     foreach ((array)($umodValidation['entries'] ?? []) as $entry) {
         $umodEntries[strtolower(str_replace('/', '\\', (string)$entry['filename']))] = $entry;
@@ -232,7 +230,16 @@ try {
 
 $builder = $read('catalog/lib/GeneratedPackageBuilder.php');
 $worker = $read('catalog/src/Infrastructure/Jobs/GeneratedPackageJobHandler.php');
-$legacyUmod = $read('catalog/lib/LegacyUmodPackageBuilder.php');
+$jobEndpoint = $read('catalog/generated-package-job.php');
+$progressPage = $read('catalog/download-package.php');
+$settingsPage = $read('catalog/download-package-settings.php');
+$adminSummary = $read('catalog/src/Infrastructure/Persistence/PdoDownloadAdminSummaryQuery.php');
+$record(
+    'retired_builder_files_absent',
+    !is_file($path('catalog/lib/ModPackageBuilder.php'))
+        && !is_file($path('catalog/lib/LegacyUmodPackageBuilder.php')),
+    'retired duplicate package builders must not return to the repository'
+);
 $record(
     'active_writer_facade_is_thin',
     str_contains($builder, 'CatalogGeneratedUmodWriter')
@@ -257,27 +264,36 @@ $record(
     'worker naming/options must stay out of the procedural builder layer'
 );
 $record(
-    'legacy_umod_facade_uses_shared_codec',
-    str_contains($legacyUmod, 'CatalogUmodBinaryCodec::unrealMemCrcStream')
-        && str_contains($legacyUmod, 'CatalogUmodBinaryCodec::compactIndex')
-        && !str_contains($legacyUmod, 'hash_init(\'crc32b\')'),
-    'legacy compatibility writer must share Unreal appMemCrc and compact-index codec'
+    'web_paths_do_not_load_retired_builders',
+    !str_contains($jobEndpoint, 'ModPackageBuilder.php')
+        && !str_contains($jobEndpoint, 'GeneratedPackageBuilder.php')
+        && str_contains($jobEndpoint, 'CatalogPackageExportSettingsService')
+        && str_contains($jobEndpoint, 'CatalogGeneratedPackageDescriptor::generatedVersion')
+        && !str_contains($progressPage, 'ModPackageBuilder.php')
+        && str_contains($progressPage, 'CatalogPackageExportSettingsService')
+        && !str_contains($settingsPage, 'modpkg_inferred_format(')
+        && str_contains($settingsPage, 'CatalogPackageExportFormatPolicy::inferred')
+        && !str_contains($adminSummary, 'ModPackageBuilder.php'),
+    'browse/enqueue/settings/admin paths must not load retired archive/planning monoliths'
 );
 
 $syntaxFiles = [
+    'catalog/generated-package-job.php',
+    'catalog/download-package.php',
+    'catalog/download-package-settings.php',
     'catalog/lib/GeneratedPackageBuilder.php',
-    'catalog/lib/LegacyUmodPackageBuilder.php',
     'catalog/src/Infrastructure/Downloads/CatalogGeneratedPackageDescriptor.php',
     'catalog/src/Infrastructure/Downloads/CatalogGeneratedUmodWriter.php',
     'catalog/src/Infrastructure/Downloads/CatalogPayloadZipWriter.php',
     'catalog/src/Infrastructure/Downloads/CatalogUmodBinaryCodec.php',
     'catalog/src/Infrastructure/Downloads/CatalogUt4PakWriter.php',
     'catalog/src/Infrastructure/Jobs/GeneratedPackageJobHandler.php',
+    'catalog/src/Infrastructure/Persistence/PdoDownloadAdminSummaryQuery.php',
 ];
 foreach ($syntaxFiles as $relative) {
-    $path = $repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+    $filePath = $path($relative);
     $process = proc_open(
-        [PHP_BINARY, '-l', $path],
+        [PHP_BINARY, '-l', $filePath],
         [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
         $pipes
     );
@@ -296,10 +312,6 @@ foreach ($syntaxFiles as $relative) {
     );
 }
 
-$result = [
-    'ok' => $failures === [],
-    'checks' => $checks,
-    'failures' => $failures,
-];
+$result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
 echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL;
 exit($failures === [] ? 0 : 2);
