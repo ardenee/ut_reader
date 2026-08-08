@@ -1,33 +1,183 @@
 # UnrealDB Architecture Baseline
 
-This document describes the current runtime architecture and the intended refactoring direction. Refactors are behavior-preserving unless explicitly stated: file identity, queue semantics, import results, search results, federation behaviour and public routes must remain stable.
+This document describes the current runtime architecture after the August 2026 queue/upload refactor. Architecture-only changes preserve file identity, package parsing rules, import outcomes, routes, API payloads, job types, queue names, dedupe keys, retry policy, federation semantics and public behaviour.
 
 ## Runtime shape
 
-UnrealDB is a modular monolith in transition. The namespaced `catalog/src` tree provides Domain, Application, Infrastructure and Presentation layers. Top-level PHP routes and a compatibility API remain under `catalog/lib`, but migrated implementations should not be duplicated there as backup code.
+UnrealDB is a **modular monolith**. The namespaced `catalog/src` tree is the primary implementation surface:
 
-### Presentation / entry points
+```text
+Presentation
+    browser pages / api/v1 / CLI entry points
+              │
+              ▼
+Application
+    use cases, policies, contracts, worker orchestration
+              │
+              ▼
+Domain
+    stable job types, claimed-job data, resource policy
+              │
+              ▼
+Infrastructure
+    PDO queries, queue persistence, filesystem storage,
+    package readers/adapters, imports, workers, federation
+```
 
-- Browser pages: `catalog/*.php` and `catalog/federation/*.php`
-- JSON API: `catalog/api/v1/*.php`
-- CLI / workers: `catalog/bin/*.php`
-- Shared request bootstrap: `catalog/lib/CatalogSupport.php`, `catalog/bootstrap.php`, `catalog/src/Presentation/Http/*`
+The intended direction remains a modular monolith with explicit boundaries, not microservices for their own sake.
 
-Entry points should validate HTTP/CLI input, resolve dependencies at the composition boundary, invoke the appropriate use case/query and render/serialize the result. They should not own SQL, filesystem policy, worker lifecycle or parser internals.
+## Layer responsibilities
 
-### Domain
+### Presentation
 
-`catalog/src/Domain` contains stable business concepts such as durable job types and resource policies. Domain code must not depend on Application, Infrastructure, PDO, HTTP, filesystem or process-launching implementations.
+- `catalog/*.php`
+- `catalog/federation/*.php`
+- `catalog/api/v1/*.php`
+- `catalog/bin/*.php`
+- `catalog/src/Presentation/*`
+
+Entry points authenticate/authorize, validate transport input, invoke a use case/query and serialize/render the result. New entry points must not contain persistence SQL, worker scheduling policy, filesystem placement policy or package-reader internals.
+
+The Background Jobs APIs now follow this rule:
+
+- `job-worker-status.php` delegates queue counts to `PdoBackgroundJobOperationalQuery` and state policy to `CatalogWorkerStatusPolicy`.
+- `job-status-cursor.php` delegates search/count/page SQL to `PdoBackgroundJobBrowserQuery` and result mapping to `CatalogBackgroundJobResultHydrator`.
+- `job-status.php` preserves the compatibility offset contract through `PdoBackgroundJobOffsetQuery` and the same shared hydrator.
+- `job-bulk.php` delegates mutation SQL to `PdoBackgroundJobBulkAction`.
 
 ### Application
 
-`catalog/src/Application` contains use-case orchestration and contracts. It should depend on Domain/Application abstractions rather than constructing PDO/filesystem/process implementations. Remaining direct persistence dependencies are migration debt, not examples for new code.
+Application code owns orchestration and policy, not PDO/filesystem implementations. Important job components include:
+
+- `Application/Jobs/JobQueue.php`
+- `Application/Jobs/JobWorker.php`
+- `Application/Jobs/JobExecutionContext.php`
+- `Application/Jobs/CatalogWorkerStatusPolicy.php`
+
+`CatalogWorkerStatusPolicy` is deliberately pure: it derives administrator-visible worker state from process state and durable queue counts without HTTP, PDO or filesystem dependencies.
+
+### Domain
+
+Domain code contains stable business concepts such as `JobType`, `ClaimedJob` and `JobResourcePolicy`. It must not depend on PDO, HTTP, filesystem or process-launching implementations.
 
 ### Infrastructure
 
-`catalog/src/Infrastructure` owns MySQL/PDO queries and repositories, filesystem storage, Unreal package readers, compact metadata, imports, job handlers, process launching and external integrations.
+Infrastructure owns persistence, filesystem, package parsing/adapters and process management.
 
-Dependency resolution/rebuilding is now explicitly Infrastructure-owned:
+## Durable background jobs
+
+There is now **one authoritative JobQueue implementation**: `PdoJobQueue`. The former worker-specific queue implementation has been removed.
+
+`PdoJobQueue` is a façade over focused persistence collaborators:
+
+```text
+PdoJobQueue
+    ├── PdoJobEnqueuer
+    │     durable inserts + active deduplication
+    ├── PdoJobClaimer
+    │     parallel claim + resource/concurrency admission
+    ├── PdoJobLeaseStore
+    │     heartbeat + completion + failure + cancellation
+    └── PdoJobRecovery
+          expired-lease recovery + explicit retry
+```
+
+Shared validation/time/JSON rules live in `PdoJobQueueSupport` rather than being duplicated across implementations.
+
+### Claim flow
+
+The old queue-wide claim mutex has been removed.
+
+Current flow:
+
+```text
+worker
+  │
+  ├─ opportunistic expired-lease recovery coordinator
+  │
+  ▼
+SELECT next ready row
+FOR UPDATE SKIP LOCKED
+  │
+  ▼
+short resource-class coordination lock
+  │
+  ├─ indexed running count < resource_limit
+  │
+  └─ optional short concurrency-key coordination lock
+          │
+          └─ indexed check that same key is not already running
+  │
+  ▼
+lease selected row
+  │
+  ▼
+commit
+```
+
+Workers assigned to unrelated resource classes can claim work concurrently. Jobs sharing a resource class are admitted atomically against the configured class limit, and jobs sharing a `concurrency_key` remain mutually exclusive.
+
+The existing queue indexes `(queue_name,status,resource_class)` and `(queue_name,status,concurrency_key)` support the admission reads; no duplicate indexes are required.
+
+### Lease lifecycle
+
+Completion, heartbeat, failure and cancellation now use `PdoJobLeaseStore` for every worker/API caller. The former divergence between one-hour and six-hour lease caps is gone; the authoritative persistence layer supports the existing long-running six-hour package-reader lease contract.
+
+### Display status read model
+
+Administrator display status is no longer repeatedly derived from `result_json` during live list/count queries.
+
+Migration `202608080001_background_job_display_status.php` adds a **stored generated** `ue_background_jobs.display_status` column derived atomically from `status` + `result_json`, plus indexes for queue/display filtering.
+
+This avoids a second mutable source of truth while making Failed/Completed counters and filters indexable.
+
+## Upload Bucket v2
+
+Canonical flow:
+
+```text
+browser
+  │ extension checks + ordinary-file MD5/SHA-1
+  ▼
+upload-bucket-chunk.php
+  │ bounded resumable staging
+  ▼
+upload-bucket-batch.php
+  │ CatalogBucketBatchQueue
+  ▼
+ue_background_jobs
+  │ PROCESS_BUCKET_UPLOAD
+  ▼
+CatalogBucketUploadJobHandler
+  │
+  ├─ ordinary package: copy + verify browser identity
+  └─ redirect wrapper: decompress + calculate package identity
+  │
+  ▼
+CatalogBucketIdentityProcessor
+  │
+  ├─ CatalogUploadDuplicateDetector
+  └─ CatalogBucketPackageOperations
+          │
+          └─ CatalogBucketPackageOperationsService
+                 ├─ CatalogPackageIdentityHasher
+                 ├─ CatalogUploadBucketStorage
+                 └─ CatalogUnverifiedPackageIndexer
+```
+
+The old `CatalogBucketUploadProcessor` monolith and `LegacyCatalogBucketPackageOperations` Reflection bridge have been deleted. No Upload Bucket production path reaches private methods through `ReflectionMethod`.
+
+### Procedural reader compatibility boundary
+
+The Unreal reader/scanner ecosystem still exposes stable procedural `scanner_*`, `catalog_*` and `uvf_*` contracts used elsewhere in the application. The new Upload Bucket services no longer scatter those calls through business logic; `CatalogUnverifiedPackageRuntime` is the explicit Infrastructure adapter for the package-reader/unverified-storage operations required by this path.
+
+That adapter is a compatibility boundary, **not** a parallel implementation. As scanner internals become namespaced, its methods can be replaced one at a time without changing Upload Bucket orchestration.
+
+## Verified metadata and dependencies
+
+Verified package metadata uses the compact per-file metadata/lookup model. Retained raw Names/Imports/Exports compatibility access is audited; new verified reads must not bypass compact compatibility sources.
+
+Dependency resolution/rebuilding is Infrastructure-owned through:
 
 - `Persistence/PdoDependencyResolver.php`
 - `Persistence/PdoCatalogDependencyRebuilder.php`
@@ -35,164 +185,87 @@ Dependency resolution/rebuilding is now explicitly Infrastructure-owned:
 - `Jobs/CatalogAffectedDependencyRefreshCoordinator.php`
 - `Metadata/CompactDependencyRebuilder.php`
 
-### Legacy compatibility layer
+`php catalog/bin/audit-legacy-runtime-references.php` guards this boundary.
 
-`catalog/lib` still exposes a procedural API used by older routes and some current workers. Compatibility functions should delegate to current namespaced implementations. Once all callers are migrated, the compatibility function/file should be deleted rather than retained as a fallback implementation.
-
-`CatalogScanner.php` is no longer a monolith. It is a thin include manifest for focused scanner compatibility modules:
-
-- `lib/Scanner/CatalogScannerPath.php`
-- `lib/Scanner/CatalogScannerSupport.php`
-- `lib/Scanner/CatalogScannerDependencies.php`
-- `lib/Scanner/CatalogScannerImport.php`
-
-The public `scanner_*` contracts remain stable while their implementations are migrated further.
-
-## Primary data flows
-
-### Upload Bucket v2
-
-1. `upload-bucket-v2.php` renders the canonical browser uploader.
-2. Browser code performs extension policy checks and ordinary-file hashing; redirect wrappers are transferred without pretending their compressed hash is package identity.
-3. `api/v1/upload-bucket-chunk.php` writes bounded resumable chunks to durable staging.
-4. `api/v1/upload-bucket-batch.php` finalizes staged files and queues durable work through `CatalogBucketBatchQueue`.
-5. `ue_background_jobs` holds durable work.
-6. Detached workers claim jobs and route each exact `JobType` to one handler.
-7. Upload/redirect processors calculate authoritative identities, store physical files and create/update unverified catalog metadata.
-8. Unverified files are later assigned/imported into a game and post-import dependency work is queued.
+## Other primary flows
 
 ### Profiled upload / staged import
 
-1. HTTP/API validates the selected game/profile and stages the file.
-2. A durable `IMPORT_STAGED_PACKAGE` or `IMPORT_STAGED_PAK` job is queued.
-3. Package jobs run through staged-import handlers; PAK jobs use the PAK import handler.
-4. Unreal readers parse package metadata.
-5. Catalog rows and compact metadata projections are persisted.
-6. Dependency/search/projection maintenance runs through durable jobs rather than extending foreground requests unnecessarily.
+1. HTTP/API validates the game/profile and stages bytes.
+2. `IMPORT_STAGED_PACKAGE` or `IMPORT_STAGED_PAK` is enqueued.
+3. Worker handlers read package/container metadata.
+4. Catalog rows + compact projections are persisted.
+5. Dependency/search/projection maintenance remains durable background work.
 
 ### Local source scan
 
-1. A configured source tree is enumerated.
-2. PAK containers are queued separately from ordinary package files.
-3. Package files are fingerprinted and compared with known physical/catalog identities.
-4. New/changed files are scanned/imported; failures are staged for review.
-5. Source-relative paths and file locations preserve physical origin and UE4/UE5 long-package identity.
-
-### Scanner package import
-
-1. `CatalogScanner.php` loads the focused scanner compatibility modules.
-2. Path/name policy determines physical filename and logical package identity.
-3. Reader/profile detection validates the package and reads Names/Imports/Exports.
-4. Physical storage and catalog rows are written using the existing import transaction semantics.
-5. `PdoCatalogDependencyRebuilder` performs dependency resolution through `PdoDependencyResolver`.
-6. Compact metadata finalization becomes authoritative for verified files.
-7. Affected-provider refresh work is coordinated through `CatalogAffectedDependencyRefreshCoordinator` unless deliberately deferred by Full Sync.
+1. Enumerate configured source tree.
+2. PAK containers are queued separately.
+3. Package fingerprints are compared with known physical/catalog identities.
+4. New/changed files are scanned/imported; failures enter unverified review.
+5. Source-relative identity is retained.
 
 ### Unverified promotion
 
-1. `unverified-files.php` reads paginated unverified inventory.
-2. `unverified-files-action.php` validates the action and resolves the staged row/file.
-3. Existing staged hashes and metadata are reused when valid.
-4. The selected game/profile and package identity are checked.
-5. The file is promoted to verified catalog state.
-6. Heavy dependency/projection work is queued after the foreground operation.
-
-### Durable background jobs
-
-1. Producers enqueue `JobType`, payload, priority, resource policy, dedupe key and retry policy.
-2. `PdoJobQueue` persists durable jobs and leases work to workers.
-3. `CatalogDetachedWorker` manages local worker processes/runtime state.
-4. `JobWorker` performs deterministic `JobType => JobHandler` dispatch.
-5. Handlers checkpoint/heartbeat while doing work.
-6. Jobs complete, retry, cancel or dead-letter while retaining result/error state.
+1. Read paginated unverified inventory.
+2. Resolve physical staged row/file.
+3. Reuse valid staged identity/metadata.
+4. Validate selected game/profile/package identity.
+5. Promote to verified catalog state.
+6. Queue heavy dependency/projection work.
 
 ### Search
 
-1. Public/admin search applies game visibility rules.
-2. Exact identifiers (hash/GUID/package identity) are preferred.
-3. Prefix and broader textual matching search file/package projections.
-4. Compact metadata terms add import/export/object/path matches.
-5. Results are normalized back to catalog files/packages for rendering.
+Exact hashes/GUIDs/package identities remain direct indexed lookups. Broad textual search uses bounded/search-projection paths where available. Leading-wildcard compatibility searches remain a known scaling concern in older non-job areas and should continue moving to explicit projections without changing result semantics.
 
 ### Federation
 
-Federation uses the same catalog identities and storage model but still contains page-local orchestration and SQL in older areas. Treat connection/authentication, inventory exchange, requests/transfers and reconciliation as a bounded context and migrate them behind stable query/use-case boundaries without changing the wire protocol.
+Federation remains a bounded context sharing catalog identities/storage. Some older federation pages still contain page-local orchestration/SQL and should migrate behind intent-specific query/use-case boundaries without changing the wire protocol.
 
-## Critical architecture debt
+## Resolved architecture debt in this refactor
 
-### 1. Legacy procedural compatibility API
+- Removed duplicate `WorkerJobQueue` lifecycle implementation.
+- Split queue enqueue/claim/lease/recovery responsibilities.
+- Removed queue-wide claim serialization.
+- Removed correlated candidate resource/concurrency subqueries.
+- Materialized/indexed Background Jobs display status without creating mutable duplicate state.
+- Removed Upload Bucket Reflection/private-method bridge.
+- Removed superseded Upload Bucket monolith.
+- Centralized Upload Bucket hashing/storage/unverified indexing.
+- Centralized Background Jobs result hydration.
+- Removed SQL from the worker-status and bulk job endpoints.
+- Moved live cursor/offset job query construction to Infrastructure.
+- Isolated job-search procedural compatibility behind one adapter.
+- Updated legacy metadata audit ownership for the new indexer.
 
-`catalog/lib` still exposes many global functions. Include order/global state can obscure dependencies.
+## Remaining architectural debt
 
-**Direction:** move real implementations into namespaced services; preserve only thin delegates while callers require them, then delete the delegates.
+These are repo-wide areas outside the job/upload refactor, not reasons to restore the removed implementations:
 
-### 2. Remaining outward dependencies from Application
+1. **Procedural `catalog/lib` compatibility surface.** Migrate callers by bounded context; delete delegates when no active caller remains.
+2. **Scanner compatibility modules.** Continue moving parser/path/import responsibilities behind namespaced collaborators while retaining stable parser behaviour.
+3. **Large older controllers.** `unverified-files-action.php`, some federation pages, backup paths and maintenance pages still own orchestration/SQL.
+4. **Broad wildcard search outside the job subsystem.** Continue replacing proven hot paths with parity-tested indexed projections.
+5. **`CatalogDetachedWorker` size.** Process launch, runtime-state storage, pool reconciliation and diagnostics can be separated further after the new queue path has production validation.
+6. **Runtime schema verification in older compatibility paths.** DDL belongs only to install/migrations; runtime may verify schema and report an administrator action.
 
-Some Application services still directly depend on PDO or Infrastructure.
+## Validation discipline
 
-**Direction:** remove these one service at a time. Persistence/query implementations belong in Infrastructure; Application should retain only genuine use-case policy/contracts.
+The repository intentionally does not rely on a broad automated PHP test suite. Architecture changes therefore require:
 
-### 3. SQL ownership is still distributed
+- `php -l` on every changed PHP file;
+- `php catalog/bin/migrate.php migrate --dry-run` before applying schema changes;
+- `php catalog/bin/migrate.php migrate` then `verify`;
+- `php catalog/bin/audit-legacy-runtime-references.php`;
+- architecture-boundary verification;
+- real Background Jobs / Upload Bucket / unverified promotion testing under worker load.
 
-Core tables such as `ue_files`, `ue_games` and `ue_background_jobs` are queried from many older routes/helpers.
+## Non-negotiable behaviour-preservation rules
 
-**Direction:** migrate bounded contexts to intent-specific query/repository objects rather than a single generic repository.
-
-### 4. Worker claim scalability
-
-`PdoJobQueue::claim()` still serializes claimers with a queue-wide MySQL advisory lock and performs resource/concurrency work during claim. This protects current semantics but can limit pool scaling.
-
-**Direction:** preserve the lease/concurrency contract while measuring through the Background Jobs UI and worker runtime state. Move toward row-level claim concurrency (`FOR UPDATE SKIP LOCKED` where supported) only when equivalent behaviour can be demonstrated on the production-style MySQL setup.
-
-### 5. Search contains queries do not scale
-
-Broad search still includes leading-wildcard `LIKE` predicates and collation/conversion expressions that normal B-tree indexes cannot efficiently satisfy.
-
-**Direction:** build an indexed normalized search projection and compare its results against the current implementation before switching reads.
-
-### 6. Remaining large orchestration files
-
-`CatalogScanner.php` itself has been decomposed, but large responsibilities remain in `CatalogScannerImport.php`, `CatalogDetachedWorker.php`, `CatalogBucketUploadProcessor.php`, `CatalogUnverifiedIndex.php`, `unverified-files-action.php`, backup handlers and federation pages.
-
-**Direction:** extract real responsibilities rather than arbitrary line ranges. Delete obsolete parallel implementations when current callers have migrated.
-
-### 7. Reflection-based upload reuse
-
-Some upload metadata/identity paths still rely on a legacy bridge around private `CatalogBucketUploadProcessor` operations.
-
-**Direction:** extract identity hashing, physical storage and indexing into explicit collaborators, then delete the reflection bridge.
-
-### 8. Runtime schema mutation / compatibility probing
-
-Some legacy areas still contain schema compatibility behaviour. Runtime request/worker code should not evolve schema.
-
-**Direction:** install/migration code owns DDL; runtime may verify required schema and fail with a clear administrator action.
-
-### 9. Manual validation discipline
-
-The project currently has no automated PHP test suite by design; application behaviour is validated through the real web/admin workflows.
-
-**Direction:** every structural change should receive a full PHP syntax pass on changed files, precise diff/blob verification for large replacements, and focused web validation of the affected route/job flow. Do not add GitHub test workflows unless explicitly requested.
-
-## Refactoring order
-
-1. **Remove dead/parallel implementations** once current routes/jobs have authoritative replacements.
-2. **Application dependency inversion:** continue moving PDO/Infrastructure implementation out of use-case classes.
-3. **Scanner migration:** move `CatalogScannerImport.php` and path/name policy into namespaced collaborators while keeping current `scanner_*` signatures until callers migrate.
-4. **Upload/import collaborators:** eliminate reflection/private-operation coupling and duplicate identity/storage/index logic.
-5. **Worker decomposition:** separate process launching, runtime-state storage, pool reconciliation and diagnostics while preserving Windows behaviour.
-6. **Query ownership:** continue bounded query/repository objects for catalog, dependencies, jobs, search and federation.
-7. **Performance changes with parity checks:** change queue claiming/search projections only after measured production-style equivalence.
-8. **Runtime schema cleanup:** remove request-time DDL/legacy compatibility paths once installation/version checks are authoritative.
-9. **Thin controllers:** reduce top-level PHP routes to validation + use-case/query invocation + rendering.
-10. **Compatibility retirement:** delete global facades when no active caller needs them.
-
-## Non-negotiable behavior-preservation rules
-
-- No route, API payload, job type, queue name, dedupe key, retry policy or result-shape changes as part of architecture-only commits.
-- No catalog identity/hash/GUID/package-name semantic change without an explicit behavioural migration.
-- No search-result semantic change during structural extraction.
-- No automatic cancellation/timeouts for legitimate long-running package work.
-- Preserve Windows detached-worker behaviour exactly during worker refactors.
-- No runtime DDL removal until installed schema compatibility is proven.
-- Validate changed PHP with syntax checks and exercise the affected web/job workflow manually.
+- Do not change routes/API payloads/job types/queue names/dedupe keys/retry semantics during architecture cleanup.
+- Do not change MD5/SHA/GUID/package-name identity semantics without an explicit behavioural migration.
+- Do not change search-result semantics merely to optimize a query.
+- Do not impose automatic short timeouts on legitimate long-running package work.
+- Preserve Windows detached-worker behaviour.
+- Runtime code must not silently mutate schema.
+- Delete superseded implementations rather than retaining backup copies after callers migrate.
