@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Orchestrates move, import and delete actions for one resolved unverified file.
  * Why: The HTTP action endpoint should own session/CSRF/progress transport, not catalog mutation branching or result semantics.
- * Role: Infrastructure/application-facing unverified action service over the existing import and staging managers.
+ * Role: Infrastructure/application-facing unverified action service over dedicated queue-mutation and import services.
  */
 declare(strict_types=1);
 
@@ -19,8 +19,6 @@ final class CatalogUnverifiedActionService
         private readonly PDO $db,
         private readonly array $config
     ) {
-        $root = dirname(__DIR__, 3);
-        require_once $root . '/lib/UnverifiedFileManager.php';
     }
 
     /**
@@ -38,12 +36,8 @@ final class CatalogUnverifiedActionService
     ): array {
         if ($action === 'move') {
             $this->emit($emit, 'moving', 25, 'Moving queued file');
-            $result = \catalog_unverified_move_item(
-                $this->db,
-                $this->config,
-                $source,
-                $targetGameId
-            );
+            $result = (new CatalogUnverifiedQueueMutationService($this->db, $this->config))
+                ->move($source, $targetGameId);
             $message = 'Moved ' . $result['original_name'] . ' to ' . $result['target_game'] . '.';
             $this->emit($emit, 'done', 100, $message);
             return $this->response($action, $result, null, '', null, $message);
@@ -68,7 +62,8 @@ final class CatalogUnverifiedActionService
 
         if ($action === 'delete') {
             $this->emit($emit, 'deleting', 25, 'Deleting queued file');
-            $result = \catalog_unverified_discard_item($this->db, $this->config, $source);
+            $result = (new CatalogUnverifiedQueueMutationService($this->db, $this->config))
+                ->discard($source);
             $message = 'Deleted ' . $result['original_name']
                 . ' from unverified storage and the staging database.';
             $this->emit($emit, 'done', 100, $message);
