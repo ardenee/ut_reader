@@ -2,12 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Defines the infrastructure class `CatalogBucketUploadJobHandler` for catalog bucket upload job handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker entry points.
+ * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external services.
  */
 declare(strict_types=1);
 
@@ -23,6 +19,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketIdentityProcessor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
 final class CatalogBucketUploadJobHandler implements JobHandler
@@ -47,7 +44,7 @@ final class CatalogBucketUploadJobHandler implements JobHandler
         $payload = $job->payload;
         $uploadId = trim((string)($payload['upload_id'] ?? ''));
         $originalName = $this->requiredName((string)($payload['original_name'] ?? ''));
-        $relativePath = $this->cleanRelativePath((string)($payload['source_relative_path'] ?? $originalName));
+        $relativePath = CatalogImportPathPolicy::relative((string)($payload['source_relative_path'] ?? $originalName));
         $userId = (int)($payload['user_id'] ?? 0);
         if ($userId < 1 || preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
             throw new \InvalidArgumentException('Deferred Upload Bucket job payload is incomplete.');
@@ -103,7 +100,7 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                 $compressedBytes = (int)$decoded['compressed_bytes'];
                 $packageMd5 = strtolower(trim((string)($decoded['md5'] ?? '')));
                 $packageSha1 = strtolower(trim((string)($decoded['sha1'] ?? '')));
-                $relativePath = $this->replaceRelativeFilename($relativePath, $workingName);
+                $relativePath = CatalogImportPathPolicy::replaceFilename($relativePath, $workingName);
             } else {
                 $this->validateOutputExtension($workingName);
                 $context->checkpoint([
@@ -154,8 +151,6 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             );
             $workingPath = '';
 
-            // Successful processing has created the durable bucket copy or found
-            // an existing physical duplicate. Browser staging is no longer needed.
             (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
 
             $status = (string)($staged['status'] ?? 'indexed');
@@ -229,8 +224,6 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             throw new \RuntimeException('Could not create Upload Bucket working storage.');
         }
 
-        // A forced process termination cannot execute finally. Remove only stale
-        // working copies belonging to this exact job before a retry creates one.
         foreach (glob($directory . DIRECTORY_SEPARATOR . 'job-' . $jobId . '-*.part') ?: [] as $oldPath) {
             if (is_string($oldPath) && is_file($oldPath)) {
                 @unlink($oldPath);
@@ -241,8 +234,12 @@ final class CatalogBucketUploadJobHandler implements JobHandler
         $input = fopen($sourcePath, 'rb');
         $output = fopen($destination, 'xb');
         if (!is_resource($input) || !is_resource($output)) {
-            if (is_resource($input)) fclose($input);
-            if (is_resource($output)) fclose($output);
+            if (is_resource($input)) {
+                fclose($input);
+            }
+            if (is_resource($output)) {
+                fclose($output);
+            }
             @unlink($destination);
             throw new \RuntimeException('Could not open Upload Bucket working copy.');
         }
@@ -260,7 +257,9 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                     throw new \RuntimeException('Could not read the uploaded source package.');
                 }
                 if ($buffer === '') {
-                    if (feof($input)) break;
+                    if (feof($input)) {
+                        break;
+                    }
                     throw new \RuntimeException('Uploaded source copy stopped before end of file.');
                 }
                 hash_update($md5Context, $buffer);
@@ -357,12 +356,6 @@ final class CatalogBucketUploadJobHandler implements JobHandler
         }
     }
 
-    private function replaceRelativeFilename(string $relativePath, string $name): string
-    {
-        $directory = trim(str_replace('\\', '/', dirname($relativePath)), '. /');
-        return ($directory !== '' ? $directory . '/' : '') . $name;
-    }
-
     private function requiredName(string $name): string
     {
         $name = \catalog_clean_unreal_filename(basename(str_replace('\\', '/', trim($name))));
@@ -370,20 +363,6 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             throw new \InvalidArgumentException('Upload Bucket filename is missing.');
         }
         return $name;
-    }
-
-    private function cleanRelativePath(string $path): string
-    {
-        $parts = [];
-        foreach (explode('/', trim(str_replace(["\0", '\\'], ['', '/'], $path), '/')) as $part) {
-            if ($part === '' || $part === '.') continue;
-            if ($part === '..') {
-                if ($parts !== []) array_pop($parts);
-                continue;
-            }
-            $parts[] = $part;
-        }
-        return implode('/', $parts);
     }
 
     private function shortError(Throwable $error): string
