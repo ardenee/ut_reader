@@ -3,17 +3,17 @@
  * UnrealDB PHP File Audit
  * Purpose: Runs the authenticated streaming federation cron workflow.
  * Why: The HTTP entry point should orchestrate shared federation services rather than depend on procedural worker facades.
- * Role: Federation cron route over namespaced transfer/import workers plus existing inventory/mirror maintenance services.
+ * Role: Federation cron route over namespaced transfer/import/inventory workers plus existing mirror maintenance services.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/../lib/CatalogSupport.php';
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationDependencyDownloads.php';
-require_once __DIR__ . '/../lib/FederationInventory.php';
 require_once __DIR__ . '/../lib/ExternalMirrors.php';
 
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationImportWorker;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationPeerInventorySyncService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferWorker;
 
 function cron_stream_json(array $data, int $status = 200): void
@@ -64,11 +64,12 @@ try {
     $limit = max(1, min(100, (int)(fed_setting($db, 'max_files_per_transfer_run', '1') ?: 1)));
     $transferWorker = new CatalogFederationTransferWorker($db, $config);
     $importWorker = new CatalogFederationImportWorker($db, $config);
+    $inventorySync = new CatalogFederationPeerInventorySyncService($db);
     $result = [
         'ok' => true,
         'mode' => 'streaming',
         'started_at' => date('c'),
-        'inventory_sync' => federation_sync_due_inventories($db),
+        'inventory_sync' => $inventorySync->syncDueInventories(),
         'approved_dependency_queue' => federation_queue_approved_dependency_downloads($db),
         'transfers' => [],
         'imports' => [],
