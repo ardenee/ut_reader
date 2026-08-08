@@ -36,10 +36,12 @@ $read = static function (string $relative) use ($catalogRoot): string {
 
 $criticalPhp = [
     'bin/verify-architecture-refactor.php',
+    'background-jobs.php',
     'api/v1/job-worker-status.php',
     'api/v1/job-status-cursor.php',
     'api/v1/job-status.php',
     'api/v1/job-bulk.php',
+    'api/v1/upload-bucket-batch.php',
     'src/Application/Jobs/CatalogWorkerStatusPolicy.php',
     'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
@@ -59,6 +61,7 @@ $criticalPhp = [
     'src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobOffsetQuery.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobQueueSummaryQuery.php',
     'src/Infrastructure/Import/CatalogBucketIdentityProcessor.php',
     'src/Infrastructure/Import/CatalogBucketPackageOperations.php',
     'src/Infrastructure/Import/CatalogBucketPackageOperationsService.php',
@@ -70,6 +73,8 @@ $criticalPhp = [
     'src/Infrastructure/Import/CatalogImportPathPolicy.php',
     'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
     'src/Infrastructure/Import/CatalogBucketBatchQueue.php',
+    'src/Infrastructure/Import/CatalogBucketBatchFinalizer.php',
+    'src/Infrastructure/Import/CatalogBucketProcessingActive.php',
     'migrations/202608080001_background_job_display_status.php',
 ];
 
@@ -155,10 +160,12 @@ $record(
 );
 
 foreach ([
+    'background-jobs.php',
     'api/v1/job-worker-status.php',
     'api/v1/job-bulk.php',
     'api/v1/job-status-cursor.php',
     'api/v1/job-status.php',
+    'api/v1/upload-bucket-batch.php',
 ] as $relative) {
     $content = $read($relative);
     $record(
@@ -166,7 +173,7 @@ foreach ([
         $content !== ''
             && !str_contains($content, 'ue_background_jobs')
             && !str_contains($content, 'JSON_EXTRACT(result_json'),
-        'job controller must delegate durable-job persistence and display-status derivation'
+        'job/upload presentation entry point must delegate durable-job persistence and display-status derivation'
     );
 }
 
@@ -193,6 +200,18 @@ $record(
         && str_contains($bucketHandler, 'CatalogImportPathPolicy::relative')
         && str_contains($redirectHandler, 'CatalogImportPathPolicy::relative'),
     'primary upload queues and worker handlers must share canonical relative-path normalization'
+);
+
+$batchEndpoint = $read('api/v1/upload-bucket-batch.php');
+$batchFinalizer = $read('src/Infrastructure/Import/CatalogBucketBatchFinalizer.php');
+$record(
+    'bucket_batch_orchestration_boundary',
+    str_contains($batchEndpoint, 'CatalogBucketBatchFinalizer')
+        && !str_contains($batchEndpoint, 'CatalogDetachedWorker')
+        && !str_contains($batchEndpoint, 'CatalogOrphanedJobRecovery')
+        && str_contains($batchFinalizer, 'CatalogDetachedWorker')
+        && str_contains($batchFinalizer, 'CatalogOrphanedJobRecovery'),
+    'Upload Bucket API must delegate queue/worker orchestration'
 );
 
 if ($checkDatabase) {
