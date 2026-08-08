@@ -216,7 +216,7 @@ final class CatalogFederationTransferClient
         );
     }
 
-    private function parentPullDependencyException(array $job): bool
+    public function parentPullDependencyException(array $job): bool
     {
         $peerFile = \catalog_one(
             $this->db,
