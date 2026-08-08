@@ -33,7 +33,8 @@ try {
      */
     $launcher = new CatalogDetachedWorker($application->config);
     $worker = $launcher->status($queueName, false);
-    $counts = (new PdoBackgroundJobOperationalQuery($application->db))->queueCounts($queueName);
+    $counts = (new PdoBackgroundJobOperationalQuery($application->db, $application->config))
+        ->queueCounts($queueName);
     $status = CatalogWorkerStatusPolicy::evaluate(
         $worker,
         $counts,
