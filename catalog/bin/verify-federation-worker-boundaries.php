@@ -43,40 +43,41 @@ $record(
     'incoming filenames must remain basename-only and filesystem-safe'
 );
 
-$workerFacade = $read('catalog/lib/FederationWorker.php');
-$streamingFacade = $read('catalog/lib/FederationStreamingWorker.php');
+$diagnostics = $read('catalog/federation/diagnostics.php');
 $transferWorker = $read('catalog/src/Infrastructure/Federation/CatalogFederationTransferWorker.php');
 $importWorker = $read('catalog/src/Infrastructure/Federation/CatalogFederationImportWorker.php');
 $packageImport = $read('catalog/src/Infrastructure/Import/CatalogPackageImportService.php');
 $transport = $read('catalog/src/Infrastructure/Federation/CatalogFederationTransferClient.php');
 $jobStore = $read('catalog/src/Infrastructure/Federation/PdoFederationTransferJobStore.php');
 $cron = $read('catalog/federation/cron-worker-streaming.php');
+$legacyWorkerFacade = $filePath('catalog/lib/FederationWorker.php');
+$legacyStreamingFacade = $filePath('catalog/lib/FederationStreamingWorker.php');
 $legacyCatalogImport = $filePath('catalog/lib/CatalogImport.php');
 
 $record(
-    'legacy_worker_is_facade_only',
-    str_contains($workerFacade, 'CatalogFederationTransferWorker')
-        && str_contains($workerFacade, 'CatalogFederationImportWorker')
-        && !str_contains($workerFacade, 'TrustedHttpSourceClient::')
-        && !str_contains($workerFacade, 'ue_federation_transfer_jobs SET')
-        && !str_contains($workerFacade, 'SELECT j.*,p.site_name'),
-    'FederationWorker.php must not regain transport or queue implementation SQL'
+    'legacy_worker_facades_retired',
+    !is_file($legacyWorkerFacade) && !is_file($legacyStreamingFacade),
+    'FederationWorker.php and FederationStreamingWorker.php must not return after production/diagnostic callers moved to namespaced workers'
 );
 $record(
-    'streaming_worker_reuses_same_claim_and_runner',
-    str_contains($streamingFacade, 'PdoFederationTransferJobStore')
-        && str_contains($streamingFacade, 'CatalogFederationTransferWorker')
-        && !str_contains($streamingFacade, 'beginTransaction()')
-        && !str_contains($streamingFacade, 'FOR UPDATE'),
-    'streaming mode must not duplicate transfer claiming logic'
+    'diagnostics_uses_namespaced_workers',
+    str_contains($diagnostics, 'CatalogFederationTransferWorker')
+        && str_contains($diagnostics, 'CatalogFederationImportWorker')
+        && str_contains($diagnostics, '$transferWorker->runOne()')
+        && str_contains($diagnostics, '$importWorker->runOne()')
+        && !str_contains($diagnostics, 'FederationWorker.php')
+        && !str_contains($diagnostics, 'FederationStreamingWorker.php')
+        && !str_contains($diagnostics, 'federation_worker_run_one_import(')
+        && !str_contains($diagnostics, 'federation_streaming_run_one_transfer('),
+    'manual diagnostics worker must use the same namespaced transfer/import workers as production'
 );
 $record(
     'production_cron_uses_namespaced_workers',
     str_contains($cron, 'CatalogFederationTransferWorker')
         && str_contains($cron, 'CatalogFederationImportWorker')
-        && !str_contains($cron, "require_once __DIR__ . '/../lib/FederationWorker.php'")
-        && !str_contains($cron, "require_once __DIR__ . '/../lib/FederationStreamingWorker.php'"),
-    'production streaming cron must bypass compatibility worker facades'
+        && !str_contains($cron, 'FederationWorker.php')
+        && !str_contains($cron, 'FederationStreamingWorker.php'),
+    'production streaming cron must use namespaced workers directly'
 );
 $record(
     'job_store_owns_claim_and_progress',
@@ -104,8 +105,7 @@ $record(
 $record(
     'failed_import_staging_uses_namespaced_storage_relative',
     str_contains($importWorker, 'CatalogUnverifiedStagingIndex::storageRelative')
-        && !str_contains($importWorker, 'catalog_unverified_storage_relative(')
-        && !str_contains($workerFacade, 'catalog_unverified_storage_relative('),
+        && !str_contains($importWorker, 'catalog_unverified_storage_relative('),
     'failed federation imports must not call the retired unverified-index helper'
 );
 $record(
@@ -124,11 +124,8 @@ $record(
         && str_contains($importWorker, '$this->imports->detectGame(')
         && !str_contains($importWorker, 'catalog_import_file(')
         && !str_contains($importWorker, 'catalog_import_detect_game(')
-        && str_contains($workerFacade, 'CatalogPackageImportService')
-        && !str_contains($workerFacade, 'catalog_import_detect_game(')
-        && !str_contains($workerFacade, "require_once __DIR__ . '/CatalogImport.php'")
         && !is_file($legacyCatalogImport),
-    'federation import paths must use CatalogPackageImportService and the retired CatalogImport.php file must remain absent'
+    'federation import must use CatalogPackageImportService and the retired CatalogImport.php file must remain absent'
 );
 $record(
     'package_import_contract_preserved',
@@ -168,8 +165,7 @@ $record(
 
 $syntaxFiles = [
     'catalog/federation/cron-worker-streaming.php',
-    'catalog/lib/FederationWorker.php',
-    'catalog/lib/FederationStreamingWorker.php',
+    'catalog/federation/diagnostics.php',
     'catalog/src/Infrastructure/Federation/CatalogFederationImportWorker.php',
     'catalog/src/Infrastructure/Federation/CatalogFederationTransferClient.php',
     'catalog/src/Infrastructure/Federation/CatalogFederationTransferStorage.php',
