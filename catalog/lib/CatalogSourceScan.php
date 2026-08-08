@@ -1,11 +1,11 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides the shared package-scan primitives used by the active container-aware source scanner.
- * Why: Common path filtering, redirect preparation, matching, import, staging, and progress helpers are reused by the
- *      durable no-container scan path without duplicating them in the page and worker.
- * Role: Shared source-scan helper layer; orchestration lives in `CatalogSourceScanNoContainers.php`.
- * Audit: The obsolete all-in-one `catalog_source_scan_run()` path was removed after confirming it had no callers.
+ * Purpose: Provides the shared package-scan primitives used by the active local source scanner.
+ * Why: Common path filtering, redirect preparation, import, staging, and progress helpers are reused by the
+ *      durable no-container scan path while stateful persistence lives under `catalog/src`.
+ * Role: Shared source-scan compatibility helper layer; orchestration lives in `CatalogSourceScanNoContainers.php`.
+ * Audit: The obsolete all-in-one `catalog_source_scan_run()` path and source-location persistence helpers were retired.
  */
 declare(strict_types=1);
 
@@ -32,11 +32,6 @@ function catalog_source_scan_allowed_file(string $path, array $profile, array $c
     $cleanName = catalog_clean_unreal_filename(basename($path));
     $extension = catalog_clean_unreal_extension((string)pathinfo($cleanName, PATHINFO_EXTENSION));
     return in_array($extension, scanner_profile_extensions($profile, $config), true);
-}
-
-function catalog_source_scan_record_location(PDOStatement $upsert, int $fileId, int $sourceId, string $relativePath): void
-{
-    $upsert->execute([$fileId, $sourceId, $relativePath, 1]);
 }
 
 function catalog_source_scan_temp_copy(string $path): string
@@ -114,22 +109,6 @@ function catalog_source_scan_import_work_file(PDO $db, array $config, array $sou
 function catalog_source_scan_sample(string $path, array $work, string $message): string
 {
     return ($work['redirect'] ? $path . ' → ' . $work['name'] : $path) . ' - ' . $message;
-}
-
-/** @param array<int,mixed> $result */
-function catalog_source_scan_record_import_result(PDOStatement $upsert, int $sourceId, string $relativePath, array $result, int &$imported, int &$duplicates, int &$locations): void
-{
-    if (($result[0] ?? '') === 'duplicate') {
-        $duplicates++;
-        if (!empty($result[1])) {
-            catalog_source_scan_record_location($upsert, (int)$result[1], $sourceId, $relativePath);
-            $locations++;
-        }
-        return;
-    }
-    $imported++;
-    catalog_source_scan_record_location($upsert, (int)$result[1], $sourceId, $relativePath);
-    $locations++;
 }
 
 /**
