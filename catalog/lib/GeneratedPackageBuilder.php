@@ -2,8 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Provides compatibility writer functions for generated package artifacts.
- * Why: Binary writers remain procedural for compatibility while descriptor policy lives under src/.
- * Role: Transitional writer facade over namespaced descriptor policy and existing binary codecs/validators.
+ * Why: Binary writers remain procedural for compatibility while descriptor and UMOD byte policy live under src/.
+ * Role: Transitional writer facade over namespaced descriptor/codec policy and existing validators/PAK writer.
  */
 declare(strict_types=1);
 
@@ -11,6 +11,9 @@ require_once __DIR__ . '/ModPackageBuilder.php';
 require_once __DIR__ . '/LegacyUmodPackageBuilder.php';
 
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeneratedPackageDescriptor;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportFormatPolicy;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageInstallPathResolver;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogUmodBinaryCodec;
 
 function modpkg_generated_version(mixed $value): string
 {
@@ -80,7 +83,11 @@ function modpkg_write_generated_umod(string $outputPath, array $plan, array $opt
 
     try {
         foreach ($plan['files'] as $file) {
-            $path = modpkg_compatible_umod_path((string)$file['install_path']);
+            $path = CatalogPackageInstallPathResolver::normalizeRelativePath((string)$file['install_path']);
+            if ($path === '') {
+                throw new RuntimeException('UMOD archive entries require a valid relative path.');
+            }
+            $path = str_replace('/', '\\', $path);
             $offset = ftell($handle);
             if ($offset === false) {
                 throw new RuntimeException('Could not determine the UMOD payload offset.');
@@ -127,12 +134,12 @@ function modpkg_write_generated_umod(string $outputPath, array $plan, array $opt
         if ($tableOffset === false) {
             throw new RuntimeException('Could not determine the UMOD directory offset.');
         }
-        $table = modpkg_compact_index(count($entries));
+        $table = CatalogUmodBinaryCodec::compactIndex(count($entries));
         foreach ($entries as $entry) {
-            $table .= modpkg_ue1_string((string)$entry['filename']);
-            $table .= modpkg_pack_u32((int)$entry['offset']);
-            $table .= modpkg_pack_u32((int)$entry['size']);
-            $table .= modpkg_pack_u32((int)$entry['flags']);
+            $table .= CatalogUmodBinaryCodec::ue1String((string)$entry['filename']);
+            $table .= CatalogUmodBinaryCodec::packU32((int)$entry['offset']);
+            $table .= CatalogUmodBinaryCodec::packU32((int)$entry['size']);
+            $table .= CatalogUmodBinaryCodec::packU32((int)$entry['flags']);
         }
         $written = fwrite($handle, $table);
         if ($written === false || $written !== strlen($table) || !fflush($handle)) {
@@ -143,16 +150,16 @@ function modpkg_write_generated_umod(string $outputPath, array $plan, array $opt
         if ($beforeFooterSize === false) {
             throw new RuntimeException('Could not determine the UMOD archive size.');
         }
-        $crc = modpkg_unreal_mem_crc_stream($handle, (int)$beforeFooterSize);
+        $crc = CatalogUmodBinaryCodec::unrealMemCrcStream($handle, (int)$beforeFooterSize);
         $fileSize = (int)$beforeFooterSize + 20;
         if (fseek($handle, 0, SEEK_END) !== 0) {
             throw new RuntimeException('Could not seek to the UMOD footer.');
         }
-        $footer = modpkg_pack_u32(0x9FE3C5A3)
-            . modpkg_pack_u32((int)$tableOffset)
-            . modpkg_pack_u32($fileSize)
-            . modpkg_pack_u32(1)
-            . modpkg_pack_u32($crc);
+        $footer = CatalogUmodBinaryCodec::packU32(0x9FE3C5A3)
+            . CatalogUmodBinaryCodec::packU32((int)$tableOffset)
+            . CatalogUmodBinaryCodec::packU32($fileSize)
+            . CatalogUmodBinaryCodec::packU32(1)
+            . CatalogUmodBinaryCodec::packU32($crc);
         if (fwrite($handle, $footer) !== 20 || !fflush($handle)) {
             throw new RuntimeException('Could not write the UMOD footer.');
         }
@@ -245,9 +252,12 @@ function modpkg_build_generated_package(
     array $settings
 ): array {
     return match ((string)$plan['format']) {
-        MODPKG_FORMAT_DEPENDENCY_ZIP, MODPKG_FORMAT_UT3_ZIP => modpkg_write_payload_zip($outputPath, $plan),
-        MODPKG_FORMAT_UMOD, MODPKG_FORMAT_UT2MOD, MODPKG_FORMAT_UT4MOD => modpkg_write_generated_umod($outputPath, $plan, $options),
-        MODPKG_FORMAT_UT4_PAK => modpkg_write_pak($outputPath, $plan, $options, $settings),
+        CatalogPackageExportFormatPolicy::DEPENDENCY_ZIP,
+        CatalogPackageExportFormatPolicy::UT3_ZIP => modpkg_write_payload_zip($outputPath, $plan),
+        CatalogPackageExportFormatPolicy::UMOD,
+        CatalogPackageExportFormatPolicy::UT2MOD,
+        CatalogPackageExportFormatPolicy::UT4MOD => modpkg_write_generated_umod($outputPath, $plan, $options),
+        CatalogPackageExportFormatPolicy::UT4_PAK => modpkg_write_pak($outputPath, $plan, $options, $settings),
         default => throw new RuntimeException('Unsupported package format.'),
     };
 }
