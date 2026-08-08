@@ -41,7 +41,7 @@ final class PdoCatalogPackageExportPlanner
         if (empty($settings['enabled'])) {
             throw new RuntimeException('Package exports are disabled by the administrator.');
         }
-        if (!$this->formatEnabled($format, $settings)) {
+        if (!CatalogPackageExportFormatPolicy::enabled($format, $settings)) {
             throw new RuntimeException('The selected package export format is disabled.');
         }
 
@@ -218,20 +218,5 @@ final class PdoCatalogPackageExportPlanner
             . 'WHERE g.id=?',
             [$gameId]
         );
-    }
-
-    /** @param array<string,mixed> $settings */
-    private function formatEnabled(string $format, array $settings): bool
-    {
-        if (empty($settings['enabled']) || $format === 'disabled') {
-            return false;
-        }
-        return match ($format) {
-            'dependency_zip' => !empty($settings['dependency_zip_enabled']),
-            'umod', 'ut2mod', 'ut4mod' => !empty($settings['umod_enabled']),
-            'ut3_zip' => !empty($settings['ut3_zip_enabled']),
-            'ut4_pak' => !empty($settings['ut4_pak_enabled']),
-            default => false,
-        };
     }
 }
