@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Generated package unavailable.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Streams an authorized completed generated package artifact.
+ * Why: Binary transport stays here while durable-job lookup and browser-token authorization are shared.
+ * Role: Download transport endpoint for generated package artifacts.
  */
 declare(strict_types=1);
 
@@ -16,7 +13,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 require_once __DIR__ . '/lib/DownloadActivity.php';
 
-use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogGeneratedPackageJobAccess;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 
 /** @return array{start:int,end:int,length:int,partial:bool} */
@@ -86,19 +83,15 @@ try {
         throw new RuntimeException('This generated package is not available in the current browser session.');
     }
 
-    $job = catalog_one(
-        $db,
-        'SELECT payload_json,result_json,status FROM ue_background_jobs WHERE id=? AND job_type=?',
-        [$jobId, JobType::GENERATE_MOD_PACKAGE]
-    );
+    $access = new CatalogGeneratedPackageJobAccess($db);
+    $job = $access->find($jobId);
     if (!$job || (string)$job['status'] !== 'completed') {
         throw new RuntimeException('The generated package is not ready.');
     }
-    $payload = json_decode((string)$job['payload_json'], true);
-    $expected = is_array($payload) ? (string)($payload['access_token_hash'] ?? '') : '';
-    if ($expected === '' || !hash_equals($expected, hash('sha256', $token))) {
+    if (!$access->isAuthorized($job, $token)) {
         throw new RuntimeException('This generated package is not authorized for the current browser session.');
     }
+    $payload = is_array($job['payload'] ?? null) ? $job['payload'] : [];
 
     $result = json_decode((string)$job['result_json'], true);
     if (!is_array($result)) {
@@ -146,7 +139,7 @@ try {
     $contentType = (string)($result['content_type'] ?? 'application/octet-stream');
     $speedBytes = catalog_public_download_speed_bytes($db);
     $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
-    $fileId = max(0, (int)($result['file_id'] ?? (is_array($payload) ? ($payload['file_id'] ?? 0) : 0)));
+    $fileId = max(0, (int)($result['file_id'] ?? ($payload['file_id'] ?? 0)));
     $fileRow = $fileId > 0 ? catalog_one($db, 'SELECT game_id FROM ue_files WHERE id=?', [$fileId]) : null;
     $gameId = $fileRow ? (int)$fileRow['game_id'] : null;
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
@@ -161,7 +154,7 @@ try {
             'ip_address' => catalog_public_access_client_ip(),
             'user_agent' => catalog_download_audit_user_agent(),
             'download_name' => $downloadName,
-            'package_format' => (string)($result['format'] ?? (is_array($payload) ? ($payload['format'] ?? '') : '')),
+            'package_format' => (string)($result['format'] ?? ($payload['format'] ?? '')),
             'artifact_size' => (int)$size,
             'range_start' => $range['start'],
             'range_end' => $range['end'],

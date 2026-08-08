@@ -3,9 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Processes the state-changing browser action for unverified duplicates.
  * Why: It separates mutation/request handling from the corresponding display page.
- * Role: Web action endpoint used by the catalog UI; reusable business rules should live in shared services.
- * Audit: Keep request validation here, but consolidate duplicated business logic into shared application/service
- *        classes.
+ * Role: Thin web action endpoint; durable job reads and lifecycle are delegated.
  */
 declare(strict_types=1);
 
@@ -16,6 +14,7 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobLookupQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 function unverified_duplicates_reply(array $payload, int $status = 200): never
@@ -34,6 +33,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
     $queue = new PdoJobQueue($db);
+    $jobs = new PdoBackgroundJobLookupQuery($db);
     $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -41,15 +41,11 @@ try {
         if ($jobId < 1) {
             unverified_duplicates_reply(['ok' => false, 'error' => 'A positive job_id is required.'], 400);
         }
-        $job = catalog_one(
-            $db,
-            'SELECT id,job_type,status,progress_json,result_json,last_error,cancel_requested_at,created_at,updated_at,completed_at '
-            . 'FROM ue_background_jobs WHERE id=? AND job_type=?',
-            [$jobId, JobType::CLEAN_UNVERIFIED_DUPLICATES]
-        );
+        $job = $jobs->findByIdAndType($jobId, JobType::CLEAN_UNVERIFIED_DUPLICATES);
         if (!$job) {
             unverified_duplicates_reply(['ok' => false, 'error' => 'The duplicate cleanup job was not found.'], 404);
         }
+        unset($job['queue_name'], $job['payload_json']);
         foreach (['progress_json' => 'progress', 'result_json' => 'result'] as $source => $target) {
             $decoded = !empty($job[$source]) ? json_decode((string)$job[$source], true) : null;
             $job[$target] = is_array($decoded) ? $decoded : null;
@@ -71,12 +67,7 @@ try {
         if ($jobId < 1) {
             unverified_duplicates_reply(['ok' => false, 'error' => 'A positive job_id is required.'], 400);
         }
-        $owned = catalog_one(
-            $db,
-            'SELECT id FROM ue_background_jobs WHERE id=? AND job_type=?',
-            [$jobId, JobType::CLEAN_UNVERIFIED_DUPLICATES]
-        );
-        if (!$owned) {
+        if (!$jobs->findByIdAndType($jobId, JobType::CLEAN_UNVERIFIED_DUPLICATES)) {
             unverified_duplicates_reply(['ok' => false, 'error' => 'The duplicate cleanup job was not found.'], 404);
         }
         $status = $queue->requestCancellation($jobId, $userId, 'Cancelled from Unverified Files.');

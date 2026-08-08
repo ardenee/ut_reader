@@ -1,19 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Game Backups.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes Game Backups.
+ * Why: Backup UI concerns stay in this page while durable-job reads and worker lifecycle are delegated.
+ * Role: Web UI entry point for game backup export/import management.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobLookupQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Storage\GameBackupStore;
 
@@ -39,6 +37,17 @@ function game_backup_key(string $slug): string
     return $slug . '-' . gmdate('Ymd-His') . '-' . bin2hex(random_bytes(3));
 }
 
+/** @return array<string,mixed> */
+function game_backup_start_worker(PDO $db, array $config, string $queueName, ?int $userId): array
+{
+    $state = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+    $error = trim((string)($state['worker_error'] ?? ''));
+    if ($error !== '') {
+        throw new RuntimeException($error);
+    }
+    return is_array($state['worker'] ?? null) ? $state['worker'] : [];
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -49,6 +58,8 @@ try {
     $store = new GameBackupStore($config);
     $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
     $queue = new PdoJobQueue($db);
+    $jobLookup = new PdoBackgroundJobLookupQuery($db);
+    $backupJobTypes = [JobType::EXPORT_GAME_BACKUP, JobType::IMPORT_GAME_BACKUP];
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -76,7 +87,7 @@ try {
                 $userId,
                 2
             );
-            $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
+            $worker = game_backup_start_worker($db, $config, $queueName, $userId);
             $_SESSION['game_backup_flash'] = 'Game backup queued as job #' . $jobId . ': ' . $backupKey
                 . (!empty($worker['started']) ? '. The detached worker was started.' : '. The existing worker will process it.');
         } elseif ($action === 'import') {
@@ -106,17 +117,12 @@ try {
                 $userId,
                 2
             );
-            $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
+            $worker = game_backup_start_worker($db, $config, $queueName, $userId);
             $_SESSION['game_backup_flash'] = 'Backup import queued as job #' . $jobId . ' for ' . (string)$game['name']
                 . (!empty($worker['started']) ? '. The detached worker was started.' : '. The existing worker will process it.');
         } elseif ($action === 'delete') {
             $backupKey = trim((string)($_POST['backup_key'] ?? ''));
-            $activeJobs = catalog_all(
-                $db,
-                'SELECT id,payload_json FROM ue_background_jobs WHERE job_type IN (?,?) AND status IN ("queued","running")',
-                [JobType::EXPORT_GAME_BACKUP, JobType::IMPORT_GAME_BACKUP]
-            );
-            if (game_backup_is_active($activeJobs, $backupKey)) {
+            if (game_backup_is_active($jobLookup->activeByTypes($backupJobTypes), $backupKey)) {
                 throw new RuntimeException('This backup cannot be deleted while an export or import job is active.');
             }
             $store->delete($backupKey);
@@ -137,17 +143,8 @@ try {
         . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id ORDER BY g.name'
     );
     $backups = $store->listBackups();
-    $recentJobs = catalog_all(
-        $db,
-        'SELECT id,job_type,status,progress_json,result_json,last_error,created_at,updated_at,completed_at '
-        . 'FROM ue_background_jobs WHERE job_type IN (?,?) ORDER BY id DESC LIMIT 20',
-        [JobType::EXPORT_GAME_BACKUP, JobType::IMPORT_GAME_BACKUP]
-    );
-    $hasActiveBackupJobs = catalog_count(
-        $db,
-        'SELECT COUNT(*) c FROM ue_background_jobs WHERE job_type IN (?,?) AND status IN ("queued","running")',
-        [JobType::EXPORT_GAME_BACKUP, JobType::IMPORT_GAME_BACKUP]
-    ) > 0;
+    $recentJobs = $jobLookup->recentByTypes($backupJobTypes, 20);
+    $hasActiveBackupJobs = $jobLookup->hasActiveByTypes($backupJobTypes);
 
     catalog_head('Game Backups');
     catalog_page_header(

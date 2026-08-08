@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for generated package job.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Handles generated package job creation, polling and cancellation.
+ * Why: The HTTP contract remains here while durable-job authorization and worker lifecycle are shared services.
+ * Role: Presentation/action endpoint for generated package jobs.
  */
 declare(strict_types=1);
 
@@ -22,7 +19,8 @@ require_once __DIR__ . '/lib/GeneratedPackageBuilder.php';
 require_once __DIR__ . '/lib/DownloadActivity.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogGeneratedPackageJobAccess;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 function generated_package_reply(array $payload, int $status = 200): never
@@ -38,7 +36,7 @@ function generated_package_token(): string
 }
 
 /** @return array<string,mixed>|null */
-function generated_package_authorized_job(PDO $db, int $jobId): ?array
+function generated_package_authorized_job(CatalogGeneratedPackageJobAccess $access, int $jobId): ?array
 {
     if ($jobId < 1) {
         return null;
@@ -47,26 +45,17 @@ function generated_package_authorized_job(PDO $db, int $jobId): ?array
     if ($token === '') {
         return null;
     }
-    $job = catalog_one(
-        $db,
-        'SELECT id,job_type,payload_json,status,progress_json,result_json,last_error,cancel_requested_at,created_at,updated_at,completed_at '
-        . 'FROM ue_background_jobs WHERE id=? AND job_type=?',
-        [$jobId, JobType::GENERATE_MOD_PACKAGE]
-    );
-    if (!$job) {
-        return null;
-    }
-    $payload = json_decode((string)$job['payload_json'], true);
-    $expected = is_array($payload) ? (string)($payload['access_token_hash'] ?? '') : '';
-    if ($expected === '' || !hash_equals($expected, hash('sha256', $token))) {
-        return null;
-    }
-    return $job;
+    return $access->findAuthorized($jobId, $token);
 }
 
 /** @return array{worker:array<string,mixed>|null,worker_error:string} */
-function generated_package_start_worker(array $config, string $queueName, int $jobId): array
-{
+function generated_package_start_worker(
+    PDO $db,
+    array $config,
+    string $queueName,
+    int $jobId,
+    ?int $userId
+): array {
     if (!isset($_SESSION['generated_package_worker_attempts']) || !is_array($_SESSION['generated_package_worker_attempts'])) {
         $_SESSION['generated_package_worker_attempts'] = [];
     }
@@ -78,20 +67,14 @@ function generated_package_start_worker(array $config, string $queueName, int $j
     }
     $_SESSION['generated_package_worker_attempts'][(string)$jobId] = $now;
 
-    try {
-        return [
-            'worker' => (new CatalogDetachedWorker($config))->start($queueName, 1000000),
-            'worker_error' => '',
-        ];
-    } catch (Throwable $error) {
-        error_log('[UnrealDB package worker launch] job #' . $jobId . ': ' . $error->getMessage());
-        return [
-            'worker' => null,
-            'worker_error' => trim($error->getMessage()) !== ''
-                ? trim($error->getMessage())
-                : 'The detached package worker could not be started.',
-        ];
+    $state = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+    if ((string)$state['worker_error'] !== '') {
+        error_log('[UnrealDB package worker launch] job #' . $jobId . ': ' . (string)$state['worker_error']);
     }
+    return [
+        'worker' => is_array($state['worker'] ?? null) ? $state['worker'] : null,
+        'worker_error' => (string)($state['worker_error'] ?? ''),
+    ];
 }
 
 try {
@@ -99,24 +82,26 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
     $queue = new PdoJobQueue($db);
+    $access = new CatalogGeneratedPackageJobAccess($db);
     $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
     if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $jobId = max(0, (int)($_GET['job_id'] ?? 0));
-        $job = generated_package_authorized_job($db, $jobId);
+        $job = generated_package_authorized_job($access, $jobId);
         if (!$job) {
             generated_package_reply(['ok' => false, 'error' => 'The package generation job is unavailable in this browser session.'], 404);
         }
         $workerState = ['worker' => null, 'worker_error' => ''];
         if (in_array((string)$job['status'], ['queued', 'retry'], true)) {
-            $workerState = generated_package_start_worker($config, $queueName, $jobId);
+            $workerState = generated_package_start_worker($db, $config, $queueName, $jobId, $userId);
         }
         foreach (['progress_json' => 'progress', 'result_json' => 'result'] as $source => $target) {
             $decoded = !empty($job[$source]) ? json_decode((string)$job[$source], true) : null;
             $job[$target] = is_array($decoded) ? $decoded : null;
             unset($job[$source]);
         }
-        unset($job['payload_json']);
+        unset($job['payload_json'], $job['payload'], $job['queue_name']);
         if (is_array($job['result'] ?? null) && !empty($job['result']['expires_at'])) {
             $expires = strtotime((string)$job['result']['expires_at']);
             $job['result']['expired'] = $expires !== false && $expires <= time();
@@ -133,10 +118,9 @@ try {
 
     if ($action === 'cancel') {
         $jobId = max(0, (int)($_POST['job_id'] ?? 0));
-        if (!generated_package_authorized_job($db, $jobId)) {
+        if (!generated_package_authorized_job($access, $jobId)) {
             generated_package_reply(['ok' => false, 'error' => 'The package generation job is unavailable in this browser session.'], 404);
         }
-        $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
         $status = $queue->requestCancellation($jobId, $userId, 'Cancelled from generated package download.');
         catalog_download_audit_generation_status($db, $jobId, 'cancelled');
         generated_package_reply(['ok' => true, 'job_id' => $jobId, 'status' => $status]);
@@ -189,7 +173,6 @@ try {
     // Count only a valid package build that is about to be queued. Invalid or
     // unavailable requests do not consume the visitor's hourly allowance.
     catalog_public_package_limit($db);
-    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     $jobId = $queue->enqueue($queueName, JobType::GENERATE_MOD_PACKAGE, $payload, 30, null, null, $userId, 2);
 
     catalog_download_audit_generation_queued($db, [
@@ -214,7 +197,7 @@ try {
         $_SESSION['generated_package_jobs'] = array_slice($_SESSION['generated_package_jobs'], -20, null, true);
     }
 
-    $workerState = generated_package_start_worker($config, $queueName, $jobId);
+    $workerState = generated_package_start_worker($db, $config, $queueName, $jobId, $userId);
     generated_package_reply([
         'ok' => true,
         'job_id' => $jobId,

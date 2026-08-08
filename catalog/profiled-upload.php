@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Upload Files.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes profiled file uploads.
+ * Why: HTTP/file-selection concerns stay in the page while staging, queueing and worker lifecycle are delegated.
+ * Role: Web UI entry point for uploads targeted at a game profile.
  */
 declare(strict_types=1);
 
@@ -16,7 +13,7 @@ require_once __DIR__ . '/lib/CatalogPakArchive.php';
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 
 function profiled_upload_error(Throwable $error): string
 {
@@ -65,7 +62,7 @@ function profiled_upload_enqueue(PDO $db, array $config): array
 
     $store = new CatalogIncomingFileStore($config);
     $queue = new CatalogProfiledUploadQueue($db, $config);
-    $queueName = (string)($config['queue']['name'] ?? 'catalog');
+    $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     $jobs = [];
     $messages = [];
@@ -124,19 +121,16 @@ function profiled_upload_enqueue(PDO $db, array $config): array
         throw new RuntimeException((string)$first);
     }
 
-    $worker = null;
-    $workerError = '';
-    try {
-        $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
-    } catch (Throwable $error) {
-        $workerError = profiled_upload_error($error);
-        error_log('[UnrealDB profiled upload worker launch] ' . $error->getMessage());
+    $workerState = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+    $workerError = (string)($workerState['worker_error'] ?? '');
+    if ($workerError !== '') {
+        error_log('[UnrealDB profiled upload worker launch] ' . $workerError);
     }
 
     return [
         'jobs' => $jobs,
         'messages' => $messages,
-        'worker' => $worker,
+        'worker' => is_array($workerState['worker'] ?? null) ? $workerState['worker'] : null,
         'worker_error' => $workerError,
     ];
 }

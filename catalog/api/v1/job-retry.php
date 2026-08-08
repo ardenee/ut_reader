@@ -1,19 +1,16 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Handles the catalog v1 HTTP endpoint for job retry.
- * Why: It exposes this operation as a narrowly scoped machine-readable request instead of mixing API behavior into
- *      HTML pages.
- * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated
- *       here.
- * Audit: Active API surface unless its callers/tests prove otherwise; preserve request/response compatibility when
- *        consolidating.
+ * Purpose: Handles the catalog v1 HTTP endpoint for restarting selected terminal jobs.
+ * Why: HTTP validation remains here while queue mutation and worker lifecycle are delegated.
+ * Role: Thin HTTP API entry point preserving the established job-retry compatibility contract.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobRetryAction;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -54,29 +51,20 @@ try {
         JsonResponse::error('too_many_jobs', 'Restart no more than 1,000 jobs at a time.', 400);
     }
 
-    $placeholders = implode(',', array_fill(0, count($jobIds), '?'));
-    $now = gmdate('Y-m-d H:i:s');
-    $arguments = array_merge([$now, $now, $queueName], $jobIds);
-
-    $statement = $application->db->prepare(
-        'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,'
-        . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
-        . 'last_error=NULL,result_json=NULL,cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
-        . 'progress_json=NULL,progress_updated_at=NULL,dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
-        . 'WHERE queue_name=? AND id IN (' . $placeholders . ') '
-        . 'AND status IN ("cancelled","failed","dead_letter")'
-    );
-    $statement->execute($arguments);
-    $restarted = $statement->rowCount();
-
+    $restarted = (new PdoBackgroundJobRetryAction($application->db))->restart($queueName, $jobIds);
     $worker = null;
     $workerError = '';
     if ($restarted > 0) {
-        try {
-            $worker = (new CatalogDetachedWorker($application->config))->start($queueName, 10000);
-        } catch (Throwable $error) {
-            $workerError = trim($error->getMessage());
-            error_log('[UnrealDB job restart worker] ' . $error->getMessage());
+        $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+        $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
+            ->start($queueName, true, $userId);
+        $worker = is_array($workerState['worker'] ?? null) ? $workerState['worker'] : null;
+        $workerError = trim((string)($workerState['worker_error'] ?? ''));
+        if ($workerError !== '') {
+            error_log('[UnrealDB job restart worker] ' . $workerError);
         }
     }
 

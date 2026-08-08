@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Handles the catalog v1 HTTP endpoint for job rerun PAK.
- * Why: It exposes this operation as a narrowly scoped machine-readable request instead of mixing API behavior into
- *      HTML pages.
- * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated
- *       here.
- * Audit: Active API surface unless its callers/tests prove otherwise; preserve request/response compatibility when
- *        consolidating.
+ * Purpose: Handles the catalog v1 HTTP endpoint for re-running a retained PAK import.
+ * Why: Request validation and response mapping stay here while durable-job lookup is delegated.
+ * Role: Thin HTTP API entry point for PAK re-run requests.
  */
 declare(strict_types=1);
 
@@ -15,6 +11,7 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobLookupQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogPakArchiveStore;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
@@ -72,12 +69,7 @@ try {
         JsonResponse::error('invalid_queue', 'A valid queue name is required.', 400);
     }
 
-    $job = catalog_one(
-        $application->db,
-        'SELECT id,queue_name,job_type,status,priority,max_attempts,payload_json,result_json '
-        . 'FROM ue_background_jobs WHERE id=? AND queue_name=? LIMIT 1',
-        [$jobId, $queueName]
-    );
+    $job = (new PdoBackgroundJobLookupQuery($application->db))->findByIdAndQueue($jobId, $queueName);
     if (!$job) {
         JsonResponse::error('not_found', 'The requested PAK import job was not found.', 404);
     }

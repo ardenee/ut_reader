@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Handles the catalog v1 HTTP endpoint for job action.
- * Why: It exposes this operation as a narrowly scoped machine-readable request instead of mixing API behavior into
- *      HTML pages.
- * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated
- *       here.
- * Audit: Active API surface unless its callers/tests prove otherwise; preserve request/response compatibility when
- *        consolidating.
+ * Purpose: Handles the catalog v1 HTTP endpoint for job actions.
+ * Why: Transport validation remains here while queue persistence, cleanup, worker stopping and recovery are delegated.
+ * Role: HTTP API entry point preserving established Background Jobs action contracts.
  */
 declare(strict_types=1);
 
@@ -15,8 +11,8 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogManualJobRecovery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -131,59 +127,8 @@ try {
     }
 
     if ($action === 'recover') {
-        $launcher = new CatalogDetachedWorker($application->config);
-        $worker = $launcher->status($queueName, false);
-        $orphanedRequeued = 0;
-        $orphanedCancelled = 0;
-
-        if (empty($worker['active'])) {
-            $now = gmdate('Y-m-d H:i:s');
-
-            // A detached process cannot still own these rows when its queue lock is
-            // not held. Preserve administrator cancellation requests; requeue all
-            // other orphaned rows without consuming another attempt.
-            $cancel = $application->db->prepare(
-                'UPDATE ue_background_jobs SET status="cancelled",dedupe_key=NULL,worker_id=NULL,lease_token=NULL,'
-                . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,completed_at=?,updated_at=? '
-                . 'WHERE queue_name=? AND status="running" AND worker_id LIKE "detached:%" '
-                . 'AND cancel_requested_at IS NOT NULL'
-            );
-            $cancel->execute([$now, $now, $queueName]);
-            $orphanedCancelled = $cancel->rowCount();
-
-            $requeue = $application->db->prepare(
-                'UPDATE ue_background_jobs SET status="queued",attempts=GREATEST(attempts-1,0),available_at=?,'
-                . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
-                . 'progress_json=NULL,progress_updated_at=NULL,last_error="Detached worker process disappeared; orphaned job requeued without consuming an attempt.",'
-                . 'updated_at=? WHERE queue_name=? AND status="running" AND worker_id LIKE "detached:%" '
-                . 'AND cancel_requested_at IS NULL'
-            );
-            $requeue->execute([$now, $now, $queueName]);
-            $orphanedRequeued = $requeue->rowCount();
-
-            if ($orphanedRequeued > 0 || $orphanedCancelled > 0) {
-                $launcher->writeState($queueName, [
-                    'status' => 'stopped',
-                    'queue' => $queueName,
-                    'ended_at' => gmdate('c'),
-                    'exit_reason' => 'orphan_recovery',
-                    'orphaned_requeued' => $orphanedRequeued,
-                    'orphaned_cancelled' => $orphanedCancelled,
-                ]);
-                $launcher->clearStopRequest($queueName);
-            }
-        }
-
-        $expired = $queue->recoverExpiredLeases($queueName);
         JsonResponse::send([
-            'data' => [
-                'queue' => $queueName,
-                'orphaned_requeued' => $orphanedRequeued,
-                'orphaned_cancelled' => $orphanedCancelled,
-                'requeued' => $orphanedRequeued + (int)($expired['requeued'] ?? 0),
-                'cancelled' => $orphanedCancelled + (int)($expired['cancelled'] ?? 0),
-                'dead_lettered' => (int)($expired['dead_lettered'] ?? 0),
-            ],
+            'data' => (new CatalogManualJobRecovery($application->db, $application->config))->recover($queueName),
         ]);
     }
 

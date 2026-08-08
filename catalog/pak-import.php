@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for PAK Import.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes PAK import requests.
+ * Why: Request/file-source handling stays here while durable staging, queueing and worker lifecycle are delegated.
+ * Role: Web UI entry point for PAK import.
  */
 declare(strict_types=1);
 
@@ -15,7 +12,7 @@ require_once __DIR__ . '/lib/CatalogPakArchive.php';
 
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogPakArchiveStore;
 
 function pak_import_public_error(Throwable $error): string
@@ -85,17 +82,18 @@ function pak_import_enqueue(PDO $db, array $config): array
         $queued = $queue->enqueueLocalPak($gameId, $source['path'], $source['name'], $strict, $userId);
     }
 
-    $queueName = (string)($config['queue']['name'] ?? 'catalog');
-    $worker = null;
-    $workerError = '';
-    try {
-        $worker = (new CatalogDetachedWorker($config))->start($queueName, 10000);
-    } catch (Throwable $error) {
-        $workerError = pak_import_public_error($error);
-        error_log('[UnrealDB PAK worker launch] ' . $error->getMessage());
+    $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    $workerState = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+    $workerError = (string)($workerState['worker_error'] ?? '');
+    if ($workerError !== '') {
+        error_log('[UnrealDB PAK worker launch] ' . $workerError);
     }
 
-    return ['job_id' => (int)$queued['job_id'], 'worker' => $worker, 'worker_error' => $workerError];
+    return [
+        'job_id' => (int)$queued['job_id'],
+        'worker' => is_array($workerState['worker'] ?? null) ? $workerState['worker'] : null,
+        'worker_error' => $workerError,
+    ];
 }
 
 try {

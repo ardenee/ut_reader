@@ -3,9 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Processes the state-changing browser action for unverified database import.
  * Why: It separates mutation/request handling from the corresponding display page.
- * Role: Web action endpoint used by the catalog UI; reusable business rules should live in shared services.
- * Audit: Keep request validation here, but consolidate duplicated business logic into shared application/service
- *        classes.
+ * Role: Thin web action endpoint; metadata repair queuing and worker lifecycle are delegated to shared services.
  */
 declare(strict_types=1);
 
@@ -16,8 +14,7 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/UnverifiedMetadataRepair.php';
 
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 
 function unverified_metadata_reply(array $payload, int $status = 200): never
 {
@@ -58,17 +55,16 @@ try {
         session_write_close();
     }
 
-    $launcher = new CatalogDetachedWorker($config);
-    $recovery = (new CatalogOrphanedJobRecovery($db, $config))->recoverInactiveQueue((string)$result['queue']);
-    $worker = null;
-    $workerError = '';
-    if ((int)$result['candidate_count'] > 0) {
-        try {
-            $worker = $launcher->start((string)$result['queue'], 10000);
-        } catch (Throwable $error) {
-            $workerError = trim($error->getMessage()) ?: 'The repair jobs were queued, but the worker could not start.';
-            error_log('[UnrealDB unverified metadata worker] ' . get_class($error) . ': ' . $workerError);
-        }
+    $workerState = (new CatalogQueueWorkerStarter($db, $config))->start(
+        (string)$result['queue'],
+        (int)$result['candidate_count'] > 0,
+        $userId
+    );
+    $worker = $workerState['worker'];
+    $workerError = (string)$workerState['worker_error'];
+    $recovery = is_array($workerState['recovery'] ?? null) ? $workerState['recovery'] : [];
+    if ($workerError !== '') {
+        error_log('[UnrealDB unverified metadata worker] ' . $workerError);
     }
 
     unverified_metadata_reply([

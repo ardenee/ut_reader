@@ -99,9 +99,9 @@ $record(
     'upload_v2_browser_pipeline',
     str_contains($coordinator, 'function inspectFile(')
         && str_contains($coordinator, 'async function preflight(')
-        && str_contains($coordinator, "data.append('action', 'init')")
+        && str_contains($coordinator, "initData.append('action', 'init')")
         && str_contains($coordinator, "data.append('action', 'chunk')")
-        && str_contains($coordinator, "data.append('action', 'complete')")
+        && str_contains($coordinator, "completeData.append('action', 'complete')")
         && str_contains($coordinator, 'async function finalizeOne(')
         && str_contains($coordinator, 'start_worker: false')
         && str_contains($coordinator, 'start_worker: true'),
@@ -111,6 +111,9 @@ $record(
 $bucketHandler = $read('catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $identityProcessor = $read('catalog/src/Infrastructure/Import/CatalogBucketIdentityProcessor.php');
 $unverifiedImportAction = $read('catalog/unverified-files-action.php');
+$unverifiedImportService = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php');
+$unverifiedPromotion = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php');
+$unverifiedDependencyRecovery = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php');
 $record(
     'upload_v2_unverified_import_dependency_chain',
     str_contains($bucketHandler, 'JobType::PROCESS_BUCKET_UPLOAD')
@@ -118,7 +121,10 @@ $record(
         && str_contains($identityProcessor, 'CatalogUploadDuplicateDetector')
         && str_contains($identityProcessor, '$this->operations->store(')
         && str_contains($identityProcessor, '$this->operations->index(')
-        && str_contains($unverifiedImportAction, 'CatalogPostImportDependencyQueue'),
+        && str_contains($unverifiedImportAction, 'CatalogUnverifiedImportService')
+        && str_contains($unverifiedImportService, 'CatalogUnverifiedPromotion')
+        && str_contains($unverifiedPromotion, '$this->dependencies->queueRefresh(')
+        && str_contains($unverifiedDependencyRecovery, 'CatalogPostImportDependencyQueue::enqueue('),
     'queued upload must reach unverified indexing and later promotion must retain durable dependency scheduling'
 );
 
@@ -228,6 +234,9 @@ $criticalPhp = [
     'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolReconciler.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolStaleRestartFailed.php',
+    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php',
+    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
+    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
 ];
 
 if (!function_exists('proc_open')) {
