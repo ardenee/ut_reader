@@ -71,10 +71,7 @@ final class CatalogBucketBatchQueue
         $sourcePath = (string)($resolved['path'] ?? '');
         $size = (int)($manifest['file_size'] ?? 0);
         $relativePath = CatalogImportPathPolicy::relative((string)($manifest['relative_path'] ?? ''));
-        $originalName = CatalogImportPathPolicy::filename(
-            basename(str_replace('\\', '/', $relativePath)),
-            'Upload Bucket filename is missing.'
-        );
+        $originalName = $this->requiredName(basename(str_replace('\\', '/', $relativePath)));
         $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
         $fingerprint = $this->fingerprint($manifest);
         if ($size < 1 || $relativePath === '' || $fingerprint === '' || !is_file($sourcePath)) {
@@ -260,5 +257,14 @@ final class CatalogBucketBatchQueue
     private function baseQueueName(): string
     {
         return trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    }
+
+    private function requiredName(string $name): string
+    {
+        $name = \catalog_clean_unreal_filename($name);
+        if ($name === '' || $name === '.' || $name === '..') {
+            throw new \InvalidArgumentException('Upload Bucket filename is missing.');
+        }
+        return $name;
     }
 }
