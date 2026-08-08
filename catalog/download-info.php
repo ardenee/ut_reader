@@ -15,6 +15,7 @@ require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/ModPackageBuilder.php';
 
 use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
 
 function render_availability(PDO $db, int $fileId): string
 {
@@ -111,7 +112,12 @@ try {
         $preview = null;
         $previewError = null;
         try {
-            $preview = modpkg_plan($db, $config, $id, $defaultFormat, true, $settings);
+            $preview = (new PdoCatalogPackageExportPlanner($db, $config))->plan(
+                $id,
+                $defaultFormat,
+                true,
+                $settings
+            );
         } catch (Throwable $previewException) {
             $previewError = $previewException->getMessage();
         }
