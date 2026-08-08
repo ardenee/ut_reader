@@ -1,21 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Package Export Settings.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes Package Export Settings.
+ * Why: Export-format policy, numeric normalization and per-game settings persistence now belong to a shared service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
+
 catalog_start_session();
-require_once __DIR__ . '/lib/FederationAuth.php';
-require_once __DIR__ . '/lib/ModPackageBuilder.php';
 
 try {
     $config = catalog_config();
@@ -25,57 +21,18 @@ try {
         exit;
     }
 
+    $service = new CatalogPackageExportSettingsService($db);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('package_export_settings');
-
-        $booleanKeys = [
-            'package_export_enabled',
-            'package_export_dependency_zip_enabled',
-            'package_export_umod_enabled',
-            'package_export_ut3_zip_enabled',
-            'package_export_ut4_pak_enabled',
-            'package_export_include_transitive',
-            'package_export_allow_incomplete',
-        ];
-        foreach ($booleanKeys as $key) {
-            fed_set_setting($db, $key, isset($_POST[$key]) ? '1' : '0');
-        }
-
-        $maxFiles = max(1, min(10000, (int)($_POST['package_export_max_files'] ?? 1000)));
-        $maxBytesMb = max(1, min(102400, (int)($_POST['package_export_max_bytes_mb'] ?? 2048)));
-        $author = trim((string)($_POST['package_export_default_author'] ?? 'UnrealDB')) ?: 'UnrealDB';
-        $mountPoint = modpkg_normalize_mount_point((string)($_POST['package_export_ut4_mount_point'] ?? '../../../UnrealTournament/Content/'));
-
-        fed_set_setting($db, 'package_export_max_files', (string)$maxFiles);
-        fed_set_setting($db, 'package_export_max_bytes_mb', (string)$maxBytesMb);
-        fed_set_setting($db, 'package_export_default_author', $author);
-        fed_set_setting($db, 'package_export_ut4_mount_point', $mountPoint);
-        fed_set_setting($db, 'package_export_ut4_pak_version', '3');
-
-        $games = catalog_all($db, 'SELECT id FROM ue_games ORDER BY id');
-        $gameFormats = [];
-        $allowed = ['auto', MODPKG_FORMAT_DEPENDENCY_ZIP, MODPKG_FORMAT_UMOD, MODPKG_FORMAT_UT2MOD, MODPKG_FORMAT_UT4MOD, MODPKG_FORMAT_UT3_ZIP, MODPKG_FORMAT_UT4_PAK];
-        foreach ($games as $game) {
-            $value = strtolower(trim((string)($_POST['game_format_' . (int)$game['id']] ?? 'auto')));
-            $gameFormats[(string)(int)$game['id']] = in_array($value, $allowed, true) ? $value : 'auto';
-        }
-        fed_set_setting($db, 'package_export_game_formats_json', modpkg_json($gameFormats));
-
+        $service->save($_POST);
         $_SESSION['package_export_flash'] = 'Package export settings saved.';
         header('Location: download-package-settings.php');
         exit;
     }
 
-    $settings = modpkg_settings($db);
-    $games = catalog_all(
-        $db,
-        'SELECT g.id, g.name, g.slug, p.profile_name, p.engine_key
-         FROM ue_games g
-         LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1
-         ORDER BY g.name'
-    );
-    $labels = modpkg_format_labels();
-    unset($labels[MODPKG_FORMAT_DISABLED]);
+    $settings = $service->settings();
+    $games = $service->games();
+    $labels = $service->formatLabels();
 
     catalog_head('Package Export Settings');
     catalog_page_header(

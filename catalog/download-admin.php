@@ -1,21 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Downloads.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders the Downloads administration dashboard.
+ * Why: Cross-subsystem settings aggregation and mirror counters now belong to a dedicated Infrastructure read model.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDownloadAdminSummaryQuery;
+
 catalog_start_session();
-require_once __DIR__ . '/lib/FederationAuth.php';
-require_once __DIR__ . '/lib/ModPackageBuilder.php';
-require_once __DIR__ . '/lib/CatalogPublicAccess.php';
 
 try {
     $config = catalog_config();
@@ -27,14 +23,15 @@ try {
 
     catalog_head('Downloads');
 
-    $settings = fed_all_settings($db);
-    $publicSettings = catalog_public_access_settings($db, $config);
-    $packageSettings = modpkg_settings($db);
-    $activeLinks = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="active"');
-    $expiredLinks = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="expired"');
-    $waitingJobs = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin","uploading")');
-    $failedJobs = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status="failed"');
-    $providers = catalog_count($db, 'SELECT COUNT(*) c FROM ue_external_download_providers WHERE is_active=1');
+    $summary = (new PdoDownloadAdminSummaryQuery($db, $config))->summary();
+    $settings = $summary['settings'];
+    $publicSettings = $summary['public'];
+    $packageSettings = $summary['package'];
+    $activeLinks = $summary['active_links'];
+    $expiredLinks = $summary['expired_links'];
+    $waitingJobs = $summary['waiting_jobs'];
+    $failedJobs = $summary['failed_jobs'];
+    $providers = $summary['providers'];
 
     catalog_page_header('Downloads', 'Control public downloads, generated mod packages, access limits, transfer speed and external mirrors. Federation parent/child transfers use controlled API transfers.', ['Public Access & Mail' => 'public-access-settings.php', 'Package Export Settings' => 'download-package-settings.php', 'Mirror Settings' => 'mirror-providers.php', 'Mirror Links' => 'mirror-links.php', 'Mirror Queue' => 'mirror-queue.php', 'Base Game Protection' => 'base-game-files.php', 'Federation Settings' => 'federation/settings.php']);
 

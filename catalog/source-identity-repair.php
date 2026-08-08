@@ -1,75 +1,20 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Source Identity Repair.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders Source Identity Repair and queues durable repair jobs.
+ * Why: Mounted-source fallback reads and canonical identity audit logic now belong to an Infrastructure query model.
+ * Role: Presentation adapter; durable mutations remain in the existing background-job repair workflow.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogScanner.php';
-require_once __DIR__ . '/lib/CatalogSourceIdentity.php';
+
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoSourceIdentityAuditQuery;
 
 function source_identity_repair_get_int(string $name): int
 {
     $value = filter_input(INPUT_GET, $name, FILTER_VALIDATE_INT);
     return ($value === false || $value === null || $value < 1) ? 0 : (int)$value;
-}
-
-function source_identity_repair_source_path(PDO $db, array $file): string
-{
-    $path = catalog_source_identity_path((string)($file['source_relative_path'] ?? ''));
-    if ($path !== '') {
-        return $path;
-    }
-
-    $location = catalog_one(
-        $db,
-        'SELECT source_relative_path FROM ue_file_locations WHERE file_id=? AND source_relative_path<>"" ORDER BY id LIMIT 1',
-        [(int)$file['id']]
-    );
-    return catalog_source_identity_path((string)($location['source_relative_path'] ?? ''));
-}
-
-/** @return list<array<string,mixed>> */
-function source_identity_repair_audit(PDO $db, int $gameId): array
-{
-    $files = catalog_all(
-        $db,
-        'SELECT f.id,f.package_name,f.original_name,f.source_relative_path,f.detected_engine_key,p.engine_key profile_engine'
-        . ' FROM ue_files f'
-        . ' JOIN ue_games g ON g.id=f.game_id'
-        . ' LEFT JOIN ue_game_profiles p ON p.id=g.profile_id'
-        . ' WHERE f.game_id=? AND f.scan_status="verified"'
-        . ' ORDER BY f.package_name,f.id',
-        [$gameId]
-    );
-
-    $mismatches = [];
-    foreach ($files as $file) {
-        $engineKey = strtoupper(trim((string)($file['detected_engine_key'] ?? '')));
-        if ($engineKey === '') {
-            $engineKey = strtoupper(trim((string)($file['profile_engine'] ?? '')));
-        }
-        $sourcePath = source_identity_repair_source_path($db, $file);
-        $canonical = catalog_source_identity_package_name(
-            $engineKey,
-            $sourcePath,
-            (string)$file['original_name']
-        );
-        if ($canonical === '' || strcasecmp((string)$file['package_name'], $canonical) === 0) {
-            continue;
-        }
-        $file['canonical_package_name'] = $canonical;
-        $file['canonical_source_path'] = $sourcePath;
-        $mismatches[] = $file;
-    }
-
-    return $mismatches;
 }
 
 try {
@@ -80,11 +25,8 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
-    $games = catalog_all(
-        $db,
-        'SELECT g.id,g.name,UPPER(COALESCE(p.engine_key,"")) engine_key '
-        . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id ORDER BY g.name'
-    );
+    $audit = new PdoSourceIdentityAuditQuery($db);
+    $games = $audit->games();
     $selectedGameId = source_identity_repair_get_int('game_id');
     if ($selectedGameId === 0 && $games !== []) {
         $selectedGameId = (int)$games[0]['id'];
@@ -96,9 +38,8 @@ try {
             break;
         }
     }
-    $repairSupported = $selectedGame !== null
-        && in_array((string)$selectedGame['engine_key'], ['UE4', 'UE5'], true);
-    $mismatches = $selectedGameId > 0 ? source_identity_repair_audit($db, $selectedGameId) : [];
+    $repairSupported = $audit->repairSupported($selectedGame);
+    $mismatches = $selectedGameId > 0 ? $audit->mismatches($selectedGameId) : [];
 
     catalog_head('Source Identity Repair');
     echo <<<'CSS'

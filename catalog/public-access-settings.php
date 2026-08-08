@@ -1,19 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Public Access & Mail.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes Public Access & Mail settings.
+ * Why: Cross-setting validation, SMTP secret handling, cache invalidation and test-mail delivery now live in a service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/FederationAuth.php';
-require_once __DIR__ . '/lib/CatalogPublicAccess.php';
-require_once __DIR__ . '/lib/CatalogSmtpMailer.php';
+
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPublicAccessSettingsService;
 
 catalog_start_session();
 
@@ -24,107 +20,18 @@ try {
         exit;
     }
 
+    $service = new CatalogPublicAccessSettingsService($db, $config);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('public_access_settings');
         $action = strtolower(trim((string)($_POST['action'] ?? 'save')));
-
-        $publicValues = [
-            'site_development_mode' => isset($_POST['site_development_mode']) ? '1' : '0',
-            'site_development_title' => (string)($_POST['site_development_title'] ?? ''),
-            'site_development_message' => (string)($_POST['site_development_message'] ?? ''),
-            'feedback_enabled' => isset($_POST['feedback_enabled']) ? '1' : '0',
-            'feedback_recipient' => (string)($_POST['feedback_recipient'] ?? 'info@unrealdb.com'),
-            'public_download_max_files' => (string)($_POST['public_download_max_files'] ?? '10'),
-            'public_download_window_seconds' => (string)($_POST['public_download_window_seconds'] ?? '3600'),
-            'public_package_max_builds' => (string)($_POST['public_package_max_builds'] ?? '10'),
-            'public_package_window_seconds' => (string)($_POST['public_package_window_seconds'] ?? '3600'),
-            'public_download_speed_kbps' => (string)($_POST['public_download_speed_kbps'] ?? '0'),
-            'public_block_crawlers' => isset($_POST['public_block_crawlers']) ? '1' : '0',
-            'public_burst_max_requests' => (string)($_POST['public_burst_max_requests'] ?? '30'),
-            'public_burst_window_seconds' => (string)($_POST['public_burst_window_seconds'] ?? '10'),
-            'public_burst_block_seconds' => (string)($_POST['public_burst_block_seconds'] ?? '600'),
-            'feedback_max_requests' => (string)($_POST['feedback_max_requests'] ?? '5'),
-            'feedback_window_seconds' => (string)($_POST['feedback_window_seconds'] ?? '3600'),
-        ];
-        $publicSettings = catalog_public_access_normalize($publicValues);
-
-        $smtpEnabled = isset($_POST['smtp_enabled']) ? '1' : '0';
-        $smtpHost = substr(trim((string)($_POST['smtp_host'] ?? '')), 0, 255);
-        $smtpPort = (string)catalog_public_access_int($_POST['smtp_port'] ?? null, 587, 1, 65535);
-        $smtpEncryption = strtolower(trim((string)($_POST['smtp_encryption'] ?? 'starttls')));
-        if (!in_array($smtpEncryption, ['none', 'starttls', 'ssl'], true)) {
-            $smtpEncryption = 'starttls';
-        }
-        $smtpUsername = substr(trim((string)($_POST['smtp_username'] ?? '')), 0, 255);
-        $smtpFromEmail = substr(trim((string)($_POST['smtp_from_email'] ?? 'info@unrealdb.com')), 0, 254);
-        $smtpFromName = substr(trim((string)($_POST['smtp_from_name'] ?? 'UnrealDB')), 0, 180);
-        $smtpTimeout = (string)catalog_public_access_int($_POST['smtp_timeout_seconds'] ?? null, 20, 3, 120);
-
-        if ($publicSettings['feedback_enabled'] && $smtpEnabled !== '1') {
-            throw new RuntimeException('Enable SMTP delivery before enabling the public feedback form.');
-        }
-        if ($smtpEnabled === '1') {
-            if ($smtpHost === '') {
-                throw new RuntimeException('SMTP host is required when SMTP is enabled.');
-            }
-            catalog_smtp_address($smtpFromEmail, 'SMTP From address');
-            catalog_smtp_address((string)$publicSettings['feedback_recipient'], 'Feedback recipient');
-        }
-
-        // Validate the complete form before changing either public or SMTP settings.
-        // This prevents a rejected submission from leaving feedback enabled while
-        // mail delivery remains disabled or incomplete.
-        $publicSettings = catalog_public_access_save($db, $config, $publicSettings);
-
-        foreach ([
-            'smtp_enabled' => $smtpEnabled,
-            'smtp_host' => $smtpHost,
-            'smtp_port' => $smtpPort,
-            'smtp_encryption' => $smtpEncryption,
-            'smtp_username' => $smtpUsername,
-            'smtp_from_email' => $smtpFromEmail,
-            'smtp_from_name' => $smtpFromName,
-            'smtp_timeout_seconds' => $smtpTimeout,
-        ] as $name => $value) {
-            fed_set_setting($db, $name, $value);
-        }
-
-        if (isset($_POST['smtp_password_clear'])) {
-            fed_set_setting($db, 'smtp_password', '');
-        } else {
-            $smtpPassword = (string)($_POST['smtp_password'] ?? '');
-            if ($smtpPassword !== '') {
-                $storedPassword = $smtpPassword;
-                $secretStore = fed_secret_store();
-                if ($secretStore->hasMasterKey()) {
-                    $storedPassword = $secretStore->encrypt($smtpPassword);
-                }
-                fed_set_setting($db, 'smtp_password', $storedPassword);
-            }
-        }
-
-        // The landing page and navigation contain these settings. Remove every
-        // shared anonymous-page entry so the new notice/Feedback state appears
-        // on the next request instead of waiting for an older cache entry.
-        catalog_public_cache_invalidate($config);
-
-        if ($action === 'test_mail') {
-            catalog_smtp_send(
-                $db,
-                (string)$publicSettings['feedback_recipient'],
-                'UnrealDB SMTP test',
-                "This is a test message from UnrealDB.\n\nThe saved SMTP and feedback recipient settings are working.\nRequest reference: " . catalog_request_id()
-            );
-            $_SESSION['public_access_flash'] = 'Settings saved and the SMTP test message was accepted by the mail server.';
-        } else {
-            $_SESSION['public_access_flash'] = 'Public access, feedback and SMTP settings saved. Public pages were refreshed.';
-        }
+        $_SESSION['public_access_flash'] = $service->save($_POST, $action, catalog_request_id());
         header('Location: public-access-settings.php', true, 303);
         exit;
     }
 
-    $public = catalog_public_access_settings($db, $config);
-    $smtp = catalog_smtp_settings($db);
+    $current = $service->current();
+    $public = $current['public'];
+    $smtp = $current['smtp'];
 
     catalog_head('Public Access & Mail');
     catalog_page_header(

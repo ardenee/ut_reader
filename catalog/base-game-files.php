@@ -1,20 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Base game file protection.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders and processes Base Game File Protection administration.
+ * Why: Protected-GUID CRUD, seeding and list SQL now belong to a shared policy administration service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogBaseGameProtectionAdminService;
+
 catalog_start_session();
-require_once __DIR__ . '/lib/BaseGameProtection.php';
 
 const BASE_GAME_PAGE_LIMIT_MAX = 200;
 
@@ -44,123 +41,39 @@ try {
     if (!catalog_require_admin_page('Base game files')) {
         exit;
     }
-    base_game_ensure($db);
 
-    $games = catalog_all($db, 'SELECT id, name FROM ue_games ORDER BY name');
-    $gameId = bg_int_get('game_id', 0, 0, PHP_INT_MAX);
-    $knownGameIds = array_map(static fn(array $game): int => (int)$game['id'], $games);
-    if ($gameId > 0 && !in_array($gameId, $knownGameIds, true)) {
-        $gameId = 0;
-    }
+    $service = new CatalogBaseGameProtectionAdminService($db);
+    $games = $service->games();
+    $gameId = $service->normalizeGameId(bg_int_get('game_id', 0, 0, PHP_INT_MAX));
     $query = trim((string)($_GET['q'] ?? ''));
     $limit = bg_int_get('limit', 100, 25, BASE_GAME_PAGE_LIMIT_MAX);
     $page = bg_int_get('page', 1, 1, PHP_INT_MAX);
-    $offset = ($page - 1) * $limit;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('base-game-files');
         $action = (string)($_POST['action'] ?? '');
-        $postGameId = (int)($_POST['game_id'] ?? $gameId);
+        $result = $service->handle(
+            $action,
+            $_POST,
+            $gameId,
+            isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null
+        );
+        $_SESSION['base_game_flash'] = $result['message'];
 
-        if ($action === 'seed_current_game') {
-            if ($postGameId <= 0) {
-                throw new RuntimeException('Choose a game before seeding base-game GUIDs.');
-            }
-            $result = base_game_seed_from_current_files($db, $postGameId, isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null);
-            $_SESSION['base_game_flash'] = 'Seed complete. Scanned=' . $result['scanned'] . ', inserted=' . $result['inserted'] . ', updated=' . $result['updated'] . '.';
-            header('Location: base-game-files.php?game_id=' . $postGameId);
-            exit;
-        }
-
-        if ($action === 'add') {
-            if ($postGameId <= 0) {
-                throw new RuntimeException('Choose a game before adding a base-game GUID.');
-            }
-            $guid = base_game_normalize_guid((string)($_POST['package_guid'] ?? ''));
-            if (!base_game_guid_is_usable($guid)) {
-                throw new RuntimeException('Enter a non-zero package GUID.');
-            }
-            $packageName = catalog_clean_unreal_package_stem((string)($_POST['package_name'] ?? ''));
-            $originalName = catalog_clean_unreal_filename((string)($_POST['original_name'] ?? $packageName));
-            $notes = trim((string)($_POST['notes'] ?? ''));
-            $stmt = $db->prepare('INSERT INTO ue_base_game_files(game_id, package_guid, package_name, original_name, notes) VALUES(?,?,?,?,?) ON DUPLICATE KEY UPDATE package_name=VALUES(package_name), original_name=VALUES(original_name), notes=VALUES(notes), updated_at=CURRENT_TIMESTAMP');
-            $stmt->execute([$postGameId, $guid, $packageName, $originalName, $notes]);
-            $_SESSION['base_game_flash'] = 'Base-game GUID saved: ' . $guid;
-            header('Location: base-game-files.php?game_id=' . $postGameId);
-            exit;
-        }
-
-        if ($action === 'save_visible') {
-            $ids = array_values(array_unique(array_map('intval', $_POST['ids'] ?? [])));
-            $packageNames = is_array($_POST['package_name'] ?? null) ? $_POST['package_name'] : [];
-            $originalNames = is_array($_POST['original_name'] ?? null) ? $_POST['original_name'] : [];
-            $notes = is_array($_POST['notes'] ?? null) ? $_POST['notes'] : [];
-            $stmt = $db->prepare('UPDATE ue_base_game_files SET package_name=?, original_name=?, notes=? WHERE id=?');
-            $saved = 0;
-            foreach ($ids as $id) {
-                if ($id <= 0) {
-                    continue;
-                }
-                $stmt->execute([
-                    catalog_clean_unreal_package_stem((string)($packageNames[$id] ?? '')),
-                    catalog_clean_unreal_filename((string)($originalNames[$id] ?? '')),
-                    trim((string)($notes[$id] ?? '')),
-                    $id,
-                ]);
-                $saved++;
-            }
-            $_SESSION['base_game_flash'] = 'Saved ' . $saved . ' visible base-game row(s).';
+        if (in_array($action, ['seed_current_game', 'add'], true)) {
+            header('Location: base-game-files.php?game_id=' . (int)$result['game_id']);
+        } else {
             header('Location: ' . bg_url(['page' => $page]));
-            exit;
         }
-
-        if ($action === 'delete_selected') {
-            $ids = array_values(array_filter(array_unique(array_map('intval', $_POST['delete_ids'] ?? [])), static fn(int $id): bool => $id > 0));
-            if ($ids === []) {
-                throw new RuntimeException('Select at least one base-game row to remove.');
-            }
-            $stmt = $db->prepare('DELETE FROM ue_base_game_files WHERE id=?');
-            foreach ($ids as $id) {
-                $stmt->execute([$id]);
-            }
-            $_SESSION['base_game_flash'] = 'Removed ' . count($ids) . ' base-game GUID row(s).';
-            header('Location: ' . bg_url(['page' => $page]));
-            exit;
-        }
+        exit;
     }
 
-    $where = 'WHERE 1=1';
-    $args = [];
-    if ($gameId > 0) {
-        $where .= ' AND b.game_id=?';
-        $args[] = $gameId;
-    }
-    if ($query !== '') {
-        $where .= ' AND (b.package_guid LIKE ? OR b.package_name LIKE ? OR b.original_name LIKE ? OR g.name LIKE ? OR b.notes LIKE ?)';
-        $like = '%' . $query . '%';
-        array_push($args, $like, $like, $like, $like, $like);
-    }
-
-    $totalRows = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_base_game_files b JOIN ue_games g ON g.id=b.game_id ' . $where, $args)['c'] ?? 0);
-    $totalPages = max(1, (int)ceil($totalRows / $limit));
-    $page = min($page, $totalPages);
-    $offset = ($page - 1) * $limit;
-    $rows = catalog_all(
-        $db,
-        'SELECT b.*, g.name game_name, f.current_file_id
-         FROM ue_base_game_files b
-         JOIN ue_games g ON g.id=b.game_id
-         LEFT JOIN (
-             SELECT game_id, package_guid, MIN(id) current_file_id
-             FROM ue_files
-             WHERE scan_status="verified"
-             GROUP BY game_id, package_guid
-         ) f ON f.game_id=b.game_id AND f.package_guid=b.package_guid
-         ' . $where . '
-         ORDER BY g.name, b.package_name, b.original_name, b.id
-         LIMIT ' . $limit . ' OFFSET ' . $offset,
-        $args
-    );
+    $list = $service->page($gameId, $query, $limit, $page);
+    $rows = $list['rows'];
+    $totalRows = $list['total_rows'];
+    $totalPages = $list['total_pages'];
+    $page = $list['page'];
+    $offset = $list['offset'];
 
     catalog_head('Base game files');
     catalog_flash($_SESSION['base_game_flash'] ?? null);

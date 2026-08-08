@@ -1,22 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Package root normalizer.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders the legacy package-root normalizer and accepts administrator selections.
+ * Why: Compact metadata inspection/mutation, identity writes and dependency repair now belong to a maintenance service.
+ * Role: Presentation adapter for UE1/UE2/UE3 package-root normalization.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogCompactMetadataMutation.php';
 
-use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogLegacyPackageNormalizationService;
 
 catalog_start_session();
-require_once __DIR__ . '/lib/CatalogScanner.php';
 
 const PACKAGE_NORMALIZE_MAX_ROWS = 950;
 
@@ -29,137 +24,6 @@ function package_normalize_int(string $key, int $default, int $min, int $max): i
     return max($min, min($max, (int)$value));
 }
 
-function package_normalize_is_modern_engine(array $file): bool
-{
-    $detected = strtoupper(trim((string)($file['detected_engine_key'] ?? '')));
-    $profile = strtoupper(trim((string)($file['profile_engine'] ?? '')));
-    return in_array($detected, ['UE4', 'UE5'], true) || in_array($profile, ['UE4', 'UE5'], true);
-}
-
-function package_normalize_assert_legacy_engine(array $file): void
-{
-    if (package_normalize_is_modern_engine($file)) {
-        throw new RuntimeException(
-            'UE4/UE5 package identities must not be processed by the legacy package-root normalizer. '
-            . 'Use Source Identity Repair so mounted paths such as /Engine/... and valid characters such as + are preserved.'
-        );
-    }
-}
-
-function package_normalize_clean_package(array $file): string
-{
-    $package = trim((string)($file['package_name'] ?? ''));
-    if ($package === '') {
-        $cleanFile = catalog_clean_unreal_filename((string)($file['original_name'] ?? ''));
-        $package = (string)pathinfo($cleanFile, PATHINFO_FILENAME);
-    }
-    return catalog_clean_unreal_package_stem($package);
-}
-
-function package_normalize_clean_original(array $file): string
-{
-    return catalog_clean_unreal_filename((string)($file['original_name'] ?? ''));
-}
-
-function package_normalize_export_dirty_count(PDO $db, int $fileId, string $cleanPackage): int
-{
-    return (int)(catalog_one(
-        $db,
-        'SELECT COUNT(*) c FROM ue_exports WHERE file_id=? '
-        . 'AND full_path<>CASE WHEN local_path<>"" THEN CONCAT(?, ".", local_path) ELSE ? END',
-        [$fileId, $cleanPackage, $cleanPackage]
-    )['c'] ?? 0);
-}
-
-/** @return array{changed:bool,file_id:int,game_id:int,old_package:string,new_package:string,old_original:string,new_original:string,export_rows:int} */
-function package_normalize_file(PDO $db, array $config, int $fileId): array
-{
-    $file = catalog_one(
-        $db,
-        'SELECT f.id,f.game_id,f.package_name,f.original_name,f.detected_engine_key,p.engine_key profile_engine '
-        . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
-        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id WHERE f.id=?',
-        [$fileId]
-    );
-    if (!$file) {
-        throw new RuntimeException('File ID ' . $fileId . ' no longer exists.');
-    }
-    package_normalize_assert_legacy_engine($file);
-
-    $cleanPackage = package_normalize_clean_package($file);
-    $cleanOriginal = package_normalize_clean_original($file);
-    $oldPackage = (string)$file['package_name'];
-    $oldOriginal = (string)$file['original_name'];
-    $exportDirty = package_normalize_export_dirty_count($db, $fileId, $cleanPackage);
-    $changed = $oldPackage !== $cleanPackage || $oldOriginal !== $cleanOriginal || $exportDirty > 0;
-
-    if ($changed) {
-        $db->prepare('UPDATE ue_files SET package_name=?,original_name=? WHERE id=?')
-            ->execute([$cleanPackage, $cleanOriginal, $fileId]);
-        try {
-            $exportDirty = catalog_compact_metadata_rewrite_package_identity(
-                $db,
-                $config,
-                $fileId,
-                $cleanPackage
-            );
-        } catch (Throwable $error) {
-            $db->prepare('UPDATE ue_files SET package_name=?,original_name=? WHERE id=?')
-                ->execute([$oldPackage, $oldOriginal, $fileId]);
-            throw $error;
-        }
-    }
-
-    return [
-        'changed' => $changed,
-        'file_id' => $fileId,
-        'game_id' => (int)$file['game_id'],
-        'old_package' => $oldPackage,
-        'new_package' => $cleanPackage,
-        'old_original' => $oldOriginal,
-        'new_original' => $cleanOriginal,
-        'export_rows' => $exportDirty,
-    ];
-}
-
-/** @return list<array<string,mixed>> */
-function package_normalize_dirty_rows(PDO $db, int $gameId): array
-{
-    $sql = 'SELECT f.id,f.game_id,g.name game_name,f.package_name,f.original_name,f.package_guid,f.md5,f.file_size,f.scan_status,'
-        . 'f.detected_engine_key,p.engine_key profile_engine FROM ue_files f '
-        . 'JOIN ue_games g ON g.id=f.game_id LEFT JOIN ue_game_profiles p ON p.id=g.profile_id '
-        . 'WHERE f.scan_status<>"failed" '
-        . 'AND UPPER(COALESCE(f.detected_engine_key,"")) NOT IN ("UE4","UE5") '
-        . 'AND UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5")';
-    $args = [];
-    if ($gameId > 0) {
-        $sql .= ' AND f.game_id=?';
-        $args[] = $gameId;
-    }
-    $sql .= ' ORDER BY g.name,f.package_name,f.original_name,f.id';
-
-    $dirty = [];
-    foreach (catalog_all($db, $sql, $args) as $row) {
-        package_normalize_assert_legacy_engine($row);
-        $cleanPackage = package_normalize_clean_package($row);
-        $cleanOriginal = package_normalize_clean_original($row);
-        $exportDirty = package_normalize_export_dirty_count($db, (int)$row['id'], $cleanPackage);
-        if ((string)$row['package_name'] === $cleanPackage
-            && (string)$row['original_name'] === $cleanOriginal
-            && $exportDirty === 0) {
-            continue;
-        }
-        $row['clean_package_name'] = $cleanPackage;
-        $row['clean_original_name'] = $cleanOriginal;
-        $row['dirty_export_count'] = $exportDirty;
-        $dirty[] = $row;
-        if (count($dirty) >= PACKAGE_NORMALIZE_MAX_ROWS) {
-            break;
-        }
-    }
-    return $dirty;
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -167,91 +31,28 @@ try {
         exit;
     }
 
-    $games = catalog_all(
-        $db,
-        'SELECT g.id,g.name,p.engine_key FROM ue_games g '
-        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id '
-        . 'WHERE UPPER(COALESCE(p.engine_key,"")) NOT IN ("UE4","UE5") ORDER BY g.name'
-    );
-    $gameId = package_normalize_int('game_id', 0, 0, PHP_INT_MAX);
-    $knownGameIds = array_map(static fn(array $game): int => (int)$game['id'], $games);
-    if ($gameId > 0 && !in_array($gameId, $knownGameIds, true)) {
-        $gameId = 0;
-    }
+    $service = new CatalogLegacyPackageNormalizationService($db, $config);
+    $games = $service->legacyGames();
+    $gameId = $service->normalizeGameId(package_normalize_int('game_id', 0, 0, PHP_INT_MAX));
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('package-normalize');
-        $ids = is_array($_POST['file_ids'] ?? null) ? $_POST['file_ids'] : [];
-        $ids = array_values(array_filter(array_unique(array_map('intval', $ids)), static fn(int $id): bool => $id > 0));
-        if (count($ids) > PACKAGE_NORMALIZE_MAX_ROWS) {
-            throw new RuntimeException('Too many files selected. Process at most ' . PACKAGE_NORMALIZE_MAX_ROWS . ' files at once.');
-        }
-        if ($ids === []) {
-            throw new RuntimeException('Select at least one file to normalize.');
-        }
+        $posted = is_array($_POST['file_ids'] ?? null) ? $_POST['file_ids'] : [];
+        $result = $service->normalize(
+            array_map('intval', $posted),
+            PACKAGE_NORMALIZE_MAX_ROWS,
+            (string)($_POST['rebuild_dependencies'] ?? '') === '1'
+        );
 
-        $changed = [];
-        $affectedPackages = [];
-        foreach ($ids as $fileId) {
-            $result = package_normalize_file($db, $config, $fileId);
-            if (!$result['changed']) {
-                continue;
-            }
-            $changed[] = $result;
-            foreach ([$result['old_package'], $result['new_package']] as $packageName) {
-                $packageName = trim((string)$packageName);
-                if ($packageName !== '') {
-                    $affectedPackages[(int)$result['game_id'] . ':' . mb_strtolower($packageName, 'UTF-8')] = [
-                        (int)$result['game_id'],
-                        $packageName,
-                    ];
-                }
-            }
-        }
-
-        foreach ($changed as $result) {
-            CatalogProjectionReconciliationQueue::enqueue(
-                $db,
-                (int)$result['file_id'],
-                [(int)$result['game_id']],
-                [(string)$result['old_package'], (string)$result['new_package']],
-                $config
-            );
-        }
-
-        $rebuild = (string)($_POST['rebuild_dependencies'] ?? '') === '1';
-        $rebuildWarnings = 0;
-        if ($rebuild) {
-            foreach ($affectedPackages as [$affectedGameId, $packageName]) {
-                try {
-                    scanner_rebuild_affected_dependencies_for_package(
-                        $db,
-                        $config,
-                        (int)$affectedGameId,
-                        (string)$packageName,
-                        null,
-                        0,
-                        100
-                    );
-                } catch (Throwable $error) {
-                    $rebuildWarnings++;
-                    error_log(
-                        '[UnrealDB package normalize] dependency refresh failed for game=' . (int)$affectedGameId
-                        . ' package=' . (string)$packageName . ': ' . $error->getMessage()
-                    );
-                }
-            }
-        }
-
-        $_SESSION['package_normalize_flash'] = 'Normalized ' . count($changed) . ' file(s).'
-            . ($rebuild
-                ? ' Dependency refresh package checks=' . count($affectedPackages) . ', warnings=' . $rebuildWarnings . '.'
+        $_SESSION['package_normalize_flash'] = 'Normalized ' . $result['changed'] . ' file(s).'
+            . ($result['rebuild']
+                ? ' Dependency refresh package checks=' . $result['affected_packages'] . ', warnings=' . $result['rebuild_warnings'] . '.'
                 : ' Durable projection reconciliation was queued.');
         header('Location: package-normalize.php' . ($gameId > 0 ? '?game_id=' . $gameId : ''));
         exit;
     }
 
-    $dirtyRows = package_normalize_dirty_rows($db, $gameId);
+    $dirtyRows = $service->dirtyRows($gameId, PACKAGE_NORMALIZE_MAX_ROWS);
     catalog_head('Package root normalizer');
     catalog_flash($_SESSION['package_normalize_flash'] ?? null);
     unset($_SESSION['package_normalize_flash']);
