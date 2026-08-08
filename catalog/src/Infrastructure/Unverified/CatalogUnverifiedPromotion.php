@@ -16,6 +16,7 @@ final class CatalogUnverifiedPromotion
 {
     private readonly CatalogUnverifiedDependencyRecovery $dependencies;
     private readonly CatalogUnverifiedQueueMutationService $queueMutations;
+    private readonly CatalogUnverifiedStagingIndex $staging;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -24,11 +25,11 @@ final class CatalogUnverifiedPromotion
         ?CatalogUnverifiedDependencyRecovery $dependencies = null,
         ?CatalogUnverifiedQueueMutationService $queueMutations = null
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
-        require_once dirname(__DIR__, 3) . '/lib/CatalogUnverifiedIndex.php';
         require_once dirname(__DIR__, 3) . '/lib/GameProfiles.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogScanner.php';
         $this->dependencies = $dependencies ?? new CatalogUnverifiedDependencyRecovery($db, $config);
         $this->queueMutations = $queueMutations ?? new CatalogUnverifiedQueueMutationService($db, $config);
+        $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
     /**
@@ -48,7 +49,7 @@ final class CatalogUnverifiedPromotion
         $row = is_array($source['row'] ?? null) ? $source['row'] : null;
         if (!$row || (int)($row['id'] ?? 0) < 1) {
             $this->emit($emit, 'staging', 3, 'Indexing a legacy filesystem-only queued package');
-            $indexed = \catalog_unverified_index_item($this->db, $this->config, $source, $userId, false);
+            $indexed = $this->staging->indexItem($source, $userId, false);
             $row = \catalog_one(
                 $this->db,
                 'SELECT * FROM ue_files WHERE id=? AND scan_status="unverified" LIMIT 1',
@@ -68,7 +69,7 @@ final class CatalogUnverifiedPromotion
 
         $physicalOriginal = (string)$source['original_name'];
         $this->emit($emit, 'preparing', 8, 'Preparing queued package');
-        $prepared = \catalog_unverified_prepare_path((string)$source['path'], $physicalOriginal);
+        $prepared = CatalogUnverifiedStagingIndex::preparePath((string)$source['path'], $physicalOriginal);
         try {
             $this->emit($emit, 'classifying', 12, 'Checking the selected game profile');
             $classification = \gp_classify_file($this->db, $targetGameId, $prepared['path'], $prepared['name']);

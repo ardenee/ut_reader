@@ -24,7 +24,6 @@ final class CatalogUnverifiedRenameService
     ) {
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
-        require_once $root . '/lib/UnverifiedFileManager.php';
         require_once $root . '/lib/CatalogScanner.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
@@ -61,7 +60,7 @@ final class CatalogUnverifiedRenameService
         }
 
         $queueGame = $queueGameId === 0
-            ? \uvf_bucket_game()
+            ? CatalogUnverifiedQueueStorage::bucketGame()
             : \catalog_one(
                 $this->db,
                 'SELECT id,name,slug,profile_id FROM ue_games WHERE id=?',
@@ -71,9 +70,15 @@ final class CatalogUnverifiedRenameService
             throw new RuntimeException('The physical queue game no longer exists.');
         }
 
-        $directory = \uvf_unverified_dir($this->config, $queueGame, false);
+        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory(
+            $this->config,
+            $queueGame,
+            false
+        );
         $oldPath = $directory . DIRECTORY_SEPARATOR . $oldQueueName;
-        if (!is_file($oldPath) || is_link($oldPath) || !\uvf_path_inside($oldPath, $directory)) {
+        if (!is_file($oldPath)
+            || is_link($oldPath)
+            || !CatalogUnverifiedQueueStorage::pathInside($oldPath, $directory)) {
             throw new RuntimeException('The physical staged file is missing or unsafe.');
         }
 

@@ -1,14 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogUnverifiedMetadataRepairJobHandler` for catalog unverified
- *          metadata repair job handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Repairs metadata for one queued unverified file in a durable background job.
+ * Why: Worker execution should use the namespaced queue-storage and staging services rather than procedural facades.
+ * Role: Infrastructure job handler preserving the existing repair progress and result contract.
  */
 declare(strict_types=1);
 
@@ -20,16 +15,20 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUnverifiedMetadataRepairProcessor;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
 final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
 {
+    private readonly CatalogUnverifiedStagingIndex $staging;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
-        require_once dirname(__DIR__, 3) . '/lib/CatalogUnverifiedIndex.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
+        $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
     public function supports(string $jobType): bool
@@ -41,7 +40,9 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
     {
         $queueGameId = (int)($job->payload['queue_game_id'] ?? -1);
         $queueName = basename((string)($job->payload['queue_name'] ?? ''));
-        if ($queueGameId < 0 || $queueName === '' || $queueName !== (string)($job->payload['queue_name'] ?? '')) {
+        if ($queueGameId < 0
+            || $queueName === ''
+            || $queueName !== (string)($job->payload['queue_name'] ?? '')) {
             throw new \RuntimeException('The metadata-repair queue reference is invalid.');
         }
 
@@ -59,17 +60,23 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
         ]);
 
         if ($queueGameId === 0) {
-            $game = \uvf_bucket_game();
+            $game = CatalogUnverifiedQueueStorage::bucketGame();
         } else {
-            $game = \catalog_one($this->db, 'SELECT id,name,slug,profile_id FROM ue_games WHERE id=?', [$queueGameId]);
+            $game = \catalog_one(
+                $this->db,
+                'SELECT id,name,slug,profile_id FROM ue_games WHERE id=?',
+                [$queueGameId]
+            );
             if (!$game) {
                 throw new \RuntimeException('The unverified source game no longer exists.');
             }
         }
 
-        $directory = \uvf_unverified_dir($this->config, $game, false);
+        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $game, false);
         $path = $directory . DIRECTORY_SEPARATOR . $queueName;
-        if (!is_file($path) || is_link($path) || !\uvf_path_inside($path, $directory)) {
+        if (!is_file($path)
+            || is_link($path)
+            || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
             throw new \RuntimeException('The physical unverified file is no longer available.');
         }
 
@@ -82,7 +89,7 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
             throw new \RuntimeException('The physical file size changed after the repair job was queued.');
         }
 
-        $key = \catalog_unverified_queue_key($queueGameId, $queueName);
+        $key = CatalogUnverifiedStagingIndex::queueKey($queueGameId, $queueName);
         $existing = \catalog_one(
             $this->db,
             'SELECT * FROM ue_files WHERE scan_status="unverified" AND unverified_queue_key=? LIMIT 1',
@@ -90,14 +97,15 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
         ) ?: [];
         $originalName = trim((string)($existing['original_name'] ?? $job->payload['original_name'] ?? ''));
         if ($originalName === '') {
-            $originalName = \uvf_original_name_from_queue_name($queueName);
+            $originalName = CatalogUnverifiedQueueStorage::originalNameFromQueueName($queueName);
         }
         $sourceRelativePath = trim((string)($existing['source_relative_path'] ?? ''));
         $uploadedBy = (int)($job->payload['requested_by'] ?? $existing['uploaded_by'] ?? 0);
         $reasonPath = $path . '.txt';
-        $reason = is_file($reasonPath) && \uvf_path_inside($reasonPath, $directory)
-            ? trim((string)@file_get_contents($reasonPath, false, null, 0, 65535))
-            : '';
+        $reason = is_file($reasonPath)
+            && CatalogUnverifiedQueueStorage::pathInside($reasonPath, $directory)
+                ? trim((string)@file_get_contents($reasonPath, false, null, 0, 65535))
+                : '';
 
         $lastVisibleStage = '';
         $lastVisiblePercent = -1;
@@ -154,9 +162,8 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
                 $progress
             );
         } else {
-            // Older per-game unverified queues still use the legacy staging helper.
-            // Keep explicit visible checkpoints around it; Upload Bucket repairs use
-            // the granular processor above.
+            // Older per-game unverified queues use the same namespaced staging
+            // index with explicit visible checkpoints around the operation.
             $context->checkpoint([
                 'stage' => 'repair_header',
                 'done' => 0,
@@ -168,9 +175,7 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
                 'stage_started_at' => gmdate(DATE_ATOM),
                 'message' => 'Part 1 of 4 — reading package identity and Header for ' . $originalName . '.',
             ]);
-            $result = \catalog_unverified_index_path(
-                $this->db,
-                $this->config,
+            $result = $this->staging->indexPath(
                 $queueGameId,
                 $queueName,
                 $path,
@@ -186,7 +191,9 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
         if ($fileId < 1) {
             throw new \RuntimeException('Metadata repair did not return a database file ID.');
         }
-        $this->db->prepare('UPDATE ue_files SET game_id=NULL WHERE id=? AND scan_status="unverified"')->execute([$fileId]);
+        $this->db->prepare(
+            'UPDATE ue_files SET game_id=NULL WHERE id=? AND scan_status="unverified"'
+        )->execute([$fileId]);
 
         $row = \catalog_one(
             $this->db,
@@ -199,7 +206,11 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
             throw new \RuntimeException('The repaired staging row could not be reloaded.');
         }
 
-        $notes = preg_replace('/(?:^|\R)Metadata repair attempted:.*$/m', '', (string)($row['scan_notes'] ?? ''));
+        $notes = preg_replace(
+            '/(?:^|\R)Metadata repair attempted:.*$/m',
+            '',
+            (string)($row['scan_notes'] ?? '')
+        );
         $notes = trim((string)$notes);
         $marker = 'Metadata repair attempted: ' . gmdate(DATE_ATOM)
             . ' | job #' . $job->id
@@ -274,24 +285,72 @@ final class CatalogUnverifiedMetadataRepairJobHandler implements JobHandler
                 'percent' => $percent,
                 'part' => 1,
                 'part_total' => 4,
-                'message' => 'Part 1 of 4 — calculating MD5/SHA-1 before reading the Header for ' . $originalName . $detail . '.',
+                'message' => 'Part 1 of 4 — calculating MD5/SHA-1 before reading the Header for '
+                    . $originalName . $detail . '.',
             ];
         }
 
         return match ($rawStage) {
-            'engine_detect' => $meta + $this->partProgress(1, 18, 'Part 1 of 4 — detecting the Unreal Engine generation and package summary.'),
-            'reader_validate' => $meta + $this->partProgress(1, 21, 'Part 1 of 4 — validating the package reader.'),
-            'read_header' => $meta + $this->partProgress(1, 23, 'Part 1 of 4 — reading the package Header.'),
-            'read_names' => $meta + $this->partProgress(2, 25, 'Part 2 of 4 — reading the Names table.'),
-            'read_imports' => $meta + $this->partProgress(3, 50, 'Part 3 of 4 — reading the Imports table.'),
-            'read_exports' => $meta + $this->partProgress(4, 75, 'Part 4 of 4 — reading the Exports table.'),
-            'reader_warning' => $meta + $this->partProgress(4, 80, 'Package table reading failed; preserving the basic identity and parser error.'),
-            'database_file' => $meta + $this->saveProgress(82, 'Saving the repaired file identity and package summary.'),
-            'database_names' => $meta + $this->saveProgress(max(83, min(89, $rawPercent)), (string)($raw['message'] ?? 'Saving the Names table.')),
-            'database_imports' => $meta + $this->saveProgress(max(90, min(94, $rawPercent)), (string)($raw['message'] ?? 'Saving the Imports table.')),
-            'database_exports' => $meta + $this->saveProgress(max(95, min(98, $rawPercent)), (string)($raw['message'] ?? 'Saving the Exports table.')),
-            'database_commit' => $meta + $this->saveProgress(99, 'Committing the repaired package inventory.'),
-            default => $meta + $this->saveProgress(max(1, min(99, $rawPercent)), trim((string)($raw['message'] ?? 'Repairing package metadata.')) ?: 'Repairing package metadata.'),
+            'engine_detect' => $meta + $this->partProgress(
+                1,
+                18,
+                'Part 1 of 4 — detecting the Unreal Engine generation and package summary.'
+            ),
+            'reader_validate' => $meta + $this->partProgress(
+                1,
+                21,
+                'Part 1 of 4 — validating the package reader.'
+            ),
+            'read_header' => $meta + $this->partProgress(
+                1,
+                23,
+                'Part 1 of 4 — reading the package Header.'
+            ),
+            'read_names' => $meta + $this->partProgress(
+                2,
+                25,
+                'Part 2 of 4 — reading the Names table.'
+            ),
+            'read_imports' => $meta + $this->partProgress(
+                3,
+                50,
+                'Part 3 of 4 — reading the Imports table.'
+            ),
+            'read_exports' => $meta + $this->partProgress(
+                4,
+                75,
+                'Part 4 of 4 — reading the Exports table.'
+            ),
+            'reader_warning' => $meta + $this->partProgress(
+                4,
+                80,
+                'Package table reading failed; preserving the basic identity and parser error.'
+            ),
+            'database_file' => $meta + $this->saveProgress(
+                82,
+                'Saving the repaired file identity and package summary.'
+            ),
+            'database_names' => $meta + $this->saveProgress(
+                max(83, min(89, $rawPercent)),
+                (string)($raw['message'] ?? 'Saving the Names table.')
+            ),
+            'database_imports' => $meta + $this->saveProgress(
+                max(90, min(94, $rawPercent)),
+                (string)($raw['message'] ?? 'Saving the Imports table.')
+            ),
+            'database_exports' => $meta + $this->saveProgress(
+                max(95, min(98, $rawPercent)),
+                (string)($raw['message'] ?? 'Saving the Exports table.')
+            ),
+            'database_commit' => $meta + $this->saveProgress(
+                99,
+                'Committing the repaired package inventory.'
+            ),
+            default => $meta + $this->saveProgress(
+                max(1, min(99, $rawPercent)),
+                trim((string)($raw['message'] ?? 'Repairing package metadata.'))
+                    ?: 'Repairing package metadata.'
+            ),
         };
     }
 

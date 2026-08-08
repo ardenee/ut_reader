@@ -1,27 +1,24 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for catalog unverified duplicates.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Compatibility helpers for unverified duplicate cleanup.
+ * Why: Existing pages keep their procedural API while duplicate cleanup and queue storage remain namespaced.
+ * Role: Thin legacy facade over application/infrastructure services.
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/UnverifiedFileManager.php';
-require_once __DIR__ . '/CatalogUnverifiedIndex.php';
+require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/../bootstrap/autoload.php';
 
 use UnrealDb\Catalog\Application\Unverified\UnverifiedDuplicateCleanupService;
 use UnrealDb\Catalog\Infrastructure\Composition\CatalogServiceFactory;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
 /** @return list<array<string,mixed>> */
 function catalog_unverified_duplicate_queues(PDO $db): array
 {
-    $queues = [uvf_bucket_game()];
+    $queues = [CatalogUnverifiedQueueStorage::bucketGame()];
     foreach (catalog_all($db, 'SELECT id,name,slug,profile_id FROM ue_games ORDER BY name') as $game) {
         $queues[] = $game;
     }
@@ -32,32 +29,20 @@ function catalog_unverified_duplicate_service(
     PDO $db,
     array $config
 ): UnverifiedDuplicateCleanupService {
-    catalog_unverified_schema_ensure($db);
-
+    (new CatalogUnverifiedStagingIndex($db, $config))->ensureSchema();
     return (new CatalogServiceFactory($db, $config))->unverifiedDuplicateCleanup();
 }
 
-/**
- * Inventory all physical unverified queues and identify exact duplicate groups.
- * Files are grouped by size first, so MD5 is calculated only for size collisions.
- *
- * @return array{physical_files:int,hashed_files:int,groups:list<array<string,mixed>>,duplicate_groups:int,duplicate_files:int,duplicate_bytes:int}
- */
+/** @return array{physical_files:int,hashed_files:int,groups:list<array<string,mixed>>,duplicate_groups:int,duplicate_files:int,duplicate_bytes:int} */
 function catalog_unverified_duplicate_scan(PDO $db, array $config): array
 {
     return catalog_unverified_duplicate_service($db, $config)->scan();
 }
 
-/**
- * Delete all duplicate physical queue files while retaining one copy per size+MD5 group.
- * An indexed copy is retained when available; otherwise the oldest queue copy is retained.
- *
- * @return array<string,mixed>
- */
+/** @return array<string,mixed> */
 function catalog_unverified_delete_duplicates(PDO $db, array $config): array
 {
     $result = catalog_unverified_duplicate_service($db, $config)->deleteDuplicates();
-
     return [
         'physical_files' => (int)$result['physical_files'],
         'hashed_files' => (int)$result['hashed_files'],

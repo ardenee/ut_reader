@@ -26,7 +26,6 @@ final class CatalogUnverifiedMetadataRepairService
     ) {
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
-        require_once $root . '/lib/UnverifiedFileManager.php';
         require_once $root . '/lib/GameProfiles.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
@@ -43,7 +42,7 @@ final class CatalogUnverifiedMetadataRepairService
 
         $games = [];
         if ($sourceGameId === 0 || $sourceGameId === -1) {
-            $games[] = \uvf_bucket_game();
+            $games[] = CatalogUnverifiedQueueStorage::bucketGame();
         }
         if ($sourceGameId !== -1) {
             $sql = 'SELECT id,name,slug,profile_id FROM ue_games';
@@ -82,7 +81,7 @@ final class CatalogUnverifiedMetadataRepairService
         $items = [];
         foreach ($games as $game) {
             $gameId = (int)($game['id'] ?? 0);
-            $directory = \uvf_unverified_dir($this->config, $game, false);
+            $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $game, false);
             if (!is_dir($directory) || !is_readable($directory)) {
                 continue;
             }
@@ -99,7 +98,9 @@ final class CatalogUnverifiedMetadataRepairService
                     continue;
                 }
                 $path = $directory . DIRECTORY_SEPARATOR . $entry;
-                if (!is_file($path) || is_link($path) || !\uvf_path_inside($path, $directory)) {
+                if (!is_file($path)
+                    || is_link($path)
+                    || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
                     continue;
                 }
 
@@ -107,15 +108,16 @@ final class CatalogUnverifiedMetadataRepairService
                 $key = CatalogUnverifiedStagingIndex::queueKey($gameId, $entry);
                 $row = $rowsByKey[$key] ?? null;
                 $reasons = $this->missingReasons(is_array($row) ? $row : null, $size, $path);
+                $fallbackName = CatalogUnverifiedQueueStorage::originalNameFromQueueName($entry);
                 $items[] = [
-                    'token' => \uvf_token($gameId, $entry),
+                    'token' => CatalogUnverifiedQueueStorage::token($gameId, $entry),
                     'queue_game_id' => $gameId,
                     'queue_name' => $entry,
                     'queue_key' => $key,
                     'queue_label' => (string)($game['name'] ?? ($gameId === 0 ? 'Upload Bucket' : 'Unknown queue')),
                     'original_name' => $row
-                        ? (string)($row['original_name'] ?? \uvf_original_name_from_queue_name($entry))
-                        : \uvf_original_name_from_queue_name($entry),
+                        ? (string)($row['original_name'] ?? $fallbackName)
+                        : $fallbackName,
                     'path' => $path,
                     'size' => $size,
                     'file_id' => $row ? (int)$row['id'] : 0,

@@ -1,32 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogUploadDuplicateDetector` for catalog upload duplicate detector.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Finds upload duplicates only when matching bytes still exist in controlled storage.
+ * Why: Candidate metadata is advisory; duplicate acceptance requires the physical file identity to match size, MD5 and SHA-1.
+ * Role: Infrastructure duplicate detector for Upload Bucket preflight/finalization.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
 
-/**
- * Finds duplicate package identities only when UnrealDB can prove that the
- * matching bytes still exist in controlled storage. Database-only identities,
- * including official base-game records whose source file is absent, are not
- * treated as upload duplicates.
- *
- * Database MD5 values are used only to find likely candidates. The candidate's
- * physical file is then read once to calculate its actual size, MD5 and SHA-1.
- * This prevents stale but syntactically valid size or SHA-1 metadata from
- * allowing an exact package through the Upload Bucket before import catches it
- * as a duplicate.
- */
 final class CatalogUploadDuplicateDetector
 {
     /** @param array<string,mixed> $config */
@@ -34,7 +19,7 @@ final class CatalogUploadDuplicateDetector
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         require_once dirname(__DIR__, 3) . '/lib/BaseGameProtection.php';
     }
 
@@ -186,11 +171,12 @@ final class CatalogUploadDuplicateDetector
             if ($queueName === '') {
                 return null;
             }
-            $bucketRoot = \uvf_upload_bucket_dir($this->config, false);
+            $bucketRoot = CatalogUnverifiedQueueStorage::uploadBucketDirectory($this->config, false);
             $candidate = $bucketRoot . DIRECTORY_SEPARATOR . $queueName;
-            return is_file($candidate) && \uvf_path_inside($candidate, $bucketRoot)
-                ? (realpath($candidate) ?: $candidate)
-                : null;
+            return is_file($candidate)
+                && CatalogUnverifiedQueueStorage::pathInside($candidate, $bucketRoot)
+                    ? (realpath($candidate) ?: $candidate)
+                    : null;
         }
 
         $storageRoot = realpath(rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
