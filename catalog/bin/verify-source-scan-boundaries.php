@@ -36,6 +36,7 @@ $discovery = $read('catalog/src/Infrastructure/Source/CatalogSourceScanDiscovery
 $fingerprints = $read('catalog/src/Infrastructure/Source/CatalogSourceFingerprintSession.php');
 $identities = $read('catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php');
 $locations = $read('catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php');
+$profiledImport = $read('catalog/src/Infrastructure/Source/CatalogSourceProfiledImportService.php');
 $service = $read('catalog/src/Infrastructure/Source/CatalogSourceScanService.php');
 
 $record(
@@ -44,17 +45,21 @@ $record(
         && str_contains($runner, 'CatalogSourceFingerprintSession')
         && str_contains($runner, 'PdoCatalogSourceIdentityQuery')
         && str_contains($runner, 'CatalogSourceLocationRecorder')
+        && str_contains($runner, 'CatalogSourceProfiledImportService')
         && str_contains($runner, '->discover(')
         && str_contains($runner, '->probeAndLookup(')
         && str_contains($runner, '->findVerifiedByMd5(')
         && str_contains($runner, '->findVerifiedByGuid(')
         && str_contains($runner, '->recordMatched(')
-        && str_contains($runner, '->recordImportResult(')
+        && str_contains($runner, '->attempt(')
+        && str_contains($runner, '->stageFailure(')
         && !str_contains($runner, 'new RecursiveDirectoryIterator(')
         && !str_contains($runner, 'PdoSourceFileFingerprintCache')
         && !str_contains($runner, 'INSERT INTO ue_file_locations')
-        && !str_contains($runner, 'scan_status="verified"'),
-    'source runner must not regain traversal, fingerprint cache, verified-file SQL or source-location persistence'
+        && !str_contains($runner, 'scan_status="verified"')
+        && !str_contains($runner, 'scanner_scan_uploaded_file(')
+        && !str_contains($runner, 'LegacyUnverifiedFileStager'),
+    'source runner must not regain traversal, fingerprint cache, verified-file SQL, location persistence or profiled import/staging implementation'
 );
 
 $record(
@@ -114,40 +119,58 @@ $record(
     'matched files and import results must retain ue_file_locations/source-path persistence and accounting semantics'
 );
 
+$record(
+    'profiled_import_contract',
+    str_contains($profiledImport, 'scanner_scan_uploaded_file(')
+        && str_contains($profiledImport, "tempnam(sys_get_temp_dir(), 'ue_src_scan_')")
+        && str_contains($profiledImport, 'LegacyUnverifiedFileStager')
+        && str_contains($profiledImport, "'Local Source Scan import failed for '")
+        && str_contains($profiledImport, "'source_relative_path' => \\catalog_source_scan_normalized_relative_path")
+        && str_contains($profiledImport, '$this->locations->recordImportResult(')
+        && str_contains($profiledImport, '$this->identities->findVerifiedById(')
+        && str_contains($profiledImport, '$this->fingerprints->remember(')
+        && str_contains($profiledImport, 'rememberFailureFingerprint'),
+    'profiled import service must preserve temp-copy, scanner import, accounting, fingerprint and failed-staging behavior'
+);
+
 $md5Lookup = strpos($runner, 'findVerifiedByMd5(');
 $headerRead = strpos($runner, 'catalog_try_read_package_header(');
 $guidLookup = strpos($runner, 'findVerifiedByGuid(');
-$importCall = strpos($runner, 'catalog_source_scan_import_work_file(');
 $record(
     'identity_decision_order_preserved',
     $md5Lookup !== false
         && $headerRead !== false
         && $guidLookup !== false
-        && $importCall !== false
+        && str_contains($runner, '->attempt(')
         && $md5Lookup < $headerRead
         && $headerRead < $guidLookup,
-    'full MD5 match must precede package-header/GUID matching; imports remain fallback behavior'
+    'full MD5 match must precede package-header/GUID matching; profiled imports remain fallback behavior'
 );
 
 $record(
-    'retired_persistence_helpers_absent',
+    'retired_stateful_helpers_absent',
     !str_contains($runner, 'catalog_source_scan_record_location(')
         && !str_contains($runner, 'catalog_source_scan_record_import_result(')
         && !str_contains($runner, 'catalog_source_scan_catalog_identity(')
+        && !str_contains($runner, 'catalog_source_scan_import_work_file(')
+        && !str_contains($runner, 'catalog_source_scan_stage_failed(')
         && !str_contains($shared, 'function catalog_source_scan_record_location(')
-        && !str_contains($shared, 'function catalog_source_scan_record_import_result('),
-    'retired procedural identity/location helpers must not return after namespaced extraction'
+        && !str_contains($shared, 'function catalog_source_scan_record_import_result(')
+        && !str_contains($shared, 'function catalog_source_scan_temp_copy(')
+        && !str_contains($shared, 'function catalog_source_scan_import_work_file(')
+        && !str_contains($shared, 'function catalog_source_scan_stage_failed('),
+    'retired procedural identity/location/import/staging helpers must not return after namespaced extraction'
 );
 
 $record(
-    'parser_and_import_helpers_unchanged',
+    'parser_and_redirect_helpers_unchanged',
     str_contains($runner, 'catalog_source_scan_work_file(')
         && str_contains($runner, 'catalog_try_read_package_header(')
         && str_contains($runner, 'catalog_header_guid(')
-        && str_contains($runner, 'catalog_source_scan_import_work_file(')
-        && str_contains($runner, 'catalog_source_scan_stage_failed(')
-        && str_contains($runner, 'catalog_source_scan_cleanup_work_file('),
-    'this extraction must not replace redirect decoding, package parsing, import or failed-staging semantics'
+        && str_contains($runner, 'catalog_source_scan_cleanup_work_file(')
+        && str_contains($shared, 'catalog_redirect_archive_decompress_to_temp(')
+        && str_contains($shared, 'catalog_source_scan_normalized_relative_path('),
+    'this extraction must not replace redirect decoding, package-header parsing or work-file cleanup semantics'
 );
 
 $record(
@@ -163,6 +186,7 @@ $criticalPhp = [
     'catalog/src/Infrastructure/Persistence/PdoCatalogSourceIdentityQuery.php',
     'catalog/src/Infrastructure/Source/CatalogSourceFingerprintSession.php',
     'catalog/src/Infrastructure/Source/CatalogSourceLocationRecorder.php',
+    'catalog/src/Infrastructure/Source/CatalogSourceProfiledImportService.php',
     'catalog/src/Infrastructure/Source/CatalogSourceScanDiscovery.php',
     'catalog/src/Infrastructure/Source/CatalogSourceScanService.php',
 ];
