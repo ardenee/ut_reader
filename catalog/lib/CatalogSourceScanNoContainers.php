@@ -2,8 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Provides the compatibility entry point for the local source scan after PAK containers are queued separately.
- * Why: Package matching/import semantics remain stable while discovery, fingerprinting and identity persistence move behind namespaced collaborators.
- * Role: Transitional source-scan orchestration; parsing/import helpers remain in CatalogSourceScan.php during staged cleanup.
+ * Why: Package matching semantics remain stable while discovery, fingerprinting, identity persistence and profiled import handling move behind namespaced collaborators.
+ * Role: Transitional source-scan orchestration; package parsing/redirect helpers remain in CatalogSourceScan.php during staged cleanup.
  */
 declare(strict_types=1);
 
@@ -12,6 +12,7 @@ require_once __DIR__ . '/CatalogSourceScan.php';
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogSourceIdentityQuery;
 use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceFingerprintSession;
 use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceLocationRecorder;
+use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceProfiledImportService;
 use UnrealDb\Catalog\Infrastructure\Source\CatalogSourceScanDiscovery;
 
 /**
@@ -68,6 +69,7 @@ function catalog_source_scan_run_without_containers(
     $fingerprintCacheAvailable = $fingerprints->available();
     $identities = new PdoCatalogSourceIdentityQuery($db);
     $locations = new CatalogSourceLocationRecorder($db);
+    $imports = new CatalogSourceProfiledImportService($db, $config, $identities, $locations, $fingerprints);
 
     $discovery = (new CatalogSourceScanDiscovery())->discover(
         $basePath,
@@ -198,49 +200,39 @@ function catalog_source_scan_run_without_containers(
                     }
                     continue;
                 }
-                try {
-                    $result = catalog_source_scan_import_work_file(
-                        $db,
-                        $config,
-                        $source,
-                        $work,
-                        $relativePath,
-                        $strictProfile,
-                        $userId
-                    );
-                    $accounting = $locations->recordImportResult($sourceId, $relativePath, $result);
+
+                $attempt = $imports->attempt(
+                    $source,
+                    $work,
+                    $relativePath,
+                    $strictProfile,
+                    $userId,
+                    $sourceId,
+                    $probe,
+                    $md5,
+                    '',
+                    false
+                );
+                if ($attempt['ok']) {
+                    $accounting = $attempt['accounting'];
                     $counters['imported'] += $accounting['imported'];
                     $counters['duplicates'] += $accounting['duplicates'];
                     $counters['locations'] += $accounting['locations'];
-                    $importedFile = $identities->findVerifiedById((int)($result[1] ?? 0));
-                    $fingerprints->remember(
-                        $sourceId,
-                        $relativePath,
-                        $probe,
-                        $work,
-                        $md5,
-                        (string)($importedFile['sha1'] ?? ''),
-                        (string)($importedFile['package_guid'] ?? ''),
-                        $importedFile,
-                        ($result[0] ?? '') === 'duplicate' ? 'duplicate' : 'import'
-                    );
-                    if (count($importSamples) < 50) {
-                        $importSamples[] = catalog_source_scan_sample($path, $work, (string)$result[2]);
+                    $result = $attempt['result'];
+                    if (is_array($result) && count($importSamples) < 50) {
+                        $importSamples[] = catalog_source_scan_sample($path, $work, (string)($result[2] ?? ''));
                     }
-                } catch (Throwable $scanError) {
+                } else {
                     $counters['import_failed']++;
-                    try {
-                        if (catalog_source_scan_stage_failed($db, $config, $source, $work, $relativePath, $scanError, $userId)) {
-                            $counters['staged_unverified']++;
-                        }
-                    } catch (Throwable $stageError) {
-                        $scanError = $stageError;
+                    if ($attempt['staged']) {
+                        $counters['staged_unverified']++;
                     }
+                    $scanError = $attempt['error'];
                     if (count($parseFailedSamples) < 50) {
                         $parseFailedSamples[] = catalog_source_scan_sample(
                             $path,
                             $work,
-                            'profiled import failed: ' . $scanError->getMessage()
+                            'profiled import failed: ' . ($scanError instanceof Throwable ? $scanError->getMessage() : 'Unknown import error')
                         );
                     }
                 }
@@ -318,61 +310,40 @@ function catalog_source_scan_run_without_containers(
                 continue;
             }
 
-            try {
-                $result = catalog_source_scan_import_work_file(
-                    $db,
-                    $config,
-                    $source,
-                    $work,
-                    $relativePath,
-                    $strictProfile,
-                    $userId
-                );
-                $accounting = $locations->recordImportResult($sourceId, $relativePath, $result);
+            $attempt = $imports->attempt(
+                $source,
+                $work,
+                $relativePath,
+                $strictProfile,
+                $userId,
+                $sourceId,
+                $probe,
+                $md5,
+                $guid,
+                true
+            );
+            if ($attempt['ok']) {
+                $accounting = $attempt['accounting'];
                 $counters['imported'] += $accounting['imported'];
                 $counters['duplicates'] += $accounting['duplicates'];
                 $counters['locations'] += $accounting['locations'];
-                $importedFile = $identities->findVerifiedById((int)($result[1] ?? 0));
-                $fingerprints->remember(
-                    $sourceId,
-                    $relativePath,
-                    $probe,
-                    $work,
-                    $md5,
-                    (string)($importedFile['sha1'] ?? ''),
-                    (string)($importedFile['package_guid'] ?? $guid),
-                    $importedFile,
-                    ($result[0] ?? '') === 'duplicate' ? 'duplicate' : 'import'
-                );
-                if (count($importSamples) < 50) {
-                    $importSamples[] = catalog_source_scan_sample($path, $work, (string)$result[2]);
+                $result = $attempt['result'];
+                if (is_array($result) && count($importSamples) < 50) {
+                    $importSamples[] = catalog_source_scan_sample($path, $work, (string)($result[2] ?? ''));
                 }
-            } catch (Throwable $scanError) {
+            } else {
                 $counters['import_failed']++;
-                $fingerprints->remember(
-                    $sourceId,
-                    $relativePath,
-                    $probe,
-                    $work,
-                    $md5,
-                    null,
-                    $guid,
-                    null,
-                    null
-                );
-                try {
-                    if (catalog_source_scan_stage_failed($db, $config, $source, $work, $relativePath, $scanError, $userId)) {
-                        $counters['staged_unverified']++;
-                    }
-                } catch (Throwable $stageError) {
-                    $scanError = $stageError;
+                if ($attempt['staged']) {
+                    $counters['staged_unverified']++;
                 }
+                $scanError = $attempt['error'];
                 if (count($unknownSamples) < 50) {
                     $unknownSamples[] = catalog_source_scan_sample(
                         $path,
                         $work,
                         ($guid === '' ? 'no GUID' : 'GUID not in catalog: ' . $guid)
-                        . '; profiled import failed: ' . $scanError->getMessage()
+                        . '; profiled import failed: '
+                        . ($scanError instanceof Throwable ? $scanError->getMessage() : 'Unknown import error')
                     );
                 }
             }
@@ -380,7 +351,7 @@ function catalog_source_scan_run_without_containers(
             $counters['parse_failed']++;
             if ($importUnknown && is_array($work)) {
                 try {
-                    if (catalog_source_scan_stage_failed($db, $config, $source, $work, $relativePath, $error, $userId)) {
+                    if ($imports->stageFailure($source, $work, $relativePath, $error, $userId)) {
                         $counters['staged_unverified']++;
                     }
                 } catch (Throwable $stageError) {
