@@ -15,17 +15,20 @@ use Throwable;
 final class CatalogUnverifiedPromotion
 {
     private readonly CatalogUnverifiedDependencyRecovery $dependencies;
+    private readonly CatalogUnverifiedQueueMutationService $queueMutations;
 
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config,
-        ?CatalogUnverifiedDependencyRecovery $dependencies = null
+        ?CatalogUnverifiedDependencyRecovery $dependencies = null,
+        ?CatalogUnverifiedQueueMutationService $queueMutations = null
     ) {
         require_once dirname(__DIR__, 3) . '/lib/UnverifiedFileManager.php';
         require_once dirname(__DIR__, 3) . '/lib/CatalogUnverifiedIndex.php';
         require_once dirname(__DIR__, 3) . '/lib/GameProfiles.php';
         $this->dependencies = $dependencies ?? new CatalogUnverifiedDependencyRecovery($db, $config);
+        $this->queueMutations = $queueMutations ?? new CatalogUnverifiedQueueMutationService($db, $config);
     }
 
     /**
@@ -123,7 +126,7 @@ final class CatalogUnverifiedPromotion
                     $status = 'alias';
                     $message = 'Package alias added for existing file identity';
                 }
-                \catalog_unverified_discard_item($this->db, $this->config, $source);
+                $this->queueMutations->discard($source);
                 $this->emit($emit, 'done', 100, $message);
                 return [
                     'status' => $status,
