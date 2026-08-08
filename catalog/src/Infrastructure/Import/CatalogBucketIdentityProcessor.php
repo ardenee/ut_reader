@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogBucketIdentityProcessor` for catalog bucket identity processor.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Stages an Upload Bucket package whose authoritative MD5/SHA-1 were already calculated while producing its bytes.
+ * Why: Browser uploads and redirect decompression can avoid a redundant hashing pass while sharing explicit storage/index collaborators.
+ * Role: Infrastructure import orchestration.
  */
 declare(strict_types=1);
 
@@ -16,12 +12,6 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 use PDO;
 use Throwable;
 
-/**
- * Identity-aware entry point for Upload Bucket processing. It reuses the
- * established storage/index implementation but bypasses its legacy full-file
- * hashing pass because the caller already calculated the package identity while
- * copying ordinary files or while producing decompressed redirect output.
- */
 final class CatalogBucketIdentityProcessor
 {
     private readonly CatalogBucketPackageOperations $operations;
@@ -32,7 +22,7 @@ final class CatalogBucketIdentityProcessor
         private readonly array $config,
         ?CatalogBucketPackageOperations $operations = null
     ) {
-        $this->operations = $operations ?? new LegacyCatalogBucketPackageOperations($db, $config);
+        $this->operations = $operations ?? new CatalogBucketPackageOperationsService($db, $config);
     }
 
     /**
