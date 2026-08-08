@@ -10,9 +10,12 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 
 final class PdoDownloadAdminSummaryQuery
 {
+    private readonly CatalogPackageExportSettingsService $packageSettings;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -21,8 +24,8 @@ final class PdoDownloadAdminSummaryQuery
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
-        require_once $root . '/lib/ModPackageBuilder.php';
         require_once $root . '/lib/CatalogPublicAccess.php';
+        $this->packageSettings = new CatalogPackageExportSettingsService($db);
     }
 
     /**
@@ -36,7 +39,7 @@ final class PdoDownloadAdminSummaryQuery
         return [
             'settings' => \fed_all_settings($this->db),
             'public' => \catalog_public_access_settings($this->db, $this->config),
-            'package' => \modpkg_settings($this->db),
+            'package' => $this->packageSettings->settings(),
             'active_links' => \catalog_count($this->db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="active"'),
             'expired_links' => \catalog_count($this->db, 'SELECT COUNT(*) c FROM ue_external_download_links WHERE status="expired"'),
             'waiting_jobs' => \catalog_count($this->db, 'SELECT COUNT(*) c FROM ue_external_mirror_jobs WHERE status IN ("queued","waiting_admin","uploading")'),
