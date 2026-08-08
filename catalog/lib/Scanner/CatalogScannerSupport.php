@@ -85,39 +85,6 @@ function scanner_range_percent(int $start, int $end, int $done, int $total): int
     return $start + (int)floor((($end - $start) * $done) / $total);
 }
 
-/** @param list<string> $columns @param list<list<mixed>> $rows */
-function scanner_bulk_insert(PDO $db, string $table, array $columns, array $rows): void
-{
-    if ($rows === []) {
-        return;
-    }
-    if (preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1 || $columns === []) {
-        throw new InvalidArgumentException('Invalid bulk insert target.');
-    }
-    foreach ($columns as $column) {
-        if (preg_match('/^[A-Za-z0-9_]+$/', $column) !== 1) {
-            throw new InvalidArgumentException('Invalid bulk insert column.');
-        }
-    }
-
-    $columnCount = count($columns);
-    $tuple = '(' . implode(',', array_fill(0, $columnCount, '?')) . ')';
-    $values = [];
-    $args = [];
-    foreach ($rows as $row) {
-        if (count($row) !== $columnCount) {
-            throw new InvalidArgumentException('Bulk insert row has the wrong column count.');
-        }
-        $values[] = $tuple;
-        array_push($args, ...$row);
-    }
-
-    $statement = $db->prepare(
-        'INSERT INTO ' . $table . '(' . implode(',', $columns) . ') VALUES ' . implode(',', $values)
-    );
-    $statement->execute($args);
-}
-
 function scanner_load_reader_class(array $config, string $engineKey): string
 {
     return \UnrealDb\Catalog\Infrastructure\Readers\CatalogReaderResolver::resolve(

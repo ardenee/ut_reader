@@ -2,9 +2,9 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Imports verified Unreal packages into the catalog and implements the application package-import port.
- * Why: Package parsing, PDO persistence, verified-file storage, compact metadata finalisation and dependency refresh
- *      are infrastructure concerns rather than procedural scanner responsibilities.
- * Role: Primary verified-package import implementation for profile uploads, durable jobs and legacy scanner delegates.
+ * Why: This class orchestrates classification, reading, identity/duplicate policy and post-import refresh while
+ *      storage, row persistence, failed-upload retention and source-path writes are delegated to focused collaborators.
+ * Role: Primary verified-package import orchestration for profile uploads, durable jobs and legacy scanner delegates.
  */
 declare(strict_types=1);
 
@@ -16,10 +16,17 @@ use Throwable;
 use UnrealDb\Catalog\Application\Upload\Contract\CatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogSourcePathStore;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogVerifiedPackagePersistence;
+use UnrealDb\Catalog\Infrastructure\Storage\CatalogVerifiedPackageStorage;
 
 final class PdoCatalogPackageImporter implements CatalogPackageImporter
 {
     private readonly PdoCatalogDependencyRebuilder $dependencyRebuilder;
+    private readonly PdoCatalogSourcePathStore $sourcePaths;
+    private readonly PdoCatalogVerifiedPackagePersistence $persistence;
+    private readonly CatalogVerifiedPackageStorage $storage;
+    private readonly CatalogFailedUploadRetention $failedUploads;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -28,6 +35,10 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
     ) {
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         $this->dependencyRebuilder = new PdoCatalogDependencyRebuilder($db, $config);
+        $this->sourcePaths = new PdoCatalogSourcePathStore($db);
+        $this->persistence = new PdoCatalogVerifiedPackagePersistence($db, $config);
+        $this->storage = new CatalogVerifiedPackageStorage($config);
+        $this->failedUploads = new CatalogFailedUploadRetention($config);
     }
 
     public function import(
@@ -83,7 +94,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         bool $allowProfileOverride = false,
         array $scannerOptions = []
     ): array {
-        \scanner_source_path_schema_ensure($this->db);
+        $this->sourcePaths->ensureSchema();
         $sourceRelativePath = \scanner_normalize_source_relative_path(
             (string)($scannerOptions['source_relative_path'] ?? '')
         );
@@ -262,35 +273,21 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         );
 
         \scanner_emit_percent($progress, 'database', 23, 'Storing file');
-        $directory = rtrim((string)$this->config['storage_path'], DIRECTORY_SEPARATOR)
-            . '/games/' . \scanner_slug_text((string)$game['slug']) . '/verified';
-        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new RuntimeException('Could not create storage folder: ' . $directory);
-        }
-        $storedName = $md5 . '.' . $ext;
-        $destination = $directory . '/' . $storedName;
-        $storedFileCreated = false;
-        if (is_file($destination)) {
-            if (is_file($temporaryPath) && !@unlink($temporaryPath)) {
-                throw new RuntimeException('Could not discard duplicate physical upload');
-            }
-        } elseif (!rename($temporaryPath, $destination)) {
-            throw new RuntimeException('Could not store upload');
-        } else {
-            $storedFileCreated = true;
-        }
-        $relativePath = 'storage/games/' . \scanner_slug_text((string)$game['slug'])
-            . '/verified/' . $storedName;
+        $stored = $this->storage->store(
+            $temporaryPath,
+            (string)$game['slug'],
+            $md5,
+            $ext
+        );
 
-        $fileId = 0;
         try {
-            $fileId = $this->persistLegacyStagingRows(
+            $fileId = $this->persistence->persist(
                 $gameId,
                 $packageName,
                 $originalName,
                 $sourceRelativePath,
-                $storedName,
-                $relativePath,
+                (string)$stored['stored_name'],
+                (string)$stored['relative_path'],
                 $ext,
                 $classification,
                 (int)$size,
@@ -306,9 +303,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
                 $progress
             );
         } catch (Throwable $error) {
-            if ($storedFileCreated && is_file($destination)) {
-                @unlink($destination);
-            }
+            $this->storage->rollbackCreated($stored);
             throw $error;
         }
 
@@ -378,18 +373,14 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         string $gameSlug,
         string $reason
     ): void {
-        if (!is_file($temporaryPath)) {
-            return;
-        }
-
-        $bytes = @file_get_contents($temporaryPath, false, null, 0, 4);
-        $tag = is_string($bytes) && strlen($bytes) === 4 ? (int)(unpack('V', $bytes)[1] ?? 0) : 0;
-        if ($tag !== 0x9E2A83C1) {
-            @unlink($temporaryPath);
-            return;
-        }
-
-        \scanner_store_failed_upload($this->config, $temporaryPath, $originalName, $gameSlug, $reason);
+        $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+        $this->failedUploads->preserve(
+            $temporaryPath,
+            $originalName,
+            $gameSlug,
+            $reason,
+            $uploadedBy
+        );
     }
 
     /** @param array<string,mixed> $duplicate @param array<string,mixed> $classification */
@@ -407,7 +398,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         ?callable $progress
     ): array {
         $duplicateFileId = (int)$duplicate['id'];
-        \scanner_record_source_relative_path($this->db, $duplicateFileId, $sourceRelativePath);
+        $this->sourcePaths->recordIfMissing($duplicateFileId, $sourceRelativePath);
         $duplicatePackageName = (string)$duplicate['package_name'];
         $meta = [
             'file_id' => $duplicateFileId,
@@ -552,206 +543,5 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         }
 
         return $notes ? implode("\n", $notes) : null;
-    }
-
-    /**
-     * @param array<string,mixed> $classification
-     * @param array<string,mixed> $header
-     * @param array<int,mixed> $names
-     * @param array<int,mixed> $imports
-     * @param array<int,mixed> $exports
-     */
-    private function persistLegacyStagingRows(
-        int $gameId,
-        string $packageName,
-        string $originalName,
-        string $sourceRelativePath,
-        string $storedName,
-        string $relativePath,
-        string $extension,
-        array $classification,
-        int $size,
-        string $md5,
-        string $sha1,
-        string $packageGuid,
-        array $header,
-        array $names,
-        array $imports,
-        array $exports,
-        ?string $scanNotes,
-        ?int $userId,
-        ?callable $progress
-    ): int {
-        $nameCount = count($names);
-        $importCount = count($imports);
-        $exportCount = count($exports);
-        $totalRows = max(1, $nameCount + $importCount + $exportCount + 1);
-        $writtenRows = 0;
-        $progressDb = static function (string $message, int $rowsDone = 1) use (
-            $progress,
-            &$writtenRows,
-            $totalRows
-        ): void {
-            $writtenRows = min($totalRows, $writtenRows + max(1, $rowsDone));
-            \scanner_emit_percent(
-                $progress,
-                'database',
-                \scanner_range_percent(23, 35, $writtenRows, $totalRows),
-                $message
-            );
-        };
-
-        try {
-            $this->db->beginTransaction();
-            $statement = $this->db->prepare(
-                'INSERT INTO ue_files('
-                . 'game_id,package_name,original_name,source_relative_path,stored_name,relative_path,extension,'
-                . 'detected_engine_key,detected_package_version,detected_licensee_version,detection_confidence,'
-                . 'compatibility_status,compatibility_label,detection_notes,file_size,md5,sha1,package_guid,'
-                . 'package_version,licensee_version,name_count,import_count,export_count,scan_status,scan_notes,uploaded_by'
-                . ') VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)'
-            );
-            $statement->execute([
-                $gameId,
-                $packageName,
-                $originalName,
-                $sourceRelativePath !== '' ? $sourceRelativePath : null,
-                $storedName,
-                $relativePath,
-                $extension,
-                $classification['detected_engine'],
-                $classification['package_version'],
-                $classification['licensee_version'],
-                $classification['confidence'],
-                $classification['compatibility_status'] ?? 'native',
-                $classification['compatibility_label'] ?? null,
-                implode("\n", $classification['notes']),
-                $size,
-                $md5,
-                $sha1,
-                $packageGuid,
-                (int)($header['version'] ?? 0),
-                (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)),
-                $nameCount,
-                $importCount,
-                $exportCount,
-                'verified',
-                $scanNotes,
-                $userId,
-            ]);
-            $fileId = (int)$this->db->lastInsertId();
-            $progressDb('Writing file row');
-
-            $batch = [];
-            foreach ($names as $index => $name) {
-                $batch[] = [
-                    $fileId,
-                    $index,
-                    (string)($name['name'] ?? $name['text'] ?? ''),
-                    isset($name['flags']) ? (int)$name['flags'] : null,
-                ];
-                $done = $index + 1;
-                if (count($batch) >= 250 || $done === $nameCount) {
-                    $batchCount = count($batch);
-                    \scanner_bulk_insert(
-                        $this->db,
-                        'ue_names',
-                        ['file_id', 'name_index', 'name_text', 'flags'],
-                        $batch
-                    );
-                    $batch = [];
-                    $progressDb('Writing names table ' . $done . '/' . $nameCount, $batchCount);
-                }
-            }
-
-            $cache = [];
-            $common = array_map('strtolower', $this->config['common_packages'] ?? []);
-            $batch = [];
-            foreach ($imports as $index => $import) {
-                $fullPath = \scanner_ref_path(-($index + 1), $imports, $exports, $cache);
-                $parts = $fullPath !== '' ? explode('.', $fullPath) : [];
-                $rootPackage = $parts[0] ?? '';
-                $relativeObjectPath = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
-                $batch[] = [
-                    $fileId,
-                    $index,
-                    (string)($import['classPackageText'] ?? ($import['ClassPackage']['text'] ?? '')),
-                    (string)($import['classNameText'] ?? ($import['ClassName']['text'] ?? '')),
-                    (string)($import['objectNameText'] ?? ($import['ObjectName']['text'] ?? '')),
-                    (int)($import['outerIndex'] ?? $import['OuterIndex'] ?? $import['outer'] ?? 0),
-                    $fullPath,
-                    $rootPackage,
-                    $relativeObjectPath,
-                    in_array(strtolower((string)$rootPackage), $common, true) ? 1 : 0,
-                ];
-                $done = $index + 1;
-                if (count($batch) >= 250 || $done === $importCount) {
-                    $batchCount = count($batch);
-                    \scanner_bulk_insert(
-                        $this->db,
-                        'ue_imports',
-                        [
-                            'file_id', 'import_index', 'class_package', 'class_name', 'object_name',
-                            'outer_index', 'full_path', 'root_package', 'relative_object_path', 'is_common',
-                        ],
-                        $batch
-                    );
-                    $batch = [];
-                    $progressDb('Writing imports table ' . $done . '/' . $importCount, $batchCount);
-                }
-            }
-
-            $batch = [];
-            foreach ($exports as $index => $export) {
-                $localPath = \scanner_ref_path($index + 1, $imports, $exports, $cache);
-                $classReference = (int)($export['classIndex'] ?? $export['class'] ?? 0);
-                $className = $classReference
-                    ? \scanner_ref_path($classReference, $imports, $exports, $cache)
-                    : '';
-                $batch[] = [
-                    $fileId,
-                    $index,
-                    $className,
-                    (string)($export['objectNameText'] ?? ''),
-                    (int)($export['outerIndex'] ?? $export['packageIndex'] ?? $export['outer'] ?? 0),
-                    $localPath,
-                    \scanner_join_path_parts([$packageName, $localPath]),
-                    isset($export['objectFlags']) ? (int)$export['objectFlags'] : null,
-                    isset($export['serialSize']) ? (int)$export['serialSize'] : null,
-                    isset($export['serialOffset']) ? (int)$export['serialOffset'] : null,
-                ];
-                $done = $index + 1;
-                if (count($batch) >= 250 || $done === $exportCount) {
-                    $batchCount = count($batch);
-                    \scanner_bulk_insert(
-                        $this->db,
-                        'ue_exports',
-                        [
-                            'file_id', 'export_index', 'class_name', 'object_name', 'outer_index',
-                            'local_path', 'full_path', 'object_flags', 'serial_size', 'serial_offset',
-                        ],
-                        $batch
-                    );
-                    $batch = [];
-                    $progressDb('Writing exports table ' . $done . '/' . $exportCount, $batchCount);
-                }
-            }
-
-            \scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
-            $this->dependencyRebuilder->rebuild(
-                $fileId,
-                $progress,
-                36,
-                55,
-                'Imported file dependency links'
-            );
-            $this->db->commit();
-            return $fileId;
-        } catch (Throwable $error) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            throw $error;
-        }
     }
 }
