@@ -37,9 +37,9 @@ final class CatalogGameLifecycleService
      */
     public function reset(int $gameId, ?callable $progress = null): array
     {
-        $result = $this->cleanupGame($gameId, $progress, 1, 76);
+        $result = $this->cleanup($gameId, $progress, 1, 76);
         $optimise = $this->tables->optimiseTables(
-            $this->tables->tableList(false),
+            PdoCatalogGameTableMaintenance::tableList(false),
             $progress,
             78,
             96
@@ -90,7 +90,7 @@ final class CatalogGameLifecycleService
             throw new RuntimeException('Game not found.');
         }
 
-        $result = $this->cleanupGame($gameId, $progress, 1, 68);
+        $result = $this->cleanup($gameId, $progress, 1, 68);
         CatalogGameLifecycleProgress::emit(
             $progress,
             'delete_game',
@@ -133,7 +133,7 @@ final class CatalogGameLifecycleService
             'Game configuration deleted; foreign-key projection rows were removed.'
         );
         $optimise = $this->tables->optimiseTables(
-            $this->tables->tableList(true),
+            PdoCatalogGameTableMaintenance::tableList(true),
             $progress,
             78,
             99
@@ -157,10 +157,12 @@ final class CatalogGameLifecycleService
     }
 
     /**
+     * Compatibility entry point for the former gm_lifecycle_cleanup_game().
+     *
      * @param null|callable(array<string,mixed>):void $progress
      * @return array<string,mixed>
      */
-    private function cleanupGame(
+    public function cleanup(
         int $gameId,
         ?callable $progress,
         int $startPercent,
@@ -258,7 +260,7 @@ final class CatalogGameLifecycleService
     }
 
     /** @return list<array{id:int,relative_path:string,file_size:int}> */
-    private function unverifiedRows(int $gameId): array
+    public function unverifiedRows(int $gameId): array
     {
         return array_map(
             static fn(array $row): array => [
