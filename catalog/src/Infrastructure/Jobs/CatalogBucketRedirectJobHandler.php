@@ -1,14 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogBucketRedirectJobHandler` for catalog bucket redirect job
- *          handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Defines the infrastructure class `CatalogBucketRedirectJobHandler` for catalog bucket redirect job handler.
+ * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker entry points.
+ * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external services.
  */
 declare(strict_types=1);
 
@@ -24,6 +19,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketIdentityProcessor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
@@ -51,7 +47,7 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
         $uploadId = trim((string)($payload['upload_id'] ?? ''));
         $stagedPath = trim((string)($payload['staged_path'] ?? ''));
         $originalName = $this->requiredName((string)($payload['original_name'] ?? ''));
-        $relativePath = $this->cleanRelativePath((string)($payload['source_relative_path'] ?? $originalName));
+        $relativePath = CatalogImportPathPolicy::relative((string)($payload['source_relative_path'] ?? $originalName));
         $userId = (int)($payload['user_id'] ?? 0);
         if ($userId < 1) {
             throw new \InvalidArgumentException('Bucket redirect job payload is incomplete.');
@@ -105,7 +101,7 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
             $decodedPath = (string)$decoded['path'];
             $workingName = $this->requiredName((string)$decoded['filename']);
             $this->validateOutputExtension($workingName);
-            $relativePath = $this->replaceRelativeFilename($relativePath, $workingName);
+            $relativePath = CatalogImportPathPolicy::replaceFilename($relativePath, $workingName);
             $packageMd5 = strtolower(trim((string)($decoded['md5'] ?? '')));
             $packageSha1 = strtolower(trim((string)($decoded['sha1'] ?? '')));
             if (preg_match('/^[a-f0-9]{32}$/', $packageMd5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $packageSha1) !== 1) {
@@ -211,13 +207,17 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
         foreach (\gp_all_profiles($this->db) as $profile) {
             foreach (\gp_extensions($profile) as $extension) {
                 $extension = \catalog_clean_unreal_extension((string)$extension);
-                if ($extension !== '') $allowed[$extension] = true;
+                if ($extension !== '') {
+                    $allowed[$extension] = true;
+                }
             }
         }
         if ($allowed === []) {
             foreach (($this->config['allowed_extensions'] ?? []) as $extension) {
                 $extension = \catalog_clean_unreal_extension((string)$extension);
-                if ($extension !== '') $allowed[$extension] = true;
+                if ($extension !== '') {
+                    $allowed[$extension] = true;
+                }
             }
         }
         $extension = \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION));
@@ -229,12 +229,6 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
         }
     }
 
-    private function replaceRelativeFilename(string $relativePath, string $name): string
-    {
-        $directory = trim(str_replace('\\', '/', dirname($relativePath)), '. /');
-        return ($directory !== '' ? $directory . '/' : '') . $name;
-    }
-
     private function requiredName(string $name): string
     {
         $name = \catalog_clean_unreal_filename(basename(str_replace('\\', '/', trim($name))));
@@ -242,19 +236,5 @@ final class CatalogBucketRedirectJobHandler implements JobHandler
             throw new \InvalidArgumentException('Bucket redirect filename is missing.');
         }
         return $name;
-    }
-
-    private function cleanRelativePath(string $path): string
-    {
-        $parts = [];
-        foreach (explode('/', trim(str_replace(["\0", '\\'], ['', '/'], $path), '/')) as $part) {
-            if ($part === '' || $part === '.') continue;
-            if ($part === '..') {
-                if ($parts !== []) array_pop($parts);
-                continue;
-            }
-            $parts[] = $part;
-        }
-        return implode('/', $parts);
     }
 }
