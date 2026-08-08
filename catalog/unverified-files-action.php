@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Processes state-changing browser actions for unverified files.
- * Why: HTTP/session/progress concerns remain here while source resolution and import promotion are delegated.
+ * Why: HTTP/session/progress concerns remain here while source resolution and catalog mutations are delegated.
  * Role: Thin web action endpoint for move, import and delete operations.
  */
 declare(strict_types=1);
@@ -15,12 +15,10 @@ $GLOBALS['unverified_action_progress_token'] = '';
 $GLOBALS['unverified_action_started_at'] = microtime(true);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/UnverifiedFileManager.php';
-require_once __DIR__ . '/lib/CatalogUnverifiedIndex.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedActionService;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedActionSourceResolver;
-use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedImportService;
 
 function unverified_action_json(array $payload): string
 {
@@ -28,7 +26,9 @@ function unverified_action_json(array $payload): string
         $payload,
         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE
     );
-    return is_string($json) ? $json : '{"ok":false,"error":"The server could not encode the action response."}';
+    return is_string($json)
+        ? $json
+        : '{"ok":false,"error":"The server could not encode the action response."}';
 }
 
 function unverified_action_reply(array $payload, int $status = 200): never
@@ -79,7 +79,12 @@ register_shutdown_function(static function (): void {
         return;
     }
     $last = error_get_last();
-    if (!is_array($last) || !in_array((int)($last['type'] ?? 0), [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+    if (!is_array($last)
+        || !in_array(
+            (int)($last['type'] ?? 0),
+            [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR],
+            true
+        )) {
         return;
     }
 
@@ -95,8 +100,13 @@ register_shutdown_function(static function (): void {
         ]);
     }
 
-    $requestId = function_exists('catalog_request_id') ? catalog_request_id() : bin2hex(random_bytes(8));
-    error_log('[UnrealDB][' . $requestId . '] fatal unverified action error: ' . (string)($last['message'] ?? 'unknown fatal error'));
+    $requestId = function_exists('catalog_request_id')
+        ? catalog_request_id()
+        : bin2hex(random_bytes(8));
+    error_log(
+        '[UnrealDB][' . $requestId . '] fatal unverified action error: '
+        . (string)($last['message'] ?? 'unknown fatal error')
+    );
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
@@ -140,7 +150,9 @@ try {
     $progressToken = upload_progress_token((string)($_POST['progress_token'] ?? ''));
     $GLOBALS['unverified_action_progress_token'] = $progressToken;
     $targetGameId = filter_input(INPUT_POST, 'target_game_id', FILTER_VALIDATE_INT);
-    $targetGameId = $targetGameId === false || $targetGameId === null ? 0 : (int)$targetGameId;
+    $targetGameId = $targetGameId === false || $targetGameId === null
+        ? 0
+        : (int)$targetGameId;
     $allowOverride = (string)($_POST['allow_profile_override'] ?? '') === '1';
     $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
 
@@ -157,9 +169,11 @@ try {
         session_write_close();
     }
 
-    $progress = $progressToken !== '' ? static function (array $state) use ($progressToken): void {
-        upload_progress_write($progressToken, $state);
-    } : null;
+    $progress = $progressToken !== ''
+        ? static function (array $state) use ($progressToken): void {
+            upload_progress_write($progressToken, $state);
+        }
+        : null;
     $emit = $progress !== null
         ? static function (string $stage, int $percent, string $message) use ($progress): void {
             unverified_action_emit($progress, $stage, $percent, $message);
@@ -176,80 +190,19 @@ try {
         // Compatible servers may expose only part of this session tuning.
     }
 
-    // The page/migrations establish the unverified schema contract. Avoid an
-    // information_schema verification query for every file in a batch.
     unverified_action_emit($progress, 'starting', 0, 'Resolving queued file');
     $source = (new CatalogUnverifiedActionSourceResolver($db, $config))->resolve($token);
 
-    $importDetails = null;
-    $warning = '';
-    $recovery = null;
-
-    if ($action === 'move') {
-        unverified_action_emit($progress, 'moving', 25, 'Moving queued file');
-        $result = catalog_unverified_move_item($db, $config, $source, $targetGameId);
-        $message = 'Moved ' . $result['original_name'] . ' to ' . $result['target_game'] . '.';
-        unverified_action_emit($progress, 'done', 100, $message);
-    } elseif ($action === 'import') {
-        $import = (new CatalogUnverifiedImportService($db, $config))->import(
-            $source,
-            $targetGameId,
-            $userId,
-            $allowOverride,
-            $emit
-        );
-        $result = $import['result'];
-        $importDetails = $import['details'];
-        $warning = (string)$import['warning'];
-        $recovery = is_array($import['recovery'] ?? null) ? $import['recovery'] : null;
-
-        $guid = trim((string)($importDetails['package_guid'] ?? ''));
-        $statusLabel = match (strtolower((string)$result['status'])) {
-            'verified' => 'Imported',
-            'duplicate' => 'Duplicate',
-            'alias' => 'Alias added',
-            default => ucfirst((string)$result['status']),
-        };
-        $message = $statusLabel . ' ' . $result['original_name'] . ' for ' . $result['target_game']
-            . '. N/I/E: ' . $importDetails['name_count'] . '/' . $importDetails['import_count'] . '/' . $importDetails['export_count']
-            . ' | GUID: ' . ($guid !== '' ? $guid : 'N/A') . '.';
-        $dependencyJobs = is_array($result['dependency_jobs'] ?? null) ? $result['dependency_jobs'] : [];
-        if ((int)($dependencyJobs['search_job_id'] ?? 0) > 0) {
-            $message .= ' Search projection queued as job #' . (int)$dependencyJobs['search_job_id'] . '.';
-        }
-        if ((int)($dependencyJobs['file_job_id'] ?? 0) > 0) {
-            $message .= ' Dependency scan queued as job #' . (int)$dependencyJobs['file_job_id'] . '.';
-        }
-        if ((int)($dependencyJobs['affected_job_id'] ?? 0) > 0) {
-            $message .= ' Affected-file refresh queued as job #' . (int)$dependencyJobs['affected_job_id'] . '.';
-        }
-        if (is_array($recovery) && !empty($recovery['recovered'])) {
-            $message .= ' Dependency repair: ' . (string)$recovery['message'];
-        }
-        if ($warning !== '') {
-            $message .= ' Warning: ' . $warning;
-        }
-        unverified_action_emit($progress, 'done', 100, $message);
-    } else {
-        unverified_action_emit($progress, 'deleting', 25, 'Deleting queued file');
-        $result = catalog_unverified_discard_item($db, $config, $source);
-        $message = 'Deleted ' . $result['original_name'] . ' from unverified storage and the staging database.';
-        unverified_action_emit($progress, 'done', 100, $message);
-    }
-
-    unverified_action_reply([
-        'ok' => true,
-        'action' => $action,
-        'original_name' => (string)$result['original_name'],
-        'file_id' => isset($result['file_id']) ? (int)$result['file_id'] : null,
-        'details' => $importDetails,
-        'warning' => $warning !== '' ? $warning : null,
-        'recovery' => $recovery,
-        'dependency_jobs' => is_array($result['dependency_jobs'] ?? null) ? $result['dependency_jobs'] : null,
-        'identity_reused' => !empty($result['identity_reused']),
-        'elapsed_ms' => unverified_action_elapsed_ms(),
-        'message' => $message,
-    ]);
+    $result = (new CatalogUnverifiedActionService($db, $config))->execute(
+        $action,
+        $source,
+        $targetGameId,
+        $userId,
+        $allowOverride,
+        $emit
+    );
+    $result['elapsed_ms'] = unverified_action_elapsed_ms();
+    unverified_action_reply($result);
 } catch (Throwable $error) {
     $requestId = catalog_request_id();
     $message = unverified_action_error_text($error);
@@ -263,8 +216,11 @@ try {
             'elapsed_ms' => unverified_action_elapsed_ms(),
         ]);
     }
-    error_log('[UnrealDB][' . $requestId . '] unverified action failed after '
-        . unverified_action_elapsed_ms() . ' ms: ' . get_class($error) . ': ' . $message);
+    error_log(
+        '[UnrealDB][' . $requestId . '] unverified action failed after '
+        . unverified_action_elapsed_ms() . ' ms: '
+        . get_class($error) . ': ' . $message
+    );
     unverified_action_reply([
         'ok' => false,
         'error' => $message,
