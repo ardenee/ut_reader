@@ -8,6 +8,7 @@
  */
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Persistence\SchemaInspector;
 
 if (PHP_SAPI !== 'cli') {
@@ -34,15 +35,19 @@ $read = static function (string $relative) use ($catalogRoot): string {
 };
 
 $criticalPhp = [
+    'bin/verify-architecture-refactor.php',
     'api/v1/job-worker-status.php',
     'api/v1/job-status-cursor.php',
     'api/v1/job-status.php',
     'api/v1/job-bulk.php',
     'src/Application/Jobs/CatalogWorkerStatusPolicy.php',
+    'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
     'src/Infrastructure/Jobs/CatalogJobDisplayStatus.php',
     'src/Infrastructure/Jobs/CatalogJobSearchProjectionRuntime.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+    'src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
     'src/Infrastructure/Persistence/PdoJobQueue.php',
     'src/Infrastructure/Persistence/PdoJobQueueSupport.php',
     'src/Infrastructure/Persistence/PdoJobEnqueuer.php',
@@ -159,9 +164,9 @@ foreach ([
     $record(
         'thin_controller:' . $relative,
         $content !== ''
-            && preg_match('/\b(?:SELECT|INSERT|UPDATE|DELETE)\b[^\n]*\bue_background_jobs\b/i', $content) !== 1
+            && !str_contains($content, 'ue_background_jobs')
             && !str_contains($content, 'JSON_EXTRACT(result_json'),
-        'job controller must delegate persistence and must not derive display status from result_json'
+        'job controller must delegate durable-job persistence and display-status derivation'
     );
 }
 
@@ -178,12 +183,16 @@ $record(
 $pathPolicy = $read('src/Infrastructure/Import/CatalogImportPathPolicy.php');
 $profiledQueue = $read('src/Infrastructure/Import/CatalogProfiledUploadQueue.php');
 $bucketQueue = $read('src/Infrastructure/Import/CatalogBucketBatchQueue.php');
+$bucketHandler = $read('src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
+$redirectHandler = $read('src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php');
 $record(
     'shared_import_path_policy',
     $pathPolicy !== ''
         && str_contains($profiledQueue, 'CatalogImportPathPolicy::relative')
-        && str_contains($bucketQueue, 'CatalogImportPathPolicy::relative'),
-    'primary upload queues must share canonical relative-path normalization'
+        && str_contains($bucketQueue, 'CatalogImportPathPolicy::relative')
+        && str_contains($bucketHandler, 'CatalogImportPathPolicy::relative')
+        && str_contains($redirectHandler, 'CatalogImportPathPolicy::relative'),
+    'primary upload queues and worker handlers must share canonical relative-path normalization'
 );
 
 if ($checkDatabase) {
@@ -197,6 +206,31 @@ if ($checkDatabase) {
         $record('db:resource_limits_table', $schema->tableExists('ue_job_resource_limits'));
         $record('db:resource_index', $schema->indexExists('ue_background_jobs', 'idx_ue_background_jobs_resource'));
         $record('db:concurrency_index', $schema->indexExists('ue_background_jobs', 'idx_ue_background_jobs_concurrency'));
+
+        if ($schema->columnExists('ue_background_jobs', 'display_status')) {
+            $statement = $application->db->query(
+                'SELECT id,status,result_json,display_status FROM ue_background_jobs ORDER BY id DESC LIMIT 1000'
+            );
+            $mismatches = [];
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                $resultStatus = null;
+                if (!empty($row['result_json'])) {
+                    $decoded = json_decode((string)$row['result_json'], true);
+                    if (is_array($decoded)) {
+                        $resultStatus = isset($decoded['status']) ? (string)$decoded['status'] : null;
+                    }
+                }
+                $expected = CatalogJobDisplayStatus::normalize((string)$row['status'], $resultStatus);
+                $actual = strtolower(trim((string)$row['display_status']));
+                if ($expected !== $actual) {
+                    $mismatches[] = '#' . (int)$row['id'] . ' expected=' . $expected . ' actual=' . $actual;
+                    if (count($mismatches) >= 20) {
+                        break;
+                    }
+                }
+            }
+            $record('db:display_status_parity', $mismatches === [], implode(' | ', $mismatches));
+        }
     } catch (Throwable $error) {
         $record('database_checks', false, $error->getMessage());
     }
