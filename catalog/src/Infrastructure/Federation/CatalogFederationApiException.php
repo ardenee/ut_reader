@@ -19,4 +19,9 @@ final class CatalogFederationApiException extends RuntimeException
     ) {
         parent::__construct($message);
     }
+
+    public function httpStatus(): int
+    {
+        return $this->httpStatus;
+    }
 }
