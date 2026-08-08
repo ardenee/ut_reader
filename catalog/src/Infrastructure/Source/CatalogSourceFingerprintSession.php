@@ -22,6 +22,7 @@ final class CatalogSourceFingerprintSession
 
     public function __construct(PDO $db)
     {
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->cache = new PdoSourceFileFingerprintCache($db);
         try {
             $this->available = $this->cache->isAvailable();
