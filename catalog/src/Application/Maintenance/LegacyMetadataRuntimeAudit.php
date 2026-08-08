@@ -87,7 +87,6 @@ final class LegacyMetadataRuntimeAudit
         'lib/CatalogSourceIdentity.php',
         'lib/FederationDependencyDownloads.php',
         'lib/FederationWorker.php',
-        'lib/ModPackageBuilder.php',
         'lib/UnverifiedObjectCheck.php',
         'library.php',
         'missing.php',
