@@ -11,6 +11,8 @@
  */
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationHttpClient;
+
 require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/FederationAuth.php';
 
@@ -137,9 +139,9 @@ function federation_auto_claim_parent(PDO $db, string $parentUrl, int $requestId
     );
 
     $allowSelfSigned = (string)fed_setting($db, 'allow_self_signed_federation_certificates', '0') === '1';
-    TrustedHttpSourceClient::configureFederationTesting($allowSelfSigned);
+    CatalogFederationHttpClient::configureTesting($allowSelfSigned);
 
-    $result = TrustedHttpSourceClient::postJson(
+    $result = CatalogFederationHttpClient::fromRuntime()->postJson(
         $parentUrl . '/api/federation/join-claim.php',
         [
             'Content-Type: application/json',
