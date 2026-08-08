@@ -15,12 +15,9 @@ use Throwable;
 
 final class CatalogPublicAccessGuard
 {
-    private readonly CatalogPublicAccessSettingsStore $settings;
-
-    /** @param array<string,mixed> $config */
-    public function __construct(private readonly array $config)
+    /** @param array<string,mixed>|null $config */
+    public function __construct(private readonly ?array $config = null)
     {
-        $this->settings = new CatalogPublicAccessSettingsStore($config);
     }
 
     public function clientIp(): string
@@ -75,7 +72,8 @@ final class CatalogPublicAccessGuard
         int $windowSeconds,
         int $blockSeconds
     ): int {
-        $directory = rtrim((string)$this->config['storage_path'], DIRECTORY_SEPARATOR)
+        $config = $this->resolvedConfig();
+        $directory = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR)
             . DIRECTORY_SEPARATOR . 'security' . DIRECTORY_SEPARATOR . 'public-burst';
         if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
             throw new RuntimeException('Could not create public burst-control storage.');
@@ -167,7 +165,7 @@ final class CatalogPublicAccessGuard
         if (!in_array($method, ['GET', 'HEAD'], true)) {
             return;
         }
-        $settings = $this->settings->settings();
+        $settings = $this->settingsStore()->settings();
         $userAgent = trim((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
         if ($settings['public_block_crawlers'] && $this->knownCrawler($userAgent)) {
             $this->abort(
@@ -197,7 +195,8 @@ final class CatalogPublicAccessGuard
         if (function_exists('catalog_support_is_admin') && \catalog_support_is_admin()) {
             return 0;
         }
-        $directory = rtrim((string)$this->config['storage_path'], DIRECTORY_SEPARATOR)
+        $config = $this->resolvedConfig();
+        $directory = rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR)
             . DIRECTORY_SEPARATOR . 'security' . DIRECTORY_SEPARATOR . 'public-actions';
         $limiter = new FileRequestRateLimiter($directory, max(1, $maximum), max(60, $windowSeconds));
         return $limiter->consume($scope, $this->clientIp());
@@ -224,7 +223,7 @@ final class CatalogPublicAccessGuard
 
     public function downloadLimit(PDO $db): void
     {
-        $settings = $this->settings->settings($db);
+        $settings = $this->settingsStore()->settings($db);
         $this->limitOrThrow(
             $db,
             'public-file-download',
@@ -236,7 +235,7 @@ final class CatalogPublicAccessGuard
 
     public function packageLimit(PDO $db): void
     {
-        $settings = $this->settings->settings($db);
+        $settings = $this->settingsStore()->settings($db);
         $this->limitOrThrow(
             $db,
             'public-package-generation',
@@ -248,7 +247,7 @@ final class CatalogPublicAccessGuard
 
     public function feedbackLimit(PDO $db): void
     {
-        $settings = $this->settings->settings($db);
+        $settings = $this->settingsStore()->settings($db);
         $this->limitOrThrow(
             $db,
             'public-feedback',
@@ -260,7 +259,21 @@ final class CatalogPublicAccessGuard
 
     public function downloadSpeedBytes(PDO $db): int
     {
-        $settings = $this->settings->settings($db);
+        $settings = $this->settingsStore()->settings($db);
         return max(0, (int)$settings['public_download_speed_kbps']) * 1024;
+    }
+
+    /** @return array<string,mixed> */
+    private function resolvedConfig(): array
+    {
+        if ($this->config !== null) {
+            return $this->config;
+        }
+        return function_exists('catalog_config') ? \catalog_config() : [];
+    }
+
+    private function settingsStore(): CatalogPublicAccessSettingsStore
+    {
+        return new CatalogPublicAccessSettingsStore($this->resolvedConfig());
     }
 }
