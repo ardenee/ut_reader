@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Provides small indexed operational reads for durable background jobs.
- * Why: Worker/status HTTP endpoints need exact live queued/running counts without rescanning terminal history every two seconds.
+ * Why: Worker/status services need exact live queue state without embedding durable-job SQL in Presentation or process orchestration.
  * Role: Infrastructure query object for live worker/queue diagnostics.
  */
 declare(strict_types=1);
@@ -64,6 +64,32 @@ final class PdoBackgroundJobOperationalQuery
             'terminal' => $terminal,
             'total' => $queued + $running + $terminal,
         ];
+    }
+
+    /** @return array{id:int,job_type:string,progress_json:?string,updated_at:string}|null */
+    public function firstRunningJob(string $queueName): ?array
+    {
+        $queueName = PdoJobQueueSupport::requiredIdentifier($queueName, 'queue');
+        $statement = $this->db->prepare(
+            'SELECT id,job_type,progress_json,updated_at FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status="running" ORDER BY id LIMIT 1'
+        );
+        $statement->execute([$queueName]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($row)) {
+            return null;
+        }
+        return [
+            'id' => (int)$row['id'],
+            'job_type' => (string)$row['job_type'],
+            'progress_json' => $row['progress_json'] !== null ? (string)$row['progress_json'] : null,
+            'updated_at' => (string)($row['updated_at'] ?? ''),
+        ];
+    }
+
+    public function queuedCount(string $queueName): int
+    {
+        return $this->statusCount(PdoJobQueueSupport::requiredIdentifier($queueName, 'queue'), 'queued');
     }
 
     private function statusCount(string $queueName, string $status): int
