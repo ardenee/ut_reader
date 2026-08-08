@@ -42,6 +42,7 @@ $criticalPhp = [
     'api/v1/job-status.php',
     'api/v1/job-bulk.php',
     'api/v1/upload-bucket-batch.php',
+    'api/v1/upload-bucket-chunk.php',
     'src/Application/Jobs/CatalogWorkerStatusPolicy.php',
     'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
@@ -75,6 +76,9 @@ $criticalPhp = [
     'src/Infrastructure/Import/CatalogBucketBatchQueue.php',
     'src/Infrastructure/Import/CatalogBucketBatchFinalizer.php',
     'src/Infrastructure/Import/CatalogBucketProcessingActive.php',
+    'src/Infrastructure/Import/CatalogBucketProcessingStateService.php',
+    'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
+    'src/Infrastructure/Import/CatalogBucketUploadTransferStoreFactory.php',
     'migrations/202608080001_background_job_display_status.php',
 ];
 
@@ -166,6 +170,7 @@ foreach ([
     'api/v1/job-status-cursor.php',
     'api/v1/job-status.php',
     'api/v1/upload-bucket-batch.php',
+    'api/v1/upload-bucket-chunk.php',
 ] as $relative) {
     $content = $read($relative);
     $record(
@@ -211,7 +216,24 @@ $record(
         && !str_contains($batchEndpoint, 'CatalogOrphanedJobRecovery')
         && str_contains($batchFinalizer, 'CatalogDetachedWorker')
         && str_contains($batchFinalizer, 'CatalogOrphanedJobRecovery'),
-    'Upload Bucket API must delegate queue/worker orchestration'
+    'Upload Bucket batch API must delegate queue/worker orchestration'
+);
+
+$chunkEndpoint = $read('api/v1/upload-bucket-chunk.php');
+$processingState = $read('src/Infrastructure/Import/CatalogBucketProcessingStateService.php');
+$filePolicy = $read('src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php');
+$transferFactory = $read('src/Infrastructure/Import/CatalogBucketUploadTransferStoreFactory.php');
+$record(
+    'bucket_chunk_orchestration_boundary',
+    str_contains($chunkEndpoint, 'CatalogBucketProcessingStateService')
+        && str_contains($chunkEndpoint, 'CatalogUploadBucketFilePolicy')
+        && str_contains($chunkEndpoint, 'CatalogBucketUploadTransferStoreFactory')
+        && !str_contains($chunkEndpoint, 'CatalogDetachedWorker')
+        && !str_contains($chunkEndpoint, 'CatalogBucketBatchQueue')
+        && str_contains($processingState, 'CatalogDetachedWorker')
+        && str_contains($filePolicy, 'allowedExtensions')
+        && str_contains($transferFactory, 'effectiveChunkBytes'),
+    'Upload Bucket chunk API must delegate worker, file/profile and transfer-store policy'
 );
 
 if ($checkDatabase) {
