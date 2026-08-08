@@ -21,9 +21,6 @@ final class PdoCatalogGameTableMaintenance
 
     public function exists(string $table): bool
     {
-        if (preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1) {
-            return false;
-        }
         $statement = $this->db->prepare(
             'SELECT COUNT(*) FROM information_schema.TABLES '
             . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?'
@@ -125,10 +122,6 @@ final class PdoCatalogGameTableMaintenance
 
     private function optimiseTable(string $table): void
     {
-        if (preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1) {
-            throw new RuntimeException('Invalid database table name.');
-        }
-
         $statement = $this->db->query(
             'OPTIMIZE TABLE `' . str_replace('`', '``', $table) . '`'
         );
