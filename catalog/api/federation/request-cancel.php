@@ -1,19 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Handles the federation HTTP endpoint for request cancel.
- * Why: It exposes this operation as a narrowly scoped machine-readable request instead of mixing API behavior into
- *      HTML pages.
- * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated
- *       here.
- * Audit: Active API surface unless its callers/tests prove otherwise; preserve request/response compatibility when
- *        consolidating.
+ * Purpose: Handles the signed federation request-cancel HTTP endpoint.
+ * Why: Authentication/JSON/serialization stays at the API boundary; request lifecycle mutations live in a shared service.
+ * Role: Thin federation HTTP adapter preserving the existing status/message contract.
  */
 declare(strict_types=1);
 
-
 require_once __DIR__ . '/../../lib/CatalogSupport.php';
 require_once __DIR__ . '/../../lib/FederationAuth.php';
+
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationApiException;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationRequestApiService;
 
 try {
     $config = catalog_config();
@@ -21,43 +19,15 @@ try {
     $body = file_get_contents('php://input') ?: '';
     $peer = fed_require_signed_peer($db, $body);
 
-    if ((string)$peer['peer_role'] !== 'child') {
-        fed_json_response(['ok' => false, 'error' => 'Only a paired child may cancel its request.'], 403);
-    }
-
     $payload = json_decode($body, true);
     if (!is_array($payload)) {
         fed_json_response(['ok' => false, 'error' => 'Invalid JSON payload'], 400);
     }
 
-    $requestId = (int)($payload['request_id'] ?? 0);
-    if ($requestId <= 0) {
-        $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE peer_id=? AND direction="child_to_parent" ORDER BY created_at DESC LIMIT 1', [(int)$peer['id']]);
-    } else {
-        $request = catalog_one($db, 'SELECT * FROM ue_federation_requests WHERE id=? AND peer_id=? AND direction="child_to_parent"', [$requestId, (int)$peer['id']]);
-    }
-
-    if (!$request) {
-        fed_json_response(['ok' => false, 'error' => 'Request not found for this child.'], 404);
-    }
-
-    if (in_array((string)$request['status'], ['completed','denied','updated','cancelled'], true)) {
-        fed_json_response(['ok' => false, 'error' => 'Request cannot be cancelled from status: ' . (string)$request['status']], 409);
-    }
-
-    $reason = trim((string)($payload['reason'] ?? 'Cancelled by child site.'));
-    $db->beginTransaction();
-    try {
-        $db->prepare('UPDATE ue_federation_requests SET status="cancelled", notes=CONCAT(COALESCE(notes,""), ?) WHERE id=?')->execute(["\n" . date('Y-m-d H:i:s') . ' - ' . $reason, (int)$request['id']]);
-        $db->prepare('UPDATE ue_federation_request_items SET status="failed", status_message=? WHERE request_id=? AND status IN ("requested","approved","queued","downloading","downloaded")')->execute(['Request cancelled by child site.', (int)$request['id']]);
-        $db->commit();
-    } catch (Throwable $e) {
-        $db->rollBack();
-        throw $e;
-    }
-
-    fed_log($db, (int)$peer['id'], null, 'INFO', 'REQUEST_CANCELLED', 'Request ' . (int)$request['id'] . ' cancelled by child.');
-    fed_json_response(['ok' => true, 'request_id' => (int)$request['id'], 'status' => 'cancelled']);
-} catch (Throwable $e) {
-    fed_json_response(['ok' => false, 'error' => $e->getMessage()], 500);
+    $result = (new CatalogFederationRequestApiService($db))->cancelRequest($peer, $payload);
+    fed_json_response($result);
+} catch (CatalogFederationApiException $error) {
+    fed_json_response(['ok' => false, 'error' => $error->getMessage()], $error->httpStatus);
+} catch (Throwable $error) {
+    fed_json_response(['ok' => false, 'error' => $error->getMessage()], 500);
 }
