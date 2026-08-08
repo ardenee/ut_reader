@@ -2,22 +2,24 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Reads mounted-source identity mismatches for Source Identity Repair.
- * Why: UE4/UE5 source-path fallback lookup and canonical identity derivation should not live in the rendering page.
- * Role: Infrastructure read model over catalog source-identity compatibility helpers.
+ * Why: UE4/UE5 source-path fallback lookup and canonical identity derivation belong in a read model using shared naming policy.
+ * Role: Infrastructure read model over CatalogSourceIdentityNaming.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Identity\CatalogSourceIdentityNaming;
 
 final class PdoSourceIdentityAuditQuery
 {
+    private readonly CatalogSourceIdentityNaming $naming;
+
     public function __construct(private readonly PDO $db)
     {
-        $root = dirname(__DIR__, 3);
-        require_once $root . '/lib/CatalogSupport.php';
-        require_once $root . '/lib/CatalogSourceIdentity.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
+        $this->naming = new CatalogSourceIdentityNaming();
     }
 
     /** @return list<array<string,mixed>> */
@@ -67,7 +69,7 @@ final class PdoSourceIdentityAuditQuery
                 $engineKey = strtoupper(trim((string)($file['profile_engine'] ?? '')));
             }
             $sourcePath = $this->sourcePath($file);
-            $canonical = \catalog_source_identity_package_name(
+            $canonical = $this->naming->packageName(
                 $engineKey,
                 $sourcePath,
                 (string)$file['original_name']
@@ -82,9 +84,10 @@ final class PdoSourceIdentityAuditQuery
         return $mismatches;
     }
 
+    /** @param array<string,mixed> $file */
     private function sourcePath(array $file): string
     {
-        $path = \catalog_source_identity_path((string)($file['source_relative_path'] ?? ''));
+        $path = $this->naming->path((string)($file['source_relative_path'] ?? ''));
         if ($path !== '') {
             return $path;
         }
@@ -95,6 +98,6 @@ final class PdoSourceIdentityAuditQuery
             . 'WHERE file_id=? AND source_relative_path<>"" ORDER BY id LIMIT 1',
             [(int)$file['id']]
         );
-        return \catalog_source_identity_path((string)($location['source_relative_path'] ?? ''));
+        return $this->naming->path((string)($location['source_relative_path'] ?? ''));
     }
 }
