@@ -1,14 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogUnverifiedMetadataRepairProcessor` for catalog unverified
- *          metadata repair processor.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Rebuilds metadata for a package already physically stored in the neutral Upload Bucket.
+ * Why: Metadata repair reuses the same explicit hash/index collaborators as new Upload Bucket processing without moving or duplicating bytes.
+ * Role: Infrastructure import orchestration.
  */
 declare(strict_types=1);
 
@@ -16,12 +11,6 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
 
-/**
- * Rebuilds metadata for a package that is already physically stored in the
- * neutral Upload Bucket. It deliberately does not move, duplicate or re-upload
- * the file. The established Upload Bucket parser/batched database writer is
- * reused so repair jobs receive the same granular progress as new uploads.
- */
 final class CatalogUnverifiedMetadataRepairProcessor
 {
     private readonly CatalogBucketPackageOperations $operations;
@@ -29,7 +18,7 @@ final class CatalogUnverifiedMetadataRepairProcessor
     /** @param array<string,mixed> $config */
     public function __construct(PDO $db, array $config, ?CatalogBucketPackageOperations $operations = null)
     {
-        $this->operations = $operations ?? new LegacyCatalogBucketPackageOperations($db, $config);
+        $this->operations = $operations ?? new CatalogBucketPackageOperationsService($db, $config);
     }
 
     /**
