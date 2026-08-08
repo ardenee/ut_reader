@@ -1,11 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides the shared package-scan primitives used by the active local source scanner.
- * Why: Common path filtering, redirect preparation, import, staging, and progress helpers are reused by the
- *      durable no-container scan path while stateful persistence lives under `catalog/src`.
+ * Purpose: Provides stateless path, redirect, sample, and progress primitives used by the active local source scanner.
+ * Why: Stateful discovery, identity, fingerprint, import and staging responsibilities live under `catalog/src` while stable parser-adjacent helpers remain available during staged cleanup.
  * Role: Shared source-scan compatibility helper layer; orchestration lives in `CatalogSourceScanNoContainers.php`.
- * Audit: The obsolete all-in-one `catalog_source_scan_run()` path and source-location persistence helpers were retired.
+ * Audit: Obsolete all-in-one scanning and stateful persistence/import helpers have been retired from this file.
  */
 declare(strict_types=1);
 
@@ -13,8 +12,6 @@ require_once __DIR__ . '/CatalogParser.php';
 require_once __DIR__ . '/CatalogScanner.php';
 require_once __DIR__ . '/CatalogRedirectArchive.php';
 require_once __DIR__ . '/GameProfiles.php';
-
-use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 
 function catalog_source_scan_relative_path(string $base, string $path): string
 {
@@ -32,19 +29,6 @@ function catalog_source_scan_allowed_file(string $path, array $profile, array $c
     $cleanName = catalog_clean_unreal_filename(basename($path));
     $extension = catalog_clean_unreal_extension((string)pathinfo($cleanName, PATHINFO_EXTENSION));
     return in_array($extension, scanner_profile_extensions($profile, $config), true);
-}
-
-function catalog_source_scan_temp_copy(string $path): string
-{
-    $temporary = tempnam(sys_get_temp_dir(), 'ue_src_scan_');
-    if ($temporary === false) {
-        throw new RuntimeException('Could not create temporary file for profiled source import.');
-    }
-    if (!copy($path, $temporary)) {
-        @unlink($temporary);
-        throw new RuntimeException('Could not copy source file to temporary scan file.');
-    }
-    return $temporary;
 }
 
 /** @return array{path:string,name:string,temp:bool,redirect:bool,source_extension:string} */
@@ -83,57 +67,10 @@ function catalog_source_scan_normalized_relative_path(string $relativePath, arra
     return scanner_normalize_source_relative_path(($directory !== '' ? $directory . '/' : '') . $work['name']);
 }
 
-/**
- * @param array<string,mixed> $config
- * @param array<string,mixed> $source
- * @param array{path:string,name:string,temp:bool,redirect:bool,source_extension:string} $work
- * @return array<int,mixed>
- */
-function catalog_source_scan_import_work_file(PDO $db, array $config, array $source, array $work, string $relativePath, bool $strictProfile, ?int $userId): array
-{
-    return scanner_scan_uploaded_file(
-        $db,
-        $config,
-        (int)$source['game_id'],
-        catalog_source_scan_temp_copy($work['path']),
-        $work['name'],
-        $userId,
-        $strictProfile,
-        null,
-        false,
-        ['source_relative_path' => catalog_source_scan_normalized_relative_path($relativePath, $work)]
-    );
-}
-
 /** @param array{path:string,name:string,temp:bool,redirect:bool,source_extension:string} $work */
 function catalog_source_scan_sample(string $path, array $work, string $message): string
 {
     return ($work['redirect'] ? $path . ' → ' . $work['name'] : $path) . ' - ' . $message;
-}
-
-/**
- * @param array<string,mixed> $config
- * @param array<string,mixed> $source
- * @param array{path:string,name:string,temp:bool,redirect:bool,source_extension:string} $work
- * @return array{queue_name:string,file_id:int}|null
- */
-function catalog_source_scan_stage_failed(PDO $db, array $config, array $source, array $work, string $relativePath, Throwable $error, ?int $userId): ?array
-{
-    if (!is_file($work['path'])) {
-        return null;
-    }
-    $sourceRelativePath = catalog_source_scan_normalized_relative_path($relativePath, $work);
-    $reason = 'Local Source Scan import failed for ' . $sourceRelativePath . ': ' . $error->getMessage();
-    $stager = new LegacyUnverifiedFileStager($db, $config);
-    $result = $stager->stageFailedCopy(
-        (int)$source['game_id'],
-        $work['path'],
-        $work['name'],
-        $reason,
-        $userId,
-        $sourceRelativePath
-    );
-    return $result === null ? null : ['queue_name' => (string)$result['queue_name'], 'file_id' => (int)$result['file_id']];
 }
 
 /** @param callable(array<string,mixed>):void|null $progress */
