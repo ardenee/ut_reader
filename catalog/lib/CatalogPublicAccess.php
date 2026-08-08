@@ -20,7 +20,7 @@ function catalog_public_access_settings(?PDO $db = null, ?array $config = null):
 
 function catalog_public_access_guard_request(): void
 {
-    (new CatalogPublicAccessGuard(catalog_config()))->guardRequest();
+    (new CatalogPublicAccessGuard())->guardRequest();
 }
 
 function catalog_public_download_limit(PDO $db): void
