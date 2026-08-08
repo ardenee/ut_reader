@@ -19,6 +19,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 
 final class GeneratedPackageJobHandler implements JobHandler
@@ -72,9 +73,7 @@ final class GeneratedPackageJobHandler implements JobHandler
                 'percent' => 5,
                 'message' => 'Resolving the package and dependency closure.',
             ]);
-            $plan = \modpkg_plan(
-                $this->db,
-                $this->config,
+            $plan = (new PdoCatalogPackageExportPlanner($this->db, $this->config))->plan(
                 $fileId,
                 $format,
                 $includeDependencies,
