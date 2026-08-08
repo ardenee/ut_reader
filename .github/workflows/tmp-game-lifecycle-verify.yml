@@ -1,0 +1,27 @@
+name: Temporary Game Lifecycle Verification
+
+on:
+  push:
+    branches:
+      - refactor/game-lifecycle-boundaries-20260808
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_mysql
+      - name: Game lifecycle boundaries
+        run: php catalog/bin/verify-game-lifecycle-boundaries.php
+      - name: Legacy metadata runtime audit
+        run: php catalog/bin/audit-legacy-runtime-references.php
+      - name: General controller boundaries
+        run: php catalog/bin/verify-general-controller-boundaries.php
+      - name: Controller boundaries
+        run: php catalog/bin/verify-controller-boundaries.php
+      - name: Architecture refactor
+        run: php catalog/bin/verify-architecture-refactor.php
