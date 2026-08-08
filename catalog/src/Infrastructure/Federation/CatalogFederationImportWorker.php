@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Federation;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogPackageImportService;
 use UnrealDb\Catalog\Infrastructure\Legacy\LegacyUnverifiedFileStager;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
 
@@ -19,6 +20,7 @@ final class CatalogFederationImportWorker
 {
     private readonly PdoFederationTransferJobStore $jobs;
     private readonly CatalogFederationTransferStorage $storage;
+    private readonly CatalogPackageImportService $imports;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -28,9 +30,9 @@ final class CatalogFederationImportWorker
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
-        require_once $root . '/lib/CatalogImport.php';
         $this->jobs = new PdoFederationTransferJobStore($db);
         $this->storage = new CatalogFederationTransferStorage($config);
+        $this->imports = new CatalogPackageImportService($db, $config);
     }
 
     /** @return array<string,mixed> */
@@ -70,9 +72,7 @@ final class CatalogFederationImportWorker
         ) ? null : $this->preferredGameId($job);
 
         try {
-            $result = \catalog_import_file(
-                $this->db,
-                $this->config,
+            $result = $this->imports->importFile(
                 $incoming,
                 $originalName,
                 $preferredGameId,
@@ -296,8 +296,7 @@ final class CatalogFederationImportWorker
         }
         $queueGameId = $preferredGameId ?? $this->preferredGameId($job);
         if ($queueGameId === null) {
-            $detected = \catalog_import_detect_game(
-                $this->db,
+            $detected = $this->imports->detectGame(
                 (string)pathinfo($originalName, PATHINFO_EXTENSION)
             );
             $queueGameId = $detected ? (int)$detected['id'] : null;

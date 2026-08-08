@@ -47,9 +47,11 @@ $workerFacade = $read('catalog/lib/FederationWorker.php');
 $streamingFacade = $read('catalog/lib/FederationStreamingWorker.php');
 $transferWorker = $read('catalog/src/Infrastructure/Federation/CatalogFederationTransferWorker.php');
 $importWorker = $read('catalog/src/Infrastructure/Federation/CatalogFederationImportWorker.php');
+$packageImport = $read('catalog/src/Infrastructure/Import/CatalogPackageImportService.php');
 $transport = $read('catalog/src/Infrastructure/Federation/CatalogFederationTransferClient.php');
 $jobStore = $read('catalog/src/Infrastructure/Federation/PdoFederationTransferJobStore.php');
 $cron = $read('catalog/federation/cron-worker-streaming.php');
+$legacyCatalogImport = $filePath('catalog/lib/CatalogImport.php');
 
 $record(
     'legacy_worker_is_facade_only',
@@ -111,8 +113,34 @@ $record(
     str_contains($transferWorker, 'CatalogFederationTransferClient')
         && str_contains($transferWorker, 'CatalogFederationTransferStorage')
         && str_contains($transferWorker, 'PdoFederationTransferJobStore')
-        && !str_contains($transferWorker, 'catalog_import_file('),
+        && !str_contains($transferWorker, 'catalog_import_file(')
+        && !str_contains($transferWorker, 'CatalogPackageImportService'),
     'transfer worker should download/upload only; package import belongs to CatalogFederationImportWorker'
+);
+$record(
+    'package_import_uses_namespaced_service',
+    str_contains($importWorker, 'CatalogPackageImportService')
+        && str_contains($importWorker, '$this->imports->importFile(')
+        && str_contains($importWorker, '$this->imports->detectGame(')
+        && !str_contains($importWorker, 'catalog_import_file(')
+        && !str_contains($importWorker, 'catalog_import_detect_game(')
+        && str_contains($workerFacade, 'CatalogPackageImportService')
+        && !str_contains($workerFacade, 'catalog_import_detect_game(')
+        && !str_contains($workerFacade, "require_once __DIR__ . '/CatalogImport.php'")
+        && !is_file($legacyCatalogImport),
+    'federation import paths must use CatalogPackageImportService and the retired CatalogImport.php file must remain absent'
+);
+$record(
+    'package_import_contract_preserved',
+    str_contains($packageImport, 'SELECT id,original_name FROM ue_files WHERE md5=? AND scan_status="verified" ORDER BY id LIMIT 1')
+        && str_contains($packageImport, 'FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 ORDER BY g.id')
+        && str_contains($packageImport, 'scanner_scan_uploaded_file(')
+        && str_contains($packageImport, "'source_relative_path' => \$sourceRelativePath")
+        && str_contains($packageImport, "if (\$status === 'duplicate')")
+        && str_contains($packageImport, "\$status = 'duplicate_md5';")
+        && str_contains($packageImport, "elseif (\$status === 'alias')")
+        && str_contains($packageImport, "\$status = 'verified';"),
+    'MD5 duplicate detection, game selection, scanner call and historical status normalization must remain unchanged'
 );
 
 $staleHelperFound = false;
@@ -147,6 +175,7 @@ $syntaxFiles = [
     'catalog/src/Infrastructure/Federation/CatalogFederationTransferStorage.php',
     'catalog/src/Infrastructure/Federation/CatalogFederationTransferWorker.php',
     'catalog/src/Infrastructure/Federation/PdoFederationTransferJobStore.php',
+    'catalog/src/Infrastructure/Import/CatalogPackageImportService.php',
 ];
 foreach ($syntaxFiles as $relative) {
     $path = $filePath($relative);
