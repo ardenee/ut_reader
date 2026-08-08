@@ -5,7 +5,7 @@
  * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
  *      that behavior at each call site.
  * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
+ *      `catalog/src`.
  * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
  *        purpose.
  */
@@ -22,38 +22,19 @@ function base_game_ensure(PDO $db): void
         return;
     }
 
-    // MySQL implicitly commits active transactions around DDL. Never execute the
-    // compatibility CREATE TABLE path from dependency/request transactions.
-    if ($db->inTransaction()) {
-        $exists = catalog_one(
-            $db,
-            'SELECT 1 AS present FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name="ue_base_game_files" LIMIT 1'
+    // Runtime code is verification-only. Schema ownership belongs to install.sql
+    // and incremental migrations; normal requests/workers must never execute DDL.
+    $exists = catalog_one(
+        $db,
+        'SELECT 1 AS present FROM information_schema.tables '
+        . 'WHERE table_schema=DATABASE() AND table_name="ue_base_game_files" LIMIT 1'
+    );
+    if (!$exists) {
+        throw new RuntimeException(
+            'Base-game protection table is missing. Run the database migrations before processing protected files or transfers.'
         );
-        if (!$exists) {
-            throw new RuntimeException('Base-game protection table is missing. Run the database migrations before processing transfers.');
-        }
-        $ensured[$connectionId] = true;
-        return;
     }
 
-    $db->exec(<<<'SQL'
-CREATE TABLE IF NOT EXISTS ue_base_game_files (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  game_id INT UNSIGNED NOT NULL,
-  package_guid VARCHAR(80) NOT NULL,
-  package_name VARCHAR(255) NULL,
-  original_name VARCHAR(255) NULL,
-  source_file_id BIGINT UNSIGNED NULL,
-  notes TEXT NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_base_game_files_game_guid (game_id, package_guid),
-  KEY idx_ue_base_game_files_game (game_id),
-  KEY idx_ue_base_game_files_guid (package_guid),
-  KEY idx_ue_base_game_files_source_file (source_file_id)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-SQL);
     $ensured[$connectionId] = true;
 }
 

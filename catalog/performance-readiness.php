@@ -1,48 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Performance Readiness.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders Performance Readiness and accepts administrator maintenance actions.
+ * Why: Projection synchronisation, cache cleanup, schema probes and telemetry SQL now belong to a diagnostics service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Diagnostics\CatalogPerformanceReadinessService;
+
 catalog_start_session();
-
-/** @return array<string,mixed> */
-function performance_readiness_row(PDO $db, string $sql, array $args = []): array
-{
-    try {
-        return catalog_one($db, $sql, $args) ?? [];
-    } catch (Throwable) {
-        return [];
-    }
-}
-
-/** @return list<array<string,mixed>> */
-function performance_readiness_rows(PDO $db, string $sql, array $args = []): array
-{
-    try {
-        return catalog_all($db, $sql, $args);
-    } catch (Throwable) {
-        return [];
-    }
-}
-
-function performance_readiness_table_exists(PDO $db, string $table): bool
-{
-    $row = performance_readiness_row(
-        $db,
-        'SELECT COUNT(*) c FROM information_schema.tables WHERE table_schema=DATABASE() AND table_name=?',
-        [$table]
-    );
-    return (int)($row['c'] ?? 0) > 0;
-}
 
 try {
     $config = catalog_config();
@@ -51,78 +20,22 @@ try {
         exit;
     }
 
+    $service = new CatalogPerformanceReadinessService($db);
     $flash = '';
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST') {
         catalog_check_csrf('performance-readiness');
-        $action = trim((string)($_POST['action'] ?? ''));
-        if ($action === 'sync_job_search') {
-            $flash = catalog_performance_sync_job_search($db, 10000)
-                ? 'Background-job search projection synchronised.'
-                : 'Background-job search projection could not be synchronised. Apply pending migrations first.';
-        } elseif ($action === 'prune_count_cache') {
-            $deleted = $db->exec('DELETE FROM ue_exact_count_cache WHERE expires_at<CURRENT_TIMESTAMP');
-            $flash = number_format(max(0, (int)$deleted)) . ' expired count-cache row(s) removed.';
-        } elseif ($action === 'clear_count_cache') {
-            $deleted = $db->exec('DELETE FROM ue_exact_count_cache');
-            $flash = number_format(max(0, (int)$deleted)) . ' count-cache row(s) removed.';
-        } elseif ($action === 'clear_request_metrics') {
-            $deleted = $db->exec('DELETE FROM ue_request_performance');
-            $flash = number_format(max(0, (int)$deleted)) . ' request-performance row(s) removed.';
-        }
+        $flash = $service->handleAction(trim((string)($_POST['action'] ?? '')));
     }
 
-    $requiredTables = [
-        'ue_game_catalog_stats',
-        'ue_dependency_package_summaries',
-        'ue_exact_count_telemetry',
-        'ue_exact_count_query_plans',
-        'ue_exact_count_cache',
-        'ue_background_job_search',
-        'ue_request_performance',
-    ];
-    $tableStatus = [];
-    foreach ($requiredTables as $table) {
-        $tableStatus[$table] = performance_readiness_table_exists($db, $table);
-    }
-    $readyCount = count(array_filter($tableStatus));
-
-    $cache = performance_readiness_row(
-        $db,
-        'SELECT COUNT(*) rows_total,COALESCE(SUM(hit_count),0) hits,'
-        . 'SUM(expires_at<CURRENT_TIMESTAMP) expired FROM ue_exact_count_cache'
-    );
-    $jobProjection = performance_readiness_row(
-        $db,
-        'SELECT (SELECT COUNT(*) FROM ue_background_jobs) source_rows,'
-        . '(SELECT COUNT(*) FROM ue_background_job_search) projected_rows,'
-        . '(SELECT COUNT(*) FROM ue_background_job_search s JOIN ue_background_jobs j ON j.id=s.job_id '
-        . 'WHERE s.source_updated_at<j.updated_at) stale_rows'
-    );
-    $requestMetrics = performance_readiness_row(
-        $db,
-        'SELECT COUNT(*) routes,COALESCE(SUM(sample_count),0) samples,COALESCE(MAX(max_duration_us),0) max_us '
-        . 'FROM ue_request_performance'
-    );
-
-    $confirmedCounts = performance_readiness_rows(
-        $db,
-        'SELECT t.metric_key,t.context_json,t.sample_count,'
-        . 'ROUND(t.total_duration_us/GREATEST(t.sample_count,1)/1000,2) average_ms,'
-        . 'ROUND(t.max_duration_us/1000,2) maximum_ms,p.assessment,p.selected_keys,p.extra_flags,p.recommendation '
-        . 'FROM ue_exact_count_telemetry t JOIN ue_exact_count_query_plans p '
-        . 'ON p.metric_key=t.metric_key AND p.context_hash=t.context_hash '
-        . 'WHERE (t.total_duration_us/GREATEST(t.sample_count,1))>=100000 '
-        . 'AND p.assessment IN ("watch","investigate") '
-        . 'ORDER BY average_ms DESC,p.full_scan_rows DESC LIMIT 30'
-    );
-    $slowRoutes = performance_readiness_rows(
-        $db,
-        'SELECT route_key,method,sample_count,'
-        . 'ROUND(total_duration_us/GREATEST(sample_count,1)/1000,2) average_ms,'
-        . 'ROUND(total_sql_us/GREATEST(sample_count,1)/1000,2) average_sql_ms,'
-        . 'ROUND(max_duration_us/1000,2) maximum_ms,slow_sample_count,last_query_count,last_status,last_seen_at '
-        . 'FROM ue_request_performance ORDER BY average_ms DESC,max_duration_us DESC LIMIT 30'
-    );
+    $snapshot = $service->snapshot();
+    $tableStatus = $snapshot['table_status'];
+    $readyCount = $snapshot['ready_count'];
+    $requiredCount = $snapshot['required_count'];
+    $cache = $snapshot['cache'];
+    $jobProjection = $snapshot['job_projection'];
+    $requestMetrics = $snapshot['request_metrics'];
+    $confirmedCounts = $snapshot['confirmed_counts'];
+    $slowRoutes = $snapshot['slow_routes'];
 
     catalog_head('Performance Readiness');
     echo CatalogUi::pageHeader(
@@ -133,7 +46,7 @@ try {
     catalog_flash($flash);
 
     echo '<div class="grid">';
-    catalog_stat_card('Required performance tables', $readyCount . ' / ' . count($requiredTables), $readyCount === count($requiredTables) ? 'All required migrations are present.' : 'Run pending migrations before relying on projections.');
+    catalog_stat_card('Required performance tables', $readyCount . ' / ' . $requiredCount, $readyCount === $requiredCount ? 'All required migrations are present.' : 'Run pending migrations before relying on projections.');
     catalog_stat_card('Count-cache rows', number_format((int)($cache['rows_total'] ?? 0)), number_format((int)($cache['hits'] ?? 0)) . ' recorded hits; ' . number_format((int)($cache['expired'] ?? 0)) . ' expired.');
     catalog_stat_card('Job-search projection', number_format((int)($jobProjection['projected_rows'] ?? 0)), number_format((int)($jobProjection['source_rows'] ?? 0)) . ' authoritative jobs; ' . number_format((int)($jobProjection['stale_rows'] ?? 0)) . ' stale.');
     catalog_stat_card('Measured routes', number_format((int)($requestMetrics['routes'] ?? 0)), number_format((int)($requestMetrics['samples'] ?? 0)) . ' requests; maximum ' . number_format(((int)($requestMetrics['max_us'] ?? 0)) / 1000, 2) . ' ms.');

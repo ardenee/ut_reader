@@ -1,22 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Exact Count Telemetry.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders Exact Count Telemetry and stores only session-local last-run display data.
+ * Why: Benchmark/plan actions, retention mutations, schema checks and telemetry SQL now belong to a diagnostics service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/FederationBaseGamePolicy.php';
 
-use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountBenchmark;
-use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountQueryCatalog;
-use UnrealDb\Catalog\Infrastructure\Persistence\SchemaInspector;
-use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountPlanCapture;
+use UnrealDb\Catalog\Infrastructure\Diagnostics\CatalogExactCountTelemetryAdminService;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogExactCountTelemetry;
 
 catalog_start_session();
@@ -54,126 +47,37 @@ try {
         exit;
     }
 
-    $schema = new SchemaInspector($db);
-    $telemetryAvailable = $schema->tableExists('ue_exact_count_telemetry');
-    $plansAvailable = $schema->tableExists('ue_exact_count_query_plans');
-
+    $service = new CatalogExactCountTelemetryAdminService($db);
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('exact-count-telemetry');
-        $action = strtolower(trim((string)($_POST['action'] ?? '')));
-
-        if ($action === 'run') {
-            if (!$telemetryAvailable) {
-                throw new RuntimeException('Apply migration 202607270012 before collecting exact-count telemetry.');
-            }
-            @set_time_limit(0);
-            $samples = CatalogExactCountBenchmark::run($db);
-            $_SESSION['exact_count_last_run'] = $samples;
-            $_SESSION['exact_count_flash'] = 'Recorded ' . count($samples) . ' representative exact-count sample(s).';
-        } elseif ($action === 'capture_plans') {
-            if (!$plansAvailable) {
-                throw new RuntimeException('Apply migration 202607270013 before capturing exact-count query plans.');
-            }
-            @set_time_limit(0);
-            $captured = CatalogExactCountPlanCapture::capture($db, CatalogExactCountQueryCatalog::definitions($db));
-            $errors = count(array_filter($captured, static fn(array $row): bool => (string)($row['assessment'] ?? '') === 'error'));
-            $_SESSION['exact_count_last_plans'] = $captured;
-            $_SESSION['exact_count_flash'] = 'Captured ' . count($captured) . ' EXPLAIN plan(s)'
-                . ($errors > 0 ? '; ' . $errors . ' could not be explained.' : '.');
-        } elseif ($action === 'prune') {
-            $days = max(1, min(3650, (int)($_POST['days'] ?? 90)));
-            $removedTelemetry = 0;
-            $removedPlans = 0;
-            if ($telemetryAvailable) {
-                $statement = $db->prepare(
-                    'DELETE FROM ue_exact_count_telemetry WHERE last_seen_at<DATE_SUB(NOW(),INTERVAL ? DAY)'
-                );
-                $statement->execute([$days]);
-                $removedTelemetry = $statement->rowCount();
-            }
-            if ($plansAvailable) {
-                $statement = $db->prepare(
-                    'DELETE FROM ue_exact_count_query_plans WHERE captured_at<DATE_SUB(NOW(),INTERVAL ? DAY)'
-                );
-                $statement->execute([$days]);
-                $removedPlans = $statement->rowCount();
-            }
-            $_SESSION['exact_count_flash'] = 'Removed ' . $removedTelemetry . ' timing context(s) and '
-                . $removedPlans . ' plan context(s) older than ' . $days . ' day(s).';
-        } elseif ($action === 'clear') {
-            $removedTelemetry = $telemetryAvailable ? (int)$db->exec('DELETE FROM ue_exact_count_telemetry') : 0;
-            $removedPlans = $plansAvailable ? (int)$db->exec('DELETE FROM ue_exact_count_query_plans') : 0;
+        $result = $service->handleAction(
+            strtolower(trim((string)($_POST['action'] ?? ''))),
+            (int)($_POST['days'] ?? 90)
+        );
+        if ($result['clear_last']) {
             $_SESSION['exact_count_last_run'] = [];
             $_SESSION['exact_count_last_plans'] = [];
-            $_SESSION['exact_count_flash'] = 'Cleared ' . $removedTelemetry . ' timing context(s) and '
-                . $removedPlans . ' plan context(s).';
-        } else {
-            throw new RuntimeException('Unknown exact-count telemetry action.');
         }
-
+        if ($result['last_run'] !== []) {
+            $_SESSION['exact_count_last_run'] = $result['last_run'];
+        }
+        if ($result['last_plans'] !== []) {
+            $_SESSION['exact_count_last_plans'] = $result['last_plans'];
+        }
+        $_SESSION['exact_count_flash'] = $result['flash'];
         header('Location: query-telemetry.php');
         exit;
     }
 
     $metricFilter = substr(strtolower(trim((string)($_GET['metric'] ?? ''))), 0, 120);
     $minimumMs = max(0, min(60000, (float)($_GET['minimum_ms'] ?? 0)));
-    $where = [];
-    $args = [];
-    if ($metricFilter !== '') {
-        $where[] = 'metric_key LIKE ?';
-        $args[] = '%' . $metricFilter . '%';
-    }
-    if ($minimumMs > 0) {
-        $where[] = '(total_duration_us/GREATEST(sample_count,1))/1000>=?';
-        $args[] = $minimumMs;
-    }
-    $whereSql = $where !== [] ? ' WHERE ' . implode(' AND ', $where) : '';
-
-    $summary = $telemetryAvailable ? catalog_one(
-        $db,
-        'SELECT COUNT(*) contexts,COALESCE(SUM(sample_count),0) samples,'
-        . 'COALESCE(SUM(slow_sample_count),0) slow_samples,COALESCE(MAX(max_duration_us),0) maximum_us '
-        . 'FROM ue_exact_count_telemetry'
-    ) : null;
-    $rows = $telemetryAvailable ? catalog_all(
-        $db,
-        'SELECT metric_key,context_hash,context_json,sample_count,total_duration_us,max_duration_us,last_duration_us,'
-        . 'slow_sample_count,last_result_count,first_seen_at,last_seen_at,'
-        . '(total_duration_us/GREATEST(sample_count,1))/1000 average_ms '
-        . 'FROM ue_exact_count_telemetry' . $whereSql
-        . ' ORDER BY average_ms DESC,max_duration_us DESC,last_seen_at DESC LIMIT 500',
-        $args
-    ) : [];
-
-    $planWhere = [];
-    $planArgs = [];
-    if ($metricFilter !== '') {
-        $planWhere[] = 'p.metric_key LIKE ?';
-        $planArgs[] = '%' . $metricFilter . '%';
-    }
-    if ($minimumMs > 0) {
-        $planWhere[] = 'COALESCE((t.total_duration_us/GREATEST(t.sample_count,1))/1000,0)>=?';
-        $planArgs[] = $minimumMs;
-    }
-    $planWhereSql = $planWhere !== [] ? ' WHERE ' . implode(' AND ', $planWhere) : '';
-    $planSummary = $plansAvailable ? catalog_one(
-        $db,
-        'SELECT COUNT(*) contexts,'
-        . 'SUM(assessment="investigate") investigate_total,SUM(assessment="watch") watch_total,'
-        . 'SUM(assessment="error") error_total,COALESCE(MAX(estimated_rows),0) maximum_rows '
-        . 'FROM ue_exact_count_query_plans'
-    ) : null;
-    $planRows = $plansAvailable ? catalog_all(
-        $db,
-        'SELECT p.*,t.sample_count timing_samples,'
-        . '(t.total_duration_us/GREATEST(t.sample_count,1))/1000 average_ms,t.max_duration_us timing_max_us '
-        . 'FROM ue_exact_count_query_plans p '
-        . 'LEFT JOIN ue_exact_count_telemetry t ON t.metric_key=p.metric_key AND t.context_hash=p.context_hash'
-        . $planWhereSql
-        . ' ORDER BY CASE p.assessment WHEN "error" THEN 0 WHEN "investigate" THEN 1 '
-        . 'WHEN "watch" THEN 2 ELSE 3 END,p.full_scan_rows DESC,p.estimated_rows DESC,p.captured_at DESC LIMIT 500',
-        $planArgs
-    ) : [];
+    $snapshot = $service->snapshot($metricFilter, $minimumMs);
+    $telemetryAvailable = $snapshot['availability']['telemetry'];
+    $plansAvailable = $snapshot['availability']['plans'];
+    $summary = $snapshot['summary'];
+    $rows = $snapshot['rows'];
+    $planSummary = $snapshot['plan_summary'];
+    $planRows = $snapshot['plan_rows'];
 
     $lastRun = is_array($_SESSION['exact_count_last_run'] ?? null)
         ? $_SESSION['exact_count_last_run']

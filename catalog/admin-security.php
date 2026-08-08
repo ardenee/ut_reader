@@ -1,19 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Administrator Security.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders Administrator Security and manages session-bound MFA setup state.
+ * Why: Password/MFA verification and durable recovery-code mutations now belong to a dedicated security service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
-require_once __DIR__ . '/lib/CatalogMfa.php';
 
-use UnrealDb\Catalog\Application\Security\TotpService;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogAdminSecurityService;
 
 try {
     $config = catalog_config();
@@ -22,75 +18,42 @@ try {
     if (!catalog_require_admin_page('Administrator Security')) {
         exit;
     }
-    $userId = (int)($_SESSION['user']['id'] ?? 0);
-    $user = catalog_one($db, 'SELECT * FROM ue_users WHERE id=? AND role="admin"', [$userId]);
-    if (!$user) {
-        throw new RuntimeException('Administrator account is unavailable.');
-    }
 
+    $service = new CatalogAdminSecurityService($db);
+    $userId = (int)($_SESSION['user']['id'] ?? 0);
+    $user = $service->administrator($userId);
     $flash = '';
     $recoveryCodes = [];
+
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('admin-security');
-        $action = strtolower(trim((string)($_POST['action'] ?? '')));
-        $password = (string)($_POST['password'] ?? '');
-        $code = trim((string)($_POST['mfa_code'] ?? ''));
-        if (!password_verify($password, (string)$user['password_hash'])) {
-            usleep(random_int(150000, 300000));
-            throw new RuntimeException('Password verification failed.');
-        }
-
-        if ($action === 'enable') {
-            if (catalog_mfa_enabled($user)) {
-                throw new RuntimeException('MFA is already enabled.');
-            }
-            $secret = trim((string)($_SESSION['catalog_mfa_setup_secret'] ?? ''));
-            if ($secret === '') {
-                throw new RuntimeException('MFA setup has expired. Reload this page and try again.');
-            }
-            $recoveryCodes = catalog_mfa_enable($db, $userId, $secret, $code);
+        $result = $service->execute(
+            $user,
+            strtolower(trim((string)($_POST['action'] ?? ''))),
+            (string)($_POST['password'] ?? ''),
+            trim((string)($_POST['mfa_code'] ?? '')),
+            trim((string)($_SESSION['catalog_mfa_setup_secret'] ?? ''))
+        );
+        if ($result['clear_setup_secret']) {
             unset($_SESSION['catalog_mfa_setup_secret']);
-            catalog_mark_recent_admin_auth();
-            $flash = 'MFA enabled. Save the recovery codes shown below; they will not be displayed again.';
-        } elseif ($action === 'disable') {
-            if (!catalog_mfa_enabled($user) || !catalog_mfa_verify($db, $user, $code)) {
-                throw new RuntimeException('A valid authenticator or recovery code is required to disable MFA.');
-            }
-            catalog_mfa_disable($db, $userId);
-            unset($_SESSION['catalog_mfa_setup_secret']);
-            catalog_mark_recent_admin_auth();
-            $flash = 'MFA disabled.';
-        } elseif ($action === 'reauth') {
-            if (catalog_mfa_enabled($user) && !catalog_mfa_verify($db, $user, $code)) {
-                throw new RuntimeException('Authenticator or recovery code verification failed.');
-            }
-            catalog_mark_recent_admin_auth();
-            $flash = 'Administrator reauthentication confirmed for ' . catalog_recent_admin_auth_seconds() . ' seconds.';
-        } elseif ($action === 'regenerate_recovery') {
-            if (!catalog_mfa_enabled($user) || !catalog_mfa_verify($db, $user, $code)) {
-                throw new RuntimeException('A valid authenticator or recovery code is required.');
-            }
-            $recoveryCodes = catalog_mfa_recovery_codes();
-            $db->prepare('UPDATE ue_users SET mfa_recovery_codes_json=? WHERE id=?')
-                ->execute([catalog_mfa_recovery_hashes($recoveryCodes), $userId]);
-            catalog_mark_recent_admin_auth();
-            $flash = 'New recovery codes created. Previous recovery codes are no longer valid.';
-        } else {
-            throw new RuntimeException('Unknown security action.');
         }
-        $user = catalog_one($db, 'SELECT * FROM ue_users WHERE id=?', [$userId]);
+        $user = $result['user'];
+        $flash = $result['flash'];
+        $recoveryCodes = $result['recovery_codes'];
     }
 
     $enabled = catalog_mfa_enabled($user);
     $secret = '';
     $uri = '';
     if (!$enabled) {
-        $secret = trim((string)($_SESSION['catalog_mfa_setup_secret'] ?? ''));
-        if ($secret === '') {
-            $secret = TotpService::generateSecret();
-            $_SESSION['catalog_mfa_setup_secret'] = $secret;
-        }
-        $uri = TotpService::provisioningUri((string)($config['site_name'] ?? 'UnrealDB'), (string)$user['username'], $secret);
+        $setup = $service->setup(
+            (string)($config['site_name'] ?? 'UnrealDB'),
+            (string)$user['username'],
+            (string)($_SESSION['catalog_mfa_setup_secret'] ?? '')
+        );
+        $secret = $setup['secret'];
+        $uri = $setup['uri'];
+        $_SESSION['catalog_mfa_setup_secret'] = $secret;
     }
 
     catalog_head('Administrator Security');
