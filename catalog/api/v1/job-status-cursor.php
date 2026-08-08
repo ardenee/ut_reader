@@ -2,8 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Handles the cursor-based Background Jobs status endpoint.
- * Why: Keyset pagination keeps live job-list reads bounded while short-cached aggregate counters avoid full queue scans every two seconds.
- * Role: HTTP API entry point for the Background Jobs live list.
+ * Why: HTTP validation, result hydration and JSON serialization remain here while SQL/search/pagination persistence is delegated.
+ * Role: Thin HTTP API entry point for the Background Jobs live list.
  */
 declare(strict_types=1);
 
@@ -11,10 +11,8 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCountCache;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobDisplayCountQuery;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobPageQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBrowserQuery;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 /** @param array<string,mixed> $result */
@@ -211,65 +209,6 @@ try {
         JsonResponse::error('invalid_search', 'Search text is too long.', 400);
     }
 
-    $fromSql = 'ue_background_jobs j';
-    $baseWhere = [];
-    $baseParams = [];
-    if ($queue !== '') {
-        $baseWhere[] = 'j.queue_name=?';
-        $baseParams[] = $queue;
-    }
-    if ($search !== '') {
-        $projectionAvailable = catalog_performance_sync_job_search($application->db);
-        $booleanSearch = catalog_performance_boolean_query($search);
-        if ($projectionAvailable && $booleanSearch !== '') {
-            $fromSql .= ' JOIN ue_background_job_search js ON js.job_id=j.id';
-            if (ctype_digit($search)) {
-                $baseWhere[] = '(j.id=? OR MATCH(js.search_text) AGAINST (? IN BOOLEAN MODE))';
-                $baseParams[] = (int)$search;
-                $baseParams[] = $booleanSearch;
-            } else {
-                $baseWhere[] = 'MATCH(js.search_text) AGAINST (? IN BOOLEAN MODE)';
-                $baseParams[] = $booleanSearch;
-            }
-        } elseif ($projectionAvailable) {
-            $fromSql .= ' JOIN ue_background_job_search js ON js.job_id=j.id';
-            $baseWhere[] = 'js.search_text LIKE ?';
-            $baseParams[] = '%' . $search . '%';
-        } else {
-            $baseWhere[] = '(CAST(j.id AS CHAR) LIKE ? OR j.job_type LIKE ? OR COALESCE(j.concurrency_key,"") LIKE ? '
-                . 'OR COALESCE(j.payload_json,"") LIKE ? OR COALESCE(j.last_error,"") LIKE ? '
-                . 'OR COALESCE(j.result_json,"") LIKE ?)';
-            $like = '%' . $search . '%';
-            array_push($baseParams, $like, $like, $like, $like, $like, $like);
-        }
-    }
-
-    $where = $baseWhere;
-    $params = $baseParams;
-    if ($status !== '') {
-        $condition = CatalogJobDisplayStatus::filterCondition($status);
-        $where[] = $condition['sql'];
-        array_push($params, ...$condition['params']);
-    }
-    $whereSql = implode(' AND ', $where);
-    $baseWhereSql = implode(' AND ', $baseWhere);
-
-    // Aggregate tabs use the indexed generated display_status column. Result JSON
-    // is decoded only for the bounded rows that are actually rendered below.
-    $countsCacheKey = json_encode(
-        ['queue' => $queue, 'search' => $search],
-        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
-    );
-    $countQuery = new PdoBackgroundJobDisplayCountQuery($application->db);
-    $counts = (new CatalogBackgroundJobCountCache($application->config))->remember(
-        $countsCacheKey,
-        static fn(): array => $countQuery->counts($fromSql, $baseWhereSql, $baseParams)
-    );
-
-    $totalKey = $status !== '' ? $status : 'all';
-    $total = max(0, (int)($counts[$totalKey] ?? 0));
-    $pages = max(1, (int)ceil($total / max(1, $perPage)));
-
     $context = json_encode([
         'page' => 'background-jobs',
         'queue' => $queue,
@@ -283,6 +222,13 @@ try {
         $move = 'first';
         $requestedPage = 1;
     }
+
+    $query = new PdoBackgroundJobBrowserQuery($application->db, $application->config);
+    $pageResult = $query->fetch($queue, $status, $search, $perPage, $cursor, $move);
+    $counts = $pageResult['counts'];
+    $total = max(0, (int)$pageResult['total']);
+    $pages = max(1, (int)ceil($total / max(1, $perPage)));
+
     if ($move === 'first') {
         $requestedPage = 1;
     } elseif ($move === 'last') {
@@ -291,33 +237,10 @@ try {
         $requestedPage = max(1, min($pages, $requestedPage));
     }
 
-    $displayStatusSql = CatalogJobDisplayStatus::sqlExpression('j');
-    $selectSql = 'SELECT j.id,j.queue_name,j.job_type,j.resource_class,j.resource_limit,j.concurrency_key,j.priority,j.status,'
-        . $displayStatusSql . ' display_status,j.available_at,'
-        . 'j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,j.last_heartbeat_at,j.recovery_count,'
-        . 'j.cancel_requested_at,j.cancel_requested_by,j.cancel_reason,j.payload_json,j.progress_json,j.progress_updated_at,'
-        . 'j.result_json,j.last_error,j.created_by,j.created_at,j.updated_at,j.completed_at,j.dead_lettered_at '
-        . 'FROM ' . $fromSql;
-    $jobPageQuery = new PdoBackgroundJobPageQuery($application->db);
-    $pageResult = $jobPageQuery->fetch(
-        $selectSql,
-        $whereSql,
-        $params,
-        $perPage,
-        $cursor,
-        $move
-    );
     if ($pageResult['rows'] === [] && $total > 0 && $move !== 'first') {
         $move = 'first';
         $requestedPage = 1;
-        $pageResult = $jobPageQuery->fetch(
-            $selectSql,
-            $whereSql,
-            $params,
-            $perPage,
-            null,
-            'first'
-        );
+        $pageResult = $query->fetch($queue, $status, $search, $perPage, null, 'first');
     }
 
     $rows = catalog_job_cursor_hydrate_rows($pageResult['rows'], $application->config);
