@@ -47,11 +47,12 @@ final class PdoDashboardStatsQuery implements DashboardStatsQuery
                 . "COALESCE(SUM(scan_status='failed'),0) failed "
                 . 'FROM ue_files'
             );
+            $dependencySource = PdoDependencyReadSource::sql($this->db);
             $dependencies = $this->one(
                 'SELECT '
                 . "COALESCE(SUM(status='missing'),0) missing, "
                 . "COALESCE(SUM(status='resolved'),0) resolved "
-                . 'FROM ue_dependencies'
+                . 'FROM ' . $dependencySource
             );
         }
 

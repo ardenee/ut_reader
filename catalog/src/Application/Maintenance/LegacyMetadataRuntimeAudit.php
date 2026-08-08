@@ -43,8 +43,8 @@ final class LegacyMetadataRuntimeAudit
         'lib/CatalogLegacyDataAudit.php',
         'lib/CatalogPerformance.php',
         'lib/CatalogRuntimeSqlCompatibility.php',
-        'lib/GameManagerLifecycle.php',
         'federation/docs.php',
+        'src/Infrastructure/Games/PdoCatalogGameTableMaintenance.php',
         'src/Infrastructure/Persistence/PdoPackageTablePageQuery.php',
         'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
         'src/Infrastructure/Persistence/PdoDependencyResolver.php',
@@ -57,6 +57,7 @@ final class LegacyMetadataRuntimeAudit
         'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
         'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
         'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
+        'src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
         'src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php',
         'src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
         'src/Infrastructure/Unverified/CatalogUnverifiedRenameService.php',
@@ -109,6 +110,7 @@ final class LegacyMetadataRuntimeAudit
         'lib/CatalogSourceIdentity.php',
         'package-normalize.php',
         'upk-info.php',
+        'src/Infrastructure/Maintenance/CatalogLegacyPackageNormalizationService.php',
     ];
 
     /** @return array{files:int,references:int,matches:list<array<string,mixed>>} */
@@ -184,6 +186,9 @@ final class LegacyMetadataRuntimeAudit
     private static function excluded(string $relative): bool
     {
         if ($relative === 'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php') {
+            return true;
+        }
+        if (str_starts_with($relative, 'bin/verify-')) {
             return true;
         }
         foreach (['migrations/', 'tests/', 'storage/', 'vendor/'] as $prefix) {

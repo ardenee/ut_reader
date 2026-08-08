@@ -111,6 +111,7 @@ $record(
 $bucketHandler = $read('catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $identityProcessor = $read('catalog/src/Infrastructure/Import/CatalogBucketIdentityProcessor.php');
 $unverifiedImportAction = $read('catalog/unverified-files-action.php');
+$unverifiedActionService = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedActionService.php');
 $unverifiedImportService = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php');
 $unverifiedPromotion = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php');
 $unverifiedDependencyRecovery = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php');
@@ -121,11 +122,14 @@ $record(
         && str_contains($identityProcessor, 'CatalogUploadDuplicateDetector')
         && str_contains($identityProcessor, '$this->operations->store(')
         && str_contains($identityProcessor, '$this->operations->index(')
-        && str_contains($unverifiedImportAction, 'CatalogUnverifiedImportService')
+        && str_contains($unverifiedImportAction, 'CatalogUnverifiedActionService')
+        && !str_contains($unverifiedImportAction, 'CatalogUnverifiedImportService')
+        && str_contains($unverifiedActionService, 'CatalogUnverifiedImportService')
         && str_contains($unverifiedImportService, 'CatalogUnverifiedPromotion')
+        && str_contains($unverifiedImportService, 'CatalogUnverifiedDependencyRecovery')
         && str_contains($unverifiedPromotion, '$this->dependencies->queueRefresh(')
         && str_contains($unverifiedDependencyRecovery, 'CatalogPostImportDependencyQueue::enqueue('),
-    'queued upload must reach unverified indexing and later promotion must retain durable dependency scheduling'
+    'queued upload must reach unverified indexing, action/import services, promotion and durable dependency scheduling'
 );
 
 $batchEndpoint = $read('catalog/api/v1/upload-bucket-batch.php');
@@ -234,6 +238,7 @@ $criticalPhp = [
     'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolReconciler.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolStaleRestartFailed.php',
+    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedActionService.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
