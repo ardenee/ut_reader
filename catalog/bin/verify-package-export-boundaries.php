@@ -84,6 +84,7 @@ $planner = $read('catalog/src/Infrastructure/Downloads/PdoCatalogPackageExportPl
 $record(
     'planner_owns_dependency_closure',
     str_contains($planner, 'PdoDependencyReadSource::sql')
+        && str_contains($planner, 'CatalogPackageExportFormatPolicy::enabled')
         && str_contains($planner, 'base_game_file_is_protected')
         && str_contains($planner, "\$settings['max_files']")
         && str_contains($planner, "\$settings['max_bytes']")
@@ -103,6 +104,14 @@ $record(
         && str_contains($downloadPage, 'PdoCatalogPackageExportPlanner')
         && !str_contains($downloadPage, 'modpkg_plan('),
     'background generation and preview must not call the procedural planner'
+);
+
+$record(
+    'worker_uses_namespaced_settings_policy',
+    str_contains($jobHandler, 'CatalogPackageExportSettingsService')
+        && str_contains($jobHandler, 'CatalogPackageExportFormatPolicy::')
+        && !str_contains($jobHandler, '\\modpkg_settings('),
+    'worker must not use the procedural settings/format-selection implementation'
 );
 
 $record(
