@@ -19,6 +19,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeneratedPackageDescriptor;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportFormatPolicy;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
@@ -41,8 +42,6 @@ final class GeneratedPackageJobHandler implements JobHandler
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
         require_once __DIR__ . '/../../../lib/ExternalMirrors.php';
-        require_once __DIR__ . '/../../../lib/ModPackageBuilder.php';
-        require_once __DIR__ . '/../../../lib/LegacyUmodPackageBuilder.php';
         require_once __DIR__ . '/../../../lib/GeneratedPackageBuilder.php';
         require_once __DIR__ . '/../../../lib/DownloadActivity.php';
 
@@ -104,10 +103,12 @@ final class GeneratedPackageJobHandler implements JobHandler
                 );
             }
 
-            $options = \modpkg_default_options($plan, $settings, $optionInput);
-            $options['version'] = \modpkg_generated_version($options['version'] ?? '1.0');
-            $extension = \modpkg_extension($format);
-            $downloadName = \modpkg_download_name($format, $options);
+            $options = CatalogGeneratedPackageDescriptor::defaultOptions($plan, $settings, $optionInput);
+            $options['version'] = CatalogGeneratedPackageDescriptor::generatedVersion(
+                $options['version'] ?? '1.0'
+            );
+            $extension = CatalogGeneratedPackageDescriptor::extension($format);
+            $downloadName = CatalogGeneratedPackageDescriptor::downloadName($format, $options);
             $store = new GeneratedPackageStore((string)($this->config['storage_path'] ?? ''));
             $pruned = $store->prune();
             $temporaryPath = $store->temporaryPath($job->id, $extension);
