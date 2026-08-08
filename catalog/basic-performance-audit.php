@@ -1,16 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Basic Page Performance Audit.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders the Basic Page Performance Audit and runs browser-side authenticated GET measurements.
+ * Why: Request-resource telemetry schema knowledge and route matching now belong to an Infrastructure read model.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBasicPerformanceAuditQuery;
 
 /** @return list<array{id:string,label:string,href:string,route_suffix:string,method:string,target_ms:int,run:bool}> */
 function basic_performance_targets(): array
@@ -26,12 +25,6 @@ function basic_performance_targets(): array
         ['id' => 'missing-counts', 'label' => 'Game missing-count API', 'href' => 'api/v1/game-missing-counts.php', 'route_suffix' => '/catalog/api/v1/game-missing-counts.php', 'method' => 'GET', 'target_ms' => 1000, 'run' => true],
         ['id' => 'login', 'label' => 'Login submission', 'href' => 'index.php?page=login', 'route_suffix' => '/catalog/index.php?page=login', 'method' => 'POST', 'target_ms' => 1500, 'run' => false],
     ];
-}
-
-function basic_performance_route_matches(string $route, string $suffix): bool
-{
-    $route = str_replace('\\', '/', $route);
-    return str_ends_with($route, $suffix);
 }
 
 /** @param array<string,mixed>|null $row */
@@ -65,39 +58,14 @@ try {
         exit;
     }
 
-    $csrf = catalog_csrf('basic-performance-audit');
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
 
     $targets = basic_performance_targets();
-    $traceRows = [];
-    $traceError = '';
-    try {
-        $traceRows = catalog_all(
-            $db,
-            'SELECT route_key,method,audience,sample_count,total_duration_us,total_sql_us,total_cpu_us,'
-            . 'max_duration_us,max_sql_us,max_cpu_us,last_duration_us,last_sql_us,last_cpu_us,'
-            . 'last_query_count,last_status,slow_sample_count,last_seen_at '
-            . 'FROM ue_request_resource_performance '
-            . 'WHERE audience="admin" ORDER BY last_seen_at DESC'
-        );
-    } catch (Throwable $error) {
-        $traceError = $error->getMessage();
-    }
-
-    $metrics = [];
-    foreach ($targets as $target) {
-        foreach ($traceRows as $row) {
-            if (
-                strtoupper((string)($row['method'] ?? '')) === $target['method']
-                && basic_performance_route_matches((string)($row['route_key'] ?? ''), $target['route_suffix'])
-            ) {
-                $metrics[$target['id']] = $row;
-                break;
-            }
-        }
-    }
+    $queryResult = (new PdoBasicPerformanceAuditQuery($db))->metrics($targets);
+    $metrics = $queryResult['metrics'];
+    $traceError = $queryResult['error'];
 
     catalog_head('Basic Page Performance Audit');
     echo CatalogUi::pageHeader(

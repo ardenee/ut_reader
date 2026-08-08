@@ -1,16 +1,15 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders and/or processes the catalog page for Workload Tracing.
- * Why: It exists as a distinct user or administrator entry point for this catalog workflow.
- * Role: Web UI entry point; reusable application logic should be supplied by shared `lib`/`src` services rather than
- *       copied into peer pages.
- * Audit: Active page unless navigation/tests show otherwise; review large page-local helper blocks for extraction
- *        when similar logic appears elsewhere.
+ * Purpose: Renders Workload Tracing and accepts administrator maintenance actions.
+ * Why: MySQL/Performance Schema probes, route telemetry, cache filesystem inspection and reset actions now live in a diagnostics service.
+ * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
+
+use UnrealDb\Catalog\Infrastructure\Diagnostics\CatalogWorkloadTracingService;
 
 function workload_ms(int|float $microseconds): string
 {
@@ -25,72 +24,6 @@ function workload_ratio(int|float $numerator, int|float $denominator): string
     return number_format(((float)$numerator * 100) / (float)$denominator, 2) . '%';
 }
 
-/** @return array<string,string> */
-function workload_mysql_map(PDO $db, string $kind, array $names): array
-{
-    if ($names === []) {
-        return [];
-    }
-    $quoted = implode(',', array_map(static fn(string $name): string => $db->quote($name), array_values($names)));
-    $rows = catalog_all($db, 'SHOW GLOBAL ' . $kind . ' WHERE Variable_name IN (' . $quoted . ')');
-    $result = [];
-    foreach ($rows as $row) {
-        $result[(string)$row['Variable_name']] = (string)$row['Value'];
-    }
-    return $result;
-}
-
-/** @return array{files:int,bytes:int,oldest:int,newest:int} */
-function workload_public_cache_stats(array $config): array
-{
-    $directory = function_exists('catalog_public_cache_directory')
-        ? catalog_public_cache_directory($config)
-        : '';
-    $stats = ['files' => 0, 'bytes' => 0, 'oldest' => 0, 'newest' => 0];
-    if ($directory === '' || !is_dir($directory)) {
-        return $stats;
-    }
-    foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
-        if (!$entry instanceof SplFileInfo || !$entry->isFile() || !str_ends_with($entry->getFilename(), '.htmlcache')) {
-            continue;
-        }
-        $stats['files']++;
-        $stats['bytes'] += max(0, $entry->getSize());
-        $mtime = $entry->getMTime();
-        $stats['oldest'] = $stats['oldest'] === 0 ? $mtime : min($stats['oldest'], $mtime);
-        $stats['newest'] = max($stats['newest'], $mtime);
-    }
-    return $stats;
-}
-
-function workload_prune_public_cache(array $config): int
-{
-    $directory = function_exists('catalog_public_cache_directory')
-        ? catalog_public_cache_directory($config)
-        : '';
-    if ($directory === '' || !is_dir($directory)) {
-        return 0;
-    }
-    $removed = 0;
-    foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
-        if (!$entry instanceof SplFileInfo || !$entry->isFile()) {
-            continue;
-        }
-        if (str_ends_with($entry->getFilename(), '.htmlcache') || str_ends_with($entry->getFilename(), '.lock')) {
-            if (@unlink($entry->getPathname())) {
-                $removed++;
-            }
-        }
-    }
-    return $removed;
-}
-
-function workload_target(array $config, string $key, int $default): int
-{
-    $performance = is_array($config['performance'] ?? null) ? $config['performance'] : [];
-    return max(0, (int)($performance[$key] ?? $default));
-}
-
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -98,132 +31,33 @@ try {
         exit;
     }
 
+    $service = new CatalogWorkloadTracingService($db, $config);
     $message = '';
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         catalog_check_csrf('workload-tracing');
-        $action = strtolower(trim((string)($_POST['action'] ?? '')));
-        if ($action === 'reset_application_trace') {
-            $db->exec('DELETE FROM ue_request_resource_performance');
-            $db->exec('DELETE FROM ue_request_performance');
-            $message = 'Application request tracing counters were reset.';
-        } elseif ($action === 'clear_public_cache') {
-            $removed = workload_prune_public_cache($config);
-            $message = 'Removed ' . $removed . ' public response cache file(s).';
-        } else {
-            throw new RuntimeException('Unknown workload tracing action.');
-        }
+        $message = $service->handleAction(strtolower(trim((string)($_POST['action'] ?? ''))));
     }
 
-    $variableNames = [
-        'version',
-        'innodb_buffer_pool_size',
-        'innodb_buffer_pool_dump_at_shutdown',
-        'innodb_buffer_pool_load_at_startup',
-        'innodb_buffer_pool_dump_pct',
-        'innodb_redo_log_capacity',
-        'max_connections',
-        'thread_cache_size',
-        'table_open_cache',
-        'tmp_table_size',
-        'max_heap_table_size',
-        'slow_query_log',
-        'long_query_time',
-        'min_examined_row_limit',
-        'performance_schema',
-        'innodb_flush_log_at_trx_commit',
-        'sync_binlog',
-    ];
-    $statusNames = [
-        'Threads_connected',
-        'Threads_running',
-        'Threads_created',
-        'Max_used_connections',
-        'Questions',
-        'Slow_queries',
-        'Created_tmp_tables',
-        'Created_tmp_disk_tables',
-        'Innodb_buffer_pool_read_requests',
-        'Innodb_buffer_pool_reads',
-        'Innodb_buffer_pool_wait_free',
-        'Bytes_received',
-        'Bytes_sent',
-        'Uptime',
-    ];
-    $variables = workload_mysql_map($db, 'VARIABLES', $variableNames);
-    $status = workload_mysql_map($db, 'STATUS', $statusNames);
+    $snapshot = $service->snapshot();
+    $variables = $snapshot['variables'];
+    $status = $snapshot['status'];
+    $routes = $snapshot['routes'];
+    $digests = $snapshot['digests'];
+    $digestError = $snapshot['digest_error'];
+    $cacheStats = $snapshot['cache'];
+    $bufferHit = $snapshot['buffer_hit'];
+    $tmpTables = $snapshot['tmp_tables'];
+    $diskTmpTables = $snapshot['disk_tmp_tables'];
+    $targets = $snapshot['targets'];
+    $opcache = $snapshot['opcache'];
+    $opcacheDirectives = $snapshot['opcache_directives'];
 
-    $routes = [];
-    try {
-        $routes = catalog_all(
-            $db,
-            'SELECT route_key,method,audience,sample_count,total_duration_us,total_sql_us,total_cpu_us,'
-            . 'max_duration_us,max_sql_us,max_cpu_us,total_peak_memory_bytes,max_peak_memory_bytes,'
-            . 'last_duration_us,last_sql_us,last_cpu_us,last_peak_memory_bytes,last_memory_delta_bytes,'
-            . 'last_query_count,last_status,slow_sample_count,last_slowest_query_hash,last_seen_at '
-            . 'FROM ue_request_resource_performance ORDER BY total_cpu_us DESC,total_duration_us DESC LIMIT 100'
-        );
-    } catch (Throwable) {
-        // Migration not applied yet.
-    }
-
-    $digests = [];
-    $digestError = '';
-    try {
-        $digestColumnRows = catalog_all(
-            $db,
-            'SELECT COLUMN_NAME FROM information_schema.COLUMNS '
-            . 'WHERE TABLE_SCHEMA="performance_schema" AND TABLE_NAME="events_statements_summary_by_digest" '
-            . 'AND COLUMN_NAME IN ("SUM_CPU_TIME","MAX_TOTAL_MEMORY")'
-        );
-        $digestColumns = array_fill_keys(array_map(
-            static fn(array $row): string => strtoupper((string)$row['COLUMN_NAME']),
-            $digestColumnRows
-        ), true);
-        $cpuSelect = isset($digestColumns['SUM_CPU_TIME'])
-            ? 'ROUND(SUM_CPU_TIME/1000000000000,3) cpu_seconds,'
-            : 'NULL cpu_seconds,';
-        $memorySelect = isset($digestColumns['MAX_TOTAL_MEMORY'])
-            ? 'MAX_TOTAL_MEMORY maximum_memory_bytes,'
-            : 'NULL maximum_memory_bytes,';
-        $digests = catalog_all(
-            $db,
-            'SELECT LEFT(DIGEST_TEXT,1000) digest_text,COUNT_STAR execution_count,'
-            . 'ROUND(SUM_TIMER_WAIT/1000000000000,3) total_seconds,'
-            . $cpuSelect
-            . 'ROUND(AVG_TIMER_WAIT/1000000000,3) average_ms,'
-            . 'ROUND(MAX_TIMER_WAIT/1000000000,3) maximum_ms,'
-            . $memorySelect
-            . 'SUM_ROWS_EXAMINED rows_examined,SUM_ROWS_SENT rows_sent,'
-            . 'SUM_CREATED_TMP_DISK_TABLES disk_tmp_tables,SUM_NO_INDEX_USED no_index_used '
-            . 'FROM performance_schema.events_statements_summary_by_digest '
-            . 'WHERE SCHEMA_NAME=DATABASE() AND DIGEST_TEXT IS NOT NULL '
-            . 'ORDER BY SUM_TIMER_WAIT DESC LIMIT 50'
-        );
-    } catch (Throwable $error) {
-        $digestError = $error->getMessage();
-    }
-
-    $cacheStats = workload_public_cache_stats($config);
-    $bufferRequests = (int)($status['Innodb_buffer_pool_read_requests'] ?? 0);
-    $bufferReads = (int)($status['Innodb_buffer_pool_reads'] ?? 0);
-    $bufferHit = $bufferRequests > 0
-        ? max(0, 100 - (($bufferReads * 100) / $bufferRequests))
-        : 0;
-    $tmpTables = (int)($status['Created_tmp_tables'] ?? 0);
-    $diskTmpTables = (int)($status['Created_tmp_disk_tables'] ?? 0);
-
-    $targetBuffer = workload_target($config, 'mysql_buffer_pool_bytes', 36 * 1024 * 1024 * 1024);
-    $targetConnections = workload_target($config, 'mysql_max_connections', 120);
-    $targetThreadCache = workload_target($config, 'mysql_thread_cache_size', 50);
-    $targetApacheThreads = workload_target($config, 'apache_threads_per_child', 100);
-    $targetOpcacheMemory = workload_target($config, 'opcache_memory_mb', 256);
-    $targetOpcacheFiles = workload_target($config, 'opcache_max_accelerated_files', 32531);
-
-    $opcache = function_exists('opcache_get_status') ? @opcache_get_status(false) : false;
-    $opcacheConfig = function_exists('opcache_get_configuration') ? @opcache_get_configuration() : false;
-    $opcacheDirectives = is_array($opcacheConfig) && is_array($opcacheConfig['directives'] ?? null)
-        ? $opcacheConfig['directives']
-        : [];
+    $targetBuffer = $targets['mysql_buffer_pool_bytes'];
+    $targetConnections = $targets['mysql_max_connections'];
+    $targetThreadCache = $targets['mysql_thread_cache_size'];
+    $targetApacheThreads = $targets['apache_threads_per_child'];
+    $targetOpcacheMemory = $targets['opcache_memory_mb'];
+    $targetOpcacheFiles = $targets['opcache_max_accelerated_files'];
 
     catalog_head('Workload Tracing');
     echo CatalogUi::pageHeader(
