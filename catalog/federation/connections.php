@@ -13,17 +13,16 @@ catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationPairing.php';
 require_once __DIR__ . '/../lib/FederationPeerSecret.php';
-require_once __DIR__ . '/../lib/FederationInventory.php';
-require_once __DIR__ . '/../lib/FederationInventoryRefresh.php';
-require_once __DIR__ . '/../lib/FederationState.php';
 
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationConnectionActions;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationConnectionQuery;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
 
 try {
     $config = catalog_config();
     $db = catalog_db($config);
-    federation_reconcile_site_role($db);
+    $state = new CatalogFederationStateService($db);
+    $state->reconcileSiteRole();
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!catalog_support_is_admin()) {
@@ -42,11 +41,11 @@ try {
     }
 
     $identity = fed_ensure_identity($db);
-    $role = federation_site_role($db);
-    $displayRole = federation_display_role($db);
-    $parent = federation_parent_peer($db, false);
-    $children = federation_child_peers($db, false);
-    $joinStatus = federation_parent_join_status($db);
+    $role = $state->siteRole();
+    $displayRole = $state->displayRole();
+    $parent = $state->parentPeer(false);
+    $children = $state->childPeers(false);
+    $joinStatus = $state->parentJoinStatus();
     $joinRequestsEnabled = (string)fed_setting($db, 'join_requests_enabled', '0') === '1';
     $incoming = (new CatalogFederationConnectionQuery($db))->incomingJoinRequests(200);
 
@@ -56,7 +55,7 @@ try {
     catalog_page_header(
         'Federation Connections',
         'Connect this server to one parent, or accept and manage children. The role is assigned by completed federation relationships, not by a manual role selector.',
-        federation_main_links()
+        CatalogFederationStateService::mainLinks()
     );
 
     echo '<div class="grid">';
@@ -75,14 +74,14 @@ try {
 
     if ($role === 'standalone') {
         echo '<div class="card"><h2>Connect to a Parent</h2>';
-        if (federation_has_pending_parent_join($db)) {
+        if ($state->hasPendingParentJoin()) {
             echo '<table><tr><th>Parent</th><td class="mono path">' . catalog_h((string)fed_setting($db, 'main_parent_url', '')) . '</td></tr>';
             echo '<tr><th>Request</th><td>#' . (int)fed_setting($db, 'main_parent_join_request_id', '0') . '</td></tr>';
             echo '<tr><th>Status</th><td><strong>' . catalog_h($joinStatus) . '</strong></td></tr>';
             echo '<tr><th>Message</th><td>' . catalog_h((string)fed_setting($db, 'main_parent_join_status_message', 'Waiting for parent administrator approval.')) . '</td></tr></table>';
             echo '<form method="post" style="display:inline"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_connections')) . '"><button name="action" value="poll_parent">Check status now</button></form> ';
             echo '<form method="post" style="display:inline" onsubmit="return confirm(\'Cancel and remove this pending parent join request?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_connections')) . '"><button class="danger" name="action" value="cancel_parent_join">Cancel request</button></form>';
-        } elseif (federation_can_join_parent($db)) {
+        } elseif ($state->canJoinParent()) {
             echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('fed_connections')) . '">';
             echo '<p><label>Parent selection<br><select name="parent_mode"><option value="manual">Custom Parent URL</option><option value="official">Official UnrealDB parent</option></select></label></p>';
             echo '<p><label>Parent URL<br><input name="parent_url" style="min-width:640px" placeholder="https://parent.example.com/catalog"></label></p>';
@@ -115,7 +114,7 @@ try {
 
     if ($role !== 'child') {
         echo '<div class="card"><h2>Accept Child Connections</h2>';
-        if (!federation_can_accept_children($db)) {
+        if (!$state->canAcceptChildren()) {
             echo '<p class="muted">Child connections cannot be accepted while this server is joining or connected to a parent.</p>';
         } else {
             echo '<p>Incoming child join requests are currently <strong>' . ($joinRequestsEnabled ? 'enabled' : 'disabled') . '</strong>.</p>';
