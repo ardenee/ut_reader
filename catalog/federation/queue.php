@@ -12,9 +12,9 @@ require_once __DIR__ . '/../lib/CatalogSupport.php';
 catalog_start_session();
 require_once __DIR__ . '/../lib/FederationAuth.php';
 require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
-require_once __DIR__ . '/../lib/FederationState.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStateService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
@@ -80,7 +80,7 @@ try {
     catalog_page_header(
         'Federation Transfers',
         'Monitor Parent pulls, Child downloads, imports, failures, retries and cancellations.',
-        federation_main_links()
+        CatalogFederationStateService::mainLinks()
     );
     echo '<div class="card"><p>' . catalog_h(federation_base_game_policy_label($db)) . '</p><p class="page-links">';
     foreach (['active' => 'Active', 'waiting' => 'Waiting for import', 'failed' => 'Failed', 'completed' => 'Completed', 'cancelled' => 'Cancelled'] as $key => $label) {
