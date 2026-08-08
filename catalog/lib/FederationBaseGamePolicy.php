@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for federation base game policy.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Provides shared catalog helper functions for federation base-game policy.
+ * Why: Federation callers need one policy interpretation/cache boundary while schema ownership remains migration-only.
+ * Role: Shared federation policy compatibility layer; runtime verifies required schema but never creates or alters it.
  */
 declare(strict_types=1);
 
@@ -23,10 +19,8 @@ function federation_policy_bool(mixed $value, bool $default = true): bool
 }
 
 /**
- * Keep federation pages compatible when application files are updated before the
- * latest migration has been applied. The normal migration remains authoritative;
- * this only repairs the one policy setting, peer-file column and supporting index
- * required by every base-game-aware federation query.
+ * Verify the federation base-game policy schema required by normal runtime.
+ * Schema creation/repair is owned by install.sql and catalog migrations.
  */
 function federation_base_game_policy_ensure_schema(PDO $db): void
 {
@@ -44,76 +38,21 @@ function federation_base_game_policy_ensure_schema(PDO $db): void
         'SELECT COUNT(*) FROM information_schema.tables '
         . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files"'
     )->fetchColumn();
-    if ($settingsTable === 0 || $peerFilesTable === 0) {
-        throw new RuntimeException('Federation database tables are incomplete. Run the pending catalog migrations.');
-    }
+    $columnExists = (int)$db->query(
+        'SELECT COUNT(*) FROM information_schema.columns '
+        . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files" '
+        . 'AND column_name="is_base_game"'
+    )->fetchColumn();
+    $indexExists = (int)$db->query(
+        'SELECT COUNT(*) FROM information_schema.statistics '
+        . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files" '
+        . 'AND index_name="idx_ue_federation_peer_files_base_game"'
+    )->fetchColumn();
 
-    $db->prepare(
-        'INSERT INTO ue_federation_settings(setting_name,setting_value) VALUES("ignore_base_game_files","1") '
-        . 'ON DUPLICATE KEY UPDATE setting_value=setting_value'
-    )->execute();
-
-    $columnExists = static function () use ($db): bool {
-        return (int)$db->query(
-            'SELECT COUNT(*) FROM information_schema.columns '
-            . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files" AND column_name="is_base_game"'
-        )->fetchColumn() > 0;
-    };
-    $columnAdded = false;
-    if (!$columnExists()) {
-        try {
-            $db->exec(
-                'ALTER TABLE ue_federation_peer_files '
-                . 'ADD COLUMN is_base_game TINYINT(1) NOT NULL DEFAULT 0 AFTER package_guid'
-            );
-            $columnAdded = true;
-        } catch (Throwable $error) {
-            if (!$columnExists()) {
-                throw new RuntimeException(
-                    'The federation base-game policy column could not be created. Run migration 202607230001. ' . $error->getMessage(),
-                    0,
-                    $error
-                );
-            }
-        }
-    }
-
-    $indexExists = static function () use ($db): bool {
-        return (int)$db->query(
-            'SELECT COUNT(*) FROM information_schema.statistics '
-            . 'WHERE table_schema=DATABASE() AND table_name="ue_federation_peer_files" '
-            . 'AND index_name="idx_ue_federation_peer_files_base_game"'
-        )->fetchColumn() > 0;
-    };
-    if (!$indexExists()) {
-        try {
-            $db->exec(
-                'ALTER TABLE ue_federation_peer_files '
-                . 'ADD KEY idx_ue_federation_peer_files_base_game(peer_id,is_base_game)'
-            );
-        } catch (Throwable $error) {
-            if (!$indexExists()) {
-                throw new RuntimeException(
-                    'The federation base-game policy index could not be created. Run migration 202607230001. ' . $error->getMessage(),
-                    0,
-                    $error
-                );
-            }
-        }
-    }
-
-    if ($columnAdded) {
-        $baseGameTable = (int)$db->query(
-            'SELECT COUNT(*) FROM information_schema.tables '
-            . 'WHERE table_schema=DATABASE() AND table_name="ue_base_game_files"'
-        )->fetchColumn();
-        if ($baseGameTable > 0) {
-            $db->exec(
-                'UPDATE ue_federation_peer_files pf '
-                . 'JOIN ue_base_game_files bg ON bg.game_id=pf.game_id AND bg.package_guid=pf.package_guid '
-                . 'SET pf.is_base_game=1 WHERE COALESCE(pf.is_base_game,0)=0'
-            );
-        }
+    if ($settingsTable === 0 || $peerFilesTable === 0 || $columnExists === 0 || $indexExists === 0) {
+        throw new RuntimeException(
+            'Federation base-game policy schema is incomplete. Run php catalog/bin/migrate.php migrate.'
+        );
     }
 
     $ready[$connectionId] = true;
@@ -217,100 +156,4 @@ function federation_filter_base_game_rows(PDO $db, array $rows, ?array $parentPe
         $rows,
         static fn(mixed $row): bool => is_array($row) && empty($row['is_base_game'])
     ));
-}
-
-/**
- * SQL expression that identifies a package name in ue_base_game_files. The
- * optional game expression keeps same-named packages scoped to the selected game.
- */
-function federation_base_game_package_exists_sql(string $packageSql, ?string $gameIdSql = null): string
-{
-    $bgStem = '(CASE WHEN LOCATE(".",COALESCE(policy_bg.original_name,""))>0 '
-        . 'THEN LEFT(policy_bg.original_name,CHAR_LENGTH(policy_bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(policy_bg.original_name,".",-1))-1) '
-        . 'ELSE COALESCE(policy_bg.original_name,"") END)';
-    $sourceStem = '(CASE WHEN LOCATE(".",COALESCE(policy_src.original_name,""))>0 '
-        . 'THEN LEFT(policy_src.original_name,CHAR_LENGTH(policy_src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(policy_src.original_name,".",-1))-1) '
-        . 'ELSE COALESCE(policy_src.original_name,"") END)';
-    $gameSql = $gameIdSql !== null && trim($gameIdSql) !== ''
-        ? ' AND policy_bg.game_id=' . $gameIdSql
-        : '';
-
-    return 'EXISTS (
-        SELECT 1
-        FROM ue_base_game_files policy_bg
-        LEFT JOIN ue_files policy_src ON policy_src.id=policy_bg.source_file_id
-        WHERE (
-            LOWER(TRIM(COALESCE(policy_bg.package_name,"")))=LOWER(TRIM(' . $packageSql . '))
-            OR LOWER(TRIM(' . $bgStem . '))=LOWER(TRIM(' . $packageSql . '))
-            OR LOWER(TRIM(COALESCE(policy_src.package_name,"")))=LOWER(TRIM(' . $packageSql . '))
-            OR LOWER(TRIM(' . $sourceStem . '))=LOWER(TRIM(' . $packageSql . '))
-        )' . $gameSql . '
-    )';
-}
-
-function federation_dependency_is_base_game_sql(string $fileAlias = 'f', string $dependencyAlias = 'd'): string
-{
-    return federation_base_game_package_exists_sql($dependencyAlias . '.required_package', $fileAlias . '.game_id');
-}
-
-function federation_request_item_is_base_game_sql(string $itemAlias = 'i'): string
-{
-    $localFileMatch = 'EXISTS (
-        SELECT 1
-        FROM ue_files policy_local
-        JOIN ue_base_game_files policy_local_bg
-          ON policy_local_bg.game_id=policy_local.game_id
-         AND policy_local_bg.package_guid=policy_local.package_guid
-        WHERE policy_local.id=' . $itemAlias . '.local_file_id
-    )';
-
-    return '(' . $localFileMatch
-        . ' OR ' . federation_base_game_package_exists_sql($itemAlias . '.required_package')
-        . ' OR LOWER(COALESCE(' . $itemAlias . '.status_message,"")) LIKE "%base-game%")';
-}
-
-function federation_visible_request_item_sql(PDO $db, string $itemAlias = 'i', ?array $parentPeer = null): string
-{
-    return federation_ignore_base_game_files($db, $parentPeer)
-        ? 'NOT ' . federation_request_item_is_base_game_sql($itemAlias)
-        : '1=1';
-}
-
-function federation_transfer_job_is_base_game_sql(string $jobAlias = 'j'): string
-{
-    $peerFileMatch = 'EXISTS (
-        SELECT 1 FROM ue_federation_peer_files policy_pf
-        WHERE policy_pf.peer_id=' . $jobAlias . '.peer_id
-          AND policy_pf.remote_file_id=' . $jobAlias . '.remote_file_id
-          AND COALESCE(policy_pf.is_base_game,0)=1
-    )';
-    $requestItemMatch = 'EXISTS (
-        SELECT 1 FROM ue_federation_request_items policy_i
-        WHERE policy_i.id=' . $jobAlias . '.remote_request_item_id
-          AND ' . federation_request_item_is_base_game_sql('policy_i') . '
-    )';
-    $localFileMatch = 'EXISTS (
-        SELECT 1
-        FROM ue_files policy_job_file
-        JOIN ue_base_game_files policy_job_bg
-          ON policy_job_bg.game_id=policy_job_file.game_id
-         AND policy_job_bg.package_guid=policy_job_file.package_guid
-        WHERE policy_job_file.id=' . $jobAlias . '.local_file_id
-    )';
-
-    return '(' . $peerFileMatch . ' OR ' . $requestItemMatch . ' OR ' . $localFileMatch . ')';
-}
-
-function federation_visible_transfer_job_sql(PDO $db, string $jobAlias = 'j', ?array $parentPeer = null): string
-{
-    return federation_ignore_base_game_files($db, $parentPeer)
-        ? 'NOT ' . federation_transfer_job_is_base_game_sql($jobAlias)
-        : '1=1';
-}
-
-function federation_base_game_policy_label(PDO $db, ?array $parentPeer = null): string
-{
-    return federation_ignore_base_game_files($db, $parentPeer)
-        ? 'Base-game files are excluded from all federation inventories, missing-file lists, requests, totals, reports and transfers.'
-        : 'Base-game files participate in federation inventories, missing-file lists, requests, totals, reports and transfers.';
 }

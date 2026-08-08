@@ -13,6 +13,8 @@ use PDO;
 
 final class CatalogFederationInventoryApiService
 {
+    private readonly CatalogFederationPeerInventorySyncService $peerSync;
+
     public function __construct(private readonly PDO $db)
     {
         $root = dirname(__DIR__, 3);
@@ -20,7 +22,7 @@ final class CatalogFederationInventoryApiService
         require_once $root . '/lib/FederationAuth.php';
         require_once $root . '/lib/BaseGameProtection.php';
         require_once $root . '/lib/FederationBaseGamePolicy.php';
-        require_once $root . '/lib/FederationInventory.php';
+        $this->peerSync = new CatalogFederationPeerInventorySyncService($db);
     }
 
     /** @param array<string,mixed> $peer @param array<string,mixed> $payload @return array<string,mixed> */
@@ -123,7 +125,7 @@ final class CatalogFederationInventoryApiService
             );
         }
 
-        $result = \federation_pull_inventory_from_parent($this->db, (int)$peer['id']);
+        $result = $this->peerSync->pullFromParent((int)$peer['id']);
         \fed_log(
             $this->db,
             (int)$peer['id'],
