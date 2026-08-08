@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Executes administrator federation-connection actions without rendering HTML.
  * Why: Pairing protocol calls, role transitions and peer persistence must not be embedded in the Connections page.
- * Role: Infrastructure/application orchestration adapter over the established federation compatibility services.
+ * Role: Infrastructure/application orchestration over namespaced federation state and inventory services.
  */
 declare(strict_types=1);
 
@@ -17,16 +17,23 @@ final class CatalogFederationConnectionActions
 {
     private const OFFICIAL_PARENT_URL = 'https://unrealdb.com';
 
+    private readonly CatalogFederationStateService $state;
+    private readonly CatalogFederationPeerInventorySyncService $peerInventorySync;
+    private readonly CatalogFederationLocalInventoryService $localInventory;
+    private readonly CatalogFederationInventoryRefreshService $inventoryRefresh;
+
     public function __construct(private readonly PDO $db)
     {
+        $this->state = new CatalogFederationStateService($db);
+        $this->peerInventorySync = new CatalogFederationPeerInventorySyncService($db);
+        $this->localInventory = new CatalogFederationLocalInventoryService($db);
+        $this->inventoryRefresh = new CatalogFederationInventoryRefreshService($db);
+
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
         require_once $root . '/lib/FederationPairing.php';
         require_once $root . '/lib/FederationPeerSecret.php';
-        require_once $root . '/lib/FederationInventory.php';
-        require_once $root . '/lib/FederationInventoryRefresh.php';
-        require_once $root . '/lib/FederationState.php';
     }
 
     /** @param array<string,mixed> $input */
@@ -35,7 +42,7 @@ final class CatalogFederationConnectionActions
         $action = strtolower(trim((string)($input['action'] ?? '')));
 
         if ($action === 'submit_parent') {
-            if (!\federation_can_join_parent($this->db)) {
+            if (!$this->state->canJoinParent()) {
                 throw new RuntimeException('Disconnect/remove all federation relationships before joining a parent.');
             }
             $identity = \fed_ensure_identity($this->db);
@@ -64,7 +71,7 @@ final class CatalogFederationConnectionActions
             \fed_set_setting($this->db, 'main_parent_join_request_id', (string)($result['request_id'] ?? '0'));
             \fed_set_setting($this->db, 'main_parent_join_request_token', $requestToken);
             $this->storeJoinResult($result);
-            \federation_set_site_role($this->db, 'standalone');
+            $this->state->setSiteRole('standalone');
             \fed_log($this->db, null, null, 'INFO', 'PARENT_JOIN_SUBMITTED', 'Join request submitted to ' . $parentUrl . '; local role remains Standalone until pairing completes.');
             return 'Parent join request submitted. This server remains Standalone until the parent approves and pairing completes.';
         }
@@ -94,14 +101,14 @@ final class CatalogFederationConnectionActions
                     $remoteMessage = ' The local request was cleared; the parent could not be contacted.';
                 }
             }
-            \federation_clear_parent_join_state($this->db);
-            \federation_set_site_role($this->db, 'standalone');
+            $this->state->clearParentJoinState();
+            $this->state->setSiteRole('standalone');
             \fed_log($this->db, null, null, 'INFO', 'PARENT_JOIN_CANCELLED', 'Pending parent join request cancelled locally.');
             return 'Pending parent join request removed.' . $remoteMessage;
         }
 
         if ($action === 'set_join_requests') {
-            if (!\federation_can_accept_children($this->db)) {
+            if (!$this->state->canAcceptChildren()) {
                 throw new RuntimeException('A Child or a server joining a Parent cannot accept child connections.');
             }
             $enabled = (string)($input['enabled'] ?? '0') === '1' ? '1' : '0';
@@ -137,7 +144,7 @@ final class CatalogFederationConnectionActions
 
         if (in_array($action, ['toggle_peer', 'update_child', 'remove_peer', 'test_peer', 'refresh_peer'], true)) {
             $peer = $this->peer((int)($input['peer_id'] ?? 0));
-            $role = \federation_site_role($this->db);
+            $role = $this->state->siteRole();
             if (($role === 'child' && (string)$peer['peer_role'] !== 'parent')
                 || ($role === 'parent' && (string)$peer['peer_role'] !== 'child')) {
                 throw new RuntimeException('This connection does not belong to the current federation role.');
@@ -165,7 +172,7 @@ final class CatalogFederationConnectionActions
             }
 
             if ($action === 'remove_peer') {
-                \federation_remove_peer($this->db, $peer);
+                $this->state->removePeer($peer);
                 return (string)$peer['peer_role'] === 'parent'
                     ? 'Disconnected from parent.'
                     : 'Child connection removed.';
@@ -184,22 +191,22 @@ final class CatalogFederationConnectionActions
                 return 'Connection test succeeded: ' . (string)($result['message'] ?? 'pong');
             }
 
-            $local = \federation_pull_inventory_from_peer($this->db, (int)$peer['id']);
+            $local = $this->peerInventorySync->pullFromPeer((int)$peer['id']);
             if ((string)$peer['peer_role'] === 'child') {
-                $remote = \federation_request_child_refresh_parent_inventory($this->db, (int)$peer['id']);
+                $remote = $this->inventoryRefresh->requestChildRefreshParentInventory((int)$peer['id']);
                 return 'Inventories refreshed: received ' . (int)($local['received'] ?? 0)
                     . ' child rows; child received ' . (int)($remote['received'] ?? 0) . ' parent rows.';
             }
-            $push = \federation_push_inventory_to_parent($this->db, (int)$peer['id']);
+            $push = $this->localInventory->pushToParent((int)$peer['id']);
             return 'Parent inventory refreshed; local inventory push result: '
                 . (!empty($push['ok']) ? 'success' : 'failed') . '.';
         }
 
         if ($action === 'stop_parent') {
-            if (\federation_site_role($this->db) !== 'parent') {
+            if ($this->state->siteRole() !== 'parent') {
                 throw new RuntimeException('This server is not a Parent.');
             }
-            if (\federation_child_peers($this->db, false) !== []) {
+            if ($this->state->childPeers(false) !== []) {
                 throw new RuntimeException('Remove all established children before leaving Parent mode.');
             }
             $pending = (int)(\catalog_one(
@@ -210,7 +217,7 @@ final class CatalogFederationConnectionActions
                 throw new RuntimeException('Deny or expire all pending/approved child requests before leaving Parent mode.');
             }
             \fed_set_setting($this->db, 'join_requests_enabled', '0');
-            \federation_set_site_role($this->db, 'standalone');
+            $this->state->setSiteRole('standalone');
             return 'Parent mode disabled. This server is now Standalone.';
         }
 
@@ -294,7 +301,7 @@ final class CatalogFederationConnectionActions
     /** @param array<string,mixed> $request */
     private function approveChild(array $request, string $adminNotes, ?int $userId): int
     {
-        if (!\federation_can_accept_children($this->db)) {
+        if (!$this->state->canAcceptChildren()) {
             throw new RuntimeException('This server cannot accept a child while connected to, or waiting to join, a parent.');
         }
         if ((string)$request['status'] !== 'pending') {
@@ -350,7 +357,7 @@ final class CatalogFederationConnectionActions
                 $peerId,
                 (int)$request['id'],
             ]);
-            \federation_set_site_role($this->db, 'parent');
+            $this->state->setSiteRole('parent');
             $this->db->commit();
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {
