@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogJobDisplayStatus` for catalog job display status.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Defines administrator-visible durable-job status normalization and indexed SQL filtering.
+ * Why: The same display semantics are shared by persistence queries and result hydration without reparsing result JSON in hot reads.
+ * Role: Infrastructure query helper; normalization semantics remain stable.
  */
 declare(strict_types=1);
 
@@ -44,22 +40,31 @@ final class CatalogJobDisplayStatus
         return $displayStatus;
     }
 
+    public static function groupDisplayStatus(string $queueStatus, string $displayStatus): string
+    {
+        $queueStatus = strtolower(trim($queueStatus));
+        $displayStatus = strtolower(trim($displayStatus));
+        if (in_array($displayStatus, self::FAILED_OUTCOMES, true)) {
+            return 'failed';
+        }
+        if ($queueStatus === 'completed') {
+            return 'completed';
+        }
+        return $displayStatus !== '' ? $displayStatus : $queueStatus;
+    }
+
     public static function isValidFilter(string $status): bool
     {
         return in_array(strtolower(trim($status)), self::FILTERS, true);
     }
 
+    /**
+     * Kept as the stable query API for existing callers. The expression is now a
+     * generated, indexed column maintained atomically by MySQL from status/result_json.
+     */
     public static function sqlExpression(string $alias = ''): string
     {
-        $prefix = self::prefix($alias);
-        $resultStatus = 'LOWER(TRIM(COALESCE(JSON_UNQUOTE(JSON_EXTRACT('
-            . $prefix . 'result_json,"$.status")),"")))';
-
-        return '(CASE '
-            . 'WHEN LOWER(' . $prefix . 'status)<>"completed" THEN LOWER(' . $prefix . 'status) '
-            . 'WHEN ' . $resultStatus . ' IN ("","completed") THEN "completed" '
-            . 'WHEN ' . $resultStatus . '="verified" THEN "imported" '
-            . 'ELSE ' . $resultStatus . ' END)';
+        return self::prefix($alias) . 'display_status';
     }
 
     /** @return array{sql:string,params:list<string>} */
@@ -71,30 +76,24 @@ final class CatalogJobDisplayStatus
         }
 
         $prefix = self::prefix($alias);
-
-        // These visible statuses are identical to the persisted queue status.
-        // Avoid JSON extraction and a full CASE expression so MySQL can use the
-        // queue/status indexes during large bulk actions and status counts.
         if (in_array($status, ['queued', 'running', 'dead_letter', 'cancelled'], true)) {
             return ['sql' => $prefix . 'status=?', 'params' => [$status]];
         }
-
-        $displayStatus = self::sqlExpression($alias);
         if ($status === 'failed') {
             return [
-                'sql' => $displayStatus . ' IN ("failed","rejected","unverified")',
+                'sql' => $prefix . 'display_status IN ("failed","rejected","unverified")',
                 'params' => [],
             ];
         }
         if ($status === 'completed') {
             return [
                 'sql' => $prefix . 'status="completed" AND '
-                    . $displayStatus . ' NOT IN ("failed","rejected","unverified")',
+                    . $prefix . 'display_status NOT IN ("failed","rejected","unverified")',
                 'params' => [],
             ];
         }
 
-        return ['sql' => $displayStatus . '=?', 'params' => [$status]];
+        return ['sql' => $prefix . 'display_status=?', 'params' => [$status]];
     }
 
     private static function prefix(string $alias): string
