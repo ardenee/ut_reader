@@ -1,32 +1,32 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for generated package builder.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Provides compatibility writer functions for generated package artifacts.
+ * Why: Binary writers remain procedural for compatibility while descriptor policy lives under src/.
+ * Role: Transitional writer facade over namespaced descriptor policy and existing binary codecs/validators.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/ModPackageBuilder.php';
 require_once __DIR__ . '/LegacyUmodPackageBuilder.php';
 
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeneratedPackageDescriptor;
+
 function modpkg_generated_version(mixed $value): string
 {
-    $value = trim(str_replace(["\0", "\r", "\n"], '', (string)$value));
-    $value = preg_replace('/[^A-Za-z0-9._+-]+/', '', $value) ?? '';
-    return $value !== '' ? substr($value, 0, 80) : '1.0';
+    return CatalogGeneratedPackageDescriptor::generatedVersion($value);
 }
 
 /** @return array<string,string> */
 function modpkg_generated_umod_manifest(array $plan, array $options): array
 {
-    $productKey = modpkg_product_key((string)$options['name']);
-    $requirement = modpkg_umod_requirement($plan['game'], (string)$plan['format']);
-    $version = modpkg_generated_version($options['version'] ?? '1.0');
+    $productKey = CatalogGeneratedPackageDescriptor::productKey((string)$options['name']);
+    $requirement = CatalogGeneratedPackageDescriptor::umodRequirement(
+        $plan['game'],
+        (string)$plan['format']
+    );
+    $version = CatalogGeneratedPackageDescriptor::generatedVersion($options['version'] ?? '1.0');
+    $safeName = CatalogGeneratedPackageDescriptor::safeComponent((string)$options['name']);
     $setup = [
         '[Setup]',
         'Product=' . $productKey,
@@ -45,7 +45,7 @@ function modpkg_generated_umod_manifest(array $plan, array $options): array
         $setup[] = 'File=(Src=' . $path . ',Size=' . (int)$file['file_size'] . ')';
     }
     $setup[] = 'File=(Src=System\\UnrealDB-Mod.json)';
-    $setup[] = 'File=(Src=System\\Readme-' . modpkg_safe_component((string)$options['name']) . '.txt)';
+    $setup[] = 'File=(Src=System\\Readme-' . $safeName . '.txt)';
     $setup[] = '';
 
     $localized = [
@@ -63,8 +63,10 @@ function modpkg_generated_umod_manifest(array $plan, array $options): array
     return [
         'System\\Manifest.ini' => implode("\r\n", $setup),
         'System\\Manifest.int' => implode("\r\n", $localized),
-        'System\\UnrealDB-Mod.json' => modpkg_json(modpkg_metadata($plan, $options)),
-        'System\\Readme-' . modpkg_safe_component((string)$options['name']) . '.txt' => modpkg_readme($plan, $options),
+        'System\\UnrealDB-Mod.json' => CatalogGeneratedPackageDescriptor::json(
+            CatalogGeneratedPackageDescriptor::metadata($plan, $options)
+        ),
+        'System\\Readme-' . $safeName . '.txt' => CatalogGeneratedPackageDescriptor::readme($plan, $options),
     ];
 }
 
@@ -162,7 +164,9 @@ function modpkg_write_generated_umod(string $outputPath, array $plan, array $opt
     if (!$validation['ok']) {
         throw new RuntimeException('Generated UMOD validation failed: ' . implode('; ', $validation['errors']));
     }
-    $validation['package_version'] = modpkg_generated_version($options['version'] ?? '1.0');
+    $validation['package_version'] = CatalogGeneratedPackageDescriptor::generatedVersion(
+        $options['version'] ?? '1.0'
+    );
     return $validation;
 }
 
