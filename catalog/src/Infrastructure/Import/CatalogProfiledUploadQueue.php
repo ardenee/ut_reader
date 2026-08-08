@@ -2,12 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Defines the infrastructure class `CatalogProfiledUploadQueue` for catalog profiled upload queue.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker entry points.
+ * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external services.
  */
 declare(strict_types=1);
 
@@ -47,7 +43,7 @@ final class CatalogProfiledUploadQueue
         ?int $userId
     ): array {
         $game = $this->requiredGame($gameId);
-        $originalName = $this->requiredName($originalName);
+        $originalName = CatalogImportPathPolicy::filename($originalName);
         $size = (int)($staged['size'] ?? 0);
         $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
         $limit = $isPak ? $this->containerLimitBytes() : (int)($this->config['max_upload_bytes'] ?? 0);
@@ -60,7 +56,7 @@ final class CatalogProfiledUploadQueue
 
         $jobType = $isPak ? JobType::IMPORT_STAGED_PAK : JobType::IMPORT_STAGED_PACKAGE;
         $stagedPath = (string)$staged['relative_path'];
-        $cleanSourceRelativePath = $this->cleanRelativePath(
+        $cleanSourceRelativePath = CatalogImportPathPolicy::relative(
             $sourceRelativePath !== '' ? $sourceRelativePath : $originalName
         );
         $payload = [
@@ -77,10 +73,6 @@ final class CatalogProfiledUploadQueue
             $payload['sha256'] = $sha256;
         }
 
-        // Standard uploads use their content hash. Large browser uploads already
-        // have a stable chunk-upload ID derived from file metadata, so use that
-        // ID when no whole-file hash is available yet. Either key prevents an
-        // exact re-upload from creating another queued/running import.
         $dedupeKey = null;
         if ($sha256 !== '') {
             $dedupeKey = 'profiled-upload:' . hash(
@@ -131,9 +123,6 @@ final class CatalogProfiledUploadQueue
             $row->execute([$jobId]);
             $storedPayload = json_decode((string)($row->fetchColumn() ?: ''), true);
             $storedPath = is_array($storedPayload) ? (string)($storedPayload['staged_path'] ?? '') : '';
-            // A second conventional upload created a different durable object;
-            // delete only that unused copy. A resumed chunk upload shares the
-            // active job's path and must remain intact.
             if ($storedPath !== '' && $storedPath !== $stagedPath) {
                 (new CatalogIncomingFileStore($this->config))->delete($stagedPath);
             }
@@ -161,7 +150,7 @@ final class CatalogProfiledUploadQueue
         if (preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
             throw new \InvalidArgumentException('Chunked upload identifier is invalid.');
         }
-        $originalName = $this->requiredName((string)($upload['original_name'] ?? 'archive.pak'));
+        $originalName = CatalogImportPathPolicy::filename((string)($upload['original_name'] ?? 'archive.pak'));
         if (strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) !== 'pak') {
             throw new \InvalidArgumentException('Completed chunked upload is not a PAK file.');
         }
@@ -169,7 +158,7 @@ final class CatalogProfiledUploadQueue
         if ($size < 1 || $size > $this->containerLimitBytes()) {
             throw new \RuntimeException('PAK exceeds the configured container upload limit.');
         }
-        $relativePath = $this->cleanRelativePath((string)($upload['relative_path'] ?? $originalName));
+        $relativePath = CatalogImportPathPolicy::relative((string)($upload['relative_path'] ?? $originalName));
         $jobId = $this->queue()->enqueue(
             $this->queueName(),
             JobType::IMPORT_STAGED_PAK,
@@ -206,7 +195,7 @@ final class CatalogProfiledUploadQueue
         if ($real === false || !is_file($real) || !is_readable($real) || is_link($real)) {
             throw new \RuntimeException('Local PAK path is not a readable regular file.');
         }
-        $originalName = $this->requiredName(basename($real));
+        $originalName = CatalogImportPathPolicy::filename(basename($real));
         if (strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) !== 'pak') {
             throw new \InvalidArgumentException('Local source is not a .pak archive.');
         }
@@ -219,7 +208,7 @@ final class CatalogProfiledUploadQueue
             'game_id' => $gameId,
             'staged_path' => 'local-pak:' . $this->encodeLocalPath($real),
             'original_name' => $originalName,
-            'source_relative_path' => $this->cleanRelativePath($sourceRelativePath !== '' ? $sourceRelativePath : $originalName),
+            'source_relative_path' => CatalogImportPathPolicy::relative($sourceRelativePath !== '' ? $sourceRelativePath : $originalName),
             'strict_profile' => $strictProfile,
             'user_id' => $userId,
             'size' => (int)$size,
@@ -283,34 +272,5 @@ final class CatalogProfiledUploadQueue
     private function encodeLocalPath(string $path): string
     {
         return rtrim(strtr(base64_encode($path), '+/', '-_'), '=');
-    }
-
-    private function requiredName(string $name): string
-    {
-        $name = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], trim($name)));
-        $name = preg_replace('/[\x00-\x1F\x7F]+/u', '', $name) ?? '';
-        $name = rtrim(trim($name), ' .');
-        if ($name === '') {
-            throw new \InvalidArgumentException('Import filename is missing.');
-        }
-        return $name;
-    }
-
-    private function cleanRelativePath(string $path): string
-    {
-        $parts = [];
-        foreach (explode('/', trim(str_replace(["\0", '\\'], ['', '/'], $path), '/')) as $part) {
-            if ($part === '' || $part === '.') {
-                continue;
-            }
-            if ($part === '..') {
-                if ($parts !== []) {
-                    array_pop($parts);
-                }
-                continue;
-            }
-            $parts[] = $part;
-        }
-        return implode('/', $parts);
     }
 }
