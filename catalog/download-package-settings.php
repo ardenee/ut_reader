@@ -2,13 +2,14 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Renders and processes Package Export Settings.
- * Why: Export-format policy, numeric normalization and per-game settings persistence now belong to a shared service.
+ * Why: Export-format policy, numeric normalization and per-game settings persistence now belong to shared services.
  * Role: Presentation adapter only.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportFormatPolicy;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 
 catalog_start_session();
@@ -68,7 +69,7 @@ try {
     echo '<div class="card"><h2>Per-game default format</h2><p class="muted">Automatic selection uses the assigned engine profile and game name. Override only when a custom game entry cannot be identified reliably. Use the global format controls above to disable an exporter.</p>';
     echo '<table><tr><th>Game</th><th>Profile</th><th>Engine</th><th>Automatic result</th><th>Configured default</th></tr>';
     foreach ($games as $game) {
-        $auto = modpkg_inferred_format($game);
+        $auto = CatalogPackageExportFormatPolicy::inferred($game);
         $selected = (string)($settings['game_formats'][(string)(int)$game['id']] ?? 'auto');
         if (!isset($labels[$selected]) && $selected !== 'auto') {
             $selected = 'auto';
