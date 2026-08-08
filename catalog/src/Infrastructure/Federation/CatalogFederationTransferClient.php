@@ -21,7 +21,6 @@ final class CatalogFederationTransferClient
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
         require_once $root . '/lib/FederationTransferAuth.php';
-        require_once $root . '/lib/TrustedHttpSourceClient.php';
         require_once $root . '/lib/FederationBaseGamePolicy.php';
     }
 
@@ -171,7 +170,7 @@ final class CatalogFederationTransferClient
             throw new RuntimeException('Could not encode federation payload.');
         }
         $headers = $this->jsonHeaders($job, $url, $body);
-        $bytes = \TrustedHttpSourceClient::postBodyToFile(
+        $bytes = CatalogFederationHttpClient::fromRuntime()->postBodyToFile(
             $url,
             $headers,
             $body,
@@ -194,7 +193,7 @@ final class CatalogFederationTransferClient
     ): array {
         $url = rtrim((string)$job['site_url'], '/') . '/api/federation/upload-file.php';
         $headers = $this->uploadHeaders($job, $url, $file, $sha256, $bytes);
-        return \TrustedHttpSourceClient::putFileJson(
+        return CatalogFederationHttpClient::fromRuntime()->putFileJson(
             $url,
             $headers,
             $path,
