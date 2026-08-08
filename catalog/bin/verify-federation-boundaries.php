@@ -2,8 +2,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Verifies Federation Connections/Inventories controller boundaries after orchestration extraction.
- * Why: Pairing/network/transfer SQL can easily drift back into large rendering pages during maintenance.
+ * Purpose: Verifies federation controller boundaries after orchestration extraction.
+ * Why: Pairing, request lifecycle, signed protocol calls and transfer mutation SQL can easily drift back into rendering pages.
  * Role: Read-only CLI architecture/regression verification; never mutates schema or application data.
  */
 declare(strict_types=1);
@@ -34,9 +34,15 @@ $criticalPhp = [
     'bin/verify-federation-boundaries.php',
     'federation/connections.php',
     'federation/inventories.php',
+    'federation/requests.php',
+    'federation/_requests-parent.php',
+    'federation/_requests-child.php',
+    'federation/queue.php',
     'src/Infrastructure/Federation/CatalogFederationConnectionActions.php',
     'src/Infrastructure/Federation/CatalogFederationConnectionQuery.php',
     'src/Infrastructure/Federation/CatalogFederationInventoryActions.php',
+    'src/Infrastructure/Federation/CatalogFederationRequestService.php',
+    'src/Infrastructure/Federation/CatalogFederationTransferService.php',
 ];
 
 if (!function_exists('proc_open')) {
@@ -167,6 +173,79 @@ $record(
     $missingInventoryContracts === []
         ? 'refresh/pull/request and page-size contracts retained'
         : 'missing: ' . implode(', ', $missingInventoryContracts)
+);
+
+$requests = $read('federation/requests.php');
+$requestParent = $read('federation/_requests-parent.php');
+$requestChild = $read('federation/_requests-child.php');
+$requestService = $read('src/Infrastructure/Federation/CatalogFederationRequestService.php');
+$record(
+    'requests_controller_boundary',
+    str_contains($requests, 'CatalogFederationRequestService')
+        && !str_contains($requests, 'fed_http_post_signed(')
+        && !str_contains($requests, 'UPDATE ue_federation_request_items')
+        && !str_contains($requests, 'federation_queue_approved_dependency_downloads(')
+        && !str_contains($requestChild, 'fed_http_post_signed(')
+        && str_contains($requestChild, '$requestService->childStatus(')
+        && !str_contains($requestParent, 'federation_refresh_request_matches(')
+        && str_contains($requestParent, '$requestService->parentRequestDetail('),
+    'request actions/protocol/detail-refresh must live in shared request service rather than controller/partials'
+);
+
+$requestContracts = [
+    "'approve'",
+    "'deny'",
+    "'approve_all'",
+    "'deny_all'",
+    "'cancel'",
+    "'queue_approved'",
+    "'/api/federation/request-cancel.php'",
+    "'/api/federation/request-status.php'",
+    'Approved for this child by the parent administrator.',
+    'Approved and waiting until the parent imports a matching file.',
+    'Excluded by the parent base-game policy.',
+];
+$missingRequestContracts = [];
+foreach ($requestContracts as $needle) {
+    if (!str_contains($requestService, $needle)) {
+        $missingRequestContracts[] = $needle;
+    }
+}
+$record(
+    'requests_lifecycle_contract',
+    $missingRequestContracts === []
+        && str_contains($requestService, 'federation_request_recalculate_header')
+        && str_contains($requestService, 'federation_queue_approved_dependency_downloads')
+        && str_contains($requestService, 'federation_refresh_request_matches'),
+    $missingRequestContracts === []
+        ? 'request decision/cancel/status/download contracts retained'
+        : 'missing: ' . implode(', ', $missingRequestContracts)
+);
+
+$queue = $read('federation/queue.php');
+$transferService = $read('src/Infrastructure/Federation/CatalogFederationTransferService.php');
+$record(
+    'transfer_controller_boundary',
+    str_contains($queue, 'CatalogFederationTransferService')
+        && str_contains($queue, 'CatalogFederationTransferService::statusesForTab')
+        && !str_contains($queue, 'UPDATE ue_federation_transfer_jobs')
+        && !str_contains($queue, 'function ft_statuses(')
+        && !str_contains($queue, 'JOB_CANCEL')
+        && !str_contains($queue, 'JOB_RETRY'),
+    'transfer page must delegate mutations, counts and tab status mapping while retaining read-only history pagination'
+);
+$record(
+    'transfer_lifecycle_contract',
+    str_contains($transferService, "'waiting' => ['downloaded']")
+        && str_contains($transferService, "'completed' => ['imported']")
+        && str_contains($transferService, "['queued', 'running']")
+        && str_contains($transferService, "['queued', 'failed']")
+        && str_contains($transferService, "['failed', 'cancelled']")
+        && str_contains($transferService, 'status="cancelled",finished_at=NOW()')
+        && str_contains($transferService, 'status="queued",bytes_done=0,incoming_path=NULL')
+        && str_contains($transferService, 'JOB_CANCEL')
+        && str_contains($transferService, 'JOB_RETRY'),
+    'transfer cancel/retry eligibility and reset semantics must remain exact'
 );
 
 $result = [

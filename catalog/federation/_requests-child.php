@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders or processes the federation interface for requests child.
- * Why: It keeps parent/child federation administration, inventory, requests, and transfer workflows separate from
- *      general catalog pages.
- * Role: Federation UI/administration entry point backed by shared federation services.
- * Audit: Federation-specific route; consolidate shared behavior into services rather than merging distinct
- *        parent/child screens blindly.
+ * Purpose: Renders the child-side federation request history/detail view.
+ * Why: Rendering stays in this partial while Parent protocol calls are delegated to the shared request service.
+ * Role: Child federation request presentation partial.
  */
 declare(strict_types=1);
 
@@ -15,12 +12,12 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
 $historyPageQuery = new PdoFederationHistoryPageQuery($db);
 
-$parent = fr_parent($db);
+$parent = $requestService->parent();
 $error = '';
 $remote = [];
 $closed = $tab === 'closed';
 try {
-    $remote = fr_child_call($db, $parent, [
+    $remote = $requestService->childStatus($parent, [
         'list' => true,
         'closed' => $closed,
         'page_size' => min(100, $historyPageSize),
@@ -77,7 +74,7 @@ if (isset($_SESSION['fed_requests_result'])) {
 
 if ($requestId > 0) {
     try {
-        $detail = fr_child_call($db, $parent, ['request_id' => $requestId]);
+        $detail = $requestService->childStatus($parent, ['request_id' => $requestId]);
     } catch (Throwable $exception) {
         $detail = ['ok' => false, 'error' => $exception->getMessage()];
     }

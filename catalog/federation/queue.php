@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders or processes the federation interface for Federation Transfers.
- * Why: It keeps parent/child federation administration, inventory, requests, and transfer workflows separate from
- *      general catalog pages.
- * Role: Federation UI/administration entry point backed by shared federation services.
- * Audit: Federation-specific route; consolidate shared behavior into services rather than merging distinct
- *        parent/child screens blindly.
+ * Purpose: Renders the federation transfer queue.
+ * Why: Pagination/rendering remain here while transfer controls, status mapping and summary counts are delegated.
+ * Role: Federation transfer UI entry point backed by shared transfer/history services.
  */
 declare(strict_types=1);
 
@@ -18,23 +15,13 @@ require_once __DIR__ . '/../lib/FederationBaseGamePolicy.php';
 require_once __DIR__ . '/../lib/FederationState.php';
 
 use UnrealDb\Catalog\Application\Federation\CatalogFederationHistoryPageService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoFederationHistoryPageQuery;
 
 function ft_tab(mixed $value): string
 {
     $tab = strtolower(trim((string)$value));
     return in_array($tab, ['active', 'waiting', 'failed', 'completed', 'cancelled'], true) ? $tab : 'active';
-}
-
-function ft_statuses(string $tab): array
-{
-    return match ($tab) {
-        'waiting' => ['downloaded'],
-        'failed' => ['failed'],
-        'completed' => ['imported'],
-        'cancelled' => ['cancelled'],
-        default => ['queued', 'running'],
-    };
 }
 
 /** @param array<string,mixed> $page */
@@ -61,6 +48,7 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
     $historyPageQuery = new PdoFederationHistoryPageQuery($db);
+    $transferService = new CatalogFederationTransferService($db);
     $tab = ft_tab($_REQUEST['tab'] ?? 'active');
     $pageSize = CatalogFederationHistoryPageService::normalizePageSize((int)($_REQUEST['page_size'] ?? 100));
 
@@ -69,32 +57,13 @@ try {
             throw new RuntimeException('Admin required.');
         }
         catalog_check_csrf('fed_transfers');
-        $jobId = (int)($_POST['job_id'] ?? 0);
-        $action = strtolower(trim((string)($_POST['action'] ?? '')));
-        $visible = federation_visible_transfer_job_sql($db, 'j');
-        $job = catalog_one($db, 'SELECT j.* FROM ue_federation_transfer_jobs j WHERE j.id=? AND ' . $visible, [$jobId]);
-        if (!$job) {
-            throw new RuntimeException('Transfer job not found or excluded by policy.');
-        }
-        if ($action === 'cancel') {
-            if (!in_array((string)$job['status'], ['queued', 'failed'], true)) {
-                throw new RuntimeException('Only queued or failed transfers can be cancelled here.');
-            }
-            $db->prepare('UPDATE ue_federation_transfer_jobs SET status="cancelled",finished_at=NOW(),last_error="Cancelled by administrator." WHERE id=?')->execute([$jobId]);
-            fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_CANCEL', 'Transfer cancelled by administrator.');
-            $_SESSION['fed_transfers_flash'] = 'Transfer #' . $jobId . ' cancelled.';
-        } elseif ($action === 'retry') {
-            if (!in_array((string)$job['status'], ['failed', 'cancelled'], true)) {
-                throw new RuntimeException('Only failed or cancelled transfers can be retried.');
-            }
-            $db->prepare('UPDATE ue_federation_transfer_jobs SET status="queued",bytes_done=0,incoming_path=NULL,downloaded_md5=NULL,downloaded_sha1=NULL,started_at=NULL,finished_at=NULL,last_error=NULL WHERE id=?')->execute([$jobId]);
-            fed_log($db, (int)$job['peer_id'], $jobId, 'INFO', 'JOB_RETRY', 'Transfer reset to queued.');
-            $_SESSION['fed_transfers_flash'] = 'Transfer #' . $jobId . ' reset to queued.';
-            $tab = 'active';
-        } else {
-            throw new RuntimeException('Unknown transfer action.');
-        }
-        header('Location: queue.php?tab=' . rawurlencode($tab));
+        $actionResult = $transferService->handle(
+            (int)($_POST['job_id'] ?? 0),
+            (string)($_POST['action'] ?? ''),
+            $tab
+        );
+        $_SESSION['fed_transfers_flash'] = (string)$actionResult['flash'];
+        header('Location: queue.php?tab=' . rawurlencode((string)$actionResult['tab']));
         exit;
     }
 
@@ -103,12 +72,7 @@ try {
     }
 
     $visible = federation_visible_transfer_job_sql($db, 'j');
-    $counts = [];
-    foreach (['active', 'waiting', 'failed', 'completed', 'cancelled'] as $key) {
-        $statuses = ft_statuses($key);
-        $quoted = implode(',', array_map([$db, 'quote'], $statuses));
-        $counts[$key] = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_federation_transfer_jobs j WHERE j.status IN (' . $quoted . ') AND ' . $visible)['c'] ?? 0);
-    }
+    $counts = $transferService->counts();
 
     catalog_head('Federation Transfers');
     catalog_flash($_SESSION['fed_transfers_flash'] ?? null);
@@ -124,7 +88,7 @@ try {
     }
     echo '</p></div>';
 
-    $statuses = ft_statuses($tab);
+    $statuses = CatalogFederationTransferService::statusesForTab($tab);
     $quoted = implode(',', array_map([$db, 'quote'], $statuses));
     $page = $historyPageQuery->fetch(
         $config,

@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders or processes the federation interface for requests parent.
- * Why: It keeps parent/child federation administration, inventory, requests, and transfer workflows separate from
- *      general catalog pages.
- * Role: Federation UI/administration entry point backed by shared federation services.
- * Audit: Federation-specific route; consolidate shared behavior into services rather than merging distinct
- *        parent/child screens blindly.
+ * Purpose: Renders the parent-side federation request history/detail view.
+ * Why: Rendering stays in this partial while request-match refresh and item reads are delegated to the request service.
+ * Role: Parent federation request presentation partial.
  */
 declare(strict_types=1);
 
@@ -108,9 +105,9 @@ echo '</div>';
 if ($requestId <= 0) {
     return;
 }
-federation_refresh_request_matches($db, $requestId);
-$request = catalog_one($db, 'SELECT r.*,p.site_name peer_name FROM ue_federation_requests r JOIN ue_federation_peers p ON p.id=r.peer_id WHERE r.id=?', [$requestId]);
-$items = fr_parent_items($db, $requestId);
+$detail = $requestService->parentRequestDetail($requestId);
+$request = is_array($detail['request'] ?? null) ? $detail['request'] : null;
+$items = is_array($detail['items'] ?? null) ? $detail['items'] : [];
 if (!$request) {
     return;
 }
