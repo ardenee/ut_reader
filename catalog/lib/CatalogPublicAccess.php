@@ -18,6 +18,11 @@ function catalog_public_access_settings(?PDO $db = null, ?array $config = null):
     return (new CatalogPublicAccessSettingsStore($config))->settings($db);
 }
 
+function catalog_public_access_client_ip(): string
+{
+    return (new CatalogPublicAccessGuard())->clientIp();
+}
+
 function catalog_public_access_guard_request(): void
 {
     (new CatalogPublicAccessGuard())->guardRequest();
