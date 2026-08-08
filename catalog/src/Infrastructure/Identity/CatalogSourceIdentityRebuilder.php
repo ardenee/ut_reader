@@ -15,6 +15,7 @@ use Throwable;
 use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogSourcePathStore;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 final class CatalogSourceIdentityRebuilder
 {
@@ -204,6 +205,7 @@ final class CatalogSourceIdentityRebuilder
         }
 
         $refreshed = $this->refreshDependencies(
+            $refreshDependencies,
             $fileId,
             $referringFileIds,
             $changed,
@@ -239,7 +241,8 @@ final class CatalogSourceIdentityRebuilder
         if ($packageNames === []) {
             return [];
         }
-        $sql = 'SELECT DISTINCT d.file_id FROM ue_dependencies d '
+        $dependencySource = PdoDependencyReadSource::sql($this->db);
+        $sql = 'SELECT DISTINCT d.file_id FROM ' . $dependencySource . ' d '
             . 'JOIN ue_files owner ON owner.id=d.file_id '
             . 'WHERE owner.game_id=? AND d.file_id<>? AND d.required_package IN ('
             . implode(',', array_fill(0, count($packageNames), '?')) . ')';
@@ -298,12 +301,24 @@ final class CatalogSourceIdentityRebuilder
 
     /** @param list<int> $referringFileIds @param list<string> $previousPackageNames */
     private function refreshDependencies(
+        bool $refreshDependencies,
         int $fileId,
         array $referringFileIds,
         bool $changed,
         array $previousPackageNames,
         ?callable $progress
     ): int {
+        if (!$refreshDependencies) {
+            \scanner_emit_percent(
+                $progress,
+                'identity',
+                100,
+                $changed
+                    ? 'Canonical UE4 package identity rebuilt'
+                    : 'Package identity already matches its mounted source path'
+            );
+            return 0;
+        }
         if (!$changed && $previousPackageNames === []) {
             \scanner_emit_percent(
                 $progress,
