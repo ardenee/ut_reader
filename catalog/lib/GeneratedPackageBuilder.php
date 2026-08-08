@@ -2,18 +2,19 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Provides compatibility writer functions for generated package artifacts.
- * Why: Binary writers remain procedural for compatibility while descriptor and UMOD byte policy live under src/.
- * Role: Transitional writer facade over namespaced descriptor/codec policy and existing validators/PAK writer.
+ * Why: Active ZIP/UMOD/PAK generation now composes namespaced descriptor/codecs while retaining stable procedural entry points.
+ * Role: Transitional generated-package writer facade; the retired all-purpose ModPackageBuilder is not on this hot path.
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/ModPackageBuilder.php';
+require_once __DIR__ . '/CatalogSupport.php';
 require_once __DIR__ . '/LegacyUmodPackageBuilder.php';
 
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogGeneratedPackageDescriptor;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportFormatPolicy;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageInstallPathResolver;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogUmodBinaryCodec;
+use UnrealDb\Catalog\Infrastructure\Downloads\CatalogUt4PakWriter;
 
 function modpkg_generated_version(mixed $value): string
 {
@@ -257,7 +258,12 @@ function modpkg_build_generated_package(
         CatalogPackageExportFormatPolicy::UMOD,
         CatalogPackageExportFormatPolicy::UT2MOD,
         CatalogPackageExportFormatPolicy::UT4MOD => modpkg_write_generated_umod($outputPath, $plan, $options),
-        CatalogPackageExportFormatPolicy::UT4_PAK => modpkg_write_pak($outputPath, $plan, $options, $settings),
+        CatalogPackageExportFormatPolicy::UT4_PAK => (new CatalogUt4PakWriter())->write(
+            $outputPath,
+            $plan,
+            $options,
+            $settings
+        ),
         default => throw new RuntimeException('Unsupported package format.'),
     };
 }
