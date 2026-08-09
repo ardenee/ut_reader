@@ -83,7 +83,7 @@ unverified-files-action.php
 
 `CatalogUnverifiedImportService` preserves the important partial-commit recovery case: if the package has already become verified but dependency job creation then fails, a retry does not promote or move the file again.
 
-The narrow `ue_dependencies` / `ue_imports` collision cleanup remains inside `CatalogUnverifiedDependencyRecovery` because unverified staging can still carry compatibility N/I/E rows before verified compact metadata finalization. It is no longer exposed in Presentation code.
+Unverified Names/Imports/Exports now live in the dedicated compressed `ue_unverified_metadata` staging record until promotion. Verified promotion publishes format-2 compact metadata and current dependency/lookup projections. `CatalogUnverifiedDependencyRecovery` is limited to promotion/recovery coordination; row-per-table metadata is migration/retirement history rather than a runtime staging contract.
 
 ## Validation
 
