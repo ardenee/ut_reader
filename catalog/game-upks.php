@@ -13,6 +13,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogUpkPackage.php';
 
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+
 catalog_start_session();
 
 function game_upks_int(string $key, int $default, int $min, int $max): int
@@ -83,12 +85,25 @@ try {
     $offset = ($page - 1) * $limit;
     $rows = catalog_all(
         $db,
-        'SELECT f.*,'
-        . '(SELECT COALESCE(SUM(e.serial_size),0) FROM ue_exports e WHERE e.file_id=f.id) serialized_export_bytes '
-        . 'FROM ue_files f ' . $where
+        'SELECT f.* FROM ue_files f ' . $where
         . ' ORDER BY f.package_name,f.original_name,f.id LIMIT ' . $limit . ' OFFSET ' . $offset,
         $args
     );
+
+    $storageRoot = trim((string)($config['storage_path'] ?? ''));
+    if ($storageRoot === '') {
+        throw new RuntimeException('Catalog storage_path is required for compact UPK metadata reading.');
+    }
+    $snapshotLoader = new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot);
+    foreach ($rows as &$row) {
+        $snapshot = $snapshotLoader->load((int)$row['id']);
+        $row['serialized_export_bytes'] = array_sum(array_map(
+            static fn(array $export): int => max(0, (int)($export['serial_size'] ?? 0)),
+            array_values((array)($snapshot['exports'] ?? []))
+        ));
+    }
+    unset($row);
+
     $isAdmin = catalog_support_is_admin();
     $csrf = $isAdmin ? catalog_csrf('catalog-maintenance') : '';
 
