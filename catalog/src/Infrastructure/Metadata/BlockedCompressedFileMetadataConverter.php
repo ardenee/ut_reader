@@ -1,14 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `BlockedCompressedFileMetadataConverter` for blocked compressed file
- *          metadata converter.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Converts explicitly legacy SQL metadata into the current version-2 container and maintains current projections.
+ * Why: Historical conversion may read retired staging tables, but current format-2 projection maintenance must remain compact-only.
+ * Role: Explicit metadata conversion/maintenance infrastructure.
  */
 declare(strict_types=1);
 
@@ -18,7 +13,6 @@ use PDO;
 use RuntimeException;
 use Throwable;
 
-/** Converts legacy SQL metadata into the version-2 random-access container. */
 final class BlockedCompressedFileMetadataConverter
 {
     public function __construct(
@@ -46,6 +40,8 @@ final class BlockedCompressedFileMetadataConverter
             ]);
         }
 
+        // This is the explicit historical conversion path. Runtime verified-file
+        // readers never call it; it exists only to recover/upgrade old staging data.
         $snapshot = (new CompressedMetadataLegacySnapshot($this->db))->capture($fileId);
         $built = BlockedCompressedMetadataContainer::build($snapshot);
         $bytes = (string)$built['bytes'];
@@ -129,8 +125,8 @@ final class BlockedCompressedFileMetadataConverter
     }
 
     /**
-     * Rebuilds only the compact MySQL projections for an existing version-2 container.
-     * The container bytes are verified and preserved unchanged.
+     * Rebuild only compact MySQL projections for an existing version-2 container.
+     * The source snapshot is loaded from the current container, never from legacy SQL.
      *
      * @return array<string,mixed>
      */
@@ -154,7 +150,7 @@ final class BlockedCompressedFileMetadataConverter
             throw new RuntimeException('File #' . $fileId . ' uses an unsupported metadata codec.');
         }
 
-        $snapshot = (new CompressedMetadataLegacySnapshot($this->db))->capture($fileId);
+        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot))->load($fileId);
         $file = (array)$snapshot['file'];
         $path = BlockedCompressedMetadataContainer::path(
             $this->storageRoot,
