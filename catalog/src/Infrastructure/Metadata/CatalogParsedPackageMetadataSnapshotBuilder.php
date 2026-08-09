@@ -93,6 +93,7 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
 
         $exportRows = [];
         $exportPaths = [];
+        $localExports = [];
         foreach ($exports as $index => $export) {
             $row = is_array($export) ? $export : [];
             $localPath = \scanner_ref_path((int)$index + 1, $imports, $exports, $cache);
@@ -118,6 +119,10 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'local' => $localPath,
                 'full' => $fullPath,
             ];
+            $lookupKey = $this->lookupKey($fullPath);
+            if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
+                $localExports[$lookupKey] = (int)$index;
+            }
         }
 
         $resolutions = PdoDependencyResolver::resolve($this->db, $gameId, $fileId, $importRows);
@@ -131,6 +136,22 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'source' => 'none',
                 'confidence' => 'missing',
             ];
+
+            // The legacy resolver preferred the newly imported file itself when
+            // an Import matched one of its own Exports. The current export lookup
+            // is not published until after this snapshot is built, so preserve
+            // that ordering explicitly from the in-memory parsed Export table.
+            $localExportIndex = $localExports[$this->lookupKey((string)$import['full_path'])] ?? null;
+            if ($localExportIndex !== null && (int)$import['is_common'] !== 1) {
+                $resolution = [
+                    'status' => 'resolved',
+                    'resolved_file_id' => $fileId,
+                    'resolved_export_index' => $localExportIndex,
+                    'source' => 'exact_object',
+                    'confidence' => 'exact',
+                ];
+            }
+
             $dependencies[] = [
                 'file_id' => $fileId,
                 'import_index' => (int)$import['import_index'],
@@ -178,5 +199,14 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
     private function virtualId(int $fileId, int $index): int
     {
         return ($fileId * 4294967296) + $index + 1;
+    }
+
+    private function lookupKey(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+        return function_exists('mb_strtolower') ? mb_strtolower($value, 'UTF-8') : strtolower($value);
     }
 }
