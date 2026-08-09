@@ -150,9 +150,10 @@ $record(
 
 $record(
     'signature_wire_contract',
-    str_contains($signatureService, 'return hash(\'sha256\', $body);')
+    str_contains($signatureService, "return hash('sha256', \$body);")
         && str_contains($signatureService, 'strtoupper($method) . "\\n"')
-        && str_contains($signatureService, "hash_hmac(\n            'sha256'")
+        && preg_match('/hash_hmac\s*\(\s*[\'\"]sha256[\'\"]/m', $signatureService) === 1
+        && str_contains($signatureService, 'CatalogFederationPeerSecretService::forCrypto')
         && str_contains($signatureService, 'sodium_crypto_sign_detached')
         && str_contains($signatureService, 'sodium_crypto_sign_verify_detached'),
     'SHA-256 body hash and canonical HMAC/Ed25519 wire format retained'
