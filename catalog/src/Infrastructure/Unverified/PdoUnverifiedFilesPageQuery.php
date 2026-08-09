@@ -14,7 +14,7 @@ use PDO;
 final class PdoUnverifiedFilesPageQuery
 {
     private readonly CatalogUnverifiedStagingIndex $staging;
-    private readonly CatalogUnverifiedQueueStorage $storage;
+    private readonly PdoUnverifiedReferenceMatchQuery $referenceMatches;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -23,7 +23,7 @@ final class PdoUnverifiedFilesPageQuery
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
-        $this->storage = new CatalogUnverifiedQueueStorage($db, $config);
+        $this->referenceMatches = new PdoUnverifiedReferenceMatchQuery($db);
     }
 
     /**
@@ -125,7 +125,7 @@ final class PdoUnverifiedFilesPageQuery
         }
         unset($item);
 
-        $referenceMatches = $this->storage->referenceMatches(
+        $referenceMatches = $this->referenceMatches->fetch(
             array_values(array_unique(array_map(
                 static fn(array $item): string => trim((string)($item['package_name'] ?? '')),
                 $items
