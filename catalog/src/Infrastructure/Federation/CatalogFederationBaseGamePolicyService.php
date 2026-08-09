@@ -22,20 +22,12 @@ final class CatalogFederationBaseGamePolicyService
         $this->parentPolicyStore = new CatalogFederationParentPolicyStore($db, $this->schemaGuard);
     }
 
-    public static function boolValue(mixed $value, bool $default = true): bool
-    {
-        if ($value === null || $value === '') {
-            return $default;
-        }
-        return in_array(strtolower(trim((string)$value)), ['1', 'true', 'yes', 'on'], true);
-    }
-
     /** @return array<string,mixed> */
     public function parentPolicy(): array
     {
         $this->schemaGuard->ensure();
         return [
-            'ignore_base_game_files' => self::boolValue(\fed_setting($this->db, 'ignore_base_game_files', '1'), true),
+            'ignore_base_game_files' => CatalogFederationPolicyValue::bool(\fed_setting($this->db, 'ignore_base_game_files', '1'), true),
             'missing_dependency_exception' => false,
         ];
     }
@@ -46,7 +38,7 @@ final class CatalogFederationBaseGamePolicyService
         $this->schemaGuard->ensure();
         $role = strtolower(trim((string)\fed_setting($this->db, 'site_role', 'standalone')));
         if ($role !== 'child') {
-            return self::boolValue(\fed_setting($this->db, 'ignore_base_game_files', '1'), true);
+            return CatalogFederationPolicyValue::bool(\fed_setting($this->db, 'ignore_base_game_files', '1'), true);
         }
 
         $peer = $parentPeer ?? $this->parentPolicyStore->activeParentPeer();
@@ -59,7 +51,7 @@ final class CatalogFederationBaseGamePolicyService
             return true;
         }
 
-        return self::boolValue($policy['ignore_base_game_files'] ?? true, true);
+        return CatalogFederationPolicyValue::bool($policy['ignore_base_game_files'] ?? true, true);
     }
 
     /** @param array<string,mixed>|null $parentPeer */

@@ -71,7 +71,7 @@ final class CatalogFederationParentPolicyStore
 
         $permissions = self::decodePermissions($peer);
         $permissions['parent_policy'] = [
-            'ignore_base_game_files' => CatalogFederationBaseGamePolicyService::boolValue(
+            'ignore_base_game_files' => CatalogFederationPolicyValue::bool(
                 $policy['ignore_base_game_files'] ?? true,
                 true
             ),

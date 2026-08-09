@@ -13,10 +13,11 @@ require_once __DIR__ . '/FederationAuth.php';
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationBaseGamePolicyService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationParentPolicyStore;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationPolicySchemaGuard;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationPolicyValue;
 
 function federation_policy_bool(mixed $value, bool $default = true): bool
 {
-    return CatalogFederationBaseGamePolicyService::boolValue($value, $default);
+    return CatalogFederationPolicyValue::bool($value, $default);
 }
 
 function federation_base_game_policy_ensure_schema(PDO $db): void
