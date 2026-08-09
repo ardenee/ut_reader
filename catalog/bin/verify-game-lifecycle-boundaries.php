@@ -149,11 +149,11 @@ $expectedBaseTables = [
     'ue_asset_registry_dependencies',
     'ue_asset_registry_assets',
     'ue_dependency_package_summaries',
-    'ue_dependencies',
+    'ue_dependency_links',
+    'ue_export_lookup',
+    'ue_file_metadata',
+    'ue_unverified_metadata',
     'ue_package_providers',
-    'ue_exports',
-    'ue_imports',
-    'ue_names',
     'ue_external_mirror_jobs',
     'ue_external_download_links',
     'ue_source_file_fingerprints',
@@ -175,7 +175,7 @@ $record(
     PdoCatalogGameTableMaintenance::tableList(false) === $expectedBaseTables
         && PdoCatalogGameTableMaintenance::tableList(true)
             === array_merge($expectedBaseTables, $expectedDeleteOnly),
-    'optimization table selection must remain unchanged from GameManagerLifecycle'
+    'optimization table selection must track the current compact/unverified metadata schema and exclude retired tables'
 );
 
 $progressStates = [];

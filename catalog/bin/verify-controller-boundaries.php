@@ -39,6 +39,8 @@ $criticalPhp = [
     'src/Infrastructure/Jobs/CatalogManualJobRecovery.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedActionService.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedActionSourceResolver.php',
+    'src/Infrastructure/Unverified/CatalogUnverifiedMetadataStore.php',
+    'src/Infrastructure/Unverified/CatalogUnverifiedCompactMetadataFinalizer.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedImportService.php',
@@ -195,8 +197,11 @@ $record(
         && str_contains($unverifiedImport, 'CatalogUnverifiedDependencyRecovery')
         && str_contains($unverifiedPromotion, 'beginTransaction()')
         && str_contains($unverifiedPromotion, 'packageIdentity')
-        && str_contains($unverifiedRecovery, 'ue_dependencies'),
-    'HTTP action must delegate through action/import services before storage/identity/transaction/recovery infrastructure'
+        && str_contains($unverifiedPromotion, 'CatalogUnverifiedCompactMetadataFinalizer')
+        && str_contains($unverifiedRecovery, 'CatalogUnverifiedMetadataStore')
+        && str_contains($unverifiedRecovery, 'CatalogUnverifiedCompactMetadataFinalizer')
+        && !str_contains($unverifiedRecovery, 'ue_dependencies'),
+    'HTTP action must delegate through action/import services; promotion/recovery must use compressed staging and compact publication instead of retired dependency tables'
 );
 
 $result = [

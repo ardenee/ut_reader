@@ -2,7 +2,7 @@
 <?php
 /**
  * Purpose: Runs the final read-only production regression suite for the August 2026 architecture/performance close-out.
- * Role: One command covering syntax, runtime prerequisites, architecture, compact metadata, federation, workers, upload/import and optional live DB/runtime reads.
+ * Role: One command covering syntax, runtime prerequisites, architecture, compact metadata, unverified staging, federation, workers, upload/import and optional live DB/runtime reads.
  */
 declare(strict_types=1);
 
@@ -77,6 +77,7 @@ $sourceSuites = [
     'verify-upload-worker-contracts.php',
     'audit-legacy-runtime-references.php',
     'verify-compact-only-metadata-runtime.php',
+    'verify-unverified-metadata-staging.php',
     'verify-federation-boundaries.php',
     'verify-federation-worker-boundaries.php',
     'verify-federation-transfer-auth-boundary.php',
@@ -179,6 +180,13 @@ if ($withDatabase) {
             'suite:verify-compact-only-metadata-runtime.php --database',
             $compactDb['ok'],
             $compactDb['ok'] ? 'passed' : substr((string)$compactDb['output'], -3000)
+        );
+
+        $unverifiedDb = $run([PHP_BINARY, __DIR__ . '/verify-unverified-metadata-staging.php', '--database'], $root);
+        $record(
+            'suite:verify-unverified-metadata-staging.php --database',
+            $unverifiedDb['ok'],
+            $unverifiedDb['ok'] ? 'passed' : substr((string)$unverifiedDb['output'], -3000)
         );
 
         $architectureDb = $run([PHP_BINARY, __DIR__ . '/verify-architecture-refactor.php', '--database'], $root);

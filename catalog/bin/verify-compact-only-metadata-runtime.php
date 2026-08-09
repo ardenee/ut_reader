@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies verified-file runtime metadata is format-2 only while explicit unverified/migration staging remains isolated.
+ * Purpose: Verifies verified-file runtime metadata is format-2 only while dedicated unverified compressed staging remains isolated.
  * Role: Read-only architecture and optional live database cutover verifier.
  */
 declare(strict_types=1);
@@ -81,17 +81,24 @@ $record(
 );
 
 $metadataCompatibility = $read('src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php');
+$metadataCompatibilityExecutable = $withoutComments($metadataCompatibility);
 $record(
-    'verified_metadata_shape_bridge_fails_closed',
+    'metadata_shape_bridge_uses_current_sources_only',
     str_contains($metadataCompatibility, "$scanStatus === 'verified'")
-        && str_contains($metadataCompatibility, 'runtime legacy metadata reads are disabled')
-        && str_contains($metadataCompatibility, "'source' => 'legacy-staging'"),
-    'historical N/I/E query shapes may use legacy SQL only for explicitly non-verified staging rows'
+        && str_contains($metadataCompatibility, 'fallback reads are disabled')
+        && str_contains($metadataCompatibility, 'CatalogUnverifiedMetadataStore')
+        && str_contains($metadataCompatibility, "'source' => 'unverified-staging'")
+        && !str_contains($metadataCompatibility, "'source' => 'legacy-staging'")
+        && !str_contains($metadataCompatibilityExecutable, 'SELECT * FROM ue_names')
+        && !str_contains($metadataCompatibilityExecutable, 'SELECT * FROM ue_imports')
+        && !str_contains($metadataCompatibilityExecutable, 'SELECT * FROM ue_exports WHERE file_id=? ORDER BY'),
+    'historical N/I/E query shapes must resolve verified files from format-2 and unverified files from dedicated compressed staging'
 );
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
 $persistence = $read('src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php');
 $finalizer = $read('src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php');
+$finalizerExecutable = $withoutComments($finalizer);
 $record(
     'verified_import_publishes_parser_snapshot',
     str_contains($importer, 'VerifiedFileCompactMetadataFinalizer::finalizeParsed(')
@@ -104,12 +111,20 @@ $record(
         && !str_contains($persistence, '->rebuild('),
     'new verified imports must publish format-2 metadata directly from in-memory parser tables'
 );
+$finalizerLegacyReferences = [];
+foreach ($legacyTables as $table) {
+    if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $finalizerExecutable) === 1) {
+        $finalizerLegacyReferences[] = $table;
+    }
+}
 $record(
     'verified_runtime_finalizer_no_legacy_conversion',
     !str_contains($finalizer, 'BlockedCompressedFileMetadataConverter')
-        && str_contains($finalizer, 'has no current format-2 metadata')
-        && str_contains($finalizer, 'Run the explicit metadata conversion/repair workflow'),
-    'runtime verification must not silently convert by rereading legacy metadata'
+        && str_contains($finalizer, 'has no current format-2 metadata.')
+        && $finalizerLegacyReferences === [],
+    $finalizerLegacyReferences === []
+        ? 'runtime verification fails closed when format-2 is missing and contains no retired-table conversion path'
+        : 'found retired metadata references: ' . implode(', ', $finalizerLegacyReferences)
 );
 
 $writer = $read('src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php');
@@ -138,7 +153,7 @@ $record(
     str_contains($converter, 'BlockedCompressedMetadataSnapshotLoader')
         && str_contains($converter, 'CompressedMetadataLegacySnapshot')
         && str_contains($converter, 'explicit historical conversion path'),
-    'current projection rebuilds use current containers; legacy reads remain isolated to explicit conversion'
+    'current projection rebuilds use current containers; historical reads remain isolated to explicit conversion tooling'
 );
 
 $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
@@ -148,6 +163,8 @@ $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
     'src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php',
+    'src/Infrastructure/Unverified/CatalogUnverifiedMetadataStore.php',
+    'src/Infrastructure/Unverified/CatalogUnverifiedCompactMetadataFinalizer.php',
 ])));
 foreach ($syntaxFiles as $relative) {
     $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
@@ -199,15 +216,29 @@ if ($withDatabase) {
 
         $legacyVerifiedCounts = [];
         foreach ($legacyTables as $table) {
+            $existsStatement = $db->prepare(
+                'SELECT COUNT(*) FROM information_schema.TABLES '
+                . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME=?'
+            );
+            $existsStatement->execute([$table]);
+            if ((int)$existsStatement->fetchColumn() !== 1) {
+                $legacyVerifiedCounts[$table] = 'absent';
+                continue;
+            }
             $legacyVerifiedCounts[$table] = (int)$db->query(
                 'SELECT COUNT(*) FROM ' . $table . ' l '
                 . 'JOIN ue_files f ON f.id=l.file_id '
                 . 'WHERE f.scan_status="verified"'
             )->fetchColumn();
         }
-        $legacyVerifiedTotal = array_sum($legacyVerifiedCounts);
+        $legacyVerifiedTotal = 0;
+        foreach ($legacyVerifiedCounts as $count) {
+            if (is_int($count)) {
+                $legacyVerifiedTotal += $count;
+            }
+        }
         $record(
-            'verified_legacy_staging_rows_absent',
+            'verified_retired_table_rows_absent',
             $legacyVerifiedTotal === 0,
             (json_encode($legacyVerifiedCounts, JSON_UNESCAPED_SLASHES) ?: '')
                 . '; total=' . $legacyVerifiedTotal
