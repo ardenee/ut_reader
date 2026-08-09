@@ -48,7 +48,6 @@ final class VerifiedFileCompactMetadataFinalizer
             }
             $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
             $conversion['already_compact'] = true;
-            $legacyRowsRemoved = self::removeLegacyStagingRows($db, $fileId);
         } catch (Throwable $error) {
             self::recordFailure($db, $fileId, $error->getMessage());
             throw new RuntimeException(
@@ -59,7 +58,14 @@ final class VerifiedFileCompactMetadataFinalizer
             );
         }
 
-        return self::complete($result, $conversion, $legacyRowsRemoved, $progress);
+        $cleanup = self::cleanupLegacyStagingRowsBestEffort($db, $fileId);
+        return self::complete(
+            $result,
+            $conversion,
+            $cleanup['removed'],
+            $cleanup['error'],
+            $progress
+        );
     }
 
     /**
@@ -124,8 +130,6 @@ final class VerifiedFileCompactMetadataFinalizer
             ) {
                 throw new RuntimeException('Compact metadata verification did not return format version 2.');
             }
-
-            $legacyRowsRemoved = self::removeLegacyStagingRows($db, $fileId);
         } catch (Throwable $error) {
             self::recordFailure($db, $fileId, $error->getMessage());
             throw new RuntimeException(
@@ -136,7 +140,18 @@ final class VerifiedFileCompactMetadataFinalizer
             );
         }
 
-        return self::complete($result, $conversion, $legacyRowsRemoved, $progress);
+        // Legacy staging cleanup is deliberately outside the publication success
+        // boundary. The old converter never made row cleanup part of import success;
+        // leftover staging rows are reported by the live compact-only verifier and
+        // can be removed safely after format-2 coverage is proven.
+        $cleanup = self::cleanupLegacyStagingRowsBestEffort($db, $fileId);
+        return self::complete(
+            $result,
+            $conversion,
+            $cleanup['removed'],
+            $cleanup['error'],
+            $progress
+        );
     }
 
     /** @param array<int|string,mixed> $result */
@@ -169,6 +184,7 @@ final class VerifiedFileCompactMetadataFinalizer
         array $result,
         array $conversion,
         array $legacyRowsRemoved,
+        ?string $legacyCleanupError,
         ?callable $progress
     ): array {
         $fileId = self::fileId($result);
@@ -184,10 +200,39 @@ final class VerifiedFileCompactMetadataFinalizer
         $details['metadata_compressed_size'] = (int)($conversion['compressed_size'] ?? 0);
         $details['metadata_already_compact'] = !empty($conversion['already_compact']);
         $details['legacy_staging_rows_removed'] = $legacyRowsRemoved;
+        if ($legacyCleanupError !== null) {
+            $details['legacy_staging_cleanup_error'] = $legacyCleanupError;
+        }
         $result[4] = $details;
 
         self::emit($progress, 100, 'Verified compact metadata for file #' . $fileId);
         return $result;
+    }
+
+    /** @return array{removed:array<string,int>,error:?string} */
+    private static function cleanupLegacyStagingRowsBestEffort(PDO $db, int $fileId): array
+    {
+        try {
+            return [
+                'removed' => self::removeLegacyStagingRows($db, $fileId),
+                'error' => null,
+            ];
+        } catch (Throwable $error) {
+            $message = trim($error->getMessage());
+            error_log(
+                '[UnrealDB compact metadata] file_id=' . $fileId
+                . ' legacy staging cleanup failed: ' . $message
+            );
+            return [
+                'removed' => [
+                    'ue_dependencies' => 0,
+                    'ue_imports' => 0,
+                    'ue_exports' => 0,
+                    'ue_names' => 0,
+                ],
+                'error' => $message !== '' ? $message : get_class($error),
+            ];
+        }
     }
 
     /** @return array<string,int> */
