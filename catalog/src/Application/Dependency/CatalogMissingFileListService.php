@@ -1,6 +1,6 @@
 <?php
 /**
- * Compatibility facade for the Missing Files page while query execution moves to Infrastructure.
+ * Compatibility facade for the Missing Files page while query execution lives in Infrastructure.
  */
 declare(strict_types=1);
 
@@ -17,13 +17,11 @@ final class CatalogMissingFileListService
      */
     public static function fetchCursorPage(
         PDO $db,
-        bool $summaryAvailable,
         int $limit,
         ?array $cursor,
         string $move = 'first'
     ): array {
         return (new PdoMissingFileListQuery($db))->fetchCursorPage(
-            $summaryAvailable,
             $limit,
             $cursor,
             $move
