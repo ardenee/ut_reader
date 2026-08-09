@@ -57,7 +57,7 @@ The resolved limit is stored on the job, so changing an environment variable aff
 
 The administrator Dependency Refresh page enqueues one durable job instead of rebuilding each file through a separate browser request.
 
-- A **single file** refresh rebuilds only that file's own `ue_dependencies` rows.
+- A **single file** refresh rebuilds only that file's compact dependency links and derived package-summary rows.
 - A **full game** refresh processes verified files in package order and retains the optional start offset.
 - An **affected-dependants** refresh remains a separate internal/operator action for files whose package identity may resolve imports in other files.
 
@@ -67,7 +67,7 @@ The page polls `job-status.php` by job ID, displays persisted worker progress an
 
 The administrator Source Identity Repair page keeps its mismatch audit synchronous because the audit is read-only. Mutating repair operations are durable jobs.
 
-- A **file repair** derives the canonical UE4/UE5 package identity from the primary mounted source path, updates the original filename and source path, rewrites export full paths, rebuilds source-derived aliases, and refreshes the file plus referring dependency rows.
+- A **file repair** derives the canonical UE4/UE5 package identity from the primary mounted source path, updates the original filename and source path, rewrites export full paths in compact metadata, rebuilds current lookup projections and source-derived aliases, and refreshes the file plus referring dependency projections.
 - A **game repair** processes every verified file in package order without rebuilding dependencies per file, collects bounded failure details, and performs one game-wide dependency pass after all successful identity changes.
 - UE1/UE2/UE3 remain audit-only. The enqueue API rejects legacy-engine repair targets.
 
