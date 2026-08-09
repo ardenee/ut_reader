@@ -13,6 +13,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/CatalogUpkPackage.php';
 
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
+
 catalog_start_session();
 
 function upk_info_int(string $key, int $default, int $min, int $max): int
@@ -55,48 +57,81 @@ try {
         throw new RuntimeException('The selected UPK is not assigned to a UE3 game profile.');
     }
 
+    $storageRoot = trim((string)($config['storage_path'] ?? ''));
+    if ($storageRoot === '') {
+        throw new RuntimeException('Catalog storage_path is required for compact UPK metadata reading.');
+    }
+    $snapshot = (new BlockedCompressedMetadataSnapshotLoader($db, $storageRoot))->load($fileId);
+    $allExports = array_values((array)($snapshot['exports'] ?? []));
+    usort(
+        $allExports,
+        static fn(array $left, array $right): int => (int)($left['export_index'] ?? 0) <=> (int)($right['export_index'] ?? 0)
+    );
+
+    $classCounts = [];
+    $serialBytes = 0;
+    $firstOffset = null;
+    $lastEnd = 0;
+    foreach ($allExports as $export) {
+        $className = trim((string)($export['class_name'] ?? ''));
+        $className = $className !== '' ? $className : 'unknown';
+        $classCounts[$className] = ($classCounts[$className] ?? 0) + 1;
+
+        $serialOffset = max(0, (int)($export['serial_offset'] ?? 0));
+        $serialSize = max(0, (int)($export['serial_size'] ?? 0));
+        $serialBytes += $serialSize;
+        $firstOffset = $firstOffset === null ? $serialOffset : min($firstOffset, $serialOffset);
+        $lastEnd = max($lastEnd, $serialOffset + $serialSize);
+    }
+    $classes = [];
+    foreach ($classCounts as $className => $count) {
+        $classes[] = ['class_name' => $className, 'c' => $count];
+    }
+    usort(
+        $classes,
+        static fn(array $left, array $right): int => ((int)$right['c'] <=> (int)$left['c'])
+            ?: strcasecmp((string)$left['class_name'], (string)$right['class_name'])
+    );
+    $classes = array_slice($classes, 0, 500);
+
+    $payload = [
+        'export_count' => count($allExports),
+        'serial_bytes' => $serialBytes,
+        'first_offset' => $firstOffset ?? 0,
+        'last_end' => $lastEnd,
+    ];
+
     $filter = trim((string)($_GET['export_filter'] ?? ''));
     $classFilter = trim((string)($_GET['class_name'] ?? ''));
+    $filteredExports = array_values(array_filter(
+        $allExports,
+        static function (array $export) use ($filter, $classFilter): bool {
+            $className = trim((string)($export['class_name'] ?? ''));
+            if ($classFilter === 'unknown' && $className !== '') {
+                return false;
+            }
+            if ($classFilter !== '' && $classFilter !== 'unknown' && $className !== $classFilter) {
+                return false;
+            }
+            if ($filter === '') {
+                return true;
+            }
+            foreach (['object_name', 'class_name', 'local_path', 'full_path'] as $field) {
+                if (stripos((string)($export[$field] ?? ''), $filter) !== false) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    ));
+
     $page = upk_info_int('export_page', 1, 1, PHP_INT_MAX);
     $limit = 200;
-    $where = 'WHERE e.file_id=?';
-    $args = [$fileId];
-    if ($filter !== '') {
-        $where .= ' AND (e.object_name LIKE ? OR e.class_name LIKE ? OR e.local_path LIKE ? OR e.full_path LIKE ?)';
-        $like = '%' . $filter . '%';
-        array_push($args, $like, $like, $like, $like);
-    }
-    if ($classFilter === 'unknown') {
-        $where .= ' AND (e.class_name IS NULL OR e.class_name="")';
-    } elseif ($classFilter !== '') {
-        $where .= ' AND e.class_name=?';
-        $args[] = $classFilter;
-    }
-
-    $total = (int)(catalog_one($db, 'SELECT COUNT(*) c FROM ue_exports e ' . $where, $args)['c'] ?? 0);
+    $total = count($filteredExports);
     $pages = max(1, (int)ceil($total / $limit));
     $page = min($page, $pages);
     $offset = ($page - 1) * $limit;
-    $exports = catalog_all(
-        $db,
-        'SELECT e.* FROM ue_exports e ' . $where
-        . ' ORDER BY e.export_index LIMIT ' . $limit . ' OFFSET ' . $offset,
-        $args
-    );
-    $classes = catalog_all(
-        $db,
-        'SELECT COALESCE(NULLIF(class_name,""),"unknown") class_name,COUNT(*) c '
-        . 'FROM ue_exports WHERE file_id=? GROUP BY COALESCE(NULLIF(class_name,""),"unknown") '
-        . 'ORDER BY c DESC,class_name LIMIT 500',
-        [$fileId]
-    );
-    $payload = catalog_one(
-        $db,
-        'SELECT COUNT(*) export_count,COALESCE(SUM(serial_size),0) serial_bytes,'
-        . 'COALESCE(MIN(serial_offset),0) first_offset,COALESCE(MAX(serial_offset+serial_size),0) last_end '
-        . 'FROM ue_exports WHERE file_id=?',
-        [$fileId]
-    ) ?: [];
+    $exports = array_slice($filteredExports, $offset, $limit);
     $isAdmin = catalog_support_is_admin();
 
     catalog_head((string)$upk['original_name']);
