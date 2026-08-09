@@ -2,9 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Audits runtime references to retired/legacy metadata tables.
- * Why: Verified catalogue reads must use current compact metadata while explicitly identified unverified staging,
- *      conversion, schema and cleanup paths may still touch legacy tables during the staged retirement.
- * Role: Application maintenance audit enforcing the compact-only verified-runtime boundary.
+ * Why: Verified catalogue reads use current compact metadata; only explicitly bounded migration, staging and cleanup paths may touch retired storage.
+ * Role: Application maintenance audit enforcing the compact-only runtime boundary.
  */
 declare(strict_types=1);
 
@@ -38,8 +37,6 @@ final class LegacyMetadataRuntimeAudit
     private const ALLOWED_FILES = [
         'lib/Scanner/CatalogScannerImport.php',
         'lib/CatalogCompactDependencies.php',
-        'lib/CatalogPerformance.php',
-        'lib/CatalogRuntimeSqlCompatibility.php',
         'federation/docs.php',
         'src/Application/Maintenance/RetiredDuplicateLegacyMetadataPurger.php',
         'src/Infrastructure/Games/PdoCatalogGameTableMaintenance.php',
@@ -47,7 +44,6 @@ final class LegacyMetadataRuntimeAudit
         'src/Infrastructure/Persistence/PdoCatalogPackageTableWriter.php',
         'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
         'src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
-        'src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php',
         'src/Infrastructure/Metadata/CatalogCompactMetadataMutationService.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
         'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
@@ -61,55 +57,9 @@ final class LegacyMetadataRuntimeAudit
         'src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php',
         'lib/UnverifiedMetadataRepair.php',
         'bin/plan-legacy-table-space-reclaim.php',
-        'bin/plan-mysql-space-release.php',
         'bin/reclaim-legacy-table-space.php',
         'bin/purge-retired-duplicate-legacy-metadata.php',
         'bin/audit-legacy-runtime-references.php',
-    ];
-
-    /**
-     * Historical dependency SQL shapes in these callers execute through catalog_one,
-     * catalog_all or catalog_count and are rewritten centrally to the compact-only
-     * dependency source. Mutations are not approved by this list.
-     *
-     * @var list<string>
-     */
-    private const CENTRAL_DEPENDENCY_READ_FILES = [
-        'download-info.php',
-        'duplicates-keep.php',
-        'duplicates.php',
-        'federation/missing-files.php',
-        'federation/peer-inventory.php',
-        'federation/request-generate.php',
-        'game-page.php',
-        'lib/CatalogSourceIdentity.php',
-        'lib/FederationDependencyDownloads.php',
-        'lib/UnverifiedObjectCheck.php',
-        'library.php',
-        'missing.php',
-        'src/Application/Dashboard/CatalogDashboardStats.php',
-        'src/Infrastructure/Federation/CatalogFederationDependencyNeedQuery.php',
-        'src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php',
-        'src/Infrastructure/Unverified/CatalogUnverifiedQueueStorage.php',
-    ];
-
-    /**
-     * Historical Names/Imports/Exports SQL shapes in these callers are routed
-     * through CatalogCompactMetadataCompatibility. Verified files are required
-     * to use format 2; only non-verified staging can reach its legacy fallback.
-     *
-     * @var list<string>
-     */
-    private const CENTRAL_METADATA_READ_FILES = [
-        'duplicates-keep.php',
-        'duplicates.php',
-        'game-upks.php',
-        'lib/CatalogAssetMetadata.php',
-        'lib/CatalogSourceIdentity.php',
-        'package-normalize.php',
-        'upk-info.php',
-        'src/Infrastructure/Maintenance/CatalogLegacyPackageNormalizationService.php',
-        'src/Infrastructure/Metadata/CatalogAssetMetadataService.php',
     ];
 
     /** @return array{files:int,references:int,matches:list<array<string,mixed>>} */
@@ -154,7 +104,7 @@ final class LegacyMetadataRuntimeAudit
                         continue;
                     }
                     $operation = self::operation($line);
-                    if (self::approvedMatch($relative, $table, $operation)) {
+                    if (self::approvedMatch($relative, $table)) {
                         continue;
                     }
                     $files[$relative] = true;
@@ -200,24 +150,12 @@ final class LegacyMetadataRuntimeAudit
         return false;
     }
 
-    private static function approvedMatch(string $relative, string $table, string $operation): bool
+    private static function approvedMatch(string $relative, string $table): bool
     {
         if ($table === 'ue_search_documents') {
             return false;
         }
-        if (in_array($relative, self::ALLOWED_FILES, true)) {
-            return true;
-        }
-        if ($operation !== 'read') {
-            return false;
-        }
-        if ($table === 'ue_dependencies') {
-            return in_array($relative, self::CENTRAL_DEPENDENCY_READ_FILES, true);
-        }
-        if (in_array($table, ['ue_names', 'ue_imports', 'ue_exports'], true)) {
-            return in_array($relative, self::CENTRAL_METADATA_READ_FILES, true);
-        }
-        return false;
+        return in_array($relative, self::ALLOWED_FILES, true);
     }
 
     private static function operation(string $line): string
