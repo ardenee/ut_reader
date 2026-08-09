@@ -15,16 +15,17 @@ use Throwable;
 
 final class CatalogFederationStateService
 {
+    private readonly CatalogFederationSettingsStore $settings;
+
     public function __construct(private readonly PDO $db)
     {
-        $root = dirname(__DIR__, 3);
-        require_once $root . '/lib/CatalogSupport.php';
-        require_once $root . '/lib/FederationAuth.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
+        $this->settings = new CatalogFederationSettingsStore($db);
     }
 
     public function siteRole(): string
     {
-        $role = strtolower(trim((string)\fed_setting($this->db, 'site_role', 'standalone')));
+        $role = strtolower(trim((string)$this->settings->get('site_role', 'standalone')));
         return in_array($role, ['standalone', 'parent', 'child'], true) ? $role : 'standalone';
     }
 
@@ -52,7 +53,7 @@ final class CatalogFederationStateService
 
     public function parentJoinStatus(): string
     {
-        $status = strtolower(trim((string)\fed_setting($this->db, 'main_parent_join_status', 'none')));
+        $status = strtolower(trim((string)$this->settings->get('main_parent_join_status', 'none')));
         return in_array($status, ['none', 'pending', 'approved', 'claimed', 'denied', 'expired'], true)
             ? $status
             : 'none';
@@ -61,7 +62,7 @@ final class CatalogFederationStateService
     public function hasPendingParentJoin(): bool
     {
         return in_array($this->parentJoinStatus(), ['pending', 'approved'], true)
-            && trim((string)\fed_setting($this->db, 'main_parent_url', '')) !== '';
+            && trim((string)$this->settings->get('main_parent_url', '')) !== '';
     }
 
     public function displayRole(): string
@@ -79,11 +80,11 @@ final class CatalogFederationStateService
             throw new RuntimeException('Invalid federation site role.');
         }
 
-        \fed_set_setting($this->db, 'site_role', $role);
-        \fed_set_setting($this->db, 'parent_enabled', $role === 'parent' ? '1' : '0');
-        \fed_set_setting($this->db, 'child_enabled', $role === 'child' ? '1' : '0');
+        $this->settings->set('site_role', $role);
+        $this->settings->set('parent_enabled', $role === 'parent' ? '1' : '0');
+        $this->settings->set('child_enabled', $role === 'child' ? '1' : '0');
         if ($role === 'child') {
-            \fed_set_setting($this->db, 'join_requests_enabled', '0');
+            $this->settings->set('join_requests_enabled', '0');
         }
     }
 
@@ -96,9 +97,9 @@ final class CatalogFederationStateService
             'main_parent_join_status_message',
             'main_parent_join_admin_notes',
         ] as $key) {
-            \fed_set_setting($this->db, $key, '');
+            $this->settings->set($key, '');
         }
-        \fed_set_setting($this->db, 'main_parent_join_status', 'none');
+        $this->settings->set('main_parent_join_status', 'none');
     }
 
     public function canJoinParent(): bool

@@ -2,14 +2,16 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Preserves historical federation authentication, identity and settings helper APIs.
- * Why: Focused signing, authentication, signed transport and secret/key implementations now live under Infrastructure while legacy callers keep stable function names.
- * Role: Transitional compatibility facade plus remaining federation identity/settings/HTTP response helpers awaiting separate extraction.
+ * Why: Focused signing, authentication, signed transport, secret/key, settings and identity implementations now live under Infrastructure while legacy callers keep stable function names.
+ * Role: Transitional compatibility facade plus remaining federation HTTP body/log/response helpers awaiting separate extraction.
  */
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationApiException;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationIdentityService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignaturePolicy;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationRequestSignatureService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSettingsStore;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSignedJsonClient;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSignedRequestAuthenticator;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationKeyMaterial;
@@ -20,10 +22,7 @@ require_once __DIR__ . '/CatalogSupport.php';
 
 function fed_random_id(): string
 {
-    $bytes = random_bytes(16);
-    $bytes[6] = chr((ord($bytes[6]) & 0x0f) | 0x40);
-    $bytes[8] = chr((ord($bytes[8]) & 0x3f) | 0x80);
-    return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($bytes), 4));
+    return CatalogFederationIdentityService::randomId();
 }
 
 function fed_random_secret(): string
@@ -90,61 +89,27 @@ function fed_migrate_peer_secrets(PDO $db): array
 
 function fed_setting(PDO $db, string $name, ?string $default = null): ?string
 {
-    $row = catalog_one($db, 'SELECT setting_value FROM ue_federation_settings WHERE setting_name=?', [$name]);
-    return $row ? (string)$row['setting_value'] : $default;
+    return (new CatalogFederationSettingsStore($db))->get($name, $default);
 }
 
 function fed_set_setting(PDO $db, string $name, string $value): void
 {
-    $stmt = $db->prepare('INSERT INTO ue_federation_settings(setting_name, setting_value) VALUES(?,?) ON DUPLICATE KEY UPDATE setting_value=VALUES(setting_value)');
-    $stmt->execute([$name, $value]);
+    (new CatalogFederationSettingsStore($db))->set($name, $value);
 }
 
 function fed_all_settings(PDO $db): array
 {
-    $rows = catalog_all($db, 'SELECT setting_name, setting_value FROM ue_federation_settings ORDER BY setting_name');
-    $out = [];
-    foreach ($rows as $row) {
-        $out[(string)$row['setting_name']] = (string)($row['setting_value'] ?? '');
-    }
-    return $out;
+    return (new CatalogFederationSettingsStore($db))->all();
 }
 
 function fed_site_fingerprint(string $siteUrl, string $siteId): string
 {
-    return strtoupper(substr(hash('sha256', rtrim(strtolower(trim($siteUrl)), '/') . '|' . strtolower(trim($siteId))), 0, 32));
+    return CatalogFederationIdentityService::fingerprint($siteUrl, $siteId);
 }
 
 function fed_ensure_identity(PDO $db, string $siteUrl = '', string $siteName = ''): array
 {
-    $siteId = fed_setting($db, 'site_id', '') ?: '';
-    if ($siteId === '') {
-        $siteId = fed_random_id();
-        fed_set_setting($db, 'site_id', $siteId);
-    }
-    if ($siteUrl !== '') {
-        fed_set_setting($db, 'site_url', $siteUrl);
-    } else {
-        $siteUrl = fed_setting($db, 'site_url', '') ?: '';
-    }
-    if ($siteName !== '') {
-        fed_set_setting($db, 'site_name', $siteName);
-    } else {
-        $siteName = fed_setting($db, 'site_name', '') ?: '';
-    }
-    $fingerprint = $siteUrl !== '' ? fed_site_fingerprint($siteUrl, $siteId) : '';
-    if ($fingerprint !== '') {
-        fed_set_setting($db, 'site_fingerprint', $fingerprint);
-    }
-    $publicKey = fed_ed25519_public_key();
-    return [
-        'site_id' => $siteId,
-        'site_url' => $siteUrl,
-        'site_name' => $siteName,
-        'site_fingerprint' => $fingerprint,
-        'ed25519_public_key' => $publicKey !== '' ? fed_base64url_encode($publicKey) : '',
-        'ed25519_key_id' => fed_ed25519_key_id($publicKey),
-    ];
+    return (new CatalogFederationIdentityService($db))->ensure($siteUrl, $siteName);
 }
 
 function fed_log(PDO $db, ?int $peerId, ?int $jobId, string $level, string $event, string $details = ''): void
@@ -281,21 +246,7 @@ function fed_http_post_signed(string $url, string $siteId, string $secret, array
 
 function fed_public_status(PDO $db): array
 {
-    $identity = fed_ensure_identity($db);
-    return [
-        'ok' => true,
-        'site_name' => $identity['site_name'],
-        'site_url' => $identity['site_url'],
-        'site_id' => $identity['site_id'],
-        'site_fingerprint' => $identity['site_fingerprint'],
-        'site_role' => fed_setting($db, 'site_role', 'standalone'),
-        'parent_enabled' => fed_setting($db, 'parent_enabled', '0'),
-        'child_enabled' => fed_setting($db, 'child_enabled', '0'),
-        'signature_algorithms' => ['hmac-sha256', 'ed25519'],
-        'ed25519_public_key' => $identity['ed25519_public_key'],
-        'ed25519_key_id' => $identity['ed25519_key_id'],
-        'server_time' => date('c'),
-    ];
+    return (new CatalogFederationIdentityService($db))->publicStatus();
 }
 
 function fed_json_response(array $data, int $status = 200): void
