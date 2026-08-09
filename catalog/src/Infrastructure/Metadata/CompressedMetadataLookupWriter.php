@@ -63,7 +63,12 @@ final class CompressedMetadataLookupWriter
             if (!is_array($row)) {
                 continue;
             }
+            $index = (int)$row['export_index'];
             $values[] = (string)$row['object_name'];
+            $localPath = trim((string)($paths['exports'][$index]['local'] ?? ''));
+            if ($localPath !== '') {
+                $values[] = $localPath;
+            }
             $className = trim((string)($row['class_name'] ?? ''));
             if ($className !== '') {
                 $values[] = $className;
@@ -109,17 +114,22 @@ final class CompressedMetadataLookupWriter
             $index = (int)$row['export_index'];
             $object = (string)$row['object_name'];
             $class = trim((string)($row['class_name'] ?? ''));
+            $localPath = trim((string)($paths['exports'][$index]['local'] ?? ''));
+            if ($localPath === '') {
+                throw new RuntimeException('Missing local Export path for export index ' . $index . '.');
+            }
             $exportRows[] = [
                 $fileId,
                 $index,
                 $termIds[$this->termKey($object)],
                 $class !== '' ? $termIds[$this->termKey($class)] : null,
-                md5((string)$paths['exports'][$index]['local'], true),
+                md5($localPath, true),
+                $termIds[$this->termKey($localPath)],
             ];
         }
         $sqlBatches += $this->bulkInsert(
             'ue_export_lookup',
-            ['file_id', 'export_index', 'object_term_id', 'class_term_id', 'path_hash'],
+            ['file_id', 'export_index', 'object_term_id', 'class_term_id', 'path_hash', 'local_path_term_id'],
             $exportRows
         );
 
