@@ -73,12 +73,14 @@ $record(
     'facade_boundary',
     str_contains($facade, 'CatalogFederationTransferSignatureService')
         && str_contains($facade, 'CatalogFederationStreamingUploadAuthenticator')
+        && str_contains($facade, 'CatalogFederationJsonApi::respond')
+        && !str_contains($facade, "'/FederationAuth.php'")
         && !str_contains($facade, 'hash_hmac(')
         && !str_contains($facade, 'sodium_crypto_sign_detached(')
         && !str_contains($facade, '$_SERVER')
         && !str_contains($facade, 'ue_federation_nonces')
         && !str_contains($facade, 'UPDATE ue_federation_peers'),
-    'legacy helper must delegate cryptography and inbound authentication'
+    'legacy helper must delegate cryptography, inbound authentication and JSON responses'
 );
 
 $signatures = $contents['signatures'];
@@ -86,7 +88,10 @@ $signatureContracts = [
     'strtoupper($method)',
     'strtolower($sha256)',
     "hash_hmac(\n            'sha256'",
-    'fed_secret_for_crypto',
+    'CatalogFederationPeerSecretService::forCrypto',
+    'CatalogFederationKeyMaterial::ed25519SecretKey',
+    'CatalogFederationKeyMaterial::base64UrlEncode',
+    'CatalogFederationKeyMaterial::base64UrlDecode',
     'sodium_crypto_sign_detached',
     'sodium_crypto_sign_verify_detached',
     'SODIUM_CRYPTO_SIGN_PUBLICKEYBYTES',
@@ -129,7 +134,10 @@ foreach ($authContracts as $needle) {
 }
 $record(
     'streaming_auth_contract',
-    $missingAuthContracts === [],
+    $missingAuthContracts === []
+        && !str_contains($authenticator, "'/lib/FederationAuth.php'")
+        && !str_contains($authenticator, '\\fed_setting(')
+        && !str_contains($authenticator, '\\fed_log('),
     $missingAuthContracts === []
         ? 'header, peer, replay, signature and activity contracts retained'
         : 'missing: ' . implode(', ', $missingAuthContracts)
