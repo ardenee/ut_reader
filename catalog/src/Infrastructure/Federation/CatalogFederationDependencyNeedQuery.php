@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Federation;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 final class CatalogFederationDependencyNeedQuery
 {
@@ -26,15 +27,14 @@ final class CatalogFederationDependencyNeedQuery
             return false;
         }
 
+        $dependencySource = PdoDependencyReadSource::sql($this->db);
         if ($requiredObjectPath !== '') {
             $row = \catalog_one(
                 $this->db,
-                'SELECT d.id
-                 FROM ue_dependencies d
-                 JOIN ue_files f ON f.id=d.file_id
-                 WHERE d.status="missing" AND f.scan_status="verified"
-                   AND d.required_package=? AND d.required_object_path=?
-                 LIMIT 1',
+                'SELECT d.id FROM ' . $dependencySource . ' d '
+                    . 'JOIN ue_files f ON f.id=d.file_id '
+                    . 'WHERE d.status="missing" AND f.scan_status="verified" '
+                    . 'AND d.required_package=? AND d.required_object_path=? LIMIT 1',
                 [$requiredPackage, $requiredObjectPath]
             );
             if ($row) {
@@ -44,11 +44,10 @@ final class CatalogFederationDependencyNeedQuery
 
         return \catalog_one(
             $this->db,
-            'SELECT d.id
-             FROM ue_dependencies d
-             JOIN ue_files f ON f.id=d.file_id
-             WHERE d.status="missing" AND f.scan_status="verified" AND d.required_package=?
-             LIMIT 1',
+            'SELECT d.id FROM ' . $dependencySource . ' d '
+                . 'JOIN ue_files f ON f.id=d.file_id '
+                . 'WHERE d.status="missing" AND f.scan_status="verified" '
+                . 'AND d.required_package=? LIMIT 1',
             [$requiredPackage]
         ) !== null;
     }
