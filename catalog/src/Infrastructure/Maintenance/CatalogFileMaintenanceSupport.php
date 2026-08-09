@@ -1,0 +1,170 @@
+<?php
+/**
+ * UnrealDB PHP File Audit
+ * Purpose: Owns shared compact file-maintenance storage, snapshot and dependency-refresh primitives.
+ * Why: Reimport, removal, data audit and maintenance actions should reuse one namespaced implementation rather than
+ *      procedural filesystem/compact/dependency helpers under catalog/lib.
+ * Role: Infrastructure maintenance support preserving the established compact-maintenance behavior.
+ */
+declare(strict_types=1);
+
+namespace UnrealDb\Catalog\Infrastructure\Maintenance;
+
+use PDO;
+use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\CompactFileMaintenanceSnapshot;
+
+final class CatalogFileMaintenanceSupport
+{
+    /** @param array<string,mixed> $config */
+    public function __construct(
+        private readonly PDO $db,
+        private readonly array $config
+    ) {
+        require_once dirname(__DIR__, 3) . '/lib/CatalogScanner.php';
+    }
+
+    /** @param array<string,mixed> $file */
+    public function storagePath(array $file): ?string
+    {
+        $storageRoot = realpath(rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
+        if ($storageRoot === false || !is_dir($storageRoot)) {
+            throw new RuntimeException('Catalog storage folder is unavailable.');
+        }
+        $relativePath = ltrim(str_replace('\\', '/', (string)($file['relative_path'] ?? '')), '/');
+        if ($relativePath === '') {
+            return null;
+        }
+        $catalogRoot = realpath(dirname(__DIR__, 3));
+        if ($catalogRoot === false) {
+            throw new RuntimeException('Catalog application folder is unavailable.');
+        }
+        $candidate = $catalogRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relativePath);
+        if (!file_exists($candidate)) {
+            return null;
+        }
+        $resolved = realpath($candidate);
+        $rootPrefix = rtrim($storageRoot, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+        if ($resolved === false || !str_starts_with($resolved, $rootPrefix)) {
+            throw new RuntimeException('Refusing to use a file outside catalog storage.');
+        }
+        return $resolved;
+    }
+
+    public static function emit(?callable $progress, string $stage, int $percent, string $message): void
+    {
+        \scanner_emit_percent($progress, $stage, $percent, $message);
+    }
+
+    public function storageRoot(): string
+    {
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact file maintenance.');
+        }
+        return $storageRoot;
+    }
+
+    public function metadataPath(int $gameId, int $fileId): string
+    {
+        return BlockedCompressedMetadataContainer::path($this->storageRoot(), $gameId, $fileId);
+    }
+
+    /** @return array<string,mixed> */
+    public function snapshot(int $fileId): array
+    {
+        return (new CompactFileMaintenanceSnapshot($this->db, $this->storageRoot()))->capture($fileId);
+    }
+
+    /** @param array<string,mixed> $snapshot */
+    public function restoreSnapshot(array $snapshot): void
+    {
+        (new CompactFileMaintenanceSnapshot($this->db, $this->storageRoot()))->restore($snapshot);
+    }
+
+    /** @param array<string,mixed> $snapshot */
+    public static function sourceRelativePath(array $snapshot): string
+    {
+        $filePath = \scanner_normalize_source_relative_path(
+            (string)($snapshot['file']['source_relative_path'] ?? '')
+        );
+        if ($filePath !== '') {
+            return $filePath;
+        }
+        foreach ((array)($snapshot['locations'] ?? []) as $location) {
+            if (!is_array($location)) {
+                continue;
+            }
+            $path = \scanner_normalize_source_relative_path(
+                (string)($location['source_relative_path'] ?? '')
+            );
+            if ($path !== '') {
+                return $path;
+            }
+        }
+        return '';
+    }
+
+    /** @return list<int> */
+    public function affectedIds(
+        int $gameId,
+        int $removedFileId,
+        string $packageName,
+        bool $deferDependencyRefresh = false
+    ): array {
+        if ($deferDependencyRefresh) {
+            return [];
+        }
+
+        $packageName = trim($packageName);
+        $rows = \catalog_all(
+            $this->db,
+            'SELECT DISTINCT l.file_id FROM ue_dependency_links l '
+            . 'JOIN ue_terms t ON t.id=l.required_package_term_id '
+            . 'JOIN ue_files owner ON owner.id=l.file_id '
+            . 'WHERE owner.game_id=? AND l.file_id<>? AND ('
+            . 'l.resolved_file_id=? OR (t.value_hash=? AND t.value_length=? AND t.value_prefix=?))',
+            [
+                $gameId,
+                $removedFileId,
+                $removedFileId,
+                md5($packageName, true),
+                strlen($packageName),
+                substr($packageName, 0, 200),
+            ]
+        );
+
+        return array_map(static fn(array $row): int => (int)$row['file_id'], $rows);
+    }
+
+    /** @param list<int> $fileIds */
+    public function refreshIds(
+        array $fileIds,
+        ?callable $progress,
+        int $startPercent,
+        int $endPercent,
+        string $prefix
+    ): void {
+        $fileIds = array_values(array_unique(array_filter(
+            array_map('intval', $fileIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        $total = count($fileIds);
+        if ($total === 0) {
+            self::emit($progress, 'dependencies', $endPercent, $prefix . ': no affected packages');
+            return;
+        }
+        foreach ($fileIds as $index => $fileId) {
+            \scanner_rebuild_dependencies(
+                $this->db,
+                $this->config,
+                $fileId,
+                $progress,
+                \scanner_range_percent($startPercent, $endPercent, $index, $total),
+                \scanner_range_percent($startPercent, $endPercent, $index + 1, $total),
+                $prefix . ' ' . ($index + 1) . '/' . $total
+            );
+        }
+    }
+}
