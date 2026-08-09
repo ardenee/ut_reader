@@ -197,6 +197,22 @@ if ($withDatabase) {
             'count_mismatches=' . $mismatchedCounts
         );
 
+        $legacyVerifiedCounts = [];
+        foreach ($legacyTables as $table) {
+            $legacyVerifiedCounts[$table] = (int)$db->query(
+                'SELECT COUNT(*) FROM ' . $table . ' l '
+                . 'JOIN ue_files f ON f.id=l.file_id '
+                . 'WHERE f.scan_status="verified"'
+            )->fetchColumn();
+        }
+        $legacyVerifiedTotal = array_sum($legacyVerifiedCounts);
+        $record(
+            'verified_legacy_staging_rows_absent',
+            $legacyVerifiedTotal === 0,
+            (json_encode($legacyVerifiedCounts, JSON_UNESCAPED_SLASHES) ?: '')
+                . '; total=' . $legacyVerifiedTotal
+        );
+
         $source = \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::sql($db);
         $statement = $db->prepare('SELECT * FROM ' . $source . ' d LIMIT 0');
         $statement->execute();
