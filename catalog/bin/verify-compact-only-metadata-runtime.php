@@ -99,14 +99,15 @@ $record(
     'runtime SQL must name current dependency sources explicitly; the retired-table rewriter must stay absent'
 );
 
-$metadataCompatibility = $read('lib/CatalogCompactMetadataCompatibility.php');
-$metadataCompatibilityExecutable = $withoutComments($metadataCompatibility);
+$coreSupport = $read('lib/CatalogSupportCore.php');
+$coreSupportExecutable = $withoutComments($coreSupport);
 $record(
     'metadata_sql_shape_bridge_retired',
-    !is_file($root . '/src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php')
-        && str_contains($metadataCompatibilityExecutable, "'handled' => false")
-        && !str_contains($metadataCompatibilityExecutable, 'CatalogCompactMetadataCompatibilityService'),
-    'CatalogSupportCore hook remains a no-op only; retired Names/Imports/Exports SQL must not be emulated'
+    !is_file($root . '/lib/CatalogCompactMetadataCompatibility.php')
+        && !is_file($root . '/src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php')
+        && !str_contains($coreSupportExecutable, 'catalog_metadata_compat_query')
+        && !str_contains($coreSupportExecutable, 'CatalogCompactMetadataCompatibility.php'),
+    'shared query helpers must execute only explicit current SQL; retired metadata SQL-shape compatibility must stay absent'
 );
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
@@ -187,7 +188,7 @@ $record(
 );
 
 $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
-    'lib/CatalogCompactMetadataCompatibility.php',
+    'lib/CatalogSupportCore.php',
     'lib/CatalogPerformance.php',
     'missing.php',
     'src/Application/Dependency/CatalogMissingFileListService.php',
