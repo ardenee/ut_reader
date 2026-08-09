@@ -1,14 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `VerifiedFileCompactMetadataFinalizer` for verified file compact metadata
- *          finalizer.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Ensures every verified package uses the authoritative format-2 metadata container.
+ * Why: Parsed package metadata must be published directly from reader output instead of being reread from retired SQL
+ *      Names/Imports/Exports/Dependencies tables.
+ * Role: Infrastructure verified-import compact metadata finalizer.
  */
 declare(strict_types=1);
 
@@ -18,10 +14,11 @@ use PDO;
 use RuntimeException;
 use Throwable;
 
-/** Ensures a newly verified scanner result immediately receives format-2 metadata. */
 final class VerifiedFileCompactMetadataFinalizer
 {
     /**
+     * Verify an already-published current metadata result.
+     *
      * @param array<int|string,mixed> $result
      * @return array<int|string,mixed>
      */
@@ -35,28 +32,89 @@ final class VerifiedFileCompactMetadataFinalizer
             return $result;
         }
 
-        $fileId = (int)($result[1] ?? ($result[4]['file_id'] ?? 0));
-        if ($fileId < 1) {
-            throw new RuntimeException('Verified scanner result has no valid file ID.');
-        }
-
-        $storageRoot = trim((string)($config['storage_path'] ?? ''));
-        if ($storageRoot === '') {
-            throw new RuntimeException('Catalog storage_path is required for compact metadata finalisation.');
-        }
-
-        self::emit($progress, 99, 'Building compact metadata for verified file #' . $fileId);
+        $fileId = self::fileId($result);
+        $storageRoot = self::storageRoot($config);
+        self::emit($progress, 99, 'Verifying compact metadata for file #' . $fileId);
 
         try {
             $statement = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
             $statement->execute([$fileId]);
-            $existingVersion = (int)($statement->fetchColumn() ?: 0);
+            $formatVersion = (int)($statement->fetchColumn() ?: 0);
+            if ($formatVersion !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+                throw new RuntimeException(
+                    'Verified file #' . $fileId . ' has no current format-2 metadata. '
+                    . 'Run the explicit metadata conversion/repair workflow instead of using a runtime legacy fallback.'
+                );
+            }
+            $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
+            $conversion['already_compact'] = true;
+            $legacyRowsRemoved = self::removeLegacyStagingRows($db, $fileId);
+        } catch (Throwable $error) {
+            self::recordFailure($db, $fileId, $error->getMessage());
+            throw new RuntimeException(
+                'Compact metadata verification failed for verified file #' . $fileId . ': '
+                . $error->getMessage(),
+                0,
+                $error
+            );
+        }
 
+        return self::complete($result, $conversion, $legacyRowsRemoved, $progress);
+    }
+
+    /**
+     * Publish current metadata directly from parser output for a newly verified package.
+     *
+     * @param array<int|string,mixed> $result
+     * @param array<int,mixed> $names
+     * @param array<int,mixed> $imports
+     * @param array<int,mixed> $exports
+     * @return array<int|string,mixed>
+     */
+    public static function finalizeParsed(
+        PDO $db,
+        array $config,
+        array $result,
+        array $names,
+        array $imports,
+        array $exports,
+        ?callable $progress = null
+    ): array {
+        if ((string)($result[0] ?? '') !== 'verified') {
+            return $result;
+        }
+
+        $fileId = self::fileId($result);
+        $storageRoot = self::storageRoot($config);
+        self::emit($progress, 99, 'Publishing compact metadata for verified file #' . $fileId);
+
+        try {
+            $statement = $db->prepare(
+                'SELECT id,game_id,package_name,original_name,scan_status FROM ue_files WHERE id=?'
+            );
+            $statement->execute([$fileId]);
+            $file = $statement->fetch(PDO::FETCH_ASSOC);
+            if (!is_array($file) || (string)($file['scan_status'] ?? '') !== 'verified') {
+                throw new RuntimeException('Verified file row is unavailable during compact metadata publication.');
+            }
+
+            $registration = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
+            $registration->execute([$fileId]);
+            $existingVersion = (int)($registration->fetchColumn() ?: 0);
             if ($existingVersion === BlockedCompressedMetadataContainer::FORMAT_VERSION) {
                 $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
                 $conversion['already_compact'] = true;
             } else {
-                $conversion = (new BlockedCompressedFileMetadataConverter($db, $storageRoot))->convert($fileId);
+                $snapshot = (new CatalogParsedPackageMetadataSnapshotBuilder($db, $config))->build(
+                    $fileId,
+                    (int)$file['game_id'],
+                    (string)$file['package_name'],
+                    (string)$file['original_name'],
+                    $names,
+                    $imports,
+                    $exports
+                );
+                $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
                 $conversion['already_compact'] = false;
             }
 
@@ -71,13 +129,49 @@ final class VerifiedFileCompactMetadataFinalizer
         } catch (Throwable $error) {
             self::recordFailure($db, $fileId, $error->getMessage());
             throw new RuntimeException(
-                'Imported file #' . $fileId . ' was stored, but compact metadata finalisation failed: '
+                'Imported file #' . $fileId . ' was stored, but direct compact metadata publication failed: '
                 . $error->getMessage(),
                 0,
                 $error
             );
         }
 
+        return self::complete($result, $conversion, $legacyRowsRemoved, $progress);
+    }
+
+    /** @param array<int|string,mixed> $result */
+    private static function fileId(array $result): int
+    {
+        $fileId = (int)($result[1] ?? ($result[4]['file_id'] ?? 0));
+        if ($fileId < 1) {
+            throw new RuntimeException('Verified scanner result has no valid file ID.');
+        }
+        return $fileId;
+    }
+
+    /** @param array<string,mixed> $config */
+    private static function storageRoot(array $config): string
+    {
+        $storageRoot = trim((string)($config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact metadata finalisation.');
+        }
+        return $storageRoot;
+    }
+
+    /**
+     * @param array<int|string,mixed> $result
+     * @param array<string,mixed> $conversion
+     * @param array<string,int> $legacyRowsRemoved
+     * @return array<int|string,mixed>
+     */
+    private static function complete(
+        array $result,
+        array $conversion,
+        array $legacyRowsRemoved,
+        ?callable $progress
+    ): array {
+        $fileId = self::fileId($result);
         $message = trim((string)($result[2] ?? ''));
         $suffix = 'compact metadata=v2, blocks=' . (int)($conversion['block_count'] ?? 0);
         if ($message === '' || !str_contains($message, 'compact metadata=v2')) {
