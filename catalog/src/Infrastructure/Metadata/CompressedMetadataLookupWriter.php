@@ -65,10 +65,9 @@ final class CompressedMetadataLookupWriter
             }
             $index = (int)$row['export_index'];
             $values[] = (string)$row['object_name'];
-            $localPath = trim((string)($paths['exports'][$index]['local'] ?? ''));
-            if ($localPath !== '') {
-                $values[] = $localPath;
-            }
+            // Preserve the exact local-path bytes used by the existing path_hash
+            // projection, including the unusual but historically valid empty value.
+            $values[] = (string)($paths['exports'][$index]['local'] ?? '');
             $className = trim((string)($row['class_name'] ?? ''));
             if ($className !== '') {
                 $values[] = $className;
@@ -114,10 +113,7 @@ final class CompressedMetadataLookupWriter
             $index = (int)$row['export_index'];
             $object = (string)$row['object_name'];
             $class = trim((string)($row['class_name'] ?? ''));
-            $localPath = trim((string)($paths['exports'][$index]['local'] ?? ''));
-            if ($localPath === '') {
-                throw new RuntimeException('Missing local Export path for export index ' . $index . '.');
-            }
+            $localPath = (string)($paths['exports'][$index]['local'] ?? '');
             $exportRows[] = [
                 $fileId,
                 $index,
