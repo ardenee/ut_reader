@@ -226,6 +226,11 @@ final class PdoDependencyResolver
     }
 
     /**
+     * Current object resolution uses the compact projection's package identity +
+     * MD5 local-path key. Older format-2 projections already have path_hash even
+     * when local_path_term_id has not yet been backfilled, so this stays compact-only
+     * without forcing a blocking projection rebuild before deployment.
+     *
      * @param list<array{lookup_value:string,package_name:string,local_path:string}> $objectLookups
      * @return array<string,array{file_id:int,export_index:int,source:string}>
      */
@@ -256,28 +261,27 @@ final class PdoDependencyResolver
             $args = [$gameId];
             $keys = [];
             foreach ($chunk as $lookup) {
-                $localPath = $lookup['local_path'];
-                $pairSql[] = '(f.package_name=? AND t.value_hash=? AND t.value_length=? AND t.value_prefix=?)';
-                array_push($args, $lookup['package_name'], md5($localPath, true), strlen($localPath), substr($localPath, 0, 200));
-                $keys[self::compactPairKey($lookup['package_name'], $localPath)] = $lookup['lookup_value'];
+                $pathHash = md5($lookup['local_path'], true);
+                $pairSql[] = '(f.package_name=? AND l.path_hash=?)';
+                $args[] = $lookup['package_name'];
+                $args[] = $pathHash;
+                $keys[self::hashPairKey($lookup['package_name'], $pathHash)] = $lookup['lookup_value'];
             }
             $args[] = $fileId;
             $rows = \catalog_all(
                 $db,
-                'SELECT f.package_name,l.file_id,l.export_index,t.value_hash,t.value_length'
+                'SELECT f.package_name,l.file_id,l.export_index,l.path_hash'
                 . ' FROM ue_export_lookup l'
                 . ' JOIN ue_files f ON f.id=l.file_id'
                 . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
-                . ' JOIN ue_terms t ON t.id=l.local_path_term_id'
                 . ' WHERE f.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
                 . ' ORDER BY f.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC',
                 $args
             );
             foreach ($rows as $row) {
-                $lookupValue = $keys[self::compactPairKeyFromHash(
+                $lookupValue = $keys[self::hashPairKey(
                     (string)$row['package_name'],
-                    (string)$row['value_hash'],
-                    (int)$row['value_length']
+                    (string)$row['path_hash']
                 )] ?? null;
                 if ($lookupValue !== null) {
                     self::collectCompactExportMatch($lookupValue, $row, 'exact_object', $matches);
@@ -309,29 +313,28 @@ final class PdoDependencyResolver
             $args = [$gameId];
             $keys = [];
             foreach ($chunk as $lookup) {
-                $localPath = $lookup['local_path'];
-                $pairSql[] = '(a.package_name=? AND t.value_hash=? AND t.value_length=? AND t.value_prefix=?)';
-                array_push($args, $lookup['package_name'], md5($localPath, true), strlen($localPath), substr($localPath, 0, 200));
-                $keys[self::compactPairKey($lookup['package_name'], $localPath)] = $lookup['lookup_value'];
+                $pathHash = md5($lookup['local_path'], true);
+                $pairSql[] = '(a.package_name=? AND l.path_hash=?)';
+                $args[] = $lookup['package_name'];
+                $args[] = $pathHash;
+                $keys[self::hashPairKey($lookup['package_name'], $pathHash)] = $lookup['lookup_value'];
             }
             $args[] = $fileId;
             $rows = \catalog_all(
                 $db,
-                'SELECT a.package_name,l.file_id,l.export_index,t.value_hash,t.value_length'
+                'SELECT a.package_name,l.file_id,l.export_index,l.path_hash'
                 . ' FROM ue_file_package_aliases a'
                 . ' JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id'
                 . ' JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2'
                 . ' JOIN ue_export_lookup l ON l.file_id=f.id'
-                . ' JOIN ue_terms t ON t.id=l.local_path_term_id'
                 . ' WHERE a.game_id=? AND f.scan_status="verified" AND (' . implode(' OR ', $pairSql) . ')'
                 . ' ORDER BY a.package_name,(f.id=?) DESC,f.uploaded_at DESC,l.export_index ASC,a.id ASC',
                 $args
             );
             foreach ($rows as $row) {
-                $lookupValue = $keys[self::compactPairKeyFromHash(
+                $lookupValue = $keys[self::hashPairKey(
                     (string)$row['package_name'],
-                    (string)$row['value_hash'],
-                    (int)$row['value_length']
+                    (string)$row['path_hash']
                 )] ?? null;
                 if ($lookupValue !== null) {
                     self::collectCompactExportMatch($lookupValue, $row, 'exact_object_alias', $matches);
@@ -358,14 +361,9 @@ final class PdoDependencyResolver
         ];
     }
 
-    private static function compactPairKey(string $packageName, string $localPath): string
+    private static function hashPairKey(string $packageName, string $hash): string
     {
-        return self::normalizeLookup($packageName) . "\0" . md5($localPath) . ':' . strlen($localPath);
-    }
-
-    private static function compactPairKeyFromHash(string $packageName, string $hash, int $length): string
-    {
-        return self::normalizeLookup($packageName) . "\0" . bin2hex($hash) . ':' . $length;
+        return self::normalizeLookup($packageName) . "\0" . bin2hex($hash);
     }
 
     private static function normalizeLookup(string|int $value): string
