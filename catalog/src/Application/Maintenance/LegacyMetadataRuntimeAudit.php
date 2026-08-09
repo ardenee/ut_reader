@@ -41,6 +41,7 @@ final class LegacyMetadataRuntimeAudit
         'lib/CatalogPerformance.php',
         'lib/CatalogRuntimeSqlCompatibility.php',
         'federation/docs.php',
+        'src/Application/Maintenance/RetiredDuplicateLegacyMetadataPurger.php',
         'src/Infrastructure/Games/PdoCatalogGameTableMaintenance.php',
         'src/Infrastructure/Maintenance/CatalogLegacyDataAuditService.php',
         'src/Infrastructure/Persistence/PdoCatalogPackageTableWriter.php',
@@ -62,6 +63,7 @@ final class LegacyMetadataRuntimeAudit
         'bin/plan-legacy-table-space-reclaim.php',
         'bin/plan-mysql-space-release.php',
         'bin/reclaim-legacy-table-space.php',
+        'bin/purge-retired-duplicate-legacy-metadata.php',
         'bin/audit-legacy-runtime-references.php',
     ];
 
