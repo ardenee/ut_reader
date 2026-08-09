@@ -167,35 +167,6 @@ try {
 
     $schemaFiles = mysql_space_files($schemaDirectory, 30);
     $topLevelFiles = mysql_space_files($datadir, 30);
-    $schemaFileMap = [];
-    foreach ($schemaFiles as $file) {
-        $schemaFileMap[strtolower((string)$file['file'])] = (int)$file['size_bytes'];
-    }
-
-    $exports = null;
-    foreach ($tables as $table) {
-        if ((string)$table['table'] === 'ue_exports') {
-            $exports = $table;
-            break;
-        }
-    }
-    $exportsGate = null;
-    if (is_array($exports)) {
-        $allocated = (int)$exports['allocated_bytes'];
-        $free = is_int($dataDrive['free_bytes']) ? (int)$dataDrive['free_bytes'] : 0;
-        $ibdBytes = $schemaFileMap['ue_exports.ibd'] ?? null;
-        $conservative = (int)ceil($allocated * 1.20);
-        $exportsGate = [
-            'allocated_bytes' => $allocated,
-            'reported_free_bytes' => (int)$exports['reported_free_bytes'],
-            'ibd_file_bytes' => $ibdBytes,
-            'data_drive_free_bytes' => $dataDrive['free_bytes'],
-            'minimum_estimated_rebuild_bytes' => $allocated,
-            'conservative_rebuild_bytes' => $conservative,
-            'shortfall_against_allocated_bytes' => max(0, $allocated - $free),
-            'shortfall_against_conservative_bytes' => max(0, $conservative - $free),
-        ];
-    }
 
     $output = [
         'verified' => true,
@@ -203,7 +174,6 @@ try {
         'mysql_variables' => $variables,
         'data_drive' => $dataDrive,
         'schema_directory' => $schemaDirectory,
-        'ue_exports_gate' => $exportsGate,
         'binary_logs' => $binaryLogs,
         'largest_schema_files' => $schemaFiles,
         'largest_datadir_files' => $topLevelFiles,
