@@ -16,8 +16,6 @@ declare(strict_types=1);
  * application autoloader so CatalogSupportCore can load it during bootstrap.
  */
 
-require_once __DIR__ . '/CatalogRuntimeSqlCompatibility.php';
-
 function catalog_performance_register(): void
 {
     if (!isset($GLOBALS['catalog_performance_state'])) {
@@ -46,14 +44,13 @@ function catalog_performance_remember_db(PDO $db): void
 function catalog_performance_statement(PDO $db, string $sql, array $args = []): PDOStatement
 {
     catalog_performance_remember_db($db);
-    $runtimeSql = catalog_runtime_sql_compat_rewrite($db, $sql);
     $started = hrtime(true);
     try {
-        $statement = $db->prepare($runtimeSql);
+        $statement = $db->prepare($sql);
         $statement->execute($args);
         return $statement;
     } finally {
-        catalog_performance_record_query($runtimeSql, hrtime(true) - $started);
+        catalog_performance_record_query($sql, hrtime(true) - $started);
     }
 }
 
@@ -162,7 +159,6 @@ function catalog_performance_count_cacheable(PDO $db, string $normalizedSql): bo
     $lower = strtolower($normalizedSql);
     foreach ([
         'ue_files',
-        'ue_dependencies',
         'ue_dependency_package_summaries',
         'ue_background_jobs',
         'ue_federation_peer_files',
@@ -211,7 +207,7 @@ function catalog_performance_count_ttl(string $normalizedSql): int
     if (str_contains($lower, 'ue_federation_')) {
         return 30;
     }
-    if (str_contains($lower, 'ue_dependencies') || str_contains($lower, 'ue_dependency_package_summaries')) {
+    if (str_contains($lower, 'ue_dependency_package_summaries')) {
         return 60;
     }
     if (str_contains($lower, 'ue_files')) {
