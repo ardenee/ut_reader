@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
+use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedReferenceMatchQuery;
 
 function uvf_base64url_encode(string $value): string
 {
@@ -102,8 +103,7 @@ function uvf_list(PDO $db, array $config, ?int $sourceGameId = null): array
  */
 function uvf_reference_matches(PDO $db, array $packageNames): array
 {
-    // referenceMatches only needs the database; storage config is unused.
-    return (new CatalogUnverifiedQueueStorage($db, []))->referenceMatches($packageNames);
+    return (new PdoUnverifiedReferenceMatchQuery($db))->fetch($packageNames);
 }
 
 function uvf_unique_destination(string $directory, string $name): string
