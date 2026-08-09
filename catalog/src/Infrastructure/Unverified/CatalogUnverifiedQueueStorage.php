@@ -325,52 +325,6 @@ final class CatalogUnverifiedQueueStorage
         return $items;
     }
 
-    /**
-     * @param list<string> $packageNames
-     * @return array<string,list<array{game_id:int,game_name:string,owner_count:int,import_count:int}>>
-     */
-    public function referenceMatches(array $packageNames): array
-    {
-        $keys = [];
-        foreach ($packageNames as $packageName) {
-            $packageName = trim((string)$packageName);
-            if ($packageName !== '') {
-                $keys[strtolower($packageName)] = $packageName;
-            }
-        }
-        if ($keys === []) {
-            return [];
-        }
-
-        $values = array_values($keys);
-        $placeholders = implode(',', array_fill(0, count($values), '?'));
-        $rows = \catalog_all(
-            $this->db,
-            'SELECT LOWER(d.required_package) package_key,g.id game_id,g.name game_name,'
-            . 'COUNT(DISTINCT d.file_id) owner_count,COUNT(*) import_count'
-            . ' FROM ue_dependencies d'
-            . ' JOIN ue_files f ON f.id=d.file_id'
-            . ' JOIN ue_games g ON g.id=f.game_id'
-            . ' WHERE d.required_package IN (' . $placeholders . ')'
-            . ' GROUP BY LOWER(d.required_package),g.id,g.name'
-            . ' ORDER BY g.name',
-            $values
-        );
-
-        $out = [];
-        foreach ($rows as $row) {
-            $key = strtolower((string)$row['package_key']);
-            $out[$key] ??= [];
-            $out[$key][] = [
-                'game_id' => (int)$row['game_id'],
-                'game_name' => (string)$row['game_name'],
-                'owner_count' => (int)$row['owner_count'],
-                'import_count' => (int)$row['import_count'],
-            ];
-        }
-        return $out;
-    }
-
     public static function uniqueDestination(string $directory, string $name): string
     {
         $name = basename($name);
