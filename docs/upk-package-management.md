@@ -18,13 +18,15 @@ Unlike a PAK import, no second container copy is required because the verified `
 
 ## Parsed contents
 
-The normal UE3 reader parses the package tables during import:
+The normal UE3 reader parses the package Names, Imports and Exports tables during import. Verified package tables are persisted in the per-file format-2 compressed metadata container rather than row-per-object legacy tables.
 
-- `ue_names` — FName table
-- `ue_imports` — references to external packages and objects
-- `ue_exports` — serialized objects contained by the UPK
+Current lookup projections provide the indexed views needed by runtime queries:
 
-Each export records its class, object name, outer reference, local/full path, object flags, serial offset and serial size. These exports are the internal contents shown by the UPK management pages.
+- `ue_export_lookup` — compact indexed export/object-path lookup data
+- `ue_dependency_links` — compact import/dependency resolution links
+- `ue_dependency_package_summaries` — per-file/package dependency counts used by list and reporting pages
+
+The compressed metadata snapshot retains each export's class, object name, outer reference, local/full path, object flags, serial offset and serial size. These exports are the internal contents shown by the UPK management pages.
 
 Export payloads are not inserted as separate `ue_files` rows. A raw serialized UObject export is not a valid standalone `.upk`; presenting it as an independent package file would create an unusable or misleading file.
 
@@ -47,15 +49,15 @@ UE3 game pages expose two separate views:
 - original UPK download
 - administrator deletion
 
-`upk-info.php` shows complete package identity and a pageable/filterable list of every parsed export. Export links open the exact row in the normal package examiner.
+`upk-info.php` loads the package's compact metadata snapshot and shows complete package identity plus a pageable/filterable list of every parsed export. Export links open the exact entry in the normal package examiner.
 
 The global `upks.php` page groups UPK packages by UE3 game.
 
 ## Import and existing data
 
-No separate UPK import job is required. Profiled Upload, folder upload, Local Source Scan and other normal package-ingestion paths already parse `.upk` files and populate Names, Imports and Exports.
+No separate UPK import job is required. Profiled Upload, folder upload, Local Source Scan and other normal package-ingestion paths already parse `.upk` files, publish the format-2 compact metadata snapshot, and build the current export/dependency lookup projections.
 
-Existing UE3 UPKs appear in the new views immediately as long as their `ue_exports` rows were created by the scanner. Re-import or rebuild only packages whose existing parse data is incomplete.
+Existing UE3 UPKs appear in the views when their current format-2 metadata is present. Re-import or rebuild only packages whose compact metadata or lookup projections are incomplete.
 
 ## Downloads and deletion
 
@@ -64,8 +66,8 @@ The original `.upk` is downloaded through the normal catalog download controller
 Deleting a UPK uses the normal file-maintenance path and removes:
 
 - the stored UPK
-- Names, Imports and Exports
-- dependencies
+- its compact metadata container
+- current export/dependency lookup and summary projections
 - file locations and aliases
 - associated asset metadata
 
