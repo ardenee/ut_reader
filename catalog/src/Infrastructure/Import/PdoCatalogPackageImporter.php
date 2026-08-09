@@ -59,8 +59,8 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         );
 
         // Preserve the established ProfiledUploadService adapter contract: the
-        // scanner-compatible path finalises verified metadata first, then this
-        // port-level call verifies the compact result while reporting progress.
+        // scanner-compatible path publishes verified metadata first, then this
+        // port-level call verifies the current compact result while reporting progress.
         $result = VerifiedFileCompactMetadataFinalizer::finalize(
             $this->db,
             $this->config,
@@ -327,10 +327,13 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
                 'source_relative_path' => $sourceRelativePath,
             ],
         ];
-        $result = VerifiedFileCompactMetadataFinalizer::finalize(
+        $result = VerifiedFileCompactMetadataFinalizer::finalizeParsed(
             $this->db,
             $this->config,
             $result,
+            $names,
+            $imports,
+            $exports,
             null
         );
 
