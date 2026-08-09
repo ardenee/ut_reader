@@ -62,11 +62,12 @@ final class CatalogAssetMetadataService
         $this->db->prepare('DELETE FROM ue_asset_registry_dependencies WHERE file_id=?')->execute([$fileId]);
         $this->db->prepare('DELETE FROM ue_asset_registry_assets WHERE file_id=?')->execute([$fileId]);
 
-        $exports = \catalog_all(
-            $this->db,
-            'SELECT * FROM ue_exports WHERE file_id=? ORDER BY export_index',
-            [$fileId]
-        );
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact asset metadata reading.');
+        }
+        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $storageRoot))->load($fileId);
+        $exports = array_values((array)($snapshot['exports'] ?? []));
         $insertAsset = $this->db->prepare(
             'INSERT IGNORE INTO ue_asset_registry_assets('
             . 'file_id,object_path,package_name,package_path,asset_name,asset_class'
