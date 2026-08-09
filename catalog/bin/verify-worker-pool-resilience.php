@@ -49,9 +49,10 @@ $record(
     str_contains($worker, 'CatalogWorkerPoolSelfHealer')
         && str_contains($worker, '$poolHealer->heal($queueName, $maxJobs)')
         && str_contains($healer, 'LOCK_EX | LOCK_NB')
-        && str_contains($healer, 'status IN ("queued","running")')
+        && str_contains($healer, 'status="queued" AND cancel_requested_at IS NULL')
+        && str_contains($healer, 'available_at<=UTC_TIMESTAMP()')
         && str_contains($healer, '$launcher->start($queueName, $maxJobs, $desired)'),
-    'surviving workers reconcile missing slots under a non-blocking single-healer lock'
+    'surviving workers reconcile missing slots only when ready queued work exists, under a non-blocking single-healer lock'
 );
 $record(
     'degraded_ui_contract',
