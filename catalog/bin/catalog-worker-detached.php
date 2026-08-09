@@ -19,6 +19,7 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobWorkerFactory;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogOrphanedJobRecovery;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogWorkerPoolSelfHealer;
 
 $options = getopt('', [
     'queue::',
@@ -29,7 +30,7 @@ $options = getopt('', [
     'worker-slot::',
     'worker-count::',
 ]);
-$application = catalog_bootstrap();
+$application = catalog_bootstrap(false);
 $queueName = trim((string)($options['queue'] ?? ($application->config['queue']['name'] ?? 'catalog')));
 $requestedMaxJobs = (int)($options['max-jobs'] ?? 1000000);
 $maxJobs = $requestedMaxJobs >= 10000 ? 1000000 : max(1, min($requestedMaxJobs, 1000000));
@@ -70,6 +71,7 @@ function catalog_detached_queue_has_pending_work(PDO $db, string $queueName): bo
 }
 
 $controller = new CatalogDetachedWorker($application->config);
+$poolHealer = new CatalogWorkerPoolSelfHealer($application->db, $application->config);
 $codeVersion = $controller->codeVersion(true);
 $lock = $controller->acquireWorkerLock($queueName, $workerSlot);
 if (!is_resource($lock)) {
@@ -89,6 +91,7 @@ $idlePasses = 0;
 $startedAt = gmdate('c');
 $normalExit = false;
 $nextCodeCheckAt = microtime(true) + 5.0;
+$nextPoolHealAt = microtime(true) + 10.0;
 $shutdownReserve = str_repeat('R', 1024 * 1024);
 
 register_shutdown_function(static function () use (
@@ -187,11 +190,29 @@ try {
             $exitReason = 'stop_requested';
             break;
         }
-        if (microtime(true) >= $nextCodeCheckAt) {
-            $nextCodeCheckAt = microtime(true) + 5.0;
+        $now = microtime(true);
+        if ($now >= $nextCodeCheckAt) {
+            $nextCodeCheckAt = $now + 5.0;
             if (!hash_equals($codeVersion, $controller->codeVersion(true))) {
                 $exitReason = 'code_changed';
                 break;
+            }
+        }
+        if ($now >= $nextPoolHealAt) {
+            $nextPoolHealAt = $now + 10.0;
+            try {
+                $heal = $poolHealer->heal($queueName, $maxJobs);
+                if (!empty($heal['healed'])) {
+                    error_log(
+                        '[UnrealDB worker self-heal][slot ' . $workerSlot . '] restored pool to '
+                        . (int)($heal['active_count'] ?? 0) . '/' . (int)($heal['desired_count'] ?? $workerCount)
+                    );
+                }
+            } catch (Throwable $healError) {
+                error_log(
+                    '[UnrealDB worker self-heal][slot ' . $workerSlot . '] '
+                    . get_class($healError) . ': ' . $healError->getMessage()
+                );
             }
         }
 
