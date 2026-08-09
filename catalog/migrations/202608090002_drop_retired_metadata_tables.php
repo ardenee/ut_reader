@@ -86,14 +86,17 @@ return [
         }
 
         if ($schema->tableExists('ue_background_jobs')) {
-            $activeJobs = $scalar(
+            // Queued jobs are safe: when they are eventually claimed they execute
+            // the current compact-only worker code. Only a job already running may
+            // still have an older PHP process/code image in memory.
+            $runningJobs = $scalar(
                 $db,
-                'SELECT COUNT(*) FROM ue_background_jobs WHERE status IN ("queued","running")'
+                'SELECT COUNT(*) FROM ue_background_jobs WHERE status="running"'
             );
-            if ($activeJobs !== 0) {
+            if ($runningJobs !== 0) {
                 throw new RuntimeException(
-                    'Legacy metadata tables cannot be dropped while ' . $activeJobs
-                    . ' background job(s) are queued or running.'
+                    'Legacy metadata tables cannot be dropped while ' . $runningJobs
+                    . ' background job(s) are currently running.'
                 );
             }
         }
