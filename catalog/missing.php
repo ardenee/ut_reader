@@ -128,24 +128,20 @@ try {
         exit;
     }
 
-    $summaryAvailable = (new PdoDependencyPackageSummary($db))->available();
+    if (!(new PdoDependencyPackageSummary($db))->available()) {
+        throw new RuntimeException('Current dependency package summaries are unavailable.');
+    }
+
     $selectedPackage = missing_selected_package();
     $selectedFileId = missing_page_int('file_id');
     $selectedView = missing_selected_view();
     $perPage = 200;
     $detailPerPage = 200;
 
-    if ($summaryAvailable) {
-        $filesWithMissing = catalog_count($db, 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependency_package_summaries WHERE missing_count>0');
-        $missingObjects = catalog_count($db, 'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries');
-        $missingPackages = catalog_count($db, 'SELECT COUNT(DISTINCT required_package) c FROM ue_dependency_package_summaries WHERE missing_count>0');
-        $resolved = catalog_count($db, 'SELECT COALESCE(SUM(resolved_count),0) c FROM ue_dependency_package_summaries');
-    } else {
-        $filesWithMissing = catalog_count($db, 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependencies WHERE status="missing"');
-        $missingObjects = catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing"');
-        $missingPackages = catalog_count($db, 'SELECT COUNT(DISTINCT required_package) c FROM ue_dependencies WHERE status="missing" AND required_package<>""');
-        $resolved = catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="resolved"');
-    }
+    $filesWithMissing = catalog_count($db, 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependency_package_summaries WHERE missing_count>0');
+    $missingObjects = catalog_count($db, 'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries');
+    $missingPackages = catalog_count($db, 'SELECT COUNT(DISTINCT required_package) c FROM ue_dependency_package_summaries WHERE missing_count>0');
+    $resolved = catalog_count($db, 'SELECT COALESCE(SUM(resolved_count),0) c FROM ue_dependency_package_summaries');
 
     $filePageCount = max(1, (int)ceil($filesWithMissing / $perPage));
     $filesMove = strtolower(trim((string)($_GET['files_move'] ?? 'first')));
@@ -160,7 +156,6 @@ try {
     $cursorContext = json_encode([
         'page' => 'missing-files',
         'limit' => $perPage,
-        'summary' => $summaryAvailable,
     ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     $cursorToken = trim((string)($_GET['files_cursor'] ?? ''));
     $cursor = $cursorToken !== '' ? CatalogKeysetPaginator::decode($config, $cursorContext, $cursorToken) : null;
@@ -169,12 +164,12 @@ try {
         $filePage = 1;
     }
 
-    $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $summaryAvailable, $perPage, $cursor, $filesMove);
+    $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $perPage, $cursor, $filesMove);
     $affectedFiles = $fileListPage['rows'];
     if ($affectedFiles === [] && $filesWithMissing > 0 && $filesMove !== 'first') {
         $filesMove = 'first';
         $filePage = 1;
-        $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $summaryAvailable, $perPage, null, 'first');
+        $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $perPage, null, 'first');
         $affectedFiles = $fileListPage['rows'];
     }
     $previousCursor = is_array($fileListPage['first_cursor'])
@@ -201,7 +196,11 @@ try {
     if ($selectedFileId > 0) {
         $detailMode = 'file_objects';
         $detailBaseParams = ['file_id' => $selectedFileId];
-        $detailTotal = catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing" AND file_id=?', [$selectedFileId]);
+        $detailTotal = catalog_count(
+            $db,
+            'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries WHERE file_id=?',
+            [$selectedFileId]
+        );
         $detailOwner = catalog_one(
             $db,
             'SELECT f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,g.id game_id,g.name game_name '
@@ -211,13 +210,19 @@ try {
     } elseif ($selectedPackage !== '' && $selectedView === 'files') {
         $detailMode = 'package_files';
         $detailBaseParams = ['package' => $selectedPackage, 'view' => 'files'];
-        $detailTotal = $summaryAvailable
-            ? catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependency_package_summaries WHERE required_package=? AND missing_count>0', [$selectedPackage])
-            : catalog_count($db, 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependencies WHERE status="missing" AND required_package=?', [$selectedPackage]);
+        $detailTotal = catalog_count(
+            $db,
+            'SELECT COUNT(*) c FROM ue_dependency_package_summaries WHERE required_package=? AND missing_count>0',
+            [$selectedPackage]
+        );
     } elseif ($selectedPackage !== '') {
         $detailMode = 'package_objects';
         $detailBaseParams = ['package' => $selectedPackage, 'view' => 'objects'];
-        $detailTotal = catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing" AND required_package=?', [$selectedPackage]);
+        $detailTotal = catalog_count(
+            $db,
+            'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries WHERE required_package=? AND missing_count>0',
+            [$selectedPackage]
+        );
     }
 
     $detailPageCount = max(1, (int)ceil($detailTotal / $detailPerPage));
@@ -238,7 +243,6 @@ try {
             'package' => $selectedPackage,
             'file_id' => $selectedFileId,
             'limit' => $detailPerPage,
-            'summary' => $summaryAvailable,
         ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
         $detailCursorToken = trim((string)($_GET['detail_cursor'] ?? ''));
         $detailCursor = $detailCursorToken !== ''
@@ -251,7 +255,7 @@ try {
 
         $detailListPage = match ($detailMode) {
             'file_objects' => CatalogMissingDetailListService::fetchFileObjects($db, $selectedFileId, $detailPerPage, $detailCursor, $detailMove),
-            'package_files' => CatalogMissingDetailListService::fetchPackageFiles($db, $summaryAvailable, $selectedPackage, $detailPerPage, $detailCursor, $detailMove),
+            'package_files' => CatalogMissingDetailListService::fetchPackageFiles($db, $selectedPackage, $detailPerPage, $detailCursor, $detailMove),
             default => CatalogMissingDetailListService::fetchPackageObjects($db, $selectedPackage, $detailPerPage, $detailCursor, $detailMove),
         };
         $detailRows = $detailListPage['rows'];
@@ -260,7 +264,7 @@ try {
             $detailPage = 1;
             $detailListPage = match ($detailMode) {
                 'file_objects' => CatalogMissingDetailListService::fetchFileObjects($db, $selectedFileId, $detailPerPage, null, 'first'),
-                'package_files' => CatalogMissingDetailListService::fetchPackageFiles($db, $summaryAvailable, $selectedPackage, $detailPerPage, null, 'first'),
+                'package_files' => CatalogMissingDetailListService::fetchPackageFiles($db, $selectedPackage, $detailPerPage, null, 'first'),
                 default => CatalogMissingDetailListService::fetchPackageObjects($db, $selectedPackage, $detailPerPage, null, 'first'),
             };
             $detailRows = $detailListPage['rows'];
@@ -424,9 +428,12 @@ CSS;
     }
     echo '</div>';
 
-    $rows = $summaryAvailable
-        ? catalog_all($db, 'SELECT required_package,SUM(missing_count) missing_object_rows,COUNT(*) requiring_file_count FROM ue_dependency_package_summaries WHERE missing_count>0 GROUP BY required_package ORDER BY missing_object_rows DESC,requiring_file_count DESC,required_package')
-        : catalog_all($db, 'SELECT required_package,COUNT(*) missing_object_rows,COUNT(DISTINCT file_id) requiring_file_count FROM ue_dependencies WHERE status="missing" AND required_package<>"" GROUP BY required_package ORDER BY missing_object_rows DESC,requiring_file_count DESC,required_package');
+    $rows = catalog_all(
+        $db,
+        'SELECT required_package,SUM(missing_count) missing_object_rows,COUNT(*) requiring_file_count '
+        . 'FROM ue_dependency_package_summaries WHERE missing_count>0 '
+        . 'GROUP BY required_package ORDER BY missing_object_rows DESC,requiring_file_count DESC,required_package'
+    );
 
     echo '<div class="card"><h2>Missing packages</h2>';
     if ($rows === []) {
