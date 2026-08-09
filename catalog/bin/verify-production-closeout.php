@@ -21,7 +21,7 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
     if (!$ok) $failures[] = $name . ($detail !== '' ? ': ' . $detail : '');
 };
 
-$run = static function (array $command, string $cwd) use ($record): array {
+$run = static function (array $command, string $cwd): array {
     if (!function_exists('proc_open')) {
         return ['ok' => false, 'exit' => 127, 'output' => 'proc_open is unavailable'];
     }
@@ -102,7 +102,10 @@ $record(
         && str_contains($bridgeSource, 'active jobs'),
     'worker UI distinguishes process-pool health from active DB jobs'
 );
-$node = trim((string)@shell_exec(PHP_OS_FAMILY === 'Windows' ? 'where node 2>NUL' : 'command -v node 2>/dev/null'));
+$node = '';
+if (function_exists('shell_exec')) {
+    $node = trim((string)@shell_exec(PHP_OS_FAMILY === 'Windows' ? 'where node 2>NUL' : 'command -v node 2>/dev/null'));
+}
 if ($node !== '') {
     $nodePath = preg_split('/\R/', $node)[0] ?? 'node';
     $result = $run([$nodePath, '--check', $bridge], $root);
