@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Telemetry;
 
 use PDO;
+use RuntimeException;
 use UnrealDb\Catalog\Application\Federation\CatalogFederationConflictListService;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
@@ -24,7 +25,9 @@ final class CatalogExactCountQueryCatalog
     public static function definitions(PDO $db): array
     {
         $definitions = [];
-        $summaryAvailable = (new PdoDependencyPackageSummary($db))->available();
+        if (!(new PdoDependencyPackageSummary($db))->available()) {
+            throw new RuntimeException('Current dependency package summaries are unavailable.');
+        }
 
         foreach (\catalog_all(
             $db,
@@ -54,61 +57,45 @@ final class CatalogExactCountQueryCatalog
             $definitions[] = self::definition(
                 'game_files.missing_filter',
                 'Game Files missing filter: ' . $gameName,
-                ['game_id' => $gameId, 'game' => $gameName, 'summary' => $summaryAvailable],
-                $summaryAvailable
-                    ? 'SELECT COUNT(*) c FROM ue_files f' . $baseWhere
-                        . ' AND EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx '
-                        . 'WHERE dx.file_id=f.id AND dx.missing_count>0)'
-                    : 'SELECT COUNT(DISTINCT f.id) c FROM ue_files f JOIN ue_dependencies d ON d.file_id=f.id'
-                        . $baseWhere . ' AND d.status="missing"',
+                ['game_id' => $gameId, 'game' => $gameName, 'summary' => true],
+                'SELECT COUNT(*) c FROM ue_files f' . $baseWhere
+                    . ' AND EXISTS (SELECT 1 FROM ue_dependency_package_summaries dx '
+                    . 'WHERE dx.file_id=f.id AND dx.missing_count>0)',
                 [$gameId]
             );
         }
 
-        $summaryQueries = $summaryAvailable ? [
+        $summaryQueries = [
             'missing.files' => ['Files with missing dependencies', 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependency_package_summaries WHERE missing_count>0'],
             'missing.objects' => ['Missing dependency objects', 'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries'],
             'missing.packages' => ['Distinct missing packages', 'SELECT COUNT(DISTINCT required_package) c FROM ue_dependency_package_summaries WHERE missing_count>0'],
             'missing.resolved' => ['Resolved dependency objects', 'SELECT COALESCE(SUM(resolved_count),0) c FROM ue_dependency_package_summaries'],
-        ] : [
-            'missing.files' => ['Files with missing dependencies', 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependencies WHERE status="missing"'],
-            'missing.objects' => ['Missing dependency objects', 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing"'],
-            'missing.packages' => ['Distinct missing packages', 'SELECT COUNT(DISTINCT required_package) c FROM ue_dependencies WHERE status="missing" AND required_package<>""'],
-            'missing.resolved' => ['Resolved dependency objects', 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="resolved"'],
         ];
         foreach ($summaryQueries as $metric => [$label, $sql]) {
-            $definitions[] = self::definition($metric, $label, ['summary' => $summaryAvailable], $sql);
+            $definitions[] = self::definition($metric, $label, ['summary' => true], $sql);
         }
 
-        $topPackages = $summaryAvailable
-            ? \catalog_all(
-                $db,
-                'SELECT required_package,SUM(missing_count) missing_total '
+        $topPackages = \catalog_all(
+            $db,
+            'SELECT required_package,SUM(missing_count) missing_total '
                 . 'FROM ue_dependency_package_summaries WHERE missing_count>0 AND required_package<>"" '
                 . 'GROUP BY required_package ORDER BY missing_total DESC,required_package LIMIT 5'
-            )
-            : \catalog_all(
-                $db,
-                'SELECT required_package,COUNT(*) missing_total FROM ue_dependencies '
-                . 'WHERE status="missing" AND required_package<>"" '
-                . 'GROUP BY required_package ORDER BY missing_total DESC,required_package LIMIT 5'
-            );
+        );
         foreach ($topPackages as $package) {
             $packageName = (string)$package['required_package'];
             $definitions[] = self::definition(
                 'missing.package_objects',
                 'Missing objects for ' . $packageName,
-                ['package' => $packageName],
-                'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing" AND required_package=?',
+                ['package' => $packageName, 'summary' => true],
+                'SELECT COALESCE(SUM(missing_count),0) c FROM ue_dependency_package_summaries '
+                    . 'WHERE required_package=? AND missing_count>0',
                 [$packageName]
             );
             $definitions[] = self::definition(
                 'missing.package_files',
                 'Files requiring ' . $packageName,
-                ['package' => $packageName, 'summary' => $summaryAvailable],
-                $summaryAvailable
-                    ? 'SELECT COUNT(*) c FROM ue_dependency_package_summaries WHERE required_package=? AND missing_count>0'
-                    : 'SELECT COUNT(DISTINCT file_id) c FROM ue_dependencies WHERE status="missing" AND required_package=?',
+                ['package' => $packageName, 'summary' => true],
+                'SELECT COUNT(*) c FROM ue_dependency_package_summaries WHERE required_package=? AND missing_count>0',
                 [$packageName]
             );
         }
