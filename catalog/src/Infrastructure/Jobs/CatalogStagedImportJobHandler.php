@@ -81,6 +81,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
         ]);
 
         $workingPath = '';
+        $workingTemporary = false;
         $workingName = $this->cleanOriginalFilename($originalName);
         $decompressed = $redirectPrepared;
         $scanStart = $startPercent;
@@ -90,6 +91,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 // in the current worker process. Scan it directly instead of making
                 // another large copy before the parser can begin.
                 $workingPath = $sourcePath;
+                $workingTemporary = true;
             } elseif (\catalog_redirect_archive_is_supported_filename($originalName)) {
                 if (\catalog_redirect_archive_extension($originalName) === 'uz2') {
                     $decoded = CatalogRedirectArchiveStream::decompressUz2(
@@ -116,6 +118,7 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     $decoded = \catalog_redirect_archive_decompress_to_temp($sourcePath, $originalName);
                 }
                 $workingPath = (string)$decoded['path'];
+                $workingTemporary = true;
                 $workingName = $this->cleanOriginalFilename((string)$decoded['filename']);
                 $sourceRelativePath = $this->replaceRelativeFilename($sourceRelativePath, $workingName);
                 $decompressed = true;
@@ -130,7 +133,10 @@ final class CatalogStagedImportJobHandler implements JobHandler
                     'decoder' => (string)($decoded['decoder'] ?? ''),
                 ]);
             } else {
-                $workingPath = $this->workingCopy($sourcePath, $workingName, $context, 2, 20);
+                // Durable upload staging is already a controlled, identity-checked
+                // source. Parse that file directly instead of reading and writing a
+                // second full copy before the parser can begin.
+                $workingPath = $sourcePath;
                 $scanStart = 20;
             }
 
@@ -228,7 +234,10 @@ final class CatalogStagedImportJobHandler implements JobHandler
             }
             throw $error;
         } finally {
-            if ($workingPath !== '' && is_file($workingPath)) {
+            // Only helper-created temporary files are disposable here. A durable
+            // staged source must survive an infrastructure/staging exception so an
+            // administrator can retry or inspect it.
+            if ($workingTemporary && $workingPath !== '' && is_file($workingPath)) {
                 @unlink($workingPath);
             }
         }
@@ -245,90 +254,6 @@ final class CatalogStagedImportJobHandler implements JobHandler
         if (!is_string($actual) || !hash_equals($expected, strtolower($actual))) {
             throw new \RuntimeException('Staged import file identity changed before execution.');
         }
-    }
-
-    private function workingCopy(
-        string $sourcePath,
-        string $name,
-        JobExecutionContext $context,
-        int $startPercent,
-        int $endPercent
-    ): string {
-        $extension = preg_replace('/[^A-Za-z0-9_]+/', '', (string)pathinfo($name, PATHINFO_EXTENSION)) ?: 'bin';
-        $base = tempnam(sys_get_temp_dir(), 'unrealdb-import-');
-        if ($base === false) {
-            throw new \RuntimeException('Could not allocate package import working file.');
-        }
-        $path = $base . '.' . $extension;
-        @unlink($base);
-
-        $size = filesize($sourcePath);
-        $input = fopen($sourcePath, 'rb');
-        $output = fopen($path, 'wb');
-        if ($size === false || !is_resource($input) || !is_resource($output)) {
-            if (is_resource($input)) {
-                fclose($input);
-            }
-            if (is_resource($output)) {
-                fclose($output);
-            }
-            @unlink($path);
-            throw new \RuntimeException('Could not create package import working copy.');
-        }
-
-        $copied = 0;
-        $lastCheckpoint = 0;
-        try {
-            while (!feof($input)) {
-                $buffer = fread($input, 4 * 1024 * 1024);
-                if (!is_string($buffer)) {
-                    throw new \RuntimeException('Could not read staged package while creating working copy.');
-                }
-                if ($buffer === '') {
-                    break;
-                }
-                $written = 0;
-                $length = strlen($buffer);
-                while ($written < $length) {
-                    $count = fwrite($output, substr($buffer, $written));
-                    if ($count === false || $count < 1) {
-                        throw new \RuntimeException('Could not create package import working copy.');
-                    }
-                    $written += $count;
-                }
-                $copied += $length;
-                if ($copied - $lastCheckpoint >= 32 * 1024 * 1024 || $copied >= (int)$size) {
-                    $sourcePercent = (int)floor($copied * 100 / max(1, (int)$size));
-                    $percent = min(
-                        $endPercent,
-                        $startPercent + (int)floor($sourcePercent * ($endPercent - $startPercent) / 100)
-                    );
-                    $context->checkpoint([
-                        'stage' => 'copy',
-                        'done' => $copied,
-                        'total' => max(1, (int)$size),
-                        'percent' => $percent,
-                        'message' => 'Creating parser working copy: '
-                            . $this->bytes($copied) . ' of ' . $this->bytes((int)$size),
-                    ]);
-                    $lastCheckpoint = $copied;
-                }
-            }
-            fflush($output);
-        } catch (Throwable $error) {
-            fclose($input);
-            fclose($output);
-            @unlink($path);
-            throw $error;
-        }
-        fclose($input);
-        fclose($output);
-
-        if ($copied !== (int)$size) {
-            @unlink($path);
-            throw new \RuntimeException('Package import working copy is incomplete.');
-        }
-        return $path;
     }
 
     private function resolvePreparedSource(string $path): string
@@ -389,17 +314,5 @@ final class CatalogStagedImportJobHandler implements JobHandler
         $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
         $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
         return trim($message) !== '' ? trim($message) : 'Unknown package import error.';
-    }
-
-    private function bytes(int $bytes): string
-    {
-        $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        $value = max(0, $bytes);
-        $unit = 0;
-        while ($value >= 1024 && $unit < count($units) - 1) {
-            $value /= 1024;
-            $unit++;
-        }
-        return ($unit === 0 ? (string)$value : number_format($value, 2)) . ' ' . $units[$unit];
     }
 }
