@@ -1,10 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Serves legacy metadata SQL read shapes from format-2 blocked metadata containers.
+ * Purpose: Serves historical metadata SQL read shapes from format-2 blocked metadata containers.
  * Why: CatalogSupport's generic query helpers still accept historical ue_names/ue_imports/ue_exports SQL shapes,
- *      while verified compact files no longer use those legacy tables as their canonical metadata source.
- * Role: Infrastructure compatibility boundary; preserves legacy read contracts without reintroducing verified-table reads.
+ *      while verified files must always resolve those shapes from current compact metadata.
+ * Role: Infrastructure compatibility boundary; legacy SQL-table fallback is restricted to non-verified staging rows.
  */
 declare(strict_types=1);
 
@@ -26,8 +26,9 @@ final class CatalogCompactMetadataCompatibilityService
     private static array $snapshotCache = [];
 
     /**
-     * Return a handled result for legacy metadata queries that can be served
-     * from a format-2 container. Unconverted/unverified rows retain SQL fallback.
+     * Return a handled result for historical metadata queries that can be served
+     * from a format-2 container. Only explicitly non-verified staging rows may
+     * retain direct legacy SQL fallback.
      *
      * @param list<mixed> $args
      * @return array{handled:bool,value:mixed}
@@ -184,15 +185,21 @@ final class CatalogCompactMetadataCompatibilityService
             return self::$snapshotCache[$connectionId]['snapshot'];
         }
 
-        // Release the previous expanded snapshot before loading the next one so
-        // peak memory does not include two potentially large package inventories.
         unset(self::$snapshotCache[$connectionId]);
 
-        $registration = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
+        $registration = $db->prepare(
+            'SELECT f.scan_status,m.format_version FROM ue_files f '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE f.id=?'
+        );
         $registration->execute([$fileId]);
-        $formatVersion = (int)($registration->fetchColumn() ?: 0);
+        $state = $registration->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($state)) {
+            throw new RuntimeException('Catalog file #' . $fileId . ' was not found.');
+        }
+        $formatVersion = (int)($state['format_version'] ?? 0);
+        $scanStatus = strtolower(trim((string)($state['scan_status'] ?? '')));
 
-        if ($formatVersion >= 2) {
+        if ($formatVersion >= BlockedCompressedMetadataContainer::FORMAT_VERSION) {
             $storageRoot = trim((string)($config['storage_path'] ?? ''));
             if ($storageRoot === '') {
                 throw new RuntimeException('Catalog storage_path is required for compact metadata reading.');
@@ -244,12 +251,18 @@ final class CatalogCompactMetadataCompatibilityService
             return $result;
         }
 
+        if ($scanStatus === 'verified') {
+            throw new RuntimeException(
+                'Verified file #' . $fileId . ' is missing current format-2 metadata; runtime legacy metadata reads are disabled.'
+            );
+        }
+
         $result = [
             'names' => $this->directRows($db, 'SELECT * FROM ue_names WHERE file_id=? ORDER BY name_index', [$fileId]),
             'imports' => $this->directRows($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index', [$fileId]),
             'exports' => $this->directRows($db, 'SELECT * FROM ue_exports WHERE file_id=? ORDER BY export_index', [$fileId]),
             'dependencies' => $this->directRows($db, 'SELECT * FROM ue_dependencies WHERE file_id=? ORDER BY id', [$fileId]),
-            'source' => 'legacy',
+            'source' => 'legacy-staging',
         ];
         self::$snapshotCache[$connectionId] = ['file_id' => $fileId, 'snapshot' => $result];
         return $result;
