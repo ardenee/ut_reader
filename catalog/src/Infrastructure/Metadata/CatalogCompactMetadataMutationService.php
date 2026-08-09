@@ -1,10 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Rewrites package identity and Export paths in compact format-2 metadata.
- * Why: Compact snapshot mutation/publication is a metadata persistence concern and should not live in a procedural
- *      catalog/lib helper.
- * Role: Infrastructure metadata mutation service preserving legacy fallback and blocked-container publication.
+ * Purpose: Rewrites package identity and Export paths in current metadata.
+ * Why: Compact snapshot mutation/publication is a metadata persistence concern; unverified staging rebases paths at read time.
+ * Role: Infrastructure metadata mutation service for format-2 containers and compressed unverified staging.
  */
 declare(strict_types=1);
 
@@ -13,6 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use InvalidArgumentException;
 use PDO;
 use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataStore;
 
 final class CatalogCompactMetadataMutationService
 {
@@ -23,10 +23,6 @@ final class CatalogCompactMetadataMutationService
     ) {
     }
 
-    /**
-     * Rewrite a file's package identity and every Export full path in format-2
-     * metadata. Unverified/unconverted rows retain the legacy staging update.
-     */
     public function rewritePackageIdentity(int $fileId, string $packageName): int
     {
         $packageName = trim($packageName);
@@ -41,13 +37,17 @@ final class CatalogCompactMetadataMutationService
         $registration->execute([$fileId]);
         $formatVersion = (int)($registration->fetchColumn() ?: 0);
 
-        if ($formatVersion < 2) {
-            $statement = $this->db->prepare(
-                'UPDATE ue_exports SET full_path=CASE WHEN local_path<>"" '
-                . 'THEN CONCAT(?, ".", local_path) ELSE ? END WHERE file_id=?'
-            );
-            $statement->execute([$packageName, $packageName, $fileId]);
-            return $statement->rowCount();
+        if ($formatVersion < BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+            $status = $this->db->prepare('SELECT scan_status FROM ue_files WHERE id=?');
+            $status->execute([$fileId]);
+            $scanStatus = strtolower(trim((string)($status->fetchColumn() ?: '')));
+            if ($scanStatus === 'unverified' && (new CatalogUnverifiedMetadataStore($this->db))->has($fileId)) {
+                // The staging payload stores local Export paths. Its reader derives
+                // full paths from the current ue_files.package_name, so no large
+                // payload rewrite is required when only package identity changes.
+                return 0;
+            }
+            throw new RuntimeException('File #' . $fileId . ' has no current metadata snapshot to rewrite.');
         }
 
         $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
@@ -73,13 +73,9 @@ final class CatalogCompactMetadataMutationService
         foreach ($exports as $index => &$export) {
             $localPath = (string)($export['local_path'] ?? '');
             $fullPath = self::joinPackagePath($packageName, $localPath);
-            if ((string)($export['full_path'] ?? '') !== $fullPath) {
-                $changed++;
-            }
+            if ((string)($export['full_path'] ?? '') !== $fullPath) $changed++;
             $export['full_path'] = $fullPath;
-            if (!isset($exportPaths[$index]) || !is_array($exportPaths[$index])) {
-                $exportPaths[$index] = [];
-            }
+            if (!isset($exportPaths[$index]) || !is_array($exportPaths[$index])) $exportPaths[$index] = [];
             $exportPaths[$index]['local'] = $localPath;
             $exportPaths[$index]['full'] = $fullPath;
         }
@@ -88,7 +84,6 @@ final class CatalogCompactMetadataMutationService
         $snapshot['exports'] = $exports;
         $paths['exports'] = $exportPaths;
         $snapshot['paths'] = $paths;
-
         (new BlockedCompressedMetadataSnapshotWriter($this->db, $storageRoot))->write($snapshot);
         return $changed;
     }
@@ -97,9 +92,7 @@ final class CatalogCompactMetadataMutationService
     {
         $packageName = trim($packageName);
         $localPath = trim($localPath);
-        if ($localPath === '') {
-            return $packageName;
-        }
+        if ($localPath === '') return $packageName;
         return rtrim($packageName, '.') . '.' . ltrim($localPath, '.');
     }
 }

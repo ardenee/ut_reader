@@ -2,8 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Renames an indexed unverified file while preserving its queue wrapper, sidecar and database identity.
- * Why: Rename validation, filesystem rollback and staging-row updates are one infrastructure use case, not page logic.
- * Role: Infrastructure service replacing the legacy procedural rename implementation.
+ * Why: Rename validation, filesystem rollback and staging-row updates are one infrastructure use case.
+ * Role: Infrastructure service for unverified file rename.
  */
 declare(strict_types=1);
 
@@ -28,13 +28,7 @@ final class CatalogUnverifiedRenameService
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
     }
 
-    /**
-     * Rename an indexed unverified file without changing its contents or hashes.
-     * Redirect wrappers remain physical queue suffixes while original_name becomes
-     * the corrected decompressed Unreal filename.
-     *
-     * @return array{file_id:int,old_name:string,new_name:string,old_queue_name:string,new_queue_name:string,package_name:string}
-     */
+    /** @return array{file_id:int,old_name:string,new_name:string,old_queue_name:string,new_queue_name:string,package_name:string} */
     public function rename(int $fileId, string $requestedName): array
     {
         $this->staging->ensureSchema();
@@ -61,24 +55,14 @@ final class CatalogUnverifiedRenameService
 
         $queueGame = $queueGameId === 0
             ? CatalogUnverifiedQueueStorage::bucketGame()
-            : \catalog_one(
-                $this->db,
-                'SELECT id,name,slug,profile_id FROM ue_games WHERE id=?',
-                [$queueGameId]
-            );
+            : \catalog_one($this->db, 'SELECT id,name,slug,profile_id FROM ue_games WHERE id=?', [$queueGameId]);
         if (!$queueGame) {
             throw new RuntimeException('The physical queue game no longer exists.');
         }
 
-        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory(
-            $this->config,
-            $queueGame,
-            false
-        );
+        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $queueGame, false);
         $oldPath = $directory . DIRECTORY_SEPARATOR . $oldQueueName;
-        if (!is_file($oldPath)
-            || is_link($oldPath)
-            || !CatalogUnverifiedQueueStorage::pathInside($oldPath, $directory)) {
+        if (!is_file($oldPath) || is_link($oldPath) || !CatalogUnverifiedQueueStorage::pathInside($oldPath, $directory)) {
             throw new RuntimeException('The physical staged file is missing or unsafe.');
         }
 
@@ -136,9 +120,7 @@ final class CatalogUnverifiedRenameService
                     if ($fileMoved && is_file($newPath) && !is_file($oldPath)) {
                         @rename($newPath, $oldPath);
                     }
-                    throw new RuntimeException(
-                        'The staged file was restored because its queue note could not be renamed.'
-                    );
+                    throw new RuntimeException('The staged file was restored because its queue note could not be renamed.');
                 }
                 $reasonMoved = true;
             }
@@ -148,31 +130,26 @@ final class CatalogUnverifiedRenameService
                 $newOriginalName
             );
             $engine = strtoupper(trim((string)($row['detected_engine_key'] ?? '')));
-            $newPackageName = in_array($engine, ['UE4', 'UE5'], true)
-                && $newSourceRelativePath !== ''
-                    ? \scanner_ue_package_name_from_source_relative($newSourceRelativePath)
-                    : \scanner_logical_package_name($newOriginalName);
+            $newPackageName = in_array($engine, ['UE4', 'UE5'], true) && $newSourceRelativePath !== ''
+                ? \scanner_ue_package_name_from_source_relative($newSourceRelativePath)
+                : \scanner_logical_package_name($newOriginalName);
             if ($newPackageName === '') {
                 throw new RuntimeException('The corrected filename does not produce a valid package name.');
             }
 
             $newRelativePath = CatalogUnverifiedStagingIndex::storageRelative($this->config, $newPath);
-            $newExtension = \catalog_clean_unreal_extension(
-                (string)pathinfo($newOriginalName, PATHINFO_EXTENSION)
-            );
+            $newExtension = \catalog_clean_unreal_extension((string)pathinfo($newOriginalName, PATHINFO_EXTENSION));
             $renameNote = 'Renamed staged file from '
                 . ($oldOriginalName !== '' ? $oldOriginalName : $oldQueueName)
                 . ' to ' . $newOriginalName . ' on ' . gmdate('Y-m-d H:i:s') . ' UTC.';
-            $scanNotes = trim((string)($row['scan_notes'] ?? ''));
-            $scanNotes = trim($scanNotes . "\n" . $renameNote);
+            $scanNotes = trim(trim((string)($row['scan_notes'] ?? '')) . "\n" . $renameNote);
 
             $this->db->beginTransaction();
             try {
                 $update = $this->db->prepare(
                     'UPDATE ue_files SET package_name=?,original_name=?,source_relative_path=?,'
                     . 'stored_name=?,relative_path=?,extension=?,unverified_queue_key=?,'
-                    . 'unverified_queue_name=?,scan_notes=? '
-                    . 'WHERE id=? AND scan_status="unverified"'
+                    . 'unverified_queue_name=?,scan_notes=? WHERE id=? AND scan_status="unverified"'
                 );
                 $update->execute([
                     $newPackageName,
@@ -189,20 +166,12 @@ final class CatalogUnverifiedRenameService
                 if ($update->rowCount() !== 1) {
                     throw new RuntimeException('The staging row changed before the rename could be saved.');
                 }
-
-                if (strcasecmp((string)$row['package_name'], $newPackageName) !== 0) {
-                    $updateExports = $this->db->prepare(
-                        'UPDATE ue_exports SET full_path=CASE '
-                        . 'WHEN local_path IS NOT NULL AND local_path<>"" THEN CONCAT(?,".",local_path) '
-                        . 'ELSE ? END WHERE file_id=?'
-                    );
-                    $updateExports->execute([$newPackageName, $newPackageName, $fileId]);
-                }
+                // Metadata structure does not change on rename. The compressed
+                // staging store rebases Export full paths from the current
+                // ue_files.package_name whenever the snapshot is loaded.
                 $this->db->commit();
             } catch (Throwable $error) {
-                if ($this->db->inTransaction()) {
-                    $this->db->rollBack();
-                }
+                if ($this->db->inTransaction()) $this->db->rollBack();
                 throw $error;
             }
         } catch (Throwable $error) {
@@ -233,19 +202,12 @@ final class CatalogUnverifiedRenameService
             throw new RuntimeException('Enter a valid filename.');
         }
         if (strcasecmp($cleanName, $requestedName) !== 0) {
-            throw new RuntimeException(
-                'Enter only a filename, without a folder path or invalid Windows filename characters.'
-            );
+            throw new RuntimeException('Enter only a filename, without a folder path or invalid Windows filename characters.');
         }
         if (preg_match('/\.uz(?:2|3)?$/i', $cleanName) === 1) {
-            throw new RuntimeException(
-                'Enter the decompressed Unreal filename without the .uz, .uz2 or .uz3 queue wrapper.'
-            );
+            throw new RuntimeException('Enter the decompressed Unreal filename without the .uz, .uz2 or .uz3 queue wrapper.');
         }
-
-        $extension = \catalog_clean_unreal_extension(
-            (string)pathinfo($cleanName, PATHINFO_EXTENSION)
-        );
+        $extension = \catalog_clean_unreal_extension((string)pathinfo($cleanName, PATHINFO_EXTENSION));
         if ($extension === '' || preg_match('/^[a-z0-9_]{1,16}$/i', $extension) !== 1) {
             throw new RuntimeException('The new filename must include a valid Unreal file extension.');
         }
@@ -262,7 +224,6 @@ final class CatalogUnverifiedRenameService
         if (preg_match('/^(\d{8}_\d{6}_[A-Fa-f0-9]{8}_)/', $currentQueueName, $match) === 1) {
             $prefix = $match[1];
         }
-
         $wrapper = '';
         if (preg_match('/(\.uz(?:2|3)?)$/i', $currentQueueName, $match) === 1) {
             $wrapper = $match[1];
@@ -273,13 +234,9 @@ final class CatalogUnverifiedRenameService
     private function sourceRelative(string $sourceRelativePath, string $newOriginalName): string
     {
         $sourceRelativePath = \scanner_normalize_source_relative_path($sourceRelativePath);
-        if ($sourceRelativePath === '') {
-            return '';
-        }
+        if ($sourceRelativePath === '') return '';
         $normalized = str_replace('\\', '/', $sourceRelativePath);
         $slash = strrpos($normalized, '/');
-        return $slash === false
-            ? $newOriginalName
-            : substr($normalized, 0, $slash + 1) . $newOriginalName;
+        return $slash === false ? $newOriginalName : substr($normalized, 0, $slash + 1) . $newOriginalName;
     }
 }

@@ -2,8 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Owns database-backed indexing for files retained in unverified storage.
- * Why: Package parsing, staging identity, temporary N/I/E persistence and schema validation are one infrastructure concern,
- *      not a procedural helper collection.
+ * Why: Package parsing, staging identity and compressed temporary metadata are one infrastructure concern.
  * Role: Infrastructure service behind the legacy CatalogUnverifiedIndex compatibility facade.
  */
 declare(strict_types=1);
@@ -13,12 +12,12 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogPackageTableWriter;
 
 final class CatalogUnverifiedStagingIndex
 {
     private static bool $schemaVerified = false;
-    private readonly PdoCatalogPackageTableWriter $tables;
+    private readonly CatalogUnverifiedMetadataStore $metadata;
+    private readonly CatalogUnverifiedMetadataSnapshotBuilder $snapshots;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -30,7 +29,8 @@ final class CatalogUnverifiedStagingIndex
         require_once $root . '/lib/CatalogScanner.php';
         require_once $root . '/lib/CatalogRedirectArchive.php';
         require_once $root . '/lib/GameProfiles.php';
-        $this->tables = new PdoCatalogPackageTableWriter($db);
+        $this->metadata = new CatalogUnverifiedMetadataStore($db);
+        $this->snapshots = new CatalogUnverifiedMetadataSnapshotBuilder($db);
     }
 
     public function ensureSchema(): void
@@ -99,6 +99,7 @@ final class CatalogUnverifiedStagingIndex
             );
         }
 
+        $this->metadata->ensureSchema();
         \scanner_source_path_schema_ensure($this->db);
         self::$schemaVerified = true;
     }
@@ -245,11 +246,7 @@ final class CatalogUnverifiedStagingIndex
         }
 
         $key = self::queueKey($queueGameId, $queueName);
-        $existing = \catalog_one(
-            $this->db,
-            'SELECT * FROM ue_files WHERE unverified_queue_key=? LIMIT 1',
-            [$key]
-        );
+        $existing = \catalog_one($this->db, 'SELECT * FROM ue_files WHERE unverified_queue_key=? LIMIT 1', [$key]);
         if ($existing && !$force) {
             return [
                 'status' => 'existing',
@@ -320,19 +317,15 @@ final class CatalogUnverifiedStagingIndex
                     : (($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : 0));
             $confidence = $parseError === null ? 'high' : (!empty($summary['ok']) ? 'medium' : 'unknown');
             $relativePath = self::storageRelative($this->config, $path);
-            $scanNotes = implode(
-                "\n",
-                array_values(array_filter(
-                    array_map('trim', $notes),
-                    static fn(string $value): bool => $value !== ''
-                ))
-            );
+            $scanNotes = implode("\n", array_values(array_filter(
+                array_map('trim', $notes),
+                static fn(string $value): bool => $value !== ''
+            )));
 
             $this->db->beginTransaction();
             try {
                 if ($existing) {
                     $fileId = (int)$existing['id'];
-                    $this->tables->deleteForFile($fileId);
                     $statement = $this->db->prepare(
                         'UPDATE ue_files SET game_id=NULL,package_name=?,original_name=?,source_relative_path=?,'
                         . 'stored_name=?,relative_path=?,extension=?,detected_engine_key=?,detected_package_version=?,'
@@ -344,34 +337,17 @@ final class CatalogUnverifiedStagingIndex
                         . 'unverified_reason=? WHERE id=?'
                     );
                     $statement->execute([
-                        $packageName,
-                        $parsedName,
-                        $sourceRelativePath !== '' ? $sourceRelativePath : null,
-                        $queueName,
-                        $relativePath,
+                        $packageName, $parsedName, $sourceRelativePath !== '' ? $sourceRelativePath : null,
+                        $queueName, $relativePath,
                         \catalog_clean_unreal_extension((string)pathinfo($parsedName, PATHINFO_EXTENSION)),
                         $detectedEngine,
                         !empty($summary['ok']) ? (int)($summary['version'] ?? 0) : null,
                         ($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : null,
-                        $confidence,
-                        $scanNotes,
-                        $size,
-                        strtolower($md5),
-                        strtolower($sha1),
-                        $guid !== '' ? $guid : null,
-                        !empty($header['compressed']) ? 1 : 0,
-                        (int)($header['compressionFlags'] ?? 0),
-                        $version,
-                        $licensee,
-                        count($names),
-                        count($imports),
-                        count($exports),
-                        $scanNotes,
-                        $uploadedBy,
-                        $queueGameId,
-                        $queueName,
-                        $reason,
-                        $fileId,
+                        $confidence, $scanNotes, $size, strtolower($md5), strtolower($sha1),
+                        $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,
+                        (int)($header['compressionFlags'] ?? 0), $version, $licensee,
+                        count($names), count($imports), count($exports), $scanNotes, $uploadedBy,
+                        $queueGameId, $queueName, $reason, $fileId,
                     ]);
                 } else {
                     $statement = $this->db->prepare(
@@ -385,48 +361,30 @@ final class CatalogUnverifiedStagingIndex
                         . ') VALUES(NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,? ,"unverified",?,?,?,?,?,?)'
                     );
                     $statement->execute([
-                        $packageName,
-                        $parsedName,
-                        $sourceRelativePath !== '' ? $sourceRelativePath : null,
-                        $queueName,
-                        $relativePath,
+                        $packageName, $parsedName, $sourceRelativePath !== '' ? $sourceRelativePath : null,
+                        $queueName, $relativePath,
                         \catalog_clean_unreal_extension((string)pathinfo($parsedName, PATHINFO_EXTENSION)),
                         $detectedEngine,
                         !empty($summary['ok']) ? (int)($summary['version'] ?? 0) : null,
                         ($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : null,
-                        $confidence,
-                        'unverified',
-                        null,
-                        $scanNotes,
-                        $size,
-                        strtolower($md5),
-                        strtolower($sha1),
-                        $guid !== '' ? $guid : null,
-                        !empty($header['compressed']) ? 1 : 0,
-                        (int)($header['compressionFlags'] ?? 0),
-                        $version,
-                        $licensee,
-                        count($names),
-                        count($imports),
-                        count($exports),
-                        $scanNotes,
-                        $uploadedBy,
-                        $key,
-                        $queueGameId,
-                        $queueName,
-                        $reason,
+                        $confidence, 'unverified', null, $scanNotes, $size, strtolower($md5), strtolower($sha1),
+                        $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,
+                        (int)($header['compressionFlags'] ?? 0), $version, $licensee,
+                        count($names), count($imports), count($exports), $scanNotes, $uploadedBy,
+                        $key, $queueGameId, $queueName, $reason,
                     ]);
                     $fileId = (int)$this->db->lastInsertId();
                 }
 
-                $this->tables->insert(
+                $snapshot = $this->snapshots->fromParsed(
                     $fileId,
                     $packageName,
                     $names,
                     $imports,
                     $exports,
-                    array_values($this->config['common_packages'] ?? [])
+                    array_values((array)($this->config['common_packages'] ?? []))
                 );
+                $this->metadata->write($snapshot);
                 $this->db->commit();
             } catch (Throwable $error) {
                 if ($this->db->inTransaction()) {
@@ -439,8 +397,8 @@ final class CatalogUnverifiedStagingIndex
                 'status' => $existing ? 'updated' : 'indexed',
                 'file_id' => $fileId,
                 'message' => $parseError === null
-                    ? 'Indexed package tables'
-                    : 'Indexed metadata; package tables could not be read',
+                    ? 'Indexed compressed package metadata'
+                    : 'Indexed basic metadata; package tables could not be read',
                 'parse_error' => $parseError,
             ];
         } finally {
@@ -450,10 +408,7 @@ final class CatalogUnverifiedStagingIndex
         }
     }
 
-    /**
-     * @param array<string,mixed> $item
-     * @return array{status:string,file_id:int,message:string,parse_error:?string}
-     */
+    /** @param array<string,mixed> $item */
     public function indexItem(array $item, ?int $uploadedBy = null, bool $force = false): array
     {
         return $this->indexPath(
@@ -484,10 +439,7 @@ final class CatalogUnverifiedStagingIndex
         string $newPath
     ): void {
         $this->ensureSchema();
-        $oldKey = self::queueKey(
-            (int)$sourceItem['game']['id'],
-            (string)$sourceItem['queue_name']
-        );
+        $oldKey = self::queueKey((int)$sourceItem['game']['id'], (string)$sourceItem['queue_name']);
         $newKey = self::queueKey($newQueueGameId, $newQueueName);
         $this->db->prepare(
             'UPDATE ue_files SET unverified_queue_key=?,unverified_queue_game_id=?,'

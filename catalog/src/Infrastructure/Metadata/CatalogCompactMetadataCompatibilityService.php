@@ -1,10 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Serves historical metadata SQL read shapes from format-2 blocked metadata containers.
- * Why: CatalogSupport's generic query helpers still accept historical ue_names/ue_imports/ue_exports SQL shapes,
- *      while verified files must always resolve those shapes from current compact metadata.
- * Role: Infrastructure compatibility boundary; legacy SQL-table fallback is restricted to non-verified staging rows.
+ * Purpose: Serves historical metadata SQL read shapes from current metadata snapshots.
+ * Why: Older callers still express Names/Imports/Exports query shapes, while physical legacy metadata tables are being retired.
+ * Role: Compatibility boundary routing verified files to format-2 and unverified files to compressed staging.
  */
 declare(strict_types=1);
 
@@ -13,23 +12,14 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use InvalidArgumentException;
 use PDO;
 use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataStore;
 
 final class CatalogCompactMetadataCompatibilityService
 {
-    /**
-     * Keep only the most recently expanded snapshot for each PDO connection.
-     * Long-lived workers can process tens of thousands of files, so retaining
-     * every decoded package snapshot would cause unbounded memory growth.
-     *
-     * @var array<int,array{file_id:int,snapshot:array<string,mixed>}>
-     */
+    /** @var array<int,array{file_id:int,snapshot:array<string,mixed>}> */
     private static array $snapshotCache = [];
 
     /**
-     * Return a handled result for historical metadata queries that can be served
-     * from a format-2 container. Only explicitly non-verified staging rows may
-     * retain direct legacy SQL fallback.
-     *
      * @param list<mixed> $args
      * @return array{handled:bool,value:mixed}
      */
@@ -75,7 +65,7 @@ final class CatalogCompactMetadataCompatibilityService
         $fileId = isset($args[0]) ? (int)$args[0] : 0;
         if ($fileId < 1) {
             throw new RuntimeException(
-                'Historical Names/Imports/Exports query has no file identity; runtime legacy metadata reads are disabled.'
+                'Historical Names/Imports/Exports query has no file identity; physical legacy metadata reads are disabled.'
             );
         }
         $snapshot = $this->snapshot($db, $config, $fileId);
@@ -173,10 +163,10 @@ final class CatalogCompactMetadataCompatibilityService
             ]];
         }
 
-        if (($snapshot['source'] ?? '') === 'compact') {
+        if (in_array((string)($snapshot['source'] ?? ''), ['compact', 'unverified-staging'], true)) {
             throw new RuntimeException(
-                'Unsupported historical metadata query shape for verified file #' . $fileId
-                . '; runtime legacy metadata reads are disabled.'
+                'Unsupported historical metadata query shape for file #' . $fileId
+                . '; physical legacy metadata reads are disabled.'
             );
         }
 
@@ -198,7 +188,6 @@ final class CatalogCompactMetadataCompatibilityService
             && is_array(self::$snapshotCache[$connectionId]['snapshot'] ?? null)) {
             return self::$snapshotCache[$connectionId]['snapshot'];
         }
-
         unset(self::$snapshotCache[$connectionId]);
 
         $registration = $db->prepare(
@@ -227,7 +216,6 @@ final class CatalogCompactMetadataCompatibilityService
                 $row['file_id'] = $fileId;
                 $names[] = $row;
             }
-
             $imports = [];
             foreach ((array)$snapshot['imports'] as $row) {
                 $index = (int)$row['import_index'];
@@ -235,7 +223,6 @@ final class CatalogCompactMetadataCompatibilityService
                 $row['file_id'] = $fileId;
                 $imports[] = $row;
             }
-
             $exports = [];
             foreach ((array)$snapshot['exports'] as $row) {
                 $index = (int)$row['export_index'];
@@ -243,7 +230,6 @@ final class CatalogCompactMetadataCompatibilityService
                 $row['file_id'] = $fileId;
                 $exports[] = $row;
             }
-
             $dependencies = [];
             foreach ((array)$snapshot['dependencies'] as $row) {
                 $index = (int)$row['import_index'];
@@ -253,7 +239,6 @@ final class CatalogCompactMetadataCompatibilityService
                 $row['resolved_export_id'] = null;
                 $dependencies[] = $row;
             }
-
             $result = [
                 'names' => $names,
                 'imports' => $imports,
@@ -267,16 +252,22 @@ final class CatalogCompactMetadataCompatibilityService
 
         if ($scanStatus === 'verified') {
             throw new RuntimeException(
-                'Verified file #' . $fileId . ' is missing current format-2 metadata; runtime legacy metadata reads are disabled.'
+                'Verified file #' . $fileId . ' is missing current format-2 metadata; fallback reads are disabled.'
+            );
+        }
+        if ($scanStatus !== 'unverified') {
+            throw new RuntimeException(
+                'File #' . $fileId . ' has no current metadata snapshot for status ' . $scanStatus . '.'
             );
         }
 
+        $staging = (new CatalogUnverifiedMetadataStore($db))->load($fileId);
         $result = [
-            'names' => $this->directRows($db, 'SELECT * FROM ue_names WHERE file_id=? ORDER BY name_index', [$fileId]),
-            'imports' => $this->directRows($db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index', [$fileId]),
-            'exports' => $this->directRows($db, 'SELECT * FROM ue_exports WHERE file_id=? ORDER BY export_index', [$fileId]),
-            'dependencies' => $this->directRows($db, 'SELECT * FROM ue_dependencies WHERE file_id=? ORDER BY id', [$fileId]),
-            'source' => 'legacy-staging',
+            'names' => array_values((array)($staging['names'] ?? [])),
+            'imports' => array_values((array)($staging['imports'] ?? [])),
+            'exports' => array_values((array)($staging['exports'] ?? [])),
+            'dependencies' => [],
+            'source' => 'unverified-staging',
         ];
         self::$snapshotCache[$connectionId] = ['file_id' => $fileId, 'snapshot' => $result];
         return $result;
@@ -318,27 +309,17 @@ final class CatalogCompactMetadataCompatibilityService
             $exports,
             static function (array $row) use ($needle, $classFilter, $unknownClass): bool {
                 $class = (string)($row['class_name'] ?? '');
-                if ($unknownClass && $class !== '') {
-                    return false;
-                }
-                if ($classFilter !== null && $class !== $classFilter) {
-                    return false;
-                }
-                if ($needle === '') {
-                    return true;
-                }
+                if ($unknownClass && $class !== '') return false;
+                if ($classFilter !== null && $class !== $classFilter) return false;
+                if ($needle === '') return true;
                 foreach (['object_name', 'class_name', 'local_path', 'full_path'] as $field) {
-                    if (stripos((string)($row[$field] ?? ''), $needle) !== false) {
-                        return true;
-                    }
+                    if (stripos((string)($row[$field] ?? ''), $needle) !== false) return true;
                 }
                 return false;
             }
         ));
-
-        usort(
-            $filtered,
-            static fn(array $a, array $b): int => (int)$a['export_index'] <=> (int)$b['export_index']
+        usort($filtered, static fn(array $a, array $b): int =>
+            (int)$a['export_index'] <=> (int)$b['export_index']
         );
         return $filtered;
     }

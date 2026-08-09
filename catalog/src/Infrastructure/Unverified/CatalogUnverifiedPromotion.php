@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Promotes one resolved unverified package into verified game storage and queues post-import dependency work.
- * Why: Filesystem placement, identity reuse, duplicate/alias policy and the promotion transaction are one infrastructure use case, not HTTP concerns.
+ * Why: Filesystem placement, identity reuse, compact metadata publication and promotion are one infrastructure use case.
  * Role: Infrastructure service for the established Unverified Files import behavior.
  */
 declare(strict_types=1);
@@ -17,6 +17,7 @@ final class CatalogUnverifiedPromotion
     private readonly CatalogUnverifiedDependencyRecovery $dependencies;
     private readonly CatalogUnverifiedQueueMutationService $queueMutations;
     private readonly CatalogUnverifiedStagingIndex $staging;
+    private readonly CatalogUnverifiedCompactMetadataFinalizer $compactMetadata;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -30,6 +31,7 @@ final class CatalogUnverifiedPromotion
         $this->dependencies = $dependencies ?? new CatalogUnverifiedDependencyRecovery($db, $config);
         $this->queueMutations = $queueMutations ?? new CatalogUnverifiedQueueMutationService($db, $config);
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
+        $this->compactMetadata = new CatalogUnverifiedCompactMetadataFinalizer($db, $config);
     }
 
     /**
@@ -44,8 +46,6 @@ final class CatalogUnverifiedPromotion
         bool $allowProfileOverride,
         ?callable $emit = null
     ): array {
-        // Upload Bucket already supplies a complete staged row and package
-        // tables. Only filesystem-only legacy entries need the indexing fallback.
         $row = is_array($source['row'] ?? null) ? $source['row'] : null;
         if (!$row || (int)($row['id'] ?? 0) < 1) {
             $this->emit($emit, 'staging', 3, 'Indexing a legacy filesystem-only queued package');
@@ -56,7 +56,7 @@ final class CatalogUnverifiedPromotion
                 [(int)$indexed['file_id']]
             );
         } else {
-            $this->emit($emit, 'staging', 3, 'Reusing staged package tables');
+            $this->emit($emit, 'staging', 3, 'Reusing compressed staged package metadata');
         }
         if (!$row) {
             throw new \RuntimeException('The unverified database row is unavailable.');
@@ -174,14 +174,16 @@ final class CatalogUnverifiedPromotion
                 $this->db->beginTransaction();
                 $notes = trim((string)$row['scan_notes']
                     . "\nVerified from unverified queue for " . (string)$target['name'] . '.');
-                $this->db->prepare(
+                $update = $this->db->prepare(
                     'UPDATE ue_files SET game_id=?,package_name=?,stored_name=?,relative_path=?,'
                     . 'detected_engine_key=?,detected_package_version=?,detected_licensee_version=?,'
                     . 'detection_confidence=?,compatibility_status=?,compatibility_label=?,detection_notes=?,'
                     . 'file_size=?,md5=?,sha1=?,scan_status="verified",scan_notes=?,'
                     . 'uploaded_by=COALESCE(?,uploaded_by),unverified_queue_key=NULL,'
-                    . 'unverified_queue_game_id=NULL,unverified_queue_name=NULL,unverified_reason=NULL WHERE id=?'
-                )->execute([
+                    . 'unverified_queue_game_id=NULL,unverified_queue_name=NULL,unverified_reason=NULL WHERE id=? '
+                    . 'AND scan_status="unverified"'
+                );
+                $update->execute([
                     $targetGameId,
                     $packageName,
                     $storedName,
@@ -200,13 +202,8 @@ final class CatalogUnverifiedPromotion
                     $userId,
                     (int)$row['id'],
                 ]);
-                if ($packageName !== (string)$row['package_name']) {
-                    $updateExports = $this->db->prepare(
-                        'UPDATE ue_exports SET full_path=CASE '
-                        . 'WHEN local_path IS NOT NULL AND local_path<>"" THEN CONCAT(?,".",local_path) '
-                        . 'ELSE ? END WHERE file_id=?'
-                    );
-                    $updateExports->execute([$packageName, $packageName, (int)$row['id']]);
+                if ($update->rowCount() !== 1) {
+                    throw new \RuntimeException('The staged database row changed before it could be promoted.');
                 }
                 $this->db->commit();
             } catch (Throwable $error) {
@@ -223,7 +220,14 @@ final class CatalogUnverifiedPromotion
                 @unlink((string)$source['reason_path']);
             }
 
-            $this->emit($emit, 'dependency_queue', 70, 'Queueing search and dependency scans');
+            // The ue_files promotion is committed before current metadata publication
+            // so the format-2 writer can resolve this file against its selected game.
+            // The compressed staging row remains until publication verifies, which
+            // gives CatalogUnverifiedDependencyRecovery a durable retry source.
+            $this->emit($emit, 'compact_metadata', 58, 'Publishing current compact metadata');
+            $compact = $this->compactMetadata->finalize((int)$row['id']);
+
+            $this->emit($emit, 'dependency_queue', 72, 'Queueing search and dependency scans');
             $dependencyJobs = $this->dependencies->queueRefresh(
                 (int)$row['id'],
                 $targetGameId,
@@ -236,8 +240,9 @@ final class CatalogUnverifiedPromotion
                 'file_id' => (int)$row['id'],
                 'original_name' => (string)$row['original_name'],
                 'target_game' => (string)$target['name'],
-                'message' => 'Promoted existing unverified database row to verified; staged package tables and identity were reused.',
+                'message' => 'Promoted existing unverified database row to verified; compressed staging metadata was published as format-2.',
                 'dependency_jobs' => $dependencyJobs,
+                'metadata_format_version' => (int)($compact['format_version'] ?? 0),
                 'identity_reused' => !empty($identity['reused']),
             ];
         } finally {
@@ -247,11 +252,7 @@ final class CatalogUnverifiedPromotion
         }
     }
 
-    /**
-     * @param array<string,mixed> $row
-     * @param array<string,mixed> $prepared
-     * @return array{md5:string,sha1:string,size:int,reused:bool}
-     */
+    /** @return array{md5:string,sha1:string,size:int,reused:bool} */
     private function packageIdentity(array $row, array $prepared): array
     {
         $path = (string)($prepared['path'] ?? '');
@@ -275,7 +276,6 @@ final class CatalogUnverifiedPromotion
         if (!is_string($calculatedMd5) || !is_string($calculatedSha1)) {
             throw new \RuntimeException('Could not calculate queued file hashes.');
         }
-
         return [
             'md5' => strtolower($calculatedMd5),
             'sha1' => strtolower($calculatedSha1),

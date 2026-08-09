@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Parses a stored Upload Bucket package and writes its unverified file/table inventory.
- * Why: Reader orchestration and database projection are independent from hashing and filesystem placement.
+ * Purpose: Parses a stored Upload Bucket package and writes its unverified file/inventory snapshot.
+ * Why: Reader orchestration and compressed staging are independent from hashing and filesystem placement.
  * Role: Infrastructure persistence/parser collaborator for Upload Bucket package operations.
  */
 declare(strict_types=1);
@@ -11,10 +11,13 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataSnapshotBuilder;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedMetadataStore;
 
 final class CatalogUnverifiedPackageIndexer
 {
-    private const INSERT_BATCH_SIZE = 250;
+    private readonly CatalogUnverifiedMetadataStore $metadata;
+    private readonly CatalogUnverifiedMetadataSnapshotBuilder $snapshots;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -22,6 +25,8 @@ final class CatalogUnverifiedPackageIndexer
         private readonly array $config,
         private readonly CatalogUnverifiedPackageRuntime $runtime
     ) {
+        $this->metadata = new CatalogUnverifiedMetadataStore($db);
+        $this->snapshots = new CatalogUnverifiedMetadataSnapshotBuilder($db);
     }
 
     /**
@@ -41,6 +46,7 @@ final class CatalogUnverifiedPackageIndexer
         ?callable $progress = null
     ): array {
         $this->runtime->ensureSchema();
+        $this->metadata->ensureSchema();
         $queueName = basename($queueName);
         if ($queueName === '' || !is_file($path)) {
             throw new \RuntimeException('Stored Upload Bucket file is unavailable.');
@@ -91,28 +97,24 @@ final class CatalogUnverifiedPackageIndexer
             if (!is_array($header)) {
                 throw new \RuntimeException('Reader returned an invalid package header.');
             }
-
             $this->emit($progress, 'read_names', 73, 'Reading the Names table.');
             $names = $reader->getNames();
-            if (!is_array($names)) {
-                throw new \RuntimeException('Reader returned an invalid Names table.');
-            }
-
             $this->emit($progress, 'read_imports', 77, 'Reading the Imports table.');
             $imports = $reader->getImports();
-            if (!is_array($imports)) {
-                throw new \RuntimeException('Reader returned an invalid Imports table.');
-            }
-
             $this->emit($progress, 'read_exports', 81, 'Reading the Exports table.');
             $exports = $reader->getExports();
-            if (!is_array($exports)) {
-                throw new \RuntimeException('Reader returned an invalid Exports table.');
+            if (!is_array($names) || !is_array($imports) || !is_array($exports)) {
+                throw new \RuntimeException('Reader returned an invalid package table.');
             }
         } catch (Throwable $error) {
             $parseError = trim($error->getMessage()) ?: 'Package tables could not be read.';
             $notes[] = 'Unverified table parse failed: ' . $parseError;
-            $this->emit($progress, 'reader_warning', 82, 'Package table parsing failed; indexing basic metadata: ' . $parseError);
+            $this->emit(
+                $progress,
+                'reader_warning',
+                82,
+                'Package table parsing failed; indexing basic metadata: ' . $parseError
+            );
             $header = [];
             $names = [];
             $imports = [];
@@ -148,10 +150,6 @@ final class CatalogUnverifiedPackageIndexer
         try {
             if (is_array($existing)) {
                 $fileId = (int)$existing['id'];
-                $this->db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
-                $this->db->prepare('DELETE FROM ue_exports WHERE file_id=?')->execute([$fileId]);
-                $this->db->prepare('DELETE FROM ue_imports WHERE file_id=?')->execute([$fileId]);
-                $this->db->prepare('DELETE FROM ue_names WHERE file_id=?')->execute([$fileId]);
                 $statement = $this->db->prepare(
                     'UPDATE ue_files SET game_id=NULL,package_name=?,original_name=?,source_relative_path=?,stored_name=?,relative_path=?,extension=?,'
                     . 'detected_engine_key=?,detected_package_version=?,detected_licensee_version=?,detection_confidence=?,'
@@ -194,10 +192,27 @@ final class CatalogUnverifiedPackageIndexer
                 $fileId = (int)$this->db->lastInsertId();
             }
 
-            $this->insertNames($fileId, $names, $progress);
-            $cache = [];
-            $this->insertImports($fileId, $imports, $exports, $cache, $progress);
-            $this->insertExports($fileId, $packageName, $imports, $exports, $cache, $progress);
+            $this->emit($progress, 'database_metadata', 90, 'Compressing staged package metadata.');
+            $snapshot = $this->snapshots->fromParsed(
+                $fileId,
+                $packageName,
+                $names,
+                $imports,
+                $exports,
+                array_values((array)($this->config['common_packages'] ?? []))
+            );
+            $stored = $this->metadata->write($snapshot);
+            $this->emit(
+                $progress,
+                'database_metadata',
+                97,
+                'Stored compressed staging metadata.',
+                [
+                    'rows_done' => count($names) + count($imports) + count($exports),
+                    'rows_total' => count($names) + count($imports) + count($exports),
+                    'compressed_size' => (int)$stored['compressed_size'],
+                ]
+            );
 
             $this->emit($progress, 'database_commit', 99, 'Committing the unverified package inventory.');
             $this->db->commit();
@@ -216,142 +231,10 @@ final class CatalogUnverifiedPackageIndexer
             'path' => $path,
             'size' => $size,
             'message' => $parseError === null
-                ? 'Stored and indexed package tables.'
+                ? 'Stored and indexed compressed package metadata.'
                 : 'Stored and indexed basic metadata; package tables could not be read.',
             'parse_error' => $parseError,
         ];
-    }
-
-    /** @param list<array<string,mixed>> $names @param callable(array<string,mixed>):void|null $progress */
-    private function insertNames(int $fileId, array $names, ?callable $progress): void
-    {
-        $total = count($names);
-        if ($total === 0) {
-            $this->emit($progress, 'database_names', 89, 'Names table is empty.');
-            return;
-        }
-        $done = 0;
-        foreach (array_chunk($names, self::INSERT_BATCH_SIZE, true) as $chunk) {
-            $values = [];
-            $params = [];
-            foreach ($chunk as $index => $name) {
-                $values[] = '(?,?,?,?)';
-                array_push($params, $fileId, (int)$index, (string)($name['name'] ?? $name['text'] ?? ''), isset($name['flags']) ? (int)$name['flags'] : null);
-            }
-            $statement = $this->db->prepare('INSERT INTO ue_names(file_id,name_index,name_text,flags) VALUES ' . implode(',', $values));
-            $statement->execute($params);
-            $done += count($chunk);
-            $this->emit($progress, 'database_names', 85 + (int)floor(($done / $total) * 4), 'Writing Names: ' . $done . ' of ' . $total . '.', [
-                'rows_done' => $done, 'rows_total' => $total, 'batch_size' => count($chunk),
-            ]);
-        }
-    }
-
-    /**
-     * @param list<array<string,mixed>> $imports
-     * @param list<array<string,mixed>> $exports
-     * @param array<int,string> $cache
-     * @param callable(array<string,mixed>):void|null $progress
-     */
-    private function insertImports(int $fileId, array $imports, array $exports, array &$cache, ?callable $progress): void
-    {
-        $total = count($imports);
-        if ($total === 0) {
-            $this->emit($progress, 'database_imports', 93, 'Imports table is empty.');
-            return;
-        }
-
-        $common = array_map('strtolower', $this->config['common_packages'] ?? []);
-        $rows = [];
-        foreach ($imports as $index => $import) {
-            $full = $this->runtime->referencePath(-((int)$index + 1), $imports, $exports, $cache);
-            $parts = $full !== '' ? explode('.', $full) : [];
-            $root = (string)($parts[0] ?? '');
-            $relative = count($parts) > 1 ? implode('.', array_slice($parts, 1)) : '';
-            $rows[] = [
-                $fileId,
-                (int)$index,
-                (string)($import['classPackageText'] ?? ($import['ClassPackage']['text'] ?? '')),
-                (string)($import['classNameText'] ?? ($import['ClassName']['text'] ?? '')),
-                (string)($import['objectNameText'] ?? ($import['ObjectName']['text'] ?? '')),
-                (int)($import['outerIndex'] ?? $import['OuterIndex'] ?? $import['outer'] ?? 0),
-                $full,
-                $root,
-                $relative,
-                in_array(strtolower($root), $common, true) ? 1 : 0,
-            ];
-        }
-
-        $done = 0;
-        foreach (array_chunk($rows, self::INSERT_BATCH_SIZE) as $chunk) {
-            $values = [];
-            $params = [];
-            foreach ($chunk as $row) {
-                $values[] = '(?,?,?,?,?,?,?,?,?,?)';
-                array_push($params, ...$row);
-            }
-            $statement = $this->db->prepare(
-                'INSERT INTO ue_imports(file_id,import_index,class_package,class_name,object_name,outer_index,full_path,root_package,relative_object_path,is_common) VALUES '
-                . implode(',', $values)
-            );
-            $statement->execute($params);
-            $done += count($chunk);
-            $this->emit($progress, 'database_imports', 89 + (int)floor(($done / $total) * 4), 'Writing Imports: ' . $done . ' of ' . $total . '.', [
-                'rows_done' => $done, 'rows_total' => $total, 'batch_size' => count($chunk),
-            ]);
-        }
-    }
-
-    /**
-     * @param list<array<string,mixed>> $imports
-     * @param list<array<string,mixed>> $exports
-     * @param array<int,string> $cache
-     * @param callable(array<string,mixed>):void|null $progress
-     */
-    private function insertExports(int $fileId, string $packageName, array $imports, array $exports, array &$cache, ?callable $progress): void
-    {
-        $total = count($exports);
-        if ($total === 0) {
-            $this->emit($progress, 'database_exports', 98, 'Exports table is empty.');
-            return;
-        }
-
-        $rows = [];
-        foreach ($exports as $index => $export) {
-            $local = $this->runtime->referencePath((int)$index + 1, $imports, $exports, $cache);
-            $classRef = (int)($export['classIndex'] ?? $export['class'] ?? 0);
-            $rows[] = [
-                $fileId,
-                (int)$index,
-                $classRef !== 0 ? $this->runtime->referencePath($classRef, $imports, $exports, $cache) : '',
-                (string)($export['objectNameText'] ?? ''),
-                (int)($export['outerIndex'] ?? $export['packageIndex'] ?? $export['outer'] ?? 0),
-                $local,
-                $this->runtime->joinPathParts([$packageName, $local]),
-                isset($export['objectFlags']) ? (int)$export['objectFlags'] : null,
-                isset($export['serialSize']) ? (int)$export['serialSize'] : null,
-                isset($export['serialOffset']) ? (int)$export['serialOffset'] : null,
-            ];
-        }
-
-        $done = 0;
-        foreach (array_chunk($rows, self::INSERT_BATCH_SIZE) as $chunk) {
-            $values = [];
-            $params = [];
-            foreach ($chunk as $row) {
-                $values[] = '(?,?,?,?,?,?,?,?,?,?)';
-                array_push($params, ...$row);
-            }
-            $statement = $this->db->prepare(
-                'INSERT INTO ue_exports(file_id,export_index,class_name,object_name,outer_index,local_path,full_path,object_flags,serial_size,serial_offset) VALUES '
-                . implode(',', $values)
-            );
-            $statement->execute($params);
-            $done += count($chunk);
-            $this->emit($progress, 'database_exports', 93 + (int)floor(($done / $total) * 5), 'Writing Exports: ' . $done . ' of ' . $total . '.', [
-                'rows_done' => $done, 'rows_total' => $total, 'batch_size' => count($chunk),
-            ]);
-        }
     }
 
     /** @param callable(array<string,mixed>):void|null $progress @param array<string,mixed> $meta */

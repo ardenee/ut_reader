@@ -1,9 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Queues post-import dependency work and repairs the established legacy staging collision case.
- * Why: Dependency persistence/recovery must not live inside the unverified HTTP action endpoint.
- * Role: Infrastructure compatibility service for unverified promotion dependency handoff.
+ * Purpose: Queues post-import dependency work and recovers a partially completed unverified promotion.
+ * Why: A file can become verified before compact publication or job queueing completes; compressed staging is the durable retry source.
+ * Role: Infrastructure recovery service for unverified promotion dependency handoff.
  */
 declare(strict_types=1);
 
@@ -12,14 +12,20 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Dependency\CatalogPostImportDependencyQueue;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 
 final class CatalogUnverifiedDependencyRecovery
 {
+    private readonly CatalogUnverifiedMetadataStore $metadata;
+    private readonly CatalogUnverifiedCompactMetadataFinalizer $compactFinalizer;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
+        $this->metadata = new CatalogUnverifiedMetadataStore($db);
+        $this->compactFinalizer = new CatalogUnverifiedCompactMetadataFinalizer($db, $config);
     }
 
     /**
@@ -51,87 +57,58 @@ final class CatalogUnverifiedDependencyRecovery
         ?int $userId = null,
         ?callable $emit = null
     ): array {
-        $error = $initialError;
-        $removed = 0;
+        try {
+            $file = \catalog_one(
+                $this->db,
+                'SELECT id,game_id,package_name,scan_status FROM ue_files WHERE id=? LIMIT 1',
+                [$fileId]
+            ) ?: [];
+            if ((string)($file['scan_status'] ?? '') !== 'verified') {
+                return [
+                    'recovered' => false,
+                    'removed' => 0,
+                    'message' => $this->errorText($initialError),
+                ];
+            }
 
-        for ($attempt = 1; $attempt <= 3; $attempt++) {
-            $importId = $this->collisionImportId($error);
-            if ($importId < 1) {
-                break;
+            $registration = $this->db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
+            $registration->execute([$fileId]);
+            $formatVersion = (int)($registration->fetchColumn() ?: 0);
+            if ($formatVersion !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+                if (!$this->metadata->has($fileId)) {
+                    throw new \RuntimeException(
+                        'Verified file #' . $fileId
+                        . ' is missing format-2 metadata and has no compressed staging snapshot for recovery.'
+                    );
+                }
+                if ($emit !== null) {
+                    $emit('compact_recovery', 60, 'Retrying compact metadata publication from compressed staging');
+                }
+                $this->compactFinalizer->finalize($fileId);
             }
 
             if ($emit !== null) {
-                $emit('dependency_recovery', 58, 'Repairing a stale dependency collision');
+                $emit('dependency_recovery', 72, 'Retrying post-import dependency queueing');
             }
-
-            // Unverified staging still uses the compatibility Names/Imports/
-            // Exports rows until promotion finalizes compact metadata. Keep this
-            // narrowly scoped cleanup here rather than leaking those tables into
-            // Presentation code.
-            $statement = $this->db->prepare('DELETE FROM ue_dependencies WHERE import_id=?');
-            $statement->execute([$importId]);
-            $removed += $statement->rowCount();
-            $removed += $this->clearFileDependencies($fileId);
-
-            try {
-                $file = \catalog_one(
-                    $this->db,
-                    'SELECT game_id,package_name FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
-                    [$fileId]
-                ) ?: [];
-                $jobs = $this->queueRefresh(
-                    $fileId,
-                    (int)($file['game_id'] ?? 0),
-                    (string)($file['package_name'] ?? ''),
-                    $userId
-                );
-                return [
-                    'recovered' => true,
-                    'removed' => $removed,
-                    'jobs' => $jobs,
-                    'message' => 'Removed a stale duplicate dependency link and queued a fresh dependency scan.',
-                ];
-            } catch (Throwable $retryError) {
-                $error = $retryError;
-            }
+            $jobs = $this->queueRefresh(
+                $fileId,
+                (int)($file['game_id'] ?? 0),
+                (string)($file['package_name'] ?? ''),
+                $userId
+            );
+            return [
+                'recovered' => true,
+                'removed' => 0,
+                'jobs' => $jobs,
+                'message' => 'Verified compact metadata and queued a fresh dependency scan.',
+            ];
+        } catch (Throwable $recoveryError) {
+            return [
+                'recovered' => false,
+                'removed' => 0,
+                'message' => $this->errorText($recoveryError),
+            ];
         }
-
-        return [
-            'recovered' => false,
-            'removed' => $removed,
-            'message' => $this->errorText($error),
-        ];
-    }
-
-    private function collisionImportId(Throwable $error): int
-    {
-        $message = $error->getMessage();
-        if (!str_contains($message, 'uq_ue_deps_import')) {
-            return 0;
-        }
-        if (preg_match("/Duplicate entry '([0-9]+)'/i", $message, $match) !== 1) {
-            return 0;
-        }
-        return max(0, (int)$match[1]);
-    }
-
-    private function clearFileDependencies(int $fileId): int
-    {
-        if ($fileId < 1) {
-            return 0;
-        }
-
-        $removed = 0;
-        $statement = $this->db->prepare(
-            'DELETE d FROM ue_dependencies d INNER JOIN ue_imports i ON i.id=d.import_id WHERE i.file_id=?'
-        );
-        $statement->execute([$fileId]);
-        $removed += $statement->rowCount();
-
-        $statement = $this->db->prepare('DELETE FROM ue_dependencies WHERE file_id=?');
-        $statement->execute([$fileId]);
-        $removed += $statement->rowCount();
-        return $removed;
     }
 
     private function errorText(Throwable $error): string

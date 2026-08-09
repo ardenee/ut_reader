@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Builds the read model for one Unverified File Details page.
- * Why: Staged-row lookup, queue label resolution, game-match ranking and N/I/E pagination are read concerns, not rendering concerns.
+ * Why: Staged-row lookup, queue labels, game-match ranking and metadata pagination are read concerns, not rendering concerns.
  * Role: Infrastructure query backing the unverified file details UI.
  */
 declare(strict_types=1);
@@ -15,6 +15,7 @@ use RuntimeException;
 final class PdoUnverifiedFileDetailsQuery
 {
     private readonly CatalogUnverifiedStagingIndex $staging;
+    private readonly CatalogUnverifiedMetadataStore $metadata;
     private readonly PdoUnverifiedGameMatchQuery $matches;
 
     /** @param array<string,mixed> $config */
@@ -24,6 +25,7 @@ final class PdoUnverifiedFileDetailsQuery
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
+        $this->metadata = new CatalogUnverifiedMetadataStore($db);
         $this->matches = new PdoUnverifiedGameMatchQuery($db);
     }
 
@@ -71,25 +73,12 @@ final class PdoUnverifiedFileDetailsQuery
             static fn(array $row): bool => (int)($row['rank'] ?? 99) <= 4
         ));
 
-        [$tableName, $order] = match ($tab) {
-            'imports' => ['ue_imports', 'import_index'],
-            'exports' => ['ue_exports', 'export_index'],
-            default => ['ue_names', 'name_index'],
-        };
-        $countRow = \catalog_one(
-            $this->db,
-            'SELECT COUNT(*) c FROM ' . $tableName . ' WHERE file_id=?',
-            [$fileId]
-        );
-        $rowCount = (int)($countRow['c'] ?? 0);
+        $snapshot = $this->metadata->load($fileId);
+        $allRows = array_values((array)($snapshot[$tab] ?? []));
+        $rowCount = count($allRows);
         $pages = max(1, (int)ceil($rowCount / $limit));
         $page = min($page, $pages);
-        $rows = \catalog_all(
-            $this->db,
-            'SELECT * FROM ' . $tableName . ' WHERE file_id=? ORDER BY ' . $order
-                . ' LIMIT ' . $limit . ' OFFSET ' . (($page - 1) * $limit),
-            [$fileId]
-        );
+        $rows = array_slice($allRows, ($page - 1) * $limit, $limit);
 
         return [
             'file' => $file,

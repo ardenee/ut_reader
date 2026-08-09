@@ -1,9 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Persists one newly verified package and its recovery staging projections atomically.
- * Why: The package importer should orchestrate parsing/storage, while this collaborator owns the ue_files insert and
- *      temporary N/I/E staging writes. Current format-2 metadata is published directly from parser output afterwards.
+ * Purpose: Persists one newly verified package file row atomically.
+ * Why: Parsed Names/Imports/Exports are published directly to format-2 metadata by the importer and must not be duplicated into retired SQL tables.
  * Role: Infrastructure persistence collaborator for verified package import.
  */
 declare(strict_types=1);
@@ -15,15 +14,12 @@ use Throwable;
 
 final class PdoCatalogVerifiedPackagePersistence
 {
-    private readonly PdoCatalogPackageTableWriter $tables;
-
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
         require_once dirname(__DIR__, 3) . '/lib/Scanner/CatalogScannerSupport.php';
-        $this->tables = new PdoCatalogPackageTableWriter($db);
     }
 
     /**
@@ -54,25 +50,6 @@ final class PdoCatalogVerifiedPackagePersistence
         ?int $userId,
         ?callable $progress
     ): int {
-        $nameCount = count($names);
-        $importCount = count($imports);
-        $exportCount = count($exports);
-        $totalRows = max(1, $nameCount + $importCount + $exportCount + 1);
-        $writtenRows = 0;
-        $progressDb = static function (string $message, int $rowsDone = 1) use (
-            $progress,
-            &$writtenRows,
-            $totalRows
-        ): void {
-            $writtenRows = min($totalRows, $writtenRows + max(1, $rowsDone));
-            \scanner_emit_percent(
-                $progress,
-                'database',
-                \scanner_range_percent(23, 35, $writtenRows, $totalRows),
-                $message
-            );
-        };
-
         try {
             $this->db->beginTransaction();
             $statement = $this->db->prepare(
@@ -104,37 +81,17 @@ final class PdoCatalogVerifiedPackagePersistence
                 $packageGuid,
                 (int)($header['version'] ?? 0),
                 (int)($header['licensee'] ?? ($header['licenseeVersion'] ?? 0)),
-                $nameCount,
-                $importCount,
-                $exportCount,
+                count($names),
+                count($imports),
+                count($exports),
                 'verified',
                 $scanNotes,
                 $userId,
             ]);
             $fileId = (int)$this->db->lastInsertId();
-            $progressDb('Writing file row');
-
-            // Keep the historical N/I/E rows only as recovery staging until the
-            // direct format-2 publication succeeds. No verified runtime reader is
-            // allowed to consume them.
-            $this->tables->insert(
-                $fileId,
-                $packageName,
-                $names,
-                $imports,
-                $exports,
-                array_values($this->config['common_packages'] ?? []),
-                static function (string $section, int $done, int $total, int $rowsWritten) use ($progressDb): void {
-                    $label = match ($section) {
-                        'names' => 'names',
-                        'imports' => 'imports',
-                        default => 'exports',
-                    };
-                    $progressDb('Writing ' . $label . ' recovery staging ' . $done . '/' . $total, $rowsWritten);
-                }
-            );
-
             $this->db->commit();
+
+            \scanner_emit_percent($progress, 'database', 35, 'Stored verified file row; publishing compact metadata');
             return $fileId;
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {

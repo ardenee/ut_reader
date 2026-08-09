@@ -2,8 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Discovers incomplete unverified metadata and queues targeted repair jobs.
- * Why: Filesystem inventory, completeness policy and durable-job orchestration are one infrastructure use case,
- *      not web-page or procedural helper responsibilities.
+ * Why: Filesystem inventory, compressed staging completeness and durable-job orchestration are one infrastructure use case.
  * Role: Infrastructure service for Repair Missing Unverified Metadata.
  */
 declare(strict_types=1);
@@ -18,6 +17,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 final class CatalogUnverifiedMetadataRepairService
 {
     private readonly CatalogUnverifiedStagingIndex $staging;
+    private readonly CatalogUnverifiedMetadataStore $metadata;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -28,6 +28,7 @@ final class CatalogUnverifiedMetadataRepairService
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/GameProfiles.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
+        $this->metadata = new CatalogUnverifiedMetadataStore($db);
     }
 
     /**
@@ -57,11 +58,7 @@ final class CatalogUnverifiedMetadataRepairService
             }
         }
 
-        $rowSql = 'SELECT f.*,'
-            . ' (SELECT COUNT(*) FROM ue_names n WHERE n.file_id=f.id) actual_name_count,'
-            . ' (SELECT COUNT(*) FROM ue_imports i WHERE i.file_id=f.id) actual_import_count,'
-            . ' (SELECT COUNT(*) FROM ue_exports e WHERE e.file_id=f.id) actual_export_count'
-            . ' FROM ue_files f WHERE f.scan_status="unverified"';
+        $rowSql = 'SELECT f.* FROM ue_files f WHERE f.scan_status="unverified"';
         $rowArgs = [];
         if ($sourceGameId === -1) {
             $rowSql .= ' AND f.unverified_queue_game_id=0';
@@ -70,8 +67,19 @@ final class CatalogUnverifiedMetadataRepairService
             $rowArgs[] = $sourceGameId;
         }
 
+        $rows = \catalog_all($this->db, $rowSql, $rowArgs);
+        $counts = $this->metadata->countsForFiles(array_map(
+            static fn(array $row): int => (int)$row['id'],
+            $rows
+        ));
         $rowsByKey = [];
-        foreach (\catalog_all($this->db, $rowSql, $rowArgs) as $row) {
+        foreach ($rows as $row) {
+            $fileId = (int)$row['id'];
+            $storedCounts = $counts[$fileId] ?? null;
+            $row['metadata_staging_present'] = is_array($storedCounts);
+            $row['actual_name_count'] = (int)($storedCounts['name_count'] ?? 0);
+            $row['actual_import_count'] = (int)($storedCounts['import_count'] ?? 0);
+            $row['actual_export_count'] = (int)($storedCounts['export_count'] ?? 0);
             $key = trim((string)($row['unverified_queue_key'] ?? ''));
             if ($key !== '') {
                 $rowsByKey[$key] = $row;
@@ -91,16 +99,11 @@ final class CatalogUnverifiedMetadataRepairService
             }
 
             foreach ($entries as $entry) {
-                if ($entry === '.'
-                    || $entry === '..'
-                    || str_starts_with($entry, '.')
-                    || str_ends_with(strtolower($entry), '.txt')) {
+                if ($entry === '.' || $entry === '..' || str_starts_with($entry, '.') || str_ends_with(strtolower($entry), '.txt')) {
                     continue;
                 }
                 $path = $directory . DIRECTORY_SEPARATOR . $entry;
-                if (!is_file($path)
-                    || is_link($path)
-                    || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
+                if (!is_file($path) || is_link($path) || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
                     continue;
                 }
 
@@ -115,9 +118,7 @@ final class CatalogUnverifiedMetadataRepairService
                     'queue_name' => $entry,
                     'queue_key' => $key,
                     'queue_label' => (string)($game['name'] ?? ($gameId === 0 ? 'Upload Bucket' : 'Unknown queue')),
-                    'original_name' => $row
-                        ? (string)($row['original_name'] ?? $fallbackName)
-                        : $fallbackName,
+                    'original_name' => $row ? (string)($row['original_name'] ?? $fallbackName) : $fallbackName,
                     'path' => $path,
                     'size' => $size,
                     'file_id' => $row ? (int)$row['id'] : 0,
@@ -128,9 +129,9 @@ final class CatalogUnverifiedMetadataRepairService
             }
         }
 
-        usort($items, static function (array $left, array $right): int {
-            return strcasecmp((string)$left['original_name'], (string)$right['original_name']);
-        });
+        usort($items, static fn(array $left, array $right): int =>
+            strcasecmp((string)$left['original_name'], (string)$right['original_name'])
+        );
         return $items;
     }
 
@@ -149,57 +150,42 @@ final class CatalogUnverifiedMetadataRepairService
         $notes = (string)($row['scan_notes'] ?? '');
         $alreadyAttempted = str_contains($notes, 'Metadata repair attempted:');
 
-        if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1) {
-            $reasons[] = 'MD5 is missing';
-        }
-        if (preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) {
-            $reasons[] = 'SHA-1 is missing';
-        }
+        if (preg_match('/^[a-f0-9]{32}$/', $md5) !== 1) $reasons[] = 'MD5 is missing';
+        if (preg_match('/^[a-f0-9]{40}$/', $sha1) !== 1) $reasons[] = 'SHA-1 is missing';
         if ($physicalSize < 1 || (int)($row['file_size'] ?? 0) !== $physicalSize) {
             $reasons[] = 'Stored size does not match the physical file';
         }
-        if (trim((string)($row['package_name'] ?? '')) === '') {
-            $reasons[] = 'Package name is missing';
-        }
-        if (trim((string)($row['extension'] ?? '')) === '') {
-            $reasons[] = 'File extension is missing';
-        }
+        if (trim((string)($row['package_name'] ?? '')) === '') $reasons[] = 'Package name is missing';
+        if (trim((string)($row['extension'] ?? '')) === '') $reasons[] = 'File extension is missing';
 
         if ($path !== '' && is_file($path)) {
             $summary = \gp_read_legacy_summary($path);
             if (!empty($summary['ok'])) {
                 $headerEngine = strtoupper(trim((string)($summary['engine_hint'] ?? '')));
                 $headerVersion = $summary['version'] ?? null;
-                if ($headerEngine !== ''
-                    && $headerEngine !== 'UNKNOWN'
-                    && $engine !== ''
-                    && $engine !== 'UNKNOWN'
-                    && $headerEngine !== $engine) {
+                if ($headerEngine !== '' && $headerEngine !== 'UNKNOWN'
+                    && $engine !== '' && $engine !== 'UNKNOWN' && $headerEngine !== $engine) {
                     $reasons[] = 'Stored engine ' . $engine . ' does not match package header ' . $headerEngine;
                 }
-                if (is_numeric($headerVersion)
-                    && is_numeric($version)
-                    && (int)$headerVersion !== (int)$version) {
+                if (is_numeric($headerVersion) && is_numeric($version) && (int)$headerVersion !== (int)$version) {
                     $reasons[] = 'Stored package version does not match the package header';
                 }
             }
         }
 
         if (!$alreadyAttempted) {
-            if ($engine === '' || $engine === 'UNKNOWN') {
-                $reasons[] = 'Detected engine is missing';
-            }
-            if ($version === null || $version === '') {
-                $reasons[] = 'Detected package version is missing';
-            }
+            if ($engine === '' || $engine === 'UNKNOWN') $reasons[] = 'Detected engine is missing';
+            if ($version === null || $version === '') $reasons[] = 'Detected package version is missing';
             if (in_array($engine, ['UE1', 'UE2', 'UE3'], true)
-                && is_numeric($version)
-                && (int)$version >= 68
+                && is_numeric($version) && (int)$version >= 68
                 && trim((string)($row['package_guid'] ?? '')) === '') {
                 $reasons[] = 'Package GUID is missing';
             }
         }
 
+        if (empty($row['metadata_staging_present'])) {
+            $reasons[] = 'Compressed package metadata snapshot is missing';
+        }
         $actualNameCount = (int)($row['actual_name_count'] ?? 0);
         $actualImportCount = (int)($row['actual_import_count'] ?? 0);
         $actualExportCount = (int)($row['actual_export_count'] ?? 0);
@@ -207,14 +193,13 @@ final class CatalogUnverifiedMetadataRepairService
             $declared = (int)($row[$table . '_count'] ?? 0);
             $actual = (int)($row['actual_' . $table . '_count'] ?? 0);
             if ($declared !== $actual) {
-                $reasons[] = ucfirst($table) . ' count does not match stored rows';
+                $reasons[] = ucfirst($table) . ' count does not match staged metadata';
             }
         }
         if (!$alreadyAttempted
+            && !empty($row['metadata_staging_present'])
             && in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)
-            && $actualNameCount === 0
-            && $actualImportCount === 0
-            && $actualExportCount === 0) {
+            && $actualNameCount === 0 && $actualImportCount === 0 && $actualExportCount === 0) {
             $reasons[] = 'Package table inventory is empty';
         }
 
@@ -230,9 +215,7 @@ final class CatalogUnverifiedMetadataRepairService
         $jobIds = [];
 
         foreach ($items as $item) {
-            if (empty($item['needs_repair'])) {
-                continue;
-            }
+            if (empty($item['needs_repair'])) continue;
             $dedupeKey = 'unverified-metadata-v2:' . substr(hash(
                 'sha256',
                 (int)$item['queue_game_id'] . "\0" . (string)$item['queue_name']
