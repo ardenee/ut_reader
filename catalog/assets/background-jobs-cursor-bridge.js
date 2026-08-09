@@ -12,6 +12,7 @@
     let workerCountSelect = null;
     let applyWorkersButton = null;
     let poolState = null;
+    let latestWorker = null;
     let pageLeaving = false;
 
     function abortStatusRequests() {
@@ -84,15 +85,86 @@
         return clampWorkers(workerCountSelect ? workerCountSelect.value : localStorage.getItem(workerStorageKey));
     }
 
-    function setPoolState(worker) {
-        if (!poolState || !worker || typeof worker !== 'object') return;
-        const active = Math.max(0, Number(worker.active_count || 0));
-        const desired = clampWorkers(worker.desired_count || selectedWorkers());
-        const maximum = Math.max(1, Number(worker.max_workers || 8));
+    function applyWorkerBanner(worker) {
+        if (!worker || typeof worker !== 'object') return;
+        const banner = document.getElementById('jobs-worker-state');
+        const startButton = document.getElementById('jobs-start');
+        const stopButton = document.getElementById('jobs-stop-worker');
+        if (!banner || !startButton || !stopButton) return;
+
+        const authority = String(worker.authoritative_status || (worker.active ? 'running' : 'stopped'));
+        const counts = worker.queue_counts || {};
+        const activeWorkers = Math.max(0, Number(worker.active_count || 0));
+        const desiredWorkers = clampWorkers(worker.desired_count || selectedWorkers());
+        const launchingWorkers = Math.max(0, Number(worker.launching_count || 0));
         const stale = Boolean(worker.stale_code);
-        poolState.textContent = 'Pool ' + active + '/' + desired + ' active · max ' + maximum + (stale ? ' · old code' : '');
-        poolState.dataset.activeWorkers = String(active);
-        poolState.dataset.desiredWorkers = String(desired);
+        const processed = parseInt((worker.state || {}).processed || 0, 10) || 0;
+        let text;
+
+        banner.dataset.authoritativeStatus = authority;
+        if (authority === 'degraded') {
+            text = 'Worker pool degraded · ' + activeWorkers + '/' + desiredWorkers + ' processes'
+                + (launchingWorkers ? ' · ' + launchingWorkers + ' launching' : '')
+                + ' · ' + String(counts.running || 0) + ' active jobs · ' + String(counts.queued || 0) + ' queued';
+            startButton.disabled = false;
+            startButton.textContent = 'Reconcile worker pool';
+            stopButton.disabled = false;
+        } else if (authority === 'running') {
+            text = stale
+                ? 'Worker running older code · restart required'
+                : 'Worker running · Pool ' + activeWorkers + '/' + desiredWorkers
+                    + (launchingWorkers ? ' +' + launchingWorkers + ' launching' : '')
+                    + ' · ' + processed + ' processed · ' + String(counts.running || 0)
+                    + ' active jobs · ' + String(counts.queued || 0) + ' queued';
+            startButton.disabled = !stale;
+            startButton.textContent = stale ? 'Restart worker' : 'Start / resume queue';
+            stopButton.disabled = false;
+        } else if (authority === 'orphaned') {
+            text = 'Worker stopped · ' + String(counts.running || 0) + ' orphaned running job(s)';
+            startButton.disabled = false;
+            startButton.textContent = 'Recover and resume';
+            stopButton.disabled = true;
+        } else if (authority === 'stopped_with_queue') {
+            text = 'Worker stopped · ' + String(counts.queued || 0) + ' queued job(s) waiting';
+            startButton.disabled = false;
+            startButton.textContent = 'Start / resume queue';
+            stopButton.disabled = true;
+        } else {
+            text = 'Worker stopped · queue empty';
+            startButton.disabled = false;
+            startButton.textContent = 'Start / resume queue';
+            stopButton.disabled = true;
+        }
+
+        if (banner.textContent !== text) banner.textContent = text;
+    }
+
+    function setPoolState(worker) {
+        if (!worker || typeof worker !== 'object') return;
+        latestWorker = worker;
+        if (poolState) {
+            const active = Math.max(0, Number(worker.active_count || 0));
+            const desired = clampWorkers(worker.desired_count || selectedWorkers());
+            const maximum = Math.max(1, Number(worker.max_workers || 8));
+            const launching = Math.max(0, Number(worker.launching_count || 0));
+            const stale = Boolean(worker.stale_code);
+            poolState.textContent = 'Pool ' + active + '/' + desired + ' active'
+                + (launching ? ' · ' + launching + ' launching' : '')
+                + ' · max ' + maximum + (stale ? ' · old code' : '');
+            poolState.dataset.activeWorkers = String(active);
+            poolState.dataset.desiredWorkers = String(desired);
+        }
+        applyWorkerBanner(worker);
+    }
+
+    function installWorkerBannerGuard() {
+        const banner = document.getElementById('jobs-worker-state');
+        if (!banner || typeof MutationObserver === 'undefined') return;
+        const observer = new MutationObserver(function () {
+            if (!latestWorker) return;
+            window.queueMicrotask(function () { applyWorkerBanner(latestWorker); });
+        });
+        observer.observe(banner, {attributes: true, childList: true, characterData: true, subtree: true});
     }
 
     function installWorkerPoolControls() {
@@ -315,6 +387,7 @@
     };
 
     installWorkerPoolControls();
+    installWorkerBannerGuard();
 
     const exportScript = document.createElement('script');
     const currentScript = document.currentScript;
