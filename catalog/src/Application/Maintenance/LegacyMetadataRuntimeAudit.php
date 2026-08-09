@@ -2,8 +2,9 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Audits runtime references to retired/legacy metadata tables.
- * Why: Verified catalogue reads must use compact metadata while explicitly identified unverified-staging paths may still use legacy projections.
- * Role: Application maintenance audit enforcing the compact-metadata runtime boundary.
+ * Why: Verified catalogue reads must use current compact metadata while explicitly identified unverified staging,
+ *      conversion, schema and cleanup paths may still touch legacy tables during the staged retirement.
+ * Role: Application maintenance audit enforcing the compact-only verified-runtime boundary.
  */
 declare(strict_types=1);
 
@@ -26,12 +27,11 @@ final class LegacyMetadataRuntimeAudit
     ];
 
     /**
-     * Files that intentionally provide schema, unverified-file inventory,
-     * transient import staging, or compact-first fallback. Verified catalogue
-     * reads must otherwise use compact compatibility sources.
+     * Explicit exceptions only: schema compatibility, unverified/recovery staging,
+     * historical conversion/repair and bounded deletion/cleanup code. Current
+     * verified-file readers and rebuilders must never be placed on this list.
      *
-     * The retired ue_search_documents table is never approved, including in
-     * these files.
+     * The retired ue_search_documents table is never approved, including here.
      *
      * @var list<string>
      */
@@ -43,19 +43,13 @@ final class LegacyMetadataRuntimeAudit
         'federation/docs.php',
         'src/Infrastructure/Games/PdoCatalogGameTableMaintenance.php',
         'src/Infrastructure/Maintenance/CatalogLegacyDataAuditService.php',
-        'src/Infrastructure/Persistence/PdoPackageTablePageQuery.php',
-        'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
-        'src/Infrastructure/Persistence/PdoDependencyResolver.php',
-        'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
         'src/Infrastructure/Persistence/PdoCatalogPackageTableWriter.php',
         'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
         'src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
-        'src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php',
         'src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php',
         'src/Infrastructure/Metadata/CatalogCompactMetadataMutationService.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
         'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
-        'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
         'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
         'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
         'src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
@@ -72,9 +66,9 @@ final class LegacyMetadataRuntimeAudit
     ];
 
     /**
-     * Read-only dependency SQL in these files is executed through catalog_one,
-     * catalog_all or catalog_count and is rewritten centrally to the compact
-     * mixed dependency source. Mutations are not approved by this list.
+     * Historical dependency SQL shapes in these callers execute through catalog_one,
+     * catalog_all or catalog_count and are rewritten centrally to the compact-only
+     * dependency source. Mutations are not approved by this list.
      *
      * @var list<string>
      */
@@ -98,8 +92,9 @@ final class LegacyMetadataRuntimeAudit
     ];
 
     /**
-     * Read-only Names/Imports/Exports SQL in these files is routed through
-     * CatalogCompactMetadataCompatibility by shared query helpers.
+     * Historical Names/Imports/Exports SQL shapes in these callers are routed
+     * through CatalogCompactMetadataCompatibility. Verified files are required
+     * to use format 2; only non-verified staging can reach its legacy fallback.
      *
      * @var list<string>
      */
@@ -166,7 +161,9 @@ final class LegacyMetadataRuntimeAudit
                         'line' => $index + 1,
                         'table' => $table,
                         'operation' => $operation,
-                        'snippet' => mb_substr(trim($line), 0, 300),
+                        'snippet' => function_exists('mb_substr')
+                            ? mb_substr(trim($line), 0, 300)
+                            : substr(trim($line), 0, 300),
                     ];
                 }
             }
