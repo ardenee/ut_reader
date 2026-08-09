@@ -102,77 +102,9 @@ CREATE TABLE ue_files (
   CONSTRAINT fk_ue_files_user FOREIGN KEY (uploaded_by) REFERENCES ue_users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE ue_names (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  file_id BIGINT UNSIGNED NOT NULL,
-  name_index INT NOT NULL,
-  name_text VARCHAR(500) NOT NULL,
-  flags BIGINT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_names_file_index (file_id, name_index),
-  KEY idx_ue_names_text (name_text(191)),
-  CONSTRAINT fk_ue_names_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE ue_imports (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  file_id BIGINT UNSIGNED NOT NULL,
-  import_index INT NOT NULL,
-  class_package VARCHAR(255) NULL,
-  class_name VARCHAR(255) NULL,
-  object_name VARCHAR(255) NOT NULL,
-  outer_index INT NOT NULL DEFAULT 0,
-  full_path VARCHAR(1000) NOT NULL,
-  root_package VARCHAR(255) NOT NULL,
-  relative_object_path VARCHAR(1000) NOT NULL,
-  is_common TINYINT(1) NOT NULL DEFAULT 0,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_imports_file_index (file_id, import_index),
-  KEY idx_ue_imports_root (root_package),
-  KEY idx_ue_imports_full_path (full_path(191)),
-  CONSTRAINT fk_ue_imports_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE ue_exports (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  file_id BIGINT UNSIGNED NOT NULL,
-  export_index INT NOT NULL,
-  class_name VARCHAR(255) NULL,
-  object_name VARCHAR(255) NOT NULL,
-  outer_index INT NOT NULL DEFAULT 0,
-  local_path VARCHAR(1000) NOT NULL,
-  full_path VARCHAR(1000) NOT NULL,
-  object_flags BIGINT NULL,
-  serial_size BIGINT NULL,
-  serial_offset BIGINT NULL,
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_exports_file_index (file_id, export_index),
-  KEY idx_ue_exports_full_path (full_path(191)),
-  KEY idx_ue_exports_full_path_file (full_path(191), file_id),
-  KEY idx_ue_exports_object (object_name),
-  CONSTRAINT fk_ue_exports_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE ue_dependencies (
-  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  file_id BIGINT UNSIGNED NOT NULL,
-  import_id BIGINT UNSIGNED NOT NULL,
-  required_package VARCHAR(255) NOT NULL,
-  required_object_path VARCHAR(1000) NOT NULL,
-  resolved_file_id BIGINT UNSIGNED NULL,
-  resolved_export_id BIGINT UNSIGNED NULL,
-  status ENUM('resolved','missing','package_only','common') NOT NULL DEFAULT 'missing',
-  PRIMARY KEY (id),
-  UNIQUE KEY uq_ue_deps_import (import_id),
-  KEY idx_ue_deps_file (file_id),
-  KEY idx_ue_deps_status (status),
-  KEY idx_ue_deps_file_status (file_id, status),
-  KEY idx_ue_deps_required (required_package, required_object_path(191)),
-  CONSTRAINT fk_ue_deps_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE,
-  CONSTRAINT fk_ue_deps_import FOREIGN KEY (import_id) REFERENCES ue_imports(id) ON DELETE CASCADE,
-  CONSTRAINT fk_ue_deps_resolved_file FOREIGN KEY (resolved_file_id) REFERENCES ue_files(id) ON DELETE SET NULL,
-  CONSTRAINT fk_ue_deps_resolved_export FOREIGN KEY (resolved_export_id) REFERENCES ue_exports(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- Legacy row-per-object metadata tables are intentionally omitted from fresh installs.
+-- Current compact metadata and lookup projections are defined in the consolidated
+-- migration section below.
 
 CREATE TABLE ue_sources (
   id INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -635,13 +567,7 @@ CREATE TABLE ue_file_package_aliases (
   CONSTRAINT fk_ue_file_alias_game FOREIGN KEY (game_id) REFERENCES ue_games(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- 202607180003: dependency resolution metadata and UE4 asset registry.
-ALTER TABLE ue_dependencies
-  ADD COLUMN resolution_source VARCHAR(64) NOT NULL DEFAULT 'unknown' AFTER status,
-  ADD COLUMN resolution_confidence VARCHAR(32) NOT NULL DEFAULT 'unknown' AFTER resolution_source,
-  ADD KEY idx_ue_deps_resolution_source (resolution_source),
-  ADD KEY idx_ue_deps_resolution_confidence (resolution_confidence);
-
+-- 202607180003: UE4 asset registry metadata.
 CREATE TABLE ue_asset_registry_assets (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   file_id BIGINT UNSIGNED NOT NULL,
@@ -833,17 +759,6 @@ ALTER TABLE ue_files
   ADD KEY idx_ue_files_game_size_cursor (game_id, file_size, package_name, original_name, id),
   ADD KEY idx_ue_files_game_compression_cursor (game_id, is_compressed, package_name, original_name, id),
   ADD KEY idx_ue_files_game_uploaded_cursor (game_id, uploaded_at, package_name, original_name, id);
-
-ALTER TABLE ue_imports
-  ADD KEY idx_ue_imports_root_file (root_package, file_id);
-
-ALTER TABLE ue_exports
-  ADD KEY idx_ue_exports_file_local (file_id, local_path(191));
-
-ALTER TABLE ue_dependencies
-  ADD KEY idx_ue_deps_required_file (required_package, file_id),
-  ADD KEY idx_ue_deps_missing_package_cursor (required_package, status, file_id, id),
-  ADD KEY idx_ue_deps_missing_file_cursor (file_id, status, required_package, id);
 
 ALTER TABLE ue_federation_peer_files
   ADD KEY idx_ue_peer_files_inventory_cursor
