@@ -50,6 +50,7 @@ final class LegacyMetadataRuntimeAudit
         'src/Infrastructure/Persistence/PdoCatalogPackageTableWriter.php',
         'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
         'src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
+        'src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php',
         'src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php',
         'src/Infrastructure/Metadata/CatalogCompactMetadataMutationService.php',
         'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
@@ -91,6 +92,7 @@ final class LegacyMetadataRuntimeAudit
         'library.php',
         'missing.php',
         'src/Application/Dashboard/CatalogDashboardStats.php',
+        'src/Infrastructure/Federation/CatalogFederationDependencyNeedQuery.php',
         'src/Infrastructure/Telemetry/CatalogExactCountQueryCatalog.php',
         'src/Infrastructure/Unverified/CatalogUnverifiedQueueStorage.php',
     ];
@@ -110,6 +112,7 @@ final class LegacyMetadataRuntimeAudit
         'package-normalize.php',
         'upk-info.php',
         'src/Infrastructure/Maintenance/CatalogLegacyPackageNormalizationService.php',
+        'src/Infrastructure/Metadata/CatalogAssetMetadataService.php',
     ];
 
     /** @return array{files:int,references:int,matches:list<array<string,mixed>>} */
