@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CompressedMetadataLookupWriter` for compressed metadata lookup writer.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Writes compact global lookup projections using bounded multi-row SQL.
+ * Why: Current metadata publication must be self-contained and must not reread retired dependency/import tables.
+ * Role: Infrastructure current metadata projection writer.
  */
 declare(strict_types=1);
 
@@ -16,7 +12,6 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 
-/** Writes compact global lookup projections using bounded multi-row SQL. */
 final class CompressedMetadataLookupWriter
 {
     private const TERM_BATCH_SIZE = 350;
@@ -27,12 +22,8 @@ final class CompressedMetadataLookupWriter
     }
 
     /** @param array<string,mixed> $snapshot */
-    public function write(
-        array $snapshot,
-        string $compressed,
-        string $json,
-        int &$sqlBatches
-    ): void {
+    public function write(array $snapshot, string $compressed, string $json, int &$sqlBatches): void
+    {
         $this->writeVersioned(
             $snapshot,
             $compressed,
@@ -58,7 +49,7 @@ final class CompressedMetadataLookupWriter
         $dependencies = (array)$snapshot['dependencies'];
         $paths = (array)$snapshot['paths'];
         $fileId = (int)$file['id'];
-        $resolutionLabels = $this->dependencyResolutionLabels($fileId, $dependencies, $sqlBatches);
+        $resolutionLabels = $this->dependencyResolutionLabels($dependencies);
 
         $importsByIndex = [];
         foreach ($imports as $row) {
@@ -212,59 +203,32 @@ final class CompressedMetadataLookupWriter
     }
 
     /**
+     * Current snapshots must carry human-readable resolution labels inline.
+     * Explicit historical conversion is responsible for hydrating them before
+     * invoking this writer; the writer never rereads retired SQL metadata.
+     *
      * @param array<int,mixed> $dependencies
      * @return array<int,array{source:string,confidence:string}>
      */
-    private function dependencyResolutionLabels(int $fileId, array $dependencies, int &$sqlBatches): array
+    private function dependencyResolutionLabels(array $dependencies): array
     {
-        if ($dependencies === []) {
-            return [];
-        }
-
-        $inline = [];
-        $inlineComplete = true;
+        $labels = [];
         foreach ($dependencies as $row) {
             if (!is_array($row)) {
-                $inlineComplete = false;
-                break;
+                throw new RuntimeException('Dependency snapshot contains a non-row value.');
             }
             $index = (int)($row['import_index'] ?? -1);
             $source = trim((string)($row['resolution_source'] ?? ''));
             $confidence = trim((string)($row['resolution_confidence'] ?? ''));
             if ($index < 0 || $source === '' || $confidence === '') {
-                $inlineComplete = false;
-                break;
+                throw new RuntimeException(
+                    'Current compact dependency snapshot is missing resolution labels for import index ' . $index . '.'
+                );
             }
-            $inline[$index] = [
-                'source' => $source,
-                'confidence' => $confidence,
-            ];
-        }
-        if ($inlineComplete && count($inline) === count($dependencies)) {
-            return $inline;
-        }
-
-        $statement = $this->db->prepare(
-            'SELECT i.import_index,d.resolution_source,d.resolution_confidence '
-            . 'FROM ue_dependencies d JOIN ue_imports i ON i.id=d.import_id '
-            . 'WHERE d.file_id=? ORDER BY i.import_index'
-        );
-        $statement->execute([$fileId]);
-        $sqlBatches++;
-        $labels = [];
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $source = trim((string)($row['resolution_source'] ?? ''));
-            $confidence = trim((string)($row['resolution_confidence'] ?? ''));
-            $labels[(int)$row['import_index']] = [
-                'source' => $source !== '' ? $source : 'unknown',
-                'confidence' => $confidence !== '' ? $confidence : 'unknown',
-            ];
+            $labels[$index] = ['source' => $source, 'confidence' => $confidence];
         }
         if (count($labels) !== count($dependencies)) {
-            throw new RuntimeException(
-                'Dependency resolution label count mismatch for file #' . $fileId
-                . ': expected ' . count($dependencies) . ', found ' . count($labels) . '.'
-            );
+            throw new RuntimeException('Current compact dependency snapshot contains duplicate import indexes.');
         }
         return $labels;
     }
