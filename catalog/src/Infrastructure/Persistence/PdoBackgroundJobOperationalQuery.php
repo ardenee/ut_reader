@@ -26,21 +26,20 @@ final class PdoBackgroundJobOperationalQuery
     {
         $queueName = PdoJobQueueSupport::requiredIdentifier($queueName, 'queue');
 
-        // These values drive the live worker banner/restart decision and therefore
-        // must never be hidden behind a multi-second cache. Both are narrow
-        // queue/status index counts rather than a GROUP BY over queue history.
-        $queued = $this->statusCount($queueName, 'queued');
-        $running = $this->statusCount($queueName, 'running');
-
-        $ready = 0;
-        if ($queued > 0) {
-            $statement = $this->db->prepare(
-                'SELECT COUNT(*) FROM ue_background_jobs '
-                . 'WHERE queue_name=? AND status="queued" AND cancel_requested_at IS NULL AND available_at<=UTC_TIMESTAMP()'
-            );
-            $statement->execute([$queueName]);
-            $ready = (int)$statement->fetchColumn();
-        }
+        // The live values are exact, but they are collected in one indexed pass
+        // instead of three separate status counts on every two-second UI poll.
+        $statement = $this->db->prepare(
+            'SELECT '
+            . 'COALESCE(SUM(status="queued"),0) queued,'
+            . 'COALESCE(SUM(status="running"),0) running,'
+            . 'COALESCE(SUM(status="queued" AND cancel_requested_at IS NULL AND available_at<=UTC_TIMESTAMP()),0) ready '
+            . 'FROM ue_background_jobs WHERE queue_name=? AND status IN ("queued","running")'
+        );
+        $statement->execute([$queueName]);
+        $live = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        $queued = max(0, (int)($live['queued'] ?? 0));
+        $running = max(0, (int)($live['running'] ?? 0));
+        $ready = max(0, (int)($live['ready'] ?? 0));
 
         // Terminal history is not used for scheduling or the live banner, so it
         // can share the short aggregate cache and avoid scanning old rows every poll.
