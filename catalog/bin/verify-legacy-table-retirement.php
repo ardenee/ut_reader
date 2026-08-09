@@ -49,6 +49,21 @@ function retirement_table_exists(PDO $db, string $table): bool
     return (bool)$statement->fetchColumn();
 }
 
+/** @return array<string,int> */
+function retirement_rows_by_status(PDO $db, string $table): array
+{
+    $statement = $db->query(
+        'SELECT f.scan_status,COUNT(*) row_count FROM ' . $table . ' legacy '
+        . 'JOIN ue_files f ON f.id=legacy.file_id '
+        . 'GROUP BY f.scan_status ORDER BY f.scan_status'
+    );
+    $out = [];
+    foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+        $out[(string)$row['scan_status']] = (int)$row['row_count'];
+    }
+    return $out;
+}
+
 /** @return array<string,mixed> */
 function retirement_table_accounting(PDO $db, string $table): array
 {
@@ -62,6 +77,7 @@ function retirement_table_accounting(PDO $db, string $table): array
             'unverified_rows' => 0,
             'other_file_status_rows' => 0,
             'orphan_rows' => 0,
+            'rows_by_status' => [],
             'empty' => true,
         ];
     }
@@ -112,10 +128,85 @@ function retirement_table_accounting(PDO $db, string $table): array
         'unverified_rows' => $unverifiedRows,
         'other_file_status_rows' => $otherRows,
         'orphan_rows' => $orphanRows,
+        'rows_by_status' => $totalRows === 0 ? [] : retirement_rows_by_status($db, $table),
         'classified_rows' => $verifiedRows + $unverifiedRows + $otherRows + $orphanRows,
         'classification_matches_total' => $totalRows === ($verifiedRows + $unverifiedRows + $otherRows + $orphanRows),
         'empty' => $totalRows === 0,
     ];
+}
+
+function retirement_legacy_file_source_sql(): string
+{
+    $selects = [];
+    foreach (LEGACY_RETIREMENT_TABLES as $table) {
+        $selects[] = 'SELECT file_id FROM ' . $table;
+    }
+    return '(' . implode(' UNION ', $selects) . ')';
+}
+
+/** @return array<string,array<string,int>> */
+function retirement_file_status_summary(PDO $db): array
+{
+    $source = retirement_legacy_file_source_sql();
+    $statement = $db->query(
+        'SELECT f.scan_status,COUNT(*) file_count,'
+        . 'SUM(CASE WHEN m.format_version=2 THEN 1 ELSE 0 END) format2_files,'
+        . 'SUM(CASE WHEN m.file_id IS NULL OR m.format_version<>2 THEN 1 ELSE 0 END) without_format2 '
+        . 'FROM ' . $source . ' legacy '
+        . 'JOIN ue_files f ON f.id=legacy.file_id '
+        . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+        . 'GROUP BY f.scan_status ORDER BY f.scan_status'
+    );
+
+    $out = [];
+    foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+        $out[(string)$row['scan_status']] = [
+            'files' => (int)$row['file_count'],
+            'format2_files' => (int)$row['format2_files'],
+            'without_format2' => (int)$row['without_format2'],
+        ];
+    }
+    return $out;
+}
+
+/** @return list<array<string,mixed>> */
+function retirement_file_samples(PDO $db, int $limit = 25): array
+{
+    $source = retirement_legacy_file_source_sql();
+    $statement = $db->query(
+        'SELECT f.id,f.scan_status,f.game_id,f.package_name,f.original_name,'
+        . 'f.name_count,f.import_count,f.export_count,m.format_version,'
+        . 'm.name_count metadata_name_count,m.import_count metadata_import_count,'
+        . 'm.export_count metadata_export_count '
+        . 'FROM ' . $source . ' legacy '
+        . 'JOIN ue_files f ON f.id=legacy.file_id '
+        . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+        . 'ORDER BY f.scan_status,f.id LIMIT ' . max(1, $limit)
+    );
+
+    $out = [];
+    foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+        $formatVersion = $row['format_version'] === null ? null : (int)$row['format_version'];
+        $countParity = $formatVersion === 2
+            && (int)$row['name_count'] === (int)$row['metadata_name_count']
+            && (int)$row['import_count'] === (int)$row['metadata_import_count']
+            && (int)$row['export_count'] === (int)$row['metadata_export_count'];
+        $out[] = [
+            'file_id' => (int)$row['id'],
+            'scan_status' => (string)$row['scan_status'],
+            'game_id' => (int)$row['game_id'],
+            'package_name' => (string)$row['package_name'],
+            'original_name' => (string)$row['original_name'],
+            'format_version' => $formatVersion,
+            'format2_count_parity' => $countParity,
+            'file_counts' => [
+                'names' => (int)$row['name_count'],
+                'imports' => (int)$row['import_count'],
+                'exports' => (int)$row['export_count'],
+            ],
+        ];
+    }
+    return $out;
 }
 
 try {
@@ -151,6 +242,9 @@ try {
         $remainingRows += (int)$accounting['total_rows'];
     }
 
+    $legacyFileStatusSummary = $remainingRows === 0 ? [] : retirement_file_status_summary($db);
+    $legacyFileSamples = $remainingRows === 0 ? [] : retirement_file_samples($db);
+
     $runningJobs = 0;
     try {
         $runningJobs = retirement_scalar(
@@ -175,11 +269,13 @@ try {
         'running_background_jobs' => $runningJobs,
         'legacy_rows_total' => $remainingRows,
         'tables' => $tables,
+        'legacy_file_status_summary' => $legacyFileStatusSummary,
+        'legacy_file_samples' => $legacyFileSamples,
         'legacy_data_empty' => $remainingRows === 0,
         'data_ready_for_source_retirement' => $dataReady,
         'next_step' => $remainingRows === 0
             ? 'Legacy data is empty. Remove remaining executable legacy-table code paths before creating the destructive table-drop migration.'
-            : 'Do not drop legacy tables. Review the row classifications and migrate or intentionally purge the remaining non-verified/orphan data first.',
+            : 'Do not drop legacy tables. Use legacy_file_status_summary and legacy_file_samples to decide whether the remaining duplicate/failed records need migration or intentional purge.',
     ];
 
     fwrite(STDOUT, json_encode(
