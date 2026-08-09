@@ -36,14 +36,12 @@ final class CatalogMissingDetailListService
     /** @param list<mixed>|null $cursor @return array{rows:list<array<string,mixed>>,has_previous:bool,has_next:bool,first_cursor:?array,last_cursor:?array} */
     public static function fetchPackageFiles(
         PDO $db,
-        bool $summaryAvailable,
         string $packageName,
         int $limit,
         ?array $cursor,
         string $move
     ): array {
         return (new PdoMissingDetailListQuery($db))->fetchPackageFiles(
-            $summaryAvailable,
             $packageName,
             $limit,
             $cursor,
