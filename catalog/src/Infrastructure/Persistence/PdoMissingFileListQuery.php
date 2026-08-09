@@ -20,7 +20,6 @@ final class PdoMissingFileListQuery
      * @return array{rows:list<array<string,mixed>>,first_cursor:?array,last_cursor:?array,has_previous:bool,has_next:bool}
      */
     public function fetchCursorPage(
-        bool $summaryAvailable,
         int $limit,
         ?array $cursor,
         string $move = 'first'
@@ -45,34 +44,18 @@ final class PdoMissingFileListQuery
         }
 
         $fetchLimit = $limit + 1;
-        if ($summaryAvailable) {
-            $rows = \catalog_all(
-                $this->db,
-                'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
-                . 'SUM(s.missing_count) missing_object_rows,COUNT(*) missing_package_count,'
-                . 'GROUP_CONCAT(s.required_package ORDER BY s.required_package SEPARATOR ", ") missing_package_names '
-                . 'FROM ue_dependency_package_summaries s '
-                . 'JOIN ue_files f ON f.id=s.file_id JOIN ue_games g ON g.id=s.game_id '
-                . 'WHERE s.missing_count>0 GROUP BY f.id,f.package_name,f.original_name,g.id,g.name'
-                . $having . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
-                . ' LIMIT ' . $fetchLimit,
-                $args
-            );
-        } else {
-            $dependencySource = PdoDependencyReadSource::sql($this->db);
-            $rows = \catalog_all(
-                $this->db,
-                'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
-                . 'COUNT(d.id) missing_object_rows,COUNT(DISTINCT d.required_package) missing_package_count,'
-                . 'GROUP_CONCAT(DISTINCT d.required_package ORDER BY d.required_package SEPARATOR ", ") missing_package_names '
-                . 'FROM ' . $dependencySource . ' d '
-                . 'JOIN ue_files f ON f.id=d.file_id JOIN ue_games g ON g.id=f.game_id '
-                . 'WHERE d.status="missing" GROUP BY f.id,f.package_name,f.original_name,g.id,g.name'
-                . $having . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
-                . ' LIMIT ' . $fetchLimit,
-                $args
-            );
-        }
+        $rows = \catalog_all(
+            $this->db,
+            'SELECT f.id file_id,f.package_name,f.original_name,g.id game_id,g.name game_name,'
+            . 'SUM(s.missing_count) missing_object_rows,COUNT(*) missing_package_count,'
+            . 'GROUP_CONCAT(s.required_package ORDER BY s.required_package SEPARATOR ", ") missing_package_names '
+            . 'FROM ue_dependency_package_summaries s '
+            . 'JOIN ue_files f ON f.id=s.file_id JOIN ue_games g ON g.id=s.game_id '
+            . 'WHERE s.missing_count>0 GROUP BY f.id,f.package_name,f.original_name,g.id,g.name'
+            . $having . ' ORDER BY ' . CatalogKeysetPaginator::order($columns, $directions, $reverse)
+            . ' LIMIT ' . $fetchLimit,
+            $args
+        );
 
         $hasExtra = count($rows) > $limit;
         if ($hasExtra) {
