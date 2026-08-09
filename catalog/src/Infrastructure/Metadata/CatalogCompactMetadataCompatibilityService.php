@@ -53,11 +53,16 @@ final class CatalogCompactMetadataCompatibilityService
                 $sql
             );
             if (!is_string($baseSql) || $baseSql === $sql) {
-                return ['handled' => false, 'value' => null];
+                throw new RuntimeException('Unsupported verified Export aggregate compatibility query shape.');
             }
             $rows = $this->directRows($db, $baseSql, $args);
             foreach ($rows as &$row) {
                 $snapshot = $this->snapshot($db, $config, (int)$row['id']);
+                if (($snapshot['source'] ?? '') !== 'compact') {
+                    throw new RuntimeException(
+                        'Verified Export aggregate compatibility encountered a non-current metadata row.'
+                    );
+                }
                 $row['serialized_export_bytes'] = array_sum(array_map(
                     static fn(array $export): int => max(0, (int)($export['serial_size'] ?? 0)),
                     $snapshot['exports']
@@ -69,7 +74,9 @@ final class CatalogCompactMetadataCompatibilityService
 
         $fileId = isset($args[0]) ? (int)$args[0] : 0;
         if ($fileId < 1) {
-            return ['handled' => false, 'value' => null];
+            throw new RuntimeException(
+                'Historical Names/Imports/Exports query has no file identity; runtime legacy metadata reads are disabled.'
+            );
         }
         $snapshot = $this->snapshot($db, $config, $fileId);
 
@@ -164,6 +171,13 @@ final class CatalogCompactMetadataCompatibilityService
                 'first_offset' => $firstOffset ?? 0,
                 'last_end' => $lastEnd,
             ]];
+        }
+
+        if (($snapshot['source'] ?? '') === 'compact') {
+            throw new RuntimeException(
+                'Unsupported historical metadata query shape for verified file #' . $fileId
+                . '; runtime legacy metadata reads are disabled.'
+            );
         }
 
         return ['handled' => false, 'value' => null];
