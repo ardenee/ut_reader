@@ -85,32 +85,18 @@ final class PdoMissingDetailListQuery
 
     /** @param list<mixed>|null $cursor @return array{rows:list<array<string,mixed>>,has_previous:bool,has_next:bool,first_cursor:?array,last_cursor:?array} */
     public function fetchPackageFiles(
-        bool $summaryAvailable,
         string $packageName,
         int $limit,
         ?array $cursor,
         string $move
     ): array {
+        $columns = ['s.missing_count', 'g.name', 'f.package_name', 'f.original_name', 'f.id'];
         $directions = ['DESC', 'ASC', 'ASC', 'ASC', 'ASC'];
-        if ($summaryAvailable) {
-            $columns = ['s.missing_count', 'g.name', 'f.package_name', 'f.original_name', 'f.id'];
-            $select = 'SELECT f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
-                . 'g.id game_id,g.name game_name,s.missing_count missing_object_rows '
-                . 'FROM ue_dependency_package_summaries s JOIN ue_files f ON f.id=s.file_id '
-                . 'JOIN ue_games g ON g.id=s.game_id '
-                . 'WHERE s.required_package=? AND s.missing_count>0';
-        } else {
-            $dependencySource = PdoDependencyReadSource::sql($this->db);
-            $columns = ['x.missing_object_rows', 'x.game_name', 'x.owner_package_name', 'x.owner_original_name', 'x.file_id'];
-            $select = 'SELECT x.* FROM ('
-                . 'SELECT f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
-                . 'g.id game_id,g.name game_name,COUNT(d.id) missing_object_rows '
-                . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
-                . 'JOIN ue_games g ON g.id=f.game_id '
-                . 'WHERE d.status="missing" AND d.required_package=? '
-                . 'GROUP BY f.id,f.package_name,f.original_name,g.id,g.name'
-                . ') x WHERE 1=1';
-        }
+        $select = 'SELECT f.id file_id,f.package_name owner_package_name,f.original_name owner_original_name,'
+            . 'g.id game_id,g.name game_name,s.missing_count missing_object_rows '
+            . 'FROM ue_dependency_package_summaries s JOIN ue_files f ON f.id=s.file_id '
+            . 'JOIN ue_games g ON g.id=s.game_id '
+            . 'WHERE s.required_package=? AND s.missing_count>0';
 
         return $this->fetch(
             $select,
