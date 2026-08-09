@@ -1,14 +1,16 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Preserves historical federation authentication, identity and settings helper APIs.
- * Why: Focused signing, authentication, signed transport, secret/key, settings and identity implementations now live under Infrastructure while legacy callers keep stable function names.
- * Role: Transitional compatibility facade plus remaining federation HTTP body/log/response helpers awaiting separate extraction.
+ * Purpose: Preserves historical federation authentication, identity, settings, logging and JSON helper APIs.
+ * Why: Implementations now live under Infrastructure while legacy pages/scripts keep stable function names.
+ * Role: Thin compatibility facade; do not add federation protocol, persistence or HTTP implementation here.
  */
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationApiException;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationIdentityService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationJsonApi;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationLogService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignaturePolicy;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationRequestSignatureService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSettingsStore;
@@ -114,54 +116,23 @@ function fed_ensure_identity(PDO $db, string $siteUrl = '', string $siteName = '
 
 function fed_log(PDO $db, ?int $peerId, ?int $jobId, string $level, string $event, string $details = ''): void
 {
-    $stmt = $db->prepare('INSERT INTO ue_federation_transfer_logs(peer_id, transfer_job_id, level, event, details) VALUES(?,?,?,?,?)');
-    $stmt->execute([$peerId, $jobId, $level, $event, $details]);
+    (new CatalogFederationLogService($db))->write($peerId, $jobId, $level, $event, $details);
 }
 
 function fed_request_body_limit_bytes(int $default = 1048576): int
 {
-    $configured = (int)(getenv('UNREALDB_FEDERATION_MAX_JSON_BYTES') ?: 0);
-    return max(1024, min($configured > 0 ? $configured : $default, 64 * 1024 * 1024));
+    return CatalogFederationJsonApi::bodyLimitBytes($default);
 }
 
 function fed_read_request_body(?int $maxBytes = null): string
 {
-    $limit = $maxBytes ?? fed_request_body_limit_bytes();
-    $limit = max(1024, min($limit, 64 * 1024 * 1024));
-    $declaredLength = filter_var($_SERVER['CONTENT_LENGTH'] ?? null, FILTER_VALIDATE_INT);
-    if ($declaredLength !== false && $declaredLength !== null && (int)$declaredLength > $limit) {
-        fed_json_response(['ok' => false, 'error' => 'Request body exceeds the allowed size.'], 413);
-    }
-    $stream = fopen('php://input', 'rb');
-    if (!is_resource($stream)) {
-        fed_json_response(['ok' => false, 'error' => 'Request body could not be read.'], 400);
-    }
-    try {
-        $body = stream_get_contents($stream, $limit + 1);
-    } finally {
-        fclose($stream);
-    }
-    if (!is_string($body)) {
-        fed_json_response(['ok' => false, 'error' => 'Request body could not be read.'], 400);
-    }
-    if (strlen($body) > $limit) {
-        fed_json_response(['ok' => false, 'error' => 'Request body exceeds the allowed size.'], 413);
-    }
-    return $body;
+    return CatalogFederationJsonApi::readRequestBody($maxBytes);
 }
 
 /** @return array<string,mixed> */
 function fed_decode_json_object(string $body): array
 {
-    try {
-        $payload = json_decode($body, true, 128, JSON_THROW_ON_ERROR);
-    } catch (JsonException) {
-        fed_json_response(['ok' => false, 'error' => 'Invalid JSON payload.'], 400);
-    }
-    if (!is_array($payload)) {
-        fed_json_response(['ok' => false, 'error' => 'JSON payload must be an object.'], 400);
-    }
-    return $payload;
+    return CatalogFederationJsonApi::decodeObject($body);
 }
 
 function fed_body_hash(string $body): string
@@ -212,9 +183,7 @@ function fed_verify_signature_ed25519(string $publicKey, string $method, string 
 
 function fed_request_path(): string
 {
-    $uri = (string)($_SERVER['REQUEST_URI'] ?? '/');
-    $pos = strpos($uri, '?');
-    return $pos === false ? $uri : substr($uri, 0, $pos);
+    return CatalogFederationJsonApi::requestPath();
 }
 
 function fed_require_signed_peer(PDO $db, string $body): array
@@ -222,8 +191,7 @@ function fed_require_signed_peer(PDO $db, string $body): array
     try {
         return (new CatalogFederationSignedRequestAuthenticator($db))->authenticate($body);
     } catch (CatalogFederationApiException $error) {
-        fed_json_response($error->responsePayload(), $error->httpStatus());
-        throw $error;
+        CatalogFederationJsonApi::respond($error->responsePayload(), $error->httpStatus());
     }
 }
 
@@ -239,7 +207,7 @@ function fed_http_post_signed(string $url, string $siteId, string $secret, array
         $siteId,
         $secret,
         $payload,
-        fed_request_body_limit_bytes(8388608),
+        CatalogFederationJsonApi::bodyLimitBytes(8388608),
         60
     );
 }
@@ -251,10 +219,5 @@ function fed_public_status(PDO $db): array
 
 function fed_json_response(array $data, int $status = 200): void
 {
-    http_response_code($status);
-    header('Content-Type: application/json; charset=utf-8');
-    header('Cache-Control: no-store');
-    header('X-Content-Type-Options: nosniff');
-    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    exit;
+    CatalogFederationJsonApi::respond($data, $status);
 }
