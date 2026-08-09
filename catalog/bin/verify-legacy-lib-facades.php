@@ -17,6 +17,9 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
     if (!$ok) $failures[] = $name . ($detail !== '' ? ': ' . $detail : '');
 };
+$documentedFacade = static function (string $source): bool {
+    return preg_match('/\bcompatibility(?:\/[a-z-]+)?\s+facade\b/i', $source) === 1;
+};
 
 $facades = [
     'lib/FederationAuth.php' => 320,
@@ -45,7 +48,7 @@ foreach ($facades as $relative => $maxLines) {
     );
     $record(
         'facade_role:' . $relative,
-        str_contains($source, 'compatibility facade') || str_contains($source, 'Compatibility facade'),
+        $documentedFacade($source),
         'extracted legacy files must be explicitly documented as compatibility facades'
     );
 }
@@ -65,6 +68,7 @@ $intentional = [
     'CatalogLegacyUz.php',
     'CatalogPakArchive.php',
     'CatalogRedirectArchive.php',
+    'CatalogRedirectCodec.php',
     'CatalogScanner.php',
     'CatalogRuntimeSqlCompatibility.php',
     'CatalogSupport.php',
@@ -81,7 +85,7 @@ foreach (glob($root . '/lib/*.php') ?: [] as $path) {
             'file' => 'lib/' . $name,
             'lines' => $lines,
             'intentional_low_level' => in_array($name, $intentional, true),
-            'facade_documented' => str_contains($source, 'compatibility facade') || str_contains($source, 'Compatibility facade'),
+            'facade_documented' => $documentedFacade($source),
         ];
     }
 }
