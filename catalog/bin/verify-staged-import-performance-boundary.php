@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies the durable staged-package import path does not recreate a redundant parser working copy.
+ * Purpose: Verifies the durable staged-package import path avoids a redundant parser copy while preserving rollback/failure bytes.
  * Role: Read-only import performance/failure-retention regression test.
  */
 declare(strict_types=1);
@@ -17,12 +17,18 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
     if (!$ok) $failures[] = $name . ($detail !== '' ? ': ' . $detail : '');
 };
-$path = $root . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php';
-$source = (string)@file_get_contents($path);
-$out = [];
-$code = 0;
-exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg($path) . ' 2>&1', $out, $code);
-$record('php_syntax', $code === 0, implode(' ', $out));
+$handlerPath = $root . '/src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php';
+$storagePath = $root . '/src/Infrastructure/Storage/CatalogVerifiedPackageStorage.php';
+$source = (string)@file_get_contents($handlerPath);
+$storage = (string)@file_get_contents($storagePath);
+$syntax = [];
+foreach ([$handlerPath, $storagePath] as $path) {
+    $out = [];
+    $code = 0;
+    exec(escapeshellarg(PHP_BINARY) . ' -l ' . escapeshellarg($path) . ' 2>&1', $out, $code);
+    if ($code !== 0) $syntax[] = basename($path) . ': ' . implode(' ', $out);
+}
+$record('php_syntax', $syntax === [], implode(' | ', $syntax));
 $record(
     'no_full_working_copy',
     !str_contains($source, 'tempnam(sys_get_temp_dir(), \'unrealdb-import-\')')
@@ -44,6 +50,13 @@ $record(
         && str_contains($source, '$workingTemporary = true;')
         && str_contains($source, 'if ($workingTemporary && $workingPath !== \'\' && is_file($workingPath))'),
     'only helper-created temporary redirect files are disposable in finally'
+);
+$record(
+    'storage_rollback_restores_source',
+    str_contains($storage, "'source_path' => $temporaryPath")
+        && str_contains($storage, '@rename($destination, $sourcePath)')
+        && str_contains($storage, '@unlink($destination)'),
+    'persistence failure restores caller-owned staged/temp bytes before bounded fallback cleanup'
 );
 $record(
     'unverified_fallback_retained',
