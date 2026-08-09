@@ -2,8 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Preserves historical federation authentication, identity and settings helper APIs.
- * Why: Focused signature, inbound-authentication and outbound signed-transport implementations now live under Infrastructure while legacy callers keep stable function names.
- * Role: Transitional compatibility facade plus remaining federation identity/settings/secret helpers awaiting separate extraction.
+ * Why: Focused signing, authentication, signed transport and secret/key implementations now live under Infrastructure while legacy callers keep stable function names.
+ * Role: Transitional compatibility facade plus remaining federation identity/settings/HTTP response helpers awaiting separate extraction.
  */
 declare(strict_types=1);
 
@@ -12,6 +12,8 @@ use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignatur
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationRequestSignatureService;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSignedJsonClient;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSignedRequestAuthenticator;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationKeyMaterial;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationPeerSecretService;
 use UnrealDb\Catalog\Infrastructure\Security\FederationSecretStore;
 
 require_once __DIR__ . '/CatalogSupport.php';
@@ -26,171 +28,64 @@ function fed_random_id(): string
 
 function fed_random_secret(): string
 {
-    return rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+    return CatalogFederationKeyMaterial::randomSecret();
 }
 
 function fed_base64url_encode(string $bytes): string
 {
-    return rtrim(strtr(base64_encode($bytes), '+/', '-_'), '=');
+    return CatalogFederationKeyMaterial::base64UrlEncode($bytes);
 }
 
 function fed_base64url_decode(string $value): string
 {
-    $value = trim($value);
-    if ($value === '' || preg_match('/^[A-Za-z0-9_+\/-]+={0,2}$/', $value) !== 1) {
-        throw new InvalidArgumentException('Invalid federation key encoding.');
-    }
-    $standard = strtr($value, '-_', '+/');
-    $standard .= str_repeat('=', (4 - strlen($standard) % 4) % 4);
-    $decoded = base64_decode($standard, true);
-    if ($decoded === false) {
-        throw new InvalidArgumentException('Invalid federation key encoding.');
-    }
-    return $decoded;
+    return CatalogFederationKeyMaterial::base64UrlDecode($value);
 }
 
 function fed_ed25519_secret_key(): string
 {
-    static $loaded = false;
-    static $secret = '';
-    if ($loaded) {
-        return $secret;
-    }
-    $loaded = true;
-    $configured = trim((string)(getenv('UNREALDB_FEDERATION_ED25519_PRIVATE_KEY') ?: ''));
-    if ($configured === '') {
-        return '';
-    }
-    if (!function_exists('sodium_crypto_sign_detached')) {
-        throw new RuntimeException('Ed25519 federation signing requires the PHP sodium extension.');
-    }
-    $decoded = fed_base64url_decode($configured);
-    if (strlen($decoded) === SODIUM_CRYPTO_SIGN_SEEDBYTES) {
-        $pair = sodium_crypto_sign_seed_keypair($decoded);
-        $secret = sodium_crypto_sign_secretkey($pair);
-    } elseif (strlen($decoded) === SODIUM_CRYPTO_SIGN_SECRETKEYBYTES) {
-        $secret = $decoded;
-    } else {
-        throw new RuntimeException('UNREALDB_FEDERATION_ED25519_PRIVATE_KEY must encode a 32-byte seed or 64-byte secret key.');
-    }
-    return $secret;
+    return CatalogFederationKeyMaterial::ed25519SecretKey();
 }
 
 function fed_ed25519_public_key(): string
 {
-    $secret = fed_ed25519_secret_key();
-    return $secret === '' ? '' : sodium_crypto_sign_publickey_from_secretkey($secret);
+    return CatalogFederationKeyMaterial::ed25519PublicKey();
 }
 
 function fed_ed25519_key_id(string $publicKey): string
 {
-    return $publicKey === '' ? '' : strtoupper(substr(hash('sha256', $publicKey), 0, 24));
+    return CatalogFederationKeyMaterial::ed25519KeyId($publicKey);
 }
 
 function fed_secret_store(): FederationSecretStore
 {
-    static $store = null;
-    if (!$store instanceof FederationSecretStore) {
-        $store = FederationSecretStore::fromEnvironment();
-    }
-    return $store;
+    return CatalogFederationPeerSecretService::store();
 }
 
 function fed_require_encrypted_secrets(): bool
 {
-    return in_array(strtolower(trim((string)(getenv('UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS') ?: '0'))), ['1', 'true', 'yes', 'on'], true);
+    return CatalogFederationPeerSecretService::requireEncryptedSecrets();
 }
 
 /** @return array{hash:string,stored:string} */
 function fed_prepare_peer_secret(string $secret): array
 {
-    if ($secret === '' || strlen($secret) > 64) {
-        throw new InvalidArgumentException('Federation shared secrets must contain between 1 and 64 bytes.');
-    }
-
-    $store = fed_secret_store();
-    if ($store->hasMasterKey()) {
-        $stored = $store->encrypt($secret);
-    } elseif (fed_require_encrypted_secrets()) {
-        throw new RuntimeException('Federation secret encryption is required, but UNREALDB_FEDERATION_MASTER_KEY is not configured.');
-    } else {
-        static $warned = false;
-        if (!$warned) {
-            error_log('[UnrealDB federation] Peer secrets are using plaintext compatibility mode. Configure UNREALDB_FEDERATION_MASTER_KEY and run encrypt-federation-secrets.php.');
-            $warned = true;
-        }
-        $stored = $secret;
-    }
-
-    return ['hash' => password_hash($secret, PASSWORD_DEFAULT), 'stored' => $stored];
+    return CatalogFederationPeerSecretService::prepare($secret);
 }
 
 function fed_secret_for_crypto(string $stored): string
 {
-    if ($stored === '') {
-        return '';
-    }
-    $store = fed_secret_store();
-    if ($store->isEncrypted($stored)) {
-        return $store->decrypt($stored);
-    }
-    if (fed_require_encrypted_secrets()) {
-        throw new RuntimeException('A plaintext federation peer secret remains. Run catalog/bin/encrypt-federation-secrets.php before enabling strict secret policy.');
-    }
-    return $stored;
+    return CatalogFederationPeerSecretService::forCrypto($stored);
 }
 
 function fed_peer_secret(PDO $db, array $peer, bool $migratePlaintext = true): string
 {
-    $stored = (string)($peer['shared_secret_plain'] ?? '');
-    if ($stored === '') {
-        return '';
-    }
-    $store = fed_secret_store();
-    if ($store->isEncrypted($stored)) {
-        return $store->decrypt($stored);
-    }
-    if ($store->hasMasterKey() && $migratePlaintext && (int)($peer['id'] ?? 0) > 0) {
-        $encrypted = $store->encrypt($stored);
-        $stmt = $db->prepare('UPDATE ue_federation_peers SET shared_secret_plain=? WHERE id=? AND shared_secret_plain=?');
-        $stmt->execute([$encrypted, (int)$peer['id'], $stored]);
-        fed_log($db, (int)$peer['id'], null, 'INFO', 'PEER_SECRET_ENCRYPTED', 'Legacy plaintext peer secret encrypted at first authenticated use.');
-        return $stored;
-    }
-    if (fed_require_encrypted_secrets()) {
-        throw new RuntimeException('A plaintext federation peer secret remains. Run catalog/bin/encrypt-federation-secrets.php before enabling strict secret policy.');
-    }
-    return $stored;
+    return (new CatalogFederationPeerSecretService($db))->peerSecret($peer, $migratePlaintext);
 }
 
 /** @return array{migrated:int,encrypted:int,missing:int} */
 function fed_migrate_peer_secrets(PDO $db): array
 {
-    $store = fed_secret_store();
-    if (!$store->hasMasterKey()) {
-        throw new RuntimeException('UNREALDB_FEDERATION_MASTER_KEY must be configured before migrating peer secrets.');
-    }
-    $counts = ['migrated' => 0, 'encrypted' => 0, 'missing' => 0];
-    $rows = catalog_all($db, 'SELECT id, shared_secret_plain FROM ue_federation_peers ORDER BY id');
-    $update = $db->prepare('UPDATE ue_federation_peers SET shared_secret_plain=? WHERE id=? AND shared_secret_plain=?');
-    foreach ($rows as $row) {
-        $stored = (string)($row['shared_secret_plain'] ?? '');
-        if ($stored === '') {
-            $counts['missing']++;
-            continue;
-        }
-        if ($store->isEncrypted($stored)) {
-            $store->decrypt($stored);
-            $counts['encrypted']++;
-            continue;
-        }
-        $encrypted = $store->encrypt($stored);
-        $update->execute([$encrypted, (int)$row['id'], $stored]);
-        if ($update->rowCount() === 1) {
-            $counts['migrated']++;
-        }
-    }
-    return $counts;
+    return (new CatalogFederationPeerSecretService($db))->migrateAll();
 }
 
 function fed_setting(PDO $db, string $name, ?string $default = null): ?string

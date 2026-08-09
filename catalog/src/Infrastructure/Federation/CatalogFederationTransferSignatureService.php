@@ -11,6 +11,8 @@ namespace UnrealDb\Catalog\Infrastructure\Federation;
 
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationKeyMaterial;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationPeerSecretService;
 
 final class CatalogFederationTransferSignatureService
 {
@@ -48,7 +50,7 @@ final class CatalogFederationTransferSignatureService
         return hash_hmac(
             'sha256',
             self::payload($method, $path, $timestamp, $nonce, $sha256, $bytes, $remoteId, $name),
-            \fed_secret_for_crypto($secret)
+            CatalogFederationPeerSecretService::forCrypto($secret)
         );
     }
 
@@ -62,15 +64,17 @@ final class CatalogFederationTransferSignatureService
         int $remoteId,
         string $name
     ): string {
-        $secret = \fed_ed25519_secret_key();
+        $secret = CatalogFederationKeyMaterial::ed25519SecretKey();
         if ($secret === '') {
             throw new RuntimeException('Ed25519 federation transfer signing is not configured.');
         }
 
-        return \fed_base64url_encode(sodium_crypto_sign_detached(
-            self::payload($method, $path, $timestamp, $nonce, $sha256, $bytes, $remoteId, $name),
-            $secret
-        ));
+        return CatalogFederationKeyMaterial::base64UrlEncode(
+            sodium_crypto_sign_detached(
+                self::payload($method, $path, $timestamp, $nonce, $sha256, $bytes, $remoteId, $name),
+                $secret
+            )
+        );
     }
 
     public static function verifyEd25519(
@@ -90,8 +94,8 @@ final class CatalogFederationTransferSignatureService
         }
 
         try {
-            $key = \fed_base64url_decode($publicKey);
-            $sig = \fed_base64url_decode($signature);
+            $key = CatalogFederationKeyMaterial::base64UrlDecode($publicKey);
+            $sig = CatalogFederationKeyMaterial::base64UrlDecode($signature);
         } catch (Throwable) {
             return false;
         }

@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Federation;
 
 use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationKeyMaterial;
 
 final class CatalogFederationSignedJsonClient
 {
@@ -28,7 +29,7 @@ final class CatalogFederationSignedJsonClient
         }
 
         $timestamp = date('c');
-        $nonce = \fed_random_secret();
+        $nonce = CatalogFederationKeyMaterial::randomSecret();
         $headers = self::headers($url, $siteId, $secret, $body, $timestamp, $nonce);
 
         return CatalogFederationHttpClient::fromRuntime()->postJson(
@@ -61,7 +62,7 @@ final class CatalogFederationSignedJsonClient
         ];
 
         if ($algorithm === 'ed25519') {
-            $publicKey = \fed_ed25519_public_key();
+            $publicKey = CatalogFederationKeyMaterial::ed25519PublicKey();
             if ($publicKey === '') {
                 throw new RuntimeException(
                     'Ed25519 outgoing federation signing is selected but no private key is configured.'
@@ -74,7 +75,7 @@ final class CatalogFederationSignedJsonClient
                 $nonce,
                 $body
             );
-            $headers[] = 'X-Key-Id: ' . \fed_ed25519_key_id($publicKey);
+            $headers[] = 'X-Key-Id: ' . CatalogFederationKeyMaterial::ed25519KeyId($publicKey);
         } else {
             $signature = CatalogFederationRequestSignatureService::hmac(
                 $secret,

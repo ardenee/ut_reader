@@ -10,14 +10,18 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Federation;
 
 use PDO;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationPeerSecretService;
 
 final class CatalogFederationSignedRequestAuthenticator
 {
+    private readonly CatalogFederationPeerSecretService $peerSecrets;
+
     public function __construct(private readonly PDO $db)
     {
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
+        $this->peerSecrets = new CatalogFederationPeerSecretService($db);
     }
 
     /** @param array<string,mixed>|null $server @return array<string,mixed> */
@@ -91,7 +95,7 @@ final class CatalogFederationSignedRequestAuthenticator
                 $signature
             );
         } elseif ($algorithm === 'hmac-sha256' || $algorithm === 'hmac') {
-            $secret = \fed_peer_secret($this->db, $peer);
+            $secret = $this->peerSecrets->peerSecret($peer);
             if ($secret === '') {
                 throw new CatalogFederationApiException('Peer has no API secret stored.', 501);
             }

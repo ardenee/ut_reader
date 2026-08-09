@@ -12,13 +12,13 @@ namespace UnrealDb\Catalog\Infrastructure\Email;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationPeerSecretService;
 use UnrealDb\Catalog\Infrastructure\Security\CatalogPublicAccessSettingsStore;
 
 final class CatalogSmtpSettingsStore
 {
     public function __construct(private readonly PDO $db)
     {
-        require_once dirname(__DIR__, 3) . '/lib/FederationAuth.php';
     }
 
     /** @return list<string> */
@@ -64,9 +64,9 @@ final class CatalogSmtpSettingsStore
 
         $storedPassword = (string)($values['smtp_password'] ?? '');
         $password = $storedPassword;
-        if ($storedPassword !== '' && function_exists('fed_secret_for_crypto')) {
+        if ($storedPassword !== '') {
             try {
-                $password = \fed_secret_for_crypto($storedPassword);
+                $password = CatalogFederationPeerSecretService::forCrypto($storedPassword);
             } catch (Throwable $error) {
                 throw new RuntimeException(
                     'The saved SMTP password could not be decrypted: ' . $error->getMessage(),

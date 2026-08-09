@@ -11,14 +11,18 @@ namespace UnrealDb\Catalog\Infrastructure\Federation;
 
 use PDO;
 use PDOException;
+use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationPeerSecretService;
 
 final class CatalogFederationStreamingUploadAuthenticator
 {
+    private readonly CatalogFederationPeerSecretService $peerSecrets;
+
     public function __construct(private readonly PDO $db)
     {
         $root = dirname(__DIR__, 3);
         require_once $root . '/lib/CatalogSupport.php';
         require_once $root . '/lib/FederationAuth.php';
+        $this->peerSecrets = new CatalogFederationPeerSecretService($db);
     }
 
     /**
@@ -101,7 +105,7 @@ final class CatalogFederationStreamingUploadAuthenticator
                 $name
             );
         } elseif ($algorithm === 'hmac' || $algorithm === 'hmac-sha256') {
-            $secret = \fed_peer_secret($this->db, $peer);
+            $secret = $this->peerSecrets->peerSecret($peer);
             if ($secret === '') {
                 throw new CatalogFederationApiException('Unknown or inactive peer', 403);
             }
