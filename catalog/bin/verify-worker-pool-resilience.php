@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies detached-worker pool self-healing and accurate partial-pool reporting.
- * Role: Read-only worker architecture regression test.
+ * Purpose: Verifies detached-worker pool self-healing, accurate partial-pool reporting and bounded live status reads.
+ * Role: Read-only worker architecture/performance regression test.
  */
 declare(strict_types=1);
 
@@ -23,6 +23,7 @@ $files = [
     'bin/catalog-worker-detached.php',
     'src/Infrastructure/Jobs/CatalogWorkerPoolSelfHealer.php',
     'src/Application/Jobs/CatalogWorkerStatusPolicy.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php',
 ];
 $syntax = [];
 foreach ($files as $file) {
@@ -36,6 +37,7 @@ $record('php_syntax', $syntax === [], implode(' | ', $syntax));
 $worker = $read('bin/catalog-worker-detached.php');
 $healer = $read('src/Infrastructure/Jobs/CatalogWorkerPoolSelfHealer.php');
 $policy = $read('src/Application/Jobs/CatalogWorkerStatusPolicy.php');
+$operational = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php');
 $bridge = $read('assets/background-jobs-cursor-bridge.js');
 $record(
     'cli_no_session',
@@ -58,6 +60,16 @@ $record(
         && str_contains($bridge, 'Worker pool degraded')
         && str_contains($bridge, 'active jobs'),
     'partial worker processes are reported separately from running database jobs'
+);
+$record(
+    'live_status_single_pass',
+    str_contains($operational, 'COALESCE(SUM(status="queued"),0) queued')
+        && str_contains($operational, 'COALESCE(SUM(status="running"),0) running')
+        && str_contains($operational, 'COALESCE(SUM(status="queued" AND cancel_requested_at IS NULL AND available_at<=UTC_TIMESTAMP()),0) ready')
+        && str_contains($operational, 'status IN ("queued","running")')
+        && !str_contains($operational, '$queued = $this->statusCount($queueName, \'queued\');')
+        && !str_contains($operational, '$running = $this->statusCount($queueName, \'running\');'),
+    'two-second worker status polling collects queued/running/ready values in one indexed aggregate pass'
 );
 
 require_once $root . '/bootstrap/autoload.php';
