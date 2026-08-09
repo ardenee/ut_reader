@@ -25,10 +25,10 @@ final class CatalogFileMaintenanceSupport
         require_once dirname(__DIR__, 3) . '/lib/CatalogScanner.php';
     }
 
-    /** @param array<string,mixed> $file */
-    public function storagePath(array $file): ?string
+    /** @param array<string,mixed> $config @param array<string,mixed> $file */
+    public static function storagePath(array $config, array $file): ?string
     {
-        $storageRoot = realpath(rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
+        $storageRoot = realpath(rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
         if ($storageRoot === false || !is_dir($storageRoot)) {
             throw new RuntimeException('Catalog storage folder is unavailable.');
         }
@@ -57,30 +57,42 @@ final class CatalogFileMaintenanceSupport
         \scanner_emit_percent($progress, $stage, $percent, $message);
     }
 
-    public function storageRoot(): string
+    /** @param array<string,mixed> $config */
+    public static function storageRoot(array $config): string
     {
-        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        $storageRoot = trim((string)($config['storage_path'] ?? ''));
         if ($storageRoot === '') {
             throw new RuntimeException('Catalog storage_path is required for compact file maintenance.');
         }
         return $storageRoot;
     }
 
-    public function metadataPath(int $gameId, int $fileId): string
+    /** @param array<string,mixed> $config */
+    public static function metadataPath(array $config, int $gameId, int $fileId): string
     {
-        return BlockedCompressedMetadataContainer::path($this->storageRoot(), $gameId, $fileId);
+        return BlockedCompressedMetadataContainer::path(
+            self::storageRoot($config),
+            $gameId,
+            $fileId
+        );
     }
 
     /** @return array<string,mixed> */
     public function snapshot(int $fileId): array
     {
-        return (new CompactFileMaintenanceSnapshot($this->db, $this->storageRoot()))->capture($fileId);
+        return (new CompactFileMaintenanceSnapshot(
+            $this->db,
+            self::storageRoot($this->config)
+        ))->capture($fileId);
     }
 
     /** @param array<string,mixed> $snapshot */
     public function restoreSnapshot(array $snapshot): void
     {
-        (new CompactFileMaintenanceSnapshot($this->db, $this->storageRoot()))->restore($snapshot);
+        (new CompactFileMaintenanceSnapshot(
+            $this->db,
+            self::storageRoot($this->config)
+        ))->restore($snapshot);
     }
 
     /** @param array<string,mixed> $snapshot */
