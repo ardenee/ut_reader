@@ -25,6 +25,20 @@ $read = static function (string $relative) use ($root): string {
     $content = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
     return is_string($content) ? $content : '';
 };
+$withoutComments = static function (string $source): string {
+    $out = '';
+    foreach (token_get_all($source) as $token) {
+        if (is_array($token)) {
+            if (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+            $out .= $token[1];
+        } else {
+            $out .= $token;
+        }
+    }
+    return $out;
+};
 
 $runtimeFiles = [
     'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
@@ -43,16 +57,17 @@ foreach ($runtimeFiles as $relative) {
     if (!$present) {
         continue;
     }
+    $executable = $withoutComments($source);
     $found = [];
     foreach ($legacyTables as $table) {
-        if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $source) === 1) {
+        if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $executable) === 1) {
             $found[] = $table;
         }
     }
     $record(
         'compact_only:' . $relative,
         $found === [],
-        $found === [] ? 'no retired metadata table references' : 'found: ' . implode(', ', $found)
+        $found === [] ? 'no executable retired metadata table references' : 'found: ' . implode(', ', $found)
     );
 }
 
@@ -61,9 +76,17 @@ $record(
     'dependency_sql_bridge_fails_closed',
     str_contains($runtimeBridge, 'CatalogDependencyReadSource')
         && str_contains($runtimeBridge, 'runtime legacy dependency reads are disabled')
-        && !str_contains($runtimeBridge, 'SQL rewrite skipped')
-        && !str_contains($runtimeBridge, 'return $sql;\n    } catch'),
+        && !str_contains($runtimeBridge, 'SQL rewrite skipped'),
     'historical dependency query shapes must rewrite to current projections or fail; never execute legacy SQL'
+);
+
+$metadataCompatibility = $read('src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php');
+$record(
+    'verified_metadata_shape_bridge_fails_closed',
+    str_contains($metadataCompatibility, "$scanStatus === 'verified'")
+        && str_contains($metadataCompatibility, 'runtime legacy metadata reads are disabled')
+        && str_contains($metadataCompatibility, "'source' => 'legacy-staging'"),
+    'historical N/I/E query shapes may use legacy SQL only for explicitly non-verified staging rows'
 );
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
@@ -94,8 +117,8 @@ $record(
     'compact_export_lookup_is_self_sufficient',
     str_contains($writer, "'local_path_term_id'")
         && str_contains($writer, '$termIds[$this->termKey($localPath)]')
-        && !str_contains($writer, 'FROM ue_dependencies')
-        && !str_contains($writer, 'JOIN ue_imports'),
+        && !str_contains($withoutComments($writer), 'FROM ue_dependencies')
+        && !str_contains($withoutComments($writer), 'JOIN ue_imports'),
     'current projection writes must include local paths and dependency labels without legacy rereads'
 );
 
@@ -104,8 +127,8 @@ $record(
     'compact_object_resolution_boundary',
     str_contains($resolver, 'ue_export_lookup')
         && str_contains($resolver, 'l.path_hash=?')
-        && !str_contains($resolver, 'FROM ue_exports')
-        && !str_contains($resolver, 'JOIN ue_exports'),
+        && !str_contains($withoutComments($resolver), 'FROM ue_exports')
+        && !str_contains($withoutComments($resolver), 'JOIN ue_exports'),
     'object dependency resolution must use current export projections only'
 );
 
@@ -124,6 +147,7 @@ $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
+    'src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php',
 ])));
 foreach ($syntaxFiles as $relative) {
     $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
