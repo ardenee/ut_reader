@@ -76,6 +76,23 @@ foreach ($runtimeFiles as $relative) {
     );
 }
 
+$installSql = $read('install.sql');
+$installLegacyReferences = [];
+foreach ($legacyTables as $table) {
+    if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $installSql) === 1) {
+        $installLegacyReferences[] = $table;
+    }
+}
+$record(
+    'fresh_install_omits_retired_metadata_tables',
+    $installSql !== '' && $installLegacyReferences === [],
+    $installSql === ''
+        ? 'install.sql could not be read'
+        : ($installLegacyReferences === []
+            ? 'fresh-install schema contains only current metadata storage/projections'
+            : 'found: ' . implode(', ', $installLegacyReferences))
+);
+
 $record(
     'dependency_sql_bridge_retired',
     !is_file($root . '/lib/CatalogRuntimeSqlCompatibility.php'),
