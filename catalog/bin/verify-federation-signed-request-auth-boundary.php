@@ -2,8 +2,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Verifies the signed federation JSON request authentication boundary.
- * Why: Authentication, signature canonicalization and nonce persistence must not drift back into the legacy FederationAuth facade.
+ * Purpose: Verifies signed federation JSON request authentication and outgoing transport boundaries.
+ * Why: Authentication, signature canonicalization, replay persistence and signed HTTP transport must not drift back into the legacy FederationAuth facade.
  * Role: Read-only architecture/protocol regression verification; never mutates schema or application data.
  */
 declare(strict_types=1);
@@ -32,7 +32,9 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 
 $criticalPhp = [
     'lib/FederationAuth.php',
+    'src/Infrastructure/Federation/CatalogFederationOutgoingSignaturePolicy.php',
     'src/Infrastructure/Federation/CatalogFederationRequestSignatureService.php',
+    'src/Infrastructure/Federation/CatalogFederationSignedJsonClient.php',
     'src/Infrastructure/Federation/CatalogFederationSignedRequestAuthenticator.php',
 ];
 
@@ -65,7 +67,9 @@ if (!function_exists('proc_open')) {
 }
 
 $auth = $read('lib/FederationAuth.php');
+$signaturePolicy = $read('src/Infrastructure/Federation/CatalogFederationOutgoingSignaturePolicy.php');
 $signatureService = $read('src/Infrastructure/Federation/CatalogFederationRequestSignatureService.php');
+$signedClient = $read('src/Infrastructure/Federation/CatalogFederationSignedJsonClient.php');
 $authenticator = $read('src/Infrastructure/Federation/CatalogFederationSignedRequestAuthenticator.php');
 
 $requireStart = strpos($auth, 'function fed_require_signed_peer(');
@@ -103,6 +107,23 @@ $record(
     $missingWrappers === [] ? 'legacy signature helpers delegate to Infrastructure' : 'missing: ' . implode(', ', $missingWrappers)
 );
 
+$outgoingStart = strpos($auth, 'function fed_outgoing_signature_algorithm(');
+$outgoingEnd = strpos($auth, 'function fed_public_status(', $outgoingStart === false ? 0 : $outgoingStart);
+$outgoingSegment = $outgoingStart !== false && $outgoingEnd !== false
+    ? substr($auth, $outgoingStart, $outgoingEnd - $outgoingStart)
+    : '';
+$record(
+    'outgoing_signed_transport_facade_boundary',
+    str_contains($outgoingSegment, 'CatalogFederationOutgoingSignaturePolicy::resolve')
+        && str_contains($outgoingSegment, 'CatalogFederationSignedJsonClient::post')
+        && !str_contains($outgoingSegment, 'json_encode(')
+        && !str_contains($outgoingSegment, 'X-Site-Id:')
+        && !str_contains($outgoingSegment, 'X-Signature:')
+        && !str_contains($outgoingSegment, 'TrustedHttpSourceClient::')
+        && !str_contains($auth, "require_once __DIR__ . '/TrustedHttpSourceClient.php'"),
+    'outgoing signed JSON serialization/header/transport work must stay outside FederationAuth'
+);
+
 $authContracts = [
     'Missing federation auth headers',
     'Unknown or inactive peer',
@@ -137,6 +158,40 @@ $record(
     'SHA-256 body hash and canonical HMAC/Ed25519 wire format retained'
 );
 
+$outgoingContracts = [
+    'Could not encode federation payload.',
+    'Content-Type: application/json',
+    'User-Agent: UnrealFileCatalogFederation/2.0',
+    'X-Site-Id: ',
+    'X-Timestamp: ',
+    'X-Nonce: ',
+    'X-Signature-Algorithm: ',
+    'X-Key-Id: ',
+    'X-Signature: ',
+    'Ed25519 outgoing federation signing is selected but no private key is configured.',
+    'CatalogFederationHttpClient::fromRuntime()->postJson',
+];
+$missingOutgoingContracts = array_values(array_filter(
+    $outgoingContracts,
+    static fn(string $needle): bool => !str_contains($signedClient, $needle)
+));
+$record(
+    'outgoing_signed_transport_contract',
+    $missingOutgoingContracts === []
+        && str_contains($signedClient, 'CatalogFederationRequestSignatureService::ed25519')
+        && str_contains($signedClient, 'CatalogFederationRequestSignatureService::hmac'),
+    $missingOutgoingContracts === []
+        ? 'JSON/header/signature/HTTP contracts retained'
+        : 'missing: ' . implode(', ', $missingOutgoingContracts)
+);
+
+$record(
+    'outgoing_algorithm_policy_boundary',
+    str_contains($signaturePolicy, 'UNREALDB_FEDERATION_SIGNATURE_ALGORITHM')
+        && str_contains($signaturePolicy, "=== 'ed25519' ? 'ed25519' : 'hmac-sha256'"),
+    'outgoing algorithm selection retains the existing Ed25519-or-HMAC fallback'
+);
+
 require_once $catalogRoot . '/bootstrap/autoload.php';
 
 $body = '{"ok":true,"value":42}';
@@ -158,6 +213,15 @@ $record(
             $bodyHash
         ) === $expectedPayload,
     'body hash and canonical payload bytes match the legacy protocol'
+);
+
+$record(
+    'outgoing_algorithm_pure_contract',
+    \UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignaturePolicy::resolve('ED25519') === 'ed25519'
+        && \UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignaturePolicy::resolve('hmac-sha256') === 'hmac-sha256'
+        && \UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignaturePolicy::resolve('hmac') === 'hmac-sha256'
+        && \UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignaturePolicy::resolve('unsupported') === 'hmac-sha256',
+    'algorithm normalization matches the legacy Ed25519-only opt-in contract'
 );
 
 $result = [

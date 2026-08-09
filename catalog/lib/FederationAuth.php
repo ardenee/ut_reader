@@ -1,23 +1,20 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for federation auth.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Preserves historical federation authentication, identity and settings helper APIs.
+ * Why: Focused signature, inbound-authentication and outbound signed-transport implementations now live under Infrastructure while legacy callers keep stable function names.
+ * Role: Transitional compatibility facade plus remaining federation identity/settings/secret helpers awaiting separate extraction.
  */
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationApiException;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationOutgoingSignaturePolicy;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationRequestSignatureService;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSignedJsonClient;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationSignedRequestAuthenticator;
 use UnrealDb\Catalog\Infrastructure\Security\FederationSecretStore;
 
 require_once __DIR__ . '/CatalogSupport.php';
-require_once __DIR__ . '/TrustedHttpSourceClient.php';
 
 function fed_random_id(): string
 {
@@ -372,40 +369,19 @@ function fed_require_signed_peer(PDO $db, string $body): array
 
 function fed_outgoing_signature_algorithm(): string
 {
-    $configured = strtolower(trim((string)(getenv('UNREALDB_FEDERATION_SIGNATURE_ALGORITHM') ?: 'hmac-sha256')));
-    return $configured === 'ed25519' ? 'ed25519' : 'hmac-sha256';
+    return CatalogFederationOutgoingSignaturePolicy::resolve();
 }
 
 function fed_http_post_signed(string $url, string $siteId, string $secret, array $payload): array
 {
-    $body = json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-    if ($body === false) {
-        throw new RuntimeException('Could not encode federation payload.');
-    }
-    $timestamp = date('c');
-    $nonce = fed_random_secret();
-    $path = parse_url($url, PHP_URL_PATH) ?: '/';
-    $algorithm = fed_outgoing_signature_algorithm();
-    $headers = [
-        'Content-Type: application/json',
-        'User-Agent: UnrealFileCatalogFederation/2.0',
-        'X-Site-Id: ' . $siteId,
-        'X-Timestamp: ' . $timestamp,
-        'X-Nonce: ' . $nonce,
-        'X-Signature-Algorithm: ' . $algorithm,
-    ];
-    if ($algorithm === 'ed25519') {
-        $publicKey = fed_ed25519_public_key();
-        if ($publicKey === '') {
-            throw new RuntimeException('Ed25519 outgoing federation signing is selected but no private key is configured.');
-        }
-        $signature = fed_sign_request_ed25519('POST', $path, $timestamp, $nonce, $body);
-        $headers[] = 'X-Key-Id: ' . fed_ed25519_key_id($publicKey);
-    } else {
-        $signature = fed_sign_request($secret, 'POST', $path, $timestamp, $nonce, $body);
-    }
-    $headers[] = 'X-Signature: ' . $signature;
-    return TrustedHttpSourceClient::postJson($url, $headers, $body, fed_request_body_limit_bytes(8388608), 60);
+    return CatalogFederationSignedJsonClient::post(
+        $url,
+        $siteId,
+        $secret,
+        $payload,
+        fed_request_body_limit_bytes(8388608),
+        60
+    );
 }
 
 function fed_public_status(PDO $db): array
