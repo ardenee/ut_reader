@@ -1,20 +1,17 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog helper functions for catalog runtime SQL compatibility.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Purpose: Preserves historical dependency SQL call shapes while routing reads exclusively to current compact metadata.
+ * Why: Shared callers may still express queries with the old ue_dependencies table name, but runtime execution must
+ *      never fall back to that retired storage representation.
+ * Role: Legacy SQL-shape compatibility facade over the authoritative compact dependency read source.
  */
 declare(strict_types=1);
 
 /**
- * Rewrite read-only references to ue_dependencies so verified format-2 files
- * come from compact projections while unverified/unconverted rows continue to
- * come from the installed legacy staging table.
+ * Rewrite read-only references to ue_dependencies so verified dependencies come
+ * exclusively from compact projections. If the current projection is unavailable,
+ * fail closed rather than executing the historical SQL against legacy tables.
  */
 function catalog_runtime_sql_compat_rewrite(PDO $db, string $sql): string
 {
@@ -29,15 +26,20 @@ function catalog_runtime_sql_compat_rewrite(PDO $db, string $sql): string
 
     $class = '\\UnrealDb\\Catalog\\Application\\Dependency\\CatalogDependencyReadSource';
     if (!class_exists($class)) {
-        return $sql;
+        throw new RuntimeException(
+            'Current compact dependency read source is unavailable; runtime legacy dependency reads are disabled.'
+        );
     }
 
     try {
         /** @var class-string $class */
         $source = $class::sql($db);
     } catch (Throwable $error) {
-        error_log('[UnrealDB dependency compatibility] SQL rewrite skipped: ' . $error->getMessage());
-        return $sql;
+        throw new RuntimeException(
+            'Current compact dependency read source could not be built: ' . $error->getMessage(),
+            0,
+            $error
+        );
     }
 
     $keywords = 'WHERE|ON|JOIN|LEFT|RIGHT|INNER|OUTER|CROSS|STRAIGHT_JOIN|GROUP|ORDER|LIMIT|HAVING|UNION|FOR|LOCK|USING';
@@ -58,5 +60,8 @@ function catalog_runtime_sql_compat_rewrite(PDO $db, string $sql): string
         $sql
     );
 
-    return is_string($rewritten) ? $rewritten : $sql;
+    if (!is_string($rewritten)) {
+        throw new RuntimeException('Current compact dependency SQL rewrite failed.');
+    }
+    return $rewritten;
 }
