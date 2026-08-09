@@ -101,7 +101,9 @@
         const processed = parseInt((worker.state || {}).processed || 0, 10) || 0;
         let text;
 
-        banner.dataset.authoritativeStatus = authority;
+        if (banner.dataset.authoritativeStatus !== authority) {
+            banner.dataset.authoritativeStatus = authority;
+        }
         if (authority === 'degraded') {
             text = 'Worker pool degraded · ' + activeWorkers + '/' + desiredWorkers + ' processes'
                 + (launchingWorkers ? ' · ' + launchingWorkers + ' launching' : '')
@@ -164,7 +166,7 @@
             if (!latestWorker) return;
             window.queueMicrotask(function () { applyWorkerBanner(latestWorker); });
         });
-        observer.observe(banner, {attributes: true, childList: true, characterData: true, subtree: true});
+        observer.observe(banner, {childList: true, characterData: true, subtree: true});
     }
 
     function installWorkerPoolControls() {
