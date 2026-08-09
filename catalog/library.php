@@ -29,52 +29,29 @@ try {
     }
 
     $stats = new PdoGameCatalogStats($db);
-    if ($stats->available()) {
-        /* Projection rebuilding belongs to import/maintenance jobs, not page loads. */
-        $games = catalog_all(
-            $db,
-            'SELECT g.id,g.name,g.slug,g.description,p.engine_key profile_engine,'
-            . 'COALESCE(s.file_count,0) file_count,COALESCE(s.verified_count,0) verified_count,'
-            . 'COALESCE(s.failed_count,0) failed_count,'
-            . 'COALESCE(s.missing_dependency_count,0) missing_dependency_count,'
-            . 'COALESCE(s.missing_base_game_dependency_count,0) missing_base_game_dependency_count '
-            . 'FROM ue_games g '
-            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-            . 'LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id '
-            . 'ORDER BY g.name'
-        );
-        $global = $stats->global();
-        $totalFiles = (int)($global['file_count'] ?? 0);
-        $verified = (int)($global['verified_count'] ?? 0);
-        $duplicates = (int)($global['duplicate_count'] ?? 0);
-        $missingDependencies = (int)($global['missing_dependency_count'] ?? 0);
-        $missingBaseGameDependencies = (int)($global['missing_base_game_dependency_count'] ?? 0);
-    } else {
-        $baseGameDependencySql = base_game_dependency_is_official_sql('df', 'd');
-        $games = catalog_all(
-            $db,
-            'SELECT g.id, g.name, g.slug, g.description, p.engine_key profile_engine, '
-            . 'COUNT(DISTINCT f.id) file_count, '
-            . 'COALESCE(SUM(f.scan_status="verified"),0) verified_count, '
-            . 'COALESCE(SUM(f.scan_status="failed"),0) failed_count, '
-            . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id) missing_dependency_count, '
-            . '(SELECT COUNT(*) FROM ue_dependencies d JOIN ue_files df ON df.id=d.file_id WHERE d.status="missing" AND df.game_id=g.id AND ' . $baseGameDependencySql . ') missing_base_game_dependency_count '
-            . 'FROM ue_games g '
-            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
-            . 'LEFT JOIN ue_files f ON f.game_id=g.id '
-            . 'GROUP BY g.id, p.id ORDER BY g.name'
-        );
-        $totalFiles = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files');
-        $verified = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="verified"');
-        $duplicates = catalog_count($db, 'SELECT COUNT(*) c FROM ue_files WHERE scan_status="duplicate"');
-        $missingDependencies = catalog_count($db, 'SELECT COUNT(*) c FROM ue_dependencies WHERE status="missing"');
-        $missingBaseGameDependencies = catalog_count(
-            $db,
-            'SELECT COUNT(*) c FROM ue_dependencies d '
-            . 'JOIN ue_files df ON df.id=d.file_id '
-            . 'WHERE d.status="missing" AND ' . $baseGameDependencySql
-        );
+    if (!$stats->available()) {
+        throw new RuntimeException('Current game catalog statistics are unavailable.');
     }
+
+    /* Projection rebuilding belongs to import/maintenance jobs, not page loads. */
+    $games = catalog_all(
+        $db,
+        'SELECT g.id,g.name,g.slug,g.description,p.engine_key profile_engine,'
+        . 'COALESCE(s.file_count,0) file_count,COALESCE(s.verified_count,0) verified_count,'
+        . 'COALESCE(s.failed_count,0) failed_count,'
+        . 'COALESCE(s.missing_dependency_count,0) missing_dependency_count,'
+        . 'COALESCE(s.missing_base_game_dependency_count,0) missing_base_game_dependency_count '
+        . 'FROM ue_games g '
+        . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+        . 'LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id '
+        . 'ORDER BY g.name'
+    );
+    $global = $stats->global();
+    $totalFiles = (int)($global['file_count'] ?? 0);
+    $verified = (int)($global['verified_count'] ?? 0);
+    $duplicates = (int)($global['duplicate_count'] ?? 0);
+    $missingDependencies = (int)($global['missing_dependency_count'] ?? 0);
+    $missingBaseGameDependencies = (int)($global['missing_base_game_dependency_count'] ?? 0);
 
     catalog_page_header('Library', 'Browse local games and files, review duplicates, and check missing dependency status.', ['Games' => 'games.php', 'Search' => 'index.php?page=search', 'Duplicates' => 'duplicates.php', 'Missing Files' => 'missing.php']);
 
