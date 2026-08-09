@@ -94,12 +94,22 @@ try {
 
     $service = new CompactMetadataCutoverService(catalog_db($config), $storageRoot);
     $progress = static function (array $event): void {
+        $attempted = (int)($event['attempted'] ?? 0);
+        $failed = !empty($event['failed']);
+        if (!$failed && $attempted > 1 && ($attempted % 10) !== 0) {
+            return;
+        }
+
         $phase = (string)($event['phase'] ?? 'cutover');
         $fileId = (int)($event['file_id'] ?? 0);
         $message = trim((string)($event['message'] ?? ''));
         fwrite(
             STDERR,
-            '[' . $phase . ']' . ($fileId > 0 ? ' #' . $fileId : '') . ($message !== '' ? ' ' . $message : '') . PHP_EOL
+            '[' . $phase . ']'
+            . ($attempted > 0 ? ' processed=' . $attempted : '')
+            . ($fileId > 0 ? ' file=#' . $fileId : '')
+            . ($message !== '' ? ' ' . $message : '')
+            . PHP_EOL
         );
     };
 
