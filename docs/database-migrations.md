@@ -6,6 +6,8 @@
 
 Historical migrations represented by that baseline have been retired. Existing installations may still contain their rows in `ue_schema_migrations`; the migration runner reports those rows as `archived` rather than treating the removed files as drift.
 
+The fresh-install baseline intentionally omits retired row-per-object metadata tables. Current verified metadata is stored in format-2 compact containers and current lookup/summary projections. Post-baseline retirement migrations are idempotent and therefore remain safe for fresh installations where the retired tables were never created.
+
 Do not import `catalog/install.sql` over a populated database.
 
 ## Fresh installation
@@ -24,7 +26,7 @@ This keeps a fresh installation identical to an upgraded production database eve
 
 ## Current incremental migrations
 
-Migrations newer than the consolidated `202608030001` baseline currently include worker/import concurrency and queue read-model changes. They remain ordinary immutable migrations until the next deliberate schema squash.
+Migrations newer than the consolidated `202608030001` baseline include staged-import concurrency, job resource/display read models, base-game policy schema, dedicated unverified compact metadata staging, and physical retirement of the former row-per-object metadata tables. They remain ordinary immutable migrations until the next deliberate schema squash.
 
 In particular, `202608080001_background_job_display_status.php` adds the stored/indexed `ue_background_jobs.display_status` read model used by the Background Jobs APIs. Runtime code assumes that migration has been applied.
 
@@ -52,7 +54,7 @@ The migration runner rejects changed checksums and missing migration files above
 
 New runtime SQL belongs in intent-specific Infrastructure query/repository objects under `catalog/src/Infrastructure`, not in pages or API entry points.
 
-Verified package metadata reads use the compact metadata/lookup model. Transitional reads of retained Names/Imports/Exports/dependency compatibility sources must pass through the approved compact compatibility boundary. `php catalog/bin/audit-legacy-runtime-references.php` enforces this rule and rejects any return of the removed `ue_search_documents` projection.
+Verified package metadata reads are compact-only. Object-level dependency reads use the current compact dependency source; aggregate dependency views use maintained package summaries. Runtime SQL-shape emulation of retired metadata tables has been removed. `php catalog/bin/audit-legacy-runtime-references.php` enforces this boundary; explicit historical migration, staging conversion and retirement tooling are the only permitted exceptions.
 
 The durable job subsystem uses:
 
