@@ -42,13 +42,13 @@ $record(
     str_contains($source, '$workingPath = $this->workingSource($sourcePath, $workingName, $context, 2, 20);')
         && str_contains($source, '$store->remove($relativePath);')
         && str_contains($source, '$completedWorkingPath = $workingPath;')
-        && str_contains($source, 'if ($workingTemporary && $completedWorkingPath !== \'\' && is_file($completedWorkingPath))'),
+        && str_contains($source, "if (\$workingTemporary && \$completedWorkingPath !== '' && is_file(\$completedWorkingPath))"),
     'the durable staged source remains separate from the parser/storage working path until import completion'
 );
 $record(
     'identity_guard_retained',
     str_contains($source, '$this->verifyIdentity($sourcePath, $payload);')
-        && str_contains($source, "hash_file('sha256', $path)")
+        && str_contains($source, "hash_file('sha256', \$path)")
         && str_contains($source, 'Staged import file identity changed before execution.'),
     'hardlink-first import still verifies queued SHA-256 identity before preparing the working path'
 );
@@ -56,12 +56,12 @@ $record(
     'temporary_cleanup_boundary',
     str_contains($source, '$workingTemporary = false;')
         && str_contains($source, '$workingTemporary = true;')
-        && str_contains($source, 'if ($workingTemporary && $workingPath !== \'\' && is_file($workingPath))'),
+        && str_contains($source, "if (\$workingTemporary && \$workingPath !== '' && is_file(\$workingPath))"),
     'only helper-created working/decompressed paths are disposable in finally'
 );
 $record(
     'storage_rollback_restores_source',
-    str_contains($storage, "'source_path' => $temporaryPath")
+    str_contains($storage, "'source_path' => \$temporaryPath")
         && str_contains($storage, '@rename($destination, $sourcePath)')
         && str_contains($storage, '@unlink($destination)'),
     'persistence failure restores caller-owned working bytes before bounded fallback cleanup'
@@ -70,7 +70,7 @@ $record(
     'unverified_fallback_retained',
     str_contains($source, 'new LegacyUnverifiedFileStager($this->db, $this->config)')
         && str_contains($source, '->stageFailedUpload(')
-        && str_contains($source, "'status' => $staged !== null ? 'unverified' : 'rejected'"),
+        && str_contains($source, "'status' => \$staged !== null ? 'unverified' : 'rejected'"),
     'failed Unreal packages still move into the established unverified queue'
 );
 
