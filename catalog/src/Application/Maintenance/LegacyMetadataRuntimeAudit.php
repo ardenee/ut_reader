@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Audits runtime references to retired/legacy metadata tables.
- * Why: Verified catalogue reads use current compact metadata; only explicitly bounded migration, staging and cleanup paths may touch retired storage.
+ * Purpose: Audits runtime references to physically retired metadata tables.
+ * Why: Current catalogue reads use compact metadata/projections exclusively; normal runtime PHP must never reference retired storage.
  * Role: Application maintenance audit enforcing the compact-only runtime boundary.
  */
 declare(strict_types=1);
@@ -23,43 +23,6 @@ final class LegacyMetadataRuntimeAudit
         'ue_exports',
         'ue_dependencies',
         'ue_search_documents',
-    ];
-
-    /**
-     * Explicit exceptions only: schema compatibility, unverified/recovery staging,
-     * historical conversion/repair and bounded deletion/cleanup code. Current
-     * verified-file readers and rebuilders must never be placed on this list.
-     *
-     * The retired ue_search_documents table is never approved, including here.
-     *
-     * @var list<string>
-     */
-    private const ALLOWED_FILES = [
-        'lib/Scanner/CatalogScannerImport.php',
-        'lib/CatalogCompactDependencies.php',
-        'federation/docs.php',
-        'src/Application/Maintenance/RetiredDuplicateLegacyMetadataPurger.php',
-        'src/Infrastructure/Games/PdoCatalogGameTableMaintenance.php',
-        'src/Infrastructure/Maintenance/CatalogLegacyDataAuditService.php',
-        'src/Infrastructure/Persistence/PdoCatalogPackageTableWriter.php',
-        'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
-        'src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php',
-        'src/Infrastructure/Metadata/CatalogCompactMetadataMutationService.php',
-        'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
-        'src/Infrastructure/Metadata/CompressedFileMetadataConverter.php',
-        'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
-        'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
-        'src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
-        'src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php',
-        'src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
-        'src/Infrastructure/Unverified/CatalogUnverifiedRenameService.php',
-        'src/Infrastructure/Unverified/PdoUnverifiedFileDetailsQuery.php',
-        'src/Infrastructure/Unverified/PdoUnverifiedGameMatchQuery.php',
-        'lib/UnverifiedMetadataRepair.php',
-        'bin/plan-legacy-table-space-reclaim.php',
-        'bin/reclaim-legacy-table-space.php',
-        'bin/purge-retired-duplicate-legacy-metadata.php',
-        'bin/audit-legacy-runtime-references.php',
     ];
 
     /** @return array{files:int,references:int,matches:list<array<string,mixed>>} */
@@ -103,16 +66,12 @@ final class LegacyMetadataRuntimeAudit
                     if (!preg_match('/\b' . preg_quote($table, '/') . '\b/i', $line)) {
                         continue;
                     }
-                    $operation = self::operation($line);
-                    if (self::approvedMatch($relative, $table)) {
-                        continue;
-                    }
                     $files[$relative] = true;
                     $matches[] = [
                         'file' => $relative,
                         'line' => $index + 1,
                         'table' => $table,
-                        'operation' => $operation,
+                        'operation' => self::operation($line),
                         'snippet' => function_exists('mb_substr')
                             ? mb_substr(trim($line), 0, 300)
                             : substr(trim($line), 0, 300),
@@ -148,14 +107,6 @@ final class LegacyMetadataRuntimeAudit
             }
         }
         return false;
-    }
-
-    private static function approvedMatch(string $relative, string $table): bool
-    {
-        if ($table === 'ue_search_documents') {
-            return false;
-        }
-        return in_array($relative, self::ALLOWED_FILES, true);
     }
 
     private static function operation(string $line): string
