@@ -42,7 +42,10 @@ final class BlockedCompressedFileMetadataConverter
 
         // This is the explicit historical conversion path. Runtime verified-file
         // readers never call it; it exists only to recover/upgrade old staging data.
-        $snapshot = (new CompressedMetadataLegacySnapshot($this->db))->capture($fileId);
+        $snapshot = $this->hydrateLegacyResolutionLabels(
+            (new CompressedMetadataLegacySnapshot($this->db))->capture($fileId),
+            $fileId
+        );
         $built = BlockedCompressedMetadataContainer::build($snapshot);
         $bytes = (string)$built['bytes'];
         $file = (array)$snapshot['file'];
@@ -211,6 +214,50 @@ final class BlockedCompressedFileMetadataConverter
             return (new BatchedCompressedFileMetadataConverter($this->db, $this->storageRoot))->verify($fileId);
         }
         return (new BlockedCompressedMetadataReader($this->db, $this->storageRoot))->verify($fileId);
+    }
+
+    /**
+     * Explicit legacy-conversion adapter. Current writers require labels inline,
+     * so hydrate the historical rows once here instead of hiding a legacy read in
+     * the shared compact projection writer.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    private function hydrateLegacyResolutionLabels(array $snapshot, int $fileId): array
+    {
+        $statement = $this->db->prepare(
+            'SELECT i.import_index,d.resolution_source,d.resolution_confidence '
+            . 'FROM ue_dependencies d JOIN ue_imports i ON i.id=d.import_id '
+            . 'WHERE d.file_id=? ORDER BY i.import_index'
+        );
+        $statement->execute([$fileId]);
+        $labels = [];
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $labels[(int)$row['import_index']] = [
+                'source' => trim((string)($row['resolution_source'] ?? '')),
+                'confidence' => trim((string)($row['resolution_confidence'] ?? '')),
+            ];
+        }
+
+        $dependencies = array_values((array)($snapshot['dependencies'] ?? []));
+        foreach ($dependencies as &$dependency) {
+            if (!is_array($dependency)) {
+                continue;
+            }
+            $index = (int)($dependency['import_index'] ?? -1);
+            $label = $labels[$index] ?? null;
+            if (!is_array($label) || $label['source'] === '' || $label['confidence'] === '') {
+                throw new RuntimeException(
+                    'Legacy conversion is missing dependency resolution labels for import index ' . $index . '.'
+                );
+            }
+            $dependency['resolution_source'] = $label['source'];
+            $dependency['resolution_confidence'] = $label['confidence'];
+        }
+        unset($dependency);
+        $snapshot['dependencies'] = $dependencies;
+        return $snapshot;
     }
 
     /** @return array<string,mixed>|null */
