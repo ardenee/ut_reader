@@ -1,10 +1,8 @@
 <?php
 /**
- * UnrealDB PHP File Audit
  * Purpose: Performs read-only UE1/UE2/UE3 package projection audits against a fresh parse.
- * Why: Reader validation, compact-compatible metadata comparison, reference validation and audit discovery are one
- *      maintenance use case and should not live in a procedural catalog/lib module or HTTP endpoint.
- * Role: Infrastructure maintenance service preserving the historical legacy-data-audit contract.
+ * Why: Reader validation should compare fresh parser output with the authoritative format-2 metadata snapshot, not retired SQL tables.
+ * Role: Infrastructure maintenance service preserving the Legacy Data Audit feature after physical legacy-table retirement.
  */
 declare(strict_types=1);
 
@@ -12,6 +10,7 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 
 use PDO;
 use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotLoader;
 
 final class CatalogLegacyDataAuditService
 {
@@ -61,7 +60,7 @@ final class CatalogLegacyDataAuditService
 
     /**
      * Read-only verification of one UE1/UE2/UE3 package. It reparses the stored
-     * bytes and compares the fresh reader output with the catalog projections.
+     * bytes and compares the fresh reader output with the authoritative format-2 snapshot.
      *
      * @param null|callable(array<string,mixed>):void $progress
      * @return array<string,mixed>
@@ -80,6 +79,9 @@ final class CatalogLegacyDataAuditService
         if (!$file) {
             throw new RuntimeException('File no longer exists in the catalog.');
         }
+        if ((string)($file['scan_status'] ?? '') !== 'verified') {
+            throw new RuntimeException('Legacy Data Audit requires a verified catalog file.');
+        }
 
         $engine = $this->engine($file);
         if ($engine === '') {
@@ -89,6 +91,11 @@ final class CatalogLegacyDataAuditService
         $path = \catalog_file_maintenance_storage_path($this->config, $file);
         if ($path === null || !is_file($path)) {
             throw new RuntimeException('Stored package file is missing.');
+        }
+
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact metadata audit.');
         }
 
         \scanner_emit_percent($progress, 'audit', 2, 'Opening ' . $engine . ' reader for ' . (string)$file['original_name']);
@@ -101,16 +108,17 @@ final class CatalogLegacyDataAuditService
             throw new RuntimeException('Fresh reader reported: ' . implode(' | ', array_map('strval', $readerIssues)));
         }
 
-        \scanner_emit_percent($progress, 'audit', 12, 'Reading fresh Names, Imports and Exports');
+        \scanner_emit_percent($progress, 'audit', 12, 'Reading fresh package tables and current compact metadata');
         $header = $pkg->getHeader();
         $names = $pkg->getNames();
         $imports = $pkg->getImports();
         $exports = $pkg->getExports();
+        $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $storageRoot))->load($fileId);
 
-        $dbNames = \catalog_all($this->db, 'SELECT * FROM ue_names WHERE file_id=? ORDER BY name_index,id', [$fileId]);
-        $dbImports = \catalog_all($this->db, 'SELECT * FROM ue_imports WHERE file_id=? ORDER BY import_index,id', [$fileId]);
-        $dbExports = \catalog_all($this->db, 'SELECT * FROM ue_exports WHERE file_id=? ORDER BY export_index,id', [$fileId]);
-        $dbDependencies = \catalog_all($this->db, 'SELECT * FROM ue_dependencies WHERE file_id=? ORDER BY import_id,id', [$fileId]);
+        $storedNames = $this->rowsByIndex((array)($snapshot['names'] ?? []), 'name_index');
+        $storedImports = $this->rowsByIndex((array)($snapshot['imports'] ?? []), 'import_index');
+        $storedExports = $this->rowsByIndex((array)($snapshot['exports'] ?? []), 'export_index');
+        $storedDependencies = array_values((array)($snapshot['dependencies'] ?? []));
 
         $found = [];
         $add = static function (array $issue) use (&$found): void {
@@ -120,7 +128,11 @@ final class CatalogLegacyDataAuditService
         };
 
         $freshCounts = ['names' => count($names), 'imports' => count($imports), 'exports' => count($exports)];
-        $storedCounts = ['names' => count($dbNames), 'imports' => count($dbImports), 'exports' => count($dbExports)];
+        $storedCounts = [
+            'names' => count($storedNames),
+            'imports' => count($storedImports),
+            'exports' => count($storedExports),
+        ];
         foreach ($freshCounts as $key => $freshCount) {
             $storedCount = $storedCounts[$key];
             $fileCountColumn = $key === 'names' ? 'name_count' : ($key === 'imports' ? 'import_count' : 'export_count');
@@ -138,10 +150,10 @@ final class CatalogLegacyDataAuditService
             if ($storedCount !== $freshCount) {
                 $add($this->issue(
                     'error',
-                    'table_count_mismatch',
-                    'ue_' . $key,
+                    'metadata_count_mismatch',
+                    'metadata.' . $key,
                     null,
-                    ucfirst($key) . ' row count differs from a fresh parse.',
+                    ucfirst($key) . ' count in format-2 metadata differs from a fresh parse.',
                     $freshCount,
                     $storedCount
                 ));
@@ -174,15 +186,15 @@ final class CatalogLegacyDataAuditService
                 'legacy_filename_identity_changed',
                 'ue_files',
                 null,
-                'Stored legacy package name differs from the literal source filename stem. This may indicate historical filename cleanup or a legitimate alias; review rather than auto-repair.',
+                'Stored package name differs from the literal source filename stem. This may indicate historical filename cleanup or a legitimate alias; review rather than auto-repair.',
                 $literalPackage,
                 (string)$file['package_name']
             ));
         }
 
-        \scanner_emit_percent($progress, 'audit', 24, 'Comparing Names table');
+        \scanner_emit_percent($progress, 'audit', 24, 'Comparing Names with format-2 metadata');
         foreach ($names as $index => $name) {
-            $stored = $dbNames[$index] ?? null;
+            $stored = $storedNames[$index] ?? null;
             if (!$stored) {
                 continue;
             }
@@ -198,7 +210,7 @@ final class CatalogLegacyDataAuditService
                     $add($this->issue(
                         'error',
                         'name_field_mismatch',
-                        'ue_names',
+                        'metadata.names',
                         $index,
                         'Stored ' . $field . ' differs from the fresh reader.',
                         $expected,
@@ -213,7 +225,7 @@ final class CatalogLegacyDataAuditService
         $importCount = count($imports);
         $exportCount = count($exports);
         foreach ($imports as $index => $import) {
-            $stored = $dbImports[$index] ?? null;
+            $stored = $storedImports[$index] ?? null;
             $fullPath = \scanner_ref_path(-($index + 1), $imports, $exports, $cache);
             $parts = $fullPath !== '' ? explode('.', $fullPath) : [];
             $rootPackage = (string)($parts[0] ?? '');
@@ -224,7 +236,7 @@ final class CatalogLegacyDataAuditService
                 $add($this->issue(
                     'error',
                     'invalid_import_outer',
-                    'ue_imports',
+                    'metadata.imports',
                     $index,
                     'Import outer reference is outside the fresh import/export tables.',
                     'valid package index',
@@ -234,7 +246,7 @@ final class CatalogLegacyDataAuditService
                 $add($this->issue(
                     'error',
                     'cyclic_import_outer',
-                    'ue_imports',
+                    'metadata.imports',
                     $index,
                     'Import outer chain contains a cycle.',
                     'acyclic chain',
@@ -261,7 +273,7 @@ final class CatalogLegacyDataAuditService
                     $add($this->issue(
                         'error',
                         'import_field_mismatch',
-                        'ue_imports',
+                        'metadata.imports',
                         $index,
                         'Stored ' . $field . ' differs from the fresh reader projection.',
                         $value,
@@ -273,7 +285,7 @@ final class CatalogLegacyDataAuditService
 
         \scanner_emit_percent($progress, 'audit', 65, 'Comparing Exports and validating outer references');
         foreach ($exports as $index => $export) {
-            $stored = $dbExports[$index] ?? null;
+            $stored = $storedExports[$index] ?? null;
             $localPath = \scanner_ref_path($index + 1, $imports, $exports, $cache);
             $classRef = (int)($export['classIndex'] ?? $export['class'] ?? 0);
             $className = $classRef !== 0 ? \scanner_ref_path($classRef, $imports, $exports, $cache) : '';
@@ -283,7 +295,7 @@ final class CatalogLegacyDataAuditService
                 $add($this->issue(
                     'error',
                     'invalid_export_outer',
-                    'ue_exports',
+                    'metadata.exports',
                     $index,
                     'Export outer reference is outside the fresh import/export tables.',
                     'valid package index',
@@ -293,7 +305,7 @@ final class CatalogLegacyDataAuditService
                 $add($this->issue(
                     'error',
                     'cyclic_export_outer',
-                    'ue_exports',
+                    'metadata.exports',
                     $index,
                     'Export outer chain contains a cycle.',
                     'acyclic chain',
@@ -320,7 +332,7 @@ final class CatalogLegacyDataAuditService
                     $add($this->issue(
                         'error',
                         'export_field_mismatch',
-                        'ue_exports',
+                        'metadata.exports',
                         $index,
                         'Stored ' . $field . ' differs from the fresh reader projection.',
                         $value,
@@ -330,19 +342,22 @@ final class CatalogLegacyDataAuditService
             }
         }
 
-        \scanner_emit_percent($progress, 'audit', 88, 'Checking dependency projections');
+        \scanner_emit_percent($progress, 'audit', 88, 'Checking compact dependency projections');
         $dependenciesByImport = [];
-        foreach ($dbDependencies as $dependency) {
-            $dependenciesByImport[(int)$dependency['import_id']][] = $dependency;
+        foreach ($storedDependencies as $dependency) {
+            if (!is_array($dependency)) {
+                continue;
+            }
+            $dependenciesByImport[(int)($dependency['import_index'] ?? -1)][] = $dependency;
         }
-        foreach ($dbImports as $storedImport) {
-            $rows = $dependenciesByImport[(int)$storedImport['id']] ?? [];
+        foreach ($storedImports as $importIndex => $storedImport) {
+            $rows = $dependenciesByImport[(int)$importIndex] ?? [];
             if (count($rows) !== 1) {
                 $add($this->issue(
                     'error',
                     'dependency_cardinality',
-                    'ue_dependencies',
-                    (int)$storedImport['import_index'],
+                    'metadata.dependencies',
+                    (int)$importIndex,
                     'Each stored import should have exactly one dependency projection.',
                     1,
                     count($rows)
@@ -350,26 +365,26 @@ final class CatalogLegacyDataAuditService
                 continue;
             }
             $dependency = $rows[0];
-            if ((string)$dependency['required_package'] !== (string)$storedImport['root_package']) {
+            if ((string)($dependency['required_package'] ?? '') !== (string)($storedImport['root_package'] ?? '')) {
                 $add($this->issue(
                     'error',
                     'dependency_package_mismatch',
-                    'ue_dependencies',
-                    (int)$storedImport['import_index'],
+                    'metadata.dependencies',
+                    (int)$importIndex,
                     'Dependency required_package differs from the stored import root_package.',
-                    (string)$storedImport['root_package'],
-                    (string)$dependency['required_package']
+                    (string)($storedImport['root_package'] ?? ''),
+                    (string)($dependency['required_package'] ?? '')
                 ));
             }
-            if ((string)$dependency['required_object_path'] !== (string)$storedImport['full_path']) {
+            if ((string)($dependency['required_object_path'] ?? '') !== (string)($storedImport['full_path'] ?? '')) {
                 $add($this->issue(
                     'error',
                     'dependency_path_mismatch',
-                    'ue_dependencies',
-                    (int)$storedImport['import_index'],
+                    'metadata.dependencies',
+                    (int)$importIndex,
                     'Dependency required_object_path differs from the stored import full_path.',
-                    (string)$storedImport['full_path'],
-                    (string)$dependency['required_object_path']
+                    (string)($storedImport['full_path'] ?? ''),
+                    (string)($dependency['required_object_path'] ?? '')
                 ));
             }
         }
@@ -400,6 +415,23 @@ final class CatalogLegacyDataAuditService
             'issues' => $found,
             'issue_limit_reached' => count($found) >= 250,
         ];
+    }
+
+    /** @param array<int,mixed> $rows @return array<int,array<string,mixed>> */
+    private function rowsByIndex(array $rows, string $field): array
+    {
+        $indexed = [];
+        foreach ($rows as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = (int)($row[$field] ?? -1);
+            if ($index >= 0) {
+                $indexed[$index] = $row;
+            }
+        }
+        ksort($indexed, SORT_NUMERIC);
+        return $indexed;
     }
 
     /** @return array{severity:string,code:string,table:string,rowIndex:?int,message:string,expected:mixed,actual:mixed} */

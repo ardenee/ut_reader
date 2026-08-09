@@ -1,9 +1,8 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Converts explicitly legacy SQL metadata into the current version-2 container and maintains current projections.
- * Why: Historical conversion may read retired staging tables, but current format-2 projection maintenance must remain compact-only.
- * Role: Explicit metadata conversion/maintenance infrastructure.
+ * Purpose: Verifies format-2 metadata containers and rebuilds their current MySQL projections.
+ * Why: Historical SQL-to-compact conversion is complete; maintenance must now operate only from authoritative format-2 containers.
+ * Role: Current compact metadata verification/projection-maintenance infrastructure. The historical class name is retained for caller compatibility.
  */
 declare(strict_types=1);
 
@@ -20,139 +19,36 @@ final class BlockedCompressedFileMetadataConverter
         private readonly string $storageRoot
     ) {
         if (trim($storageRoot) === '') {
-            throw new RuntimeException('A catalog storage path is required for blocked metadata conversion.');
+            throw new RuntimeException('A catalog storage path is required for compact metadata maintenance.');
         }
     }
 
-    /** @return array<string,mixed> */
+    /**
+     * Compatibility method for callers that previously requested conversion.
+     * Historical conversion is intentionally retired; current files are verified only.
+     *
+     * @return array<string,mixed>
+     */
     public function convert(int $fileId): array
     {
-        if ($fileId < 1) {
-            throw new RuntimeException('A positive file ID is required.');
-        }
-        $this->assertSchema();
-        $existing = $this->metadataRow($fileId);
-        if (is_array($existing) && (int)$existing['format_version'] >= BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            return array_merge($this->verify($fileId), [
-                'already_converted' => true,
-                'upgraded_from_version' => null,
-                'legacy_rows_deleted' => false,
-            ]);
-        }
-
-        // This is the explicit historical conversion path. Runtime verified-file
-        // readers never call it; it exists only to recover/upgrade old staging data.
-        $snapshot = $this->hydrateLegacyResolutionLabels(
-            (new CompressedMetadataLegacySnapshot($this->db))->capture($fileId),
-            $fileId
-        );
-        $built = BlockedCompressedMetadataContainer::build($snapshot);
-        $bytes = (string)$built['bytes'];
-        $file = (array)$snapshot['file'];
-        $path = BlockedCompressedMetadataContainer::path(
-            $this->storageRoot,
-            (int)$file['game_id'],
-            $fileId
-        );
-        $directory = dirname($path);
-        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new RuntimeException('Could not create blocked metadata directory: ' . $directory);
-        }
-        if (is_file($path) && !unlink($path)) {
-            throw new RuntimeException('Could not replace orphan blocked metadata file: ' . $path);
-        }
-
-        $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(6));
-        $written = file_put_contents($temporaryPath, $bytes, LOCK_EX);
-        if ($written !== strlen($bytes)) {
-            @unlink($temporaryPath);
-            throw new RuntimeException('Could not completely write blocked metadata file: ' . $temporaryPath);
-        }
-        try {
-            $temporaryBytes = file_get_contents($temporaryPath);
-            if (!is_string($temporaryBytes)) {
-                throw new RuntimeException('Could not read back the blocked metadata temporary file.');
-            }
-            BlockedCompressedMetadataContainer::verifyBytes($temporaryBytes, $fileId);
-            if (!rename($temporaryPath, $path)) {
-                throw new RuntimeException('Could not publish blocked metadata file: ' . $path);
-            }
-        } catch (Throwable $error) {
-            @unlink($temporaryPath);
-            throw $error;
-        }
-
-        $sqlBatches = 0;
-        $this->db->beginTransaction();
-        try {
-            (new CompressedMetadataLookupWriter($this->db))->writeVersioned(
-                $snapshot,
-                $bytes,
-                (int)$built['uncompressed_size'],
-                BlockedCompressedMetadataContainer::FORMAT_VERSION,
-                BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP,
-                $sqlBatches
-            );
-            (new CompactSearchProjectionWriter($this->db))->write($snapshot, $sqlBatches);
-            $this->db->commit();
-        } catch (Throwable $error) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            @unlink($path);
-            throw $error;
-        }
-
-        $upgradedFrom = is_array($existing) ? (int)$existing['format_version'] : null;
-        if ($upgradedFrom === 1) {
-            $legacyPath = BatchedCompressedFileMetadataConverter::metadataPath(
-                $this->storageRoot,
-                (int)$file['game_id'],
-                $fileId
-            );
-            if (is_file($legacyPath)) {
-                @unlink($legacyPath);
-            }
-        }
-
+        $row = $this->requireCurrentMetadata($fileId);
         return array_merge($this->verify($fileId), [
-            'game_id' => (int)$file['game_id'],
-            'package_name' => (string)$file['package_name'],
-            'dependency_count' => count((array)$snapshot['dependencies']),
-            'block_size' => BlockedCompressedMetadataContainer::DEFAULT_BLOCK_SIZE,
-            'sql_batches' => $sqlBatches,
-            'already_converted' => false,
-            'upgraded_from_version' => $upgradedFrom,
+            'already_converted' => true,
+            'upgraded_from_version' => null,
             'legacy_rows_deleted' => false,
+            'format_version' => (int)$row['format_version'],
         ]);
     }
 
     /**
      * Rebuild only compact MySQL projections for an existing version-2 container.
-     * The source snapshot is loaded from the current container, never from legacy SQL.
+     * The source snapshot is loaded from the current container.
      *
      * @return array<string,mixed>
      */
     public function rebuildProjections(int $fileId): array
     {
-        if ($fileId < 1) {
-            throw new RuntimeException('A positive file ID is required.');
-        }
-        $this->assertSchema();
-        $existing = $this->metadataRow($fileId);
-        if (!is_array($existing)) {
-            throw new RuntimeException('File #' . $fileId . ' has no compressed metadata row.');
-        }
-        if ((int)$existing['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-            throw new RuntimeException(
-                'File #' . $fileId . ' is not using metadata format version '
-                . BlockedCompressedMetadataContainer::FORMAT_VERSION . '.'
-            );
-        }
-        if ((int)$existing['codec'] !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
-            throw new RuntimeException('File #' . $fileId . ' uses an unsupported metadata codec.');
-        }
-
+        $existing = $this->requireCurrentMetadata($fileId);
         $snapshot = (new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot))->load($fileId);
         $file = (array)$snapshot['file'];
         $path = BlockedCompressedMetadataContainer::path(
@@ -206,58 +102,34 @@ final class BlockedCompressedFileMetadataConverter
     /** @return array<string,mixed> */
     public function verify(int $fileId): array
     {
-        $row = $this->metadataRow($fileId);
-        if (!is_array($row)) {
-            throw new RuntimeException('File #' . $fileId . ' has no compressed metadata row.');
-        }
-        if ((int)$row['format_version'] === 1) {
-            return (new BatchedCompressedFileMetadataConverter($this->db, $this->storageRoot))->verify($fileId);
-        }
+        $this->requireCurrentMetadata($fileId);
         return (new BlockedCompressedMetadataReader($this->db, $this->storageRoot))->verify($fileId);
     }
 
-    /**
-     * Explicit legacy-conversion adapter. Current writers require labels inline,
-     * so hydrate the historical rows once here instead of hiding a legacy read in
-     * the shared compact projection writer.
-     *
-     * @param array<string,mixed> $snapshot
-     * @return array<string,mixed>
-     */
-    private function hydrateLegacyResolutionLabels(array $snapshot, int $fileId): array
+    /** @return array<string,mixed> */
+    private function requireCurrentMetadata(int $fileId): array
     {
-        $statement = $this->db->prepare(
-            'SELECT i.import_index,d.resolution_source,d.resolution_confidence '
-            . 'FROM ue_dependencies d JOIN ue_imports i ON i.id=d.import_id '
-            . 'WHERE d.file_id=? ORDER BY i.import_index'
-        );
-        $statement->execute([$fileId]);
-        $labels = [];
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $labels[(int)$row['import_index']] = [
-                'source' => trim((string)($row['resolution_source'] ?? '')),
-                'confidence' => trim((string)($row['resolution_confidence'] ?? '')),
-            ];
+        if ($fileId < 1) {
+            throw new RuntimeException('A positive file ID is required.');
         }
-
-        $dependencies = array_values((array)($snapshot['dependencies'] ?? []));
-        foreach ($dependencies as &$dependency) {
-            if (!is_array($dependency)) {
-                continue;
-            }
-            $index = (int)($dependency['import_index'] ?? -1);
-            $label = $labels[$index] ?? null;
-            if (!is_array($label) || $label['source'] === '' || $label['confidence'] === '') {
-                throw new RuntimeException(
-                    'Legacy conversion is missing dependency resolution labels for import index ' . $index . '.'
-                );
-            }
-            $dependency['resolution_source'] = $label['source'];
-            $dependency['resolution_confidence'] = $label['confidence'];
+        $this->assertSchema();
+        $row = $this->metadataRow($fileId);
+        if (!is_array($row)) {
+            throw new RuntimeException(
+                'File #' . $fileId . ' has no current metadata registration. Historical SQL metadata conversion has been retired.'
+            );
         }
-        unset($dependency);
-        $snapshot['dependencies'] = $dependencies;
-        return $snapshot;
+        if ((int)$row['format_version'] !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
+            throw new RuntimeException(
+                'File #' . $fileId . ' uses metadata format version ' . (int)$row['format_version']
+                . '; only authoritative format-' . BlockedCompressedMetadataContainer::FORMAT_VERSION
+                . ' metadata is supported after legacy table retirement.'
+            );
+        }
+        if ((int)$row['codec'] !== BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP) {
+            throw new RuntimeException('File #' . $fileId . ' uses an unsupported metadata codec.');
+        }
+        return $row;
     }
 
     /** @return array<string,mixed>|null */

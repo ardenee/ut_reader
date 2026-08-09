@@ -1,21 +1,16 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `PdoDependencySchemaManager` for PDO dependency schema manager.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Verifies the current compact dependency/projection schema during normal application execution.
+ * Why: Runtime schema validation must follow the authoritative format-2 metadata model and must not require retired SQL metadata tables.
+ * Role: Infrastructure schema guard used by dependency and asset-metadata entry points.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use RuntimeException;
 
-/** Verifies the migrated dependency schema during normal application execution. */
 final class PdoDependencySchemaManager
 {
     public function __construct(private readonly PDO $db)
@@ -54,25 +49,26 @@ final class PdoDependencySchemaManager
 
     public function ensure(): void
     {
+        $requiredTables = [
+            'ue_file_metadata',
+            'ue_terms',
+            'ue_export_lookup',
+            'ue_dependency_links',
+            'ue_package_providers',
+            'ue_asset_registry_assets',
+            'ue_asset_registry_tags',
+            'ue_asset_registry_dependencies',
+        ];
+
         $missing = [];
-        foreach (['resolution_source', 'resolution_confidence'] as $column) {
-            if (!$this->columnExists('ue_dependencies', $column)) {
-                $missing[] = 'ue_dependencies.' . $column;
-            }
-        }
-        foreach (['idx_ue_deps_resolution_source', 'idx_ue_deps_resolution_confidence'] as $index) {
-            if (!$this->indexExists('ue_dependencies', $index)) {
-                $missing[] = 'index ' . $index;
-            }
-        }
-        foreach (['ue_asset_registry_assets', 'ue_asset_registry_tags', 'ue_asset_registry_dependencies'] as $table) {
+        foreach ($requiredTables as $table) {
             if (!$this->tableExists($table)) {
                 $missing[] = $table;
             }
         }
         if ($missing !== []) {
-            throw new \RuntimeException(
-                'The database schema is not migrated. Missing: ' . implode(', ', $missing)
+            throw new RuntimeException(
+                'The current dependency schema is not migrated. Missing: ' . implode(', ', $missing)
                 . '. Run php catalog/bin/migrate.php migrate followed by verify.'
             );
         }
@@ -87,7 +83,7 @@ final class PdoDependencySchemaManager
             }
         }
         if ($missing !== []) {
-            throw new \RuntimeException(
+            throw new RuntimeException(
                 'The asset registry schema is not migrated. Missing: ' . implode(', ', $missing)
                 . '. Run php catalog/bin/migrate.php migrate followed by verify.'
             );

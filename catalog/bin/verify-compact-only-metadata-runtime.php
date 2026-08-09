@@ -2,7 +2,7 @@
 <?php
 /**
  * Purpose: Verifies verified-file runtime metadata is format-2 only while dedicated unverified compressed staging remains isolated.
- * Role: Read-only architecture and optional live database cutover verifier.
+ * Role: Read-only architecture and optional live database gate before and after physical legacy-table retirement.
  */
 declare(strict_types=1);
 
@@ -45,9 +45,11 @@ $runtimeFiles = [
     'src/Infrastructure/Persistence/PdoDependencyResolver.php',
     'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
     'src/Infrastructure/Persistence/PdoPackageTablePageQuery.php',
+    'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
     'src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php',
     'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
     'src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php',
+    'src/Infrastructure/Maintenance/CatalogLegacyDataAuditService.php',
 ];
 $legacyTables = ['ue_names', 'ue_imports', 'ue_exports', 'ue_dependencies'];
 foreach ($runtimeFiles as $relative) {
@@ -148,12 +150,28 @@ $record(
 );
 
 $converter = $read('src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php');
+$converterExecutable = $withoutComments($converter);
+$converterLegacyReferences = [];
+foreach ($legacyTables as $table) {
+    if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $converterExecutable) === 1) {
+        $converterLegacyReferences[] = $table;
+    }
+}
 $record(
     'current_projection_rebuild_uses_current_snapshot',
     str_contains($converter, 'BlockedCompressedMetadataSnapshotLoader')
-        && str_contains($converter, 'CompressedMetadataLegacySnapshot')
-        && str_contains($converter, 'explicit historical conversion path'),
-    'current projection rebuilds use current containers; historical reads remain isolated to explicit conversion tooling'
+        && str_contains($converter, 'Historical SQL metadata conversion has been retired')
+        && $converterLegacyReferences === [],
+    $converterLegacyReferences === []
+        ? 'projection rebuilds and verification use current format-2 containers only'
+        : 'found retired metadata references: ' . implode(', ', $converterLegacyReferences)
+);
+
+$record(
+    'historical_conversion_tools_retired',
+    !is_file($root . '/src/Infrastructure/Metadata/CompressedFileMetadataConverter.php')
+        && !is_file($root . '/bin/convert-file-metadata.php'),
+    'completed SQL-to-compact conversion tooling must not remain callable'
 );
 
 $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
@@ -162,6 +180,8 @@ $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
+    'src/Infrastructure/Metadata/CompactDependencyEncoding.php',
+    'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
     'src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedMetadataStore.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedCompactMetadataFinalizer.php',
@@ -247,11 +267,7 @@ if ($withDatabase) {
         $source = \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::sql($db);
         $statement = $db->prepare('SELECT * FROM ' . $source . ' d LIMIT 0');
         $statement->execute();
-        $record(
-            'compact_dependency_source_compiles',
-            true,
-            'mode=compact-only'
-        );
+        $record('compact_dependency_source_compiles', true, 'mode=compact-only');
 
         $missingLocalPathTerms = (int)$db->query(
             'SELECT COUNT(*) FROM ue_export_lookup l '
