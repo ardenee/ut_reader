@@ -3,8 +3,8 @@
  * UnrealDB PHP File Audit
  * Purpose: Resolves rare case-only Export path misses from current format-2 metadata containers.
  * Why: Historical MySQL text comparisons were case-insensitive while ue_export_lookup.path_hash is byte-sensitive.
- *      Exact hash matching remains the fast path; this bounded fallback preserves old lookup semantics without reading
- *      retired ue_exports rows.
+ *      Exact hash matching remains the fast path; this bounded fallback preserves the historical lookup semantics
+ *      entirely from current compact metadata.
  * Role: Infrastructure current-metadata compatibility resolver used only after compact hash lookup misses.
  */
 declare(strict_types=1);
