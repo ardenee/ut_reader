@@ -37,7 +37,7 @@ final class CatalogWorkerPoolSelfHealer
         $active = max(0, (int)($before['active_count'] ?? 0));
         $launching = max(0, (int)($before['launching_count'] ?? 0));
 
-        if (!empty($before['stop_requested']) || $active + $launching >= $desired || !$this->hasPendingWork($queueName)) {
+        if (!empty($before['stop_requested']) || $active + $launching >= $desired || !$this->hasReadyWork($queueName)) {
             return [
                 'healed' => false,
                 'reason' => !empty($before['stop_requested']) ? 'stop_requested'
@@ -64,7 +64,7 @@ final class CatalogWorkerPoolSelfHealer
             $desired = max(1, (int)($current['desired_count'] ?? $desired));
             $active = max(0, (int)($current['active_count'] ?? 0));
             $launching = max(0, (int)($current['launching_count'] ?? 0));
-            if (!empty($current['stop_requested']) || $active + $launching >= $desired || !$this->hasPendingWork($queueName)) {
+            if (!empty($current['stop_requested']) || $active + $launching >= $desired || !$this->hasReadyWork($queueName)) {
                 return [
                     'healed' => false,
                     'reason' => !empty($current['stop_requested']) ? 'stop_requested'
@@ -93,17 +93,18 @@ final class CatalogWorkerPoolSelfHealer
         }
     }
 
-    private function hasPendingWork(string $queueName): bool
+    private function hasReadyWork(string $queueName): bool
     {
         try {
             $statement = $this->db->prepare(
                 'SELECT EXISTS(SELECT 1 FROM ue_background_jobs '
-                . 'WHERE queue_name=? AND status IN ("queued","running") LIMIT 1)'
+                . 'WHERE queue_name=? AND status="queued" AND cancel_requested_at IS NULL '
+                . 'AND available_at<=UTC_TIMESTAMP() LIMIT 1)'
             );
             $statement->execute([$queueName]);
             return (int)$statement->fetchColumn() === 1;
         } catch (Throwable $error) {
-            error_log('[UnrealDB worker self-heal pending check] ' . $error->getMessage());
+            error_log('[UnrealDB worker self-heal ready-work check] ' . $error->getMessage());
             return true;
         }
     }
