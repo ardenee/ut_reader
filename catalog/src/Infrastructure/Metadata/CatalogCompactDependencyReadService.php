@@ -2,8 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Reads dependency views exclusively from current format-2 metadata and compact projections.
- * Why: Verified dependency pages must have one authoritative representation and must not merge or fall back to retired
- *      ue_dependencies/ue_imports/ue_exports tables.
+ * Why: Verified dependency pages must have one authoritative representation and must not merge or fall back to retired row-per-object metadata storage.
  * Role: Infrastructure current-metadata dependency read service.
  */
 declare(strict_types=1);
