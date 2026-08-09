@@ -3,13 +3,14 @@
  * UnrealDB PHP File Audit
  * Purpose: Preserves the historical federation streaming-transfer authentication helper API.
  * Why: Transfer cryptography and inbound streaming authentication now live in focused Infrastructure services.
- * Role: Thin compatibility facade; do not add signature, replay-protection or peer-authentication implementation here.
+ * Role: Thin compatibility facade; do not add signature, replay-protection, peer-authentication or HTTP response implementation here.
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/FederationAuth.php';
+require_once __DIR__ . '/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationApiException;
+use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationJsonApi;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationStreamingUploadAuthenticator;
 use UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferSignatureService;
 
@@ -78,7 +79,6 @@ function fed_require_streaming_upload_peer(PDO $db): array
     try {
         return (new CatalogFederationStreamingUploadAuthenticator($db))->authenticate();
     } catch (CatalogFederationApiException $error) {
-        fed_json_response($error->responsePayload(), $error->httpStatus());
-        throw $error;
+        CatalogFederationJsonApi::respond($error->responsePayload(), $error->httpStatus());
     }
 }
