@@ -2,7 +2,7 @@
 <?php
 /**
  * Purpose: Verifies verified-file runtime metadata is format-2 only while dedicated unverified compressed staging remains isolated.
- * Role: Read-only architecture and optional live database gate before and after physical legacy-table retirement.
+ * Role: Read-only architecture and optional live database gate after physical legacy-table retirement.
  */
 declare(strict_types=1);
 
@@ -46,10 +46,13 @@ $runtimeFiles = [
     'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
     'src/Infrastructure/Persistence/PdoPackageTablePageQuery.php',
     'src/Infrastructure/Persistence/PdoDependencySchemaManager.php',
+    'src/Infrastructure/Persistence/PdoMissingFileListQuery.php',
+    'src/Infrastructure/Persistence/PdoMissingDetailListQuery.php',
     'src/Infrastructure/Metadata/CatalogCompactDependencyReadService.php',
     'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
     'src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php',
     'src/Infrastructure/Maintenance/CatalogLegacyDataAuditService.php',
+    'src/Infrastructure/Unverified/PdoUnverifiedReferenceMatchQuery.php',
 ];
 $legacyTables = ['ue_names', 'ue_imports', 'ue_exports', 'ue_dependencies'];
 foreach ($runtimeFiles as $relative) {
@@ -73,28 +76,20 @@ foreach ($runtimeFiles as $relative) {
     );
 }
 
-$runtimeBridge = $read('lib/CatalogRuntimeSqlCompatibility.php');
 $record(
-    'dependency_sql_bridge_fails_closed',
-    str_contains($runtimeBridge, 'CatalogDependencyReadSource')
-        && str_contains($runtimeBridge, 'runtime legacy dependency reads are disabled')
-        && !str_contains($runtimeBridge, 'SQL rewrite skipped'),
-    'historical dependency query shapes must rewrite to current projections or fail; never execute legacy SQL'
+    'dependency_sql_bridge_retired',
+    !is_file($root . '/lib/CatalogRuntimeSqlCompatibility.php'),
+    'runtime SQL must name current dependency sources explicitly; the retired-table rewriter must stay absent'
 );
 
-$metadataCompatibility = $read('src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php');
+$metadataCompatibility = $read('lib/CatalogCompactMetadataCompatibility.php');
 $metadataCompatibilityExecutable = $withoutComments($metadataCompatibility);
 $record(
-    'metadata_shape_bridge_uses_current_sources_only',
-    str_contains($metadataCompatibility, "$scanStatus === 'verified'")
-        && str_contains($metadataCompatibility, 'fallback reads are disabled')
-        && str_contains($metadataCompatibility, 'CatalogUnverifiedMetadataStore')
-        && str_contains($metadataCompatibility, "'source' => 'unverified-staging'")
-        && !str_contains($metadataCompatibility, "'source' => 'legacy-staging'")
-        && !str_contains($metadataCompatibilityExecutable, 'SELECT * FROM ue_names')
-        && !str_contains($metadataCompatibilityExecutable, 'SELECT * FROM ue_imports')
-        && !str_contains($metadataCompatibilityExecutable, 'SELECT * FROM ue_exports WHERE file_id=? ORDER BY'),
-    'historical N/I/E query shapes must resolve verified files from format-2 and unverified files from dedicated compressed staging'
+    'metadata_sql_shape_bridge_retired',
+    !is_file($root . '/src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php')
+        && str_contains($metadataCompatibilityExecutable, "'handled' => false")
+        && !str_contains($metadataCompatibilityExecutable, 'CatalogCompactMetadataCompatibilityService'),
+    'CatalogSupportCore hook remains a no-op only; retired Names/Imports/Exports SQL must not be emulated'
 );
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
@@ -175,14 +170,17 @@ $record(
 );
 
 $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
-    'lib/CatalogRuntimeSqlCompatibility.php',
+    'lib/CatalogCompactMetadataCompatibility.php',
+    'lib/CatalogPerformance.php',
+    'missing.php',
+    'src/Application/Dependency/CatalogMissingFileListService.php',
+    'src/Application/Dependency/CatalogMissingDetailListService.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
     'src/Infrastructure/Metadata/CompactDependencyEncoding.php',
     'src/Infrastructure/Metadata/CompressedMetadataLegacySnapshot.php',
-    'src/Infrastructure/Metadata/CatalogCompactMetadataCompatibilityService.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedMetadataStore.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedCompactMetadataFinalizer.php',
 ])));
