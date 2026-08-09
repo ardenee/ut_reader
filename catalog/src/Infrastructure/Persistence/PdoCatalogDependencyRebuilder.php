@@ -1,15 +1,14 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Rebuilds dependency resolution for one file, a whole game, or files affected by a provider change.
- * Why: Dependency persistence, compact/legacy branching and affected-provider lookup are infrastructure concerns.
- * Role: Primary dependency rebuild implementation used by scanner compatibility functions and durable jobs.
+ * Purpose: Rebuilds dependency resolution for verified files from authoritative format-2 metadata.
+ * Why: Dependency maintenance must not fall back to retired SQL Import/Dependency projections.
+ * Role: Primary compact dependency rebuild implementation used by durable jobs and scanner compatibility delegates.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
-use InvalidArgumentException;
 use PDO;
 use RuntimeException;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogAffectedDependencyRefreshCoordinator;
@@ -31,102 +30,42 @@ final class PdoCatalogDependencyRebuilder
         int $endPercent = 100,
         string $prefix = 'Rebuilding dependencies'
     ): void {
-        $statement = $this->db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
-        $statement->execute([$fileId]);
-        $metadata = $statement->fetch(PDO::FETCH_ASSOC);
-        if ((int)($metadata['format_version'] ?? 0) >= 2) {
-            if ($this->db->inTransaction()) {
-                throw new RuntimeException('Compact dependency rebuilding cannot run inside an existing database transaction.');
-            }
-            $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
-            if ($storageRoot === '') {
-                throw new RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
-            }
-            self::emitPercent($progress, 'dependencies', $startPercent, $prefix . ': loading compact metadata');
-            $result = (new CompactDependencyRebuilder($this->db, $storageRoot))->rebuild($fileId);
-            self::emitPercent(
-                $progress,
-                'dependencies',
-                $endPercent,
-                $prefix . ': compact imports=' . (int)($result['imports_processed'] ?? 0)
-                . ', changed=' . (int)($result['dependencies_changed'] ?? 0)
-            );
-            return;
-        }
-
-        (new PdoDependencySchemaManager($this->db))->ensure();
-        self::emitPercent($progress, 'dependencies', $startPercent, $prefix . ': clearing old links');
-        $this->db->prepare('DELETE FROM ue_dependencies WHERE file_id=?')->execute([$fileId]);
-
-        $statement = $this->db->prepare('SELECT game_id FROM ue_files WHERE id=?');
-        $statement->execute([$fileId]);
-        $file = $statement->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($file)) {
-            self::emitPercent($progress, 'dependencies', $endPercent, $prefix . ': skipped missing file');
-            return;
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('Compact dependency rebuilding cannot run inside an existing database transaction.');
         }
 
         $statement = $this->db->prepare(
-            'SELECT id,root_package,full_path,relative_object_path,is_common '
-            . 'FROM ue_imports WHERE file_id=? ORDER BY import_index'
+            'SELECT f.scan_status,m.format_version FROM ue_files f '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE f.id=?'
         );
         $statement->execute([$fileId]);
-        $imports = $statement->fetchAll(PDO::FETCH_ASSOC);
-        if ($imports === []) {
-            self::emitPercent($progress, 'dependencies', $endPercent, $prefix . ': no imports');
+        $metadata = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($metadata)) {
+            self::emitPercent($progress, 'dependencies', $endPercent, $prefix . ': skipped missing file');
             return;
         }
-
-        $resolutions = PdoDependencyResolver::resolve($this->db, (int)$file['game_id'], $fileId, $imports);
-        $total = count($imports);
-        $batch = [];
-        foreach ($imports as $i => $imp) {
-            $resolution = $resolutions[(int)$imp['id']] ?? [
-                'status' => 'missing',
-                'resolved_file_id' => null,
-                'resolved_export_id' => null,
-                'source' => 'none',
-                'confidence' => 'missing',
-            ];
-            $batch[] = [
-                $fileId,
-                (int)$imp['id'],
-                (string)$imp['root_package'],
-                (string)$imp['full_path'],
-                $resolution['resolved_file_id'],
-                $resolution['resolved_export_id'],
-                (string)$resolution['status'],
-                (string)($resolution['source'] ?? 'unknown'),
-                (string)($resolution['confidence'] ?? 'unknown'),
-            ];
-
-            $done = $i + 1;
-            if (count($batch) >= 250 || $done === $total) {
-                self::bulkInsert(
-                    $this->db,
-                    'ue_dependencies',
-                    [
-                        'file_id',
-                        'import_id',
-                        'required_package',
-                        'required_object_path',
-                        'resolved_file_id',
-                        'resolved_export_id',
-                        'status',
-                        'resolution_source',
-                        'resolution_confidence',
-                    ],
-                    $batch
-                );
-                $batch = [];
-                self::emitPercent(
-                    $progress,
-                    'dependencies',
-                    self::rangePercent($startPercent, $endPercent, $done, $total),
-                    $prefix . ': import ' . $done . '/' . $total
-                );
-            }
+        if ((string)($metadata['scan_status'] ?? '') !== 'verified') {
+            throw new RuntimeException('Dependency rebuilding is only supported for verified catalog files.');
         }
+        if ((int)($metadata['format_version'] ?? 0) !== 2) {
+            throw new RuntimeException(
+                'Verified file #' . $fileId . ' has no current format-2 metadata; runtime legacy dependency rebuild is disabled.'
+            );
+        }
+
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
+        }
+        self::emitPercent($progress, 'dependencies', $startPercent, $prefix . ': loading compact metadata');
+        $result = (new CompactDependencyRebuilder($this->db, $storageRoot))->rebuild($fileId);
+        self::emitPercent(
+            $progress,
+            'dependencies',
+            $endPercent,
+            $prefix . ': compact imports=' . (int)($result['imports_processed'] ?? 0)
+            . ', changed=' . (int)($result['dependencies_changed'] ?? 0)
+        );
     }
 
     public function rebuildGame(
@@ -136,8 +75,9 @@ final class PdoCatalogDependencyRebuilder
         int $endPercent = 99
     ): void {
         $statement = $this->db->prepare(
-            'SELECT id, package_name FROM ue_files '
-            . 'WHERE game_id=? AND scan_status="verified" ORDER BY package_name, id'
+            'SELECT f.id,f.package_name FROM ue_files f '
+            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
+            . 'WHERE f.game_id=? AND f.scan_status="verified" ORDER BY f.package_name,f.id'
         );
         $statement->execute([$gameId]);
         $files = $statement->fetchAll(PDO::FETCH_ASSOC);
@@ -165,7 +105,7 @@ final class PdoCatalogDependencyRebuilder
         int $startPercent = 56,
         int $endPercent = 99
     ): void {
-        $statement = $this->db->prepare('SELECT game_id, package_name FROM ue_files WHERE id=?');
+        $statement = $this->db->prepare('SELECT game_id,package_name FROM ue_files WHERE id=?');
         $statement->execute([$newFileId]);
         $file = $statement->fetch(PDO::FETCH_ASSOC);
         if (!is_array($file)) {
@@ -263,38 +203,5 @@ final class PdoCatalogDependencyRebuilder
         $total = max(1, $total);
         $done = max(0, min($done, $total));
         return $start + (int)floor((($end - $start) * $done) / $total);
-    }
-
-    /** @param list<string> $columns @param list<list<mixed>> $rows */
-    private static function bulkInsert(PDO $db, string $table, array $columns, array $rows): void
-    {
-        if ($rows === []) {
-            return;
-        }
-        if (preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1 || $columns === []) {
-            throw new InvalidArgumentException('Invalid bulk insert target.');
-        }
-        foreach ($columns as $column) {
-            if (preg_match('/^[A-Za-z0-9_]+$/', $column) !== 1) {
-                throw new InvalidArgumentException('Invalid bulk insert column.');
-            }
-        }
-
-        $columnCount = count($columns);
-        $tuple = '(' . implode(',', array_fill(0, $columnCount, '?')) . ')';
-        $values = [];
-        $args = [];
-        foreach ($rows as $row) {
-            if (count($row) !== $columnCount) {
-                throw new InvalidArgumentException('Bulk insert row has the wrong column count.');
-            }
-            $values[] = $tuple;
-            array_push($args, ...$row);
-        }
-
-        $statement = $db->prepare(
-            'INSERT INTO ' . $table . '(' . implode(',', $columns) . ') VALUES ' . implode(',', $values)
-        );
-        $statement->execute($args);
     }
 }
