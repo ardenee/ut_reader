@@ -250,7 +250,8 @@ if ($withDatabase) {
             'count_mismatches=' . $mismatchedCounts
         );
 
-        $legacyVerifiedCounts = [];
+        $legacyTableStates = [];
+        $presentLegacyTables = [];
         foreach ($legacyTables as $table) {
             $existsStatement = $db->prepare(
                 'SELECT COUNT(*) FROM information_schema.TABLES '
@@ -258,26 +259,18 @@ if ($withDatabase) {
             );
             $existsStatement->execute([$table]);
             if ((int)$existsStatement->fetchColumn() !== 1) {
-                $legacyVerifiedCounts[$table] = 'absent';
+                $legacyTableStates[$table] = 'absent';
                 continue;
             }
-            $legacyVerifiedCounts[$table] = (int)$db->query(
-                'SELECT COUNT(*) FROM ' . $table . ' l '
-                . 'JOIN ue_files f ON f.id=l.file_id '
-                . 'WHERE f.scan_status="verified"'
-            )->fetchColumn();
-        }
-        $legacyVerifiedTotal = 0;
-        foreach ($legacyVerifiedCounts as $count) {
-            if (is_int($count)) {
-                $legacyVerifiedTotal += $count;
-            }
+
+            $rowCount = (int)$db->query('SELECT COUNT(*) FROM `' . $table . '`')->fetchColumn();
+            $legacyTableStates[$table] = 'present; rows=' . $rowCount;
+            $presentLegacyTables[] = $table;
         }
         $record(
-            'verified_retired_table_rows_absent',
-            $legacyVerifiedTotal === 0,
-            (json_encode($legacyVerifiedCounts, JSON_UNESCAPED_SLASHES) ?: '')
-                . '; total=' . $legacyVerifiedTotal
+            'retired_metadata_tables_physically_absent',
+            $presentLegacyTables === [],
+            json_encode($legacyTableStates, JSON_UNESCAPED_SLASHES) ?: ''
         );
 
         $source = \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::sql($db);
