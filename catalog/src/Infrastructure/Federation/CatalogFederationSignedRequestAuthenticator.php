@@ -15,13 +15,15 @@ use UnrealDb\Catalog\Infrastructure\Security\CatalogFederationPeerSecretService;
 final class CatalogFederationSignedRequestAuthenticator
 {
     private readonly CatalogFederationPeerSecretService $peerSecrets;
+    private readonly CatalogFederationSettingsStore $settings;
+    private readonly CatalogFederationLogService $logs;
 
     public function __construct(private readonly PDO $db)
     {
-        $root = dirname(__DIR__, 3);
-        require_once $root . '/lib/CatalogSupport.php';
-        require_once $root . '/lib/FederationAuth.php';
+        require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->peerSecrets = new CatalogFederationPeerSecretService($db);
+        $this->settings = new CatalogFederationSettingsStore($db);
+        $this->logs = new CatalogFederationLogService($db);
     }
 
     /** @param array<string,mixed>|null $server @return array<string,mixed> */
@@ -49,7 +51,7 @@ final class CatalogFederationSignedRequestAuthenticator
             throw new CatalogFederationApiException('Unknown or inactive peer', 403);
         }
 
-        $nonceTtl = (int)(\fed_setting($this->db, 'api_nonce_ttl_seconds', '300') ?: 300);
+        $nonceTtl = (int)($this->settings->get('api_nonce_ttl_seconds', '300') ?: 300);
         $ts = strtotime($timestamp);
         if ($ts === false || abs(time() - $ts) > $nonceTtl) {
             throw new CatalogFederationApiException('Timestamp outside allowed window', 401);
@@ -71,8 +73,7 @@ final class CatalogFederationSignedRequestAuthenticator
                 || ($keyId !== ''
                     && $configuredKeyId !== ''
                     && !hash_equals($configuredKeyId, $keyId))) {
-                \fed_log(
-                    $this->db,
+                $this->logs->write(
                     (int)$peer['id'],
                     null,
                     'WARN',
@@ -114,8 +115,7 @@ final class CatalogFederationSignedRequestAuthenticator
         }
 
         if (!$verified) {
-            \fed_log(
-                $this->db,
+            $this->logs->write(
                 (int)$peer['id'],
                 null,
                 'WARN',
@@ -141,8 +141,6 @@ final class CatalogFederationSignedRequestAuthenticator
     /** @param array<string,mixed> $server */
     private static function requestPath(array $server): string
     {
-        $uri = (string)($server['REQUEST_URI'] ?? '/');
-        $position = strpos($uri, '?');
-        return $position === false ? $uri : substr($uri, 0, $position);
+        return CatalogFederationJsonApi::requestPath($server);
     }
 }
