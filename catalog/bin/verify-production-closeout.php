@@ -2,7 +2,7 @@
 <?php
 /**
  * Purpose: Runs the final read-only production regression suite for the August 2026 architecture/performance close-out.
- * Role: One command covering syntax, runtime prerequisites, architecture, federation, workers, upload/import and optional live DB/runtime reads.
+ * Role: One command covering syntax, runtime prerequisites, architecture, compact metadata, federation, workers, upload/import and optional live DB/runtime reads.
  */
 declare(strict_types=1);
 
@@ -42,7 +42,6 @@ $run = static function (array $command, string $cwd): array {
     ];
 };
 
-// Full PHP syntax pass. Exclude generated/runtime/vendor trees only.
 $syntaxFailures = [];
 $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root, RecursiveDirectoryIterator::SKIP_DOTS)
@@ -77,6 +76,7 @@ $sourceSuites = [
     'verify-game-lifecycle-boundaries.php',
     'verify-upload-worker-contracts.php',
     'audit-legacy-runtime-references.php',
+    'verify-compact-only-metadata-runtime.php',
     'verify-federation-boundaries.php',
     'verify-federation-worker-boundaries.php',
     'verify-federation-transfer-auth-boundary.php',
@@ -139,8 +139,11 @@ if ($withDatabase) {
             $record(
                 'db_dependency_read_source_compiles',
                 true,
-                'compact=' . (\UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::compactAvailable($db) ? 'yes' : 'no')
-                    . ' legacy=' . (\UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::legacyAvailable($db) ? 'yes' : 'no')
+                'mode=compact-only compact=' . (
+                    \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::compactAvailable($db)
+                    ? 'yes'
+                    : 'no'
+                )
             );
         } catch (Throwable $error) {
             $record('db_dependency_read_source_compiles', false, $error->getMessage());
@@ -170,6 +173,13 @@ if ($withDatabase) {
 
         $unverified = $db->query('SELECT COUNT(*) FROM ue_files WHERE scan_status="unverified"')->fetchColumn();
         $record('db_unverified_index_read', $unverified !== false, 'unverified=' . (int)$unverified);
+
+        $compactDb = $run([PHP_BINARY, __DIR__ . '/verify-compact-only-metadata-runtime.php', '--database'], $root);
+        $record(
+            'suite:verify-compact-only-metadata-runtime.php --database',
+            $compactDb['ok'],
+            $compactDb['ok'] ? 'passed' : substr((string)$compactDb['output'], -3000)
+        );
 
         $architectureDb = $run([PHP_BINARY, __DIR__ . '/verify-architecture-refactor.php', '--database'], $root);
         $record(
