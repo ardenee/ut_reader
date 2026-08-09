@@ -54,7 +54,7 @@ foreach ($iterator as $item) {
     if (str_starts_with($relative, 'storage/') || str_starts_with($relative, 'vendor/')) continue;
     $result = $run([PHP_BINARY, '-l', $path], $root);
     if (!$result['ok']) {
-        $syntaxFailures[] = $relative . ': ' . mb_substr((string)$result['output'], -1200);
+        $syntaxFailures[] = $relative . ': ' . substr((string)$result['output'], -1200);
         if (count($syntaxFailures) >= 50) break;
     }
 }
@@ -89,7 +89,7 @@ foreach ($sourceSuites as $script) {
     $result = $run([PHP_BINARY, $path], $root);
     $detail = $result['ok']
         ? 'passed'
-        : ('exit=' . $result['exit'] . ' ' . mb_substr((string)$result['output'], -3000));
+        : ('exit=' . $result['exit'] . ' ' . substr((string)$result['output'], -3000));
     $record('suite:' . $script, $result['ok'], $detail);
 }
 
@@ -109,7 +109,7 @@ if (function_exists('shell_exec')) {
 if ($node !== '') {
     $nodePath = preg_split('/\R/', $node)[0] ?? 'node';
     $result = $run([$nodePath, '--check', $bridge], $root);
-    $record('background_jobs_js_syntax', $result['ok'], $result['ok'] ? 'passed' : mb_substr((string)$result['output'], -1200));
+    $record('background_jobs_js_syntax', $result['ok'], $result['ok'] ? 'passed' : substr((string)$result['output'], -1200));
 } else {
     $checks[] = ['check' => 'background_jobs_js_syntax', 'ok' => true, 'detail' => 'Node.js unavailable; structural JS contract checked instead.'];
 }
@@ -151,7 +151,7 @@ if ($withDatabase) {
         $record(
             'suite:verify-architecture-refactor.php --database',
             $architectureDb['ok'],
-            $architectureDb['ok'] ? 'passed' : mb_substr((string)$architectureDb['output'], -3000)
+            $architectureDb['ok'] ? 'passed' : substr((string)$architectureDb['output'], -3000)
         );
     } catch (Throwable $error) {
         $record('database_runtime_checks', false, get_class($error) . ': ' . $error->getMessage());
