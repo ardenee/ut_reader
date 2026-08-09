@@ -2,7 +2,7 @@
 <?php
 /**
  * Purpose: Runs the final read-only production regression suite for the August 2026 architecture/performance close-out.
- * Role: One command covering syntax, architecture, federation, workers, upload/import and optional live DB/runtime reads.
+ * Role: One command covering syntax, runtime prerequisites, architecture, federation, workers, upload/import and optional live DB/runtime reads.
  */
 declare(strict_types=1);
 
@@ -59,6 +59,14 @@ foreach ($iterator as $item) {
     }
 }
 $record('full_php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
+
+$record(
+    'runtime_php_zip_extension',
+    class_exists(ZipArchive::class),
+    class_exists(ZipArchive::class)
+        ? 'ZipArchive available'
+        : 'ZipArchive unavailable; enable the PHP zip extension for generated ZIP downloads'
+);
 
 $sourceSuites = [
     'verify-architecture-refactor.php',
@@ -121,6 +129,22 @@ if ($withDatabase) {
         $db = $application->db;
         $version = (string)$db->query('SELECT VERSION()')->fetchColumn();
         $record('db_connection', $version !== '', $version);
+
+        try {
+            $dependencySource = \UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::sql($db);
+            $statement = $db->query(
+                'SELECT COUNT(*) FROM ' . $dependencySource . ' runtime_dependencies WHERE 1=0'
+            );
+            $statement->fetchColumn();
+            $record(
+                'db_dependency_read_source_compiles',
+                true,
+                'compact=' . (\UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::compactAvailable($db) ? 'yes' : 'no')
+                    . ' legacy=' . (\UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource::legacyAvailable($db) ? 'yes' : 'no')
+            );
+        } catch (Throwable $error) {
+            $record('db_dependency_read_source_compiles', false, $error->getMessage());
+        }
 
         $queue = trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
         $counts = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperationalQuery(
