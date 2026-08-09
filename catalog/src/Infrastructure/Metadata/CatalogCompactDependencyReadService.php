@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
 use PDO;
 use RuntimeException;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 final class CatalogCompactDependencyReadService
 {
@@ -193,7 +194,8 @@ final class CatalogCompactDependencyReadService
 
     /**
      * Return dependency rows in the legacy page shape. Converted files use compact
-     * metadata; unconverted files continue to use ue_dependencies.
+     * metadata; unconverted files use the legacy fallback only while those staging
+     * tables still exist.
      *
      * @return list<array<string,mixed>>
      */
@@ -202,6 +204,9 @@ final class CatalogCompactDependencyReadService
         $compact = $this->compactRows($fileId);
         if (is_array($compact)) {
             return $compact;
+        }
+        if (!PdoDependencyReadSource::legacyAvailable($this->db)) {
+            return [];
         }
 
         $statement = $this->db->prepare(
@@ -227,7 +232,8 @@ final class CatalogCompactDependencyReadService
 
     /**
      * Return files with resolved links to the target. Converted source files come
-     * from ue_dependency_links; unconverted source files retain the legacy query.
+     * from ue_dependency_links; unconverted source files retain the legacy query
+     * only while the staging tables exist.
      *
      * @return list<array<string,mixed>>
      */
@@ -251,22 +257,24 @@ final class CatalogCompactDependencyReadService
             }
         }
 
-        $legacySql =
-            'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.file_size'
-            . ' FROM ue_dependencies d'
-            . ' JOIN ue_files src ON src.id=d.file_id';
-        if ($this->available()) {
-            $legacySql .= ' LEFT JOIN ue_file_metadata m ON m.file_id=src.id AND m.format_version=2';
-        }
-        $legacySql .= ' WHERE d.resolved_file_id=?';
-        if ($this->available()) {
-            $legacySql .= ' AND m.file_id IS NULL';
-        }
-        $legacySql .= ' ORDER BY src.package_name,src.original_name LIMIT ' . $limit;
-        $statement = $this->db->prepare($legacySql);
-        $statement->execute([$targetFileId]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $byFile[(int)$row['id']] = $row;
+        if (PdoDependencyReadSource::legacyAvailable($this->db)) {
+            $legacySql =
+                'SELECT DISTINCT src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.file_size'
+                . ' FROM ue_dependencies d'
+                . ' JOIN ue_files src ON src.id=d.file_id';
+            if ($this->available()) {
+                $legacySql .= ' LEFT JOIN ue_file_metadata m ON m.file_id=src.id AND m.format_version=2';
+            }
+            $legacySql .= ' WHERE d.resolved_file_id=?';
+            if ($this->available()) {
+                $legacySql .= ' AND m.file_id IS NULL';
+            }
+            $legacySql .= ' ORDER BY src.package_name,src.original_name LIMIT ' . $limit;
+            $statement = $this->db->prepare($legacySql);
+            $statement->execute([$targetFileId]);
+            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                $byFile[(int)$row['id']] = $row;
+            }
         }
 
         $rows = array_values($byFile);
@@ -308,7 +316,8 @@ final class CatalogCompactDependencyReadService
 
     /**
      * Return reverse dependency rows in the shape used by file-dependency-files.php.
-     * Compact rows are merged with legacy rows from unconverted source files.
+     * Compact rows are merged with legacy rows from unconverted source files while
+     * the legacy staging tables remain installed.
      *
      * @param list<string> $identityNames
      * @return list<array<string,mixed>>
@@ -385,29 +394,31 @@ final class CatalogCompactDependencyReadService
             }
         }
 
-        $placeholders = implode(',', array_fill(0, count($identityNames), '?'));
-        $legacySql =
-            'SELECT d.id dependency_id,d.file_id source_file_id,d.required_package,d.required_object_path,'
-            . ' d.status,d.resolved_file_id,src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.file_size'
-            . ' FROM ue_dependencies d'
-            . ' JOIN ue_files src ON src.id=d.file_id AND src.game_id=? AND src.scan_status="verified"';
-        if ($this->available()) {
-            $legacySql .= ' LEFT JOIN ue_file_metadata m ON m.file_id=src.id AND m.format_version=2';
+        if (PdoDependencyReadSource::legacyAvailable($this->db)) {
+            $placeholders = implode(',', array_fill(0, count($identityNames), '?'));
+            $legacySql =
+                'SELECT d.id dependency_id,d.file_id source_file_id,d.required_package,d.required_object_path,'
+                . ' d.status,d.resolved_file_id,src.id,src.package_name,src.original_name,src.package_guid,src.md5,src.file_size'
+                . ' FROM ue_dependencies d'
+                . ' JOIN ue_files src ON src.id=d.file_id AND src.game_id=? AND src.scan_status="verified"';
+            if ($this->available()) {
+                $legacySql .= ' LEFT JOIN ue_file_metadata m ON m.file_id=src.id AND m.format_version=2';
+            }
+            $legacySql .= ' WHERE src.id<>? AND (d.resolved_file_id=?';
+            $legacyParameters = [$gameId, $targetFileId, $targetFileId];
+            if ($identityNames !== []) {
+                $legacySql .= ' OR d.required_package IN (' . $placeholders . ')';
+                array_push($legacyParameters, ...$identityNames);
+            }
+            $legacySql .= ')';
+            if ($this->available()) {
+                $legacySql .= ' AND m.file_id IS NULL';
+            }
+            $legacySql .= ' ORDER BY src.original_name,d.id';
+            $statement = $this->db->prepare($legacySql);
+            $statement->execute($legacyParameters);
+            array_push($rows, ...($statement->fetchAll(PDO::FETCH_ASSOC) ?: []));
         }
-        $legacySql .= ' WHERE src.id<>? AND (d.resolved_file_id=?';
-        $legacyParameters = [$gameId, $targetFileId, $targetFileId];
-        if ($identityNames !== []) {
-            $legacySql .= ' OR d.required_package IN (' . $placeholders . ')';
-            array_push($legacyParameters, ...$identityNames);
-        }
-        $legacySql .= ')';
-        if ($this->available()) {
-            $legacySql .= ' AND m.file_id IS NULL';
-        }
-        $legacySql .= ' ORDER BY src.original_name,d.id';
-        $statement = $this->db->prepare($legacySql);
-        $statement->execute($legacyParameters);
-        array_push($rows, ...($statement->fetchAll(PDO::FETCH_ASSOC) ?: []));
 
         usort($rows, static function (array $left, array $right): int {
             $comparison = strnatcasecmp(
