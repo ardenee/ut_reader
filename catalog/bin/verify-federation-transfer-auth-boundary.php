@@ -87,7 +87,6 @@ $signatures = $contents['signatures'];
 $signatureContracts = [
     'strtoupper($method)',
     'strtolower($sha256)',
-    "hash_hmac(\n            'sha256'",
     'CatalogFederationPeerSecretService::forCrypto',
     'CatalogFederationKeyMaterial::ed25519SecretKey',
     'CatalogFederationKeyMaterial::base64UrlEncode',
@@ -103,6 +102,10 @@ foreach ($signatureContracts as $needle) {
     if (!str_contains($signatures, $needle)) {
         $missingSignatureContracts[] = $needle;
     }
+}
+$hmacContract = preg_match('/hash_hmac\s*\(\s*[\'\"]sha256[\'\"]/m', $signatures) === 1;
+if (!$hmacContract) {
+    $missingSignatureContracts[] = 'hash_hmac(sha256, ...)';
 }
 $record(
     'signature_wire_contract',
@@ -141,6 +144,23 @@ $record(
     $missingAuthContracts === []
         ? 'header, peer, replay, signature and activity contracts retained'
         : 'missing: ' . implode(', ', $missingAuthContracts)
+);
+
+require_once $catalogRoot . '/bootstrap/autoload.php';
+$payload = \UnrealDb\Catalog\Infrastructure\Federation\CatalogFederationTransferSignatureService::payload(
+    'post',
+    '/api/federation/transfer.php',
+    '2026-08-09T12:00:00+00:00',
+    'nonce-example',
+    'ABCDEF',
+    42,
+    17,
+    'DM-Test.ut2'
+);
+$record(
+    'signature_payload_pure_contract',
+    $payload === "POST\n/api/federation/transfer.php\n2026-08-09T12:00:00+00:00\nnonce-example\nabcdef\n42\n17\nDM-Test.ut2",
+    'canonical transfer payload bytes remain stable independent of source formatting'
 );
 
 $result = [
