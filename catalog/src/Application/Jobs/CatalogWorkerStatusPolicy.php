@@ -58,9 +58,20 @@ final class CatalogWorkerStatusPolicy
         }
 
         if ($active) {
+            if ($counts['ready'] > 0 && $activeCount < $desiredCount && $launchingCount === 0) {
+                return [
+                    'authoritative_status' => 'degraded',
+                    'authoritative_message' => $activeCount . ' of ' . $desiredCount
+                        . ' detached worker process(es) are running while ready work remains. '
+                        . 'A surviving worker will reconcile the missing slot(s) automatically.',
+                    'restart_recommended' => false,
+                ];
+            }
+
             return [
                 'authoritative_status' => 'running',
-                'authoritative_message' => $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.',
+                'authoritative_message' => $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.'
+                    . ($launchingCount > 0 ? ' ' . $launchingCount . ' additional process(es) are launching.' : ''),
                 'restart_recommended' => false,
             ];
         }
