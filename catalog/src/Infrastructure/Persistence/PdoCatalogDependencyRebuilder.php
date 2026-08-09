@@ -74,10 +74,11 @@ final class PdoCatalogDependencyRebuilder
         int $startPercent = 56,
         int $endPercent = 99
     ): void {
+        // Include every verified file. rebuild() owns the format-2 invariant and
+        // will surface an integrity gap instead of silently skipping that file.
         $statement = $this->db->prepare(
-            'SELECT f.id,f.package_name FROM ue_files f '
-            . 'JOIN ue_file_metadata m ON m.file_id=f.id AND m.format_version=2 '
-            . 'WHERE f.game_id=? AND f.scan_status="verified" ORDER BY f.package_name,f.id'
+            'SELECT id,package_name FROM ue_files '
+            . 'WHERE game_id=? AND scan_status="verified" ORDER BY package_name,id'
         );
         $statement->execute([$gameId]);
         $files = $statement->fetchAll(PDO::FETCH_ASSOC);
