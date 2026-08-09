@@ -75,9 +75,9 @@ try {
 
     $files = catalog_all(
         $db,
-        "SELECT f.*, SUM(d.status='resolved') resolved_count, SUM(d.status='missing') missing_count, SUM(d.status='package_only') package_only_count, SUM(d.status='common') common_count
+        "SELECT f.*, COALESCE(SUM(s.resolved_count),0) resolved_count, COALESCE(SUM(s.missing_count),0) missing_count, COALESCE(SUM(s.package_only_count),0) package_only_count, COALESCE(SUM(s.common_count),0) common_count
          FROM ue_files f
-         LEFT JOIN ue_dependencies d ON d.file_id=f.id
+         LEFT JOIN ue_dependency_package_summaries s ON s.file_id=f.id
          $where
          GROUP BY f.id
          ORDER BY f.package_name, f.original_name
