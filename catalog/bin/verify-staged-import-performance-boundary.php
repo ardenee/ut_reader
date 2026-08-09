@@ -1,7 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies the durable staged-package import path avoids a redundant parser copy while preserving rollback/failure bytes.
+ * Purpose: Verifies the durable staged-package import path uses hardlink-first working sources while preserving rollback/failure bytes.
  * Role: Read-only import performance/failure-retention regression test.
  */
 declare(strict_types=1);
@@ -30,33 +30,41 @@ foreach ([$handlerPath, $storagePath] as $path) {
 }
 $record('php_syntax', $syntax === [], implode(' | ', $syntax));
 $record(
-    'no_full_working_copy',
-    !str_contains($source, 'tempnam(sys_get_temp_dir(), \'unrealdb-import-\')')
-        && !str_contains($source, 'function workingCopy(')
-        && str_contains($source, '$workingPath = $sourcePath;')
-        && str_contains($source, 'Parse that file directly instead of reading and writing a'),
-    'ordinary durable staged packages are parsed in place after identity validation'
+    'hardlink_first_working_source',
+    str_contains($source, 'function workingSource(')
+        && str_contains($source, '@link($sourcePath, $path)')
+        && str_contains($source, "'.unrealdb-import-'")
+        && str_contains($source, 'return $this->workingCopy($sourcePath, $name, $context, $startPercent, $endPercent);'),
+    'ordinary staged imports use an O(1) same-volume hardlink when supported and retain the streamed-copy fallback'
+);
+$record(
+    'durable_source_retained_until_success',
+    str_contains($source, '$workingPath = $this->workingSource($sourcePath, $workingName, $context, 2, 20);')
+        && str_contains($source, '$store->remove($relativePath);')
+        && str_contains($source, '$completedWorkingPath = $workingPath;')
+        && str_contains($source, 'if ($workingTemporary && $completedWorkingPath !== \'\' && is_file($completedWorkingPath))'),
+    'the durable staged source remains separate from the parser/storage working path until import completion'
 );
 $record(
     'identity_guard_retained',
     str_contains($source, '$this->verifyIdentity($sourcePath, $payload);')
         && str_contains($source, "hash_file('sha256', $path)")
         && str_contains($source, 'Staged import file identity changed before execution.'),
-    'zero-copy import still verifies the queued SHA-256 identity before parsing'
+    'hardlink-first import still verifies queued SHA-256 identity before preparing the working path'
 );
 $record(
     'temporary_cleanup_boundary',
     str_contains($source, '$workingTemporary = false;')
         && str_contains($source, '$workingTemporary = true;')
         && str_contains($source, 'if ($workingTemporary && $workingPath !== \'\' && is_file($workingPath))'),
-    'only helper-created temporary redirect files are disposable in finally'
+    'only helper-created working/decompressed paths are disposable in finally'
 );
 $record(
     'storage_rollback_restores_source',
     str_contains($storage, "'source_path' => $temporaryPath")
         && str_contains($storage, '@rename($destination, $sourcePath)')
         && str_contains($storage, '@unlink($destination)'),
-    'persistence failure restores caller-owned staged/temp bytes before bounded fallback cleanup'
+    'persistence failure restores caller-owned working bytes before bounded fallback cleanup'
 );
 $record(
     'unverified_fallback_retained',
