@@ -265,12 +265,9 @@ final class CatalogLegacyPackageNormalizationService
         $format = \catalog_one($this->db, 'SELECT format_version FROM ue_file_metadata WHERE file_id=?', [$fileId]);
         $formatVersion = (int)($format['format_version'] ?? 0);
         if ($formatVersion < 2) {
-            return (int)(\catalog_one(
-                $this->db,
-                'SELECT COUNT(*) c FROM ue_exports WHERE file_id=? '
-                . 'AND full_path<>CASE WHEN local_path<>"" THEN CONCAT(?, ".", local_path) ELSE ? END',
-                [$fileId, $cleanPackage, $cleanPackage]
-            )['c'] ?? 0);
+            throw new RuntimeException(
+                'File #' . $fileId . ' has no current format-2 metadata; package normalization cannot use retired export rows.'
+            );
         }
 
         $snapshot = $this->snapshotLoader->load($fileId);
