@@ -20,7 +20,7 @@ final class CatalogVerifiedPackageStorage
     }
 
     /**
-     * @return array{stored_name:string,destination:string,relative_path:string,created:bool}
+     * @return array{stored_name:string,destination:string,relative_path:string,created:bool,source_path:string}
      */
     public function store(
         string $temporaryPath,
@@ -53,15 +53,26 @@ final class CatalogVerifiedPackageStorage
             'destination' => $destination,
             'relative_path' => 'storage/games/' . $slug . '/verified/' . $storedName,
             'created' => $created,
+            'source_path' => $temporaryPath,
         ];
     }
 
-    /** @param array{destination?:string,created?:bool} $stored */
+    /** @param array{destination?:string,created?:bool,source_path?:string} $stored */
     public function rollbackCreated(array $stored): void
     {
         $destination = (string)($stored['destination'] ?? '');
-        if (!empty($stored['created']) && $destination !== '' && is_file($destination)) {
-            @unlink($destination);
+        if (empty($stored['created']) || $destination === '' || !is_file($destination)) {
+            return;
         }
+
+        // Persistence happens after the physical move. Restore the caller-owned
+        // source first so retry/unverified retention still has the original bytes.
+        // Falling back to the historical delete keeps rollback bounded if the
+        // source path unexpectedly became unavailable or could not be restored.
+        $sourcePath = (string)($stored['source_path'] ?? '');
+        if ($sourcePath !== '' && !is_file($sourcePath) && @rename($destination, $sourcePath)) {
+            return;
+        }
+        @unlink($destination);
     }
 }
