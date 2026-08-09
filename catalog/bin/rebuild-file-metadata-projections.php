@@ -2,18 +2,13 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Provides the command-line utility for rebuild file metadata projections.
- * Why: It handles administrator, migration, verification, repair, generation, or worker work that should not execute
- *      as an interactive browser request.
- * Role: CLI/maintenance entry point used from the server shell or operational scripts.
- * Audit: Operational entry point; verify scheduled/manual usage before considering removal.
+ * Purpose: Rebuilds current metadata projections from authoritative format-2 containers.
+ * Why: Projection maintenance for converted files must not reread retired Names/Imports/Exports/Dependencies tables.
+ * Role: CLI/maintenance entry point for bounded current-metadata projection rebuilding.
  */
 declare(strict_types=1);
 
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
-use UnrealDb\Catalog\Infrastructure\Metadata\CompactSearchProjectionWriter;
-use UnrealDb\Catalog\Infrastructure\Metadata\CompressedMetadataLegacySnapshot;
-use UnrealDb\Catalog\Infrastructure\Metadata\CompressedMetadataLookupWriter;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedFileMetadataConverter;
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This command may only run from the PHP CLI.\n");
@@ -76,11 +71,7 @@ try {
 
     $db = catalog_db($config);
     $statement = $db->prepare(
-        'SELECT f.id,f.game_id,f.original_name,f.name_count,f.import_count,f.export_count,'
-        . 'm.format_version metadata_version,m.codec metadata_codec,'
-        . 'm.compressed_size metadata_compressed_size,'
-        . 'm.uncompressed_size metadata_uncompressed_size,'
-        . 'm.payload_sha256 metadata_sha256 '
+        'SELECT f.id,f.game_id,f.original_name,f.name_count,f.import_count,f.export_count '
         . 'FROM ue_file_metadata m JOIN ue_files f ON f.id=m.file_id '
         . 'WHERE m.format_version=2 AND f.scan_status="verified" AND f.id>? '
         . 'ORDER BY f.id LIMIT ' . (int)$arguments['limit']
@@ -108,9 +99,7 @@ try {
         exit(0);
     }
 
-    $snapshotLoader = new CompressedMetadataLegacySnapshot($db);
-    $lookupWriter = new CompressedMetadataLookupWriter($db);
-    $searchWriter = new CompactSearchProjectionWriter($db);
+    $converter = new BlockedCompressedFileMetadataConverter($db, $storagePath);
     $completed = 0;
     $failed = 0;
     $lastFileId = 0;
@@ -129,44 +118,8 @@ try {
         ));
 
         try {
-            $metadataPath = BlockedCompressedMetadataContainer::path(
-                $storagePath,
-                (int)$file['game_id'],
-                $fileId
-            );
-            $storedBytes = file_get_contents($metadataPath);
-            if (!is_string($storedBytes)) {
-                throw new RuntimeException('Could not read blocked metadata container: ' . $metadataPath);
-            }
-            if (strlen($storedBytes) !== (int)$file['metadata_compressed_size']) {
-                throw new RuntimeException('Blocked metadata container size mismatch for file #' . $fileId . '.');
-            }
-            if (!hash_equals((string)$file['metadata_sha256'], hash('sha256', $storedBytes, true))) {
-                throw new RuntimeException('Blocked metadata container SHA-256 mismatch for file #' . $fileId . '.');
-            }
-            $verified = BlockedCompressedMetadataContainer::verifyBytes($storedBytes, $fileId);
-            $snapshot = $snapshotLoader->capture($fileId);
-
-            $sqlBatches = 0;
-            $db->beginTransaction();
-            try {
-                $lookupWriter->writeVersioned(
-                    $snapshot,
-                    $storedBytes,
-                    (int)$file['metadata_uncompressed_size'],
-                    (int)$file['metadata_version'],
-                    (int)$file['metadata_codec'],
-                    $sqlBatches
-                );
-                $searchWriter->write($snapshot, $sqlBatches);
-                $db->commit();
-            } catch (Throwable $error) {
-                if ($db->inTransaction()) {
-                    $db->rollBack();
-                }
-                throw $error;
-            }
-
+            $result = $converter->rebuildProjections($fileId);
+            $sqlBatches = (int)($result['sql_batches'] ?? 0);
             if ($sqlBatches < 1) {
                 throw new RuntimeException(
                     'Projection rebuild performed no SQL writes for file #' . $fileId . '.'
@@ -177,7 +130,7 @@ try {
             fwrite(STDOUT, sprintf(
                 "  OK %.2fs, blocks=%d, SQL batches=%d\n",
                 microtime(true) - $fileStartedAt,
-                (int)($verified['block_count'] ?? 0),
+                (int)($result['block_count'] ?? 0),
                 $sqlBatches
             ));
         } catch (Throwable $error) {
