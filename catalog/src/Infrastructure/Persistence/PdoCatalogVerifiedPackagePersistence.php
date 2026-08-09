@@ -1,8 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Persists one newly verified package and its initial legacy projections atomically.
- * Why: The package importer should orchestrate parsing/storage, not own the ue_files insert, N/I/E writes and dependency transaction.
+ * Purpose: Persists one newly verified package and its recovery staging projections atomically.
+ * Why: The package importer should orchestrate parsing/storage, while this collaborator owns the ue_files insert and
+ *      temporary N/I/E staging writes. Current format-2 metadata is published directly from parser output afterwards.
  * Role: Infrastructure persistence collaborator for verified package import.
  */
 declare(strict_types=1);
@@ -15,7 +16,6 @@ use Throwable;
 final class PdoCatalogVerifiedPackagePersistence
 {
     private readonly PdoCatalogPackageTableWriter $tables;
-    private readonly PdoCatalogDependencyRebuilder $dependencies;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -24,7 +24,6 @@ final class PdoCatalogVerifiedPackagePersistence
     ) {
         require_once dirname(__DIR__, 3) . '/lib/Scanner/CatalogScannerSupport.php';
         $this->tables = new PdoCatalogPackageTableWriter($db);
-        $this->dependencies = new PdoCatalogDependencyRebuilder($db, $config);
     }
 
     /**
@@ -115,6 +114,9 @@ final class PdoCatalogVerifiedPackagePersistence
             $fileId = (int)$this->db->lastInsertId();
             $progressDb('Writing file row');
 
+            // Keep the historical N/I/E rows only as recovery staging until the
+            // direct format-2 publication succeeds. No verified runtime reader is
+            // allowed to consume them.
             $this->tables->insert(
                 $fileId,
                 $packageName,
@@ -128,18 +130,10 @@ final class PdoCatalogVerifiedPackagePersistence
                         'imports' => 'imports',
                         default => 'exports',
                     };
-                    $progressDb('Writing ' . $label . ' table ' . $done . '/' . $total, $rowsWritten);
+                    $progressDb('Writing ' . $label . ' recovery staging ' . $done . '/' . $total, $rowsWritten);
                 }
             );
 
-            \scanner_emit_percent($progress, 'dependencies', 36, 'Rebuilding dependencies for imported file');
-            $this->dependencies->rebuild(
-                $fileId,
-                $progress,
-                36,
-                55,
-                'Imported file dependency links'
-            );
             $this->db->commit();
             return $fileId;
         } catch (Throwable $error) {
