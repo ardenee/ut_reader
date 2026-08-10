@@ -20,7 +20,7 @@ use Throwable;
 final class MigrationRunner
 {
     private const TABLE = 'ue_schema_migrations';
-    private const BASELINE_VERSION = '202608030001';
+    private const BASELINE_VERSION = '202608090002';
 
     /** @var array<string,callable(PDO,SchemaInspector,array<string,mixed>):void> */
     private array $executionOverrides;
