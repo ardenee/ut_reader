@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 /** Durable MySQL queue façade. */
 final class PdoJobQueue implements JobQueue
 {
+    private const CLAIM_CONTENTION_ATTEMPTS = 6;
     private const COMPLETE_CONTENTION_ATTEMPTS = 6;
 
     private readonly PdoJobEnqueuer $enqueuer;
@@ -56,7 +57,21 @@ final class PdoJobQueue implements JobQueue
 
     public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob
     {
-        return $this->claimer->claim($queue, $workerId, $leaseSeconds);
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $this->claimer->claim($queue, $workerId, $leaseSeconds);
+            } catch (\Throwable $exception) {
+                if (!PdoJobQueueSupport::retryableContention($exception)
+                    || $attempt >= self::CLAIM_CONTENTION_ATTEMPTS) {
+                    throw $exception;
+                }
+
+                // The normal claim path never sleeps. This is reached only after
+                // MySQL has chosen this short claim/recovery transaction as the
+                // victim of an actual deadlock/lock-wait conflict.
+                usleep(PdoJobQueueSupport::contentionBackoffMicros($attempt));
+            }
+        }
     }
 
     public function complete(ClaimedJob $job, array $result = []): string
