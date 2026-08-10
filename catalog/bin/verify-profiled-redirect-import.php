@@ -26,6 +26,7 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $phpFiles = [
+    'lib/CatalogRedirectArchivePayload.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
     'src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
     'src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
@@ -160,6 +161,27 @@ try {
     } finally {
         @unlink($fixture);
     }
+
+    $badTag = catalog_redirect_archive_decode_failure_message(
+        pack('V2', 1234, 4096) . "\x78\x9Cbad",
+        'uz3',
+        1024 * 1024,
+        'Fake.utx.uz3'
+    );
+    $badStream = catalog_redirect_archive_decode_failure_message(
+        pack('V2', 5678, 4096) . "not-zlib",
+        'uz3',
+        1024 * 1024,
+        'Fake.utx.uz3'
+    );
+    $record(
+        'uz3_failure_identifies_header_or_zlib_stage',
+        str_contains($badTag, 'expected 5678')
+            && str_contains($badTag, 'got 1234')
+            && str_contains($badStream, 'zlib stream could not be decompressed')
+            && str_contains($badStream, 'declared=4096'),
+        'Strict UZ3 rejection must identify whether the wrapper tag or tagged whole-file zlib stream failed without trying another format.'
+    );
 } catch (Throwable $error) {
     $record('decoded_non_package_uz2_is_rejected_before_profile_detection', false, get_class($error) . ': ' . $error->getMessage());
 }
