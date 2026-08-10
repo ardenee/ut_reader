@@ -74,10 +74,12 @@ final class CatalogJobWorkerFactory
         $dependencyRefresh = new CatalogDependencyRefreshJobHandler($db, $config);
         $affectedDependencyRefresh = new CatalogAffectedDependencyRefreshJobHandler($db, $config);
         $maintenance = new CatalogMaintenanceJobHandler($db, $config);
+        $fullSync = new CatalogFullSyncJobHandler($db, $trustedImportConfig);
 
         // Route every durable job type explicitly. Worker dispatch must never
         // depend on handler array order or on broad supports() fallbacks.
         $handlersByType = [
+            JobType::FULL_SYNC_GAME => $fullSync,
             JobType::REBUILD_GAME_DEPENDENCIES => $dependencyRefresh,
             JobType::REBUILD_FILE_DEPENDENCIES => $dependencyRefresh,
             JobType::REBUILD_AFFECTED_DEPENDENCIES => $affectedDependencyRefresh,
