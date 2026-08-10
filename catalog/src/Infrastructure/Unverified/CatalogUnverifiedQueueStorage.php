@@ -199,18 +199,14 @@ final class CatalogUnverifiedQueueStorage
     ): array {
         $md5 = @md5_file($path);
         $packageGuid = '';
-        $engine = strtoupper((string)(
-            $legacy['engine_hint']
-            ?? \gp_detect_from_extension(pathinfo($originalName, PATHINFO_EXTENSION))
-            ?? ''
-        ));
+        $engine = strtoupper(trim((string)($legacy['engine_hint'] ?? '')));
 
         if (in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
             try {
                 $header = \catalog_try_read_package_header($config, $engine, $path);
                 $packageGuid = trim(\catalog_header_guid($header));
             } catch (Throwable) {
-                // Keep MD5/legacy summary usable for unreadable packages.
+                // Keep MD5/header summary usable for unreadable packages.
             }
         }
 
@@ -267,11 +263,7 @@ final class CatalogUnverifiedQueueStorage
         $legacy = \gp_read_legacy_summary($path);
         $header = [
             'ok' => !empty($legacy['ok']),
-            'engine' => (string)(
-                $legacy['engine_hint']
-                ?? \gp_detect_from_extension(pathinfo($originalName, PATHINFO_EXTENSION))
-                ?? 'UNKNOWN'
-            ),
+            'engine' => (string)($legacy['engine_hint'] ?? 'UNKNOWN'),
             'version' => !empty($legacy['ok']) ? (int)($legacy['version'] ?? 0) : null,
             'licensee' => !empty($legacy['ok']) ? (int)($legacy['licensee'] ?? 0) : null,
             'note' => !empty($legacy['ok']) ? '' : (string)($legacy['reason'] ?? ''),
