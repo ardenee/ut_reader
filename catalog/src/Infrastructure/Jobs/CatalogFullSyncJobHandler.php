@@ -48,8 +48,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
         if ($gameId < 1) {
             throw new RuntimeException('Full Sync job requires a positive game_id.');
         }
-        $userId = (int)($job->payload['requested_by'] ?? 0);
-        $userId = $userId > 0 ? $userId : null;
+        $requestedBy = (int)($job->payload['requested_by'] ?? 0);
+        $userId = $requestedBy > 0 ? $requestedBy : null;
 
         $game = $this->one('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
         if ($game === null) {
@@ -94,6 +94,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 &$dependencyFailures
             ): void {
                 $innerPercent = max(0, min(100, (int)($inner['percent'] ?? 0)));
+                $innerMessage = trim((string)($inner['message'] ?? ''));
                 $overall = $this->phasePercent(0, 70, $currentIndex, max(1, $total), $innerPercent);
                 $context->heartbeatIfDue($this->progress(
                     'full_sync_reimport',
@@ -101,7 +102,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
                     max(1, $total),
                     $overall,
                     'Reimporting ' . ($currentIndex + 1) . '/' . max(1, $total) . ': ' . $currentName
-                        . ($inner['message'] ?? '' ? ' — ' . (string)$inner['message'] : ''),
+                        . ($innerMessage !== '' ? ' — ' . $innerMessage : ''),
                     $reimported,
                     $removed,
                     $reimportFailures,
