@@ -53,33 +53,39 @@ try {
             throw new RuntimeException('Update no more than 1,000 errors at once.');
         }
         $action = strtolower(trim((string)($_POST['action'] ?? '')));
-        $targetStatus = match ($action) {
-            'resolve' => 'resolved',
-            'ignore' => 'ignored',
-            'reopen' => 'open',
-            default => '',
-        };
-        if ($targetStatus === '') {
-            throw new RuntimeException('Choose Resolve, Ignore or Reopen.');
+        if (!in_array($action, ['resolve', 'ignore', 'reopen', 'delete'], true)) {
+            throw new RuntimeException('Choose Resolve, Ignore, Reopen or Delete.');
         }
-        $note = trim((string)($_POST['resolution_note'] ?? ''));
-        if (mb_strlen($note, 'UTF-8') > 500) {
-            $note = mb_substr($note, 0, 500, 'UTF-8');
-        }
+
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        if ($targetStatus === 'open') {
-            $sql = 'UPDATE ue_system_errors SET status="open",resolved_at=NULL,resolved_by=NULL,resolution_note=NULL '
-                . 'WHERE id IN (' . $placeholders . ')';
-            $args = $ids;
+        if ($action === 'delete') {
+            $statement = $db->prepare('DELETE FROM ue_system_errors WHERE id IN (' . $placeholders . ')');
+            $statement->execute($ids);
+            $message = $statement->rowCount() . ' system error record(s) deleted.';
         } else {
-            $sql = 'UPDATE ue_system_errors SET status=?,resolved_at=?,resolved_by=?,resolution_note=? '
-                . 'WHERE id IN (' . $placeholders . ')';
-            $args = [$targetStatus, gmdate('Y-m-d H:i:s'), (int)($_SESSION['user']['id'] ?? 0) ?: null, $note];
-            array_push($args, ...$ids);
+            $targetStatus = match ($action) {
+                'resolve' => 'resolved',
+                'ignore' => 'ignored',
+                'reopen' => 'open',
+            };
+            $note = trim((string)($_POST['resolution_note'] ?? ''));
+            if (mb_strlen($note, 'UTF-8') > 500) {
+                $note = mb_substr($note, 0, 500, 'UTF-8');
+            }
+            if ($targetStatus === 'open') {
+                $sql = 'UPDATE ue_system_errors SET status="open",resolved_at=NULL,resolved_by=NULL,resolution_note=NULL '
+                    . 'WHERE id IN (' . $placeholders . ')';
+                $args = $ids;
+            } else {
+                $sql = 'UPDATE ue_system_errors SET status=?,resolved_at=?,resolved_by=?,resolution_note=? '
+                    . 'WHERE id IN (' . $placeholders . ')';
+                $args = [$targetStatus, gmdate('Y-m-d H:i:s'), (int)($_SESSION['user']['id'] ?? 0) ?: null, $note];
+                array_push($args, ...$ids);
+            }
+            $statement = $db->prepare($sql);
+            $statement->execute($args);
+            $message = $statement->rowCount() . ' system error record(s) updated.';
         }
-        $statement = $db->prepare($sql);
-        $statement->execute($args);
-        $message = $statement->rowCount() . ' system error record(s) updated.';
     }
 
     $status = system_error_filter((string)($_GET['status'] ?? 'open'), ['open', 'resolved', 'ignored', 'all'], 'open');
@@ -221,10 +227,10 @@ try {
     if (!$available || $rows === []) {
         echo CatalogUi::emptyState('No matching system errors', $available ? 'No persistent errors match the current filters.' : 'Apply the database migration to begin recording errors.');
     } else {
-        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('system_errors')) . '">';
+        echo '<form method="post" onsubmit="return this.elements[\'action\'].value!==\'delete\' || confirm(\'Permanently delete the selected System Error records?\')"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('system_errors')) . '">';
         echo '<div class="system-error-actions">'
             . '<label><input type="checkbox" onclick="document.querySelectorAll(\'.system-error-check\').forEach(c=>c.checked=this.checked)"> Select page</label>'
-            . '<select name="action" required><option value="">Choose action</option><option value="resolve">Resolve</option><option value="ignore">Ignore</option><option value="reopen">Reopen</option></select>'
+            . '<select name="action" required><option value="">Choose action</option><option value="resolve">Resolve</option><option value="ignore">Ignore</option><option value="reopen">Reopen</option><option value="delete">Delete permanently</option></select>'
             . '<input name="resolution_note" maxlength="500" placeholder="Optional resolution note">'
             . '<button type="submit">Apply to selected</button></div>';
         echo '<div class="table-wrap"><table class="system-error-table"><colgroup>'
