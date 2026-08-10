@@ -79,7 +79,6 @@ $criticalPhp = [
     'src/Infrastructure/Import/CatalogBucketProcessingStateService.php',
     'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
     'src/Infrastructure/Import/CatalogBucketUploadTransferStoreFactory.php',
-    'migrations/202608080001_background_job_display_status.php',
 ];
 
 if (!function_exists('proc_open')) {
@@ -183,13 +182,13 @@ foreach ([
 }
 
 $statusHelper = $read('src/Infrastructure/Jobs/CatalogJobDisplayStatus.php');
-$migration = $read('migrations/202608080001_background_job_display_status.php');
+$installSql = $read('install.sql');
 $record(
     'indexed_display_status_source',
     str_contains($statusHelper, 'display_status')
-        && str_contains($migration, 'GENERATED ALWAYS AS')
-        && str_contains($migration, 'idx_ue_background_jobs_queue_display_id'),
-    'display status must remain generated and indexed'
+        && str_contains($installSql, 'GENERATED ALWAYS AS')
+        && str_contains($installSql, 'idx_ue_background_jobs_queue_display_id'),
+    'display status must remain generated and indexed in the consolidated schema'
 );
 
 $pathPolicy = $read('src/Infrastructure/Import/CatalogImportPathPolicy.php');
