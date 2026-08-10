@@ -1,6 +1,6 @@
 -- consolidated schema assembly boundary 1
 -- UnrealDB consolidated catalog schema
--- Consolidated migration baseline: 202608030001
+-- Consolidated migration baseline: 202608090002
 -- Canonical baseline for a new, empty MySQL 8+ or MariaDB database.
 -- Do not import this over a populated catalog. Test a dedicated upgrade path first.
 
@@ -512,7 +512,7 @@ VALUES ('manual', 'Manual external link', 'ManualProvider', 1, JSON_OBJECT(), 10
 
 
 -- =====================================================================
--- Consolidated migration baseline through 202608030001
+-- Consolidated migration baseline through 202608090002
 -- Historical migration files up to this version are represented below.
 -- =====================================================================
 
@@ -1246,5 +1246,59 @@ CREATE TABLE ue_dependency_links (
   KEY idx_ue_dependency_object_term (required_object_term_id, status, file_id),
   KEY idx_ue_dependency_import_object (import_object_term_id, file_id, import_index)
 ) ENGINE=InnoDB;
+
+-- 202608060001: administrator-controlled background-job resource limits.
+CREATE TABLE ue_job_resource_limits (
+  resource_class VARCHAR(80) NOT NULL,
+  limit_value SMALLINT UNSIGNED NOT NULL,
+  updated_by INT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (resource_class),
+  KEY idx_ue_job_resource_limits_updated_by (updated_by)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO ue_job_resource_limits (resource_class,limit_value) VALUES
+('dependency-heavy',1),
+('search-heavy',1),
+('import-heavy',8),
+('archive-import-heavy',1),
+('bucket-processing',8),
+('storage-heavy',1),
+('package-heavy',1),
+('housekeeping',2),
+('default',4);
+
+-- 202608080001: indexed generated background-job display status.
+ALTER TABLE ue_background_jobs ADD COLUMN display_status VARCHAR(120)
+GENERATED ALWAYS AS (
+  CASE
+    WHEN LOWER(status)<>"completed" THEN LOWER(status)
+    WHEN LOWER(TRIM(COALESCE(IF(JSON_VALID(result_json),JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")),NULL),""))) IN ("","completed") THEN "completed"
+    WHEN LOWER(TRIM(COALESCE(IF(JSON_VALID(result_json),JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")),NULL),"")))="verified" THEN "imported"
+    ELSE LOWER(TRIM(COALESCE(IF(JSON_VALID(result_json),JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.status")),NULL),"")))
+  END
+) STORED AFTER status;
+
+CREATE INDEX idx_ue_background_jobs_queue_display_id
+  ON ue_background_jobs(queue_name,display_status,id);
+CREATE INDEX idx_ue_background_jobs_display_id
+  ON ue_background_jobs(display_status,id);
+
+-- 202608090001: compressed staging metadata for unverified packages.
+CREATE TABLE ue_unverified_metadata (
+  file_id BIGINT UNSIGNED NOT NULL,
+  format_version TINYINT UNSIGNED NOT NULL DEFAULT 1,
+  codec VARCHAR(32) NOT NULL DEFAULT "gzip-json",
+  name_count INT UNSIGNED NOT NULL DEFAULT 0,
+  import_count INT UNSIGNED NOT NULL DEFAULT 0,
+  export_count INT UNSIGNED NOT NULL DEFAULT 0,
+  uncompressed_size BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  compressed_size BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  payload LONGBLOB NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (file_id),
+  CONSTRAINT fk_ue_unverified_metadata_file FOREIGN KEY (file_id) REFERENCES ue_files(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
