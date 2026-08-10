@@ -42,6 +42,7 @@ $files = [
     'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Persistence/PdoPackageProviderRepository.php',
+    'src/Infrastructure/Storage/CatalogVerifiedPackageStorage.php',
 ];
 
 if (!function_exists('proc_open')) {
@@ -113,6 +114,7 @@ $record(
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
 $persistence = $read('src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php');
+$storage = $read('src/Infrastructure/Storage/CatalogVerifiedPackageStorage.php');
 $record(
     'maintenance_importer_stable_id_contract',
     str_contains($importer, 'maintenance_replace_file_id')
@@ -121,6 +123,13 @@ $record(
         && str_contains($persistence, 'int $replaceFileId = 0')
         && str_contains($persistence, 'UPDATE ue_files SET '),
     'Maintenance refresh must exclude its own identity from duplicate detection and update that row in place.'
+);
+$record(
+    'maintenance_scanner_copy_cleanup_is_windows_safe',
+    str_contains($importer, '$maintenanceReplaceFileId === 0')
+        && str_contains($storage, 'bool $discardDuplicateSource = true')
+        && str_contains($storage, 'if ($discardDuplicateSource'),
+    'Normal uploads discard duplicate temporary files immediately; stable-ID maintenance leaves its scanner copy for outer cleanup after reader use.'
 );
 
 $removal = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php');
