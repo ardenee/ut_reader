@@ -98,7 +98,7 @@ $record(
 $reimport = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php');
 $record(
     'full_sync_reimport_preserves_file_identity',
-    str_contains($reimport, "'maintenance_replace_file_id' => $fileId")
+    str_contains($reimport, "'maintenance_replace_file_id' => \$fileId")
         && str_contains($reimport, 'stable file ID preserved=')
         && str_contains($reimport, 'restoreExistingSnapshot($snapshot)')
         && !str_contains($reimport, 'DELETE FROM ue_files'),
