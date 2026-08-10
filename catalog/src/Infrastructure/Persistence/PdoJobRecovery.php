@@ -23,6 +23,20 @@ final class PdoJobRecovery
     {
         $queue = PdoJobQueueSupport::requiredIdentifier($queue, 'queue');
         $timestamp = PdoJobQueueSupport::now()->format('Y-m-d H:i:s');
+
+        // Normal worker claims should not open a write transaction and execute
+        // three status-changing UPDATE scans when there is nothing to recover.
+        // This is a non-locking existence check, not a throttle: every claim can
+        // still recover an expired lease immediately when one actually exists.
+        $expired = $this->db->prepare(
+            'SELECT 1 FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status="running" AND lease_expires_at<? LIMIT 1'
+        );
+        $expired->execute([$queue, $timestamp]);
+        if (!$expired->fetchColumn()) {
+            return ['requeued' => 0, 'cancelled' => 0, 'dead_lettered' => 0];
+        }
+
         $this->db->beginTransaction();
         try {
             $cancel = $this->db->prepare(
