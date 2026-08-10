@@ -27,13 +27,13 @@ The historical background-job type `catalog.rebuild_file_search_index` remains a
 
 ### Package examination
 
-Names, Imports and Exports are loaded in bounded pages. Full CSV and JSON exports stream rows in batches instead of loading complete tables into PHP memory.
+Names, Imports and Exports are loaded in bounded pages from the current compact per-file metadata representation. Full CSV and JSON exports stream rows in batches instead of loading complete package tables into PHP memory.
 
-Per-file compressed metadata is stored in `ue_file_metadata`, with reusable string terms and compact export/dependency lookup rows. Legacy parser-detail tables are retained only where compatibility paths still require them; new broad search does not scan them.
+Per-file compressed metadata is stored in `ue_file_metadata`, with reusable string terms and compact export/dependency lookup rows. The retired row-per-object metadata tables are physically absent and are not runtime fallback sources.
 
 ### Imports and maintenance
 
-Parser rows are written in bounded batches. Dependency rebuilds, projection reconciliation, package generation and other long-running work use durable background jobs.
+Parser output is published directly into current compact metadata and projections. Dependency rebuilds, projection reconciliation, package generation and other long-running work use durable background jobs.
 
 `catalog.reconcile_catalog_projections` receives old and new game/package context. It reconciles package providers, dependency summaries and cached game statistics, including deleted-file and game-reset cases.
 
@@ -47,7 +47,7 @@ Federation inventory, request, transfer and log pages use signed keyset cursors.
 
 ## Schema baseline
 
-`catalog/install.sql` is the canonical empty-database schema through baseline `202608030001`. Historical migration PHP files through that version have been consolidated and removed.
+`catalog/install.sql` is the canonical empty-database schema through baseline `202608090002`. Historical migration PHP files through that version have been consolidated and removed.
 
 For an existing database:
 
@@ -57,7 +57,7 @@ php catalog\bin\migrate.php migrate
 php catalog\bin\migrate.php verify
 ```
 
-Applied historical migration rows at or below the baseline are reported as archived. Future migrations must use a version greater than `202608030001`.
+Applied historical migration rows at or below the baseline are reported as archived. Future migrations must use a version greater than `202608090002`.
 
 Do not import `catalog/install.sql` over a populated database.
 
