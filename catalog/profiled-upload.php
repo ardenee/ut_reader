@@ -99,7 +99,15 @@ function profiled_upload_enqueue(PDO $db, array $config): array
             // for SHA-256 here; authoritative content hashes are calculated by
             // the background importer after the complete batch is staged.
             $staged = $store->stageUploadedFile($temporaryPath, $originalName, false);
-            $queued = $queue->enqueueStaged($gameId, $staged, $originalName, $displayName, $strict, $userId);
+            $queued = $queue->enqueueStaged(
+                $gameId,
+                $staged,
+                $originalName,
+                $displayName,
+                $strict,
+                $userId,
+                $deferWorkerStart
+            );
         } catch (Throwable $error) {
             if (is_array($staged) && isset($staged['relative_path'])) {
                 $store->delete((string)$staged['relative_path']);
@@ -113,8 +121,10 @@ function profiled_upload_enqueue(PDO $db, array $config): array
             'status' => 'queued',
             'file' => $displayName,
             'message' => !empty($queued['deduplicated'])
-                ? 'The same file is already queued or running as job #' . $queued['job_id'] . '.'
-                : 'Upload durably staged for background import as job #' . $queued['job_id'] . '.',
+                ? 'The same staged file is already represented by job #' . $queued['job_id'] . '.'
+                : ($deferWorkerStart
+                    ? 'Upload durably staged as held background job #' . $queued['job_id'] . '; it will be released after this browser batch finishes staging.'
+                    : 'Upload durably staged for background import as job #' . $queued['job_id'] . '.'),
             'file_size_text' => catalog_bytes($queued['size']),
             'job_id' => $queued['job_id'],
         ];
@@ -144,6 +154,42 @@ function profiled_upload_enqueue(PDO $db, array $config): array
     ];
 }
 
+/** @return array{released:int,requested:int,worker:array<string,mixed>|null,worker_error:string} */
+function profiled_upload_release_batch(PDO $db, array $config): array
+{
+    catalog_check_csrf('profiled_upload');
+    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+    if ($userId < 1) {
+        throw new RuntimeException('Administrator authentication is required to release upload jobs.');
+    }
+    $raw = (string)($_POST['job_ids'] ?? '[]');
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded)) {
+        throw new RuntimeException('Upload batch job list is invalid.');
+    }
+    $ids = array_values(array_unique(array_filter(
+        array_map('intval', $decoded),
+        static fn(int $id): bool => $id > 0
+    )));
+    if ($ids === []) {
+        throw new RuntimeException('Upload batch contains no queued jobs to release.');
+    }
+
+    $released = (new CatalogProfiledUploadQueue($db, $config))->releaseHeldJobs($ids, $userId);
+    $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    $workerState = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+    $workerError = (string)($workerState['worker_error'] ?? '');
+    if ($workerError !== '') {
+        error_log('[UnrealDB profiled upload batch release worker launch] ' . $workerError);
+    }
+    return [
+        'released' => $released,
+        'requested' => count($ids),
+        'worker' => is_array($workerState['worker'] ?? null) ? $workerState['worker'] : null,
+        'worker_error' => $workerError,
+    ];
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -161,16 +207,22 @@ try {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $result = profiled_upload_enqueue($db, $config);
+        if ((string)($_POST['action'] ?? '') === 'release_batch') {
+            $result = profiled_upload_release_batch($db, $config);
+        } else {
+            $result = profiled_upload_enqueue($db, $config);
+        }
         if ((string)($_POST['ajax'] ?? '') === '1') {
             header('Content-Type: application/json');
             header('Cache-Control: no-store');
             echo json_encode(['ok' => true] + $result, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             exit;
         }
-        $_SESSION['profiled_upload_flash'] = $result['worker_error'] !== ''
-            ? 'Queued ' . count($result['jobs']) . ' import job(s), but the detached worker could not be started: ' . $result['worker_error']
-            : 'Queued ' . count($result['jobs']) . ' import job(s) and started the detached worker.';
+        $_SESSION['profiled_upload_flash'] = isset($result['released'])
+            ? 'Released ' . (int)$result['released'] . ' staged import job(s) for background processing.'
+            : ($result['worker_error'] !== ''
+                ? 'Queued ' . count($result['jobs']) . ' import job(s), but the detached worker could not be started: ' . $result['worker_error']
+                : 'Queued ' . count($result['jobs']) . ' import job(s) and started the detached worker.');
         header('Location: profiled-upload.php?game_id=' . (int)($_POST['game_id'] ?? 0));
         exit;
     }
@@ -189,7 +241,7 @@ try {
     unset($_SESSION['profiled_upload_flash']);
     catalog_page_header(
         'Upload Files',
-        'Files are first copied into durable controlled staging as quickly as possible. After the selected batch is fully staged, detached CLI workers perform decompression, header validation, hashing and import in the background; you do not need to keep this page open while jobs run.',
+        'Files are first copied into durable controlled staging as quickly as possible. Jobs remain unclaimable while the selected browser batch is uploading. After the batch is fully staged, all of its jobs are released together and detached CLI workers perform decompression, header validation, hashing and import in the background; you do not need to keep this page open while jobs run.',
         [
             'Background Jobs' => 'background-jobs.php',
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
