@@ -1,0 +1,155 @@
+#!/usr/bin/env php
+<?php
+/**
+ * Purpose: Verifies package reader selection is serialized-header-only and Profiled Upload stages the whole browser batch before worker processing starts.
+ * Role: Read-only/no-database regression gate for upload correctness and ingress performance.
+ */
+declare(strict_types=1);
+
+if (PHP_SAPI !== 'cli') {
+    fwrite(STDERR, "CLI only.\n");
+    exit(1);
+}
+
+$root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
+$checks = [];
+$failures = [];
+$record = static function (string $name, bool $ok, string $detail = '') use (&$checks, &$failures): void {
+    $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
+    if (!$ok) {
+        $failures[] = $name . ($detail !== '' ? ': ' . $detail : '');
+    }
+};
+$read = static function (string $relative) use ($root): string {
+    $content = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
+    return is_string($content) ? $content : '';
+};
+
+$phpFiles = [
+    'lib/GameProfiles.php',
+    'lib/CompatibilityRules.php',
+    'profiled-upload.php',
+    'api/v1/profiled-upload-chunk.php',
+    'src/Infrastructure/Games/CatalogGameProfileAdminService.php',
+    'src/Infrastructure/Import/CatalogIncomingFileStore.php',
+    'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+];
+$syntaxFailures = [];
+if (!function_exists('proc_open')) {
+    $syntaxFailures[] = 'proc_open unavailable';
+} else {
+    foreach ($phpFiles as $relative) {
+        $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        $pipes = [];
+        $process = proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+        if (!is_resource($process)) {
+            $syntaxFailures[] = $relative . ' could not be linted';
+            continue;
+        }
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exit = proc_close($process);
+        if ($exit !== 0) {
+            $syntaxFailures[] = $relative . ': ' . trim((string)$stderr . ' ' . (string)$stdout);
+        }
+    }
+}
+$record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
+
+try {
+    require_once $root . '/lib/GameProfiles.php';
+    $record(
+        'extension_never_selects_engine',
+        gp_detect_from_extension('u') === null
+            && gp_detect_from_extension('utx') === null
+            && gp_detect_from_extension('ut2') === null
+            && gp_detect_from_extension('ut3') === null
+            && gp_detect_from_extension('uasset') === null,
+        'Filename extensions must have zero authority over UE1/UE2/UE3/UE4/UE5 reader selection.'
+    );
+    $record(
+        'header_version_selects_supported_legacy_engine',
+        gp_engine_from_version(69) === 'UE1'
+            && gp_engine_from_version(128) === 'UE2'
+            && gp_engine_from_version(512) === 'UE3'
+            && gp_engine_from_version(8261) === null,
+        'Legacy engine-family hints must come from serialized package versions only.'
+    );
+} catch (Throwable $error) {
+    $record('header_only_runtime_helpers', false, get_class($error) . ': ' . $error->getMessage());
+}
+
+$profiles = $read('lib/GameProfiles.php');
+$compatibility = $read('lib/CompatibilityRules.php');
+$importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$profileAdmin = $read('src/Infrastructure/Games/CatalogGameProfileAdminService.php');
+$record(
+    'classification_has_no_extension_or_profile_fallback',
+    !str_contains($profiles, '$engineByExt')
+        && !str_contains($profiles, '$engineByVersion ?: $engineByExt')
+        && !str_contains($profiles, "?: (\$selectedEngine ?: 'UNKNOWN')")
+        && str_contains($profiles, "filename and extension fallback is disabled"),
+    'Unknown/corrupt headers must remain UNKNOWN instead of borrowing the extension or selected profile.'
+);
+$record(
+    'primary_importer_has_no_extension_gate_or_reader_fallback',
+    !str_contains($importer, '$profileExtensions')
+        && !str_contains($importer, 'Extension not allowed by assigned profile')
+        && !str_contains($importer, "\$readerEngine = \$profileEngine")
+        && str_contains($importer, 'serialized header data'),
+    'Primary import must neither reject by extension nor fall back to the selected profile reader.'
+);
+$record(
+    'compatibility_rules_ignore_filename_fields',
+    !str_contains($compatibility, 'compat_rule_extensions(')
+        && !str_contains($compatibility, 'in_array($extension')
+        && str_contains($profileAdmin, "unset(\$rule['extensions']"),
+    'Compatibility acceptance must use detected engine/version/licensee header facts only.'
+);
+
+$uploadPage = $read('profiled-upload.php');
+$uploadJs = $read('assets/profiled-upload-jobs.js');
+$chunkApi = $read('api/v1/profiled-upload-chunk.php');
+$incoming = $read('src/Infrastructure/Import/CatalogIncomingFileStore.php');
+$record(
+    'browser_does_not_wait_for_import_jobs',
+    !str_contains($uploadJs, 'waitForJob(')
+        && !str_contains($uploadJs, 'readJob(')
+        && !str_contains($uploadJs, 'job-status.php')
+        && str_contains($uploadJs, "defer_worker_start', '1")
+        && str_contains($uploadJs, 'All selected files have finished browser upload/staging'),
+    'Each file must be durably staged and the next upload started immediately; job polling belongs on Background Jobs.'
+);
+$record(
+    'workers_start_after_batch_staging',
+    str_contains($uploadPage, '$deferWorkerStart')
+        && str_contains($uploadPage, 'if (!$deferWorkerStart)')
+        && str_contains($chunkApi, '$deferWorkerStart')
+        && str_contains($chunkApi, 'if (!$deferWorkerStart)')
+        && substr_count($uploadJs, 'await ensureWorker();') === 1,
+    'Profiled Upload must defer worker launch for each file and start the queue once after the upload loop exits.'
+);
+$record(
+    'normal_http_staging_skips_whole_file_sha256',
+    str_contains($uploadPage, 'stageUploadedFile($temporaryPath, $originalName, false)')
+        && str_contains($incoming, 'bool $hashNow = true')
+        && str_contains($incoming, 'if ($hashNow)')
+        && str_contains($incoming, "\$sha256 = '';"),
+    'Normal browser ingress must not reread a just-uploaded file solely to SHA-256 it before returning the HTTP response.'
+);
+$record(
+    'upload_ui_states_background_independence',
+    str_contains($uploadPage, 'you do not need to keep this page open while jobs run')
+        && str_contains($uploadJs, 'processing continues independently'),
+    'The UI must describe the durable staging/background-processing boundary accurately.'
+);
+
+$result = [
+    'ok' => $failures === [],
+    'checks' => $checks,
+    'failures' => $failures,
+];
+fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+exit($failures === [] ? 0 : 2);
