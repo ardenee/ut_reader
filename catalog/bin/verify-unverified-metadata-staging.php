@@ -7,6 +7,8 @@
 declare(strict_types=1);
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
+require_once $root . '/src/Application/Maintenance/LegacyMetadataRuntimeAudit.php';
+
 $withDatabase = in_array('--database', array_slice($argv, 1), true);
 $failures = [];
 $checks = [];
@@ -30,13 +32,10 @@ $activeFiles = [
     'src/Infrastructure/Unverified/CatalogUnverifiedMetadataRepairService.php',
     'src/Infrastructure/Games/PdoCatalogGameTableMaintenance.php',
 ];
-$legacyTables = ['ue_names', 'ue_imports', 'ue_exports', 'ue_dependencies'];
+$legacyTables = \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataTables();
 foreach ($activeFiles as $relative) {
     $source = (string)@file_get_contents($root . '/' . $relative);
-    $hits = [];
-    foreach ($legacyTables as $table) {
-        if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $source) === 1) $hits[] = $table;
-    }
+    $hits = \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataReferences($source);
     $record('source_no_legacy_tables:' . $relative, $source !== '' && $hits === [], implode(',', $hits));
 }
 
