@@ -94,10 +94,11 @@ function gp_engine_from_version(?int $version): ?string
         return null;
     }
 
-    // The UE3 package-summary layout starts at version 334. The UE3 reader has
-    // always used this boundary; keeping detection at 500 incorrectly sent early
-    // UE3 packages (including .u files) through the UE1/UE2 header layout.
-    if ($version >= 334) {
+    // Epic UE3 package-summary versions begin at 334 and the available Epic
+    // source defines engine package versions through 867. Values outside that
+    // range must not become self-fulfilling UE3 detection hints: damaged or
+    // protected UE1 packages can contain arbitrary high bytes in this field.
+    if ($version >= 334 && $version <= 867) {
         return 'UE3';
     }
     if ($version >= 100 && $version <= 199) {
