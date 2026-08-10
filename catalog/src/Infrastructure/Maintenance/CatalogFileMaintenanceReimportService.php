@@ -37,21 +37,45 @@ final class CatalogFileMaintenanceReimportService
         ?callable $progress = null,
         bool $deferDependencyRefresh = false
     ): array {
-        $snapshot = \catalog_file_maintenance_snapshot($this->db, $fileId, $this->config);
-        $file = (array)$snapshot['file'];
+        $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
+
+        // Capture the authoritative relational identity first. This path deliberately
+        // does not read .uedb2 so a damaged derived metadata file cannot prevent the
+        // maintenance operation whose purpose is to rebuild it from the stored package.
+        $reimportState = $support->reimportState($fileId);
+        $file = (array)$reimportState['file'];
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         if ($storedPath === null || !is_file($storedPath)) {
             throw new RuntimeException('The stored package file is missing, so it cannot be re-imported.');
         }
 
-        $sourceRelativePath = \catalog_file_maintenance_source_relative_path($snapshot);
+        $sourceRelativePath = \catalog_file_maintenance_source_relative_path($reimportState);
         $scannerOriginalName = \scanner_original_name_from_source_relative($sourceRelativePath);
         if ($scannerOriginalName === '') {
             $scannerOriginalName = (string)$file['original_name'];
         }
 
+        $snapshot = null;
+        $repairingCompactMetadata = false;
+        $snapshotFailureMessage = '';
+        try {
+            $snapshot = $support->snapshot($fileId);
+        } catch (Throwable $snapshotError) {
+            $repairingCompactMetadata = true;
+            $snapshotFailureMessage = trim($snapshotError->getMessage());
+            \catalog_file_maintenance_emit(
+                $progress,
+                'compact_metadata',
+                0,
+                'Existing compact metadata is unreadable; rebuilding it from the authoritative stored package'
+            );
+            error_log(
+                '[UnrealDB reimport repair] file_id=' . $fileId
+                . ' existing compact metadata snapshot unavailable: ' . $snapshotFailureMessage
+            );
+        }
+
         $inputPath = $storedPath . '.reimport-' . bin2hex(random_bytes(8)) . '.input';
-        $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
         \catalog_file_maintenance_emit(
             $progress,
             'reimport',
@@ -63,6 +87,7 @@ final class CatalogFileMaintenanceReimportService
             throw new RuntimeException('Could not prepare a scanner copy of the stored package.');
         }
 
+        $replacementPublished = false;
         try {
             $gameId = (int)$file['game_id'];
             $oldPackageName = (string)$file['package_name'];
@@ -96,6 +121,11 @@ final class CatalogFileMaintenanceReimportService
             if ((int)($result[1] ?? 0) !== $fileId) {
                 throw new RuntimeException('Maintenance refresh unexpectedly changed the stable catalog file ID.');
             }
+
+            // scanner_scan_uploaded_file() only returns a verified result after
+            // VerifiedFileCompactMetadataFinalizer has atomically published and
+            // verified the freshly parsed metadata container.
+            $replacementPublished = true;
 
             $replacement = \catalog_one(
                 $this->db,
@@ -159,6 +189,9 @@ final class CatalogFileMaintenanceReimportService
                     . ($sourceRelativePath !== ''
                         ? '; reimport source=' . $sourceRelativePath
                         : '; reimport source unavailable, used stored filename metadata')
+                    . ($repairingCompactMetadata
+                        ? '; repaired unreadable compact metadata from authoritative package'
+                        : '')
                     . $storageWarning,
             ];
         } catch (Throwable $error) {
@@ -175,7 +208,23 @@ final class CatalogFileMaintenanceReimportService
             }
 
             try {
-                $support->restoreExistingSnapshot($snapshot);
+                if (is_array($snapshot)) {
+                    $support->restoreExistingSnapshot($snapshot);
+                } elseif (!$replacementPublished) {
+                    // The old compact metadata was already unreadable. If reparsing or
+                    // publication failed, the compact writer has rolled its own changes
+                    // back atomically; restore only the ue_files row changed by persist().
+                    $support->restoreReimportFileRow($reimportState);
+                } else {
+                    // Do not replace a successfully repaired metadata container with the
+                    // known-bad state merely because a later projection/reconciliation
+                    // step failed. The downstream maintenance pass can retry that work.
+                    error_log(
+                        '[UnrealDB reimport repair] file_id=' . $fileId
+                        . ' retained successfully republished compact metadata after later failure: '
+                        . $error->getMessage()
+                    );
+                }
             } catch (Throwable $restoreError) {
                 error_log(
                     '[UnrealDB reimport rollback] file_id=' . $fileId
