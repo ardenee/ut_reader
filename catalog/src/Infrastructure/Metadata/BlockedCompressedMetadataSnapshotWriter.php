@@ -95,6 +95,11 @@ final class BlockedCompressedMetadataSnapshotWriter
             }
             $published = true;
 
+            // filesize()/is_file() results for $path may have been cached while the
+            // previous container was still present. The verification below must see
+            // the replacement that was just published at the same stable path.
+            clearstatcache(true, $path);
+
             $this->db->commit();
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {
@@ -107,6 +112,7 @@ final class BlockedCompressedMetadataSnapshotWriter
                 @rename($backupPath, $path);
             }
             @unlink($temporaryPath);
+            clearstatcache(true, $path);
             throw $error;
         }
 
@@ -114,6 +120,9 @@ final class BlockedCompressedMetadataSnapshotWriter
             @unlink($backupPath);
         }
 
+        // Publishing replaces an existing filename in-place. Always invalidate PHP's
+        // stat cache before comparing the on-disk size with ue_file_metadata.
+        clearstatcache(true, $path);
         $verified = (new BlockedCompressedMetadataReader($this->db, $this->storageRoot))->verify($fileId);
         return array_merge($verified, [
             'sql_batches' => $sqlBatches,
