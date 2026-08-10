@@ -38,14 +38,26 @@
 
     function renderQueued(data) {
         resultBox.innerHTML = '';
+        var warning = String(data.worker_warning || '').trim();
         var alert = document.createElement('div');
-        alert.className = 'alert alert-success';
+        alert.className = warning ? 'alert alert-warning' : 'alert alert-success';
 
         var text = document.createElement('div');
         text.textContent = 'Full Sync queued as background job #' + Number(data.job_id || 0)
-            + ' for ' + String(data.game_name || 'the selected game')
-            + '. You can leave this page; the worker owns the sync now.';
+            + ' for ' + String(data.game_name || 'the selected game') + '.';
         alert.appendChild(text);
+
+        var workerText = document.createElement('div');
+        if (warning) {
+            workerText.textContent = warning + ' The job remains safely queued; open Background Jobs to review the pool.';
+        } else {
+            var active = Number(data.worker_active_count || 0);
+            var requested = Number(data.worker_requested_count || 0);
+            workerText.textContent = 'Worker pool ready'
+                + (requested > 0 ? ' (' + active + '/' + requested + ' active)' : '')
+                + '. You can leave this page; the worker owns the sync now.';
+        }
+        alert.appendChild(workerText);
 
         var actions = document.createElement('p');
         actions.className = 'button-row';
@@ -73,7 +85,7 @@
             renderError('Select a valid game before starting Full Sync.');
             return;
         }
-        if (!window.confirm('Queue a full game rescan and dependency rebuild? This may run for many hours, but you can leave the page once it is queued.')) {
+        if (!window.confirm('Queue a full game rescan and dependency rebuild? This may run for many hours, but you can leave the page once it is queued and the worker pool is ready.')) {
             return;
         }
 
@@ -82,7 +94,7 @@
             submitButton.dataset.originalText = submitButton.textContent || '';
             submitButton.textContent = 'Queueing Full Sync…';
         }
-        resultBox.textContent = 'Queueing durable Full Sync job…';
+        resultBox.textContent = 'Queueing durable Full Sync job and waking the worker pool…';
 
         fetch(actionUrl, {
             method: 'POST',
