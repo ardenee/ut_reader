@@ -171,15 +171,26 @@ final class CatalogBackgroundJobResultHydrator
         if ($expectedName === '' || $resultName === '' || strcasecmp($expectedName, $resultName) === 0) {
             return true;
         }
-        if ($jobType !== JobType::PROCESS_BUCKET_UPLOAD || trim((string)($result['decoder'] ?? '')) === '') {
-            return false;
-        }
+
         $extension = strtolower((string)pathinfo($expectedName, PATHINFO_EXTENSION));
         if (!in_array($extension, ['uz', 'uz2', 'uz3'], true)) {
             return false;
         }
         $packageName = substr($expectedName, 0, -strlen('.' . $extension));
-        return is_string($packageName) && $packageName !== '' && strcasecmp($packageName, $resultName) === 0;
+        if (!is_string($packageName) || $packageName === '' || strcasecmp($packageName, $resultName) !== 0) {
+            return false;
+        }
+
+        if ($jobType === JobType::IMPORT_STAGED_PACKAGE) {
+            if (empty($result['decompressed'])) {
+                return false;
+            }
+            $redirectSourceName = trim((string)($result['redirect_source_name'] ?? ''));
+            return $redirectSourceName === '' || strcasecmp($redirectSourceName, $expectedName) === 0;
+        }
+
+        return $jobType === JobType::PROCESS_BUCKET_UPLOAD
+            && trim((string)($result['decoder'] ?? '')) !== '';
     }
 
     /** @param array<string,mixed>|null $progress @param array<string,mixed> $result */
