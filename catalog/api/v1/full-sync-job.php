@@ -1,15 +1,16 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Queues one durable Full Sync job for an administrator-selected game.
- * Why: Full Sync can run for many hours and must not depend on a browser request or tab staying alive.
- * Role: Thin HTTP adapter over the durable background-job queue.
+ * Purpose: Queues one durable Full Sync job for an administrator-selected game and wakes the durable worker pool.
+ * Why: Full Sync can run for many hours and must not depend on a browser request, tab, or a second manual Start click.
+ * Role: Thin HTTP adapter over the durable background-job queue and worker-pool reconciler.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogWorkerPoolReconciler;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -59,6 +60,39 @@ try {
         1
     );
 
+    // The enqueue is durable. Once CSRF/auth/session state is no longer needed,
+    // release the session lock and synchronously wake/reconcile the detached pool.
+    // Worker startup failure must never discard or misreport the successfully
+    // queued job; return the queued job with a warning so Background Jobs can
+    // still be used to recover it manually.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    $workerReady = false;
+    $workerStarted = false;
+    $workerActiveCount = 0;
+    $workerRequestedCount = 0;
+    $workerWarning = '';
+    try {
+        $workerResult = (new CatalogWorkerPoolReconciler($application->db, $application->config))
+            ->run($queueName, 'drain', null, $userId);
+        $workerState = is_array($workerResult['worker'] ?? null) ? $workerResult['worker'] : [];
+        $workerReady = !empty($workerResult['pool_satisfied']);
+        $workerStarted = !empty($workerResult['started']) || $workerActiveCount > 0;
+        $workerActiveCount = max(0, (int)($workerState['active_count'] ?? 0));
+        $workerRequestedCount = max(0, (int)($workerResult['workers'] ?? $workerState['desired_count'] ?? 0));
+        if (!$workerReady) {
+            $summary = trim((string)($workerResult['slot_summary'] ?? ''));
+            $workerWarning = 'Full Sync is queued, but the requested worker pool was not fully ready.'
+                . ($summary !== '' ? ' ' . $summary : '');
+        }
+    } catch (Throwable $workerError) {
+        $workerWarning = 'Full Sync is queued, but the worker pool could not be started automatically: '
+            . $workerError->getMessage();
+        error_log('[UnrealDB Full Sync worker wake] ' . $workerError->getMessage());
+    }
+
     JsonResponse::send([
         'data' => [
             'job_id' => $jobId,
@@ -68,6 +102,11 @@ try {
             'game_id' => $gameId,
             'game_name' => (string)$game['name'],
             'verified_files' => (int)$game['verified_files'],
+            'worker_ready' => $workerReady,
+            'worker_started' => $workerStarted,
+            'worker_active_count' => $workerActiveCount,
+            'worker_requested_count' => $workerRequestedCount,
+            'worker_warning' => $workerWarning,
         ],
     ], 202);
 } catch (Throwable $error) {
