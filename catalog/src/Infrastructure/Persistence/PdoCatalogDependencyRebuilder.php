@@ -2,7 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Rebuilds dependency resolution for verified files from authoritative format-2 metadata.
- * Why: Dependency maintenance must not fall back to retired SQL Import/Dependency projections.
+ * Why: Dependency maintenance must not fall back to retired SQL Import/Dependency projections, and unrelated files
+ *      must not serialize behind the global catalog identity-write lock.
  * Role: Primary compact dependency rebuild implementation used by durable jobs and scanner compatibility delegates.
  */
 declare(strict_types=1);
@@ -11,11 +12,15 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use RuntimeException;
+use Throwable;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogAffectedDependencyRefreshCoordinator;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactDependencyRebuilder;
 
 final class PdoCatalogDependencyRebuilder
 {
+    private const FILE_LOCK_PREFIX = 'unrealdb_dependency_file_v1_';
+    private const FILE_LOCK_WAIT_SECONDS = 15;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -28,49 +33,79 @@ final class PdoCatalogDependencyRebuilder
         ?callable $progress = null,
         int $startPercent = 0,
         int $endPercent = 100,
-        string $prefix = 'Rebuilding dependencies'
+        string $prefix = 'Rebuilding dependencies',
+        bool $refreshSummary = true
     ): void {
-        if ($this->db->inTransaction()) {
-            throw new RuntimeException('Compact dependency rebuilding cannot run inside an existing database transaction.');
-        }
-
-        $statement = $this->db->prepare(
-            'SELECT f.scan_status,m.format_version FROM ue_files f '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE f.id=?'
-        );
-        $statement->execute([$fileId]);
-        $metadata = $statement->fetch(PDO::FETCH_ASSOC);
-        if (!is_array($metadata)) {
-            self::emitPercent($progress, 'dependencies', $endPercent, $prefix . ': skipped missing file');
-            return;
-        }
-        if ((string)($metadata['scan_status'] ?? '') !== 'verified') {
-            throw new RuntimeException('Dependency rebuilding is only supported for verified catalog files.');
-        }
-        if ((int)($metadata['format_version'] ?? 0) !== 2) {
-            throw new RuntimeException(
-                'Verified file #' . $fileId . ' has no current format-2 metadata; runtime legacy dependency rebuild is disabled.'
-            );
-        }
-
-        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
-        if ($storageRoot === '') {
-            throw new RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
-        }
-        self::emitPercent($progress, 'dependencies', $startPercent, $prefix . ': loading compact metadata');
-        $result = (new CompactDependencyRebuilder($this->db, $storageRoot))->rebuild($fileId);
-        $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
-        if (empty($summary['available'])) {
-            throw new RuntimeException('Dependency package summary projection is unavailable after compact rebuild.');
-        }
-        self::emitPercent(
+        $this->withFileLock($fileId, function () use (
+            $fileId,
             $progress,
-            'dependencies',
+            $startPercent,
             $endPercent,
-            $prefix . ': compact imports=' . (int)($result['imports_processed'] ?? 0)
-            . ', changed=' . (int)($result['dependencies_changed'] ?? 0)
-            . ', summary rows=' . (int)($summary['summary_rows'] ?? 0)
-        );
+            $prefix,
+            $refreshSummary
+        ): void {
+            $storageRoot = $this->assertRebuildableFile($fileId, $progress, $endPercent, $prefix);
+            if ($storageRoot === null) {
+                return;
+            }
+
+            self::emitPercent($progress, 'dependencies', $startPercent, $prefix . ': loading compact metadata');
+            $result = (new CompactDependencyRebuilder($this->db, $storageRoot))->rebuild($fileId);
+
+            $summaryRows = null;
+            if ($refreshSummary) {
+                $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
+                if (empty($summary['available'])) {
+                    throw new RuntimeException('Dependency package summary projection is unavailable after compact rebuild.');
+                }
+                $summaryRows = (int)($summary['summary_rows'] ?? 0);
+            }
+
+            $message = $prefix . ': compact imports=' . (int)($result['imports_processed'] ?? 0)
+                . ', changed=' . (int)($result['dependencies_changed'] ?? 0);
+            $message .= $summaryRows === null
+                ? ', summary refresh deferred'
+                : ', summary rows=' . $summaryRows;
+            self::emitPercent($progress, 'dependencies', $endPercent, $message);
+        });
+    }
+
+    /**
+     * Targeted compact dependency refresh used by projection reconciliation.
+     * The caller may bulk-refresh summaries after all changed owners are known.
+     *
+     * @param list<string> $packageNames
+     * @return array<string,mixed>
+     */
+    public function rebuildForPackages(
+        int $fileId,
+        array $packageNames,
+        bool $refreshSummary = false
+    ): array {
+        return $this->withFileLock($fileId, function () use ($fileId, $packageNames, $refreshSummary): array {
+            $storageRoot = $this->assertRebuildableFile($fileId, null, 100, 'Targeted dependency rebuild');
+            if ($storageRoot === null) {
+                return [
+                    'file_id' => $fileId,
+                    'imports_processed' => 0,
+                    'imports_total' => 0,
+                    'dependencies_changed' => 0,
+                    'container_rewritten' => false,
+                    'skipped_missing_file' => true,
+                ];
+            }
+
+            $result = (new CompactDependencyRebuilder($this->db, $storageRoot))
+                ->rebuildForPackages($fileId, $packageNames);
+            if ($refreshSummary) {
+                $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
+                if (empty($summary['available'])) {
+                    throw new RuntimeException('Dependency package summary projection is unavailable after targeted compact rebuild.');
+                }
+                $result['summary_rows'] = (int)($summary['summary_rows'] ?? 0);
+            }
+            return $result;
+        });
     }
 
     public function rebuildGame(
@@ -186,6 +221,66 @@ final class PdoCatalogDependencyRebuilder
                 self::rangePercent($startPercent, $endPercent, $index + 1, $total),
                 'Refreshing alias dependency links ' . ($index + 1) . '/' . $total . ' (' . $packageName . ')'
             );
+        }
+    }
+
+    private function assertRebuildableFile(
+        int $fileId,
+        ?callable $progress,
+        int $endPercent,
+        string $prefix
+    ): ?string {
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('Compact dependency rebuilding cannot run inside an existing database transaction.');
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT f.scan_status,m.format_version FROM ue_files f '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id WHERE f.id=?'
+        );
+        $statement->execute([$fileId]);
+        $metadata = $statement->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($metadata)) {
+            self::emitPercent($progress, 'dependencies', $endPercent, $prefix . ': skipped missing file');
+            return null;
+        }
+        if ((string)($metadata['scan_status'] ?? '') !== 'verified') {
+            throw new RuntimeException('Dependency rebuilding is only supported for verified catalog files.');
+        }
+        if ((int)($metadata['format_version'] ?? 0) !== 2) {
+            throw new RuntimeException(
+                'Verified file #' . $fileId . ' has no current format-2 metadata; runtime legacy dependency rebuild is disabled.'
+            );
+        }
+
+        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
+        if ($storageRoot === '') {
+            throw new RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
+        }
+        return $storageRoot;
+    }
+
+    private function withFileLock(int $fileId, callable $operation): mixed
+    {
+        if ($fileId < 1) {
+            throw new RuntimeException('Dependency rebuilding requires a positive file ID.');
+        }
+        $lockName = self::FILE_LOCK_PREFIX . $fileId;
+        $statement = $this->db->prepare('SELECT GET_LOCK(?, ?)');
+        $statement->execute([$lockName, self::FILE_LOCK_WAIT_SECONDS]);
+        if ((int)$statement->fetchColumn() !== 1) {
+            throw new RuntimeException('Dependency metadata for file #' . $fileId . ' is already being refreshed.');
+        }
+
+        try {
+            return $operation();
+        } finally {
+            try {
+                $release = $this->db->prepare('SELECT RELEASE_LOCK(?)');
+                $release->execute([$lockName]);
+            } catch (Throwable) {
+                // Closing the connection also releases advisory locks.
+            }
         }
     }
 
