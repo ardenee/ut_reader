@@ -35,6 +35,7 @@ final class JobExecutionContext
         $longRunningImport = in_array(
             $job->type,
             [
+                JobType::FULL_SYNC_GAME,
                 JobType::PREPARE_BUCKET_REDIRECT,
                 JobType::PROCESS_BUCKET_UPLOAD,
                 JobType::REPAIR_UNVERIFIED_METADATA,
