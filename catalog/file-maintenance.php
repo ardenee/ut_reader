@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: HTTP transport for catalog file maintenance actions and progress polling.
- * Why: Maintenance identity, locking, retry, transaction and dependency orchestration belongs behind a shared service.
+ * Why: Maintenance identity, locking, retry, transaction and dependency orchestration belongs behind shared services.
  * Role: Presentation adapter; validates request/session state and serializes the service result.
  */
 declare(strict_types=1);
@@ -10,7 +10,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 
+use JsonException;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncDependencyBatchService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncProjectionService;
 
 function catalog_maintenance_reply(array $payload, int $status = 200): never
@@ -71,6 +73,37 @@ function catalog_maintenance_game_id(array $input): int
     return (int)$gameId;
 }
 
+/** @return list<int> */
+function catalog_maintenance_file_ids(array $input): array
+{
+    $raw = trim((string)($input['file_ids_json'] ?? ''));
+    if ($raw === '') {
+        throw new RuntimeException('Dependency batch file IDs are required.');
+    }
+
+    try {
+        $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+    } catch (JsonException $error) {
+        throw new RuntimeException('Dependency batch file IDs are not valid JSON.', 0, $error);
+    }
+    if (!is_array($decoded)) {
+        throw new RuntimeException('Dependency batch file IDs must be a JSON array.');
+    }
+
+    $ids = [];
+    foreach ($decoded as $value) {
+        if (!is_int($value) && !(is_string($value) && ctype_digit($value))) {
+            throw new RuntimeException('Dependency batch contains an invalid file ID.');
+        }
+        $fileId = (int)$value;
+        if ($fileId < 1) {
+            throw new RuntimeException('Dependency batch contains an invalid file ID.');
+        }
+        $ids[] = $fileId;
+    }
+    return $ids;
+}
+
 try {
     catalog_start_session();
     if (!catalog_support_is_admin()) {
@@ -100,7 +133,12 @@ try {
     $config = catalog_config();
     $db = catalog_db($config);
 
-    if ($operation === 'sync_prepare_dependencies' || $operation === 'sync_finalize_game') {
+    if ($operation === 'sync_refresh_dependencies_batch') {
+        $payload = (new CatalogFullSyncDependencyBatchService($db, $config, $progress))->refresh(
+            catalog_maintenance_game_id($_POST),
+            catalog_maintenance_file_ids($_POST)
+        );
+    } elseif ($operation === 'sync_prepare_dependencies' || $operation === 'sync_finalize_game') {
         $fullSync = new CatalogFullSyncProjectionService($db, $progress);
         $gameId = catalog_maintenance_game_id($_POST);
         $payload = $operation === 'sync_prepare_dependencies'
