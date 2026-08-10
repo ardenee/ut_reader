@@ -81,16 +81,22 @@ if (!function_exists('proc_open')) {
 
 $page = $read('full-sync.php');
 $client = $read('full-sync.js');
+$runFullSyncStart = strpos($client, 'async function runFullSync');
+$runFullSync = $runFullSyncStart === false ? '' : substr($client, $runFullSyncStart);
+$reimportPosition = strpos($runFullSync, "'sync_reimport'");
+$preparePosition = strpos($runFullSync, "'sync_prepare_dependencies'");
+$batchPosition = strpos($runFullSync, 'processDependencyBatch(overlay, batch');
+$finalizePosition = strpos($runFullSync, "'sync_finalize_game'");
 $record(
     'full_sync_four_phase_order',
-    $client !== ''
-        && strpos($client, "'sync_reimport'") !== false
-        && strpos($client, "'sync_prepare_dependencies'") !== false
-        && strpos($client, "'sync_refresh_dependencies_batch'") !== false
-        && strpos($client, "'sync_finalize_game'") !== false
-        && strpos($client, "'sync_reimport'") < strpos($client, "'sync_prepare_dependencies'")
-        && strpos($client, "'sync_prepare_dependencies'") < strpos($client, "'sync_refresh_dependencies_batch'")
-        && strpos($client, "'sync_refresh_dependencies_batch'") < strpos($client, "'sync_finalize_game'"),
+    $runFullSync !== ''
+        && $reimportPosition !== false
+        && $preparePosition !== false
+        && $batchPosition !== false
+        && $finalizePosition !== false
+        && $reimportPosition < $preparePosition
+        && $preparePosition < $batchPosition
+        && $batchPosition < $finalizePosition,
     'Full Sync must refresh all package identities before providers, bounded dependency batches and final projections.'
 );
 $record(
@@ -117,7 +123,7 @@ $record(
     str_contains($client, 'async function processDependencyBatch')
         && str_contains($client, 'Math.ceil(batch.length / 2)')
         && str_contains($client, 'await processDependencyBatch(overlay, first')
-        && str_contains($client, 'await processDependencyBatch('),
+        && str_contains($client, 'completedBefore + first.length'),
     'A request-level batch failure must split into smaller idempotent ranges instead of dropping the whole batch.'
 );
 
@@ -169,6 +175,10 @@ $record(
 
 $transport = $read('file-maintenance.php');
 $batchService = $read('src/Infrastructure/Maintenance/CatalogFullSyncDependencyBatchService.php');
+$batchUsesDeferredRebuild = preg_match(
+    '/->rebuild\(\s*\$fileId,\s*null,\s*0,\s*100,[\s\S]*?,\s*false\s*\);/m',
+    $batchService
+) === 1;
 $record(
     'full_sync_dependency_batch_transport',
     str_contains($transport, "\$operation === 'sync_refresh_dependencies_batch'")
@@ -190,7 +200,7 @@ $record(
     !str_contains($batchService, 'unrealdb_catalog_maintenance_write_v1')
         && !str_contains($batchService, 'withWriteLock')
         && str_contains($batchService, 'PdoCatalogDependencyRebuilder')
-        && str_contains($batchService, "false\n                            );"),
+        && $batchUsesDeferredRebuild,
     'Dependency batches must rely on the per-file compact dependency lock rather than the global identity-write lock.'
 );
 
@@ -202,13 +212,16 @@ $nextOperationStart = $syncDependencyStart === false
 $syncDependencyBlock = ($syncDependencyStart !== false && $nextOperationStart !== false)
     ? substr($action, $syncDependencyStart, $nextOperationStart - $syncDependencyStart)
     : '';
+$singleUsesDeferredRebuild = preg_match(
+    '/PdoCatalogDependencyRebuilder[\s\S]*?->rebuild\([\s\S]*?,\s*false\s*\);/m',
+    $syncDependencyBlock
+) === 1;
 $record(
     'single_dependency_endpoint_remains_nonblocking',
     $syncDependencyBlock !== ''
         && !str_contains($syncDependencyBlock, 'withWriteLock')
-        && str_contains($syncDependencyBlock, 'PdoCatalogDependencyRebuilder')
         && str_contains($syncDependencyBlock, "'Final dependency refresh for '")
-        && str_contains($syncDependencyBlock, "false\n                );"),
+        && $singleUsesDeferredRebuild,
     'The compatibility single-file dependency endpoint must retain the same narrow locking/summary policy.'
 );
 $record(
