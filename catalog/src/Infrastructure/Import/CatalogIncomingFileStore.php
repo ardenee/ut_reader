@@ -30,18 +30,16 @@ final class CatalogIncomingFileStore
     }
 
     /** @return array{relative_path:string,original_name:string,size:int,sha256:string} */
-    public function stageUploadedFile(string $temporaryPath, string &$originalName): array
+    public function stageUploadedFile(string $temporaryPath, string &$originalName, bool $hashNow = true): array
     {
-        // Return the logical name through the existing caller variable so job
-        // payloads cannot accidentally retain an unnormalised duplicate suffix.
         $originalName = $this->logicalName($originalName);
-        return $this->stage($temporaryPath, $originalName, true);
+        return $this->stage($temporaryPath, $originalName, true, $hashNow);
     }
 
     /** @return array{relative_path:string,original_name:string,size:int,sha256:string} */
     public function stageLocalFile(string $sourcePath, string $originalName = ''): array
     {
-        return $this->stage($sourcePath, $originalName !== '' ? $originalName : basename($sourcePath), false);
+        return $this->stage($sourcePath, $originalName !== '' ? $originalName : basename($sourcePath), false, true);
     }
 
     public function resolve(string $relativePath): string
@@ -74,20 +72,11 @@ final class CatalogIncomingFileStore
         return $real;
     }
 
-    /**
-     * Retain the staged source after a handler finishes.
-     *
-     * Job completion is persisted after the handler returns. Deleting here made
-     * a successful import non-retryable when queue finalisation failed. Incoming
-     * files are now durable placeholders and are removed only by explicit
-     * deletion or age-based pruning.
-     */
     public function remove(string $relativePath): void
     {
         // Intentionally retained for retry/recovery.
     }
 
-    /** Delete a staged file when no job was created or an operator cleans it up. */
     public function delete(string $relativePath): void
     {
         if (str_starts_with($relativePath, 'chunk-upload:') || str_starts_with($relativePath, 'local-pak:')) {
@@ -138,7 +127,7 @@ final class CatalogIncomingFileStore
     }
 
     /** @return array{relative_path:string,original_name:string,size:int,sha256:string} */
-    private function stage(string $sourcePath, string $originalName, bool $move): array
+    private function stage(string $sourcePath, string $originalName, bool $move, bool $hashNow): array
     {
         $this->ensureDirectory();
         if ($sourcePath === '' || !is_file($sourcePath) || !is_readable($sourcePath) || is_link($sourcePath)) {
@@ -179,10 +168,15 @@ final class CatalogIncomingFileStore
             if (!@rename($part, $destination)) {
                 throw new \RuntimeException('Could not publish staged import source file.');
             }
-            $sha256 = hash_file('sha256', $destination);
-            if (!is_string($sha256) || preg_match('/^[a-f0-9]{64}$/', $sha256) !== 1) {
-                throw new \RuntimeException('Could not hash staged import source file.');
+
+            $sha256 = '';
+            if ($hashNow) {
+                $sha256 = hash_file('sha256', $destination);
+                if (!is_string($sha256) || preg_match('/^[a-f0-9]{64}$/', $sha256) !== 1) {
+                    throw new \RuntimeException('Could not hash staged import source file.');
+                }
             }
+
             $relative = ltrim(str_replace('\\', '/', substr($destination, strlen($this->storageRoot))), '/');
             return [
                 'relative_path' => $relative,
@@ -215,13 +209,7 @@ final class CatalogIncomingFileStore
 
         do {
             $previous = $name;
-
-            // Some download tools append the duplicate marker after the whole
-            // filename, for example Name.ut2 (2).
             $name = preg_replace('/\s+\([0-9]+\)$/u', '', $name) ?? $name;
-
-            // Normal copies place the marker at the end of the stem. Handling
-            // the stem also fixes Name.uax (2).uz2 before redirect decoding.
             $extension = (string)pathinfo($name, PATHINFO_EXTENSION);
             if ($extension !== '') {
                 $stem = (string)pathinfo($name, PATHINFO_FILENAME);
@@ -230,7 +218,6 @@ final class CatalogIncomingFileStore
                 $stem = preg_replace('/\s+copy(?:\s*\([0-9]+\))?$/iu', '', $stem) ?? $stem;
                 $name = rtrim($stem, ' .') . '.' . $extension;
             }
-
             $name = rtrim(trim($name), ' .');
         } while ($name !== $previous);
 
@@ -239,8 +226,6 @@ final class CatalogIncomingFileStore
 
     private function safeName(string $name): string
     {
-        // This is only the controlled staging filename. It must never replace
-        // the logical original_name stored in the database.
         $name = preg_replace('/[\x00-\x1F\x7F<>:"\/\\\\|?*]+/u', '_', $name) ?? '';
         $name = trim($name, " .\t\n\r\0\x0B");
         if (function_exists('mb_substr')) {
