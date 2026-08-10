@@ -13,6 +13,8 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
 final class CatalogFileMaintenanceReimportService
 {
@@ -57,6 +59,7 @@ final class CatalogFileMaintenanceReimportService
         );
         $replacementFileId = 0;
         $replacementGameId = 0;
+        $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
         \catalog_file_maintenance_emit(
             $progress,
             'reimport',
@@ -88,6 +91,7 @@ final class CatalogFileMaintenanceReimportService
                 22,
                 'Removing the old catalog record and its compact projections'
             );
+            $support->deleteFileProjections($fileId);
             $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
 
             $result = \scanner_scan_uploaded_file(
@@ -118,7 +122,9 @@ final class CatalogFileMaintenanceReimportService
                 $progress,
                 'dependencies',
                 99,
-                'Refreshing references to the re-imported package'
+                $deferDependencyRefresh
+                    ? 'Dependency reconciliation deferred to the final Full Sync pass'
+                    : 'Refreshing references to the re-imported package'
             );
             \catalog_file_maintenance_refresh_ids(
                 $this->db,
@@ -130,14 +136,17 @@ final class CatalogFileMaintenanceReimportService
                 'Refreshing affected dependency links'
             );
 
-            $reconciliationJobId = CatalogProjectionReconciliationQueue::enqueue(
-                $this->db,
-                $replacementFileId,
-                [$gameId],
-                [$oldPackageName, $newPackageName],
-                $this->config,
-                $userId
-            );
+            $reconciliationJobId = null;
+            if (!$deferDependencyRefresh) {
+                $reconciliationJobId = CatalogProjectionReconciliationQueue::enqueue(
+                    $this->db,
+                    $replacementFileId,
+                    [$gameId],
+                    [$oldPackageName, $newPackageName],
+                    $this->config,
+                    $userId
+                );
+            }
 
             @unlink($backupPath);
             if (is_file($oldMetadataPath)) {
@@ -159,6 +168,7 @@ final class CatalogFileMaintenanceReimportService
         } catch (Throwable $error) {
             @unlink($inputPath);
             if ($replacementFileId > 0) {
+                $support->deleteFileProjections($replacementFileId);
                 $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$replacementFileId]);
                 if ($replacementGameId > 0) {
                     $replacementMetadataPath = \catalog_file_maintenance_metadata_path(
@@ -180,12 +190,17 @@ final class CatalogFileMaintenanceReimportService
             if (is_file($backupPath)) {
                 @rename($backupPath, $storedPath);
             }
+
             try {
-                \scanner_rebuild_game($this->db, $this->config, (int)$file['game_id']);
+                (new PdoPackageProviderRepository($this->db))->reconcileFile($fileId);
+                if (!$deferDependencyRefresh) {
+                    \scanner_rebuild_game($this->db, $this->config, (int)$file['game_id']);
+                    (new PdoGameCatalogStats($this->db))->rebuildGame((int)$file['game_id']);
+                }
             } catch (Throwable $refreshError) {
                 error_log(
                     '[UnrealDB reimport rollback] file_id=' . $fileId
-                    . ' dependency refresh failed: ' . $refreshError->getMessage()
+                    . ' projection refresh failed: ' . $refreshError->getMessage()
                 );
             }
             throw $error;
