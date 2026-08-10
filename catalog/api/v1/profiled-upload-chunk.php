@@ -4,8 +4,7 @@
  * Purpose: Handles the catalog v1 HTTP endpoint for profiled upload chunk.
  * Why: It exposes this operation as a narrowly scoped machine-readable request instead of mixing API behavior into
  *      HTML pages.
- * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated
- *       here.
+ * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated.
  * Audit: Active API surface unless its callers/tests prove otherwise; preserve request/response compatibility when
  *        consolidating.
  */
@@ -79,9 +78,6 @@ try {
             );
         }
 
-        // CatalogChunkedUploadStore was originally PAK-only. Its durable storage
-        // is format-neutral, so use a synthetic internal PAK name for normal
-        // packages while retaining the real name in relative_path.
         $storageName = $isPak
             ? $originalName
             : 'package-' . substr(hash('sha256', $originalName), 0, 24) . '.pak';
@@ -121,6 +117,7 @@ try {
 
     if ($action === 'complete') {
         $uploadId = (string)($_POST['upload_id'] ?? '');
+        $deferWorkerStart = (string)($_POST['defer_worker_start'] ?? '0') === '1';
         $state = $store->complete($userId, $uploadId);
         $queue = new CatalogProfiledUploadQueue($application->db, $application->config);
         $originalName = profiled_chunk_original_name_from_state($state);
@@ -150,14 +147,16 @@ try {
 
         $worker = null;
         $workerError = '';
-        try {
-            $worker = (new CatalogDetachedWorker($application->config))->start(
-                (string)($application->config['queue']['name'] ?? 'catalog'),
-                10000
-            );
-        } catch (Throwable $error) {
-            $workerError = trim($error->getMessage());
-            error_log('[UnrealDB chunked profiled upload worker launch] ' . $error->getMessage());
+        if (!$deferWorkerStart) {
+            try {
+                $worker = (new CatalogDetachedWorker($application->config))->start(
+                    (string)($application->config['queue']['name'] ?? 'catalog'),
+                    10000
+                );
+            } catch (Throwable $error) {
+                $workerError = trim($error->getMessage());
+                error_log('[UnrealDB chunked profiled upload worker launch] ' . $error->getMessage());
+            }
         }
         JsonResponse::send([
             'ok' => true,
@@ -165,6 +164,7 @@ try {
             'upload' => $state,
             'worker' => $worker,
             'worker_error' => $workerError,
+            'worker_deferred' => $deferWorkerStart,
         ], 202);
     }
 
