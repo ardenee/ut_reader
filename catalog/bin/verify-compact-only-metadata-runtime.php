@@ -12,6 +12,8 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
+require_once $root . '/src/Application/Maintenance/LegacyMetadataRuntimeAudit.php';
+
 $withDatabase = in_array('--database', array_slice($argv, 1), true);
 $checks = [];
 $failures = [];
@@ -39,6 +41,10 @@ $withoutComments = static function (string $source): string {
     }
     return $out;
 };
+$retiredReferences = static function (string $source): array {
+    return \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataReferences($source);
+};
+$legacyTables = \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataTables();
 
 $runtimeFiles = [
     'src/Infrastructure/Persistence/PdoDependencyReadSource.php',
@@ -54,7 +60,6 @@ $runtimeFiles = [
     'src/Infrastructure/Maintenance/CatalogLegacyDataAuditService.php',
     'src/Infrastructure/Unverified/PdoUnverifiedReferenceMatchQuery.php',
 ];
-$legacyTables = ['ue_names', 'ue_imports', 'ue_exports', 'ue_dependencies'];
 foreach ($runtimeFiles as $relative) {
     $source = $read($relative);
     $present = $source !== '';
@@ -62,13 +67,7 @@ foreach ($runtimeFiles as $relative) {
     if (!$present) {
         continue;
     }
-    $executable = $withoutComments($source);
-    $found = [];
-    foreach ($legacyTables as $table) {
-        if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $executable) === 1) {
-            $found[] = $table;
-        }
-    }
+    $found = $retiredReferences($withoutComments($source));
     $record(
         'compact_only:' . $relative,
         $found === [],
@@ -77,12 +76,7 @@ foreach ($runtimeFiles as $relative) {
 }
 
 $installSql = $read('install.sql');
-$installLegacyReferences = [];
-foreach ($legacyTables as $table) {
-    if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $installSql) === 1) {
-        $installLegacyReferences[] = $table;
-    }
-}
+$installLegacyReferences = $retiredReferences($installSql);
 $record(
     'fresh_install_omits_retired_metadata_tables',
     $installSql !== '' && $installLegacyReferences === [],
@@ -126,12 +120,7 @@ $record(
         && !str_contains($persistence, '->rebuild('),
     'new verified imports must publish format-2 metadata directly from in-memory parser tables'
 );
-$finalizerLegacyReferences = [];
-foreach ($legacyTables as $table) {
-    if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $finalizerExecutable) === 1) {
-        $finalizerLegacyReferences[] = $table;
-    }
-}
+$finalizerLegacyReferences = $retiredReferences($finalizerExecutable);
 $record(
     'verified_runtime_finalizer_no_legacy_conversion',
     !str_contains($finalizer, 'BlockedCompressedFileMetadataConverter')
@@ -143,33 +132,32 @@ $record(
 );
 
 $writer = $read('src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php');
+$writerLegacyReferences = $retiredReferences($withoutComments($writer));
 $record(
     'compact_export_lookup_is_self_sufficient',
     str_contains($writer, "'local_path_term_id'")
         && str_contains($writer, '$termIds[$this->termKey($localPath)]')
-        && !str_contains($withoutComments($writer), 'FROM ue_dependencies')
-        && !str_contains($withoutComments($writer), 'JOIN ue_imports'),
-    'current projection writes must include local paths and dependency labels without legacy rereads'
+        && $writerLegacyReferences === [],
+    $writerLegacyReferences === []
+        ? 'current projection writes include local paths and dependency labels without retired metadata rereads'
+        : 'found retired metadata references: ' . implode(', ', $writerLegacyReferences)
 );
 
 $resolver = $read('src/Infrastructure/Persistence/PdoDependencyResolver.php');
+$resolverLegacyReferences = $retiredReferences($withoutComments($resolver));
 $record(
     'compact_object_resolution_boundary',
     str_contains($resolver, 'ue_export_lookup')
         && str_contains($resolver, 'l.path_hash=?')
-        && !str_contains($withoutComments($resolver), 'FROM ue_exports')
-        && !str_contains($withoutComments($resolver), 'JOIN ue_exports'),
-    'object dependency resolution must use current export projections only'
+        && $resolverLegacyReferences === [],
+    $resolverLegacyReferences === []
+        ? 'object dependency resolution uses current export projections only'
+        : 'found retired metadata references: ' . implode(', ', $resolverLegacyReferences)
 );
 
 $converter = $read('src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php');
 $converterExecutable = $withoutComments($converter);
-$converterLegacyReferences = [];
-foreach ($legacyTables as $table) {
-    if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $converterExecutable) === 1) {
-        $converterLegacyReferences[] = $table;
-    }
-}
+$converterLegacyReferences = $retiredReferences($converterExecutable);
 $record(
     'current_projection_rebuild_uses_current_snapshot',
     str_contains($converter, 'BlockedCompressedMetadataSnapshotLoader')
@@ -193,6 +181,7 @@ $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
     'missing.php',
     'src/Application/Dependency/CatalogMissingFileListService.php',
     'src/Application/Dependency/CatalogMissingDetailListService.php',
+    'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
