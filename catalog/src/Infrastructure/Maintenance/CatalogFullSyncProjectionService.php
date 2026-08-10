@@ -58,9 +58,12 @@ final class CatalogFullSyncProjectionService
             $this->requireGame($gameId);
             $fileIds = $this->verifiedFileIds($gameId);
 
+            $this->emit('providers', 5, 'Rechecking package-provider projection after dependency resolution.');
+            $providers = (new PdoPackageProviderRepository($this->db))->reconcileGame($gameId);
+
             $this->emit(
                 'dependency_summaries',
-                10,
+                15,
                 'Verifying package dependency summaries for ' . count($fileIds) . ' package(s).'
             );
             $summaries = (new PdoDependencyPackageSummary($this->db))->rebuildFiles($fileIds);
@@ -84,10 +87,11 @@ final class CatalogFullSyncProjectionService
                 'ok' => true,
                 'game_id' => $gameId,
                 'verified_files' => count($fileIds),
+                'providers' => $providers,
                 'summary_files' => (int)($summaries['files'] ?? 0),
                 'summary_rows' => (int)($summaries['summary_rows'] ?? 0),
                 'stats' => $stats,
-                'message' => 'Dependency summaries and game counters finalized.',
+                'message' => 'Package providers, dependency summaries and game counters finalized.',
             ];
         });
     }
