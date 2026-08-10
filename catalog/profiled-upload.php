@@ -50,6 +50,7 @@ function profiled_upload_enqueue(PDO $db, array $config): array
     catalog_check_csrf('profiled_upload');
     $gameId = (int)($_POST['game_id'] ?? 0);
     $strict = (string)($_POST['strict_profile'] ?? '1') === '1';
+    $deferWorkerStart = (string)($_POST['defer_worker_start'] ?? '0') === '1';
     $game = $gameId > 0 ? catalog_one($db, 'SELECT id,name,slug FROM ue_games WHERE id=?', [$gameId]) : null;
     if (!$game) {
         throw new RuntimeException('Choose a valid target game.');
@@ -94,7 +95,10 @@ function profiled_upload_enqueue(PDO $db, array $config): array
 
         $staged = null;
         try {
-            $staged = $store->stageUploadedFile($temporaryPath, $originalName);
+            // Browser priority is durable ingress. Do not reread the whole file
+            // for SHA-256 here; authoritative content hashes are calculated by
+            // the background importer after the complete batch is staged.
+            $staged = $store->stageUploadedFile($temporaryPath, $originalName, false);
             $queued = $queue->enqueueStaged($gameId, $staged, $originalName, $displayName, $strict, $userId);
         } catch (Throwable $error) {
             if (is_array($staged) && isset($staged['relative_path'])) {
@@ -110,7 +114,7 @@ function profiled_upload_enqueue(PDO $db, array $config): array
             'file' => $displayName,
             'message' => !empty($queued['deduplicated'])
                 ? 'The same file is already queued or running as job #' . $queued['job_id'] . '.'
-                : 'Upload staged for background import as job #' . $queued['job_id'] . '.',
+                : 'Upload durably staged for background import as job #' . $queued['job_id'] . '.',
             'file_size_text' => catalog_bytes($queued['size']),
             'job_id' => $queued['job_id'],
         ];
@@ -121,16 +125,21 @@ function profiled_upload_enqueue(PDO $db, array $config): array
         throw new RuntimeException((string)$first);
     }
 
-    $workerState = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
-    $workerError = (string)($workerState['worker_error'] ?? '');
-    if ($workerError !== '') {
-        error_log('[UnrealDB profiled upload worker launch] ' . $workerError);
+    $worker = null;
+    $workerError = '';
+    if (!$deferWorkerStart) {
+        $workerState = (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+        $workerError = (string)($workerState['worker_error'] ?? '');
+        if ($workerError !== '') {
+            error_log('[UnrealDB profiled upload worker launch] ' . $workerError);
+        }
+        $worker = is_array($workerState['worker'] ?? null) ? $workerState['worker'] : null;
     }
 
     return [
         'jobs' => $jobs,
         'messages' => $messages,
-        'worker' => is_array($workerState['worker'] ?? null) ? $workerState['worker'] : null,
+        'worker' => $worker,
         'worker_error' => $workerError,
     ];
 }
@@ -180,7 +189,7 @@ try {
     unset($_SESSION['profiled_upload_flash']);
     catalog_page_header(
         'Upload Files',
-        'Uploads are copied into durable controlled staging, queued, and automatically started by a detached CLI worker. Large files use resumable chunks and continue from chunks already received when the file is selected again.',
+        'Files are first copied into durable controlled staging as quickly as possible. After the selected batch is fully staged, detached CLI workers perform decompression, header validation, hashing and import in the background; you do not need to keep this page open while jobs run.',
         [
             'Background Jobs' => 'background-jobs.php',
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
@@ -200,11 +209,11 @@ try {
             . catalog_h((string)$game['name'] . ' / ' . ((string)($game['profile_engine'] ?: 'no active profile'))) . '</option>';
     }
     echo '</select></label></p>';
-    echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain mismatches as unverified</option><option value="0">Loose: allow detected reader override</option></select></label></p>';
+    echo '<p><label>Profile mismatch handling<br><select name="strict_profile"><option value="1" selected>Strict: retain header-detected mismatches as unverified</option><option value="0">Loose: allow the header-detected reader for another engine family</option></select></label></p>';
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
-    echo '<p><button id="profiled-upload-button" type="submit">Upload and import</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current upload/job</button></p>';
-    echo '<p class="muted">Normal package files larger than ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' also use resumable chunks. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
+    echo '<p><button id="profiled-upload-button" type="submit">Upload and queue</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current upload</button></p>';
+    echo '<p class="muted">Package reader selection is based on serialized Unreal header data, never the filename or extension. Normal package files larger than ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' use resumable chunks. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
     echo '<div id="profiled-upload-progress" class="upload-progress" hidden '
         . 'data-queue="' . catalog_h((string)($config['queue']['name'] ?? 'catalog')) . '" '
         . 'data-status-url="api/v1/job-status.php" '
@@ -216,12 +225,12 @@ try {
         . 'data-chunk-csrf="' . catalog_h(catalog_csrf('profiled_upload_chunk')) . '" '
         . 'data-chunk-bytes="' . $chunkStore->chunkBytes() . '" '
         . 'data-container-limit="' . $containerLimit . '">';
-    echo '<div class="progress-row"><span id="overall-progress-label">Overall batch</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
+    echo '<div class="progress-row"><span id="overall-progress-label">Overall upload staging</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
     echo '<div id="upload-progress-log" class="upload-progress-log"></div></div>';
     echo '</form></div>';
 
-    echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Extensions</th><th>Version range</th><th>Open</th></tr>';
+    echo '<div class="card"><h2>Game profiles</h2><table><tr><th>Game</th><th>Profile engine</th><th>Discovery extensions</th><th>Version range</th><th>Open</th></tr>';
     foreach ($games as $game) {
         $extensions = json_decode((string)($game['allowed_extensions_json'] ?? '[]'), true);
         $range = ($game['package_version_min'] !== null || $game['package_version_max'] !== null)
@@ -232,7 +241,7 @@ try {
             . catalog_h(is_array($extensions) ? implode(', ', $extensions) : '') . '</td><td class="mono">' . catalog_h($range)
             . '</td><td><a class="button" href="profiled-upload.php?game_id=' . (int)$game['id'] . '">select</a></td></tr>';
     }
-    echo '</table></div>';
+    echo '</table><p class="muted small">Discovery extensions are only source/file-picker hints. They are not trusted for engine detection or package acceptance.</p></div>';
     $uploadClient = __DIR__ . '/assets/profiled-upload-jobs.js';
     $uploadClientVersion = is_file($uploadClient) ? (string)filemtime($uploadClient) : '1';
     $diagnosticClient = __DIR__ . '/assets/profiled-upload-diagnostics.js';
