@@ -4,7 +4,7 @@
  * Purpose: Imports verified Unreal packages into the catalog and implements the application package-import port.
  * Why: This class orchestrates classification, reading, identity/duplicate policy and post-import refresh while
  *      storage, row persistence, failed-upload retention and source-path writes are delegated to focused collaborators.
- * Role: Primary verified-package import orchestration for profile uploads, durable jobs and legacy scanner delegates.
+ * Role: Primary verified-package import orchestration for profile uploads, durable jobs and maintenance scanner delegates.
  */
 declare(strict_types=1);
 
@@ -81,6 +81,10 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
     /**
      * Scanner-compatible verified import operation.
      *
+     * `maintenance_replace_file_id` is reserved for trusted maintenance callers.
+     * It reparses and republishes a verified package on its existing ue_files ID,
+     * preserving unrelated foreign-key relationships during a Full Sync/rebuild.
+     *
      * @param array<string,mixed> $scannerOptions
      * @return array<int|string,mixed>
      */
@@ -99,6 +103,23 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             (string)($scannerOptions['source_relative_path'] ?? '')
         );
         $deferDependencyRebuild = !empty($scannerOptions['defer_dependency_rebuild']);
+        $maintenanceReplaceFileId = max(0, (int)($scannerOptions['maintenance_replace_file_id'] ?? 0));
+        if ($maintenanceReplaceFileId > 0) {
+            $target = \catalog_one(
+                $this->db,
+                'SELECT id,game_id,scan_status FROM ue_files WHERE id=?',
+                [$maintenanceReplaceFileId]
+            );
+            if (!$target
+                || (int)$target['game_id'] !== $gameId
+                || (string)$target['scan_status'] !== 'verified') {
+                throw new RuntimeException(
+                    'Maintenance refresh target #' . $maintenanceReplaceFileId
+                    . ' is no longer a verified package in the selected game.'
+                );
+            }
+        }
+
         $submittedOriginalName = $originalName;
         $sourceOriginalName = \scanner_original_name_from_source_relative($sourceRelativePath);
         if ($sourceOriginalName !== '') {
@@ -205,23 +226,30 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         $packageName = \scanner_package_name_from_reader($packageName, $readerEngine, $names, $header);
         \catalog_package_aliases_ensure($this->db);
 
+        $duplicateSql = 'SELECT id, original_name, package_name, package_guid, file_size, md5 FROM ue_files WHERE game_id=?';
+        $duplicateArgs = [$gameId];
         if ($packageGuid !== '') {
-            $duplicate = \catalog_one(
-                $this->db,
-                'SELECT id, original_name, package_name, package_guid, file_size, md5 '
-                . 'FROM ue_files WHERE game_id=? AND package_guid=? AND md5=?',
-                [$gameId, $packageGuid, $md5]
-            );
+            $duplicateSql .= ' AND package_guid=? AND md5=?';
+            $duplicateArgs[] = $packageGuid;
+            $duplicateArgs[] = $md5;
         } else {
-            $duplicate = \catalog_one(
-                $this->db,
-                'SELECT id, original_name, package_name, package_guid, file_size, md5 '
-                . 'FROM ue_files WHERE game_id=? AND md5=? AND (package_guid IS NULL OR package_guid="")',
-                [$gameId, $md5]
-            );
+            $duplicateSql .= ' AND md5=? AND (package_guid IS NULL OR package_guid="")';
+            $duplicateArgs[] = $md5;
         }
+        if ($maintenanceReplaceFileId > 0) {
+            $duplicateSql .= ' AND id<>?';
+            $duplicateArgs[] = $maintenanceReplaceFileId;
+        }
+        $duplicateSql .= ' LIMIT 1';
+        $duplicate = \catalog_one($this->db, $duplicateSql, $duplicateArgs);
 
         if ($duplicate) {
+            if ($maintenanceReplaceFileId > 0) {
+                throw new RuntimeException(
+                    'Maintenance refresh would collide with existing file #' . (int)$duplicate['id']
+                    . '; refusing to merge stable file identities automatically.'
+                );
+            }
             return $this->handleDuplicate(
                 $gameId,
                 $duplicate,
@@ -300,7 +328,8 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
                 $exports,
                 $scanNotesText,
                 $userId,
-                $progress
+                $progress,
+                $maintenanceReplaceFileId
             );
         } catch (Throwable $error) {
             $this->storage->rollbackCreated($stored);
@@ -310,10 +339,11 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         $resultLabel = ($classification['compatibility_status'] ?? 'native') === 'legacy_compatible'
             ? ('; ' . (string)($classification['compatibility_label'] ?? 'legacy-compatible'))
             : '';
+        $verb = $maintenanceReplaceFileId > 0 ? 'Refreshed' : 'Imported';
         $result = [
             'verified',
             $fileId,
-            'Imported. Profile=' . $profileEngine . ', reader=' . $readerEngine
+            $verb . '. Profile=' . $profileEngine . ', reader=' . $readerEngine
                 . ', detection=' . $classification['confidence'] . $resultLabel
                 . ', size=' . \catalog_bytes((int)$size)
                 . ', names=' . $nameCount . ', imports=' . $importCount . ', exports=' . $exportCount,
@@ -325,6 +355,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
                 'file_size' => (int)$size,
                 'file_size_text' => \catalog_bytes((int)$size),
                 'source_relative_path' => $sourceRelativePath,
+                'maintenance_replace_file_id' => $maintenanceReplaceFileId,
             ],
         ];
         $result = VerifiedFileCompactMetadataFinalizer::finalizeParsed(
@@ -364,7 +395,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             $progress,
             'done',
             100,
-            'Imported ' . $nameCount . ' names, ' . $importCount
+            $verb . ' ' . $nameCount . ' names, ' . $importCount
             . ' imports, ' . $exportCount . ' exports with compact metadata'
         );
         return $result;
