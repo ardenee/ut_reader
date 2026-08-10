@@ -17,13 +17,35 @@ use SplFileInfo;
 final class LegacyMetadataRuntimeAudit
 {
     /** @var list<string> */
-    private const TABLES = [
+    private const METADATA_TABLES = [
         'ue_names',
         'ue_imports',
         'ue_exports',
         'ue_dependencies',
+    ];
+
+    /** @var list<string> */
+    private const OTHER_RETIRED_TABLES = [
         'ue_search_documents',
     ];
+
+    /** @return list<string> */
+    public static function retiredMetadataTables(): array
+    {
+        return self::METADATA_TABLES;
+    }
+
+    /** @return list<string> */
+    public static function retiredTables(): array
+    {
+        return array_merge(self::METADATA_TABLES, self::OTHER_RETIRED_TABLES);
+    }
+
+    /** @return list<string> */
+    public static function retiredMetadataReferences(string $source): array
+    {
+        return self::references($source, self::METADATA_TABLES);
+    }
 
     /** @return array{files:int,references:int,matches:list<array<string,mixed>>} */
     public static function scan(string $catalogRoot): array
@@ -62,7 +84,7 @@ final class LegacyMetadataRuntimeAudit
                 if ($trimmed === '' || str_starts_with($trimmed, '//') || str_starts_with($trimmed, '*')) {
                     continue;
                 }
-                foreach (self::TABLES as $table) {
+                foreach (self::retiredTables() as $table) {
                     if (!preg_match('/\b' . preg_quote($table, '/') . '\b/i', $line)) {
                         continue;
                     }
@@ -91,6 +113,18 @@ final class LegacyMetadataRuntimeAudit
             'references' => count($matches),
             'matches' => $matches,
         ];
+    }
+
+    /** @param list<string> $tables @return list<string> */
+    private static function references(string $source, array $tables): array
+    {
+        $found = [];
+        foreach ($tables as $table) {
+            if (preg_match('/\b' . preg_quote($table, '/') . '\b/i', $source) === 1) {
+                $found[] = $table;
+            }
+        }
+        return $found;
     }
 
     private static function excluded(string $relative): bool
