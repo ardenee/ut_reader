@@ -13,6 +13,7 @@ require_once __DIR__ . '/lib/UploadProgress.php';
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncDependencyBatchService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncProjectionService;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 function catalog_maintenance_reply(array $payload, int $status = 200): never
 {
@@ -160,6 +161,23 @@ try {
             'total' => 100,
             'percent' => 0,
             'message' => $e->getMessage(),
+        ]);
+    }
+    if (isset($operation) && str_starts_with($operation, 'sync_')) {
+        CatalogSystemErrorRecorder::record([
+            'source_kind' => 'full-sync',
+            'severity' => 'error',
+            'error_type' => get_class($e),
+            'message' => 'Full Sync ' . $operation . ' failed: ' . $e->getMessage(),
+            'source_file' => $e->getFile(),
+            'source_line' => $e->getLine(),
+            'trace_text' => $e->getTraceAsString(),
+            'context' => [
+                'operation' => $operation,
+                'game_id' => max(0, (int)($_POST['game_id'] ?? 0)),
+                'file_id' => max(0, (int)($_POST['file_id'] ?? 0)),
+                'progress_token' => isset($postProgressToken) ? $postProgressToken : '',
+            ],
         ]);
     }
     error_log('[UnrealDB][' . catalog_request_id() . '] catalog maintenance failed: ' . $e->getMessage());
