@@ -129,7 +129,8 @@ try {
                 $uploadId,
                 $state + ['original_name' => $originalName],
                 (bool)$state['strict_profile'],
-                $userId
+                $userId,
+                $deferWorkerStart
             );
         } else {
             $job = $queue->enqueueStaged(
@@ -141,7 +142,8 @@ try {
                 $originalName,
                 (string)$state['relative_path'],
                 (bool)$state['strict_profile'],
-                $userId
+                $userId,
+                $deferWorkerStart
             );
         }
 
