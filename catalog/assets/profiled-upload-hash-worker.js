@@ -3,7 +3,9 @@
 // Browser-side duplicate preflight only. This digest is advisory: the server
 // recalculates authoritative hashes for every file that is actually uploaded.
 const CHUNK_BYTES = 4 * 1024 * 1024;
+const SHA1_ABC = 'a9993e364706816aba3e25717850c26c9cd0d89d';
 let cancelRequested = false;
+let selfTestPassed = null;
 
 function rotl(value, bits) {
     return ((value << bits) | (value >>> (32 - bits))) >>> 0;
@@ -127,8 +129,20 @@ class Sha1 {
     }
 }
 
+function verifySha1Implementation() {
+    if (selfTestPassed !== null) return selfTestPassed;
+    const probe = new Sha1();
+    probe.update(new Uint8Array([0x61, 0x62, 0x63]));
+    selfTestPassed = probe.digestHex() === SHA1_ABC;
+    return selfTestPassed;
+}
+
 async function hashFile(id, file) {
     cancelRequested = false;
+    if (!verifySha1Implementation()) {
+        throw new Error('Client SHA-1 self-test failed; duplicate preflight has been disabled for this file.');
+    }
+
     const sha1 = new Sha1();
     const total = Number(file.size || 0);
     let loaded = 0;
