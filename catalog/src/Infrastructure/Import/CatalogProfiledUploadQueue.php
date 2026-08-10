@@ -9,12 +9,16 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Import;
 
+use DateTimeImmutable;
+use DateTimeZone;
 use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogProfiledUploadQueue
 {
+    private const BATCH_HOLD_SECONDS = 86400;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -32,7 +36,7 @@ final class CatalogProfiledUploadQueue
 
     /**
      * @param array{relative_path:string,original_name?:string,size:int,sha256?:string} $staged
-     * @return array{job_id:int,type:string,file:string,size:int,deduplicated:bool}
+     * @return array{job_id:int,type:string,file:string,size:int,deduplicated:bool,held:bool}
      */
     public function enqueueStaged(
         int $gameId,
@@ -40,7 +44,8 @@ final class CatalogProfiledUploadQueue
         string $originalName,
         string $sourceRelativePath,
         bool $strictProfile,
-        ?int $userId
+        ?int $userId,
+        bool $holdForBatch = false
     ): array {
         $game = $this->requiredGame($gameId);
         $originalName = CatalogImportPathPolicy::filename($originalName);
@@ -94,24 +99,30 @@ final class CatalogProfiledUploadQueue
                 . $chunkMatch[1] . "\0"
                 . ($strictProfile ? 'strict' : 'loose')
             );
+        } else {
+            // The staging path is server-generated and unique. It is sufficient
+            // to prevent a repeated queue request for the same durable object
+            // without rereading the entire upload to calculate a synchronous hash.
+            $dedupeKey = 'profiled-staged:' . hash(
+                'sha256',
+                $gameId . "\0" . $jobType . "\0" . $stagedPath . "\0" . ($strictProfile ? 'strict' : 'loose')
+            );
         }
 
         $queueName = $this->queueName();
         $existingJobId = 0;
-        if ($dedupeKey !== null) {
-            $existing = $this->db->prepare(
-                'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
-            );
-            $existing->execute([$queueName, $dedupeKey]);
-            $existingJobId = (int)($existing->fetchColumn() ?: 0);
-        }
+        $existing = $this->db->prepare(
+            'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
+        );
+        $existing->execute([$queueName, $dedupeKey]);
+        $existingJobId = (int)($existing->fetchColumn() ?: 0);
 
         $jobId = $this->queue()->enqueue(
             $queueName,
             $jobType,
             $payload,
             5,
-            null,
+            $holdForBatch ? $this->batchHoldUntil() : null,
             $dedupeKey,
             $userId,
             3
@@ -134,16 +145,18 @@ final class CatalogProfiledUploadQueue
             'file' => $sourceRelativePath,
             'size' => $size,
             'deduplicated' => $deduplicated,
+            'held' => $holdForBatch,
         ];
     }
 
-    /** @return array{job_id:int,type:string,file:string,size:int} */
+    /** @return array{job_id:int,type:string,file:string,size:int,held:bool} */
     public function enqueueChunkedPak(
         int $gameId,
         string $uploadId,
         array $upload,
         bool $strictProfile,
-        ?int $userId
+        ?int $userId,
+        bool $holdForBatch = false
     ): array {
         $game = $this->requiredGame($gameId);
         $this->requirePakGame($game);
@@ -172,12 +185,54 @@ final class CatalogProfiledUploadQueue
                 'size' => $size,
             ],
             5,
-            null,
+            $holdForBatch ? $this->batchHoldUntil() : null,
             'chunk-pak:' . $uploadId,
             $userId,
             3
         );
-        return ['job_id' => $jobId, 'type' => JobType::IMPORT_STAGED_PAK, 'file' => $relativePath, 'size' => $size];
+        return [
+            'job_id' => $jobId,
+            'type' => JobType::IMPORT_STAGED_PAK,
+            'file' => $relativePath,
+            'size' => $size,
+            'held' => $holdForBatch,
+        ];
+    }
+
+    /**
+     * Make held profiled-upload jobs runnable immediately after the browser has
+     * durably staged its selected batch. Only queued jobs owned by this admin
+     * and belonging to the profiled import job types can be released.
+     *
+     * @param list<int> $jobIds
+     */
+    public function releaseHeldJobs(array $jobIds, int $userId): int
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $jobIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        if ($ids === []) {
+            return 0;
+        }
+        if (count($ids) > 10000) {
+            throw new \InvalidArgumentException('Too many upload jobs were supplied for one batch release.');
+        }
+        if ($userId < 1) {
+            throw new \RuntimeException('A valid administrator identity is required to release upload jobs.');
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $sql = 'UPDATE ue_background_jobs SET available_at=UTC_TIMESTAMP(),updated_at=UTC_TIMESTAMP() '
+            . 'WHERE status="queued" AND created_by=? '
+            . 'AND job_type IN (?,?) AND id IN (' . $placeholders . ')';
+        $statement = $this->db->prepare($sql);
+        $statement->execute(array_merge([
+            $userId,
+            JobType::IMPORT_STAGED_PACKAGE,
+            JobType::IMPORT_STAGED_PAK,
+        ], $ids));
+        return $statement->rowCount();
     }
 
     /** @return array{job_id:int,type:string,file:string,size:int} */
@@ -267,6 +322,12 @@ final class CatalogProfiledUploadQueue
     private function queueName(): string
     {
         return trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    }
+
+    private function batchHoldUntil(): DateTimeImmutable
+    {
+        return (new DateTimeImmutable('now', new DateTimeZone('UTC')))
+            ->modify('+' . self::BATCH_HOLD_SECONDS . ' seconds');
     }
 
     private function encodeLocalPath(string $path): string
