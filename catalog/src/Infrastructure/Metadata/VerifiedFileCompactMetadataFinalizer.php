@@ -60,7 +60,11 @@ final class VerifiedFileCompactMetadataFinalizer
     }
 
     /**
-     * Publish current metadata directly from parser output for a newly verified package.
+     * Publish current metadata directly from parser output for a newly verified or reimported package.
+     *
+     * Parsed reader output is authoritative here. Even when a format-2 registration already exists,
+     * maintenance reimport must replace it so stale/corrupt metadata and parser changes are actually
+     * repaired instead of merely verifying the previous container.
      *
      * @param array<int|string,mixed> $result
      * @param array<int,mixed> $names
@@ -95,25 +99,18 @@ final class VerifiedFileCompactMetadataFinalizer
                 throw new RuntimeException('Verified file row is unavailable during compact metadata publication.');
             }
 
-            $registration = $db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
-            $registration->execute([$fileId]);
-            $existingVersion = (int)($registration->fetchColumn() ?: 0);
-            if ($existingVersion === BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-                $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
-                $conversion['already_compact'] = true;
-            } else {
-                $snapshot = (new CatalogParsedPackageMetadataSnapshotBuilder($db, $config))->build(
-                    $fileId,
-                    (int)$file['game_id'],
-                    (string)$file['package_name'],
-                    (string)$file['original_name'],
-                    $names,
-                    $imports,
-                    $exports
-                );
-                $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
-                $conversion['already_compact'] = false;
-            }
+            $snapshot = (new CatalogParsedPackageMetadataSnapshotBuilder($db, $config))->build(
+                $fileId,
+                (int)$file['game_id'],
+                (string)$file['package_name'],
+                (string)$file['original_name'],
+                $names,
+                $imports,
+                $exports
+            );
+            $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
+            $conversion['already_compact'] = false;
+            $conversion['republished_from_parser'] = true;
 
             if (
                 empty($conversion['verified'])
@@ -176,6 +173,7 @@ final class VerifiedFileCompactMetadataFinalizer
         $details['metadata_block_count'] = (int)($conversion['block_count'] ?? 0);
         $details['metadata_compressed_size'] = (int)($conversion['compressed_size'] ?? 0);
         $details['metadata_already_compact'] = !empty($conversion['already_compact']);
+        $details['metadata_republished_from_parser'] = !empty($conversion['republished_from_parser']);
         $result[4] = $details;
 
         self::emit($progress, 100, 'Verified compact metadata for file #' . $fileId);
