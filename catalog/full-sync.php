@@ -1,10 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders the administrator Full Sync workflow for one game.
- * Why: A game-wide rescan must rebuild package identities first, then resolve dependencies against the complete rebuilt
- *      provider set in bounded batches, and finally publish consistent summary/stat projections.
- * Role: Web UI entry point; reusable maintenance logic lives behind file-maintenance.php services and full-sync.js.
+ * Purpose: Queues the administrator Full Sync workflow for one game.
+ * Why: A game-wide rescan can take many hours and must run as durable background work rather than browser orchestration.
+ * Role: Web UI entry point; the durable worker coordinates reimport, provider, dependency and final projection phases.
  */
 declare(strict_types=1);
 
@@ -25,10 +24,10 @@ try {
 
     $games = catalog_all(
         $db,
-        'SELECT g.id, g.name, COUNT(f.id) catalog_file_count, COALESCE(SUM(f.file_size), 0) total_size'
+        'SELECT g.id,g.name,COUNT(f.id) catalog_file_count,COALESCE(SUM(f.file_size),0) total_size'
         . ' FROM ue_games g'
         . ' LEFT JOIN ue_files f ON f.game_id=g.id AND f.scan_status="verified"'
-        . ' GROUP BY g.id, g.name ORDER BY g.name'
+        . ' GROUP BY g.id,g.name ORDER BY g.name'
     );
     $selectedGameId = full_sync_int('game_id');
     if ($selectedGameId === 0 && $games) {
@@ -41,12 +40,8 @@ try {
             break;
         }
     }
-    $syncFiles = $selectedGame === null ? [] : catalog_all(
-        $db,
-        'SELECT id, original_name, package_name, md5, package_guid FROM ue_files '
-        . 'WHERE game_id=? AND scan_status="verified" ORDER BY package_name, original_name, id',
-        [$selectedGameId]
-    );
+
+    $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
 
     catalog_head('Full Sync');
     echo <<<'CSS'
@@ -57,45 +52,26 @@ try {
 .full-sync-scope .stat { min-height: auto; }
 .full-sync-warning { border-left: 4px solid #f6c453; padding-left: 12px; }
 .full-sync-start { margin-top: 16px; }
-.full-sync-overlay { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; background: rgba(3,8,18,.72); backdrop-filter: blur(3px); }
-.full-sync-dialog { width: min(630px,100%); padding: 24px; border: 1px solid var(--line2); border-radius: 14px; background: #111b2d; box-shadow: 0 24px 70px rgba(0,0,0,.5); }
-.full-sync-dialog h2 { margin: 0 0 8px; }
-.full-sync-dialog p { margin: 0 0 16px; }
-.full-sync-progress { height: 14px; overflow: hidden; border: 1px solid var(--line2); border-radius: 999px; background: rgba(255,255,255,.05); }
-.full-sync-progress > span { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#76a9ff,#9dc2ff); transition: width .18s linear; }
-.full-sync-count { margin-top: 9px; color: var(--muted); font-size: 13px; }
-.full-sync-loading { display: none; align-items: center; gap: 10px; margin-top: 16px; color: var(--text); }
-.full-sync-loading.is-visible { display: flex; }
-.full-sync-spinner { width: 17px; height: 17px; border: 3px solid rgba(157,194,255,.25); border-top-color:#9dc2ff; border-radius: 50%; animation: full-sync-spin .8s linear infinite; }
-.full-sync-failures { max-height: 220px; overflow: auto; margin: 14px 0 0; padding: 10px 14px; border: 1px solid rgba(255,107,122,.55); border-radius: 8px; color: #ffd9de; background: rgba(255,107,122,.1); white-space: pre-wrap; }
-.full-sync-result-actions { display: flex; gap: 8px; margin-top: 16px; }
-@keyframes full-sync-spin { to { transform: rotate(360deg); } }
+.full-sync-result { margin-top: 16px; }
+.full-sync-result .button-row { margin-top: 10px; }
 @media (max-width: 700px) { .full-sync-scope { grid-template-columns: 1fr; } }
 </style>
 CSS;
     echo CatalogUi::pageHeader(
         'Full Sync',
-        'Validate every verified package in one game against storage, re-import it, then rebuild dependency projections from the complete game.',
-        ['Back to dashboard' => 'dashboard.php']
+        'Queue a durable game-wide storage validation, re-import and dependency rebuild. You may leave this page immediately after the job is queued.',
+        [
+            'Background Jobs' => 'background-jobs.php?queue=' . rawurlencode($queueName),
+            'System Errors' => 'system-errors.php',
+            'Back to dashboard' => 'dashboard.php',
+        ]
     );
 
-    $synced = full_sync_int('synced');
-    $removed = full_sync_int('removed');
-    $total = full_sync_int('total');
-    $failed = full_sync_int('failed');
-    if ($total > 0) {
-        $message = 'Last full sync: ' . $synced . ' re-imported';
-        if ($removed > 0) {
-            $message .= ', ' . $removed . ' missing stored file record(s) removed';
-        }
-        $message .= ', from ' . $total . ' verified catalog record(s).';
-        if ($failed > 0) {
-            $message .= ' ' . $failed . ' operation(s) reported an issue.';
-            echo CatalogUi::alert('warning', $message, 'The page shows individual failures at the end of a run.');
-        } else {
-            echo CatalogUi::alert('success', $message);
-        }
-    }
+    echo CatalogUi::alert(
+        'info',
+        'Full Sync now runs as a background job.',
+        'The browser no longer performs or owns the sync. Progress, cancellation and terminal status are managed under Maintenance → Background Jobs.'
+    );
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Select game</h2><p>Choose the game whose verified catalog packages should be checked against storage.</p></div></div><div class="ui-section__body">';
     if (!$games) {
@@ -120,33 +96,32 @@ CSS;
     echo '</div></section>';
 
     if ($selectedGame !== null) {
-        $count = count($syncFiles);
+        $count = (int)$selectedGame['catalog_file_count'];
         echo '<section class="ui-section"><div class="ui-section__header"><div><h2>'
             . catalog_h($selectedGame['name'])
-            . '</h2><p>Storage validation, scanner rebuild and dependency reconciliation scope.</p></div></div>'
+            . '</h2><p>Durable storage validation, scanner rebuild and dependency reconciliation scope.</p></div></div>'
             . '<div class="ui-section__body">';
         echo '<div class="full-sync-scope">';
         echo '<div class="stat"><h2>' . $count . '</h2><p>Verified packages</p></div>';
         echo '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)$selectedGame['total_size']))
             . '</h2><p>Recorded verified size</p></div>';
-        echo '<div class="stat"><h2>4 phases</h2><p>Check, rebuild, resolve, finalize</p></div>';
+        echo '<div class="stat"><h2>1 job</h2><p>4 durable phases</p></div>';
         echo '</div>';
-        echo '<p class="full-sync-warning"><strong>For each verified package:</strong> Full Sync checks whether the stored package still exists. A missing package is removed together with its compact metadata, lookup projections, locations and catalog references. Existing packages are re-imported through the normal scanner. After every package identity is rebuilt, Full Sync rebuilds the game provider projection, resolves dependencies in bounded batches of up to 100 packages, refreshes package summaries, and finally rebuilds the cached game counters.</p>';
+        echo '<p class="full-sync-warning"><strong>Background workflow:</strong> the worker checks each verified package, removes only genuinely missing stored packages, and re-imports existing packages while preserving their stable file IDs. It then rebuilds package providers, refreshes dependencies in bounded batches of up to 100 files, and finalizes dependency summaries and cached game counters. Individual package failures are recorded under <a href="system-errors.php">Maintenance → System Errors</a> and the job continues where safe.</p>';
         if ($count === 0) {
             echo '<p class="muted">This game has no verified catalog packages to sync.</p>';
         } else {
-            echo '<form id="full-sync-form" class="full-sync-start" method="post" action="file-maintenance.php">';
-            echo '<input type="hidden" name="csrf" value="'
-                . catalog_h(catalog_csrf('catalog-maintenance')) . '">';
+            echo '<form id="full-sync-form" class="full-sync-start" '
+                . 'data-action-url="api/v1/full-sync-job.php" '
+                . 'data-background-url="background-jobs.php?queue=' . catalog_h(rawurlencode($queueName)) . '" '
+                . 'data-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
             echo '<input type="hidden" name="game_id" value="' . (int)$selectedGame['id'] . '">';
             echo CatalogUi::button(
-                'Start full sync for ' . $selectedGame['name'],
+                'Queue full sync for ' . $selectedGame['name'],
                 ['type' => 'submit', 'variant' => 'danger']
             );
             echo '</form>';
-            echo '<script id="full-sync-files" type="application/json">'
-                . json_encode($syncFiles, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)
-                . '</script>';
+            echo '<div id="full-sync-result" class="full-sync-result" aria-live="polite"></div>';
         }
         echo '</div></section>';
     }
