@@ -235,13 +235,15 @@ try {
     );
     $chunkStore = new CatalogChunkedUploadStore($config);
     $containerLimit = $chunkStore->maxBytes();
+    $hashWorker = __DIR__ . '/assets/profiled-upload-hash-worker.js';
+    $hashWorkerVersion = is_file($hashWorker) ? (string)filemtime($hashWorker) : '1';
 
     catalog_head('Upload Files');
     catalog_flash($_SESSION['profiled_upload_flash'] ?? null);
     unset($_SESSION['profiled_upload_flash']);
     catalog_page_header(
         'Upload Files',
-        'Files are first copied into durable controlled staging as quickly as possible. Jobs remain unclaimable while the selected browser batch is uploading. After the batch is fully staged, all of its jobs are released together and detached CLI workers perform decompression, header validation, hashing and import in the background; you do not need to keep this page open while jobs run.',
+        'Ordinary package files are first SHA-1 hashed locally in a Web Worker and checked against already verified content for the selected game; matching content is skipped before network transfer. Files that need uploading are copied into durable controlled staging as quickly as possible. Redirect wrappers and PAK containers defer duplicate decisions to background processing because their uploaded bytes are not the catalogued package payload. Jobs remain unclaimable while the selected browser batch is uploading. After the batch is fully staged, all of its jobs are released together and detached CLI workers perform authoritative hashing, decompression, header validation and import in the background.',
         [
             'Background Jobs' => 'background-jobs.php',
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
@@ -265,7 +267,7 @@ try {
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
     echo '<p><button id="profiled-upload-button" type="submit">Upload and queue</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current upload</button></p>';
-    echo '<p class="muted">Package reader selection is based on serialized Unreal header data, never the filename or extension. Normal package files larger than ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' use resumable chunks. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
+    echo '<p class="muted">Ordinary files are hashed locally one at a time before upload so already verified duplicates can be skipped without sending their bytes. This browser hash is advisory only; uploaded files are always re-hashed authoritatively by the background worker. Package reader selection is based on serialized Unreal header data, never the filename or extension. Normal package files larger than ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' use resumable chunks. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
     echo '<div id="profiled-upload-progress" class="upload-progress" hidden '
         . 'data-queue="' . catalog_h((string)($config['queue']['name'] ?? 'catalog')) . '" '
         . 'data-status-url="api/v1/job-status.php" '
@@ -273,11 +275,14 @@ try {
         . 'data-action-url="api/v1/job-action.php" '
         . 'data-run-url="api/v1/job-run.php" '
         . 'data-chunk-url="api/v1/profiled-upload-chunk.php" '
+        . 'data-preflight-url="api/v1/profiled-upload-preflight.php" '
+        . 'data-hash-worker-url="assets/profiled-upload-hash-worker.js?v=' . catalog_h($hashWorkerVersion) . '" '
         . 'data-action-csrf="' . catalog_h(catalog_csrf('job_action')) . '" '
         . 'data-chunk-csrf="' . catalog_h(catalog_csrf('profiled_upload_chunk')) . '" '
+        . 'data-preflight-csrf="' . catalog_h(catalog_csrf('profiled_upload_preflight')) . '" '
         . 'data-chunk-bytes="' . $chunkStore->chunkBytes() . '" '
         . 'data-container-limit="' . $containerLimit . '">';
-    echo '<div class="progress-row"><span id="overall-progress-label">Overall upload staging</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
+    echo '<div class="progress-row"><span id="overall-progress-label">Overall preflight/upload</span><span id="overall-progress-count"></span></div><progress id="overall-progress-bar" value="0" max="100"></progress>';
     echo '<div class="progress-row"><span id="upload-progress-label">Waiting...</span><span id="upload-progress-speed"></span></div><progress id="upload-progress-bar" value="0" max="100"></progress>';
     echo '<div id="upload-progress-log" class="upload-progress-log"></div></div>';
     echo '</form></div>';
