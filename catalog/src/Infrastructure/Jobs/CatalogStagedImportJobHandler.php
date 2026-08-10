@@ -224,21 +224,24 @@ final class CatalogStagedImportJobHandler implements JobHandler
                 );
                 $workingPath = '';
                 $store->remove($relativePath);
+                $shortError = $this->shortError($error);
+                $retentionMessage = $staged !== null
+                    ? 'Package could not be verified and was retained in the unverified queue'
+                    : 'Unsupported or invalid input was discarded';
                 $context->checkpoint([
-                    'stage' => 'unverified',
+                    'stage' => $staged !== null ? 'unverified' : 'rejected',
                     'done' => 100,
                     'total' => 100,
                     'percent' => 100,
-                    'message' => $staged !== null
-                        ? 'Package could not be verified and was retained in the unverified queue.'
-                        : 'Unsupported or invalid input was discarded.',
-                    'error' => $this->shortError($error),
+                    'status' => $staged !== null ? 'unverified' : 'rejected',
+                    'message' => $retentionMessage . ': ' . $shortError,
+                    'error' => $shortError,
                 ]);
                 return [
                     'operation' => 'import_staged_package',
                     'status' => $staged !== null ? 'unverified' : 'rejected',
                     'file_id' => (int)($staged['file_id'] ?? 0),
-                    'message' => $this->shortError($error),
+                    'message' => $shortError,
                     'original_name' => $workingName,
                     'source_relative_path' => $sourceRelativePath,
                     'unverified' => $staged,
