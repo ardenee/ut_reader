@@ -14,6 +14,8 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $catalogRoot = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
+require_once $catalogRoot . '/src/Application/Maintenance/LegacyMetadataRuntimeAudit.php';
+
 $checks = [];
 $failures = [];
 
@@ -182,6 +184,8 @@ $unverifiedAction = $read('src/Infrastructure/Unverified/CatalogUnverifiedAction
 $unverifiedImport = $read('src/Infrastructure/Unverified/CatalogUnverifiedImportService.php');
 $unverifiedPromotion = $read('src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php');
 $unverifiedRecovery = $read('src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php');
+$unverifiedControllerLegacy = \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataReferences($unverifiedController);
+$unverifiedRecoveryLegacy = \UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit::retiredMetadataReferences($unverifiedRecovery);
 $record(
     'unverified_promotion_boundary',
     $unverifiedController !== ''
@@ -190,7 +194,7 @@ $record(
         && !str_contains($unverifiedController, 'CatalogUnverifiedImportService')
         && !str_contains($unverifiedController, 'beginTransaction()')
         && !str_contains($unverifiedController, 'md5_file(')
-        && !str_contains($unverifiedController, 'ue_dependencies')
+        && $unverifiedControllerLegacy === []
         && str_contains($unverifiedAction, 'CatalogUnverifiedImportService')
         && str_contains($unverifiedAction, 'CatalogUnverifiedQueueMutationService')
         && str_contains($unverifiedImport, 'CatalogUnverifiedPromotion')
@@ -200,8 +204,8 @@ $record(
         && str_contains($unverifiedPromotion, 'CatalogUnverifiedCompactMetadataFinalizer')
         && str_contains($unverifiedRecovery, 'CatalogUnverifiedMetadataStore')
         && str_contains($unverifiedRecovery, 'CatalogUnverifiedCompactMetadataFinalizer')
-        && !str_contains($unverifiedRecovery, 'ue_dependencies'),
-    'HTTP action must delegate through action/import services; promotion/recovery must use compressed staging and compact publication instead of retired dependency tables'
+        && $unverifiedRecoveryLegacy === [],
+    'HTTP action must delegate through action/import services; promotion/recovery must use compressed staging and compact publication only'
 );
 
 $result = [
