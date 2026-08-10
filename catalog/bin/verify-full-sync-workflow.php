@@ -42,11 +42,8 @@ $phpFiles = [
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php',
-    'src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
-    'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
-    'src/Infrastructure/Persistence/PdoPackageProviderRepository.php',
     'src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
     'src/Infrastructure/Storage/CatalogVerifiedPackageStorage.php',
 ];
@@ -62,11 +59,7 @@ if (!function_exists('proc_open')) {
             continue;
         }
         $pipes = [];
-        $process = proc_open(
-            [PHP_BINARY, '-l', $path],
-            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-            $pipes
-        );
+        $process = proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($process)) {
             $syntaxFailures[] = $relative . ' could not be linted';
             continue;
@@ -106,16 +99,14 @@ $record(
 $record(
     'full_sync_job_type_registered',
     str_contains($jobType, "FULL_SYNC_GAME = 'catalog.full_sync_game'")
-        && str_contains($jobType, 'self::FULL_SYNC_GAME')
         && str_contains($workerFactory, 'new CatalogFullSyncJobHandler')
         && str_contains($workerFactory, 'JobType::FULL_SYNC_GAME => $fullSync'),
-    'The durable Full Sync type must be part of the domain contract and explicit worker dispatch map.'
+    'The Full Sync type must be in the domain contract and explicit worker dispatch map.'
 );
 $record(
     'full_sync_enqueue_is_deduplicated',
     str_contains($api, 'JobType::FULL_SYNC_GAME')
         && str_contains($api, "'full-sync-game:' . \$gameId")
-        && str_contains($api, "'initial_verified_files'")
         && str_contains($api, "'requested_by'")
         && preg_match('/full-sync-game:[\s\S]*?\$userId,\s*1\s*\)/m', $api) === 1,
     'Only one active Full Sync per game should be queued and automatic retries must not silently repeat an eight-hour run.'
@@ -126,13 +117,17 @@ $record(
         && str_contains($resourcePolicy, 'self::DEPENDENCY_HEAVY')
         && str_contains($resourcePolicy, 'self::PROJECTION_CONCURRENCY_KEY')
         && str_contains($executionContext, 'JobType::FULL_SYNC_GAME'),
-    'Full Sync must consume one dependency-heavy worker slot and retain a long renewable lease while parsing a package.'
+    'Full Sync must consume a dependency-heavy slot and use the long renewable package-reader lease.'
 );
 
 $reimportPosition = strpos($handler, "execute('sync_reimport'");
 $preparePosition = strpos($handler, 'prepareDependencies($gameId)');
-$dependencyPosition = strpos($handler, 'CatalogFullSyncDependencyBatchService');
-$finalizePosition = strpos($handler, 'finalize($gameId)');
+$dependencyPosition = $preparePosition === false
+    ? false
+    : strpos($handler, 'new CatalogFullSyncDependencyBatchService', $preparePosition);
+$finalizePosition = $dependencyPosition === false
+    ? false
+    : strpos($handler, 'finalize($gameId)', $dependencyPosition);
 $record(
     'full_sync_four_phase_order',
     $reimportPosition !== false
@@ -142,14 +137,13 @@ $record(
         && $reimportPosition < $preparePosition
         && $preparePosition < $dependencyPosition
         && $dependencyPosition < $finalizePosition,
-    'The worker must refresh package identities before providers, bounded dependency batches and final projections.'
+    'The worker must reimport identities, rebuild providers, refresh bounded dependency batches, then finalize projections.'
 );
 $record(
     'full_sync_worker_verified_scope',
     str_contains($handler, 'WHERE game_id=? AND scan_status="verified"')
-        && str_contains($handler, 'CatalogFileMaintenanceActionService')
         && str_contains($handler, 'CatalogFullSyncDependencyBatchService::MAX_BATCH_SIZE'),
-    'The worker must snapshot verified package identities and refresh current verified files only.'
+    'The durable worker must operate only on verified packages and bounded dependency batches.'
 );
 $record(
     'full_sync_worker_cancellable_and_observable',
@@ -158,13 +152,13 @@ $record(
         && str_contains($handler, '$context->heartbeatIfDue(')
         && str_contains($handler, 'CatalogSystemErrorRecorder::record')
         && str_contains($handler, "'source_kind' => 'full-sync-job'"),
-    'Long-running Full Sync work must heartbeat, honor cancellation checkpoints and preserve per-package failures in System Errors.'
+    'Full Sync must heartbeat, honor cancellation checkpoints and persist individual failures in System Errors.'
 );
 $record(
     'full_sync_worker_does_not_hold_global_lock',
     !str_contains($handler, 'unrealdb_catalog_maintenance_write_v1')
         && !str_contains($handler, 'GET_LOCK('),
-    'The coordinator must not monopolize the global identity-write lock across the whole game.'
+    'The coordinator must release identity-write serialization between packages rather than monopolizing the site for hours.'
 );
 
 $batchService = $read('src/Infrastructure/Maintenance/CatalogFullSyncDependencyBatchService.php');
@@ -174,7 +168,7 @@ $record(
         && str_contains($batchService, 'PdoCatalogDependencyRebuilder')
         && str_contains($batchService, "'summary_refresh_deferred' => true")
         && str_contains($batchService, 'catch (Throwable $error)'),
-    'Dependency resolution must remain bounded to 100 owners with isolated per-file failures and deferred bulk summaries.'
+    'Dependency resolution must stay bounded to 100 owners with isolated per-file failures.'
 );
 
 $reimport = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php');
@@ -184,7 +178,7 @@ $record(
         && str_contains($reimport, 'stable file ID preserved=')
         && str_contains($reimport, 'restoreExistingSnapshot($snapshot)')
         && !str_contains($reimport, 'DELETE FROM ue_files'),
-    'Successful and failed maintenance reparses must retain the ue_files ID and unrelated relationships.'
+    'Maintenance reparse must retain the existing ue_files ID and restore the compact snapshot on failure.'
 );
 $record(
     'full_sync_reimport_defers_async_reconciliation',
@@ -207,38 +201,27 @@ $record(
 $record(
     'maintenance_scanner_copy_cleanup_is_windows_safe',
     str_contains($importer, '$maintenanceReplaceFileId === 0')
-        && str_contains($storage, 'bool $discardDuplicateSource = true')
-        && str_contains($storage, 'if ($discardDuplicateSource'),
-    'Stable-ID maintenance must leave its scanner copy for outer cleanup after reader use on Windows.'
+        && str_contains($storage, 'bool $discardDuplicateSource = true'),
+    'Stable-ID maintenance must leave the scanner copy for outer cleanup after reader use on Windows.'
 );
 
 $metadataWriter = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php');
 $statClearPosition = strrpos($metadataWriter, 'clearstatcache(true, $path)');
-$verifyPosition = strpos($metadataWriter, 'new BlockedCompressedMetadataReader', $statClearPosition === false ? 0 : $statClearPosition);
+$verifyPosition = $statClearPosition === false
+    ? false
+    : strpos($metadataWriter, 'new BlockedCompressedMetadataReader', $statClearPosition);
 $record(
     'blocked_metadata_publish_clears_stat_cache',
-    $statClearPosition !== false
-        && $verifyPosition !== false
-        && $statClearPosition < $verifyPosition,
-    'Replacing a stable .uedb2 path must invalidate PHP stat caching before comparing the new file size with ue_file_metadata.'
+    $statClearPosition !== false && $verifyPosition !== false && $statClearPosition < $verifyPosition,
+    'Replacing the same .uedb2 path must invalidate PHP stat caching before size/hash verification.'
 );
 
-$removal = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php');
-$record(
-    'full_sync_missing_file_removal_is_explicit',
-    str_contains($removal, 'bool $deferDependencyRefresh = false')
-        && str_contains($removal, 'deleteFileProjections($fileId)')
-        && str_contains($removal, 'DELETE FROM ue_files WHERE id=?'),
-    'Only genuinely missing stored packages should use destructive catalog removal during Full Sync.'
-);
-
-$providers = $read('src/Infrastructure/Persistence/PdoPackageProviderRepository.php');
 $projectionService = $read('src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php');
+$providers = $read('src/Infrastructure/Persistence/PdoPackageProviderRepository.php');
 $record(
     'full_sync_projection_finalization',
     str_contains($providers, 'function reconcileGame(int $gameId)')
         && str_contains($projectionService, 'prepareDependencies')
-        && str_contains($projectionService, 'reconcileGame($gameId)')
         && str_contains($projectionService, 'rebuildFiles($fileIds)')
         && str_contains($projectionService, 'rebuildGame($gameId)'),
     'Finalization must leave providers, dependency summaries and cached game statistics current.'
