@@ -51,7 +51,9 @@ final class CatalogEpicUE3BinaryReader
     {
         $len=$this->i32("$field.length"); if ($len===0) return '';
         if ($len>0) {
-            $raw=$this->bytes($len,$field); return str_ends_with($raw,"\0") ? substr($raw,0,-1) : $raw;
+            $raw=$this->bytes($len,$field);
+            if (str_ends_with($raw,"\0")) $raw=substr($raw,0,-1);
+            return $raw==='' ? '' : $this->ansiToUtf8($raw);
         }
         $chars=-$len; if ($chars > intdiv(PHP_INT_MAX,2)) throw new OutOfBoundsException("UE3 $field Unicode length overflow");
         $raw=$this->bytes($chars*2,$field); if (str_ends_with($raw,"\0\0")) $raw=substr($raw,0,-2); if ($raw==='') return '';
@@ -59,6 +61,21 @@ final class CatalogEpicUE3BinaryReader
         if (function_exists('mb_convert_encoding')) return (string)mb_convert_encoding($raw,'UTF-8',$enc);
         $out=function_exists('iconv')?@iconv($enc,'UTF-8//IGNORE',$raw):false;
         if ($out===false) throw new RuntimeException('UE3 Unicode FString requires mbstring or iconv');
+        return $out;
+    }
+    private function ansiToUtf8(string $raw): string
+    {
+        // Epic's FString archive operator loads positive-length strings byte by
+        // byte with FromAnsi(ANSICHAR); the Unicode Core definition is exactly
+        // `(BYTE)In`. Preserve that 0x00-0xFF code-point mapping and encode the
+        // resulting TCHAR text as UTF-8 for PHP/JSON instead of treating the
+        // serialized ANSI bytes themselves as UTF-8.
+        $out='';
+        for ($i=0,$length=strlen($raw);$i<$length;$i++) {
+            $code=ord($raw[$i]);
+            if ($code<0x80) $out.=chr($code);
+            else $out.=chr(0xC0|($code>>6)).chr(0x80|($code&0x3F));
+        }
         return $out;
     }
 }
