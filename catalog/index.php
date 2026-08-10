@@ -81,7 +81,16 @@ function catalog_render_search_results(array $rows, string $query, bool $truncat
     if ($truncated) {
         echo '<p class="muted small">Showing the first matching files without calculating an expensive exact total. Refine the search to narrow the result set.</p>';
     }
-    echo '<table id="catalog-search-results" data-sortable-table><thead><tr><th>Game</th><th>Package</th><th>File</th><th>Matched Field</th><th>Tables (N/I/E)</th><th>Size</th><th>Identity</th></tr></thead><tbody>';
+    echo '<style>'
+        . '#catalog-search-results .search-file-package-cell{min-width:190px}'
+        . '#catalog-search-results .search-file-name{margin-bottom:4px}'
+        . '#catalog-search-results .search-package-name{display:block}'
+        . '#catalog-search-results .search-match-cell,#catalog-search-results .search-match{white-space:normal;overflow-wrap:anywhere;word-break:break-word}'
+        . '#catalog-search-results .search-match-cell{min-width:180px}'
+        . '#catalog-search-results .search-tables-cell,#catalog-search-results .search-size-cell{white-space:nowrap}'
+        . '#catalog-search-results .search-tables-cell span{display:block}'
+        . '</style>';
+    echo '<table id="catalog-search-results" data-sortable-table><thead><tr><th>Game</th><th>File / Package</th><th>Matching field</th><th>Tables</th><th>Size</th><th>Identity</th></tr></thead><tbody>';
     foreach ($rows as $row) {
         $fileId = (int)$row['id'];
         $gameId = (int)$row['game_id'];
@@ -99,11 +108,17 @@ function catalog_render_search_results(array $rows, string $query, bool $truncat
         }
         echo '<tr>';
         echo '<td><a href="game-files.php?id=' . $gameId . '">' . catalog_search_highlight($gameName, $query) . '</a></td>';
-        echo '<td class="mono"><a href="file-info.php?id=' . $fileId . '">' . catalog_search_highlight($packageName, $query) . '</a></td>';
-        echo '<td><a href="file-examine.php?id=' . $fileId . '">' . catalog_search_highlight($originalName, $query) . '</a></td>';
-        echo '<td>' . ($matched !== '' ? $matched : '<span class="muted">match details unavailable</span>') . '</td>';
-        echo '<td class="mono">' . (int)($row['name_count'] ?? 0) . ' / ' . (int)($row['import_count'] ?? 0) . ' / ' . (int)($row['export_count'] ?? 0) . '</td>';
-        echo '<td>' . catalog_h(catalog_bytes((int)($row['file_size'] ?? 0))) . '</td>';
+        echo '<td class="search-file-package-cell">'
+            . '<div class="search-file-name"><a href="file-examine.php?id=' . $fileId . '">' . catalog_search_highlight($originalName, $query) . '</a></div>'
+            . '<span class="search-package-name mono small"><a href="file-info.php?id=' . $fileId . '">' . catalog_search_highlight($packageName, $query) . '</a></span>'
+            . '</td>';
+        echo '<td class="search-match-cell">' . ($matched !== '' ? $matched : '<span class="muted">match details unavailable</span>') . '</td>';
+        echo '<td class="mono search-tables-cell">'
+            . '<span>N: ' . (int)($row['name_count'] ?? 0) . '</span>'
+            . '<span>I: ' . (int)($row['import_count'] ?? 0) . '</span>'
+            . '<span>E: ' . (int)($row['export_count'] ?? 0) . '</span>'
+            . '</td>';
+        echo '<td class="search-size-cell">' . catalog_h(catalog_bytes((int)($row['file_size'] ?? 0))) . '</td>';
         echo '<td class="catalog-identity-cell">' . CatalogUi::identity(
             (string)($row['package_guid'] ?? ''),
             (string)($row['md5'] ?? ''),
