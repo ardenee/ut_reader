@@ -88,6 +88,43 @@ final class CatalogFileMaintenanceSupport
         ))->capture($fileId);
     }
 
+    /**
+     * Capture only the relational state needed to reparse a verified file.
+     *
+     * This deliberately does not read compact metadata. A maintenance reimport is
+     * also the recovery path for a missing/truncated/corrupt .uedb2 container, so
+     * requiring that derived file to decode successfully would make it impossible
+     * to repair from the authoritative stored package.
+     *
+     * @return array<string,mixed>
+     */
+    public function reimportState(int $fileId): array
+    {
+        if ($fileId < 1) {
+            throw new RuntimeException('A positive file ID is required.');
+        }
+
+        $file = \catalog_one($this->db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
+        if (!$file) {
+            throw new RuntimeException('File #' . $fileId . ' was not found.');
+        }
+        if ((string)($file['scan_status'] ?? '') !== 'verified') {
+            throw new RuntimeException('File #' . $fileId . ' is not verified.');
+        }
+
+        return [
+            'format' => 'unrealdb.reimport-relational-state',
+            'format_version' => 1,
+            'file' => $file,
+            'locations' => \catalog_all(
+                $this->db,
+                'SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id',
+                [$fileId]
+            ),
+            'captured_at' => gmdate('c'),
+        ];
+    }
+
     /** @param array<string,mixed> $snapshot */
     public function restoreSnapshot(array $snapshot): void
     {
@@ -119,42 +156,44 @@ final class CatalogFileMaintenanceSupport
             return;
         }
 
-        $columns = [];
-        $values = [];
-        foreach ($file as $column => $value) {
-            $column = (string)$column;
-            if ($column === 'id') {
-                continue;
-            }
-            if (preg_match('/^[A-Za-z0-9_]+$/', $column) !== 1) {
-                throw new RuntimeException('Invalid column in compact maintenance rollback snapshot.');
-            }
-            $columns[] = '`' . $column . '`=?';
-            $values[] = $value;
-        }
-        if ($columns === []) {
-            throw new RuntimeException('Compact maintenance rollback snapshot has no file fields.');
-        }
-        $values[] = $fileId;
-
-        $this->db->beginTransaction();
-        try {
-            $statement = $this->db->prepare(
-                'UPDATE ue_files SET ' . implode(',', $columns) . ' WHERE id=?'
-            );
-            $statement->execute($values);
-            $this->db->commit();
-        } catch (Throwable $error) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            throw $error;
-        }
+        $this->restoreExistingFileRow($file);
 
         (new BlockedCompressedMetadataSnapshotWriter(
             $this->db,
             self::storageRoot($this->config)
         ))->write($metadata);
+    }
+
+    /**
+     * Restore only the ue_files row captured before a repair-mode reimport.
+     *
+     * Used only when the previous compact metadata could not be decoded, so there
+     * is intentionally no old metadata snapshot to republish. The compact writer
+     * provides its own atomic filesystem/SQL rollback if publication fails.
+     *
+     * @param array<string,mixed> $state
+     */
+    public function restoreReimportFileRow(array $state): void
+    {
+        if ((string)($state['format'] ?? '') !== 'unrealdb.reimport-relational-state'
+            || (int)($state['format_version'] ?? 0) !== 1) {
+            throw new RuntimeException('Unsupported maintenance reimport relational state.');
+        }
+        $file = is_array($state['file'] ?? null) ? $state['file'] : [];
+        $fileId = (int)($file['id'] ?? 0);
+        if ($fileId < 1) {
+            throw new RuntimeException('Maintenance reimport rollback state has no valid file identity.');
+        }
+
+        $current = $this->db->prepare('SELECT id FROM ue_files WHERE id=?');
+        $current->execute([$fileId]);
+        if ($current->fetchColumn() === false) {
+            throw new RuntimeException(
+                'Cannot restore maintenance reimport file row #' . $fileId . ' because the stable identity disappeared.'
+            );
+        }
+
+        $this->restoreExistingFileRow($file);
     }
 
     /** Remove current lookup rows that are not protected by ue_files foreign-key cascades. */
@@ -249,6 +288,47 @@ final class CatalogFileMaintenanceSupport
                 \scanner_range_percent($startPercent, $endPercent, $index + 1, $total),
                 $prefix . ' ' . ($index + 1) . '/' . $total
             );
+        }
+    }
+
+    /** @param array<string,mixed> $file */
+    private function restoreExistingFileRow(array $file): void
+    {
+        $fileId = (int)($file['id'] ?? 0);
+        if ($fileId < 1) {
+            throw new RuntimeException('Maintenance rollback file row has no valid identity.');
+        }
+
+        $columns = [];
+        $values = [];
+        foreach ($file as $column => $value) {
+            $column = (string)$column;
+            if ($column === 'id') {
+                continue;
+            }
+            if (preg_match('/^[A-Za-z0-9_]+$/', $column) !== 1) {
+                throw new RuntimeException('Invalid column in maintenance rollback file row.');
+            }
+            $columns[] = '`' . $column . '`=?';
+            $values[] = $value;
+        }
+        if ($columns === []) {
+            throw new RuntimeException('Maintenance rollback file row has no fields.');
+        }
+        $values[] = $fileId;
+
+        $this->db->beginTransaction();
+        try {
+            $statement = $this->db->prepare(
+                'UPDATE ue_files SET ' . implode(',', $columns) . ' WHERE id=?'
+            );
+            $statement->execute($values);
+            $this->db->commit();
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
         }
     }
 }
