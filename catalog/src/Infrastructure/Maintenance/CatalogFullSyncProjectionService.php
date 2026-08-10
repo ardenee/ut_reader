@@ -21,6 +21,8 @@ final class CatalogFullSyncProjectionService
 {
     private const WRITE_LOCK = 'unrealdb_catalog_maintenance_write_v1';
     private const LOCK_WAIT_SECONDS = 45;
+    private const STATS_RETRY_COUNT = 40;
+    private const STATS_RETRY_DELAY_US = 250000;
 
     /** @param null|callable(array<string,mixed>):void $progress */
     public function __construct(
@@ -72,10 +74,7 @@ final class CatalogFullSyncProjectionService
             }
 
             $this->emit('game_stats', 80, 'Rebuilding cached game dependency counters.');
-            $stats = (new PdoGameCatalogStats($this->db))->rebuildGame($gameId);
-            if ($stats === null) {
-                throw new RuntimeException('Game catalog statistics could not be rebuilt because the stats lock is busy.');
-            }
+            $stats = $this->rebuildStats($gameId);
 
             $this->emit(
                 'complete',
@@ -94,6 +93,28 @@ final class CatalogFullSyncProjectionService
                 'message' => 'Package providers, dependency summaries and game counters finalized.',
             ];
         });
+    }
+
+    /** @return array<string,int> */
+    private function rebuildStats(int $gameId): array
+    {
+        $statsStore = new PdoGameCatalogStats($this->db);
+        for ($attempt = 1; $attempt <= self::STATS_RETRY_COUNT; $attempt++) {
+            $stats = $statsStore->rebuildGame($gameId);
+            if ($stats !== null) {
+                return $stats;
+            }
+            if ($attempt < self::STATS_RETRY_COUNT) {
+                $this->emit(
+                    'game_stats',
+                    80 + (int)floor(($attempt / self::STATS_RETRY_COUNT) * 15),
+                    'Waiting for an existing game-stat refresh to release its lock ('
+                        . $attempt . '/' . self::STATS_RETRY_COUNT . ').'
+                );
+                usleep(self::STATS_RETRY_DELAY_US);
+            }
+        }
+        throw new RuntimeException('Game catalog statistics could not be rebuilt because the stats lock remained busy.');
     }
 
     private function requireGame(int $gameId): void
