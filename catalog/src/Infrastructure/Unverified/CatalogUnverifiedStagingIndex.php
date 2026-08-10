@@ -150,11 +150,10 @@ final class CatalogUnverifiedStagingIndex
     public static function detectEngine(string $path, string $name): array
     {
         $summary = \gp_read_legacy_summary($path);
-        $engine = strtoupper((string)(
-            $summary['engine_hint']
-            ?? \gp_detect_from_extension((string)pathinfo($name, PATHINFO_EXTENSION))
-            ?? 'UNKNOWN'
-        ));
+        $engine = strtoupper(trim((string)($summary['engine_hint'] ?? 'UNKNOWN')));
+        if (!in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+            $engine = 'UNKNOWN';
+        }
         return [$engine, $summary];
     }
 
@@ -169,7 +168,7 @@ final class CatalogUnverifiedStagingIndex
     ): array {
         [$engine] = self::detectEngine($path, $name);
         if (!in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
-            throw new RuntimeException('No Unreal package reader could be selected from the file header or extension.');
+            throw new RuntimeException('No Unreal package reader could be selected from serialized package header data.');
         }
 
         if (in_array($engine, ['UE4', 'UE5'], true) && $queueGameId > 0) {
