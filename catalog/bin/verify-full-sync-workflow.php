@@ -33,12 +33,14 @@ $files = [
     'full-sync.php',
     'file-maintenance.php',
     'lib/CatalogFileMaintenance.php',
+    'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php',
     'src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php',
+    'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Persistence/PdoPackageProviderRepository.php',
 ];
 
@@ -85,7 +87,7 @@ $record(
         && strpos($page, "'sync_reimport'") < strpos($page, "'sync_prepare_dependencies'")
         && strpos($page, "'sync_prepare_dependencies'") < strpos($page, "'sync_refresh_dependencies'")
         && strpos($page, "'sync_refresh_dependencies'") < strpos($page, "'sync_finalize_game'"),
-    'Full Sync must rebuild all identities before providers, dependencies and final projections.'
+    'Full Sync must refresh all package identities before providers, dependencies and final projections.'
 );
 $record(
     'full_sync_verified_scope',
@@ -95,20 +97,40 @@ $record(
 
 $reimport = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php');
 $record(
+    'full_sync_reimport_preserves_file_identity',
+    str_contains($reimport, "'maintenance_replace_file_id' => $fileId")
+        && str_contains($reimport, 'stable file ID preserved=')
+        && str_contains($reimport, 'restoreExistingSnapshot($snapshot)')
+        && !str_contains($reimport, 'DELETE FROM ue_files'),
+    'A successful/failed maintenance reparse must retain the existing ue_files ID and unrelated relationships.'
+);
+$record(
     'full_sync_reimport_defers_async_reconciliation',
     str_contains($reimport, 'if (!$deferDependencyRefresh)')
-        && str_contains($reimport, 'CatalogProjectionReconciliationQueue::enqueue')
-        && str_contains($reimport, 'deleteFileProjections($fileId)'),
-    'Deferred Full Sync reimports must not queue per-package reconciliation and must remove old lookup rows.'
+        && str_contains($reimport, 'CatalogProjectionReconciliationQueue::enqueue'),
+    'Deferred Full Sync reimports must not queue per-package projection reconciliation.'
+);
+
+$importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$persistence = $read('src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php');
+$record(
+    'maintenance_importer_stable_id_contract',
+    str_contains($importer, 'maintenance_replace_file_id')
+        && str_contains($importer, 'AND id<>?')
+        && str_contains($importer, '$maintenanceReplaceFileId')
+        && str_contains($persistence, 'int $replaceFileId = 0')
+        && str_contains($persistence, 'UPDATE ue_files SET '),
+    'Maintenance refresh must exclude its own identity from duplicate detection and update that row in place.'
 );
 
 $removal = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php');
 $record(
-    'full_sync_removal_defers_async_reconciliation',
+    'full_sync_missing_file_removal_is_explicit',
     str_contains($removal, 'bool $deferDependencyRefresh = false')
         && str_contains($removal, 'if (!$deferDependencyRefresh)')
-        && str_contains($removal, 'deleteFileProjections($fileId)'),
-    'Missing-file removal must share the deferred Full Sync reconciliation model.'
+        && str_contains($removal, 'deleteFileProjections($fileId)')
+        && str_contains($removal, 'DELETE FROM ue_files WHERE id=?'),
+    'Only genuinely missing stored packages should use destructive catalog removal during Full Sync.'
 );
 
 $rebuilder = $read('src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php');
