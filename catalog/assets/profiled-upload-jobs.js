@@ -18,12 +18,22 @@
 
     const chunkUrl = progress.dataset.chunkUrl || 'api/v1/profiled-upload-chunk.php';
     const chunkCsrf = progress.dataset.chunkCsrf || '';
+    const preflightUrl = progress.dataset.preflightUrl || 'api/v1/profiled-upload-preflight.php';
+    const preflightCsrf = progress.dataset.preflightCsrf || '';
+    const hashWorkerUrl = progress.dataset.hashWorkerUrl || 'assets/profiled-upload-hash-worker.js';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progress.dataset.chunkBytes || 16 * 1024 * 1024));
     const containerLimit = Math.max(0, Number(progress.dataset.containerLimit || 0));
     let activeUploadId = '';
     let activeXhr = null;
+    let activeHashWorker = null;
+    let activeHashReject = null;
     let cancelRequested = false;
     let queuedJobIds = [];
+    let stagedHashes = new Map();
+    let preflightDuplicates = 0;
+    let preflightWarningShown = false;
+    let batchGameId = '';
+    let batchStrictProfile = '1';
 
     function installStatusStyles() {
         const style = document.createElement('style');
@@ -52,6 +62,14 @@
 
     function isPak(file) {
         return /\.pak$/i.test(file.name || '');
+    }
+
+    function isRedirectWrapper(file) {
+        return /\.uz(?:2|3)?$/i.test(file.name || '');
+    }
+
+    function preflightEligible(file) {
+        return Number(file.size || 0) > 0 && !isPak(file) && !isRedirectWrapper(file);
     }
 
     function shouldUseChunks(file) {
@@ -95,8 +113,8 @@
     function setOverall(done, total, currentPercent) {
         const percent = Math.round(((done + currentPercent / 100) / Math.max(1, total)) * 100);
         overallBar.value = percent;
-        overallLabel.textContent = 'Overall upload staging (' + percent + '%)';
-        overallCount.textContent = done + ' of ' + total + ' durably staged';
+        overallLabel.textContent = 'Overall preflight/upload (' + percent + '%)';
+        overallCount.textContent = done + ' of ' + total + ' checked/staged';
     }
 
     function responseError(body, fallback) {
@@ -187,6 +205,160 @@
         return body;
     }
 
+    function cancelActiveHash() {
+        if (activeHashWorker) {
+            activeHashWorker.terminate();
+            activeHashWorker = null;
+        }
+        if (activeHashReject) {
+            const reject = activeHashReject;
+            activeHashReject = null;
+            reject(new Error('Upload cancelled.'));
+        }
+    }
+
+    function hashFileLocally(file, index, total) {
+        return new Promise(function (resolve, reject) {
+            if (!window.Worker || !hashWorkerUrl) {
+                reject(new Error('Web Worker hashing is unavailable in this browser.'));
+                return;
+            }
+            const id = String(Date.now()) + '-' + String(index) + '-' + Math.random().toString(16).slice(2);
+            const worker = new Worker(hashWorkerUrl);
+            const started = Date.now();
+            activeHashWorker = worker;
+            activeHashReject = reject;
+            currentBar.value = 0;
+            currentLabel.textContent = 'Checking duplicate locally ' + index + ' of ' + total + ': ' + shownName(file);
+
+            function cleanup() {
+                worker.terminate();
+                if (activeHashWorker === worker) activeHashWorker = null;
+                if (activeHashReject === reject) activeHashReject = null;
+                speed.textContent = '';
+            }
+
+            worker.onmessage = function (event) {
+                const message = event.data || {};
+                if (String(message.id || '') !== id) return;
+                if (message.type === 'progress') {
+                    const loaded = Number(message.loaded || 0);
+                    const totalBytes = Math.max(1, Number(message.total || file.size || 1));
+                    const percent = Math.floor((loaded * 100) / totalBytes);
+                    currentBar.value = percent;
+                    currentLabel.textContent = 'Checking duplicate locally ' + index + ' of ' + total + ': ' + shownName(file) + ' (' + percent + '%)';
+                    speed.textContent = bytes(loaded / Math.max(0.1, (Date.now() - started) / 1000)) + '/s hash';
+                    return;
+                }
+                if (message.type === 'done') {
+                    cleanup();
+                    resolve(String(message.sha1 || '').toLowerCase());
+                    return;
+                }
+                if (message.type === 'cancelled') {
+                    cleanup();
+                    reject(new Error('Upload cancelled.'));
+                    return;
+                }
+                if (message.type === 'error') {
+                    cleanup();
+                    reject(new Error(String(message.message || 'Client hash failed.')));
+                }
+            };
+            worker.onerror = function () {
+                cleanup();
+                reject(new Error('Client hash worker failed.'));
+            };
+            worker.postMessage({type: 'hash', id: id, file: file});
+        });
+    }
+
+    async function serverDuplicatePreflight(file, sha1) {
+        if (!preflightUrl || !preflightCsrf) {
+            throw new Error('Duplicate preflight endpoint is unavailable.');
+        }
+        const response = await fetch(preflightUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            cache: 'no-store',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': preflightCsrf
+            },
+            body: JSON.stringify({
+                game_id: Number(batchGameId || 0),
+                sha1: sha1,
+                file_size: Number(file.size || 0)
+            })
+        });
+        const text = await response.text();
+        const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Duplicate preflight');
+        if (!response.ok) {
+            throw new Error(responseError(body, 'Duplicate preflight failed with HTTP ' + response.status + '.'));
+        }
+        return body;
+    }
+
+    async function duplicatePreflight(file, index, total) {
+        if (!preflightEligible(file)) {
+            return {skip: false, hashKey: ''};
+        }
+
+        let sha1;
+        try {
+            sha1 = await hashFileLocally(file, index, total);
+        } catch (error) {
+            if (cancelRequested || (error && error.message === 'Upload cancelled.')) throw error;
+            if (!preflightWarningShown) {
+                preflightWarningShown = true;
+                addLog({status: 'skipped', message: 'Client duplicate preflight is unavailable; affected files will upload normally and remain protected by authoritative server-side duplicate detection.'});
+            }
+            return {skip: false, hashKey: ''};
+        }
+
+        if (!/^[a-f0-9]{40}$/.test(sha1)) {
+            if (!preflightWarningShown) {
+                preflightWarningShown = true;
+                addLog({status: 'skipped', message: 'Client duplicate preflight returned an invalid digest; upload will continue normally.'});
+            }
+            return {skip: false, hashKey: ''};
+        }
+
+        const hashKey = String(file.size) + ':' + sha1;
+        if (stagedHashes.has(hashKey)) {
+            preflightDuplicates++;
+            addLog({
+                status: 'duplicate',
+                file: shownName(file),
+                message: 'Skipped before upload: identical SHA-1 and byte size to ' + stagedHashes.get(hashKey) + ', already staged in this browser batch.'
+            });
+            setOverall(index, total, 0);
+            return {skip: true, hashKey: hashKey};
+        }
+
+        try {
+            const preflight = await serverDuplicatePreflight(file, sha1);
+            if (preflight && preflight.duplicate && preflight.match) {
+                const match = preflight.match;
+                preflightDuplicates++;
+                addLog({
+                    status: 'duplicate',
+                    file: shownName(file),
+                    message: 'Skipped before upload: matching SHA-1 and byte size already verified as file #' + String(match.id || '?') + ' (' + String(match.original_name || match.package_name || 'existing package') + ').'
+                });
+                setOverall(index, total, 0);
+                return {skip: true, hashKey: hashKey};
+            }
+        } catch (error) {
+            if (!preflightWarningShown) {
+                preflightWarningShown = true;
+                addLog({status: 'skipped', message: (error.message || 'Duplicate preflight failed.') + ' Upload will continue normally; server-side duplicate detection remains authoritative.'});
+            }
+        }
+
+        return {skip: false, hashKey: hashKey};
+    }
+
     function standardUpload(file, index, total) {
         return new Promise(function (resolve) {
             const data = new FormData();
@@ -194,8 +366,8 @@
             data.append('ajax', '1');
             data.append('defer_worker_start', '1');
             data.append('csrf', form.querySelector('[name="csrf"]').value);
-            data.append('game_id', form.querySelector('[name="game_id"]').value);
-            data.append('strict_profile', form.querySelector('[name="strict_profile"]').value);
+            data.append('game_id', batchGameId);
+            data.append('strict_profile', batchStrictProfile);
             data.append('relative_paths[]', name);
             data.append('files[]', file, file.name);
 
@@ -216,6 +388,7 @@
             xhr.onload = function () {
                 if (activeXhr === xhr) activeXhr = null;
                 speed.textContent = '';
+                let staged = false;
                 try {
                     const response = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Upload request');
                     if (xhr.status < 200 || xhr.status >= 300 || !response.ok || !Array.isArray(response.jobs) || !response.jobs.length) {
@@ -229,24 +402,25 @@
                             message: 'Durably staged as held background job #' + queued.job_id + '. Existing workers cannot claim it until the upload batch is released.'
                         });
                     });
+                    staged = true;
                 } catch (error) {
                     addLog({status: 'failed', file: name, message: error.message || 'Invalid server response.'});
                 }
                 setOverall(index, total, 0);
-                resolve();
+                resolve(staged);
             };
             xhr.onerror = function () {
                 if (activeXhr === xhr) activeXhr = null;
                 speed.textContent = '';
                 addLog({status: 'failed', file: name, message: 'Upload connection error.'});
                 setOverall(index, total, 0);
-                resolve();
+                resolve(false);
             };
             xhr.onabort = function () {
                 if (activeXhr === xhr) activeXhr = null;
                 speed.textContent = '';
                 addLog({status: 'cancelled', file: name, message: 'Upload cancelled.'});
-                resolve();
+                resolve(false);
             };
             xhr.send(data);
         });
@@ -274,17 +448,15 @@
         if (pak && containerLimit > 0 && file.size > containerLimit) {
             throw new Error('PAK is ' + bytes(file.size) + '; configured container limit is ' + bytes(containerLimit) + '.');
         }
-        const gameId = form.querySelector('[name="game_id"]').value;
-        const strictProfile = form.querySelector('[name="strict_profile"]').value;
-        const clientKey = [file.name, file.size, file.lastModified || 0, name, gameId].join('|');
+        const clientKey = [file.name, file.size, file.lastModified || 0, name, batchGameId].join('|');
         const initData = new FormData();
         initData.append('action', 'init');
         initData.append('client_key', clientKey);
         initData.append('original_name', file.name);
         initData.append('relative_path', name);
         initData.append('file_size', String(file.size));
-        initData.append('game_id', gameId);
-        initData.append('strict_profile', strictProfile);
+        initData.append('game_id', batchGameId);
+        initData.append('strict_profile', batchStrictProfile);
 
         cancelButton.hidden = false;
         currentLabel.textContent = 'Preparing resumable upload: ' + name;
@@ -350,33 +522,49 @@
                 message: 'Resumable upload durably staged as held background job #' + queued.job_id + '. Existing workers cannot claim it until the upload batch is released.'
             });
         });
+        return true;
     }
 
     async function processOne(file, index, total) {
         const name = shownName(file);
-        if (!shouldUseChunks(file)) {
-            await standardUpload(file, index, total);
+        let preflight;
+        try {
+            preflight = await duplicatePreflight(file, index, total);
+        } catch (error) {
+            if (cancelRequested) return;
+            addLog({status: 'failed', file: name, message: error.message || 'Duplicate preflight failed.'});
             return;
         }
-        try {
-            await chunkedUpload(file, index, total);
-        } catch (error) {
-            if (!cancelRequested) {
-                addLog({status: 'failed', file: name, message: error.message || 'Resumable upload failed.'});
+        if (preflight.skip || cancelRequested) return;
+
+        let staged = false;
+        if (!shouldUseChunks(file)) {
+            staged = await standardUpload(file, index, total);
+        } else {
+            try {
+                staged = await chunkedUpload(file, index, total);
+            } catch (error) {
+                if (!cancelRequested) {
+                    addLog({status: 'failed', file: name, message: error.message || 'Resumable upload failed.'});
+                }
             }
-        } finally {
-            speed.textContent = '';
-            activeUploadId = '';
-            activeXhr = null;
-            cancelButton.hidden = false;
-            setOverall(index, total, 0);
         }
+
+        if (staged && preflight.hashKey) {
+            stagedHashes.set(preflight.hashKey, name);
+        }
+        speed.textContent = '';
+        activeUploadId = '';
+        activeXhr = null;
+        cancelButton.hidden = false;
+        setOverall(index, total, 0);
     }
 
     cancelButton.addEventListener('click', async function () {
         cancelRequested = true;
         cancelButton.disabled = true;
         try {
+            cancelActiveHash();
             if (activeXhr) activeXhr.abort();
             if (activeUploadId && chunkCsrf) {
                 const data = new FormData();
@@ -402,11 +590,16 @@
             return;
         }
 
+        batchGameId = String(form.querySelector('[name="game_id"]').value || '');
+        batchStrictProfile = String(form.querySelector('[name="strict_profile"]').value || '1');
         submitButton.disabled = true;
         progress.hidden = false;
         log.textContent = '';
         cancelRequested = false;
         queuedJobIds = [];
+        stagedHashes = new Map();
+        preflightDuplicates = 0;
+        preflightWarningShown = false;
         cancelButton.hidden = false;
         setOverall(0, selected.length, 0);
 
@@ -420,6 +613,7 @@
         speed.textContent = '';
         activeXhr = null;
         activeUploadId = '';
+        cancelActiveHash();
         if (queuedJobIds.length > 0) {
             currentLabel.textContent = 'Upload staging complete. Releasing ' + queuedJobIds.length + ' background job(s)...';
             try {
@@ -437,18 +631,21 @@
         }
 
         currentBar.value = cancelRequested ? 0 : 100;
+        const duplicateText = preflightDuplicates > 0 ? '; ' + preflightDuplicates + ' duplicate(s) skipped before upload' : '';
         if (!cancelRequested) {
             overallBar.value = 100;
-            overallLabel.textContent = 'Upload staging complete (100%)';
-            overallCount.textContent = selected.length + ' of ' + selected.length + ' upload(s) attempted; ' + queuedJobIds.length + ' job(s) staged';
-            currentLabel.textContent = 'All selected files have finished browser upload/staging. Background processing continues independently.';
+            overallLabel.textContent = 'Preflight/upload complete (100%)';
+            overallCount.textContent = selected.length + ' of ' + selected.length + ' checked; ' + queuedJobIds.length + ' job(s) staged' + duplicateText;
+            currentLabel.textContent = 'All selected files have finished duplicate preflight/upload staging. Background processing continues independently.';
         } else {
-            overallCount.textContent = attempted + ' of ' + selected.length + ' upload(s) attempted; ' + queuedJobIds.length + ' job(s) staged';
+            overallCount.textContent = attempted + ' of ' + selected.length + ' checked; ' + queuedJobIds.length + ' job(s) staged' + duplicateText;
             currentLabel.textContent = 'Upload batch cancelled. Already-staged jobs were released for background processing.';
         }
         submitButton.disabled = false;
         cancelButton.hidden = true;
         cancelRequested = false;
+        batchGameId = '';
+        batchStrictProfile = '1';
     });
 
     installStatusStyles();
