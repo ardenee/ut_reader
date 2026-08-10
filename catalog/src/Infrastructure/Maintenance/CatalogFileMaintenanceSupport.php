@@ -95,6 +95,16 @@ final class CatalogFileMaintenanceSupport
         ))->restore($snapshot);
     }
 
+    /** Remove current lookup rows that are not protected by ue_files foreign-key cascades. */
+    public function deleteFileProjections(int $fileId): void
+    {
+        if ($fileId < 1) {
+            return;
+        }
+        $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
+        $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
+    }
+
     /** @param array<string,mixed> $snapshot */
     public static function sourceRelativePath(array $snapshot): string
     {
