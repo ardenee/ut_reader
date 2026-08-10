@@ -42,9 +42,11 @@ $phpFiles = [
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php',
+    'src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
+    'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Storage/CatalogVerifiedPackageStorage.php',
 ];
 
@@ -172,6 +174,7 @@ $record(
 );
 
 $reimport = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php');
+$maintenanceSupport = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceSupport.php');
 $record(
     'full_sync_reimport_preserves_file_identity',
     str_contains($reimport, "'maintenance_replace_file_id' => \$fileId")
@@ -179,6 +182,17 @@ $record(
         && str_contains($reimport, 'restoreExistingSnapshot($snapshot)')
         && !str_contains($reimport, 'DELETE FROM ue_files'),
     'Maintenance reparse must retain the existing ue_files ID and restore the compact snapshot on failure.'
+);
+$record(
+    'full_sync_reimport_repairs_unreadable_compact_metadata',
+    str_contains($reimport, '$support->reimportState($fileId)')
+        && str_contains($reimport, '$support->snapshot($fileId)')
+        && str_contains($reimport, 'Existing compact metadata is unreadable; rebuilding it from the authoritative stored package')
+        && str_contains($reimport, '$support->restoreReimportFileRow($reimportState)')
+        && str_contains($reimport, 'repaired unreadable compact metadata from authoritative package')
+        && str_contains($maintenanceSupport, 'public function reimportState(int $fileId)')
+        && str_contains($maintenanceSupport, 'public function restoreReimportFileRow(array $state)'),
+    'A missing/truncated/corrupt .uedb2 must not be a prerequisite for reparsing the authoritative stored package.'
 );
 $record(
     'full_sync_reimport_defers_async_reconciliation',
@@ -214,6 +228,25 @@ $record(
     'blocked_metadata_publish_clears_stat_cache',
     $statClearPosition !== false && $verifyPosition !== false && $statClearPosition < $verifyPosition,
     'Replacing the same .uedb2 path must invalidate PHP stat caching before size/hash verification.'
+);
+
+$metadataFinalizer = $read('src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php');
+$parsedStart = strpos($metadataFinalizer, 'public static function finalizeParsed(');
+$parsedEnd = $parsedStart === false
+    ? false
+    : strpos($metadataFinalizer, 'private static function fileId', $parsedStart);
+$parsedBody = $parsedStart !== false && $parsedEnd !== false
+    ? substr($metadataFinalizer, $parsedStart, $parsedEnd - $parsedStart)
+    : '';
+$record(
+    'parsed_reimport_always_republishes_compact_metadata',
+    $parsedBody !== ''
+        && str_contains($parsedBody, 'CatalogParsedPackageMetadataSnapshotBuilder')
+        && str_contains($parsedBody, 'BlockedCompressedMetadataSnapshotWriter')
+        && str_contains($parsedBody, "'republished_from_parser' => true")
+        && !str_contains($parsedBody, 'SELECT format_version')
+        && !str_contains($parsedBody, '->verify($fileId)'),
+    'Fresh parser output must replace existing compact metadata; reimport must never discard parsed tables just because format-2 already exists.'
 );
 
 $projectionService = $read('src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php');
