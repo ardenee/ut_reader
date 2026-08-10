@@ -172,7 +172,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
                     'chunks' => (int)($progress['chunks'] ?? 0),
                 ]);
             },
-            false
+            true
         );
         $decoded = $this->normalizePreparedTemporaryPath($decoded);
 
