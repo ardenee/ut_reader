@@ -106,18 +106,28 @@ $record(
     'A validated-invalid verified row must use the normal maintenance removal service and be reported as removed_invalid.'
 );
 
+$logMethodStart = strpos($handler, 'private function recordInvalidRemoval(');
+$logMethodEnd = $logMethodStart === false
+    ? false
+    : strpos($handler, 'private function recordFailure(', $logMethodStart);
+$logMethod = $logMethodStart !== false && $logMethodEnd !== false
+    ? substr($handler, $logMethodStart, $logMethodEnd - $logMethodStart)
+    : '';
 $record(
     'invalid_removal_is_warning_log_not_system_error',
-    str_contains($handler, "\\app_log(\$this->db, 'WARN', 'FULL_SYNC_INVALID_PACKAGE_REMOVED'")
-        && !str_contains(
-            substr(
-                $handler,
-                $typedCatch === false ? 0 : $typedCatch,
-                ($genericCatch === false || $typedCatch === false) ? 0 : $genericCatch - $typedCatch
-            ),
-            'recordFailure('
-        ),
+    $logMethod !== ''
+        && str_contains($logMethod, "\\app_log(\$this->db, 'WARN', 'FULL_SYNC_INVALID_PACKAGE_REMOVED'")
+        && !str_contains($logMethod, 'CatalogSystemErrorRecorder::record'),
     'Successful invalid-package retirement must log the reason as a warning and must not create a Full Sync System Error.'
+);
+
+$record(
+    'cleanup_failure_remains_real_error',
+    $typedCatch !== false
+        && str_contains($handler, "'sync_remove_invalid'")
+        && str_contains($handler, 'catch (Throwable $removeError)')
+        && str_contains($handler, '$reimportFailures++'),
+    'Failure to remove an invalid row/storage package is an infrastructure failure and must remain visible as an error.'
 );
 
 $record(
