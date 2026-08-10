@@ -69,9 +69,13 @@ try {
         'Only Epic UE3 package versions 334..867 may provide a UE3 engine hint; 8261/8320 must not self-classify as UE3.'
     );
     $record(
-        'ambiguous_u_extension_falls_back_to_ue1',
-        gp_detect_from_extension('u') === 'UE1',
-        'When a bogus high version gives no valid engine hint, .u must not be forced into the UE3 reader.'
+        'extension_engine_fallback_is_disabled',
+        gp_detect_from_extension('u') === null
+            && gp_detect_from_extension('utx') === null
+            && gp_detect_from_extension('ut2') === null
+            && gp_detect_from_extension('ut3') === null
+            && gp_detect_from_extension('uasset') === null,
+        'Filenames/extensions must never select UE1/UE2/UE3/UE4/UE5; engine detection is serialized-header-only.'
     );
 } catch (Throwable $error) {
     $record('epic_ue3_detection_is_bounded', false, get_class($error) . ': ' . $error->getMessage());
@@ -81,6 +85,14 @@ $exception = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php');
 $removal = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php');
+
+$record(
+    'primary_importer_has_no_extension_profile_gate',
+    !str_contains($importer, 'Extension not allowed by assigned profile')
+        && !str_contains($importer, '$profileExtensions')
+        && str_contains($importer, 'No supported package reader can be selected from serialized header data.'),
+    'Primary package import must never accept/reject or choose a reader from the filename extension.'
+);
 
 $record(
     'invalid_package_has_explicit_exception_type',
