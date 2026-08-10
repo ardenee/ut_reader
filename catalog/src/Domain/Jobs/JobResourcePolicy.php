@@ -47,7 +47,7 @@ final class JobResourcePolicy
             self::DEPENDENCY_HEAVY => [
                 'label' => 'Dependency and projection work',
                 'default' => 1,
-                'description' => 'Dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
+                'description' => 'Full Sync, dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
             ],
             self::SEARCH_HEAVY => [
                 'label' => 'Search-index rebuilds',
@@ -96,6 +96,11 @@ final class JobResourcePolicy
     public static function for(string $jobType, array $payload): JobResourceProfile
     {
         return match ($jobType) {
+            JobType::FULL_SYNC_GAME => new JobResourceProfile(
+                self::DEPENDENCY_HEAVY,
+                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::PROJECTION_CONCURRENCY_KEY
+            ),
             JobType::REBUILD_GAME_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
