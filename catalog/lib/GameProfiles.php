@@ -70,18 +70,6 @@ function gp_extensions(array $profile): array
     return array_values(array_filter(array_map(static fn($v) => catalog_clean_unreal_extension((string)$v), $json), static fn($v) => $v !== ''));
 }
 
-/**
- * Compatibility shim retained for older callers.
- *
- * File extensions and filenames are not authoritative Unreal format data and
- * must never select an engine reader. All production detection now comes from
- * serialized package/container data.
- */
-function gp_detect_from_extension(string $ext): ?string
-{
-    return null;
-}
-
 function gp_engine_from_version(?int $version): ?string
 {
     if ($version === null || $version <= 0) {
@@ -153,8 +141,7 @@ function gp_read_legacy_summary(string $path): array
 
     // UE4/UE5 package summaries start with the same package magic, but the next
     // value is a signed 32-bit package file version. This proves the modern
-    // package family without consulting the filename. The selected profile may
-    // still distinguish UE4 from UE5 where parser configuration requires it.
+    // package family without consulting the filename.
     if ($signedVersion32 < 0) {
         return [
             'ok' => true,
@@ -243,9 +230,9 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
     }
 
     // Modern package summaries are identified from the signed serialized version.
-    // UE4/UE5 share this family-level header convention; the selected modern
-    // profile chooses the parser configuration only after the header proves the
-    // file belongs to the modern package family.
+    // The current UE5 reader is the same serialized package reader implementation
+    // as UE4, so a UE5 target may accept that proven modern package family; reader
+    // selection itself remains the header-selected UE4 implementation.
     $modernFamilyMatch = $detectedEngine === 'UE4' && in_array($selectedEngine, ['UE4', 'UE5'], true);
     $engineOk = $detectedEngine !== 'UNKNOWN'
         && ($selectedEngine === '' || $detectedEngine === $selectedEngine || $modernFamilyMatch || $compatible);
@@ -284,7 +271,7 @@ function gp_classify_file(PDO $db, int $selectedGameId, string $path, string $or
 
     $readerEngine = $compatible
         ? strtoupper((string)$compatibility['reader_engine'])
-        : ($modernFamilyMatch ? $selectedEngine : $detectedEngine);
+        : $detectedEngine;
     if (!in_array($readerEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
         $readerEngine = 'UNKNOWN';
     }
