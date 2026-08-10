@@ -14,6 +14,7 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
@@ -89,6 +90,14 @@ final class CatalogFileMaintenanceReimportService
 
         $replacementPublished = false;
         try {
+            if (is_array($snapshot)) {
+                VerifiedFileCompactMetadataFinalizer::setMaintenanceBaseline($fileId, $snapshot);
+            } else {
+                // A corrupt/missing compact container must never be reused. Absence of
+                // a baseline makes finalizeParsed() publish fresh parser output.
+                VerifiedFileCompactMetadataFinalizer::clearMaintenanceBaseline($fileId);
+            }
+
             $gameId = (int)$file['game_id'];
             $oldPackageName = (string)$file['package_name'];
             $affectedFileIds = \catalog_file_maintenance_affected_ids(
@@ -123,8 +132,8 @@ final class CatalogFileMaintenanceReimportService
             }
 
             // scanner_scan_uploaded_file() only returns a verified result after
-            // VerifiedFileCompactMetadataFinalizer has atomically published and
-            // verified the freshly parsed metadata container.
+            // compact metadata has either been proven unchanged against the validated
+            // baseline or atomically republished from the freshly parsed tables.
             $replacementPublished = true;
 
             $replacement = \catalog_one(
@@ -252,6 +261,7 @@ final class CatalogFileMaintenanceReimportService
             }
             throw $error;
         } finally {
+            VerifiedFileCompactMetadataFinalizer::clearMaintenanceBaseline($fileId);
             @unlink($inputPath);
         }
     }
