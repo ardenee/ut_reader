@@ -17,7 +17,9 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceRemovalService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncDependencyBatchService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncProjectionService;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
@@ -31,6 +33,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
         private readonly PDO $db,
         private readonly array $config
     ) {
+        require_once dirname(__DIR__, 3) . '/lib/AppLog.php';
     }
 
     public function supports(string $jobType): bool
@@ -60,6 +63,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
         $total = count($files);
         $reimported = 0;
         $removed = 0;
+        $removedInvalid = 0;
         $reimportFailures = 0;
         $dependencyFailures = 0;
         $providerPreparationFailed = false;
@@ -74,7 +78,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
             $reimported,
             $removed,
             $reimportFailures,
-            $dependencyFailures
+            $dependencyFailures,
+            ['removed_invalid' => $removedInvalid]
         ));
 
         $currentIndex = 0;
@@ -90,6 +95,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $total,
                 &$reimported,
                 &$removed,
+                &$removedInvalid,
                 &$reimportFailures,
                 &$dependencyFailures
             ): void {
@@ -107,7 +113,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
                     $removed,
                     $reimportFailures,
                     $dependencyFailures,
-                    ['file_name' => $currentName]
+                    ['file_name' => $currentName, 'removed_invalid' => $removedInvalid]
                 ));
             }
         );
@@ -130,6 +136,36 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 }
             } catch (JobCancellationRequested $error) {
                 throw $error;
+            } catch (CatalogInvalidPackageException $error) {
+                try {
+                    $removedResult = (new CatalogFileMaintenanceRemovalService(
+                        $this->db,
+                        $this->config
+                    ))->remove((int)$file['id'], null, true);
+                    $removedInvalid++;
+                    $this->recordInvalidRemoval(
+                        $gameId,
+                        (int)$file['id'],
+                        $currentName,
+                        $error,
+                        trim((string)($removedResult['warning'] ?? ''))
+                    );
+                } catch (Throwable $removeError) {
+                    $reimportFailures++;
+                    $this->appendFailure(
+                        $failureSample,
+                        'Invalid package cleanup failed — ' . $currentName
+                            . ': validation=' . $error->getMessage()
+                            . '; cleanup=' . $removeError->getMessage()
+                    );
+                    $this->recordFailure(
+                        $gameId,
+                        (int)$file['id'],
+                        $currentName,
+                        'sync_remove_invalid',
+                        $removeError
+                    );
+                }
             } catch (Throwable $error) {
                 $reimportFailures++;
                 $this->appendFailure(
@@ -156,7 +192,11 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $removed,
                 $reimportFailures,
                 $dependencyFailures,
-                ['file_id' => (int)$file['id'], 'file_name' => $currentName]
+                [
+                    'file_id' => (int)$file['id'],
+                    'file_name' => $currentName,
+                    'removed_invalid' => $removedInvalid,
+                ]
             ));
         }
 
@@ -169,13 +209,15 @@ final class CatalogFullSyncJobHandler implements JobHandler
             $reimported,
             $removed,
             $reimportFailures,
-            $dependencyFailures
+            $dependencyFailures,
+            ['removed_invalid' => $removedInvalid]
         ));
 
         $projectionProgress = function (array $inner) use (
             $context,
             &$reimported,
             &$removed,
+            &$removedInvalid,
             &$reimportFailures,
             &$dependencyFailures
         ): void {
@@ -189,7 +231,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $reimported,
                 $removed,
                 $reimportFailures,
-                $dependencyFailures
+                $dependencyFailures,
+                ['removed_invalid' => $removedInvalid]
             ));
         };
 
@@ -219,7 +262,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
             $reimported,
             $removed,
             $reimportFailures,
-            $dependencyFailures
+            $dependencyFailures,
+            ['removed_invalid' => $removedInvalid]
         ));
 
         foreach (array_chunk($dependencyFiles, CatalogFullSyncDependencyBatchService::MAX_BATCH_SIZE) as $batch) {
@@ -233,6 +277,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $batchSize,
                 &$reimported,
                 &$removed,
+                &$removedInvalid,
                 &$reimportFailures,
                 &$dependencyFailures
             ): void {
@@ -250,7 +295,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
                     $reimported,
                     $removed,
                     $reimportFailures,
-                    $dependencyFailures
+                    $dependencyFailures,
+                    ['removed_invalid' => $removedInvalid]
                 ));
             };
 
@@ -265,7 +311,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $reimported,
                 $removed,
                 $reimportFailures,
-                $dependencyFailures
+                $dependencyFailures,
+                ['removed_invalid' => $removedInvalid]
             ));
 
             $result = (new CatalogFullSyncDependencyBatchService(
@@ -298,13 +345,15 @@ final class CatalogFullSyncJobHandler implements JobHandler
             $reimported,
             $removed,
             $reimportFailures,
-            $dependencyFailures
+            $dependencyFailures,
+            ['removed_invalid' => $removedInvalid]
         ));
 
         $finalProgress = function (array $inner) use (
             $context,
             &$reimported,
             &$removed,
+            &$removedInvalid,
             &$reimportFailures,
             &$dependencyFailures
         ): void {
@@ -318,7 +367,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
                 $reimported,
                 $removed,
                 $reimportFailures,
-                $dependencyFailures
+                $dependencyFailures,
+                ['removed_invalid' => $removedInvalid]
             ));
         };
 
@@ -335,7 +385,8 @@ final class CatalogFullSyncJobHandler implements JobHandler
         $failureCount = $reimportFailures + $dependencyFailures + ($providerPreparationFailed ? 1 : 0);
         $message = 'Full Sync complete for ' . (string)$game['name']
             . ': reimported=' . $reimported
-            . ', removed=' . $removed
+            . ', removed missing=' . $removed
+            . ', removed invalid=' . $removedInvalid
             . ', reimport failures=' . $reimportFailures
             . ', dependency failures=' . $dependencyFailures
             . ', missing dependencies=' . (int)($stats['missing_dependency_count'] ?? 0)
@@ -352,6 +403,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
             $reimportFailures,
             $dependencyFailures,
             [
+                'removed_invalid' => $removedInvalid,
                 'missing_dependency_count' => (int)($stats['missing_dependency_count'] ?? 0),
                 'missing_package_count' => (int)($stats['missing_package_count'] ?? 0),
                 'failure_count' => $failureCount,
@@ -366,6 +418,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
             'final_verified_files' => $dependencyTotal,
             'reimported' => $reimported,
             'removed_missing' => $removed,
+            'removed_invalid' => $removedInvalid,
             'reimport_failure_count' => $reimportFailures,
             'dependency_failure_count' => $dependencyFailures,
             'provider_preparation_failed' => $providerPreparationFailed,
@@ -403,6 +456,27 @@ final class CatalogFullSyncJobHandler implements JobHandler
         if (count($failures) < self::FAILURE_SAMPLE_LIMIT) {
             $failures[] = $message;
         }
+    }
+
+    private function recordInvalidRemoval(
+        int $gameId,
+        int $fileId,
+        string $name,
+        CatalogInvalidPackageException $error,
+        string $cleanupWarning
+    ): void {
+        $message = 'Removed invalid verified package ' . $name . ': ' . $error->getMessage();
+        if ($cleanupWarning !== '') {
+            $message .= ' Cleanup warning: ' . $cleanupWarning;
+        }
+        \app_log($this->db, 'WARN', 'FULL_SYNC_INVALID_PACKAGE_REMOVED', $message, [
+            'operation' => 'sync_reimport',
+            'game_id' => $gameId,
+            'file_id' => $fileId,
+            'original_name' => $name,
+            'validation_reason' => $error->getMessage(),
+            'cleanup_warning' => $cleanupWarning,
+        ]);
     }
 
     private function recordFailure(
