@@ -59,12 +59,17 @@ final class PdoCatalogDependencyRebuilder
         }
         self::emitPercent($progress, 'dependencies', $startPercent, $prefix . ': loading compact metadata');
         $result = (new CompactDependencyRebuilder($this->db, $storageRoot))->rebuild($fileId);
+        $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
+        if (empty($summary['available'])) {
+            throw new RuntimeException('Dependency package summary projection is unavailable after compact rebuild.');
+        }
         self::emitPercent(
             $progress,
             'dependencies',
             $endPercent,
             $prefix . ': compact imports=' . (int)($result['imports_processed'] ?? 0)
             . ', changed=' . (int)($result['dependencies_changed'] ?? 0)
+            . ', summary rows=' . (int)($summary['summary_rows'] ?? 0)
         );
     }
 
