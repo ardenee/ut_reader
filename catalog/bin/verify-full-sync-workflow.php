@@ -29,12 +29,13 @@ $read = static function (string $relative) use ($root): string {
     return is_string($content) ? $content : '';
 };
 
-$files = [
+$phpFiles = [
     'full-sync.php',
     'file-maintenance.php',
     'lib/CatalogFileMaintenance.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php',
+    'src/Infrastructure/Maintenance/CatalogFullSyncDependencyBatchService.php',
     'src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php',
@@ -47,10 +48,10 @@ $files = [
 ];
 
 if (!function_exists('proc_open')) {
-    $record('php_syntax', false, 'proc_open unavailable; run php -l on the Full Sync files manually.');
+    $record('php_syntax', false, 'proc_open unavailable; run php -l on the Full Sync PHP files manually.');
 } else {
     $syntaxFailures = [];
-    foreach ($files as $relative) {
+    foreach ($phpFiles as $relative) {
         $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
         if (!is_file($path)) {
             $syntaxFailures[] = $relative . ' is missing';
@@ -79,22 +80,45 @@ if (!function_exists('proc_open')) {
 }
 
 $page = $read('full-sync.php');
+$client = $read('full-sync.js');
 $record(
     'full_sync_four_phase_order',
-    $page !== ''
-        && strpos($page, "'sync_reimport'") !== false
-        && strpos($page, "'sync_prepare_dependencies'") !== false
-        && strpos($page, "'sync_refresh_dependencies'") !== false
-        && strpos($page, "'sync_finalize_game'") !== false
-        && strpos($page, "'sync_reimport'") < strpos($page, "'sync_prepare_dependencies'")
-        && strpos($page, "'sync_prepare_dependencies'") < strpos($page, "'sync_refresh_dependencies'")
-        && strpos($page, "'sync_refresh_dependencies'") < strpos($page, "'sync_finalize_game'"),
-    'Full Sync must refresh all package identities before providers, dependencies and final projections.'
+    $client !== ''
+        && strpos($client, "'sync_reimport'") !== false
+        && strpos($client, "'sync_prepare_dependencies'") !== false
+        && strpos($client, "'sync_refresh_dependencies_batch'") !== false
+        && strpos($client, "'sync_finalize_game'") !== false
+        && strpos($client, "'sync_reimport'") < strpos($client, "'sync_prepare_dependencies'")
+        && strpos($client, "'sync_prepare_dependencies'") < strpos($client, "'sync_refresh_dependencies_batch'")
+        && strpos($client, "'sync_refresh_dependencies_batch'") < strpos($client, "'sync_finalize_game'"),
+    'Full Sync must refresh all package identities before providers, bounded dependency batches and final projections.'
 );
 $record(
     'full_sync_verified_scope',
     str_contains($page, 'WHERE game_id=? AND scan_status="verified"'),
     'Full Sync must not feed unverified/failed rows into verified compact reimport maintenance.'
+);
+$record(
+    'full_sync_client_is_externalized',
+    str_contains($page, 'full-sync.js?v=')
+        && !str_contains($page, 'async function runFullSync'),
+    'The Full Sync page should keep browser orchestration in the dedicated client file.'
+);
+$record(
+    'full_sync_dependency_client_batches',
+    str_contains($client, 'DEPENDENCY_BATCH_SIZE = 100')
+        && str_contains($client, "data.set('operation', 'sync_refresh_dependencies_batch')")
+        && str_contains($client, "data.set('file_ids_json'")
+        && str_contains($client, 'batchStart += DEPENDENCY_BATCH_SIZE'),
+    'The dependency phase must send bounded groups of 100 IDs instead of one HTTP request per package.'
+);
+$record(
+    'full_sync_dependency_batch_fallback_splits',
+    str_contains($client, 'async function processDependencyBatch')
+        && str_contains($client, 'Math.ceil(batch.length / 2)')
+        && str_contains($client, 'await processDependencyBatch(overlay, first')
+        && str_contains($client, 'await processDependencyBatch('),
+    'A request-level batch failure must split into smaller idempotent ranges instead of dropping the whole batch.'
 );
 
 $reimport = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php');
@@ -143,6 +167,33 @@ $record(
     'Only genuinely missing stored packages should use destructive catalog removal during Full Sync.'
 );
 
+$transport = $read('file-maintenance.php');
+$batchService = $read('src/Infrastructure/Maintenance/CatalogFullSyncDependencyBatchService.php');
+$record(
+    'full_sync_dependency_batch_transport',
+    str_contains($transport, "\$operation === 'sync_refresh_dependencies_batch'")
+        && str_contains($transport, 'CatalogFullSyncDependencyBatchService')
+        && str_contains($transport, 'catalog_maintenance_file_ids($_POST)')
+        && str_contains($batchService, 'public const MAX_BATCH_SIZE = 100'),
+    'The HTTP adapter and service must enforce the same bounded Full Sync dependency batch contract.'
+);
+$record(
+    'full_sync_dependency_batch_isolated_failures',
+    str_contains($batchService, 'foreach ($fileIds as $index => $fileId)')
+        && str_contains($batchService, "'failures' => \$failures")
+        && str_contains($batchService, 'catch (Throwable $error)')
+        && str_contains($batchService, "'summary_refresh_deferred' => true"),
+    'A bad package must be reported within its batch without aborting successful dependency owners or publishing summaries early.'
+);
+$record(
+    'full_sync_dependency_batch_avoids_global_identity_lock',
+    !str_contains($batchService, 'unrealdb_catalog_maintenance_write_v1')
+        && !str_contains($batchService, 'withWriteLock')
+        && str_contains($batchService, 'PdoCatalogDependencyRebuilder')
+        && str_contains($batchService, "false\n                            );"),
+    'Dependency batches must rely on the per-file compact dependency lock rather than the global identity-write lock.'
+);
+
 $action = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php');
 $syncDependencyStart = strpos($action, "if (\$operation === 'sync_refresh_dependencies')");
 $nextOperationStart = $syncDependencyStart === false
@@ -152,13 +203,13 @@ $syncDependencyBlock = ($syncDependencyStart !== false && $nextOperationStart !=
     ? substr($action, $syncDependencyStart, $nextOperationStart - $syncDependencyStart)
     : '';
 $record(
-    'full_sync_dependency_phase_avoids_global_identity_lock',
+    'single_dependency_endpoint_remains_nonblocking',
     $syncDependencyBlock !== ''
         && !str_contains($syncDependencyBlock, 'withWriteLock')
         && str_contains($syncDependencyBlock, 'PdoCatalogDependencyRebuilder')
         && str_contains($syncDependencyBlock, "'Final dependency refresh for '")
         && str_contains($syncDependencyBlock, "false\n                );"),
-    'Full Sync dependency-only requests must not compete for the global catalog identity-write lock and must defer per-file summaries.'
+    'The compatibility single-file dependency endpoint must retain the same narrow locking/summary policy.'
 );
 $record(
     'full_sync_reimport_skips_unused_dependency_discovery',
