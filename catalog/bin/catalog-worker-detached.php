@@ -14,6 +14,14 @@ if (PHP_SAPI !== 'cli') {
     exit;
 }
 
+// Detached workers are durable process hosts. Individual jobs own their own
+// leases/cancellation checkpoints; a web-server max_execution_time must never
+// terminate a multi-hour CLI Full Sync or another legitimate background job.
+@ini_set('max_execution_time', '0');
+if (function_exists('set_time_limit')) {
+    @set_time_limit(0);
+}
+
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
