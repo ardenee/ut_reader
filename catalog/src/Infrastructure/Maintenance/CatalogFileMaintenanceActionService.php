@@ -2,9 +2,9 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Executes catalog file maintenance use cases outside the HTTP controller.
- * Why: Identity resolution, advisory locking, deadlock retry, alias/location restoration and dependency refresh are
- *      application/infrastructure concerns rather than Presentation responsibilities.
- * Role: Infrastructure orchestration over the existing compact file-maintenance and scanner compatibility services.
+ * Why: Identity writes require global serialization, while dependency-only refreshes should use the narrower per-file
+ *      compact dependency lock and must not stall behind unrelated catalog maintenance.
+ * Role: Infrastructure orchestration over compact file-maintenance and dependency services.
  */
 declare(strict_types=1);
 
@@ -13,6 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 
 final class CatalogFileMaintenanceActionService
 {
@@ -62,20 +63,23 @@ final class CatalogFileMaintenanceActionService
         }
 
         if ($operation === 'sync_refresh_dependencies') {
-            $file = $this->withWriteLock(function () use ($fileId, $input): array {
+            // Full Sync has already completed every package identity write before
+            // entering this phase. Do not acquire the global identity-write lock
+            // 50k+ times; PdoCatalogDependencyRebuilder serializes only the file
+            // whose compact dependency snapshot is actually being changed.
+            $file = $this->retryDeadlock(function () use ($fileId, $input): array {
                 [$file] = $this->currentFile(
                     $fileId,
                     $input,
                     'The re-imported package is no longer present in the catalog. Refresh Full Sync to rebuild its package list.'
                 );
-                \scanner_rebuild_dependencies(
-                    $this->db,
-                    $this->config,
+                (new PdoCatalogDependencyRebuilder($this->db, $this->config))->rebuild(
                     (int)$file['id'],
                     $this->progress,
                     0,
                     100,
-                    'Final dependency refresh for ' . $file['original_name']
+                    'Final dependency refresh for ' . $file['original_name'],
+                    false
                 );
                 return $file;
             });
@@ -84,7 +88,8 @@ final class CatalogFileMaintenanceActionService
                 'file_id' => (int)$file['id'],
                 'game_id' => (int)$file['game_id'],
                 'original_name' => (string)$file['original_name'],
-                'message' => 'Refreshed dependencies for ' . $file['original_name'] . '.',
+                'message' => 'Refreshed dependencies for ' . $file['original_name']
+                    . '; package summary deferred to Full Sync finalization.',
             ];
         }
 
@@ -175,12 +180,6 @@ final class CatalogFileMaintenanceActionService
         return \catalog_all($this->db, 'SELECT * FROM ue_file_package_aliases WHERE file_id=? ORDER BY id', [$fileId]);
     }
 
-    /** @return list<array<string,mixed>> */
-    private function locationRows(int $fileId): array
-    {
-        return \catalog_all($this->db, 'SELECT * FROM ue_file_locations WHERE file_id=? ORDER BY id', [$fileId]);
-    }
-
     /** @param list<array<string,mixed>> $aliases @return list<string> */
     private function packageNames(array $file, array $aliases): array
     {
@@ -230,66 +229,6 @@ final class CatalogFileMaintenanceActionService
     }
 
     /**
-     * @param list<array<string,mixed>> $aliases
-     * @param list<array<string,mixed>> $locations
-     */
-    private function restoreIdentityRows(int $oldFileId, int $newFileId, array $aliases, array $locations): void
-    {
-        $replacement = \catalog_one($this->db, 'SELECT package_name FROM ue_files WHERE id=?', [$newFileId]);
-        if (!$replacement) {
-            throw new RuntimeException('Replacement package disappeared before its aliases and source locations could be restored.');
-        }
-
-        $this->db->beginTransaction();
-        try {
-            \catalog_package_aliases_ensure($this->db);
-            $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$oldFileId]);
-
-            $aliasInsert = $this->db->prepare(
-                'INSERT INTO ue_file_package_aliases(file_id,game_id,package_name,original_name,package_guid,md5,file_size)'
-                . ' VALUES(?,?,?,?,?,?,?)'
-                . ' ON DUPLICATE KEY UPDATE original_name=VALUES(original_name),package_guid=VALUES(package_guid),md5=VALUES(md5),file_size=VALUES(file_size)'
-            );
-            foreach ($aliases as $alias) {
-                $packageName = trim((string)($alias['package_name'] ?? ''));
-                if ($packageName === '' || strcasecmp($packageName, (string)$replacement['package_name']) === 0) {
-                    continue;
-                }
-                $aliasInsert->execute([
-                    $newFileId,
-                    (int)$alias['game_id'],
-                    $packageName,
-                    (string)$alias['original_name'],
-                    $alias['package_guid'],
-                    (string)$alias['md5'],
-                    (int)$alias['file_size'],
-                ]);
-            }
-
-            $locationInsert = $this->db->prepare(
-                'INSERT INTO ue_file_locations(file_id,source_id,source_relative_path,exists_in_source,last_seen_at)'
-                . ' VALUES(?,?,?,?,?)'
-                . ' ON DUPLICATE KEY UPDATE exists_in_source=VALUES(exists_in_source),last_seen_at=VALUES(last_seen_at)'
-            );
-            foreach ($locations as $location) {
-                $locationInsert->execute([
-                    $newFileId,
-                    (int)$location['source_id'],
-                    (string)$location['source_relative_path'],
-                    (int)$location['exists_in_source'],
-                    $location['last_seen_at'],
-                ]);
-            }
-            $this->db->commit();
-        } catch (Throwable $error) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            throw $error;
-        }
-    }
-
-    /**
      * @param array<string,mixed> $input
      * @return array{status:string,file_id:?int,game_id:int,original_name:string,message:string}
      */
@@ -311,14 +250,26 @@ final class CatalogFileMaintenanceActionService
         }
 
         $oldFileId = (int)$file['id'];
-        $oldAliases = $this->aliasRows($oldFileId);
-        $oldLocations = $this->locationRows($oldFileId);
-        $oldPackageNames = $this->packageNames($file, $oldAliases);
-        $referringFileIds = $this->referringFileIds((int)$file['game_id'], $oldPackageNames, $oldFileId);
+        $referringFileIds = [];
+        if ($operation !== 'sync_reimport') {
+            $oldAliases = $this->aliasRows($oldFileId);
+            $oldPackageNames = $this->packageNames($file, $oldAliases);
+            $referringFileIds = $this->referringFileIds(
+                (int)$file['game_id'],
+                $oldPackageNames,
+                $oldFileId
+            );
+        }
 
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         if ($storedPath === null || !is_file($storedPath)) {
-            $removed = \catalog_file_maintenance_remove($this->db, $this->config, $oldFileId, $this->progress);
+            $removed = \catalog_file_maintenance_remove(
+                $this->db,
+                $this->config,
+                $oldFileId,
+                $this->progress,
+                $operation === 'sync_reimport'
+            );
             \catalog_package_aliases_ensure($this->db);
             $this->db->prepare('DELETE FROM ue_file_package_aliases WHERE file_id=?')->execute([$oldFileId]);
             return [
@@ -339,7 +290,13 @@ final class CatalogFileMaintenanceActionService
             $operation === 'sync_reimport'
         );
         $newFileId = (int)$result['file_id'];
-        $this->restoreIdentityRows($oldFileId, $newFileId, $oldAliases, $oldLocations);
+
+        if ($newFileId !== $oldFileId) {
+            throw new RuntimeException(
+                'Maintenance re-import changed stable file identity from #'
+                . $oldFileId . ' to #' . $newFileId . '.'
+            );
+        }
 
         if ($operation !== 'sync_reimport') {
             $newFile = \catalog_one($this->db, 'SELECT * FROM ue_files WHERE id=?', [$newFileId]);
@@ -356,7 +313,8 @@ final class CatalogFileMaintenanceActionService
             $referringFileIds = array_values(array_unique(array_map('intval', $referringFileIds)));
             $referringFileIds = array_values(array_filter(
                 $referringFileIds,
-                fn(int $id): bool => $id > 0 && (bool)\catalog_one($this->db, 'SELECT id FROM ue_files WHERE id=?', [$id])
+                fn(int $id): bool => $id > 0
+                    && (bool)\catalog_one($this->db, 'SELECT id FROM ue_files WHERE id=?', [$id])
             ));
             \catalog_file_maintenance_refresh_ids(
                 $this->db,
@@ -404,7 +362,8 @@ final class CatalogFileMaintenanceActionService
                         'done' => 0,
                         'total' => 100,
                         'percent' => 0,
-                        'message' => 'Database write conflict detected; retrying maintenance request (' . $attempt . '/' . self::DEADLOCK_RETRIES . ').',
+                        'message' => 'Database write conflict detected; retrying maintenance request ('
+                            . $attempt . '/' . self::DEADLOCK_RETRIES . ').',
                     ]);
                 }
                 usleep(250000 * $attempt);
@@ -440,7 +399,10 @@ final class CatalogFileMaintenanceActionService
             try {
                 $this->db->prepare('SELECT RELEASE_LOCK(?)')->execute([self::WRITE_LOCK]);
             } catch (Throwable $releaseError) {
-                error_log('[UnrealDB][' . \catalog_request_id() . '] could not release catalog maintenance lock: ' . $releaseError->getMessage());
+                error_log(
+                    '[UnrealDB][' . \catalog_request_id()
+                    . '] could not release catalog maintenance lock: ' . $releaseError->getMessage()
+                );
             }
         }
     }
