@@ -48,6 +48,7 @@ try {
         [
             'game_id' => $gameId,
             'game_name' => (string)$game['name'],
+            'original_name' => 'Full Sync: ' . (string)$game['name'],
             'requested_by' => $userId,
             'initial_verified_files' => (int)$game['verified_files'],
         ],
