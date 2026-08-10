@@ -1,9 +1,10 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Re-imports one verified stored package while preserving rollback and dependency-reconciliation behavior.
- * Why: Filesystem staging, destructive catalog replacement, scanner execution and rollback form one maintenance use case and should not live in a procedural catalog/lib file.
- * Role: Infrastructure maintenance service preserving the existing compact reimport contract.
+ * Purpose: Re-parses one verified stored package in place while preserving its stable catalog identity.
+ * Why: Maintenance rescans must refresh parser/compact metadata without deleting ue_files rows and cascading unrelated
+ *      download, PAK, federation, source-fingerprint or asset-registry relationships.
+ * Role: Infrastructure maintenance service preserving stable file identity, rollback and dependency reconciliation.
  */
 declare(strict_types=1);
 
@@ -49,29 +50,16 @@ final class CatalogFileMaintenanceReimportService
             $scannerOriginalName = (string)$file['original_name'];
         }
 
-        $suffix = '.reimport-' . bin2hex(random_bytes(8));
-        $backupPath = $storedPath . $suffix . '.backup';
-        $inputPath = $storedPath . $suffix . '.input';
-        $oldMetadataPath = \catalog_file_maintenance_metadata_path(
-            $this->config,
-            (int)$file['game_id'],
-            $fileId
-        );
-        $replacementFileId = 0;
-        $replacementGameId = 0;
+        $inputPath = $storedPath . '.reimport-' . bin2hex(random_bytes(8)) . '.input';
         $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
         \catalog_file_maintenance_emit(
             $progress,
             'reimport',
             0,
-            'Verifying stored package ' . $file['original_name']
+            'Verifying stored package ' . $file['original_name'] . ' without changing its catalog ID'
         );
 
-        if (!@rename($storedPath, $backupPath)) {
-            throw new RuntimeException('Could not stage the stored package for re-import.');
-        }
-        if (!@copy($backupPath, $inputPath)) {
-            @rename($backupPath, $storedPath);
+        if (!@copy($storedPath, $inputPath)) {
             throw new RuntimeException('Could not prepare a scanner copy of the stored package.');
         }
 
@@ -85,14 +73,6 @@ final class CatalogFileMaintenanceReimportService
                 $oldPackageName,
                 $deferDependencyRefresh
             );
-            \catalog_file_maintenance_emit(
-                $progress,
-                'database',
-                22,
-                'Removing the old catalog record and its compact projections'
-            );
-            $support->deleteFileProjections($fileId);
-            $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
 
             $result = \scanner_scan_uploaded_file(
                 $this->db,
@@ -104,20 +84,30 @@ final class CatalogFileMaintenanceReimportService
                 true,
                 $progress,
                 false,
-                ['source_relative_path' => $sourceRelativePath]
+                [
+                    'source_relative_path' => $sourceRelativePath,
+                    'maintenance_replace_file_id' => $fileId,
+                    'defer_dependency_rebuild' => $deferDependencyRefresh,
+                ]
             );
             if (($result[0] ?? '') !== 'verified') {
-                throw new RuntimeException((string)($result[2] ?? 'Stored package was not re-imported.'));
+                throw new RuntimeException((string)($result[2] ?? 'Stored package was not refreshed.'));
+            }
+            if ((int)($result[1] ?? 0) !== $fileId) {
+                throw new RuntimeException('Maintenance refresh unexpectedly changed the stable catalog file ID.');
             }
 
-            $replacementFileId = (int)$result[1];
-            $replacementGameId = $gameId;
             $replacement = \catalog_one(
                 $this->db,
-                'SELECT package_name FROM ue_files WHERE id=?',
-                [$replacementFileId]
+                'SELECT * FROM ue_files WHERE id=?',
+                [$fileId]
             );
+            if (!$replacement) {
+                throw new RuntimeException('Refreshed package disappeared before maintenance finalization.');
+            }
             $newPackageName = (string)($replacement['package_name'] ?? $oldPackageName);
+            $newStoredPath = \catalog_file_maintenance_storage_path($this->config, $replacement);
+
             \catalog_file_maintenance_emit(
                 $progress,
                 'dependencies',
@@ -140,7 +130,7 @@ final class CatalogFileMaintenanceReimportService
             if (!$deferDependencyRefresh) {
                 $reconciliationJobId = CatalogProjectionReconciliationQueue::enqueue(
                     $this->db,
-                    $replacementFileId,
+                    $fileId,
                     [$gameId],
                     [$oldPackageName, $newPackageName],
                     $this->config,
@@ -148,47 +138,55 @@ final class CatalogFileMaintenanceReimportService
                 );
             }
 
-            @unlink($backupPath);
-            if (is_file($oldMetadataPath)) {
-                @unlink($oldMetadataPath);
+            $storageWarning = '';
+            if ($newStoredPath !== null
+                && strcasecmp($newStoredPath, $storedPath) !== 0
+                && is_file($storedPath)
+                && !@unlink($storedPath)) {
+                $storageWarning = '; old canonical storage copy could not be removed';
             }
+
             return [
                 'game_id' => $gameId,
-                'file_id' => $replacementFileId,
+                'file_id' => $fileId,
                 'old_file_id' => $fileId,
                 'old_package_name' => $oldPackageName,
                 'new_package_name' => $newPackageName,
                 'original_name' => (string)($result[4]['source_relative_path'] ?? $scannerOriginalName),
                 'reconciliation_job_id' => $reconciliationJobId,
                 'message' => (string)$result[2]
+                    . '; stable file ID preserved=' . $fileId
                     . ($sourceRelativePath !== ''
                         ? '; reimport source=' . $sourceRelativePath
-                        : '; reimport source unavailable, used stored filename metadata'),
+                        : '; reimport source unavailable, used stored filename metadata')
+                    . $storageWarning,
             ];
         } catch (Throwable $error) {
             @unlink($inputPath);
-            if ($replacementFileId > 0) {
-                $support->deleteFileProjections($replacementFileId);
-                $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$replacementFileId]);
-                if ($replacementGameId > 0) {
-                    $replacementMetadataPath = \catalog_file_maintenance_metadata_path(
-                        $this->config,
-                        $replacementGameId,
-                        $replacementFileId
-                    );
-                    if (is_file($replacementMetadataPath)) {
-                        @unlink($replacementMetadataPath);
-                    }
+
+            $failedStoredPath = null;
+            try {
+                $current = \catalog_one($this->db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
+                if ($current) {
+                    $failedStoredPath = \catalog_file_maintenance_storage_path($this->config, $current);
                 }
+            } catch (Throwable) {
+                $failedStoredPath = null;
             }
-            if (!\catalog_one($this->db, 'SELECT id FROM ue_files WHERE id=?', [$fileId])) {
-                \catalog_file_maintenance_restore_snapshot($this->db, $snapshot, $this->config);
+
+            try {
+                $support->restoreExistingSnapshot($snapshot);
+            } catch (Throwable $restoreError) {
+                error_log(
+                    '[UnrealDB reimport rollback] file_id=' . $fileId
+                    . ' snapshot restore failed: ' . $restoreError->getMessage()
+                );
             }
-            if (is_file($storedPath)) {
-                @unlink($storedPath);
-            }
-            if (is_file($backupPath)) {
-                @rename($backupPath, $storedPath);
+
+            if ($failedStoredPath !== null
+                && strcasecmp($failedStoredPath, $storedPath) !== 0
+                && is_file($failedStoredPath)) {
+                @unlink($failedStoredPath);
             }
 
             try {
@@ -204,6 +202,8 @@ final class CatalogFileMaintenanceReimportService
                 );
             }
             throw $error;
+        } finally {
+            @unlink($inputPath);
         }
     }
 }
