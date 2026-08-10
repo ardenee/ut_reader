@@ -34,13 +34,13 @@ function gprof_form(?array $profile, string $mode): void
     $title = $isEdit ? 'Edit game profile: ' . gp_profile_display_name($profile ?? []) : 'Add new game profile';
     $button = $isEdit ? 'Update' : 'Add';
     $policy = (string)($profile['confidence_policy'] ?? 'normal');
-    $rulesExample = "[\n  {\n    \"detected_engine\": \"UE1\",\n    \"reader_engine\": \"UE1\",\n    \"extensions\": [\"utx\"],\n    \"package_version_min\": 40,\n    \"package_version_max\": 99,\n    \"label\": \"Legacy UE1 texture package\"\n  }\n]";
+    $rulesExample = "[\n  {\n    \"detected_engine\": \"UE1\",\n    \"reader_engine\": \"UE1\",\n    \"package_version_min\": 40,\n    \"package_version_max\": 99,\n    \"licensee_version_min\": 0,\n    \"licensee_version_max\": 0,\n    \"label\": \"Header-verified UE1 compatibility\"\n  }\n]";
 
     echo '<div class="card"><h2>' . catalog_h($title) . '</h2><form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('game_profiles')) . '"><input type="hidden" name="action" value="' . ($isEdit ? 'update' : 'add') . '"><input type="hidden" name="profile_id" value="' . (int)($profile['profile_id'] ?? $profile['id'] ?? 0) . '"><table>';
     echo '<tr><th>Profile name</th><td><input name="profile_name" required value="' . catalog_h($profile['profile_name'] ?? '') . '" style="min-width:420px" placeholder="UT99 / UE1 packages"></td></tr>';
     echo '<tr><th>Engine key</th><td><input name="engine_key" required value="' . catalog_h($profile['profile_engine'] ?? $profile['engine_key'] ?? 'UE1') . '" style="width:120px"> <span class="muted">Examples: UE1, UE2, UE3, UE4, UE5</span></td></tr>';
-    echo '<tr><th>Extensions</th><td><input name="extensions" value="' . catalog_h(gprof_extension_text($profile['allowed_extensions_json'] ?? null)) . '" style="min-width:520px" placeholder="u, unr, utx, umx, uax"></td></tr>';
-    echo '<tr><th>Legacy compatibility rules</th><td><textarea name="compatibility_rules_json" rows="12" class="mono" style="width:100%" placeholder="' . catalog_h($rulesExample) . '">' . catalog_h(gprof_compatibility_rules_text($profile['compatibility_rules_json'] ?? null)) . '</textarea><p class="muted small">Optional and explicit. These allow a profile to accept a proven older package format, store it in the selected game, and parse it using its detected-engine reader. Do not add broad lower-engine rules.</p></td></tr>';
+    echo '<tr><th>Discovery extensions</th><td><input name="extensions" value="' . catalog_h(gprof_extension_text($profile['allowed_extensions_json'] ?? null)) . '" style="min-width:520px" placeholder="u, unr, utx, umx, uax"><p class="muted small">Used only to narrow source/file discovery. Extensions never select a reader and never prove package compatibility.</p></td></tr>';
+    echo '<tr><th>Header compatibility rules</th><td><textarea name="compatibility_rules_json" rows="12" class="mono" style="width:100%" placeholder="' . catalog_h($rulesExample) . '">' . catalog_h(gprof_compatibility_rules_text($profile['compatibility_rules_json'] ?? null)) . '</textarea><p class="muted small">Optional and explicit. Rules may use only serialized header facts: detected engine family, package version and licensee version. Filename/extension fields are ignored and removed when saving.</p></td></tr>';
     echo '<tr><th>Package version min/max</th><td><input name="package_version_min" value="' . catalog_h((string)($profile['package_version_min'] ?? '')) . '" style="width:90px"> <input name="package_version_max" value="' . catalog_h((string)($profile['package_version_max'] ?? '')) . '" style="width:90px"></td></tr>';
     echo '<tr><th>Licensee version min/max</th><td><input name="licensee_version_min" value="' . catalog_h((string)($profile['licensee_version_min'] ?? '')) . '" style="width:90px"> <input name="licensee_version_max" value="' . catalog_h((string)($profile['licensee_version_max'] ?? '')) . '" style="width:90px"></td></tr>';
     echo '<tr><th>Confidence policy</th><td><select name="confidence_policy">';
@@ -100,13 +100,13 @@ try {
         }
     }
 
-    catalog_page_header('Game Profiles', 'Create and maintain reusable scanner profiles here. Game Admin assigns one of these profiles to each game.', ['Game Admin' => 'game-manager.php', 'Upload Files' => 'profiled-upload.php', 'Library' => 'library.php']);
+    catalog_page_header('Game Profiles', 'Create and maintain reusable scanner profiles here. Reader selection is based on serialized package data; discovery extensions are non-authoritative hints only.', ['Game Admin' => 'game-manager.php', 'Upload Files' => 'profiled-upload.php', 'Library' => 'library.php']);
 
     echo '<div class="card"><h2>Game profiles</h2>';
     if (!$profiles) {
         echo '<p class="muted">No game profiles configured yet.</p>';
     } else {
-        echo '<table><tr><th>Profile</th><th>Engine</th><th>Extensions</th><th>Legacy rules</th><th>Version</th><th>Licensee</th><th>Policy</th><th>Assigned games</th><th>Actions</th></tr>';
+        echo '<table><tr><th>Profile</th><th>Engine</th><th>Discovery extensions</th><th>Header rules</th><th>Version</th><th>Licensee</th><th>Policy</th><th>Assigned games</th><th>Actions</th></tr>';
         foreach ($profiles as $profile) {
             $range = ($profile['package_version_min'] !== null || $profile['package_version_max'] !== null) ? (($profile['package_version_min'] ?? '?') . ' - ' . ($profile['package_version_max'] ?? '?')) : 'not fixed';
             $licensee = ($profile['licensee_version_min'] !== null || $profile['licensee_version_max'] !== null) ? (($profile['licensee_version_min'] ?? '?') . ' - ' . ($profile['licensee_version_max'] ?? '?')) : 'not fixed';
