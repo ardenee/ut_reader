@@ -51,8 +51,8 @@ final class JobWorker
             return $this->recordFailure($job, $exception, 0);
         }
 
+        $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds, $this->eventAppender);
         try {
-            $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds, $this->eventAppender);
             $this->diagnostic('heartbeat_start', $job, 'Writing the initial worker heartbeat.');
             $context->heartbeat([
                 'stage' => 'worker_start',
@@ -64,10 +64,6 @@ final class JobWorker
             ], true);
             $this->diagnostic('handler_start', $job, 'Initial heartbeat stored; entering the job handler.');
             $result = $handler->handle($job, $context);
-
-            $this->queue->complete($job, $result);
-            $this->diagnostic('completed', $job, 'Handler returned and the job was completed.');
-            return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
         } catch (JobCancellationRequested $exception) {
             $message = $this->errorText($exception);
             $this->diagnostic('cancelled', $job, $message);
@@ -86,6 +82,38 @@ final class JobWorker
             );
             $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
             return $this->recordFailure($job, $exception, $delay);
+        }
+
+        // The handler has returned successfully. From this point onward, a queue
+        // persistence failure is NOT a job/handler failure and must never be fed
+        // into fail(), retried as business work, or converted to dead_letter.
+        // PdoJobQueue::complete() performs bounded retries for MySQL deadlocks.
+        try {
+            $disposition = $this->queue->complete($job, $result);
+            $this->diagnostic(
+                $disposition === 'cancelled' ? 'completed_as_cancelled' : 'completed',
+                $job,
+                $disposition === 'cancelled'
+                    ? 'Handler returned successfully, but a prior cancellation request won the terminal transition.'
+                    : 'Handler returned and the job was completed.'
+            );
+            if ($disposition === 'cancelled') {
+                return [
+                    'status' => 'cancelled',
+                    'job_id' => $job->id,
+                    'type' => $job->type,
+                    'result' => $result,
+                ];
+            }
+            return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
+        } catch (\Throwable $completionError) {
+            $this->diagnostic(
+                'completion_persist_failed',
+                $job,
+                get_class($completionError) . ': handler already returned successfully; terminal queue state could not be persisted: '
+                    . $this->errorText($completionError)
+            );
+            return $this->failureResult('completion_persist_failed', $job, $completionError);
         }
     }
 
