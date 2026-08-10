@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use Throwable;
 
 /** Maintains the compact package-provider lookup from normal application writes. */
 final class PdoPackageProviderRepository
@@ -88,6 +89,62 @@ final class PdoPackageProviderRepository
             . 'game_id=VALUES(game_id),package_name=VALUES(package_name),'
             . 'file_id=VALUES(file_id),provider_created_at=VALUES(provider_created_at)'
         )->execute([$fileId]);
+    }
+
+    /** @return array{primary:int,aliases:int,total:int} */
+    public function reconcileGame(int $gameId): array
+    {
+        if ($gameId < 1) {
+            return ['primary' => 0, 'aliases' => 0, 'total' => 0];
+        }
+
+        $ownsTransaction = !$this->db->inTransaction();
+        if ($ownsTransaction) {
+            $this->db->beginTransaction();
+        }
+
+        try {
+            $delete = $this->db->prepare('DELETE FROM ue_package_providers WHERE game_id=?');
+            $delete->execute([$gameId]);
+
+            $primary = $this->db->prepare(
+                'INSERT INTO ue_package_providers('
+                . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
+                . ') '
+                . 'SELECT "primary",f.id,f.game_id,f.package_name,f.id,f.uploaded_at '
+                . 'FROM ue_files f '
+                . 'WHERE f.game_id=? AND f.scan_status="verified"'
+            );
+            $primary->execute([$gameId]);
+            $primaryCount = $primary->rowCount();
+
+            $aliases = $this->db->prepare(
+                'INSERT INTO ue_package_providers('
+                . 'source_kind,source_id,game_id,package_name,file_id,provider_created_at'
+                . ') '
+                . 'SELECT "alias",a.id,a.game_id,a.package_name,a.file_id,a.created_at '
+                . 'FROM ue_file_package_aliases a '
+                . 'JOIN ue_files f ON f.id=a.file_id AND f.game_id=a.game_id '
+                . 'WHERE a.game_id=? AND f.scan_status="verified"'
+            );
+            $aliases->execute([$gameId]);
+            $aliasCount = $aliases->rowCount();
+
+            if ($ownsTransaction) {
+                $this->db->commit();
+            }
+
+            return [
+                'primary' => max(0, $primaryCount),
+                'aliases' => max(0, $aliasCount),
+                'total' => max(0, $primaryCount) + max(0, $aliasCount),
+            ];
+        } catch (Throwable $error) {
+            if ($ownsTransaction && $this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
     }
 
     public function removeFile(int $fileId): void
