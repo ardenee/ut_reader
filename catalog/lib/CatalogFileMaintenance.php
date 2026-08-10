@@ -38,8 +38,15 @@ function catalog_file_maintenance_remove(
     PDO $db,
     array $config,
     int $fileId,
-    ?callable $progress = null
+    ?callable $progress = null,
+    bool $deferDependencyRefresh = false
 ): array {
+    // Full Sync owns a complete second dependency pass after every package has
+    // been validated/re-imported. Keep missing-file removals in that same mode.
+    if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
+        $deferDependencyRefresh = true;
+    }
+
     return (new CatalogFileMaintenanceRemovalService($db, $config))
-        ->remove($fileId, $progress);
+        ->remove($fileId, $progress, $deferDependencyRefresh);
 }
