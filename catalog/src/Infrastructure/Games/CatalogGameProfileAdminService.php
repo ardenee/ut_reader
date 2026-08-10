@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Owns reusable game-profile listing, validation, persistence and deletion policy.
- * Why: Compatibility-rule validation, extension normalization and assigned-game checks should not live in Presentation.
+ * Why: Compatibility-rule validation, discovery-extension normalization and assigned-game checks should not live in Presentation.
  * Role: Infrastructure/application service over the existing GameProfiles compatibility contract.
  */
 declare(strict_types=1);
@@ -113,6 +113,10 @@ final class CatalogGameProfileAdminService
         $this->db->prepare('DELETE FROM ue_game_profiles WHERE id=?')->execute([$profileId]);
     }
 
+    /**
+     * Extensions are retained only as discovery/UI hints for source enumeration.
+     * They do not participate in package engine detection or reader selection.
+     */
     private function extensionsJson(string $text): string
     {
         $parts = preg_split('/[,\s]+/', strtolower(trim($text))) ?: [];
@@ -133,14 +137,15 @@ final class CatalogGameProfileAdminService
         if (!is_array($rules)) {
             throw new RuntimeException('Compatibility rules must be valid JSON array data.');
         }
-        foreach ($rules as $index => $rule) {
+        foreach ($rules as $index => &$rule) {
             if (!is_array($rule) || trim((string)($rule['detected_engine'] ?? '')) === '') {
                 throw new RuntimeException('Compatibility rule #' . ($index + 1) . ' requires detected_engine.');
             }
-            if (!isset($rule['extensions']) || !is_array($rule['extensions']) || $rule['extensions'] === []) {
-                throw new RuntimeException('Compatibility rule #' . ($index + 1) . ' requires one or more extensions.');
-            }
+            // Filename/extension conditions are non-authoritative. Strip legacy
+            // copies when the profile is saved so they cannot imply otherwise.
+            unset($rule['extensions'], $rule['extension'], $rule['filename'], $rule['filenames']);
         }
+        unset($rule);
         return json_encode($rules, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?: null;
     }
 }
