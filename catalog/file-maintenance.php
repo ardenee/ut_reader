@@ -11,6 +11,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncProjectionService;
 
 function catalog_maintenance_reply(array $payload, int $status = 200): never
 {
@@ -61,6 +62,15 @@ function catalog_maintenance_progress_callback(string $token): callable
     };
 }
 
+function catalog_maintenance_game_id(array $input): int
+{
+    $gameId = filter_var($input['game_id'] ?? null, FILTER_VALIDATE_INT);
+    if ($gameId === false || $gameId === null || $gameId < 1) {
+        throw new RuntimeException('A valid game ID is required.');
+    }
+    return (int)$gameId;
+}
+
 try {
     catalog_start_session();
     if (!catalog_support_is_admin()) {
@@ -89,8 +99,17 @@ try {
 
     $config = catalog_config();
     $db = catalog_db($config);
-    $service = new CatalogFileMaintenanceActionService($db, $config, $userId, $progress);
-    $payload = $service->execute($operation, $_POST);
+
+    if ($operation === 'sync_prepare_dependencies' || $operation === 'sync_finalize_game') {
+        $fullSync = new CatalogFullSyncProjectionService($db, $progress);
+        $gameId = catalog_maintenance_game_id($_POST);
+        $payload = $operation === 'sync_prepare_dependencies'
+            ? $fullSync->prepareDependencies($gameId)
+            : $fullSync->finalize($gameId);
+    } else {
+        $service = new CatalogFileMaintenanceActionService($db, $config, $userId, $progress);
+        $payload = $service->execute($operation, $_POST);
+    }
 
     if (str_starts_with($operation, 'sync_')) {
         catalog_maintenance_reply($payload);
