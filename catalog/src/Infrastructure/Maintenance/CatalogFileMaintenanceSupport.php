@@ -12,7 +12,9 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 
 use PDO;
 use RuntimeException;
+use Throwable;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
+use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataSnapshotWriter;
 use UnrealDb\Catalog\Infrastructure\Metadata\CompactFileMaintenanceSnapshot;
 
 final class CatalogFileMaintenanceSupport
@@ -93,6 +95,66 @@ final class CatalogFileMaintenanceSupport
             $this->db,
             self::storageRoot($this->config)
         ))->restore($snapshot);
+    }
+
+    /**
+     * Restore a captured verified file row and compact metadata without deleting the current ue_files identity.
+     * External/Pak/federation/download relationships therefore survive a failed maintenance refresh untouched.
+     *
+     * @param array<string,mixed> $snapshot
+     */
+    public function restoreExistingSnapshot(array $snapshot): void
+    {
+        $file = is_array($snapshot['file'] ?? null) ? $snapshot['file'] : [];
+        $metadata = is_array($snapshot['metadata'] ?? null) ? $snapshot['metadata'] : [];
+        $fileId = (int)($file['id'] ?? 0);
+        if ($fileId < 1 || (int)($metadata['file']['id'] ?? 0) !== $fileId) {
+            throw new RuntimeException('Compact maintenance rollback snapshot identity is invalid.');
+        }
+
+        $current = $this->db->prepare('SELECT id FROM ue_files WHERE id=?');
+        $current->execute([$fileId]);
+        if ($current->fetchColumn() === false) {
+            $this->restoreSnapshot($snapshot);
+            return;
+        }
+
+        $columns = [];
+        $values = [];
+        foreach ($file as $column => $value) {
+            $column = (string)$column;
+            if ($column === 'id') {
+                continue;
+            }
+            if (preg_match('/^[A-Za-z0-9_]+$/', $column) !== 1) {
+                throw new RuntimeException('Invalid column in compact maintenance rollback snapshot.');
+            }
+            $columns[] = '`' . $column . '`=?';
+            $values[] = $value;
+        }
+        if ($columns === []) {
+            throw new RuntimeException('Compact maintenance rollback snapshot has no file fields.');
+        }
+        $values[] = $fileId;
+
+        $this->db->beginTransaction();
+        try {
+            $statement = $this->db->prepare(
+                'UPDATE ue_files SET ' . implode(',', $columns) . ' WHERE id=?'
+            );
+            $statement->execute($values);
+            $this->db->commit();
+        } catch (Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
+        }
+
+        (new BlockedCompressedMetadataSnapshotWriter(
+            $this->db,
+            self::storageRoot($this->config)
+        ))->write($metadata);
     }
 
     /** Remove current lookup rows that are not protected by ue_files foreign-key cascades. */
