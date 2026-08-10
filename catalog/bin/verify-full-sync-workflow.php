@@ -34,6 +34,7 @@ $files = [
     'file-maintenance.php',
     'lib/CatalogFileMaintenance.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    'src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php',
     'src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceReimportService.php',
@@ -142,12 +143,54 @@ $record(
     'Only genuinely missing stored packages should use destructive catalog removal during Full Sync.'
 );
 
+$action = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceActionService.php');
+$syncDependencyStart = strpos($action, "if (\$operation === 'sync_refresh_dependencies')");
+$nextOperationStart = $syncDependencyStart === false
+    ? false
+    : strpos($action, "if (\$operation === 'reimport' || \$operation === 'rebuild')", $syncDependencyStart);
+$syncDependencyBlock = ($syncDependencyStart !== false && $nextOperationStart !== false)
+    ? substr($action, $syncDependencyStart, $nextOperationStart - $syncDependencyStart)
+    : '';
+$record(
+    'full_sync_dependency_phase_avoids_global_identity_lock',
+    $syncDependencyBlock !== ''
+        && !str_contains($syncDependencyBlock, 'withWriteLock')
+        && str_contains($syncDependencyBlock, 'PdoCatalogDependencyRebuilder')
+        && str_contains($syncDependencyBlock, "'Final dependency refresh for '")
+        && str_contains($syncDependencyBlock, "false\n                );"),
+    'Full Sync dependency-only requests must not compete for the global catalog identity-write lock and must defer per-file summaries.'
+);
+$record(
+    'full_sync_reimport_skips_unused_dependency_discovery',
+    str_contains($action, "if (\$operation !== 'sync_reimport')")
+        && !str_contains($action, 'restoreIdentityRows('),
+    'Stable-ID Full Sync reimports must not query referring files or rebuild alias/location identities that remain attached to the same file ID.'
+);
+
 $rebuilder = $read('src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php');
 $record(
-    'dependency_rebuild_refreshes_summary',
-    str_contains($rebuilder, 'PdoDependencyPackageSummary($this->db)')
-        && str_contains($rebuilder, '->rebuildFile($fileId)'),
-    'Each explicit dependency rebuild must keep package summaries synchronized.'
+    'dependency_rebuild_uses_per_file_lock',
+    str_contains($rebuilder, "FILE_LOCK_PREFIX = 'unrealdb_dependency_file_v1_'")
+        && str_contains($rebuilder, 'withFileLock($fileId')
+        && str_contains($rebuilder, 'SELECT GET_LOCK(?, ?)'),
+    'Dependency writers for different files must not serialize behind a global maintenance lock; same-file writers remain serialized.'
+);
+$record(
+    'dependency_rebuild_summary_policy',
+    str_contains($rebuilder, 'bool $refreshSummary = true')
+        && str_contains($rebuilder, 'if ($refreshSummary)')
+        && str_contains($rebuilder, 'summary refresh deferred'),
+    'Normal dependency maintenance keeps summaries current while Full Sync may defer them to its final bulk summary rebuild.'
+);
+
+$projectionJob = $read('src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php');
+$record(
+    'projection_reconciliation_does_not_monopolize_identity_lock',
+    !str_contains($projectionJob, 'unrealdb_catalog_maintenance_write_v1')
+        && !str_contains($projectionJob, 'MAINTENANCE_LOCK')
+        && str_contains($projectionJob, 'PdoCatalogDependencyRebuilder')
+        && str_contains($projectionJob, 'rebuildForPackages('),
+    'Projection jobs must use per-file dependency locking rather than holding the global identity-write lock across affected-file loops.'
 );
 
 $providers = $read('src/Infrastructure/Persistence/PdoPackageProviderRepository.php');
