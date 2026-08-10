@@ -305,7 +305,8 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             $temporaryPath,
             (string)$game['slug'],
             $md5,
-            $ext
+            $ext,
+            $maintenanceReplaceFileId === 0
         );
 
         try {
