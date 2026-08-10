@@ -156,7 +156,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             foreach ($classification['suggested_games'] as $suggestion) {
                 $suggested[] = $suggestion['game_name'] . ' (' . $suggestion['engine_key'] . ')';
             }
-            throw new RuntimeException(
+            throw new CatalogInvalidPackageException(
                 'Game/profile mismatch. Detected=' . ($classification['detected_engine'] ?? 'unknown')
                 . ', profile=' . ($classification['selected_engine'] ?? 'unknown') . '. '
                 . implode(' ', $classification['notes'])
@@ -211,7 +211,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             : (method_exists($package, 'getDebugErrors') ? $package->getDebugErrors() : []);
         [$fatalIssues, $scanNotes] = \scanner_split_reader_issues($issues);
         if ($fatalIssues) {
-            throw new RuntimeException(implode("\n", $fatalIssues));
+            throw new CatalogInvalidPackageException(implode("\n", $fatalIssues));
         }
         foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
             if (!method_exists($package, $method)) {
