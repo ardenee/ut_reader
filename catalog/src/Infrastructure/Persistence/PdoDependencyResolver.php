@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Resolves package/object Imports against verified current-format catalog providers and export projections.
- * Why: Dependency resolution must use ue_package_providers/ue_export_lookup rather than retired ue_exports rows.
+ * Why: Dependency resolution must use ue_package_providers/ue_export_lookup and current compact metadata only.
  * Role: Infrastructure current-metadata dependency resolver.
  */
 declare(strict_types=1);
@@ -230,7 +230,7 @@ final class PdoDependencyResolver
      * MD5 local-path key. Older format-2 projections already have path_hash even
      * when local_path_term_id has not yet been backfilled, so this stays compact-only
      * without forcing a blocking projection rebuild before deployment. Rare case-only
-     * misses use the current blocked metadata container rather than legacy ue_exports.
+     * misses use the current blocked metadata container rather than any retired row source.
      *
      * @param list<array{lookup_value:string,package_name:string,local_path:string}> $objectLookups
      * @return array<string,array{file_id:int,export_index:int,source:string}>
