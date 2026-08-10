@@ -54,14 +54,15 @@ final class CatalogWorkerPoolReconciler
         }
 
         $orphanRecovery = null;
-        if (empty($before['active'])) {
+        if (empty($before['active']) && ($queueCounts['queued'] > 0 || $queueCounts['running'] > 0)) {
             $orphanRecovery = (new CatalogOrphanedJobRecovery($this->db, $this->config))
                 ->recoverInactiveQueue($queueName);
             $before = $launcher->status($queueName, false);
         }
 
         $restart = null;
-        if (!empty($before['active']) && !empty($before['stale_code'])) {
+        if (!empty($before['active']) && !empty($before['stale_code'])
+            && ($queueCounts['queued'] > 0 || $queueCounts['running'] > 0)) {
             $staleWorker = $launcher->status($queueName, true);
             $restart = (new CatalogDetachedWorkerStop($this->db, $this->config))
                 ->restartStaleQueue($queueName);
@@ -75,6 +76,35 @@ final class CatalogWorkerPoolReconciler
         // them. This keeps current resource/concurrency policy authoritative.
         $queuePolicySync = (new CatalogJobResourceLimitStore($this->db, $queueName))
             ->synchronizeQueuedPolicies();
+
+        // Starting/resuming an empty queue is a successful no-op. Do not spawn
+        // workers merely to watch them exit four idle passes later, and do not
+        // turn that expected lifecycle into a worker_pool_incomplete API error.
+        $queueCounts = (new PdoBackgroundJobOperationalQuery($this->db, $this->config))
+            ->queueCounts($queueName);
+        if ($queueCounts['queued'] === 0 && $queueCounts['running'] === 0) {
+            $worker = $launcher->status($queueName, true);
+            return [
+                'queue' => $queueName,
+                'mode' => $mode,
+                'workers' => $workerCount,
+                'idle_restart' => $idleRestart,
+                'orphan_recovery' => $orphanRecovery,
+                'stale_restart' => $restart,
+                'queue_policy_sync' => $queuePolicySync,
+                'started' => false,
+                'reason' => 'queue_empty',
+                'requested_workers' => $workerCount,
+                'started_workers' => 0,
+                'stopping_workers' => 0,
+                'worker' => $worker,
+                'pool_satisfied' => true,
+                'no_work' => true,
+                'reconcile_attempts' => 0,
+                'slot_summary' => $this->slotSummary($worker, $workerCount),
+                'launch_errors' => [],
+            ];
+        }
 
         $result = $this->reconcilePool($launcher, $queueName, $maxJobs, $workerCount);
 
