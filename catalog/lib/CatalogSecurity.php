@@ -5,7 +5,7 @@
  * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
  *      that behavior at each call site.
  * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
+ *      `catalog/src`.
  * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
  *        purpose.
  */
@@ -80,8 +80,15 @@ function catalog_apply_runtime_safeguards(): void
     ini_set('display_errors', '0');
     ini_set('display_startup_errors', '0');
     ini_set('log_errors', '1');
-    ini_set('session.use_strict_mode', '1');
-    ini_set('session.use_only_cookies', '1');
+
+    // Session directives are PHP_INI_ALL only before the active session has
+    // consumed them. Some legacy/bootstrap paths can load CatalogSupport after
+    // another layer already started the session; do not turn that harmless
+    // ordering difference into thousands of E_WARNING System Error records.
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        ini_set('session.use_strict_mode', '1');
+        ini_set('session.use_only_cookies', '1');
+    }
 
     if (!headers_sent()) {
         header('X-Content-Type-Options: nosniff');
