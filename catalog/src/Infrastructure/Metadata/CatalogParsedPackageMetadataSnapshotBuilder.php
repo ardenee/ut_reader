@@ -28,12 +28,47 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
     }
 
     /**
+     * Build a complete compact snapshot, including dependency resolution.
+     *
      * @param array<int,mixed> $names
      * @param array<int,mixed> $imports
      * @param array<int,mixed> $exports
      * @return array<string,mixed>
      */
     public function build(
+        int $fileId,
+        int $gameId,
+        string $packageName,
+        string $originalName,
+        array $names,
+        array $imports,
+        array $exports
+    ): array {
+        return $this->withDependencies($this->buildParsedSections(
+            $fileId,
+            $gameId,
+            $packageName,
+            $originalName,
+            $names,
+            $imports,
+            $exports
+        ));
+    }
+
+    /**
+     * Normalize only the package-owned parser output.
+     *
+     * Full Sync can compare these sections with its already validated compact
+     * snapshot before doing dependency resolution or rewriting the .uedb2 file.
+     * Dependencies are deliberately excluded because their resolution can change
+     * independently and Full Sync owns a separate bounded dependency phase.
+     *
+     * @param array<int,mixed> $names
+     * @param array<int,mixed> $imports
+     * @param array<int,mixed> $exports
+     * @return array<string,mixed>
+     */
+    public function buildParsedSections(
         int $fileId,
         int $gameId,
         string $packageName,
@@ -93,7 +128,6 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
 
         $exportRows = [];
         $exportPaths = [];
-        $localExports = [];
         foreach ($exports as $index => $export) {
             $row = is_array($export) ? $export : [];
             $localPath = \scanner_ref_path((int)$index + 1, $imports, $exports, $cache);
@@ -119,15 +153,65 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
                 'local' => $localPath,
                 'full' => $fullPath,
             ];
-            $lookupKey = $this->lookupKey($fullPath);
+        }
+
+        return [
+            'file' => [
+                'id' => $fileId,
+                'game_id' => $gameId,
+                'package_name' => $packageName,
+                'original_name' => $originalName,
+                'name_count' => count($nameRows),
+                'import_count' => count($importRows),
+                'export_count' => count($exportRows),
+                'scan_status' => 'verified',
+            ],
+            'names' => $nameRows,
+            'imports' => $importRows,
+            'exports' => $exportRows,
+            'dependencies' => [],
+            'paths' => [
+                'imports' => $importPaths,
+                'exports' => $exportPaths,
+            ],
+            'source_format' => 'parsed-package-current-no-dependencies',
+        ];
+    }
+
+    /**
+     * Resolve dependencies for an already normalized parsed snapshot.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    public function withDependencies(array $snapshot): array
+    {
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        $gameId = (int)($file['game_id'] ?? 0);
+        $importRows = array_values((array)($snapshot['imports'] ?? []));
+        $exportRows = array_values((array)($snapshot['exports'] ?? []));
+        if ($fileId < 1 || $gameId < 1) {
+            throw new RuntimeException('Parsed compact dependency resolution requires valid file and game identities.');
+        }
+
+        $localExports = [];
+        foreach ($exportRows as $export) {
+            if (!is_array($export)) {
+                continue;
+            }
+            $lookupKey = $this->lookupKey((string)($export['full_path'] ?? ''));
             if ($lookupKey !== '' && !isset($localExports[$lookupKey])) {
-                $localExports[$lookupKey] = (int)$index;
+                $localExports[$lookupKey] = (int)($export['export_index'] ?? 0);
             }
         }
 
         $resolutions = PdoDependencyResolver::resolve($this->db, $gameId, $fileId, $importRows);
         $dependencies = [];
         foreach ($importRows as $import) {
+            if (!is_array($import)) {
+                continue;
+            }
             $importId = (int)$import['id'];
             $resolution = $resolutions[$importId] ?? [
                 'status' => 'missing',
@@ -173,27 +257,83 @@ final class CatalogParsedPackageMetadataSnapshotBuilder
             throw new RuntimeException('Parsed compact metadata did not produce one dependency row per Import.');
         }
 
-        return [
+        $snapshot['dependencies'] = $dependencies;
+        $snapshot['source_format'] = 'parsed-package-current';
+        return $snapshot;
+    }
+
+    /**
+     * Binary-safe semantic fingerprint of the package-owned metadata sections.
+     *
+     * Virtual/physical row IDs and dependency resolution are intentionally omitted.
+     * Loader JSON numeric strings are normalized to the same representation as
+     * current parser integers so an unchanged package compares equal without a
+     * rewrite.
+     *
+     * @param array<string,mixed> $snapshot
+     */
+    public static function parsedContentFingerprint(array $snapshot): string
+    {
+        $file = (array)($snapshot['file'] ?? []);
+        $canonical = [
             'file' => [
-                'id' => $fileId,
-                'game_id' => $gameId,
-                'package_name' => $packageName,
-                'original_name' => $originalName,
-                'name_count' => count($nameRows),
-                'import_count' => count($importRows),
-                'export_count' => count($exportRows),
-                'scan_status' => 'verified',
+                (int)($file['id'] ?? 0),
+                (int)($file['game_id'] ?? 0),
+                (string)($file['package_name'] ?? ''),
+                (string)($file['original_name'] ?? ''),
+                (int)($file['name_count'] ?? count((array)($snapshot['names'] ?? []))),
+                (int)($file['import_count'] ?? count((array)($snapshot['imports'] ?? []))),
+                (int)($file['export_count'] ?? count((array)($snapshot['exports'] ?? []))),
+                (string)($file['scan_status'] ?? 'verified'),
             ],
-            'names' => $nameRows,
-            'imports' => $importRows,
-            'exports' => $exportRows,
-            'dependencies' => $dependencies,
-            'paths' => [
-                'imports' => $importPaths,
-                'exports' => $exportPaths,
-            ],
-            'source_format' => 'parsed-package-current',
+            'names' => [],
+            'imports' => [],
+            'exports' => [],
         ];
+
+        foreach ((array)($snapshot['names'] ?? []) as $row) {
+            $row = is_array($row) ? $row : [];
+            $canonical['names'][] = [
+                (int)($row['name_index'] ?? 0),
+                (string)($row['name_text'] ?? ''),
+                self::nullableScalarString($row['flags'] ?? null),
+            ];
+        }
+        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+            $row = is_array($row) ? $row : [];
+            $canonical['imports'][] = [
+                (int)($row['import_index'] ?? 0),
+                trim((string)($row['class_package'] ?? '')),
+                trim((string)($row['class_name'] ?? '')),
+                (string)($row['object_name'] ?? ''),
+                (int)($row['outer_index'] ?? 0),
+                (string)($row['full_path'] ?? ''),
+                (string)($row['root_package'] ?? ''),
+                (string)($row['relative_object_path'] ?? ''),
+                (int)($row['is_common'] ?? 0),
+            ];
+        }
+        foreach ((array)($snapshot['exports'] ?? []) as $row) {
+            $row = is_array($row) ? $row : [];
+            $canonical['exports'][] = [
+                (int)($row['export_index'] ?? 0),
+                trim((string)($row['class_name'] ?? '')),
+                (string)($row['object_name'] ?? ''),
+                (int)($row['outer_index'] ?? 0),
+                (string)($row['local_path'] ?? ''),
+                (string)($row['full_path'] ?? ''),
+                self::nullableScalarString($row['object_flags'] ?? null),
+                self::nullableScalarString($row['serial_size'] ?? null),
+                self::nullableScalarString($row['serial_offset'] ?? null),
+            ];
+        }
+
+        return hash('sha256', serialize($canonical));
+    }
+
+    private static function nullableScalarString(mixed $value): ?string
+    {
+        return $value === null ? null : (string)$value;
     }
 
     private function virtualId(int $fileId, int $index): int
