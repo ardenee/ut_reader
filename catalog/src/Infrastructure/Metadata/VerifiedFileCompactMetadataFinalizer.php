@@ -15,6 +15,36 @@ use Throwable;
 
 final class VerifiedFileCompactMetadataFinalizer
 {
+    /** @var array<int,array<string,mixed>> */
+    private static array $maintenanceBaselines = [];
+
+    /**
+     * Scope an already validated maintenance snapshot to one synchronous reimport.
+     *
+     * Full Sync captures this before the parser runs. It allows finalizeParsed()
+     * to compare package-owned metadata without re-reading or rewriting an
+     * unchanged .uedb2. A corrupt/missing compact file deliberately has no
+     * baseline, which forces publication from parser output.
+     *
+     * @param array<string,mixed> $snapshot
+     */
+    public static function setMaintenanceBaseline(int $fileId, array $snapshot): void
+    {
+        $file = is_array($snapshot['file'] ?? null) ? $snapshot['file'] : [];
+        $metadata = is_array($snapshot['metadata'] ?? null) ? $snapshot['metadata'] : [];
+        if ($fileId < 1
+            || (int)($file['id'] ?? 0) !== $fileId
+            || (int)($metadata['file']['id'] ?? 0) !== $fileId) {
+            throw new RuntimeException('Maintenance compact metadata baseline identity mismatch.');
+        }
+        self::$maintenanceBaselines[$fileId] = $snapshot;
+    }
+
+    public static function clearMaintenanceBaseline(int $fileId): void
+    {
+        unset(self::$maintenanceBaselines[$fileId]);
+    }
+
     /**
      * Verify an already-published current metadata result.
      *
@@ -60,11 +90,13 @@ final class VerifiedFileCompactMetadataFinalizer
     }
 
     /**
-     * Publish current metadata directly from parser output for a newly verified or reimported package.
+     * Publish parser output only when package-owned metadata changed or the
+     * existing compact container could not be validated before reimport.
      *
-     * Parsed reader output is authoritative here. Even when a format-2 registration already exists,
-     * maintenance reimport must replace it so stale/corrupt metadata and parser changes are actually
-     * repaired instead of merely verifying the previous container.
+     * New imports have no maintenance baseline and therefore always publish.
+     * Full Sync reparses still detect parser/data changes, but unchanged valid
+     * packages avoid dependency resolution, gzip encoding, projection writes,
+     * filesystem replacement and a second full verification pass.
      *
      * @param array<int|string,mixed> $result
      * @param array<int,mixed> $names
@@ -87,7 +119,7 @@ final class VerifiedFileCompactMetadataFinalizer
 
         $fileId = self::fileId($result);
         $storageRoot = self::storageRoot($config);
-        self::emit($progress, 99, 'Publishing compact metadata for verified file #' . $fileId);
+        self::emit($progress, 99, 'Reconciling compact metadata for verified file #' . $fileId);
 
         try {
             $statement = $db->prepare(
@@ -99,7 +131,8 @@ final class VerifiedFileCompactMetadataFinalizer
                 throw new RuntimeException('Verified file row is unavailable during compact metadata publication.');
             }
 
-            $snapshot = (new CatalogParsedPackageMetadataSnapshotBuilder($db, $config))->build(
+            $builder = new CatalogParsedPackageMetadataSnapshotBuilder($db, $config);
+            $parsed = $builder->buildParsedSections(
                 $fileId,
                 (int)$file['game_id'],
                 (string)$file['package_name'],
@@ -108,15 +141,45 @@ final class VerifiedFileCompactMetadataFinalizer
                 $imports,
                 $exports
             );
-            $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
-            $conversion['already_compact'] = false;
-            $conversion['republished_from_parser'] = true;
+
+            $baseline = self::$maintenanceBaselines[$fileId] ?? null;
+            $baselineMetadata = is_array($baseline)
+                && is_array($baseline['metadata'] ?? null)
+                ? $baseline['metadata']
+                : null;
+
+            if (is_array($baselineMetadata)
+                && CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($parsed)
+                    === CatalogParsedPackageMetadataSnapshotBuilder::parsedContentFingerprint($baselineMetadata)) {
+                $registration = is_array($baseline['registration'] ?? null)
+                    ? $baseline['registration']
+                    : [];
+                $conversion = [
+                    'verified' => true,
+                    'file_id' => $fileId,
+                    'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
+                    'compressed_size' => (int)($registration['compressed_size'] ?? 0),
+                    'uncompressed_size' => (int)($registration['uncompressed_size'] ?? 0),
+                    'name_count' => count((array)$parsed['names']),
+                    'import_count' => count((array)$parsed['imports']),
+                    'export_count' => count((array)$parsed['exports']),
+                    'already_compact' => true,
+                    'reused_unchanged' => true,
+                    'republished_from_parser' => false,
+                ];
+            } else {
+                $snapshot = $builder->withDependencies($parsed);
+                $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
+                $conversion['already_compact'] = false;
+                $conversion['reused_unchanged'] = false;
+                $conversion['republished_from_parser'] = true;
+            }
 
             if (
                 empty($conversion['verified'])
                 || (int)($conversion['format_version'] ?? 0) !== BlockedCompressedMetadataContainer::FORMAT_VERSION
             ) {
-                throw new RuntimeException('Compact metadata verification did not return format version 2.');
+                throw new RuntimeException('Compact metadata reconciliation did not return format version 2.');
             }
         } catch (Throwable $error) {
             self::recordFailure($db, $fileId, $error->getMessage());
@@ -163,7 +226,13 @@ final class VerifiedFileCompactMetadataFinalizer
     ): array {
         $fileId = self::fileId($result);
         $message = trim((string)($result[2] ?? ''));
-        $suffix = 'compact metadata=v2, blocks=' . (int)($conversion['block_count'] ?? 0);
+        $suffix = 'compact metadata=v2';
+        if (array_key_exists('block_count', $conversion)) {
+            $suffix .= ', blocks=' . (int)$conversion['block_count'];
+        }
+        if (!empty($conversion['reused_unchanged'])) {
+            $suffix .= ', reused=unchanged';
+        }
         if ($message === '' || !str_contains($message, 'compact metadata=v2')) {
             $result[2] = $message !== '' ? $message . '; ' . $suffix : $suffix;
         }
@@ -173,6 +242,7 @@ final class VerifiedFileCompactMetadataFinalizer
         $details['metadata_block_count'] = (int)($conversion['block_count'] ?? 0);
         $details['metadata_compressed_size'] = (int)($conversion['compressed_size'] ?? 0);
         $details['metadata_already_compact'] = !empty($conversion['already_compact']);
+        $details['metadata_reused_unchanged'] = !empty($conversion['reused_unchanged']);
         $details['metadata_republished_from_parser'] = !empty($conversion['republished_from_parser']);
         $result[4] = $details;
 
