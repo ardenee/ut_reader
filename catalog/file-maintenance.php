@@ -10,7 +10,6 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 
-use JsonException;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncDependencyBatchService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncProjectionService;
@@ -83,7 +82,7 @@ function catalog_maintenance_file_ids(array $input): array
 
     try {
         $decoded = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
-    } catch (JsonException $error) {
+    } catch (\JsonException $error) {
         throw new RuntimeException('Dependency batch file IDs are not valid JSON.', 0, $error);
     }
     if (!is_array($decoded)) {
