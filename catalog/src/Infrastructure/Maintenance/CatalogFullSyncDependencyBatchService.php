@@ -14,6 +14,7 @@ use PDO;
 use RuntimeException;
 use Throwable;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogFullSyncDependencyBatchService
 {
@@ -76,11 +77,13 @@ final class CatalogFullSyncDependencyBatchService
 
             if (!is_array($file)) {
                 $failed = true;
+                $message = 'The package is no longer a verified file in the selected game.';
                 $failures[] = [
                     'file_id' => $fileId,
                     'original_name' => $name,
-                    'error' => 'The package is no longer a verified file in the selected game.',
+                    'error' => $message,
                 ];
+                $this->recordFailure($gameId, $fileId, $name, $position, $total, $message);
             } else {
                 try {
                     $this->retryDeadlock(
@@ -106,6 +109,15 @@ final class CatalogFullSyncDependencyBatchService
                         'original_name' => $name,
                         'error' => $error->getMessage(),
                     ];
+                    $this->recordFailure(
+                        $gameId,
+                        $fileId,
+                        $name,
+                        $position,
+                        $total,
+                        $error->getMessage(),
+                        $error
+                    );
                     error_log(
                         '[UnrealDB Full Sync dependency batch] file_id=' . $fileId
                         . ' error=' . $error->getMessage()
@@ -166,6 +178,34 @@ final class CatalogFullSyncDependencyBatchService
             $normalized[$id] = true;
         }
         return array_map('intval', array_keys($normalized));
+    }
+
+    private function recordFailure(
+        int $gameId,
+        int $fileId,
+        string $name,
+        int $position,
+        int $total,
+        string $message,
+        ?Throwable $error = null
+    ): void {
+        CatalogSystemErrorRecorder::record([
+            'source_kind' => 'full-sync',
+            'severity' => 'error',
+            'error_type' => $error instanceof Throwable ? get_class($error) : 'dependency_file_unavailable',
+            'message' => 'Dependency refresh failed for ' . $name . ': ' . $message,
+            'source_file' => $error instanceof Throwable ? $error->getFile() : __FILE__,
+            'source_line' => $error instanceof Throwable ? $error->getLine() : __LINE__,
+            'trace_text' => $error instanceof Throwable ? $error->getTraceAsString() : '',
+            'context' => [
+                'operation' => 'sync_refresh_dependencies_batch',
+                'game_id' => $gameId,
+                'file_id' => $fileId,
+                'original_name' => $name,
+                'batch_position' => $position,
+                'batch_total' => $total,
+            ],
+        ]);
     }
 
     private function retryDeadlock(
