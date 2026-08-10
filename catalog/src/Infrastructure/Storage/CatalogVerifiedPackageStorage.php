@@ -26,7 +26,8 @@ final class CatalogVerifiedPackageStorage
         string $temporaryPath,
         string $gameSlug,
         string $md5,
-        string $extension
+        string $extension,
+        bool $discardDuplicateSource = true
     ): array {
         $slug = \scanner_slug_text($gameSlug);
         $directory = rtrim((string)$this->config['storage_path'], DIRECTORY_SEPARATOR)
@@ -39,7 +40,12 @@ final class CatalogVerifiedPackageStorage
         $destination = $directory . '/' . $storedName;
         $created = false;
         if (is_file($destination)) {
-            if (is_file($temporaryPath) && !@unlink($temporaryPath)) {
+            // Full Sync/maintenance may still have a reader handle open on its
+            // isolated scanner copy, especially on Windows. The outer maintenance
+            // service owns that copy and removes it after the reader is released.
+            if ($discardDuplicateSource
+                && is_file($temporaryPath)
+                && !@unlink($temporaryPath)) {
                 throw new RuntimeException('Could not discard duplicate physical upload');
             }
         } elseif (!rename($temporaryPath, $destination)) {
