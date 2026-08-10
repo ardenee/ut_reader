@@ -216,6 +216,46 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
     };
 }
 
+function catalog_redirect_archive_decode_failure_message(
+    string $data,
+    string $sourceExtension,
+    int $limit,
+    string $sourceName
+): string {
+    $name = basename($sourceName);
+    if ($sourceExtension !== 'uz3') {
+        return 'Could not completely decompress Unreal redirect archive: ' . $name;
+    }
+
+    $length = strlen($data);
+    if ($length <= 8) {
+        return 'Invalid Epic UZ3 wrapper: ' . $name
+            . ' is too small (' . $length . ' bytes; need tag + declared size + zlib payload).';
+    }
+
+    $tag = catalog_redirect_archive_read_u32($data, 0, 'le');
+    if ($tag !== 5678) {
+        return 'Invalid Epic UZ3 wrapper tag in ' . $name
+            . ': expected 5678 (0x0000162E), got ' . $tag
+            . ' (' . sprintf('0x%08X', $tag) . ').';
+    }
+
+    $expectedBytes = catalog_redirect_archive_read_u32($data, 4, 'le');
+    if ($expectedBytes <= 0) {
+        return 'Invalid Epic UZ3 declared output size in ' . $name . ': ' . $expectedBytes . ' bytes.';
+    }
+    if ($expectedBytes > $limit) {
+        return 'Epic UZ3 declared output exceeds the configured redirect limit in ' . $name
+            . ': declared=' . $expectedBytes . ' bytes, limit=' . $limit . ' bytes.';
+    }
+
+    $payload = substr($data, 8);
+    return 'Epic UZ3 zlib stream could not be decompressed to its declared output size in ' . $name
+        . ': tag=5678, declared=' . $expectedBytes
+        . ' bytes, compressed_payload=' . strlen($payload)
+        . ' bytes, payload_prefix=' . strtoupper(bin2hex(substr($payload, 0, 8))) . '.';
+}
+
 /**
  * @return array{
  *   path:string,
@@ -253,7 +293,9 @@ function catalog_redirect_archive_decompress_payload_to_temp(
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
     $decoded = catalog_redirect_archive_decode_payload($data, $sourceExtension, $limit);
     if (!is_array($decoded)) {
-        throw new RuntimeException('Could not completely decompress Unreal redirect archive: ' . basename($sourceName));
+        throw new RuntimeException(
+            catalog_redirect_archive_decode_failure_message($data, $sourceExtension, $limit, $sourceName)
+        );
     }
 
     $output = (string)($decoded['data'] ?? '');
