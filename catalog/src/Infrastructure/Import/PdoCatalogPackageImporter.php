@@ -58,9 +58,6 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             $progress
         );
 
-        // Preserve the established ProfiledUploadService adapter contract: the
-        // scanner-compatible path publishes verified metadata first, then this
-        // port-level call verifies the current compact result while reporting progress.
         $result = VerifiedFileCompactMetadataFinalizer::finalize(
             $this->db,
             $this->config,
@@ -81,9 +78,8 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
     /**
      * Scanner-compatible verified import operation.
      *
-     * `maintenance_replace_file_id` is reserved for trusted maintenance callers.
-     * It reparses and republishes a verified package on its existing ue_files ID,
-     * preserving unrelated foreign-key relationships during a Full Sync/rebuild.
+     * Reader selection is authoritative-header-only. Filename extensions remain
+     * storage/display metadata and never choose or override an engine parser.
      *
      * @param array<string,mixed> $scannerOptions
      * @return array<int|string,mixed>
@@ -135,14 +131,6 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         $profile = \gp_required_profile_for_game($this->db, $gameId);
         $profileEngine = strtoupper((string)$profile['engine_key']);
         $ext = \catalog_clean_unreal_extension((string)pathinfo($originalName, PATHINFO_EXTENSION));
-        $profileExtensions = \scanner_profile_extensions($profile, $this->config);
-        $extensionOutsideProfile = !in_array($ext, $profileExtensions, true);
-        if ($extensionOutsideProfile && !$allowProfileOverride) {
-            throw new RuntimeException(
-                'Extension not allowed by assigned profile: ' . $ext
-                . '. Allowed: ' . implode(', ', $profileExtensions)
-            );
-        }
 
         $size = filesize($temporaryPath) ?: 0;
         if ($size <= 0 || $size > (int)$this->config['max_upload_bytes']) {
@@ -164,14 +152,13 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             );
         }
 
-        $readerEngine = strtoupper((string)($classification['reader_engine'] ?? $profileEngine));
-        $detectedEngine = strtoupper((string)($classification['detected_engine'] ?? ''));
-        if ((!$strictProfile || $allowProfileOverride)
-            && in_array($detectedEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
-            $readerEngine = $detectedEngine;
-        }
-        if ($readerEngine === '') {
-            $readerEngine = $profileEngine;
+        $readerEngine = strtoupper(trim((string)($classification['reader_engine'] ?? 'UNKNOWN')));
+        $detectedEngine = strtoupper(trim((string)($classification['detected_engine'] ?? 'UNKNOWN')));
+        if (!in_array($readerEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+            throw new CatalogInvalidPackageException(
+                'No supported package reader can be selected from serialized header data. '
+                . implode(' ', (array)($classification['notes'] ?? []))
+            );
         }
 
         $sourcePackageName = '';
@@ -292,10 +279,8 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             $originalName,
             $sourceRelativePath,
             $sourcePackageName,
-            $extensionOutsideProfile,
             $strictProfile,
             $detectedEngine,
-            $ext,
             $game,
             $profile
         );
@@ -524,10 +509,8 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         string $originalName,
         string $sourceRelativePath,
         string $sourcePackageName,
-        bool $extensionOutsideProfile,
         bool $strictProfile,
         string $detectedEngine,
-        string $extension,
         array $game,
         array $profile
     ): ?string {
@@ -559,7 +542,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
 
         $notes = array_merge($scanNotes, [
             'Profile engine=' . $profileEngine
-            . '; package reader=' . $readerEngine
+            . '; header-selected package reader=' . $readerEngine
             . $parserNote
             . '; package=' . $packageName
             . '; compatibility=' . ($classification['compatibility_status'] ?? 'native')
@@ -568,13 +551,9 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             . '; ' . implode(' ', $classification['notes'])
         ]);
 
-        if ($extensionOutsideProfile) {
-            $notes[] = 'Administrator override: extension .' . $extension
-                . ' is outside the assigned profile extension list.';
-        }
         if (!$strictProfile && ($detectedEngine !== '' && $detectedEngine !== $profileEngine)) {
             $notes[] = 'Administrator compatibility override: catalogued under ' . $profileEngine
-                . ' game using detected ' . $detectedEngine . ' reader.';
+                . ' game using header-detected ' . $detectedEngine . ' reader.';
         }
 
         return $notes ? implode("\n", $notes) : null;
