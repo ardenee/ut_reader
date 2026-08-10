@@ -278,15 +278,8 @@ final class CatalogAssetMetadataService
     private function readerEngine(array $file): string
     {
         $engine = strtoupper(trim((string)($file['detected_engine_key'] ?? '')));
-        if (in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
-            return $engine;
-        }
-
-        $fallback = strtoupper((string)(\gp_detect_from_extension(
-            (string)($file['extension'] ?? '')
-        ) ?? ''));
-        return in_array($fallback, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)
-            ? $fallback
+        return in_array($engine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)
+            ? $engine
             : '';
     }
 
