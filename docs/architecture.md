@@ -127,7 +127,7 @@ Completion, heartbeat, failure and cancellation now use `PdoJobLeaseStore` for e
 
 Administrator display status is no longer repeatedly derived from `result_json` during live list/count queries.
 
-Migration `202608080001_background_job_display_status.php` adds a **stored generated** `ue_background_jobs.display_status` column derived atomically from `status` + `result_json`, plus indexes for queue/display filtering.
+The consolidated schema defines a **stored generated** `ue_background_jobs.display_status` column derived atomically from `status` + `result_json`, plus indexes for queue/display filtering.
 
 This avoids a second mutable source of truth while making Failed/Completed counters and filters indexable.
 
@@ -175,7 +175,7 @@ That adapter is a compatibility boundary, **not** a parallel implementation. As 
 
 ## Verified metadata and dependencies
 
-Verified package metadata uses the compact per-file metadata/lookup model. Retained raw Names/Imports/Exports compatibility access is audited; new verified reads must not bypass compact compatibility sources.
+Verified package metadata uses the compact per-file metadata/lookup model exclusively. The former expanded row-per-object metadata tables have been physically retired; verified runtime reads, rebuilds and maintenance paths must not depend on fallback SQL against them.
 
 Dependency resolution/rebuilding is Infrastructure-owned through:
 
@@ -236,7 +236,7 @@ Federation remains a bounded context sharing catalog identities/storage. Some ol
 - Removed SQL from the worker-status and bulk job endpoints.
 - Moved live cursor/offset job query construction to Infrastructure.
 - Isolated job-search procedural compatibility behind one adapter.
-- Updated legacy metadata audit ownership for the new indexer.
+- Completed compact-metadata cutover and physical retirement of the former expanded metadata tables.
 
 ## Remaining architectural debt
 
