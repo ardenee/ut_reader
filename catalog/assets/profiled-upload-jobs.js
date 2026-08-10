@@ -16,17 +16,14 @@
     const log = document.getElementById('upload-progress-log');
     if (!form || !fileInput || !progress || !window.XMLHttpRequest || !window.fetch) return;
 
-    const queue = progress.dataset.queue || 'catalog';
-    const runUrl = progress.dataset.runUrl || 'api/v1/job-run.php';
     const chunkUrl = progress.dataset.chunkUrl || 'api/v1/profiled-upload-chunk.php';
-    const actionCsrf = progress.dataset.actionCsrf || '';
     const chunkCsrf = progress.dataset.chunkCsrf || '';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progress.dataset.chunkBytes || 16 * 1024 * 1024));
     const containerLimit = Math.max(0, Number(progress.dataset.containerLimit || 0));
     let activeUploadId = '';
     let activeXhr = null;
     let cancelRequested = false;
-    let queuedJobs = 0;
+    let queuedJobIds = [];
 
     function installStatusStyles() {
         const style = document.createElement('style');
@@ -161,17 +158,33 @@
         });
     }
 
-    async function ensureWorker() {
-        if (!actionCsrf || queuedJobs < 1) return;
-        const response = await fetch(runUrl, {
+    function rememberJob(jobId) {
+        const id = parseInt(jobId || 0, 10);
+        if (id > 0 && !queuedJobIds.includes(id)) queuedJobIds.push(id);
+    }
+
+    async function releaseBatch() {
+        if (!queuedJobIds.length) return {released: 0, requested: 0};
+        const data = new FormData();
+        data.append('ajax', '1');
+        data.append('action', 'release_batch');
+        data.append('csrf', form.querySelector('[name="csrf"]').value);
+        data.append('job_ids', JSON.stringify(queuedJobIds));
+        const response = await fetch(form.action || window.location.href, {
             method: 'POST',
             credentials: 'same-origin',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-Token': actionCsrf},
-            body: JSON.stringify({queue: queue, mode: 'drain'})
+            body: data,
+            cache: 'no-store'
         });
-        if (!response.ok) {
-            throw new Error('Uploads are staged, but the detached worker could not be started automatically. Open Background Jobs and start the queue.');
+        const text = await response.text();
+        const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Upload batch release');
+        if (!response.ok || !body.ok) {
+            throw new Error(responseError(body, 'Uploaded files are staged, but their background jobs could not be released.'));
         }
+        if (body.worker_error) {
+            throw new Error('The batch was released, but the detached worker could not be started: ' + body.worker_error);
+        }
+        return body;
     }
 
     function standardUpload(file, index, total) {
@@ -209,11 +222,11 @@
                         throw new Error(responseError(response, 'Upload could not be staged and queued (HTTP ' + xhr.status + ').'));
                     }
                     response.jobs.forEach(function (queued) {
-                        queuedJobs++;
+                        rememberJob(queued.job_id);
                         addLog({
                             status: 'queued',
                             file: name,
-                            message: 'Durably staged as background job #' + queued.job_id + '. Processing is deferred until the upload batch is complete.'
+                            message: 'Durably staged as held background job #' + queued.job_id + '. Existing workers cannot claim it until the upload batch is released.'
                         });
                     });
                 } catch (error) {
@@ -330,11 +343,11 @@
             throw new Error(responseError(completed, 'Completed upload could not be queued.'));
         }
         completed.jobs.forEach(function (queued) {
-            queuedJobs++;
+            rememberJob(queued.job_id);
             addLog({
                 status: 'queued',
                 file: name,
-                message: 'Resumable upload durably staged as background job #' + queued.job_id + '. Processing is deferred until the upload batch is complete.'
+                message: 'Resumable upload durably staged as held background job #' + queued.job_id + '. Existing workers cannot claim it until the upload batch is released.'
             });
         });
     }
@@ -393,7 +406,7 @@
         progress.hidden = false;
         log.textContent = '';
         cancelRequested = false;
-        queuedJobs = 0;
+        queuedJobIds = [];
         cancelButton.hidden = false;
         setOverall(0, selected.length, 0);
 
@@ -407,16 +420,19 @@
         speed.textContent = '';
         activeXhr = null;
         activeUploadId = '';
-        if (queuedJobs > 0) {
-            currentLabel.textContent = 'Upload staging complete. Starting background processing for ' + queuedJobs + ' queued job(s)...';
+        if (queuedJobIds.length > 0) {
+            currentLabel.textContent = 'Upload staging complete. Releasing ' + queuedJobIds.length + ' background job(s)...';
             try {
-                await ensureWorker();
+                const released = await releaseBatch();
                 addLog({
                     status: 'completed',
-                    message: queuedJobs + ' background import job(s) started. You may leave this page; processing continues independently.'
+                    message: (released.released || queuedJobIds.length) + ' background import job(s) released. You may leave this page; processing continues independently.'
                 });
             } catch (error) {
-                addLog({status: 'failed', message: error.message || 'Could not start the background worker.'});
+                addLog({
+                    status: 'failed',
+                    message: (error.message || 'Could not release the staged batch.') + ' The staged jobs remain safe and have a 24-hour fallback availability time.'
+                });
             }
         }
 
@@ -424,11 +440,11 @@
         if (!cancelRequested) {
             overallBar.value = 100;
             overallLabel.textContent = 'Upload staging complete (100%)';
-            overallCount.textContent = selected.length + ' of ' + selected.length + ' upload(s) attempted; ' + queuedJobs + ' job(s) queued';
+            overallCount.textContent = selected.length + ' of ' + selected.length + ' upload(s) attempted; ' + queuedJobIds.length + ' job(s) staged';
             currentLabel.textContent = 'All selected files have finished browser upload/staging. Background processing continues independently.';
         } else {
-            overallCount.textContent = attempted + ' of ' + selected.length + ' upload(s) attempted; ' + queuedJobs + ' job(s) queued';
-            currentLabel.textContent = 'Upload batch cancelled. Already-staged jobs have been handed to the background worker.';
+            overallCount.textContent = attempted + ' of ' + selected.length + ' upload(s) attempted; ' + queuedJobIds.length + ' job(s) staged';
+            currentLabel.textContent = 'Upload batch cancelled. Already-staged jobs were released for background processing.';
         }
         submitButton.disabled = false;
         cancelButton.hidden = true;
