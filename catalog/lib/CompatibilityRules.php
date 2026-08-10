@@ -12,20 +12,18 @@
 declare(strict_types=1);
 
 /**
- * Compatibility rules deliberately require an explicit profile rule. They do not
- * make a blanket claim that an engine can load every package produced by an
- * earlier engine.
+ * Compatibility rules deliberately require explicit serialized-header facts.
+ * Filenames and extensions are never used to select or accept an engine reader.
  *
  * Rule shape:
  * {
  *   "detected_engine":"UE1",
  *   "reader_engine":"UE1",
- *   "extensions":["utx"],
  *   "package_version_min":40,
  *   "package_version_max":99,
  *   "licensee_version_min":null,
  *   "licensee_version_max":null,
- *   "label":"Legacy UE1 texture package"
+ *   "label":"Legacy UE1 package"
  * }
  */
 function compat_rules(array $profile): array
@@ -34,31 +32,16 @@ function compat_rules(array $profile): array
     return is_array($rules) ? array_values(array_filter($rules, 'is_array')) : [];
 }
 
-function compat_rule_extensions(array $rule): array
-{
-    $exts = $rule['extensions'] ?? [];
-    if (is_string($exts)) {
-        $exts = preg_split('/[\s,]+/', $exts) ?: [];
-    }
-    if (!is_array($exts)) {
-        return [];
-    }
-    return array_values(array_unique(array_filter(array_map(static fn($ext) => strtolower(trim((string)$ext, '. ')), $exts), static fn($ext) => $ext !== '')));
-}
-
+/**
+ * $extension is retained only for call compatibility. It is intentionally ignored.
+ */
 function compat_rule_match(array $profile, string $extension, ?int $version, ?int $licensee, ?string $detectedEngine): ?array
 {
-    $extension = strtolower(trim($extension, '. '));
     $detectedEngine = strtoupper(trim((string)$detectedEngine));
 
     foreach (compat_rules($profile) as $rule) {
         $ruleEngine = strtoupper(trim((string)($rule['detected_engine'] ?? '')));
         if ($ruleEngine === '' || $ruleEngine !== $detectedEngine) {
-            continue;
-        }
-
-        $extensions = compat_rule_extensions($rule);
-        if (!$extensions || !in_array($extension, $extensions, true)) {
             continue;
         }
 
@@ -76,9 +59,9 @@ function compat_rule_match(array $profile, string $extension, ?int $version, ?in
             }
         }
 
-        $label = trim((string)($rule['label'] ?? 'Legacy-compatible package'));
+        $label = trim((string)($rule['label'] ?? 'Header-compatible package'));
         return [
-            'label' => $label !== '' ? $label : 'Legacy-compatible package',
+            'label' => $label !== '' ? $label : 'Header-compatible package',
             'reader_engine' => strtoupper(trim((string)($rule['reader_engine'] ?? $ruleEngine))),
             'rule' => $rule,
         ];
