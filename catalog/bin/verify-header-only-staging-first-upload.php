@@ -33,6 +33,9 @@ $phpFiles = [
     'src/Infrastructure/Games/CatalogGameProfileAdminService.php',
     'src/Infrastructure/Import/CatalogIncomingFileStore.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    'src/Infrastructure/Metadata/CatalogAssetMetadataService.php',
+    'src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php',
+    'src/Infrastructure/Unverified/CatalogUnverifiedQueueStorage.php',
 ];
 $syntaxFailures = [];
 if (!function_exists('proc_open')) {
@@ -61,15 +64,6 @@ $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 try {
     require_once $root . '/lib/GameProfiles.php';
     $record(
-        'extension_never_selects_engine',
-        gp_detect_from_extension('u') === null
-            && gp_detect_from_extension('utx') === null
-            && gp_detect_from_extension('ut2') === null
-            && gp_detect_from_extension('ut3') === null
-            && gp_detect_from_extension('uasset') === null,
-        'Filename extensions must have zero authority over UE1/UE2/UE3/UE4/UE5 reader selection.'
-    );
-    $record(
         'header_version_selects_supported_legacy_engine',
         gp_engine_from_version(69) === 'UE1'
             && gp_engine_from_version(128) === 'UE2'
@@ -85,12 +79,23 @@ $profiles = $read('lib/GameProfiles.php');
 $compatibility = $read('lib/CompatibilityRules.php');
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
 $profileAdmin = $read('src/Infrastructure/Games/CatalogGameProfileAdminService.php');
+$assetMetadata = $read('src/Infrastructure/Metadata/CatalogAssetMetadataService.php');
+$unverifiedIndex = $read('src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php');
+$unverifiedQueue = $read('src/Infrastructure/Unverified/CatalogUnverifiedQueueStorage.php');
+$record(
+    'extension_engine_detector_is_removed',
+    !str_contains($profiles, 'function gp_detect_from_extension')
+        && !str_contains($assetMetadata, 'gp_detect_from_extension')
+        && !str_contains($unverifiedIndex, 'gp_detect_from_extension')
+        && !str_contains($unverifiedQueue, 'gp_detect_from_extension'),
+    'There must be no filename/extension-to-engine detector or production call site to fall back to.'
+);
 $record(
     'classification_has_no_extension_or_profile_fallback',
     !str_contains($profiles, '$engineByExt')
         && !str_contains($profiles, '$engineByVersion ?: $engineByExt')
         && !str_contains($profiles, "?: (\$selectedEngine ?: 'UNKNOWN')")
-        && str_contains($profiles, "filename and extension fallback is disabled"),
+        && str_contains($profiles, 'filename and extension fallback is disabled'),
     'Unknown/corrupt headers must remain UNKNOWN instead of borrowing the extension or selected profile.'
 );
 $record(
@@ -107,6 +112,14 @@ $record(
         && !str_contains($compatibility, 'in_array($extension')
         && str_contains($profileAdmin, "unset(\$rule['extensions']"),
     'Compatibility acceptance must use detected engine/version/licensee header facts only.'
+);
+$record(
+    'unverified_and_metadata_readers_are_header_only',
+    str_contains($unverifiedIndex, 'serialized package header data')
+        && !str_contains($unverifiedIndex, 'file header or extension')
+        && !str_contains($assetMetadata, '$fallback')
+        && !str_contains($unverifiedQueue, 'gp_detect_from_extension'),
+    'Unverified indexing, queue identity and asset metadata must not resurrect extension-based reader selection.'
 );
 
 $uploadPage = $read('profiled-upload.php');
