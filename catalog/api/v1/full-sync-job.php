@@ -12,6 +12,7 @@ require_once __DIR__ . '/_bootstrap.php';
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogWorkerPoolReconciler;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
@@ -86,10 +87,39 @@ try {
             $summary = trim((string)($workerResult['slot_summary'] ?? ''));
             $workerWarning = 'Full Sync is queued, but the requested worker pool was not fully ready.'
                 . ($summary !== '' ? ' ' . $summary : '');
+            CatalogSystemErrorRecorder::record([
+                'source_kind' => 'full-sync-worker-wake',
+                'severity' => 'warning',
+                'error_type' => 'worker_pool_not_ready',
+                'message' => $workerWarning,
+                'context' => [
+                    'job_id' => $jobId,
+                    'game_id' => $gameId,
+                    'game_name' => (string)$game['name'],
+                    'queue' => $queueName,
+                    'active_workers' => $workerActiveCount,
+                    'requested_workers' => $workerRequestedCount,
+                ],
+            ]);
         }
     } catch (Throwable $workerError) {
         $workerWarning = 'Full Sync is queued, but the worker pool could not be started automatically: '
             . $workerError->getMessage();
+        CatalogSystemErrorRecorder::record([
+            'source_kind' => 'full-sync-worker-wake',
+            'severity' => 'error',
+            'error_type' => get_class($workerError),
+            'message' => $workerWarning,
+            'source_file' => $workerError->getFile(),
+            'source_line' => $workerError->getLine(),
+            'trace_text' => $workerError->getTraceAsString(),
+            'context' => [
+                'job_id' => $jobId,
+                'game_id' => $gameId,
+                'game_name' => (string)$game['name'],
+                'queue' => $queueName,
+            ],
+        ]);
         error_log('[UnrealDB Full Sync worker wake] ' . $workerError->getMessage());
     }
 
