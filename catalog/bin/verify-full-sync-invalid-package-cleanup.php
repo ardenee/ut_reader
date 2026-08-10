@@ -68,23 +68,22 @@ try {
             && gp_engine_from_version(8320) === null,
         'Only Epic UE3 package versions 334..867 may provide a UE3 engine hint; 8261/8320 must not self-classify as UE3.'
     );
-    $record(
-        'extension_engine_fallback_is_disabled',
-        gp_detect_from_extension('u') === null
-            && gp_detect_from_extension('utx') === null
-            && gp_detect_from_extension('ut2') === null
-            && gp_detect_from_extension('ut3') === null
-            && gp_detect_from_extension('uasset') === null,
-        'Filenames/extensions must never select UE1/UE2/UE3/UE4/UE5; engine detection is serialized-header-only.'
-    );
 } catch (Throwable $error) {
     $record('epic_ue3_detection_is_bounded', false, get_class($error) . ': ' . $error->getMessage());
 }
 
+$profiles = $read('lib/GameProfiles.php');
 $exception = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php');
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php');
 $removal = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php');
+
+$record(
+    'extension_engine_fallback_is_removed',
+    !str_contains($profiles, 'function gp_detect_from_extension')
+        && !str_contains($importer, 'gp_detect_from_extension'),
+    'There must be no filename/extension engine detector available to Full Sync or package import.'
+);
 
 $record(
     'primary_importer_has_no_extension_profile_gate',
