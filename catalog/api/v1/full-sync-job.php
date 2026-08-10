@@ -79,9 +79,9 @@ try {
             ->run($queueName, 'drain', null, $userId);
         $workerState = is_array($workerResult['worker'] ?? null) ? $workerResult['worker'] : [];
         $workerReady = !empty($workerResult['pool_satisfied']);
-        $workerStarted = !empty($workerResult['started']) || $workerActiveCount > 0;
         $workerActiveCount = max(0, (int)($workerState['active_count'] ?? 0));
         $workerRequestedCount = max(0, (int)($workerResult['workers'] ?? $workerState['desired_count'] ?? 0));
+        $workerStarted = !empty($workerResult['started']) || $workerActiveCount > 0;
         if (!$workerReady) {
             $summary = trim((string)($workerResult['slot_summary'] ?? ''));
             $workerWarning = 'Full Sync is queued, but the requested worker pool was not fully ready.'
