@@ -32,6 +32,7 @@ $read = static function (string $relative) use ($root): string {
 $phpFiles = [
     'full-sync.php',
     'api/v1/full-sync-job.php',
+    'parsers/EpicUE3PackageReader.php',
     'src/Application/Jobs/JobExecutionContext.php',
     'src/Domain/Jobs/JobType.php',
     'src/Domain/Jobs/JobResourcePolicy.php',
@@ -46,6 +47,7 @@ $phpFiles = [
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
+    'src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Storage/CatalogVerifiedPackageStorage.php',
 ];
@@ -195,6 +197,13 @@ $record(
     'A missing/truncated/corrupt .uedb2 must not be a prerequisite for reparsing the authoritative stored package.'
 );
 $record(
+    'full_sync_reimport_scopes_validated_metadata_baseline',
+    str_contains($reimport, 'VerifiedFileCompactMetadataFinalizer::setMaintenanceBaseline($fileId, $snapshot)')
+        && str_contains($reimport, 'VerifiedFileCompactMetadataFinalizer::clearMaintenanceBaseline($fileId)')
+        && str_contains($reimport, 'finally {'),
+    'A valid pre-reimport snapshot must be available only for the synchronous parser comparison and always cleared afterward.'
+);
+$record(
     'full_sync_reimport_defers_async_reconciliation',
     str_contains($reimport, 'if (!$deferDependencyRefresh)')
         && str_contains($reimport, 'CatalogProjectionReconciliationQueue::enqueue'),
@@ -231,23 +240,103 @@ $record(
 );
 
 $metadataFinalizer = $read('src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php');
-$parsedStart = strpos($metadataFinalizer, 'public static function finalizeParsed(');
-$parsedEnd = $parsedStart === false
-    ? false
-    : strpos($metadataFinalizer, 'private static function fileId', $parsedStart);
-$parsedBody = $parsedStart !== false && $parsedEnd !== false
-    ? substr($metadataFinalizer, $parsedStart, $parsedEnd - $parsedStart)
-    : '';
+$parsedBuilder = $read('src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php');
 $record(
-    'parsed_reimport_always_republishes_compact_metadata',
-    $parsedBody !== ''
-        && str_contains($parsedBody, 'CatalogParsedPackageMetadataSnapshotBuilder')
-        && str_contains($parsedBody, 'BlockedCompressedMetadataSnapshotWriter')
-        && str_contains($parsedBody, "'republished_from_parser' => true")
-        && !str_contains($parsedBody, 'SELECT format_version')
-        && !str_contains($parsedBody, '->verify($fileId)'),
-    'Fresh parser output must replace existing compact metadata; reimport must never discard parsed tables just because format-2 already exists.'
+    'parsed_reimport_compares_before_dependency_rebuild',
+    str_contains($metadataFinalizer, 'buildParsedSections(')
+        && str_contains($metadataFinalizer, 'parsedContentFingerprint($parsed)')
+        && str_contains($metadataFinalizer, 'parsedContentFingerprint($baselineMetadata)')
+        && str_contains($metadataFinalizer, "'reused_unchanged' => true")
+        && str_contains($metadataFinalizer, '$builder->withDependencies($parsed)')
+        && str_contains($metadataFinalizer, 'BlockedCompressedMetadataSnapshotWriter')
+        && str_contains($parsedBuilder, 'public function buildParsedSections(')
+        && str_contains($parsedBuilder, 'public function withDependencies(array $snapshot)')
+        && str_contains($parsedBuilder, 'public static function parsedContentFingerprint(array $snapshot)'),
+    'Full Sync must reuse validated unchanged metadata and only resolve dependencies/write .uedb2 when parser-owned content changed or the old container was unreadable.'
 );
+
+try {
+    require_once $root . '/src/Infrastructure/Metadata/CatalogParsedPackageMetadataSnapshotBuilder.php';
+    $base = [
+        'file' => [
+            'id' => 7,
+            'game_id' => 6,
+            'package_name' => 'Example',
+            'original_name' => 'Example.u',
+            'name_count' => 1,
+            'import_count' => 1,
+            'export_count' => 1,
+            'scan_status' => 'verified',
+        ],
+        'names' => [[
+            'id' => 30064771073,
+            'file_id' => 7,
+            'name_index' => 0,
+            'name_text' => 'Example',
+            'flags' => 1,
+        ]],
+        'imports' => [[
+            'id' => 30064771073,
+            'file_id' => 7,
+            'import_index' => 0,
+            'class_package' => 'Core',
+            'class_name' => 'Class',
+            'object_name' => 'Thing',
+            'outer_index' => 0,
+            'full_path' => 'Core.Thing',
+            'root_package' => 'Core',
+            'relative_object_path' => 'Thing',
+            'is_common' => 1,
+        ]],
+        'exports' => [[
+            'id' => 30064771073,
+            'file_id' => 7,
+            'export_index' => 0,
+            'class_name' => 'Core.Class',
+            'object_name' => 'Thing',
+            'outer_index' => 0,
+            'local_path' => 'Thing',
+            'full_path' => 'Example.Thing',
+            'object_flags' => 2,
+            'serial_size' => 10,
+            'serial_offset' => 20,
+        ]],
+    ];
+    $loadedEquivalent = $base;
+    $loadedEquivalent['names'][0]['id'] = 1;
+    $loadedEquivalent['names'][0]['flags'] = '1';
+    $loadedEquivalent['imports'][0]['id'] = 1;
+    $loadedEquivalent['exports'][0]['id'] = 1;
+    $loadedEquivalent['exports'][0]['object_flags'] = '2';
+    $loadedEquivalent['exports'][0]['serial_size'] = '10';
+    $loadedEquivalent['exports'][0]['serial_offset'] = '20';
+
+    $fingerprintClass = UnrealDb\Catalog\Infrastructure\Metadata\CatalogParsedPackageMetadataSnapshotBuilder::class;
+    $baseFingerprint = $fingerprintClass::parsedContentFingerprint($base);
+    $loadedFingerprint = $fingerprintClass::parsedContentFingerprint($loadedEquivalent);
+    $changed = $loadedEquivalent;
+    $changed['names'][0]['name_text'] = 'Changed';
+    $changedFingerprint = $fingerprintClass::parsedContentFingerprint($changed);
+    $record(
+        'parsed_metadata_fingerprint_semantics',
+        $baseFingerprint === $loadedFingerprint && $baseFingerprint !== $changedFingerprint,
+        'Storage-only row IDs/numeric JSON types must compare equal while parser-owned content changes must compare different.'
+    );
+} catch (Throwable $error) {
+    $record('parsed_metadata_fingerprint_semantics', false, get_class($error) . ': ' . $error->getMessage());
+}
+
+try {
+    require_once $root . '/parsers/EpicUE3PackageReader.php';
+    $reader = new CatalogEpicUE3BinaryReader(pack('V', 2) . "\xE9\0");
+    $record(
+        'epic_ue3_ansi_fstring_to_utf8',
+        $reader->fstring('fixture') === "\xC3\xA9",
+        'Epic positive-length FString loading uses FromAnsi byte-to-TCHAR semantics; high ANSI bytes must become valid UTF-8 without byte loss.'
+    );
+} catch (Throwable $error) {
+    $record('epic_ue3_ansi_fstring_to_utf8', false, get_class($error) . ': ' . $error->getMessage());
+}
 
 $projectionService = $read('src/Infrastructure/Maintenance/CatalogFullSyncProjectionService.php');
 $providers = $read('src/Infrastructure/Persistence/PdoPackageProviderRepository.php');
