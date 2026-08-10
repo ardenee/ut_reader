@@ -28,8 +28,11 @@ final class CatalogFileMaintenanceRemovalService
      * @param null|callable(array<string,mixed>):void $progress
      * @return array<string,mixed>
      */
-    public function remove(int $fileId, ?callable $progress = null): array
-    {
+    public function remove(
+        int $fileId,
+        ?callable $progress = null,
+        bool $deferDependencyRefresh = false
+    ): array {
         $file = \catalog_one($this->db, 'SELECT * FROM ue_files WHERE id=?', [$fileId]);
         if (!$file) {
             throw new RuntimeException('File no longer exists in the catalog.');
@@ -40,6 +43,7 @@ final class CatalogFileMaintenanceRemovalService
         $metadataPath = \catalog_file_maintenance_metadata_path($this->config, $gameId, $fileId);
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
         $stagedPath = null;
+        $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
 
         if ($storedPath !== null && is_file($storedPath)) {
             $stagedPath = $storedPath . '.deleting-' . bin2hex(random_bytes(8));
@@ -54,7 +58,8 @@ final class CatalogFileMaintenanceRemovalService
                 $this->db,
                 $gameId,
                 $fileId,
-                $packageName
+                $packageName,
+                $deferDependencyRefresh
             );
             \catalog_file_maintenance_emit(
                 $progress,
@@ -62,16 +67,26 @@ final class CatalogFileMaintenanceRemovalService
                 20,
                 'Removing catalog records and compact projections'
             );
+            $support->deleteFileProjections($fileId);
             $this->db->prepare('DELETE FROM ue_files WHERE id=?')->execute([$fileId]);
-            \catalog_file_maintenance_refresh_ids(
-                $this->db,
-                $this->config,
-                $affectedFileIds,
-                $progress,
-                25,
-                95,
-                'Refreshing affected dependency links'
-            );
+            if ($deferDependencyRefresh) {
+                \catalog_file_maintenance_emit(
+                    $progress,
+                    'dependencies',
+                    95,
+                    'Dependency reconciliation deferred to the final Full Sync pass'
+                );
+            } else {
+                \catalog_file_maintenance_refresh_ids(
+                    $this->db,
+                    $this->config,
+                    $affectedFileIds,
+                    $progress,
+                    25,
+                    95,
+                    'Refreshing affected dependency links'
+                );
+            }
         } catch (Throwable $error) {
             if ($stagedPath !== null && is_file($stagedPath) && $storedPath !== null) {
                 @rename($stagedPath, $storedPath);
@@ -79,13 +94,16 @@ final class CatalogFileMaintenanceRemovalService
             throw $error;
         }
 
-        $reconciliationJobId = CatalogProjectionReconciliationQueue::enqueue(
-            $this->db,
-            $fileId,
-            [$gameId],
-            [$packageName],
-            $this->config
-        );
+        $reconciliationJobId = null;
+        if (!$deferDependencyRefresh) {
+            $reconciliationJobId = CatalogProjectionReconciliationQueue::enqueue(
+                $this->db,
+                $fileId,
+                [$gameId],
+                [$packageName],
+                $this->config
+            );
+        }
 
         $warnings = [];
         \catalog_file_maintenance_emit(
