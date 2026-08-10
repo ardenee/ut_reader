@@ -30,8 +30,10 @@ $phpFiles = [
     'lib/CompatibilityRules.php',
     'profiled-upload.php',
     'api/v1/profiled-upload-chunk.php',
+    'api/v1/profiled-upload-preflight.php',
     'src/Infrastructure/Games/CatalogGameProfileAdminService.php',
     'src/Infrastructure/Import/CatalogIncomingFileStore.php',
+    'src/Infrastructure/Import/CatalogProfiledUploadDuplicatePreflight.php',
     'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Metadata/CatalogAssetMetadataService.php',
@@ -44,6 +46,10 @@ if (!function_exists('proc_open')) {
 } else {
     foreach ($phpFiles as $relative) {
         $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        if (!is_file($path)) {
+            $syntaxFailures[] = $relative . ' is missing';
+            continue;
+        }
         $pipes = [];
         $process = proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($process)) {
@@ -125,6 +131,7 @@ $record(
 
 $uploadPage = $read('profiled-upload.php');
 $uploadJs = $read('assets/profiled-upload-jobs.js');
+$hashWorker = $read('assets/profiled-upload-hash-worker.js');
 $chunkApi = $read('api/v1/profiled-upload-chunk.php');
 $incoming = $read('src/Infrastructure/Import/CatalogIncomingFileStore.php');
 $profiledQueue = $read('src/Infrastructure/Import/CatalogProfiledUploadQueue.php');
@@ -135,8 +142,16 @@ $record(
         && !str_contains($uploadJs, 'readJob(')
         && !str_contains($uploadJs, 'job-status.php')
         && str_contains($uploadJs, "defer_worker_start', '1")
-        && str_contains($uploadJs, 'All selected files have finished browser upload/staging'),
-    'Each file must be durably staged and the next upload started immediately; job polling belongs on Background Jobs.'
+        && str_contains($uploadJs, 'All selected files have finished duplicate preflight/upload staging'),
+    'Each file may be locally preflighted, but browser flow must never wait for its background import job before advancing.'
+);
+$record(
+    'client_preflight_happens_before_network_upload',
+    str_contains($uploadJs, 'await duplicatePreflight(file, index, total)')
+        && str_contains($uploadJs, 'if (preflight.skip || cancelRequested) return;')
+        && str_contains($uploadJs, 'new Worker(hashWorkerUrl)')
+        && str_contains($hashWorker, 'file.slice(loaded, end).arrayBuffer()'),
+    'Ordinary files should be checked locally before network transfer while hashing stays off the UI thread.'
 );
 $record(
     'jobs_are_unclaimable_during_batch_staging',
@@ -172,7 +187,7 @@ $record(
 );
 $record(
     'upload_ui_states_background_independence',
-    str_contains($uploadPage, 'you do not need to keep this page open while jobs run')
+    str_contains($uploadPage, 'Jobs remain unclaimable while the selected browser batch is uploading')
         && str_contains($uploadJs, 'processing continues independently'),
     'The UI must describe the durable staging/background-processing boundary accurately.'
 );
