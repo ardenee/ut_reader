@@ -2,7 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Reconciles materialized catalogue projections after direct maintenance writes.
- * Why: Provider changes can affect many dependency owners; reconciliation must target only relevant Imports and avoid no-op rewrites.
+ * Why: Projection maintenance is not an identity write; affected dependency owners must use narrow per-file locking so
+ *      long reconciliation jobs cannot stall unrelated Full Sync or catalog maintenance requests.
  * Role: Infrastructure durable-job handler for catalog.reconcile_catalog_projections.
  */
 declare(strict_types=1);
@@ -16,7 +17,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Metadata\CompactDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
@@ -25,8 +26,6 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 /** Reconciles all materialized catalogue projections after direct maintenance writes. */
 final class CatalogProjectionReconciliationJobHandler implements JobHandler
 {
-    private const MAINTENANCE_LOCK = 'unrealdb_catalog_maintenance_write_v1';
-
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -41,22 +40,11 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
-        $lock = $this->db->prepare('SELECT GET_LOCK(?,45)');
-        $lock->execute([self::MAINTENANCE_LOCK]);
-        if ((int)$lock->fetchColumn() !== 1) {
-            throw new \RuntimeException('Catalogue maintenance is still writing identity data; projection reconciliation will retry.');
-        }
-
-        try {
-            return $this->reconcile($job, $context);
-        } finally {
-            try {
-                $release = $this->db->prepare('SELECT RELEASE_LOCK(?)');
-                $release->execute([self::MAINTENANCE_LOCK]);
-            } catch (Throwable) {
-                // Closing the worker connection also releases the advisory lock.
-            }
-        }
+        // Provider, dependency-summary and game-stat rows are projections. They
+        // must not hold unrealdb_catalog_maintenance_write_v1 while iterating
+        // potentially thousands of dependency owners. File dependency writes are
+        // serialized by PdoCatalogDependencyRebuilder's per-file advisory lock.
+        return $this->reconcile($job, $context);
     }
 
     /** @return array<string,mixed> */
@@ -83,7 +71,9 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 $gameIds[] = $currentGameId;
             }
             $packageNames[] = (string)($file['package_name'] ?? '');
-            $aliasStatement = $this->db->prepare('SELECT package_name FROM ue_file_package_aliases WHERE file_id=? ORDER BY id');
+            $aliasStatement = $this->db->prepare(
+                'SELECT package_name FROM ue_file_package_aliases WHERE file_id=? ORDER BY id'
+            );
             $aliasStatement->execute([$fileId]);
             foreach ($aliasStatement->fetchAll(PDO::FETCH_COLUMN) as $aliasName) {
                 $packageNames[] = (string)$aliasName;
@@ -129,62 +119,27 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
         $compactNoopFiles = 0;
         $targetedImports = 0;
         $summaryRefreshIds = [];
-
-        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
-        $compactRebuilder = $storageRoot !== ''
-            ? new CompactDependencyRebuilder($this->db, $storageRoot)
-            : null;
-        $formatStatement = $this->db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
-        $legacyScannerLoaded = false;
+        $dependencyRebuilder = new PdoCatalogDependencyRebuilder($this->db, $this->config);
 
         foreach ($affectedIds as $index => $affectedFileId) {
             try {
-                $formatStatement->execute([$affectedFileId]);
-                $formatVersion = (int)$formatStatement->fetchColumn();
                 $message = 'Reconciling dependency owner ' . ($index + 1) . '/' . $affectedTotal;
-
-                if ($formatVersion >= 2) {
-                    if ($compactRebuilder === null) {
-                        throw new \RuntimeException('Catalog storage_path is required for compact dependency rebuilding.');
-                    }
-                    $result = $compactRebuilder->rebuildForPackages($affectedFileId, $packageNames);
-                    $changed = (int)($result['dependencies_changed'] ?? 0);
-                    $targeted = (int)($result['imports_processed'] ?? 0);
-                    $importsTotal = (int)($result['imports_total'] ?? $targeted);
-                    $targetedImports += $targeted;
-                    $message .= ': targeted compact imports=' . $targeted . '/' . $importsTotal
-                        . ', changed=' . $changed;
-                    if ($changed === 0) {
-                        $compactNoopFiles++;
-                    } else {
-                        $dependencyFilesChanged++;
-                        $summaryRefreshIds[] = $affectedFileId;
-                    }
+                $result = $dependencyRebuilder->rebuildForPackages(
+                    $affectedFileId,
+                    $packageNames,
+                    false
+                );
+                $changed = (int)($result['dependencies_changed'] ?? 0);
+                $targeted = (int)($result['imports_processed'] ?? 0);
+                $importsTotal = (int)($result['imports_total'] ?? $targeted);
+                $targetedImports += $targeted;
+                $message .= ': targeted compact imports=' . $targeted . '/' . $importsTotal
+                    . ', changed=' . $changed;
+                if ($changed === 0) {
+                    $compactNoopFiles++;
                 } else {
-                    if (!$legacyScannerLoaded) {
-                        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
-                        $legacyScannerLoaded = true;
-                    }
-                    \scanner_rebuild_dependencies(
-                        $this->db,
-                        $this->config,
-                        $affectedFileId,
-                        static function (array $progress) use ($context, $index, $affectedTotal): void {
-                            $context->heartbeatIfDue([
-                                'stage' => 'dependencies',
-                                'done' => $index,
-                                'total' => max(1, $affectedTotal),
-                                'percent' => 25 + (int)floor(($index * 50) / max(1, $affectedTotal)),
-                                'message' => (string)($progress['message'] ?? 'Refreshing affected dependency owner.'),
-                            ]);
-                        },
-                        0,
-                        100,
-                        $message
-                    );
                     $dependencyFilesChanged++;
                     $summaryRefreshIds[] = $affectedFileId;
-                    $message .= ': legacy dependency rows rebuilt';
                 }
 
                 $processed++;
@@ -204,7 +159,10 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 if (count($failures) < 100) {
                     $failures[] = ['file_id' => $affectedFileId, 'error' => $error->getMessage()];
                 }
-                error_log('[UnrealDB projection reconciliation] affected_file_id=' . $affectedFileId . ' failed: ' . $error->getMessage());
+                error_log(
+                    '[UnrealDB projection reconciliation] affected_file_id=' . $affectedFileId
+                    . ' failed: ' . $error->getMessage()
+                );
             }
         }
 
@@ -215,7 +173,8 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 'done' => max(1, $affectedTotal),
                 'total' => max(1, $affectedTotal),
                 'percent' => 76,
-                'message' => 'Refreshing package summaries for ' . count($summaryRefreshIds) . ' changed dependency owner(s).',
+                'message' => 'Refreshing package summaries for ' . count($summaryRefreshIds)
+                    . ' changed dependency owner(s).',
             ]);
             $bulkSummary = $summaries->rebuildFiles($summaryRefreshIds);
             $summaryFilesRefreshed = (int)($bulkSummary['files'] ?? 0);
@@ -309,7 +268,10 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
     /** @param array<mixed> $values @return list<int> */
     private function positiveIds(array $values): array
     {
-        $ids = array_values(array_unique(array_filter(array_map('intval', $values), static fn(int $id): bool => $id > 0)));
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $values),
+            static fn(int $id): bool => $id > 0
+        )));
         sort($ids, SORT_NUMERIC);
         return $ids;
     }
