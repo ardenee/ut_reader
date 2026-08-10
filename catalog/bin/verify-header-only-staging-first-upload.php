@@ -32,6 +32,7 @@ $phpFiles = [
     'api/v1/profiled-upload-chunk.php',
     'src/Infrastructure/Games/CatalogGameProfileAdminService.php',
     'src/Infrastructure/Import/CatalogIncomingFileStore.php',
+    'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Metadata/CatalogAssetMetadataService.php',
     'src/Infrastructure/Unverified/CatalogUnverifiedStagingIndex.php',
@@ -126,6 +127,8 @@ $uploadPage = $read('profiled-upload.php');
 $uploadJs = $read('assets/profiled-upload-jobs.js');
 $chunkApi = $read('api/v1/profiled-upload-chunk.php');
 $incoming = $read('src/Infrastructure/Import/CatalogIncomingFileStore.php');
+$profiledQueue = $read('src/Infrastructure/Import/CatalogProfiledUploadQueue.php');
+$claimer = $read('src/Infrastructure/Persistence/PdoJobClaimer.php');
 $record(
     'browser_does_not_wait_for_import_jobs',
     !str_contains($uploadJs, 'waitForJob(')
@@ -136,13 +139,22 @@ $record(
     'Each file must be durably staged and the next upload started immediately; job polling belongs on Background Jobs.'
 );
 $record(
-    'workers_start_after_batch_staging',
-    str_contains($uploadPage, '$deferWorkerStart')
-        && str_contains($uploadPage, 'if (!$deferWorkerStart)')
-        && str_contains($chunkApi, '$deferWorkerStart')
-        && str_contains($chunkApi, 'if (!$deferWorkerStart)')
-        && substr_count($uploadJs, 'await ensureWorker();') === 1,
-    'Profiled Upload must defer worker launch for each file and start the queue once after the upload loop exits.'
+    'jobs_are_unclaimable_during_batch_staging',
+    str_contains($profiledQueue, 'BATCH_HOLD_SECONDS')
+        && str_contains($profiledQueue, '$holdForBatch ? $this->batchHoldUntil() : null')
+        && str_contains($claimer, "'available_at<=?'")
+        && str_contains($uploadPage, '$deferWorkerStart')
+        && str_contains($chunkApi, '$deferWorkerStart'),
+    'Held upload jobs must have a future available_at so even already-running workers cannot process them before batch release.'
+);
+$record(
+    'batch_is_released_once_after_upload_loop',
+    str_contains($profiledQueue, 'public function releaseHeldJobs(')
+        && str_contains($uploadPage, "'release_batch'")
+        && str_contains($uploadJs, 'async function releaseBatch()')
+        && substr_count($uploadJs, 'await releaseBatch();') === 1
+        && !str_contains($uploadJs, 'ensureWorker('),
+    'The browser must release the held job IDs once, after the upload loop exits; the release endpoint starts background processing.'
 );
 $record(
     'normal_http_staging_skips_whole_file_sha256',
@@ -151,6 +163,12 @@ $record(
         && str_contains($incoming, 'if ($hashNow)')
         && str_contains($incoming, "\$sha256 = '';"),
     'Normal browser ingress must not reread a just-uploaded file solely to SHA-256 it before returning the HTTP response.'
+);
+$record(
+    'hashless_staging_still_has_durable_job_dedupe',
+    str_contains($profiledQueue, "'profiled-staged:'")
+        && str_contains($profiledQueue, '$stagedPath'),
+    'Skipping the synchronous SHA-256 reread must not allow duplicate queue requests for the same durable staged object.'
 );
 $record(
     'upload_ui_states_background_independence',
