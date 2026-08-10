@@ -1,7 +1,7 @@
 # Future database migrations
 
-The schema was consolidated into `catalog/install.sql` through baseline
-`202608030001`.
+The schema is consolidated into `catalog/install.sql` through baseline
+`202608090002`.
 
 Add only new immutable PHP migrations with a version greater than that
 baseline. Existing installations retain historical rows in
