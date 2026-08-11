@@ -1,12 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the domain class `JobResourcePolicy` for job resource policy.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Domain model/contract code representing core catalog behavior without presentation concerns.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Defines the domain class `JobResourcePolicy` for job type.
+ * Why: It keeps resource/concurrency policy out of handlers and pages.
+ * Role: Domain model/contract code representing durable-job resource limits.
  */
 declare(strict_types=1);
 
@@ -18,6 +15,7 @@ use Throwable;
 final class JobResourcePolicy
 {
     public const DEPENDENCY_HEAVY = 'dependency-heavy';
+    public const AFFECTED_DEPENDENCY_BATCH = 'affected-dependency-batch';
     public const SEARCH_HEAVY = 'search-heavy';
     public const IMPORT_HEAVY = 'import-heavy';
     public const ARCHIVE_IMPORT_HEAVY = 'archive-import-heavy';
@@ -31,24 +29,25 @@ final class JobResourcePolicy
 
     private static ?Closure $limitResolver = null;
 
-    /**
-     * @param callable(string,int):int|null $resolver
-     */
+    /** @param callable(string,int):int|null $resolver */
     public static function setLimitResolver(?callable $resolver): void
     {
         self::$limitResolver = $resolver === null ? null : Closure::fromCallable($resolver);
     }
 
-    /**
-     * @return array<string,array{label:string,default:int,description:string}>
-     */
+    /** @return array<string,array{label:string,default:int,description:string}> */
     public static function definitions(): array
     {
         return [
             self::DEPENDENCY_HEAVY => [
                 'label' => 'Dependency and projection work',
                 'default' => 1,
-                'description' => 'Full Sync, dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
+                'description' => 'Full Sync, whole-game/file dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
+            ],
+            self::AFFECTED_DEPENDENCY_BATCH => [
+                'label' => 'Affected dependency batches',
+                'default' => 2,
+                'description' => 'Targeted dependency refresh batches after a new provider is imported. Independent files may run concurrently; per-file locks and compact publication retries protect overlap.',
             ],
             self::SEARCH_HEAVY => [
                 'label' => 'Search-index rebuilds',
@@ -117,11 +116,7 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
             ),
-            JobType::REBUILD_AFFECTED_DEPENDENCIES => new JobResourceProfile(
-                self::DEPENDENCY_HEAVY,
-                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
-                self::affectedDependencyKey($payload)
-            ),
+            JobType::REBUILD_AFFECTED_DEPENDENCIES => self::affectedDependencyProfile($payload),
             JobType::RECONCILE_CATALOG_PROJECTIONS => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
@@ -196,6 +191,25 @@ final class JobResourcePolicy
         };
     }
 
+    /** @param array<string,mixed> $payload */
+    private static function affectedDependencyProfile(array $payload): JobResourceProfile
+    {
+        $batchIds = $payload['affected_file_ids'] ?? null;
+        if (is_array($batchIds) && $batchIds !== []) {
+            return new JobResourceProfile(
+                self::AFFECTED_DEPENDENCY_BATCH,
+                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 2),
+                self::affectedBatchKey($payload)
+            );
+        }
+
+        return new JobResourceProfile(
+            self::DEPENDENCY_HEAVY,
+            self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+            self::affectedDependencyKey($payload)
+        );
+    }
+
     private static function configuredLimit(string $resourceClass, int $default): int
     {
         $name = 'UNREALDB_JOB_RESOURCE_LIMIT_' . strtoupper(str_replace('-', '_', $resourceClass));
@@ -230,6 +244,17 @@ final class JobResourcePolicy
             return $gameKey;
         }
         return self::positiveKey('dependency:affected-file:', $payload['file_id'] ?? null);
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function affectedBatchKey(array $payload): ?string
+    {
+        $sourceFileId = (int)($payload['file_id'] ?? 0);
+        $batchNumber = (int)($payload['batch_number'] ?? 0);
+        if ($sourceFileId < 1 || $batchNumber < 1) {
+            return null;
+        }
+        return 'dependency:affected-batch:' . $sourceFileId . ':' . $batchNumber;
     }
 
     /** @param array<string,mixed> $payload */
