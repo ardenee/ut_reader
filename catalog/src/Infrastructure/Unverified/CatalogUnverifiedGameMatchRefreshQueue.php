@@ -44,6 +44,14 @@ final class CatalogUnverifiedGameMatchRefreshQueue
             throw new \RuntimeException('The unverified file is no longer available for game-match refresh.');
         }
 
+        // Bucket staging must remain successful during a rolling deployment in
+        // which code reaches a node before the schema migration is applied.
+        // The page will show this file as not calculated until migration/manual
+        // refresh catches it up rather than creating a guaranteed failed job.
+        if (!$this->cache->available()) {
+            return 0;
+        }
+
         $this->cache->markPending($fileId);
         return (new PdoJobQueue($this->db))->enqueue(
             $this->queueName(),
@@ -59,6 +67,11 @@ final class CatalogUnverifiedGameMatchRefreshQueue
 
     public function enqueueBucket(?int $userId = null): int
     {
+        if (!$this->cache->available()) {
+            throw new \RuntimeException(
+                'Unverified game-match cache is not installed. Run php catalog/bin/migrate.php migrate first.'
+            );
+        }
         return (new PdoJobQueue($this->db))->enqueue(
             $this->queueName(),
             JobType::REFRESH_UNVERIFIED_GAME_MATCHES,
