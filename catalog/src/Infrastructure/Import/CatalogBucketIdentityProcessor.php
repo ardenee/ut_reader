@@ -63,69 +63,113 @@ final class CatalogBucketIdentityProcessor
             'sha1' => $sha1,
         ]);
 
-        $this->emit($progress, 'duplicate_check', 58, 'Checking size, MD5 and SHA-1 against physical Upload Bucket and catalog files.');
-        $inspection = (new CatalogUploadDuplicateDetector($this->db, $this->config))->inspect($size, $md5, $sha1);
-        $duplicate = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
-        if ($duplicate !== null) {
-            @unlink($temporaryPath);
-            $existingName = trim((string)($duplicate['original_name'] ?? ''));
-            if ($existingName === '') {
-                $existingName = trim((string)($duplicate['package_name'] ?? '')) ?: 'existing physical package';
-            }
-            $location = (string)($duplicate['location_kind'] ?? '') === 'upload_bucket'
-                ? 'the Upload Bucket'
-                : 'catalog storage';
-            $message = 'Duplicate size, MD5 and SHA-1 already exist in ' . $location
-                . ' as ' . $existingName . ' (file #' . (int)$duplicate['file_id'] . '). Prepared copy discarded.';
-            $this->emit($progress, 'duplicate', 100, $message, ['file_id' => (int)$duplicate['file_id']]);
-            return [
-                'status' => 'duplicate',
-                'file_id' => (int)$duplicate['file_id'],
-                'queue_name' => '',
-                'original_name' => $existingName,
-                'path' => (string)$duplicate['physical_path'],
-                'size' => $size,
-                'message' => $message,
-                'parse_error' => null,
-                'md5' => $md5,
-                'sha1' => $sha1,
-            ];
-        }
-
-        $missingBase = (int)($inspection['missing_base_game_matches'] ?? 0);
-        if ($missingBase > 0) {
-            $this->emit(
-                $progress,
-                'duplicate_check',
-                59,
-                'Official base-game identity metadata matched, but no physical source file exists. Keeping this package.'
-            );
-        }
-
-        $this->emit($progress, 'bucket_store', 60, 'Moving the prepared package into Upload Bucket storage.');
-        $stored = $this->operations->store($temporaryPath, $originalName, $reason);
-        $storedPath = (string)$stored['path'];
-
+        // Multiple workers can finish the raw package and its .uz/.uz2/.uz3
+        // equivalent at the same time. Serialize only identical package
+        // identities so the duplicate check and publication form one critical
+        // section without reducing concurrency for unrelated files.
+        $this->emit($progress, 'duplicate_lock', 57, 'Serializing identical package identity before duplicate inspection.');
+        $identityLock = $this->lockIdentity($size, $md5, $sha1);
         try {
-            $indexed = $this->operations->index(
-                (string)$stored['queue_name'],
-                $storedPath,
-                (string)$stored['original_name'],
-                $reason,
-                $uploadedBy,
-                $sourceRelativePath,
-                (int)$stored['size'],
-                $md5,
-                $sha1,
-                $progress
-            );
-        } catch (Throwable $error) {
-            @unlink($storedPath . '.txt');
-            @unlink($storedPath);
-            throw $error;
+            $this->emit($progress, 'duplicate_check', 58, 'Checking size, MD5 and SHA-1 against physical Upload Bucket and catalog files.');
+            $inspection = (new CatalogUploadDuplicateDetector($this->db, $this->config))->inspect($size, $md5, $sha1);
+            $duplicate = is_array($inspection['duplicate'] ?? null) ? $inspection['duplicate'] : null;
+            if ($duplicate !== null) {
+                @unlink($temporaryPath);
+                $existingName = trim((string)($duplicate['original_name'] ?? ''));
+                if ($existingName === '') {
+                    $existingName = trim((string)($duplicate['package_name'] ?? '')) ?: 'existing physical package';
+                }
+                $location = (string)($duplicate['location_kind'] ?? '') === 'upload_bucket'
+                    ? 'the Upload Bucket'
+                    : 'catalog storage';
+                $message = 'Duplicate size, MD5 and SHA-1 already exist in ' . $location
+                    . ' as ' . $existingName . ' (file #' . (int)$duplicate['file_id'] . '). Prepared copy discarded.';
+                $this->emit($progress, 'duplicate', 100, $message, ['file_id' => (int)$duplicate['file_id']]);
+                return [
+                    'status' => 'duplicate',
+                    'file_id' => (int)$duplicate['file_id'],
+                    'queue_name' => '',
+                    'original_name' => $existingName,
+                    'path' => (string)$duplicate['physical_path'],
+                    'size' => $size,
+                    'message' => $message,
+                    'parse_error' => null,
+                    'md5' => $md5,
+                    'sha1' => $sha1,
+                ];
+            }
+
+            $missingBase = (int)($inspection['missing_base_game_matches'] ?? 0);
+            if ($missingBase > 0) {
+                $this->emit(
+                    $progress,
+                    'duplicate_check',
+                    59,
+                    'Official base-game identity metadata matched, but no physical source file exists. Keeping this package.'
+                );
+            }
+
+            $this->emit($progress, 'bucket_store', 60, 'Moving the prepared package into Upload Bucket storage.');
+            $stored = $this->operations->store($temporaryPath, $originalName, $reason);
+            $storedPath = (string)$stored['path'];
+
+            try {
+                $indexed = $this->operations->index(
+                    (string)$stored['queue_name'],
+                    $storedPath,
+                    (string)$stored['original_name'],
+                    $reason,
+                    $uploadedBy,
+                    $sourceRelativePath,
+                    (int)$stored['size'],
+                    $md5,
+                    $sha1,
+                    $progress
+                );
+            } catch (Throwable $error) {
+                @unlink($storedPath . '.txt');
+                @unlink($storedPath);
+                throw $error;
+            }
+
+            return $indexed + ['md5' => $md5, 'sha1' => $sha1];
+        } finally {
+            $this->unlockIdentity($identityLock);
+        }
+    }
+
+    /** @return resource */
+    private function lockIdentity(int $size, string $md5, string $sha1)
+    {
+        $storageRoot = rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
+        if ($storageRoot === '') {
+            throw new \RuntimeException('Catalog storage path is unavailable for Upload Bucket identity locking.');
         }
 
-        return $indexed + ['md5' => $md5, 'sha1' => $sha1];
+        $identity = hash('sha256', $size . "\0" . $md5 . "\0" . $sha1);
+        $directory = $storageRoot
+            . DIRECTORY_SEPARATOR . 'jobs'
+            . DIRECTORY_SEPARATOR . 'upload-identity-locks'
+            . DIRECTORY_SEPARATOR . substr($identity, 0, 2);
+        if (!is_dir($directory) && !@mkdir($directory, 0750, true) && !is_dir($directory)) {
+            throw new \RuntimeException('Could not create Upload Bucket identity lock storage.');
+        }
+
+        $handle = @fopen($directory . DIRECTORY_SEPARATOR . $identity . '.lock', 'c+b');
+        if (!is_resource($handle) || !flock($handle, LOCK_EX)) {
+            if (is_resource($handle)) {
+                fclose($handle);
+            }
+            throw new \RuntimeException('Could not lock Upload Bucket package identity.');
+        }
+        return $handle;
+    }
+
+    /** @param resource $handle */
+    private function unlockIdentity($handle): void
+    {
+        flock($handle, LOCK_UN);
+        fclose($handle);
     }
 
     /** @param callable(array<string,mixed>):void|null $progress @param array<string,mixed> $meta */
