@@ -54,6 +54,7 @@ final class CatalogJobWorkerFactory
 
         $bucketUpload = new CatalogBucketUploadJobHandler($db, $trustedImportConfig);
         $metadataRepair = new CatalogUnverifiedMetadataRepairJobHandler($db, $trustedImportConfig);
+        $unverifiedMatchRefresh = new CatalogUnverifiedGameMatchRefreshJobHandler($db, $trustedImportConfig);
         $bucketRedirect = new CatalogBucketRedirectJobHandler($db, $trustedImportConfig);
         $pakImport = new CatalogPakImportJobHandler($db, $trustedImportConfig);
         $packageImport = new CatalogNonBlockingImportJobHandler(
@@ -90,6 +91,7 @@ final class CatalogJobWorkerFactory
             JobType::SOURCE_SCAN => $sourceScan,
             JobType::CLEAN_UNVERIFIED_DUPLICATES => $duplicateCleanup,
             JobType::REPAIR_UNVERIFIED_METADATA => $metadataRepair,
+            JobType::REFRESH_UNVERIFIED_GAME_MATCHES => $unverifiedMatchRefresh,
             JobType::GENERATE_MOD_PACKAGE => $generatedPackage,
             JobType::EXPORT_GAME_BACKUP => $backupExport,
             JobType::IMPORT_GAME_BACKUP => $backupImport,
