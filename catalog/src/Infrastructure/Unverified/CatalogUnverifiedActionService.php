@@ -35,6 +35,9 @@ final class CatalogUnverifiedActionService
         ?callable $emit = null
     ): array {
         if ($action === 'move') {
+            if ($targetGameId < 1) {
+                throw new RuntimeException('Moving a queued file requires one target game.');
+            }
             $this->emit($emit, 'moving', 25, 'Moving queued file');
             $result = (new CatalogUnverifiedQueueMutationService($this->db, $this->config))
                 ->move($source, $targetGameId);
@@ -44,13 +47,16 @@ final class CatalogUnverifiedActionService
         }
 
         if ($action === 'import') {
-            $import = (new CatalogUnverifiedImportService($this->db, $this->config))->import(
-                $source,
-                $targetGameId,
-                $userId,
-                $allowOverride,
-                $emit
-            );
+            $service = new CatalogUnverifiedImportService($this->db, $this->config);
+            $import = $targetGameId === -1
+                ? $service->importExactCompatibleGames($source, $userId, $emit)
+                : $service->import(
+                    $source,
+                    $targetGameId,
+                    $userId,
+                    $allowOverride,
+                    $emit
+                );
             $result = $import['result'];
             $details = is_array($import['details'] ?? null) ? $import['details'] : [];
             $warning = (string)($import['warning'] ?? '');
@@ -83,12 +89,34 @@ final class CatalogUnverifiedActionService
             'alias' => 'Alias added',
             default => ucfirst((string)($result['status'] ?? 'completed')),
         };
-        $message = $statusLabel . ' ' . (string)$result['original_name']
-            . ' for ' . (string)$result['target_game'] . '. N/I/E: '
-            . (int)($details['name_count'] ?? 0) . '/'
-            . (int)($details['import_count'] ?? 0) . '/'
-            . (int)($details['export_count'] ?? 0)
-            . ' | GUID: ' . ($guid !== '' ? $guid : 'N/A') . '.';
+
+        if (!empty($result['multi_game'])) {
+            $primaryGame = trim((string)($result['primary_game'] ?? $result['target_game'] ?? 'primary game'));
+            $queued = is_array($result['queued_game_jobs'] ?? null) ? $result['queued_game_jobs'] : [];
+            $message = $statusLabel . ' ' . (string)$result['original_name'] . ' for ' . $primaryGame . '. ';
+            if ($queued !== []) {
+                $queuedLabels = [];
+                foreach ($queued as $entry) {
+                    $queuedLabels[] = (string)($entry['game_name'] ?? 'game')
+                        . ' (job #' . (int)($entry['job_id'] ?? 0) . ')';
+                }
+                $message .= 'Queued verified copies for ' . implode(', ', $queuedLabels) . '. ';
+            } else {
+                $message .= 'No additional game copy jobs were needed. ';
+            }
+            $message .= 'Only exact compatible dependency matches were included. N/I/E: '
+                . (int)($details['name_count'] ?? 0) . '/'
+                . (int)($details['import_count'] ?? 0) . '/'
+                . (int)($details['export_count'] ?? 0)
+                . ' | GUID: ' . ($guid !== '' ? $guid : 'N/A') . '.';
+        } else {
+            $message = $statusLabel . ' ' . (string)$result['original_name']
+                . ' for ' . (string)$result['target_game'] . '. N/I/E: '
+                . (int)($details['name_count'] ?? 0) . '/'
+                . (int)($details['import_count'] ?? 0) . '/'
+                . (int)($details['export_count'] ?? 0)
+                . ' | GUID: ' . ($guid !== '' ? $guid : 'N/A') . '.';
+        }
 
         $dependencyJobs = is_array($result['dependency_jobs'] ?? null)
             ? $result['dependency_jobs']
@@ -138,6 +166,12 @@ final class CatalogUnverifiedActionService
             'recovery' => $recovery,
             'dependency_jobs' => is_array($result['dependency_jobs'] ?? null)
                 ? $result['dependency_jobs']
+                : null,
+            'queued_game_jobs' => is_array($result['queued_game_jobs'] ?? null)
+                ? $result['queued_game_jobs']
+                : null,
+            'target_games' => is_array($result['target_games'] ?? null)
+                ? $result['target_games']
                 : null,
             'identity_reused' => !empty($result['identity_reused']),
             'message' => $message,
