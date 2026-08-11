@@ -249,6 +249,11 @@ final class CompressedMetadataLookupWriter
             return [];
         }
 
+        // ue_terms is a shared unique lookup touched by every import. Acquire its
+        // unique-index locks in one global hash/length order so overlapping term
+        // sets cannot take the same locks in parser-dependent opposite orders.
+        ksort($terms, SORT_STRING);
+
         foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
             $placeholders = [];
             $arguments = [];
