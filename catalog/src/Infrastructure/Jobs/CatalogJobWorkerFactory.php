@@ -60,6 +60,7 @@ final class CatalogJobWorkerFactory
         $pakImport = new CatalogPakImportJobHandler($db, $trustedImportConfig);
         $packageImport = new CatalogNonBlockingImportJobHandler(
             new CatalogStagedImportJobHandler($db, $trustedImportConfig),
+            $db,
             $trustedImportConfig
         );
         $sourceScan = new CatalogSourceScanJobHandler($db, $trustedImportConfig);
