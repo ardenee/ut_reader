@@ -2,16 +2,16 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Queues a verified package from one sibling game into another when it exactly satisfies missing dependency objects.
- * Why: Cross-game dependency repair must create a real game-scoped verified row rather than an alias or presentation-only relationship.
- * Role: Mutation service behind the dependency cross-examine administration page.
+ * Why: Cross-game dependency repair must create a real game-scoped verified row without duplicating trusted source bytes before queueing.
+ * Role: Mutation service behind the dependency cross-examine administration workflow.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogCrossGamePackageCopyService
 {
@@ -49,36 +49,61 @@ final class CatalogCrossGamePackageCopyService
 
         $sourceRow = \catalog_one(
             $this->db,
-            'SELECT source_relative_path FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
+            'SELECT source_relative_path,file_size,md5 FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
             [$sourceFileId]
         ) ?: [];
         $sourceRelativePath = trim((string)($sourceRow['source_relative_path'] ?? ''));
         if ($sourceRelativePath === '') {
             $sourceRelativePath = $originalName;
         }
-
-        // This is an existing trusted package copied within controlled server
-        // storage, not a new HTTP upload. Do not apply the browser upload-size
-        // ceiling to a cross-game dependency repair operation.
-        $serverConfig = $this->config;
-        $serverConfig['max_upload_bytes'] = PHP_INT_MAX;
-
-        $store = new CatalogIncomingFileStore($serverConfig);
-        $staged = $store->stageLocalFile($sourcePath, $originalName);
-        try {
-            $queued = (new CatalogProfiledUploadQueue($this->db, $serverConfig))->enqueueStaged(
-                $targetGameId,
-                $staged,
-                $originalName,
-                $sourceRelativePath,
-                false,
-                $userId,
-                false
-            );
-        } catch (\Throwable $error) {
-            $store->delete((string)$staged['relative_path']);
-            throw $error;
+        $fileSize = (int)($sourceRow['file_size'] ?? 0);
+        if ($fileSize < 1) {
+            $physicalSize = filesize($sourcePath);
+            $fileSize = $physicalSize === false ? 0 : (int)$physicalSize;
         }
+        if ($fileSize < 1) {
+            throw new \RuntimeException('Verified source package size is unavailable.');
+        }
+
+        // Do not copy/hash the already-verified package just to create a queue
+        // record. The import worker resolves this read-only catalog-local source
+        // and creates its normal parser working hardlink/copy there. The original
+        // verified source path is never moved or deleted.
+        $payload = [
+            'game_id' => $targetGameId,
+            'staged_path' => 'local-catalog:' . $this->encodeLocalPath($sourcePath),
+            'original_name' => $originalName,
+            'source_relative_path' => $sourceRelativePath,
+            'strict_profile' => false,
+            'user_id' => $userId,
+            'size' => $fileSize,
+            'cross_game_source_file_id' => $sourceFileId,
+        ];
+        $md5 = strtolower(trim((string)($sourceRow['md5'] ?? $candidate['md5'] ?? '')));
+        $identity = $md5 !== '' ? $md5 : (string)$sourceFileId;
+        $dedupeKey = 'cross-game-copy:' . hash(
+            'sha256',
+            $targetGameId . "\0" . $sourceFileId . "\0" . $identity
+        );
+        $queueName = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $queue = new PdoJobQueue($this->db);
+
+        $existing = $this->db->prepare(
+            'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
+        );
+        $existing->execute([$queueName, $dedupeKey]);
+        $existingJobId = (int)($existing->fetchColumn() ?: 0);
+
+        $jobId = $queue->enqueue(
+            $queueName,
+            JobType::IMPORT_STAGED_PACKAGE,
+            $payload,
+            5,
+            null,
+            $dedupeKey,
+            $userId,
+            3
+        );
 
         return [
             'source_file_id' => $sourceFileId,
@@ -89,8 +114,8 @@ final class CatalogCrossGamePackageCopyService
             'original_name' => $originalName,
             'exact_object_matches' => (int)$candidate['exact_object_matches'],
             'target_missing_count' => (int)$candidate['target_missing_count'],
-            'job_id' => (int)$queued['job_id'],
-            'deduplicated' => !empty($queued['deduplicated']),
+            'job_id' => $jobId,
+            'deduplicated' => $existingJobId > 0 && $existingJobId === $jobId,
         ];
     }
 
@@ -136,5 +161,10 @@ final class CatalogCrossGamePackageCopyService
             }
         }
         throw new \RuntimeException('Verified source package is missing from controlled storage.');
+    }
+
+    private function encodeLocalPath(string $path): string
+    {
+        return rtrim(strtr(base64_encode($path), '+/', '-_'), '=');
     }
 }
