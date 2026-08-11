@@ -15,6 +15,7 @@ final class PdoUnverifiedFilesPageQuery
 {
     private readonly CatalogUnverifiedStagingIndex $staging;
     private readonly PdoUnverifiedReferenceMatchQuery $referenceMatches;
+    private readonly PdoUnverifiedGameMatchQuery $gameMatches;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -24,6 +25,7 @@ final class PdoUnverifiedFilesPageQuery
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
         $this->referenceMatches = new PdoUnverifiedReferenceMatchQuery($db);
+        $this->gameMatches = new PdoUnverifiedGameMatchQuery($db);
     }
 
     /**
@@ -32,6 +34,7 @@ final class PdoUnverifiedFilesPageQuery
      *   total:int,pages:int,page:int,limit:int,
      *   items:list<array<string,mixed>>,
      *   reference_matches:array<string,list<array<string,mixed>>>,
+     *   game_matches:array<int,list<array<string,mixed>>>,
      *   summary:array<string,mixed>,
      *   extension_options:list<string>,engine_options:list<string>
      * }
@@ -84,7 +87,7 @@ final class PdoUnverifiedFilesPageQuery
 
         $items = \catalog_all(
             $this->db,
-            'SELECT f.id,f.package_name,f.original_name,f.stored_name,f.extension,f.md5,f.package_guid,'
+            'SELECT f.id,f.package_name,f.original_name,f.stored_name,f.extension,f.md5,f.sha1,f.package_guid,'
             . 'f.file_size,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
             . 'f.name_count,f.import_count,f.export_count,f.unverified_queue_key,'
             . 'f.unverified_queue_game_id,f.unverified_queue_name,f.unverified_reason'
@@ -132,6 +135,15 @@ final class PdoUnverifiedFilesPageQuery
             )))
         );
 
+        // The package-summary projection above is intentionally cheap and is
+        // retained for compatibility callers. The page itself needs stronger
+        // evidence before an administrator chooses a game, so also calculate
+        // per-file profile compatibility and exact required-object/export hits.
+        $gameMatches = $this->gameMatches->bulk(array_values(array_map(
+            static fn(array $item): int => (int)($item['id'] ?? 0),
+            $items
+        )));
+
         $summary = \catalog_one(
             $this->db,
             'SELECT COUNT(*) indexed_count,COALESCE(SUM(file_size),0) indexed_bytes,'
@@ -167,6 +179,7 @@ final class PdoUnverifiedFilesPageQuery
             'limit' => $limit,
             'items' => $items,
             'reference_matches' => $referenceMatches,
+            'game_matches' => $gameMatches,
             'summary' => $summary,
             'extension_options' => $extensionOptions,
             'engine_options' => $engineOptions,
