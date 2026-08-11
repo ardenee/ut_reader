@@ -66,6 +66,21 @@ $checks = [
         'needle' => 'GROUP BY CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci',
         'present' => true,
     ],
+    'cross-examine excludes source bytes already verified in target before candidate counts' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'AND NOT EXISTS (',
+        'present' => true,
+    ],
+    'cross-examine target exclusion compares verified target md5' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'target_existing.md5=f.md5',
+        'present' => true,
+    ],
+    'single cross-examine revalidation rejects a source already installed in target' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'if ($targetExisting) {\n                return null;',
+        'present' => true,
+    ],
     'cross-examine requires current format2 source metadata' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
         'needle' => 'source_meta.format_version=2',
@@ -144,11 +159,6 @@ $checks = [
     'catalog-local source is resolved read-only by incoming store' => [
         'path' => $root . '/src/Infrastructure/Import/CatalogIncomingFileStore.php',
         'needle' => 'resolveLocalCatalogReference(',
-        'present' => true,
-    ],
-    'cross-game copy refuses duplicate target identity' => [
-        'path' => $root . '/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php',
-        'needle' => "['already_in_target']",
         'present' => true,
     ],
     'worker factory routes cross-game batch job' => [
