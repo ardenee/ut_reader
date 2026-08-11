@@ -162,8 +162,11 @@ try {
     if (!in_array($action, ['move', 'import', 'delete'], true)) {
         throw new RuntimeException('Unknown unverified queue action.');
     }
-    if (in_array($action, ['move', 'import'], true) && $targetGameId < 1) {
-        throw new RuntimeException('Choose a target game first.');
+    if ($action === 'move' && $targetGameId < 1) {
+        throw new RuntimeException('Choose one target game before moving a queued file.');
+    }
+    if ($action === 'import' && $targetGameId < 1 && $targetGameId !== -1) {
+        throw new RuntimeException('Choose a target game or All exact compatible games first.');
     }
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
