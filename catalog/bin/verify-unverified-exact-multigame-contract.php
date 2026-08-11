@@ -78,7 +78,7 @@ $checks = [
     ],
     'single cross-examine revalidation rejects a source already installed in target' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
-        'needle' => 'if ($targetExisting) {\n                return null;',
+        'needle' => 'if ($targetExisting) {',
         'present' => true,
     ],
     'cross-examine requires current format2 source metadata' => [
