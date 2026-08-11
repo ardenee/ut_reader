@@ -134,9 +134,11 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         $this->cache->purgeNonUnverified();
         $row = \catalog_one(
             $this->db,
-            'SELECT COUNT(*) c FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0'
+            'SELECT COUNT(*) c,COALESCE(MAX(id),0) max_id FROM ue_files '
+            . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0'
         ) ?: [];
         $total = (int)($row['c'] ?? 0);
+        $snapshotMaxId = (int)($row['max_id'] ?? 0);
         $context->checkpoint([
             'stage' => 'match_refresh',
             'done' => 0,
@@ -145,7 +147,7 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
             'message' => 'Refreshing cached game/dependency evidence for ' . $total . ' Upload Bucket file(s).',
         ]);
 
-        if ($total === 0) {
+        if ($total === 0 || $snapshotMaxId < 1) {
             return [
                 'operation' => 'refresh_unverified_game_matches',
                 'scope' => 'bucket',
@@ -159,12 +161,12 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         $processed = 0;
         $failed = 0;
         $lastId = 0;
-        while (true) {
+        while ($lastId < $snapshotMaxId) {
             $statement = $this->db->prepare(
                 'SELECT id FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
-                . 'AND id>? ORDER BY id LIMIT ' . self::BATCH_SIZE
+                . 'AND id>? AND id<=? ORDER BY id LIMIT ' . self::BATCH_SIZE
             );
-            $statement->execute([$lastId]);
+            $statement->execute([$lastId, $snapshotMaxId]);
             $ids = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
             if ($ids === []) {
                 break;
