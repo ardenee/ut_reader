@@ -43,13 +43,13 @@ try {
     catalog_head('Dependency Cross-Examine');
     echo <<<'CSS'
 <style>
-.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:1250px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-action{margin:0}.cross-action button{white-space:nowrap}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}}
+.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:1250px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-action{margin:0}.cross-action button{white-space:nowrap}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}}
 </style>
 CSS;
 
     echo CatalogUi::pageHeader(
         'Dependency Cross-Examine',
-        'Find packages already verified in sibling games that can satisfy missing dependencies in another game. Candidates require the same engine profile family, target-profile compatibility, and at least one exact required object path exported by the source package.',
+        'Find packages already verified in same-engine sibling games that export objects currently recorded as missing by the target game.',
         [
             'Unverified files' => 'unverified-files.php',
             'Missing dependencies' => 'missing.php',
@@ -64,7 +64,7 @@ CSS;
         echo CatalogUi::alert('danger', 'Could not queue copy', $error);
     }
 
-    echo '<p class="cross-note"><strong>What counts as a candidate:</strong> this is not a filename similarity check. The target game must currently have unresolved dependency rows for the package, the source package must be compatible with the target profile, and its compressed metadata must contain exports whose full object paths exactly match those missing dependency object paths. Queueing a copy creates a real game-scoped verified import through the background worker.</p>';
+    echo '<p class="cross-note"><strong>How candidates are found:</strong> the target game\'s current dependency rows with status <span class="mono">missing</span> are the authoritative input. For each missing package/object path, the report checks verified files in the selected same-engine source game(s) and keeps a source only when its recorded exports contain that exact required object path. Package-version and target-profile ranges do not remove an otherwise exact provider from this report.</p>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Compare games</h2><p>Choose the game whose missing dependencies you want to repair.</p></div></div><div class="ui-section__body">';
     echo '<form class="cross-controls" method="get">';
@@ -98,6 +98,14 @@ CSS;
 
     $rows = is_array($model['rows'] ?? null) ? $model['rows'] : [];
     $target = is_array($model['target'] ?? null) ? $model['target'] : [];
+    $diagnostics = is_array($model['diagnostics'] ?? null) ? $model['diagnostics'] : [];
+
+    echo '<p class="cross-note"><strong>Scan input:</strong> '
+        . number_format((int)($diagnostics['missing_dependency_rows'] ?? 0)) . ' actual missing dependency row(s) across '
+        . number_format((int)($diagnostics['missing_packages'] ?? 0)) . ' package(s); '
+        . number_format((int)($diagnostics['source_package_files'] ?? 0)) . ' verified source package file(s) had matching package names and were examined; '
+        . number_format((int)($diagnostics['metadata_unreadable'] ?? 0)) . ' source metadata snapshot(s) could not be read.</p>';
+
     $exactTotal = 0;
     $ownerTotal = 0;
     foreach ($rows as $row) {
@@ -113,7 +121,7 @@ CSS;
     if ($rows === []) {
         echo CatalogUi::emptyState(
             'No exact sibling-game providers found',
-            'No verified package in the selected sibling-game scope currently exports an exact object path required by a missing dependency in ' . (string)($target['name'] ?? 'the target game') . '.'
+            'The scan started from the target game\'s actual missing dependency rows. No verified package in the selected same-engine source scope exported one of those exact required object paths. The scan-input counts above show which stage produced no candidates.'
         );
         catalog_foot();
         exit;
@@ -129,6 +137,7 @@ CSS;
         $owners = (int)$row['target_owner_count'];
         $exactOwners = (int)$row['exact_owner_count'];
         $coverage = number_format((float)$row['coverage_percent'], 1) . '%';
+        $alreadyInTarget = !empty($row['already_in_target']);
         echo '<tr>';
         echo '<td><strong>' . catalog_h((string)$row['source_game_name']) . '</strong><small class="muted">'
             . catalog_h((string)$row['source_engine']) . '</small></td>';
@@ -149,6 +158,15 @@ CSS;
             . number_format($exact) . ' / ' . number_format($missing) . ' (' . catalog_h($coverage) . ')</strong><small>'
             . number_format($exactOwners) . ' referencing file' . ($exactOwners === 1 ? '' : 's')
             . ' receive at least one exact match.</small></td>';
+
+        if ($alreadyInTarget) {
+            $existingId = (int)($row['target_existing_file_id'] ?? 0);
+            echo '<td><span class="cross-warn">Already in target</span><small>Identical MD5 is already verified as '
+                . ($existingId > 0 ? '<a href="file-info.php?id=' . $existingId . '">file #' . $existingId . '</a>' : 'a target file')
+                . '. Rebuild target dependencies rather than copying it again.</small></td></tr>';
+            continue;
+        }
+
         echo '<td><form class="cross-action" method="post" action="dependency-cross-examine-action.php">'
             . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('dependency-cross-examine')) . '">'
             . '<input type="hidden" name="source_file_id" value="' . $sourceFileId . '">'
