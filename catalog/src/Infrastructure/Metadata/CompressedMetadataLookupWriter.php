@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Writes compact global lookup projections using bounded multi-row SQL.
- * Why: Current metadata publication must be self-contained and must not reread retired dependency/import tables.
+ * Purpose: Writes current compact global lookup projections using bounded multi-row SQL.
+ * Why: Format-1 metadata publication is retired; callers must explicitly publish the authoritative current container version and codec.
  * Role: Infrastructure current metadata projection writer.
  */
 declare(strict_types=1);
@@ -19,19 +19,6 @@ final class CompressedMetadataLookupWriter
 
     public function __construct(private readonly PDO $db)
     {
-    }
-
-    /** @param array<string,mixed> $snapshot */
-    public function write(array $snapshot, string $compressed, string $json, int &$sqlBatches): void
-    {
-        $this->writeVersioned(
-            $snapshot,
-            $compressed,
-            strlen($json),
-            BatchedCompressedFileMetadataConverter::FORMAT_VERSION,
-            BatchedCompressedFileMetadataConverter::CODEC_GZIP,
-            $sqlBatches
-        );
     }
 
     /** @param array<string,mixed> $snapshot */
@@ -210,8 +197,7 @@ final class CompressedMetadataLookupWriter
 
     /**
      * Current snapshots must carry human-readable resolution labels inline.
-     * Explicit historical conversion is responsible for hydrating them before
-     * invoking this writer; the writer never rereads retired SQL metadata.
+     * The writer never rereads retired SQL metadata.
      *
      * @param array<int,mixed> $dependencies
      * @return array<int,array{source:string,confidence:string}>
