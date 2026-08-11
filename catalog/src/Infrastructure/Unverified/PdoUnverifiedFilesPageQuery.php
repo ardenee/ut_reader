@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Builds the paginated read model for the Unverified Files admin page.
- * Why: Filtering SQL, summary counts, option discovery, dependency evidence and physical queue hydration are read-model concerns.
+ * Why: Filtering SQL, summary counts, cached dependency evidence and physical queue hydration are read-model concerns.
  * Role: Infrastructure query; Presentation supplies filters and renders the returned model.
  */
 declare(strict_types=1);
@@ -14,8 +14,7 @@ use PDO;
 final class PdoUnverifiedFilesPageQuery
 {
     private readonly CatalogUnverifiedStagingIndex $staging;
-    private readonly PdoUnverifiedReferenceMatchQuery $referenceMatches;
-    private readonly PdoUnverifiedGameMatchQuery $gameMatches;
+    private readonly PdoUnverifiedGameMatchCache $gameMatchCache;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -24,8 +23,7 @@ final class PdoUnverifiedFilesPageQuery
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->staging = new CatalogUnverifiedStagingIndex($db, $config);
-        $this->referenceMatches = new PdoUnverifiedReferenceMatchQuery($db);
-        $this->gameMatches = new PdoUnverifiedGameMatchQuery($db);
+        $this->gameMatchCache = new PdoUnverifiedGameMatchCache($db);
     }
 
     /**
@@ -33,8 +31,9 @@ final class PdoUnverifiedFilesPageQuery
      *   games:list<array<string,mixed>>,
      *   total:int,pages:int,page:int,limit:int,
      *   items:list<array<string,mixed>>,
-     *   reference_matches:array<string,list<array<string,mixed>>>,
      *   game_matches:array<int,list<array<string,mixed>>>,
+     *   game_match_states:array<int,array<string,mixed>>,
+     *   match_cache_summary:array{ready:int,pending:int,failed:int,missing:int,total:int},
      *   summary:array<string,mixed>,
      *   extension_options:list<string>,engine_options:list<string>
      * }
@@ -128,21 +127,17 @@ final class PdoUnverifiedFilesPageQuery
         }
         unset($item);
 
-        $referenceMatches = $this->referenceMatches->fetch(
-            array_values(array_unique(array_map(
-                static fn(array $item): string => trim((string)($item['package_name'] ?? '')),
-                $items
-            )))
-        );
-
-        // The package-summary projection above is intentionally cheap and is
-        // retained for compatibility callers. The page itself needs stronger
-        // evidence before an administrator chooses a game, so also calculate
-        // per-file profile compatibility and exact required-object/export hits.
-        $gameMatches = $this->gameMatches->bulk(array_values(array_map(
+        // Exact dependency/object-path matching is intentionally absent from the
+        // page request path. The worker projection stores all evidence as one row
+        // per unverified file, so rendering a page is one indexed cache lookup.
+        $fileIds = array_values(array_map(
             static fn(array $item): int => (int)($item['id'] ?? 0),
             $items
-        )));
+        ));
+        $cachedMatches = $this->gameMatchCache->read($fileIds);
+        $gameMatches = $cachedMatches['matches'];
+        $gameMatchStates = $cachedMatches['states'];
+        $matchCacheSummary = $this->gameMatchCache->bucketSummary();
 
         $summary = \catalog_one(
             $this->db,
@@ -178,8 +173,9 @@ final class PdoUnverifiedFilesPageQuery
             'page' => $page,
             'limit' => $limit,
             'items' => $items,
-            'reference_matches' => $referenceMatches,
             'game_matches' => $gameMatches,
+            'game_match_states' => $gameMatchStates,
+            'match_cache_summary' => $matchCacheSummary,
             'summary' => $summary,
             'extension_options' => $extensionOptions,
             'engine_options' => $engineOptions,
