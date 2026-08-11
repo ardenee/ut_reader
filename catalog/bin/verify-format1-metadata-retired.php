@@ -62,11 +62,19 @@ foreach ($currentPaths as $relative) {
     );
 }
 
-$forbiddenTokens = [
+$retiredClassNames = [
     'CompressedFileMetadataReader',
     'BatchedCompressedFileMetadataConverter',
-    '.uedb.json.gz',
 ];
+$retiredStorageSuffix = '.uedb.json.gz';
+$identifierTokenTypes = [T_STRING];
+foreach (['T_NAME_QUALIFIED', 'T_NAME_FULLY_QUALIFIED', 'T_NAME_RELATIVE'] as $constant) {
+    if (defined($constant)) {
+        $identifierTokenTypes[] = constant($constant);
+    }
+}
+$stringTokenTypes = [T_CONSTANT_ENCAPSED_STRING, T_ENCAPSED_AND_WHITESPACE];
+
 $references = [];
 $iterator = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator($root, FilesystemIterator::SKIP_DOTS)
@@ -91,12 +99,42 @@ foreach ($iterator as $file) {
         $references[$normalized][] = 'unreadable';
         continue;
     }
-    $executable = $withoutComments($source);
-    foreach ($forbiddenTokens as $token) {
-        if (str_contains($executable, $token)) {
-            $references[$normalized][] = $token;
+
+    // Verification contracts legitimately contain retired class names inside
+    // string literals so they can assert that production files do not contain
+    // them. Scan PHP identifier tokens everywhere, but ignore string-literal
+    // references inside bin/verify-*.php to avoid treating assertions as callers.
+    $isVerificationScript = preg_match('#/bin/verify-[^/]+\.php$#i', $normalized) === 1;
+    foreach (token_get_all($source) as $token) {
+        if (!is_array($token)) {
+            continue;
+        }
+        [$type, $text] = $token;
+        if (in_array($type, [T_COMMENT, T_DOC_COMMENT], true)) {
+            continue;
+        }
+        if (in_array($type, $identifierTokenTypes, true)) {
+            foreach ($retiredClassNames as $className) {
+                if (str_contains($text, $className)) {
+                    $references[$normalized][] = $className;
+                }
+            }
+            continue;
+        }
+        if (!$isVerificationScript && in_array($type, $stringTokenTypes, true)) {
+            foreach ($retiredClassNames as $className) {
+                if (str_contains($text, $className)) {
+                    $references[$normalized][] = $className . ' (dynamic string reference)';
+                }
+            }
+            if (str_contains($text, $retiredStorageSuffix)) {
+                $references[$normalized][] = $retiredStorageSuffix;
+            }
         }
     }
+}
+foreach ($references as $path => $tokens) {
+    $references[$path] = array_values(array_unique($tokens));
 }
 $record(
     'no_format1_runtime_references',
