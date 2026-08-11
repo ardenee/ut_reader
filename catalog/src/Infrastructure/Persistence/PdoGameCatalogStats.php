@@ -48,15 +48,16 @@ final class PdoGameCatalogStats
     }
 
     /** @return array<string,int>|null */
-    public function rebuildGame(int $gameId): ?array
+    public function rebuildGame(int $gameId, int $lockWaitSeconds = 0): ?array
     {
         if ($gameId < 1 || !$this->available()) {
             return null;
         }
 
+        $lockWaitSeconds = max(0, min(30, $lockWaitSeconds));
         $lockName = 'unrealdb_game_stats_' . $gameId;
-        $lock = $this->db->prepare('SELECT GET_LOCK(?,0)');
-        $lock->execute([$lockName]);
+        $lock = $this->db->prepare('SELECT GET_LOCK(?,?)');
+        $lock->execute([$lockName, $lockWaitSeconds]);
         if ((int)$lock->fetchColumn() !== 1) {
             return null;
         }
