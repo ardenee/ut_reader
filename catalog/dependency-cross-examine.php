@@ -115,8 +115,8 @@ CSS;
     }
     echo '<div class="cross-summary">'
         . '<div class="stat"><h2>' . count($rows) . '</h2><p>Exact provider candidates</p></div>'
-        . '<div class="stat"><h2>' . number_format($exactTotal) . '</h2><p>Exact missing dependency references covered</p></div>'
-        . '<div class="stat"><h2>' . number_format($ownerTotal) . '</h2><p>Referencing files covered across candidates</p></div>'
+        . '<div class="stat"><h2>' . number_format($exactTotal) . '</h2><p>Exact missing-reference matches across candidates</p></div>'
+        . '<div class="stat"><h2>' . number_format($ownerTotal) . '</h2><p>Referencing-file matches across candidates</p></div>'
         . '</div>';
 
     if ($rows === []) {
