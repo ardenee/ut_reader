@@ -40,7 +40,12 @@ final class CatalogCrossGamePackageCopyService
             throw new \RuntimeException('The source package filename is unavailable.');
         }
 
-        $sourceRelativePath = trim((string)($candidate['source_relative_path'] ?? ''));
+        $sourceRow = \catalog_one(
+            $this->db,
+            'SELECT source_relative_path FROM ue_files WHERE id=? AND scan_status="verified" LIMIT 1',
+            [$sourceFileId]
+        ) ?: [];
+        $sourceRelativePath = trim((string)($sourceRow['source_relative_path'] ?? ''));
         if ($sourceRelativePath === '') {
             $sourceRelativePath = $originalName;
         }
