@@ -62,6 +62,16 @@ $checks = [
         'needle' => '$stats->rebuildGame($gameId, 5)',
         'present' => true,
     ],
+    'job_hydrator_preserves_affected_batch_identity' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
+        'needle' => "'batch_number',",
+        'present' => true,
+    ],
+    'job_hydrator_labels_provider_and_batch_range' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
+        'needle' => "' · affected positions ' . \$batchStart . '-' . \$batchEnd",
+        'present' => true,
+    ],
 ];
 
 $failed = [];
