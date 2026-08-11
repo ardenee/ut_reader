@@ -81,17 +81,22 @@ final class PdoGameDependencyCrossExamineQuery
         // directly so required_path_hash can be joined to ue_export_lookup.path_hash.
         PdoDependencyReadSource::sql($this->db);
 
+        // Group by the logical package name under the same case-insensitive
+        // collation used by the provider match. Grouping by ue_terms.id can split
+        // one logical package across multiple term rows and produce a denominator
+        // smaller than the exact-match numerator.
         $packageStatsRows = \catalog_all(
             $this->db,
             'SELECT '
             . 'CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci required_package,'
-            . 'COUNT(*) missing_count,COUNT(DISTINCT l.file_id) owner_count '
+            . 'COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
+            . 'COUNT(DISTINCT l.file_id) owner_count '
             . 'FROM ue_dependency_links l '
             . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
             . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
             . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
             . 'WHERE owner.game_id=? AND l.status=0 '
-            . 'GROUP BY pkg.id,pkg.value_prefix',
+            . 'GROUP BY CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci',
             [$targetGameId]
         );
         if ($packageStatsRows === []) {
@@ -147,12 +152,13 @@ final class PdoGameDependencyCrossExamineQuery
             if (!is_array($stats)) {
                 continue;
             }
-            $exact = max(0, (int)($exactEvidence['exact_object_matches'] ?? 0));
+            $missingCount = max(1, (int)($stats['missing_count'] ?? 0));
+            $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
+            $exact = min($missingCount, max(0, (int)($exactEvidence['exact_object_matches'] ?? 0)));
             if ($exact < 1) {
                 continue;
             }
-            $missingCount = max(1, (int)($stats['missing_count'] ?? 0));
-            $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
+            $exactOwners = min($ownerCount, max(0, (int)($exactEvidence['exact_owner_count'] ?? 0)));
 
             $targetExisting = null;
             $md5 = strtolower(trim((string)($source['md5'] ?? '')));
@@ -170,7 +176,7 @@ final class PdoGameDependencyCrossExamineQuery
                 'target_missing_count' => $missingCount,
                 'target_owner_count' => $ownerCount,
                 'exact_object_matches' => $exact,
-                'exact_owner_count' => max(0, (int)($exactEvidence['exact_owner_count'] ?? 0)),
+                'exact_owner_count' => $exactOwners,
                 'coverage_percent' => round(($exact / $missingCount) * 100, 1),
                 'target_existing_file_id' => (int)($targetExisting['id'] ?? 0),
                 'already_in_target' => (int)($targetExisting['id'] ?? 0) > 0,
@@ -230,7 +236,8 @@ final class PdoGameDependencyCrossExamineQuery
         PdoDependencyReadSource::sql($this->db);
         $stats = \catalog_one(
             $this->db,
-            'SELECT COUNT(*) missing_count,COUNT(DISTINCT l.file_id) owner_count '
+            'SELECT COUNT(DISTINCT l.file_id,l.import_index) missing_count,'
+            . 'COUNT(DISTINCT l.file_id) owner_count '
             . 'FROM ue_dependency_links l '
             . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
             . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
@@ -249,6 +256,10 @@ final class PdoGameDependencyCrossExamineQuery
             return null;
         }
 
+        $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
+        $exactMatches = min($missingCount, max(0, (int)$exact['exact_object_matches']));
+        $exactOwners = min($ownerCount, max(0, (int)($exact['exact_owner_count'] ?? 0)));
+
         $targetExisting = null;
         $md5 = strtolower(trim((string)($source['md5'] ?? '')));
         if ($md5 !== '') {
@@ -263,10 +274,10 @@ final class PdoGameDependencyCrossExamineQuery
             'target_game_id' => $targetGameId,
             'target_game_name' => (string)$target['name'],
             'target_missing_count' => $missingCount,
-            'target_owner_count' => max(0, (int)($stats['owner_count'] ?? 0)),
-            'exact_object_matches' => (int)$exact['exact_object_matches'],
-            'exact_owner_count' => max(0, (int)($exact['exact_owner_count'] ?? 0)),
-            'coverage_percent' => round(((int)$exact['exact_object_matches'] / $missingCount) * 100, 1),
+            'target_owner_count' => $ownerCount,
+            'exact_object_matches' => $exactMatches,
+            'exact_owner_count' => $exactOwners,
+            'coverage_percent' => round(($exactMatches / $missingCount) * 100, 1),
             'target_existing_file_id' => (int)($targetExisting['id'] ?? 0),
             'already_in_target' => (int)($targetExisting['id'] ?? 0) > 0,
         ];
@@ -276,7 +287,9 @@ final class PdoGameDependencyCrossExamineQuery
      * Match the target's current missing dependency path hashes against the same
      * ue_export_lookup.path_hash projection used by normal dependency resolution.
      * Package identity is compared separately so an export from an unrelated
-     * package cannot satisfy a same-path dependency.
+     * package cannot satisfy a same-path dependency. Each missing dependency row
+     * is counted once even if a source package contains duplicate exports with the
+     * same local path hash.
      *
      * @param list<int> $sourceFileIds
      * @return array<int,array{exact_object_matches:int,exact_owner_count:int}>
@@ -296,7 +309,8 @@ final class PdoGameDependencyCrossExamineQuery
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $rows = \catalog_all(
                 $this->db,
-                'SELECT source.id source_file_id,COUNT(*) exact_object_matches,'
+                'SELECT source.id source_file_id,'
+                . 'COUNT(DISTINCT l.file_id,l.import_index) exact_object_matches,'
                 . 'COUNT(DISTINCT l.file_id) exact_owner_count '
                 . 'FROM ue_dependency_links l '
                 . 'JOIN ue_file_metadata owner_meta ON owner_meta.file_id=l.file_id AND owner_meta.format_version=2 '
