@@ -43,7 +43,7 @@ try {
     catalog_head('Dependency Cross-Examine');
     echo <<<'CSS'
 <style>
-.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:1250px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-action{margin:0}.cross-action button{white-space:nowrap}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}}
+.cross-controls{display:grid;grid-template-columns:minmax(220px,1.2fr) minmax(220px,1.2fr) 120px auto;gap:10px;align-items:end}.cross-controls label{display:flex;flex-direction:column;gap:4px}.cross-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}.cross-table{min-width:1280px}.cross-table td{vertical-align:top}.cross-coverage strong{display:block;margin-top:4px}.cross-coverage small{display:block;margin-top:4px}.cross-good{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#b8f3cb;background:rgba(67,190,110,.15)}.cross-warn{display:inline-flex;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;color:#f5d98b;background:rgba(246,196,83,.13)}.cross-note{padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);color:var(--muted);margin:0 0 12px}.cross-batch{display:flex;gap:10px;align-items:end;flex-wrap:wrap;padding:10px 12px;border:1px solid var(--line2);border-radius:8px;background:rgba(255,255,255,.025);margin:0 0 10px}.cross-batch label{display:flex;flex-direction:column;gap:4px;min-width:260px}.cross-batch-note{flex:1 1 340px;color:var(--muted);font-size:12px}.cross-select{width:42px;text-align:center}.cross-select input{width:18px;height:18px}.cross-file-name{display:inline-block;margin-top:2px}.cross-file-size{display:inline-block;margin-top:2px}.cross-game-engine{display:inline-block;margin-top:2px}.cross-target-files{display:inline-block;margin-top:3px}@media(max-width:900px){.cross-controls{grid-template-columns:1fr 1fr}.cross-summary{grid-template-columns:1fr}.cross-batch{align-items:stretch}}
 </style>
 CSS;
 
@@ -58,10 +58,10 @@ CSS;
     );
 
     if ($notice !== '') {
-        echo CatalogUi::alert('success', 'Copy queued', $notice);
+        echo CatalogUi::alert('success', 'Copy jobs queued', $notice);
     }
     if ($error !== '') {
-        echo CatalogUi::alert('danger', 'Could not queue copy', $error);
+        echo CatalogUi::alert('danger', 'Some copies could not be queued', $error);
     }
 
     echo '<p class="cross-note"><strong>What counts as a candidate:</strong> the target game must currently have a dependency marked missing for the package/object. The selected same-engine source game must contain a verified package with the same package identity and its current <span class="mono">ue_export_lookup.path_hash</span> must exactly match the missing dependency\'s <span class="mono">required_path_hash</span>. Package-version/profile ranges are not used to hide cross-game providers.</p>';
@@ -128,9 +128,36 @@ CSS;
         exit;
     }
 
+    $destinationGames = array_values(array_filter(
+        $games,
+        static fn(array $game): bool => strcasecmp(
+            trim((string)($game['engine_key'] ?? '')),
+            trim((string)($target['engine_key'] ?? ''))
+        ) === 0
+    ));
+
+    echo '<form method="post" action="dependency-cross-examine-action.php" id="cross-batch-form">'
+        . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('dependency-cross-examine')) . '">'
+        . '<input type="hidden" name="report_target_game_id" value="' . $targetGameId . '">'
+        . '<input type="hidden" name="source_game_id" value="' . $sourceGameId . '">'
+        . '<input type="hidden" name="limit" value="' . $limit . '">';
+    echo '<div class="cross-batch">'
+        . '<label>Add selected packages to<select name="destination_game_id" required>';
+    foreach ($destinationGames as $game) {
+        $gameId = (int)$game['id'];
+        echo '<option value="' . $gameId . '"' . ($gameId === $targetGameId ? ' selected' : '') . '>'
+            . catalog_h((string)$game['name'] . ' / ' . (string)$game['engine_key']) . '</option>';
+    }
+    echo '</select></label>'
+        . '<button type="submit">Queue selected</button>'
+        . '<div class="cross-batch-note">The current rows are evidence for <strong>' . catalog_h((string)($target['name'] ?? 'the report target'))
+        . '</strong>. If another same-engine destination is selected, every checked package is revalidated against that game\'s current missing dependencies before it is queued.</div>'
+        . '</div>';
+
     echo '<div class="table-wrap"><table class="cross-table"><thead><tr>'
+        . '<th class="cross-select"><input type="checkbox" id="cross-select-all" aria-label="Select all rows"></th>'
         . '<th>Source game</th><th>Package / file</th><th>Identity</th><th>Detected</th>'
-        . '<th>Target need</th><th>Exact coverage</th><th>Action</th></tr></thead><tbody>';
+        . '<th>Target need</th><th>Exact coverage</th></tr></thead><tbody>';
     foreach ($rows as $row) {
         $sourceFileId = (int)$row['id'];
         $exact = (int)$row['exact_object_matches'];
@@ -140,11 +167,13 @@ CSS;
         $coverage = number_format((float)$row['coverage_percent'], 1) . '%';
         $alreadyInTarget = !empty($row['already_in_target']);
         echo '<tr>';
-        echo '<td><strong>' . catalog_h((string)$row['source_game_name']) . '</strong><small class="muted">'
-            . catalog_h((string)$row['source_engine']) . '</small></td>';
+        echo '<td class="cross-select"><input type="checkbox" name="source_file_ids[]" value="' . $sourceFileId
+            . '" aria-label="Select ' . catalog_h((string)$row['original_name']) . '"></td>';
+        echo '<td><strong>' . catalog_h((string)$row['source_game_name']) . '</strong><br><span class="muted cross-game-engine">'
+            . catalog_h((string)$row['source_engine']) . '</span></td>';
         echo '<td><strong><a href="file-info.php?id=' . $sourceFileId . '">'
-            . catalog_h((string)$row['package_name']) . '</a></strong><small>'
-            . catalog_h((string)$row['original_name']) . '</small><small>'
+            . catalog_h((string)$row['package_name']) . '</a></strong><br><span class="cross-file-name">'
+            . catalog_h((string)$row['original_name']) . '</span><br><small class="muted cross-file-size">'
             . catalog_h(catalog_bytes((int)$row['file_size'])) . '</small></td>';
         echo '<td><span class="mono small">GUID: ' . catalog_h((string)($row['package_guid'] ?? '')) . '</span><br>'
             . '<span class="mono small">MD5: ' . catalog_h((string)$row['md5']) . '</span><br>'
@@ -152,31 +181,48 @@ CSS;
         echo '<td class="mono">' . catalog_h((string)$row['detected_engine_key'])
             . ' v' . (int)$row['detected_package_version']
             . '<br><span class="muted">lic ' . (int)$row['detected_licensee_version'] . '</span></td>';
-        echo '<td><strong>' . number_format($missing) . '</strong> missing dependency reference'
-            . ($missing === 1 ? '' : 's') . '<small>' . number_format($owners) . ' referencing file'
-            . ($owners === 1 ? '' : 's') . '</small></td>';
+        echo '<td><strong>' . number_format($missing) . ' missing dependency reference'
+            . ($missing === 1 ? '' : 's') . '</strong><br><span class="cross-target-files">'
+            . number_format($owners) . ' referencing file' . ($owners === 1 ? '' : 's') . '</span></td>';
         echo '<td class="cross-coverage"><span class="cross-good">Exact object paths</span><strong>'
-            . number_format($exact) . ' / ' . number_format($missing) . ' (' . catalog_h($coverage) . ')</strong><small>'
-            . number_format($exactOwners) . ' referencing file' . ($exactOwners === 1 ? '' : 's')
-            . ' receive at least one exact match.</small></td>';
-
+            . number_format($exact) . ' / ' . number_format($missing) . ' missing references (' . catalog_h($coverage) . ')</strong><small>'
+            . number_format($exactOwners) . ' / ' . number_format($owners) . ' referencing file'
+            . ($owners === 1 ? '' : 's') . ' receive at least one exact object match.</small>';
         if ($alreadyInTarget) {
             $existingId = (int)($row['target_existing_file_id'] ?? 0);
-            echo '<td><span class="cross-warn">Already in target</span><small>Identical MD5 is already verified as '
+            echo '<small><span class="cross-warn">Already in report target</span> Identical MD5 is already verified as '
                 . ($existingId > 0 ? '<a href="file-info.php?id=' . $existingId . '">file #' . $existingId . '</a>' : 'a target file')
-                . '. Rebuild target dependencies rather than copying it again.</small></td></tr>';
-            continue;
+                . '.</small>';
         }
-
-        echo '<td><form class="cross-action" method="post" action="dependency-cross-examine-action.php">'
-            . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('dependency-cross-examine')) . '">'
-            . '<input type="hidden" name="source_file_id" value="' . $sourceFileId . '">'
-            . '<input type="hidden" name="target_game_id" value="' . $targetGameId . '">'
-            . '<input type="hidden" name="source_game_id" value="' . $sourceGameId . '">'
-            . '<button type="submit">Queue copy to ' . catalog_h((string)$target['name']) . '</button>'
-            . '</form></td></tr>';
+        echo '</td></tr>';
     }
-    echo '</tbody></table></div>';
+    echo '</tbody></table></div></form>';
+
+    echo <<<'JS'
+<script>
+(() => {
+    const selectAll = document.getElementById('cross-select-all');
+    const form = document.getElementById('cross-batch-form');
+    if (!selectAll || !form) return;
+    const boxes = () => Array.from(form.querySelectorAll('input[name="source_file_ids[]"]'));
+    selectAll.addEventListener('change', () => {
+        for (const box of boxes()) box.checked = selectAll.checked;
+    });
+    form.addEventListener('change', (event) => {
+        if (!(event.target instanceof HTMLInputElement) || event.target.name !== 'source_file_ids[]') return;
+        const all = boxes();
+        selectAll.checked = all.length > 0 && all.every((box) => box.checked);
+        selectAll.indeterminate = !selectAll.checked && all.some((box) => box.checked);
+    });
+    form.addEventListener('submit', (event) => {
+        if (!boxes().some((box) => box.checked)) {
+            event.preventDefault();
+            window.alert('Select at least one package to queue.');
+        }
+    });
+})();
+</script>
+JS;
 
     catalog_foot();
 } catch (Throwable $error) {
