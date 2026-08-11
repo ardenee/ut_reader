@@ -56,6 +56,16 @@ $checks = [
         'needle' => 'exports.path_hash=l.required_path_hash',
         'present' => true,
     ],
+    'cross-examine counts each missing dependency once' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'COUNT(DISTINCT l.file_id,l.import_index) exact_object_matches',
+        'present' => true,
+    ],
+    'cross-examine groups missing totals by logical package name' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'GROUP BY CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci',
+        'present' => true,
+    ],
     'cross-examine requires current format2 source metadata' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
         'needle' => 'source_meta.format_version=2',
@@ -79,6 +89,21 @@ $checks = [
     'cross-examine exposes scan diagnostics' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
         'needle' => "'format2_source_files'",
+        'present' => true,
+    ],
+    'cross-examine page exposes row batch checkboxes' => [
+        'path' => $root . '/dependency-cross-examine.php',
+        'needle' => 'name="source_file_ids[]"',
+        'present' => true,
+    ],
+    'cross-examine page exposes destination game selector' => [
+        'path' => $root . '/dependency-cross-examine.php',
+        'needle' => 'name="destination_game_id"',
+        'present' => true,
+    ],
+    'cross-examine batch action revalidates every selected provider' => [
+        'path' => $root . '/dependency-cross-examine-action.php',
+        'needle' => '$service->queue($sourceFileId, $destinationGameId, $userId)',
         'present' => true,
     ],
     'cross-game copy queues a real profiled import' => [
