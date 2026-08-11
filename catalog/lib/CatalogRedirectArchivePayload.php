@@ -20,8 +20,6 @@ function catalog_redirect_archive_uncompress_epic_zlib(string $payload, int $lim
         return null;
     }
 
-    // Epic's UE2 and UE3 implementations call zlib uncompress(). PHP's
-    // gzuncompress() is the direct zlib-wrapper equivalent.
     if (function_exists('gzuncompress')) {
         try {
             $decoded = @gzuncompress($payload, $expectedBytes);
@@ -33,8 +31,6 @@ function catalog_redirect_archive_uncompress_epic_zlib(string $payload, int $lim
         }
     }
 
-    // Same zlib wrapper through PHP's incremental API when gzuncompress() is
-    // unavailable. Raw deflate and gzip are deliberately not accepted.
     $strict = catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expectedBytes);
     if ($strict !== null) {
         return ['data' => (string)$strict['data'], 'decoder' => 'zlib-inflate'];
@@ -44,10 +40,13 @@ function catalog_redirect_archive_uncompress_epic_zlib(string $payload, int $lim
 }
 
 /**
- * Decode Epic's UE1 FCodec redirect wrapper. Signature 1234 is the normal
- * UCC .uz format. Some historical UE1 builds used signature 5678 with an
- * additional RLE stage; that legacy variant is still a .uz wrapper, not UE3
- * .uz3.
+ * Decode Epic's FCodec redirect wrapper. Signature 1234 is the classic .uz
+ * format. Signature 5678 is the later five-codec wrapper used by Epic UZ3.
+ * Both wrappers serialize the original filename immediately after the
+ * little-endian signature.
+ *
+ * 1234 decode: Huffman -> MTF -> BWT -> RLE
+ * 5678 decode: Huffman -> RLE -> MTF -> BWT -> RLE
  *
  * @return array{
  *   data:string,
@@ -87,7 +86,7 @@ function catalog_redirect_archive_legacy_payload(string $data, int $maxOutputByt
         return [
             'data' => $output,
             'decoder' => $header['signature'] === 5678
-                ? 'legacy-uz-newver-huffman+rle+mtf+bwt+rle'
+                ? 'epic-uz3-huffman+rle+mtf+bwt+rle'
                 : 'epic-uz-huffman+mtf+bwt+rle',
             'chunks' => (int)$bwt['chunks'],
             'expected_bytes' => strlen($output),
@@ -162,38 +161,21 @@ function catalog_redirect_archive_epic_uz2_payload(string $data, int $limit): ?a
 }
 
 /**
- * Decode Epic's UE3 UZ3 wrapper: little-endian tag 5678, little-endian total
- * uncompressed size, then one zlib compress() stream for the complete file.
+ * Decode Epic UZ3 using the signed 5678 FCodec wrapper. The wrapper is:
+ * little-endian signature 5678, Unreal compact-index filename length,
+ * serialized original filename, then the FCodec stream.
  *
- * @return array{data:string,decoder:string,chunks:int,expected_bytes:int,wrapper_signature:int}|null
+ * @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename:string,wrapper_signature:int}|null
  */
 function catalog_redirect_archive_epic_uz3_payload(string $data, int $limit): ?array
 {
-    if (strlen($data) <= 8 || catalog_redirect_archive_read_u32($data, 0, 'le') !== 5678) {
+    $decoded = catalog_redirect_archive_legacy_payload($data, $limit);
+    if (!is_array($decoded) || (int)($decoded['wrapper_signature'] ?? 0) !== 5678) {
         return null;
     }
 
-    $expectedBytes = catalog_redirect_archive_read_u32($data, 4, 'le');
-    if ($expectedBytes <= 0 || $expectedBytes > $limit) {
-        return null;
-    }
-
-    $decoded = catalog_redirect_archive_uncompress_epic_zlib(
-        substr($data, 8),
-        $limit,
-        $expectedBytes
-    );
-    if ($decoded === null) {
-        return null;
-    }
-
-    return [
-        'data' => $decoded['data'],
-        'decoder' => 'epic-uz3-' . $decoded['decoder'],
-        'chunks' => 1,
-        'expected_bytes' => $expectedBytes,
-        'wrapper_signature' => 5678,
-    ];
+    $decoded['decoder'] = 'epic-uz3-huffman+rle+mtf+bwt+rle';
+    return $decoded;
 }
 
 /** @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename?:string,wrapper_signature?:int}|null */
@@ -205,11 +187,13 @@ function catalog_redirect_archive_decode_payload(string $data, string $sourceExt
 
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
 
-    // Production dispatch is extension-specific. A numeric 5678 at byte zero
-    // means the legacy UE1 NewVer FCodec wrapper for .uz, but the UE3 tag and
-    // total-size header for .uz3. Do not guess between those formats.
     return match ($sourceExtension) {
-        'uz' => catalog_redirect_archive_legacy_payload($data, $limit),
+        'uz' => (static function () use ($data, $limit): ?array {
+            $decoded = catalog_redirect_archive_legacy_payload($data, $limit);
+            return is_array($decoded) && (int)($decoded['wrapper_signature'] ?? 0) === 1234
+                ? $decoded
+                : null;
+        })(),
         'uz2' => catalog_redirect_archive_epic_uz2_payload($data, $limit),
         'uz3' => catalog_redirect_archive_epic_uz3_payload($data, $limit),
         default => null,
@@ -228,9 +212,8 @@ function catalog_redirect_archive_decode_failure_message(
     }
 
     $length = strlen($data);
-    if ($length <= 8) {
-        return 'Invalid Epic UZ3 wrapper: ' . $name
-            . ' is too small (' . $length . ' bytes; need tag + declared size + zlib payload).';
+    if ($length < 5) {
+        return 'Invalid Epic UZ3 wrapper: ' . $name . ' is too small to contain the 5678 FCodec header.';
     }
 
     $tag = catalog_redirect_archive_read_u32($data, 0, 'le');
@@ -240,20 +223,16 @@ function catalog_redirect_archive_decode_failure_message(
             . ' (' . sprintf('0x%08X', $tag) . ').';
     }
 
-    $expectedBytes = catalog_redirect_archive_read_u32($data, 4, 'le');
-    if ($expectedBytes <= 0) {
-        return 'Invalid Epic UZ3 declared output size in ' . $name . ': ' . $expectedBytes . ' bytes.';
-    }
-    if ($expectedBytes > $limit) {
-        return 'Epic UZ3 declared output exceeds the configured redirect limit in ' . $name
-            . ': declared=' . $expectedBytes . ' bytes, limit=' . $limit . ' bytes.';
+    $header = catalog_legacy_uz_header($data);
+    if ($header === null) {
+        return 'Invalid Epic UZ3 FCodec header in ' . $name
+            . ': signature 5678 is present but the embedded filename/header could not be decoded.';
     }
 
-    $payload = substr($data, 8);
-    return 'Epic UZ3 zlib stream could not be decompressed to its declared output size in ' . $name
-        . ': tag=5678, declared=' . $expectedBytes
-        . ' bytes, compressed_payload=' . strlen($payload)
-        . ' bytes, payload_prefix=' . strtoupper(bin2hex(substr($payload, 0, 8))) . '.';
+    return 'Epic UZ3 FCodec stream could not be completely decompressed in ' . $name
+        . ': tag=5678, embedded_filename=' . basename((string)$header['filename'])
+        . ', compressed_bytes=' . $length
+        . ', decode=Huffman->RLE->MTF->BWT->RLE.';
 }
 
 /**
