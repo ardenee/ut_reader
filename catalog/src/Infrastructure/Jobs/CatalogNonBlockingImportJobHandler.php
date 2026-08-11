@@ -5,15 +5,13 @@
  *          handler.
  * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
  *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Role: Infrastructure job wrapper that keeps bad files from blocking the queue and repairs interrupted verified imports.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
+use PDO;
 use PDOException;
 use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
@@ -22,6 +20,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceReimportService;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
 /**
@@ -35,6 +34,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly CatalogStagedImportJobHandler $inner,
+        private readonly PDO $db,
         private readonly array $config
     ) {
     }
@@ -64,6 +64,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             }
 
             $result = $this->inner->handle($preparedJob, $context);
+            $result = $this->repairInterruptedVerifiedImport($preparedJob, $result, $context);
             if (is_array($redirectMeta)) {
                 $result['decompressed'] = true;
                 $result['redirect_decoder'] = (string)$redirectMeta['decoder'];
@@ -116,6 +117,92 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
                 @unlink($temporaryPreparedPath);
             }
         }
+    }
+
+    /**
+     * A metadata-publication deadlock can happen after ue_files and canonical
+     * package storage have already been committed. Retrying the staged import then
+     * detects that row as a duplicate. If that duplicate lacks format-2 metadata,
+     * repair the stable file in place instead of incorrectly completing as a
+     * harmless duplicate.
+     *
+     * @param array<string,mixed> $result
+     * @return array<string,mixed>
+     */
+    private function repairInterruptedVerifiedImport(
+        ClaimedJob $job,
+        array $result,
+        JobExecutionContext $context
+    ): array {
+        if ($job->type !== JobType::IMPORT_STAGED_PACKAGE
+            || (string)($result['status'] ?? '') !== 'duplicate') {
+            return $result;
+        }
+
+        $fileId = (int)($result['file_id'] ?? 0);
+        if ($fileId < 1) {
+            return $result;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT m.format_version FROM ue_files f '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+            . 'WHERE f.id=? AND f.scan_status="verified" LIMIT 1'
+        );
+        $statement->execute([$fileId]);
+        $formatVersion = (int)($statement->fetchColumn() ?: 0);
+        if ($formatVersion === 2) {
+            return $result;
+        }
+
+        $userId = isset($job->payload['user_id']) && (int)$job->payload['user_id'] > 0
+            ? (int)$job->payload['user_id']
+            : null;
+        $context->checkpoint([
+            'stage' => 'compact_metadata_repair',
+            'done' => 95,
+            'total' => 100,
+            'percent' => 95,
+            'status' => 'repairing',
+            'file_id' => $fileId,
+            'message' => 'Retry found verified file #' . $fileId
+                . ' without format-2 metadata; repairing the interrupted import in place.',
+        ]);
+
+        $repair = (new CatalogFileMaintenanceReimportService($this->db, $this->config))->reimport(
+            $fileId,
+            $userId,
+            static function (array $progress) use ($context, $fileId): void {
+                $sourcePercent = max(0, min(100, (int)($progress['percent'] ?? 0)));
+                $context->heartbeatIfDue([
+                    'stage' => 'compact_metadata_repair',
+                    'done' => 95 + (int)floor($sourcePercent * 4 / 100),
+                    'total' => 100,
+                    'percent' => min(99, 95 + (int)floor($sourcePercent * 4 / 100)),
+                    'file_id' => $fileId,
+                    'message' => (string)($progress['message'] ?? 'Repairing interrupted compact metadata publication.'),
+                ]);
+            },
+            false
+        );
+
+        $message = 'Recovered interrupted verified import for file #' . $fileId
+            . '; format-2 compact metadata was rebuilt in place.';
+        $context->checkpoint([
+            'stage' => 'complete',
+            'done' => 100,
+            'total' => 100,
+            'percent' => 100,
+            'status' => 'verified',
+            'file_id' => $fileId,
+            'message' => $message,
+        ]);
+
+        $result['status'] = 'verified';
+        $result['message'] = $message;
+        $result['recovered_incomplete_metadata'] = true;
+        $result['maintenance_repair'] = $repair;
+        return $result;
     }
 
     /**
