@@ -53,6 +53,9 @@ final class CatalogIncomingFileStore
         if (str_starts_with($relativePath, 'local-pak:')) {
             return $this->resolveLocalPakReference(substr($relativePath, strlen('local-pak:')));
         }
+        if (str_starts_with($relativePath, 'local-catalog:')) {
+            return $this->resolveLocalCatalogReference(substr($relativePath, strlen('local-catalog:')));
+        }
 
         $relativePath = str_replace('\\', '/', $relativePath);
         if ($relativePath === '' || str_starts_with($relativePath, '/') || preg_match('/^[A-Za-z]:\//', $relativePath) === 1 || preg_match('#(^|/)\.\.(/|$)#', $relativePath) === 1) {
@@ -74,12 +77,15 @@ final class CatalogIncomingFileStore
 
     public function remove(string $relativePath): void
     {
-        // Intentionally retained for retry/recovery.
+        // Intentionally retained for retry/recovery. Read-only local references
+        // are never owned by the incoming store and therefore are never removed.
     }
 
     public function delete(string $relativePath): void
     {
-        if (str_starts_with($relativePath, 'chunk-upload:') || str_starts_with($relativePath, 'local-pak:')) {
+        if (str_starts_with($relativePath, 'chunk-upload:')
+            || str_starts_with($relativePath, 'local-pak:')
+            || str_starts_with($relativePath, 'local-catalog:')) {
             return;
         }
         try {
@@ -278,5 +284,38 @@ final class CatalogIncomingFileStore
             throw new \RuntimeException('Local PAK source exceeds the configured container limit.');
         }
         return $real;
+    }
+
+    private function resolveLocalCatalogReference(string $encodedPath): string
+    {
+        $decoded = $this->decodeLocalReference($encodedPath, 'Catalog-local');
+        $real = realpath($decoded);
+        $root = realpath($this->storageRoot);
+        if ($real === false || $root === false || !is_file($real) || !is_readable($real) || is_link($real)) {
+            throw new \RuntimeException('Catalog-local source is unavailable.');
+        }
+        $normalizedRoot = rtrim(str_replace('\\', '/', $root), '/') . '/';
+        $normalizedReal = str_replace('\\', '/', $real);
+        $inside = DIRECTORY_SEPARATOR === '\\'
+            ? str_starts_with(strtolower($normalizedReal), strtolower($normalizedRoot))
+            : str_starts_with($normalizedReal, $normalizedRoot);
+        if (!$inside) {
+            throw new \RuntimeException('Catalog-local source escapes controlled storage.');
+        }
+        return $real;
+    }
+
+    private function decodeLocalReference(string $encodedPath, string $label): string
+    {
+        $encodedPath = trim($encodedPath);
+        if ($encodedPath === '' || preg_match('/^[A-Za-z0-9_-]+$/', $encodedPath) !== 1) {
+            throw new \RuntimeException($label . ' reference is invalid.');
+        }
+        $padding = (4 - (strlen($encodedPath) % 4)) % 4;
+        $decoded = base64_decode(strtr($encodedPath . str_repeat('=', $padding), '-_', '+/'), true);
+        if (!is_string($decoded) || $decoded === '' || str_contains($decoded, "\0")) {
+            throw new \RuntimeException($label . ' reference could not be decoded.');
+        }
+        return $decoded;
     }
 }
