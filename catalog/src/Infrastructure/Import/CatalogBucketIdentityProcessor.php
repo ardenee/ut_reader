@@ -11,6 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 
 use PDO;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedGameMatchRefreshQueue;
 
 final class CatalogBucketIdentityProcessor
 {
@@ -130,6 +131,25 @@ final class CatalogBucketIdentityProcessor
                 @unlink($storedPath . '.txt');
                 @unlink($storedPath);
                 throw $error;
+            }
+
+            // Exact dependency/object-path evidence is intentionally not built in
+            // this worker's staging critical path. Queue it after the package is
+            // durably indexed; the same bucket worker pool will pick it up after
+            // the current upload job completes.
+            $fileId = (int)($indexed['file_id'] ?? 0);
+            if ($fileId > 0) {
+                try {
+                    $indexed['game_match_job_id'] = (new CatalogUnverifiedGameMatchRefreshQueue($this->db, $this->config))
+                        ->enqueueFile($fileId, $uploadedBy);
+                } catch (Throwable $matchError) {
+                    $message = trim($matchError->getMessage());
+                    $indexed['game_match_warning'] = $message;
+                    error_log(
+                        '[UnrealDB bucket match cache] file_id=' . $fileId . ' error='
+                        . ($message !== '' ? $message : get_class($matchError))
+                    );
+                }
             }
 
             return $indexed + ['md5' => $md5, 'sha1' => $sha1];
