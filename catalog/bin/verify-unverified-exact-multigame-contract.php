@@ -41,10 +41,30 @@ $checks = [
         'needle' => 'enqueueStaged(',
         'present' => true,
     ],
-    'cross-examine starts from actual missing dependencies' => [
+    'cross-examine starts from current missing dependency links' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
-        'needle' => 'WHERE owner.game_id=? AND d.status="missing"',
+        'needle' => 'WHERE owner.game_id=? AND l.status=0',
         'present' => true,
+    ],
+    'cross-examine uses current export lookup projection' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'ue_export_lookup exports',
+        'present' => true,
+    ],
+    'cross-examine joins required and exported path hashes' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'exports.path_hash=l.required_path_hash',
+        'present' => true,
+    ],
+    'cross-examine requires current format2 source metadata' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'source_meta.format_version=2',
+        'present' => true,
+    ],
+    'cross-examine does not use obsolete compressed metadata reader' => [
+        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        'needle' => 'CompressedFileMetadataReader',
+        'present' => false,
     ],
     'cross-examine does not use package summary projection' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
@@ -56,14 +76,9 @@ $checks = [
         'needle' => 'compatibleWithTarget(',
         'present' => false,
     ],
-    'cross-examine verifies exported object paths' => [
-        'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
-        'needle' => "['required_object_path']",
-        'present' => true,
-    ],
     'cross-examine exposes scan diagnostics' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
-        'needle' => "'source_package_files'",
+        'needle' => "'format2_source_files'",
         'present' => true,
     ],
     'cross-game copy queues a real profiled import' => [
