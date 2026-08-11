@@ -12,9 +12,12 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
 final class VerifiedFileCompactMetadataFinalizer
 {
+    private const PUBLICATION_CONTENTION_ATTEMPTS = 5;
+
     /** @var array<int,array<string,mixed>> */
     private static array $maintenanceBaselines = [];
 
@@ -169,7 +172,13 @@ final class VerifiedFileCompactMetadataFinalizer
                 ];
             } else {
                 $snapshot = $builder->withDependencies($parsed);
-                $conversion = (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
+                $conversion = self::publishWithContentionRetry(
+                    $db,
+                    $storageRoot,
+                    $snapshot,
+                    $fileId,
+                    $progress
+                );
                 $conversion['already_compact'] = false;
                 $conversion['reused_unchanged'] = false;
                 $conversion['republished_from_parser'] = true;
@@ -192,6 +201,42 @@ final class VerifiedFileCompactMetadataFinalizer
         }
 
         return self::complete($result, $conversion, $progress);
+    }
+
+    /**
+     * The snapshot writer owns the complete SQL transaction and restores the
+     * previous .uedb2 file on failure, so retry the whole publication rather than
+     * retrying individual projection statements inside a rolled-back transaction.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array<string,mixed>
+     */
+    private static function publishWithContentionRetry(
+        PDO $db,
+        string $storageRoot,
+        array $snapshot,
+        int $fileId,
+        ?callable $progress
+    ): array {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return (new BlockedCompressedMetadataSnapshotWriter($db, $storageRoot))->write($snapshot);
+            } catch (Throwable $error) {
+                if (!PdoContention::retryable($error) || $attempt >= self::PUBLICATION_CONTENTION_ATTEMPTS) {
+                    throw $error;
+                }
+
+                $nextAttempt = $attempt + 1;
+                self::emit(
+                    $progress,
+                    99,
+                    'Compact metadata database contention for file #' . $fileId
+                    . '; retrying publication (' . $nextAttempt . '/'
+                    . self::PUBLICATION_CONTENTION_ATTEMPTS . ').'
+                );
+                usleep(PdoContention::backoffMicros($attempt, 25000));
+            }
+        }
     }
 
     /** @param array<int|string,mixed> $result */
