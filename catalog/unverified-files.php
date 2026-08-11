@@ -34,11 +34,41 @@ function uv_list_detected(array $row): string
         . ' / lic ' . (int)($row['detected_licensee_version'] ?? 0);
 }
 
-/** @param list<array<string,mixed>> $matches */
-function uv_list_possible_games(array $matches): string
+/** @param list<array<string,mixed>> $matches @param array<string,mixed> $state */
+function uv_list_possible_games(array $matches, array $state = []): string
 {
+    $status = strtolower(trim((string)($state['status'] ?? 'missing'))) ?: 'missing';
+    $calculatedAt = trim((string)($state['calculated_at'] ?? ''));
+    $lastError = trim((string)($state['last_error'] ?? ''));
+    $prefix = '';
+
+    if ($status === 'missing') {
+        return '<div class="uv-cache-state pending"><strong>Not calculated</strong>'
+            . '<small>Exact dependency evidence is not cached yet. Use Refresh bucket matches.</small></div>';
+    }
+    if ($status === 'pending') {
+        $prefix = '<div class="uv-cache-state pending"><strong>Background refresh queued</strong><small>'
+            . ($calculatedAt !== ''
+                ? 'Showing the previous cache from ' . catalog_h($calculatedAt) . ' UTC while it refreshes.'
+                : 'Exact dependency evidence is being calculated in the background.')
+            . '</small></div>';
+        if ($matches === []) {
+            return $prefix;
+        }
+    } elseif ($status === 'failed') {
+        $prefix = '<div class="uv-cache-state failed"><strong>Last refresh failed</strong><small>'
+            . catalog_h($lastError !== '' ? $lastError : 'Unknown match calculation error.')
+            . ($calculatedAt !== '' ? ' · ' . catalog_h($calculatedAt) . ' UTC' : '')
+            . '</small></div>';
+        if ($matches === []) {
+            return $prefix;
+        }
+    } elseif ($calculatedAt !== '') {
+        $prefix = '<small class="uv-cache-time">Cached ' . catalog_h($calculatedAt) . ' UTC</small>';
+    }
+
     if ($matches === []) {
-        return '<span class="muted">No dependency evidence</span>';
+        return $prefix . '<span class="muted">No verified files currently reference this package.</span>';
     }
 
     $html = '<div class="uv-game-links">';
@@ -97,9 +127,9 @@ function uv_list_possible_games(array $matches): string
     }
 
     if ($shown === 0) {
-        return '<span class="muted">No verified files currently reference this package.</span>';
+        return $prefix . '<span class="muted">No verified files currently reference this package.</span>';
     }
-    return $html . '</div>';
+    return $prefix . $html . '</div>';
 }
 
 try {
@@ -116,6 +146,9 @@ try {
     $licensee = uv_list_text('licensee');
     $requestedPage = max(1, uv_list_int('queue_page', 1));
     $requestedLimit = max(50, min(1000, uv_list_int('limit', 100)));
+    $matchRefreshJobId = max(0, uv_list_int('match_refresh_job', 0));
+    $matchRefreshQueued = uv_list_text('match_refresh') === 'queued';
+    $matchRefreshWorkerManual = uv_list_text('match_refresh_worker') === 'manual';
 
     $model = (new PdoUnverifiedFilesPageQuery($db, $config))->fetch(
         $sourceGameId,
@@ -133,6 +166,10 @@ try {
     $limit = (int)$model['limit'];
     $items = $model['items'];
     $gameMatches = is_array($model['game_matches'] ?? null) ? $model['game_matches'] : [];
+    $gameMatchStates = is_array($model['game_match_states'] ?? null) ? $model['game_match_states'] : [];
+    $matchCacheSummary = is_array($model['match_cache_summary'] ?? null)
+        ? $model['match_cache_summary']
+        : ['ready' => 0, 'pending' => 0, 'failed' => 0, 'missing' => 0, 'total' => 0];
     $summary = $model['summary'];
     $extensionOptions = $model['extension_options'];
     $engineOptions = $model['engine_options'];
@@ -140,13 +177,13 @@ try {
     catalog_head('Unverified Files');
     echo <<<'CSS'
 <style>
-.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
+.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 CSS;
 
     echo CatalogUi::pageHeader(
         'Unverified Files',
-        'Game suggestions are dependency evidence, not MD5/GUID identity matches. Exact means the staged package exports the full object path required by verified files in that game; Package name only means only the required package name matched.',
+        'Game suggestions are cached dependency evidence, not MD5/GUID identity matches. Exact means the staged package exports the full object path required by verified files in that game; Package name only means only the required package name matched.',
         [
             'Cross-examine games' => 'dependency-cross-examine.php',
             'Index existing queue files' => 'unverified-database-import.php',
@@ -155,12 +192,32 @@ CSS;
         ]
     );
 
+    if ($matchRefreshQueued && $matchRefreshJobId > 0) {
+        echo CatalogUi::alert(
+            $matchRefreshWorkerManual ? 'warning' : 'success',
+            'Upload Bucket match refresh queued.',
+            'Background job #' . $matchRefreshJobId . ' will rebuild the cached exact dependency evidence.'
+                . ($matchRefreshWorkerManual ? ' The worker could not be started automatically; start it from Background Jobs.' : '')
+        );
+    }
+
     echo '<div class="uv-summary">'
         . '<div class="stat"><h2>' . (int)($summary['indexed_count'] ?? 0) . '</h2><p>Indexed unverified files</p></div>'
         . '<div class="stat"><h2>' . $total . '</h2><p>Matching current filters</p></div>'
         . '<div class="stat"><h2>' . (int)($summary['bucket_count'] ?? 0) . '</h2><p>Upload Bucket files</p></div>'
         . '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)($summary['indexed_bytes'] ?? 0))) . '</h2><p>Indexed queue storage</p></div>'
         . '</div>';
+
+    echo '<section class="ui-section"><div class="ui-section__body"><div class="uv-cache-panel"><div>'
+        . '<h2>Dependency evidence cache</h2><p>Upload Bucket: '
+        . number_format((int)($matchCacheSummary['ready'] ?? 0)) . ' ready · '
+        . number_format((int)($matchCacheSummary['pending'] ?? 0)) . ' pending · '
+        . number_format((int)($matchCacheSummary['failed'] ?? 0)) . ' failed · '
+        . number_format((int)($matchCacheSummary['missing'] ?? 0)) . ' not calculated.</p>'
+        . '<p>New bucket files are calculated automatically in the background. Refresh rebuilds all current bucket entries when dependency data may have changed.</p></div>'
+        . '<form method="post" action="unverified-game-matches-refresh.php">'
+        . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('unverified-files')) . '">'
+        . '<button type="submit" class="secondary">Refresh bucket matches</button></form></div></div></section>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Filters</h2><p>'
         . $total . ' matching file(s).</p></div></div><div class="ui-section__body">';
@@ -197,6 +254,7 @@ CSS;
         . '<a class="button secondary" href="unverified-files.php">Clear</a></div></form></div></section>';
 
     $query = $_GET;
+    unset($query['match_refresh'], $query['match_refresh_job'], $query['match_refresh_worker']);
     $pageUrl = static function (int $number) use ($query): string {
         $query['queue_page'] = $number;
         return 'unverified-files.php?' . http_build_query($query);
@@ -240,10 +298,14 @@ CSS;
             $queueName = (string)($item['queue_name'] ?? '');
             $exists = !empty($item['physical_exists']);
             $token = (string)($item['queue_token'] ?? '');
-            $detailsUrl = 'unverified-file-details.php?id=' . (int)$item['id'];
-            $possibleGames = is_array($gameMatches[(int)$item['id']] ?? null)
-                ? $gameMatches[(int)$item['id']]
+            $fileId = (int)$item['id'];
+            $detailsUrl = 'unverified-file-details.php?id=' . $fileId;
+            $possibleGames = is_array($gameMatches[$fileId] ?? null)
+                ? $gameMatches[$fileId]
                 : [];
+            $matchState = is_array($gameMatchStates[$fileId] ?? null)
+                ? $gameMatchStates[$fileId]
+                : ['status' => 'missing'];
 
             echo '<tr>';
             echo '<td><input class="unverified-select" type="checkbox" name="tokens[]" value="'
@@ -261,13 +323,13 @@ CSS;
                 . '<span class="mono small">MD5: ' . catalog_h((string)$item['md5']) . '</span><br>'
                 . '<span class="mono small">SHA: ' . catalog_h((string)($item['sha1'] ?? '')) . '</span></td>';
             echo '<td><span class="uv-badge good">Indexed</span>'
-                . '<div><a href="' . catalog_h($detailsUrl) . '">DB file #' . (int)$item['id'] . '</a></div>'
+                . '<div><a href="' . catalog_h($detailsUrl) . '">DB file #' . $fileId . '</a></div>'
                 . '<small>Game assignment: none (NULL)</small><small>'
                 . (int)$item['name_count'] . ' / ' . (int)$item['import_count'] . ' / '
                 . (int)$item['export_count'] . ' N/I/E</small></td>';
             echo '<td class="mono">' . catalog_h(uv_list_detected($item)) . '</td>'
                 . '<td>' . catalog_h(catalog_bytes((int)$item['file_size'])) . '</td>'
-                . '<td>' . uv_list_possible_games($possibleGames) . '</td></tr>';
+                . '<td>' . uv_list_possible_games($possibleGames, $matchState) . '</td></tr>';
 
             if (trim((string)($item['unverified_reason'] ?? '')) !== '') {
                 echo '<tr class="uv-note-row"><td></td><td colspan="7"><div class="uv-note">'
