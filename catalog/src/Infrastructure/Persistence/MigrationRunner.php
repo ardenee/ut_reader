@@ -55,7 +55,7 @@ final class MigrationRunner
                 throw new RuntimeException('Invalid migration filename: ' . $filename);
             }
 
-            $definition = require $path;
+            $definition = $this->loadDefinition($path);
             if (!is_array($definition)) {
                 throw new RuntimeException('Migration must return an array: ' . $filename);
             }
@@ -306,6 +306,29 @@ final class MigrationRunner
             $statement->execute([$lockName]);
         } catch (Throwable) {
             // The database connection also releases advisory locks when it closes.
+        }
+    }
+
+    private function loadDefinition(string $path): mixed
+    {
+        $normalizedPath = realpath($path) ?: $path;
+        set_error_handler(
+            static function (int $severity, string $message, string $file) use ($normalizedPath): bool {
+                if ($severity !== E_WARNING) {
+                    return false;
+                }
+                $warningPath = realpath($file) ?: $file;
+                if ($warningPath !== $normalizedPath) {
+                    return false;
+                }
+                return str_contains($message, 'use statement with non-compound name')
+                    && str_contains($message, 'has no effect');
+            }
+        );
+        try {
+            return require $path;
+        } finally {
+            restore_error_handler();
         }
     }
 }
