@@ -1,16 +1,38 @@
 <?php
 /**
- * Queue selected exact cross-game dependency providers for verified import into a destination game.
+ * Queue one lightweight parent job for selected cross-game dependency providers.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Infrastructure\Unverified\CatalogCrossGamePackageCopyService;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+
+function cross_game_batch_wants_json(): bool
+{
+    return strtolower(trim((string)($_SERVER['HTTP_X_REQUESTED_WITH'] ?? ''))) === 'xmlhttprequest'
+        || str_contains(strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? '')), 'application/json')
+        || (string)($_POST['response'] ?? '') === 'json';
+}
+
+/** @param array<string,mixed> $payload */
+function cross_game_batch_reply(array $payload, int $status = 200): never
+{
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, private');
+    echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    exit;
+}
 
 try {
     catalog_start_session();
     if (!catalog_support_is_admin()) {
+        if (cross_game_batch_wants_json()) {
+            cross_game_batch_reply(['ok' => false, 'error' => 'Administrator login is required.'], 403);
+        }
         http_response_code(403);
         exit('Administrator login is required.');
     }
@@ -23,8 +45,6 @@ try {
     if (!is_array($rawIds)) {
         $rawIds = [$rawIds];
     }
-    // Preserve compatibility with the former one-row action while the UI moves
-    // to checkbox-based batch selection.
     if ($rawIds === [] && isset($_POST['source_file_id'])) {
         $rawIds = [$_POST['source_file_id']];
     }
@@ -41,10 +61,12 @@ try {
 
     $destinationGameId = filter_input(INPUT_POST, 'destination_game_id', FILTER_VALIDATE_INT);
     if ($destinationGameId === false || $destinationGameId === null) {
-        // Former one-row action used target_game_id.
         $destinationGameId = filter_input(INPUT_POST, 'target_game_id', FILTER_VALIDATE_INT);
     }
     $destinationGameId = $destinationGameId === false || $destinationGameId === null ? 0 : (int)$destinationGameId;
+    if ($destinationGameId < 1) {
+        throw new RuntimeException('Choose a destination game.');
+    }
 
     $reportTargetGameId = filter_input(INPUT_POST, 'report_target_game_id', FILTER_VALIDATE_INT);
     $reportTargetGameId = $reportTargetGameId === false || $reportTargetGameId === null
@@ -54,66 +76,82 @@ try {
     $sourceGameId = $sourceGameId === false || $sourceGameId === null ? 0 : (int)$sourceGameId;
     $limit = filter_input(INPUT_POST, 'limit', FILTER_VALIDATE_INT);
     $limit = $limit === false || $limit === null ? 100 : max(10, min(500, (int)$limit));
+    $userId = isset($_SESSION['user']['id']) && (int)$_SESSION['user']['id'] > 0
+        ? (int)$_SESSION['user']['id']
+        : null;
 
-    if ($destinationGameId < 1) {
-        throw new RuntimeException('Choose a destination game.');
+    $config = catalog_config();
+    $db = catalog_db($config);
+    $destination = catalog_one($db, 'SELECT id,name FROM ue_games WHERE id=? LIMIT 1', [$destinationGameId]);
+    if (!$destination) {
+        throw new RuntimeException('Destination game no longer exists.');
     }
 
-    $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
+    sort($sourceFileIds, SORT_NUMERIC);
+    $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+    $dedupeKey = 'cross-game-copy-batch:' . hash(
+        'sha256',
+        $destinationGameId . "\0" . implode(',', $sourceFileIds)
+    );
+    $jobId = (new PdoJobQueue($db))->enqueue(
+        $queueName,
+        JobType::CROSS_GAME_COPY_BATCH,
+        [
+            'source_file_ids' => $sourceFileIds,
+            'destination_game_id' => $destinationGameId,
+            'user_id' => $userId,
+            'report_target_game_id' => max(0, $reportTargetGameId),
+            'report_source_game_id' => max(0, $sourceGameId),
+            'report_limit' => $limit,
+        ],
+        3,
+        null,
+        $dedupeKey,
+        $userId,
+        3
+    );
+
+    // Worker start is non-blocking. All package revalidation and import queue
+    // preparation occurs inside CROSS_GAME_COPY_BATCH, never in this request.
+    try {
+        (new CatalogQueueWorkerStarter($db, $config))->start($queueName, true, $userId);
+    } catch (Throwable $workerError) {
+        error_log('[UnrealDB cross-game batch] worker start: ' . $workerError->getMessage());
+    }
+
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
     }
 
-    $config = catalog_config();
-    $db = catalog_db($config);
-    $service = new CatalogCrossGamePackageCopyService($db, $config);
-    $queued = [];
-    $failed = [];
-    foreach ($sourceFileIds as $sourceFileId) {
-        try {
-            $queued[] = $service->queue($sourceFileId, $destinationGameId, $userId);
-        } catch (Throwable $error) {
-            $message = trim($error->getMessage()) ?: 'Could not queue this package.';
-            $failed[] = 'file #' . $sourceFileId . ': ' . $message;
-        }
+    if (cross_game_batch_wants_json()) {
+        cross_game_batch_reply([
+            'ok' => true,
+            'job_id' => $jobId,
+            'status' => 'queued',
+            'selected' => count($sourceFileIds),
+            'destination_game_id' => $destinationGameId,
+            'destination_game' => (string)$destination['name'],
+        ], 202);
     }
 
     $query = [
         'target_game_id' => max(0, $reportTargetGameId),
         'source_game_id' => max(0, $sourceGameId),
         'limit' => $limit,
+        'batch_job_id' => $jobId,
+        'notice' => 'Cross-game queue preparation started as background job #' . $jobId . '.',
     ];
-
-    if ($queued !== []) {
-        $targetName = (string)($queued[0]['target_game'] ?? ('game #' . $destinationGameId));
-        $jobIds = array_values(array_filter(array_map(
-            static fn(array $row): int => (int)($row['job_id'] ?? 0),
-            $queued
-        ), static fn(int $id): bool => $id > 0));
-        $jobSummary = $jobIds === []
-            ? ''
-            : ' Background job' . (count($jobIds) === 1 ? '' : 's') . ': #'
-                . implode(', #', array_slice($jobIds, 0, 10))
-                . (count($jobIds) > 10 ? ' +' . (count($jobIds) - 10) . ' more' : '') . '.';
-        $query['notice'] = 'Queued ' . count($queued) . ' of ' . count($sourceFileIds)
-            . ' selected package' . (count($sourceFileIds) === 1 ? '' : 's')
-            . ' to ' . $targetName . '.' . $jobSummary;
-    }
-
-    if ($failed !== []) {
-        $shown = array_slice($failed, 0, 5);
-        $query['error'] = count($failed) . ' selected package' . (count($failed) === 1 ? '' : 's')
-            . ' could not be queued: ' . implode(' | ', $shown)
-            . (count($failed) > count($shown) ? ' | +' . (count($failed) - count($shown)) . ' more.' : '');
-    }
-
-    if ($queued === [] && $failed === []) {
-        $query['error'] = 'No selected package could be queued.';
-    }
-
     header('Location: dependency-cross-examine.php?' . http_build_query($query), true, 303);
     exit;
 } catch (Throwable $error) {
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+    $message = trim($error->getMessage()) ?: 'Cross-game package batch could not be queued.';
+    if (cross_game_batch_wants_json()) {
+        cross_game_batch_reply(['ok' => false, 'error' => $message], 400);
+    }
+
     $reportTargetGameId = isset($reportTargetGameId) ? (int)$reportTargetGameId : 0;
     $sourceGameId = isset($sourceGameId) ? (int)$sourceGameId : 0;
     $limit = isset($limit) ? (int)$limit : 100;
@@ -121,7 +159,7 @@ try {
         'target_game_id' => max(0, $reportTargetGameId),
         'source_game_id' => max(0, $sourceGameId),
         'limit' => max(10, min(500, $limit)),
-        'error' => trim($error->getMessage()) ?: 'Cross-game package copies could not be queued.',
+        'error' => $message,
     ];
     header('Location: dependency-cross-examine.php?' . http_build_query($query), true, 303);
     exit;
