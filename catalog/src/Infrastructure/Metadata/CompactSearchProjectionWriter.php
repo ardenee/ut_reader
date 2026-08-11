@@ -239,6 +239,10 @@ final class CompactSearchProjectionWriter
             return [];
         }
 
+        // Keep lock acquisition on the shared ue_terms unique index in the same
+        // deterministic order as the primary compact lookup writer.
+        ksort($terms, SORT_STRING);
+
         foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
             $placeholders = [];
             $arguments = [];
