@@ -22,6 +22,7 @@ final class JobResourcePolicy
     public const IMPORT_HEAVY = 'import-heavy';
     public const ARCHIVE_IMPORT_HEAVY = 'archive-import-heavy';
     public const BUCKET_PROCESSING = 'bucket-processing';
+    public const UNVERIFIED_MATCHES = 'unverified-matches';
     public const STORAGE_HEAVY = 'storage-heavy';
     public const PACKAGE_HEAVY = 'package-heavy';
     public const HOUSEKEEPING = 'housekeeping';
@@ -68,6 +69,11 @@ final class JobResourcePolicy
                 'label' => 'Upload Bucket processing',
                 'default' => 8,
                 'description' => 'Redirect preparation, uploaded-file processing and unverified metadata repair.',
+            ],
+            self::UNVERIFIED_MATCHES => [
+                'label' => 'Unverified dependency matching',
+                'default' => 2,
+                'description' => 'Builds cached exact object-path/game compatibility evidence for Upload Bucket files. Database and metadata read intensive.',
             ],
             self::STORAGE_HEAVY => [
                 'label' => 'Storage and backup maintenance',
@@ -142,6 +148,11 @@ final class JobResourcePolicy
                 self::BUCKET_PROCESSING,
                 self::configuredLimit(self::BUCKET_PROCESSING, 8),
                 self::bucketFileKey($payload)
+            ),
+            JobType::REFRESH_UNVERIFIED_GAME_MATCHES => new JobResourceProfile(
+                self::UNVERIFIED_MATCHES,
+                self::configuredLimit(self::UNVERIFIED_MATCHES, 2),
+                self::unverifiedMatchKey($payload)
             ),
             JobType::IMPORT_STAGED_PACKAGE => new JobResourceProfile(
                 self::IMPORT_HEAVY,
@@ -237,6 +248,16 @@ final class JobResourcePolicy
         }
 
         return 'bucket:unidentified';
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function unverifiedMatchKey(array $payload): string
+    {
+        $fileId = (int)($payload['file_id'] ?? 0);
+        if ($fileId > 0) {
+            return 'unverified-match:file:' . $fileId;
+        }
+        return 'unverified-match:' . (strtolower(trim((string)($payload['scope'] ?? 'bucket'))) ?: 'bucket');
     }
 
     /** @param array<string,mixed> $payload */
