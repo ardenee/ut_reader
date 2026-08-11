@@ -38,6 +38,10 @@ $checks = [
         $root . '/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php',
         'enqueueStaged('
     ],
+    'cross-examine query closes package-name IN clause' => [
+        $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
+        "array_fill(0, count(\$packageNames), '?')) . ')'"
+    ],
     'cross-examine query requires missing dependencies' => [
         $root . '/src/Infrastructure/Unverified/PdoGameDependencyCrossExamineQuery.php',
         'd.status="missing"'
