@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Queues a verified package from one game for import into another compatible game when it can satisfy exact missing dependencies.
+ * Purpose: Queues a verified package from one sibling game into another when it exactly satisfies missing dependency objects.
  * Why: Cross-game dependency repair must create a real game-scoped verified row rather than an alias or presentation-only relationship.
  * Role: Mutation service behind the dependency cross-examine administration page.
  */
@@ -30,7 +30,14 @@ final class CatalogCrossGamePackageCopyService
             ->one($sourceFileId, $targetGameId);
         if ($candidate === null) {
             throw new \RuntimeException(
-                'This source file is no longer an exact compatible provider for a missing dependency in the target game.'
+                'This source file no longer exports an object required by a missing dependency in the target game.'
+            );
+        }
+        if (!empty($candidate['already_in_target'])) {
+            throw new \RuntimeException(
+                'The same package bytes are already verified in the target game as file #'
+                . (int)($candidate['target_existing_file_id'] ?? 0)
+                . '. Rebuild the target dependencies instead of copying the file again.'
             );
         }
 
@@ -64,7 +71,7 @@ final class CatalogCrossGamePackageCopyService
                 $staged,
                 $originalName,
                 $sourceRelativePath,
-                true,
+                false,
                 $userId,
                 false
             );
