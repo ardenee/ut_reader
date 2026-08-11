@@ -97,7 +97,7 @@ final class PdoGameDependencyCrossExamineQuery
             . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
             . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
             . 'WHERE f.scan_status="verified" AND UPPER(p.engine_key)=? AND f.game_id<>? '
-            . 'AND f.package_name IN (' . implode(',', array_fill(0, count($packageNames), '?'));
+            . 'AND f.package_name IN (' . implode(',', array_fill(0, count($packageNames), '?')) . ')';
         $sourceArgs = array_merge([$engine, $targetGameId], $packageNames);
         if ($sourceGameId > 0) {
             $sourceSql .= ' AND f.game_id=?';
