@@ -50,10 +50,16 @@ final class CatalogCrossGamePackageCopyService
             $sourceRelativePath = $originalName;
         }
 
-        $store = new CatalogIncomingFileStore($this->config);
+        // This is an existing trusted package copied within controlled server
+        // storage, not a new HTTP upload. Do not apply the browser upload-size
+        // ceiling to a cross-game dependency repair operation.
+        $serverConfig = $this->config;
+        $serverConfig['max_upload_bytes'] = PHP_INT_MAX;
+
+        $store = new CatalogIncomingFileStore($serverConfig);
         $staged = $store->stageLocalFile($sourcePath, $originalName);
         try {
-            $queued = (new CatalogProfiledUploadQueue($this->db, $this->config))->enqueueStaged(
+            $queued = (new CatalogProfiledUploadQueue($this->db, $serverConfig))->enqueueStaged(
                 $targetGameId,
                 $staged,
                 $originalName,
