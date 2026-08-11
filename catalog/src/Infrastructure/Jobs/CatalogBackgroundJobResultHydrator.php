@@ -60,11 +60,53 @@ final class CatalogBackgroundJobResultHydrator
             'file_id',
             'expected_size',
             'max_files',
+            'package_name',
+            'affected_total',
+            'batch_number',
+            'batch_count',
+            'batch_start',
+            'batch_end',
         ] as $field) {
             if (array_key_exists($field, $decoded)) {
                 $payload[$field] = $decoded[$field];
             }
         }
+
+        // Affected dependency child jobs deliberately share file_id because it is
+        // the provider whose arrival triggered every child batch. The stable jobs
+        // table historically renders source_relative_path/original_name/file_id in
+        // that order, so without a presentation label every parallel child appears
+        // to be processing the same file. Preserve the provider identity while
+        // exposing the distinct batch/range; never leak the large affected ID list.
+        if (array_key_exists('affected_file_ids', $decoded)
+            && (int)($decoded['file_id'] ?? 0) > 0
+            && trim((string)($payload['source_relative_path'] ?? '')) === '') {
+            $label = '';
+            $packageName = trim((string)($decoded['package_name'] ?? ''));
+            if ($packageName !== '') {
+                $label .= $packageName . ' · ';
+            }
+            $label .= 'provider #' . (int)$decoded['file_id'];
+
+            $batchNumber = max(0, (int)($decoded['batch_number'] ?? 0));
+            $batchCount = max(0, (int)($decoded['batch_count'] ?? 0));
+            if ($batchNumber > 0) {
+                $label .= ' · batch ' . $batchNumber . ($batchCount > 0 ? '/' . $batchCount : '');
+            }
+
+            $batchStart = max(0, (int)($decoded['batch_start'] ?? 0));
+            $batchEnd = max(0, (int)($decoded['batch_end'] ?? 0));
+            $affectedTotal = max(0, (int)($decoded['affected_total'] ?? 0));
+            if ($batchStart > 0 && $batchEnd >= $batchStart) {
+                $label .= ' · affected positions ' . $batchStart . '-' . $batchEnd;
+                if ($affectedTotal > 0) {
+                    $label .= '/' . $affectedTotal;
+                }
+            }
+
+            $payload['source_relative_path'] = $label;
+        }
+
         return $payload;
     }
 
