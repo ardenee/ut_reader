@@ -76,15 +76,8 @@ final class PdoGameDependencyCrossExamineQuery
             return $this->result($target, $sourceGames, [], $diagnostics);
         }
 
-        // Validate that the current compact dependency read source exists. The
-        // cross-game query below then reads its underlying format-2 projections
-        // directly so required_path_hash can be joined to ue_export_lookup.path_hash.
         PdoDependencyReadSource::sql($this->db);
 
-        // Group by the logical package name under the same case-insensitive
-        // collation used by the provider match. Grouping by ue_terms.id can split
-        // one logical package across multiple term rows and produce a denominator
-        // smaller than the exact-match numerator.
         $packageStatsRows = \catalog_all(
             $this->db,
             'SELECT '
@@ -126,7 +119,14 @@ final class PdoGameDependencyCrossExamineQuery
         }
 
         $sourceIds = $sourceGameId > 0 ? [$sourceGameId] : array_keys($allowedSourceIds);
-        $sources = $this->sourceFilesForMissingPackages($sourceIds, array_values($packageNames));
+        // A source whose exact bytes are already verified in the report target is
+        // not a repair candidate. Exclude it before diagnostics, exact matching,
+        // result limiting and all summary/coverage calculations.
+        $sources = $this->sourceFilesForMissingPackages(
+            $targetGameId,
+            $sourceIds,
+            array_values($packageNames)
+        );
         $diagnostics['source_package_files'] = count($sources);
         if ($sources === []) {
             return $this->result($target, $sourceGames, [], $diagnostics);
@@ -160,16 +160,6 @@ final class PdoGameDependencyCrossExamineQuery
             }
             $exactOwners = min($ownerCount, max(0, (int)($exactEvidence['exact_owner_count'] ?? 0)));
 
-            $targetExisting = null;
-            $md5 = strtolower(trim((string)($source['md5'] ?? '')));
-            if ($md5 !== '') {
-                $targetExisting = \catalog_one(
-                    $this->db,
-                    'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
-                    [$targetGameId, $md5]
-                );
-            }
-
             $rows[] = $source + [
                 'target_game_id' => $targetGameId,
                 'target_game_name' => (string)$target['name'],
@@ -178,8 +168,6 @@ final class PdoGameDependencyCrossExamineQuery
                 'exact_object_matches' => $exact,
                 'exact_owner_count' => $exactOwners,
                 'coverage_percent' => round(($exact / $missingCount) * 100, 1),
-                'target_existing_file_id' => (int)($targetExisting['id'] ?? 0),
-                'already_in_target' => (int)($targetExisting['id'] ?? 0) > 0,
             ];
         }
 
@@ -228,6 +216,18 @@ final class PdoGameDependencyCrossExamineQuery
             return null;
         }
 
+        $md5 = strtolower(trim((string)($source['md5'] ?? '')));
+        if ($md5 !== '') {
+            $targetExisting = \catalog_one(
+                $this->db,
+                'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
+                [$targetGameId, $md5]
+            );
+            if ($targetExisting) {
+                return null;
+            }
+        }
+
         $package = trim((string)$source['package_name']);
         if ($package === '') {
             return null;
@@ -260,16 +260,6 @@ final class PdoGameDependencyCrossExamineQuery
         $exactMatches = min($missingCount, max(0, (int)$exact['exact_object_matches']));
         $exactOwners = min($ownerCount, max(0, (int)($exact['exact_owner_count'] ?? 0)));
 
-        $targetExisting = null;
-        $md5 = strtolower(trim((string)($source['md5'] ?? '')));
-        if ($md5 !== '') {
-            $targetExisting = \catalog_one(
-                $this->db,
-                'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1',
-                [$targetGameId, $md5]
-            );
-        }
-
         return $source + [
             'target_game_id' => $targetGameId,
             'target_game_name' => (string)$target['name'],
@@ -278,8 +268,6 @@ final class PdoGameDependencyCrossExamineQuery
             'exact_object_matches' => $exactMatches,
             'exact_owner_count' => $exactOwners,
             'coverage_percent' => round(($exactMatches / $missingCount) * 100, 1),
-            'target_existing_file_id' => (int)($targetExisting['id'] ?? 0),
-            'already_in_target' => (int)($targetExisting['id'] ?? 0) > 0,
         ];
     }
 
@@ -344,8 +332,11 @@ final class PdoGameDependencyCrossExamineQuery
      * @param list<string> $packageNames
      * @return list<array<string,mixed>>
      */
-    private function sourceFilesForMissingPackages(array $sourceGameIds, array $packageNames): array
-    {
+    private function sourceFilesForMissingPackages(
+        int $targetGameId,
+        array $sourceGameIds,
+        array $packageNames
+    ): array {
         $sourceGameIds = array_values(array_unique(array_filter(
             array_map('intval', $sourceGameIds),
             static fn(int $id): bool => $id > 0
@@ -354,7 +345,7 @@ final class PdoGameDependencyCrossExamineQuery
             array_map(static fn(string $name): string => trim($name), $packageNames),
             static fn(string $name): bool => $name !== ''
         )));
-        if ($sourceGameIds === [] || $packageNames === []) {
+        if ($targetGameId < 1 || $sourceGameIds === [] || $packageNames === []) {
             return [];
         }
 
@@ -373,8 +364,13 @@ final class PdoGameDependencyCrossExamineQuery
                 . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
                 . 'WHERE f.scan_status="verified" AND f.game_id IN (' . $gamePlaceholders . ') '
                 . 'AND f.package_name IN (' . $packagePlaceholders . ') '
+                . 'AND NOT EXISTS ('
+                . 'SELECT 1 FROM ue_files target_existing '
+                . 'WHERE target_existing.game_id=? AND target_existing.scan_status="verified" '
+                . 'AND f.md5<>"" AND target_existing.md5=f.md5'
+                . ') '
                 . 'ORDER BY f.package_name,g.name,f.id',
-                array_merge($sourceGameIds, $packageChunk)
+                array_merge($sourceGameIds, $packageChunk, [$targetGameId])
             );
             foreach ($chunkRows as $row) {
                 $fileId = (int)($row['id'] ?? 0);
