@@ -128,7 +128,7 @@ final class CatalogAffectedDependencyRefreshCoordinator
     private static function isActiveRefreshJob(PDO $db, int $fileId): bool
     {
         try {
-            [$dedupeKey, $continuationPattern] = self::chainKeys($fileId);
+            [$dedupeKey, $chainPattern] = self::chainKeys($fileId);
             $statement = $db->prepare(
                 'SELECT 1 FROM ue_background_jobs'
                 . ' WHERE job_type=? AND status="running"'
@@ -137,7 +137,7 @@ final class CatalogAffectedDependencyRefreshCoordinator
             $statement->execute([
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
                 $dedupeKey,
-                $continuationPattern,
+                $chainPattern,
             ]);
             return $statement->fetchColumn() !== false;
         } catch (Throwable) {
@@ -150,7 +150,7 @@ final class CatalogAffectedDependencyRefreshCoordinator
     private static function existingRefreshJobId(PDO $db, int $fileId): int
     {
         try {
-            [$dedupeKey, $continuationPattern] = self::chainKeys($fileId);
+            [$dedupeKey, $chainPattern] = self::chainKeys($fileId);
             $statement = $db->prepare(
                 'SELECT id FROM ue_background_jobs'
                 . ' WHERE job_type=? AND status IN ("queued","running")'
@@ -160,7 +160,7 @@ final class CatalogAffectedDependencyRefreshCoordinator
             $statement->execute([
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
                 $dedupeKey,
-                $continuationPattern,
+                $chainPattern,
             ]);
             return max(0, (int)($statement->fetchColumn() ?: 0));
         } catch (Throwable) {
@@ -228,7 +228,8 @@ final class CatalogAffectedDependencyRefreshCoordinator
     private static function chainKeys(int $fileId): array
     {
         $dedupeKey = self::dedupeKey($fileId);
-        return [$dedupeKey, $dedupeKey . ':offset:%'];
+        // Match legacy :offset: continuations and current :batch: children.
+        return [$dedupeKey, $dedupeKey . ':%'];
     }
 
     private static function dedupeKey(int $fileId): string
