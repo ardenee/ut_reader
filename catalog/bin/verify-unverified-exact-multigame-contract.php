@@ -101,19 +101,59 @@ $checks = [
         'needle' => 'name="destination_game_id"',
         'present' => true,
     ],
-    'cross-examine batch action revalidates every selected provider' => [
+    'cross-examine page uses asynchronous batch submission' => [
+        'path' => $root . '/dependency-cross-examine.php',
+        'needle' => "fetch(form.action",
+        'present' => true,
+    ],
+    'cross-examine page polls durable batch progress' => [
+        'path' => $root . '/dependency-cross-examine.php',
+        'needle' => 'dependency-cross-examine-job.php?job_id=',
+        'present' => true,
+    ],
+    'cross-examine HTTP action queues one parent job' => [
         'path' => $root . '/dependency-cross-examine-action.php',
+        'needle' => 'JobType::CROSS_GAME_COPY_BATCH',
+        'present' => true,
+    ],
+    'cross-examine HTTP action does not perform package copy work' => [
+        'path' => $root . '/dependency-cross-examine-action.php',
+        'needle' => 'CatalogCrossGamePackageCopyService',
+        'present' => false,
+    ],
+    'cross-game parent handler revalidates selected providers' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php',
         'needle' => '$service->queue($sourceFileId, $destinationGameId, $userId)',
         'present' => true,
     ],
-    'cross-game copy queues a real profiled import' => [
+    'cross-game parent handler reports ETA' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php',
+        'needle' => "'eta_seconds'",
+        'present' => true,
+    ],
+    'cross-game copy uses read-only catalog-local source' => [
         'path' => $root . '/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php',
-        'needle' => 'CatalogProfiledUploadQueue',
+        'needle' => "'local-catalog:'",
+        'present' => true,
+    ],
+    'cross-game copy does not pre-stage a full duplicate' => [
+        'path' => $root . '/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php',
+        'needle' => 'stageLocalFile(',
+        'present' => false,
+    ],
+    'catalog-local source is resolved read-only by incoming store' => [
+        'path' => $root . '/src/Infrastructure/Import/CatalogIncomingFileStore.php',
+        'needle' => 'resolveLocalCatalogReference(',
         'present' => true,
     ],
     'cross-game copy refuses duplicate target identity' => [
         'path' => $root . '/src/Infrastructure/Unverified/CatalogCrossGamePackageCopyService.php',
         'needle' => "['already_in_target']",
+        'present' => true,
+    ],
+    'worker factory routes cross-game batch job' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+        'needle' => 'JobType::CROSS_GAME_COPY_BATCH => $crossGameCopyBatch',
         'present' => true,
     ],
 ];
