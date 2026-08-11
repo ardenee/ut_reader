@@ -34,25 +34,70 @@ function uv_list_detected(array $row): string
         . ' / lic ' . (int)($row['detected_licensee_version'] ?? 0);
 }
 
-/** @param list<array{game_id:int,game_name:string,owner_count:int,import_count:int}> $matches */
+/** @param list<array<string,mixed>> $matches */
 function uv_list_possible_games(array $matches): string
 {
     if ($matches === []) {
-        return '';
+        return '<span class="muted">No dependency evidence</span>';
     }
 
     $html = '<div class="uv-game-links">';
+    $shown = 0;
     foreach ($matches as $match) {
-        $links = max(0, (int)($match['import_count'] ?? 0));
-        if ($links < 1) {
+        $references = max(0, (int)($match['import_count'] ?? 0));
+        if ($references < 1) {
             continue;
         }
+        $shown++;
         $owners = max(0, (int)($match['owner_count'] ?? 0));
-        $html .= '<div><a href="game-files.php?id=' . (int)$match['game_id'] . '"><strong>'
+        $exact = max(0, (int)($match['exact_object_matches'] ?? 0));
+        $compatible = !empty($match['compatible']);
+        $matchPercent = $match['match_percent'] !== null
+            ? number_format((float)$match['match_percent'], 1) . '%'
+            : '0.0%';
+        $engine = trim((string)($match['engine_key'] ?? ''));
+        $compatibilityLabel = trim((string)($match['compatibility_label'] ?? ''));
+
+        if ($compatible && $exact > 0) {
+            $badgeClass = 'good';
+            $badgeText = 'Exact compatible';
+        } elseif ($exact > 0) {
+            $badgeClass = 'bad';
+            $badgeText = 'Exact objects / profile conflict';
+        } else {
+            $badgeClass = 'neutral';
+            $badgeText = 'Package name only';
+        }
+
+        $html .= '<div class="uv-game-evidence">'
+            . '<a href="game-files.php?id=' . (int)$match['game_id'] . '"><strong>'
             . catalog_h((string)$match['game_name']) . '</strong></a>'
-            . '<small>' . number_format($links) . ' possible package link' . ($links === 1 ? '' : 's')
-            . ($owners > 0 ? ' from ' . number_format($owners) . ' file' . ($owners === 1 ? '' : 's') : '')
-            . '</small></div>';
+            . '<span class="uv-evidence-badge ' . $badgeClass . '">' . catalog_h($badgeText) . '</span>';
+
+        if ($exact > 0) {
+            $html .= '<small><strong>' . number_format($exact) . ' / ' . number_format($references)
+                . '</strong> dependency references match an exported object path (' . catalog_h($matchPercent) . ').</small>';
+        } else {
+            $html .= '<small><strong>0 / ' . number_format($references)
+                . '</strong> required object paths matched; package-name reference only.</small>';
+        }
+
+        $html .= '<small>' . number_format($references) . ' dependency reference'
+            . ($references === 1 ? '' : 's') . ' from ' . number_format($owners) . ' verified file'
+            . ($owners === 1 ? '' : 's') . '.</small>';
+
+        $profileText = $engine !== '' ? $engine : 'profile unknown';
+        if ($compatibilityLabel !== '') {
+            $profileText .= ' · ' . $compatibilityLabel;
+        }
+        if (!$compatible && trim((string)($match['reason'] ?? '')) !== '') {
+            $profileText .= ' · ' . (string)$match['reason'];
+        }
+        $html .= '<small class="muted">' . catalog_h($profileText) . '</small></div>';
+    }
+
+    if ($shown === 0) {
+        return '<span class="muted">No verified files currently reference this package.</span>';
     }
     return $html . '</div>';
 }
@@ -87,7 +132,7 @@ try {
     $page = (int)$model['page'];
     $limit = (int)$model['limit'];
     $items = $model['items'];
-    $referenceMatches = $model['reference_matches'];
+    $gameMatches = is_array($model['game_matches'] ?? null) ? $model['game_matches'] : [];
     $summary = $model['summary'];
     $extensionOptions = $model['extension_options'];
     $engineOptions = $model['engine_options'];
@@ -95,14 +140,15 @@ try {
     catalog_head('Unverified Files');
     echo <<<'CSS'
 <style>
-.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:7px;min-width:210px}.uv-game-links div{padding-bottom:6px;border-bottom:1px solid var(--line2)}.uv-game-links div:last-child{padding-bottom:0;border-bottom:0}.uv-game-links small{display:block;color:var(--muted)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
+.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 CSS;
 
     echo CatalogUi::pageHeader(
         'Unverified Files',
-        'This list is database-paginated. Possible games are shown only when verified files reference the staged package name.',
+        'Game suggestions are dependency evidence, not MD5/GUID identity matches. Exact means the staged package exports the full object path required by verified files in that game; Package name only means only the required package name matched.',
         [
+            'Cross-examine games' => 'dependency-cross-examine.php',
             'Index existing queue files' => 'unverified-database-import.php',
             'Upload bucket' => 'upload-bucket-v2.php',
             'Upload to game' => 'profiled-upload.php',
@@ -164,7 +210,8 @@ CSS;
 
     echo '<form id="unverified-bulk-form" method="post" action="unverified-files-action.php">';
     echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('unverified-files')) . '">';
-    echo '<div class="uv-actions"><label>Target game <select name="target_game_id"><option value="">Choose game</option>';
+    echo '<div class="uv-actions"><label>Target game <select name="target_game_id"><option value="">Choose game</option>'
+        . '<option value="-1">All exact compatible games</option>';
     foreach ($games as $game) {
         echo '<option value="' . (int)$game['id'] . '">'
             . catalog_h((string)$game['name'] . ' / ' . (string)($game['engine_key'] ?? ''))
@@ -176,6 +223,7 @@ CSS;
         . '<button name="action" value="delete" class="danger">Delete selected</button>'
         . '<label><input type="checkbox" name="allow_profile_override" value="1"> Allow profile override</label>'
         . '</div>';
+    echo '<p class="uv-evidence-help"><strong>All exact compatible games</strong> imports the first exact compatible match immediately and queues proper copies for every other game where at least one required full object path is exported by this package. Package-name-only suggestions are never auto-imported.</p>';
 
     if ($items === []) {
         echo CatalogUi::emptyState(
@@ -185,7 +233,7 @@ CSS;
     } else {
         echo '<div class="table-wrap"><table class="uv-table"><thead><tr>'
             . '<th></th><th>Physical queue</th><th>File</th><th>Identity</th><th>Database</th>'
-            . '<th>Detected</th><th>Size</th><th>Possible games</th></tr></thead><tbody>';
+            . '<th>Detected</th><th>Size</th><th>Dependency evidence</th></tr></thead><tbody>';
 
         foreach ($items as $item) {
             $queueGame = is_array($item['queue_game'] ?? null) ? $item['queue_game'] : [];
@@ -193,8 +241,9 @@ CSS;
             $exists = !empty($item['physical_exists']);
             $token = (string)($item['queue_token'] ?? '');
             $detailsUrl = 'unverified-file-details.php?id=' . (int)$item['id'];
-            $packageKey = strtolower(trim((string)($item['package_name'] ?? '')));
-            $possibleGames = $referenceMatches[$packageKey] ?? [];
+            $possibleGames = is_array($gameMatches[(int)$item['id']] ?? null)
+                ? $gameMatches[(int)$item['id']]
+                : [];
 
             echo '<tr>';
             echo '<td><input class="unverified-select" type="checkbox" name="tokens[]" value="'
@@ -208,8 +257,9 @@ CSS;
                 . catalog_h((string)$item['original_name']) . '</a></strong>'
                 . '<span>Package: <span class="mono">' . catalog_h((string)$item['package_name']) . '</span></span>'
                 . '<small>Queue name: ' . catalog_h($queueName) . '</small></td>';
-            echo '<td><span class="mono small">MD5: ' . catalog_h((string)$item['md5']) . '</span><br>'
-                . '<span class="mono small">GUID: ' . catalog_h((string)($item['package_guid'] ?? '')) . '</span></td>';
+            echo '<td><span class="mono small">GUID: ' . catalog_h((string)($item['package_guid'] ?? '')) . '</span><br>'
+                . '<span class="mono small">MD5: ' . catalog_h((string)$item['md5']) . '</span><br>'
+                . '<span class="mono small">SHA: ' . catalog_h((string)($item['sha1'] ?? '')) . '</span></td>';
             echo '<td><span class="uv-badge good">Indexed</span>'
                 . '<div><a href="' . catalog_h($detailsUrl) . '">DB file #' . (int)$item['id'] . '</a></div>'
                 . '<small>Game assignment: none (NULL)</small><small>'
