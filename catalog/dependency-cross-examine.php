@@ -49,7 +49,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Dependency Cross-Examine',
-        'Find packages already verified in same-engine sibling games that export objects currently recorded as missing by the target game.',
+        'Find packages already verified in sibling games that can satisfy actual missing dependencies in another game. Matching uses the same current compact required-path/export-path projections as normal dependency resolution.',
         [
             'Unverified files' => 'unverified-files.php',
             'Missing dependencies' => 'missing.php',
@@ -64,7 +64,7 @@ CSS;
         echo CatalogUi::alert('danger', 'Could not queue copy', $error);
     }
 
-    echo '<p class="cross-note"><strong>How candidates are found:</strong> the target game\'s current dependency rows with status <span class="mono">missing</span> are the authoritative input. For each missing package/object path, the report checks verified files in the selected same-engine source game(s) and keeps a source only when its recorded exports contain that exact required object path. Package-version and target-profile ranges do not remove an otherwise exact provider from this report.</p>';
+    echo '<p class="cross-note"><strong>What counts as a candidate:</strong> the target game must currently have a dependency marked missing for the package/object. The selected same-engine source game must contain a verified package with the same package identity and its current <span class="mono">ue_export_lookup.path_hash</span> must exactly match the missing dependency\'s <span class="mono">required_path_hash</span>. Package-version/profile ranges are not used to hide cross-game providers.</p>';
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Compare games</h2><p>Choose the game whose missing dependencies you want to repair.</p></div></div><div class="ui-section__body">';
     echo '<form class="cross-controls" method="get">';
@@ -103,8 +103,9 @@ CSS;
     echo '<p class="cross-note"><strong>Scan input:</strong> '
         . number_format((int)($diagnostics['missing_dependency_rows'] ?? 0)) . ' actual missing dependency row(s) across '
         . number_format((int)($diagnostics['missing_packages'] ?? 0)) . ' package(s); '
-        . number_format((int)($diagnostics['source_package_files'] ?? 0)) . ' verified source package file(s) had matching package names and were examined; '
-        . number_format((int)($diagnostics['metadata_unreadable'] ?? 0)) . ' source metadata snapshot(s) could not be read.</p>';
+        . number_format((int)($diagnostics['source_package_files'] ?? 0)) . ' verified source package file(s) had matching package names; '
+        . number_format((int)($diagnostics['format2_source_files'] ?? 0)) . ' have current format-2 metadata/export projections; '
+        . number_format((int)($diagnostics['exact_provider_files'] ?? 0)) . ' file(s) matched at least one missing object path.</p>';
 
     $exactTotal = 0;
     $ownerTotal = 0;
@@ -121,7 +122,7 @@ CSS;
     if ($rows === []) {
         echo CatalogUi::emptyState(
             'No exact sibling-game providers found',
-            'The scan started from the target game\'s actual missing dependency rows. No verified package in the selected same-engine source scope exported one of those exact required object paths. The scan-input counts above show which stage produced no candidates.'
+            'The scan starts from the target game\'s actual missing dependency rows and uses the current compact export projection. The scan-input counts above show whether matching source package names and format-2 export data exist.'
         );
         catalog_foot();
         exit;
