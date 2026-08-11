@@ -36,6 +36,7 @@ function catalog_admin_navigation_groups(string $root): array
         ],
         'Catalog' => [
             'Missing Dependencies' => $root . 'missing.php',
+            'Cross-Game Dependencies' => $root . 'dependency-cross-examine.php',
             'Duplicate Files' => $root . 'duplicates.php',
             'Unverified Files' => $root . 'unverified-files.php',
             'Import Existing Unverified DB' => $root . 'unverified-database-import.php',
