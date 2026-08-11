@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Finds verified packages in sibling games that satisfy actual missing dependency objects in a target game.
- * Why: Cross-game repair must be driven by unresolved dependency rows, not by package-summary limits or target profile heuristics.
+ * Why: Cross-game repair must use the same current compact dependency/export projections as normal dependency resolution.
  * Role: Read model for the cross-game dependency examination admin workflow.
  */
 declare(strict_types=1);
@@ -10,26 +10,19 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
-use Throwable;
-use UnrealDb\Catalog\Infrastructure\Metadata\CompressedFileMetadataReader;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 final class PdoGameDependencyCrossExamineQuery
 {
     private const SOURCE_PACKAGE_CHUNK = 250;
-
-    private readonly CompressedFileMetadataReader $metadata;
+    private const SOURCE_ID_CHUNK = 250;
 
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
-        private readonly array $config
+        array $config
     ) {
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
-        $this->metadata = new CompressedFileMetadataReader(
-            $db,
-            rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR)
-        );
     }
 
     /** @return list<array<string,mixed>> */
@@ -57,9 +50,6 @@ final class PdoGameDependencyCrossExamineQuery
         $target = $this->targetGame($targetGameId);
         $engine = strtoupper(trim((string)$target['engine_key']));
 
-        // Source selection stays within the configured engine family. Package
-        // profile/version ranges do NOT veto a provider: the authoritative test
-        // is missing required object -> exported source object.
         $sourceGames = \catalog_all(
             $this->db,
             'SELECT g.id,g.name,g.slug,p.engine_key,p.profile_name '
@@ -79,156 +69,91 @@ final class PdoGameDependencyCrossExamineQuery
             'missing_dependency_rows' => 0,
             'missing_packages' => 0,
             'source_package_files' => 0,
-            'metadata_unreadable' => 0,
+            'format2_source_files' => 0,
             'exact_provider_files' => 0,
         ];
         if ($allowedSourceIds === []) {
-            return [
-                'target' => $target,
-                'source_games' => $sourceGames,
-                'rows' => [],
-                'diagnostics' => $diagnostics,
-            ];
+            return $this->result($target, $sourceGames, [], $diagnostics);
         }
 
-        // Start directly from authoritative compact dependency rows. The old
-        // package-summary projection and LIMIT 500 are intentionally not used.
-        $dependencySource = PdoDependencyReadSource::sql($this->db);
-        $dependencyRows = \catalog_all(
+        // Validate that the current compact dependency read source exists. The
+        // cross-game query below then reads its underlying format-2 projections
+        // directly so required_path_hash can be joined to ue_export_lookup.path_hash.
+        PdoDependencyReadSource::sql($this->db);
+
+        $packageStatsRows = \catalog_all(
             $this->db,
-            'SELECT d.id,d.file_id owner_file_id,d.required_package,d.required_object_path '
-            . 'FROM ' . $dependencySource . ' d '
-            . 'JOIN ue_files owner ON owner.id=d.file_id AND owner.scan_status="verified" '
-            . 'WHERE owner.game_id=? AND d.status="missing" '
-            . 'AND d.required_package IS NOT NULL AND d.required_package<>"" '
-            . 'AND d.required_object_path IS NOT NULL AND d.required_object_path<>""',
+            'SELECT '
+            . 'CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci required_package,'
+            . 'COUNT(*) missing_count,COUNT(DISTINCT l.file_id) owner_count '
+            . 'FROM ue_dependency_links l '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+            . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
+            . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
+            . 'WHERE owner.game_id=? AND l.status=0 '
+            . 'GROUP BY pkg.id,pkg.value_prefix',
             [$targetGameId]
         );
-        $diagnostics['missing_dependency_rows'] = count($dependencyRows);
-        if ($dependencyRows === []) {
-            return [
-                'target' => $target,
-                'source_games' => $sourceGames,
-                'rows' => [],
-                'diagnostics' => $diagnostics,
-            ];
+        if ($packageStatsRows === []) {
+            return $this->result($target, $sourceGames, [], $diagnostics);
         }
 
-        $dependenciesByPackage = [];
-        $packageNames = [];
         $packageStats = [];
-        foreach ($dependencyRows as $row) {
+        $packageNames = [];
+        foreach ($packageStatsRows as $row) {
             $package = trim((string)($row['required_package'] ?? ''));
-            $objectPath = trim((string)($row['required_object_path'] ?? ''));
-            if ($package === '' || $objectPath === '') {
+            if ($package === '') {
                 continue;
             }
-            $packageKey = $this->key($package);
-            $dependencyId = (int)($row['id'] ?? 0);
-            $ownerId = (int)($row['owner_file_id'] ?? 0);
-            $dependenciesByPackage[$packageKey][] = $row;
-            $packageNames[$packageKey] = $package;
-            if ($dependencyId > 0) {
-                $packageStats[$packageKey]['dependencies'][$dependencyId] = true;
-            }
-            if ($ownerId > 0) {
-                $packageStats[$packageKey]['owners'][$ownerId] = true;
-            }
+            $key = $this->key($package);
+            $missingCount = max(0, (int)($row['missing_count'] ?? 0));
+            $ownerCount = max(0, (int)($row['owner_count'] ?? 0));
+            $packageStats[$key] = [
+                'missing_count' => $missingCount,
+                'owner_count' => $ownerCount,
+            ];
+            $packageNames[$key] = $package;
+            $diagnostics['missing_dependency_rows'] += $missingCount;
         }
         $diagnostics['missing_packages'] = count($packageNames);
         if ($packageNames === []) {
-            return [
-                'target' => $target,
-                'source_games' => $sourceGames,
-                'rows' => [],
-                'diagnostics' => $diagnostics,
-            ];
+            return $this->result($target, $sourceGames, [], $diagnostics);
         }
 
         $sourceIds = $sourceGameId > 0 ? [$sourceGameId] : array_keys($allowedSourceIds);
         $sources = $this->sourceFilesForMissingPackages($sourceIds, array_values($packageNames));
         $diagnostics['source_package_files'] = count($sources);
         if ($sources === []) {
-            return [
-                'target' => $target,
-                'source_games' => $sourceGames,
-                'rows' => [],
-                'diagnostics' => $diagnostics,
-            ];
+            return $this->result($target, $sourceGames, [], $diagnostics);
         }
 
-        $rows = [];
-        /** @var array<string,array<string,bool>|null> $exportCache */
-        $exportCache = [];
+        $sourceById = [];
         foreach ($sources as $source) {
+            $sourceById[(int)$source['id']] = $source;
+            if ((int)($source['metadata_format_version'] ?? 0) === 2) {
+                $diagnostics['format2_source_files']++;
+            }
+        }
+
+        $exactByFile = $this->exactProjectionMatches($targetGameId, array_keys($sourceById));
+        $rows = [];
+        foreach ($exactByFile as $sourceFileId => $exactEvidence) {
+            $source = $sourceById[$sourceFileId] ?? null;
+            if (!is_array($source)) {
+                continue;
+            }
             $packageKey = $this->key((string)$source['package_name']);
-            $dependencies = $dependenciesByPackage[$packageKey] ?? [];
-            if ($dependencies === []) {
+            $stats = $packageStats[$packageKey] ?? null;
+            if (!is_array($stats)) {
                 continue;
             }
-
-            // Identical bytes can already be registered in more than one sibling
-            // game. Reuse their export set, but keep each source-game row visible.
-            $identityKey = strtolower(trim((string)($source['md5'] ?? '')));
-            if ($identityKey === '') {
-                $identityKey = 'file:' . (int)$source['id'];
-            }
-            if (!array_key_exists($identityKey, $exportCache)) {
-                try {
-                    $exports = $this->metadata->exports((int)$source['id']);
-                    $paths = [];
-                    foreach ($exports as $export) {
-                        $path = trim((string)($export['full_path'] ?? ''));
-                        if ($path !== '') {
-                            $paths[$this->key($path)] = true;
-                        }
-                    }
-                    $exportCache[$identityKey] = $paths;
-                } catch (Throwable) {
-                    $exportCache[$identityKey] = null;
-                    $diagnostics['metadata_unreadable']++;
-                }
-            }
-            $exportPaths = $exportCache[$identityKey];
-            if (!is_array($exportPaths) || $exportPaths === []) {
-                continue;
-            }
-
-            $exact = 0;
-            $exactOwners = [];
-            foreach ($dependencies as $dependency) {
-                $requiredObject = trim((string)($dependency['required_object_path'] ?? ''));
-                if ($requiredObject === '') {
-                    continue;
-                }
-                if (isset($exportPaths[$this->key($requiredObject)])) {
-                    $exact++;
-                    $ownerId = (int)($dependency['owner_file_id'] ?? 0);
-                    if ($ownerId > 0) {
-                        $exactOwners[$ownerId] = true;
-                    }
-                }
-            }
+            $exact = max(0, (int)($exactEvidence['exact_object_matches'] ?? 0));
             if ($exact < 1) {
                 continue;
             }
+            $missingCount = max(1, (int)($stats['missing_count'] ?? 0));
+            $ownerCount = max(0, (int)($stats['owner_count'] ?? 0));
 
-            $stats = $packageStats[$packageKey] ?? [];
-            $missingCount = count((array)($stats['dependencies'] ?? []));
-            if ($missingCount < 1) {
-                $missingCount = count($dependencies);
-            }
-            $ownerCount = count((array)($stats['owners'] ?? []));
-            if ($ownerCount < 1) {
-                $ownerCount = count(array_unique(array_filter(array_map(
-                    static fn(array $dependency): int => (int)($dependency['owner_file_id'] ?? 0),
-                    $dependencies
-                ))));
-            }
-
-            // Do not hide an exact provider just because the same bytes are
-            // already registered in the target. Showing it diagnoses stale target
-            // dependency status; the copy action will refuse a duplicate identity.
             $targetExisting = null;
             $md5 = strtolower(trim((string)($source['md5'] ?? '')));
             if ($md5 !== '') {
@@ -242,11 +167,11 @@ final class PdoGameDependencyCrossExamineQuery
             $rows[] = $source + [
                 'target_game_id' => $targetGameId,
                 'target_game_name' => (string)$target['name'],
-                'target_missing_count' => max(1, $missingCount),
-                'target_owner_count' => max(0, $ownerCount),
+                'target_missing_count' => $missingCount,
+                'target_owner_count' => $ownerCount,
                 'exact_object_matches' => $exact,
-                'exact_owner_count' => count($exactOwners),
-                'coverage_percent' => round(($exact / max(1, $missingCount)) * 100, 1),
+                'exact_owner_count' => max(0, (int)($exactEvidence['exact_owner_count'] ?? 0)),
+                'coverage_percent' => round(($exact / $missingCount) * 100, 1),
                 'target_existing_file_id' => (int)($targetExisting['id'] ?? 0),
                 'already_in_target' => (int)($targetExisting['id'] ?? 0) > 0,
             ];
@@ -264,12 +189,7 @@ final class PdoGameDependencyCrossExamineQuery
             $rows = array_slice($rows, 0, $limit);
         }
 
-        return [
-            'target' => $target,
-            'source_games' => $sourceGames,
-            'rows' => $rows,
-            'diagnostics' => $diagnostics,
-        ];
+        return $this->result($target, $sourceGames, $rows, $diagnostics);
     }
 
     /** @return array<string,mixed>|null */
@@ -283,9 +203,10 @@ final class PdoGameDependencyCrossExamineQuery
             $this->db,
             'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.extension,f.file_size,'
             . 'f.md5,f.sha1,f.package_guid,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
-            . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine '
+            . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine,m.format_version metadata_format_version '
             . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
             . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
             . 'WHERE f.id=? AND f.scan_status="verified" LIMIT 1',
             [$sourceFileId]
         );
@@ -294,58 +215,37 @@ final class PdoGameDependencyCrossExamineQuery
         }
 
         $target = $this->targetGame($targetGameId);
-        // Same configured engine family is the only compatibility gate here.
         if (strcasecmp((string)$source['source_engine'], (string)$target['engine_key']) !== 0) {
             return null;
         }
+        if ((int)($source['metadata_format_version'] ?? 0) !== 2) {
+            return null;
+        }
 
-        $dependencySource = PdoDependencyReadSource::sql($this->db);
-        $dependencies = \catalog_all(
+        $package = trim((string)$source['package_name']);
+        if ($package === '') {
+            return null;
+        }
+
+        PdoDependencyReadSource::sql($this->db);
+        $stats = \catalog_one(
             $this->db,
-            'SELECT d.id,d.file_id owner_file_id,d.required_object_path '
-            . 'FROM ' . $dependencySource . ' d '
-            . 'JOIN ue_files owner ON owner.id=d.file_id AND owner.scan_status="verified" '
-            . 'WHERE owner.game_id=? AND d.status="missing" AND d.required_package=? '
-            . 'AND d.required_object_path IS NOT NULL AND d.required_object_path<>""',
-            [$targetGameId, (string)$source['package_name']]
-        );
-        if ($dependencies === []) {
+            'SELECT COUNT(*) missing_count,COUNT(DISTINCT l.file_id) owner_count '
+            . 'FROM ue_dependency_links l '
+            . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+            . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
+            . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
+            . 'WHERE owner.game_id=? AND l.status=0 '
+            . 'AND CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci=?',
+            [$targetGameId, $package]
+        ) ?: [];
+        $missingCount = max(0, (int)($stats['missing_count'] ?? 0));
+        if ($missingCount < 1) {
             return null;
         }
 
-        try {
-            $exports = $this->metadata->exports($sourceFileId);
-        } catch (Throwable) {
-            return null;
-        }
-        $exportPaths = [];
-        foreach ($exports as $export) {
-            $path = trim((string)($export['full_path'] ?? ''));
-            if ($path !== '') {
-                $exportPaths[$this->key($path)] = true;
-            }
-        }
-        if ($exportPaths === []) {
-            return null;
-        }
-
-        $exact = 0;
-        $owners = [];
-        $allOwners = [];
-        foreach ($dependencies as $dependency) {
-            $ownerId = (int)($dependency['owner_file_id'] ?? 0);
-            if ($ownerId > 0) {
-                $allOwners[$ownerId] = true;
-            }
-            $requiredObject = trim((string)($dependency['required_object_path'] ?? ''));
-            if ($requiredObject !== '' && isset($exportPaths[$this->key($requiredObject)])) {
-                $exact++;
-                if ($ownerId > 0) {
-                    $owners[$ownerId] = true;
-                }
-            }
-        }
-        if ($exact < 1) {
+        $exact = $this->exactProjectionMatches($targetGameId, [$sourceFileId])[$sourceFileId] ?? null;
+        if (!is_array($exact) || (int)($exact['exact_object_matches'] ?? 0) < 1) {
             return null;
         }
 
@@ -362,14 +262,67 @@ final class PdoGameDependencyCrossExamineQuery
         return $source + [
             'target_game_id' => $targetGameId,
             'target_game_name' => (string)$target['name'],
-            'target_missing_count' => count($dependencies),
-            'target_owner_count' => count($allOwners),
-            'exact_object_matches' => $exact,
-            'exact_owner_count' => count($owners),
-            'coverage_percent' => round(($exact / max(1, count($dependencies))) * 100, 1),
+            'target_missing_count' => $missingCount,
+            'target_owner_count' => max(0, (int)($stats['owner_count'] ?? 0)),
+            'exact_object_matches' => (int)$exact['exact_object_matches'],
+            'exact_owner_count' => max(0, (int)($exact['exact_owner_count'] ?? 0)),
+            'coverage_percent' => round(((int)$exact['exact_object_matches'] / $missingCount) * 100, 1),
             'target_existing_file_id' => (int)($targetExisting['id'] ?? 0),
             'already_in_target' => (int)($targetExisting['id'] ?? 0) > 0,
         ];
+    }
+
+    /**
+     * Match the target's current missing dependency path hashes against the same
+     * ue_export_lookup.path_hash projection used by normal dependency resolution.
+     * Package identity is compared separately so an export from an unrelated
+     * package cannot satisfy a same-path dependency.
+     *
+     * @param list<int> $sourceFileIds
+     * @return array<int,array{exact_object_matches:int,exact_owner_count:int}>
+     */
+    private function exactProjectionMatches(int $targetGameId, array $sourceFileIds): array
+    {
+        $sourceFileIds = array_values(array_unique(array_filter(
+            array_map('intval', $sourceFileIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        if ($sourceFileIds === []) {
+            return [];
+        }
+
+        $matches = [];
+        foreach (array_chunk($sourceFileIds, self::SOURCE_ID_CHUNK) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $rows = \catalog_all(
+                $this->db,
+                'SELECT source.id source_file_id,COUNT(*) exact_object_matches,'
+                . 'COUNT(DISTINCT l.file_id) exact_owner_count '
+                . 'FROM ue_dependency_links l '
+                . 'JOIN ue_file_metadata owner_meta ON owner_meta.file_id=l.file_id AND owner_meta.format_version=2 '
+                . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
+                . 'JOIN ue_terms pkg ON pkg.id=l.required_package_term_id '
+                . 'JOIN ue_files source ON source.id IN (' . $placeholders . ') '
+                . 'AND source.scan_status="verified" '
+                . 'AND source.package_name=CONVERT(pkg.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci '
+                . 'JOIN ue_file_metadata source_meta ON source_meta.file_id=source.id AND source_meta.format_version=2 '
+                . 'JOIN ue_export_lookup exports ON exports.file_id=source.id AND exports.path_hash=l.required_path_hash '
+                . 'WHERE owner.game_id=? AND l.status=0 '
+                . 'GROUP BY source.id',
+                array_merge($chunk, [$targetGameId])
+            );
+            foreach ($rows as $row) {
+                $fileId = (int)($row['source_file_id'] ?? 0);
+                if ($fileId < 1) {
+                    continue;
+                }
+                $matches[$fileId] = [
+                    'exact_object_matches' => max(0, (int)($row['exact_object_matches'] ?? 0)),
+                    'exact_owner_count' => max(0, (int)($row['exact_owner_count'] ?? 0)),
+                ];
+            }
+        }
+        return $matches;
     }
 
     /**
@@ -400,9 +353,10 @@ final class PdoGameDependencyCrossExamineQuery
                 $this->db,
                 'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.extension,f.file_size,'
                 . 'f.md5,f.sha1,f.package_guid,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
-                . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine '
+                . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine,m.format_version metadata_format_version '
                 . 'FROM ue_files f JOIN ue_games g ON g.id=f.game_id '
                 . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+                . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
                 . 'WHERE f.scan_status="verified" AND f.game_id IN (' . $gamePlaceholders . ') '
                 . 'AND f.package_name IN (' . $packagePlaceholders . ') '
                 . 'ORDER BY f.package_name,g.name,f.id',
@@ -436,6 +390,23 @@ final class PdoGameDependencyCrossExamineQuery
             throw new \RuntimeException('Target game or active profile was not found.');
         }
         return $row;
+    }
+
+    /**
+     * @param array<string,mixed> $target
+     * @param list<array<string,mixed>> $sourceGames
+     * @param list<array<string,mixed>> $rows
+     * @param array<string,int> $diagnostics
+     * @return array<string,mixed>
+     */
+    private function result(array $target, array $sourceGames, array $rows, array $diagnostics): array
+    {
+        return [
+            'target' => $target,
+            'source_games' => $sourceGames,
+            'rows' => $rows,
+            'diagnostics' => $diagnostics,
+        ];
     }
 
     private function key(string $value): string
