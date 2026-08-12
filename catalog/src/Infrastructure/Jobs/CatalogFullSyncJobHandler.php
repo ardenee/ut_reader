@@ -1,9 +1,11 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Runs a complete game Full Sync as one durable background job.
- * Why: Game-wide rescans can take many hours and must not depend on a browser tab remaining open.
- * Role: Durable Full Sync coordinator; identity writes remain short/per-file while dependency work uses bounded batches.
+ * Durable Full Sync coordinator.
+ *
+ * The coordinator never loops over package parsing/dependency work itself. It
+ * plans idempotent child units, releases its worker while those units run, and
+ * resumes at the next phase from persisted progress. Successful units are never
+ * replayed after a worker crash or manual Restart.
  */
 declare(strict_types=1);
 
@@ -17,23 +19,19 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogInvalidPackageException;
-use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
-use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceRemovalService;
-use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncDependencyBatchService;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncProjectionService;
-use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogFullSyncJobHandler implements JobHandler
 {
-    private const FAILURE_SAMPLE_LIMIT = 200;
+    private const WORKFLOW_VERSION = 2;
+    private const PLAN_BATCH_SIZE = 500;
 
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
     ) {
-        require_once dirname(__DIR__, 3) . '/lib/AppLog.php';
     }
 
     public function supports(string $jobType): bool
@@ -43,402 +41,328 @@ final class CatalogFullSyncJobHandler implements JobHandler
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
-        if ($job->type !== JobType::FULL_SYNC_GAME) {
-            throw new RuntimeException('Unsupported Full Sync job type: ' . $job->type);
-        }
-
         $gameId = (int)($job->payload['game_id'] ?? 0);
         if ($gameId < 1) {
             throw new RuntimeException('Full Sync job requires a positive game_id.');
         }
         $requestedBy = (int)($job->payload['requested_by'] ?? 0);
-        $userId = $requestedBy > 0 ? $requestedBy : null;
-
+        $requestedBy = $requestedBy > 0 ? $requestedBy : null;
         $game = $this->one('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
         if ($game === null) {
             throw new RuntimeException('Full Sync game no longer exists: ' . $gameId);
         }
 
-        $files = $this->verifiedFiles($gameId);
-        $total = count($files);
-        $reimported = 0;
-        $removed = 0;
-        $removedInvalid = 0;
-        $reimportFailures = 0;
-        $dependencyFailures = 0;
-        $providerPreparationFailed = false;
-        $failureSample = [];
+        $resume = $context->resumeProgress();
+        $stage = $this->resumeStage($resume);
 
-        $context->checkpoint($this->progress(
-            'full_sync_reimport',
-            0,
-            max(1, $total),
-            0,
-            'Full Sync queued for ' . (string)$game['name'] . ': ' . $total . ' verified package(s).',
-            $reimported,
-            $removed,
-            $reimportFailures,
-            $dependencyFailures,
-            ['removed_invalid' => $removedInvalid]
-        ));
-
-        $currentIndex = 0;
-        $currentName = '';
-        $maintenance = new CatalogFileMaintenanceActionService(
-            $this->db,
-            $this->config,
-            $userId,
-            function (array $inner) use (
-                $context,
-                &$currentIndex,
-                &$currentName,
-                $total,
-                &$reimported,
-                &$removed,
-                &$removedInvalid,
-                &$reimportFailures,
-                &$dependencyFailures
-            ): void {
-                $innerPercent = max(0, min(100, (int)($inner['percent'] ?? 0)));
-                $innerMessage = trim((string)($inner['message'] ?? ''));
-                $overall = $this->phasePercent(0, 70, $currentIndex, max(1, $total), $innerPercent);
-                $context->heartbeatIfDue($this->progress(
-                    'full_sync_reimport',
-                    $currentIndex,
-                    max(1, $total),
-                    $overall,
-                    'Reimporting ' . ($currentIndex + 1) . '/' . max(1, $total) . ': ' . $currentName
-                        . ($innerMessage !== '' ? ' — ' . $innerMessage : ''),
-                    $reimported,
-                    $removed,
-                    $reimportFailures,
-                    $dependencyFailures,
-                    ['file_name' => $currentName, 'removed_invalid' => $removedInvalid]
-                ));
+        // Compatibility for a Full Sync created by the old monolithic handler.
+        // In particular, a job that died at 97% finalization now retries only
+        // finalization instead of replaying the package/dependency phases.
+        if ((int)($resume['workflow_version'] ?? 0) < self::WORKFLOW_VERSION) {
+            $legacyStage = (string)($resume['stage'] ?? '');
+            if ($legacyStage === 'full_sync_finalize') {
+                $stage = 'full_sync_finalize';
+            } elseif (in_array($legacyStage, ['full_sync_dependencies', 'full_sync_providers'], true)) {
+                $stage = 'full_sync_plan_dependencies';
+                $resume = [];
+            } else {
+                $stage = 'full_sync_plan_reimport';
+                $resume = [];
             }
-        );
-
-        foreach ($files as $index => $file) {
-            $currentIndex = $index;
-            $currentName = (string)$file['original_name'];
-            try {
-                $result = $maintenance->execute('sync_reimport', [
-                    'file_id' => (int)$file['id'],
-                    'game_id' => $gameId,
-                    'package_name' => (string)$file['package_name'],
-                    'md5' => (string)$file['md5'],
-                    'package_guid' => (string)($file['package_guid'] ?? ''),
-                ]);
-                if ((string)($result['status'] ?? '') === 'removed_missing') {
-                    $removed++;
-                } else {
-                    $reimported++;
-                }
-            } catch (JobCancellationRequested $error) {
-                throw $error;
-            } catch (CatalogInvalidPackageException $error) {
-                try {
-                    $removedResult = (new CatalogFileMaintenanceRemovalService(
-                        $this->db,
-                        $this->config
-                    ))->remove((int)$file['id'], null, true);
-                    $removedInvalid++;
-                    $this->recordInvalidRemoval(
-                        $gameId,
-                        (int)$file['id'],
-                        $currentName,
-                        $error,
-                        trim((string)($removedResult['warning'] ?? ''))
-                    );
-                } catch (Throwable $removeError) {
-                    $reimportFailures++;
-                    $this->appendFailure(
-                        $failureSample,
-                        'Invalid package cleanup failed — ' . $currentName
-                            . ': validation=' . $error->getMessage()
-                            . '; cleanup=' . $removeError->getMessage()
-                    );
-                    $this->recordFailure(
-                        $gameId,
-                        (int)$file['id'],
-                        $currentName,
-                        'sync_remove_invalid',
-                        $removeError
-                    );
-                }
-            } catch (Throwable $error) {
-                $reimportFailures++;
-                $this->appendFailure(
-                    $failureSample,
-                    'Re-import failed — ' . $currentName . ': ' . $error->getMessage()
-                );
-                $this->recordFailure(
-                    $gameId,
-                    (int)$file['id'],
-                    $currentName,
-                    'sync_reimport',
-                    $error
-                );
-            }
-
-            $done = $index + 1;
-            $context->heartbeatIfDue($this->progress(
-                'full_sync_reimport',
-                $done,
-                max(1, $total),
-                $total > 0 ? (int)floor(($done * 70) / $total) : 70,
-                'Full Sync package phase ' . $done . '/' . max(1, $total) . ': ' . $currentName,
-                $reimported,
-                $removed,
-                $reimportFailures,
-                $dependencyFailures,
-                [
-                    'file_id' => (int)$file['id'],
-                    'file_name' => $currentName,
-                    'removed_invalid' => $removedInvalid,
-                ]
-            ));
         }
 
-        $context->checkpoint($this->progress(
-            'full_sync_providers',
-            0,
-            100,
-            70,
-            'Rebuilding package providers before dependency resolution.',
-            $reimported,
-            $removed,
-            $reimportFailures,
-            $dependencyFailures,
-            ['removed_invalid' => $removedInvalid]
-        ));
-
-        $projectionProgress = function (array $inner) use (
-            $context,
-            &$reimported,
-            &$removed,
-            &$removedInvalid,
-            &$reimportFailures,
-            &$dependencyFailures
-        ): void {
-            $innerPercent = max(0, min(100, (int)($inner['percent'] ?? 0)));
-            $context->heartbeatIfDue($this->progress(
-                'full_sync_providers',
-                $innerPercent,
-                100,
-                70 + (int)floor(($innerPercent * 4) / 100),
-                (string)($inner['message'] ?? 'Preparing package providers.'),
-                $reimported,
-                $removed,
-                $reimportFailures,
-                $dependencyFailures,
-                ['removed_invalid' => $removedInvalid]
-            ));
-        };
-
-        try {
-            (new CatalogFullSyncProjectionService($this->db, $projectionProgress))->prepareDependencies($gameId);
-        } catch (JobCancellationRequested $error) {
-            throw $error;
-        } catch (Throwable $error) {
-            $providerPreparationFailed = true;
-            $this->appendFailure(
-                $failureSample,
-                'Provider projection preparation failed: ' . $error->getMessage()
+        if ($stage === 'full_sync_plan_reimport') {
+            $this->planUnits(
+                $job,
+                $context,
+                $gameId,
+                $requestedBy,
+                JobType::FULL_SYNC_FILE,
+                'reimport',
+                0,
+                5,
+                $resume
             );
-            $this->recordFailure($gameId, 0, (string)$game['name'], 'sync_prepare_dependencies', $error);
+            $resume = $context->resumeProgress();
+            $stage = 'full_sync_wait_reimport';
         }
 
-        $dependencyFiles = $this->verifiedFiles($gameId);
-        $dependencyTotal = count($dependencyFiles);
-        $dependencyDone = 0;
-
-        $context->checkpoint($this->progress(
-            'full_sync_dependencies',
-            0,
-            max(1, $dependencyTotal),
-            74,
-            'Refreshing dependencies for ' . $dependencyTotal . ' verified package(s).',
-            $reimported,
-            $removed,
-            $reimportFailures,
-            $dependencyFailures,
-            ['removed_invalid' => $removedInvalid]
-        ));
-
-        foreach (array_chunk($dependencyFiles, CatalogFullSyncDependencyBatchService::MAX_BATCH_SIZE) as $batch) {
-            $batchIds = array_map(static fn(array $row): int => (int)$row['id'], $batch);
-            $batchSize = count($batchIds);
-            $completedBefore = $dependencyDone;
-            $batchProgress = function (array $inner) use (
-                $context,
-                $dependencyTotal,
-                $completedBefore,
-                $batchSize,
-                &$reimported,
-                &$removed,
-                &$removedInvalid,
-                &$reimportFailures,
-                &$dependencyFailures
-            ): void {
-                $localDone = max(0, min($batchSize, (int)($inner['done'] ?? 0)));
-                $done = min($dependencyTotal, $completedBefore + $localDone);
-                $overall = $dependencyTotal > 0
-                    ? 74 + (int)floor(($done * 23) / $dependencyTotal)
-                    : 97;
-                $context->heartbeatIfDue($this->progress(
-                    'full_sync_dependencies',
-                    $done,
-                    max(1, $dependencyTotal),
-                    $overall,
-                    (string)($inner['message'] ?? 'Refreshing dependency batch.'),
-                    $reimported,
-                    $removed,
-                    $reimportFailures,
-                    $dependencyFailures,
-                    ['removed_invalid' => $removedInvalid]
-                ));
-            };
-
-            $context->checkpoint($this->progress(
-                'full_sync_dependencies',
-                $dependencyDone,
-                max(1, $dependencyTotal),
-                $dependencyTotal > 0
-                    ? 74 + (int)floor(($dependencyDone * 23) / $dependencyTotal)
-                    : 97,
-                'Starting dependency batch at package ' . ($dependencyDone + 1) . '.',
-                $reimported,
-                $removed,
-                $reimportFailures,
-                $dependencyFailures,
-                ['removed_invalid' => $removedInvalid]
-            ));
-
-            $result = (new CatalogFullSyncDependencyBatchService(
-                $this->db,
-                $this->config,
-                $batchProgress
-            ))->refresh($gameId, $batchIds);
-
-            $dependencyFailures += (int)($result['failed'] ?? 0);
-            foreach ((array)($result['failures'] ?? []) as $failure) {
-                if (!is_array($failure)) {
-                    continue;
-                }
-                $this->appendFailure(
-                    $failureSample,
-                    'Dependency refresh failed — '
-                        . (string)($failure['original_name'] ?? ('file #' . (int)($failure['file_id'] ?? 0)))
-                        . ': ' . (string)($failure['error'] ?? 'Unknown error')
-                );
+        if ($stage === 'full_sync_wait_reimport') {
+            $state = $this->childState($job->id, 'reimport:');
+            if (!$this->childrenReady($context, $state, 'full_sync_wait_reimport', 5, 65, 'package reimport')) {
+                throw new \LogicException('Unreachable after Full Sync reimport defer.');
             }
-            $dependencyDone += $batchSize;
+            $context->checkpoint($this->progress(
+                'full_sync_prepare_providers',
+                70,
+                'All ' . $state['completed'] . ' package units completed; rebuilding package providers.',
+                ['reimport_children' => $state]
+            ));
+            $stage = 'full_sync_prepare_providers';
         }
 
-        $context->checkpoint($this->progress(
-            'full_sync_finalize',
-            0,
-            100,
-            97,
-            'Finalizing dependency summaries and cached game statistics.',
-            $reimported,
-            $removed,
-            $reimportFailures,
-            $dependencyFailures,
-            ['removed_invalid' => $removedInvalid]
-        ));
-
-        $finalProgress = function (array $inner) use (
-            $context,
-            &$reimported,
-            &$removed,
-            &$removedInvalid,
-            &$reimportFailures,
-            &$dependencyFailures
-        ): void {
-            $innerPercent = max(0, min(100, (int)($inner['percent'] ?? 0)));
-            $context->heartbeatIfDue($this->progress(
-                'full_sync_finalize',
-                $innerPercent,
-                100,
-                97 + (int)floor(($innerPercent * 3) / 100),
-                (string)($inner['message'] ?? 'Finalizing Full Sync projections.'),
-                $reimported,
-                $removed,
-                $reimportFailures,
-                $dependencyFailures,
-                ['removed_invalid' => $removedInvalid]
+        if ($stage === 'full_sync_prepare_providers') {
+            $projectionProgress = static function (array $inner) use ($context): void {
+                $innerPercent = max(0, min(100, (int)($inner['percent'] ?? 0)));
+                $context->heartbeatIfDue([
+                    'workflow_version' => self::WORKFLOW_VERSION,
+                    'stage' => 'full_sync_prepare_providers',
+                    'done' => $innerPercent,
+                    'total' => 100,
+                    'percent' => 70 + (int)floor(($innerPercent * 4) / 100),
+                    'message' => (string)($inner['message'] ?? 'Preparing package providers.'),
+                ]);
+            };
+            (new CatalogFullSyncProjectionService($this->db, $projectionProgress))->prepareDependencies($gameId);
+            $context->checkpoint($this->progress(
+                'full_sync_plan_dependencies',
+                74,
+                'Package providers are ready; planning dependency units.'
             ));
-        };
+            $resume = [];
+            $stage = 'full_sync_plan_dependencies';
+        }
 
+        if ($stage === 'full_sync_plan_dependencies') {
+            $this->planUnits(
+                $job,
+                $context,
+                $gameId,
+                $requestedBy,
+                JobType::FULL_SYNC_DEPENDENCY_FILE,
+                'dependency',
+                74,
+                76,
+                $resume
+            );
+            $stage = 'full_sync_wait_dependencies';
+        }
+
+        if ($stage === 'full_sync_wait_dependencies') {
+            $state = $this->childState($job->id, 'dependency:');
+            if (!$this->childrenReady($context, $state, 'full_sync_wait_dependencies', 76, 97, 'dependency')) {
+                throw new \LogicException('Unreachable after Full Sync dependency defer.');
+            }
+            $context->checkpoint($this->progress(
+                'full_sync_finalize',
+                97,
+                'All ' . $state['completed'] . ' dependency units completed; finalizing summaries and game statistics.',
+                ['dependency_children' => $state]
+            ));
+            $stage = 'full_sync_finalize';
+        }
+
+        if ($stage !== 'full_sync_finalize') {
+            throw new RuntimeException('Unknown Full Sync workflow stage: ' . $stage);
+        }
+
+        $finalProgress = static function (array $inner) use ($context): void {
+            $innerPercent = max(0, min(100, (int)($inner['percent'] ?? 0)));
+            $context->heartbeatIfDue([
+                'workflow_version' => self::WORKFLOW_VERSION,
+                'stage' => 'full_sync_finalize',
+                'done' => $innerPercent,
+                'total' => 100,
+                'percent' => 97 + (int)floor(($innerPercent * 3) / 100),
+                'message' => (string)($inner['message'] ?? 'Finalizing Full Sync projections.'),
+            ]);
+        };
         try {
             $final = (new CatalogFullSyncProjectionService($this->db, $finalProgress))->finalize($gameId);
         } catch (JobCancellationRequested $error) {
             throw $error;
         } catch (Throwable $error) {
-            $this->recordFailure($gameId, 0, (string)$game['name'], 'sync_finalize_game', $error);
+            // The checkpoint remains full_sync_finalize, so automatic retry or
+            // manual Restart executes only this finalization block.
             throw new RuntimeException('Full Sync finalization failed: ' . $error->getMessage(), 0, $error);
         }
 
         $stats = is_array($final['stats'] ?? null) ? $final['stats'] : [];
-        $failureCount = $reimportFailures + $dependencyFailures + ($providerPreparationFailed ? 1 : 0);
+        $reimportState = $this->childState($job->id, 'reimport:');
+        $dependencyState = $this->childState($job->id, 'dependency:');
         $message = 'Full Sync complete for ' . (string)$game['name']
-            . ': reimported=' . $reimported
-            . ', removed missing=' . $removed
-            . ', removed invalid=' . $removedInvalid
-            . ', reimport failures=' . $reimportFailures
-            . ', dependency failures=' . $dependencyFailures
+            . ': package units=' . $reimportState['completed']
+            . ', dependency units=' . $dependencyState['completed']
             . ', missing dependencies=' . (int)($stats['missing_dependency_count'] ?? 0)
             . ', missing packages=' . (int)($stats['missing_package_count'] ?? 0) . '.';
 
-        $context->checkpoint($this->progress(
-            'complete',
-            100,
-            100,
-            100,
-            $message,
-            $reimported,
-            $removed,
-            $reimportFailures,
-            $dependencyFailures,
-            [
-                'removed_invalid' => $removedInvalid,
-                'missing_dependency_count' => (int)($stats['missing_dependency_count'] ?? 0),
-                'missing_package_count' => (int)($stats['missing_package_count'] ?? 0),
-                'failure_count' => $failureCount,
-            ]
-        ));
+        $context->checkpoint($this->progress('complete', 100, $message, [
+            'reimport_children' => $reimportState,
+            'dependency_children' => $dependencyState,
+            'missing_dependency_count' => (int)($stats['missing_dependency_count'] ?? 0),
+            'missing_package_count' => (int)($stats['missing_package_count'] ?? 0),
+        ]));
 
         return [
             'operation' => 'full_sync_game',
+            'workflow_version' => self::WORKFLOW_VERSION,
             'game_id' => $gameId,
             'game_name' => (string)$game['name'],
-            'initial_verified_files' => $total,
-            'final_verified_files' => $dependencyTotal,
-            'reimported' => $reimported,
-            'removed_missing' => $removed,
-            'removed_invalid' => $removedInvalid,
-            'reimport_failure_count' => $reimportFailures,
-            'dependency_failure_count' => $dependencyFailures,
-            'provider_preparation_failed' => $providerPreparationFailed,
-            'failure_count' => $failureCount,
-            'failure_sample' => $failureSample,
-            'failure_sample_truncated' => $failureCount > count($failureSample),
+            'reimport_children' => $reimportState,
+            'dependency_children' => $dependencyState,
             'stats' => $stats,
             'message' => $message,
         ];
     }
 
-    /** @return list<array<string,mixed>> */
-    private function verifiedFiles(int $gameId): array
-    {
+    /**
+     * Plan at most one bounded page of child rows per coordinator claim. The
+     * parent/unit unique key makes replay idempotent if the coordinator dies
+     * between the insert and checkpoint.
+     *
+     * @param array<string,mixed> $resume
+     */
+    private function planUnits(
+        ClaimedJob $job,
+        JobExecutionContext $context,
+        int $gameId,
+        ?int $requestedBy,
+        string $childType,
+        string $prefix,
+        int $percentStart,
+        int $percentEnd,
+        array $resume
+    ): void {
+        $expectedStage = $prefix === 'reimport' ? 'full_sync_plan_reimport' : 'full_sync_plan_dependencies';
+        $snapshotMaxId = (int)($resume['snapshot_max_file_id'] ?? 0);
+        $lastId = (int)($resume['plan_last_file_id'] ?? 0);
+        $planned = (int)($resume['planned_units'] ?? 0);
+
+        if ((string)($resume['stage'] ?? '') !== $expectedStage || $snapshotMaxId < 1) {
+            $snapshot = $this->one(
+                'SELECT COUNT(*) c,COALESCE(MAX(id),0) max_id FROM ue_files WHERE game_id=? AND scan_status="verified"',
+                [$gameId]
+            ) ?? [];
+            $snapshotMaxId = (int)($snapshot['max_id'] ?? 0);
+            $lastId = 0;
+            $planned = 0;
+        }
+
+        if ($snapshotMaxId < 1) {
+            $context->checkpoint($this->progress(
+                $prefix === 'reimport' ? 'full_sync_wait_reimport' : 'full_sync_wait_dependencies',
+                $percentEnd,
+                'No verified package units require ' . $prefix . ' work.'
+            ));
+            return;
+        }
+
         $statement = $this->db->prepare(
-            'SELECT id,original_name,package_name,md5,package_guid FROM ue_files '
-            . 'WHERE game_id=? AND scan_status="verified" ORDER BY package_name,original_name,id'
+            'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND id>? AND id<=? '
+            . 'ORDER BY id LIMIT ' . self::PLAN_BATCH_SIZE
         );
-        $statement->execute([$gameId]);
-        return $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $statement->execute([$gameId, $lastId, $snapshotMaxId]);
+        $ids = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
+
+        $queue = new PdoJobQueue($this->db);
+        foreach ($ids as $fileId) {
+            $queue->enqueue(
+                $job->queue,
+                $childType,
+                [
+                    'game_id' => $gameId,
+                    'file_id' => $fileId,
+                    'requested_by' => $requestedBy,
+                    'workflow_parent_job_id' => $job->id,
+                ],
+                90,
+                null,
+                null,
+                $requestedBy,
+                3,
+                $job->id,
+                $prefix . ':' . $fileId
+            );
+            $lastId = $fileId;
+            $planned++;
+        }
+
+        $hasMore = $lastId < $snapshotMaxId && $ids !== [];
+        $approxPercent = $snapshotMaxId > 0
+            ? $percentStart + (int)floor(($percentEnd - $percentStart) * ($lastId / $snapshotMaxId))
+            : $percentEnd;
+        $progress = $this->progress($expectedStage, min($percentEnd, $approxPercent),
+            'Planned ' . $planned . ' durable ' . $prefix . ' unit(s).', [
+                'snapshot_max_file_id' => $snapshotMaxId,
+                'plan_last_file_id' => $lastId,
+                'planned_units' => $planned,
+            ]);
+
+        if ($hasMore) {
+            $context->defer(1, $progress);
+        }
+
+        $context->checkpoint($this->progress(
+            $prefix === 'reimport' ? 'full_sync_wait_reimport' : 'full_sync_wait_dependencies',
+            $percentEnd,
+            'Planned ' . $planned . ' durable ' . $prefix . ' unit(s); waiting for workers.',
+            ['planned_units' => $planned]
+        ));
+    }
+
+    /** @param array<string,int> $state */
+    private function childrenReady(
+        JobExecutionContext $context,
+        array $state,
+        string $stage,
+        int $startPercent,
+        int $endPercent,
+        string $label
+    ): bool {
+        $total = max(1, $state['total']);
+        $percent = $startPercent + (int)floor((($endPercent - $startPercent) * $state['completed']) / $total);
+        if ($state['dead_letter'] > 0 || $state['failed'] > 0 || $state['cancelled'] > 0) {
+            $context->defer(30, $this->progress($stage, $percent,
+                ucfirst($label) . ' workflow is waiting on '
+                . ($state['dead_letter'] + $state['failed'] + $state['cancelled'])
+                . ' error/cancelled unit(s). Restart only those failed child jobs; '
+                . $state['completed'] . ' successful unit(s) are retained.',
+                [$label . '_children' => $state]
+            ));
+        }
+        if (($state['queued'] + $state['running']) > 0) {
+            $context->defer(2, $this->progress($stage, $percent,
+                ucfirst($label) . ' units: ' . $state['completed'] . '/' . $state['total']
+                . ' completed, ' . $state['running'] . ' running, ' . $state['queued'] . ' queued.',
+                [$label . '_children' => $state]
+            ));
+        }
+        return $state['total'] === 0 || $state['completed'] === $state['total'];
+    }
+
+    /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
+    private function childState(int $parentJobId, string $prefix): array
+    {
+        $state = [
+            'total' => 0,
+            'queued' => 0,
+            'running' => 0,
+            'completed' => 0,
+            'failed' => 0,
+            'dead_letter' => 0,
+            'cancelled' => 0,
+        ];
+        $statement = $this->db->prepare(
+            'SELECT status,COUNT(*) c FROM ue_background_jobs '
+            . 'WHERE parent_job_id=? AND workflow_unit_key LIKE ? GROUP BY status'
+        );
+        $statement->execute([$parentJobId, $prefix . '%']);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $status = (string)$row['status'];
+            $count = (int)$row['c'];
+            $state['total'] += $count;
+            if (array_key_exists($status, $state)) {
+                $state[$status] += $count;
+            }
+        }
+        return $state;
+    }
+
+    /** @param array<string,mixed> $resume */
+    private function resumeStage(array $resume): string
+    {
+        $stage = trim((string)($resume['stage'] ?? ''));
+        return $stage !== '' && $stage !== 'worker_start' ? $stage : 'full_sync_plan_reimport';
     }
 
     /** @param list<mixed> $arguments @return array<string,mixed>|null */
@@ -450,89 +374,16 @@ final class CatalogFullSyncJobHandler implements JobHandler
         return is_array($row) ? $row : null;
     }
 
-    /** @param list<string> $failures */
-    private function appendFailure(array &$failures, string $message): void
-    {
-        if (count($failures) < self::FAILURE_SAMPLE_LIMIT) {
-            $failures[] = $message;
-        }
-    }
-
-    private function recordInvalidRemoval(
-        int $gameId,
-        int $fileId,
-        string $name,
-        CatalogInvalidPackageException $error,
-        string $cleanupWarning
-    ): void {
-        $message = 'Removed invalid verified package ' . $name . ': ' . $error->getMessage();
-        if ($cleanupWarning !== '') {
-            $message .= ' Cleanup warning: ' . $cleanupWarning;
-        }
-        \app_log($this->db, 'WARN', 'FULL_SYNC_INVALID_PACKAGE_REMOVED', $message, [
-            'operation' => 'sync_reimport',
-            'game_id' => $gameId,
-            'file_id' => $fileId,
-            'original_name' => $name,
-            'validation_reason' => $error->getMessage(),
-            'cleanup_warning' => $cleanupWarning,
-        ]);
-    }
-
-    private function recordFailure(
-        int $gameId,
-        int $fileId,
-        string $name,
-        string $operation,
-        Throwable $error
-    ): void {
-        CatalogSystemErrorRecorder::record([
-            'source_kind' => 'full-sync-job',
-            'severity' => 'error',
-            'error_type' => get_class($error),
-            'message' => $operation . ' failed for ' . $name . ': ' . $error->getMessage(),
-            'source_file' => $error->getFile(),
-            'source_line' => $error->getLine(),
-            'trace_text' => $error->getTraceAsString(),
-            'context' => [
-                'operation' => $operation,
-                'game_id' => $gameId,
-                'file_id' => $fileId,
-                'original_name' => $name,
-            ],
-        ]);
-    }
-
     /** @param array<string,mixed> $extra @return array<string,mixed> */
-    private function progress(
-        string $stage,
-        int $done,
-        int $total,
-        int $percent,
-        string $message,
-        int $reimported,
-        int $removed,
-        int $reimportFailures,
-        int $dependencyFailures,
-        array $extra = []
-    ): array {
+    private function progress(string $stage, int $percent, string $message, array $extra = []): array
+    {
         return [
+            'workflow_version' => self::WORKFLOW_VERSION,
             'stage' => $stage,
-            'done' => $done,
-            'total' => $total,
+            'done' => max(0, min(100, $percent)),
+            'total' => 100,
             'percent' => max(0, min(100, $percent)),
             'message' => $message,
-            'reimported' => $reimported,
-            'removed_missing' => $removed,
-            'reimport_failures' => $reimportFailures,
-            'dependency_failures' => $dependencyFailures,
         ] + $extra;
-    }
-
-    private function phasePercent(int $start, int $end, int $index, int $total, int $innerPercent): int
-    {
-        $total = max(1, $total);
-        $position = max(0, min($total, $index + ($innerPercent / 100)));
-        return $start + (int)floor((($end - $start) * $position) / $total);
     }
 }
