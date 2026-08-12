@@ -22,6 +22,7 @@ final class JobResourcePolicy
     public const ARCHIVE_IMPORT_HEAVY = 'archive-import-heavy';
     public const BUCKET_PROCESSING = 'bucket-processing';
     public const UNVERIFIED_MATCHES = 'unverified-matches';
+    public const UNVERIFIED_FILE_MAINTENANCE = 'unverified-file-maintenance';
     public const STORAGE_HEAVY = 'storage-heavy';
     public const PACKAGE_HEAVY = 'package-heavy';
     public const HOUSEKEEPING = 'housekeeping';
@@ -51,9 +52,9 @@ final class JobResourcePolicy
                 'description' => 'Independent per-file Full Sync reimport and dependency units. Completed units remain durable and are never replayed after a workflow restart.',
             ],
             self::AFFECTED_DEPENDENCY_BATCH => [
-                'label' => 'Affected dependency batches',
+                'label' => 'Affected dependency file units',
                 'default' => 2,
-                'description' => 'Targeted dependency refresh and projection-reconciliation file units. Independent files may run concurrently; per-file locks and compact publication retries protect overlap.',
+                'description' => 'Targeted dependency refresh and projection-reconciliation file units. A failed file is restarted independently; per-file locks and compact publication retries protect overlap.',
             ],
             self::SEARCH_HEAVY => [
                 'label' => 'Search-index rebuilds',
@@ -80,10 +81,15 @@ final class JobResourcePolicy
                 'default' => 2,
                 'description' => 'Builds cached exact object-path/game compatibility evidence for Upload Bucket files. Database and metadata read intensive.',
             ],
+            self::UNVERIFIED_FILE_MAINTENANCE => [
+                'label' => 'Unverified file maintenance',
+                'default' => 2,
+                'description' => 'Independent unverified duplicate hash/delete and storage-reconciliation file units. Errors are isolated to one physical queue file.',
+            ],
             self::STORAGE_HEAVY => [
                 'label' => 'Storage and backup maintenance',
                 'default' => 1,
-                'description' => 'Backup export, duplicate cleanup and storage reconciliation.',
+                'description' => 'Backup export and storage-maintenance coordinators. Their independently recoverable child units use narrower resource classes where safe.',
             ],
             self::PACKAGE_HEAVY => [
                 'label' => 'Generated download packages',
@@ -198,14 +204,18 @@ final class JobResourcePolicy
                 self::configuredLimit(self::STORAGE_HEAVY, 1),
                 self::positiveKey('game-backup-export:', $payload['game_id'] ?? null)
             ),
-            JobType::CLEAN_UNVERIFIED_DUPLICATES,
-            JobType::RECONCILE_UNVERIFIED_STORAGE => new JobResourceProfile(
+            JobType::CLEAN_UNVERIFIED_DUPLICATES => new JobResourceProfile(
                 self::STORAGE_HEAVY,
                 self::configuredLimit(self::STORAGE_HEAVY, 1),
-                $jobType === JobType::CLEAN_UNVERIFIED_DUPLICATES
-                    ? 'unverified-duplicate-cleanup'
-                    : 'unverified-storage-reconciliation'
+                'unverified-duplicate-cleanup'
             ),
+            JobType::HASH_UNVERIFIED_DUPLICATE,
+            JobType::DELETE_UNVERIFIED_DUPLICATE => new JobResourceProfile(
+                self::UNVERIFIED_FILE_MAINTENANCE,
+                self::configuredLimit(self::UNVERIFIED_FILE_MAINTENANCE, 2),
+                self::unverifiedQueueFileKey($payload)
+            ),
+            JobType::RECONCILE_UNVERIFIED_STORAGE => self::unverifiedReconcileProfile($payload),
             JobType::GENERATE_MOD_PACKAGE => new JobResourceProfile(
                 self::PACKAGE_HEAVY,
                 self::configuredLimit(self::PACKAGE_HEAVY, 1),
@@ -215,7 +225,9 @@ final class JobResourcePolicy
             JobType::PRUNE_STALE_ARTIFACTS => new JobResourceProfile(
                 self::HOUSEKEEPING,
                 self::configuredLimit(self::HOUSEKEEPING, 2),
-                $jobType === JobType::PRUNE_STALE_ARTIFACTS ? 'stale-artifact-pruning' : null
+                JobType::PRUNE_STALE_ARTIFACTS === $jobType && !empty($payload['prune_unit'])
+                    ? 'stale-artifact-prune:' . strtolower(trim((string)$payload['prune_unit']))
+                    : (JobType::PRUNE_STALE_ARTIFACTS === $jobType ? 'stale-artifact-pruning' : null)
             ),
             default => new JobResourceProfile(
                 self::DEFAULT,
@@ -227,6 +239,16 @@ final class JobResourcePolicy
     /** @param array<string,mixed> $payload */
     private static function affectedDependencyProfile(array $payload): JobResourceProfile
     {
+        $affectedFileId = (int)($payload['affected_file_id'] ?? 0);
+        if ($affectedFileId > 0) {
+            $sourceFileId = max(0, (int)($payload['file_id'] ?? 0));
+            return new JobResourceProfile(
+                self::AFFECTED_DEPENDENCY_BATCH,
+                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 2),
+                'dependency:affected-file-unit:' . $sourceFileId . ':' . $affectedFileId
+            );
+        }
+
         $batchIds = $payload['affected_file_ids'] ?? null;
         if (is_array($batchIds) && $batchIds !== []) {
             return new JobResourceProfile(
@@ -240,6 +262,26 @@ final class JobResourcePolicy
             self::DEPENDENCY_HEAVY,
             self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
             self::affectedDependencyKey($payload)
+        );
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function unverifiedReconcileProfile(array $payload): JobResourceProfile
+    {
+        if (trim((string)($payload['reconcile_queue_name'] ?? '')) !== '') {
+            return new JobResourceProfile(
+                self::UNVERIFIED_FILE_MAINTENANCE,
+                self::configuredLimit(self::UNVERIFIED_FILE_MAINTENANCE, 2),
+                self::unverifiedQueueFileKey([
+                    'queue_game_id' => $payload['reconcile_game_id'] ?? 0,
+                    'queue_name' => $payload['reconcile_queue_name'] ?? '',
+                ])
+            );
+        }
+        return new JobResourceProfile(
+            self::STORAGE_HEAVY,
+            self::configuredLimit(self::STORAGE_HEAVY, 1),
+            'unverified-storage-reconciliation'
         );
     }
 
@@ -316,6 +358,14 @@ final class JobResourcePolicy
             return 'unverified-match:file:' . $fileId;
         }
         return 'unverified-match:' . (strtolower(trim((string)($payload['scope'] ?? 'bucket'))) ?: 'bucket');
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function unverifiedQueueFileKey(array $payload): string
+    {
+        $gameId = max(0, (int)($payload['queue_game_id'] ?? 0));
+        $name = strtolower(trim(str_replace('\\', '/', (string)($payload['queue_name'] ?? ''))));
+        return 'unverified:file:' . $gameId . ':' . substr(hash('sha256', $name), 0, 40);
     }
 
     /** @param array<string,mixed> $payload */
