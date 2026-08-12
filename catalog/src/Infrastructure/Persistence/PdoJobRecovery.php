@@ -24,10 +24,6 @@ final class PdoJobRecovery
         $queue = PdoJobQueueSupport::requiredIdentifier($queue, 'queue');
         $timestamp = PdoJobQueueSupport::now()->format('Y-m-d H:i:s');
 
-        // Normal worker claims should not open a write transaction and execute
-        // three status-changing UPDATE scans when there is nothing to recover.
-        // This is a non-locking existence check, not a throttle: every claim can
-        // still recover an expired lease immediately when one actually exists.
         $expired = $this->db->prepare(
             'SELECT 1 FROM ue_background_jobs '
             . 'WHERE queue_name=? AND status="running" AND lease_expires_at<? LIMIT 1'
@@ -46,11 +42,12 @@ final class PdoJobRecovery
             );
             $cancel->execute([$timestamp, $timestamp, $queue, $timestamp]);
 
+            // Keep progress_json/progress_updated_at. An expired worker lease is a
+            // process failure, not permission to erase the workflow checkpoint.
             $retry = $this->db->prepare(
                 'UPDATE ue_background_jobs SET status="queued",worker_id=NULL,lease_token=NULL,leased_at=NULL,'
                 . 'lease_expires_at=NULL,last_heartbeat_at=NULL,available_at=?,recovery_count=recovery_count+1,'
-                . 'last_error=COALESCE(last_error,"Worker lease expired; recovered for retry."),'
-                . 'progress_json=NULL,progress_updated_at=NULL,updated_at=? '
+                . 'last_error=COALESCE(last_error,"Worker lease expired; recovered for retry."),updated_at=? '
                 . 'WHERE queue_name=? AND status="running" AND cancel_requested_at IS NULL '
                 . 'AND lease_expires_at<? AND attempts<max_attempts'
             );
@@ -88,10 +85,12 @@ final class PdoJobRecovery
         }
         $availableAt = ($availableAt ?? PdoJobQueueSupport::now())->setTimezone(PdoJobQueueSupport::utc());
         $now = PdoJobQueueSupport::now()->format('Y-m-d H:i:s');
+        // Restart means resume. Preserve progress_json so the handler can continue
+        // from its last durable unit rather than replaying successful work.
         $statement = $this->db->prepare(
             'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,worker_id=NULL,lease_token=NULL,'
             . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=NULL,result_json=NULL,'
-            . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,progress_json=NULL,progress_updated_at=NULL,'
+            . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
             . 'dead_lettered_at=NULL,completed_at=NULL,updated_at=? WHERE id=? AND status IN ("dead_letter","failed")'
         );
         $statement->execute([$availableAt->format('Y-m-d H:i:s'), $now, $jobId]);
