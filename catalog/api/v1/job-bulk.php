@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Handles bounded bulk restart/cancel/delete requests for Background Jobs.
- * Why: HTTP input/authentication belongs here while durable mutation SQL lives behind an Infrastructure service.
+ * Purpose: Handles bounded bulk restart/cancel requests and queues bulk terminal-history deletion.
+ * Why: HTTP input/authentication belongs here while durable mutation SQL lives behind Infrastructure services.
  * Role: Thin HTTP API entry point.
  */
 declare(strict_types=1);
@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -82,6 +83,13 @@ try {
         $jobIds,
         $userId
     );
+
+    if (!empty($result['worker_start_required'])) {
+        $workerState = (new CatalogQueueWorkerStarter($application->db, $application->config))
+            ->start($queueName, true, $userId);
+        $result['worker'] = $workerState['worker'];
+        $result['worker_error'] = (string)$workerState['worker_error'];
+    }
 
     JsonResponse::send(['data' => $result]);
 } catch (Throwable $error) {
