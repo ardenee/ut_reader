@@ -1,198 +1,343 @@
-# Durable background jobs
+# Background jobs, workflows and recovery
 
-UnrealDB uses `ue_background_jobs` as a durable MySQL queue for maintenance work. The web application enqueues work; CLI workers claim one leased job at a time.
+UnrealDB uses database-backed background workers for work that should not keep an HTTP request/browser open.
 
-## States
+The current design is explicitly **recoverable**, not merely asynchronous. A job that can take minutes or hours must either be decomposed into durable independently retryable units, or persist an exact restart cursor/journal where decomposition is not appropriate.
 
-- `queued`: available now or scheduled through `available_at`
-- `running`: owned by one worker and one opaque lease token
-- `completed`: result persisted and active deduplication key released
-- `cancelled`: cancelled before claim or cooperatively stopped by the lease owner
-- `dead_letter`: exhausted retries, unsupported job type, or an expired final attempt
-- `failed`: legacy terminal state retained for upgrade compatibility; operators may retry it like a dead letter
+## Core rules
 
-## Lease ownership
+1. A long operation must not depend on the browser remaining open.
+2. Restart/recovery preserves the last durable progress/checkpoint state.
+3. Successful work is never deliberately replayed just because another unit failed.
+4. A natural file/archive-entry/item boundary should become a child job.
+5. Coordinators release their worker slot while waiting for children.
+6. Child creation is idempotent through `(parent_job_id, workflow_unit_key)`.
+7. Routine status/event logging is optional and separate from recovery state.
+8. Failed/dead-letter/cancelled child units remain visible to the operator; routine successful children are hidden from the default Background Jobs view.
 
-Every claim records a worker ID, random lease token, lease start, expiry and heartbeat time. Completion, failure, cancellation and progress updates require the same lease token. A worker whose lease expired cannot overwrite a job claimed by another worker.
+## Queue schema
 
-The default lease is 120 seconds and is configured with `queue.lease_seconds` or `UNREALDB_QUEUE_LEASE_SECONDS`. Handler checkpoints renew the lease approximately every third of that interval, bounded between 5 and 30 seconds.
+`ue_background_jobs` stores the durable queue state.
 
-Retries and recovered leases clear all former ownership fields before returning to `queued`.
+Important recovery fields include:
 
-## Resource classes and concurrency keys
+- `status`
+- `payload_json`
+- `progress_json`
+- `result_json`
+- lease/heartbeat fields
+- retry/attempt information
+- `resource_class`
+- `resource_limit`
+- `concurrency_key`
+- `parent_job_id`
+- `workflow_unit_key`
 
-Every queued job persists three scheduling fields:
+`parent_job_id` and `workflow_unit_key` identify a workflow unit uniquely. If a coordinator is reclaimed/restarted and attempts to enqueue the same unit again, the existing child is reused rather than duplicated.
 
-- `resource_class`: the shared capacity pool
-- `resource_limit`: maximum running jobs in that class for the queue
-- `concurrency_key`: optional target lock preventing two jobs for the same game/file from running together
+## Progress versus recovery state
 
-Current defaults:
+`progress_json` is used for live progress and, where a handler needs sequential restart state, durable checkpoint information.
 
-| Job type | Resource class | Default limit | Target key |
-| --- | --- | ---: | --- |
-| game dependency rebuild | `dependency-heavy` | 1 | `dependency:game:<id>` |
-| exact file dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
-| affected-dependants dependency rebuild | `dependency-heavy` | 1 | `dependency:file:<id>` |
-| file source-identity repair | `dependency-heavy` | 1 | `source-identity:file:<id>` |
-| game source-identity repair | `dependency-heavy` | 1 | `source-identity:game:<id>` |
-| unverified duplicate cleanup | `storage-heavy` | 1 | `unverified-duplicate-cleanup` |
-| generated package build | `package-heavy` | 1 | `package:file:<id>` |
-| upload-progress pruning | `housekeeping` | 2 | none |
-| unknown/future type | `default` | 4 | none |
+Queue recovery paths do **not** erase it:
 
-Limits may be overridden before enqueueing with:
+- normal claim
+- automatic retry
+- expired-lease recovery
+- manual Restart
+- bulk Restart
+- detached-worker stop/requeue
+- manual orphan recovery
 
-```text
-UNREALDB_JOB_RESOURCE_LIMIT_DEPENDENCY_HEAVY=1
-UNREALDB_JOB_RESOURCE_LIMIT_STORAGE_HEAVY=1
-UNREALDB_JOB_RESOURCE_LIMIT_PACKAGE_HEAVY=1
-UNREALDB_JOB_RESOURCE_LIMIT_HOUSEKEEPING=2
-UNREALDB_JOB_RESOURCE_LIMIT_DEFAULT=4
-```
+`ClaimedJob::resumeProgress` exposes the previous durable checkpoint to the handler.
 
-The resolved limit is stored on the job, so changing an environment variable affects newly queued work only. Claim selection skips saturated classes, allowing unrelated eligible work to continue. A short MySQL advisory lock serializes claim decisions so competing workers cannot overbook a class.
+A handler must not overwrite a good recovery checkpoint with a generic `failed` stage simply to report an exception. The queue stores `last_error`/terminal error state separately.
 
-## Dependency refresh jobs
+## Coordinator defer
 
-The administrator Dependency Refresh page enqueues one durable job instead of rebuilding each file through a separate browser request.
+A parent waiting for child work uses `JobExecutionContext::defer()`.
 
-- A **single file** refresh rebuilds only that file's compact dependency links and derived package-summary rows.
-- A **full game** refresh processes verified files in package order and retains the optional start offset.
-- An **affected-dependants** refresh remains a separate internal/operator action for files whose package identity may resolve imports in other files.
+Defer:
 
-The page polls `job-status.php` by job ID, displays persisted worker progress and final dependency totals, supports cooperative cancellation, and stores the active job ID in the page URL. Reloading or reopening that URL resumes the progress dialog. Closing the page does not stop the worker.
+- persists updated parent progress;
+- releases the worker lease;
+- requeues the parent for a short future check;
+- does not consume a failure/retry attempt.
 
-## Source identity repair jobs
+This avoids the old pattern where a coordinator occupied one worker for hours while looping or polling.
 
-The administrator Source Identity Repair page keeps its mismatch audit synchronous because the audit is read-only. Mutating repair operations are durable jobs.
+## Workflow patterns
 
-- A **file repair** derives the canonical UE4/UE5 package identity from the primary mounted source path, updates the original filename and source path, rewrites export full paths in compact metadata, rebuilds current lookup projections and source-derived aliases, and refreshes the file plus referring dependency projections.
-- A **game repair** processes every verified file in package order without rebuilding dependencies per file, collects bounded failure details, and performs one game-wide dependency pass after all successful identity changes.
-- UE1/UE2/UE3 remain audit-only. The enqueue API rejects legacy-engine repair targets.
+### Parent + per-file/entry children
 
-Both repair types share the exclusive `dependency-heavy` class with dependency rebuilds. The source-identity worker also retains the legacy database advisory lock so older maintenance code cannot overlap the same write boundary during a staged deployment.
+Used when each item is independently meaningful and retryable.
 
-The page stores the active job ID in the URL, resumes polling after reload, reports changed identities, retained aliases and failures, and supports cooperative cancellation. Closing the page does not interrupt repair work.
+Examples:
 
-The former `source-identity-repair-api.php` endpoint remains only as a compatibility enqueue adapter. It no longer writes progress files or executes identity/dependency mutation inside HTTP requests.
+- Full Sync reimport files
+- Full Sync dependency files
+- whole-game dependency rebuild
+- affected dependency refresh
+- projection reconciliation
+- game-wide source-identity repair
+- unverified exact-game matching
+- cross-game copy preparation
+- PAK entries
+- Game Backup restore entries
+- unverified duplicate hash/delete operations
+- unverified-storage reconciliation
+
+A failed child blocks completion of the parent but does not invalidate completed siblings. Restart the failed child; the parent notices when it completes and continues.
+
+### Exact sequential cursor
+
+Used when discovery/order is naturally sequential and recreating thousands of child rows is unnecessary.
+
+Local source scanning uses deterministic normalized source-relative ordering and persists `scan_last_relative_path` after each completed loose package. Container preparation is a separate checkpointed phase.
+
+A recovered source scan can repeat inexpensive discovery but continues **after** the last completed path instead of reimporting earlier files.
+
+### Durable plan/journal
+
+Game Backup export uses an immutable export plan plus completion journal.
+
+On restart it verifies/adopts already copied files and continues from the first incomplete planned entry. It does not delete the partial backup and start over.
+
+### Atomic artifact
+
+Generated download/package output is one artifact unit. The builder writes a temporary file, validates it, then publishes the completed artifact. If that one artifact fails, rebuilding that artifact is acceptable because it is itself the durable work unit; it does not represent thousands of independent catalogue mutations.
+
+## Full Sync
+
+`catalog.full_sync_game` is a coordinator.
+
+The workflow is broadly:
+
+1. plan and execute `catalog.full_sync_file` children;
+2. rebuild/reconcile provider projections;
+3. plan and execute `catalog.full_sync_dependency_file` children;
+4. finalize dependency summaries and cached game statistics.
+
+A successful child remains completed across a restart. If the parent fails only during finalization, Restart returns to finalization rather than starting again at file 1.
+
+This is especially important for failures near 97–100%: the expensive reimport/dependency phases are not replayed solely because final summary/stat publication failed.
+
+## Whole-game dependency rebuild
+
+A game dependency rebuild is a parent workflow that creates one file child per verified file and publishes game statistics at the end.
+
+Per-file dependency failures are independently restartable.
+
+## Affected dependency refresh
+
+When a new provider package becomes available, UnrealDB determines which current files reference that package.
+
+New work is **one affected file per child job**. The child calls the targeted `rebuildForPackages(fileId, [packageName])` path instead of performing an unrelated full dependency rebuild.
+
+After all children complete, the parent bulk-refreshes dependency package summaries and the game's cached counters.
+
+Older queue rows created by the previous 50-file batching implementation are supported by a compatibility path that honors their persisted `done` cursor. New jobs no longer create those multi-file child batches.
+
+Default resource class: `affected-dependency-batch` (the historical class name is retained; it now represents per-file affected/projection units), default limit `2`.
+
+## Projection reconciliation
+
+Provider/projection reconciliation can affect many dependency owners. The parent performs provider/source preparation, then creates one `catalog.reconcile_catalog_projection_file` child per affected owner.
+
+Each child runs the targeted dependency reconciliation. The parent bulk-refreshes summaries and game stats after all units are successful.
+
+## Source identity repair
+
+Game-wide source-identity repair is parent/child work rather than a single game loop.
+
+After source identity file units complete, the workflow invokes the normal resumable game dependency workflow instead of rebuilding the game inline.
+
+## Cross-game dependency copy preparation
+
+The Cross-Game Dependency page submits one lightweight parent job containing selected source file IDs and destination game.
+
+The parent creates one durable source-preparation child per selected verified file. Each child:
+
+1. revalidates the destination's **current** missing dependency evidence;
+2. treats already-present/no-longer-needed selections as normal skips;
+3. queues the normal destination import if still valid.
+
+An unexpected error affects only that source-preparation child. Destination package imports then continue as their own independent import jobs.
+
+The source package is never moved. A read-only catalog-local source reference is used instead of performing an extra synchronous staging copy/hash before queueing.
+
+## PAK import
+
+PAK import uses a durable workspace under job storage.
+
+The parent:
+
+1. validates/extracts/selects the PAK index;
+2. promotes extracted content/state into a durable `jobs/pak-import/job-<parent>` workspace;
+3. creates one `catalog.import_staged_pak_entry` child per archive entry;
+4. waits for entries;
+5. invokes the normal resumable game dependency workflow;
+6. finalizes the retained PAK record;
+7. cleans the recovery workspace only after final completion.
+
+An entry child uses a disposable working link/copy from its durable extracted source. A package import cannot consume another entry's recovery bytes.
+
+Unsupported/encrypted/non-package entries are recorded as entry outcomes and do not block unrelated entries. Infrastructure/database failures fail that entry child and are restartable.
+
+## Game Backup restore/export
+
+### Restore
+
+Game Backup restore creates durable manifest-entry children. Canonical entries complete before alias entries. After all entries are successful, the parent invokes the normal game dependency workflow.
+
+### Export
+
+Game Backup export uses an immutable plan/completion journal. Every copied output is size/MD5 verified before being journaled. Restart verifies/adopts already copied files and continues.
 
 ## Unverified duplicate cleanup
 
-The **Delete duplicate files** control on `unverified-files.php` now enqueues one `storage-heavy` job.
+Duplicate cleanup is a two-phase child workflow:
 
-The worker inventories all physical Upload Bucket and game unverified queues, groups by size, calculates MD5 only for same-size candidates, and retains one copy of each exact size+MD5 identity. An indexed copy is preferred; otherwise the oldest queue copy is retained. Verified game storage is never included.
+1. only same-size candidates receive independent MD5 hash jobs;
+2. persisted hash results are grouped by exact `size + MD5`;
+3. one delete child is created for each exact duplicate that is not the chosen keeper;
+4. the delete child rechecks size/MD5 immediately before deletion.
 
-Progress reports inventory, hash candidates, exact duplicate groups, deleted files, freed bytes and errors. Detailed deletion output is bounded to 100 entries and detailed errors to 200 entries in the durable result.
+Deletion is idempotent. If a worker dies after unlinking the data file but before deleting the note/database record, Restart recognizes the physical file is already absent and completes the remaining metadata cleanup.
 
-Cancellation is cooperative. Files deleted before a cancellation checkpoint remain deleted, while unprocessed duplicate candidates remain in place. Every file is rechecked for its expected size and MD5 immediately before deletion.
+Default resource class for hash/delete units: `unverified-file-maintenance`, default limit `2`.
 
-Operator enqueue command:
+## Unverified storage reconciliation
 
-```text
-php catalog/bin/job-control.php enqueue-clean-unverified-duplicates
+Filesystem/database reconciliation is one child per unverified queue file. Missing files are normal skips; unexpected indexing failures fail only that child.
+
+## Stale artifact cleanup
+
+Stale artifact maintenance has separate durable child units for:
+
+- generated artifacts;
+- incomplete chunk-upload sessions;
+- job recovery/storage artifacts.
+
+A failure in one category does not replay the successful categories.
+
+Recovery artifacts are retained while the owning job is restartable (`queued`, `running`, `failed`, `dead_letter`, `cancelled`). Completed historical job rows do not pin incoming/prepared/PAK recovery storage forever; stale completed-job artifacts become eligible for age-based cleanup.
+
+## Upload boundary
+
+Upload transport and background recovery are deliberately separate.
+
+### Upload to Game
+
+For ordinary PHP uploads, the complete received file is first moved into `jobs/incoming` and only then is an import job created.
+
+For chunked uploads, the chunk store must reach `complete` before the package/PAK job is created.
+
+### Upload Bucket
+
+The complete Bucket upload must exist in completed chunk storage before the Bucket processing job is finalized/queued.
+
+### What is resumable
+
+The browser/network upload session itself is **not** promised to survive a lost tab, browser or client state.
+
+After the complete file exists on the server, the background pipeline is recoverable. Durable prepared storage can preserve completed redirect decompression or copy/hash work so a later infrastructure failure does not require retransferring the file or redoing completed preparation.
+
+## Job resource classes
+
+The administrator can change class limits on the Job Resource Limits page. Applying limits updates compatible queued rows immediately while preserving narrower child concurrency keys.
+
+Current classes include:
+
+| Resource class | Default | Typical work |
+|---|---:|---|
+| `dependency-heavy` | 1 | dependency/projection coordinators, whole-game dependency work |
+| `full-sync-unit` | 2 | Full Sync per-file reimport/dependency units |
+| `affected-dependency-batch` | 2 | affected dependency and projection per-file units |
+| `search-heavy` | 1 | file search-index rebuild |
+| `import-heavy` | 8 | normal independent staged package imports |
+| `archive-import-heavy` | 1 | PAK/backup coordinators and archive-entry units |
+| `bucket-processing` | 8 | Upload Bucket processing / redirect prep / unverified metadata repair |
+| `unverified-matches` | 2 | exact unverified game-match projection |
+| `unverified-file-maintenance` | 2 | duplicate hash/delete and reconciliation file units |
+| `storage-heavy` | 1 | storage/backup coordinators |
+| `package-heavy` | 1 | generated download package artifacts |
+| `housekeeping` | 2 | cleanup/pruning |
+| `default` | 4 | uncategorized bounded jobs |
+
+The global worker-pool size remains a separate upper bound.
+
+## Concurrency keys
+
+A resource-class slot answers **how many** jobs of that class may run. A concurrency key answers **which jobs must not overlap**.
+
+Examples include per-file import/dependency keys, provider/affected file keys, per-parent PAK entry keys and the global projection-maintenance coordinator key.
+
+The resource-limit synchronizer must not replace a per-file child key with an old game-wide coordinator key.
+
+## Retry and restart semantics
+
+`Restart` means **resume/retry the durable unit**, not “clear progress and begin the entire workflow again.”
+
+For parent/child workflows:
+
+- restart the failed child when possible;
+- the parent remains waiting;
+- completed siblings remain completed;
+- once all required children are good, the parent continues automatically.
+
+For exact-cursor/journal operations, Restart uses the persisted cursor/journal.
+
+If a job truly has no trustworthy recovery state from an older code version, the handler may deliberately convert it to the new workflow/compatibility mode; this must be explicit in code rather than silently treating a display percentage as a cursor.
+
+## Logging policy
+
+Durable progress/result storage is not optional logging.
+
+The Job Logging page controls event/diagnostic streams independently. Defaults are errors-first:
+
+| Event stream | Default |
+|---|---|
+| Errors | ON |
+| Progress | OFF |
+| Success/completed | OFF |
+| Duplicate | OFF |
+| Skipped | OFF |
+| Cancelled | OFF |
+| Worker diagnostics | OFF |
+
+This keeps the operator logs focused on problems that need investigation while preserving job state/progress in the queue database.
+
+Terminal background-job failures are also recorded in System Errors. System Errors can be filtered and exported as a Markdown diagnostic report with available stack trace/context information; secret-like context values are redacted.
+
+## Background Jobs operator view
+
+The default Background Jobs view shows top-level workflows plus failed/dead-letter/cancelled child units that require attention. It does not list thousands of successful workflow children by default.
+
+Child rows preserve useful unit identity such as:
+
+- affected file ID/provider package;
+- PAK/entry number;
+- cross-game source file;
+- unverified queue filename;
+- cleanup category.
+
+## Deploying workflow changes
+
+Stop/restart detached workers when deploying changes that add job types or handler semantics so old PHP processes do not continue executing the pre-deploy handler graph.
+
+Apply migrations before starting the new workers:
+
+```bash
+php catalog/bin/migrate.php migrate
 ```
 
-## Generated package jobs
+The current recovery/logging model requires `202608120001_job_workflow_recovery_logging.php`. Unverified exact-game-match caching requires `202608110001_unverified_game_match_cache.php`.
 
-`download-package.php` no longer builds ZIP, UMOD-family or PAK output inside Apache. It queues `catalog.generate_mod_package`, polls persisted progress and exposes the completed artifact through a separate download controller.
+Run the architectural regression gate after deployment:
 
-Package jobs:
-
-1. revalidate the public download mode, selected verified file and enabled format
-2. resolve the dependency closure and base-game exclusions
-3. enforce configured file/byte limits and incomplete-dependency policy
-4. build into a unique `.part` file
-5. run the existing format validator
-6. check cancellation and lease ownership before publication
-7. atomically rename the validated artifact into `storage/generated-packages`
-8. persist only the artifact identity, size, SHA-256, filename and expiry in the job result
-
-The initiating browser session stores the random access token; only that session can poll or download the artifact. The token itself is not stored in job payloads—only its SHA-256 hash. Artifact filenames are not public authorization credentials.
-
-Public enqueueing is IP-rate-limited. Defaults:
-
-```text
-UNREALDB_PACKAGE_GENERATION_MAX_REQUESTS=3
-UNREALDB_PACKAGE_GENERATION_WINDOW_SECONDS=600
-UNREALDB_GENERATED_PACKAGE_RETENTION_SECONDS=86400
+```bash
+php catalog/bin/verify-resumable-job-workflows.php --database
 ```
 
-The default artifact lifetime is 24 hours, configurable between 15 minutes and seven days. Expired artifacts and abandoned `.part` files are pruned by subsequent package jobs; an expired download request also deletes the artifact when present.
-
-Archive writers are atomic but not forcibly interrupted mid-file. A cancellation requested during archive writing is observed before publication, and the completed temporary output is deleted rather than made downloadable. A worker crash may leave a `.part` file, which is removed by the orphan-pruning policy.
-
-## Progress
-
-Progress callbacks from maintenance handlers are persisted in `progress_json` with `progress_updated_at`. Progress is an operational snapshot, not the durable result. A successful completion stores the final result separately in `result_json`.
-
-The job status API supports a positive `job_id` filter and decodes both progress and result objects for authenticated administrators. General multi-job listings omit result payloads so operator pages remain bounded. Public generated-package status uses a separate session-bound endpoint and never exposes arbitrary queue records.
-
-## Cancellation
-
-Queued jobs are cancelled immediately. Running jobs receive `cancel_requested_at`, `cancel_requested_by` and `cancel_reason`. The current lease owner observes the request at its next checkpoint and transitions the job to `cancelled`.
-
-A cancelled request does not forcibly terminate PHP in the middle of a database or filesystem operation. Handlers call the execution context at safe boundaries. If a worker disappears after cancellation is requested, expired-lease recovery finalizes the job as cancelled.
-
-## Dead letters and retries
-
-A normal exception is retried with bounded exponential delay while `attempts < max_attempts`. The final failure enters `dead_letter`, clears the active deduplication key and records `dead_lettered_at` and `last_error`.
-
-An operator can explicitly requeue a dead-letter or legacy failed job. Retry resets attempts, cancellation data, progress, result, terminal timestamps and lease ownership. Package retries use a new temporary file and atomically replace only an artifact produced for the same job ID.
-
-## Operator commands
-
-Run commands from a trusted CLI with the production configuration available:
-
-```text
-php catalog/bin/job-control.php status --queue=catalog --limit=50
-php catalog/bin/job-control.php cancel --id=123 --reason="Operator requested stop"
-php catalog/bin/job-control.php retry --id=123
-php catalog/bin/job-control.php recover --queue=catalog
-php catalog/bin/job-control.php enqueue-rebuild-game --game-id=1 --offset=0
-php catalog/bin/job-control.php enqueue-rebuild-file --file-id=123
-php catalog/bin/job-control.php enqueue-rebuild-affected --file-id=123
-php catalog/bin/job-control.php enqueue-source-identity-file --file-id=123
-php catalog/bin/job-control.php enqueue-source-identity-game --game-id=1
-php catalog/bin/job-control.php enqueue-clean-unverified-duplicates
-php catalog/bin/job-control.php enqueue-prune --max-age-seconds=86400
-```
-
-The administrator `job-action.php` API exposes equivalent CSRF-protected POST actions for dependency/identity enqueue, cancel, retry and recovery operations. Duplicate cleanup uses its unverified-files CSRF endpoint. Public generated-package jobs use a dedicated session-bound endpoint.
-
-The normal worker claim path also recovers expired leases before selecting new work. The explicit recovery command is useful for diagnostics and scheduled maintenance.
-
-## Worker execution
-
-```text
-php catalog/bin/catalog-worker.php --queue=catalog --max-jobs=100 --sleep-ms=250 --lease-seconds=120
-```
-
-The production container uses `deploy/docker/worker-loop.sh`, gives every process a stable worker ID for its lifetime and passes the configured lease duration.
-
-## Scaling rules
-
-Multiple workers may claim from the same queue. Advisory claim coordination, persisted resource limits, concurrency keys and lease-token ownership prevent overbooking, duplicate target work and stale completion.
-
-Keep one worker replica until representative scanner, filesystem and package-generation jobs pass idempotency and crash-recovery tests. Queue scheduling safety alone does not make the underlying operation horizontally safe.
-
-Before adding replicas:
-
-1. confirm every job type is idempotent or resumable
-2. confirm package storage supports concurrent access
-3. review persisted resource limits and target keys
-4. monitor queue age, class saturation, lease recovery count, dead letters and cancellation latency
-5. test worker termination during each major stage
-
-## Alerts
-
-Page or warn on:
-
-- oldest queued job exceeding its service target
-- a resource class remaining saturated beyond its expected duration
-- repeated lease recoveries for the same job or worker
-- any growing dead-letter count
-- running jobs with stale heartbeat timestamps
-- cancellation requests not acknowledged before lease expiry
-- generated-package artifact storage growth or repeated orphan pruning
-- worker restart loops or database/advisory lock timeouts
+This is read-only. It checks queue recovery boundaries, parent/child registration, workflow decomposition, upload handoff rules, artifact retention and logging/schema prerequisites.
