@@ -73,7 +73,12 @@ function profiled_upload_enqueue(PDO $db, array $config): array
         $displayName = profiled_upload_relative_path((int)$index, $originalName);
         $errorCode = (int)($_FILES['files']['error'][$index] ?? UPLOAD_ERR_NO_FILE);
         if ($errorCode !== UPLOAD_ERR_OK) {
-            $messages[] = ['status' => 'failed', 'file' => $displayName, 'message' => 'PHP upload error ' . $errorCode . '. Large files should use the resumable chunked uploader.'];
+            $messages[] = [
+                'status' => 'failed',
+                'file' => $displayName,
+                'message' => 'PHP upload error ' . $errorCode
+                    . '. Large files can use the chunked uploader, but recovery starts only after the complete file has been durably staged on the server.',
+            ];
             continue;
         }
         if (!is_string($temporaryPath) || !is_file($temporaryPath)) {
@@ -95,9 +100,10 @@ function profiled_upload_enqueue(PDO $db, array $config): array
 
         $staged = null;
         try {
-            // Browser priority is durable ingress. Do not reread the whole file
-            // for SHA-256 here; authoritative content hashes are calculated by
-            // the background importer after the complete batch is staged.
+            // Browser priority is durable ingress. The background recovery
+            // boundary begins only after this complete file has been moved into
+            // controlled server staging; an incomplete browser transfer is not a
+            // resumable catalog job.
             $staged = $store->stageUploadedFile($temporaryPath, $originalName, false);
             $queued = $queue->enqueueStaged(
                 $gameId,
@@ -123,8 +129,8 @@ function profiled_upload_enqueue(PDO $db, array $config): array
             'message' => !empty($queued['deduplicated'])
                 ? 'The same staged file is already represented by job #' . $queued['job_id'] . '.'
                 : ($deferWorkerStart
-                    ? 'Upload durably staged as held background job #' . $queued['job_id'] . '; it will be released after this browser batch finishes staging.'
-                    : 'Upload durably staged for background import as job #' . $queued['job_id'] . '.'),
+                    ? 'Complete upload durably staged as held background job #' . $queued['job_id'] . '; it will be released after this browser batch finishes staging.'
+                    : 'Complete upload durably staged for resumable background import as job #' . $queued['job_id'] . '.'),
             'file_size_text' => catalog_bytes($queued['size']),
             'job_id' => $queued['job_id'],
         ];
@@ -243,7 +249,7 @@ try {
     unset($_SESSION['profiled_upload_flash']);
     catalog_page_header(
         'Upload Files',
-        'Ordinary package files are first SHA-1 hashed locally in a Web Worker and checked against already verified content for the selected game; matching content is skipped before network transfer. Files that need uploading are copied into durable controlled staging as quickly as possible. Redirect wrappers and PAK containers defer duplicate decisions to background processing because their uploaded bytes are not the catalogued package payload. Jobs remain unclaimable while the selected browser batch is uploading. After the batch is fully staged, all of its jobs are released together and detached CLI workers perform authoritative hashing, decompression, header validation and import in the background.',
+        'Ordinary package files are first SHA-1 hashed locally in a Web Worker and checked against already verified content for the selected game; matching content is skipped before network transfer. Files that need uploading are copied into durable controlled staging as quickly as possible. Redirect wrappers and PAK containers defer duplicate decisions to background processing because their uploaded bytes are not the catalogued package payload. Jobs remain unclaimable while the selected browser batch is uploading. Resumable/recoverable processing begins only after each complete file is durably present on the server; after the batch is fully staged, detached CLI workers perform authoritative hashing, decompression, header validation and import in the background.',
         [
             'Background Jobs' => 'background-jobs.php',
             'Game Admin' => 'game-manager.php' . ($selectedGameId ? '?game_id=' . $selectedGameId : ''),
@@ -267,7 +273,7 @@ try {
     echo '<p><label>Choose files<br><input id="profiled-upload-files" type="file" name="files[]" multiple></label></p>';
     echo '<p><label>Choose folder / subfolders<br><input id="profiled-upload-folder" type="file" multiple webkitdirectory directory mozdirectory></label></p>';
     echo '<p><button id="profiled-upload-button" type="submit">Upload and queue</button> <button id="profiled-upload-cancel" type="button" hidden>Cancel current upload</button></p>';
-    echo '<p class="muted">Ordinary files are hashed locally one at a time before upload so already verified duplicates can be skipped without sending their bytes. This browser hash is advisory only; uploaded files are always re-hashed authoritatively by the background worker. Package reader selection is based on serialized Unreal header data, never the filename or extension. Normal package files larger than ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' use resumable chunks. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
+    echo '<p class="muted">Ordinary files are hashed locally one at a time before upload so already verified duplicates can be skipped without sending their bytes. This browser hash is advisory only; uploaded files are always re-hashed authoritatively by the background worker. Package reader selection is based on serialized Unreal header data, never the filename or extension. Normal package files larger than ' . catalog_h(catalog_bytes($chunkStore->chunkBytes())) . ' use chunked transfer. <strong>Chunking does not make an interrupted browser upload session recoverable:</strong> background recovery begins after the complete file is durably staged. Normal-file limit: ' . catalog_h(catalog_bytes((int)$config['max_upload_bytes'])) . '; PAK container limit: ' . catalog_h(catalog_bytes($containerLimit)) . '.</p>';
     echo '<div id="profiled-upload-progress" class="upload-progress" hidden '
         . 'data-queue="' . catalog_h((string)($config['queue']['name'] ?? 'catalog')) . '" '
         . 'data-status-url="api/v1/job-status.php" '
