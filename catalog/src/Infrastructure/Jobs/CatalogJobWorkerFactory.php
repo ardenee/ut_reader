@@ -108,6 +108,7 @@ final class CatalogJobWorkerFactory
             JobType::REBUILD_AFFECTED_DEPENDENCIES => $affectedDependencyRefresh,
             JobType::REBUILD_FILE_SEARCH_INDEX => $searchIndex,
             JobType::RECONCILE_CATALOG_PROJECTIONS => $projectionReconciliation,
+            JobType::RECONCILE_CATALOG_PROJECTION_FILE => $projectionReconciliation,
             JobType::REPAIR_SOURCE_IDENTITY_FILE => $maintenance,
             JobType::REPAIR_SOURCE_IDENTITY_GAME => $maintenance,
             JobType::SOURCE_SCAN => $sourceScan,
