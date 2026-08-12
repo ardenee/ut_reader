@@ -121,6 +121,7 @@ final class CatalogJobWorkerFactory
             JobType::IMPORT_GAME_BACKUP_ENTRY => $backupImport,
             JobType::IMPORT_STAGED_PACKAGE => $packageImport,
             JobType::IMPORT_STAGED_PAK => $pakImport,
+            JobType::IMPORT_STAGED_PAK_ENTRY => $pakImport,
             JobType::PREPARE_BUCKET_REDIRECT => $bucketRedirect,
             JobType::PROCESS_BUCKET_UPLOAD => $bucketUpload,
             JobType::RECONCILE_UNVERIFIED_STORAGE => $storageMaintenance,
