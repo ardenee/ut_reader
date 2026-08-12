@@ -46,6 +46,13 @@ final class PdoBackgroundJobOffsetQuery
             $baseWhere[] = 'j.queue_name=?';
             $baseParams[] = $queue;
         }
+        // Keep compatibility pages usable when a workflow owns thousands of
+        // successful/running child units. Explicit ID/search requests can still
+        // inspect any child, while the normal view surfaces only top-level jobs
+        // and child units that require operator attention.
+        if ($jobId < 1 && $search === '') {
+            $baseWhere[] = '(j.parent_job_id IS NULL OR j.status IN ("failed","dead_letter","cancelled"))';
+        }
         if ($search !== '') {
             $baseWhere[] = '(CAST(j.id AS CHAR) LIKE ? OR j.job_type LIKE ? OR COALESCE(j.concurrency_key,"") LIKE ? '
                 . 'OR COALESCE(j.payload_json,"") LIKE ? OR COALESCE(j.last_error,"") LIKE ? '
@@ -74,7 +81,7 @@ final class PdoBackgroundJobOffsetQuery
         $offset = ($page - 1) * $perPage;
 
         $counts = $this->countQuery->counts('ue_background_jobs j', $baseWhereSql, $baseParams);
-        $sql = 'SELECT j.id,j.queue_name,j.job_type,j.resource_class,j.resource_limit,j.concurrency_key,j.priority,j.status,'
+        $sql = 'SELECT j.id,j.parent_job_id,j.workflow_unit_key,j.queue_name,j.job_type,j.resource_class,j.resource_limit,j.concurrency_key,j.priority,j.status,'
             . 'j.display_status,j.available_at,j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,'
             . 'j.last_heartbeat_at,j.recovery_count,j.cancel_requested_at,j.cancel_requested_by,j.cancel_reason,'
             . 'j.payload_json,j.progress_json,j.progress_updated_at,j.result_json,j.last_error,j.created_by,j.created_at,'
