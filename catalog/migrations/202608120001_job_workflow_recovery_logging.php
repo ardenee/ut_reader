@@ -38,9 +38,12 @@ return [
         );
         $foreignKey->execute();
         if ((int)$foreignKey->fetchColumn() === 0) {
+            // A workflow owns its child ledger. Retention cleanup of the parent
+            // must remove its completed child rows too; SET NULL would orphan
+            // thousands of hidden units and make them appear as top-level jobs.
             $db->exec(
                 'ALTER TABLE ue_background_jobs ADD CONSTRAINT fk_ue_background_jobs_parent '
-                . 'FOREIGN KEY (parent_job_id) REFERENCES ue_background_jobs(id) ON DELETE SET NULL'
+                . 'FOREIGN KEY (parent_job_id) REFERENCES ue_background_jobs(id) ON DELETE CASCADE'
             );
         }
 
