@@ -42,10 +42,13 @@ final class PdoBackgroundJobRetryAction
             'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,'
             . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
             . 'last_error=NULL,result_json=NULL,cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
-            . 'progress_json=NULL,progress_updated_at=NULL,dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
+            . 'dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
             . 'WHERE queue_name=? AND id IN (' . $placeholders . ') '
             . 'AND status IN ("cancelled","failed","dead_letter")'
         );
+        // Keep progress_json/progress_updated_at. Restart means resume from the
+        // last durable checkpoint; handlers that do not use resume state simply
+        // overwrite the progress as normal.
         $statement->execute(array_merge([$now, $now, $queueName], $ids));
         return $statement->rowCount();
     }
