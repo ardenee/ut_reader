@@ -21,6 +21,7 @@ final class ClaimedJob
 {
     /**
      * @param array<string, mixed> $payload
+     * @param array<string, mixed> $resumeProgress Last durable progress snapshot from a prior attempt/recovery.
      */
     public function __construct(
         public readonly int $id,
@@ -33,7 +34,8 @@ final class ClaimedJob
         public readonly DateTimeImmutable $leaseExpiresAt,
         public readonly string $resourceClass = 'default',
         public readonly int $resourceLimit = 1,
-        public readonly ?string $concurrencyKey = null
+        public readonly ?string $concurrencyKey = null,
+        public readonly array $resumeProgress = []
     ) {
     }
 }
