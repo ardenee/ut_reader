@@ -54,8 +54,9 @@ final class CatalogStagedImportJobHandler implements JobHandler
         $store = new CatalogIncomingFileStore($this->config);
         $preparedSourcePath = trim((string)($payload['prepared_source_path'] ?? ''));
         $redirectPrepared = !empty($payload['redirect_prepared']) && $preparedSourcePath !== '';
+        $persistentPreparedSource = $redirectPrepared && !empty($payload['prepared_source_persistent']);
         $sourcePath = $redirectPrepared
-            ? $this->resolvePreparedSource($preparedSourcePath)
+            ? $this->resolvePreparedSource($preparedSourcePath, $job->id, $persistentPreparedSource)
             : $store->resolve($relativePath);
         if (!$redirectPrepared) {
             $this->verifyIdentity($sourcePath, $payload);
@@ -87,11 +88,20 @@ final class CatalogStagedImportJobHandler implements JobHandler
         $scanStart = $startPercent;
         try {
             if ($redirectPrepared) {
-                // The non-blocking wrapper created this controlled temporary file
-                // in the current worker process. Scan it directly instead of making
-                // another large copy before the parser can begin.
-                $workingPath = $sourcePath;
-                $workingTemporary = true;
+                if ($persistentPreparedSource) {
+                    // Keep the durable decompressed source untouched. The parser
+                    // receives a hardlink/working copy that may be moved into
+                    // verified storage without consuming the recovery artifact.
+                    $workingPath = $this->workingSource($sourcePath, $workingName, $context, 46, 48);
+                    $workingTemporary = true;
+                    $scanStart = 48;
+                } else {
+                    // Compatibility for already-queued jobs produced by the old
+                    // non-blocking wrapper: their prepared source is a one-shot
+                    // controlled temp file and may be consumed directly.
+                    $workingPath = $sourcePath;
+                    $workingTemporary = true;
+                }
             } elseif (\catalog_redirect_archive_is_supported_filename($originalName)) {
                 if (\catalog_redirect_archive_extension($originalName) === 'uz2') {
                     $decoded = CatalogRedirectArchiveStream::decompressUz2(
@@ -178,8 +188,9 @@ final class CatalogStagedImportJobHandler implements JobHandler
             );
 
             // Duplicate/alias outcomes return before verified storage consumes the
-            // working path. Remove that helper path explicitly before deleting the
-            // durable staging source; successful new imports have already moved it.
+            // working path. Remove that helper path explicitly; successful new
+            // imports may already have moved it into canonical storage. The
+            // durable incoming/prepared recovery source is intentionally separate.
             $completedWorkingPath = $workingPath;
             $workingPath = '';
             if ($workingTemporary && $completedWorkingPath !== '' && is_file($completedWorkingPath)) {
@@ -379,15 +390,32 @@ final class CatalogStagedImportJobHandler implements JobHandler
         return $path;
     }
 
-    private function resolvePreparedSource(string $path): string
+    private function resolvePreparedSource(string $path, int $jobId, bool $persistent): string
     {
         $real = realpath($path);
-        $temporaryRoot = realpath(sys_get_temp_dir());
-        if ($real === false || $temporaryRoot === false || !is_file($real) || !is_readable($real) || is_link($real)) {
+        if ($real === false || !is_file($real) || !is_readable($real) || is_link($real)) {
             throw new \RuntimeException('Prepared redirect payload is unavailable.');
         }
-        $prefix = rtrim(str_replace('\\', '/', $temporaryRoot), '/') . '/';
         $normalized = str_replace('\\', '/', $real);
+
+        if ($persistent) {
+            $storageRoot = realpath(rtrim((string)($this->config['storage_path'] ?? ''), DIRECTORY_SEPARATOR));
+            if ($storageRoot === false) {
+                throw new \RuntimeException('Catalog storage path is unavailable for prepared redirect recovery.');
+            }
+            $expected = rtrim(str_replace('\\', '/', $storageRoot), '/')
+                . '/jobs/prepared/job-' . $jobId . '/';
+            if (!str_starts_with($normalized, $expected)) {
+                throw new \RuntimeException('Prepared redirect payload escaped durable job storage.');
+            }
+            return $real;
+        }
+
+        $temporaryRoot = realpath(sys_get_temp_dir());
+        if ($temporaryRoot === false) {
+            throw new \RuntimeException('Temporary storage is unavailable for prepared redirect payload.');
+        }
+        $prefix = rtrim(str_replace('\\', '/', $temporaryRoot), '/') . '/';
         if (!str_starts_with($normalized, $prefix) || !str_starts_with(basename($real), 'ue_redirect_')) {
             throw new \RuntimeException('Prepared redirect payload escaped controlled temporary storage.');
         }
