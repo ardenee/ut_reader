@@ -100,7 +100,7 @@ try {
 
     catalog_page_header(
         'Background Jobs',
-        'Each job uses a fixed summary row plus a full-width live status row. Current file time is measured from that job’s own claim time. The worker banner describes the detached queue process separately.',
+        'Each job uses a fixed summary row plus a full-width live status row. Long workflows keep successful child units and retry only failed/incomplete work; routine child rows stay hidden unless they need attention.',
         [
             'Upload Bucket' => 'upload-bucket-v2.php',
             'Upload Files' => 'profiled-upload.php',
@@ -194,14 +194,14 @@ try {
         . '</div></div>';
 
     echo '<details class="jobs-maintenance"><summary>Maintenance</summary><div class="jobs-maintenance-body">'
-        . '<p class="muted">Use recovery only when the authoritative state reports orphaned running rows or expired leases.</p>'
+        . '<p class="muted">Use recovery only when the authoritative state reports orphaned running rows or expired leases. Old-job cleanup is queued as resumable background work; the browser only snapshots eligible terminal job IDs.</p>'
         . '<p class="button-row">'
         . '<button id="jobs-recover" type="button">Recover orphaned / expired jobs</button>'
         . '<label>Delete terminal jobs older than <select id="jobs-cleanup-days">'
         . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
         . '<option value="90">90 days</option><option value="365">1 year</option>'
         . '</select></label>'
-        . '<button id="jobs-cleanup" type="button">Clean old jobs</button>'
+        . '<button id="jobs-cleanup" type="button">Queue cleanup</button>'
         . '</p></div></details>';
 
     echo '</div></div></section>';
@@ -212,6 +212,9 @@ try {
     $script = __DIR__ . '/assets/background-jobs-stable.js';
     $version = is_file($script) ? (string)filemtime($script) : '1';
     echo '<script src="assets/background-jobs-stable.js?v=' . catalog_h($version) . '"></script>';
+    $cleanupScript = __DIR__ . '/assets/background-jobs-async-cleanup.js';
+    $cleanupVersion = is_file($cleanupScript) ? (string)filemtime($cleanupScript) : '1';
+    echo '<script src="assets/background-jobs-async-cleanup.js?v=' . catalog_h($cleanupVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
