@@ -15,8 +15,10 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
+use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogJobWorkerFactory
 {
@@ -30,11 +32,6 @@ final class CatalogJobWorkerFactory
     ): JobWorker {
         self::raiseWorkerMemoryLimit($config);
 
-        // max_upload_bytes protects browser/staging ingress. It must not reject a
-        // trusted package after it has already entered durable staging, a local
-        // source, a PAK extraction, or a managed game backup. Preserve the real
-        // ingress limit separately so redirect decompression still has a finite,
-        // configurable expansion ceiling rather than inheriting PHP_INT_MAX.
         $trustedImportConfig = $config;
         $ingressLimit = max(1, (int)($config['max_upload_bytes'] ?? (256 * 1024 * 1024)));
         $defaultRedirectLimit = $ingressLimit > intdiv(PHP_INT_MAX, 8)
@@ -47,9 +44,31 @@ final class CatalogJobWorkerFactory
         );
         $trustedImportConfig['max_upload_bytes'] = PHP_INT_MAX;
 
-        $eventLog = new CatalogJobEventLog($config);
+        $logging = new CatalogJobLoggingSettingsStore($db);
+        $eventLog = new CatalogJobEventLog($config, $logging);
         $eventAppender = static function (int $jobId, array $event) use ($eventLog): void {
             $eventLog->append($jobId, $event);
+        };
+        $diagnosticEnabled = static fn(): bool => $logging->enabled('worker_diagnostics', false);
+        $failureReporter = static function (ClaimedJob $job, \Throwable $error, string $disposition): void {
+            CatalogSystemErrorRecorder::record([
+                'source_kind' => 'background-job',
+                'severity' => 'error',
+                'error_type' => get_class($error),
+                'message' => $job->type . ' #' . $job->id . ' ' . $disposition . ': ' . $error->getMessage(),
+                'source_file' => $error->getFile(),
+                'source_line' => $error->getLine(),
+                'trace_text' => $error->getTraceAsString(),
+                'context' => [
+                    'job_id' => $job->id,
+                    'job_type' => $job->type,
+                    'attempt' => $job->attempt,
+                    'max_attempts' => $job->maxAttempts,
+                    'disposition' => $disposition,
+                    'resource_class' => $job->resourceClass,
+                    'concurrency_key' => $job->concurrencyKey,
+                ],
+            ]);
         };
 
         $bucketUpload = new CatalogBucketUploadJobHandler($db, $trustedImportConfig);
@@ -79,8 +98,6 @@ final class CatalogJobWorkerFactory
         $maintenance = new CatalogMaintenanceJobHandler($db, $config);
         $fullSync = new CatalogFullSyncJobHandler($db, $trustedImportConfig);
 
-        // Route every durable job type explicitly. Worker dispatch must never
-        // depend on handler array order or on broad supports() fallbacks.
         $handlersByType = [
             JobType::FULL_SYNC_GAME => $fullSync,
             JobType::REBUILD_GAME_DEPENDENCIES => $dependencyRefresh,
@@ -113,7 +130,9 @@ final class CatalogJobWorkerFactory
             $queueName,
             $workerId,
             $leaseSeconds,
-            $eventAppender
+            $eventAppender,
+            $diagnosticEnabled,
+            $failureReporter
         );
     }
 
