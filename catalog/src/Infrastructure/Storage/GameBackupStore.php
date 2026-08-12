@@ -48,6 +48,11 @@ final class GameBackupStore
         return $this->backupPath($backupKey) . DIRECTORY_SEPARATOR . 'files';
     }
 
+    public function exportJournalPath(string $backupKey): string
+    {
+        return $this->backupPath($backupKey) . DIRECTORY_SEPARATOR . 'export-entries.jsonl';
+    }
+
     /** @return array{path:string,files_path:string} */
     public function create(string $backupKey): array
     {
@@ -77,6 +82,73 @@ final class GameBackupStore
         $state['backup_key'] = $this->validateKey($backupKey);
         $state['updated_at'] = gmdate('c');
         $this->writeJson($this->backupPath($backupKey) . DIRECTORY_SEPARATOR . 'state.json', $state);
+    }
+
+    /** @param array<string,mixed> $entry */
+    public function appendExportJournal(string $backupKey, array $entry): void
+    {
+        $path = $this->exportJournalPath($backupKey);
+        $line = json_encode($entry, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n";
+        $handle = fopen($path, 'ab');
+        if (!is_resource($handle)) {
+            throw new \RuntimeException('Could not open game-backup export journal.');
+        }
+        try {
+            if (!flock($handle, LOCK_EX)) {
+                throw new \RuntimeException('Could not lock game-backup export journal.');
+            }
+            $written = fwrite($handle, $line);
+            if ($written === false || $written !== strlen($line)) {
+                throw new \RuntimeException('Could not append game-backup export journal.');
+            }
+            fflush($handle);
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+        @chmod($path, 0640);
+    }
+
+    /** @return list<array<string,mixed>> */
+    public function readExportJournal(string $backupKey): array
+    {
+        $path = $this->exportJournalPath($backupKey);
+        if (!is_file($path)) {
+            return [];
+        }
+        $handle = fopen($path, 'rb');
+        if (!is_resource($handle)) {
+            throw new \RuntimeException('Could not read game-backup export journal.');
+        }
+        $entries = [];
+        try {
+            if (!flock($handle, LOCK_SH)) {
+                throw new \RuntimeException('Could not lock game-backup export journal for reading.');
+            }
+            while (($line = fgets($handle)) !== false) {
+                $line = trim($line);
+                if ($line === '') {
+                    continue;
+                }
+                $decoded = json_decode($line, true, 64, JSON_THROW_ON_ERROR);
+                if (!is_array($decoded)) {
+                    throw new \RuntimeException('Game-backup export journal contains an invalid entry.');
+                }
+                $entries[] = $decoded;
+            }
+        } finally {
+            flock($handle, LOCK_UN);
+            fclose($handle);
+        }
+        return $entries;
+    }
+
+    public function clearExportJournal(string $backupKey): void
+    {
+        $path = $this->exportJournalPath($backupKey);
+        if (is_file($path) && !@unlink($path)) {
+            throw new \RuntimeException('Could not remove completed game-backup export journal.');
+        }
     }
 
     /** @param array<string,mixed> $manifest */
