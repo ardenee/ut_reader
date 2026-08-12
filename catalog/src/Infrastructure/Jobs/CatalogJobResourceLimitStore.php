@@ -157,8 +157,12 @@ final class CatalogJobResourceLimitStore
      * Projection reconciliation uses one global MySQL maintenance lock. Older
      * rows were persisted as search-heavy with per-file concurrency keys, so
      * several workers could claim them even though only one could make progress.
-     * Normalize them to dependency-heavy and one global concurrency key before
-     * a worker pool is started or resized.
+     * Normalize only the projection coordinator to dependency-heavy and one
+     * global concurrency key before a worker pool is started or resized.
+     *
+     * Affected-dependency coordinators also have a legacy rekey rule. Per-file
+     * children and pre-upgrade batch compatibility rows are intentionally excluded
+     * because their narrower concurrency keys are required for safe fan-out.
      *
      * @return array{updated_jobs:int,updated_limits:int,projection_rows:int,rekeyed_jobs:int,per_class:array<string,int>}
      */
@@ -297,6 +301,8 @@ final class CatalogJobResourceLimitStore
             'UPDATE ue_background_jobs SET concurrency_key=' . $expectedKey . ' '
             . 'WHERE queue_name=? AND status="queued" AND job_type=? '
             . 'AND JSON_VALID(payload_json) AND ' . $gameIdExpression . '>0 '
+            . 'AND JSON_EXTRACT(payload_json,"$.affected_file_id") IS NULL '
+            . 'AND JSON_EXTRACT(payload_json,"$.affected_file_ids") IS NULL '
             . 'AND (concurrency_key IS NULL OR concurrency_key<>' . $expectedKey . ')'
         );
         $statement->execute([$this->queueName, JobType::REBUILD_AFFECTED_DEPENDENCIES]);
