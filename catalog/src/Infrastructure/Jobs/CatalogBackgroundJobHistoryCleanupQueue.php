@@ -46,6 +46,15 @@ final class CatalogBackgroundJobHistoryCleanupQueue
         }
 
         $requested = max(count($ids), $requested);
+        if ($ids === []) {
+            return [
+                'job_id' => 0,
+                'scheduled' => 0,
+                'requested' => $requested,
+                'limited' => false,
+            ];
+        }
+
         $jobId = (new PdoJobQueue($this->db))->enqueue(
             $queueName,
             JobType::CLEAN_BACKGROUND_JOB_HISTORY,
