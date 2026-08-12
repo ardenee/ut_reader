@@ -25,6 +25,7 @@ final class CatalogSourceScanRunner
 
     /**
      * @param callable(array<string,mixed>):void|null $progress
+     * @param array<string,mixed> $resume Durable scanner checkpoint from a prior worker attempt.
      * @return array<string,mixed>
      */
     public function run(
@@ -32,7 +33,8 @@ final class CatalogSourceScanRunner
         bool $importUnknown,
         bool $strictProfile,
         ?int $userId = null,
-        ?callable $progress = null
+        ?callable $progress = null,
+        array $resume = []
     ): array {
         $context = (new CatalogSourceScanContextLoader($this->db))->load($sourceId);
         $source = $context['source'];
@@ -40,15 +42,28 @@ final class CatalogSourceScanRunner
         $profileEngine = $context['profile_engine'];
         $basePath = $context['base_path'];
 
-        $counters = array_fill_keys([
+        $counterNames = [
             'found', 'redirect_archives', 'redirect_cache_hits', 'matched_md5', 'matched_guid', 'guid_ambiguous',
             'parse_failed', 'unknown', 'locations', 'imported', 'duplicates',
             'import_failed', 'staged_unverified', 'containers_skipped',
             'fingerprint_hits', 'cached_hashes', 'fingerprints_written', 'fingerprint_errors',
-        ], 0);
-        $unknownSamples = [];
-        $parseFailedSamples = [];
-        $importSamples = [];
+        ];
+        $counters = array_fill_keys($counterNames, 0);
+        foreach ($counterNames as $name) {
+            if (isset($resume[$name]) && is_numeric($resume[$name])) {
+                $counters[$name] = max(0, (int)$resume[$name]);
+            }
+        }
+        $unknownSamples = is_array($resume['unknown_samples'] ?? null)
+            ? array_slice(array_values($resume['unknown_samples']), 0, 50)
+            : [];
+        $parseFailedSamples = is_array($resume['parse_failed_samples'] ?? null)
+            ? array_slice(array_values($resume['parse_failed_samples']), 0, 50)
+            : [];
+        $importSamples = is_array($resume['import_samples'] ?? null)
+            ? array_slice(array_values($resume['import_samples']), 0, 50)
+            : [];
+        $lastRelativePath = $this->normalizeRelative((string)($resume['scan_last_relative_path'] ?? ''));
 
         $fingerprints = new CatalogSourceFingerprintSession($this->db);
         $fingerprints->applyCounters($counters);
@@ -71,20 +86,40 @@ final class CatalogSourceScanRunner
             $progress
         );
         $files = $discovery['files'];
+        // Discovery is repeatable setup work; this count describes the current
+        // source snapshot and must not be accumulated across process restarts.
         $counters['containers_skipped'] = (int)$discovery['containers_skipped'];
 
         $total = count($files);
+        $startIndex = 0;
+        if ($lastRelativePath !== '') {
+            while ($startIndex < $total) {
+                $candidate = $this->normalizeRelative((string)($files[$startIndex][1] ?? ''));
+                if (strnatcasecmp($candidate, $lastRelativePath) > 0) {
+                    break;
+                }
+                $startIndex++;
+            }
+        }
+
         CatalogSourceScanProgress::report($progress, [
             'stage' => 'scanning',
-            'done' => 0,
+            'done' => $startIndex,
             'total' => max(1, $total),
-            'percent' => 0,
+            'percent' => (int)floor(($startIndex * 100) / max(1, $total)),
             'message' => $total > 0
-                ? 'Scanning ' . $total . ' package-like files.'
+                ? ($startIndex > 0
+                    ? 'Resuming source scan after ' . $lastRelativePath . '; ' . $startIndex . '/' . $total . ' path(s) already durable.'
+                    : 'Scanning ' . $total . ' package-like files.')
                 : 'No package-like files were found.',
+            'scan_last_relative_path' => $lastRelativePath,
+            'unknown_samples' => $unknownSamples,
+            'parse_failed_samples' => $parseFailedSamples,
+            'import_samples' => $importSamples,
         ] + $counters);
 
-        foreach ($files as $index => [$path, $relativePath]) {
+        for ($index = $startIndex; $index < $total; $index++) {
+            [$path, $relativePath] = $files[$index];
             $counters['found']++;
             $work = null;
             $probe = null;
@@ -146,11 +181,7 @@ final class CatalogSourceScanRunner
                 if ($md5 === false || $md5 === '') {
                     $counters['unknown']++;
                     if (count($unknownSamples) < 50) {
-                        $unknownSamples[] = CatalogSourceScanPathPolicy::sample(
-                            $path,
-                            $work,
-                            'could not hash file'
-                        );
+                        $unknownSamples[] = CatalogSourceScanPathPolicy::sample($path, $work, 'could not hash file');
                     }
                     continue;
                 }
@@ -243,9 +274,7 @@ final class CatalogSourceScanRunner
                                 $path,
                                 $work,
                                 'profiled import failed: '
-                                . ($scanError instanceof Throwable
-                                    ? $scanError->getMessage()
-                                    : 'Unknown import error')
+                                . ($scanError instanceof Throwable ? $scanError->getMessage() : 'Unknown import error')
                             );
                         }
                     }
@@ -360,9 +389,7 @@ final class CatalogSourceScanRunner
                             $work,
                             ($guid === '' ? 'no GUID' : 'GUID not in catalog: ' . $guid)
                             . '; profiled import failed: '
-                            . ($scanError instanceof Throwable
-                                ? $scanError->getMessage()
-                                : 'Unknown import error')
+                            . ($scanError instanceof Throwable ? $scanError->getMessage() : 'Unknown import error')
                         );
                     }
                 }
@@ -385,6 +412,7 @@ final class CatalogSourceScanRunner
                     CatalogSourceScanWorkFile::cleanup($work);
                 }
                 $fingerprints->applyCounters($counters);
+                $lastRelativePath = $this->normalizeRelative($relativePath);
                 $done = $index + 1;
                 CatalogSourceScanProgress::report($progress, [
                     'stage' => 'scanning',
@@ -392,6 +420,10 @@ final class CatalogSourceScanRunner
                     'total' => max(1, $total),
                     'percent' => (int)floor(($done * 100) / max(1, $total)),
                     'message' => 'Processed ' . $done . '/' . $total . ': ' . basename($path),
+                    'scan_last_relative_path' => $lastRelativePath,
+                    'unknown_samples' => $unknownSamples,
+                    'parse_failed_samples' => $parseFailedSamples,
+                    'import_samples' => $importSamples,
                 ] + $counters);
             }
         }
@@ -403,6 +435,10 @@ final class CatalogSourceScanRunner
             'total' => max(1, $total),
             'percent' => 100,
             'message' => 'Source scan complete.',
+            'scan_last_relative_path' => $lastRelativePath,
+            'unknown_samples' => $unknownSamples,
+            'parse_failed_samples' => $parseFailedSamples,
+            'import_samples' => $importSamples,
         ] + $counters);
 
         return $counters + [
@@ -411,6 +447,12 @@ final class CatalogSourceScanRunner
             'unknown_samples' => $unknownSamples,
             'parse_failed_samples' => $parseFailedSamples,
             'import_samples' => $importSamples,
+            'scan_last_relative_path' => $lastRelativePath,
         ];
+    }
+
+    private function normalizeRelative(string $path): string
+    {
+        return trim(str_replace('\\', '/', $path), '/');
     }
 }
