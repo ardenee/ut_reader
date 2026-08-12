@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Executes bounded bulk restart/cancel/delete operations for durable background jobs.
+ * Purpose: Executes bounded bulk restart/cancel requests and snapshots bulk delete requests for Background Jobs.
  * Why: Bulk mutation SQL and resumable dependency-job handling do not belong in an HTTP entry point.
  * Role: Infrastructure persistence service used by the Background Jobs API.
  */
@@ -11,7 +11,7 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobHistoryCleanupQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 
 final class PdoBackgroundJobBulkAction
@@ -27,7 +27,7 @@ final class PdoBackgroundJobBulkAction
 
     /**
      * @param list<int> $jobIds
-     * @return array{action:string,scope:string,queue:string,requested:int,affected:int,skipped:int,deleted_staged_files:int,limited:bool,batch_limit:int,worker:null,worker_error:string,worker_start_required:bool}
+     * @return array<string,mixed>
      */
     public function execute(
         string $action,
@@ -40,47 +40,55 @@ final class PdoBackgroundJobBulkAction
     ): array {
         $this->setShortLockWait();
 
-        $where = ['queue_name=?'];
-        $params = [$queueName];
+        // Use the exact same search/workflow-child visibility scope as the list
+        // endpoint. "Select all matching" must never mutate hidden routine child
+        // rows that were not part of the administrator's current result set.
+        $browserScope = (new PdoBackgroundJobSearchScope($this->db))->build($queueName, $search);
+        $where = [];
+        $params = [];
+        if (trim((string)$browserScope['where']) !== '') {
+            $where[] = '(' . $browserScope['where'] . ')';
+            $params = $browserScope['params'];
+        }
+
         if ($scope === 'selected') {
-            $where[] = 'id IN (' . implode(',', array_fill(0, count($jobIds), '?')) . ')';
+            if ($jobIds === []) {
+                throw new \InvalidArgumentException('Select at least one background job.');
+            }
+            $where[] = 'j.id IN (' . implode(',', array_fill(0, count($jobIds), '?')) . ')';
             array_push($params, ...$jobIds);
         }
         if ($status !== '') {
-            $condition = CatalogJobDisplayStatus::filterCondition($status);
-            $where[] = $condition['sql'];
+            $condition = CatalogJobDisplayStatus::filterCondition($status, 'j');
+            $where[] = '(' . $condition['sql'] . ')';
             array_push($params, ...$condition['params']);
-        }
-        if ($search !== '') {
-            $where[] = '(CAST(id AS CHAR) LIKE ? OR job_type LIKE ? OR COALESCE(concurrency_key,"") LIKE ? '
-                . 'OR COALESCE(payload_json,"") LIKE ? OR COALESCE(last_error,"") LIKE ? '
-                . 'OR COALESCE(result_json,"") LIKE ?)';
-            $like = '%' . $search . '%';
-            array_push($params, $like, $like, $like, $like, $like, $like);
         }
 
         $actionCondition = match ($action) {
-            'restart' => '(status IN ("cancelled","failed","dead_letter") '
-                . 'OR (status="completed" AND display_status IN ("failed","rejected","unverified")))',
-            'cancel' => 'status="queued"',
-            'delete' => 'status IN ("completed","failed","dead_letter","cancelled")',
+            'restart' => '(j.status IN ("cancelled","failed","dead_letter") '
+                . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified")))',
+            'cancel' => 'j.status="queued"',
+            'delete' => 'j.status IN ("completed","failed","dead_letter","cancelled")',
             default => throw new \InvalidArgumentException('Unsupported bulk job action.'),
         };
         $where[] = $actionCondition;
         $whereSql = implode(' AND ', $where);
+        $fromSql = (string)$browserScope['from'];
 
-        $count = $this->db->prepare('SELECT COUNT(*) FROM ue_background_jobs WHERE ' . $whereSql);
+        $count = $this->db->prepare('SELECT COUNT(*) FROM ' . $fromSql . ' WHERE ' . $whereSql);
         $count->execute($params);
-        $requested = (int)$count->fetchColumn();
+        $requested = max(0, (int)$count->fetchColumn());
 
         $select = $this->db->prepare(
-            'SELECT id FROM ue_background_jobs WHERE ' . $whereSql
-            . ' ORDER BY id ASC LIMIT ' . self::BATCH_LIMIT
+            'SELECT j.id FROM ' . $fromSql . ' WHERE ' . $whereSql
+            . ' ORDER BY j.id ASC LIMIT ' . self::BATCH_LIMIT
         );
         $select->execute($params);
-        $eligibleIds = array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN));
+        $eligibleIds = array_values(array_unique(array_map('intval', $select->fetchAll(PDO::FETCH_COLUMN) ?: [])));
 
         $affected = 0;
+        $scheduled = 0;
+        $cleanupJobId = 0;
         $deletedStagedFiles = 0;
         $limited = $requested > count($eligibleIds);
         $now = gmdate('Y-m-d H:i:s');
@@ -90,10 +98,16 @@ final class PdoBackgroundJobBulkAction
         } elseif ($action === 'cancel' && $eligibleIds !== []) {
             $affected = $this->cancel($queueName, $eligibleIds, $userId, $now);
         } elseif ($action === 'delete' && $eligibleIds !== []) {
-            $result = (new CatalogBackgroundJobCleanup($this->db, $this->config))
-                ->deleteTerminalJobs($eligibleIds, $queueName);
-            $affected = (int)($result['deleted_jobs'] ?? 0);
-            $deletedStagedFiles = (int)($result['deleted_staged_files'] ?? 0);
+            $queued = (new CatalogBackgroundJobHistoryCleanupQueue($this->db, $this->config))->enqueueSnapshot(
+                $queueName,
+                $eligibleIds,
+                $requested,
+                $limited,
+                $userId,
+                $scope === 'matching' ? 'Delete matching terminal jobs' : 'Delete selected terminal jobs'
+            );
+            $cleanupJobId = (int)$queued['job_id'];
+            $scheduled = (int)$queued['scheduled'];
         }
 
         return [
@@ -102,13 +116,18 @@ final class PdoBackgroundJobBulkAction
             'queue' => $queueName,
             'requested' => $requested,
             'affected' => $affected,
-            'skipped' => max(0, min($requested, count($eligibleIds)) - $affected),
+            'scheduled' => $scheduled,
+            'cleanup_job_id' => $cleanupJobId,
+            'skipped' => $action === 'delete'
+                ? max(0, min($requested, count($eligibleIds)) - $scheduled)
+                : max(0, min($requested, count($eligibleIds)) - $affected),
             'deleted_staged_files' => $deletedStagedFiles,
             'limited' => $limited,
             'batch_limit' => self::BATCH_LIMIT,
             'worker' => null,
             'worker_error' => '',
-            'worker_start_required' => $action === 'restart' && $affected > 0,
+            'worker_start_required' => ($action === 'restart' && $affected > 0)
+                || ($action === 'delete' && $cleanupJobId > 0),
         ];
     }
 
@@ -134,11 +153,12 @@ final class PdoBackgroundJobBulkAction
             . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=NULL,result_json=NULL,'
             . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
             . 'dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
-            . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND ' . $actionCondition
+            . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND '
+            . str_replace('j.', '', $actionCondition)
         );
         // Do not clear progress_json/progress_updated_at. The durable progress
-        // snapshot is recovery state. Legacy affected-dependency rows still get
-        // their resume_offset projected into payload_json above for compatibility.
+        // snapshot is recovery state. Only legacy affected-dependency batch rows
+        // receive the resume_offset compatibility projection above.
         $statement->execute(array_merge([$now, $now, $queueName], $eligibleIds));
         return $statement->rowCount();
     }
@@ -164,7 +184,9 @@ final class PdoBackgroundJobBulkAction
             return null;
         }
         $payload = json_decode((string)($row['payload_json'] ?? ''), true);
-        if (!is_array($payload)) {
+        if (!is_array($payload)
+            || (int)($payload['affected_file_id'] ?? 0) > 0
+            || !is_array($payload['affected_file_ids'] ?? null)) {
             return null;
         }
 
