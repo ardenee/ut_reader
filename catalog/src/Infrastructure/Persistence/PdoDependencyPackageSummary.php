@@ -105,13 +105,18 @@ final class PdoDependencyPackageSummary
                     . 'WHEN SUM(d.status="resolved")=COUNT(*) THEN "resolved" '
                     . 'WHEN SUM(d.status IN ("resolved","package_only"))=COUNT(*) THEN "package_only" '
                     . 'ELSE "mixed" END summary_status,'
-                    . 'CASE WHEN COUNT(DISTINCT d.resolved_file_id)=1 THEN MAX(d.resolved_file_id) ELSE NULL END provider_file_id ';
+                    // resolved_file_id is a compact projection hint and can briefly point at a provider
+                    // that has been removed while another maintenance pass is rebuilding owners. Only
+                    // publish an FK-backed provider that still exists in ue_files.
+                    . 'CASE WHEN COUNT(DISTINCT provider.id)=1 THEN MAX(provider.id) ELSE NULL END provider_file_id ';
                 $dependencySource = PdoDependencyReadSource::sql($this->db);
 
                 $insert = $this->db->prepare(
                     'INSERT INTO ue_dependency_package_summaries(' . $insertColumns . ') '
                     . 'SELECT ' . $selectColumns
-                    . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
+                    . 'FROM ' . $dependencySource . ' d '
+                    . 'JOIN ue_files f ON f.id=d.file_id '
+                    . 'LEFT JOIN ue_files provider ON provider.id=d.resolved_file_id '
                     . 'WHERE d.file_id IN (' . $placeholders . ') AND f.scan_status="verified" '
                     . 'AND d.required_package IS NOT NULL AND d.required_package<>"" '
                     . 'GROUP BY f.game_id,d.file_id,d.required_package'
