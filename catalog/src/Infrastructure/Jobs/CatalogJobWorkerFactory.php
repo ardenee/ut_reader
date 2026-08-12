@@ -118,6 +118,7 @@ final class CatalogJobWorkerFactory
             JobType::GENERATE_MOD_PACKAGE => $generatedPackage,
             JobType::EXPORT_GAME_BACKUP => $backupExport,
             JobType::IMPORT_GAME_BACKUP => $backupImport,
+            JobType::IMPORT_GAME_BACKUP_ENTRY => $backupImport,
             JobType::IMPORT_STAGED_PACKAGE => $packageImport,
             JobType::IMPORT_STAGED_PAK => $pakImport,
             JobType::PREPARE_BUCKET_REDIRECT => $bucketRedirect,
