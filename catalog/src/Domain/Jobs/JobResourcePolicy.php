@@ -15,6 +15,7 @@ use Throwable;
 final class JobResourcePolicy
 {
     public const DEPENDENCY_HEAVY = 'dependency-heavy';
+    public const FULL_SYNC_UNIT = 'full-sync-unit';
     public const AFFECTED_DEPENDENCY_BATCH = 'affected-dependency-batch';
     public const SEARCH_HEAVY = 'search-heavy';
     public const IMPORT_HEAVY = 'import-heavy';
@@ -42,7 +43,12 @@ final class JobResourcePolicy
             self::DEPENDENCY_HEAVY => [
                 'label' => 'Dependency and projection work',
                 'default' => 1,
-                'description' => 'Full Sync, whole-game/file dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
+                'description' => 'Full Sync coordinators, whole-game/file dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
+            ],
+            self::FULL_SYNC_UNIT => [
+                'label' => 'Full Sync file units',
+                'default' => 2,
+                'description' => 'Independent per-file Full Sync reimport and dependency units. Completed units remain durable and are never replayed after a workflow restart.',
             ],
             self::AFFECTED_DEPENDENCY_BATCH => [
                 'label' => 'Affected dependency batches',
@@ -105,6 +111,16 @@ final class JobResourcePolicy
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::PROJECTION_CONCURRENCY_KEY
+            ),
+            JobType::FULL_SYNC_FILE => new JobResourceProfile(
+                self::FULL_SYNC_UNIT,
+                self::configuredLimit(self::FULL_SYNC_UNIT, 2),
+                self::positiveKey('import:file-id:', $payload['file_id'] ?? null)
+            ),
+            JobType::FULL_SYNC_DEPENDENCY_FILE => new JobResourceProfile(
+                self::FULL_SYNC_UNIT,
+                self::configuredLimit(self::FULL_SYNC_UNIT, 2),
+                self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
             ),
             JobType::REBUILD_GAME_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
