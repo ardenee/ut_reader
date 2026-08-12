@@ -60,6 +60,7 @@ function catalog_admin_navigation_groups(string $root): array
         'Maintenance' => [
             'Background Jobs' => $root . 'background-jobs.php',
             'Job Resource Limits' => $root . 'job-resource-limits.php',
+            'Job Logging' => $root . 'job-logging.php',
             'Live Contention' => $root . 'live-contention.php',
             'System Errors' => $root . 'system-errors.php',
             'Basic Page Audit' => $root . 'basic-performance-audit.php',
