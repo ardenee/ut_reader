@@ -151,6 +151,34 @@ final class CatalogPakArchiveStore
     }
 
     /** @param array<string,mixed> $entry */
+    public function ensureEntry(PDO $db, int $pakId, int $entryIndex, array $entry, bool $wasExtracted): int
+    {
+        if ($pakId < 1 || $entryIndex < 0) {
+            throw new \InvalidArgumentException('PAK entry identity is invalid.');
+        }
+        $existing = $db->prepare('SELECT id FROM ue_pak_entries WHERE pak_id=? AND entry_index=? LIMIT 1');
+        $existing->execute([$pakId, $entryIndex]);
+        $entryId = (int)($existing->fetchColumn() ?: 0);
+        if ($entryId > 0) {
+            return $entryId;
+        }
+
+        try {
+            return $this->addEntry($db, $pakId, $entryIndex, $entry, $wasExtracted);
+        } catch (\PDOException $error) {
+            // Parent planning / worker recovery can replay the same unit after a
+            // process dies between INSERT and its job checkpoint. If another
+            // attempt already published the structural row, reuse it.
+            $existing->execute([$pakId, $entryIndex]);
+            $entryId = (int)($existing->fetchColumn() ?: 0);
+            if ($entryId > 0) {
+                return $entryId;
+            }
+            throw $error;
+        }
+    }
+
+    /** @param array<string,mixed> $entry */
     public function addEntry(PDO $db, int $pakId, int $entryIndex, array $entry, bool $wasExtracted): int
     {
         $path = trim(str_replace('\\', '/', (string)($entry['filename'] ?? '')), '/');
