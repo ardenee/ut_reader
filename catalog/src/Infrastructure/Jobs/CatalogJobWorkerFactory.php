@@ -84,6 +84,7 @@ final class CatalogJobWorkerFactory
         );
         $sourceScan = new CatalogSourceScanJobHandler($db, $trustedImportConfig);
         $storageMaintenance = new CatalogStorageMaintenanceJobHandler($db, $config);
+        $jobHistoryCleanup = new CatalogBackgroundJobHistoryCleanupJobHandler($db, $config);
         $duplicateCleanup = new UnverifiedDuplicateCleanupJobHandler($db, $config);
         $generatedPackage = new GeneratedPackageJobHandler($db, $config);
         $backupExport = new GameBackupExportJobHandler($db, $config);
@@ -112,6 +113,7 @@ final class CatalogJobWorkerFactory
             JobType::REPAIR_SOURCE_IDENTITY_FILE => $maintenance,
             JobType::REPAIR_SOURCE_IDENTITY_GAME => $maintenance,
             JobType::SOURCE_SCAN => $sourceScan,
+            JobType::CLEAN_BACKGROUND_JOB_HISTORY => $jobHistoryCleanup,
             JobType::CLEAN_UNVERIFIED_DUPLICATES => $duplicateCleanup,
             JobType::HASH_UNVERIFIED_DUPLICATE => $duplicateCleanup,
             JobType::DELETE_UNVERIFIED_DUPLICATE => $duplicateCleanup,
