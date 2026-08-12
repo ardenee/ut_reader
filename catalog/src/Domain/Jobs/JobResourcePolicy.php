@@ -68,7 +68,7 @@ final class JobResourcePolicy
             self::ARCHIVE_IMPORT_HEAVY => [
                 'label' => 'Archive and backup imports',
                 'default' => 1,
-                'description' => 'PAK and game-backup import coordinators/entry units. Backup entries remain serial by default to preserve canonical-before-alias restore ordering.',
+                'description' => 'PAK and game-backup import coordinators/entry units. Entry units remain serial by default to avoid archive/storage contention and preserve canonical-before-alias restore ordering.',
             ],
             self::BUCKET_PROCESSING => [
                 'label' => 'Upload Bucket processing',
@@ -170,7 +170,16 @@ final class JobResourcePolicy
                 self::configuredLimit(self::IMPORT_HEAVY, 8),
                 self::importFileKey($payload)
             ),
-            JobType::IMPORT_STAGED_PAK,
+            JobType::IMPORT_STAGED_PAK => new JobResourceProfile(
+                self::ARCHIVE_IMPORT_HEAVY,
+                self::configuredLimit(self::ARCHIVE_IMPORT_HEAVY, 1),
+                self::positiveKey('import:game:', $payload['game_id'] ?? null)
+            ),
+            JobType::IMPORT_STAGED_PAK_ENTRY => new JobResourceProfile(
+                self::ARCHIVE_IMPORT_HEAVY,
+                self::configuredLimit(self::ARCHIVE_IMPORT_HEAVY, 1),
+                self::positiveKey('pak-entry-parent:', $payload['workflow_parent_job_id'] ?? null)
+            ),
             JobType::IMPORT_GAME_BACKUP,
             JobType::IMPORT_GAME_BACKUP_ENTRY => new JobResourceProfile(
                 self::ARCHIVE_IMPORT_HEAVY,
