@@ -113,6 +113,8 @@ final class CatalogJobWorkerFactory
             JobType::REPAIR_SOURCE_IDENTITY_GAME => $maintenance,
             JobType::SOURCE_SCAN => $sourceScan,
             JobType::CLEAN_UNVERIFIED_DUPLICATES => $duplicateCleanup,
+            JobType::HASH_UNVERIFIED_DUPLICATE => $duplicateCleanup,
+            JobType::DELETE_UNVERIFIED_DUPLICATE => $duplicateCleanup,
             JobType::REPAIR_UNVERIFIED_METADATA => $metadataRepair,
             JobType::REFRESH_UNVERIFIED_GAME_MATCHES => $unverifiedMatchRefresh,
             JobType::CROSS_GAME_COPY_BATCH => $crossGameCopyBatch,
