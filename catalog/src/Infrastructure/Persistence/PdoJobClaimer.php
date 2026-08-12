@@ -28,9 +28,6 @@ final class PdoJobClaimer
         $workerId = PdoJobQueueSupport::requiredIdentifier($workerId, 'worker id');
         $leaseSeconds = max(15, min($leaseSeconds, 6 * 3600));
 
-        // Recovery is maintenance, not part of every claim critical section.
-        // One worker performs it opportunistically; other workers continue
-        // claiming immediately instead of waiting behind recovery updates.
         $this->recoverExpiredLeasesIfCoordinator($queue);
 
         $blockedClasses = [];
@@ -65,9 +62,6 @@ final class PdoJobClaimer
                     }
                 }
 
-                // Admission checks are serialized only for the relevant resource
-                // class/key, not for the entire queue. Existing resource and
-                // concurrency indexes from the durable-queue schema support these reads.
                 if ($this->runningResourceCount($queue, $resourceClass) >= $resourceLimit) {
                     $this->rollbackClaimTransaction();
                     $blockedClasses[$resourceClass] = true;
@@ -155,11 +149,21 @@ final class PdoJobClaimer
         $timestamp = $now->format('Y-m-d H:i:s');
         $leaseExpiresAt = $now->modify('+' . $leaseSeconds . ' seconds');
         $leaseToken = bin2hex(random_bytes(16));
+        $resumeProgress = [];
+        if (!empty($row['progress_json'])) {
+            $decoded = json_decode((string)$row['progress_json'], true);
+            if (is_array($decoded)) {
+                $resumeProgress = $decoded;
+            }
+        }
 
         try {
+            // Do not erase progress_json here. It is durable recovery state, not
+            // merely presentation data. The handler receives the prior snapshot
+            // through ClaimedJob::resumeProgress and overwrites it as work advances.
             $update = $this->db->prepare(
                 'UPDATE ue_background_jobs SET status="running",attempts=attempts+1,worker_id=?,lease_token=?,leased_at=?,'
-                . 'lease_expires_at=?,last_heartbeat_at=?,progress_json=NULL,progress_updated_at=NULL,updated_at=? '
+                . 'lease_expires_at=?,last_heartbeat_at=?,updated_at=? '
                 . 'WHERE id=? AND status="queued" AND cancel_requested_at IS NULL'
             );
             $update->execute([
@@ -187,7 +191,8 @@ final class PdoJobClaimer
                 $leaseExpiresAt,
                 $resourceClass,
                 $resourceLimit,
-                $concurrencyKey !== '' ? $concurrencyKey : null
+                $concurrencyKey !== '' ? $concurrencyKey : null,
+                $resumeProgress
             );
         } catch (\Throwable $exception) {
             $this->rollbackClaimTransaction();
