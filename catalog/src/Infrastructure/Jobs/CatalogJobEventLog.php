@@ -21,8 +21,10 @@ final class CatalogJobEventLog
     private string $directory;
 
     /** @param array<string,mixed> $config */
-    public function __construct(array $config)
-    {
+    public function __construct(
+        array $config,
+        private readonly ?CatalogJobLoggingSettingsStore $logging = null
+    ) {
         $storageRoot = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
         if ($storageRoot === '') {
             throw new \InvalidArgumentException('A catalog storage path is required for job events.');
@@ -43,9 +45,14 @@ final class CatalogJobEventLog
     /** @param array<string,mixed> $event */
     public function append(int $jobId, array $event): void
     {
+        $status = $this->text((string)($event['status'] ?? 'info'), 32, 'info');
+        if ($this->logging !== null && !$this->logging->shouldWriteEvent($status)) {
+            return;
+        }
+
         $this->ensureDirectory();
         $payload = [
-            'status' => $this->text((string)($event['status'] ?? 'info'), 32, 'info'),
+            'status' => $status,
             'file' => $this->text((string)($event['file'] ?? ''), self::MAX_EVENT_FILE_LENGTH),
             'message' => $this->text((string)($event['message'] ?? ''), self::MAX_EVENT_MESSAGE_LENGTH),
             'file_id' => max(0, (int)($event['file_id'] ?? 0)),
@@ -81,9 +88,7 @@ final class CatalogJobEventLog
         }
     }
 
-    /**
-     * @return array{events:list<array<string,mixed>>,offset:int,has_more:bool}
-     */
+    /** @return array{events:list<array<string,mixed>>,offset:int,has_more:bool} */
     public function readFrom(int $jobId, int $offset = 0, int $limit = 250): array
     {
         $path = $this->path($jobId);
