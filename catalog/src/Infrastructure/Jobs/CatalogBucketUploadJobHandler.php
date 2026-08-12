@@ -212,9 +212,6 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                     $context->checkpoint($progress);
                 }
             );
-            // stage() consumes/discards only the disposable working link/copy.
-            // The durable prepared source remains available until the checkpoint
-            // below is persisted.
             $workingPath = '';
 
             $status = (string)($staged['status'] ?? 'indexed');
@@ -244,19 +241,11 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             $context->checkpoint($checkpoint);
             return $this->finalizeStagedCheckpoint($uploadId, $preparedStore, $checkpoint, $context);
         } catch (JobCancellationRequested $error) {
-            // Keep both the completed upload and any durable prepared package so
-            // a later Restart can continue without browser interaction.
             throw $error;
         } catch (Throwable $error) {
-            try {
-                $failed = $context->resumeProgress();
-                $failed['stage'] = 'failed';
-                $failed['status'] = 'failed';
-                $failed['message'] = $this->shortError($error);
-                $context->checkpoint($failed);
-            } catch (Throwable) {
-                // Preserve the original processing exception for retry/dead-letter handling.
-            }
+            // Do not replace the last successful durable phase with a generic
+            // "failed" progress object. last_error owns failure diagnostics;
+            // progress_json must remain the recovery checkpoint.
             throw $error;
         } finally {
             if ($workingPath !== '' && is_file($workingPath)) {
@@ -272,10 +261,6 @@ final class CatalogBucketUploadJobHandler implements JobHandler
         array $checkpoint,
         JobExecutionContext $context
     ): array {
-        // Once bucket staging itself is durable, browser transfer storage and
-        // prepared recovery storage are no longer required. If cleanup fails,
-        // the bucket_staged checkpoint remains and the next retry repeats cleanup
-        // only; it does not re-stage the package.
         (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
         $preparedStore->clear();
 
@@ -487,11 +472,5 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             throw new \InvalidArgumentException('Upload Bucket filename is missing.');
         }
         return $name;
-    }
-
-    private function shortError(Throwable $error): string
-    {
-        $message = trim($error->getMessage());
-        return $message !== '' ? $message : 'Upload Bucket processing failed.';
     }
 }
