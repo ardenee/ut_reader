@@ -41,7 +41,9 @@ final class PdoJobQueue implements JobQueue
         ?DateTimeImmutable $availableAt = null,
         ?string $dedupeKey = null,
         ?int $createdBy = null,
-        int $maxAttempts = 3
+        int $maxAttempts = 3,
+        ?int $parentJobId = null,
+        ?string $workflowUnitKey = null
     ): int {
         return $this->enqueuer->enqueue(
             $queue,
@@ -51,7 +53,9 @@ final class PdoJobQueue implements JobQueue
             $availableAt,
             $dedupeKey,
             $createdBy,
-            $maxAttempts
+            $maxAttempts,
+            $parentJobId,
+            $workflowUnitKey
         );
     }
 
@@ -65,10 +69,6 @@ final class PdoJobQueue implements JobQueue
                     || $attempt >= self::CLAIM_CONTENTION_ATTEMPTS) {
                     throw $exception;
                 }
-
-                // The normal claim path never sleeps. This is reached only after
-                // MySQL has chosen this short claim/recovery transaction as the
-                // victim of an actual deadlock/lock-wait conflict.
                 usleep(PdoJobQueueSupport::contentionBackoffMicros($attempt));
             }
         }
@@ -84,10 +84,6 @@ final class PdoJobQueue implements JobQueue
                     || $attempt >= self::COMPLETE_CONTENTION_ATTEMPTS) {
                     throw $exception;
                 }
-
-                // No normal-path delay. Back off only after MySQL has already
-                // reported a deadlock/lock-wait conflict and rolled back the
-                // short completion transaction.
                 usleep(PdoJobQueueSupport::contentionBackoffMicros($attempt));
             }
         }
@@ -96,6 +92,11 @@ final class PdoJobQueue implements JobQueue
     public function fail(ClaimedJob $job, \Throwable $exception, int $retryDelaySeconds): string
     {
         return $this->leases->fail($job, $exception, $retryDelaySeconds);
+    }
+
+    public function defer(ClaimedJob $job, int $delaySeconds, array $progress = []): void
+    {
+        $this->leases->defer($job, $delaySeconds, $progress);
     }
 
     public function heartbeat(ClaimedJob $job, int $leaseSeconds, array $progress = []): string
