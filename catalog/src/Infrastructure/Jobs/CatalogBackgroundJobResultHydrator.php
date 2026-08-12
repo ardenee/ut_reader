@@ -62,6 +62,14 @@ final class CatalogBackgroundJobResultHydrator
             'max_files',
             'package_name',
             'affected_total',
+            'affected_file_id',
+            'source_file_id',
+            'workflow_parent_job_id',
+            'pak_id',
+            'entry_index',
+            'reconcile_game_id',
+            'reconcile_queue_name',
+            'prune_unit',
             'batch_number',
             'batch_count',
             'batch_start',
@@ -72,15 +80,68 @@ final class CatalogBackgroundJobResultHydrator
             }
         }
 
-        // Affected dependency child jobs deliberately share file_id because it is
-        // the provider whose arrival triggered every child batch. The stable jobs
-        // table historically renders source_relative_path/original_name/file_id in
-        // that order, so without a presentation label every parallel child appears
-        // to be processing the same file. Preserve the provider identity while
-        // exposing the distinct batch/range; never leak the large affected ID list.
+        $this->addChildDisplayLabel($payload, $decoded);
+        return $payload;
+    }
+
+    /** @param array<string,mixed> $payload @param array<string,mixed> $decoded */
+    private function addChildDisplayLabel(array &$payload, array $decoded): void
+    {
+        if (trim((string)($payload['source_relative_path'] ?? '')) !== '') {
+            return;
+        }
+
+        $parentId = max(0, (int)($decoded['workflow_parent_job_id'] ?? 0));
+        $affectedFileId = max(0, (int)($decoded['affected_file_id'] ?? 0));
+        if ($affectedFileId > 0) {
+            $package = trim((string)($decoded['package_name'] ?? ''));
+            $provider = max(0, (int)($decoded['file_id'] ?? 0));
+            $label = ($package !== '' ? $package . ' · ' : '')
+                . ($provider > 0 ? 'provider #' . $provider . ' · ' : '')
+                . 'affected file #' . $affectedFileId;
+            if ($parentId > 0) {
+                $label .= ' · workflow #' . $parentId;
+            }
+            $payload['source_relative_path'] = $label;
+            return;
+        }
+
+        $pakId = max(0, (int)($decoded['pak_id'] ?? 0));
+        $entryIndex = (int)($decoded['entry_index'] ?? -1);
+        if ($pakId > 0 && $entryIndex >= 0) {
+            $label = 'PAK #' . $pakId . ' · entry ' . ($entryIndex + 1);
+            if ($parentId > 0) {
+                $label .= ' · workflow #' . $parentId;
+            }
+            $payload['source_relative_path'] = $label;
+            return;
+        }
+
+        $sourceFileId = max(0, (int)($decoded['source_file_id'] ?? 0));
+        if ($sourceFileId > 0 && $parentId > 0) {
+            $payload['source_relative_path'] = 'Source file #' . $sourceFileId . ' · workflow #' . $parentId;
+            return;
+        }
+
+        $reconcileName = trim((string)($decoded['reconcile_queue_name'] ?? ''));
+        if ($reconcileName !== '') {
+            $payload['source_relative_path'] = $reconcileName
+                . ' · unverified game #' . max(0, (int)($decoded['reconcile_game_id'] ?? 0))
+                . ($parentId > 0 ? ' · workflow #' . $parentId : '');
+            return;
+        }
+
+        $pruneUnit = trim((string)($decoded['prune_unit'] ?? ''));
+        if ($pruneUnit !== '') {
+            $payload['source_relative_path'] = 'Artifact cleanup · ' . $pruneUnit
+                . ($parentId > 0 ? ' · workflow #' . $parentId : '');
+            return;
+        }
+
+        // Compatibility reporting for affected-dependency children created by
+        // the previous 50-file batch implementation.
         if (array_key_exists('affected_file_ids', $decoded)
-            && (int)($decoded['file_id'] ?? 0) > 0
-            && trim((string)($payload['source_relative_path'] ?? '')) === '') {
+            && (int)($decoded['file_id'] ?? 0) > 0) {
             $label = '';
             $packageName = trim((string)($decoded['package_name'] ?? ''));
             if ($packageName !== '') {
@@ -103,11 +164,8 @@ final class CatalogBackgroundJobResultHydrator
                     $label .= '/' . $affectedTotal;
                 }
             }
-
             $payload['source_relative_path'] = $label;
         }
-
-        return $payload;
     }
 
     /** @return array<string,mixed>|null */
