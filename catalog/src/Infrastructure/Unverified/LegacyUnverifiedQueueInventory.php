@@ -53,11 +53,27 @@ final class LegacyUnverifiedQueueInventory implements UnverifiedQueueInventory
      */
     public function one(int $queueGameId, string $queueName): ?array
     {
-        $queueName = basename(str_replace('\\', '/', trim($queueName)));
-        if ($queueName === '' || $queueName === '.' || $queueName === '..') {
+        $paths = $this->paths($queueGameId, $queueName);
+        if ($paths === null || !is_file($paths['path']) || is_link($paths['path'])) {
             return null;
         }
+        $queue = $paths['queue'];
+        return $this->itemFromQueue($queue, $paths['directory'], $paths['queue_name']);
+    }
 
+    /**
+     * Resolve the controlled physical path for a durable queue identity even if
+     * the data file has already disappeared. This lets idempotent delete jobs
+     * finish note/DB cleanup after a crash that occurred just after unlink().
+     *
+     * @return array{queue:array<string,mixed>,directory:string,queue_name:string,path:string,reason_path:string}|null
+     */
+    public function paths(int $queueGameId, string $queueName): ?array
+    {
+        $queueName = basename(str_replace('\\', '/', trim($queueName)));
+        if ($queueName === '' || $queueName === '.' || $queueName === '..' || str_starts_with($queueName, '.')) {
+            return null;
+        }
         $queue = $queueGameId === 0
             ? CatalogUnverifiedQueueStorage::bucketGame()
             : $this->game($queueGameId);
@@ -65,7 +81,26 @@ final class LegacyUnverifiedQueueInventory implements UnverifiedQueueInventory
             return null;
         }
         $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $queue, false);
-        return $this->itemFromQueue($queue, $directory, $queueName);
+        if (!is_dir($directory)) {
+            return null;
+        }
+        $root = realpath($directory);
+        if ($root === false) {
+            return null;
+        }
+        $path = $root . DIRECTORY_SEPARATOR . $queueName;
+        // basename() above prevents traversal; existing targets get the stronger
+        // canonical containment check as an additional guard.
+        if (file_exists($path) && !CatalogUnverifiedQueueStorage::pathInside($path, $root)) {
+            return null;
+        }
+        return [
+            'queue' => $queue,
+            'directory' => $root,
+            'queue_name' => $queueName,
+            'path' => $path,
+            'reason_path' => $path . '.txt',
+        ];
     }
 
     /** @param array<string,mixed> $queue @return array<string,mixed>|null */
