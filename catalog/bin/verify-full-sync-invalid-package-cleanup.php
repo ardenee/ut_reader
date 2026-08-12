@@ -1,8 +1,8 @@
 #!/usr/bin/env php
 <?php
 /**
- * Purpose: Verifies that Full Sync retires authoritative invalid packages cleanly instead of keeping broken verified rows.
- * Role: Read-only regression gate for invalid-package detection, typed validation and cleanup routing.
+ * Purpose: Verifies that one durable Full Sync file unit retires an authoritative invalid package cleanly.
+ * Role: Read-only regression gate for typed validation and per-file cleanup without failing/replaying sibling units.
  */
 declare(strict_types=1);
 
@@ -29,7 +29,7 @@ $phpFiles = [
     'lib/GameProfiles.php',
     'src/Infrastructure/Import/CatalogInvalidPackageException.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
-    'src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php',
     'src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php',
 ];
 $syntaxFailures = [];
@@ -75,7 +75,7 @@ try {
 $profiles = $read('lib/GameProfiles.php');
 $exception = $read('src/Infrastructure/Import/CatalogInvalidPackageException.php');
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
-$handler = $read('src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php');
+$unit = $read('src/Infrastructure/Jobs/CatalogFullSyncUnitJobHandler.php');
 $removal = $read('src/Infrastructure/Maintenance/CatalogFileMaintenanceRemovalService.php');
 
 $record(
@@ -84,7 +84,6 @@ $record(
         && !str_contains($importer, 'gp_detect_from_extension'),
     'There must be no filename/extension engine detector available to Full Sync or package import.'
 );
-
 $record(
     'primary_importer_has_no_extension_profile_gate',
     !str_contains($importer, 'Extension not allowed by assigned profile')
@@ -92,68 +91,44 @@ $record(
         && str_contains($importer, 'No supported package reader can be selected from serialized header data.'),
     'Primary package import must never accept/reject or choose a reader from the filename extension.'
 );
-
 $record(
     'invalid_package_has_explicit_exception_type',
     str_contains($exception, 'final class CatalogInvalidPackageException extends RuntimeException')
         && substr_count($importer, 'throw new CatalogInvalidPackageException(') >= 2,
-    'Profile mismatch and authoritative reader validation failures must be distinguishable from infrastructure failures.'
+    'Authoritative package validation failures must remain distinguishable from infrastructure failures.'
 );
 
-$typedCatch = strpos($handler, 'catch (CatalogInvalidPackageException $error)');
-$genericCatch = strpos($handler, 'catch (Throwable $error)', $typedCatch === false ? 0 : $typedCatch);
+$typedCatch = strpos($unit, 'catch (CatalogInvalidPackageException $error)');
 $record(
-    'full_sync_catches_invalid_before_generic_failure',
-    $typedCatch !== false && $genericCatch !== false && $typedCatch < $genericCatch,
-    'Invalid package retirement must run before the generic reimport-error path.'
-);
-
-$record(
-    'full_sync_removes_invalid_verified_package',
-    str_contains($handler, 'new CatalogFileMaintenanceRemovalService(')
-        && str_contains($handler, "->remove((int)\$file['id'], null, true)")
-        && str_contains($handler, '$removedInvalid++')
-        && str_contains($handler, "'removed_invalid' => \$removedInvalid"),
-    'A validated-invalid verified row must use the normal maintenance removal service and be reported as removed_invalid.'
-);
-
-$logMethodStart = strpos($handler, 'private function recordInvalidRemoval(');
-$logMethodEnd = $logMethodStart === false
-    ? false
-    : strpos($handler, 'private function recordFailure(', $logMethodStart);
-$logMethod = $logMethodStart !== false && $logMethodEnd !== false
-    ? substr($handler, $logMethodStart, $logMethodEnd - $logMethodStart)
-    : '';
-$record(
-    'invalid_removal_is_warning_log_not_system_error',
-    $logMethod !== ''
-        && str_contains($logMethod, "\\app_log(\$this->db, 'WARN', 'FULL_SYNC_INVALID_PACKAGE_REMOVED'")
-        && !str_contains($logMethod, 'CatalogSystemErrorRecorder::record'),
-    'Successful invalid-package retirement must log the reason as a warning and must not create a Full Sync System Error.'
-);
-
-$record(
-    'cleanup_failure_remains_real_error',
+    'full_sync_file_unit_handles_invalid_package',
     $typedCatch !== false
-        && str_contains($handler, "'sync_remove_invalid'")
-        && str_contains($handler, 'catch (Throwable $removeError)')
-        && str_contains($handler, '$reimportFailures++'),
-    'Failure to remove an invalid row/storage package is an infrastructure failure and must remain visible as an error.'
+        && str_contains($unit, 'new CatalogFileMaintenanceRemovalService')
+        && str_contains($unit, '->remove($fileId, null, true)')
+        && str_contains($unit, "'status' => 'removed_invalid'")
+        && str_contains($unit, 'Removed invalid verified package'),
+    'Only the failing Full Sync file unit should retire a validated-invalid verified package.'
 );
-
+$record(
+    'invalid_retirement_does_not_fail_siblings',
+    str_contains($unit, "'status' => 'removed_invalid'")
+        && !str_contains($unit, 'throw $error;'),
+    'Successful invalid-package retirement is a completed child result, not a reason to replay/fail sibling units.'
+);
+$record(
+    'cleanup_failure_still_throws',
+    $typedCatch !== false
+        && !str_contains(substr($unit, $typedCatch), 'catch (Throwable $removeError)'),
+    'If the maintenance removal itself fails, the exception must escape so that one child retries/dead-letters visibly.'
+);
 $record(
     'invalid_removal_uses_complete_cleanup_contract',
     str_contains($removal, '$support->deleteFileProjections($fileId)')
-        && str_contains($removal, "DELETE FROM ue_files WHERE id=?")
-        && str_contains($removal, "@unlink(\$stagedPath)")
-        && str_contains($removal, "@unlink(\$metadataPath)"),
-    'Invalid retirement must remove compact projections, the verified row, staged storage and compact metadata without leaving catalog debris.'
+        && str_contains($removal, 'DELETE FROM ue_files WHERE id=?')
+        && str_contains($removal, '@unlink($stagedPath)')
+        && str_contains($removal, '@unlink($metadataPath)'),
+    'Invalid retirement must remove projections, verified row, stored package and compact metadata without leaving debris.'
 );
 
-$result = [
-    'ok' => $failures === [],
-    'checks' => $checks,
-    'failures' => $failures,
-];
+$result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
 fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
 exit($failures === [] ? 0 : 2);
