@@ -78,6 +78,16 @@ final class CatalogSourceScanDiscovery
             }
         }
 
+        // Filesystem iterator order is not a recovery contract. Sort by the
+        // normalized source-relative identity so a restarted scan can continue
+        // strictly after its last durable path even after a process/server restart.
+        usort($files, static function (array $left, array $right): int {
+            return strnatcasecmp(
+                str_replace('\\', '/', (string)($left[1] ?? '')),
+                str_replace('\\', '/', (string)($right[1] ?? ''))
+            );
+        });
+
         return [
             'files' => $files,
             'containers_skipped' => $containersSkipped,
