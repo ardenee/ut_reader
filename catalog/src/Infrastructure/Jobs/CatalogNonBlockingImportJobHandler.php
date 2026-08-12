@@ -28,6 +28,11 @@ use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
  * outcome. The queue can then continue immediately to the next uploaded file.
  * Queue/storage/database/programming failures still escape and use the normal
  * retry and diagnostics policy.
+ *
+ * Once a complete browser upload is available, expensive redirect preparation is
+ * itself durable: decompressed output remains in a per-job prepared workspace
+ * across worker/process retries and is removed only after this job returns a
+ * completed terminal result.
  */
 final class CatalogNonBlockingImportJobHandler implements JobHandler
 {
@@ -47,8 +52,9 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
         $preparedJob = $job;
-        $temporaryPreparedPath = '';
+        $preparedStore = null;
         $redirectMeta = null;
+        $completedResult = false;
 
         try {
             $context->checkpoint([
@@ -60,22 +66,26 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             ]);
 
             if ($job->type === JobType::IMPORT_STAGED_PACKAGE) {
-                [$preparedJob, $temporaryPreparedPath, $redirectMeta] = $this->prepareRedirectPayload($job, $context);
+                [$preparedJob, $preparedStore, $redirectMeta] = $this->prepareRedirectPayload($job, $context);
             }
 
             $result = $this->inner->handle($preparedJob, $context);
             $result = $this->repairInterruptedVerifiedImport($preparedJob, $result, $context);
             if (is_array($redirectMeta)) {
                 $result['decompressed'] = true;
-                $result['redirect_decoder'] = (string)$redirectMeta['decoder'];
+                $result['redirect_decoder'] = (string)($redirectMeta['decoder'] ?? '');
                 $result['redirect_signature'] = (int)($redirectMeta['wrapper_signature'] ?? 0);
-                $result['redirect_compressed_bytes'] = (int)$redirectMeta['compressed_bytes'];
-                $result['redirect_output_bytes'] = (int)$redirectMeta['bytes'];
-                $result['redirect_is_unreal_package'] = (bool)$redirectMeta['is_unreal_package'];
+                $result['redirect_compressed_bytes'] = (int)($redirectMeta['compressed_bytes'] ?? 0);
+                $result['redirect_output_bytes'] = (int)($redirectMeta['bytes'] ?? 0);
+                $result['redirect_is_unreal_package'] = (bool)($redirectMeta['is_unreal_package'] ?? false);
                 $result['redirect_source_name'] = (string)($job->payload['original_name'] ?? '');
+                $result['redirect_preparation_reused'] = !empty($redirectMeta['reused_prepared_output']);
             }
+            $completedResult = true;
             return $result;
         } catch (JobCancellationRequested $error) {
+            // Keep a completed prepared payload. A cancelled job can be restarted
+            // later and should not need to decompress the same server-side file.
             throw $error;
         } catch (PDOException $error) {
             throw $error;
@@ -85,6 +95,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             throw $error;
         } catch (Throwable $error) {
             if ($this->isInfrastructureFailure($error)) {
+                // Infrastructure failure is retryable; retain the prepared file.
                 throw $error;
             }
 
@@ -102,6 +113,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
                 'message' => $message,
             ]);
 
+            $completedResult = true;
             return [
                 'operation' => $job->type === JobType::IMPORT_STAGED_PAK
                     ? 'import_staged_pak'
@@ -113,8 +125,8 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
                 'source_relative_path' => $sourceRelativePath,
             ];
         } finally {
-            if ($temporaryPreparedPath !== '' && is_file($temporaryPreparedPath)) {
-                @unlink($temporaryPreparedPath);
+            if ($completedResult && $preparedStore instanceof CatalogPreparedJobFileStore) {
+                $preparedStore->clear();
             }
         }
     }
@@ -207,21 +219,50 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
 
     /**
      * Resolve the staged wrapper, then delegate all format dispatch and decoding
-     * to the shared redirect processor before the package scanner runs.
+     * to the shared redirect processor before the package scanner runs. Completed
+     * decompression is persisted under catalog job storage and reused on retry.
      *
-     * @return array{0:ClaimedJob,1:string,2:array<string,mixed>|null}
+     * @return array{0:ClaimedJob,1:?CatalogPreparedJobFileStore,2:array<string,mixed>|null}
      */
     private function prepareRedirectPayload(ClaimedJob $job, JobExecutionContext $context): array
     {
         $payload = $job->payload;
         $originalName = trim((string)($payload['original_name'] ?? ''));
         if ($originalName === '') {
-            return [$job, '', null];
+            return [$job, null, null];
         }
 
         $processor = new CatalogRedirectArchiveProcessor($this->config);
         if (!$processor->supports($originalName)) {
-            return [$job, '', null];
+            return [$job, null, null];
+        }
+
+        $preparedStore = new CatalogPreparedJobFileStore($this->config, $job->id, 'redirect');
+        $persisted = $preparedStore->load();
+        if (is_array($persisted)) {
+            $decoded = [
+                'path' => (string)$persisted['path'],
+                'filename' => (string)($persisted['logical_name'] ?? 'package.bin'),
+                'decoder' => (string)($persisted['decoder'] ?? ''),
+                'wrapper_signature' => (int)($persisted['wrapper_signature'] ?? 0),
+                'compressed_bytes' => (int)($persisted['compressed_bytes'] ?? 0),
+                'bytes' => (int)($persisted['size'] ?? 0),
+                'is_unreal_package' => (bool)($persisted['is_unreal_package'] ?? false),
+                'source_relative_path' => (string)($persisted['source_relative_path'] ?? ''),
+                'reused_prepared_output' => true,
+            ];
+            $context->checkpoint([
+                'stage' => 'redirect_ready',
+                'done' => 45,
+                'total' => 100,
+                'percent' => 45,
+                'message' => 'Reusing durable decompressed redirect output '
+                    . basename((string)$decoded['filename']) . ' (' . $this->bytes((int)$decoded['bytes']) . ').',
+                'output_bytes' => (int)$decoded['bytes'],
+                'decoder' => (string)$decoded['decoder'],
+                'prepared_reused' => true,
+            ]);
+            return [$this->preparedJob($job, $payload, $decoded), $preparedStore, $decoded];
         }
 
         $context->checkpoint([
@@ -261,34 +302,68 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             },
             true
         );
-        $decoded = $this->normalizePreparedTemporaryPath($decoded);
+
+        $sourceRelativePath = trim(
+            str_replace('\\', '/', (string)($payload['source_relative_path'] ?? $originalName)),
+            '/'
+        );
+        $preparedRelativePath = $this->replaceRelativeFilename(
+            $sourceRelativePath,
+            (string)$decoded['filename']
+        );
+        $durable = $preparedStore->publish(
+            (string)$decoded['path'],
+            (string)$decoded['filename'],
+            [
+                'decoder' => (string)($decoded['decoder'] ?? ''),
+                'wrapper_signature' => (int)($decoded['wrapper_signature'] ?? 0),
+                'compressed_bytes' => (int)($decoded['compressed_bytes'] ?? 0),
+                'is_unreal_package' => (bool)($decoded['is_unreal_package'] ?? false),
+                'source_relative_path' => $preparedRelativePath,
+            ]
+        );
+        $decoded['path'] = (string)$durable['path'];
+        $decoded['bytes'] = (int)$durable['size'];
+        $decoded['source_relative_path'] = $preparedRelativePath;
+        $decoded['reused_prepared_output'] = false;
 
         $context->checkpoint([
             'stage' => 'redirect_ready',
             'done' => 45,
             'total' => 100,
             'percent' => 45,
-            'message' => 'Redirect archive decompressed to ' . basename((string)$decoded['filename'])
-                . ' (' . $this->bytes((int)$decoded['bytes']) . ').',
+            'message' => 'Redirect archive decompressed and durably prepared as '
+                . basename((string)$decoded['filename']) . ' (' . $this->bytes((int)$decoded['bytes']) . ').',
             'output_bytes' => (int)$decoded['bytes'],
-            'decoder' => (string)$decoded['decoder'],
+            'decoder' => (string)($decoded['decoder'] ?? ''),
+            'prepared_reused' => false,
         ]);
 
-        $sourceRelativePath = trim(
-            str_replace('\\', '/', (string)($payload['source_relative_path'] ?? $originalName)),
-            '/'
-        );
+        return [$this->preparedJob($job, $payload, $decoded), $preparedStore, $decoded];
+    }
+
+    /**
+     * @param array<string,mixed> $payload
+     * @param array<string,mixed> $decoded
+     */
+    private function preparedJob(ClaimedJob $job, array $payload, array $decoded): ClaimedJob
+    {
+        $sourceRelativePath = trim((string)($decoded['source_relative_path'] ?? ''));
+        if ($sourceRelativePath === '') {
+            $sourceRelativePath = $this->replaceRelativeFilename(
+                trim(str_replace('\\', '/', (string)($payload['source_relative_path'] ?? $payload['original_name'] ?? '')), '/'),
+                (string)$decoded['filename']
+            );
+        }
         $payload['prepared_source_path'] = (string)$decoded['path'];
+        $payload['prepared_source_persistent'] = true;
         $payload['redirect_prepared'] = true;
         $payload['original_name'] = (string)$decoded['filename'];
-        $payload['source_relative_path'] = $this->replaceRelativeFilename(
-            $sourceRelativePath,
-            (string)$decoded['filename']
-        );
+        $payload['source_relative_path'] = $sourceRelativePath;
         $payload['size'] = (int)$decoded['bytes'];
         unset($payload['sha256']);
 
-        $prepared = new ClaimedJob(
+        return new ClaimedJob(
             $job->id,
             $job->queue,
             $job->type,
@@ -299,44 +374,9 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             $job->leaseExpiresAt,
             $job->resourceClass,
             $job->resourceLimit,
-            $job->concurrencyKey
+            $job->concurrencyKey,
+            $job->resumeProgress
         );
-
-        return [$prepared, (string)$decoded['path'], $decoded];
-    }
-
-    /**
-     * Windows tempnam() keeps only the first three prefix characters. Rename the
-     * file inside the same temporary directory so the downstream containment
-     * guard can verify the full ue_redirect_ marker on every platform.
-     *
-     * @param array<string,mixed> $decoded
-     * @return array<string,mixed>
-     */
-    private function normalizePreparedTemporaryPath(array $decoded): array
-    {
-        $path = trim((string)($decoded['path'] ?? ''));
-        if ($path === '' || !is_file($path)) {
-            throw new \RuntimeException('Prepared redirect payload is unavailable.');
-        }
-        if (str_starts_with(basename($path), 'ue_redirect_')) {
-            return $decoded;
-        }
-
-        $directory = dirname($path);
-        for ($attempt = 0; $attempt < 5; $attempt++) {
-            $target = $directory . DIRECTORY_SEPARATOR . 'ue_redirect_' . bin2hex(random_bytes(16)) . '.tmp';
-            if (file_exists($target)) {
-                continue;
-            }
-            if (@rename($path, $target)) {
-                $decoded['path'] = $target;
-                return $decoded;
-            }
-        }
-
-        @unlink($path);
-        throw new \RuntimeException('Could not normalize prepared redirect temporary file.');
     }
 
     private function replaceRelativeFilename(string $relativePath, string $name): string
@@ -359,6 +399,10 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'target game no longer exists',
             'could not allocate package import working file',
             'could not create package import working copy',
+            'prepared job source file is unavailable',
+            'could not persist prepared job file',
+            'could not publish prepared job file',
+            'could not persist prepared job-file metadata',
             'job payload requires',
             'job lease no longer belongs',
             'could not lock chunked upload state',
