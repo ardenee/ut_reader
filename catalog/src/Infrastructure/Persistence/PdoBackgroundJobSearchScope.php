@@ -31,6 +31,15 @@ final class PdoBackgroundJobSearchScope
             $where[] = 'j.queue_name=?';
             $params[] = $queue;
         }
+
+        // Workflow units can number in the tens of thousands. The normal queue
+        // browser is an operator view, not a workflow ledger: show top-level jobs
+        // and child units that require attention. Supplying a search removes this
+        // suppression so a specific child id/file/type remains inspectable.
+        if ($search === '') {
+            $where[] = '(j.parent_job_id IS NULL OR j.status IN ("failed","dead_letter","cancelled"))';
+        }
+
         if ($search !== '') {
             $projectionAvailable = $this->searchRuntime->synchronize($this->db);
             $booleanSearch = $this->searchRuntime->booleanQuery($search);
@@ -49,8 +58,6 @@ final class PdoBackgroundJobSearchScope
                 $where[] = 'js.search_text LIKE ?';
                 $params[] = '%' . $search . '%';
             } else {
-                // Preserve the compatibility fallback if the projection is not
-                // available yet; migration/readiness checks should make this rare.
                 $where[] = '(CAST(j.id AS CHAR) LIKE ? OR j.job_type LIKE ? OR COALESCE(j.concurrency_key,"") LIKE ? '
                     . 'OR COALESCE(j.payload_json,"") LIKE ? OR COALESCE(j.last_error,"") LIKE ? '
                     . 'OR COALESCE(j.result_json,"") LIKE ?)';
