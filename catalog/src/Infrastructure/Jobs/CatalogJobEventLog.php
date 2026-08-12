@@ -19,17 +19,28 @@ final class CatalogJobEventLog
     private const MAX_EVENT_MESSAGE_LENGTH = 8000;
 
     private string $directory;
+    private ?CatalogJobLoggingSettingsStore $logging;
 
     /** @param array<string,mixed> $config */
-    public function __construct(
-        array $config,
-        private readonly ?CatalogJobLoggingSettingsStore $logging = null
-    ) {
+    public function __construct(array $config, ?CatalogJobLoggingSettingsStore $logging = null)
+    {
         $storageRoot = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
         if ($storageRoot === '') {
             throw new \InvalidArgumentException('A catalog storage path is required for job events.');
         }
         $this->directory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'events';
+        $this->logging = $logging;
+
+        // Some handlers (notably PAK import) own their event stream directly.
+        // Resolve the same policy automatically so those paths cannot bypass the
+        // administrator's errors-only logging selection.
+        if ($this->logging === null && function_exists('catalog_db')) {
+            try {
+                $this->logging = new CatalogJobLoggingSettingsStore(\catalog_db($config));
+            } catch (\Throwable) {
+                $this->logging = null;
+            }
+        }
     }
 
     public function reset(int $jobId): void
