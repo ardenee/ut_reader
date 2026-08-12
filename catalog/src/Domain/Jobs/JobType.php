@@ -15,6 +15,8 @@ namespace UnrealDb\Catalog\Domain\Jobs;
 final class JobType
 {
     public const FULL_SYNC_GAME = 'catalog.full_sync_game';
+    public const FULL_SYNC_FILE = 'catalog.full_sync_file';
+    public const FULL_SYNC_DEPENDENCY_FILE = 'catalog.full_sync_dependency_file';
     public const REBUILD_GAME_DEPENDENCIES = 'catalog.rebuild_game_dependencies';
     public const REBUILD_FILE_DEPENDENCIES = 'catalog.rebuild_file_dependencies';
     public const REBUILD_AFFECTED_DEPENDENCIES = 'catalog.rebuild_affected_dependencies';
@@ -43,6 +45,8 @@ final class JobType
     {
         return [
             self::FULL_SYNC_GAME,
+            self::FULL_SYNC_FILE,
+            self::FULL_SYNC_DEPENDENCY_FILE,
             self::REBUILD_GAME_DEPENDENCIES,
             self::REBUILD_FILE_DEPENDENCIES,
             self::REBUILD_AFFECTED_DEPENDENCIES,
