@@ -20,14 +20,21 @@ use RecursiveIteratorIterator;
 
 /**
  * Removes disposable and orphaned job-storage files without deleting sources
- * still referenced by any surviving/restartable background-job row.
+ * still owned by a background job that can be resumed/restarted.
+ *
+ * Completed jobs are deliberately not treated as recovery owners. Their durable
+ * source/preparation artifacts become eligible for age-based pruning even while
+ * the historical job row is retained for reporting.
  */
 final class CatalogJobStorageCleanup
 {
+    private const RESTARTABLE_STATUSES = ['queued', 'running', 'failed', 'dead_letter', 'cancelled'];
+
     private string $storageRoot;
     private string $incomingDirectory;
     private string $backupImportDirectory;
     private string $preparedDirectory;
+    private string $pakImportDirectory;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -39,16 +46,19 @@ final class CatalogJobStorageCleanup
             throw new \InvalidArgumentException('A catalog storage path is required for job-storage cleanup.');
         }
         $this->storageRoot = $storageRoot;
-        $this->incomingDirectory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'incoming';
-        $this->backupImportDirectory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'game-backup-import';
-        $this->preparedDirectory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'prepared';
+        $jobsRoot = $storageRoot . DIRECTORY_SEPARATOR . 'jobs';
+        $this->incomingDirectory = $jobsRoot . DIRECTORY_SEPARATOR . 'incoming';
+        $this->backupImportDirectory = $jobsRoot . DIRECTORY_SEPARATOR . 'game-backup-import';
+        $this->preparedDirectory = $jobsRoot . DIRECTORY_SEPARATOR . 'prepared';
+        $this->pakImportDirectory = $jobsRoot . DIRECTORY_SEPARATOR . 'pak-import';
     }
 
     /**
      * @return array{
      *   incoming:array{scanned:int,referenced:int,recent:int,deleted:int,bytes:int,failed:int},
      *   backup_import:array{scanned:int,active:int,recent:int,deleted:int,bytes:int,failed:int},
-     *   prepared:array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int}
+     *   prepared:array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int},
+     *   pak_import:array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int}
      * }
      */
     public function prune(int $minimumAgeSeconds = 300): array
@@ -57,7 +67,8 @@ final class CatalogJobStorageCleanup
         return [
             'incoming' => $this->pruneIncoming($minimumAgeSeconds),
             'backup_import' => $this->pruneBackupImport($minimumAgeSeconds),
-            'prepared' => $this->prunePrepared($minimumAgeSeconds),
+            'prepared' => $this->pruneOwnedDirectories($this->preparedDirectory, $minimumAgeSeconds),
+            'pak_import' => $this->pruneOwnedDirectories($this->pakImportDirectory, $minimumAgeSeconds),
         ];
     }
 
@@ -116,7 +127,7 @@ final class CatalogJobStorageCleanup
             return $result;
         }
 
-        $activeJobs = $this->activeBackupImportJobs();
+        $activeJobs = $this->restartableBackupImportJobs();
         $threshold = time() - $minimumAgeSeconds;
         foreach (new FilesystemIterator($this->backupImportDirectory, FilesystemIterator::SKIP_DOTS) as $entry) {
             if (!$entry instanceof \SplFileInfo || !$entry->isFile() || $entry->isLink()) {
@@ -147,16 +158,16 @@ final class CatalogJobStorageCleanup
     }
 
     /** @return array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int} */
-    private function prunePrepared(int $minimumAgeSeconds): array
+    private function pruneOwnedDirectories(string $root, int $minimumAgeSeconds): array
     {
         $result = ['scanned' => 0, 'retained' => 0, 'recent' => 0, 'deleted' => 0, 'bytes' => 0, 'failed' => 0];
-        if (!is_dir($this->preparedDirectory)) {
+        if (!is_dir($root)) {
             return $result;
         }
 
         $threshold = time() - $minimumAgeSeconds;
         $status = $this->db->prepare('SELECT status FROM ue_background_jobs WHERE id=? LIMIT 1');
-        foreach (new FilesystemIterator($this->preparedDirectory, FilesystemIterator::SKIP_DOTS) as $entry) {
+        foreach (new FilesystemIterator($root, FilesystemIterator::SKIP_DOTS) as $entry) {
             if (!$entry instanceof \SplFileInfo || !$entry->isDir() || $entry->isLink()) {
                 continue;
             }
@@ -165,8 +176,7 @@ final class CatalogJobStorageCleanup
             $jobId = preg_match('/^job-([0-9]+)$/', $name, $match) === 1 ? (int)$match[1] : 0;
             if ($jobId > 0) {
                 $status->execute([$jobId]);
-                $jobStatus = (string)($status->fetchColumn() ?: '');
-                if (in_array($jobStatus, ['queued', 'running', 'failed', 'dead_letter', 'cancelled'], true)) {
+                if ($this->isRestartableStatus((string)($status->fetchColumn() ?: ''))) {
                     $result['retained']++;
                     continue;
                 }
@@ -184,7 +194,7 @@ final class CatalogJobStorageCleanup
                 $result['failed']++;
             }
         }
-        @rmdir($this->preparedDirectory);
+        @rmdir($root);
         return $result;
     }
 
@@ -193,7 +203,9 @@ final class CatalogJobStorageCleanup
     {
         $references = [];
         $statement = $this->db->query(
-            'SELECT payload_json FROM ue_background_jobs WHERE payload_json LIKE "%jobs/incoming/%"'
+            'SELECT payload_json FROM ue_background_jobs '
+            . 'WHERE status IN ("queued","running","failed","dead_letter","cancelled") '
+            . 'AND payload_json LIKE "%jobs/incoming/%"'
         );
         foreach ($statement->fetchAll(PDO::FETCH_COLUMN) as $json) {
             try {
@@ -225,10 +237,11 @@ final class CatalogJobStorageCleanup
     }
 
     /** @return array<int,true> */
-    private function activeBackupImportJobs(): array
+    private function restartableBackupImportJobs(): array
     {
         $statement = $this->db->prepare(
-            'SELECT id FROM ue_background_jobs WHERE job_type=? AND status IN ("queued","running")'
+            'SELECT id FROM ue_background_jobs WHERE job_type=? '
+            . 'AND status IN ("queued","running","failed","dead_letter","cancelled")'
         );
         $statement->execute([\UnrealDb\Catalog\Domain\Jobs\JobType::IMPORT_GAME_BACKUP]);
         $ids = [];
@@ -239,6 +252,11 @@ final class CatalogJobStorageCleanup
             }
         }
         return $ids;
+    }
+
+    private function isRestartableStatus(string $status): bool
+    {
+        return in_array($status, self::RESTARTABLE_STATUSES, true);
     }
 
     /** @return array{bytes:int,modified:int} */
