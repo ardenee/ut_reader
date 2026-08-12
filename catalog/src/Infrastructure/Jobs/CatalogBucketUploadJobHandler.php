@@ -1,9 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogBucketUploadJobHandler` for catalog bucket upload job handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external services.
+ * Purpose: Processes one fully uploaded Upload Bucket source as a recoverable background job.
+ * Why: Browser transfer is not the recovery boundary; once a complete server file exists, preparation and bucket staging must survive worker/process retries.
+ * Role: Infrastructure job handler for JobType::PROCESS_BUCKET_UPLOAD.
  */
 declare(strict_types=1);
 
@@ -50,76 +50,138 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             throw new \InvalidArgumentException('Deferred Upload Bucket job payload is incomplete.');
         }
 
+        $preparedStore = new CatalogPreparedJobFileStore($this->config, $job->id, 'bucket-package');
+        $resume = $context->resumeProgress();
+        if ((string)($resume['stage'] ?? '') === 'bucket_staged' && (int)($resume['file_id'] ?? 0) > 0) {
+            return $this->finalizeStagedCheckpoint($uploadId, $preparedStore, $resume, $context);
+        }
+
         $workingPath = '';
         try {
-            $context->checkpoint([
-                'stage' => 'source_resolve',
-                'done' => 2,
-                'total' => 100,
-                'percent' => 2,
-                'message' => 'Resolving the completed browser upload.',
-            ]);
-            $source = $this->chunkStore()->resolveCompletedFile($uploadId, $userId);
-            $sourcePath = (string)$source['path'];
-            $workingName = $originalName;
-            $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
-            $decoder = '';
-            $compressedBytes = 0;
-            $packageMd5 = '';
-            $packageSha1 = '';
-
-            if ($redirect) {
-                $context->checkpoint([
-                    'stage' => 'redirect_decompress',
-                    'done' => 5,
-                    'total' => 100,
-                    'percent' => 5,
-                    'message' => 'Starting redirect decompression. Package hashes will be calculated from the decompressed output.',
-                ]);
-                $decoded = (new CatalogRedirectArchiveProcessor($this->config))->decompressToTemp(
-                    $sourcePath,
-                    $originalName,
-                    static function (array $progress) use ($context): void {
-                        $sourcePercent = max(0, min(100, (int)($progress['percent'] ?? 0)));
-                        $context->checkpoint([
-                            'stage' => 'redirect_decompress',
-                            'done' => (int)($progress['compressed_done'] ?? 0),
-                            'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
-                            'percent' => max(5, min(40, 5 + (int)floor($sourcePercent * 35 / 100))),
-                            'message' => (string)($progress['message'] ?? 'Decompressing and hashing redirect archive.'),
-                            'compressed_bytes' => (int)($progress['compressed_done'] ?? 0),
-                            'output_bytes' => (int)($progress['output_bytes'] ?? 0),
-                            'chunks' => (int)($progress['chunks'] ?? 0),
-                        ]);
-                    },
-                    true
+            $prepared = $preparedStore->load();
+            if (is_array($prepared)) {
+                $workingName = $this->requiredName((string)($prepared['logical_name'] ?? $originalName));
+                $relativePath = CatalogImportPathPolicy::relative(
+                    (string)($prepared['source_relative_path'] ?? $relativePath)
                 );
-                $workingPath = (string)$decoded['path'];
-                $workingName = $this->requiredName((string)$decoded['filename']);
-                $decoder = (string)$decoded['decoder'];
-                $compressedBytes = (int)$decoded['compressed_bytes'];
-                $packageMd5 = strtolower(trim((string)($decoded['md5'] ?? '')));
-                $packageSha1 = strtolower(trim((string)($decoded['sha1'] ?? '')));
-                $relativePath = CatalogImportPathPolicy::replaceFilename($relativePath, $workingName);
+                $packageMd5 = strtolower(trim((string)($prepared['md5'] ?? '')));
+                $packageSha1 = strtolower(trim((string)($prepared['sha1'] ?? '')));
+                $decoder = (string)($prepared['decoder'] ?? '');
+                $compressedBytes = (int)($prepared['compressed_bytes'] ?? 0);
+                $redirect = !empty($prepared['redirect']);
+                $context->checkpoint([
+                    'stage' => 'package_prepared',
+                    'done' => 45,
+                    'total' => 100,
+                    'percent' => 45,
+                    'message' => 'Reusing durable prepared package ' . $workingName . '.',
+                    'prepared_reused' => true,
+                    'md5' => $packageMd5,
+                    'sha1' => $packageSha1,
+                ]);
             } else {
-                $this->validateOutputExtension($workingName);
                 $context->checkpoint([
-                    'stage' => 'source_copy',
-                    'done' => 5,
+                    'stage' => 'source_resolve',
+                    'done' => 2,
                     'total' => 100,
-                    'percent' => 5,
-                    'message' => 'Preparing the uploaded package and verifying its browser-calculated MD5/SHA-1.',
+                    'percent' => 2,
+                    'message' => 'Resolving the completed browser upload.',
                 ]);
-                $prepared = $this->copyToWorkingFile(
-                    $sourcePath,
-                    $job->id,
-                    $context,
-                    strtolower(trim((string)($payload['package_md5'] ?? $payload['source_md5'] ?? ''))),
-                    strtolower(trim((string)($payload['package_sha1'] ?? $payload['source_sha1'] ?? '')))
-                );
-                $workingPath = $prepared['path'];
-                $packageMd5 = $prepared['md5'];
-                $packageSha1 = $prepared['sha1'];
+                $source = $this->chunkStore()->resolveCompletedFile($uploadId, $userId);
+                $sourcePath = (string)$source['path'];
+                $workingName = $originalName;
+                $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
+                $decoder = '';
+                $compressedBytes = 0;
+                $packageMd5 = '';
+                $packageSha1 = '';
+
+                if ($redirect) {
+                    $context->checkpoint([
+                        'stage' => 'redirect_decompress',
+                        'done' => 5,
+                        'total' => 100,
+                        'percent' => 5,
+                        'message' => 'Starting redirect decompression. Package hashes will be calculated from the decompressed output.',
+                    ]);
+                    $decoded = (new CatalogRedirectArchiveProcessor($this->config))->decompressToTemp(
+                        $sourcePath,
+                        $originalName,
+                        static function (array $progress) use ($context): void {
+                            $sourcePercent = max(0, min(100, (int)($progress['percent'] ?? 0)));
+                            $context->checkpoint([
+                                'stage' => 'redirect_decompress',
+                                'done' => (int)($progress['compressed_done'] ?? 0),
+                                'total' => max(1, (int)($progress['compressed_total'] ?? 1)),
+                                'percent' => max(5, min(40, 5 + (int)floor($sourcePercent * 35 / 100))),
+                                'message' => (string)($progress['message'] ?? 'Decompressing and hashing redirect archive.'),
+                                'compressed_bytes' => (int)($progress['compressed_done'] ?? 0),
+                                'output_bytes' => (int)($progress['output_bytes'] ?? 0),
+                                'chunks' => (int)($progress['chunks'] ?? 0),
+                            ]);
+                        },
+                        true
+                    );
+                    $workingName = $this->requiredName((string)$decoded['filename']);
+                    $decoder = (string)$decoded['decoder'];
+                    $compressedBytes = (int)$decoded['compressed_bytes'];
+                    $packageMd5 = strtolower(trim((string)($decoded['md5'] ?? '')));
+                    $packageSha1 = strtolower(trim((string)($decoded['sha1'] ?? '')));
+                    $relativePath = CatalogImportPathPolicy::replaceFilename($relativePath, $workingName);
+                    $prepared = $preparedStore->publish(
+                        (string)$decoded['path'],
+                        $workingName,
+                        [
+                            'redirect' => true,
+                            'decoder' => $decoder,
+                            'compressed_bytes' => $compressedBytes,
+                            'md5' => $packageMd5,
+                            'sha1' => $packageSha1,
+                            'source_relative_path' => $relativePath,
+                        ]
+                    );
+                } else {
+                    $this->validateOutputExtension($workingName);
+                    $context->checkpoint([
+                        'stage' => 'source_copy',
+                        'done' => 5,
+                        'total' => 100,
+                        'percent' => 5,
+                        'message' => 'Preparing the uploaded package and verifying its browser-calculated MD5/SHA-1.',
+                    ]);
+                    $copied = $this->copyToWorkingFile(
+                        $sourcePath,
+                        $job->id,
+                        $context,
+                        strtolower(trim((string)($payload['package_md5'] ?? $payload['source_md5'] ?? ''))),
+                        strtolower(trim((string)($payload['package_sha1'] ?? $payload['source_sha1'] ?? '')))
+                    );
+                    $packageMd5 = $copied['md5'];
+                    $packageSha1 = $copied['sha1'];
+                    $prepared = $preparedStore->publish(
+                        $copied['path'],
+                        $workingName,
+                        [
+                            'redirect' => false,
+                            'decoder' => '',
+                            'compressed_bytes' => 0,
+                            'md5' => $packageMd5,
+                            'sha1' => $packageSha1,
+                            'source_relative_path' => $relativePath,
+                        ]
+                    );
+                }
+
+                $context->checkpoint([
+                    'stage' => 'package_prepared',
+                    'done' => 45,
+                    'total' => 100,
+                    'percent' => 45,
+                    'message' => 'Package preparation is durable; bucket staging can now retry without repeating transfer/decompression.',
+                    'prepared_reused' => false,
+                    'md5' => $packageMd5,
+                    'sha1' => $packageSha1,
+                ]);
             }
 
             if (preg_match('/^[a-f0-9]{32}$/', $packageMd5) !== 1 || preg_match('/^[a-f0-9]{40}$/', $packageSha1) !== 1) {
@@ -127,14 +189,15 @@ final class CatalogBucketUploadJobHandler implements JobHandler
             }
 
             $this->validateOutputExtension($workingName);
+            $workingPath = $this->workingFromPrepared((string)$prepared['path'], $workingName);
             $note = 'Uploaded to the unsorted Upload Bucket on ' . date('Y-m-d H:i:s')
                 . '. No game assignment has been made yet.';
             if ($redirect) {
-                $note .= ' Redirect archive was decompressed after the complete browser batch finished. Decoder: '
+                $note .= ' Redirect archive was decompressed after the complete browser upload finished. Decoder: '
                     . $decoder . '. Original wrapper: ' . $originalName
                     . '. MD5/SHA-1 identify the decompressed package, not the wrapper.';
             } else {
-                $note .= ' Package identity was calculated before upload and verified while the isolated working copy was written.';
+                $note .= ' Package identity was calculated before upload and verified while the durable prepared copy was written.';
             }
 
             $staged = (new CatalogBucketIdentityProcessor($this->db, $this->config))->stage(
@@ -149,9 +212,10 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                     $context->checkpoint($progress);
                 }
             );
+            // stage() consumes/discards only the disposable working link/copy.
+            // The durable prepared source remains available until the checkpoint
+            // below is persisted.
             $workingPath = '';
-
-            (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
 
             $status = (string)($staged['status'] ?? 'indexed');
             $resultStatus = $status === 'duplicate' ? 'duplicate' : 'bucketed';
@@ -160,18 +224,11 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                 $message .= ' Package tables could not be read: ' . trim((string)$staged['parse_error']);
             }
 
-            $context->checkpoint([
-                'stage' => 'complete',
-                'done' => 100,
+            $checkpoint = [
+                'stage' => 'bucket_staged',
+                'done' => 98,
                 'total' => 100,
-                'percent' => 100,
-                'status' => $resultStatus,
-                'message' => $message,
-                'file_id' => (int)$staged['file_id'],
-            ]);
-
-            return [
-                'operation' => 'process_bucket_upload',
+                'percent' => 98,
                 'status' => $resultStatus,
                 'message' => $message,
                 'file_id' => (int)$staged['file_id'],
@@ -181,21 +238,22 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                 'bytes' => (int)$staged['size'],
                 'compressed_bytes' => $compressedBytes,
                 'decoder' => $decoder,
-                'md5' => (string)($staged['md5'] ?? ''),
-                'sha1' => (string)($staged['sha1'] ?? ''),
+                'md5' => (string)($staged['md5'] ?? $packageMd5),
+                'sha1' => (string)($staged['sha1'] ?? $packageSha1),
             ];
+            $context->checkpoint($checkpoint);
+            return $this->finalizeStagedCheckpoint($uploadId, $preparedStore, $checkpoint, $context);
         } catch (JobCancellationRequested $error) {
+            // Keep both the completed upload and any durable prepared package so
+            // a later Restart can continue without browser interaction.
             throw $error;
         } catch (Throwable $error) {
             try {
-                $context->checkpoint([
-                    'stage' => 'failed',
-                    'done' => 100,
-                    'total' => 100,
-                    'percent' => 100,
-                    'status' => 'failed',
-                    'message' => $this->shortError($error),
-                ]);
+                $failed = $context->resumeProgress();
+                $failed['stage'] = 'failed';
+                $failed['status'] = 'failed';
+                $failed['message'] = $this->shortError($error);
+                $context->checkpoint($failed);
             } catch (Throwable) {
                 // Preserve the original processing exception for retry/dead-letter handling.
             }
@@ -205,6 +263,72 @@ final class CatalogBucketUploadJobHandler implements JobHandler
                 @unlink($workingPath);
             }
         }
+    }
+
+    /** @param array<string,mixed> $checkpoint @return array<string,mixed> */
+    private function finalizeStagedCheckpoint(
+        string $uploadId,
+        CatalogPreparedJobFileStore $preparedStore,
+        array $checkpoint,
+        JobExecutionContext $context
+    ): array {
+        // Once bucket staging itself is durable, browser transfer storage and
+        // prepared recovery storage are no longer required. If cleanup fails,
+        // the bucket_staged checkpoint remains and the next retry repeats cleanup
+        // only; it does not re-stage the package.
+        (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
+        $preparedStore->clear();
+
+        $complete = $checkpoint;
+        $complete['stage'] = 'complete';
+        $complete['done'] = 100;
+        $complete['total'] = 100;
+        $complete['percent'] = 100;
+        $context->checkpoint($complete);
+
+        return [
+            'operation' => 'process_bucket_upload',
+            'status' => (string)($checkpoint['status'] ?? 'bucketed'),
+            'message' => (string)($checkpoint['message'] ?? 'Upload Bucket processing completed.'),
+            'file_id' => (int)($checkpoint['file_id'] ?? 0),
+            'queue_name' => (string)($checkpoint['queue_name'] ?? ''),
+            'original_name' => (string)($checkpoint['original_name'] ?? ''),
+            'source_relative_path' => (string)($checkpoint['source_relative_path'] ?? ''),
+            'bytes' => (int)($checkpoint['bytes'] ?? 0),
+            'compressed_bytes' => (int)($checkpoint['compressed_bytes'] ?? 0),
+            'decoder' => (string)($checkpoint['decoder'] ?? ''),
+            'md5' => (string)($checkpoint['md5'] ?? ''),
+            'sha1' => (string)($checkpoint['sha1'] ?? ''),
+        ];
+    }
+
+    private function workingFromPrepared(string $sourcePath, string $name): string
+    {
+        if (!is_file($sourcePath) || !is_readable($sourcePath) || is_link($sourcePath)) {
+            throw new \RuntimeException('Durable prepared Upload Bucket package is unavailable.');
+        }
+        $extension = preg_replace('/[^A-Za-z0-9_]+/', '', (string)pathinfo($name, PATHINFO_EXTENSION)) ?: 'bin';
+        $directory = dirname($sourcePath);
+        for ($attempt = 0; $attempt < 4; $attempt++) {
+            $path = $directory . DIRECTORY_SEPARATOR . '.bucket-stage-'
+                . bin2hex(random_bytes(8)) . '.' . $extension;
+            if (@link($sourcePath, $path)) {
+                return $path;
+            }
+        }
+
+        $path = $directory . DIRECTORY_SEPARATOR . '.bucket-stage-'
+            . bin2hex(random_bytes(8)) . '.' . $extension;
+        if (!@copy($sourcePath, $path)) {
+            throw new \RuntimeException('Could not create Upload Bucket staging working copy.');
+        }
+        $sourceSize = filesize($sourcePath);
+        $copySize = filesize($path);
+        if ($sourceSize === false || $copySize === false || (int)$sourceSize !== (int)$copySize) {
+            @unlink($path);
+            throw new \RuntimeException('Upload Bucket staging working copy is incomplete.');
+        }
+        return $path;
     }
 
     /** @return array{path:string,md5:string,sha1:string} */
