@@ -1,6 +1,6 @@
 # UE4 and UE5 PAK archive management
 
-UnrealDB treats original Unreal Engine 4 and Unreal Engine 5 `.pak` containers separately from the package files extracted from them.
+UnrealDB treats original Unreal Engine 4 and Unreal Engine 5 `.pak` containers separately from package files extracted from them.
 
 ## Storage model
 
@@ -10,88 +10,118 @@ A successful PAK import retains an independent copy of the original container un
 <storage_path>/games/<game-slug>/paks/<sha256>.pak
 ```
 
-The copy is written through a temporary `.part` file and is verified by file size and SHA-256 before publication. The uploaded or local staged source remains governed by normal incoming-job retention and cleanup rules.
+The copy is written through a temporary `.part` file and verified by size and SHA-256 before publication.
 
-`ue_pak_archives` stores the container identity and PAK metadata, including:
+`ue_pak_archives` stores container identity/PAK metadata, including target game, original filename, retained storage path, hashes, PAK/footer/index information, mount point, entry counts and processing state.
 
-- target game and its UE4/UE5 profile
-- original filename
-- retained storage path
-- file size, MD5, SHA-1 and SHA-256
-- PAK version and footer layout
-- mount point
-- index offset, size and hash
-- entry, extracted and skipped counts
-- processing, ready or failed state
+`ue_pak_entries` stores every readable PAK index entry, including companion payloads that are not independent Unreal packages. Entries record path, sizes, compression information, hash, encryption/extraction state and import outcome.
 
-`ue_pak_entries` stores every readable PAK index entry, including companion payloads that are not independent Unreal packages. Each entry records its path, sizes, compression information, hash, encryption state and import result.
+When an entry becomes a catalog file, `ue_pak_entries.file_id` links it to `ue_files.id`.
 
-When an extracted entry becomes a catalog file, `ue_pak_entries.file_id` links that entry to `ue_files.id`. A file can therefore identify the original PAK and entry path from which it was extracted, while a PAK can list all linked catalog packages.
+## Durable import workflow
 
-## Import workflow
+PAK import is a recoverable parent/child workflow. A single archive is **not** processed as one long loop that must restart at entry 1 after a worker failure.
 
-`Admin → Imports → PAK Import` accepts games assigned to UE4 or UE5 profiles.
+The parent job performs bounded preparation:
 
-The background job:
+1. resolve/validate the complete staged PAK source;
+2. confirm the target game has a UE4/UE5 profile;
+3. locate a supported footer and parse/select the matching index;
+4. extract supported content;
+5. retain/verify the original PAK in game storage;
+6. promote the selected index/extracted tree into a durable per-job recovery workspace;
+7. create one child job per PAK entry;
+8. wait for entry children;
+9. invoke the normal resumable game dependency workflow if package imports changed the catalogue;
+10. finalize the PAK record and clean the recovery workspace.
 
-1. validates the staged PAK identity
-2. confirms that the target game uses a UE4 or UE5 profile
-3. reads a supported PAK footer and index
-4. copies and verifies the original PAK into durable game storage
-5. records every readable PAK index entry
-6. extracts supported unencrypted entries
-7. imports standalone package extensions through the normal scanner
-8. records duplicate, alias, verified, unverified, rejected, skipped, encrypted and not-extracted outcomes
-9. links successful package results back to their PAK entries
-10. performs one game-wide dependency refresh after the import
+The durable recovery workspace lives under:
 
-The original PAK remains the preferred self-contained download. Extracted files remain independently searchable and usable for dependency analysis.
+```text
+<storage_path>/jobs/pak-import/job-<parent-job-id>/
+```
+
+It is retained while the parent is restartable and removed after successful finalization/stale completed-job cleanup.
+
+## Entry jobs
+
+Each `catalog.import_staged_pak_entry` child owns exactly one index entry.
+
+A child resolves its durable extracted source and uses a disposable working link/copy for any scanner operation that may consume/move the working file. Therefore:
+
+- one package import cannot consume another entry's recovery source;
+- a failed entry can be restarted without re-extracting the whole PAK;
+- completed entry children are never intentionally replayed because a sibling failed;
+- the parent can be reclaimed repeatedly without duplicating child units because `(parent_job_id, workflow_unit_key)` is unique.
+
+Expected entry outcomes such as encrypted, unsupported/not-extracted, companion payload, skipped extension, duplicate, alias, verified, unverified or rejected are recorded as entry results. Infrastructure/database failures are exceptions and fail only that entry child.
+
+## Dependency refresh
+
+The old implementation performed a whole-game dependency rebuild inline after looping every PAK entry. The current parent instead nests the normal durable `catalog.rebuild_game_dependencies` workflow after entry processing. Its per-file dependency units are independently restartable.
+
+A parent that fails during PAK finalization does not need to repeat successful entry imports or the earlier extraction phase.
 
 ## Browsing
 
-UE4 and UE5 game pages expose two separate views:
+UE4/UE5 game pages expose separate views:
 
-- **Files** — extracted packages in `ue_files`
-- **PAK archives** — original retained containers in `ue_pak_archives`
+- **Files** — imported package files in `ue_files`;
+- **PAK archives** — retained original containers in `ue_pak_archives`.
 
-PAKs are never inserted into the normal game-file table.
+PAKs are not inserted into the normal game-file table.
 
-`game-paks.php` lists original containers for one game. `pak-info.php` shows complete container metadata and a paginated list of every indexed entry. Package entries link to their normal file information and examination pages.
+`game-paks.php` lists original containers. `pak-info.php` shows container metadata and paginated indexed entries. Linked package entries can open normal file information/examination pages.
 
-File information and examination pages query the reverse relationship and display a **Source PAK archive** card with the original PAK, entry path, identity and download link.
+File pages can show a **Source PAK archive** relationship back to the original container/entry.
 
-## Downloads and protection
+## Downloads and base-game protection
 
-`pak-download.php` streams the retained original filename when local public delivery is allowed.
+`pak-download.php` streams the retained original filename when local delivery is allowed.
 
-An entire PAK download is blocked when any linked extracted package is present in the selected game's base-game protection list. This prevents a self-contained PAK from bypassing the normal protected-file distribution rules.
+A complete PAK download is blocked when protected/base-game package policy says the archive would expose protected content. Original-container retention does not bypass normal distribution policy.
 
 ## Administration
 
-`Admin → PAK Archives` lists UE4 and UE5 games and their retained archive totals. Administrators can inspect and delete retained PAKs. Deleting a retained PAK removes its archive and entry records but intentionally leaves independently imported package files in the catalog.
+Administrators can inspect/delete retained PAK records. Deleting a retained PAK removes its archive/entry records and retained original archive, but independently imported package rows are intentionally preserved.
+
+## Worker/resource behavior
+
+PAK parent and entry work uses the `archive-import-heavy` resource class. The default limit is conservative (`1`) because archive extraction/import performs sustained filesystem/database work and because entry children share one parent workspace.
+
+Routine successful/duplicate/skipped entry event logging can be disabled on the Job Logging page. Durable child results remain in the queue regardless of those event settings. Terminal entry failures remain visible/actionable and are promoted into System Errors.
+
+## Upload/recovery boundary
+
+Chunking an upload does not by itself make the browser session recoverable. PAK background recovery begins only after the complete archive exists in server-controlled staging/chunk storage and the PAK job has been created.
+
+Once that boundary is crossed, browser presence is unnecessary.
 
 ## Deployment
 
-The PAK archive tables are provided by migration `202607210001_pak_archive_management.php`:
+PAK archive tables are part of the consolidated schema/history. Current durable parent/child recovery additionally requires migration `202608120001_job_workflow_recovery_logging.php`:
 
 ```bash
 php catalog/bin/migrate.php migrate
-php catalog/bin/migrate.php verify
 ```
 
-Restart or stop/start any detached worker that was already running before the update so it loads the UE4/UE5-aware PAK handler.
+Restart detached workers after deploying code that introduces `catalog.import_staged_pak_entry`, otherwise an old worker process will not know the new child type.
 
-PAKs imported before original-container retention was added are not automatically reconstructed. Re-import the original `.pak` file once to create the retained container and entry links.
+The architectural recovery contract can be checked with:
+
+```bash
+php catalog/bin/verify-resumable-job-workflows.php --database
+```
 
 ## Current format limits
 
-The PHP extractor handles supported standard readable PAK footer/index layouts and supported compression methods. It does not claim universal UE5 container support.
+The extractor handles supported readable PAK footer/index layouts and supported compression methods. It does not claim universal UE5 container support.
 
-The following remain separate or unsupported by this PAK importer:
+Current limitations include:
 
-- encrypted PAK indexes or entries without available keys
-- Oodle-compressed payloads that cannot be decoded by the PHP extractor
-- UE5 IoStore `.utoc` / `.ucas` containers
-- packages whose companion data or engine version cannot be parsed by the selected reader
+- encrypted PAK indexes/entries without usable keys;
+- compression methods the PHP extractor cannot decode (including unsupported Oodle cases);
+- UE5 IoStore `.utoc` / `.ucas` containers;
+- package/companion layouts not understood by the selected package reader.
 
-Unsupported entries remain recorded where their index metadata can be read, but they are not represented as successfully extracted standalone packages.
+Unsupported entries can still remain represented in `ue_pak_entries` when their index metadata is readable; they are not misrepresented as successfully imported standalone packages.
