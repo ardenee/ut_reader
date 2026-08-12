@@ -28,7 +28,9 @@ interface JobQueue
         ?DateTimeImmutable $availableAt = null,
         ?string $dedupeKey = null,
         ?int $createdBy = null,
-        int $maxAttempts = 3
+        int $maxAttempts = 3,
+        ?int $parentJobId = null,
+        ?string $workflowUnitKey = null
     ): int;
 
     public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob;
@@ -43,6 +45,12 @@ interface JobQueue
      * @return 'retry_queued'|'dead_letter'|'cancelled'
      */
     public function fail(ClaimedJob $job, \Throwable $exception, int $retryDelaySeconds): string;
+
+    /**
+     * Return a coordinator to the queue without treating waiting as an error or consuming an attempt.
+     * @param array<string,mixed> $progress
+     */
+    public function defer(ClaimedJob $job, int $delaySeconds, array $progress = []): void;
 
     /**
      * @param array<string,mixed> $progress
