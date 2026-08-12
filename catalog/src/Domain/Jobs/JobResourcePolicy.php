@@ -66,9 +66,9 @@ final class JobResourcePolicy
                 'description' => 'Independent per-file Unreal package imports protected by per-file concurrency keys.',
             ],
             self::ARCHIVE_IMPORT_HEAVY => [
-                'label' => 'Full PAK and game-backup imports',
+                'label' => 'Archive and backup imports',
                 'default' => 1,
-                'description' => 'Large archive or whole-game imports. Kept separate from normal per-file imports.',
+                'description' => 'PAK and game-backup import coordinators/entry units. Backup entries remain serial by default to preserve canonical-before-alias restore ordering.',
             ],
             self::BUCKET_PROCESSING => [
                 'label' => 'Upload Bucket processing',
@@ -171,10 +171,13 @@ final class JobResourcePolicy
                 self::importFileKey($payload)
             ),
             JobType::IMPORT_STAGED_PAK,
-            JobType::IMPORT_GAME_BACKUP => new JobResourceProfile(
+            JobType::IMPORT_GAME_BACKUP,
+            JobType::IMPORT_GAME_BACKUP_ENTRY => new JobResourceProfile(
                 self::ARCHIVE_IMPORT_HEAVY,
                 self::configuredLimit(self::ARCHIVE_IMPORT_HEAVY, 1),
-                self::positiveKey('import:game:', $payload['game_id'] ?? null)
+                JobType::IMPORT_GAME_BACKUP_ENTRY === $jobType
+                    ? self::positiveKey('backup-entry-parent:', $payload['workflow_parent_job_id'] ?? null)
+                    : self::positiveKey('import:game:', $payload['game_id'] ?? null)
             ),
             JobType::EXPORT_GAME_BACKUP => new JobResourceProfile(
                 self::STORAGE_HEAVY,
