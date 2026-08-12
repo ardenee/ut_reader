@@ -97,9 +97,12 @@ final class CatalogJobWorkerFactory
         $affectedDependencyRefresh = new CatalogAffectedDependencyRefreshJobHandler($db, $config);
         $maintenance = new CatalogMaintenanceJobHandler($db, $config);
         $fullSync = new CatalogFullSyncJobHandler($db, $trustedImportConfig);
+        $fullSyncUnit = new CatalogFullSyncUnitJobHandler($db, $trustedImportConfig);
 
         $handlersByType = [
             JobType::FULL_SYNC_GAME => $fullSync,
+            JobType::FULL_SYNC_FILE => $fullSyncUnit,
+            JobType::FULL_SYNC_DEPENDENCY_FILE => $fullSyncUnit,
             JobType::REBUILD_GAME_DEPENDENCIES => $dependencyRefresh,
             JobType::REBUILD_FILE_DEPENDENCIES => $dependencyRefresh,
             JobType::REBUILD_AFFECTED_DEPENDENCIES => $affectedDependencyRefresh,
