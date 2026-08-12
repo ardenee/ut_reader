@@ -75,11 +75,17 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
             if (!$this->childrenReady($context, $state, 'duplicate_hash_wait', 5, 65, 'duplicate hash')) {
                 throw new \LogicException('Unreachable after duplicate hash defer.');
             }
+            $current = $context->resumeProgress();
             $context->checkpoint($this->progress(
                 'duplicate_delete_plan',
                 68,
                 'All same-size candidates are durably hashed; planning exact duplicate deletions.',
-                ['hash_children' => $state, 'delete_plan_offset' => 0]
+                [
+                    'physical_files' => max(0, (int)($current['physical_files'] ?? 0)),
+                    'hash_candidates' => max(0, (int)($current['hash_candidates'] ?? $state['total'])),
+                    'hash_children' => $state,
+                    'delete_plan_offset' => 0,
+                ]
             ));
             $resume = $context->resumeProgress();
             $stage = 'duplicate_delete_plan';
@@ -95,11 +101,16 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
             if (!$this->childrenReady($context, $state, 'duplicate_delete_wait', 72, 98, 'duplicate delete')) {
                 throw new \LogicException('Unreachable after duplicate delete defer.');
             }
+            $current = $context->resumeProgress();
             $context->checkpoint($this->progress(
                 'duplicate_finalize',
                 99,
                 'All duplicate deletion units completed; finalizing cleanup summary.',
-                ['delete_children' => $state]
+                [
+                    'physical_files' => max(0, (int)($current['physical_files'] ?? 0)),
+                    'hash_candidates' => max(0, (int)($current['hash_candidates'] ?? 0)),
+                    'delete_children' => $state,
+                ]
             ));
             $stage = 'duplicate_finalize';
         }
@@ -286,7 +297,12 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
             'duplicate_delete_plan',
             70,
             'Planned ' . $offset . '/' . count($duplicates) . ' exact duplicate delete unit(s).',
-            ['delete_plan_offset' => $offset, 'duplicate_files' => count($duplicates)]
+            [
+                'physical_files' => max(0, (int)($resume['physical_files'] ?? 0)),
+                'hash_candidates' => max(0, (int)($resume['hash_candidates'] ?? 0)),
+                'delete_plan_offset' => $offset,
+                'duplicate_files' => count($duplicates),
+            ]
         );
         if ($offset < count($duplicates)) {
             $context->defer(1, $progress);
@@ -297,7 +313,12 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
             count($duplicates) > 0
                 ? 'All exact duplicate delete units are planned; waiting for workers.'
                 : 'No exact duplicate files require deletion.',
-            ['delete_plan_offset' => $offset, 'duplicate_files' => count($duplicates)]
+            [
+                'physical_files' => max(0, (int)($resume['physical_files'] ?? 0)),
+                'hash_candidates' => max(0, (int)($resume['hash_candidates'] ?? 0)),
+                'delete_plan_offset' => $offset,
+                'duplicate_files' => count($duplicates),
+            ]
         ));
     }
 
