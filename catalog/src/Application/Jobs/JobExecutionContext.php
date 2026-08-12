@@ -44,14 +44,32 @@ final class JobExecutionContext
             ],
             true
         );
-        // Package readers can legitimately spend a long time inside one table
-        // method before another checkpoint is possible. Keep the lease renewable
-        // for six hours; operators still retain the explicit Stop job control.
         $this->leaseSeconds = $longRunningImport
             ? max($leaseSeconds, 6 * 3600)
             : $leaseSeconds;
         $this->lastHeartbeatAt = time();
         $this->heartbeatIntervalSeconds = max(5, min(30, intdiv(max(15, $this->leaseSeconds), 3)));
+    }
+
+    /** @return array<string,mixed> */
+    public function resumeProgress(): array
+    {
+        return $this->job->resumeProgress;
+    }
+
+    /**
+     * Release the worker while durable child work advances. Waiting is not a
+     * failure and therefore must not consume a retry attempt.
+     *
+     * @param array<string,mixed> $progress
+     * @return never
+     */
+    public function defer(int $delaySeconds = 2, array $progress = []): never
+    {
+        if ($progress === []) {
+            $progress = $this->pendingProgress !== [] ? $this->pendingProgress : $this->job->resumeProgress;
+        }
+        throw new JobDeferred(max(1, $delaySeconds), $progress);
     }
 
     /** @param array<string,mixed> $progress */
