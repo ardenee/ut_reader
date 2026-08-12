@@ -28,7 +28,8 @@ final class CatalogFullSyncDependencyBatchService
     public function __construct(
         private readonly PDO $db,
         private readonly array $config,
-        private readonly mixed $progress = null
+        private readonly mixed $progress = null,
+        private readonly bool $recordFailures = true
     ) {
     }
 
@@ -84,7 +85,9 @@ final class CatalogFullSyncDependencyBatchService
                     'original_name' => $name,
                     'error' => $message,
                 ];
-                $this->recordFailure($gameId, $fileId, $name, $position, $total, $message);
+                if ($this->recordFailures) {
+                    $this->recordFailure($gameId, $fileId, $name, $position, $total, $message);
+                }
             } else {
                 try {
                     $repaired = $this->refreshOne(
@@ -105,19 +108,21 @@ final class CatalogFullSyncDependencyBatchService
                         'original_name' => $name,
                         'error' => $error->getMessage(),
                     ];
-                    $this->recordFailure(
-                        $gameId,
-                        $fileId,
-                        $name,
-                        $position,
-                        $total,
-                        $error->getMessage(),
-                        $error
-                    );
-                    error_log(
-                        '[UnrealDB Full Sync dependency batch] file_id=' . $fileId
-                        . ' error=' . $error->getMessage()
-                    );
+                    if ($this->recordFailures) {
+                        $this->recordFailure(
+                            $gameId,
+                            $fileId,
+                            $name,
+                            $position,
+                            $total,
+                            $error->getMessage(),
+                            $error
+                        );
+                        error_log(
+                            '[UnrealDB Full Sync dependency batch] file_id=' . $fileId
+                            . ' error=' . $error->getMessage()
+                        );
+                    }
                 }
             }
 
@@ -186,9 +191,6 @@ final class CatalogFullSyncDependencyBatchService
                 'package_guid' => (string)($file['package_guid'] ?? ''),
             ]);
 
-            // This worker may have stat information cached for the stable .uedb2 path
-            // while another maintenance writer replaced that file. Force the retry to
-            // observe the freshly-published container and its current database size.
             clearstatcache();
             $this->runDependencyRebuild($rebuilder, $fileId, $position, $total, $name);
             return true;
@@ -202,9 +204,6 @@ final class CatalogFullSyncDependencyBatchService
         int $total,
         string $name
     ): void {
-        // Full Sync is a long-lived CLI process. Clear PHP's process-local stat cache
-        // before reading stable .uedb2 paths that may have been atomically replaced by
-        // this or another worker since an earlier phase.
         clearstatcache();
         $this->retryDeadlock(
             static function () use ($rebuilder, $fileId, $name): void {
