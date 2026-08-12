@@ -33,8 +33,6 @@ final class PdoJobLeaseStore
                 return 'cancelled';
             }
 
-            // Bind terminal output to the exact claimed row. This preserves the
-            // existing worker result identity contract while making it universal.
             $result['job_id'] = $job->id;
             $expectedOriginalName = trim((string)($job->payload['original_name'] ?? ''));
             if ($expectedOriginalName !== '') {
@@ -115,7 +113,7 @@ final class PdoJobLeaseStore
                 $availableAt = $now->modify('+' . min(3600, $retryDelaySeconds) . ' seconds');
                 $statement = $this->db->prepare(
                     'UPDATE ue_background_jobs SET status="queued",available_at=?,worker_id=NULL,lease_token=NULL,leased_at=NULL,'
-                    . 'lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=?,progress_json=NULL,progress_updated_at=NULL,updated_at=? '
+                    . 'lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=?,updated_at=? '
                     . 'WHERE id=? AND status="running" AND lease_token=?'
                 );
                 $statement->execute([
@@ -151,6 +149,52 @@ final class PdoJobLeaseStore
                 $this->db->rollBack();
             }
             throw $failure;
+        }
+    }
+
+    /** @param array<string,mixed> $progress */
+    public function defer(ClaimedJob $job, int $delaySeconds, array $progress = []): void
+    {
+        $delaySeconds = max(1, min(3600, $delaySeconds));
+        $now = PdoJobQueueSupport::now();
+        $timestamp = $now->format('Y-m-d H:i:s');
+        $availableAt = $now->modify('+' . $delaySeconds . ' seconds')->format('Y-m-d H:i:s');
+
+        $this->db->beginTransaction();
+        try {
+            $row = $this->lockLeaseRow($job, 'cancel_requested_at,cancel_reason,progress_json');
+            if (!empty($row['cancel_requested_at'])) {
+                $this->transitionCancelled($job, (string)($row['cancel_reason'] ?? ''), $timestamp);
+                $this->db->commit();
+                return;
+            }
+            if ($progress === [] && !empty($row['progress_json'])) {
+                $decoded = json_decode((string)$row['progress_json'], true);
+                if (is_array($decoded)) {
+                    $progress = $decoded;
+                }
+            }
+            $statement = $this->db->prepare(
+                'UPDATE ue_background_jobs SET status="queued",attempts=GREATEST(attempts-1,0),available_at=?,'
+                . 'worker_id=NULL,lease_token=NULL,leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=NULL,'
+                . 'progress_json=?,progress_updated_at=?,updated_at=? '
+                . 'WHERE id=? AND status="running" AND lease_token=?'
+            );
+            $statement->execute([
+                $availableAt,
+                $progress !== [] ? PdoJobQueueSupport::encodeJson($progress) : null,
+                $progress !== [] ? $timestamp : null,
+                $timestamp,
+                $job->id,
+                $job->leaseToken,
+            ]);
+            $this->assertLeaseUpdate($statement->rowCount(), $job);
+            $this->db->commit();
+        } catch (\Throwable $error) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $error;
         }
     }
 
