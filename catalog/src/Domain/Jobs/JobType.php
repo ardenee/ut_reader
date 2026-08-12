@@ -35,6 +35,7 @@ final class JobType
     public const IMPORT_GAME_BACKUP_ENTRY = 'catalog.import_game_backup_entry';
     public const IMPORT_STAGED_PACKAGE = 'catalog.import_staged_package';
     public const IMPORT_STAGED_PAK = 'catalog.import_staged_pak';
+    public const IMPORT_STAGED_PAK_ENTRY = 'catalog.import_staged_pak_entry';
     public const PREPARE_BUCKET_REDIRECT = 'catalog.prepare_bucket_redirect';
     public const PROCESS_BUCKET_UPLOAD = 'catalog.process_bucket_upload';
     public const RECONCILE_UNVERIFIED_STORAGE = 'catalog.reconcile_unverified_storage';
@@ -66,6 +67,7 @@ final class JobType
             self::IMPORT_GAME_BACKUP_ENTRY,
             self::IMPORT_STAGED_PACKAGE,
             self::IMPORT_STAGED_PAK,
+            self::IMPORT_STAGED_PAK_ENTRY,
             self::PREPARE_BUCKET_REDIRECT,
             self::PROCESS_BUCKET_UPLOAD,
             self::RECONCILE_UNVERIFIED_STORAGE,
