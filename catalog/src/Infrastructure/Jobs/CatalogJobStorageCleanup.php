@@ -20,13 +20,14 @@ use RecursiveIteratorIterator;
 
 /**
  * Removes disposable and orphaned job-storage files without deleting sources
- * still referenced by any surviving background-job row.
+ * still referenced by any surviving/restartable background-job row.
  */
 final class CatalogJobStorageCleanup
 {
     private string $storageRoot;
     private string $incomingDirectory;
     private string $backupImportDirectory;
+    private string $preparedDirectory;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -40,12 +41,14 @@ final class CatalogJobStorageCleanup
         $this->storageRoot = $storageRoot;
         $this->incomingDirectory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'incoming';
         $this->backupImportDirectory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'game-backup-import';
+        $this->preparedDirectory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'prepared';
     }
 
     /**
      * @return array{
      *   incoming:array{scanned:int,referenced:int,recent:int,deleted:int,bytes:int,failed:int},
-     *   backup_import:array{scanned:int,active:int,recent:int,deleted:int,bytes:int,failed:int}
+     *   backup_import:array{scanned:int,active:int,recent:int,deleted:int,bytes:int,failed:int},
+     *   prepared:array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int}
      * }
      */
     public function prune(int $minimumAgeSeconds = 300): array
@@ -54,6 +57,7 @@ final class CatalogJobStorageCleanup
         return [
             'incoming' => $this->pruneIncoming($minimumAgeSeconds),
             'backup_import' => $this->pruneBackupImport($minimumAgeSeconds),
+            'prepared' => $this->prunePrepared($minimumAgeSeconds),
         ];
     }
 
@@ -142,6 +146,48 @@ final class CatalogJobStorageCleanup
         return $result;
     }
 
+    /** @return array{scanned:int,retained:int,recent:int,deleted:int,bytes:int,failed:int} */
+    private function prunePrepared(int $minimumAgeSeconds): array
+    {
+        $result = ['scanned' => 0, 'retained' => 0, 'recent' => 0, 'deleted' => 0, 'bytes' => 0, 'failed' => 0];
+        if (!is_dir($this->preparedDirectory)) {
+            return $result;
+        }
+
+        $threshold = time() - $minimumAgeSeconds;
+        $status = $this->db->prepare('SELECT status FROM ue_background_jobs WHERE id=? LIMIT 1');
+        foreach (new FilesystemIterator($this->preparedDirectory, FilesystemIterator::SKIP_DOTS) as $entry) {
+            if (!$entry instanceof \SplFileInfo || !$entry->isDir() || $entry->isLink()) {
+                continue;
+            }
+            $result['scanned']++;
+            $name = $entry->getFilename();
+            $jobId = preg_match('/^job-([0-9]+)$/', $name, $match) === 1 ? (int)$match[1] : 0;
+            if ($jobId > 0) {
+                $status->execute([$jobId]);
+                $jobStatus = (string)($status->fetchColumn() ?: '');
+                if (in_array($jobStatus, ['queued', 'running', 'failed', 'dead_letter', 'cancelled'], true)) {
+                    $result['retained']++;
+                    continue;
+                }
+            }
+
+            $stats = $this->treeStats($entry->getPathname());
+            if ($stats['modified'] > $threshold) {
+                $result['recent']++;
+                continue;
+            }
+            if ($this->deleteTree($entry->getPathname())) {
+                $result['deleted']++;
+                $result['bytes'] += $stats['bytes'];
+            } else {
+                $result['failed']++;
+            }
+        }
+        @rmdir($this->preparedDirectory);
+        return $result;
+    }
+
     /** @return array<string,true> */
     private function incomingReferences(): array
     {
@@ -193,6 +239,47 @@ final class CatalogJobStorageCleanup
             }
         }
         return $ids;
+    }
+
+    /** @return array{bytes:int,modified:int} */
+    private function treeStats(string $path): array
+    {
+        $bytes = 0;
+        $modified = 0;
+        if (!is_dir($path)) {
+            return ['bytes' => 0, 'modified' => 0];
+        }
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)
+        );
+        foreach ($iterator as $entry) {
+            if (!$entry instanceof \SplFileInfo || !$entry->isFile() || $entry->isLink()) {
+                continue;
+            }
+            $bytes += max(0, (int)$entry->getSize());
+            $modified = max($modified, (int)$entry->getMTime());
+        }
+        return ['bytes' => $bytes, 'modified' => $modified];
+    }
+
+    private function deleteTree(string $path): bool
+    {
+        if (!file_exists($path)) {
+            return true;
+        }
+        if (is_link($path) || is_file($path)) {
+            return @unlink($path);
+        }
+        $ok = true;
+        foreach (scandir($path) ?: [] as $entry) {
+            if ($entry === '.' || $entry === '..') {
+                continue;
+            }
+            if (!$this->deleteTree($path . DIRECTORY_SEPARATOR . $entry)) {
+                $ok = false;
+            }
+        }
+        return @rmdir($path) && $ok;
     }
 
     private function storageRelativePath(string $path): string
