@@ -2,7 +2,7 @@
     'use strict';
 
     const root = document.getElementById('background-jobs-app');
-    const notice = document.getElementById('job-notice');
+    const notice = document.getElementById('jobs-message') || document.getElementById('job-notice');
     if (!root || !notice || typeof window.fetch !== 'function') {
         return;
     }
@@ -69,7 +69,7 @@
     };
 
     // The established client writes its historical synchronous notice immediately
-    // after the fetch resolves. Replace only that next notice mutation; all other
+    // after the fetch resolves. Replace only that next cleanup notice; all other
     // job messages remain owned by background-jobs-stable.js.
     const observer = new MutationObserver(() => {
         if (pendingNotice === '') {
