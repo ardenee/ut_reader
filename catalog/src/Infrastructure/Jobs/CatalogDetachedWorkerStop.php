@@ -337,10 +337,11 @@ final class CatalogDetachedWorkerStop
         $statement = $this->db->prepare(
             'UPDATE ue_background_jobs SET status="queued", attempts=GREATEST(attempts-1,0), available_at=?, '
             . 'worker_id=NULL, lease_token=NULL, leased_at=NULL, lease_expires_at=NULL, last_heartbeat_at=NULL, '
-            . 'progress_json=NULL, progress_updated_at=NULL, '
-            . 'last_error="Detached worker pool was restarted after a code update; job requeued without consuming an attempt.", '
+            . 'last_error="Detached worker pool was restarted after a code update; job resumed without consuming an attempt.", '
             . 'updated_at=? WHERE queue_name=? AND status="running" AND worker_id=? AND cancel_requested_at IS NULL'
         );
+        // Preserve progress_json/progress_updated_at. A code-refresh restart must
+        // resume the durable unit rather than replay completed work.
         $statement->execute([$timestamp, $timestamp, $queueName, $workerId]);
         return $statement->rowCount();
     }
