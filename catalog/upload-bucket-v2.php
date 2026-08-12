@@ -1,9 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders the canonical Upload Bucket interface using the JavaScript/API resumable uploader.
+ * Purpose: Renders the canonical Upload Bucket interface using the JavaScript/API chunked uploader.
  * Why: This is the proven upload workflow and replaces the retired legacy uploader while retaining the same server APIs.
- * Role: Primary Upload Bucket UI for unsorted files, resumable transfer, validation, and background queue handoff.
+ * Role: Primary Upload Bucket UI for unsorted files, chunked transfer, validation, and durable background queue handoff.
  * Audit: Canonical implementation; keep `upload-bucket.php` only as a temporary compatibility redirect.
  */
 declare(strict_types=1);
@@ -113,7 +113,7 @@ CSS;
 
     echo CatalogUi::pageHeader(
         'Upload Bucket',
-        'One file is inspected, uploaded and queued at a time. Large Chrome folder selections use incremental directory discovery instead of constructing and copying one enormous FileList.',
+        'One file is inspected, uploaded and queued at a time. Large Chrome folder selections use incremental directory discovery instead of constructing and copying one enormous FileList. Background recovery begins only after a complete file is durably present on the server.',
         [
             'Upload Issues' => 'upload-issues.php',
             'System Errors' => 'system-errors.php',
@@ -135,11 +135,11 @@ CSS;
     echo '<ol class="bucket-phases">'
         . '<li>Use the recommended folder button in Chrome to discover subfolders incrementally without creating a 70,000-file browser FileList.</li>'
         . '<li>Validate the extension and inspect only the active file in the reusable Web Worker.</li>'
-        . '<li>Ask the API whether that physical file already exists, then upload it in resumable chunks only when needed.</li>'
-        . '<li>Validate and queue that file before moving to the next file.</li>'
+        . '<li>Ask the API whether that physical file already exists, then upload it in bounded chunks only when needed.</li>'
+        . '<li>Once the complete file is durably staged on the server, create its recoverable background processing job before moving to the next file.</li>'
         . '<li>Keep one compact status line per file. The default view shows errors only; uncheck it to see the complete live status.</li>'
         . '<li>Persist only failed validation, transfer and finalisation results to Upload Issues so they remain reviewable after this page is closed.</li>'
-        . '<li>The Stop button works during folder discovery, hashing, transfer and queue finalisation.</li>'
+        . '<li>The Stop button works during folder discovery, hashing, transfer and queue finalisation. An incomplete browser transfer is not a resumable background job.</li>'
         . '</ol>';
     echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data" data-allowed-extensions="'
         . catalog_h($allowedExtensionJson) . '">';
@@ -156,6 +156,7 @@ CSS;
         . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured')
         . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
     echo '<p class="muted"><strong>Redirect archives:</strong> .uz accepts both historic 1234 and 5678 FCodec signatures. .uz/.uz2/.uz3 are transferred in their compressed wrapper form. Server processing then decompresses the wrapper, calculates the real package MD5/SHA-1, runs the duplicate check and stores the uncompressed package in the Upload Bucket.</p>';
+    echo '<p class="muted"><strong>Recovery boundary:</strong> chunking is transport only. If the browser/session disappears before a file reaches the server in complete form, that upload is incomplete and must be started again. Once complete staging succeeds, all processing after that point is background/recoverable.</p>';
     echo '<p class="muted"><strong>Status format:</strong> each file keeps one line, for example CHECKED : READY : UPLOADED : QUEUED : UPLOADED : path/file.uz : 513.62 KB. Only errors are written to <a href="upload-issues.php">Upload Issues</a>.</p>';
     echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total batch-size limit is applied. Only one file is active and it is split into chunks of up to '
         . catalog_h(catalog_bytes($chunkBytes))
