@@ -137,6 +137,63 @@ $check(
     'Loose-source scanning must checkpoint every completed path in deterministic order and retain the container-preparation phase.'
 );
 
+// Browser/network upload transport is explicitly outside the durable recovery
+// contract. The boundary starts only after a complete server-side file exists.
+// Both upload destinations must preserve that ordering: complete/stage first,
+// enqueue a background job second.
+$profiledUpload = $read('profiled-upload.php');
+$profiledChunk = $read('api/v1/profiled-upload-chunk.php');
+$incomingStore = $read('src/Infrastructure/Import/CatalogIncomingFileStore.php');
+$profiledQueue = $read('src/Infrastructure/Import/CatalogProfiledUploadQueue.php');
+$bucketChunk = $read('api/v1/upload-bucket-chunk.php');
+$bucketBatch = $read('api/v1/upload-bucket-batch.php');
+$bucketHandler = $read('src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
+
+$directStagePosition = strpos($profiledUpload, '$store->stageUploadedFile(');
+$directQueuePosition = strpos($profiledUpload, '$queue->enqueueStaged(');
+$profiledCompletePosition = strpos($profiledChunk, '$store->complete(');
+$profiledChunkQueuePosition = strpos($profiledChunk, '$queue->enqueueStaged(');
+$profiledPakQueuePosition = strpos($profiledChunk, '$queue->enqueueChunkedPak(');
+$bucketCompletePosition = strpos($bucketChunk, '$store->complete(');
+$bucketFinalizePosition = strpos($bucketBatch, 'CatalogBucketBatchFinalizer');
+
+$check(
+    'direct_game_upload_stages_complete_file_before_job',
+    $directStagePosition !== false
+        && $directQueuePosition !== false
+        && $directStagePosition < $directQueuePosition
+        && str_contains($incomingStore, "DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'incoming'")
+        && str_contains($profiledQueue, 'JobType::IMPORT_STAGED_PACKAGE'),
+    'Direct-to-game upload recovery must begin only after the complete file has moved into controlled server staging.'
+);
+
+$check(
+    'chunked_game_upload_completes_before_job',
+    $profiledCompletePosition !== false
+        && (($profiledChunkQueuePosition !== false && $profiledCompletePosition < $profiledChunkQueuePosition)
+            || ($profiledPakQueuePosition !== false && $profiledCompletePosition < $profiledPakQueuePosition))
+        && str_contains($profiledUpload, 'recovery begins after the complete file is durably staged'),
+    'Chunk transport is not the recovery contract; the completed server file must exist before a game import job is created.'
+);
+
+$check(
+    'upload_bucket_completes_transfer_before_processing_job',
+    $bucketCompletePosition !== false
+        && $bucketFinalizePosition !== false
+        && str_contains($bucketBatch, 'completed Upload Bucket source identifier')
+        && str_contains($bucketHandler, 'resolveCompletedFile($uploadId, $userId)'),
+    'Upload Bucket processing must consume a completed durable source; an incomplete browser transfer must never be represented as resumable processing work.'
+);
+
+$check(
+    'upload_ui_does_not_claim_browser_session_recovery',
+    !str_contains($profiledUpload, 'use resumable chunks')
+        && !str_contains($read('upload-bucket-v2.php'), 'upload it in resumable chunks')
+        && str_contains($profiledUpload, 'Chunking does not make an interrupted browser upload session recoverable')
+        && str_contains($read('upload-bucket-v2.php'), 'An incomplete browser transfer is not a resumable background job'),
+    'Only post-complete server-side processing may be described as resumable/recoverable.'
+);
+
 $logging = $read('src/Infrastructure/Jobs/CatalogJobLoggingSettingsStore.php');
 $eventLog = $read('src/Infrastructure/Jobs/CatalogJobEventLog.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
