@@ -148,6 +148,10 @@ $profiledQueue = $read('src/Infrastructure/Import/CatalogProfiledUploadQueue.php
 $bucketChunk = $read('api/v1/upload-bucket-chunk.php');
 $bucketBatch = $read('api/v1/upload-bucket-batch.php');
 $bucketHandler = $read('src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
+$preparedStore = $read('src/Infrastructure/Jobs/CatalogPreparedJobFileStore.php');
+$nonBlockingImport = $read('src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php');
+$stagedImport = $read('src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php');
+$storageCleanup = $read('src/Infrastructure/Jobs/CatalogJobStorageCleanup.php');
 
 $directStagePosition = strpos($profiledUpload, '$store->stageUploadedFile(');
 $directQueuePosition = strpos($profiledUpload, '$queue->enqueueStaged(');
@@ -192,6 +196,37 @@ $check(
         && str_contains($profiledUpload, 'Chunking does not make an interrupted browser upload session recoverable')
         && str_contains($read('upload-bucket-v2.php'), 'An incomplete browser transfer is not a resumable background job'),
     'Only post-complete server-side processing may be described as resumable/recoverable.'
+);
+
+$check(
+    'direct_game_redirect_preparation_is_reusable',
+    str_contains($preparedStore, "DIRECTORY_SEPARATOR . 'prepared'")
+        && str_contains($nonBlockingImport, "new CatalogPreparedJobFileStore(\$this->config, \$job->id, 'redirect')")
+        && str_contains($nonBlockingImport, '$preparedStore->load()')
+        && str_contains($nonBlockingImport, '$preparedStore->publish(')
+        && str_contains($nonBlockingImport, '$job->resumeProgress')
+        && str_contains($stagedImport, 'prepared_source_persistent')
+        && str_contains($stagedImport, '$this->workingSource($sourcePath, $workingName, $context, 46, 48)'),
+    'A completed direct-to-game redirect decompression must survive infrastructure retry/cancellation and feed the importer through a disposable working path.'
+);
+
+$check(
+    'upload_bucket_preparation_and_staging_are_phase_resumable',
+    str_contains($bucketHandler, "new CatalogPreparedJobFileStore(\$this->config, \$job->id, 'bucket-package')")
+        && str_contains($bucketHandler, "'stage' => 'package_prepared'")
+        && str_contains($bucketHandler, "'stage' => 'bucket_staged'")
+        && str_contains($bucketHandler, 'finalizeStagedCheckpoint(')
+        && str_contains($bucketHandler, 'workingFromPrepared(')
+        && str_contains($bucketHandler, 'progress_json must remain the recovery checkpoint'),
+    'A Bucket retry must reuse completed copy/hash/decompression and a post-staging retry must perform cleanup only.'
+);
+
+$check(
+    'prepared_recovery_files_have_safe_retention_cleanup',
+    str_contains($storageCleanup, "status IN")
+        || (str_contains($storageCleanup, "['queued', 'running', 'failed', 'dead_letter', 'cancelled']")
+            && str_contains($storageCleanup, 'prunePrepared(')),
+    'Prepared recovery artifacts must be retained for restartable jobs and pruned after completed/deleted jobs become stale.'
 );
 
 $logging = $read('src/Infrastructure/Jobs/CatalogJobLoggingSettingsStore.php');
