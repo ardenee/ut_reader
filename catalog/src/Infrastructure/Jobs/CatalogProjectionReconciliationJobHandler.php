@@ -1,18 +1,18 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Reconciles materialized catalogue projections after direct maintenance writes.
- * Why: Projection maintenance is not an identity write; affected dependency owners must use narrow per-file locking so
- *      long reconciliation jobs cannot stall unrelated Full Sync or catalog maintenance requests.
- * Role: Infrastructure durable-job handler for catalog.reconcile_catalog_projections.
+ * Durable projection reconciliation workflow.
+ *
+ * Provider/source projection preparation stays in the parent. Potentially large
+ * affected dependency-owner work is split into independent per-file children so
+ * successful owners are never replayed after a retry. The parent releases its
+ * worker while children run and performs bulk summary/stat publication only once
+ * every child has completed successfully.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
-use Throwable;
-use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -21,11 +21,14 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
-/** Reconciles all materialized catalogue projections after direct maintenance writes. */
 final class CatalogProjectionReconciliationJobHandler implements JobHandler
 {
+    private const WORKFLOW_VERSION = 2;
+    private const PLAN_BATCH_SIZE = 500;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -35,36 +38,406 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
 
     public function supports(string $jobType): bool
     {
-        return $jobType === JobType::RECONCILE_CATALOG_PROJECTIONS;
+        return in_array(
+            $jobType,
+            [JobType::RECONCILE_CATALOG_PROJECTIONS, JobType::RECONCILE_CATALOG_PROJECTION_FILE],
+            true
+        );
     }
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
-        // Provider, dependency-summary and game-stat rows are projections. They
-        // must not hold unrealdb_catalog_maintenance_write_v1 while iterating
-        // potentially thousands of dependency owners. File dependency writes are
-        // serialized by PdoCatalogDependencyRebuilder's per-file advisory lock.
-        return $this->reconcile($job, $context);
+        if ($job->type === JobType::RECONCILE_CATALOG_PROJECTION_FILE) {
+            return $this->reconcileFileUnit($job, $context);
+        }
+        return $this->coordinate($job, $context);
     }
 
     /** @return array<string,mixed> */
-    private function reconcile(ClaimedJob $job, JobExecutionContext $context): array
+    private function coordinate(ClaimedJob $job, JobExecutionContext $context): array
     {
-        $fileId = max(0, (int)($job->payload['file_id'] ?? 0));
-        $gameIds = $this->positiveIds((array)($job->payload['game_ids'] ?? []));
-        $packageNames = $this->packageNames((array)($job->payload['package_names'] ?? []));
+        [$fileId, $file, $gameIds, $packageNames] = $this->reconciliationContext($job->payload);
         if ($fileId < 1 && $gameIds === []) {
             throw new \RuntimeException('Projection reconciliation requires a file or game context.');
         }
 
+        $resume = $context->resumeProgress();
+        $stage = trim((string)($resume['stage'] ?? ''));
+        if ($stage === '' || $stage === 'worker_start') {
+            $stage = 'projection_prepare';
+        }
+
+        // Old jobs only persisted display progress. There is no trustworthy
+        // per-owner recovery cursor in those snapshots, so convert them into the
+        // new durable child workflow. If the old job already reached game_stats,
+        // dependency work was complete and only final publication needs retrying.
+        if ((int)($resume['workflow_version'] ?? 0) < self::WORKFLOW_VERSION) {
+            $legacyStage = (string)($resume['stage'] ?? '');
+            $stage = $legacyStage === 'game_stats' ? 'projection_finalize' : 'projection_prepare';
+            $resume = [];
+        }
+
+        if ($stage === 'projection_prepare') {
+            $providers = new PdoPackageProviderRepository($this->db);
+            $summaries = new PdoDependencyPackageSummary($this->db);
+            $summaryRows = 0;
+            if ($fileId > 0) {
+                $providers->reconcileFile($fileId);
+                $summary = $summaries->rebuildFile($fileId);
+                $summaryRows = (int)($summary['summary_rows'] ?? 0);
+            }
+            $context->checkpoint($this->progress(
+                'projection_plan',
+                10,
+                'Provider projections are ready; planning independently recoverable dependency-owner units.',
+                [
+                    'file_id' => $fileId,
+                    'game_ids' => $gameIds,
+                    'package_names' => $packageNames,
+                    'dependency_summary_rows' => $summaryRows,
+                    'plan_last_file_id' => 0,
+                    'planned_units' => 0,
+                ]
+            ));
+            $resume = $context->resumeProgress();
+            $stage = 'projection_plan';
+        }
+
+        if ($stage === 'projection_plan') {
+            $this->planUnits($job, $context, $gameIds, $packageNames, $fileId, $resume);
+            $stage = 'projection_wait';
+        }
+
+        if ($stage === 'projection_wait') {
+            $state = $this->childState($job->id);
+            $total = max(1, $state['total']);
+            $percent = 15 + (int)floor(($state['completed'] * 65) / $total);
+            $problems = $state['failed'] + $state['dead_letter'] + $state['cancelled'];
+            if ($problems > 0) {
+                $context->defer(30, $this->progress(
+                    'projection_wait',
+                    min(80, $percent),
+                    'Projection reconciliation is waiting on ' . $problems . ' failed/cancelled file unit(s). '
+                        . 'Restart only those units; ' . $state['completed'] . ' successful file unit(s) are retained.',
+                    ['children' => $state]
+                ));
+            }
+            if (($state['queued'] + $state['running']) > 0) {
+                $context->defer(2, $this->progress(
+                    'projection_wait',
+                    min(80, $percent),
+                    'Projection file units: ' . $state['completed'] . '/' . $state['total']
+                        . ' complete, ' . $state['running'] . ' running, ' . $state['queued'] . ' queued.',
+                    ['children' => $state]
+                ));
+            }
+            $context->checkpoint($this->progress(
+                'projection_finalize',
+                82,
+                'All projection dependency-owner units completed; publishing summaries and cached game statistics.',
+                ['children' => $state]
+            ));
+            $stage = 'projection_finalize';
+        }
+
+        if ($stage !== 'projection_finalize') {
+            throw new \RuntimeException('Unknown projection reconciliation workflow stage: ' . $stage);
+        }
+
+        $aggregate = $this->aggregateUnitResults($job->id);
+        $summaries = new PdoDependencyPackageSummary($this->db);
+        $summaryRows = 0;
+        if ($fileId > 0) {
+            $sourceSummary = $summaries->rebuildFile($fileId);
+            $summaryRows = (int)($sourceSummary['summary_rows'] ?? 0);
+        }
+
+        $summaryFilesRefreshed = 0;
+        if ($aggregate['changed_file_ids'] !== []) {
+            $context->checkpoint($this->progress(
+                'projection_finalize',
+                88,
+                'Bulk-refreshing dependency summaries for ' . count($aggregate['changed_file_ids'])
+                    . ' changed owner file(s).'
+            ));
+            $bulkSummary = $summaries->rebuildFiles($aggregate['changed_file_ids']);
+            $summaryFilesRefreshed = (int)($bulkSummary['files'] ?? 0);
+        }
+
+        $context->checkpoint($this->progress(
+            'projection_finalize',
+            94,
+            'Refreshing cached game counters.',
+            ['game_ids' => $gameIds]
+        ));
+        $stats = new PdoGameCatalogStats($this->db);
+        $statsRefreshed = 0;
+        foreach ($gameIds as $gameId) {
+            if ($stats->rebuildGame($gameId) !== null) {
+                $statsRefreshed++;
+            }
+        }
+
+        $children = $this->childState($job->id);
+        $context->checkpoint($this->progress(
+            'complete',
+            100,
+            'Catalogue projections reconciled.',
+            [
+                'affected_files' => $children['total'],
+                'changed_files' => count($aggregate['changed_file_ids']),
+                'no_op_files' => $aggregate['no_op_files'],
+                'children' => $children,
+            ]
+        ));
+
+        return [
+            'operation' => 'reconcile_catalog_projections',
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'file_id' => $fileId,
+            'file_exists' => $file !== null,
+            'game_ids' => $gameIds,
+            'package_names' => $packageNames,
+            'dependency_summary_rows' => $summaryRows,
+            'affected_files' => $children['total'],
+            'processed_files' => $aggregate['processed_files'],
+            'dependency_files_changed' => count($aggregate['changed_file_ids']),
+            'compact_no_op_files' => $aggregate['no_op_files'],
+            'targeted_imports_processed' => $aggregate['targeted_imports'],
+            'summary_files_refreshed' => $summaryFilesRefreshed,
+            'stats_refreshed' => $statsRefreshed,
+            'failure_count' => 0,
+            'failures' => [],
+            'failures_truncated' => false,
+            'children' => $children,
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private function reconcileFileUnit(ClaimedJob $job, JobExecutionContext $context): array
+    {
+        $fileId = (int)($job->payload['affected_file_id'] ?? 0);
+        if ($fileId < 1) {
+            throw new \InvalidArgumentException('Projection file unit requires a positive affected_file_id.');
+        }
+        $packageNames = $this->packageNames((array)($job->payload['package_names'] ?? []));
+        if ($packageNames === []) {
+            throw new \InvalidArgumentException('Projection file unit requires at least one package name.');
+        }
+
+        $context->checkpoint([
+            'stage' => 'projection_file',
+            'done' => 0,
+            'total' => 1,
+            'percent' => 1,
+            'file_id' => $fileId,
+            'message' => 'Reconciling targeted dependencies for file #' . $fileId . '.',
+        ]);
+
+        $result = (new PdoCatalogDependencyRebuilder($this->db, $this->config))->rebuildForPackages(
+            $fileId,
+            $packageNames,
+            false
+        );
+        $changed = max(0, (int)($result['dependencies_changed'] ?? 0));
+        $targeted = max(0, (int)($result['imports_processed'] ?? 0));
+        $importsTotal = max($targeted, (int)($result['imports_total'] ?? $targeted));
+        $skipped = !empty($result['skipped_missing_file']);
+
+        $context->checkpoint([
+            'stage' => 'complete',
+            'done' => 1,
+            'total' => 1,
+            'percent' => 100,
+            'file_id' => $fileId,
+            'status' => $skipped ? 'skipped' : 'completed',
+            'message' => $skipped
+                ? 'Projection dependency owner no longer exists; skipped file #' . $fileId . '.'
+                : 'Projection file #' . $fileId . ' reconciled: targeted imports=' . $targeted . '/'
+                    . $importsTotal . ', changes=' . $changed . '.',
+        ]);
+
+        return [
+            'operation' => 'reconcile_catalog_projection_file',
+            'affected_file_id' => $fileId,
+            'skipped_missing_file' => $skipped,
+            'imports_processed' => $targeted,
+            'imports_total' => $importsTotal,
+            'dependencies_changed' => $changed,
+            'container_rewritten' => !empty($result['container_rewritten']),
+        ];
+    }
+
+    /**
+     * @param list<int> $gameIds
+     * @param list<string> $packageNames
+     * @param array<string,mixed> $resume
+     */
+    private function planUnits(
+        ClaimedJob $job,
+        JobExecutionContext $context,
+        array $gameIds,
+        array $packageNames,
+        int $excludeFileId,
+        array $resume
+    ): void {
+        $affected = $this->affectedFileIds(
+            $gameIds,
+            $packageNames,
+            $excludeFileId,
+            (new PdoDependencyPackageSummary($this->db))->available()
+        );
+        $lastFileId = (int)($resume['plan_last_file_id'] ?? 0);
+        $planned = (int)($resume['planned_units'] ?? 0);
+        if ((string)($resume['stage'] ?? '') !== 'projection_plan') {
+            $lastFileId = 0;
+            $planned = 0;
+        }
+
+        $ids = [];
+        foreach ($affected as $id) {
+            if ($id > $lastFileId) {
+                $ids[] = $id;
+                if (count($ids) >= self::PLAN_BATCH_SIZE) {
+                    break;
+                }
+            }
+        }
+
+        $queue = new PdoJobQueue($this->db);
+        $createdBy = isset($job->payload['requested_by']) && (int)$job->payload['requested_by'] > 0
+            ? (int)$job->payload['requested_by']
+            : null;
+        foreach ($ids as $affectedFileId) {
+            $queue->enqueue(
+                $job->queue,
+                JobType::RECONCILE_CATALOG_PROJECTION_FILE,
+                [
+                    'affected_file_id' => $affectedFileId,
+                    'package_names' => $packageNames,
+                    'workflow_parent_job_id' => $job->id,
+                ],
+                50,
+                null,
+                null,
+                $createdBy,
+                3,
+                $job->id,
+                'affected:' . $affectedFileId
+            );
+            $lastFileId = $affectedFileId;
+            $planned++;
+        }
+
+        $hasMore = false;
+        foreach ($affected as $id) {
+            if ($id > $lastFileId) {
+                $hasMore = true;
+                break;
+            }
+        }
+        $progress = $this->progress(
+            'projection_plan',
+            12,
+            'Planned ' . $planned . '/' . count($affected) . ' durable projection file unit(s).',
+            [
+                'plan_last_file_id' => $lastFileId,
+                'planned_units' => $planned,
+                'affected_total' => count($affected),
+            ]
+        );
+        if ($hasMore) {
+            $context->defer(1, $progress);
+        }
+
+        $context->checkpoint($this->progress(
+            'projection_wait',
+            15,
+            'Planned ' . $planned . ' durable projection file unit(s); waiting for workers.',
+            ['planned_units' => $planned, 'affected_total' => count($affected)]
+        ));
+    }
+
+    /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
+    private function childState(int $parentJobId): array
+    {
+        $state = [
+            'total' => 0,
+            'queued' => 0,
+            'running' => 0,
+            'completed' => 0,
+            'failed' => 0,
+            'dead_letter' => 0,
+            'cancelled' => 0,
+        ];
+        $statement = $this->db->prepare(
+            'SELECT status,COUNT(*) c FROM ue_background_jobs '
+            . 'WHERE parent_job_id=? AND workflow_unit_key LIKE "affected:%" GROUP BY status'
+        );
+        $statement->execute([$parentJobId]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $status = (string)$row['status'];
+            $count = (int)$row['c'];
+            $state['total'] += $count;
+            if (array_key_exists($status, $state)) {
+                $state[$status] += $count;
+            }
+        }
+        return $state;
+    }
+
+    /** @return array{processed_files:int,no_op_files:int,targeted_imports:int,changed_file_ids:list<int>} */
+    private function aggregateUnitResults(int $parentJobId): array
+    {
+        $processed = 0;
+        $noOp = 0;
+        $targetedImports = 0;
+        $changed = [];
+        $statement = $this->db->prepare(
+            'SELECT result_json FROM ue_background_jobs WHERE parent_job_id=? '
+            . 'AND workflow_unit_key LIKE "affected:%" AND status="completed" ORDER BY id'
+        );
+        $statement->execute([$parentJobId]);
+        foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $json) {
+            $result = json_decode((string)$json, true);
+            if (!is_array($result) || !empty($result['skipped_missing_file'])) {
+                continue;
+            }
+            $processed++;
+            $targetedImports += max(0, (int)($result['imports_processed'] ?? 0));
+            $changes = max(0, (int)($result['dependencies_changed'] ?? 0));
+            if ($changes > 0) {
+                $fileId = (int)($result['affected_file_id'] ?? 0);
+                if ($fileId > 0) {
+                    $changed[$fileId] = $fileId;
+                }
+            } else {
+                $noOp++;
+            }
+        }
+        ksort($changed, SORT_NUMERIC);
+        return [
+            'processed_files' => $processed,
+            'no_op_files' => $noOp,
+            'targeted_imports' => $targetedImports,
+            'changed_file_ids' => array_values($changed),
+        ];
+    }
+
+    /** @param array<string,mixed> $payload @return array{0:int,1:array<string,mixed>|null,2:list<int>,3:list<string>} */
+    private function reconciliationContext(array $payload): array
+    {
+        $fileId = max(0, (int)($payload['file_id'] ?? 0));
+        $gameIds = $this->positiveIds((array)($payload['game_ids'] ?? []));
+        $packageNames = $this->packageNames((array)($payload['package_names'] ?? []));
         $file = null;
+
         if ($fileId > 0) {
             $statement = $this->db->prepare('SELECT id,game_id,package_name,scan_status FROM ue_files WHERE id=?');
             $statement->execute([$fileId]);
             $row = $statement->fetch(PDO::FETCH_ASSOC);
             $file = is_array($row) ? $row : null;
         }
-
         if ($file !== null) {
             $currentGameId = (int)($file['game_id'] ?? 0);
             if ($currentGameId > 0) {
@@ -79,153 +452,8 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 $packageNames[] = (string)$aliasName;
             }
         }
-        $gameIds = $this->positiveIds($gameIds);
-        $packageNames = $this->packageNames($packageNames);
 
-        $context->checkpoint([
-            'stage' => 'projections',
-            'done' => 0,
-            'total' => 4,
-            'percent' => 0,
-            'message' => 'Reconciling package providers and compact dependency summaries.',
-            'file_id' => $fileId,
-            'game_ids' => $gameIds,
-        ]);
-
-        $providers = new PdoPackageProviderRepository($this->db);
-        $summaries = new PdoDependencyPackageSummary($this->db);
-        if ($fileId > 0) {
-            $providers->reconcileFile($fileId);
-            $summaryResult = $summaries->rebuildFile($fileId);
-        } else {
-            $summaryResult = ['summary_rows' => 0, 'available' => $summaries->available()];
-        }
-
-        $context->checkpoint([
-            'stage' => 'dependencies',
-            'done' => 1,
-            'total' => 4,
-            'percent' => 25,
-            'message' => 'Finding dependency owners affected by old and new package identities.',
-            'package_names' => $packageNames,
-        ]);
-
-        $affectedIds = $this->affectedFileIds($gameIds, $packageNames, $fileId, $summaries->available());
-        $affectedTotal = count($affectedIds);
-        $processed = 0;
-        $failureCount = 0;
-        $failures = [];
-        $dependencyFilesChanged = 0;
-        $compactNoopFiles = 0;
-        $targetedImports = 0;
-        $summaryRefreshIds = [];
-        $dependencyRebuilder = new PdoCatalogDependencyRebuilder($this->db, $this->config);
-
-        foreach ($affectedIds as $index => $affectedFileId) {
-            try {
-                $message = 'Reconciling dependency owner ' . ($index + 1) . '/' . $affectedTotal;
-                $result = $dependencyRebuilder->rebuildForPackages(
-                    $affectedFileId,
-                    $packageNames,
-                    false
-                );
-                $changed = (int)($result['dependencies_changed'] ?? 0);
-                $targeted = (int)($result['imports_processed'] ?? 0);
-                $importsTotal = (int)($result['imports_total'] ?? $targeted);
-                $targetedImports += $targeted;
-                $message .= ': targeted compact imports=' . $targeted . '/' . $importsTotal
-                    . ', changed=' . $changed;
-                if ($changed === 0) {
-                    $compactNoopFiles++;
-                } else {
-                    $dependencyFilesChanged++;
-                    $summaryRefreshIds[] = $affectedFileId;
-                }
-
-                $processed++;
-                $context->heartbeatIfDue([
-                    'stage' => 'dependencies',
-                    'done' => $index + 1,
-                    'total' => max(1, $affectedTotal),
-                    'percent' => 25 + (int)floor((($index + 1) * 50) / max(1, $affectedTotal)),
-                    'message' => $message,
-                    'changed_files' => $dependencyFilesChanged,
-                    'no_op_files' => $compactNoopFiles,
-                ]);
-            } catch (JobCancellationRequested $error) {
-                throw $error;
-            } catch (Throwable $error) {
-                $failureCount++;
-                if (count($failures) < 100) {
-                    $failures[] = ['file_id' => $affectedFileId, 'error' => $error->getMessage()];
-                }
-                error_log(
-                    '[UnrealDB projection reconciliation] affected_file_id=' . $affectedFileId
-                    . ' failed: ' . $error->getMessage()
-                );
-            }
-        }
-
-        $summaryFilesRefreshed = 0;
-        if ($summaryRefreshIds !== []) {
-            $context->checkpoint([
-                'stage' => 'dependencies',
-                'done' => max(1, $affectedTotal),
-                'total' => max(1, $affectedTotal),
-                'percent' => 76,
-                'message' => 'Refreshing package summaries for ' . count($summaryRefreshIds)
-                    . ' changed dependency owner(s).',
-            ]);
-            $bulkSummary = $summaries->rebuildFiles($summaryRefreshIds);
-            $summaryFilesRefreshed = (int)($bulkSummary['files'] ?? 0);
-        }
-
-        $context->checkpoint([
-            'stage' => 'game_stats',
-            'done' => 3,
-            'total' => 4,
-            'percent' => 80,
-            'message' => 'Refreshing cached game counters.',
-            'game_ids' => $gameIds,
-        ]);
-        $stats = new PdoGameCatalogStats($this->db);
-        $statsRefreshed = 0;
-        foreach ($gameIds as $gameId) {
-            if ($stats->rebuildGame($gameId) !== null) {
-                $statsRefreshed++;
-            }
-        }
-
-        $context->checkpoint([
-            'stage' => 'complete',
-            'done' => 4,
-            'total' => 4,
-            'percent' => 100,
-            'message' => 'Catalogue projections reconciled.',
-            'affected_files' => $affectedTotal,
-            'changed_files' => $dependencyFilesChanged,
-            'no_op_files' => $compactNoopFiles,
-            'failures' => $failureCount,
-        ]);
-
-        return [
-            'operation' => 'reconcile_catalog_projections',
-            'file_id' => $fileId,
-            'file_exists' => $file !== null,
-            'game_ids' => $gameIds,
-            'package_names' => $packageNames,
-            'dependency_summary_rows' => (int)($summaryResult['summary_rows'] ?? 0),
-            'affected_files' => $affectedTotal,
-            'processed_files' => $processed,
-            'dependency_files_changed' => $dependencyFilesChanged,
-            'compact_no_op_files' => $compactNoopFiles,
-            'targeted_imports_processed' => $targetedImports,
-            'summary_files_refreshed' => $summaryFilesRefreshed,
-            'stats_refreshed' => $statsRefreshed,
-            'failure_count' => $failureCount,
-            'failures' => $failures,
-            'failures_truncated' => $failureCount > count($failures),
-        ];
+        return [$fileId, $file, $this->positiveIds($gameIds), $this->packageNames($packageNames)];
     }
 
     /** @param list<int> $gameIds @param list<string> $packageNames @return list<int> */
@@ -261,7 +489,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
                 }
             }
         }
-        ksort($ids);
+        ksort($ids, SORT_NUMERIC);
         return array_map('intval', array_keys($ids));
     }
 
@@ -288,5 +516,19 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
         }
         ksort($names);
         return array_values($names);
+    }
+
+    /** @param array<string,mixed> $extra @return array<string,mixed> */
+    private function progress(string $stage, int $percent, string $message, array $extra = []): array
+    {
+        $percent = max(0, min(100, $percent));
+        return $extra + [
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'stage' => $stage,
+            'done' => $percent,
+            'total' => 100,
+            'percent' => $percent,
+            'message' => $message,
+        ];
     }
 }
