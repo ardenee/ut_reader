@@ -62,6 +62,7 @@ final class CatalogFullSyncDependencyBatchService
         $rebuilder = new PdoCatalogDependencyRebuilder($this->db, $this->config);
         $total = count($fileIds);
         $succeeded = 0;
+        $metadataRepairs = 0;
         $failures = [];
         $progressStride = max(1, (int)ceil($total / 20));
 
@@ -86,21 +87,16 @@ final class CatalogFullSyncDependencyBatchService
                 $this->recordFailure($gameId, $fileId, $name, $position, $total, $message);
             } else {
                 try {
-                    $this->retryDeadlock(
-                        static function () use ($rebuilder, $fileId, $name): void {
-                            $rebuilder->rebuild(
-                                $fileId,
-                                null,
-                                0,
-                                100,
-                                'Full Sync batch dependency refresh for ' . $name,
-                                false
-                            );
-                        },
+                    $repaired = $this->refreshOne(
+                        $rebuilder,
+                        $file,
                         $position,
                         $total,
                         $name
                     );
+                    if ($repaired) {
+                        $metadataRepairs++;
+                    }
                     $succeeded++;
                 } catch (Throwable $error) {
                     $failed = true;
@@ -131,6 +127,7 @@ final class CatalogFullSyncDependencyBatchService
                     $total,
                     ($failed ? 'Dependency refresh failed for ' : 'Dependency-refreshed ')
                         . $position . '/' . $total . ': ' . $name
+                        . ($metadataRepairs > 0 ? '; compact metadata repaired=' . $metadataRepairs : '')
                 );
             }
         }
@@ -142,11 +139,107 @@ final class CatalogFullSyncDependencyBatchService
             'processed' => $total,
             'succeeded' => $succeeded,
             'failed' => count($failures),
+            'metadata_repairs' => $metadataRepairs,
             'failures' => $failures,
             'summary_refresh_deferred' => true,
             'message' => 'Dependency batch complete: ' . $succeeded . '/' . $total
-                . ' refreshed; package summaries deferred to Full Sync finalization.',
+                . ' refreshed; compact metadata repaired=' . $metadataRepairs
+                . '; package summaries deferred to Full Sync finalization.',
         ];
+    }
+
+    /** @param array<string,mixed> $file */
+    private function refreshOne(
+        PdoCatalogDependencyRebuilder $rebuilder,
+        array $file,
+        int $position,
+        int $total,
+        string $name
+    ): bool {
+        $fileId = (int)$file['id'];
+        try {
+            $this->runDependencyRebuild($rebuilder, $fileId, $position, $total, $name);
+            return false;
+        } catch (Throwable $error) {
+            if (!$this->isCompactMetadataIntegrityFailure($error)) {
+                throw $error;
+            }
+
+            $this->emit(
+                max(0, $position - 1),
+                $total,
+                'Compact metadata is unreadable for ' . $position . '/' . $total . ': ' . $name
+                    . '; reparsing the authoritative stored package before retrying dependencies.'
+            );
+
+            $maintenance = new CatalogFileMaintenanceActionService(
+                $this->db,
+                $this->config,
+                null,
+                null
+            );
+            $maintenance->execute('sync_reimport', [
+                'file_id' => $fileId,
+                'game_id' => (int)$file['game_id'],
+                'package_name' => (string)$file['package_name'],
+                'md5' => (string)$file['md5'],
+                'package_guid' => (string)($file['package_guid'] ?? ''),
+            ]);
+
+            // This worker may have stat information cached for the stable .uedb2 path
+            // while another maintenance writer replaced that file. Force the retry to
+            // observe the freshly-published container and its current database size.
+            clearstatcache();
+            $this->runDependencyRebuild($rebuilder, $fileId, $position, $total, $name);
+            return true;
+        }
+    }
+
+    private function runDependencyRebuild(
+        PdoCatalogDependencyRebuilder $rebuilder,
+        int $fileId,
+        int $position,
+        int $total,
+        string $name
+    ): void {
+        // Full Sync is a long-lived CLI process. Clear PHP's process-local stat cache
+        // before reading stable .uedb2 paths that may have been atomically replaced by
+        // this or another worker since an earlier phase.
+        clearstatcache();
+        $this->retryDeadlock(
+            static function () use ($rebuilder, $fileId, $name): void {
+                $rebuilder->rebuild(
+                    $fileId,
+                    null,
+                    0,
+                    100,
+                    'Full Sync batch dependency refresh for ' . $name,
+                    false
+                );
+            },
+            $position,
+            $total,
+            $name
+        );
+    }
+
+    private function isCompactMetadataIntegrityFailure(Throwable $error): bool
+    {
+        $message = strtolower($error->getMessage());
+        foreach ([
+            'blocked metadata file size mismatch',
+            'blocked metadata container',
+            'blocked metadata manifest',
+            'blocked metadata section',
+            'no compressed metadata row',
+            'not using blocked metadata format version 2',
+            'unsupported blocked metadata codec',
+        ] as $needle) {
+            if (str_contains($message, $needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** @param list<int> $fileIds @return array<int,array<string,mixed>> */
@@ -154,7 +247,7 @@ final class CatalogFullSyncDependencyBatchService
     {
         $placeholders = implode(',', array_fill(0, count($fileIds), '?'));
         $statement = $this->db->prepare(
-            'SELECT id,game_id,original_name FROM ue_files '
+            'SELECT id,game_id,package_name,original_name,md5,package_guid FROM ue_files '
             . 'WHERE game_id=? AND scan_status="verified" AND id IN (' . $placeholders . ')'
         );
         $statement->execute([$gameId, ...$fileIds]);
