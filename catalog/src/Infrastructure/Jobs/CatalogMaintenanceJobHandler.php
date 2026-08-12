@@ -1,13 +1,7 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogMaintenanceJobHandler` for catalog maintenance job handler.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Catalog maintenance job handler. Whole-game source identity repair is a
+ * parent/child workflow; individual file repair remains one bounded unit.
  */
 declare(strict_types=1);
 
@@ -15,24 +9,21 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Storage\UploadProgressPruner;
 
-/**
- * Bridges durable maintenance jobs to existing scanner/progress implementations.
- */
 final class CatalogMaintenanceJobHandler implements JobHandler
 {
     private const MAINTENANCE_WRITE_LOCK = 'unrealdb_catalog_maintenance_write_v1';
     private const MAINTENANCE_WRITE_LOCK_WAIT = 45;
+    private const WORKFLOW_VERSION = 2;
+    private const PLAN_BATCH_SIZE = 500;
 
-    /**
-     * @param array<string, mixed> $config
-     */
+    /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
         private readonly array $config
@@ -58,11 +49,24 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         };
     }
 
+    /** @return array<string,mixed> */
     private function repairSourceIdentityFile(ClaimedJob $job, JobExecutionContext $context): array
     {
         $fileId = $this->requiredPositiveInt($job->payload, 'file_id');
         require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         require_once __DIR__ . '/../../../lib/CatalogSourceIdentity.php';
+
+        $exists = $this->fetchOne('SELECT id FROM ue_files WHERE id=? AND scan_status="verified"', [$fileId]);
+        if ($exists === null && !empty($job->payload['workflow_parent_job_id'])) {
+            return [
+                'operation' => 'repair_source_identity_file',
+                'file_id' => $fileId,
+                'status' => 'already_removed',
+                'changed' => false,
+                'alias_count' => 0,
+                'message' => 'Verified file was removed after workflow planning; no source identity work remains.',
+            ];
+        }
 
         return $this->withMaintenanceWriteLock(function () use ($fileId, $context): array {
             $context->checkpoint([
@@ -70,31 +74,35 @@ final class CatalogMaintenanceJobHandler implements JobHandler
                 'done' => 0,
                 'total' => 1,
                 'percent' => 0,
+                'file_id' => $fileId,
                 'message' => 'Preparing canonical source identity repair.',
             ]);
             $result = \catalog_source_identity_rebuild_file(
                 $this->db,
                 $this->config,
                 $fileId,
-                static function (array $progress) use ($context): void {
+                static function (array $progress) use ($context, $fileId): void {
+                    $progress['file_id'] = $fileId;
                     $context->heartbeatIfDue($progress);
                 },
                 true
             );
             $context->checkpoint([
-                'stage' => 'source_identity',
+                'stage' => 'complete',
                 'done' => 1,
                 'total' => 1,
                 'percent' => 100,
+                'file_id' => $fileId,
                 'message' => !empty($result['changed'])
                     ? 'Canonical source identity repair complete.'
                     : 'The file already matches its mounted source path.',
             ]);
 
-            return ['operation' => 'repair_source_identity_file'] + $result;
+            return ['operation' => 'repair_source_identity_file', 'file_id' => $fileId] + $result;
         });
     }
 
+    /** @return array<string,mixed> */
     private function repairSourceIdentityGame(ClaimedJob $job, JobExecutionContext $context): array
     {
         $gameId = $this->requiredPositiveInt($job->payload, 'game_id');
@@ -103,127 +111,248 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             throw new \RuntimeException('Game no longer exists: ' . $gameId);
         }
 
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
-        require_once __DIR__ . '/../../../lib/CatalogSourceIdentity.php';
+        $resume = $context->resumeProgress();
+        $stage = trim((string)($resume['stage'] ?? ''));
+        if ($stage === '' || $stage === 'worker_start' || (int)($resume['workflow_version'] ?? 0) < self::WORKFLOW_VERSION) {
+            $stage = 'source_identity_game_plan';
+            $resume = [];
+        }
 
-        return $this->withMaintenanceWriteLock(function () use ($gameId, $game, $context): array {
-            $statement = $this->db->prepare(
-                'SELECT id,package_name FROM ue_files WHERE game_id=? AND scan_status="verified" ORDER BY package_name,id'
-            );
-            $statement->execute([$gameId]);
-            $files = $statement->fetchAll(PDO::FETCH_ASSOC);
-            $total = count($files);
-            $changed = 0;
-            $aliases = 0;
-            $failureCount = 0;
-            $failures = [];
+        if ($stage === 'source_identity_game_plan') {
+            $this->planSourceIdentityUnits($job, $context, $gameId, $resume);
+            $stage = 'source_identity_game_wait';
+        }
 
-            $context->checkpoint([
-                'stage' => 'source_identity',
-                'done' => 0,
-                'total' => max(1, $total),
-                'percent' => 0,
-                'message' => $total > 0
-                    ? 'Preparing canonical source identity repair for ' . $total . ' files.'
-                    : 'No verified files were found for this game.',
-                'changed' => 0,
-                'aliases' => 0,
-                'failures' => 0,
-            ]);
-
-            foreach ($files as $index => $file) {
-                $fileId = (int)$file['id'];
-                $packageName = (string)$file['package_name'];
-                $basePercent = (int)floor(($index * 80) / max(1, $total));
-                try {
-                    $result = \catalog_source_identity_rebuild_file(
-                        $this->db,
-                        $this->config,
-                        $fileId,
-                        static function (array $progress) use ($context, $index, $total, $packageName, $basePercent): void {
-                            $context->heartbeatIfDue([
-                                'stage' => 'source_identity',
-                                'done' => $index,
-                                'total' => max(1, $total),
-                                'percent' => $basePercent,
-                                'message' => 'Repairing ' . ($index + 1) . '/' . $total . ': ' . $packageName
-                                    . (!empty($progress['message']) ? ' — ' . (string)$progress['message'] : ''),
-                            ]);
-                        },
-                        false
-                    );
-                    if (!empty($result['changed'])) {
-                        $changed++;
-                    }
-                    $aliases += (int)($result['alias_count'] ?? 0);
-                } catch (JobCancellationRequested $error) {
-                    throw $error;
-                } catch (Throwable $error) {
-                    $failureCount++;
-                    if (count($failures) < 100) {
-                        $failures[] = $packageName . ': ' . $error->getMessage();
-                    }
-                }
-
-                $context->checkpoint([
-                    'stage' => 'source_identity',
-                    'done' => $index + 1,
-                    'total' => max(1, $total),
-                    'percent' => (int)floor((($index + 1) * 80) / max(1, $total)),
-                    'message' => 'Processed source identity ' . ($index + 1) . '/' . $total . ': ' . $packageName,
-                    'changed' => $changed,
-                    'aliases' => $aliases,
-                    'failures' => $failureCount,
-                ]);
+        if ($stage === 'source_identity_game_wait') {
+            $state = $this->childState($job->id, 'source_identity:');
+            $total = max(1, $state['total']);
+            $percent = 5 + (int)floor(($state['completed'] * 75) / $total);
+            if (($state['failed'] + $state['dead_letter'] + $state['cancelled']) > 0) {
+                $context->defer(30, $this->workflowProgress(
+                    'source_identity_game_wait',
+                    min(80, $percent),
+                    'Source identity repair is waiting on '
+                        . ($state['failed'] + $state['dead_letter'] + $state['cancelled'])
+                        . ' failed/cancelled file unit(s). Restart only those child jobs; '
+                        . $state['completed'] . ' successful units are retained.',
+                    ['children' => $state]
+                ));
             }
+            if (($state['queued'] + $state['running']) > 0) {
+                $context->defer(2, $this->workflowProgress(
+                    'source_identity_game_wait',
+                    min(80, $percent),
+                    'Source identity units: ' . $state['completed'] . '/' . $state['total']
+                        . ' complete, ' . $state['running'] . ' running, ' . $state['queued'] . ' queued.',
+                    ['children' => $state]
+                ));
+            }
+            $context->checkpoint($this->workflowProgress(
+                'source_identity_game_dependency_plan',
+                82,
+                'All source identity file units completed; queueing the dependency refresh workflow.',
+                ['children' => $state]
+            ));
+            $stage = 'source_identity_game_dependency_plan';
+        }
 
-            \scanner_rebuild_game(
-                $this->db,
-                $this->config,
-                $gameId,
-                static function (array $progress) use ($context, $total, $changed, $aliases, $failureCount): void {
-                    $innerPercent = max(0, min(100, (int)($progress['percent'] ?? 0)));
-                    $context->heartbeatIfDue([
-                        'stage' => 'dependencies',
-                        'done' => $total,
-                        'total' => max(1, $total),
-                        'percent' => 80 + (int)floor($innerPercent / 5),
-                        'message' => (string)($progress['message'] ?? 'Rebuilding dependencies after source identity repair.'),
-                        'changed' => $changed,
-                        'aliases' => $aliases,
-                        'failures' => $failureCount,
-                    ]);
-                },
-                0,
-                100
+        if ($stage === 'source_identity_game_dependency_plan') {
+            $dependencyJobId = (new PdoJobQueue($this->db))->enqueue(
+                $job->queue,
+                JobType::REBUILD_GAME_DEPENDENCIES,
+                [
+                    'game_id' => $gameId,
+                    'offset' => 0,
+                    'workflow_parent_job_id' => $job->id,
+                ],
+                20,
+                null,
+                null,
+                null,
+                3,
+                $job->id,
+                'dependencies'
             );
+            $context->checkpoint($this->workflowProgress(
+                'source_identity_game_dependency_wait',
+                85,
+                'Dependency refresh workflow #' . $dependencyJobId . ' queued.',
+                ['dependency_job_id' => $dependencyJobId]
+            ));
+            $stage = 'source_identity_game_dependency_wait';
+        }
 
-            $context->checkpoint([
-                'stage' => 'complete',
-                'done' => max(1, $total),
-                'total' => max(1, $total),
-                'percent' => 100,
-                'message' => 'Canonical source identity repair and dependency refresh complete.',
-                'changed' => $changed,
-                'aliases' => $aliases,
-                'failures' => $failureCount,
-            ]);
+        if ($stage === 'source_identity_game_dependency_wait') {
+            $dependency = $this->workflowChild($job->id, 'dependencies');
+            if ($dependency === null) {
+                // Idempotent planning will recreate it on the next claim.
+                $context->checkpoint($this->workflowProgress(
+                    'source_identity_game_dependency_plan',
+                    82,
+                    'Dependency workflow child was not found; replanning it.'
+                ));
+                $context->defer(1);
+            }
+            $status = (string)($dependency['status'] ?? 'queued');
+            if (in_array($status, ['failed', 'dead_letter', 'cancelled'], true)) {
+                $context->defer(30, $this->workflowProgress(
+                    'source_identity_game_dependency_wait',
+                    90,
+                    'Dependency child job #' . (int)$dependency['id'] . ' requires attention. Restart that child only; source identity file work is retained.',
+                    ['dependency_job_id' => (int)$dependency['id'], 'dependency_status' => $status]
+                ));
+            }
+            if ($status !== 'completed') {
+                $progress = json_decode((string)($dependency['progress_json'] ?? ''), true);
+                $innerPercent = is_array($progress) ? max(0, min(100, (int)($progress['percent'] ?? 0))) : 0;
+                $context->defer(2, $this->workflowProgress(
+                    'source_identity_game_dependency_wait',
+                    85 + (int)floor(($innerPercent * 14) / 100),
+                    'Dependency workflow #' . (int)$dependency['id'] . ' is ' . $status . '.',
+                    ['dependency_job_id' => (int)$dependency['id'], 'dependency_status' => $status]
+                ));
+            }
+            $stage = 'source_identity_game_finalize';
+            $context->checkpoint($this->workflowProgress(
+                $stage,
+                99,
+                'Dependency workflow completed; finalizing source identity workflow.'
+            ));
+        }
 
-            return [
-                'operation' => 'repair_source_identity_game',
-                'game_id' => $gameId,
-                'game_name' => (string)$game['name'],
-                'total' => $total,
-                'changed' => $changed,
-                'aliases' => $aliases,
-                'failure_count' => $failureCount,
-                'failures' => $failures,
-                'failures_truncated' => $failureCount > count($failures),
-                'dependencies_rebuilt' => true,
-            ];
-        });
+        if ($stage !== 'source_identity_game_finalize') {
+            throw new \RuntimeException('Unknown source identity workflow stage: ' . $stage);
+        }
+
+        $state = $this->childState($job->id, 'source_identity:');
+        $aggregate = $this->sourceIdentityAggregate($job->id);
+        $result = [
+            'operation' => 'repair_source_identity_game',
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'game_id' => $gameId,
+            'game_name' => (string)$game['name'],
+            'total' => $state['total'],
+            'changed' => $aggregate['changed'],
+            'aliases' => $aggregate['aliases'],
+            'failure_count' => 0,
+            'failures' => [],
+            'failures_truncated' => false,
+            'dependencies_rebuilt' => true,
+            'children' => $state,
+            'message' => 'Source identity repair complete: ' . $state['completed'] . ' durable file unit(s), '
+                . $aggregate['changed'] . ' changed, ' . $aggregate['aliases'] . ' alias(es).',
+        ];
+        $context->checkpoint($this->workflowProgress('complete', 100, (string)$result['message'], $result));
+        return $result;
     }
 
+    /** @param array<string,mixed> $resume */
+    private function planSourceIdentityUnits(
+        ClaimedJob $job,
+        JobExecutionContext $context,
+        int $gameId,
+        array $resume
+    ): void {
+        $snapshotMaxId = max(0, (int)($resume['snapshot_max_file_id'] ?? 0));
+        $lastId = max(0, (int)($resume['plan_last_file_id'] ?? 0));
+        $planned = max(0, (int)($resume['planned_units'] ?? 0));
+        if ($snapshotMaxId < 1) {
+            $snapshot = $this->fetchOne(
+                'SELECT COALESCE(MAX(id),0) max_id FROM ue_files WHERE game_id=? AND scan_status="verified"',
+                [$gameId]
+            ) ?? [];
+            $snapshotMaxId = (int)($snapshot['max_id'] ?? 0);
+        }
+        if ($snapshotMaxId < 1) {
+            $context->checkpoint($this->workflowProgress('source_identity_game_wait', 5, 'No verified files require source identity repair.'));
+            return;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND id>? AND id<=? ORDER BY id LIMIT '
+            . self::PLAN_BATCH_SIZE
+        );
+        $statement->execute([$gameId, $lastId, $snapshotMaxId]);
+        $ids = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
+        $queue = new PdoJobQueue($this->db);
+        foreach ($ids as $fileId) {
+            $queue->enqueue(
+                $job->queue,
+                JobType::REPAIR_SOURCE_IDENTITY_FILE,
+                ['file_id' => $fileId, 'workflow_parent_job_id' => $job->id],
+                10,
+                null,
+                null,
+                null,
+                3,
+                $job->id,
+                'source_identity:' . $fileId
+            );
+            $lastId = $fileId;
+            $planned++;
+        }
+
+        $progress = $this->workflowProgress('source_identity_game_plan', 3,
+            'Planned ' . $planned . ' durable source identity file unit(s).', [
+                'snapshot_max_file_id' => $snapshotMaxId,
+                'plan_last_file_id' => $lastId,
+                'planned_units' => $planned,
+            ]);
+        if ($ids !== [] && $lastId < $snapshotMaxId) {
+            $context->defer(1, $progress);
+        }
+        $context->checkpoint($this->workflowProgress(
+            'source_identity_game_wait',
+            5,
+            'Planned ' . $planned . ' durable source identity file unit(s); waiting for workers.',
+            ['planned_units' => $planned]
+        ));
+    }
+
+    /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
+    private function childState(int $parentJobId, string $prefix): array
+    {
+        $state = ['total' => 0, 'queued' => 0, 'running' => 0, 'completed' => 0, 'failed' => 0, 'dead_letter' => 0, 'cancelled' => 0];
+        $statement = $this->db->prepare(
+            'SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=? AND workflow_unit_key LIKE ? GROUP BY status'
+        );
+        $statement->execute([$parentJobId, $prefix . '%']);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $status = (string)$row['status'];
+            $count = (int)$row['c'];
+            $state['total'] += $count;
+            if (array_key_exists($status, $state)) {
+                $state[$status] += $count;
+            }
+        }
+        return $state;
+    }
+
+    /** @return array<string,mixed>|null */
+    private function workflowChild(int $parentJobId, string $unitKey): ?array
+    {
+        return $this->fetchOne(
+            'SELECT id,status,progress_json,result_json,last_error FROM ue_background_jobs '
+            . 'WHERE parent_job_id=? AND workflow_unit_key=? LIMIT 1',
+            [$parentJobId, $unitKey]
+        );
+    }
+
+    /** @return array{changed:int,aliases:int} */
+    private function sourceIdentityAggregate(int $parentJobId): array
+    {
+        $statement = $this->db->prepare(
+            'SELECT '
+            . 'COALESCE(SUM(CASE WHEN JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.changed")) IN ("1","true") THEN 1 ELSE 0 END),0) changed,'
+            . 'COALESCE(SUM(CAST(COALESCE(JSON_UNQUOTE(JSON_EXTRACT(result_json,"$.alias_count")),"0") AS UNSIGNED)),0) aliases '
+            . 'FROM ue_background_jobs WHERE parent_job_id=? AND workflow_unit_key LIKE "source_identity:%" AND status="completed"'
+        );
+        $statement->execute([$parentJobId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC) ?: [];
+        return ['changed' => (int)($row['changed'] ?? 0), 'aliases' => (int)($row['aliases'] ?? 0)];
+    }
+
+    /** @return array<string,mixed> */
     private function pruneUploadProgress(ClaimedJob $job, JobExecutionContext $context): array
     {
         $maxAge = isset($job->payload['max_age_seconds'])
@@ -240,7 +369,7 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         ];
     }
 
-    /** @return array<string,mixed>|null */
+    /** @param list<mixed> $params @return array<string,mixed>|null */
     private function fetchOne(string $sql, array $params): ?array
     {
         $statement = $this->db->prepare($sql);
@@ -274,7 +403,7 @@ final class CatalogMaintenanceJobHandler implements JobHandler
         }
     }
 
-    /** @param array<string, mixed> $payload */
+    /** @param array<string,mixed> $payload */
     private function requiredPositiveInt(array $payload, string $field): int
     {
         $value = (int)($payload[$field] ?? 0);
@@ -282,5 +411,18 @@ final class CatalogMaintenanceJobHandler implements JobHandler
             throw new \InvalidArgumentException('Job payload requires positive ' . $field . '.');
         }
         return $value;
+    }
+
+    /** @param array<string,mixed> $extra @return array<string,mixed> */
+    private function workflowProgress(string $stage, int $percent, string $message, array $extra = []): array
+    {
+        return [
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'stage' => $stage,
+            'done' => max(0, min(100, $percent)),
+            'total' => 100,
+            'percent' => max(0, min(100, $percent)),
+            'message' => $message,
+        ] + $extra;
     }
 }
