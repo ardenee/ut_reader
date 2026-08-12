@@ -5,6 +5,9 @@
     const endpoint = script && script.src
         ? new URL('../api/v1/system-error.php', script.src).toString()
         : 'api/v1/system-error.php';
+    const exportEndpoint = script && script.src
+        ? new URL('../system-errors-export.php', script.src).toString()
+        : 'system-errors-export.php';
     const storageKey = 'unrealdb.systemErrors.pending';
     const seenRenderedErrors = new Set();
     let flushing = false;
@@ -122,6 +125,23 @@
         enqueue(payload);
     }
 
+    function installExportButton() {
+        if (!/(?:^|\/)system-errors\.php$/.test(location.pathname)) return;
+        const toolbar = document.querySelector('.system-error-toolbar');
+        if (!toolbar || toolbar.querySelector('[data-system-error-export]')) return;
+
+        const params = new URLSearchParams(location.search);
+        params.delete('p');
+        params.delete('per_page');
+        const link = document.createElement('a');
+        link.className = 'button secondary';
+        link.dataset.systemErrorExport = '1';
+        link.textContent = 'Export errors';
+        link.href = exportEndpoint + (params.toString() ? '?' + params.toString() : '');
+        link.title = 'Download all System Error records matching the current filters as Markdown';
+        toolbar.appendChild(link);
+    }
+
     window.addEventListener('error', function (event) {
         if (reporting) return;
         const target = event.target;
@@ -152,6 +172,7 @@
     function startRenderedErrorObserver() {
         reportRenderedErrors(document);
         reportNavigationStatus();
+        installExportButton();
         if (!window.MutationObserver || !document.body) return;
         const observer = new MutationObserver(function (mutations) {
             mutations.forEach(function (mutation) {
