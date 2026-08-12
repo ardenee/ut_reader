@@ -11,8 +11,11 @@ require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCleanup;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobHistoryCleanupQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorkerStop;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogManualJobRecovery;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBulkAction;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -73,6 +76,9 @@ try {
         JsonResponse::send(['data' => ['job_id' => $jobId, 'status' => 'queued']]);
     }
 
+    // Deleting one terminal row is bounded and remains immediate. Potentially
+    // large selected/matching/retention cleanup requests below are snapshotted
+    // into catalog.clean_background_job_history instead.
     if ($action === 'delete') {
         $jobId = (int)($payload['job_id'] ?? 0);
         if ($jobId < 1) {
@@ -91,12 +97,29 @@ try {
         if (!is_array($jobIds) || $jobIds === []) {
             JsonResponse::error('invalid_jobs', 'Select at least one terminal job to delete.', 400);
         }
-        $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
-            ->deleteTerminalJobs(array_values($jobIds), $queueName);
-        if ((int)$result['deleted_jobs'] < 1) {
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $jobIds),
+            static fn(int $id): bool => $id > 0
+        )));
+        if ($ids === [] || count($ids) > 10000) {
+            JsonResponse::error('invalid_jobs', 'Select between 1 and 10,000 terminal jobs.', 400);
+        }
+        $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
+            'delete',
+            'selected',
+            $queueName,
+            '',
+            '',
+            $ids,
+            $userId
+        );
+        if ((int)($result['cleanup_job_id'] ?? 0) < 1) {
             JsonResponse::error('not_deletable', 'None of the selected jobs are terminal jobs in this queue.', 409);
         }
-        JsonResponse::send(['data' => ['queue' => $queueName] + $result]);
+        $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))->start($queueName, true, $userId);
+        $result['worker'] = $worker['worker'];
+        $result['worker_error'] = (string)$worker['worker_error'];
+        JsonResponse::send(['data' => $result], 202);
     }
 
     if ($action === 'delete_matching') {
@@ -104,26 +127,49 @@ try {
         if ($status !== '' && !in_array($status, ['completed', 'failed', 'dead_letter', 'cancelled'], true)) {
             JsonResponse::error('invalid_status', 'Bulk deletion is available only for terminal job statuses.', 400);
         }
-        $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
-            ->deleteTerminalMatching($queueName, $status);
-        JsonResponse::send([
-            'data' => [
-                'queue' => $queueName,
-                'status' => $status !== '' ? $status : null,
-            ] + $result,
-        ]);
+        $result = (new PdoBackgroundJobBulkAction($application->db, $application->config))->execute(
+            'delete',
+            'matching',
+            $queueName,
+            $status,
+            trim((string)($payload['search'] ?? '')),
+            [],
+            $userId
+        );
+        if ((int)($result['cleanup_job_id'] ?? 0) > 0) {
+            $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))->start($queueName, true, $userId);
+            $result['worker'] = $worker['worker'];
+            $result['worker_error'] = (string)$worker['worker_error'];
+        }
+        JsonResponse::send(['data' => $result], 202);
     }
 
     if ($action === 'cleanup') {
         $retentionDays = max(1, min((int)($payload['retention_days'] ?? 30), 3650));
-        $result = (new CatalogBackgroundJobCleanup($application->db, $application->config))
-            ->cleanup($queueName, $retentionDays);
+        $cleanupQueue = new CatalogBackgroundJobHistoryCleanupQueue($application->db, $application->config);
+        $snapshot = $cleanupQueue->snapshotOlderThan($queueName, $retentionDays);
+        $queued = $cleanupQueue->enqueueSnapshot(
+            $queueName,
+            $snapshot['ids'],
+            $snapshot['requested'],
+            $snapshot['limited'],
+            $userId,
+            'Clean terminal jobs older than ' . $retentionDays . ' day(s)'
+        );
+        $worker = (new CatalogQueueWorkerStarter($application->db, $application->config))->start($queueName, true, $userId);
         JsonResponse::send([
             'data' => [
                 'queue' => $queueName,
                 'retention_days' => $retentionDays,
-            ] + $result,
-        ]);
+                'cutoff' => $snapshot['cutoff'],
+                'cleanup_job_id' => $queued['job_id'],
+                'scheduled' => $queued['scheduled'],
+                'requested' => $queued['requested'],
+                'limited' => $queued['limited'],
+                'worker' => $worker['worker'],
+                'worker_error' => (string)$worker['worker_error'],
+            ],
+        ], 202);
     }
 
     if ($action === 'recover') {
