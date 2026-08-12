@@ -53,7 +53,7 @@ final class JobResourcePolicy
             self::AFFECTED_DEPENDENCY_BATCH => [
                 'label' => 'Affected dependency batches',
                 'default' => 2,
-                'description' => 'Targeted dependency refresh batches after a new provider is imported. Independent files may run concurrently; per-file locks and compact publication retries protect overlap.',
+                'description' => 'Targeted dependency refresh and projection-reconciliation file units. Independent files may run concurrently; per-file locks and compact publication retries protect overlap.',
             ],
             self::SEARCH_HEAVY => [
                 'label' => 'Search-index rebuilds',
@@ -137,6 +137,11 @@ final class JobResourcePolicy
                 self::DEPENDENCY_HEAVY,
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::projectionKey($payload)
+            ),
+            JobType::RECONCILE_CATALOG_PROJECTION_FILE => new JobResourceProfile(
+                self::AFFECTED_DEPENDENCY_BATCH,
+                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 2),
+                self::positiveKey('projection:file:', $payload['affected_file_id'] ?? null)
             ),
             JobType::REBUILD_FILE_SEARCH_INDEX => new JobResourceProfile(
                 self::SEARCH_HEAVY,
