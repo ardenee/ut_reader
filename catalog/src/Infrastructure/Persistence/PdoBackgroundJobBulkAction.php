@@ -132,10 +132,13 @@ final class PdoBackgroundJobBulkAction
         $statement = $this->db->prepare(
             'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,worker_id=NULL,lease_token=NULL,'
             . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=NULL,result_json=NULL,'
-            . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,progress_json=NULL,'
-            . 'progress_updated_at=NULL,dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
+            . 'cancel_requested_at=NULL,cancel_requested_by=NULL,cancel_reason=NULL,'
+            . 'dead_lettered_at=NULL,completed_at=NULL,updated_at=? '
             . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND ' . $actionCondition
         );
+        // Do not clear progress_json/progress_updated_at. The durable progress
+        // snapshot is recovery state. Legacy affected-dependency rows still get
+        // their resume_offset projected into payload_json above for compatibility.
         $statement->execute(array_merge([$now, $now, $queueName], $eligibleIds));
         return $statement->rowCount();
     }
