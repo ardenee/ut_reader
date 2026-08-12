@@ -32,6 +32,7 @@ final class JobType
     public const GENERATE_MOD_PACKAGE = 'catalog.generate_mod_package';
     public const EXPORT_GAME_BACKUP = 'catalog.export_game_backup';
     public const IMPORT_GAME_BACKUP = 'catalog.import_game_backup';
+    public const IMPORT_GAME_BACKUP_ENTRY = 'catalog.import_game_backup_entry';
     public const IMPORT_STAGED_PACKAGE = 'catalog.import_staged_package';
     public const IMPORT_STAGED_PAK = 'catalog.import_staged_pak';
     public const PREPARE_BUCKET_REDIRECT = 'catalog.prepare_bucket_redirect';
@@ -62,6 +63,7 @@ final class JobType
             self::GENERATE_MOD_PACKAGE,
             self::EXPORT_GAME_BACKUP,
             self::IMPORT_GAME_BACKUP,
+            self::IMPORT_GAME_BACKUP_ENTRY,
             self::IMPORT_STAGED_PACKAGE,
             self::IMPORT_STAGED_PAK,
             self::PREPARE_BUCKET_REDIRECT,
