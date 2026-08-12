@@ -4,13 +4,12 @@
  */
 declare(strict_types=1);
 
-use PDO;
 use UnrealDb\Catalog\Infrastructure\Persistence\SchemaInspector;
 
 return [
     'version' => '202608120001',
     'description' => 'Add resumable parent/child job workflow identity and configurable job-event logging policy.',
-    'up' => static function (PDO $db, SchemaInspector $schema): void {
+    'up' => static function (\PDO $db, SchemaInspector $schema): void {
         $schema->ensureColumn(
             'ue_background_jobs',
             'parent_job_id',
