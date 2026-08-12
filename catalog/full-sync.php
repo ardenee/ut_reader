@@ -59,7 +59,7 @@ try {
 CSS;
     echo CatalogUi::pageHeader(
         'Full Sync',
-        'Queue a durable game-wide storage validation, re-import and dependency rebuild. You may leave this page immediately after the job is queued.',
+        'Queue a resumable game-wide storage validation, re-import and dependency rebuild. You may leave this page immediately after the workflow is queued.',
         [
             'Background Jobs' => 'background-jobs.php?queue=' . rawurlencode($queueName),
             'System Errors' => 'system-errors.php',
@@ -69,8 +69,8 @@ CSS;
 
     echo CatalogUi::alert(
         'info',
-        'Full Sync now runs as a background job.',
-        'The browser no longer performs or owns the sync. Progress, cancellation and terminal status are managed under Maintenance → Background Jobs.'
+        'Full Sync is a durable parent/child workflow.',
+        'The coordinator releases its worker while independent file units run. Completed units remain complete after a worker crash or Restart; only failed units need to be retried.'
     );
 
     echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Select game</h2><p>Choose the game whose verified catalog packages should be checked against storage.</p></div></div><div class="ui-section__body">';
@@ -105,9 +105,9 @@ CSS;
         echo '<div class="stat"><h2>' . $count . '</h2><p>Verified packages</p></div>';
         echo '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)$selectedGame['total_size']))
             . '</h2><p>Recorded verified size</p></div>';
-        echo '<div class="stat"><h2>1 job</h2><p>4 durable phases</p></div>';
+        echo '<div class="stat"><h2>Resumable</h2><p>Per-file durable units</p></div>';
         echo '</div>';
-        echo '<p class="full-sync-warning"><strong>Background workflow:</strong> the worker checks each verified package, removes only genuinely missing stored packages, and re-imports existing packages while preserving their stable file IDs. It then rebuilds package providers, refreshes dependencies in bounded batches of up to 100 files, and finalizes dependency summaries and cached game counters. Individual package failures are recorded under <a href="system-errors.php">Maintenance → System Errors</a> and the job continues where safe.</p>';
+        echo '<p class="full-sync-warning"><strong>Background workflow:</strong> the coordinator snapshots the verified files and queues one durable re-import unit per file. After those units succeed it rebuilds package providers, queues independent dependency units, and finally rebuilds dependency summaries and cached game counters. A successful unit is never replayed because another file failed. If a child reaches dead letter, the parent waits; restart that failed child only and the parent continues automatically. If finalization itself fails, Restart resumes at finalization rather than starting the game over.</p>';
         if ($count === 0) {
             echo '<p class="muted">This game has no verified catalog packages to sync.</p>';
         } else {
