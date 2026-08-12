@@ -26,60 +26,99 @@ final class LegacyUnverifiedQueueInventory implements UnverifiedQueueInventory
     {
         $items = [];
         foreach ($this->queues() as $queue) {
-            $queueGameId = (int)($queue['id'] ?? 0);
-            $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory(
-                $this->config,
-                $queue,
-                false
-            );
+            $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $queue, false);
             if (!is_dir($directory) || !is_readable($directory)) {
                 continue;
             }
-
             $entries = scandir($directory);
             if ($entries === false) {
                 continue;
             }
-
             foreach ($entries as $entry) {
-                if ($entry === '.'
-                    || $entry === '..'
-                    || str_starts_with($entry, '.')
-                    || str_ends_with(strtolower($entry), '.txt')) {
-                    continue;
+                $item = $this->itemFromQueue($queue, $directory, $entry);
+                if ($item !== null) {
+                    $items[] = $item;
                 }
-
-                $path = $directory . DIRECTORY_SEPARATOR . $entry;
-                if (!is_file($path)
-                    || is_link($path)
-                    || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
-                    continue;
-                }
-
-                $items[] = [
-                    'queue_game_id' => $queueGameId,
-                    'queue_name' => $entry,
-                    'queue_name_label' => (string)($queue['name'] ?? 'Upload Bucket'),
-                    'queue_key' => CatalogUnverifiedStagingIndex::queueKey($queueGameId, $entry),
-                    'original_name' => CatalogUnverifiedQueueStorage::originalNameFromQueueName($entry),
-                    'path' => $path,
-                    'reason_path' => $path . '.txt',
-                    'size' => (int)(filesize($path) ?: 0),
-                    'modified_at' => (int)(filemtime($path) ?: 0),
-                ];
             }
         }
-
         return $items;
+    }
+
+    /**
+     * Resolve exactly one current queue file without rescanning every game queue.
+     * Child background jobs use this to revalidate their filesystem target from
+     * durable queue identity rather than trusting a persisted absolute path.
+     *
+     * @return array<string,mixed>|null
+     */
+    public function one(int $queueGameId, string $queueName): ?array
+    {
+        $queueName = basename(str_replace('\\', '/', trim($queueName)));
+        if ($queueName === '' || $queueName === '.' || $queueName === '..') {
+            return null;
+        }
+
+        $queue = $queueGameId === 0
+            ? CatalogUnverifiedQueueStorage::bucketGame()
+            : $this->game($queueGameId);
+        if ($queue === null) {
+            return null;
+        }
+        $directory = CatalogUnverifiedQueueStorage::unverifiedDirectory($this->config, $queue, false);
+        return $this->itemFromQueue($queue, $directory, $queueName);
+    }
+
+    /** @param array<string,mixed> $queue @return array<string,mixed>|null */
+    private function itemFromQueue(array $queue, string $directory, string $entry): ?array
+    {
+        if ($entry === '.'
+            || $entry === '..'
+            || str_starts_with($entry, '.')
+            || str_ends_with(strtolower($entry), '.txt')) {
+            return null;
+        }
+        if (!is_dir($directory) || !is_readable($directory)) {
+            return null;
+        }
+
+        $path = $directory . DIRECTORY_SEPARATOR . basename($entry);
+        if (!is_file($path)
+            || is_link($path)
+            || !CatalogUnverifiedQueueStorage::pathInside($path, $directory)) {
+            return null;
+        }
+
+        $queueGameId = (int)($queue['id'] ?? 0);
+        return [
+            'queue_game_id' => $queueGameId,
+            'queue_name' => basename($entry),
+            'queue_name_label' => (string)($queue['name'] ?? 'Upload Bucket'),
+            'queue_key' => CatalogUnverifiedStagingIndex::queueKey($queueGameId, basename($entry)),
+            'original_name' => CatalogUnverifiedQueueStorage::originalNameFromQueueName(basename($entry)),
+            'path' => $path,
+            'reason_path' => $path . '.txt',
+            'size' => (int)(filesize($path) ?: 0),
+            'modified_at' => (int)(filemtime($path) ?: 0),
+        ];
+    }
+
+    /** @return array<string,mixed>|null */
+    private function game(int $gameId): ?array
+    {
+        if ($gameId < 1) {
+            return null;
+        }
+        $statement = $this->db->prepare('SELECT id,name,slug,profile_id FROM ue_games WHERE id=? LIMIT 1');
+        $statement->execute([$gameId]);
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+        return is_array($row) ? $row : null;
     }
 
     /** @return list<array<string,mixed>> */
     private function queues(): array
     {
         $queues = [CatalogUnverifiedQueueStorage::bucketGame()];
-        $statement = $this->db->query(
-            'SELECT id,name,slug,profile_id FROM ue_games ORDER BY name'
-        );
+        $statement = $this->db->query('SELECT id,name,slug,profile_id FROM ue_games ORDER BY name');
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $game) {
             $queues[] = $game;
         }
