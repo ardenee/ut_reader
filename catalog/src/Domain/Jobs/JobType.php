@@ -26,6 +26,7 @@ final class JobType
     public const REPAIR_SOURCE_IDENTITY_FILE = 'catalog.repair_source_identity_file';
     public const REPAIR_SOURCE_IDENTITY_GAME = 'catalog.repair_source_identity_game';
     public const SOURCE_SCAN = 'catalog.source.scan';
+    public const CLEAN_BACKGROUND_JOB_HISTORY = 'catalog.clean_background_job_history';
     public const CLEAN_UNVERIFIED_DUPLICATES = 'catalog.clean_unverified_duplicates';
     public const HASH_UNVERIFIED_DUPLICATE = 'catalog.hash_unverified_duplicate';
     public const DELETE_UNVERIFIED_DUPLICATE = 'catalog.delete_unverified_duplicate';
@@ -61,6 +62,7 @@ final class JobType
             self::REPAIR_SOURCE_IDENTITY_FILE,
             self::REPAIR_SOURCE_IDENTITY_GAME,
             self::SOURCE_SCAN,
+            self::CLEAN_BACKGROUND_JOB_HISTORY,
             self::CLEAN_UNVERIFIED_DUPLICATES,
             self::HASH_UNVERIFIED_DUPLICATE,
             self::DELETE_UNVERIFIED_DUPLICATE,
