@@ -1,9 +1,7 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Builds cached exact game/dependency evidence for unverified packages outside the HTTP request path.
- * Why: Export-path matching against catalog dependencies can be expensive even for a small visible bucket page.
- * Role: Durable background projection handler for per-file staging and full Upload Bucket refreshes.
+ * Builds cached exact game/dependency evidence. Bucket scope is a durable
+ * coordinator over the same authoritative one-file matcher used elsewhere.
  */
 declare(strict_types=1);
 
@@ -15,12 +13,14 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedGameMatchCache;
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedGameMatchQuery;
 
 final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
 {
-    private const BATCH_SIZE = 20;
+    private const WORKFLOW_VERSION = 2;
+    private const PLAN_BATCH_SIZE = 500;
 
     private readonly PdoUnverifiedGameMatchCache $cache;
     private readonly PdoUnverifiedGameMatchQuery $matcher;
@@ -57,7 +57,7 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         if ($scope !== 'bucket') {
             throw new \RuntimeException('Unsupported unverified game-match refresh scope: ' . $scope);
         }
-        return $this->refreshBucket($context);
+        return $this->refreshBucketWorkflow($job, $context);
     }
 
     /** @return array<string,mixed> */
@@ -129,105 +129,153 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
     }
 
     /** @return array<string,mixed> */
-    private function refreshBucket(JobExecutionContext $context): array
+    private function refreshBucketWorkflow(ClaimedJob $job, JobExecutionContext $context): array
     {
-        $this->cache->purgeNonUnverified();
-        $row = \catalog_one(
-            $this->db,
-            'SELECT COUNT(*) c,COALESCE(MAX(id),0) max_id FROM ue_files '
-            . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0'
-        ) ?: [];
-        $total = (int)($row['c'] ?? 0);
-        $snapshotMaxId = (int)($row['max_id'] ?? 0);
-        $context->checkpoint([
-            'stage' => 'match_refresh',
-            'done' => 0,
-            'total' => max(1, $total),
-            'percent' => $total > 0 ? 0 : 100,
-            'message' => 'Refreshing cached game/dependency evidence for ' . $total . ' Upload Bucket file(s).',
-        ]);
-
-        if ($total === 0 || $snapshotMaxId < 1) {
-            return [
-                'operation' => 'refresh_unverified_game_matches',
-                'scope' => 'bucket',
-                'status' => 'completed',
-                'processed' => 0,
-                'failed' => 0,
-                'message' => 'Upload Bucket contains no unverified files to refresh.',
-            ];
+        $resume = $context->resumeProgress();
+        $stage = trim((string)($resume['stage'] ?? ''));
+        if ($stage === '' || $stage === 'worker_start' || (int)($resume['workflow_version'] ?? 0) < self::WORKFLOW_VERSION) {
+            $this->cache->purgeNonUnverified();
+            $stage = 'bucket_match_plan';
+            $resume = [];
         }
 
-        $processed = 0;
-        $failed = 0;
-        $lastId = 0;
-        while ($lastId < $snapshotMaxId) {
-            $statement = $this->db->prepare(
-                'SELECT id FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
-                . 'AND id>? AND id<=? ORDER BY id LIMIT ' . self::BATCH_SIZE
-            );
-            $statement->execute([$lastId, $snapshotMaxId]);
-            $ids = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
-            if ($ids === []) {
-                break;
-            }
-            $lastId = max($ids);
-            foreach ($ids as $id) {
-                $this->cache->markPending($id);
-            }
-
-            try {
-                $matchesByFile = $this->matcher->bulk($ids);
-                foreach ($ids as $id) {
-                    $this->cache->storeReady($id, $matchesByFile[$id] ?? []);
-                    $processed++;
-                }
-            } catch (Throwable $batchError) {
-                // Keep one damaged metadata snapshot from blocking every other
-                // bucket file. The normal path remains batched; fallback isolates
-                // failures only when the batch calculation itself cannot complete.
-                foreach ($ids as $id) {
-                    try {
-                        $this->cache->storeReady($id, $this->matcher->one($id));
-                        $processed++;
-                    } catch (Throwable $fileError) {
-                        $this->cache->storeFailed($id, $fileError);
-                        $failed++;
-                    }
-                }
-            }
-
-            $done = min($total, $processed + $failed);
-            $context->checkpoint([
-                'stage' => 'match_refresh',
-                'done' => $done,
-                'total' => $total,
-                'percent' => (int)floor($done * 100 / max(1, $total)),
-                'processed' => $processed,
-                'failed' => $failed,
-                'message' => 'Refreshed game/dependency evidence for ' . $done . ' of ' . $total
-                    . ' Upload Bucket file(s).',
-            ]);
+        if ($stage === 'bucket_match_plan') {
+            $this->planBucketUnits($job, $context, $resume);
+            $stage = 'bucket_match_wait';
         }
 
-        $message = 'Upload Bucket match cache refresh complete: ' . $processed . ' ready, ' . $failed . ' failed.';
-        $context->checkpoint([
-            'stage' => 'complete',
-            'done' => $total,
-            'total' => $total,
-            'percent' => 100,
-            'processed' => $processed,
-            'failed' => $failed,
-            'message' => $message,
-        ]);
+        if ($stage !== 'bucket_match_wait') {
+            throw new \RuntimeException('Unknown Upload Bucket match workflow stage: ' . $stage);
+        }
 
-        return [
+        $state = $this->childState($job->id);
+        $total = max(1, $state['total']);
+        $percent = 5 + (int)floor(($state['completed'] * 94) / $total);
+        if (($state['failed'] + $state['dead_letter'] + $state['cancelled']) > 0) {
+            $context->defer(30, $this->workflowProgress(
+                'bucket_match_wait',
+                min(99, $percent),
+                'Upload Bucket matching is waiting on '
+                    . ($state['failed'] + $state['dead_letter'] + $state['cancelled'])
+                    . ' failed/cancelled file unit(s). Restart only those child jobs; successful cached matches are retained.',
+                ['children' => $state]
+            ));
+        }
+        if (($state['queued'] + $state['running']) > 0) {
+            $context->defer(2, $this->workflowProgress(
+                'bucket_match_wait',
+                min(99, $percent),
+                'Upload Bucket match units: ' . $state['completed'] . '/' . $state['total']
+                    . ' complete, ' . $state['running'] . ' running, ' . $state['queued'] . ' queued.',
+                ['children' => $state]
+            ));
+        }
+
+        $message = 'Upload Bucket match cache refresh complete: ' . $state['completed'] . ' durable file unit(s).';
+        $result = [
             'operation' => 'refresh_unverified_game_matches',
+            'workflow_version' => self::WORKFLOW_VERSION,
             'scope' => 'bucket',
             'status' => 'completed',
-            'processed' => $processed,
-            'failed' => $failed,
+            'processed' => $state['completed'],
+            'failed' => 0,
+            'children' => $state,
             'message' => $message,
         ];
+        $context->checkpoint($this->workflowProgress('complete', 100, $message, $result));
+        return $result;
+    }
+
+    /** @param array<string,mixed> $resume */
+    private function planBucketUnits(ClaimedJob $job, JobExecutionContext $context, array $resume): void
+    {
+        $snapshotMaxId = max(0, (int)($resume['snapshot_max_file_id'] ?? 0));
+        $lastId = max(0, (int)($resume['plan_last_file_id'] ?? 0));
+        $planned = max(0, (int)($resume['planned_units'] ?? 0));
+        if ($snapshotMaxId < 1) {
+            $row = \catalog_one(
+                $this->db,
+                'SELECT COUNT(*) c,COALESCE(MAX(id),0) max_id FROM ue_files '
+                . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0'
+            ) ?: [];
+            $snapshotMaxId = (int)($row['max_id'] ?? 0);
+        }
+        if ($snapshotMaxId < 1) {
+            $context->checkpoint($this->workflowProgress('bucket_match_wait', 5, 'Upload Bucket contains no unverified files to refresh.'));
+            return;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT id FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
+            . 'AND id>? AND id<=? ORDER BY id LIMIT ' . self::PLAN_BATCH_SIZE
+        );
+        $statement->execute([$lastId, $snapshotMaxId]);
+        $ids = array_values(array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []));
+        $queue = new PdoJobQueue($this->db);
+        foreach ($ids as $fileId) {
+            $queue->enqueue(
+                $job->queue,
+                JobType::REFRESH_UNVERIFIED_GAME_MATCHES,
+                ['file_id' => $fileId, 'workflow_parent_job_id' => $job->id],
+                90,
+                null,
+                null,
+                null,
+                3,
+                $job->id,
+                'match:' . $fileId
+            );
+            $lastId = $fileId;
+            $planned++;
+        }
+
+        $progress = $this->workflowProgress('bucket_match_plan', 3,
+            'Planned ' . $planned . ' durable Upload Bucket match unit(s).', [
+                'snapshot_max_file_id' => $snapshotMaxId,
+                'plan_last_file_id' => $lastId,
+                'planned_units' => $planned,
+            ]);
+        if ($ids !== [] && $lastId < $snapshotMaxId) {
+            $context->defer(1, $progress);
+        }
+        $context->checkpoint($this->workflowProgress(
+            'bucket_match_wait',
+            5,
+            'Planned ' . $planned . ' durable Upload Bucket match unit(s); waiting for workers.',
+            ['planned_units' => $planned]
+        ));
+    }
+
+    /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
+    private function childState(int $parentJobId): array
+    {
+        $state = ['total' => 0, 'queued' => 0, 'running' => 0, 'completed' => 0, 'failed' => 0, 'dead_letter' => 0, 'cancelled' => 0];
+        $statement = $this->db->prepare(
+            'SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=? '
+            . 'AND workflow_unit_key LIKE "match:%" GROUP BY status'
+        );
+        $statement->execute([$parentJobId]);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            $status = (string)$row['status'];
+            $count = (int)$row['c'];
+            $state['total'] += $count;
+            if (array_key_exists($status, $state)) {
+                $state[$status] += $count;
+            }
+        }
+        return $state;
+    }
+
+    /** @param array<string,mixed> $extra @return array<string,mixed> */
+    private function workflowProgress(string $stage, int $percent, string $message, array $extra = []): array
+    {
+        return [
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'stage' => $stage,
+            'done' => max(0, min(100, $percent)),
+            'total' => 100,
+            'percent' => max(0, min(100, $percent)),
+            'message' => $message,
+        ] + $extra;
     }
 }
