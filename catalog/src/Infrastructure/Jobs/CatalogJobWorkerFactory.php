@@ -4,8 +4,7 @@
  * Purpose: Defines the infrastructure class `CatalogJobWorkerFactory` for catalog job worker factory.
  * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
  *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
+ * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external services.
  * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
  *        same behavior.
  */
@@ -75,6 +74,7 @@ final class CatalogJobWorkerFactory
         $metadataRepair = new CatalogUnverifiedMetadataRepairJobHandler($db, $trustedImportConfig);
         $unverifiedMatchRefresh = new CatalogUnverifiedGameMatchRefreshJobHandler($db, $trustedImportConfig);
         $crossGameCopyBatch = new CatalogCrossGameCopyBatchJobHandler($db, $trustedImportConfig);
+        $profiledUploadBatch = new CatalogProfiledUploadBatchJobHandler($db, $trustedImportConfig);
         $bucketRedirect = new CatalogBucketRedirectJobHandler($db, $trustedImportConfig);
         $pakImport = new CatalogPakImportJobHandler($db, $trustedImportConfig);
         $packageImport = new CatalogNonBlockingImportJobHandler(
@@ -122,6 +122,7 @@ final class CatalogJobWorkerFactory
             JobType::REPAIR_UNVERIFIED_METADATA => $metadataRepair,
             JobType::REFRESH_UNVERIFIED_GAME_MATCHES => $unverifiedMatchRefresh,
             JobType::CROSS_GAME_COPY_BATCH => $crossGameCopyBatch,
+            JobType::PROFILED_UPLOAD_BATCH => $profiledUploadBatch,
             JobType::GENERATE_MOD_PACKAGE => $generatedPackage,
             JobType::EXPORT_GAME_BACKUP => $backupExport,
             JobType::IMPORT_GAME_BACKUP => $backupImport,
