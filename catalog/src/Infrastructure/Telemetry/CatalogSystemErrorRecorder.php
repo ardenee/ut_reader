@@ -36,14 +36,7 @@ final class CatalogSystemErrorRecorder
             }
 
             try {
-                if (self::$tableAvailable === null) {
-                    $statement = $db->query(
-                        'SELECT COUNT(*) FROM information_schema.TABLES '
-                        . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_system_errors"'
-                    );
-                    self::$tableAvailable = (int)$statement->fetchColumn() === 1;
-                }
-                if (!self::$tableAvailable) {
+                if (!self::tableAvailable($db)) {
                     self::fallback($normalized, 'system error migration not applied');
                     return;
                 }
@@ -80,6 +73,40 @@ final class CatalogSystemErrorRecorder
                 ]);
             } catch (Throwable $failure) {
                 self::fallback($normalized, $failure->getMessage());
+            }
+        } finally {
+            self::$busy = false;
+        }
+    }
+
+    /**
+     * Resolve only the operator error that represents an unreadable format-2
+     * provider after a targeted repair has positively verified that provider.
+     */
+    public static function resolveCompactMetadataProvider(int $fileId): void
+    {
+        if ($fileId < 1 || self::$busy) {
+            return;
+        }
+        self::$busy = true;
+        try {
+            $db = self::connection();
+            if (!$db instanceof PDO || !self::tableAvailable($db)) {
+                return;
+            }
+            try {
+                $now = gmdate('Y-m-d H:i:s');
+                $statement = $db->prepare(
+                    'UPDATE ue_system_errors SET status="resolved",resolved_at=?,resolved_by=NULL,'
+                    . 'resolution_note="Compact metadata provider verified successfully after repair." '
+                    . 'WHERE status="open" AND source_kind="compact-metadata-provider" '
+                    . 'AND error_type="UnreadableCompactMetadataProvider" '
+                    . 'AND CAST(JSON_UNQUOTE(JSON_EXTRACT(context_json,"$.provider_file_id")) AS UNSIGNED)=?'
+                );
+                $statement->execute([$now, $fileId]);
+            } catch (Throwable $error) {
+                error_log('[UnrealDB system error resolve] Could not resolve compact provider #' . $fileId . ': '
+                    . $error->getMessage());
             }
         } finally {
             self::$busy = false;
@@ -151,6 +178,18 @@ final class CatalogSystemErrorRecorder
         } catch (Throwable) {
             return null;
         }
+    }
+
+    private static function tableAvailable(PDO $db): bool
+    {
+        if (self::$tableAvailable === null) {
+            $statement = $db->query(
+                'SELECT COUNT(*) FROM information_schema.TABLES '
+                . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_system_errors"'
+            );
+            self::$tableAvailable = (int)$statement->fetchColumn() === 1;
+        }
+        return self::$tableAvailable;
     }
 
     /** @param array<string,mixed> $normalized */
