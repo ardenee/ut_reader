@@ -22,7 +22,6 @@
     const chunkCsrf = progress.dataset.chunkCsrf || '';
     const hashWorkerUrl = progress.dataset.hashWorkerUrl || 'assets/profiled-upload-hash-worker.js';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progress.dataset.chunkBytes || 16 * 1024 * 1024));
-    const containerLimit = Math.max(0, Number(progress.dataset.containerLimit || 0));
     const MAX_LOG_ROWS = 250;
 
     let activeBatchId = '';
@@ -34,7 +33,12 @@
     let batchCancelled = false;
     let batchGameId = '';
     let batchStrictProfile = '1';
+    let batchEngineKey = '';
+    let normalUploadLimit = Math.max(0, Number(progress.dataset.normalLimit || 0));
+    let containerLimit = Math.max(0, Number(progress.dataset.containerLimit || 0));
+    let allowedExtensions = new Set();
     let preflightDuplicates = 0;
+    let filteredItemCount = 0;
     let stagedItemCount = 0;
     let failedItemCount = 0;
 
@@ -63,12 +67,18 @@
         return file.webkitRelativePath || file.name;
     }
 
+    function extensionOf(file) {
+        const name = String((file && file.name) || '');
+        const index = name.lastIndexOf('.');
+        return index >= 0 ? name.slice(index + 1).trim().toLowerCase() : '';
+    }
+
     function isPak(file) {
-        return /\.pak$/i.test(file.name || '');
+        return extensionOf(file) === 'pak';
     }
 
     function isRedirectWrapper(file) {
-        return /\.uz(?:2|3)?$/i.test(file.name || '');
+        return ['uz', 'uz2', 'uz3'].includes(extensionOf(file));
     }
 
     function preflightEligible(file) {
@@ -77,6 +87,32 @@
 
     function shouldUseChunks(file) {
         return isPak(file) || Number(file.size || 0) > configuredChunkBytes;
+    }
+
+    function clientPolicy(file) {
+        const extension = extensionOf(file);
+        if (isPak(file)) {
+            if (!['UE4', 'UE5'].includes(batchEngineKey)) {
+                return {allowed: false, reason: 'PAK containers are only valid for UE4/UE5 target games.'};
+            }
+            if (containerLimit > 0 && Number(file.size || 0) > containerLimit) {
+                return {allowed: false, reason: 'File is ' + bytes(file.size) + '; configured PAK/container limit is ' + bytes(containerLimit) + '.'};
+            }
+            return {allowed: Number(file.size || 0) > 0, reason: Number(file.size || 0) > 0 ? '' : 'File is empty.'};
+        }
+        if (isRedirectWrapper(file)) {
+            if (normalUploadLimit > 0 && Number(file.size || 0) > normalUploadLimit) {
+                return {allowed: false, reason: 'File is ' + bytes(file.size) + '; configured normal upload limit is ' + bytes(normalUploadLimit) + '.'};
+            }
+            return {allowed: Number(file.size || 0) > 0, reason: Number(file.size || 0) > 0 ? '' : 'File is empty.'};
+        }
+        if (!extension || !allowedExtensions.has(extension)) {
+            return {allowed: false, reason: 'Extension .' + (extension || '(none)') + ' is not allowed by the selected game profile.'};
+        }
+        if (normalUploadLimit > 0 && Number(file.size || 0) > normalUploadLimit) {
+            return {allowed: false, reason: 'File is ' + bytes(file.size) + '; configured normal upload limit is ' + bytes(normalUploadLimit) + '.'};
+        }
+        return {allowed: Number(file.size || 0) > 0, reason: Number(file.size || 0) > 0 ? '' : 'File is empty.'};
     }
 
     function bytes(value) {
@@ -191,6 +227,12 @@
         if (!/^[a-f0-9]{64}$/i.test(activeBatchId)) {
             throw new Error('Server did not return a valid upload batch identifier.');
         }
+        batchEngineKey = String(batch.engine_key || '').toUpperCase();
+        allowedExtensions = new Set((Array.isArray(batch.allowed_extensions) ? batch.allowed_extensions : [])
+            .map(function (extension) { return String(extension || '').trim().toLowerCase().replace(/^\.+/, ''); })
+            .filter(Boolean));
+        normalUploadLimit = Math.max(0, Number(batch.normal_upload_limit_bytes || normalUploadLimit || 0));
+        containerLimit = Math.max(normalUploadLimit, Number(batch.container_upload_limit_bytes || containerLimit || 0));
         return body;
     }
 
@@ -296,12 +338,21 @@
         let hashingWarningShown = false;
         const verified = new Set(Array.isArray(duplicateKeys) ? duplicateKeys.map(String) : []);
 
-        overallLabel.textContent = 'Local duplicate preflight';
+        overallLabel.textContent = 'Local duplicate/profile preflight';
         for (let i = 0; i < files.length; i++) {
             if (cancelRequested) break;
             const file = files[i];
             const index = i + 1;
             const name = shownName(file);
+            const policy = clientPolicy(file);
+
+            if (!policy.allowed) {
+                filteredItemCount++;
+                addLog({status: 'skipped', file: name, message: 'Skipped before upload: ' + policy.reason});
+                overallBar.value = Math.round((index * 100) / Math.max(1, files.length));
+                overallCount.textContent = index + ' of ' + files.length + ' preflight checked';
+                continue;
+            }
 
             if (!preflightEligible(file)) {
                 plan.push({file: file, selectedIndex: index, hashKey: ''});
@@ -425,8 +476,9 @@
         const name = shownName(file);
         const pak = isPak(file);
         if (!chunkCsrf) throw new Error('Chunked upload CSRF token is unavailable.');
-        if (pak && containerLimit > 0 && file.size > containerLimit) {
-            throw new Error('PAK is ' + bytes(file.size) + '; configured container limit is ' + bytes(containerLimit) + '.');
+        const effectiveLimit = pak ? containerLimit : normalUploadLimit;
+        if (effectiveLimit > 0 && file.size > effectiveLimit) {
+            throw new Error('File is ' + bytes(file.size) + '; configured upload limit is ' + bytes(effectiveLimit) + '.');
         }
 
         const clientKey = [file.name, file.size, file.lastModified || 0, name, batchGameId].join('|');
@@ -576,7 +628,10 @@
         activeBatchId = '';
         activeUploadId = '';
         activeXhr = null;
+        batchEngineKey = '';
+        allowedExtensions = new Set();
         preflightDuplicates = 0;
+        filteredItemCount = 0;
         stagedItemCount = 0;
         failedItemCount = 0;
         overallBar.value = 0;
@@ -589,7 +644,7 @@
             initialized = await initBatch();
             addLog({
                 status: 'uploading',
-                message: 'Batch initialized. Local duplicate preflight runs first; no background import jobs are created during preflight or upload.'
+                message: 'Batch initialized. Selected-game extension and size policy is checked locally before hashing or transfer. No background import jobs are created during preflight or upload.'
             });
         } catch (error) {
             addLog({status: 'failed', message: error.message || 'Could not initialize upload batch.'});
@@ -608,7 +663,8 @@
         if (!cancelRequested) {
             addLog({
                 status: 'completed',
-                message: 'Preflight complete: ' + plan.length + ' file(s) require upload; ' + preflightDuplicates + ' duplicate(s) skipped. Starting continuous upload staging.'
+                message: 'Preflight complete: ' + plan.length + ' file(s) require upload; '
+                    + preflightDuplicates + ' duplicate(s) and ' + filteredItemCount + ' unsupported/oversized file(s) skipped. Starting continuous upload staging.'
             });
             await uploadPlan(plan);
         }
@@ -653,7 +709,8 @@
         if (!cancelRequested) {
             overallBar.value = 100;
             overallLabel.textContent = 'Upload complete (100%)';
-            overallCount.textContent = stagedItemCount + ' staged; ' + preflightDuplicates + ' duplicate(s) skipped; ' + failedItemCount + ' failed';
+            overallCount.textContent = stagedItemCount + ' staged; ' + preflightDuplicates + ' duplicate(s); '
+                + filteredItemCount + ' unsupported/oversized skipped; ' + failedItemCount + ' failed';
             currentBar.value = 100;
             currentLabel.textContent = finalJobId > 0
                 ? 'Background processing started only after upload completion as batch job #' + finalJobId + '.'
@@ -661,7 +718,8 @@
         } else {
             currentBar.value = 0;
             currentLabel.textContent = 'Upload batch cancelled. No background import jobs were started.';
-            overallCount.textContent = stagedItemCount + ' file(s) staged before cancellation; ' + preflightDuplicates + ' duplicate(s) skipped';
+            overallCount.textContent = stagedItemCount + ' file(s) staged before cancellation; ' + preflightDuplicates
+                + ' duplicate(s); ' + filteredItemCount + ' unsupported/oversized skipped';
         }
 
         submitButton.disabled = false;
@@ -669,6 +727,7 @@
         cancelRequested = false;
         batchGameId = '';
         batchStrictProfile = '1';
+        batchEngineKey = '';
         activeBatchId = '';
     });
 
