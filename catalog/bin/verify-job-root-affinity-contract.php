@@ -19,9 +19,9 @@ $checks = [
     ],
     'src/Application/Jobs/JobDeferred.php' => [
         '$retainWorkerAffinity',
-        "$children['failed']",
-        "$children['dead_letter']",
-        "$children['cancelled']",
+        '$children[\'failed\']',
+        '$children[\'dead_letter\']',
+        '$children[\'cancelled\']',
     ],
     'src/Application/Jobs/JobWorker.php' => [
         'private ?int $preferredRootJobId = null',
