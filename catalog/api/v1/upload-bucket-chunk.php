@@ -29,6 +29,13 @@ try {
         JsonResponse::error('unauthorized', 'Administrator authentication is required.', 401);
     }
 
+    // Upload Bucket hashing checks, chunk writes and file assembly must never
+    // retain PHP's per-session lock. Without this, another page from the same
+    // admin login blocks behind every long upload request and looks DB-locked.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     $action = strtolower(trim((string)($_POST['action'] ?? '')));
     $store = CatalogBucketUploadTransferStoreFactory::create($application->config);
     $identityStore = new CatalogBucketUploadIdentityStore($application->config);
