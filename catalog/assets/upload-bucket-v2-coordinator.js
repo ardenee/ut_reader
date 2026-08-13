@@ -25,6 +25,7 @@
     const queueUrl = progressBox.dataset.processingUrl || 'background-jobs.php?queue=catalog%3Abucket-processing';
     const csrf = progressBox.dataset.chunkCsrf || '';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progressBox.dataset.chunkBytes || 16 * 1024 * 1024));
+    const FINALIZE_BATCH_SIZE = 100;
     const LOG_ROW_HEIGHT = 22;
     const LOG_OVERSCAN = 12;
 
@@ -436,7 +437,7 @@
         throw lastError || new Error(operation + ' failed.');
     }
 
-    async function postBatch(payload, operation, fileName, allowWhenStopped, lineId) {
+    async function postBatch(payload, operation, allowWhenStopped) {
         let lastError = null;
         for (let attempt = 1; attempt <= 4; attempt++) {
             if (stopRequested && !allowWhenStopped) throw stoppedError();
@@ -451,23 +452,16 @@
                     signal: controller.signal
                 });
                 if (activeFetchController === controller) activeFetchController = null;
-                let body;
-                try {
-                    body = await response.json();
-                } catch (error) {
-                    throw new Error(operation + ' returned invalid JSON (HTTP ' + response.status + ').');
-                }
+                const body = await response.json();
                 if (!response.ok || !body.ok) {
                     throw new Error(errorText(body, operation + ' failed with HTTP ' + response.status + '.'));
                 }
-                if (lineId >= 0) setLineTransient(lineId, '');
                 return body.data || {};
             } catch (error) {
                 if (activeFetchController === controller) activeFetchController = null;
                 if ((stopRequested && !allowWhenStopped) || error.name === 'AbortError') throw stoppedError();
                 lastError = error;
                 if (attempt >= 4) break;
-                if (lineId >= 0) setLineTransient(lineId, 'RETRYING ' + (attempt + 1) + '/4');
                 await (allowWhenStopped ? delay(attempt * 750) : sleep(attempt * 750));
             }
         }
@@ -493,26 +487,23 @@
         return parts.length ? parts.join(' · ') : String(active.queue || 'Upload Bucket worker');
     }
 
-    async function waitUntilPaused(initialBody, lineId) {
+    async function waitUntilPaused(initialBody) {
         let body = initialBody;
         let processing = body && body.processing ? body.processing : {};
         while (!processing.ready) {
             if (stopRequested) throw stoppedError();
-            setLineTransient(lineId, 'WAITING');
             scheduleProgress(0, 'Waiting for ' + workerDescription(processing) + ' to finish its current file.', '', true);
             await sleep(1000);
             body = await processingState('batch_status');
             processing = body.processing || {};
         }
-        setLineTransient(lineId, '');
         scheduleProgress(100, 'Previous Upload Bucket processing is paused.', '', false);
     }
 
     function ensureInspectorWorker() {
         if (activeInspector) return activeInspector;
-        const worker = new Worker(workerUrl);
-        activeInspector = worker;
-        return worker;
+        activeInspector = new Worker(workerUrl);
+        return activeInspector;
     }
 
     function terminateInspector() {
@@ -527,7 +518,7 @@
             const worker = ensureInspectorWorker();
             const requestId = String(Date.now()) + '-' + String(index);
             activeInspectorReject = reject;
-            scheduleProgress(0, 'Inspecting header for ' + index + ' of ' + total + ': ' + relativePath, '', false);
+            scheduleProgress(0, 'Inspecting/hash preflight ' + index + ' of ' + total + ': ' + relativePath, '', false);
             setLineTransient(lineId, 'CHECKING');
             worker.onmessage = function (event) {
                 const data = event.data || {};
@@ -535,10 +526,8 @@
                 if (data.type === 'progress') {
                     const loaded = Math.max(0, Number(data.loaded || 0));
                     const size = Math.max(1, Number(data.total || file.size || 1));
-                    const label = data.phase === 'hash'
-                        ? 'Calculating MD5 and SHA-1 for ' + index + ' of ' + total + ': ' + relativePath
-                        : 'Checking Unreal file header for ' + index + ' of ' + total + ': ' + relativePath;
-                    scheduleProgress(Math.floor((loaded * 100) / size), label, '', false);
+                    scheduleProgress(Math.floor((loaded * 100) / size),
+                        'Preflight ' + index + ' of ' + total + ': ' + relativePath, '', false);
                     return;
                 }
                 if (data.type === 'result') {
@@ -571,7 +560,6 @@
             data.append('sha1', inspection.sha1);
         }
         setLineTransient(lineId, 'CHECKING DATABASE');
-        scheduleProgress(0, 'Checking database identity: ' + relativePath, '', false);
         return requestFormRetry(data, null, relativePath, 'Duplicate check', 120000, lineId);
     }
 
@@ -588,7 +576,6 @@
             initData.append('sha1', identity.sha1);
         }
         setLineTransient(lineId, 'OPENING');
-        scheduleProgress(0, 'Opening durable staging for ' + index + ' of ' + total + ': ' + relativePath, '', false);
         const initialized = await requestFormRetry(initData, null, relativePath, 'Upload initialisation', 120000, lineId);
         const upload = initialized.upload || {};
         const uploadId = String(upload.upload_id || '');
@@ -607,8 +594,6 @@
             const end = Math.min(file.size, start + chunkBytes);
             if (received.has(chunkIndex)) {
                 acknowledged = Math.max(acknowledged, end);
-                scheduleProgress(Math.floor((acknowledged * 100) / Math.max(1, file.size)),
-                    'Resuming ' + index + ' of ' + total + ': ' + relativePath, '', false);
                 continue;
             }
             const data = new FormData();
@@ -622,12 +607,13 @@
                 if (!event.lengthComputable) return;
                 const current = Math.min(file.size, base + event.loaded);
                 const elapsed = Math.max(0.25, (Date.now() - startedAt) / 1000);
-                scheduleProgress(
-                    Math.floor((current * 100) / Math.max(1, file.size)),
+                const percent = Math.floor((current * 100) / Math.max(1, file.size));
+                scheduleProgress(percent,
                     'Uploading ' + index + ' of ' + total + ': ' + relativePath + ' · chunk ' + (chunkIndex + 1) + '/' + totalChunks,
-                    fmtBytes(event.loaded / elapsed) + '/s',
-                    false
-                );
+                    fmtBytes(event.loaded / elapsed) + '/s', false);
+                overallBar.value = Math.floor((((index - 1) + percent / 100) * 100) / Math.max(1, total));
+                overallLabel.textContent = 'Continuous upload staging';
+                overallCount.textContent = (index - 1) + ' of ' + total + ' transfers complete';
             }, relativePath, 'Chunk ' + (chunkIndex + 1) + '/' + totalChunks, 180000, lineId);
             acknowledged += end - start;
         }
@@ -636,37 +622,27 @@
         completeData.append('action', 'complete');
         completeData.append('upload_id', uploadId);
         setLineTransient(lineId, 'VERIFYING');
-        scheduleProgress(100, 'Verifying staged file ' + index + ' of ' + total + ': ' + relativePath, '', false);
         const completed = await requestFormRetry(completeData, null, relativePath, 'Upload completion', 120000, lineId);
         activeUploadId = '';
-        scheduleProgress(100, 'Staged upload verified: ' + relativePath, '', false);
-        return {uploadId: String(completed.upload_id || uploadId), name: relativePath, size: Number(file.size || 0)};
-    }
-
-    async function finalizeOne(item, lineId) {
-        setLineTransient(lineId, 'QUEUING');
-        scheduleProgress(0, 'Validating and queuing: ' + item.name, '', false);
-        const data = await postBatch({
-            upload_ids: [item.uploadId],
-            prepare_queue: !queuePrepared,
-            start_worker: false
-        }, 'File finalisation', item.name, false, lineId);
-        queuePrepared = true;
-        scheduleProgress(100, 'Queue result received: ' + item.name, '', false);
-        return data;
+        return {
+            uploadId: String(completed.upload_id || uploadId),
+            name: relativePath,
+            size: Number(file.size || 0),
+            lineId: lineId
+        };
     }
 
     async function startProcessing(allowWhenStopped) {
         if (!queuePrepared) return {pending_jobs: 0, worker_error: ''};
-        scheduleProgress(0, 'Starting Upload Bucket processing for queued files...', '', true);
+        scheduleProgress(0, 'Starting Upload Bucket processing for finalized files...', '', true);
         return postBatch({upload_ids: [], prepare_queue: false, start_worker: true},
-            'Processing worker start', 'Upload batch', Boolean(allowWhenStopped), -1);
+            'Processing worker start', Boolean(allowWhenStopped));
     }
 
-    function updateOverall(done, total, totals) {
+    function updateOverall(done, total, totals, phase) {
         overallBar.value = Math.floor((done * 100) / Math.max(1, total));
-        overallLabel.textContent = done < total ? 'Processing file ' + (done + 1) + ' of ' + total : 'Selected files complete';
-        overallCount.textContent = done.toLocaleString() + ' of ' + total.toLocaleString() + ' finished · '
+        overallLabel.textContent = phase || (done < total ? 'Processing file ' + (done + 1) + ' of ' + total : 'Selected files complete');
+        overallCount.textContent = done.toLocaleString() + ' of ' + total.toLocaleString() + ' handled · '
             + totals.queued.toLocaleString() + ' queued · ' + totals.duplicates.toLocaleString() + ' duplicate(s) · '
             + totals.skipped.toLocaleString() + ' skipped · ' + totals.failed.toLocaleString() + ' failed';
     }
@@ -697,22 +673,68 @@
             overallLabel.textContent = 'Stopped by user';
             currentLabel.textContent = activeUploadId
                 ? 'Stopped. The current partial upload remains in durable staging and can resume when the same file is selected again.'
-                : 'Stopped. Completed files remain queued; unstarted files were not read or uploaded.';
+                : 'Stopped. No background jobs were created before post-upload finalisation.';
         } else {
             overallBar.value = 100;
             currentBar.value = 100;
-            overallLabel.textContent = 'Upload queue complete';
+            overallLabel.textContent = 'Upload and queue handoff complete';
             currentLabel.textContent = 'Finished: ' + totals.queued + ' queued, ' + totals.duplicates + ' duplicate(s), '
                 + totals.skipped + ' skipped, ' + totals.failed + ' failed.';
         }
         const workerText = workerResult.worker_error
             ? ' Worker start failed: ' + workerResult.worker_error
             : (Number(workerResult.pending_jobs || 0) > 0 ? ' Processing jobs are running or queued.' : ' No processing jobs remain.');
-        overallCount.textContent = totals.finished.toLocaleString() + ' of ' + totalFiles.toLocaleString() + ' finished · '
+        overallCount.textContent = totals.finished.toLocaleString() + ' of ' + totalFiles.toLocaleString() + ' handled · '
             + totals.queued.toLocaleString() + ' queued · ' + totals.duplicates.toLocaleString() + ' duplicate(s) · '
             + totals.skipped.toLocaleString() + ' skipped · ' + totals.failed.toLocaleString() + ' failed.' + workerText;
         addCompletionPanel();
         renderLogNow(true);
+    }
+
+    async function finalizeUploaded(uploaded, totals, totalFiles) {
+        if (!uploaded.length) return;
+
+        scheduleProgress(0, 'All transfers are complete. Requesting a safe Upload Bucket processing pause...', '', true);
+        let initialProcessing;
+        try {
+            initialProcessing = await processingState('begin_batch');
+            await waitUntilPaused(initialProcessing);
+        } catch (error) {
+            throw new Error('Could not request a safe processing pause: ' + (error.message || 'unknown error'));
+        }
+
+        for (let offset = 0; offset < uploaded.length; offset += FINALIZE_BATCH_SIZE) {
+            if (stopRequested) throw stoppedError();
+            const slice = uploaded.slice(offset, offset + FINALIZE_BATCH_SIZE);
+            const data = await postBatch({
+                upload_ids: slice.map(function (item) { return item.uploadId; }),
+                prepare_queue: !queuePrepared,
+                start_worker: false
+            }, 'Post-upload queue finalisation', false);
+            queuePrepared = true;
+
+            const messages = Array.isArray(data.messages) ? data.messages : [];
+            for (let index = 0; index < slice.length; index++) {
+                const item = slice[index];
+                const message = messages[index] || {};
+                const status = String(message.status || '').toLowerCase();
+                if (status === 'queued') {
+                    totals.queued++;
+                    appendStage(item.lineId, 'QUEUED', 'queued');
+                    finishLine(item.lineId, 'UPLOADED', 'uploaded', '');
+                } else if (status === 'duplicate') {
+                    totals.duplicates++;
+                    appendStage(item.lineId, 'DUPLICATE', 'duplicate');
+                    finishLine(item.lineId, 'SKIPPED', 'skipped', 'DUPLICATE AFTER UPLOAD');
+                } else {
+                    totals.failed++;
+                    finishLine(item.lineId, 'FAILED', 'failed', String(message.message || 'QUEUE RESULT FAILED'));
+                }
+                totals.finished++;
+            }
+            updateOverall(totals.finished, totalFiles, totals, 'Post-upload queue finalisation');
+            await yieldToBrowser();
+        }
     }
 
     stopButton.addEventListener('click', function () {
@@ -721,7 +743,7 @@
         stopButton.disabled = true;
         scheduleProgress(0, directoryScanActive
             ? 'Stopping folder discovery...'
-            : 'Stopping after the active browser/server operation is aborted...', '', true);
+            : 'Stopping the active preflight/transfer operation...', '', true);
         if (activeInspectorReject) {
             const reject = activeInspectorReject;
             activeInspectorReject = null;
@@ -761,95 +783,56 @@
         currentSpeed.textContent = '';
 
         const totals = {finished: 0, queued: 0, duplicates: 0, skipped: 0, failed: 0, stopped: 0};
-        updateOverall(0, totalFiles, totals);
-
-        let initialProcessing;
-        try {
-            scheduleProgress(0, 'Requesting the existing Upload Bucket worker to stop after its current file...', '', true);
-            initialProcessing = await processingState('begin_batch');
-        } catch (error) {
-            if (isStopped(error)) {
-                totals.stopped = totalFiles;
-                await finishOperation(totals, totalFiles, true);
-                return;
-            }
-            totals.failed = totalFiles;
-            totals.finished = totalFiles;
-            currentLabel.textContent = 'Could not request a safe processing pause: ' + error.message;
-            await finishOperation(totals, totalFiles, false);
-            return;
-        }
-
-        let pauseConfirmed = Boolean(initialProcessing.processing && initialProcessing.processing.ready);
         const seen = new Set();
+        const plan = [];
+        updateOverall(0, totalFiles, totals, 'Preflight');
 
+        // Phase 1: inspect/hash/duplicate-check every selected file before the
+        // first network transfer. This makes Phase 2 a continuous upload stream.
         for (let index = 0; index < totalFiles; index++) {
             if (stopRequested) {
                 totals.stopped += totalFiles - index;
                 break;
             }
-
             let source;
             try {
                 source = await selectionAt(index);
             } catch (error) {
                 totals.failed++;
                 totals.finished++;
-                updateOverall(totals.finished, totalFiles, totals);
                 continue;
             }
-
             const file = source.file;
             const name = source.relativePath || file.name;
             const lineId = beginFileLine(name, file.size);
-            overallLabel.textContent = 'Processing file ' + (index + 1).toLocaleString() + ' of ' + totalFiles.toLocaleString();
-            overallCount.textContent = totals.finished.toLocaleString() + ' finished · current: ' + name;
+            activeLineId = lineId;
+            overallLabel.textContent = 'Preflight ' + (index + 1).toLocaleString() + ' of ' + totalFiles.toLocaleString();
+            overallCount.textContent = index.toLocaleString() + ' checked · current: ' + name;
 
             try {
                 const key = fileKey(file, name);
                 if (seen.has(key)) {
                     totals.skipped++;
+                    totals.finished++;
                     finishLine(lineId, 'SKIPPED', 'skipped', 'DUPLICATE SELECTION');
                 } else if (!isAllowedName(name)) {
                     seen.add(key);
                     totals.skipped++;
+                    totals.finished++;
                     finishLine(lineId, 'SKIPPED', 'skipped', 'EXTENSION NOT ALLOWED');
                 } else {
                     seen.add(key);
                     const inspection = await inspectFile(file, name, index + 1, totalFiles, lineId);
                     appendStage(lineId, 'CHECKED', 'checked');
-
                     const checked = await preflight(file, name, inspection, lineId);
                     if (checked.duplicate) {
                         totals.duplicates++;
+                        totals.finished++;
                         appendStage(lineId, 'DUPLICATE', 'duplicate');
                         finishLine(lineId, 'SKIPPED', 'skipped', 'ALREADY EXISTS');
                     } else {
                         appendStage(lineId, 'READY', 'ready');
-                        const uploaded = await uploadFile(file, name, inspection, index + 1, totalFiles, lineId);
-                        appendStage(lineId, 'UPLOADED', 'uploaded');
-                        if (!pauseConfirmed) {
-                            await waitUntilPaused(initialProcessing, lineId);
-                            pauseConfirmed = true;
-                        }
-                        const finalized = await finalizeOne(uploaded, lineId);
-                        const queued = Number(finalized.queued || 0);
-                        const duplicates = Number(finalized.duplicates || 0);
-                        const failed = Number(finalized.failed || 0);
-                        if (queued > 0) {
-                            totals.queued += queued;
-                            appendStage(lineId, 'QUEUED', 'queued');
-                            finishLine(lineId, 'UPLOADED', 'uploaded', '');
-                        } else if (duplicates > 0) {
-                            totals.duplicates += duplicates;
-                            appendStage(lineId, 'DUPLICATE', 'duplicate');
-                            finishLine(lineId, 'SKIPPED', 'skipped', 'DUPLICATE AFTER UPLOAD');
-                        } else {
-                            totals.failed += Math.max(1, failed);
-                            const message = Array.isArray(finalized.messages) && finalized.messages[0]
-                                ? String(finalized.messages[0].message || '') : 'QUEUE RESULT FAILED';
-                            finishLine(lineId, 'FAILED', 'failed', message);
-                        }
+                        plan.push({file: file, name: name, inspection: inspection, lineId: lineId});
                     }
                 }
             } catch (error) {
@@ -859,25 +842,79 @@
                     break;
                 }
                 totals.failed++;
-                finishLine(lineId, 'FAILED', 'failed', error.message || 'FILE HANDLING FAILED');
+                totals.finished++;
+                finishLine(lineId, 'FAILED', 'failed', error.message || 'PREFLIGHT FAILED');
             }
-
-            totals.finished++;
-            activeUploadId = '';
             activeLineId = -1;
-            updateOverall(totals.finished, totalFiles, totals);
+            overallBar.value = Math.floor(((index + 1) * 100) / Math.max(1, totalFiles));
             if ((index + 1) % 100 === 0) await yieldToBrowser();
         }
 
         if (stopRequested) {
-            totals.finished = totalFiles - totals.stopped;
-            updateOverall(totals.finished, totalFiles, totals);
             await finishOperation(totals, totalFiles, true);
             return;
         }
 
-        totals.finished = totalFiles;
-        updateOverall(totals.finished, totalFiles, totals);
+        // Phase 2: transfer only READY files. There is no hashing, duplicate DB
+        // lookup, queue insert or worker lifecycle operation between file uploads.
+        const uploaded = [];
+        overallBar.value = 0;
+        overallLabel.textContent = 'Continuous upload staging';
+        overallCount.textContent = '0 of ' + plan.length.toLocaleString() + ' required files transferred';
+        for (let index = 0; index < plan.length; index++) {
+            if (stopRequested) break;
+            const item = plan[index];
+            activeLineId = item.lineId;
+            try {
+                const uploadedItem = await uploadFile(
+                    item.file,
+                    item.name,
+                    item.inspection,
+                    index + 1,
+                    plan.length,
+                    item.lineId
+                );
+                appendStage(item.lineId, 'UPLOADED', 'uploaded');
+                uploaded.push(uploadedItem);
+            } catch (error) {
+                if (isStopped(error)) {
+                    finishLine(item.lineId, 'STOPPED', 'stopped', 'STOPPED BY USER');
+                    break;
+                }
+                totals.failed++;
+                totals.finished++;
+                finishLine(item.lineId, 'FAILED', 'failed', error.message || 'UPLOAD FAILED');
+            }
+            activeUploadId = '';
+            activeLineId = -1;
+            overallBar.value = Math.floor(((index + 1) * 100) / Math.max(1, plan.length));
+            overallCount.textContent = (index + 1).toLocaleString() + ' of ' + plan.length.toLocaleString() + ' required files transferred';
+            if ((index + 1) % 100 === 0) await yieldToBrowser();
+        }
+
+        if (stopRequested) {
+            await finishOperation(totals, totalFiles, true);
+            return;
+        }
+
+        // Phase 3: only now touch the background queue. Finalise completed
+        // upload IDs in bounded groups, then start the worker pool once.
+        try {
+            await finalizeUploaded(uploaded, totals, totalFiles);
+        } catch (error) {
+            if (isStopped(error)) {
+                await finishOperation(totals, totalFiles, true);
+                return;
+            }
+            currentLabel.textContent = error.message || 'Post-upload finalisation failed.';
+            // Any uploaded IDs not finalized remain in durable chunk staging;
+            // they are not converted into misleading queued rows.
+            await finishOperation(totals, totalFiles, false);
+            return;
+        }
+
+        totals.finished = Math.min(totalFiles, totals.finished);
+        updateOverall(totals.finished, totalFiles, totals, 'Upload and queue handoff complete');
         await finishOperation(totals, totalFiles, false);
     });
 
