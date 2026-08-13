@@ -23,6 +23,7 @@ $check = static function (string $name, bool $ok, string $detail) use (&$checks,
 };
 
 $resolver = $read('src/Infrastructure/Persistence/PdoCompactCaseInsensitiveExportResolver.php');
+$reader = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php');
 $jobType = $read('src/Domain/Jobs/JobType.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
@@ -36,6 +37,14 @@ $check(
         && str_contains($resolver, 'CatalogSystemErrorRecorder::record')
         && str_contains($resolver, 'clearstatcache();'),
     'Unreadable provider metadata must not abort every consumer; it must be skipped and reported once.'
+);
+$check(
+    'reader_distinguishes_missing_from_size_mismatch',
+    str_contains($reader, 'clearstatcache(true, $path)')
+        && str_contains($reader, 'Blocked metadata file is missing: ')
+        && str_contains($reader, '(expected=')
+        && str_contains($reader, ', actual='),
+    'Storage diagnostics must distinguish a missing metadata file from a real DB/on-disk size disagreement.'
 );
 $check(
     'repair_job_is_registered',
@@ -67,6 +76,14 @@ $check(
         && str_contains($cli, "'compact-metadata-repair:' . \$fileId")
         && str_contains($cli, "array_key_exists('queue-repair', \$options)"),
     'The diagnostic command must verify first and only queue repair for containers that actually fail verification.'
+);
+$check(
+    'targeted_cli_makes_storage_root_explicit',
+    str_contains($cli, "'storage-root:'")
+        && str_contains($cli, "'storage_root' => \$storageRoot")
+        && str_contains($cli, "'storage_root_source'")
+        && str_contains($cli, "'configured_storage_root'"),
+    'A source checkout and deployed runtime can have different storage trees, so diagnostics must expose and allow overriding the storage root.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
