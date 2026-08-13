@@ -32,9 +32,6 @@ final class JobExecutionContext
         int $leaseSeconds,
         private readonly ?\Closure $eventAppender = null
     ) {
-        // These handlers can legitimately spend more than the normal two-minute
-        // lease inside one bounded I/O/DB operation. Give them the same renewable
-        // long lease so another worker cannot recover and duplicate live work.
         $longRunningJob = in_array(
             $job->type,
             [
@@ -62,18 +59,23 @@ final class JobExecutionContext
     }
 
     /**
-     * Release the worker while durable child work advances. Waiting is not a
-     * failure and therefore must not consume a retry attempt.
+     * Release the current queue row while durable child work advances. By
+     * default the worker remains assigned to this root workflow, so its next
+     * claim stays inside the same job instead of jumping to another parent.
+     * A genuinely blocked workflow can explicitly release that affinity.
      *
      * @param array<string,mixed> $progress
      * @return never
      */
-    public function defer(int $delaySeconds = 2, array $progress = []): never
-    {
+    public function defer(
+        int $delaySeconds = 2,
+        array $progress = [],
+        bool $retainWorkerAffinity = true
+    ): never {
         if ($progress === []) {
             $progress = $this->pendingProgress !== [] ? $this->pendingProgress : $this->job->resumeProgress;
         }
-        throw new JobDeferred(max(1, $delaySeconds), $progress);
+        throw new JobDeferred(max(1, $delaySeconds), $progress, $retainWorkerAffinity);
     }
 
     /** @param array<string,mixed> $progress */
