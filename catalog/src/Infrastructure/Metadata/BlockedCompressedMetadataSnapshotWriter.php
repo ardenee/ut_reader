@@ -6,7 +6,7 @@
  * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
  *      entry points.
  * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
+ *      services.
  * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
  *        same behavior.
  */
@@ -56,9 +56,23 @@ final class BlockedCompressedMetadataSnapshotWriter
             throw new RuntimeException('Could not create compact metadata directory: ' . $directory);
         }
 
+        // ue_terms is shared by every file. Publish the complete dictionary before
+        // starting the file-owned transaction, so unrelated file writers never
+        // retain global term locks while replacing their projections.
+        $dictionarySqlBatches = 0;
+        (new CompressedMetadataLookupWriter($this->db))->primeSnapshotTerms($snapshot, $dictionarySqlBatches);
+        (new CompactTermOverflowWriter($this->db))->write($snapshot, $dictionarySqlBatches);
+
         for ($attempt = 1; ; $attempt++) {
             try {
-                return $this->publishAttempt($snapshot, $built, $bytes, $path, $fileId);
+                return $this->publishAttempt(
+                    $snapshot,
+                    $built,
+                    $bytes,
+                    $path,
+                    $fileId,
+                    $dictionarySqlBatches
+                );
             } catch (Throwable $error) {
                 if (!PdoContention::retryable($error) || $attempt >= self::CONTENTION_ATTEMPTS) {
                     throw $error;
@@ -81,7 +95,8 @@ final class BlockedCompressedMetadataSnapshotWriter
         array $built,
         string $bytes,
         string $path,
-        int $fileId
+        int $fileId,
+        int $dictionarySqlBatches
     ): array {
         $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(8));
         $backupPath = $path . '.bak.' . bin2hex(random_bytes(8));
@@ -101,7 +116,7 @@ final class BlockedCompressedMetadataSnapshotWriter
         $hadExistingFile = is_file($path);
         $published = false;
         $backedUp = false;
-        $sqlBatches = 0;
+        $sqlBatches = $dictionarySqlBatches;
 
         $this->db->beginTransaction();
         try {
