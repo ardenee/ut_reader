@@ -3,21 +3,23 @@
 
     const root = document.getElementById('background-jobs-app');
     const notice = document.getElementById('jobs-message') || document.getElementById('job-notice');
-    if (!root || !notice || typeof window.fetch !== 'function') {
-        return;
-    }
+    if (!root || !notice || typeof window.fetch !== 'function') return;
 
     const bulkUrl = String(root.dataset.bulkUrl || '');
     const actionUrl = String(root.dataset.actionUrl || '');
     const statusUrl = String(root.dataset.statusUrl || '');
     const workerStatusUrl = String(root.dataset.workerStatusUrl || '');
-    const legacyWorkerState = document.getElementById('jobs-worker-state');
-    const queueSelect = document.querySelector('.jobs-queue-switcher select[name="queue"]');
     const originalFetch = window.fetch.bind(window);
     const operatorStatusById = new Map();
     const operatorStartedAtById = new Map();
     let pendingNotice = '';
     let latestWorkerAuthority = '';
+
+    const setText = (element, text) => {
+        if (!element) return;
+        text = String(text == null ? '' : text);
+        if (element.textContent !== text) element.textContent = text;
+    };
 
     const style = document.createElement('style');
     style.textContent = [
@@ -33,16 +35,16 @@
     ].join('');
     document.head.appendChild(style);
 
+    const queueSelect = document.querySelector('.jobs-queue-switcher select[name="queue"]');
     if (queueSelect) {
         Array.from(queueSelect.options || []).forEach((option) => {
-            const queueName = String(option.value || '').trim();
-            if (queueName !== '') {
-                option.textContent = queueName;
-            }
+            const name = String(option.value || '').trim();
+            if (name) option.textContent = name;
         });
         queueSelect.title = 'Queue selector';
     }
 
+    const legacyWorkerState = document.getElementById('jobs-worker-state');
     let readableWorkerState = document.getElementById('jobs-worker-summary-readable');
     if (legacyWorkerState) {
         legacyWorkerState.hidden = true;
@@ -57,16 +59,10 @@
     }
 
     const tabs = document.getElementById('jobs-status-tabs');
-    const relabelTabs = () => {
-        if (!tabs) return;
+    if (tabs) {
         const labels = {
-            '': 'All',
-            queued: 'Waiting',
-            running: 'In progress',
-            completed: 'Completed',
-            failed: 'Failed',
-            dead_letter: 'Needs retry',
-            cancelled: 'Cancelled'
+            '': 'All', queued: 'Waiting', running: 'In progress', completed: 'Completed',
+            failed: 'Failed', dead_letter: 'Needs retry', cancelled: 'Cancelled'
         };
         tabs.querySelectorAll('button[data-status]').forEach((button) => {
             const key = String(button.dataset.status || '');
@@ -74,16 +70,13 @@
             if (!count || !Object.prototype.hasOwnProperty.call(labels, key)) return;
             button.replaceChildren(document.createTextNode(labels[key] + ' '), count);
         });
-    };
-    relabelTabs();
+    }
 
-    const hideDuplicatePoolState = () => {
-        const poolState = document.getElementById('jobs-worker-pool-state');
-        if (poolState) {
-            poolState.hidden = true;
-            poolState.setAttribute('aria-hidden', 'true');
-        }
-    };
+    const headers = root.querySelectorAll('.jobs-table thead th');
+    if (headers.length >= 6) {
+        setText(headers[1], 'Job');
+        setText(headers[5], 'In progress for');
+    }
 
     const toolbar = root.querySelector('.jobs-toolbar');
     const startButton = document.getElementById('jobs-start');
@@ -92,18 +85,22 @@
     if (refreshButton) refreshButton.hidden = true;
 
     const simplifyWorkerControls = () => {
-        hideDuplicatePoolState();
+        const poolState = document.getElementById('jobs-worker-pool-state');
         const applyWorkers = document.getElementById('jobs-apply-workers');
         const workerCount = document.getElementById('jobs-worker-count');
+        if (poolState) {
+            poolState.hidden = true;
+            poolState.setAttribute('aria-hidden', 'true');
+        }
         if (applyWorkers) applyWorkers.hidden = true;
         if (startButton) {
-            const text = String(startButton.textContent || '').toLowerCase();
-            startButton.hidden = Boolean(startButton.disabled)
-                && (text.includes('start') || text.includes('resume'));
+            const label = String(startButton.textContent || '').toLowerCase();
+            startButton.hidden = Boolean(startButton.disabled) && (label.includes('start') || label.includes('resume'));
         }
+        if (stopButton) stopButton.hidden = Boolean(stopButton.disabled);
         if (workerCount && applyWorkers && !workerCount.dataset.operatorAutoApply) {
             workerCount.dataset.operatorAutoApply = '1';
-            workerCount.title = 'Changing this updates a running worker pool automatically. If stopped, the value is used when the queue is started.';
+            workerCount.title = 'Changing this resizes a running worker pool automatically. If stopped, the value is used when the queue starts.';
             workerCount.addEventListener('change', () => {
                 if (latestWorkerAuthority === 'running' || latestWorkerAuthority === 'degraded') {
                     window.setTimeout(() => applyWorkers.click(), 0);
@@ -113,8 +110,9 @@
     };
     simplifyWorkerControls();
     if (toolbar && typeof MutationObserver !== 'undefined') {
-        const toolbarObserver = new MutationObserver(simplifyWorkerControls);
-        toolbarObserver.observe(toolbar, {childList: true, subtree: true, attributes: true, attributeFilter: ['disabled']});
+        new MutationObserver(simplifyWorkerControls).observe(toolbar, {
+            childList: true, subtree: true, attributes: true, attributeFilter: ['disabled']
+        });
     }
 
     const selectionBar = root.querySelector('.jobs-selectionbar');
@@ -125,7 +123,6 @@
         bulkPanel = document.createElement('details');
         bulkPanel.className = 'jobs-bulk-panel';
         bulkSummary = document.createElement('summary');
-        bulkSummary.textContent = 'Bulk actions';
         selectionBar.parentNode.insertBefore(bulkPanel, selectionBar);
         bulkPanel.appendChild(bulkSummary);
         bulkPanel.appendChild(selectionBar);
@@ -134,12 +131,14 @@
         if (!bulkPanel || !bulkSummary || !selectionSummary) return;
         const text = String(selectionSummary.textContent || '').trim();
         const selected = text !== '' && text !== 'Nothing selected';
-        bulkSummary.textContent = selected ? 'Bulk actions · ' + text : 'Bulk actions';
+        setText(bulkSummary, selected ? 'Bulk actions · ' + text : 'Bulk actions');
         if (selected) bulkPanel.open = true;
     };
     syncBulkPanel();
     if (selectionSummary && typeof MutationObserver !== 'undefined') {
-        new MutationObserver(syncBulkPanel).observe(selectionSummary, {childList: true, characterData: true, subtree: true});
+        new MutationObserver(syncBulkPanel).observe(selectionSummary, {
+            childList: true, characterData: true, subtree: true
+        });
     }
 
     const pagination = root.querySelector('.jobs-pagination');
@@ -150,7 +149,9 @@
     };
     syncPagination();
     if (pageLabel && typeof MutationObserver !== 'undefined') {
-        new MutationObserver(syncPagination).observe(pageLabel, {childList: true, characterData: true, subtree: true});
+        new MutationObserver(syncPagination).observe(pageLabel, {
+            childList: true, characterData: true, subtree: true
+        });
     }
 
     const requestAction = (init) => {
@@ -161,38 +162,26 @@
             return '';
         }
     };
-
     const responseBody = async (response) => {
-        try {
-            return await response.clone().json();
-        } catch (_) {
-            return null;
-        }
+        try { return await response.clone().json(); } catch (_) { return null; }
     };
-
     const responseData = async (response) => {
         const body = await responseBody(response);
-        return body && typeof body === 'object' && body.data && typeof body.data === 'object'
-            ? body.data
-            : null;
+        return body && typeof body === 'object' && body.data && typeof body.data === 'object' ? body.data : null;
     };
-
     const replacementResponse = (response, body) => {
         const headers = new Headers(response.headers);
         headers.set('Content-Type', 'application/json');
         headers.delete('Content-Length');
         return new Response(JSON.stringify(body), {
-            status: response.status,
-            statusText: response.statusText,
-            headers: headers
+            status: response.status, statusText: response.statusText, headers: headers
         });
     };
 
     const rollUpJobStatus = async (response, url) => {
-        if (statusUrl === '' || !url.includes(statusUrl)) return response;
+        if (!statusUrl || !url.includes(statusUrl)) return response;
         const body = await responseBody(response);
         if (!body || !body.data || !Array.isArray(body.data.jobs)) return response;
-
         let changed = false;
         body.data.jobs.forEach((job) => {
             if (!job || typeof job !== 'object') return;
@@ -203,7 +192,7 @@
                 operatorStatusById.set(id, operator);
                 operatorStartedAtById.set(id, String(job.operator_started_at || job.leased_at || ''));
             }
-            if (operator === 'running') {
+            if (operator === 'running' && String(job.display_status || '').toLowerCase() !== 'running') {
                 job.display_status = 'running';
                 changed = true;
             }
@@ -214,21 +203,15 @@
     const parseUtc = (value) => {
         const text = String(value || '').trim();
         if (!text) return 0;
-        const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text)
-            ? text.replace(' ', 'T') + 'Z'
-            : text;
+        const normalized = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(text) ? text.replace(' ', 'T') + 'Z' : text;
         const timestamp = Date.parse(normalized);
         return Number.isFinite(timestamp) ? timestamp : 0;
     };
-
     const formatDuration = (milliseconds) => {
         let seconds = Math.max(0, Math.floor(milliseconds / 1000));
-        const days = Math.floor(seconds / 86400);
-        seconds -= days * 86400;
-        const hours = Math.floor(seconds / 3600);
-        seconds -= hours * 3600;
-        const minutes = Math.floor(seconds / 60);
-        seconds -= minutes * 60;
+        const days = Math.floor(seconds / 86400); seconds -= days * 86400;
+        const hours = Math.floor(seconds / 3600); seconds -= hours * 3600;
+        const minutes = Math.floor(seconds / 60); seconds -= minutes * 60;
         const parts = [];
         if (days) parts.push(days + 'd');
         if (days || hours) parts.push(hours + 'h');
@@ -245,40 +228,43 @@
             const status = operatorStatusById.get(id) || '';
             const badge = row.querySelector('.job-status');
             if (badge) {
-                if (status === 'running') {
-                    badge.textContent = 'in progress';
-                } else if (status === 'queued') {
-                    badge.textContent = 'waiting';
-                }
+                if (status === 'running') setText(badge, 'in progress');
+                else if (status === 'queued') setText(badge, 'waiting');
             }
             if (status === 'running') {
                 const started = parseUtc(operatorStartedAtById.get(id));
                 const runtime = row.querySelector('.jobs-running-for');
-                if (started && runtime) runtime.textContent = formatDuration(Date.now() - started);
+                if (started && runtime) setText(runtime, formatDuration(Date.now() - started));
             }
             const actionButton = row.querySelector('.jobs-actions button');
             if (actionButton && String(actionButton.textContent || '').trim() === 'Cancel') {
-                actionButton.textContent = 'Cancel job';
+                setText(actionButton, 'Cancel job');
             }
         });
     };
 
     const tableBody = document.getElementById('jobs-table-body');
     if (tableBody && typeof MutationObserver !== 'undefined') {
-        new MutationObserver(renderOperatorRows).observe(tableBody, {childList: true, subtree: true, characterData: true});
+        let queued = false;
+        new MutationObserver(() => {
+            if (queued) return;
+            queued = true;
+            window.queueMicrotask(() => {
+                queued = false;
+                renderOperatorRows();
+            });
+        }).observe(tableBody, {childList: true, subtree: true, characterData: true});
     }
     window.setInterval(renderOperatorRows, 1000);
 
     const renderWorkerSummary = (worker) => {
         if (!readableWorkerState || !worker || typeof worker !== 'object') return;
-
         const authority = String(worker.authoritative_status || (worker.active ? 'running' : 'stopped'));
         latestWorkerAuthority = authority;
         const active = Math.max(0, Number(worker.active_count || 0));
         const desired = Math.max(1, Number(worker.desired_count || active || 1));
         const launching = Math.max(0, Number(worker.launching_count || 0));
         const stale = Boolean(worker.stale_code);
-
         let text;
         if (authority === 'running' || authority === 'degraded') {
             text = 'Workers ' + active + '/' + desired + ' running'
@@ -292,44 +278,31 @@
         } else {
             text = 'Workers stopped';
         }
-
         readableWorkerState.dataset.authoritativeStatus = authority;
-        readableWorkerState.textContent = text;
+        setText(readableWorkerState, text);
         simplifyWorkerControls();
     };
 
     window.fetch = async (input, init) => {
         let response = await originalFetch(input, init);
         if (!response.ok) return response;
-
-        const url = typeof input === 'string'
-            ? input
-            : (input && typeof input.url === 'string' ? input.url : '');
+        const url = typeof input === 'string' ? input : (input && typeof input.url === 'string' ? input.url : '');
         const action = requestAction(init);
-
         response = await rollUpJobStatus(response, url);
-
-        if (workerStatusUrl !== '' && url.includes(workerStatusUrl)) {
+        if (workerStatusUrl && url.includes(workerStatusUrl)) {
             const data = await responseData(response);
             if (data && data.worker) renderWorkerSummary(data.worker);
         }
-
         window.setTimeout(() => {
-            relabelTabs();
-            renderOperatorRows();
-            syncPagination();
-            syncBulkPanel();
-            simplifyWorkerControls();
+            renderOperatorRows(); syncPagination(); syncBulkPanel(); simplifyWorkerControls();
         }, 0);
 
-        const isBulkDelete = bulkUrl !== '' && url.includes(bulkUrl) && action === 'delete';
-        const isRetentionCleanup = actionUrl !== '' && url.includes(actionUrl) && action === 'cleanup';
+        const isBulkDelete = bulkUrl && url.includes(bulkUrl) && action === 'delete';
+        const isRetentionCleanup = actionUrl && url.includes(actionUrl) && action === 'cleanup';
         if (!isBulkDelete && !isRetentionCleanup) return response;
-
         const data = await responseData(response);
         const cleanupJobId = Number(data && data.cleanup_job_id || 0);
         if (cleanupJobId < 1) return response;
-
         const scheduled = Number(data && data.scheduled || 0);
         const requested = Number(data && data.requested || scheduled);
         const limited = Boolean(data && data.limited);
@@ -339,18 +312,16 @@
             + (requested > scheduled ? ' from ' + requested + ' matching job(s)' : '')
             + '. Actual deleted/skipped/staged-file counts will be reported by the cleanup job.'
             + (limited ? ' The 10,000-job snapshot limit was reached; run cleanup again after it completes for any remainder.' : '')
-            + (workerError !== '' ? ' Worker start warning: ' + workerError : '');
-
+            + (workerError ? ' Worker start warning: ' + workerError : '');
         return response;
     };
 
-    const observer = new MutationObserver(() => {
-        if (pendingNotice === '') return;
+    new MutationObserver(() => {
+        if (!pendingNotice) return;
         const text = String(notice.textContent || '');
         if (text.startsWith('Delete affected ') || text.startsWith('Removed ')) {
-            notice.textContent = pendingNotice;
+            setText(notice, pendingNotice);
             pendingNotice = '';
         }
-    });
-    observer.observe(notice, {childList: true, characterData: true, subtree: true});
+    }).observe(notice, {childList: true, characterData: true, subtree: true});
 })();
