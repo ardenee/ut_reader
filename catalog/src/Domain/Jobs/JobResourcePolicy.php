@@ -52,9 +52,9 @@ final class JobResourcePolicy
                 'description' => 'Independent per-file Full Sync reimport, compact-metadata repair and dependency units. Completed units remain durable and are never replayed after a workflow restart.',
             ],
             self::AFFECTED_DEPENDENCY_BATCH => [
-                'label' => 'Affected dependency file units',
-                'default' => 2,
-                'description' => 'Targeted dependency refresh and projection-reconciliation file units. A failed file is restarted independently; per-file locks and compact publication retries protect overlap.',
+                'label' => 'Affected dependency batches',
+                'default' => 4,
+                'description' => 'Bounded targeted dependency batches and projection-reconciliation file units. Batches process one file at a time internally; individual failures are isolated into retry jobs. Lower this if dependency maintenance causes database pressure.',
             ],
             self::SEARCH_HEAVY => [
                 'label' => 'Search-index rebuilds',
@@ -147,7 +147,7 @@ final class JobResourcePolicy
             ),
             JobType::RECONCILE_CATALOG_PROJECTION_FILE => new JobResourceProfile(
                 self::AFFECTED_DEPENDENCY_BATCH,
-                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 2),
+                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 4),
                 self::positiveKey('projection:file:', $payload['affected_file_id'] ?? null)
             ),
             JobType::REBUILD_FILE_SEARCH_INDEX => new JobResourceProfile(
@@ -245,7 +245,7 @@ final class JobResourcePolicy
             $sourceFileId = max(0, (int)($payload['file_id'] ?? 0));
             return new JobResourceProfile(
                 self::AFFECTED_DEPENDENCY_BATCH,
-                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 2),
+                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 4),
                 'dependency:affected-file-unit:' . $sourceFileId . ':' . $affectedFileId
             );
         }
@@ -254,7 +254,7 @@ final class JobResourcePolicy
         if (is_array($batchIds) && $batchIds !== []) {
             return new JobResourceProfile(
                 self::AFFECTED_DEPENDENCY_BATCH,
-                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 2),
+                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 4),
                 self::affectedBatchKey($payload)
             );
         }
