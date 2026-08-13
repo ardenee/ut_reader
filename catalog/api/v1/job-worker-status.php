@@ -33,8 +33,9 @@ try {
      */
     $launcher = new CatalogDetachedWorker($application->config);
     $worker = $launcher->status($queueName, false);
-    $counts = (new PdoBackgroundJobOperationalQuery($application->db, $application->config))
-        ->queueCounts($queueName);
+    $operational = new PdoBackgroundJobOperationalQuery($application->db, $application->config);
+    $counts = $operational->queueCounts($queueName);
+    $working = $operational->runningWork($queueName);
     $status = CatalogWorkerStatusPolicy::evaluate(
         $worker,
         $counts,
@@ -62,7 +63,7 @@ try {
     $worker['auto_start'] = null;
     $worker['auto_start_error'] = '';
 
-    JsonResponse::send(['data' => ['worker' => $worker]]);
+    JsonResponse::send(['data' => ['worker' => $worker, 'working' => $working]]);
 } catch (InvalidArgumentException $exception) {
     JsonResponse::error('invalid_worker_request', $exception->getMessage(), 400);
 } catch (Throwable $exception) {
