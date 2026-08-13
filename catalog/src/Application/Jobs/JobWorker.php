@@ -44,8 +44,7 @@ final class JobWorker
         $this->diagnostic('claimed', $job, 'Worker claimed the job row.');
         $handler = $this->findHandler($job->type);
         if ($handler === null) {
-            $exception = new \RuntimeException('No job handler registered for type: ' . $job->type);
-            return $this->recordFailure($job, $exception, 0);
+            return $this->deferUnknownJobType($job);
         }
 
         $context = new JobExecutionContext($this->queue, $job, $this->leaseSeconds, $this->eventAppender);
@@ -118,6 +117,35 @@ final class JobWorker
             );
             $this->reportTerminalFailure($job, $completionError, 'completion_persist_failed');
             return $this->failureResult('completion_persist_failed', $job, $completionError);
+        }
+    }
+
+    /** @return array{status:string,job_id:int,type:string} */
+    private function deferUnknownJobType(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job): array
+    {
+        $progress = $job->resumeProgress;
+        $progress['queue_wait_reason'] = 'handler_unavailable';
+        $progress['queue_wait_job_type'] = $job->type;
+        $progress['message'] = 'This worker does not have a handler for ' . $job->type
+            . '; leaving the job queued for a newer/restarted worker.';
+        try {
+            // A rolling deployment can leave an older worker alive briefly after
+            // newer code has started enqueueing a new job type. That is not job
+            // failure and must not consume an attempt or dead-letter the work.
+            $this->queue->defer($job, 30, $progress);
+            $this->diagnostic(
+                'handler_unavailable_deferred',
+                $job,
+                'No handler is loaded for ' . $job->type . '; job returned to the queue without consuming an attempt.'
+            );
+            return ['status' => 'deferred', 'job_id' => $job->id, 'type' => $job->type];
+        } catch (\Throwable $leaseError) {
+            $this->reportTerminalFailure($job, $leaseError, 'unknown_handler_defer_failed');
+            return [
+                'status' => 'lease_lost',
+                'job_id' => $job->id,
+                'type' => $job->type,
+            ];
         }
     }
 
