@@ -247,9 +247,20 @@ final class BlockedCompressedMetadataReader
             (int)$row['game_id'],
             $fileId
         );
+        clearstatcache(true, $path);
+        if (!is_file($path)) {
+            throw new RuntimeException('Blocked metadata file is missing: ' . $path);
+        }
         $size = @filesize($path);
-        if ($size === false || (int)$size !== (int)$row['compressed_size']) {
-            throw new RuntimeException('Blocked metadata file size mismatch: ' . $path);
+        if ($size === false) {
+            throw new RuntimeException('Could not read blocked metadata file size: ' . $path);
+        }
+        $expectedSize = (int)$row['compressed_size'];
+        if ((int)$size !== $expectedSize) {
+            throw new RuntimeException(
+                'Blocked metadata file size mismatch: ' . $path
+                . ' (expected=' . $expectedSize . ', actual=' . (int)$size . ')'
+            );
         }
         $handle = fopen($path, 'rb');
         if ($handle === false) {
@@ -298,8 +309,7 @@ final class BlockedCompressedMetadataReader
      * @param resource $handle
      * @param array<string,mixed> $context
      * @param array<string,mixed> $block
-     * @return list<array<string,mixed>>
-     */
+     * @return list<array<string,mixed>> */
     private function readBlock($handle, array $context, string $section, array $block): array
     {
         $offset = (int)$context['payload_start'] + (int)$block['offset'];
@@ -364,7 +374,7 @@ final class BlockedCompressedMetadataReader
                 'object_name' => $this->stringAt($strings, $row[2] ?? null),
                 'outer_index' => (int)($row[3] ?? 0),
                 'local_path' => $this->stringAt($strings, $row[4] ?? null),
-                'full_path' => $this->stringAt($strings, $row[5] ?? null),
+                'full_path' => $this->stringAt($strings, $row[5] ?? ''),
                 'object_flags' => $row[6] ?? null,
                 'serial_size' => $row[7] ?? null,
                 'serial_offset' => $row[8] ?? null,
