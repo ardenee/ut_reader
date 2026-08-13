@@ -58,6 +58,9 @@ final class PdoBackgroundJobBrowserQuery
         $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" '
             . 'AND EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1) '
             . 'THEN "running" ELSE j.status END';
+        $operatorStartedSql = 'CASE WHEN EXISTS(SELECT 1 FROM ue_background_jobs started_child WHERE started_child.parent_job_id=j.id LIMIT 1) '
+            . 'THEN (SELECT MIN(started_child2.created_at) FROM ue_background_jobs started_child2 WHERE started_child2.parent_job_id=j.id) '
+            . 'ELSE j.leased_at END';
 
         if ($status !== '') {
             if (in_array($status, ['queued', 'running'], true)) {
@@ -75,7 +78,7 @@ final class PdoBackgroundJobBrowserQuery
         }
 
         $countsCacheKey = json_encode(
-            ['scope' => 'parent-jobs-v3', 'queue' => $queue, 'search' => $search],
+            ['scope' => 'parent-jobs-v4', 'queue' => $queue, 'search' => $search],
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
         );
         $counts = (new CatalogBackgroundJobCountCache($this->config))->remember(
@@ -86,7 +89,8 @@ final class PdoBackgroundJobBrowserQuery
         $total = max(0, (int)($counts[$totalKey] ?? 0));
 
         $selectSql = 'SELECT j.id,j.parent_job_id,j.workflow_unit_key,j.queue_name,j.job_type,j.resource_class,j.resource_limit,j.concurrency_key,j.priority,j.status,'
-            . $operatorStatusSql . ' AS operator_status,j.display_status,j.available_at,j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,'
+            . $operatorStatusSql . ' AS operator_status,' . $operatorStartedSql . ' AS operator_started_at,'
+            . 'j.display_status,j.available_at,j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,'
             . 'j.last_heartbeat_at,j.recovery_count,j.cancel_requested_at,j.cancel_requested_by,j.cancel_reason,'
             . 'j.payload_json,j.progress_json,j.progress_updated_at,j.result_json,j.last_error,j.created_by,j.created_at,'
             . 'j.updated_at,j.completed_at,j.dead_lettered_at FROM ' . $fromSql;
