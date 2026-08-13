@@ -2,11 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Defines the application class `JobWorker` for job worker.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
+ * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker entry points.
  * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
  */
 declare(strict_types=1);
 
@@ -14,10 +11,9 @@ namespace UnrealDb\Catalog\Application\Jobs;
 
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 
-/** Executes one leased job at a time. */
 final class JobWorker
 {
-    /** @param array<string, JobHandler> $handlersByType Exact JobType => handler routes. */
+    /** @param array<string, JobHandler> $handlersByType */
     public function __construct(
         private readonly JobQueue $queue,
         private readonly array $handlersByType,
@@ -31,9 +27,7 @@ final class JobWorker
         self::assertCompleteHandlerMap($handlersByType);
     }
 
-    /**
-     * @return array{status:string,job_id?:int,type?:string,result?:array<string,mixed>,error?:string,error_file?:string,error_line?:int}
-     */
+    /** @return array<string,mixed> */
     public function runOne(): array
     {
         $job = $this->queue->claim($this->queueName, $this->workerId, $this->leaseSeconds);
@@ -67,7 +61,7 @@ final class JobWorker
                 $this->diagnostic('deferred', $job, 'Coordinator released its worker while child work advances.');
                 return ['status' => 'deferred', 'job_id' => $job->id, 'type' => $job->type];
             } catch (\Throwable $leaseError) {
-                $this->reportTerminalFailure($job, $leaseError, 'defer_persist_failed');
+                $this->reportFailure($job, $leaseError, 'defer_persist_failed');
                 return $this->failureResult('lease_lost', $job, $leaseError);
             }
         } catch (JobCancellationRequested $exception) {
@@ -76,6 +70,7 @@ final class JobWorker
             try {
                 $this->queue->cancelClaimed($job, $message);
             } catch (\Throwable $leaseError) {
+                $this->reportFailure($job, $leaseError, 'cancel_persist_failed');
                 return $this->failureResult('lease_lost', $job, $leaseError);
             }
             return $this->failureResult('cancelled', $job, $exception);
@@ -100,12 +95,7 @@ final class JobWorker
                     : 'Handler returned and the job was completed.'
             );
             if ($disposition === 'cancelled') {
-                return [
-                    'status' => 'cancelled',
-                    'job_id' => $job->id,
-                    'type' => $job->type,
-                    'result' => $result,
-                ];
+                return ['status' => 'cancelled', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
             }
             return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
         } catch (\Throwable $completionError) {
@@ -115,7 +105,7 @@ final class JobWorker
                 get_class($completionError) . ': handler already returned successfully; terminal queue state could not be persisted: '
                     . $this->errorText($completionError)
             );
-            $this->reportTerminalFailure($job, $completionError, 'completion_persist_failed');
+            $this->reportFailure($job, $completionError, 'completion_persist_failed');
             return $this->failureResult('completion_persist_failed', $job, $completionError);
         }
     }
@@ -129,9 +119,6 @@ final class JobWorker
         $progress['message'] = 'This worker does not have a handler for ' . $job->type
             . '; leaving the job queued for a newer/restarted worker.';
         try {
-            // A rolling deployment can leave an older worker alive briefly after
-            // newer code has started enqueueing a new job type. That is not job
-            // failure and must not consume an attempt or dead-letter the work.
             $this->queue->defer($job, 30, $progress);
             $this->diagnostic(
                 'handler_unavailable_deferred',
@@ -140,36 +127,32 @@ final class JobWorker
             );
             return ['status' => 'deferred', 'job_id' => $job->id, 'type' => $job->type];
         } catch (\Throwable $leaseError) {
-            $this->reportTerminalFailure($job, $leaseError, 'unknown_handler_defer_failed');
-            return [
-                'status' => 'lease_lost',
-                'job_id' => $job->id,
-                'type' => $job->type,
-            ];
+            $this->reportFailure($job, $leaseError, 'unknown_handler_defer_failed');
+            return ['status' => 'lease_lost', 'job_id' => $job->id, 'type' => $job->type];
         }
     }
 
-    /** @return array{status:string,job_id:int,type:string,error:string,error_file:string,error_line:int} */
+    /** @return array<string,mixed> */
     private function recordFailure(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception, int $delay): array
     {
         try {
             $disposition = $this->queue->fail($job, $exception, $delay);
         } catch (\Throwable $leaseError) {
-            $this->reportTerminalFailure($job, $leaseError, 'lease_lost');
+            $this->reportFailure($job, $leaseError, 'lease_lost');
             return $this->failureResult('lease_lost', $job, $leaseError);
         }
-        if ($disposition === 'dead_letter') {
-            $this->reportTerminalFailure($job, $exception, 'dead_letter');
+
+        // Retryable execution errors are real errors too. Report them immediately
+        // so the operator can see why a worker left one task and moved to another.
+        if ($disposition !== 'cancelled') {
+            $this->reportFailure($job, $exception, $disposition);
         }
         return $this->failureResult($disposition, $job, $exception);
     }
 
-    /** @return array{status:string,job_id:int,type:string,error:string,error_file:string,error_line:int} */
-    private function failureResult(
-        string $status,
-        \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job,
-        \Throwable $exception
-    ): array {
+    /** @return array<string,mixed> */
+    private function failureResult(string $status, \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception): array
+    {
         return [
             'status' => $status,
             'job_id' => $job->id,
@@ -180,18 +163,15 @@ final class JobWorker
         ];
     }
 
-    private function reportTerminalFailure(
-        \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job,
-        \Throwable $exception,
-        string $disposition
-    ): void {
+    private function reportFailure(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception, string $disposition): void
+    {
         if (!$this->failureReporter instanceof \Closure) {
             return;
         }
         try {
             ($this->failureReporter)($job, $exception, $disposition);
         } catch (\Throwable $reportError) {
-            error_log('[UnrealDB worker] terminal failure reporter failed: ' . $reportError->getMessage());
+            error_log('[UnrealDB worker] failure reporter failed: ' . $reportError->getMessage());
         }
     }
 
@@ -217,12 +197,10 @@ final class JobWorker
         if ($unknownTypes !== []) {
             throw new \LogicException('Unknown job handler route(s): ' . implode(', ', $unknownTypes));
         }
-
         $missingTypes = array_values(array_diff(array_keys($knownTypes), array_keys($handlersByType)));
         if ($missingTypes !== []) {
             throw new \LogicException('Missing job handler route(s): ' . implode(', ', $missingTypes));
         }
-
         foreach ($handlersByType as $type => $handler) {
             if (!$handler instanceof JobHandler) {
                 throw new \LogicException('Invalid job handler registered for type: ' . $type);
@@ -233,11 +211,8 @@ final class JobWorker
         }
     }
 
-    private function diagnostic(
-        string $stage,
-        \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job,
-        string $message
-    ): void {
+    private function diagnostic(string $stage, \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, string $message): void
+    {
         if ($this->diagnosticEnabled instanceof \Closure) {
             try {
                 if (!(bool)($this->diagnosticEnabled)()) {
