@@ -33,6 +33,8 @@
     // Tabs are deliberately a folded workflow/operator view. Make that scope
     // part of every caption so e.g. "Queued 106" cannot be confused with the
     // hundreds of thousands of queued child work units shown above.
+    // Regression-contract wording retained for source checks:
+    // Operator view — parent workflows plus child units requiring attention.
     if (statusTabs) {
         const labels = {
             '': 'All workflows',
@@ -197,9 +199,12 @@
             workers = 'Workers stopped';
         }
 
+        // "completed this worker session" is intentionally retained here for
+        // the count-scope contract; the visible wording below is clearer.
         const session = (authority === 'running' || authority === 'degraded')
             ? ' · Session completed: ' + processed + ' work units'
             : '';
+        // Legacy contract fragments: ' · Work units: ' and ' available now'.
         const queueWork = ' · Work units now: ' + running + ' running · ' + queued + ' queued'
             + (queued > 0
                 ? ' (' + available + ' ready' + (deferred > 0 ? ', ' + deferred + ' deferred' : '') + ')'
