@@ -16,8 +16,12 @@ final class PdoJobClaimer
 {
     private ?string $databaseIdentity = null;
 
-    public function __construct(private readonly PDO $db)
-    {
+    public function __construct(
+        private readonly PDO $db,
+        ?PdoJobRecovery $legacyRecovery = null
+    ) {
+        // The second argument is retained temporarily for constructor compatibility.
+        // Time-based recovery is deliberately not performed during claim.
     }
 
     public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob
@@ -26,10 +30,9 @@ final class PdoJobClaimer
         $workerId = PdoJobQueueSupport::requiredIdentifier($workerId, 'worker id');
         $leaseSeconds = max(15, min($leaseSeconds, 6 * 3600));
 
-        // IMPORTANT: a timestamp must never steal a live job from its worker.
-        // Running jobs are recovered only when detached-worker liveness proves
-        // that their owning process is gone. The token assigned below is an
-        // ownership/CAS guard; lease_expires_at remains legacy diagnostics only.
+        // A timestamp must never steal a live job from its worker. Running jobs
+        // are recovered only after detached-worker liveness proves the owning
+        // process is gone. The token assigned below is an ownership/CAS guard.
 
         $blockedClasses = [];
         $blockedKeys = [];
@@ -159,9 +162,6 @@ final class PdoJobClaimer
         }
 
         try {
-            // Do not erase progress_json here. It is durable recovery state, not
-            // merely presentation data. The handler receives the prior snapshot
-            // through ClaimedJob::resumeProgress and overwrites it as work advances.
             $update = $this->db->prepare(
                 'UPDATE ue_background_jobs SET status="running",attempts=attempts+1,worker_id=?,lease_token=?,leased_at=?,'
                 . 'lease_expires_at=?,last_heartbeat_at=?,updated_at=? '
