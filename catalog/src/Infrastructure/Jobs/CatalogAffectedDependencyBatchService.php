@@ -17,12 +17,14 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogAffectedDependencyBatchService
 {
     public const MAX_BATCH_SIZE = 250;
+    private const FILE_CONTENTION_ATTEMPTS = 4;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -71,7 +73,7 @@ final class CatalogAffectedDependencyBatchService
             $affectedFileId = $fileIds[$index];
             $failure = null;
             try {
-                $result = $rebuilder->rebuildForPackages($affectedFileId, [$packageName], false);
+                $result = $this->rebuildWithContentionRetry($rebuilder, $affectedFileId, $packageName);
                 if (!empty($result['skipped_missing_file'])) {
                     $skippedIds[$affectedFileId] = true;
                 } else {
@@ -84,7 +86,13 @@ final class CatalogAffectedDependencyBatchService
                 }
             } catch (Throwable $error) {
                 $failure = $error;
-                $this->recordFailure($job, $affectedFileId, $packageName, $error);
+                // Transient database contention is an execution condition, not a
+                // corrupt-file/system-error event. It receives an isolated retry
+                // without polluting the system error log. Non-contention failures
+                // remain visible for diagnosis.
+                if (!PdoContention::retryable($error)) {
+                    $this->recordFailure($job, $affectedFileId, $packageName, $error);
+                }
                 try {
                     $queue->enqueue(
                         $job->queue,
@@ -128,7 +136,9 @@ final class CatalogAffectedDependencyBatchService
                 $dependenciesChanged,
                 $containersRewritten,
                 $failure instanceof Throwable
-                    ? 'Affected file #' . $affectedFileId . ' failed in the batch; queued an isolated retry and continuing.'
+                    ? (PdoContention::retryable($failure)
+                        ? 'Affected file #' . $affectedFileId . ' remained contended after local retries; queued an isolated retry and continuing.'
+                        : 'Affected file #' . $affectedFileId . ' failed in the batch; queued an isolated retry and continuing.')
                     : 'Targeted dependency batch ' . $done . '/' . $total . ' for ' . $packageName . '.'
             );
 
@@ -174,6 +184,24 @@ final class CatalogAffectedDependencyBatchService
             'dependencies_changed' => $dependenciesChanged,
             'containers_rewritten' => $containersRewritten,
         ];
+    }
+
+    /** @return array<string,mixed> */
+    private function rebuildWithContentionRetry(
+        PdoCatalogDependencyRebuilder $rebuilder,
+        int $fileId,
+        string $packageName
+    ): array {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $rebuilder->rebuildForPackages($fileId, [$packageName], false);
+            } catch (Throwable $error) {
+                if (!PdoContention::retryable($error) || $attempt >= self::FILE_CONTENTION_ATTEMPTS) {
+                    throw $error;
+                }
+                usleep(PdoContention::backoffMicros($attempt, 25000));
+            }
+        }
     }
 
     /** @return list<int> */
