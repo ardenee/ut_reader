@@ -12,8 +12,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
-use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
@@ -31,7 +31,6 @@ function profiled_chunk_original_name_from_state(array $state): string
 }
 
 try {
-    $application = catalog_api_application();
     catalog_api_require_admin(false);
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         JsonResponse::error('method_not_allowed', 'Only POST is supported.', 405);
@@ -42,34 +41,55 @@ try {
     if ($userId < 1) {
         JsonResponse::error('unauthorized', 'Administrator authentication is required.', 401);
     }
+
+    // Chunk writes and assembly can be slow. Authentication/CSRF are complete,
+    // so release PHP's per-session lock before any file or database operation.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
+    $config = catalog_config();
     $action = strtolower(trim((string)($_POST['action'] ?? '')));
-    $store = new CatalogChunkedUploadStore($application->config);
+    $batchId = strtolower(trim((string)($_POST['batch_id'] ?? '')));
+    $batchStore = new CatalogProfiledUploadBatchStore($config);
+    $store = new CatalogChunkedUploadStore($config);
 
     if ($action === 'init') {
-        (new CatalogChunkedUploadCleanup($application->config))->pruneIncomplete();
-
         $gameId = (int)($_POST['game_id'] ?? 0);
         $originalName = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], trim((string)($_POST['original_name'] ?? ''))));
         $originalName = rtrim(trim($originalName), ' .');
-        $game = $gameId > 0 ? catalog_one(
-            $application->db,
-            'SELECT g.id,p.engine_key FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
-            [$gameId]
-        ) : null;
-        if (!$game) {
-            JsonResponse::error('invalid_game', 'Chunked upload requires a target game with an active profile.', 400);
+
+        $engineKey = '';
+        if ($batchId !== '') {
+            $batch = $batchStore->info($batchId, $userId);
+            if ((string)($batch['status'] ?? '') !== 'uploading' || (int)($batch['game_id'] ?? 0) !== $gameId) {
+                JsonResponse::error('invalid_batch', 'Chunked upload does not match the active upload batch.', 409);
+            }
+            $engineKey = (string)($batch['engine_key'] ?? '');
+        } else {
+            $db = catalog_db($config);
+            $game = $gameId > 0 ? catalog_one(
+                $db,
+                'SELECT g.id,p.engine_key FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
+                [$gameId]
+            ) : null;
+            if (!$game) {
+                JsonResponse::error('invalid_game', 'Chunked upload requires a target game with an active profile.', 400);
+            }
+            $engineKey = (string)($game['engine_key'] ?? '');
         }
+
         if ($originalName === '') {
             JsonResponse::error('invalid_name', 'Chunked upload filename is missing.', 400);
         }
 
         $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
-        if ($isPak && preg_match('/^UE[45]/i', trim((string)($game['engine_key'] ?? ''))) !== 1) {
+        if ($isPak && preg_match('/^UE[45]/i', trim($engineKey)) !== 1) {
             JsonResponse::error('invalid_game', 'PAK container upload requires a UE4 or UE5 target game.', 400);
         }
 
         $fileSize = (int)($_POST['file_size'] ?? 0);
-        $normalLimit = max(1, (int)($application->config['max_upload_bytes'] ?? 0));
+        $normalLimit = max(1, (int)($config['max_upload_bytes'] ?? 0));
         if (!$isPak && ($fileSize < 1 || $fileSize > $normalLimit)) {
             JsonResponse::error(
                 'file_too_large',
@@ -78,6 +98,8 @@ try {
             );
         }
 
+        // Stale chunk cleanup is maintenance work. Never recursively scan/prune
+        // upload storage from a live file-init request.
         $storageName = $isPak
             ? $originalName
             : 'package-' . substr(hash('sha256', $originalName), 0, 24) . '.pak';
@@ -117,12 +139,36 @@ try {
 
     if ($action === 'complete') {
         $uploadId = (string)($_POST['upload_id'] ?? '');
-        $deferWorkerStart = (string)($_POST['defer_worker_start'] ?? '0') === '1';
         $state = $store->complete($userId, $uploadId);
-        $queue = new CatalogProfiledUploadQueue($application->db, $application->config);
         $originalName = profiled_chunk_original_name_from_state($state);
         $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
 
+        if ($batchId !== '') {
+            $batch = $batchStore->info($batchId, $userId);
+            if ((string)($batch['status'] ?? '') !== 'uploading'
+                || (int)($batch['game_id'] ?? 0) !== (int)($state['game_id'] ?? 0)) {
+                JsonResponse::error('invalid_batch', 'Completed chunk does not match the active upload batch.', 409);
+            }
+            $item = $batchStore->append($userId, $batchId, [
+                'kind' => $isPak ? 'pak' : 'package',
+                'staged_path' => 'chunk-upload:' . $uploadId,
+                'original_name' => $originalName,
+                'source_relative_path' => (string)$state['relative_path'],
+                'size' => (int)$state['file_size'],
+                'game_id' => (int)$state['game_id'],
+            ]);
+            JsonResponse::send([
+                'ok' => true,
+                'staged' => $item,
+                'upload' => $state,
+                'background_job_created' => false,
+            ], 201);
+        }
+
+        // Compatibility path for older/non-batch clients.
+        $deferWorkerStart = (string)($_POST['defer_worker_start'] ?? '0') === '1';
+        $db = catalog_db($config);
+        $queue = new CatalogProfiledUploadQueue($db, $config);
         if ($isPak) {
             $job = $queue->enqueueChunkedPak(
                 (int)$state['game_id'],
@@ -151,8 +197,8 @@ try {
         $workerError = '';
         if (!$deferWorkerStart) {
             try {
-                $worker = (new CatalogDetachedWorker($application->config))->start(
-                    (string)($application->config['queue']['name'] ?? 'catalog'),
+                $worker = (new CatalogDetachedWorker($config))->start(
+                    (string)($config['queue']['name'] ?? 'catalog'),
                     10000
                 );
             } catch (Throwable $error) {
