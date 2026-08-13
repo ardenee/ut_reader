@@ -22,6 +22,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogCompactMetadataRepairJobHandler implements JobHandler
 {
@@ -75,6 +76,7 @@ final class CatalogCompactMetadataRepairJobHandler implements JobHandler
                 ));
                 $stage = 'compact_repair_reimport';
             } else {
+                CatalogSystemErrorRecorder::resolveCompactMetadataProvider($fileId);
                 $context->checkpoint($this->progress(
                     'compact_repair_dependency_plan',
                     55,
@@ -121,6 +123,7 @@ final class CatalogCompactMetadataRepairJobHandler implements JobHandler
                     'Compact metadata still does not verify after reparsing file #' . $fileId . '.'
                 );
             }
+            CatalogSystemErrorRecorder::resolveCompactMetadataProvider($fileId);
             $repaired = true;
             $context->checkpoint($this->progress(
                 'compact_repair_dependency_plan',
