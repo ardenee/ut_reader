@@ -55,12 +55,14 @@ final class PdoBackgroundJobBrowserQuery
         // A parent coordinator can deliberately defer itself while its durable
         // child units execute. To an operator that is still one in-progress job,
         // not a queued job repeatedly jumping in and out of Running.
-        $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" '
-            . 'AND EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1) '
-            . 'THEN "running" ELSE j.status END';
-        $operatorStartedSql = 'CASE WHEN EXISTS(SELECT 1 FROM ue_background_jobs started_child WHERE started_child.parent_job_id=j.id LIMIT 1) '
-            . 'THEN (SELECT MIN(started_child2.created_at) FROM ue_background_jobs started_child2 WHERE started_child2.parent_job_id=j.id) '
-            . 'ELSE j.leased_at END';
+        $hasWorkflowSql = 'EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1)';
+        $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" AND ' . $hasWorkflowSql
+            . ' THEN "running" ELSE j.status END';
+        // For workflow parents, created_at is a stable, cheap elapsed-time anchor.
+        // It intentionally avoids MIN(created_at) scans over tens of thousands of
+        // child units on every two-second status refresh. Simple non-workflow jobs
+        // continue to use the current claim time.
+        $operatorStartedSql = 'CASE WHEN ' . $hasWorkflowSql . ' THEN j.created_at ELSE j.leased_at END';
 
         if ($status !== '') {
             if (in_array($status, ['queued', 'running'], true)) {
@@ -78,7 +80,7 @@ final class PdoBackgroundJobBrowserQuery
         }
 
         $countsCacheKey = json_encode(
-            ['scope' => 'parent-jobs-v4', 'queue' => $queue, 'search' => $search],
+            ['scope' => 'parent-jobs-v5', 'queue' => $queue, 'search' => $search],
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
         );
         $counts = (new CatalogBackgroundJobCountCache($this->config))->remember(
