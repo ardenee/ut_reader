@@ -11,7 +11,8 @@ final class JobDeferred extends \RuntimeException
     /** @param array<string,mixed> $progress */
     public function __construct(
         public readonly int $delaySeconds,
-        public readonly array $progress = []
+        public readonly array $progress = [],
+        public readonly bool $retainWorkerAffinity = true
     ) {
         parent::__construct('Background workflow deferred without failure.');
     }
