@@ -1,18 +1,21 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the application class `JobWorker` for job worker.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker entry points.
- * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
+ * Purpose: Executes durable jobs while keeping a worker attached to one root workflow until it finishes or blocks.
+ * Role: Application-layer orchestration shared by detached workers and other job runners.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Application\Jobs;
 
+use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 final class JobWorker
 {
+    private ?int $preferredRootJobId = null;
+    private bool $requirePreferredRoot = false;
+
     /** @param array<string, JobHandler> $handlersByType */
     public function __construct(
         private readonly JobQueue $queue,
@@ -30,14 +33,32 @@ final class JobWorker
     /** @return array<string,mixed> */
     public function runOne(): array
     {
-        $job = $this->queue->claim($this->queueName, $this->workerId, $this->leaseSeconds);
+        $job = $this->queue->claim(
+            $this->queueName,
+            $this->workerId,
+            $this->leaseSeconds,
+            $this->preferredRootJobId,
+            $this->requirePreferredRoot
+        );
         if ($job === null) {
-            return ['status' => 'idle'];
+            return [
+                'status' => 'idle',
+                'root_job_id' => $this->preferredRootJobId,
+                'affinity_held' => $this->requirePreferredRoot,
+            ];
         }
 
-        $this->diagnostic('claimed', $job, 'Worker claimed the job row.');
+        $rootJobId = $job->rootJobId();
+        $this->retainAffinity($rootJobId);
+        $this->diagnostic(
+            'claimed',
+            $job,
+            'Worker claimed the job row for root job #' . $rootJobId . '.'
+        );
+
         $handler = $this->findHandler($job->type);
         if ($handler === null) {
+            $this->releaseAffinity();
             return $this->deferUnknownJobType($job);
         }
 
@@ -58,9 +79,27 @@ final class JobWorker
         } catch (JobDeferred $deferred) {
             try {
                 $this->queue->defer($job, $deferred->delaySeconds, $deferred->progress);
-                $this->diagnostic('deferred', $job, 'Coordinator released its worker while child work advances.');
-                return ['status' => 'deferred', 'job_id' => $job->id, 'type' => $job->type];
+                if ($deferred->retainWorkerAffinity) {
+                    $this->retainAffinity($rootJobId);
+                } else {
+                    $this->releaseAffinity();
+                }
+                $this->diagnostic(
+                    'deferred',
+                    $job,
+                    $deferred->retainWorkerAffinity
+                        ? 'Coordinator released its current row but kept worker affinity with root job #' . $rootJobId . '.'
+                        : 'Coordinator released its worker because the root workflow is blocked.'
+                );
+                return [
+                    'status' => 'deferred',
+                    'job_id' => $job->id,
+                    'root_job_id' => $rootJobId,
+                    'type' => $job->type,
+                    'affinity_held' => $deferred->retainWorkerAffinity,
+                ];
             } catch (\Throwable $leaseError) {
+                $this->releaseAffinity();
                 $this->reportFailure($job, $leaseError, 'defer_persist_failed');
                 return $this->failureResult('lease_lost', $job, $leaseError);
             }
@@ -70,9 +109,11 @@ final class JobWorker
             try {
                 $this->queue->cancelClaimed($job, $message);
             } catch (\Throwable $leaseError) {
+                $this->releaseAffinity();
                 $this->reportFailure($job, $leaseError, 'cancel_persist_failed');
                 return $this->failureResult('lease_lost', $job, $leaseError);
             }
+            $this->releaseAffinity();
             return $this->failureResult('cancelled', $job, $exception);
         } catch (\Throwable $exception) {
             $this->diagnostic(
@@ -82,7 +123,11 @@ final class JobWorker
                     . str_replace('\\', '/', $exception->getFile()) . ':' . $exception->getLine()
             );
             $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
-            return $this->recordFailure($job, $exception, $delay);
+            $failure = $this->recordFailure($job, $exception, $delay);
+            // A genuine execution failure is the explicit boundary where this
+            // worker is allowed to move on. The error has already been recorded.
+            $this->releaseAffinity();
+            return $failure;
         }
 
         try {
@@ -92,13 +137,39 @@ final class JobWorker
                 $job,
                 $disposition === 'cancelled'
                     ? 'Handler returned successfully, but a prior cancellation request won the terminal transition.'
-                    : 'Handler returned and the job was completed.'
+                    : 'Handler returned and the queue row completed.'
             );
+
             if ($disposition === 'cancelled') {
-                return ['status' => 'cancelled', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
+                $this->releaseAffinity();
+                return [
+                    'status' => 'cancelled',
+                    'job_id' => $job->id,
+                    'root_job_id' => $rootJobId,
+                    'type' => $job->type,
+                    'result' => $result,
+                ];
             }
-            return ['status' => 'completed', 'job_id' => $job->id, 'type' => $job->type, 'result' => $result];
+
+            // Finishing a child unit does not finish its parent workflow. Keep the
+            // same worker on that root. Finishing the root row itself is the point
+            // where the worker advances to another queued job.
+            if ($job->parentJobId === null) {
+                $this->releaseAffinity();
+            } else {
+                $this->retainAffinity($rootJobId);
+            }
+
+            return [
+                'status' => 'completed',
+                'job_id' => $job->id,
+                'root_job_id' => $rootJobId,
+                'type' => $job->type,
+                'result' => $result,
+                'affinity_held' => $job->parentJobId !== null,
+            ];
         } catch (\Throwable $completionError) {
+            $this->releaseAffinity();
             $this->diagnostic(
                 'completion_persist_failed',
                 $job,
@@ -111,7 +182,7 @@ final class JobWorker
     }
 
     /** @return array{status:string,job_id:int,type:string} */
-    private function deferUnknownJobType(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job): array
+    private function deferUnknownJobType(ClaimedJob $job): array
     {
         $progress = $job->resumeProgress;
         $progress['queue_wait_reason'] = 'handler_unavailable';
@@ -133,7 +204,7 @@ final class JobWorker
     }
 
     /** @return array<string,mixed> */
-    private function recordFailure(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception, int $delay): array
+    private function recordFailure(ClaimedJob $job, \Throwable $exception, int $delay): array
     {
         try {
             $disposition = $this->queue->fail($job, $exception, $delay);
@@ -142,8 +213,6 @@ final class JobWorker
             return $this->failureResult('lease_lost', $job, $leaseError);
         }
 
-        // Retryable execution errors are real errors too. Report them immediately
-        // so the operator can see why a worker left one task and moved to another.
         if ($disposition !== 'cancelled') {
             $this->reportFailure($job, $exception, $disposition);
         }
@@ -151,11 +220,12 @@ final class JobWorker
     }
 
     /** @return array<string,mixed> */
-    private function failureResult(string $status, \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception): array
+    private function failureResult(string $status, ClaimedJob $job, \Throwable $exception): array
     {
         return [
             'status' => $status,
             'job_id' => $job->id,
+            'root_job_id' => $job->rootJobId(),
             'type' => $job->type,
             'error' => $this->errorText($exception),
             'error_file' => str_replace('\\', '/', $exception->getFile()),
@@ -163,7 +233,19 @@ final class JobWorker
         ];
     }
 
-    private function reportFailure(\UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, \Throwable $exception, string $disposition): void
+    private function retainAffinity(int $rootJobId): void
+    {
+        $this->preferredRootJobId = max(1, $rootJobId);
+        $this->requirePreferredRoot = true;
+    }
+
+    private function releaseAffinity(): void
+    {
+        $this->preferredRootJobId = null;
+        $this->requirePreferredRoot = false;
+    }
+
+    private function reportFailure(ClaimedJob $job, \Throwable $exception, string $disposition): void
     {
         if (!$this->failureReporter instanceof \Closure) {
             return;
@@ -211,7 +293,7 @@ final class JobWorker
         }
     }
 
-    private function diagnostic(string $stage, \UnrealDb\Catalog\Domain\Jobs\ClaimedJob $job, string $message): void
+    private function diagnostic(string $stage, ClaimedJob $job, string $message): void
     {
         if ($this->diagnosticEnabled instanceof \Closure) {
             try {
@@ -227,6 +309,7 @@ final class JobWorker
             'worker_id' => $this->workerId,
             'queue' => $this->queueName,
             'job_id' => $job->id,
+            'root_job_id' => $job->rootJobId(),
             'job_type' => $job->type,
             'stage' => $stage,
             'message' => trim($message) !== '' ? $message : 'Worker diagnostic message was empty.',
