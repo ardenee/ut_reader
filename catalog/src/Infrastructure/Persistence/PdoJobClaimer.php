@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Selects and leases the next runnable durable background job.
+ * Purpose: Selects and assigns the next runnable durable background job to one worker.
  * Why: Claiming must scale across worker processes while preserving resource-class and concurrency-key limits.
  * Role: Infrastructure persistence collaborator used by PdoJobQueue.
  */
@@ -16,10 +16,8 @@ final class PdoJobClaimer
 {
     private ?string $databaseIdentity = null;
 
-    public function __construct(
-        private readonly PDO $db,
-        private readonly PdoJobRecovery $recovery
-    ) {
+    public function __construct(private readonly PDO $db)
+    {
     }
 
     public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob
@@ -28,7 +26,10 @@ final class PdoJobClaimer
         $workerId = PdoJobQueueSupport::requiredIdentifier($workerId, 'worker id');
         $leaseSeconds = max(15, min($leaseSeconds, 6 * 3600));
 
-        $this->recoverExpiredLeasesIfCoordinator($queue);
+        // IMPORTANT: a timestamp must never steal a live job from its worker.
+        // Running jobs are recovered only when detached-worker liveness proves
+        // that their owning process is gone. The token assigned below is an
+        // ownership/CAS guard; lease_expires_at remains legacy diagnostics only.
 
         $blockedClasses = [];
         $blockedKeys = [];
@@ -176,7 +177,7 @@ final class PdoJobClaimer
                 (int)$row['id'],
             ]);
             if ($update->rowCount() !== 1) {
-                throw new \RuntimeException('Job claim lost before lease update.');
+                throw new \RuntimeException('Job claim lost before ownership update.');
             }
 
             $this->db->commit();
@@ -218,19 +219,6 @@ final class PdoJobClaimer
         );
         $statement->execute([$queue, $concurrencyKey]);
         return (bool)$statement->fetchColumn();
-    }
-
-    private function recoverExpiredLeasesIfCoordinator(string $queue): void
-    {
-        $lockName = $this->coordinationLockName('recovery', $queue, 'expired-leases');
-        if (!$this->acquireLock($lockName, 0)) {
-            return;
-        }
-        try {
-            $this->recovery->recoverExpiredLeases($queue);
-        } finally {
-            $this->releaseLock($lockName);
-        }
     }
 
     private function coordinationLockName(string $kind, string $queue, string $value): string
