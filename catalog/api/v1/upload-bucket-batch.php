@@ -28,6 +28,13 @@ try {
         JsonResponse::error('unauthorized', 'Administrator authentication is required.', 401);
     }
 
+    // Queue finalisation can touch many uploaded files. Authentication and CSRF
+    // are complete, so do not serialize the administrator's other page requests
+    // behind this operation via PHP's session lock.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+
     $payload = catalog_api_json_body();
     $rawIds = $payload['upload_ids'] ?? [];
     if (!is_array($rawIds)) {
