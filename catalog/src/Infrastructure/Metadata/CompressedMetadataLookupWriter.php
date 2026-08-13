@@ -11,14 +11,34 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
 use PDO;
 use RuntimeException;
+use Throwable;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
 final class CompressedMetadataLookupWriter
 {
     private const TERM_BATCH_SIZE = 350;
     private const WRITE_BATCH_SIZE = 500;
+    private const TERM_CONTENTION_ATTEMPTS = 8;
 
     public function __construct(private readonly PDO $db)
     {
+    }
+
+    /**
+     * Prime the complete shared term dictionary before a file-owned metadata
+     * transaction begins. Every term needed by both lookup writers is inserted
+     * here in one deterministic global order. Each INSERT is autocommitted, so
+     * ue_terms locks are never held while a file's larger projections are being
+     * deleted/reinserted.
+     *
+     * @param array<string,mixed> $snapshot
+     */
+    public function primeSnapshotTerms(array $snapshot, int &$sqlBatches): void
+    {
+        if ($this->db->inTransaction()) {
+            throw new RuntimeException('Compact term dictionary priming must run outside a snapshot transaction.');
+        }
+        $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
     }
 
     /** @param array<string,mixed> $snapshot */
@@ -86,6 +106,8 @@ final class CompressedMetadataLookupWriter
                 $values[] = $className;
             }
         }
+        // During the atomic file transaction this is now read-only. The complete
+        // dictionary was primed before the transaction began.
         $termIds = $this->resolveTermIds($values, $sqlBatches);
 
         $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
@@ -225,6 +247,53 @@ final class CompressedMetadataLookupWriter
         return $labels;
     }
 
+    /** @param array<string,mixed> $snapshot @return list<string> */
+    private function snapshotTermValues(array $snapshot): array
+    {
+        $values = [];
+        $paths = (array)($snapshot['paths'] ?? []);
+
+        foreach ((array)($snapshot['exports'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $index = (int)($row['export_index'] ?? -1);
+            $values[] = (string)($row['object_name'] ?? '');
+            $values[] = (string)($index >= 0 ? ($paths['exports'][$index]['local'] ?? '') : '');
+            $className = trim((string)($row['class_name'] ?? ''));
+            if ($className !== '') {
+                $values[] = $className;
+            }
+        }
+
+        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $values[] = (string)($row['object_name'] ?? '');
+            $classPackage = trim((string)($row['class_package'] ?? ''));
+            $className = trim((string)($row['class_name'] ?? ''));
+            if ($classPackage !== '') {
+                $values[] = $classPackage;
+            }
+            if ($className !== '') {
+                $values[] = $className;
+            }
+        }
+
+        foreach ((array)($snapshot['dependencies'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $values[] = (string)($row['required_package'] ?? '');
+            $values[] = (string)($row['required_object_path'] ?? '');
+            $values[] = (string)($row['resolution_source'] ?? '');
+            $values[] = (string)($row['resolution_confidence'] ?? '');
+        }
+
+        return $values;
+    }
+
     /** @param list<string> $values @return array<string,int> */
     private function resolveTermIds(array $values, int &$sqlBatches): array
     {
@@ -249,24 +318,26 @@ final class CompressedMetadataLookupWriter
             return [];
         }
 
-        // ue_terms is a shared unique lookup touched by every import. Acquire its
-        // unique-index locks in one global hash/length order so overlapping term
-        // sets cannot take the same locks in parser-dependent opposite orders.
         ksort($terms, SORT_STRING);
 
-        foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
-            $placeholders = [];
-            $arguments = [];
-            foreach ($chunk as $term) {
-                $placeholders[] = '(?,?,?,?)';
-                array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+        // Shared dictionary writes happen only outside a file-owned transaction.
+        // Inside the atomic snapshot transaction resolution is read-only, which
+        // prevents unrelated file writers from forming ue_terms lock cycles.
+        if (!$this->db->inTransaction()) {
+            foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
+                $placeholders = [];
+                $arguments = [];
+                foreach ($chunk as $term) {
+                    $placeholders[] = '(?,?,?,?)';
+                    array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+                }
+                $this->executeWithContentionRetry(
+                    'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
+                        . implode(',', $placeholders),
+                    $arguments
+                );
+                $sqlBatches++;
             }
-            $statement = $this->db->prepare(
-                'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
-                . implode(',', $placeholders)
-            );
-            $statement->execute($arguments);
-            $sqlBatches++;
         }
 
         $resolved = [];
@@ -309,6 +380,23 @@ final class CompressedMetadataLookupWriter
             );
         }
         return $resolved;
+    }
+
+    /** @param list<mixed> $arguments */
+    private function executeWithContentionRetry(string $sql, array $arguments): void
+    {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                $statement = $this->db->prepare($sql);
+                $statement->execute($arguments);
+                return;
+            } catch (Throwable $error) {
+                if (!PdoContention::retryable($error) || $attempt >= self::TERM_CONTENTION_ATTEMPTS) {
+                    throw $error;
+                }
+                usleep(PdoContention::backoffMicros($attempt, 10000));
+            }
+        }
     }
 
     private function termKey(string $value): string
