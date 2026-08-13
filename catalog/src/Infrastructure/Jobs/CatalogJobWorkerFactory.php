@@ -99,11 +99,13 @@ final class CatalogJobWorkerFactory
         $maintenance = new CatalogMaintenanceJobHandler($db, $config);
         $fullSync = new CatalogFullSyncJobHandler($db, $trustedImportConfig);
         $fullSyncUnit = new CatalogFullSyncUnitJobHandler($db, $trustedImportConfig);
+        $compactMetadataRepair = new CatalogCompactMetadataRepairJobHandler($db, $trustedImportConfig);
 
         $handlersByType = [
             JobType::FULL_SYNC_GAME => $fullSync,
             JobType::FULL_SYNC_FILE => $fullSyncUnit,
             JobType::FULL_SYNC_DEPENDENCY_FILE => $fullSyncUnit,
+            JobType::REPAIR_COMPACT_METADATA_FILE => $compactMetadataRepair,
             JobType::REBUILD_GAME_DEPENDENCIES => $dependencyRefresh,
             JobType::REBUILD_FILE_DEPENDENCIES => $dependencyRefresh,
             JobType::REBUILD_AFFECTED_DEPENDENCIES => $affectedDependencyRefresh,
