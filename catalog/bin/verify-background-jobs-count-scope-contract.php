@@ -15,6 +15,7 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $ui = $read('assets/background-jobs-async-cleanup.js');
+$bridge = $read('assets/background-jobs-cursor-bridge.js');
 $displayQuery = $read('src/Infrastructure/Persistence/PdoBackgroundJobOffsetQuery.php');
 $operationalQuery = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php');
 $checks = [];
@@ -30,7 +31,7 @@ $check(
     'queue_selector_is_navigation_not_stale_telemetry',
     str_contains($ui, 'The queue selector is navigation, not telemetry')
         && str_contains($ui, 'option.textContent = queueName')
-        && str_contains($ui, 'Live work-unit counts are shown in the worker status line'),
+        && str_contains($ui, 'Live raw work-unit counts are shown in the worker status line'),
     'The queue selector must not keep server-rendered counts that immediately diverge from live polling.'
 );
 $check(
@@ -41,25 +42,32 @@ $check(
 );
 $check(
     'raw_work_units_use_authoritative_live_counts',
-    str_contains($ui, 'worker.queue_counts')
-        && str_contains($ui, "'Work units: '")
-        && str_contains($ui, "' available now'")
+    str_contains($bridge, 'const counts = worker.queue_counts || {}')
+        && str_contains($bridge, "String(counts.running || 0)")
+        && str_contains($bridge, "String(counts.queued || 0)")
         && str_contains($operationalQuery, 'SUM(status="queued") queued')
         && str_contains($operationalQuery, 'SUM(status="running") running')
         && str_contains($operationalQuery, 'available_at<=UTC_TIMESTAMP()'),
-    'Live running/queued/available counts must come from the raw durable queue-unit read model.'
+    'Live active/queued counts must come from the raw durable queue-unit read model used by the authoritative worker-status endpoint.'
 );
 $check(
-    'count_clarity_reuses_existing_worker_poll',
-    str_contains($ui, 'Reuse the status request the established client already makes')
-        && str_contains($ui, "url.includes(workerStatusUrl)")
-        && str_contains($ui, 'response.clone().json()'),
-    'Count clarity must not add another two-second database/status polling request.'
+    'duplicate_pool_summary_is_hidden',
+    str_contains($ui, "document.getElementById('jobs-worker-pool-state')")
+        && str_contains($ui, 'poolState.hidden = true')
+        && str_contains($ui, "poolState.setAttribute('aria-hidden', 'true')"),
+    'The page must show one worker-process summary, not the worker banner plus a second Pool x/y label.'
 );
 $check(
-    'worker_processed_label_has_scope',
-    str_contains($ui, 'completed this worker session'),
-    'The processed counter is a worker-session completion counter, not a queue total, and must be labelled as such.'
+    'worker_processed_scope_is_explained',
+    str_contains($ui, 'processed = jobs completed by the current worker processes')
+        && str_contains($ui, 'active/queued = raw durable work units'),
+    'Processed is a worker-session counter, not a queue total; its scope must be explicit.'
+);
+$check(
+    'clarity_layer_adds_no_status_poll',
+    !str_contains($ui, 'workerStatusUrl')
+        && !str_contains($ui, 'job-worker-status.php'),
+    'The count-clarity layer must reuse the established clients and must not add another status polling request.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
