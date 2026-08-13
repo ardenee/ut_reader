@@ -49,7 +49,7 @@ final class JobResourcePolicy
             self::FULL_SYNC_UNIT => [
                 'label' => 'Full Sync file units',
                 'default' => 2,
-                'description' => 'Independent per-file Full Sync reimport and dependency units. Completed units remain durable and are never replayed after a workflow restart.',
+                'description' => 'Independent per-file Full Sync reimport, compact-metadata repair and dependency units. Completed units remain durable and are never replayed after a workflow restart.',
             ],
             self::AFFECTED_DEPENDENCY_BATCH => [
                 'label' => 'Affected dependency file units',
@@ -118,7 +118,8 @@ final class JobResourcePolicy
                 self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
                 self::PROJECTION_CONCURRENCY_KEY
             ),
-            JobType::FULL_SYNC_FILE => new JobResourceProfile(
+            JobType::FULL_SYNC_FILE,
+            JobType::REPAIR_COMPACT_METADATA_FILE => new JobResourceProfile(
                 self::FULL_SYNC_UNIT,
                 self::configuredLimit(self::FULL_SYNC_UNIT, 2),
                 self::positiveKey('import:file-id:', $payload['file_id'] ?? null)
