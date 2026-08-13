@@ -15,7 +15,7 @@ namespace UnrealDb\Catalog\Domain\Jobs;
 use DateTimeImmutable;
 
 /**
- * Immutable lease returned to a worker after a successful queue claim.
+ * Immutable ownership record returned to a worker after a successful queue claim.
  */
 final class ClaimedJob
 {
@@ -35,7 +35,16 @@ final class ClaimedJob
         public readonly string $resourceClass = 'default',
         public readonly int $resourceLimit = 1,
         public readonly ?string $concurrencyKey = null,
-        public readonly array $resumeProgress = []
+        public readonly array $resumeProgress = [],
+        public readonly ?int $parentJobId = null,
+        public readonly ?string $workflowUnitKey = null
     ) {
+    }
+
+    public function rootJobId(): int
+    {
+        return $this->parentJobId !== null && $this->parentJobId > 0
+            ? $this->parentJobId
+            : $this->id;
     }
 }
