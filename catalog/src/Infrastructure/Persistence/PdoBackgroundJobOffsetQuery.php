@@ -47,9 +47,6 @@ final class PdoBackgroundJobOffsetQuery
             $baseParams[] = $queue;
         }
 
-        // The normal Background Jobs page reports jobs, not internal workflow
-        // units. Child rows remain durable for resume/retry/progress accounting,
-        // but are folded into their parent unless an exact job_id is requested.
         if ($jobId < 1) {
             $baseWhere[] = 'j.parent_job_id IS NULL';
         }
@@ -61,9 +58,12 @@ final class PdoBackgroundJobOffsetQuery
             array_push($baseParams, $like, $like, $like, $like, $like, $like);
         }
 
-        $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" '
-            . 'AND EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1) '
-            . 'THEN "running" ELSE j.status END';
+        $hasRunningChildSql = 'EXISTS(SELECT 1 FROM ue_background_jobs job_child '
+            . 'WHERE job_child.parent_job_id=j.id AND job_child.status="running" LIMIT 1)';
+        $operatorStatusSql = 'CASE '
+            . 'WHEN j.status="running" THEN "running" '
+            . 'WHEN j.parent_job_id IS NULL AND j.status="queued" AND ' . $hasRunningChildSql . ' THEN "running" '
+            . 'ELSE j.status END';
         $where = $baseWhere;
         $params = $baseParams;
         if ($status !== '') {
