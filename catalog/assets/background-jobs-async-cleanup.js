@@ -9,6 +9,7 @@
 
     const bulkUrl = String(root.dataset.bulkUrl || '');
     const actionUrl = String(root.dataset.actionUrl || '');
+    const statusUrl = String(root.dataset.statusUrl || '');
     const workerStatusUrl = String(root.dataset.workerStatusUrl || '');
     const legacyWorkerState = document.getElementById('jobs-worker-state');
     const queueSelect = document.querySelector('.jobs-queue-switcher select[name="queue"]');
@@ -81,6 +82,44 @@
             : null;
     };
 
+    const replacementResponse = (response, body) => {
+        const headers = new Headers(response.headers);
+        headers.set('Content-Type', 'application/json');
+        headers.delete('Content-Length');
+        return new Response(JSON.stringify(body), {
+            status: response.status,
+            statusText: response.statusText,
+            headers: headers
+        });
+    };
+
+    // The durable coordinator row may be internally deferred to `queued` while
+    // its own child workflow units are processing. The API exposes operator_status
+    // so the row badge follows the parent job's real progress without changing the
+    // raw queue status used by cancel/restart controls.
+    const rollUpJobStatus = async (response, url) => {
+        if (statusUrl === '' || !url.includes(statusUrl)) {
+            return response;
+        }
+        const body = await responseBody(response);
+        if (!body || !body.data || !Array.isArray(body.data.jobs)) {
+            return response;
+        }
+        let changed = false;
+        body.data.jobs.forEach((job) => {
+            if (!job || typeof job !== 'object') {
+                return;
+            }
+            const raw = String(job.status || '').toLowerCase();
+            const operator = String(job.operator_status || raw).toLowerCase();
+            if (raw === 'queued' && operator === 'running') {
+                job.display_status = 'running';
+                changed = true;
+            }
+        });
+        return changed ? replacementResponse(response, body) : response;
+    };
+
     const renderWorkerSummary = (worker) => {
         if (!readableWorkerState || !worker || typeof worker !== 'object') {
             return;
@@ -111,7 +150,7 @@
     };
 
     window.fetch = async (input, init) => {
-        const response = await originalFetch(input, init);
+        let response = await originalFetch(input, init);
         if (!response.ok) {
             return response;
         }
@@ -120,6 +159,8 @@
             ? input
             : (input && typeof input.url === 'string' ? input.url : '');
         const action = requestAction(init);
+
+        response = await rollUpJobStatus(response, url);
 
         if (workerStatusUrl !== '' && url.includes(workerStatusUrl)) {
             const data = await responseData(response);
