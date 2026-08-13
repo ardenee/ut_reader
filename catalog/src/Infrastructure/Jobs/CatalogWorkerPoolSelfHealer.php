@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Reconciles missing detached-worker slots from a surviving worker process.
  * Why: A configured pool must not permanently shrink when one detached PHP process exits after the initial launch.
- * Role: Best-effort worker-pool resilience service; never changes durable job state and never runs during an explicit stop.
+ * Role: Best-effort worker-pool resilience service driven by process liveness, never job age.
  */
 declare(strict_types=1);
 
@@ -37,14 +37,43 @@ final class CatalogWorkerPoolSelfHealer
         $active = max(0, (int)($before['active_count'] ?? 0));
         $launching = max(0, (int)($before['launching_count'] ?? 0));
 
-        if (!empty($before['stop_requested']) || $active + $launching >= $desired || !$this->hasReadyWork($queueName)) {
+        if (!empty($before['stop_requested'])) {
             return [
                 'healed' => false,
-                'reason' => !empty($before['stop_requested']) ? 'stop_requested'
-                    : ($active + $launching >= $desired ? 'pool_satisfied' : 'queue_idle'),
+                'reason' => 'stop_requested',
                 'desired_count' => $desired,
                 'active_count' => $active,
                 'launching_count' => $launching,
+                'orphaned_requeued' => 0,
+                'orphaned_cancelled' => 0,
+                'orphaned_dead_lettered' => 0,
+            ];
+        }
+
+        // A running row belongs to its exact detached worker process until that
+        // worker lock disappears. Recover those proven orphans before deciding
+        // whether the queue has ready work or a replacement process is needed.
+        $orphanRecovery = (new CatalogOrphanedJobRecovery($this->db, $this->config))
+            ->recoverInactiveQueue($queueName);
+        $orphanedRequeued = max(0, (int)($orphanRecovery['requeued'] ?? 0));
+        $orphanedCancelled = max(0, (int)($orphanRecovery['cancelled'] ?? 0));
+        $orphanedDeadLettered = max(0, (int)($orphanRecovery['dead_lettered'] ?? 0));
+
+        $before = $launcher->status($queueName, false);
+        $desired = max(1, (int)($before['desired_count'] ?? $desired));
+        $active = max(0, (int)($before['active_count'] ?? 0));
+        $launching = max(0, (int)($before['launching_count'] ?? 0));
+
+        if ($active + $launching >= $desired || !$this->hasReadyWork($queueName)) {
+            return [
+                'healed' => false,
+                'reason' => $active + $launching >= $desired ? 'pool_satisfied' : 'queue_idle',
+                'desired_count' => $desired,
+                'active_count' => $active,
+                'launching_count' => $launching,
+                'orphaned_requeued' => $orphanedRequeued,
+                'orphaned_cancelled' => $orphanedCancelled,
+                'orphaned_dead_lettered' => $orphanedDeadLettered,
             ];
         }
 
@@ -56,6 +85,9 @@ final class CatalogWorkerPoolSelfHealer
                 'desired_count' => $desired,
                 'active_count' => $active,
                 'launching_count' => $launching,
+                'orphaned_requeued' => $orphanedRequeued,
+                'orphaned_cancelled' => $orphanedCancelled,
+                'orphaned_dead_lettered' => $orphanedDeadLettered,
             ];
         }
 
@@ -72,6 +104,9 @@ final class CatalogWorkerPoolSelfHealer
                     'desired_count' => $desired,
                     'active_count' => $active,
                     'launching_count' => $launching,
+                    'orphaned_requeued' => $orphanedRequeued,
+                    'orphaned_cancelled' => $orphanedCancelled,
+                    'orphaned_dead_lettered' => $orphanedDeadLettered,
                 ];
             }
 
@@ -86,6 +121,9 @@ final class CatalogWorkerPoolSelfHealer
                 'active_count' => max(0, (int)($after['active_count'] ?? 0)),
                 'launching_count' => max(0, (int)($after['launching_count'] ?? 0)),
                 'started_workers' => max(0, (int)($result['started_workers'] ?? 0)),
+                'orphaned_requeued' => $orphanedRequeued,
+                'orphaned_cancelled' => $orphanedCancelled,
+                'orphaned_dead_lettered' => $orphanedDeadLettered,
             ];
         } finally {
             flock($lock, LOCK_UN);
