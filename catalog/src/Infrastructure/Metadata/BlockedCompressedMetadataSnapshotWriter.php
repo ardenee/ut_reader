@@ -17,10 +17,13 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 
 /** Publishes a complete format-2 snapshot and its MySQL projections atomically. */
 final class BlockedCompressedMetadataSnapshotWriter
 {
+    private const CONTENTION_ATTEMPTS = 5;
+
     public function __construct(
         private readonly PDO $db,
         private readonly string $storageRoot
@@ -53,6 +56,33 @@ final class BlockedCompressedMetadataSnapshotWriter
             throw new RuntimeException('Could not create compact metadata directory: ' . $directory);
         }
 
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                return $this->publishAttempt($snapshot, $built, $bytes, $path, $fileId);
+            } catch (Throwable $error) {
+                if (!PdoContention::retryable($error) || $attempt >= self::CONTENTION_ATTEMPTS) {
+                    throw $error;
+                }
+                // Retry the whole atomic publication. Retrying an individual SQL
+                // statement inside an aborted transaction is unsafe, and the file
+                // replacement must remain coupled to the successful DB projection.
+                usleep(PdoContention::backoffMicros($attempt, 25000));
+            }
+        }
+    }
+
+    /**
+     * @param array<string,mixed> $snapshot
+     * @param array<string,mixed> $built
+     * @return array<string,mixed>
+     */
+    private function publishAttempt(
+        array $snapshot,
+        array $built,
+        string $bytes,
+        string $path,
+        int $fileId
+    ): array {
         $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(8));
         $backupPath = $path . '.bak.' . bin2hex(random_bytes(8));
         $written = file_put_contents($temporaryPath, $bytes, LOCK_EX);
@@ -67,6 +97,7 @@ final class BlockedCompressedMetadataSnapshotWriter
         }
         BlockedCompressedMetadataContainer::verifyBytes($temporaryBytes, $fileId);
 
+        clearstatcache(true, $path);
         $hadExistingFile = is_file($path);
         $published = false;
         $backedUp = false;
@@ -94,10 +125,6 @@ final class BlockedCompressedMetadataSnapshotWriter
                 throw new RuntimeException('Could not publish replacement compact metadata file.');
             }
             $published = true;
-
-            // filesize()/is_file() results for $path may have been cached while the
-            // previous container was still present. The verification below must see
-            // the replacement that was just published at the same stable path.
             clearstatcache(true, $path);
 
             $this->db->commit();
@@ -119,9 +146,8 @@ final class BlockedCompressedMetadataSnapshotWriter
         if ($backedUp && is_file($backupPath)) {
             @unlink($backupPath);
         }
+        @unlink($temporaryPath);
 
-        // Publishing replaces an existing filename in-place. Always invalidate PHP's
-        // stat cache before comparing the on-disk size with ue_file_metadata.
         clearstatcache(true, $path);
         $verified = (new BlockedCompressedMetadataReader($this->db, $this->storageRoot))->verify($fileId);
         return array_merge($verified, [
