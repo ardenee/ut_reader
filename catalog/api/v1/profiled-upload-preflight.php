@@ -13,13 +13,19 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadDuplicatePreflig
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
-    $application = catalog_api_application();
     catalog_api_require_admin(false);
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         JsonResponse::error('method_not_allowed', 'Only POST is supported.', 405);
     }
     catalog_api_require_csrf('profiled_upload_preflight');
+
+    // Authentication and CSRF no longer need the PHP session. Release its
+    // exclusive lock before the database lookup so another page in this browser
+    // can continue independently while a large folder is being preflighted.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
 
     $body = catalog_api_json_body();
     $gameId = (int)($body['game_id'] ?? 0);
@@ -36,6 +42,7 @@ try {
         JsonResponse::error('invalid_size', 'A positive file size is required.', 400);
     }
 
+    $application = catalog_api_application();
     $duplicate = (new CatalogProfiledUploadDuplicatePreflight($application->db))
         ->findVerifiedDuplicate($gameId, $sha1, $fileSize);
 
