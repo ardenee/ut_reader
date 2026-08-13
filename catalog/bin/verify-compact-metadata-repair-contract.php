@@ -25,6 +25,7 @@ $check = static function (string $name, bool $ok, string $detail) use (&$checks,
 $resolver = $read('src/Infrastructure/Persistence/PdoCompactCaseInsensitiveExportResolver.php');
 $reader = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php');
+$recorder = $read('src/Infrastructure/Telemetry/CatalogSystemErrorRecorder.php');
 $jobType = $read('src/Domain/Jobs/JobType.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $policy = $read('src/Domain/Jobs/JobResourcePolicy.php');
@@ -43,8 +44,17 @@ $check(
     str_contains($resolver, 'if ($fileId !== $preferredFileId)')
         && str_contains($resolver, 'self::reportUnreadableProvider($fileId, $error)')
         && str_contains($resolver, 'previous container may legitimately')
-        && str_contains($resolver, '$preferredFileId') ,
+        && str_contains($resolver, '$preferredFileId'),
     'The file currently being finalized/repaired may have no previous container; that transient self-provider miss must not create an open System Error.'
+);
+$check(
+    'repaired_provider_error_is_auto_resolved',
+    str_contains($handler, 'CatalogSystemErrorRecorder::resolveCompactMetadataProvider($fileId)')
+        && str_contains($recorder, 'public static function resolveCompactMetadataProvider(int $fileId)')
+        && str_contains($recorder, 'source_kind="compact-metadata-provider"')
+        && str_contains($recorder, 'error_type="UnreadableCompactMetadataProvider"')
+        && str_contains($recorder, 'JSON_EXTRACT(context_json,"$.provider_file_id")'),
+    'Once a targeted repair positively verifies the provider, its matching operator error must stop appearing as an open fault.'
 );
 $check(
     'reader_distinguishes_missing_from_size_mismatch',
