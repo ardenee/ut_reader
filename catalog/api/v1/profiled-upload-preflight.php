@@ -42,8 +42,11 @@ try {
         JsonResponse::error('invalid_size', 'A positive file size is required.', 400);
     }
 
-    $application = catalog_api_application();
-    $duplicate = (new CatalogProfiledUploadDuplicatePreflight($application->db))
+    // Do not call catalog_api_application() here: CatalogApplication::boot()
+    // starts the PHP session again. This endpoint only needs a read-only PDO.
+    $config = catalog_config();
+    $db = catalog_db($config);
+    $duplicate = (new CatalogProfiledUploadDuplicatePreflight($db))
         ->findVerifiedDuplicate($gameId, $sha1, $fileSize);
 
     JsonResponse::send([
