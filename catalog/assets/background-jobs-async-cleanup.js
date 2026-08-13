@@ -35,7 +35,7 @@
         label.id = 'jobs-operator-view-label';
         label.className = 'muted';
         label.style.margin = '0 0 8px';
-        label.textContent = 'Operator view — parent workflows plus child units requiring attention; routine child units are folded into their parent.';
+        label.textContent = 'Operator view — parent workflows plus child units requiring attention; routine child units are folded into their parent. The live worker banner uses raw work units; “processed” is only completions since the current worker processes started.';
         statusTabs.parentNode.insertBefore(label, statusTabs);
         statusTabs.title = 'These are operator-visible rows, not raw queue work-unit totals.';
     }
