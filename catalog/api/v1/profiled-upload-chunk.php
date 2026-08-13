@@ -16,6 +16,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
+use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 function profiled_chunk_original_name_from_state(array $state): string
@@ -28,6 +29,53 @@ function profiled_chunk_original_name_from_state(array $state): string
         throw new RuntimeException('Completed chunked upload has no usable original filename.');
     }
     return $name;
+}
+
+/** @return list<string> */
+function profiled_chunk_extensions(mixed $raw): array
+{
+    $decoded = is_array($raw) ? $raw : json_decode((string)$raw, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+    $extensions = [];
+    foreach ($decoded as $extension) {
+        $extension = strtolower(ltrim(trim((string)$extension), '.'));
+        if ($extension !== '' && preg_match('/^[a-z0-9_]+$/', $extension) === 1) {
+            $extensions[$extension] = $extension;
+        }
+    }
+    return array_values($extensions);
+}
+
+/** @return array{allowed:bool,is_pak:bool,is_redirect:bool,reason:string} */
+function profiled_chunk_file_policy(string $originalName, string $engineKey, mixed $allowedExtensions): array
+{
+    $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+    $isPak = $extension === 'pak';
+    $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
+    $engineKey = strtoupper(trim($engineKey));
+    if ($isPak) {
+        $allowed = in_array($engineKey, ['UE4', 'UE5'], true);
+        return [
+            'allowed' => $allowed,
+            'is_pak' => true,
+            'is_redirect' => false,
+            'reason' => $allowed ? '' : 'PAK container upload requires a UE4 or UE5 target game.',
+        ];
+    }
+    if ($isRedirect) {
+        return ['allowed' => true, 'is_pak' => false, 'is_redirect' => true, 'reason' => ''];
+    }
+    $allowed = in_array($extension, profiled_chunk_extensions($allowedExtensions), true);
+    return [
+        'allowed' => $allowed,
+        'is_pak' => false,
+        'is_redirect' => false,
+        'reason' => $allowed
+            ? ''
+            : 'File extension .' . ($extension !== '' ? $extension : '(none)') . ' is not allowed by the selected game profile.',
+    ];
 }
 
 try {
@@ -58,49 +106,63 @@ try {
         $gameId = (int)($_POST['game_id'] ?? 0);
         $originalName = basename(str_replace(["\0", '/', '\\'], ['', DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR], trim((string)($_POST['original_name'] ?? ''))));
         $originalName = rtrim(trim($originalName), ' .');
+        if ($originalName === '') {
+            JsonResponse::error('invalid_name', 'Chunked upload filename is missing.', 400);
+        }
 
         $engineKey = '';
+        $allowedExtensions = [];
+        $normalLimit = max(1, (int)($config['max_upload_bytes'] ?? 0));
+        $containerLimit = max($normalLimit, (int)($config['max_container_upload_bytes'] ?? 0));
         if ($batchId !== '') {
             $batch = $batchStore->info($batchId, $userId);
             if ((string)($batch['status'] ?? '') !== 'uploading' || (int)($batch['game_id'] ?? 0) !== $gameId) {
                 JsonResponse::error('invalid_batch', 'Chunked upload does not match the active upload batch.', 409);
             }
             $engineKey = (string)($batch['engine_key'] ?? '');
+            $allowedExtensions = $batch['allowed_extensions'] ?? [];
+            $normalLimit = max(1, (int)($batch['normal_upload_limit_bytes'] ?? $normalLimit));
+            $containerLimit = max(
+                $normalLimit,
+                (int)($batch['container_upload_limit_bytes'] ?? $containerLimit)
+            );
         } else {
             $db = catalog_db($config);
             $game = $gameId > 0 ? catalog_one(
                 $db,
-                'SELECT g.id,p.engine_key FROM ue_games g JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
+                'SELECT g.id,p.engine_key,p.allowed_extensions_json FROM ue_games g '
+                . 'JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
                 [$gameId]
             ) : null;
             if (!$game) {
                 JsonResponse::error('invalid_game', 'Chunked upload requires a target game with an active profile.', 400);
             }
             $engineKey = (string)($game['engine_key'] ?? '');
+            $allowedExtensions = $game['allowed_extensions_json'] ?? '[]';
+            $limits = (new CatalogProgramSettingsStore($db, $config))->uploadLimits();
+            $normalLimit = (int)$limits['normal_upload_limit_bytes'];
+            $containerLimit = (int)$limits['container_upload_limit_bytes'];
         }
 
-        if ($originalName === '') {
-            JsonResponse::error('invalid_name', 'Chunked upload filename is missing.', 400);
-        }
-
-        $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
-        if ($isPak && preg_match('/^UE[45]/i', trim($engineKey)) !== 1) {
-            JsonResponse::error('invalid_game', 'PAK container upload requires a UE4 or UE5 target game.', 400);
+        $policy = profiled_chunk_file_policy($originalName, $engineKey, $allowedExtensions);
+        if (!$policy['allowed']) {
+            JsonResponse::error($policy['is_pak'] ? 'invalid_game' : 'invalid_extension', $policy['reason'], $policy['is_pak'] ? 400 : 415);
         }
 
         $fileSize = (int)($_POST['file_size'] ?? 0);
-        $normalLimit = max(1, (int)($config['max_upload_bytes'] ?? 0));
-        if (!$isPak && ($fileSize < 1 || $fileSize > $normalLimit)) {
+        $limit = $policy['is_pak'] ? $containerLimit : $normalLimit;
+        if ($fileSize < 1 || $fileSize > $limit) {
             JsonResponse::error(
                 'file_too_large',
-                'File exceeds the configured normal upload limit of ' . catalog_bytes($normalLimit) . '.',
+                'File exceeds the configured ' . ($policy['is_pak'] ? 'container' : 'normal upload')
+                    . ' limit of ' . catalog_bytes($limit) . '.',
                 413
             );
         }
 
         // Stale chunk cleanup is maintenance work. Never recursively scan/prune
         // upload storage from a live file-init request.
-        $storageName = $isPak
+        $storageName = $policy['is_pak']
             ? $originalName
             : 'package-' . substr(hash('sha256', $originalName), 0, 24) . '.pak';
         $relativePath = trim((string)($_POST['relative_path'] ?? ''));
@@ -118,7 +180,7 @@ try {
             (string)($_POST['strict_profile'] ?? '1') === '1'
         );
         $state['logical_original_name'] = $originalName;
-        $state['upload_kind'] = $isPak ? 'pak' : 'package';
+        $state['upload_kind'] = $policy['is_pak'] ? 'pak' : 'package';
         JsonResponse::send(['ok' => true, 'upload' => $state], 200);
     }
 
@@ -168,6 +230,7 @@ try {
         // Compatibility path for older/non-batch clients.
         $deferWorkerStart = (string)($_POST['defer_worker_start'] ?? '0') === '1';
         $db = catalog_db($config);
+        $config = (new CatalogProgramSettingsStore($db, $config))->applyUploadLimits($config);
         $queue = new CatalogProfiledUploadQueue($db, $config);
         if ($isPak) {
             $job = $queue->enqueueChunkedPak(
