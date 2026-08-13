@@ -53,7 +53,7 @@ $checks = [
     ],
     'duplicate preflight does not reopen application session' => [
         'path' => $root . '/api/v1/profiled-upload-preflight.php',
-        'needle' => 'catalog_api_application()',
+        'needle' => '$application = catalog_api_application();',
         'present' => false,
     ],
     'batch store is append-only during file ingress' => [
