@@ -34,6 +34,7 @@ final class JobType
     public const REPAIR_UNVERIFIED_METADATA = 'catalog.repair_unverified_metadata';
     public const REFRESH_UNVERIFIED_GAME_MATCHES = 'catalog.refresh_unverified_game_matches';
     public const CROSS_GAME_COPY_BATCH = 'catalog.cross_game_copy_batch';
+    public const PROFILED_UPLOAD_BATCH = 'catalog.profiled_upload_batch';
     public const GENERATE_MOD_PACKAGE = 'catalog.generate_mod_package';
     public const EXPORT_GAME_BACKUP = 'catalog.export_game_backup';
     public const IMPORT_GAME_BACKUP = 'catalog.import_game_backup';
@@ -71,6 +72,7 @@ final class JobType
             self::REPAIR_UNVERIFIED_METADATA,
             self::REFRESH_UNVERIFIED_GAME_MATCHES,
             self::CROSS_GAME_COPY_BATCH,
+            self::PROFILED_UPLOAD_BATCH,
             self::GENERATE_MOD_PACKAGE,
             self::EXPORT_GAME_BACKUP,
             self::IMPORT_GAME_BACKUP,
