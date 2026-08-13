@@ -39,6 +39,14 @@ $check(
     'Unreadable provider metadata must not abort every consumer; it must be skipped and reported once.'
 );
 $check(
+    'self_provider_repair_is_not_operator_error',
+    str_contains($resolver, 'if ($fileId !== $preferredFileId)')
+        && str_contains($resolver, 'self::reportUnreadableProvider($fileId, $error)')
+        && str_contains($resolver, 'previous container may legitimately')
+        && str_contains($resolver, '$preferredFileId') ,
+    'The file currently being finalized/repaired may have no previous container; that transient self-provider miss must not create an open System Error.'
+);
+$check(
     'reader_distinguishes_missing_from_size_mismatch',
     str_contains($reader, 'clearstatcache(true, $path)')
         && str_contains($reader, 'Blocked metadata file is missing: ')
