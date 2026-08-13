@@ -59,11 +59,22 @@ final class PdoJobQueue implements JobQueue
         );
     }
 
-    public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob
-    {
+    public function claim(
+        string $queue,
+        string $workerId,
+        int $leaseSeconds,
+        ?int $preferredRootJobId = null,
+        bool $requirePreferredRoot = false
+    ): ?ClaimedJob {
         for ($attempt = 1; ; $attempt++) {
             try {
-                return $this->claimer->claim($queue, $workerId, $leaseSeconds);
+                return $this->claimer->claim(
+                    $queue,
+                    $workerId,
+                    $leaseSeconds,
+                    $preferredRootJobId,
+                    $requirePreferredRoot
+                );
             } catch (\Throwable $exception) {
                 if (!PdoJobQueueSupport::retryableContention($exception)
                     || $attempt >= self::CLAIM_CONTENTION_ATTEMPTS) {
