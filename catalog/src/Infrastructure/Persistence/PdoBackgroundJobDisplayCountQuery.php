@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Aggregates Background Jobs display groups for the operator job view.
- * Why: Internal workflow units roll up into their parent job instead of becoming separate headline counters.
+ * Why: Internal workflow units roll up into their parent job without making a waiting workflow look actively executed.
  * Role: Infrastructure query object used by cursor/background-job APIs.
  */
 declare(strict_types=1);
@@ -33,9 +33,17 @@ final class PdoBackgroundJobDisplayCountQuery
             'dead_letter' => 0,
             'cancelled' => 0,
         ];
-        $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" '
-            . 'AND EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1) '
+
+        // "Running" means a worker is executing either the parent itself or one
+        // of its child workflow units right now. Merely having unfinished/created
+        // children is not enough; that parent is waiting and remains queued.
+        $operatorStatusSql = 'CASE '
+            . 'WHEN j.status="running" THEN "running" '
+            . 'WHEN j.parent_job_id IS NULL AND j.status="queued" '
+            . 'AND EXISTS(SELECT 1 FROM ue_background_jobs job_child '
+            . 'WHERE job_child.parent_job_id=j.id AND job_child.status="running" LIMIT 1) '
             . 'THEN "running" ELSE j.status END';
+
         $sql = 'SELECT ' . $operatorStatusSql . ' AS operator_status,j.status,j.display_status,COUNT(*) AS total FROM ' . $fromSql
             . ($whereSql !== '' ? ' WHERE ' . $whereSql : '')
             . ' GROUP BY operator_status,j.status,j.display_status';
