@@ -31,7 +31,7 @@ $check(
     'queue_selector_is_navigation_not_stale_telemetry',
     str_contains($ui, 'The queue selector is navigation, not telemetry')
         && str_contains($ui, 'option.textContent = queueName')
-        && str_contains($ui, 'Live raw work-unit counts are shown in the worker status line'),
+        && str_contains($ui, 'Live work-unit counts are shown in the worker summary'),
     'The queue selector must not keep server-rendered counts that immediately diverge from live polling.'
 );
 $check(
@@ -43,31 +43,34 @@ $check(
 $check(
     'raw_work_units_use_authoritative_live_counts',
     str_contains($bridge, 'const counts = worker.queue_counts || {}')
-        && str_contains($bridge, "String(counts.running || 0)")
-        && str_contains($bridge, "String(counts.queued || 0)")
         && str_contains($operationalQuery, 'SUM(status="queued") queued')
         && str_contains($operationalQuery, 'SUM(status="running") running')
-        && str_contains($operationalQuery, 'available_at<=UTC_TIMESTAMP()'),
-    'Live active/queued counts must come from the raw durable queue-unit read model used by the authoritative worker-status endpoint.'
+        && str_contains($operationalQuery, 'available_at<=UTC_TIMESTAMP()')
+        && str_contains($ui, "const counts = worker.queue_counts")
+        && str_contains($ui, "' · Work units: '")
+        && str_contains($ui, "' available now'"),
+    'The visible summary must use the same raw durable queue-unit counts as the authoritative worker-status endpoint.'
 );
 $check(
-    'duplicate_pool_summary_is_hidden',
-    str_contains($ui, "document.getElementById('jobs-worker-pool-state')")
-        && str_contains($ui, 'poolState.hidden = true')
-        && str_contains($ui, "poolState.setAttribute('aria-hidden', 'true')"),
-    'The page must show one worker-process summary, not the worker banner plus a second Pool x/y label.'
+    'one_visible_worker_summary',
+    str_contains($ui, "legacyWorkerState.hidden = true")
+        && str_contains($ui, "readableWorkerState.id = 'jobs-worker-summary-readable'")
+        && str_contains($ui, "document.getElementById('jobs-worker-pool-state')")
+        && str_contains($ui, 'poolState.hidden = true'),
+    'Stable/bridge internal status elements may remain for control logic, but only one worker/process/work-unit summary should be visible.'
 );
 $check(
-    'worker_processed_scope_is_explained',
-    str_contains($ui, 'processed = jobs completed by the current worker processes')
-        && str_contains($ui, 'active/queued = raw durable work units'),
-    'Processed is a worker-session counter, not a queue total; its scope must be explicit.'
+    'worker_processed_scope_is_explicit',
+    str_contains($ui, 'completed this worker session'),
+    'Processed/completed must be labelled as a worker-session counter, not a queue total.'
 );
 $check(
-    'clarity_layer_adds_no_status_poll',
-    !str_contains($ui, 'workerStatusUrl')
-        && !str_contains($ui, 'job-worker-status.php'),
-    'The count-clarity layer must reuse the established clients and must not add another status polling request.'
+    'clarity_reuses_existing_status_response',
+    str_contains($ui, 'Reuse the worker-status response already requested by the established')
+        && str_contains($ui, "url.includes(workerStatusUrl)")
+        && str_contains($ui, 'response.clone().json()')
+        && !str_contains($ui, 'originalFetch(workerStatusUrl'),
+    'The readable summary must consume the existing worker-status response and must not create another polling request.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
