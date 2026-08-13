@@ -46,12 +46,12 @@ final class PdoBackgroundJobOffsetQuery
             $baseWhere[] = 'j.queue_name=?';
             $baseParams[] = $queue;
         }
-        // Keep compatibility pages usable when a workflow owns thousands of
-        // successful/running child units. Explicit ID/search requests can still
-        // inspect any child, while the normal view surfaces only top-level jobs
-        // and child units that require operator attention.
-        if ($jobId < 1 && $search === '') {
-            $baseWhere[] = '(j.parent_job_id IS NULL OR j.status IN ("failed","dead_letter","cancelled"))';
+
+        // The normal Background Jobs page reports jobs, not internal workflow
+        // units. Child rows remain durable for resume/retry/progress accounting,
+        // but are folded into their parent unless an exact job_id is requested.
+        if ($jobId < 1) {
+            $baseWhere[] = 'j.parent_job_id IS NULL';
         }
         if ($search !== '') {
             $baseWhere[] = '(CAST(j.id AS CHAR) LIKE ? OR j.job_type LIKE ? OR COALESCE(j.concurrency_key,"") LIKE ? '
