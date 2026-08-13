@@ -12,7 +12,6 @@ require_once __DIR__ . '/_bootstrap.php';
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
-use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadQueue;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
@@ -26,6 +25,29 @@ function profiled_upload_batch_name(string $value): string
         throw new InvalidArgumentException('Uploaded filename is invalid.');
     }
     return $value;
+}
+
+/** @return array{keys:list<string>,complete:bool} */
+function profiled_upload_duplicate_snapshot(PDO $db, int $gameId): array
+{
+    // One indexed read at batch initialization replaces thousands of per-file DB
+    // round trips while the browser is actively transferring data.
+    $limit = 250000;
+    $statement = $db->prepare(
+        'SELECT CONCAT(file_size,":",LOWER(sha1)) identity_key FROM ue_files '
+        . 'WHERE game_id=? AND scan_status="verified" AND sha1 IS NOT NULL AND sha1<>"" '
+        . 'ORDER BY id LIMIT ' . ($limit + 1)
+    );
+    $statement->execute([$gameId]);
+    $keys = array_values(array_filter(
+        array_map('strval', $statement->fetchAll(PDO::FETCH_COLUMN) ?: []),
+        static fn(string $key): bool => $key !== ''
+    ));
+    $complete = count($keys) <= $limit;
+    if (!$complete) {
+        array_pop($keys);
+    }
+    return ['keys' => $keys, 'complete' => $complete];
 }
 
 try {
@@ -63,10 +85,13 @@ try {
         if (!$game || trim((string)($game['engine_key'] ?? '')) === '') {
             JsonResponse::error('invalid_game', 'Choose a target game with an active profile.', 400);
         }
+        $snapshot = profiled_upload_duplicate_snapshot($db, $gameId);
         $batch = $batchStore->create($userId, $gameId, $strictProfile, (string)$game['engine_key']);
         JsonResponse::send([
             'ok' => true,
             'batch' => $batch,
+            'duplicate_keys' => $snapshot['keys'],
+            'duplicate_snapshot_complete' => $snapshot['complete'],
             'message' => 'Upload batch initialized without creating background import jobs.',
         ], 201);
     }
@@ -95,9 +120,12 @@ try {
         $sourceRelativePath = trim(str_replace(["\0", '\\'], ['', '/'], (string)($_POST['relative_path'] ?? $originalName)), '/');
         $size = filesize($temporaryPath);
         $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
-        $limit = $isPak
-            ? (new CatalogProfiledUploadQueue(catalog_db($config), $config))->containerLimitBytes()
-            : max(1, (int)($config['max_upload_bytes'] ?? 0));
+        $normalLimit = max(1, (int)($config['max_upload_bytes'] ?? 0));
+        $containerLimit = max(
+            $normalLimit,
+            (int)($config['max_container_upload_bytes'] ?? (64 * 1024 * 1024 * 1024))
+        );
+        $limit = $isPak ? $containerLimit : $normalLimit;
         if ($size === false || $size < 1 || (int)$size > $limit) {
             JsonResponse::error(
                 'file_too_large',
