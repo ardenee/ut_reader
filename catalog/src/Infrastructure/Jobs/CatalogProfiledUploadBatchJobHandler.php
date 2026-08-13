@@ -117,14 +117,14 @@ final class CatalogProfiledUploadBatchJobHandler implements JobHandler
             $context->defer(1, $progress);
         }
 
-        $context->checkpoint($progress + [
+        $context->checkpoint(array_merge($progress, [
             'stage' => 'complete',
             'done' => max(1, $total),
             'total' => max(1, $total),
             'percent' => 100,
             'message' => 'Upload batch expansion complete: ' . number_format($planned)
                 . ' import job(s) queued after browser upload completion.',
-        ]);
+        ]));
 
         return [
             'operation' => 'profiled_upload_batch',
