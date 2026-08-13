@@ -4,9 +4,14 @@
  * Verify selected verified-file format-2 containers and optionally queue one
  * durable repair workflow for each unreadable container.
  *
+ * The storage root is always emitted in the result. When source and deployed
+ * catalog trees are separate, --storage-root allows diagnostics to target the
+ * deployed metadata tree without copying the CLI script there first.
+ *
  * Examples:
  *   php catalog/bin/verify-compact-metadata-files.php --file-ids=180119,190014
- *   php catalog/bin/verify-compact-metadata-files.php --file-ids=180119,190014 --queue-repair
+ *   php catalog/bin/verify-compact-metadata-files.php --file-ids=180119,190014 --storage-root="D:\\Apache24\\htdocs\\unrealdb\\catalog\\storage"
+ *   php catalog/bin/verify-compact-metadata-files.php --file-ids=180119,190014 --storage-root="D:\\Apache24\\htdocs\\unrealdb\\catalog\\storage" --queue-repair
  */
 declare(strict_types=1);
 
@@ -22,10 +27,10 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
-$options = getopt('', ['file-ids:', 'queue-repair']);
+$options = getopt('', ['file-ids:', 'storage-root:', 'queue-repair']);
 $rawIds = trim((string)($options['file-ids'] ?? ''));
 if ($rawIds === '') {
-    fwrite(STDERR, "Usage: php catalog/bin/verify-compact-metadata-files.php --file-ids=1,2,3 [--queue-repair]\n");
+    fwrite(STDERR, "Usage: php catalog/bin/verify-compact-metadata-files.php --file-ids=1,2,3 [--storage-root=PATH] [--queue-repair]\n");
     exit(2);
 }
 
@@ -49,11 +54,20 @@ if (count($fileIds) > 1000) {
 
 $config = catalog_config();
 $db = catalog_db($config);
-$storageRoot = trim((string)($config['storage_path'] ?? ''));
+$configuredStorageRoot = trim((string)($config['storage_path'] ?? ''));
+$storageRootOverride = trim((string)($options['storage-root'] ?? ''));
+$storageRoot = $storageRootOverride !== '' ? $storageRootOverride : $configuredStorageRoot;
 if ($storageRoot === '') {
-    fwrite(STDERR, "Catalog storage_path is not configured.\n");
+    fwrite(STDERR, "Catalog storage_path is not configured and no --storage-root was supplied.\n");
     exit(2);
 }
+$normalizedStorageRoot = rtrim(str_replace('/', DIRECTORY_SEPARATOR, $storageRoot), "\\/");
+if ($normalizedStorageRoot === '') {
+    fwrite(STDERR, "The selected storage root is invalid.\n");
+    exit(2);
+}
+$storageRoot = $normalizedStorageRoot;
+
 $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
 $queueRepair = array_key_exists('queue-repair', $options);
 $reader = new BlockedCompressedMetadataReader($db, $storageRoot);
@@ -145,6 +159,9 @@ foreach ($fileIds as $fileId) {
 
 $result = [
     'ok' => $bad === 0 && $missing === 0,
+    'storage_root' => $storageRoot,
+    'storage_root_source' => $storageRootOverride !== '' ? 'command_line' : 'catalog_config',
+    'configured_storage_root' => $configuredStorageRoot,
     'checked' => count($fileIds),
     'valid' => count($fileIds) - $bad - $missing,
     'invalid' => $bad,
