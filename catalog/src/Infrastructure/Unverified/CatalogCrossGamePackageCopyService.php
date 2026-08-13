@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Queues a verified package from one sibling game into another when it exactly satisfies missing dependency objects.
- * Why: Cross-game dependency repair must create a real game-scoped verified row without duplicating trusted source bytes before queueing.
+ * Purpose: Queues a verified package from one sibling game into another together with its resolved dependency closure.
+ * Why: Cross-game dependency repair must create real game-scoped verified rows without forcing an import/re-scan loop for every newly revealed dependency.
  * Role: Mutation service behind the dependency cross-examine administration workflow.
  */
 declare(strict_types=1);
@@ -39,6 +39,155 @@ final class CatalogCrossGamePackageCopyService
                 . (int)($candidate['target_existing_file_id'] ?? 0)
                 . '. Rebuild the target dependencies instead of copying the file again.'
             );
+        }
+
+        // Resolve the source game's dependency graph before queueing the selected
+        // root. This mirrors generated-package traversal: resolved/package_only
+        // links are followed transitively, while common and unresolved links are
+        // not invented. Shared dependencies dedupe through the normal import key.
+        $closure = (new CatalogCrossGameDependencyClosurePlanner($this->db))
+            ->plan($sourceFileId, $targetGameId);
+        $dependencyJobIds = [];
+        $dependencyQueued = 0;
+        $dependencyDeduplicated = 0;
+        $dependencyAlreadyPresent = 0;
+
+        foreach ($closure['file_ids'] as $dependencyFileId) {
+            $dependency = $this->sourceForTarget((int)$dependencyFileId, $targetGameId);
+            if ($dependency === null) {
+                throw new \RuntimeException(
+                    'A resolved source dependency is no longer a verified same-engine package: file #'
+                    . (int)$dependencyFileId . '.'
+                );
+            }
+            if (!empty($dependency['already_in_target'])) {
+                $dependencyAlreadyPresent++;
+                continue;
+            }
+
+            $queued = $this->queueCandidate(
+                $dependency,
+                $targetGameId,
+                $userId,
+                5,
+                $sourceFileId,
+                true
+            );
+            $dependencyJobIds[(int)$queued['job_id']] = (int)$queued['job_id'];
+            if (!empty($queued['deduplicated'])) {
+                $dependencyDeduplicated++;
+            } else {
+                $dependencyQueued++;
+            }
+        }
+
+        // Queue the selected package after its dependency jobs. A slightly lower
+        // scheduling precedence than dependency imports prevents the root from
+        // needlessly exposing a fresh wave of missing rows while the closure is
+        // still waiting in the same queue.
+        $rootQueued = $this->queueCandidate(
+            $candidate,
+            $targetGameId,
+            $userId,
+            6,
+            $sourceFileId,
+            false
+        );
+
+        ksort($dependencyJobIds, SORT_NUMERIC);
+        return [
+            'source_file_id' => $sourceFileId,
+            'source_game' => (string)$candidate['source_game_name'],
+            'target_game_id' => $targetGameId,
+            'target_game' => (string)$candidate['target_game_name'],
+            'package_name' => (string)$candidate['package_name'],
+            'original_name' => trim((string)($candidate['original_name'] ?? '')),
+            'exact_object_matches' => (int)$candidate['exact_object_matches'],
+            'target_missing_count' => (int)$candidate['target_missing_count'],
+            'job_id' => (int)$rootQueued['job_id'],
+            'deduplicated' => !empty($rootQueued['deduplicated']),
+            'dependency_file_count' => count($closure['file_ids']),
+            'dependency_jobs_queued' => $dependencyQueued,
+            'dependency_jobs_deduplicated' => $dependencyDeduplicated,
+            'dependency_files_already_in_target' => $dependencyAlreadyPresent,
+            'dependency_job_ids' => array_values(array_filter(
+                $dependencyJobIds,
+                static fn(int $id): bool => $id > 0
+            )),
+            'unresolved_dependency_count' => (int)$closure['missing_count'],
+            'common_dependency_count' => (int)$closure['common_count'],
+            'package_only_dependency_count' => (int)$closure['package_only_count'],
+        ];
+    }
+
+    /** @return array<string,mixed>|null */
+    private function sourceForTarget(int $sourceFileId, int $targetGameId): ?array
+    {
+        $source = \catalog_one(
+            $this->db,
+            'SELECT f.id,f.game_id,f.package_name,f.original_name,f.relative_path,f.extension,f.file_size,'
+            . 'f.md5,f.sha1,f.package_guid,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
+            . 'g.name source_game_name,COALESCE(p.engine_key,"") source_engine,m.format_version metadata_format_version '
+            . 'FROM ue_files f '
+            . 'JOIN ue_games g ON g.id=f.game_id '
+            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
+            . 'WHERE f.id=? AND f.scan_status="verified" LIMIT 1',
+            [$sourceFileId]
+        );
+        if (!$source || (int)$source['game_id'] === $targetGameId) {
+            return null;
+        }
+        if ((int)($source['metadata_format_version'] ?? 0) !== 2) {
+            return null;
+        }
+
+        $target = \catalog_one(
+            $this->db,
+            'SELECT g.id,g.name,COALESCE(p.engine_key,"") engine_key '
+            . 'FROM ue_games g '
+            . 'LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 '
+            . 'WHERE g.id=? LIMIT 1',
+            [$targetGameId]
+        );
+        if (!$target
+            || strcasecmp(trim((string)$source['source_engine']), trim((string)$target['engine_key'])) !== 0) {
+            return null;
+        }
+
+        $targetExistingFileId = 0;
+        $md5 = strtolower(trim((string)($source['md5'] ?? '')));
+        if ($md5 !== '') {
+            $statement = $this->db->prepare(
+                'SELECT id FROM ue_files WHERE game_id=? AND scan_status="verified" AND md5=? LIMIT 1'
+            );
+            $statement->execute([$targetGameId, $md5]);
+            $targetExistingFileId = (int)($statement->fetchColumn() ?: 0);
+        }
+
+        return $source + [
+            'target_game_id' => $targetGameId,
+            'target_game_name' => (string)$target['name'],
+            'already_in_target' => $targetExistingFileId > 0,
+            'target_existing_file_id' => $targetExistingFileId ?: null,
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $candidate
+     * @return array{job_id:int,deduplicated:bool}
+     */
+    private function queueCandidate(
+        array $candidate,
+        int $targetGameId,
+        ?int $userId,
+        int $priority,
+        int $rootSourceFileId,
+        bool $dependencySupport
+    ): array {
+        $sourceFileId = (int)($candidate['id'] ?? 0);
+        if ($sourceFileId < 1) {
+            throw new \RuntimeException('Cross-game source package ID is unavailable.');
         }
 
         $sourcePath = $this->physicalPath((string)($candidate['relative_path'] ?? ''));
@@ -78,6 +227,8 @@ final class CatalogCrossGamePackageCopyService
             'user_id' => $userId,
             'size' => $fileSize,
             'cross_game_source_file_id' => $sourceFileId,
+            'cross_game_root_source_file_id' => $rootSourceFileId,
+            'cross_game_dependency_support' => $dependencySupport,
         ];
         $md5 = strtolower(trim((string)($sourceRow['md5'] ?? $candidate['md5'] ?? '')));
         $identity = $md5 !== '' ? $md5 : (string)$sourceFileId;
@@ -98,7 +249,7 @@ final class CatalogCrossGamePackageCopyService
             $queueName,
             JobType::IMPORT_STAGED_PACKAGE,
             $payload,
-            5,
+            max(1, min(100, $priority)),
             null,
             $dedupeKey,
             $userId,
@@ -106,14 +257,6 @@ final class CatalogCrossGamePackageCopyService
         );
 
         return [
-            'source_file_id' => $sourceFileId,
-            'source_game' => (string)$candidate['source_game_name'],
-            'target_game_id' => $targetGameId,
-            'target_game' => (string)$candidate['target_game_name'],
-            'package_name' => (string)$candidate['package_name'],
-            'original_name' => $originalName,
-            'exact_object_matches' => (int)$candidate['exact_object_matches'],
-            'target_missing_count' => (int)$candidate['target_missing_count'],
             'job_id' => $jobId,
             'deduplicated' => $existingJobId > 0 && $existingJobId === $jobId,
         ];
