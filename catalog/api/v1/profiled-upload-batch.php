@@ -14,6 +14,7 @@ use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 function profiled_upload_batch_name(string $value): string
@@ -25,6 +26,71 @@ function profiled_upload_batch_name(string $value): string
         throw new InvalidArgumentException('Uploaded filename is invalid.');
     }
     return $value;
+}
+
+/** @return list<string> */
+function profiled_upload_allowed_extensions(mixed $json): array
+{
+    $decoded = is_array($json) ? $json : json_decode((string)$json, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+    $result = [];
+    foreach ($decoded as $extension) {
+        $extension = strtolower(ltrim(trim((string)$extension), '.'));
+        if ($extension !== '' && preg_match('/^[a-z0-9_]+$/', $extension) === 1) {
+            $result[$extension] = $extension;
+        }
+    }
+    $result = array_values($result);
+    sort($result, SORT_NATURAL | SORT_FLAG_CASE);
+    return $result;
+}
+
+/** @return array{allowed:bool,is_pak:bool,is_redirect:bool,extension:string,reason:string} */
+function profiled_upload_batch_file_policy(array $batch, string $originalName): array
+{
+    $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+    $isPak = $extension === 'pak';
+    $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
+    $engine = strtoupper(trim((string)($batch['engine_key'] ?? '')));
+
+    if ($isPak) {
+        $allowed = in_array($engine, ['UE4', 'UE5'], true);
+        return [
+            'allowed' => $allowed,
+            'is_pak' => true,
+            'is_redirect' => false,
+            'extension' => $extension,
+            'reason' => $allowed ? '' : 'PAK container upload requires a UE4 or UE5 target game.',
+        ];
+    }
+    if ($isRedirect) {
+        // Redirect wrappers are transport formats. The decompressed package is
+        // still validated authoritatively by the background import pipeline.
+        return [
+            'allowed' => true,
+            'is_pak' => false,
+            'is_redirect' => true,
+            'extension' => $extension,
+            'reason' => '',
+        ];
+    }
+
+    $allowedExtensions = array_fill_keys(
+        profiled_upload_allowed_extensions($batch['allowed_extensions'] ?? []),
+        true
+    );
+    $allowed = $extension !== '' && isset($allowedExtensions[$extension]);
+    return [
+        'allowed' => $allowed,
+        'is_pak' => false,
+        'is_redirect' => false,
+        'extension' => $extension,
+        'reason' => $allowed
+            ? ''
+            : 'File extension .' . ($extension !== '' ? $extension : '(none)') . ' is not allowed by the selected game profile.',
+    ];
 }
 
 /** @return array{keys:list<string>,complete:bool} */
@@ -78,15 +144,26 @@ try {
         $db = catalog_db($config);
         $game = $gameId > 0 ? catalog_one(
             $db,
-            'SELECT g.id,g.name,COALESCE(p.engine_key,"") engine_key '
+            'SELECT g.id,g.name,COALESCE(p.engine_key,"") engine_key,p.allowed_extensions_json '
             . 'FROM ue_games g LEFT JOIN ue_game_profiles p ON p.id=g.profile_id AND p.is_active=1 WHERE g.id=?',
             [$gameId]
         ) : null;
         if (!$game || trim((string)($game['engine_key'] ?? '')) === '') {
             JsonResponse::error('invalid_game', 'Choose a target game with an active profile.', 400);
         }
+
+        $allowedExtensions = profiled_upload_allowed_extensions($game['allowed_extensions_json'] ?? '[]');
+        $limits = (new CatalogProgramSettingsStore($db, $config))->uploadLimits();
         $snapshot = profiled_upload_duplicate_snapshot($db, $gameId);
-        $batch = $batchStore->create($userId, $gameId, $strictProfile, (string)$game['engine_key']);
+        $batch = $batchStore->create(
+            $userId,
+            $gameId,
+            $strictProfile,
+            (string)$game['engine_key'],
+            $allowedExtensions,
+            (int)$limits['normal_upload_limit_bytes'],
+            (int)$limits['container_upload_limit_bytes']
+        );
         JsonResponse::send([
             'ok' => true,
             'batch' => $batch,
@@ -117,15 +194,18 @@ try {
         }
 
         $originalName = profiled_upload_batch_name((string)($_POST['original_name'] ?? $file['name'] ?? 'upload.bin'));
+        $policy = profiled_upload_batch_file_policy($batch, $originalName);
+        if (!$policy['allowed']) {
+            JsonResponse::error('invalid_extension', $policy['reason'], 415);
+        }
         $sourceRelativePath = trim(str_replace(["\0", '\\'], ['', '/'], (string)($_POST['relative_path'] ?? $originalName)), '/');
         $size = filesize($temporaryPath);
-        $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
-        $normalLimit = max(1, (int)($config['max_upload_bytes'] ?? 0));
+        $normalLimit = max(1, (int)($batch['normal_upload_limit_bytes'] ?? ($config['max_upload_bytes'] ?? 0)));
         $containerLimit = max(
             $normalLimit,
-            (int)($config['max_container_upload_bytes'] ?? (64 * 1024 * 1024 * 1024))
+            (int)($batch['container_upload_limit_bytes'] ?? ($config['max_container_upload_bytes'] ?? 0))
         );
-        $limit = $isPak ? $containerLimit : $normalLimit;
+        $limit = $policy['is_pak'] ? $containerLimit : $normalLimit;
         if ($size === false || $size < 1 || (int)$size > $limit) {
             JsonResponse::error(
                 'file_too_large',
@@ -133,15 +213,12 @@ try {
                 413
             );
         }
-        if ($isPak && preg_match('/^UE[45]/i', (string)($batch['engine_key'] ?? '')) !== 1) {
-            JsonResponse::error('invalid_game', 'PAK container upload requires a UE4 or UE5 target game.', 400);
-        }
 
         $incoming = new CatalogIncomingFileStore($config);
         $staged = $incoming->stageUploadedFile($temporaryPath, $originalName, false);
         try {
             $item = $batchStore->append($userId, $batchId, [
-                'kind' => $isPak ? 'pak' : 'package',
+                'kind' => $policy['is_pak'] ? 'pak' : 'package',
                 'staged_path' => (string)$staged['relative_path'],
                 'original_name' => $originalName,
                 'source_relative_path' => $sourceRelativePath,
