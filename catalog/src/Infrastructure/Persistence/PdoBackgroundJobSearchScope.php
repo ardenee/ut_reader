@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Builds the authoritative Background Jobs queue/search persistence scope shared by list and bulk actions.
- * Why: "Select all matching" must target exactly the same indexed search set the administrator is viewing.
+ * Why: The operator page reports stable top-level jobs; internal workflow units must never inflate or destabilise job counts.
  * Role: Infrastructure query builder; contains no HTTP or mutation behavior.
  */
 declare(strict_types=1);
@@ -25,21 +25,16 @@ final class PdoBackgroundJobSearchScope
     public function build(string $queue, string $search): array
     {
         $fromSql = 'ue_background_jobs j';
-        $where = [];
+        $where = ['j.parent_job_id IS NULL'];
         $params = [];
         if ($queue !== '') {
             $where[] = 'j.queue_name=?';
             $params[] = $queue;
         }
 
-        // Workflow units can number in the tens of thousands. The normal queue
-        // browser is an operator view, not a workflow ledger: show top-level jobs
-        // and child units that require attention. Supplying a search removes this
-        // suppression so a specific child id/file/type remains inspectable.
-        if ($search === '') {
-            $where[] = '(j.parent_job_id IS NULL OR j.status IN ("failed","dead_letter","cancelled"))';
-        }
-
+        // Child workflow units are durable implementation state. They remain
+        // queryable by exact job-id APIs, but the normal browser/search surface
+        // always returns parent jobs so the visible job count is stable.
         if ($search !== '') {
             $projectionAvailable = $this->searchRuntime->synchronize($this->db);
             $booleanSearch = $this->searchRuntime->booleanQuery($search);
