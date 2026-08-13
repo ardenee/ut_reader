@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Builds and executes the live Background Jobs list/count query with keyset pagination.
- * Why: HTTP endpoints should validate/serialize requests rather than construct persistence SQL.
+ * Why: The operator page reports stable parent jobs while internal workflow units roll up into parent progress/status.
  * Role: Infrastructure read model for the Background Jobs browser.
  */
 declare(strict_types=1);
@@ -52,16 +52,30 @@ final class PdoBackgroundJobBrowserQuery
         $whereSql = $baseWhereSql;
         $params = $baseParams;
 
+        // A parent coordinator can deliberately defer itself while its durable
+        // child units execute. To an operator that is still one in-progress job,
+        // not a queued job repeatedly jumping in and out of Running.
+        $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" '
+            . 'AND EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1) '
+            . 'THEN "running" ELSE j.status END';
+
         if ($status !== '') {
-            $condition = CatalogJobDisplayStatus::filterCondition($status, 'j');
+            if (in_array($status, ['queued', 'running'], true)) {
+                $conditionSql = $operatorStatusSql . '=?';
+                $conditionParams = [$status];
+            } else {
+                $condition = CatalogJobDisplayStatus::filterCondition($status, 'j');
+                $conditionSql = $condition['sql'];
+                $conditionParams = $condition['params'];
+            }
             $whereSql = $whereSql !== ''
-                ? '(' . $whereSql . ') AND ' . $condition['sql']
-                : $condition['sql'];
-            array_push($params, ...$condition['params']);
+                ? '(' . $whereSql . ') AND ' . $conditionSql
+                : $conditionSql;
+            array_push($params, ...$conditionParams);
         }
 
         $countsCacheKey = json_encode(
-            ['queue' => $queue, 'search' => $search],
+            ['scope' => 'parent-jobs-v3', 'queue' => $queue, 'search' => $search],
             JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
         );
         $counts = (new CatalogBackgroundJobCountCache($this->config))->remember(
@@ -72,7 +86,7 @@ final class PdoBackgroundJobBrowserQuery
         $total = max(0, (int)($counts[$totalKey] ?? 0));
 
         $selectSql = 'SELECT j.id,j.parent_job_id,j.workflow_unit_key,j.queue_name,j.job_type,j.resource_class,j.resource_limit,j.concurrency_key,j.priority,j.status,'
-            . 'j.display_status,j.available_at,j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,'
+            . $operatorStatusSql . ' AS operator_status,j.display_status,j.available_at,j.attempts,j.max_attempts,j.worker_id,j.leased_at,j.lease_expires_at,'
             . 'j.last_heartbeat_at,j.recovery_count,j.cancel_requested_at,j.cancel_requested_by,j.cancel_reason,'
             . 'j.payload_json,j.progress_json,j.progress_updated_at,j.result_json,j.last_error,j.created_by,j.created_at,'
             . 'j.updated_at,j.completed_at,j.dead_lettered_at FROM ' . $fromSql;
