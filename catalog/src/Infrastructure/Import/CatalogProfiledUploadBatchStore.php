@@ -25,9 +25,19 @@ final class CatalogProfiledUploadBatchStore
         $this->directory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'profiled-upload-batches';
     }
 
-    /** @return array<string,mixed> */
-    public function create(int $userId, int $gameId, bool $strictProfile, string $engineKey): array
-    {
+    /**
+     * @param list<string> $allowedExtensions
+     * @return array<string,mixed>
+     */
+    public function create(
+        int $userId,
+        int $gameId,
+        bool $strictProfile,
+        string $engineKey,
+        array $allowedExtensions = [],
+        int $normalUploadLimitBytes = 0,
+        int $containerUploadLimitBytes = 0
+    ): array {
         if ($userId < 1 || $gameId < 1) {
             throw new \InvalidArgumentException('Upload batch requires an administrator and target game.');
         }
@@ -37,6 +47,27 @@ final class CatalogProfiledUploadBatchStore
             $batchId = bin2hex(random_bytes(32));
         } while (is_file($this->metadataPath($batchId)) || is_file($this->manifestPath($batchId)));
 
+        $extensions = [];
+        foreach ($allowedExtensions as $extension) {
+            $extension = strtolower(trim((string)$extension));
+            $extension = ltrim($extension, '.');
+            if ($extension !== '' && preg_match('/^[a-z0-9_]+$/', $extension) === 1) {
+                $extensions[$extension] = $extension;
+            }
+        }
+        $extensions = array_values($extensions);
+        sort($extensions, SORT_NATURAL | SORT_FLAG_CASE);
+
+        $normalUploadLimitBytes = max(1, $normalUploadLimitBytes > 0
+            ? $normalUploadLimitBytes
+            : (int)($this->config['max_upload_bytes'] ?? (256 * 1024 * 1024)));
+        $containerUploadLimitBytes = max(
+            $normalUploadLimitBytes,
+            $containerUploadLimitBytes > 0
+                ? $containerUploadLimitBytes
+                : (int)($this->config['max_container_upload_bytes'] ?? (64 * 1024 * 1024 * 1024))
+        );
+
         $now = gmdate('Y-m-d H:i:s');
         $metadata = [
             'batch_id' => $batchId,
@@ -44,6 +75,9 @@ final class CatalogProfiledUploadBatchStore
             'game_id' => $gameId,
             'strict_profile' => $strictProfile,
             'engine_key' => strtoupper(trim($engineKey)),
+            'allowed_extensions' => $extensions,
+            'normal_upload_limit_bytes' => $normalUploadLimitBytes,
+            'container_upload_limit_bytes' => $containerUploadLimitBytes,
             'status' => 'uploading',
             'created_at' => $now,
             'updated_at' => $now,
