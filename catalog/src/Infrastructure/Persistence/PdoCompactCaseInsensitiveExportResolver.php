@@ -13,11 +13,16 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use RuntimeException;
+use Throwable;
 use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
+use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class PdoCompactCaseInsensitiveExportResolver
 {
     private const PAGE_SIZE = 5000;
+
+    /** @var array<int,true> */
+    private static array $reportedUnreadableProviders = [];
 
     /**
      * @param list<array{lookup_value:string,package_name:string,local_path:string}> $objectLookups
@@ -96,7 +101,19 @@ final class PdoCompactCaseInsensitiveExportResolver
     ): void {
         foreach ($fileIds as $fileId) {
             for ($start = 0; ; $start += self::PAGE_SIZE) {
-                $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
+                try {
+                    // Long-lived workers may have seen this stable path before a
+                    // concurrent/earlier format-2 replacement. Never let PHP's stat
+                    // cache manufacture a provider size mismatch.
+                    clearstatcache();
+                    $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
+                } catch (Throwable $error) {
+                    // One damaged provider is an issue with that provider, not with
+                    // every consumer that happens to reference it. Skip it, try the
+                    // next verified provider, and surface one actionable System Error.
+                    self::reportUnreadableProvider($fileId, $error);
+                    break;
+                }
                 foreach ($page as $export) {
                     $pathKey = self::key((string)($export['local_path'] ?? ''));
                     $lookupValues = $pendingPaths[$pathKey] ?? null;
@@ -123,6 +140,30 @@ final class PdoCompactCaseInsensitiveExportResolver
                 }
             }
         }
+    }
+
+    private static function reportUnreadableProvider(int $fileId, Throwable $error): void
+    {
+        if ($fileId < 1 || isset(self::$reportedUnreadableProviders[$fileId])) {
+            return;
+        }
+        self::$reportedUnreadableProviders[$fileId] = true;
+
+        CatalogSystemErrorRecorder::record([
+            'source_kind' => 'compact-metadata-provider',
+            'severity' => 'error',
+            'error_type' => 'UnreadableCompactMetadataProvider',
+            'message' => 'Verified provider file #' . $fileId
+                . ' has unreadable format-2 metadata and was skipped during dependency resolution: '
+                . trim($error->getMessage()),
+            'source_file' => $error->getFile(),
+            'source_line' => $error->getLine(),
+            'trace_text' => $error->getTraceAsString(),
+            'context' => [
+                'provider_file_id' => $fileId,
+                'operation' => 'case_insensitive_export_resolution',
+            ],
+        ]);
     }
 
     /** @return list<int> */
