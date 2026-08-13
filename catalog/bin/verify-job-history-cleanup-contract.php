@@ -129,7 +129,7 @@ $check(
 $check(
     'stable_client_still_owns_general_job_ui',
     str_contains($stableClient, "cleanupButton.addEventListener('click'")
-        && str_contains($stableClient, 'applyBulk')
+        && str_contains($stableClient, 'runBulk(')
         && str_contains($cleanupClient, 'all other')
         && str_contains($cleanupClient, 'background-jobs-stable.js'),
     'The compatibility shim should only correct async cleanup notices, not replace the established Background Jobs client.'
