@@ -1,13 +1,9 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Defines the infrastructure class `CatalogOrphanedJobRecovery` for catalog orphaned job recovery.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *       services.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Purpose: Recovers durable jobs whose detached worker process is proven absent.
+ * Why: A running job must never be stolen because a timer elapsed; process ownership is authoritative.
+ * Role: Infrastructure recovery service for detached-worker crashes/orphans.
  */
 declare(strict_types=1);
 
@@ -17,7 +13,7 @@ use PDO;
 use Throwable;
 
 /**
- * Recovers jobs whose detached worker process has disappeared.
+ * Recovers jobs only after their owning detached worker lock is no longer held.
  *
  * A disappeared process is a failed attempt, not a free retry. Repeated fatal
  * crashes therefore reach dead-letter instead of looping forever as running.
@@ -36,39 +32,43 @@ final class CatalogOrphanedJobRecovery
     {
         $queueName = $this->queueName($queueName);
         $launcher = new CatalogDetachedWorker($this->config);
-        $worker = $launcher->status($queueName, true);
-        if (!empty($worker['active'])) {
-            return [
-                'recovered' => false,
-                'reason' => 'worker_active',
-                'requeued' => 0,
-                'cancelled' => 0,
-                'dead_lettered' => 0,
-                'worker' => $worker,
-            ];
+        $workerIds = $this->runningDetachedWorkerIds($queueName);
+        $requeued = 0;
+        $cancelled = 0;
+        $deadLettered = 0;
+        $affected = 0;
+        $inactiveWorkers = 0;
+
+        foreach ($workerIds as $workerId) {
+            $ownedWorker = $launcher->workerForId($queueName, $workerId);
+            if ($ownedWorker !== [] && !empty($ownedWorker['active'])) {
+                continue;
+            }
+
+            // The lock for this exact worker identity is absent. That is the
+            // authoritative orphan signal; heartbeat/lease timestamps are not.
+            $inactiveWorkers++;
+            $state = is_array($ownedWorker['state'] ?? null) ? $ownedWorker['state'] : [];
+            $error = $this->workerStateError(
+                $state,
+                (string)($ownedWorker['log_tail'] ?? ''),
+                'Detached worker ' . $workerId . ' is no longer active; recovering its owned job.'
+            );
+            $result = $this->recoverRows($queueName, $workerId, $error);
+            $affected += (int)$result['affected'];
+            $requeued += (int)$result['requeued'];
+            $cancelled += (int)$result['cancelled'];
+            $deadLettered += (int)$result['dead_lettered'];
         }
 
-        $state = is_array($worker['state'] ?? null) ? $worker['state'] : [];
-        $message = $this->workerStateError($state, (string)($worker['log_tail'] ?? ''));
-        $result = $this->recoverRows($queueName, null, $message);
-
-        if ((int)$result['affected'] > 0) {
-            $launcher->writeState($queueName, array_merge($state, [
-                'status' => 'stopped',
-                'queue' => $queueName,
-                'ended_at' => gmdate('c'),
-                'exit_reason' => 'orphan_recovery',
-                'error' => $message,
-                'orphaned_requeued' => (int)$result['requeued'],
-                'orphaned_cancelled' => (int)$result['cancelled'],
-                'orphaned_dead_lettered' => (int)$result['dead_lettered'],
-            ]));
-            $launcher->clearStopRequest($queueName);
-        }
-
-        return $result + [
-            'recovered' => (int)$result['affected'] > 0,
-            'reason' => (int)$result['affected'] > 0 ? 'orphaned_jobs_recovered' : 'no_detached_orphans',
+        return [
+            'affected' => $affected,
+            'requeued' => $requeued,
+            'cancelled' => $cancelled,
+            'dead_lettered' => $deadLettered,
+            'inactive_workers' => $inactiveWorkers,
+            'recovered' => $affected > 0,
+            'reason' => $affected > 0 ? 'dead_worker_jobs_recovered' : 'no_dead_worker_jobs',
             'worker' => $launcher->status($queueName, true),
         ];
     }
@@ -86,6 +86,25 @@ final class CatalogOrphanedJobRecovery
             'recovered' => true,
             'reason' => 'worker_crash',
         ];
+    }
+
+    /** @return list<string> */
+    private function runningDetachedWorkerIds(string $queueName): array
+    {
+        $statement = $this->db->prepare(
+            'SELECT DISTINCT worker_id FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND status="running" AND worker_id LIKE "detached:%" '
+            . 'AND worker_id IS NOT NULL AND worker_id<>""'
+        );
+        $statement->execute([$queueName]);
+        $ids = [];
+        foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $workerId) {
+            $workerId = trim((string)$workerId);
+            if ($workerId !== '') {
+                $ids[] = $workerId;
+            }
+        }
+        return array_values(array_unique($ids));
     }
 
     /** @return array{affected:int,requeued:int,cancelled:int,dead_lettered:int,error:string} */
@@ -169,7 +188,7 @@ final class CatalogOrphanedJobRecovery
     }
 
     /** @param array<string,mixed> $state */
-    private function workerStateError(array $state, string $logTail): string
+    private function workerStateError(array $state, string $logTail, string $fallback = ''): string
     {
         $error = trim((string)($state['error'] ?? ''));
         if ($error === '') {
@@ -184,7 +203,9 @@ final class CatalogOrphanedJobRecovery
             }
         }
         if ($error === '' || $error === "''" || $error === '""') {
-            $error = 'Detached worker process disappeared unexpectedly without recording a PHP exception message.';
+            $error = trim($fallback) !== ''
+                ? trim($fallback)
+                : 'Detached worker process disappeared unexpectedly without recording a PHP exception message.';
         }
 
         $file = trim((string)($state['error_file'] ?? ''));
