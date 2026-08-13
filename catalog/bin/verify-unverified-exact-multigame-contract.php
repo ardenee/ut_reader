@@ -136,14 +136,24 @@ $checks = [
         'needle' => 'CatalogCrossGamePackageCopyService',
         'present' => false,
     ],
-    'cross-game parent handler revalidates selected providers' => [
+    'cross-game parent creates durable per-source preparation units' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php',
-        'needle' => '$service->queue($sourceFileId, $destinationGameId, $userId)',
+        'needle' => "'source:' . \$sourceFileId",
         'present' => true,
     ],
-    'cross-game parent handler reports ETA' => [
+    'cross-game source unit revalidates before queueing destination import' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php',
+        'needle' => 'new CatalogCrossGamePackageCopyService',
+        'present' => true,
+    ],
+    'cross-game progress projection reports ETA' => [
+        'path' => $root . '/dependency-cross-examine-job.php',
         'needle' => "'eta_seconds'",
+        'present' => true,
+    ],
+    'cross-game progress projection reports real child completion counts' => [
+        'path' => $root . '/dependency-cross-examine-job.php',
+        'needle' => 'cross_game_child_progress(',
         'present' => true,
     ],
     'cross-game copy uses read-only catalog-local source' => [
