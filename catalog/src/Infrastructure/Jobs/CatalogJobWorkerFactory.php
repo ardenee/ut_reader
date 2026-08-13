@@ -21,6 +21,9 @@ use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogJobWorkerFactory
 {
+    // This factory is part of the detached-worker code fingerprint. Keep this
+    // marker so the process-owned queue change forces long-lived workers to
+    // reload after their current job reaches a normal loop boundary.
     /** @param array<string,mixed> $config */
     public static function create(
         PDO $db,
