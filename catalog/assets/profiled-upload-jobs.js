@@ -16,6 +16,8 @@
     const log = document.getElementById('upload-progress-log');
     if (!form || !fileInput || !progress || !window.XMLHttpRequest || !window.fetch) return;
 
+    const batchUrl = progress.dataset.batchUrl || 'api/v1/profiled-upload-batch.php';
+    const batchCsrf = (form.querySelector('[name="csrf"]') || {}).value || '';
     const chunkUrl = progress.dataset.chunkUrl || 'api/v1/profiled-upload-chunk.php';
     const chunkCsrf = progress.dataset.chunkCsrf || '';
     const preflightUrl = progress.dataset.preflightUrl || 'api/v1/profiled-upload-preflight.php';
@@ -23,13 +25,19 @@
     const hashWorkerUrl = progress.dataset.hashWorkerUrl || 'assets/profiled-upload-hash-worker.js';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progress.dataset.chunkBytes || 16 * 1024 * 1024));
     const containerLimit = Math.max(0, Number(progress.dataset.containerLimit || 0));
+    const MAX_LOG_ROWS = 250;
+
+    let activeBatchId = '';
     let activeUploadId = '';
     let activeXhr = null;
     let activeHashWorker = null;
     let activeHashReject = null;
     let cancelRequested = false;
-    let queuedJobIds = [];
+    let batchCancelled = false;
+    let stagedItemCount = 0;
     let stagedHashes = new Map();
+    let verifiedHashes = new Set();
+    let verifiedSnapshotComplete = false;
     let preflightDuplicates = 0;
     let preflightWarningShown = false;
     let batchGameId = '';
@@ -46,8 +54,8 @@
             '.upload-result-duplicate .upload-result-badge { color:#bfdbfe; }',
             '.upload-result-failed,.upload-result-invalid,.upload-result-rejected,.upload-result-unverified,.upload-result-dead_letter,.upload-result-cancelled { border-left-color:#ff6b7a; background:rgba(255,107,122,.08); }',
             '.upload-result-failed .upload-result-badge,.upload-result-invalid .upload-result-badge,.upload-result-rejected .upload-result-badge,.upload-result-unverified .upload-result-badge,.upload-result-dead_letter .upload-result-badge,.upload-result-cancelled .upload-result-badge { color:#fecdd3; }',
-            '.upload-result-queued,.upload-result-running,.upload-result-uploading,.upload-result-skipped { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
-            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge,.upload-result-uploading .upload-result-badge,.upload-result-skipped .upload-result-badge { color:#ffe29a; }'
+            '.upload-result-queued,.upload-result-running,.upload-result-uploading,.upload-result-staged,.upload-result-skipped { border-left-color:#f6c453; background:rgba(246,196,83,.08); }',
+            '.upload-result-queued .upload-result-badge,.upload-result-running .upload-result-badge,.upload-result-uploading .upload-result-badge,.upload-result-staged .upload-result-badge,.upload-result-skipped .upload-result-badge { color:#ffe29a; }'
         ].join('\n');
         document.head.appendChild(style);
     }
@@ -107,6 +115,9 @@
         message.textContent = String(entry.message || '');
         row.appendChild(message);
         log.appendChild(row);
+        while (log.childElementCount > MAX_LOG_ROWS) {
+            log.removeChild(log.firstElementChild);
+        }
         log.scrollTop = log.scrollHeight;
     }
 
@@ -142,31 +153,31 @@
         }
     }
 
-    function requestForm(url, data, onProgress) {
+    function requestForm(url, data, csrf, onProgress, label) {
         return new Promise(function (resolve, reject) {
             const xhr = new XMLHttpRequest();
             activeXhr = xhr;
             xhr.open('POST', url, true);
-            if (chunkCsrf) xhr.setRequestHeader('X-CSRF-Token', chunkCsrf);
+            if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
             if (typeof onProgress === 'function') xhr.upload.onprogress = onProgress;
             xhr.onload = function () {
                 if (activeXhr === xhr) activeXhr = null;
                 let body;
                 try {
-                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Chunked upload request');
+                    body = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), label || 'Upload request');
                 } catch (error) {
                     reject(error);
                     return;
                 }
                 if (xhr.status < 200 || xhr.status >= 300 || !body.ok) {
-                    reject(new Error(responseError(body, 'Chunked upload request failed with HTTP ' + xhr.status + '.')));
+                    reject(new Error(responseError(body, (label || 'Upload request') + ' failed with HTTP ' + xhr.status + '.')));
                     return;
                 }
                 resolve(body);
             };
             xhr.onerror = function () {
                 if (activeXhr === xhr) activeXhr = null;
-                reject(new Error('Upload connection error. The current chunk can be retried.'));
+                reject(new Error((label || 'Upload request') + ' connection error.'));
             };
             xhr.onabort = function () {
                 if (activeXhr === xhr) activeXhr = null;
@@ -176,45 +187,57 @@
         });
     }
 
-    function rememberJob(jobId) {
-        const id = parseInt(jobId || 0, 10);
-        if (id > 0 && !queuedJobIds.includes(id)) queuedJobIds.push(id);
-    }
-
-    async function releaseBatch() {
-        if (!queuedJobIds.length) return {released: 0, requested: 0};
+    async function initBatch() {
         const data = new FormData();
-        data.append('ajax', '1');
-        data.append('action', 'release_batch');
-        data.append('csrf', form.querySelector('[name="csrf"]').value);
-        data.append('job_ids', JSON.stringify(queuedJobIds));
-        const response = await fetch(form.action || window.location.href, {
-            method: 'POST',
-            credentials: 'same-origin',
-            body: data,
-            cache: 'no-store'
-        });
-        const text = await response.text();
-        const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Upload batch release');
-        if (!response.ok || !body.ok) {
-            throw new Error(responseError(body, 'Uploaded files are staged, but their background jobs could not be released.'));
+        data.append('action', 'init');
+        data.append('game_id', batchGameId);
+        data.append('strict_profile', batchStrictProfile);
+        const body = await requestForm(batchUrl, data, batchCsrf, null, 'Upload batch initialization');
+        const batch = body.batch || {};
+        activeBatchId = String(batch.batch_id || '');
+        if (!/^[a-f0-9]{64}$/i.test(activeBatchId)) {
+            throw new Error('Server did not return a valid upload batch identifier.');
         }
-        if (body.worker_error) {
-            throw new Error('The batch was released, but the detached worker could not be started: ' + body.worker_error);
-        }
+        verifiedHashes = new Set(Array.isArray(body.duplicate_keys) ? body.duplicate_keys.map(String) : []);
+        verifiedSnapshotComplete = body.duplicate_snapshot_complete === true;
         return body;
     }
 
-    function cancelActiveHash() {
+    async function finalizeBatch() {
+        if (!activeBatchId) return {job_id: 0};
+        const data = new FormData();
+        data.append('action', 'finalize');
+        data.append('batch_id', activeBatchId);
+        return requestForm(batchUrl, data, batchCsrf, null, 'Upload batch finalization');
+    }
+
+    async function cancelBatch() {
+        if (!activeBatchId || batchCancelled) return;
+        const data = new FormData();
+        data.append('action', 'cancel');
+        data.append('batch_id', activeBatchId);
+        try {
+            await requestForm(batchUrl, data, batchCsrf, null, 'Upload batch cancellation');
+        } finally {
+            batchCancelled = true;
+        }
+    }
+
+    function destroyHashWorker() {
         if (activeHashWorker) {
             activeHashWorker.terminate();
             activeHashWorker = null;
         }
+        activeHashReject = null;
+    }
+
+    function cancelActiveHash() {
         if (activeHashReject) {
             const reject = activeHashReject;
             activeHashReject = null;
             reject(new Error('Upload cancelled.'));
         }
+        destroyHashWorker();
     }
 
     function hashFileLocally(file, index, total) {
@@ -223,17 +246,17 @@
                 reject(new Error('Web Worker hashing is unavailable in this browser.'));
                 return;
             }
+            if (!activeHashWorker) {
+                activeHashWorker = new Worker(hashWorkerUrl);
+            }
+            const worker = activeHashWorker;
             const id = String(Date.now()) + '-' + String(index) + '-' + Math.random().toString(16).slice(2);
-            const worker = new Worker(hashWorkerUrl);
             const started = Date.now();
-            activeHashWorker = worker;
             activeHashReject = reject;
             currentBar.value = 0;
             currentLabel.textContent = 'Checking duplicate locally ' + index + ' of ' + total + ': ' + shownName(file);
 
             function cleanup() {
-                worker.terminate();
-                if (activeHashWorker === worker) activeHashWorker = null;
                 if (activeHashReject === reject) activeHashReject = null;
                 speed.textContent = '';
             }
@@ -262,11 +285,13 @@
                 }
                 if (message.type === 'error') {
                     cleanup();
+                    destroyHashWorker();
                     reject(new Error(String(message.message || 'Client hash failed.')));
                 }
             };
             worker.onerror = function () {
                 cleanup();
+                destroyHashWorker();
                 reject(new Error('Client hash worker failed.'));
             };
             worker.postMessage({type: 'hash', id: id, file: file});
@@ -277,26 +302,33 @@
         if (!preflightUrl || !preflightCsrf) {
             throw new Error('Duplicate preflight endpoint is unavailable.');
         }
-        const response = await fetch(preflightUrl, {
-            method: 'POST',
-            credentials: 'same-origin',
-            cache: 'no-store',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-Token': preflightCsrf
-            },
-            body: JSON.stringify({
-                game_id: Number(batchGameId || 0),
-                sha1: sha1,
-                file_size: Number(file.size || 0)
-            })
-        });
-        const text = await response.text();
-        const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Duplicate preflight');
-        if (!response.ok) {
-            throw new Error(responseError(body, 'Duplicate preflight failed with HTTP ' + response.status + '.'));
+        const controller = window.AbortController ? new AbortController() : null;
+        const timeout = controller ? window.setTimeout(function () { controller.abort(); }, 2000) : 0;
+        try {
+            const response = await fetch(preflightUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                cache: 'no-store',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-Token': preflightCsrf
+                },
+                body: JSON.stringify({
+                    game_id: Number(batchGameId || 0),
+                    sha1: sha1,
+                    file_size: Number(file.size || 0)
+                }),
+                signal: controller ? controller.signal : undefined
+            });
+            const text = await response.text();
+            const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Duplicate preflight');
+            if (!response.ok) {
+                throw new Error(responseError(body, 'Duplicate preflight failed with HTTP ' + response.status + '.'));
+            }
+            return body;
+        } finally {
+            if (timeout) window.clearTimeout(timeout);
         }
-        return body;
     }
 
     async function duplicatePreflight(file, index, total) {
@@ -311,16 +343,12 @@
             if (cancelRequested || (error && error.message === 'Upload cancelled.')) throw error;
             if (!preflightWarningShown) {
                 preflightWarningShown = true;
-                addLog({status: 'skipped', message: 'Client duplicate preflight is unavailable; affected files will upload normally and remain protected by authoritative server-side duplicate detection.'});
+                addLog({status: 'skipped', message: 'Client duplicate hashing is unavailable; affected files will upload normally and remain protected by authoritative background hashing.'});
             }
             return {skip: false, hashKey: ''};
         }
 
         if (!/^[a-f0-9]{40}$/.test(sha1)) {
-            if (!preflightWarningShown) {
-                preflightWarningShown = true;
-                addLog({status: 'skipped', message: 'Client duplicate preflight returned an invalid digest; upload will continue normally.'});
-            }
             return {skip: false, hashKey: ''};
         }
 
@@ -336,23 +364,38 @@
             return {skip: true, hashKey: hashKey};
         }
 
-        try {
-            const preflight = await serverDuplicatePreflight(file, sha1);
-            if (preflight && preflight.duplicate && preflight.match) {
-                const match = preflight.match;
-                preflightDuplicates++;
-                addLog({
-                    status: 'duplicate',
-                    file: shownName(file),
-                    message: 'Skipped before upload: matching SHA-1 and byte size already verified as file #' + String(match.id || '?') + ' (' + String(match.original_name || match.package_name || 'existing package') + ').'
-                });
-                setOverall(index, total, 0);
-                return {skip: true, hashKey: hashKey};
-            }
-        } catch (error) {
-            if (!preflightWarningShown) {
-                preflightWarningShown = true;
-                addLog({status: 'skipped', message: (error.message || 'Duplicate preflight failed.') + ' Upload will continue normally; server-side duplicate detection remains authoritative.'});
+        if (verifiedHashes.has(hashKey)) {
+            preflightDuplicates++;
+            addLog({
+                status: 'duplicate',
+                file: shownName(file),
+                message: 'Skipped before upload: matching SHA-1 and byte size already verified in the selected game.'
+            });
+            setOverall(index, total, 0);
+            return {skip: true, hashKey: hashKey};
+        }
+
+        // Older servers may not provide the one-time verified-hash snapshot.
+        // Keep the legacy advisory lookup as a bounded fallback only; never let
+        // it stall the upload stream for more than two seconds.
+        if (!verifiedSnapshotComplete) {
+            try {
+                const preflight = await serverDuplicatePreflight(file, sha1);
+                if (preflight && preflight.duplicate) {
+                    preflightDuplicates++;
+                    addLog({
+                        status: 'duplicate',
+                        file: shownName(file),
+                        message: 'Skipped before upload: matching content is already verified in the selected game.'
+                    });
+                    setOverall(index, total, 0);
+                    return {skip: true, hashKey: hashKey};
+                }
+            } catch (error) {
+                if (!preflightWarningShown) {
+                    preflightWarningShown = true;
+                    addLog({status: 'skipped', message: 'Duplicate lookup was slow/unavailable; upload continues without waiting. Background duplicate detection remains authoritative.'});
+                }
             }
         }
 
@@ -363,79 +406,53 @@
         return new Promise(function (resolve) {
             const data = new FormData();
             const name = shownName(file);
-            data.append('ajax', '1');
-            data.append('defer_worker_start', '1');
-            data.append('csrf', form.querySelector('[name="csrf"]').value);
-            data.append('game_id', batchGameId);
-            data.append('strict_profile', batchStrictProfile);
-            data.append('relative_paths[]', name);
-            data.append('files[]', file, file.name);
+            data.append('action', 'stage');
+            data.append('batch_id', activeBatchId);
+            data.append('original_name', file.name);
+            data.append('relative_path', name);
+            data.append('file', file, file.name);
 
-            const xhr = new XMLHttpRequest();
-            activeXhr = xhr;
             const started = Date.now();
             currentBar.value = 0;
             currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + name;
-            xhr.open('POST', form.action || window.location.href, true);
-            xhr.upload.onprogress = function (event) {
+            requestForm(batchUrl, data, batchCsrf, function (event) {
                 if (!event.lengthComputable) return;
                 const percent = Math.round((event.loaded / event.total) * 100);
                 currentBar.value = percent;
                 speed.textContent = bytes(event.loaded / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
                 currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + name + ' (' + percent + '%)';
                 setOverall(index - 1, total, percent);
-            };
-            xhr.onload = function () {
-                if (activeXhr === xhr) activeXhr = null;
-                speed.textContent = '';
-                let staged = false;
-                try {
-                    const response = parseJsonResponse(xhr.responseText, xhr.status, xhr.getResponseHeader('Content-Type'), 'Upload request');
-                    if (xhr.status < 200 || xhr.status >= 300 || !response.ok || !Array.isArray(response.jobs) || !response.jobs.length) {
-                        throw new Error(responseError(response, 'Upload could not be staged and queued (HTTP ' + xhr.status + ').'));
-                    }
-                    response.jobs.forEach(function (queued) {
-                        rememberJob(queued.job_id);
-                        addLog({
-                            status: 'queued',
-                            file: name,
-                            message: 'Durably staged as held background job #' + queued.job_id + '. Existing workers cannot claim it until the upload batch is released.'
-                        });
-                    });
-                    staged = true;
-                } catch (error) {
-                    addLog({status: 'failed', file: name, message: error.message || 'Invalid server response.'});
+            }, 'Upload staging').then(function (response) {
+                stagedItemCount++;
+                addLog({
+                    status: 'staged',
+                    file: name,
+                    message: 'Durably staged. No background import job has been created yet.'
+                });
+                setOverall(index, total, 0);
+                resolve(true);
+            }).catch(function (error) {
+                if (!cancelRequested) {
+                    addLog({status: 'failed', file: name, message: error.message || 'Upload could not be staged.'});
                 }
                 setOverall(index, total, 0);
-                resolve(staged);
-            };
-            xhr.onerror = function () {
-                if (activeXhr === xhr) activeXhr = null;
-                speed.textContent = '';
-                addLog({status: 'failed', file: name, message: 'Upload connection error.'});
-                setOverall(index, total, 0);
                 resolve(false);
-            };
-            xhr.onabort = function () {
-                if (activeXhr === xhr) activeXhr = null;
+            }).finally(function () {
                 speed.textContent = '';
-                addLog({status: 'cancelled', file: name, message: 'Upload cancelled.'});
-                resolve(false);
-            };
-            xhr.send(data);
+            });
         });
     }
 
-    async function chunkRequestWithRetry(data, onProgress, attempts) {
+    async function chunkRequestWithRetry(data, onProgress, attempts, label) {
         let lastError = null;
         for (let attempt = 1; attempt <= attempts; attempt++) {
             if (cancelRequested) throw new Error('Upload cancelled.');
             try {
-                return await requestForm(chunkUrl, data, onProgress);
+                return await requestForm(chunkUrl, data, chunkCsrf, onProgress, label || 'Chunked upload request');
             } catch (error) {
                 lastError = error;
                 if (cancelRequested || attempt === attempts) break;
-                await new Promise(function (resolve) { window.setTimeout(resolve, attempt * 750); });
+                await new Promise(function (resolve) { window.setTimeout(resolve, attempt * 500); });
             }
         }
         throw lastError || new Error('Chunk upload failed.');
@@ -451,6 +468,7 @@
         const clientKey = [file.name, file.size, file.lastModified || 0, name, batchGameId].join('|');
         const initData = new FormData();
         initData.append('action', 'init');
+        initData.append('batch_id', activeBatchId);
         initData.append('client_key', clientKey);
         initData.append('original_name', file.name);
         initData.append('relative_path', name);
@@ -460,7 +478,7 @@
 
         cancelButton.hidden = false;
         currentLabel.textContent = 'Preparing resumable upload: ' + name;
-        const initialized = await requestForm(chunkUrl, initData);
+        const initialized = await requestForm(chunkUrl, initData, chunkCsrf, null, 'Chunked upload initialization');
         const upload = initialized.upload || {};
         activeUploadId = String(upload.upload_id || '');
         const chunkBytes = Math.max(1024 * 1024, Number(upload.chunk_bytes || configuredChunkBytes));
@@ -498,7 +516,7 @@
                 speed.textContent = bytes(currentBytes / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
                 currentLabel.textContent = 'Uploading chunk ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
                 setOverall(index - 1, total, percent);
-            }, 4);
+            }, 4, 'Chunk upload');
             uploadedBytes += length;
         }
 
@@ -507,20 +525,18 @@
         currentLabel.textContent = 'Publishing durable upload: ' + name;
         const completeData = new FormData();
         completeData.append('action', 'complete');
+        completeData.append('batch_id', activeBatchId);
         completeData.append('upload_id', activeUploadId);
-        completeData.append('defer_worker_start', '1');
-        const completed = await requestForm(chunkUrl, completeData);
+        const completed = await requestForm(chunkUrl, completeData, chunkCsrf, null, 'Chunked upload completion');
         activeUploadId = '';
-        if (!Array.isArray(completed.jobs) || !completed.jobs.length) {
-            throw new Error(responseError(completed, 'Completed upload could not be queued.'));
+        if (!completed.staged) {
+            throw new Error(responseError(completed, 'Completed upload was not added to the upload batch.'));
         }
-        completed.jobs.forEach(function (queued) {
-            rememberJob(queued.job_id);
-            addLog({
-                status: 'queued',
-                file: name,
-                message: 'Resumable upload durably staged as held background job #' + queued.job_id + '. Existing workers cannot claim it until the upload batch is released.'
-            });
+        stagedItemCount++;
+        addLog({
+            status: 'staged',
+            file: name,
+            message: 'Durably staged. No background import job has been created yet.'
         });
         return true;
     }
@@ -571,12 +587,15 @@
                 data.append('action', 'cancel');
                 data.append('upload_id', activeUploadId);
                 try {
-                    await requestForm(chunkUrl, data);
+                    await requestForm(chunkUrl, data, chunkCsrf, null, 'Chunked upload cancellation');
                 } catch (error) {
                     // The active request may already have released it.
                 }
                 activeUploadId = '';
             }
+            await cancelBatch();
+        } catch (error) {
+            addLog({status: 'failed', message: error.message || 'Could not close the cancelled upload batch.'});
         } finally {
             cancelButton.disabled = false;
         }
@@ -596,12 +615,32 @@
         progress.hidden = false;
         log.textContent = '';
         cancelRequested = false;
-        queuedJobIds = [];
+        batchCancelled = false;
+        activeBatchId = '';
+        stagedItemCount = 0;
         stagedHashes = new Map();
+        verifiedHashes = new Set();
+        verifiedSnapshotComplete = false;
         preflightDuplicates = 0;
         preflightWarningShown = false;
         cancelButton.hidden = false;
         setOverall(0, selected.length, 0);
+
+        try {
+            currentLabel.textContent = 'Initializing isolated upload batch...';
+            const initialized = await initBatch();
+            const snapshotCount = verifiedHashes.size;
+            addLog({
+                status: 'uploading',
+                message: 'Upload batch initialized. Background import jobs are disabled until all selected files finish staging.'
+                    + (snapshotCount > 0 ? ' Loaded ' + snapshotCount + ' verified hash identities for local duplicate checks.' : '')
+            });
+        } catch (error) {
+            addLog({status: 'failed', message: error.message || 'Could not initialize upload batch.'});
+            submitButton.disabled = false;
+            cancelButton.hidden = true;
+            return;
+        }
 
         let attempted = 0;
         for (let index = 0; index < selected.length; index++) {
@@ -613,20 +652,38 @@
         speed.textContent = '';
         activeXhr = null;
         activeUploadId = '';
-        cancelActiveHash();
-        if (queuedJobIds.length > 0) {
-            currentLabel.textContent = 'Upload staging complete. Releasing ' + queuedJobIds.length + ' background job(s)...';
+        destroyHashWorker();
+
+        let finalJobId = 0;
+        if (!cancelRequested) {
+            currentLabel.textContent = 'All file transfers are complete. Starting background processing...';
             try {
-                const released = await releaseBatch();
-                addLog({
-                    status: 'completed',
-                    message: (released.released || queuedJobIds.length) + ' background import job(s) released. You may leave this page; processing continues independently.'
-                });
+                const finalized = await finalizeBatch();
+                finalJobId = Number(finalized.job_id || 0);
+                if (finalized.worker_error) {
+                    addLog({
+                        status: 'failed',
+                        message: 'Upload completed and batch job #' + finalJobId + ' was queued, but the detached worker could not start: ' + finalized.worker_error
+                    });
+                } else if (finalJobId > 0) {
+                    addLog({
+                        status: 'completed',
+                        message: 'Upload complete. Background batch job #' + finalJobId + ' now owns ' + stagedItemCount + ' staged file(s). You may leave this page.'
+                    });
+                } else {
+                    addLog({status: 'completed', message: 'Upload complete; no files require background import.'});
+                }
             } catch (error) {
                 addLog({
                     status: 'failed',
-                    message: (error.message || 'Could not release the staged batch.') + ' The staged jobs remain safe and have a 24-hour fallback availability time.'
+                    message: (error.message || 'Could not finalize the staged upload batch.') + ' Staged files remain durable and no import jobs were started early.'
                 });
+            }
+        } else if (!batchCancelled) {
+            try {
+                await cancelBatch();
+            } catch (error) {
+                addLog({status: 'failed', message: error.message || 'Could not close cancelled upload batch.'});
             }
         }
 
@@ -635,17 +692,22 @@
         if (!cancelRequested) {
             overallBar.value = 100;
             overallLabel.textContent = 'Preflight/upload complete (100%)';
-            overallCount.textContent = selected.length + ' of ' + selected.length + ' checked; ' + queuedJobIds.length + ' job(s) staged' + duplicateText;
-            currentLabel.textContent = 'All selected files have finished duplicate preflight/upload staging. Background processing continues independently.';
+            overallCount.textContent = selected.length + ' of ' + selected.length + ' checked; ' + stagedItemCount + ' file(s) staged' + duplicateText;
+            currentLabel.textContent = finalJobId > 0
+                ? 'All selected files finished staging. Background processing started only after upload completion as batch job #' + finalJobId + '.'
+                : 'All selected files finished staging.';
         } else {
-            overallCount.textContent = attempted + ' of ' + selected.length + ' checked; ' + queuedJobIds.length + ' job(s) staged' + duplicateText;
-            currentLabel.textContent = 'Upload batch cancelled. Already-staged jobs were released for background processing.';
+            overallCount.textContent = attempted + ' of ' + selected.length + ' checked; ' + stagedItemCount + ' file(s) staged before cancellation' + duplicateText;
+            currentLabel.textContent = 'Upload batch cancelled. No background import jobs were started.';
         }
+
         submitButton.disabled = false;
         cancelButton.hidden = true;
         cancelRequested = false;
         batchGameId = '';
         batchStrictProfile = '1';
+        activeBatchId = '';
+        verifiedHashes = new Set();
     });
 
     installStatusStyles();
