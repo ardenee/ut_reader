@@ -62,6 +62,10 @@ final class CompactSearchProjectionWriter
             $exportValues[$index] = $path;
         }
 
+        // The complete shared dictionary is primed before the file-owned
+        // transaction begins. During snapshot publication this method therefore
+        // performs read-only term resolution and cannot participate in ue_terms
+        // insert/update deadlocks with another file writer.
         $termIds = $this->resolveTermIds($values, $sqlBatches);
         $this->assertProjectionCounts($fileId, count($imports), count($exports), $sqlBatches);
 
@@ -97,7 +101,6 @@ final class CompactSearchProjectionWriter
             count($exports),
             $sqlBatches
         );
-        (new CompactTermOverflowWriter($this->db))->write($snapshot, $sqlBatches);
     }
 
     private function assertSchema(): void
@@ -239,23 +242,25 @@ final class CompactSearchProjectionWriter
             return [];
         }
 
-        // Keep lock acquisition on the shared ue_terms unique index in the same
-        // deterministic order as the primary compact lookup writer.
         ksort($terms, SORT_STRING);
 
-        foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
-            $placeholders = [];
-            $arguments = [];
-            foreach ($chunk as $term) {
-                $placeholders[] = '(?,?,?,?)';
-                array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+        // Retain compatibility for any future standalone caller, but never write
+        // the shared dictionary from inside a file snapshot transaction.
+        if (!$this->db->inTransaction()) {
+            foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
+                $placeholders = [];
+                $arguments = [];
+                foreach ($chunk as $term) {
+                    $placeholders[] = '(?,?,?,?)';
+                    array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+                }
+                $statement = $this->db->prepare(
+                    'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
+                    . implode(',', $placeholders)
+                );
+                $statement->execute($arguments);
+                $sqlBatches++;
             }
-            $statement = $this->db->prepare(
-                'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
-                . implode(',', $placeholders)
-            );
-            $statement->execute($arguments);
-            $sqlBatches++;
         }
 
         $resolved = [];
