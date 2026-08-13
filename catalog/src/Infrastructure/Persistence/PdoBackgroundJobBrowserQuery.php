@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobCountCache;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 
 final class PdoBackgroundJobBrowserQuery
@@ -79,14 +78,10 @@ final class PdoBackgroundJobBrowserQuery
             array_push($params, ...$conditionParams);
         }
 
-        $countsCacheKey = json_encode(
-            ['scope' => 'parent-jobs-v5', 'queue' => $queue, 'search' => $search],
-            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
-        );
-        $counts = (new CatalogBackgroundJobCountCache($this->config))->remember(
-            $countsCacheKey,
-            fn(): array => $this->countQuery->counts($fromSql, $baseWhereSql, $baseParams)
-        );
+        // This query now sees top-level jobs only. The expensive hundreds-of-
+        // thousands-of-child-units count that required a 15-second cache no longer
+        // exists here, so keep the tabs in the same live snapshot as the rows.
+        $counts = $this->countQuery->counts($fromSql, $baseWhereSql, $baseParams);
         $totalKey = $status !== '' ? $status : 'all';
         $total = max(0, (int)($counts[$totalKey] ?? 0));
 
