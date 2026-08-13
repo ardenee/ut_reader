@@ -7,6 +7,8 @@
     const summary = document.getElementById('jobs-selection-summary');
     if (!app || !action || !apply || !summary) return;
 
+    const deleteLabel = 'Delete selected/matching non-running jobs';
+
     function selectedNonRunningExists() {
         const text = String(summary.textContent || '').trim();
         if (!text || text === 'Nothing selected') return false;
@@ -31,9 +33,11 @@
         if (!option) {
             option = document.createElement('option');
             option.value = 'delete';
+            option.textContent = deleteLabel;
             action.appendChild(option);
+        } else if (option.textContent !== deleteLabel) {
+            option.textContent = deleteLabel;
         }
-        option.textContent = 'Delete selected/matching non-running jobs';
         action.disabled = false;
         apply.disabled = !action.value;
     }
