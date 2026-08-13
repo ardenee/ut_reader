@@ -68,7 +68,10 @@ final class PdoBackgroundJobBulkAction
             'restart' => '(j.status IN ("cancelled","failed","dead_letter") '
                 . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified")))',
             'cancel' => 'j.status="queued"',
-            'delete' => 'j.status IN ("completed","failed","dead_letter","cancelled")',
+            // Queued/deferred rows are safe to purge only after they are first
+            // atomically moved to cancelled below. Running rows are deliberately
+            // excluded so cleanup can never delete a job underneath a worker.
+            'delete' => 'j.status IN ("queued","completed","failed","dead_letter","cancelled")',
             default => throw new \InvalidArgumentException('Unsupported bulk job action.'),
         };
         $where[] = $actionCondition;
@@ -98,13 +101,25 @@ final class PdoBackgroundJobBulkAction
         } elseif ($action === 'cancel' && $eligibleIds !== []) {
             $affected = $this->cancel($queueName, $eligibleIds, $userId, $now);
         } elseif ($action === 'delete' && $eligibleIds !== []) {
+            // Freeze queued/deferred rows before the cleanup job is enqueued.
+            // This closes the race where another worker could claim a ready row
+            // between the browser snapshot and asynchronous deletion.
+            $cancelledForDelete = $this->cancel(
+                $queueName,
+                $eligibleIds,
+                $userId,
+                $now,
+                'Cancelled automatically because the job was selected for deletion.'
+            );
+            $affected = $cancelledForDelete;
+
             $queued = (new CatalogBackgroundJobHistoryCleanupQueue($this->db, $this->config))->enqueueSnapshot(
                 $queueName,
                 $eligibleIds,
                 $requested,
                 $limited,
                 $userId,
-                $scope === 'matching' ? 'Delete matching terminal jobs' : 'Delete selected terminal jobs'
+                $scope === 'matching' ? 'Delete matching non-running jobs' : 'Delete selected non-running jobs'
             );
             $cleanupJobId = (int)$queued['job_id'];
             $scheduled = (int)$queued['scheduled'];
@@ -164,9 +179,13 @@ final class PdoBackgroundJobBulkAction
     }
 
     /** @param list<int> $eligibleIds */
-    private function cancel(string $queueName, array $eligibleIds, ?int $userId, string $now): int
-    {
-        $reason = 'Cancelled in bulk from Background Jobs.';
+    private function cancel(
+        string $queueName,
+        array $eligibleIds,
+        ?int $userId,
+        string $now,
+        string $reason = 'Cancelled in bulk from Background Jobs.'
+    ): int {
         $idSql = implode(',', array_fill(0, count($eligibleIds), '?'));
         $statement = $this->db->prepare(
             'UPDATE ue_background_jobs SET status="cancelled",dedupe_key=NULL,cancel_requested_at=?,'
