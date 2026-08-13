@@ -1,8 +1,8 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Aggregates Background Jobs display groups from the indexed display_status read model.
- * Why: Live UI counters must not parse result JSON or embed aggregate SQL in HTTP entry points.
+ * Purpose: Aggregates Background Jobs display groups for the operator job view.
+ * Why: Internal workflow units roll up into their parent job instead of becoming separate headline counters.
  * Role: Infrastructure query object used by cursor/background-job APIs.
  */
 declare(strict_types=1);
@@ -33,18 +33,25 @@ final class PdoBackgroundJobDisplayCountQuery
             'dead_letter' => 0,
             'cancelled' => 0,
         ];
-        $sql = 'SELECT j.status,j.display_status,COUNT(*) AS total FROM ' . $fromSql
+        $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" '
+            . 'AND EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1) '
+            . 'THEN "running" ELSE j.status END';
+        $sql = 'SELECT ' . $operatorStatusSql . ' AS operator_status,j.status,j.display_status,COUNT(*) AS total FROM ' . $fromSql
             . ($whereSql !== '' ? ' WHERE ' . $whereSql : '')
-            . ' GROUP BY j.status,j.display_status';
+            . ' GROUP BY operator_status,j.status,j.display_status';
         $statement = $this->db->prepare($sql);
         $statement->execute($params);
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
             $amount = (int)($row['total'] ?? 0);
             $counts['all'] += $amount;
-            $group = CatalogJobDisplayStatus::groupDisplayStatus(
-                (string)($row['status'] ?? ''),
-                (string)($row['display_status'] ?? '')
-            );
+            $queueStatus = strtolower(trim((string)($row['status'] ?? '')));
+            $operatorStatus = strtolower(trim((string)($row['operator_status'] ?? $queueStatus)));
+            $group = $operatorStatus !== $queueStatus
+                ? $operatorStatus
+                : CatalogJobDisplayStatus::groupDisplayStatus(
+                    $queueStatus,
+                    (string)($row['display_status'] ?? '')
+                );
             if (array_key_exists($group, $counts)) {
                 $counts[$group] += $amount;
             }
