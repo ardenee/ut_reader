@@ -14,14 +14,12 @@
     const overallCount = document.getElementById('overall-progress-count');
     const speed = document.getElementById('upload-progress-speed');
     const log = document.getElementById('upload-progress-log');
-    if (!form || !fileInput || !progress || !window.XMLHttpRequest || !window.fetch) return;
+    if (!form || !fileInput || !progress || !window.XMLHttpRequest) return;
 
     const batchUrl = progress.dataset.batchUrl || 'api/v1/profiled-upload-batch.php';
     const batchCsrf = (form.querySelector('[name="csrf"]') || {}).value || '';
     const chunkUrl = progress.dataset.chunkUrl || 'api/v1/profiled-upload-chunk.php';
     const chunkCsrf = progress.dataset.chunkCsrf || '';
-    const preflightUrl = progress.dataset.preflightUrl || 'api/v1/profiled-upload-preflight.php';
-    const preflightCsrf = progress.dataset.preflightCsrf || '';
     const hashWorkerUrl = progress.dataset.hashWorkerUrl || 'assets/profiled-upload-hash-worker.js';
     const configuredChunkBytes = Math.max(1024 * 1024, Number(progress.dataset.chunkBytes || 16 * 1024 * 1024));
     const containerLimit = Math.max(0, Number(progress.dataset.containerLimit || 0));
@@ -34,14 +32,11 @@
     let activeHashReject = null;
     let cancelRequested = false;
     let batchCancelled = false;
-    let stagedItemCount = 0;
-    let stagedHashes = new Map();
-    let verifiedHashes = new Set();
-    let verifiedSnapshotComplete = false;
-    let preflightDuplicates = 0;
-    let preflightWarningShown = false;
     let batchGameId = '';
     let batchStrictProfile = '1';
+    let preflightDuplicates = 0;
+    let stagedItemCount = 0;
+    let failedItemCount = 0;
 
     function installStatusStyles() {
         const style = document.createElement('style');
@@ -60,7 +55,7 @@
         document.head.appendChild(style);
     }
 
-    function files() {
+    function selectedFiles() {
         return Array.from(fileInput.files || []).concat(folderInput ? Array.from(folderInput.files || []) : []);
     }
 
@@ -100,32 +95,29 @@
         const status = String(entry.status || 'info').toLowerCase();
         const row = document.createElement('div');
         row.className = 'upload-result upload-result-' + status.replace(/[^a-z0-9_-]+/g, '-');
+
         const badge = document.createElement('span');
         badge.className = 'upload-result-badge';
         badge.textContent = status.replace(/_/g, ' ');
         row.appendChild(badge);
+
         if (entry.file) {
             const file = document.createElement('span');
             file.className = 'upload-result-file';
             file.textContent = String(entry.file);
             row.appendChild(file);
         }
+
         const message = document.createElement('span');
         message.className = 'upload-result-message';
         message.textContent = String(entry.message || '');
         row.appendChild(message);
         log.appendChild(row);
+
         while (log.childElementCount > MAX_LOG_ROWS) {
             log.removeChild(log.firstElementChild);
         }
         log.scrollTop = log.scrollHeight;
-    }
-
-    function setOverall(done, total, currentPercent) {
-        const percent = Math.round(((done + currentPercent / 100) / Math.max(1, total)) * 100);
-        overallBar.value = percent;
-        overallLabel.textContent = 'Overall preflight/upload (' + percent + '%)';
-        overallCount.textContent = done + ' of ' + total + ' checked/staged';
     }
 
     function responseError(body, fallback) {
@@ -160,6 +152,7 @@
             xhr.open('POST', url, true);
             if (csrf) xhr.setRequestHeader('X-CSRF-Token', csrf);
             if (typeof onProgress === 'function') xhr.upload.onprogress = onProgress;
+
             xhr.onload = function () {
                 if (activeXhr === xhr) activeXhr = null;
                 let body;
@@ -198,8 +191,6 @@
         if (!/^[a-f0-9]{64}$/i.test(activeBatchId)) {
             throw new Error('Server did not return a valid upload batch identifier.');
         }
-        verifiedHashes = new Set(Array.isArray(body.duplicate_keys) ? body.duplicate_keys.map(String) : []);
-        verifiedSnapshotComplete = body.duplicate_snapshot_complete === true;
         return body;
     }
 
@@ -249,12 +240,13 @@
             if (!activeHashWorker) {
                 activeHashWorker = new Worker(hashWorkerUrl);
             }
+
             const worker = activeHashWorker;
             const id = String(Date.now()) + '-' + String(index) + '-' + Math.random().toString(16).slice(2);
             const started = Date.now();
             activeHashReject = reject;
             currentBar.value = 0;
-            currentLabel.textContent = 'Checking duplicate locally ' + index + ' of ' + total + ': ' + shownName(file);
+            currentLabel.textContent = 'Preflight ' + index + ' of ' + total + ': ' + shownName(file);
 
             function cleanup() {
                 if (activeHashReject === reject) activeHashReject = null;
@@ -269,7 +261,7 @@
                     const totalBytes = Math.max(1, Number(message.total || file.size || 1));
                     const percent = Math.floor((loaded * 100) / totalBytes);
                     currentBar.value = percent;
-                    currentLabel.textContent = 'Checking duplicate locally ' + index + ' of ' + total + ': ' + shownName(file) + ' (' + percent + '%)';
+                    currentLabel.textContent = 'Preflight ' + index + ' of ' + total + ': ' + shownName(file) + ' (' + percent + '%)';
                     speed.textContent = bytes(loaded / Math.max(0.1, (Date.now() - started) / 1000)) + '/s hash';
                     return;
                 }
@@ -298,148 +290,118 @@
         });
     }
 
-    async function serverDuplicatePreflight(file, sha1) {
-        if (!preflightUrl || !preflightCsrf) {
-            throw new Error('Duplicate preflight endpoint is unavailable.');
-        }
-        const controller = window.AbortController ? new AbortController() : null;
-        const timeout = controller ? window.setTimeout(function () { controller.abort(); }, 2000) : 0;
-        try {
-            const response = await fetch(preflightUrl, {
-                method: 'POST',
-                credentials: 'same-origin',
-                cache: 'no-store',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': preflightCsrf
-                },
-                body: JSON.stringify({
-                    game_id: Number(batchGameId || 0),
-                    sha1: sha1,
-                    file_size: Number(file.size || 0)
-                }),
-                signal: controller ? controller.signal : undefined
-            });
-            const text = await response.text();
-            const body = parseJsonResponse(text, response.status, response.headers.get('Content-Type'), 'Duplicate preflight');
-            if (!response.ok) {
-                throw new Error(responseError(body, 'Duplicate preflight failed with HTTP ' + response.status + '.'));
-            }
-            return body;
-        } finally {
-            if (timeout) window.clearTimeout(timeout);
-        }
-    }
+    async function buildUploadPlan(files, duplicateKeys, snapshotComplete) {
+        const plan = [];
+        const seen = new Map();
+        let hashingWarningShown = false;
+        const verified = new Set(Array.isArray(duplicateKeys) ? duplicateKeys.map(String) : []);
 
-    async function duplicatePreflight(file, index, total) {
-        if (!preflightEligible(file)) {
-            return {skip: false, hashKey: ''};
-        }
-
-        let sha1;
-        try {
-            sha1 = await hashFileLocally(file, index, total);
-        } catch (error) {
-            if (cancelRequested || (error && error.message === 'Upload cancelled.')) throw error;
-            if (!preflightWarningShown) {
-                preflightWarningShown = true;
-                addLog({status: 'skipped', message: 'Client duplicate hashing is unavailable; affected files will upload normally and remain protected by authoritative background hashing.'});
-            }
-            return {skip: false, hashKey: ''};
-        }
-
-        if (!/^[a-f0-9]{40}$/.test(sha1)) {
-            return {skip: false, hashKey: ''};
-        }
-
-        const hashKey = String(file.size) + ':' + sha1;
-        if (stagedHashes.has(hashKey)) {
-            preflightDuplicates++;
-            addLog({
-                status: 'duplicate',
-                file: shownName(file),
-                message: 'Skipped before upload: identical SHA-1 and byte size to ' + stagedHashes.get(hashKey) + ', already staged in this browser batch.'
-            });
-            setOverall(index, total, 0);
-            return {skip: true, hashKey: hashKey};
-        }
-
-        if (verifiedHashes.has(hashKey)) {
-            preflightDuplicates++;
-            addLog({
-                status: 'duplicate',
-                file: shownName(file),
-                message: 'Skipped before upload: matching SHA-1 and byte size already verified in the selected game.'
-            });
-            setOverall(index, total, 0);
-            return {skip: true, hashKey: hashKey};
-        }
-
-        // Older servers may not provide the one-time verified-hash snapshot.
-        // Keep the legacy advisory lookup as a bounded fallback only; never let
-        // it stall the upload stream for more than two seconds.
-        if (!verifiedSnapshotComplete) {
-            try {
-                const preflight = await serverDuplicatePreflight(file, sha1);
-                if (preflight && preflight.duplicate) {
-                    preflightDuplicates++;
-                    addLog({
-                        status: 'duplicate',
-                        file: shownName(file),
-                        message: 'Skipped before upload: matching content is already verified in the selected game.'
-                    });
-                    setOverall(index, total, 0);
-                    return {skip: true, hashKey: hashKey};
-                }
-            } catch (error) {
-                if (!preflightWarningShown) {
-                    preflightWarningShown = true;
-                    addLog({status: 'skipped', message: 'Duplicate lookup was slow/unavailable; upload continues without waiting. Background duplicate detection remains authoritative.'});
-                }
-            }
-        }
-
-        return {skip: false, hashKey: hashKey};
-    }
-
-    function standardUpload(file, index, total) {
-        return new Promise(function (resolve) {
-            const data = new FormData();
+        overallLabel.textContent = 'Local duplicate preflight';
+        for (let i = 0; i < files.length; i++) {
+            if (cancelRequested) break;
+            const file = files[i];
+            const index = i + 1;
             const name = shownName(file);
-            data.append('action', 'stage');
-            data.append('batch_id', activeBatchId);
-            data.append('original_name', file.name);
-            data.append('relative_path', name);
-            data.append('file', file, file.name);
 
-            const started = Date.now();
-            currentBar.value = 0;
-            currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + name;
-            requestForm(batchUrl, data, batchCsrf, function (event) {
-                if (!event.lengthComputable) return;
-                const percent = Math.round((event.loaded / event.total) * 100);
-                currentBar.value = percent;
-                speed.textContent = bytes(event.loaded / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
-                currentLabel.textContent = 'Uploading ' + index + ' of ' + total + ': ' + name + ' (' + percent + '%)';
-                setOverall(index - 1, total, percent);
-            }, 'Upload staging').then(function (response) {
-                stagedItemCount++;
-                addLog({
-                    status: 'staged',
-                    file: name,
-                    message: 'Durably staged. No background import job has been created yet.'
-                });
-                setOverall(index, total, 0);
-                resolve(true);
-            }).catch(function (error) {
-                if (!cancelRequested) {
-                    addLog({status: 'failed', file: name, message: error.message || 'Upload could not be staged.'});
+            if (!preflightEligible(file)) {
+                plan.push({file: file, selectedIndex: index, hashKey: ''});
+                overallBar.value = Math.round((index * 100) / Math.max(1, files.length));
+                overallCount.textContent = index + ' of ' + files.length + ' preflight checked';
+                continue;
+            }
+
+            let sha1 = '';
+            try {
+                sha1 = await hashFileLocally(file, index, files.length);
+            } catch (error) {
+                if (cancelRequested || (error && error.message === 'Upload cancelled.')) break;
+                if (!hashingWarningShown) {
+                    hashingWarningShown = true;
+                    addLog({
+                        status: 'skipped',
+                        message: 'Client hashing is unavailable for some files. They will upload normally; authoritative duplicate detection remains in background processing.'
+                    });
                 }
-                setOverall(index, total, 0);
-                resolve(false);
-            }).finally(function () {
-                speed.textContent = '';
+            }
+
+            const hashKey = /^[a-f0-9]{40}$/.test(sha1) ? String(file.size) + ':' + sha1 : '';
+            if (hashKey && seen.has(hashKey)) {
+                preflightDuplicates++;
+                addLog({
+                    status: 'duplicate',
+                    file: name,
+                    message: 'Skipped before upload: identical SHA-1 and byte size to ' + seen.get(hashKey) + ' in this selected batch.'
+                });
+            } else if (hashKey && verified.has(hashKey)) {
+                preflightDuplicates++;
+                addLog({
+                    status: 'duplicate',
+                    file: name,
+                    message: 'Skipped before upload: matching SHA-1 and byte size are already verified in the selected game.'
+                });
+            } else {
+                plan.push({file: file, selectedIndex: index, hashKey: hashKey});
+                if (hashKey) seen.set(hashKey, name);
+            }
+
+            overallBar.value = Math.round((index * 100) / Math.max(1, files.length));
+            overallCount.textContent = index + ' of ' + files.length + ' preflight checked';
+        }
+
+        if (!snapshotComplete) {
+            addLog({
+                status: 'skipped',
+                message: 'Verified-hash snapshot was capped for this very large game. Unknown hashes will upload without per-file database lookups; background import remains authoritative.'
             });
+        }
+        return plan;
+    }
+
+    function updateUploadOverall(done, total, currentPercent) {
+        const percent = Math.round(((done + currentPercent / 100) / Math.max(1, total)) * 100);
+        overallBar.value = percent;
+        overallLabel.textContent = 'Upload staging (' + percent + '%)';
+        overallCount.textContent = done + ' of ' + total + ' files staged for background processing';
+    }
+
+    function standardUpload(item, uploadIndex, uploadTotal) {
+        const file = item.file;
+        const name = shownName(file);
+        const data = new FormData();
+        data.append('action', 'stage');
+        data.append('batch_id', activeBatchId);
+        data.append('original_name', file.name);
+        data.append('relative_path', name);
+        data.append('file', file, file.name);
+
+        const started = Date.now();
+        currentBar.value = 0;
+        currentLabel.textContent = 'Uploading ' + uploadIndex + ' of ' + uploadTotal + ': ' + name;
+        return requestForm(batchUrl, data, batchCsrf, function (event) {
+            if (!event.lengthComputable) return;
+            const percent = Math.round((event.loaded / event.total) * 100);
+            currentBar.value = percent;
+            speed.textContent = bytes(event.loaded / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
+            currentLabel.textContent = 'Uploading ' + uploadIndex + ' of ' + uploadTotal + ': ' + name + ' (' + percent + '%)';
+            updateUploadOverall(uploadIndex - 1, uploadTotal, percent);
+        }, 'Upload staging').then(function () {
+            stagedItemCount++;
+            addLog({
+                status: 'staged',
+                file: name,
+                message: 'Durably staged. No background import job exists yet.'
+            });
+            updateUploadOverall(uploadIndex, uploadTotal, 0);
+            return true;
+        }).catch(function (error) {
+            if (!cancelRequested) {
+                failedItemCount++;
+                addLog({status: 'failed', file: name, message: error.message || 'Upload could not be staged.'});
+                updateUploadOverall(uploadIndex, uploadTotal, 0);
+            }
+            return false;
+        }).finally(function () {
+            speed.textContent = '';
         });
     }
 
@@ -458,13 +420,15 @@
         throw lastError || new Error('Chunk upload failed.');
     }
 
-    async function chunkedUpload(file, index, total) {
+    async function chunkedUpload(item, uploadIndex, uploadTotal) {
+        const file = item.file;
         const name = shownName(file);
         const pak = isPak(file);
         if (!chunkCsrf) throw new Error('Chunked upload CSRF token is unavailable.');
         if (pak && containerLimit > 0 && file.size > containerLimit) {
             throw new Error('PAK is ' + bytes(file.size) + '; configured container limit is ' + bytes(containerLimit) + '.');
         }
+
         const clientKey = [file.name, file.size, file.lastModified || 0, name, batchGameId].join('|');
         const initData = new FormData();
         initData.append('action', 'init');
@@ -476,8 +440,8 @@
         initData.append('game_id', batchGameId);
         initData.append('strict_profile', batchStrictProfile);
 
-        cancelButton.hidden = false;
-        currentLabel.textContent = 'Preparing resumable upload: ' + name;
+        currentBar.value = 0;
+        currentLabel.textContent = 'Preparing resumable upload ' + uploadIndex + ' of ' + uploadTotal + ': ' + name;
         const initialized = await requestForm(chunkUrl, initData, chunkCsrf, null, 'Chunked upload initialization');
         const upload = initialized.upload || {};
         activeUploadId = String(upload.upload_id || '');
@@ -485,44 +449,42 @@
         const totalChunks = Math.max(1, Number(upload.total_chunks || Math.ceil(file.size / chunkBytes)));
         const received = new Set((upload.received_chunks || []).map(Number));
         const started = Date.now();
-        let uploadedBytes = Number(upload.received_bytes || 0);
-        if (received.size) {
-            addLog({status: 'uploading', file: name, message: 'Resuming ' + received.size + ' previously stored chunk(s).'});
-        }
+        let completedBytes = 0;
 
         for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
             const start = chunkIndex * chunkBytes;
             const end = Math.min(file.size, start + chunkBytes);
             const length = end - start;
             if (received.has(chunkIndex)) {
-                uploadedBytes += length;
-                const percent = Math.floor((Math.min(file.size, end) * 100) / Math.max(1, file.size));
+                completedBytes += length;
+                const percent = Math.floor((completedBytes * 100) / Math.max(1, file.size));
                 currentBar.value = percent;
-                currentLabel.textContent = 'Resuming chunk ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
-                setOverall(index - 1, total, percent);
+                currentLabel.textContent = 'Resuming ' + uploadIndex + ' of ' + uploadTotal + ': ' + name + ' (' + percent + '%)';
+                updateUploadOverall(uploadIndex - 1, uploadTotal, percent);
                 continue;
             }
+
             const data = new FormData();
             data.append('action', 'chunk');
             data.append('upload_id', activeUploadId);
             data.append('chunk_index', String(chunkIndex));
             data.append('chunk', file.slice(start, end), file.name + '.part-' + chunkIndex);
-            const baseUploaded = uploadedBytes;
+            const baseBytes = completedBytes;
             await chunkRequestWithRetry(data, function (event) {
                 if (!event.lengthComputable) return;
-                const currentBytes = Math.min(file.size, baseUploaded + event.loaded);
+                const currentBytes = Math.min(file.size, baseBytes + event.loaded);
                 const percent = Math.floor((currentBytes * 100) / Math.max(1, file.size));
                 currentBar.value = percent;
                 speed.textContent = bytes(currentBytes / Math.max(0.1, (Date.now() - started) / 1000)) + '/s';
-                currentLabel.textContent = 'Uploading chunk ' + (chunkIndex + 1) + '/' + totalChunks + ': ' + name + ' (' + percent + '%)';
-                setOverall(index - 1, total, percent);
+                currentLabel.textContent = 'Uploading ' + uploadIndex + ' of ' + uploadTotal + ': ' + name + ' (' + percent + '%)';
+                updateUploadOverall(uploadIndex - 1, uploadTotal, percent);
             }, 4, 'Chunk upload');
-            uploadedBytes += length;
+            completedBytes += length;
         }
 
         speed.textContent = '';
         currentBar.value = 100;
-        currentLabel.textContent = 'Publishing durable upload: ' + name;
+        currentLabel.textContent = 'Publishing durable upload ' + uploadIndex + ' of ' + uploadTotal + ': ' + name;
         const completeData = new FormData();
         completeData.append('action', 'complete');
         completeData.append('batch_id', activeBatchId);
@@ -532,48 +494,42 @@
         if (!completed.staged) {
             throw new Error(responseError(completed, 'Completed upload was not added to the upload batch.'));
         }
+
         stagedItemCount++;
         addLog({
             status: 'staged',
             file: name,
-            message: 'Durably staged. No background import job has been created yet.'
+            message: 'Durably staged. No background import job exists yet.'
         });
+        updateUploadOverall(uploadIndex, uploadTotal, 0);
         return true;
     }
 
-    async function processOne(file, index, total) {
-        const name = shownName(file);
-        let preflight;
-        try {
-            preflight = await duplicatePreflight(file, index, total);
-        } catch (error) {
-            if (cancelRequested) return;
-            addLog({status: 'failed', file: name, message: error.message || 'Duplicate preflight failed.'});
-            return;
-        }
-        if (preflight.skip || cancelRequested) return;
+    async function uploadPlan(plan) {
+        overallBar.value = 0;
+        overallLabel.textContent = 'Upload staging (0%)';
+        overallCount.textContent = '0 of ' + plan.length + ' files staged for background processing';
 
-        let staged = false;
-        if (!shouldUseChunks(file)) {
-            staged = await standardUpload(file, index, total);
-        } else {
+        for (let i = 0; i < plan.length; i++) {
+            if (cancelRequested) break;
+            const item = plan[i];
+            const uploadIndex = i + 1;
+            if (!shouldUseChunks(item.file)) {
+                await standardUpload(item, uploadIndex, plan.length);
+                continue;
+            }
             try {
-                staged = await chunkedUpload(file, index, total);
+                await chunkedUpload(item, uploadIndex, plan.length);
             } catch (error) {
+                activeUploadId = '';
+                speed.textContent = '';
                 if (!cancelRequested) {
-                    addLog({status: 'failed', file: name, message: error.message || 'Resumable upload failed.'});
+                    failedItemCount++;
+                    addLog({status: 'failed', file: shownName(item.file), message: error.message || 'Resumable upload failed.'});
+                    updateUploadOverall(uploadIndex, plan.length, 0);
                 }
             }
         }
-
-        if (staged && preflight.hashKey) {
-            stagedHashes.set(preflight.hashKey, name);
-        }
-        speed.textContent = '';
-        activeUploadId = '';
-        activeXhr = null;
-        cancelButton.hidden = false;
-        setOverall(index, total, 0);
     }
 
     cancelButton.addEventListener('click', async function () {
@@ -589,7 +545,7 @@
                 try {
                     await requestForm(chunkUrl, data, chunkCsrf, null, 'Chunked upload cancellation');
                 } catch (error) {
-                    // The active request may already have released it.
+                    // The active request may already have completed/removed the chunk upload.
                 }
                 activeUploadId = '';
             }
@@ -603,8 +559,8 @@
 
     form.addEventListener('submit', async function (event) {
         event.preventDefault();
-        const selected = files();
-        if (!selected.length) {
+        const files = selectedFiles();
+        if (!files.length) {
             window.alert('Choose one or more files or a folder first.');
             return;
         }
@@ -614,26 +570,26 @@
         submitButton.disabled = true;
         progress.hidden = false;
         log.textContent = '';
+        cancelButton.hidden = false;
         cancelRequested = false;
         batchCancelled = false;
         activeBatchId = '';
-        stagedItemCount = 0;
-        stagedHashes = new Map();
-        verifiedHashes = new Set();
-        verifiedSnapshotComplete = false;
+        activeUploadId = '';
+        activeXhr = null;
         preflightDuplicates = 0;
-        preflightWarningShown = false;
-        cancelButton.hidden = false;
-        setOverall(0, selected.length, 0);
+        stagedItemCount = 0;
+        failedItemCount = 0;
+        overallBar.value = 0;
+        currentBar.value = 0;
+        speed.textContent = '';
 
+        let initialized;
         try {
             currentLabel.textContent = 'Initializing isolated upload batch...';
-            const initialized = await initBatch();
-            const snapshotCount = verifiedHashes.size;
+            initialized = await initBatch();
             addLog({
                 status: 'uploading',
-                message: 'Upload batch initialized. Background import jobs are disabled until all selected files finish staging.'
-                    + (snapshotCount > 0 ? ' Loaded ' + snapshotCount + ' verified hash identities for local duplicate checks.' : '')
+                message: 'Batch initialized. Local duplicate preflight runs first; no background import jobs are created during preflight or upload.'
             });
         } catch (error) {
             addLog({status: 'failed', message: error.message || 'Could not initialize upload batch.'});
@@ -642,21 +598,28 @@
             return;
         }
 
-        let attempted = 0;
-        for (let index = 0; index < selected.length; index++) {
-            if (cancelRequested) break;
-            attempted = index + 1;
-            await processOne(selected[index], index + 1, selected.length);
+        const plan = await buildUploadPlan(
+            files,
+            initialized.duplicate_keys || [],
+            initialized.duplicate_snapshot_complete === true
+        );
+        destroyHashWorker();
+
+        if (!cancelRequested) {
+            addLog({
+                status: 'completed',
+                message: 'Preflight complete: ' + plan.length + ' file(s) require upload; ' + preflightDuplicates + ' duplicate(s) skipped. Starting continuous upload staging.'
+            });
+            await uploadPlan(plan);
         }
 
         speed.textContent = '';
         activeXhr = null;
         activeUploadId = '';
-        destroyHashWorker();
 
         let finalJobId = 0;
         if (!cancelRequested) {
-            currentLabel.textContent = 'All file transfers are complete. Starting background processing...';
+            currentLabel.textContent = 'All file transfers finished. Creating background processing batch...';
             try {
                 const finalized = await finalizeBatch();
                 finalJobId = Number(finalized.job_id || 0);
@@ -687,18 +650,18 @@
             }
         }
 
-        currentBar.value = cancelRequested ? 0 : 100;
-        const duplicateText = preflightDuplicates > 0 ? '; ' + preflightDuplicates + ' duplicate(s) skipped before upload' : '';
         if (!cancelRequested) {
             overallBar.value = 100;
-            overallLabel.textContent = 'Preflight/upload complete (100%)';
-            overallCount.textContent = selected.length + ' of ' + selected.length + ' checked; ' + stagedItemCount + ' file(s) staged' + duplicateText;
+            overallLabel.textContent = 'Upload complete (100%)';
+            overallCount.textContent = stagedItemCount + ' staged; ' + preflightDuplicates + ' duplicate(s) skipped; ' + failedItemCount + ' failed';
+            currentBar.value = 100;
             currentLabel.textContent = finalJobId > 0
-                ? 'All selected files finished staging. Background processing started only after upload completion as batch job #' + finalJobId + '.'
-                : 'All selected files finished staging.';
+                ? 'Background processing started only after upload completion as batch job #' + finalJobId + '.'
+                : 'Upload staging complete.';
         } else {
-            overallCount.textContent = attempted + ' of ' + selected.length + ' checked; ' + stagedItemCount + ' file(s) staged before cancellation' + duplicateText;
+            currentBar.value = 0;
             currentLabel.textContent = 'Upload batch cancelled. No background import jobs were started.';
+            overallCount.textContent = stagedItemCount + ' file(s) staged before cancellation; ' + preflightDuplicates + ' duplicate(s) skipped';
         }
 
         submitButton.disabled = false;
@@ -707,7 +670,6 @@
         batchGameId = '';
         batchStrictProfile = '1';
         activeBatchId = '';
-        verifiedHashes = new Set();
     });
 
     installStatusStyles();
