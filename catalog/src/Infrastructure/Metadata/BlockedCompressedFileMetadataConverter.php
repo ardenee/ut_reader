@@ -68,7 +68,13 @@ final class BlockedCompressedFileMetadataConverter
         }
         BlockedCompressedMetadataContainer::verifyBytes($bytes, $fileId);
 
+        // Shared dictionary rows are append-mostly global state. Prime them before
+        // opening the file-owned projection transaction so concurrent maintenance
+        // cannot retain ue_terms locks while rewriting unrelated file rows.
         $sqlBatches = 0;
+        (new CompressedMetadataLookupWriter($this->db))->primeSnapshotTerms($snapshot, $sqlBatches);
+        (new CompactTermOverflowWriter($this->db))->write($snapshot, $sqlBatches);
+
         $this->db->beginTransaction();
         try {
             (new CompressedMetadataLookupWriter($this->db))->writeVersioned(
