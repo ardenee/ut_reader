@@ -21,6 +21,21 @@ $checks = [
         'needle' => 'releaseBatch()',
         'present' => false,
     ],
+    'browser performs no per-file server duplicate preflight' => [
+        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'needle' => 'serverDuplicatePreflight',
+        'present' => false,
+    ],
+    'browser builds upload plan before staging begins' => [
+        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'needle' => 'const plan = await buildUploadPlan(',
+        'present' => true,
+    ],
+    'browser has a separate continuous upload phase' => [
+        'path' => $root . '/assets/profiled-upload-jobs.js',
+        'needle' => 'await uploadPlan(plan);',
+        'present' => true,
+    ],
     'browser caps live result DOM rows' => [
         'path' => $root . '/assets/profiled-upload-jobs.js',
         'needle' => 'MAX_LOG_ROWS = 250',
