@@ -73,7 +73,8 @@ final class PdoCompactCaseInsensitiveExportResolver
                 self::primaryProviderFileIds($db, $gameId, $preferredFileId, $packageName),
                 $pendingPaths,
                 'exact_object',
-                $matches
+                $matches,
+                $preferredFileId
             );
             if ($pendingPaths !== []) {
                 self::matchProviderFiles(
@@ -81,7 +82,8 @@ final class PdoCompactCaseInsensitiveExportResolver
                     self::aliasProviderFileIds($db, $gameId, $preferredFileId, $packageName),
                     $pendingPaths,
                     'exact_object_alias',
-                    $matches
+                    $matches,
+                    $preferredFileId
                 );
             }
         }
@@ -97,7 +99,8 @@ final class PdoCompactCaseInsensitiveExportResolver
         array $fileIds,
         array &$pendingPaths,
         string $source,
-        array &$matches
+        array &$matches,
+        int $preferredFileId
     ): void {
         foreach ($fileIds as $fileId) {
             for ($start = 0; ; $start += self::PAGE_SIZE) {
@@ -109,9 +112,16 @@ final class PdoCompactCaseInsensitiveExportResolver
                     $page = $reader->page($fileId, 'exports', $start, self::PAGE_SIZE);
                 } catch (Throwable $error) {
                     // One damaged provider is an issue with that provider, not with
-                    // every consumer that happens to reference it. Skip it, try the
-                    // next verified provider, and surface one actionable System Error.
-                    self::reportUnreadableProvider($fileId, $error);
+                    // every consumer that happens to reference it. Skip it and try
+                    // the next provider. The preferred file is the package currently
+                    // being finalized/repaired; its previous container may legitimately
+                    // be absent until this publication completes, so do not create a
+                    // transient operator error for that self-provider case. If the
+                    // final publication itself fails, that failure is reported by the
+                    // importer/repair workflow instead.
+                    if ($fileId !== $preferredFileId) {
+                        self::reportUnreadableProvider($fileId, $error);
+                    }
                     break;
                 }
                 foreach ($page as $export) {
