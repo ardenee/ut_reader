@@ -32,7 +32,10 @@ final class JobExecutionContext
         int $leaseSeconds,
         private readonly ?\Closure $eventAppender = null
     ) {
-        $longRunningImport = in_array(
+        // These handlers can legitimately spend more than the normal two-minute
+        // lease inside one bounded I/O/DB operation. Give them the same renewable
+        // long lease so another worker cannot recover and duplicate live work.
+        $longRunningJob = in_array(
             $job->type,
             [
                 JobType::FULL_SYNC_GAME,
@@ -41,10 +44,11 @@ final class JobExecutionContext
                 JobType::REPAIR_UNVERIFIED_METADATA,
                 JobType::IMPORT_STAGED_PACKAGE,
                 JobType::IMPORT_STAGED_PAK,
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
             ],
             true
         );
-        $this->leaseSeconds = $longRunningImport
+        $this->leaseSeconds = $longRunningJob
             ? max($leaseSeconds, 6 * 3600)
             : $leaseSeconds;
         $this->lastHeartbeatAt = time();
