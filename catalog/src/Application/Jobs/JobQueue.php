@@ -33,7 +33,13 @@ interface JobQueue
         ?string $workflowUnitKey = null
     ): int;
 
-    public function claim(string $queue, string $workerId, int $leaseSeconds): ?ClaimedJob;
+    public function claim(
+        string $queue,
+        string $workerId,
+        int $leaseSeconds,
+        ?int $preferredRootJobId = null,
+        bool $requirePreferredRoot = false
+    ): ?ClaimedJob;
 
     /**
      * @param array<string, mixed> $result
