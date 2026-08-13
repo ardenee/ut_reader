@@ -9,11 +9,14 @@
     const actionUrl = String(root.dataset.actionUrl || '');
     const statusUrl = String(root.dataset.statusUrl || '');
     const workerStatusUrl = String(root.dataset.workerStatusUrl || '');
+    const csrf = String(root.dataset.csrf || '');
     const originalFetch = window.fetch.bind(window);
     const operatorStatusById = new Map();
     const operatorStartedAtById = new Map();
     let pendingNotice = '';
     let latestWorkerAuthority = '';
+    let latestWorking = [];
+    let latestWorker = null;
 
     const setText = (element, text) => {
         if (!element) return;
@@ -31,7 +34,17 @@
         '#jobs-first-page,#jobs-last-page,#jobs-page-summary{display:none!important}',
         '.jobs-toolbar{gap:8px}',
         '.jobs-toolbar #jobs-worker-summary-readable{margin-left:auto}',
-        '@media(max-width:900px){.jobs-toolbar #jobs-worker-summary-readable{width:100%;margin-left:0}}'
+        '.jobs-working{margin:0 0 16px;padding:12px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.012)}',
+        '.jobs-working__head{display:flex;gap:10px;align-items:baseline;justify-content:space-between;margin-bottom:9px}',
+        '.jobs-working__head strong{font-size:14px}',
+        '.jobs-working__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:8px}',
+        '.jobs-working__card{position:relative;padding:10px 110px 10px 11px;border-left:3px solid #f6c453;background:rgba(246,196,83,.035);min-height:74px}',
+        '.jobs-working__line{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}',
+        '.jobs-working__title{font-weight:700}',
+        '.jobs-working__meta{font-size:12px;color:var(--muted)}',
+        '.jobs-working__stop{position:absolute;right:10px;top:10px}',
+        '.jobs-working__empty{padding:5px 0;color:var(--muted)}',
+        '@media(max-width:900px){.jobs-toolbar #jobs-worker-summary-readable{width:100%;margin-left:0}.jobs-working__grid{grid-template-columns:1fr}}'
     ].join('');
     document.head.appendChild(style);
 
@@ -70,6 +83,33 @@
             if (!count || !Object.prototype.hasOwnProperty.call(labels, key)) return;
             button.replaceChildren(document.createTextNode(labels[key] + ' '), count);
         });
+    }
+
+    let workingPanel = null;
+    let workingTitle = null;
+    let workingBody = null;
+    if (tabs && !document.getElementById('jobs-currently-working')) {
+        workingPanel = document.createElement('section');
+        workingPanel.id = 'jobs-currently-working';
+        workingPanel.className = 'jobs-working';
+        const head = document.createElement('div');
+        head.className = 'jobs-working__head';
+        workingTitle = document.createElement('strong');
+        workingTitle.textContent = 'Currently working';
+        const hint = document.createElement('span');
+        hint.className = 'muted';
+        hint.textContent = 'Exact worker-owned tasks';
+        head.appendChild(workingTitle);
+        head.appendChild(hint);
+        workingBody = document.createElement('div');
+        workingBody.className = 'jobs-working__grid';
+        workingPanel.appendChild(head);
+        workingPanel.appendChild(workingBody);
+        tabs.parentNode.insertBefore(workingPanel, tabs.nextSibling);
+    } else {
+        workingPanel = document.getElementById('jobs-currently-working');
+        workingTitle = workingPanel ? workingPanel.querySelector('strong') : null;
+        workingBody = workingPanel ? workingPanel.querySelector('.jobs-working__grid') : null;
     }
 
     const headers = root.querySelectorAll('.jobs-table thead th');
@@ -192,8 +232,12 @@
                 operatorStatusById.set(id, operator);
                 operatorStartedAtById.set(id, String(job.operator_started_at || job.leased_at || ''));
             }
-            if (operator === 'running' && String(job.display_status || '').toLowerCase() !== 'running') {
+            const display = String(job.display_status || '').toLowerCase();
+            if (operator === 'running' && display !== 'running') {
                 job.display_status = 'running';
+                changed = true;
+            } else if (operator === 'queued' && display === 'running') {
+                job.display_status = 'queued';
                 changed = true;
             }
         });
@@ -218,6 +262,126 @@
         if (days || hours || minutes) parts.push(minutes + 'm');
         parts.push(seconds + 's');
         return parts.join(' ');
+    };
+    const formatAgo = (timestamp) => {
+        if (!timestamp) return '';
+        return formatDuration(Date.now() - timestamp) + ' ago';
+    };
+
+    const workerSlotMap = (worker) => {
+        const map = new Map();
+        const workers = worker && Array.isArray(worker.workers) ? worker.workers : [];
+        workers.forEach((entry, index) => {
+            if (!entry || typeof entry !== 'object') return;
+            const state = entry.state && typeof entry.state === 'object' ? entry.state : {};
+            const id = String(state.worker_id || '').trim();
+            const slot = Math.max(1, Number(entry.slot || state.worker_slot || index + 1));
+            if (id) map.set(id, slot);
+        });
+        return map;
+    };
+
+    const shortType = (value) => String(value || '').replace(/^catalog\./, '');
+
+    const stopWorkingTask = async (task, button) => {
+        const taskId = Number(task && task.task_id || 0);
+        if (!taskId || !actionUrl) return;
+        button.disabled = true;
+        setText(button, 'Stopping…');
+        try {
+            const response = await originalFetch(actionUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+                body: JSON.stringify({
+                    action: 'cancel',
+                    queue: String(root.dataset.queue || 'catalog'),
+                    job_id: taskId,
+                    reason: 'Stopped by administrator from Currently working.'
+                })
+            });
+            const body = await responseBody(response);
+            if (!response.ok) {
+                const message = body && body.error && body.error.message ? body.error.message : 'Could not stop task #' + taskId + '.';
+                throw new Error(String(message));
+            }
+            setText(button, 'Stopped');
+        } catch (error) {
+            button.disabled = false;
+            setText(button, task && task.is_child ? 'Stop task' : 'Stop job');
+            window.alert(error && error.message ? error.message : 'Could not stop the current task.');
+        }
+    };
+
+    const renderWorking = (working, worker) => {
+        latestWorking = Array.isArray(working) ? working : [];
+        latestWorker = worker && typeof worker === 'object' ? worker : null;
+        if (!workingBody || !workingTitle) return;
+        const desired = Math.max(1, Number(latestWorker && latestWorker.desired_count || latestWorker && latestWorker.active_count || 1));
+        setText(workingTitle, 'Currently working ' + latestWorking.length + '/' + desired);
+        workingBody.replaceChildren();
+
+        if (latestWorking.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'jobs-working__empty';
+            empty.textContent = latestWorkerAuthority === 'running' || latestWorkerAuthority === 'degraded'
+                ? 'Workers are idle between claims; no task is currently owned.'
+                : 'No task is currently owned by a worker.';
+            workingBody.appendChild(empty);
+            return;
+        }
+
+        const slots = workerSlotMap(latestWorker);
+        latestWorking.forEach((task, index) => {
+            const card = document.createElement('div');
+            card.className = 'jobs-working__card';
+            const slot = slots.get(String(task.worker_id || '')) || index + 1;
+
+            const title = document.createElement('span');
+            title.className = 'jobs-working__line jobs-working__title';
+            title.textContent = 'Worker ' + slot + ' · Job #' + Number(task.job_id || task.task_id || 0)
+                + (task.is_child ? ' · task #' + Number(task.task_id || 0) : '');
+            card.appendChild(title);
+
+            const target = document.createElement('span');
+            target.className = 'jobs-working__line';
+            const taskTarget = String(task.target || task.job_target || '').trim();
+            target.textContent = shortType(task.task_type || task.job_type) + (taskTarget ? ' · ' + taskTarget : '');
+            target.title = target.textContent;
+            card.appendChild(target);
+
+            const meta = document.createElement('span');
+            meta.className = 'jobs-working__line jobs-working__meta';
+            const started = parseUtc(task.started_at);
+            const activity = parseUtc(task.last_activity_at);
+            meta.dataset.workingStart = started ? String(started) : '';
+            meta.dataset.workingActivity = activity ? String(activity) : '';
+            const progress = Number(task.percent || 0) > 0 ? Number(task.percent || 0) + '% · ' : '';
+            meta.dataset.workingPrefix = progress + String(task.stage || 'running').replaceAll('_', ' ') + ' · ';
+            card.appendChild(meta);
+
+            const stop = document.createElement('button');
+            stop.type = 'button';
+            stop.className = 'jobs-working__stop';
+            stop.textContent = task.is_child ? 'Stop task' : 'Stop job';
+            stop.addEventListener('click', () => stopWorkingTask(task, stop));
+            card.appendChild(stop);
+
+            workingBody.appendChild(card);
+        });
+        updateWorkingTimes();
+    };
+
+    const updateWorkingTimes = () => {
+        if (!workingBody) return;
+        workingBody.querySelectorAll('[data-working-start]').forEach((element) => {
+            const started = Number(element.dataset.workingStart || 0);
+            const activity = Number(element.dataset.workingActivity || 0);
+            const prefix = String(element.dataset.workingPrefix || '');
+            const running = started ? 'running ' + formatDuration(Date.now() - started) : 'running';
+            const active = activity ? ' · active ' + formatAgo(activity) : '';
+            setText(element, prefix + running + active);
+        });
     };
 
     const renderOperatorRows = () => {
@@ -255,7 +419,10 @@
             });
         }).observe(tableBody, {childList: true, subtree: true, characterData: true});
     }
-    window.setInterval(renderOperatorRows, 1000);
+    window.setInterval(() => {
+        renderOperatorRows();
+        updateWorkingTimes();
+    }, 1000);
 
     const renderWorkerSummary = (worker) => {
         if (!readableWorkerState || !worker || typeof worker !== 'object') return;
@@ -291,7 +458,10 @@
         response = await rollUpJobStatus(response, url);
         if (workerStatusUrl && url.includes(workerStatusUrl)) {
             const data = await responseData(response);
-            if (data && data.worker) renderWorkerSummary(data.worker);
+            if (data && data.worker) {
+                renderWorkerSummary(data.worker);
+                renderWorking(Array.isArray(data.working) ? data.working : [], data.worker);
+            }
         }
         window.setTimeout(() => {
             renderOperatorRows(); syncPagination(); syncBulkPanel(); simplifyWorkerControls();
