@@ -5,7 +5,7 @@
  * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
  *      that behavior at each call site.
  * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
+ *      `catalog/src`.
  * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
  *        purpose.
  */
@@ -23,6 +23,7 @@ function catalog_admin_navigation_groups(string $root): array
         'Admin' => [
             'Dashboard' => $root . 'dashboard.php',
             'Setup' => $root . 'setup.php',
+            'Program Settings' => $root . 'program-settings.php',
             'Library' => $root . 'library.php',
             'Game Browser' => $root . 'games.php',
             'Search' => $root . 'index.php?page=search',
@@ -123,6 +124,11 @@ function catalog_admin_navigation_groups(string $root): array
             $backupGameScript = __DIR__ . '/../assets/game-backup-job-game.js';
             $backupGameVersion = is_file($backupGameScript) ? (string)filemtime($backupGameScript) : '1';
             echo '<script src="' . catalog_h($root . 'assets/game-backup-job-game.js?v=' . $backupGameVersion) . '"></script>';
+        }
+        if ($currentScript === 'background-jobs.php') {
+            $deleteScript = __DIR__ . '/../assets/background-jobs-delete-nonrunning.js';
+            $deleteVersion = is_file($deleteScript) ? (string)filemtime($deleteScript) : '1';
+            echo '<script src="' . catalog_h($root . 'assets/background-jobs-delete-nonrunning.js?v=' . $deleteVersion) . '" defer></script>';
         }
         $clientNavigationLoaded = true;
     }
