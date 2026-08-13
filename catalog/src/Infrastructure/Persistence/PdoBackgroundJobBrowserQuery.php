@@ -51,16 +51,20 @@ final class PdoBackgroundJobBrowserQuery
         $whereSql = $baseWhereSql;
         $params = $baseParams;
 
-        // A parent coordinator can deliberately defer itself while its durable
-        // child units execute. To an operator that is still one in-progress job,
-        // not a queued job repeatedly jumping in and out of Running.
+        // "In progress" is deliberately tied to worker ownership. A parent is
+        // active if it is itself claimed or one of its child units is claimed.
+        // A coordinator that merely has queued/completed children is Waiting.
         $hasWorkflowSql = 'EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1)';
-        $operatorStatusSql = 'CASE WHEN j.parent_job_id IS NULL AND j.status="queued" AND ' . $hasWorkflowSql
-            . ' THEN "running" ELSE j.status END';
-        // For workflow parents, created_at is a stable, cheap elapsed-time anchor.
-        // It intentionally avoids MIN(created_at) scans over tens of thousands of
-        // child units on every two-second status refresh. Simple non-workflow jobs
-        // continue to use the current claim time.
+        $hasRunningChildSql = 'EXISTS(SELECT 1 FROM ue_background_jobs running_child '
+            . 'WHERE running_child.parent_job_id=j.id AND running_child.status="running" LIMIT 1)';
+        $operatorStatusSql = 'CASE '
+            . 'WHEN j.status="running" THEN "running" '
+            . 'WHEN j.parent_job_id IS NULL AND j.status="queued" AND ' . $hasRunningChildSql . ' THEN "running" '
+            . 'ELSE j.status END';
+
+        // Workflow parent elapsed time is intentionally stable across coordinator
+        // yields/reclaims. The separate Currently working panel reports the exact
+        // claim duration of each worker-owned child/task.
         $operatorStartedSql = 'CASE WHEN ' . $hasWorkflowSql . ' THEN j.created_at ELSE j.leased_at END';
 
         if ($status !== '') {
@@ -78,9 +82,7 @@ final class PdoBackgroundJobBrowserQuery
             array_push($params, ...$conditionParams);
         }
 
-        // This query now sees top-level jobs only. The expensive hundreds-of-
-        // thousands-of-child-units count that required a 15-second cache no longer
-        // exists here, so keep the tabs in the same live snapshot as the rows.
+        // Parent-only counts are cheap enough to keep live with the rows.
         $counts = $this->countQuery->counts($fromSql, $baseWhereSql, $baseParams);
         $totalKey = $status !== '' ? $status : 'all';
         $total = max(0, (int)($counts[$totalKey] ?? 0));
