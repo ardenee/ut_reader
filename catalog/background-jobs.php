@@ -88,7 +88,6 @@ try {
         . '.jobs-detail-text strong{text-transform:capitalize;margin-bottom:3px}'
         . '.jobs-detail-text span,.jobs-detail-error{overflow-wrap:anywhere}'
         . '.jobs-detail-meta{grid-column:1/-1;text-align:left;font-size:12px}'
-        . '.jobs-detail-meta>span:first-child{display:none!important}'
         . '.jobs-detail-error{margin-top:0;color:#fecdd3}'
         . '.job-status{display:inline-block;min-width:84px;padding:3px 8px;border:1px solid var(--line);border-radius:999px;font-weight:700;text-align:center}'
         . '.job-status-queued,.job-status-running{color:#ffe29a;border-color:rgba(246,196,83,.75);background:rgba(246,196,83,.10)}'
@@ -180,7 +179,7 @@ try {
         . '<col><col class="jobs-col-runtime"><col class="jobs-col-attempts"><col class="jobs-col-created"><col class="jobs-col-action">'
         . '</colgroup><thead><tr>'
         . '<th></th><th>ID</th><th>Status</th><th>Type</th><th>File / target</th>'
-        . '<th>Current file time</th><th>Attempts</th><th>Created</th><th>Action</th>'
+        . '<th>Running for</th><th>Attempts</th><th>Created</th><th>Action</th>'
         . '</tr></thead><tbody id="jobs-table-body"><tr class="jobs-empty-row"><td colspan="9" class="jobs-empty muted">Loading…</td></tr></tbody></table></div>';
 
     echo '<div class="jobs-pagination">'
@@ -194,9 +193,9 @@ try {
         . '</div></div>';
 
     echo '<details class="jobs-maintenance"><summary>Maintenance</summary><div class="jobs-maintenance-body">'
-        . '<p class="muted">Use recovery only when the authoritative state reports orphaned running rows or expired leases. Old-job cleanup is queued as resumable background work; the browser only snapshots eligible terminal job IDs.</p>'
+        . '<p class="muted">Recovery only acts on running jobs whose detached worker process is no longer active. A long-running live job is never recovered because of elapsed time; use Stop job if operator review shows it is genuinely stuck.</p>'
         . '<p class="button-row">'
-        . '<button id="jobs-recover" type="button">Recover orphaned / expired jobs</button>'
+        . '<button id="jobs-recover" type="button">Recover orphaned jobs</button>'
         . '<label>Delete terminal jobs older than <select id="jobs-cleanup-days">'
         . '<option value="1">1 day</option><option value="7">7 days</option><option value="30" selected>30 days</option>'
         . '<option value="90">90 days</option><option value="365">1 year</option>'
