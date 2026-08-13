@@ -227,10 +227,12 @@ final class PdoJobLeaseStore
                 $job->leaseToken,
             ]);
         }
-        if ($statement->rowCount() !== 1) {
-            return 'lost';
-        }
 
+        // MySQL PDO rowCount() reports changed rows for UPDATE by default, not
+        // matched rows. A legitimate heartbeat can therefore return zero when a
+        // restarted job immediately persists the same checkpoint within the same
+        // second. Lease ownership is authoritative; never infer lease loss from a
+        // no-op UPDATE.
         $check = $this->db->prepare(
             'SELECT cancel_requested_at FROM ue_background_jobs WHERE id=? AND status="running" AND lease_token=?'
         );
