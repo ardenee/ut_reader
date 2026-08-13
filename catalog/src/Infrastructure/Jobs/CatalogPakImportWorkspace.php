@@ -25,8 +25,8 @@ final class CatalogPakImportWorkspace
         if ($parentJobId < 1) {
             throw new \InvalidArgumentException('A positive parent job id is required for PAK import workspace.');
         }
-        $this->directory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR
-            . 'pak-import' . DIRECTORY_SEPARATOR . 'job-' . $parentJobId;
+        $this->directory = $storageRoot . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'pak-import'
+            . DIRECTORY_SEPARATOR . 'job-' . $parentJobId;
         $this->filesDirectory = $this->directory . DIRECTORY_SEPARATOR . 'files';
     }
 
