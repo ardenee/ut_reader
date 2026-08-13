@@ -4,6 +4,7 @@
  * Purpose: Provides the application JobQueue contract through focused PDO persistence collaborators.
  * Why: Queue enqueue, claim, lease and recovery responsibilities have different correctness/performance concerns and should not live in one monolithic repository.
  * Role: Infrastructure façade; contains no duplicated lifecycle SQL.
+ * Worker fingerprint marker: affected-dependency batching v4 / child-first root affinity.
  */
 declare(strict_types=1);
 
