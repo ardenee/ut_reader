@@ -108,9 +108,16 @@ final class PdoJobClaimer
                 $where[] = '(concurrency_key IS NULL OR concurrency_key NOT IN (' . implode(',', array_fill(0, count($keys), '?')) . '))';
                 array_push($params, ...$keys);
             }
+
+            // Once a worker has root-job affinity, useful child work must beat the
+            // coordinator row. Otherwise the lower parent ID wakes every few
+            // seconds only to defer again while its children remain queued.
+            $order = $preferredRootJobId !== null
+                ? '(parent_job_id IS NULL) ASC,priority ASC,available_at ASC,id ASC'
+                : 'priority ASC,available_at ASC,id ASC';
             $statement = $this->db->prepare(
                 'SELECT * FROM ue_background_jobs WHERE ' . implode(' AND ', $where)
-                . ' ORDER BY priority ASC,available_at ASC,id ASC LIMIT 1 FOR UPDATE SKIP LOCKED'
+                . ' ORDER BY ' . $order . ' LIMIT 1 FOR UPDATE SKIP LOCKED'
             );
             $statement->execute($params);
             $row = $statement->fetch(PDO::FETCH_ASSOC);
