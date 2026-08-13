@@ -16,14 +16,15 @@ use PDO;
 use UnrealDb\Catalog\Application\Jobs\JobWorker;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogJobWorkerFactory
 {
-    // This factory is part of the detached-worker code fingerprint. Keep this
-    // marker so the process-owned queue change forces long-lived workers to
-    // reload after their current job reaches a normal loop boundary.
+    // Worker fingerprint marker: 20260813-compact-term-contention-v2.
+    // This factory is part of the detached-worker code fingerprint, so changing
+    // the marker forces long-lived workers to reload after their current unit.
     /** @param array<string,mixed> $config */
     public static function create(
         PDO $db,
@@ -53,6 +54,12 @@ final class CatalogJobWorkerFactory
         };
         $diagnosticEnabled = static fn(): bool => $logging->enabled('worker_diagnostics', false);
         $failureReporter = static function (ClaimedJob $job, \Throwable $error, string $disposition): void {
+            // A retryable deadlock/lock wait that was successfully returned to the
+            // queue is operational contention, not a system error. Keep the final
+            // failed/dead-letter outcome visible if retries are exhausted.
+            if ($disposition === 'retry_queued' && PdoContention::retryable($error)) {
+                return;
+            }
             CatalogSystemErrorRecorder::record([
                 'source_kind' => 'background-job',
                 'severity' => 'error',
