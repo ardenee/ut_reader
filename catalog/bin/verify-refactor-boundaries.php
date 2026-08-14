@@ -28,6 +28,27 @@ function sourceFile(string $root, string $relative, array &$failures): string
     return $source;
 }
 
+/**
+ * Return PHP source without comments/docblocks so boundary assertions inspect
+ * executable code and string literals rather than audit prose describing what
+ * a class deliberately does not depend on.
+ */
+function sourceWithoutComments(string $source): string
+{
+    $result = '';
+    foreach (token_get_all($source) as $token) {
+        if (is_array($token)) {
+            if (in_array($token[0], [T_COMMENT, T_DOC_COMMENT], true)) {
+                continue;
+            }
+            $result .= $token[1];
+            continue;
+        }
+        $result .= $token;
+    }
+    return $result;
+}
+
 function requireMarkers(string $relative, string $source, array $markers, array &$failures): void
 {
     foreach ($markers as $marker) {
@@ -119,7 +140,7 @@ foreach ($checks as $relative => $rules) {
         continue;
     }
     requireMarkers($relative, $source, $rules['require'], $failures);
-    forbidMarkers($relative, $source, $rules['forbid'], $failures);
+    forbidMarkers($relative, sourceWithoutComments($source), $rules['forbid'], $failures);
 }
 
 // Application/Search must remain persistence-free as the directory evolves.
@@ -127,7 +148,12 @@ $searchDir = $root . '/src/Application/Search';
 foreach (glob($searchDir . '/*.php') ?: [] as $path) {
     $source = (string)file_get_contents($path);
     $relative = 'src/Application/Search/' . basename($path);
-    forbidMarkers($relative, $source, ['use PDO;', 'PDO $', '->prepare(', '->query('], $failures);
+    forbidMarkers(
+        $relative,
+        sourceWithoutComments($source),
+        ['use PDO;', 'PDO $', '->prepare(', '->query('],
+        $failures
+    );
 }
 
 // Workflow coordinators that have been migrated must route status counts through
@@ -148,7 +174,7 @@ foreach ([
         requireMarkers($relative, $source, ['PdoWorkflowChildStateQuery'], $failures);
         forbidMarkers(
             $relative,
-            $source,
+            sourceWithoutComments($source),
             ['SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=?'],
             $failures
         );
