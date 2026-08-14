@@ -19,6 +19,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
@@ -27,7 +28,9 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
 {
     private const WORKFLOW_VERSION = 4;
-    private const LEGACY_COMPACT_LIMIT = 5000;
+    // Online conversion must keep a tiny lock footprint. One pass converts one
+    // normal affected-dependency batch; subsequent coordinator turns continue.
+    private const LEGACY_COMPACT_LIMIT = 250;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -492,6 +495,14 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
+            }
+            // This is an online optimization for legacy v3 children, not the
+            // dependency operation itself. Workers may legitimately race these
+            // queued rows while the coordinator is converting them. A transient
+            // lock timeout/deadlock therefore means "try compaction later", not
+            // "fail the parent workflow".
+            if (PdoContention::retryable($error)) {
+                return ['files' => 0, 'batches' => 0];
             }
             throw $error;
         }
