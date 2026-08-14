@@ -28,6 +28,7 @@ interface CatalogPackageImporter
         string $temporaryPath,
         string $originalName,
         string $gameSlug,
-        string $reason
+        string $reason,
+        ?int $uploadedBy = null
     ): void;
 }
