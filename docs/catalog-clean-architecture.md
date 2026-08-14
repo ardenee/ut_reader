@@ -2,45 +2,38 @@
 
 ## Goal
 
-The catalog is being refactored incrementally while preserving current behaviour. Public URLs, HTML, JSON payloads, profile rules, reader behaviour, database schema meaning, storage paths, job types, queue semantics and file identity rules remain stable while responsibilities move to clearer boundaries.
+The catalog is refactored incrementally while preserving public URLs, HTML/JSON contracts, Unreal parsing rules, file identity, storage layout, job types and durable workflow semantics.
 
-`catalog/lib` is now treated as a compatibility surface rather than a permanent implementation layer. When every caller of a compatibility facade has moved to the current namespaced implementation, the facade should be deleted rather than retained as backup code.
+`catalog/lib` is a compatibility surface. New behaviour belongs under `catalog/src`; a legacy facade should become a thin delegate and be removed only after its callers have migrated.
 
-## Active folder structure
+## Active structure
 
 ```text
 catalog/
 ├── bootstrap.php
 ├── src/
-│   ├── Domain/                           # stable domain concepts such as job types/resource policies
-│   ├── Application/                      # use-case policy/orchestration that does not own persistence
+│   ├── Domain/                       # pure durable-job/domain policy and value objects
+│   ├── Application/                  # persistence-free use cases and ports
 │   │   ├── Dashboard/
 │   │   ├── Jobs/
 │   │   ├── Search/
+│   │   ├── Unverified/
 │   │   └── Upload/
 │   ├── Infrastructure/
-│   │   ├── Import/                       # package/upload implementations
-│   │   ├── Jobs/                         # durable job handlers, worker/process coordination
-│   │   ├── Metadata/                     # compact metadata read/write/rebuild implementations
-│   │   ├── Persistence/                  # PDO query/repository implementations
-│   │   │   ├── PdoCatalogDependencyRebuilder.php
-│   │   │   ├── PdoDependencyResolver.php
-│   │   │   ├── PdoDependencyReadSource.php
-│   │   │   ├── PdoGameFileListQuery.php
-│   │   │   └── PdoPackageTablePageQuery.php
-│   │   └── Readers/                      # configured engine-to-reader resolution
+│   │   ├── Composition/              # concrete dependency wiring
+│   │   ├── Import/                   # package import/storage adapters
+│   │   ├── Jobs/                     # job handlers and host worker supervisor adapters
+│   │   ├── Metadata/                 # format-2 compact metadata publication/read/write
+│   │   ├── Persistence/              # PDO repositories and durable queue
+│   │   ├── Readers/                  # engine reader resolution
+│   │   ├── Search/                   # PDO search repository
+│   │   └── Unverified/               # queue/import adapters
 │   └── Presentation/
-│       └── Http/
-├── lib/
-│   ├── CatalogScanner.php                # thin scanner compatibility include manifest
-│   └── Scanner/
-│       ├── CatalogScannerPath.php         # package/source path compatibility functions
-│       ├── CatalogScannerSupport.php      # reader/progress/storage helpers
-│       ├── CatalogScannerDependencies.php # thin delegates to PDO dependency rebuilder
-│       └── CatalogScannerImport.php       # current scanner import workflow
+│       └── Http/                     # request/session/response compatibility
+├── lib/                              # transitional global compatibility facades
 ├── parsers/
-├── federation/
-└── *.php                                 # existing page controllers, migrated incrementally
+├── migrations/
+└── *.php                             # existing page controllers, migrated incrementally
 ```
 
 ## Dependency direction
@@ -48,98 +41,111 @@ catalog/
 ```text
 Presentation / entry points
         ↓
-Application use cases and contracts
+Application use cases and ports
         ↓
 Infrastructure adapters
         ↓
-PDO / filesystem / readers / worker processes / MySQL
+PDO / filesystem / readers / processes / MySQL
 ```
 
-Application code must not render HTML, inspect request globals, manage sessions, launch processes, or own SQL/filesystem persistence. Infrastructure owns database queries, filesystem storage, reader bridges and worker/process implementations.
+Domain and Application code must not inspect request globals, open PDO connections, own SQL/filesystem persistence, launch processes or render HTML.
 
-Some older Application classes still violate this direction. They are migration targets, not patterns for new code.
+Concrete adapters are composed in Infrastructure composition roots or at an explicit legacy compatibility boundary. Presentation must not mutate Domain static state to install infrastructure behaviour.
 
-## Scanner and dependency ownership
+## Current ownership
 
-The old `CatalogScanner.php` monolith has been decomposed without changing the public `scanner_*` API used by existing jobs and pages.
+### Durable jobs
 
-Dependency persistence no longer lives in the scanner procedural file:
+- `JobResourcePolicy` is pure Domain policy: job type/payload → default resource profile and concurrency key.
+- Runtime environment/database resource limits are resolved by Infrastructure at claim time; changing a saved limit does not rewrite queued rows.
+- `PdoJobClaimer` selects queue rows with `FOR UPDATE SKIP LOCKED` and uses `PdoJobAdmissionGuard` to serialize resource-class/concurrency-key admission.
+- Root workflow affinity is preference-only. A worker falls back to unrelated runnable work when its preferred workflow is blocked.
+- `PdoWorkerOwnership` holds a connection-scoped MySQL named lock for process ownership. Recovery uses process/database ownership, not elapsed lease time, to decide whether a running job is orphaned.
+- `lease_token` remains the fencing token for running-row lifecycle writes.
+- `PdoWorkflowChildStateQuery` is the canonical child status-count read model; coordinators should not reimplement `status/COUNT(*)` semantics.
+- `BackgroundJobDisplaySql` is the canonical operator status expression used by both list rows and counts.
 
-- `PdoDependencyResolver` owns exact package/provider/object lookup semantics.
-- `PdoCatalogDependencyRebuilder` owns single-file, whole-game and affected dependency rebuild persistence.
-- `CatalogAffectedDependencyRefreshCoordinator` owns durable affected-refresh discovery/queue coordination.
-- `CompactDependencyRebuilder` uses the same Infrastructure resolver for compact metadata.
-- `CatalogScannerDependencies.php` only preserves the existing global function signatures while callers are migrated.
+### Upload/import
 
-The former `Application/Dependency/CatalogDependencyResolver.php` and `CatalogAffectedDependencyRefreshService.php` compatibility implementations have been removed.
+- Upload Bucket v2 remains the only upload implementation; the old upload route is a compatibility redirect.
+- `ProfiledUploadService` owns upload-batch application policy and passes user identity explicitly to failed-upload retention.
+- `FailedUploadPreserver` is the Application port; the filesystem retention implementation lives in Infrastructure.
+- `scanner_scan_uploaded_file()` is a thin global compatibility delegate to the namespaced package importer.
+- The package importer remains a deliberately conservative compatibility adapter over reader, persistence, storage and dependency collaborators. Further decomposition must be driven by behavioural tests because Unreal package import semantics are tightly coupled and a folder-only rewrite would increase risk without improving the runtime model.
+
+### Unverified files
+
+- `Application/Unverified/CatalogUnverifiedActionService` owns move/import/delete use-case sequencing and result semantics.
+- `CatalogUnverifiedQueueMutation` and `CatalogUnverifiedImporter` are Application ports.
+- Infrastructure supplies filesystem/PDO/import adapters; the historical Infrastructure action service is now a thin composition compatibility adapter.
+
+### Compact metadata
+
+- Format-2 compact metadata remains authoritative for verified package metadata.
+- `ue_files.metadata_status` explicitly records `pending`, `ready` or `failed` publication state.
+- `metadata_error` and `metadata_updated_at` expose partial publication failures for repair/operations instead of requiring inference from missing side data.
+- `VerifiedFileCompactMetadataFinalizer` marks publication pending before work, ready after verification, and failed with the publication error on failure.
+
+### Search
+
+- `Application/Search` depends on `CatalogSearchRepository`, not PDO.
+- `Infrastructure/Search/PdoCatalogSearchRepository` owns identity, prefix, alias, compact metadata and bounded contains SQL.
+- The legacy global `CatalogSearchService::findFiles(PDO, ...)` remains only as a composition facade for existing pages.
+- Broad global contains search stays bounded per game. Do not add Elasticsearch or another service until production measurements justify it.
+
+### Host-local workers
+
+`CatalogDetachedWorker` is the stable public supervisor facade. Its previous mixed responsibilities are split into:
+
+- `CatalogWorkerRuntimeStateStore` — runtime files, locks, state and log tails;
+- `CatalogWorkerProcessLauncher` — PHP executable resolution and Windows/POSIX process launch;
+- `CatalogWorkerCodeVersion` — stale-code fingerprinting.
+
+Durable correctness does **not** depend on those host-local files; MySQL queue state and `PdoWorkerOwnership` remain authoritative across Windows, Docker and Kubernetes.
+
+### Readers
+
+- UE1/UE2 continue using memory-bounded readers.
+- UE3 uses the strict Epic reader. Compressed UE3 packages release the full compressed buffer before logical reconstruction and read compressed chunks from disk one at a time, reducing peak memory without changing serialized layout handling.
+- UE4/UE5 use their configured readers.
 
 ## Compatibility strategy
 
-Compatibility exists to keep current routes and callers stable during a migration; it is not a reason to retain obsolete implementations.
+1. Keep an existing public/global contract while active callers require it.
+2. Move policy to Application or implementation to Infrastructure as appropriate.
+3. Make the compatibility surface a thin delegate/composition boundary.
+4. Migrate callers when doing so does not change behaviour.
+5. Delete a facade only after repository search and runtime verification show it is unused.
 
-Use these rules:
-
-1. Keep an existing public/global function when active callers still require that exact contract.
-2. Move its real implementation to the correct namespaced layer.
-3. Make the compatibility function a thin delegate.
-4. Migrate callers to the namespaced implementation where practical.
-5. Delete the facade once no live caller requires it.
-
-Do not keep parallel old/new implementations as fallback code when the current implementation is authoritative.
-
-## Controller migration rule
-
-Each existing page should converge on this shape:
-
-1. Load the shared bootstrap/application context.
-2. Parse and validate HTTP input.
-3. Construct or resolve the required use-case/query collaborator.
-4. Invoke it.
-5. Render the existing HTML or JSON response.
-
-A page controller should not own package reader selection, dependency-resolution precedence, database aggregation algorithms, upload batch orchestration, worker lifecycle or filesystem storage rules.
-
-## Current ownership examples
-
-| Module | Owns | Does not own |
-|---|---|---|
-| `Application/Search` | search use-case policy and outcome handling | page HTML, PDO setup |
-| `Application/Upload` | upload use-case contract/orchestration | reader globals, durable storage implementation |
-| `Infrastructure/Persistence` | PDO queries, keyset paging, dependency/provider persistence | HTTP parsing/rendering |
-| `Infrastructure/Metadata` | compact metadata loading/writing/rebuilding | page controllers |
-| `Infrastructure/Jobs` | durable handlers, affected-refresh coordination, worker/process implementation | HTTP UI |
-| `Infrastructure/Readers` | configured engine-to-reader resolution | profile forms |
-| `lib/Scanner` | temporary global scanner compatibility API | new product/business behaviour |
-| `Presentation/Http` | request-level config/PDO/session composition | persistence algorithms |
-
-## Next safe migrations
-
-1. Move the implementation of `scanner_scan_uploaded_file()` from `lib/Scanner/CatalogScannerImport.php` into a namespaced import service and leave only a global delegate while legacy callers remain.
-2. Move scanner package/source-path policy into a namespaced `PackageNamePolicy`/`SourcePathPolicy`, then migrate direct global callers.
-3. Retire remaining dependency/schema compatibility functions when their callers use `PdoDependencySchemaManager` directly.
-4. Decompose `CatalogUnverifiedIndex.php` into staging/index/query services.
-5. Decompose `CatalogDetachedWorker.php` into pool, runtime-state and process-launch components while preserving Windows behaviour exactly.
-6. Continue moving page-local SQL into intent-specific Infrastructure query objects.
+Do not keep two independent implementations as fallbacks.
 
 ## Validation policy
 
-The project currently uses application/web-interface validation rather than an automated PHP test suite.
+There is deliberately no required GitHub Actions application-quality workflow. Validation is local/manual so repository changes do not create an email-heavy CI gate.
 
-For architecture changes:
+Before deployment:
 
-- run `php -l` on every changed PHP file;
-- verify published Git blobs match the locally linted files when large files are replaced;
-- exercise the affected web/API workflow manually;
-- preserve SQL ordering, result shapes, cursor semantics, job types, dedupe keys, retries and progress reporting unless a separate behavioural change is intentional;
-- do not add GitHub Actions/test workflows unless explicitly requested.
+```text
+php catalog/bin/migrate.php status
+php catalog/bin/migrate.php verify
+php catalog/bin/verify-queue-runtime-invariants.php
+php catalog/bin/verify-job-root-affinity-contract.php
+php catalog/bin/verify-job-claim-concurrency.php --run
+```
+
+Also run `php -l` on changed PHP files and exercise the affected HTTP/job workflow on the deployment host. The real-MySQL concurrency verifier uses uniquely named temporary queue/resource rows and cleans them up when it exits.
+
+Architecture marker scripts are secondary checks only. They must not be treated as substitutes for real queue/database behaviour tests.
 
 ## Rules for new code
 
-- Put new product behaviour in `catalog/src`, not `catalog/lib`.
-- `catalog/lib` may contain compatibility delegates or legacy code awaiting migration, but not a second implementation of already-migrated behaviour.
-- New classes use the `UnrealDb\Catalog` namespace.
-- Infrastructure owns PDO/filesystem/process/reader implementation details.
-- Application owns use-case policy and contracts, not Infrastructure construction.
-- Do not call `$_SESSION`, `$_FILES`, `header()`, `echo`, or `exit` from Application services.
-- Request globals may remain temporarily at a legacy compatibility boundary, but should not leak into new Infrastructure services.
-- Preserve existing response structures and operational semantics during architecture-only refactors.
+- New product behaviour goes in `catalog/src`, not `catalog/lib`.
+- Domain code is pure: no PDO, environment reads, sessions, filesystem or logging side effects.
+- Application code owns use-case sequencing and contracts but no SQL/PDO/filesystem/process details.
+- Infrastructure implements database, filesystem, reader, process and external-service ports.
+- Presentation owns request/session/CSRF/response behaviour.
+- Do not read `$_POST`, `$_FILES` or `$_SESSION` below Presentation/legacy compatibility boundaries.
+- New workflow coordinators use `PdoWorkflowChildStateQuery` rather than duplicating status-count SQL.
+- New operator job reporting uses `BackgroundJobDisplaySql` rather than duplicating parent/child display semantics.
+- Preserve queue job types, unit keys, dedupe keys, result shapes, retry semantics and package identity during architecture-only refactors.
+- Add a new external service only after measurement demonstrates that the modular monolith/MySQL design is the bottleneck.
