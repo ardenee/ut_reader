@@ -38,15 +38,11 @@ final class PdoJobClaimer
             ? $preferredRootJobId
             : null;
 
-        // The old claimer stacked independent resource/key GET_LOCK calls on top
-        // of row locking. That made an otherwise runnable queue capable of
-        // returning idle simply because claim-coordination locks disagreed. One
-        // queue claim mutex is sufficient for a local 1-8 process worker pool and
-        // keeps resource/concurrency checks atomic with the ownership transition.
+        // One queue claim mutex is sufficient for a local 1-8 process worker
+        // pool and keeps resource/concurrency checks atomic with the ownership
+        // transition. It is held only while choosing and marking one row.
         $claimLock = $this->coordinationLockName($queue);
         if (!$this->acquireLock($claimLock, 1)) {
-            // Another worker is spending a few milliseconds claiming a row. This
-            // worker will poll again; this is not evidence that the queue is idle.
             return null;
         }
 
@@ -100,16 +96,9 @@ final class PdoJobClaimer
                 'j.status="queued"',
                 'j.cancel_requested_at IS NULL',
                 'j.available_at<=?',
-                // Resource limits are evaluated against rows actually owned now.
-                // Because every ownership transition passes through the queue
-                // claim mutex, two workers cannot race this count and both claim
-                // the final slot.
                 '(SELECT COUNT(*) FROM ue_background_jobs rr '
                     . 'WHERE rr.queue_name=j.queue_name AND rr.status="running" '
                     . 'AND rr.resource_class=j.resource_class) < GREATEST(1,j.resource_limit)',
-                // A concurrency key blocks only while another row with that exact
-                // key is genuinely running. Queued/deferred rows never block one
-                // another.
                 '(j.concurrency_key IS NULL OR j.concurrency_key="" OR NOT EXISTS('
                     . 'SELECT 1 FROM ue_background_jobs rk '
                     . 'WHERE rk.queue_name=j.queue_name AND rk.status="running" '
@@ -126,11 +115,18 @@ final class PdoJobClaimer
                 $params[] = $preferredRootJobId;
             }
 
-            // Within a preferred workflow, useful child work wins over the
-            // coordinator row. Globally, normal durable priority/FIFO ordering is
-            // retained.
+            /*
+             * Within an active root workflow, let an available coordinator row
+             * briefly run before its children. The coordinator deliberately
+             * defers itself between checks, so this does not monopolize a worker:
+             * while it is deferred the child rows win automatically. This is
+             * essential for resumable workflows because the parent owns progress
+             * aggregation, legacy-child compaction and the final completion step.
+             * Starving the parent until every child finished left progress frozen
+             * for hours and prevented old one-file units from being compacted.
+             */
             $order = $preferredRootJobId !== null
-                ? '(j.parent_job_id IS NULL) ASC,j.priority ASC,j.available_at ASC,j.id ASC'
+                ? '(j.parent_job_id IS NULL) DESC,j.priority ASC,j.available_at ASC,j.id ASC'
                 : 'j.priority ASC,j.available_at ASC,j.id ASC';
 
             $statement = $this->db->prepare(
