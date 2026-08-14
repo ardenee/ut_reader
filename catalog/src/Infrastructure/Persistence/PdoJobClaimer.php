@@ -9,15 +9,13 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 /**
  * Claims the next runnable durable job.
  *
- * A worker must never report idle merely because advisory claim coordination is
- * unavailable. The queue row transition itself is protected by a transaction and
- * FOR UPDATE SKIP LOCKED. The advisory mutex is therefore best-effort only: it
- * normally serializes resource/concurrency decisions, but failure to acquire it
- * can never hide otherwise runnable work.
+ * Candidate row ownership is protected by FOR UPDATE SKIP LOCKED. Resource-class
+ * and concurrency-key admission is serialized separately by PdoJobAdmissionGuard,
+ * so workers selecting different queue rows cannot race through the same limit.
  */
 final class PdoJobClaimer
 {
-    private ?string $databaseIdentity = null;
+    private const MAX_BLOCKED_CANDIDATES_PER_SCOPE = 32;
 
     public function __construct(private readonly PDO $db, ?PdoJobRecovery $legacyRecovery = null)
     {
@@ -36,80 +34,105 @@ final class PdoJobClaimer
         $preferredRootJobId = $preferredRootJobId !== null && $preferredRootJobId > 0
             ? $preferredRootJobId
             : null;
+        $guard = new PdoJobAdmissionGuard($this->db);
 
-        // Keep the short advisory mutex when it is immediately available because
-        // it makes resource/concurrency decisions deterministic across the small
-        // local worker pool. It is deliberately NOT a prerequisite for claiming:
-        // a stale/contended named lock must never turn a non-empty queue into an
-        // apparently idle queue.
-        $claimLock = $this->coordinationLockName($queue);
-        $claimLockHeld = $this->tryAcquireLock($claimLock);
-
-        try {
-            $candidate = null;
-
-            // Affinity only affects ordering. If this root has no runnable row,
-            // immediately fall back to any valid queue job.
-            if ($preferredRootJobId !== null) {
-                $candidate = $this->lockNextValidCandidate($queue, $preferredRootJobId);
+        if ($preferredRootJobId !== null) {
+            $preferred = $this->claimFromScope(
+                $queue,
+                $workerId,
+                $leaseSeconds,
+                $preferredRootJobId,
+                $guard
+            );
+            if ($preferred !== null || $requirePreferredRoot) {
+                return $preferred;
             }
-            if ($candidate === null) {
-                $candidate = $this->lockNextValidCandidate($queue, null);
-            }
+        }
+
+        return $this->claimFromScope($queue, $workerId, $leaseSeconds, null, $guard);
+    }
+
+    private function claimFromScope(
+        string $queue,
+        string $workerId,
+        int $leaseSeconds,
+        ?int $preferredRootJobId,
+        PdoJobAdmissionGuard $guard
+    ): ?ClaimedJob {
+        $excluded = [];
+
+        for ($attempt = 0; $attempt < self::MAX_BLOCKED_CANDIDATES_PER_SCOPE; $attempt++) {
+            $candidate = $this->lockNextCandidate($queue, $preferredRootJobId, $excluded);
             if ($candidate === null) {
                 return null;
             }
 
+            $candidateId = (int)($candidate['id'] ?? 0);
             $resourceClass = trim((string)($candidate['resource_class'] ?? 'default')) ?: 'default';
-            $resourceLimit = max(1, (int)($candidate['resource_limit'] ?? 1));
-            $concurrencyKey = $candidate['concurrency_key'] !== null
-                ? trim((string)$candidate['concurrency_key'])
-                : '';
-
-            return $this->leaseLockedCandidate(
-                $candidate,
-                $workerId,
-                $leaseSeconds,
+            $persistedLimit = max(1, (int)($candidate['resource_limit'] ?? 1));
+            $concurrencyKey = trim((string)($candidate['concurrency_key'] ?? ''));
+            $locks = $guard->acquire(
+                $queue,
                 $resourceClass,
-                $resourceLimit,
-                $concurrencyKey
+                $concurrencyKey !== '' ? $concurrencyKey : null
             );
-        } finally {
-            // A selected row leaves its transaction open until
-            // leaseLockedCandidate() commits it. If anything exits early or
-            // throws, never leak that row transaction into the next poll.
-            $this->rollbackClaimTransaction();
-            if ($claimLockHeld) {
-                $this->releaseLock($claimLock);
+
+            if ($locks === null) {
+                $this->rollbackClaimTransaction();
+                if ($candidateId > 0) {
+                    $excluded[] = $candidateId;
+                }
+                continue;
+            }
+
+            try {
+                $resourceLimit = $guard->currentLimit($resourceClass, $persistedLimit);
+                if (!$guard->canRun(
+                    $queue,
+                    $resourceClass,
+                    $resourceLimit,
+                    $concurrencyKey !== '' ? $concurrencyKey : null
+                )) {
+                    $this->rollbackClaimTransaction();
+                    if ($candidateId > 0) {
+                        $excluded[] = $candidateId;
+                    }
+                    continue;
+                }
+
+                return $this->leaseLockedCandidate(
+                    $candidate,
+                    $workerId,
+                    $leaseSeconds,
+                    $resourceClass,
+                    $resourceLimit,
+                    $concurrencyKey
+                );
+            } finally {
+                $this->rollbackClaimTransaction();
+                $guard->release($locks);
             }
         }
+
+        return null;
     }
 
-    /** @return array<string,mixed>|null */
-    private function lockNextValidCandidate(string $queue, ?int $preferredRootJobId): ?array
-    {
+    /**
+     * @param list<int> $excludedIds
+     * @return array<string,mixed>|null
+     */
+    private function lockNextCandidate(
+        string $queue,
+        ?int $preferredRootJobId,
+        array $excludedIds
+    ): ?array {
         $this->db->beginTransaction();
         try {
             $where = [
                 'j.queue_name=?',
                 'j.status="queued"',
                 'j.cancel_requested_at IS NULL',
-                // Use database time so PHP/DB clock or timezone differences can
-                // never make an already-available job invisible.
                 'COALESCE(j.available_at,j.created_at)<=UTC_TIMESTAMP()',
-                // Legacy rows may predate persisted resource policy. Normalize
-                // NULL/blank class and NULL limit in SQL before evaluating the
-                // runnable predicate rather than relying on PHP normalization
-                // after the row has already been excluded.
-                '(SELECT COUNT(*) FROM ue_background_jobs rr '
-                    . 'WHERE rr.queue_name=j.queue_name AND rr.status="running" '
-                    . 'AND COALESCE(NULLIF(rr.resource_class,""),"default")='
-                    . 'COALESCE(NULLIF(j.resource_class,""),"default")) '
-                    . '< GREATEST(1,COALESCE(j.resource_limit,1))',
-                '(j.concurrency_key IS NULL OR j.concurrency_key="" OR NOT EXISTS('
-                    . 'SELECT 1 FROM ue_background_jobs rk '
-                    . 'WHERE rk.queue_name=j.queue_name AND rk.status="running" '
-                    . 'AND rk.concurrency_key=j.concurrency_key LIMIT 1))',
             ];
             $params = [$queue];
 
@@ -119,9 +142,13 @@ final class PdoJobClaimer
                 $params[] = $preferredRootJobId;
             }
 
-            // When the coordinator becomes available it gets a brief turn so it
-            // can publish progress, compact legacy children and finalize. While it
-            // is deferred, its runnable child rows naturally win.
+            if ($excludedIds !== []) {
+                $where[] = 'j.id NOT IN (' . implode(',', array_fill(0, count($excludedIds), '?')) . ')';
+                foreach ($excludedIds as $excludedId) {
+                    $params[] = $excludedId;
+                }
+            }
+
             $order = $preferredRootJobId !== null
                 ? '(j.parent_job_id IS NULL) DESC,j.priority ASC,j.available_at ASC,j.id ASC'
                 : 'j.priority ASC,j.available_at ASC,j.id ASC';
@@ -208,44 +235,6 @@ final class PdoJobClaimer
         } catch (\Throwable $exception) {
             $this->rollbackClaimTransaction();
             throw $exception;
-        }
-    }
-
-    private function coordinationLockName(string $queue): string
-    {
-        $identity = $this->databaseIdentity() . "\0" . $queue;
-        return 'unrealdb:queue-claim:' . substr(hash('sha256', $identity), 0, 40);
-    }
-
-    private function databaseIdentity(): string
-    {
-        if ($this->databaseIdentity === null) {
-            $this->databaseIdentity = (string)(
-                $this->db->query('SELECT DATABASE()')->fetchColumn() ?: 'default'
-            );
-        }
-        return $this->databaseIdentity;
-    }
-
-    private function tryAcquireLock(string $lockName): bool
-    {
-        try {
-            $statement = $this->db->prepare('SELECT GET_LOCK(?,0)');
-            $statement->execute([$lockName]);
-            return (int)$statement->fetchColumn() === 1;
-        } catch (\Throwable) {
-            // Claim coordination is an optimization, never queue availability.
-            return false;
-        }
-    }
-
-    private function releaseLock(string $lockName): void
-    {
-        try {
-            $statement = $this->db->prepare('SELECT RELEASE_LOCK(?)');
-            $statement->execute([$lockName]);
-        } catch (\Throwable $error) {
-            error_log('[UnrealDB jobs] Could not release queue claim lock: ' . $error->getMessage());
         }
     }
 
