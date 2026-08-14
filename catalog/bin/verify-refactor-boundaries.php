@@ -76,6 +76,19 @@ foreach ([
     'catalog/src/Presentation/Http/LegacySupportHooks.php',
     'catalog/src/Presentation/Http/CatalogTableSortAssets.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedActionService.php',
+    'catalog/src/Infrastructure/Logging/LegacyUploadFailureLogger.php',
+    'UE1/UE1.php',
+    'UE1/UnrealPackageReader.php',
+    'UE2/UE2.php',
+    'UE2/UnrealPackageReader.php',
+    'UE3/UE3.php',
+    'UE3/TUnrealPackage.php',
+    'UE3/UnrealPackageReader.php',
+    'UE3/View.php',
+    'UE4/UE4.php',
+    'UE5/UE5.php',
+    'UE5/UnrealPackageReader.php',
+    'standalone/StandalonePackageUi.php',
 ] as $retiredPath) {
     if (is_file($repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $retiredPath))) {
         $failures[] = $retiredPath . ': retired compatibility path must stay removed';
@@ -83,6 +96,30 @@ foreach ([
 }
 
 $checks = [
+    'config.example.php' => [
+        'require' => [
+            "'UE4' => ['reader' => '../UE4/UnrealPackageReader.php'",
+        ],
+        'forbid' => [
+            "'UE1' => ['reader' => '../UE1/UnrealPackageReader.php'",
+            "'UE2' => ['reader' => '../UE2/UnrealPackageReader.php'",
+            "'UE3' => ['reader' => '../UE3/UnrealPackageReader.php'",
+            "'UE5' => ['reader' => '../UE5/UnrealPackageReader.php'",
+        ],
+    ],
+    'src/Infrastructure/Readers/CatalogReaderResolver.php' => [
+        'require' => [
+            'CatalogLegacyPackageReader.php',
+            'UE3CatalogReader.php',
+            "return 'CatalogUE3PackageReader';",
+        ],
+        'forbid' => [
+            "if (\$engineKey === 'UE3') {\n            \$catalogReader",
+            "../UE1/UnrealPackageReader.php",
+            "../UE2/UnrealPackageReader.php",
+            "../UE3/UnrealPackageReader.php",
+        ],
+    ],
     'lib/CatalogSupport.php' => [
         'require' => [
             'CatalogPageResponseTransform::register()',
@@ -93,7 +130,29 @@ $checks = [
     ],
     'src/Presentation/Http/CatalogPageResponseTransform.php' => [
         'require' => ['final class CatalogPageResponseTransform', 'catalog-table-sort.js', 'ob_start('],
-        'forbid' => ['LegacySupportHooks'],
+        'forbid' => [
+            'LegacySupportHooks',
+            'request-generate.php',
+            'request-status.php',
+            'approved-downloads.php',
+            'peer-inventory.php',
+            'federation/conflicts.php',
+            'strtr($html',
+        ],
+    ],
+    'missing.php' => [
+        'require' => [
+            'federation/inventories.php',
+            'federation/requests.php',
+            'federation/diagnostics.php?tab=conflicts',
+        ],
+        'forbid' => [
+            'federation/request-generate.php',
+            'federation/request-status.php',
+            'federation/approved-downloads.php',
+            'federation/peer-inventory.php',
+            'federation/conflicts.php',
+        ],
     ],
     'src/Presentation/Http/CatalogFileInfoRouteGuard.php' => [
         'require' => ['final class CatalogFileInfoRouteGuard', 'unverified-file-details.php'],
@@ -106,6 +165,14 @@ $checks = [
             'register_shutdown_function',
         ],
         'forbid' => [],
+    ],
+    'src/Infrastructure/Logging/CatalogUploadFailureLogger.php' => [
+        'require' => ['final class CatalogUploadFailureLogger', 'implements UploadFailureLogger'],
+        'forbid' => ['LegacyUploadFailureLogger'],
+    ],
+    'src/Infrastructure/Composition/CatalogServiceFactory.php' => [
+        'require' => ['CatalogUploadFailureLogger', 'new CatalogUploadFailureLogger($this->db)'],
+        'forbid' => ['LegacyUploadFailureLogger'],
     ],
     'src/Domain/Jobs/JobResourcePolicy.php' => [
         'require' => ['final class JobResourcePolicy', 'public static function for('],
