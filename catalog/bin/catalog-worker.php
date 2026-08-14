@@ -17,6 +17,7 @@ if (PHP_SAPI !== 'cli') {
 require_once dirname(__DIR__) . '/bootstrap.php';
 
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobWorkerFactory;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkerOwnership;
 
 $options = getopt('', ['queue::', 'max-jobs::', 'sleep-ms::', 'worker-id::', 'lease-seconds::']);
 $application = catalog_bootstrap();
@@ -25,6 +26,12 @@ $maxJobs = max(1, min((int)($options['max-jobs'] ?? 1), 10000));
 $sleepMs = max(50, min((int)($options['sleep-ms'] ?? 1000), 60000));
 $workerId = (string)($options['worker-id'] ?? (gethostname() . ':' . getmypid()));
 $leaseSeconds = max(15, min((int)($options['lease-seconds'] ?? ($application->config['queue']['lease_seconds'] ?? 120)), 3600));
+
+$ownership = new PdoWorkerOwnership($application->db);
+$ownershipLock = $ownership->acquire($queueName, $workerId);
+register_shutdown_function(static function () use ($ownership, $ownershipLock): void {
+    $ownership->release($ownershipLock);
+});
 
 $worker = CatalogJobWorkerFactory::create(
     $application->db,
