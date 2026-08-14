@@ -108,7 +108,7 @@ $checks = [
         'forbid' => [],
     ],
     'parsers/EpicUE3PackageReader.php' => [
-        'require' => ['readFileRange(', 'fopen($this->path', "$this->physical=''"],
+        'require' => ['readFileRange(', 'fopen($this->path', '$this->physical=\'\''],
         'forbid' => ['substr_replace($logical'],
     ],
 ];
@@ -130,8 +130,8 @@ foreach (glob($searchDir . '/*.php') ?: [] as $path) {
     forbidMarkers($relative, $source, ['use PDO;', 'PDO $', '->prepare(', '->query('], $failures);
 }
 
-// The documented workflow child-state users should all route status counts
-// through the shared query even when they retain a private convenience method.
+// Workflow coordinators that have been migrated must route status counts through
+// the shared query even when they retain a private convenience method.
 foreach ([
     'src/Infrastructure/Jobs/CatalogFullSyncJobHandler.php',
     'src/Infrastructure/Jobs/CatalogMaintenanceJobHandler.php',
@@ -139,6 +139,9 @@ foreach ([
     'src/Infrastructure/Jobs/CatalogProjectionReconciliationJobHandler.php',
     'src/Infrastructure/Jobs/CatalogCrossGameCopyBatchJobHandler.php',
     'src/Infrastructure/Jobs/CatalogUnverifiedGameMatchRefreshJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogStorageMaintenanceJobHandler.php',
+    'src/Infrastructure/Jobs/UnverifiedDuplicateCleanupJobHandler.php',
+    'src/Infrastructure/Jobs/GameBackupImportJobHandler.php',
 ] as $relative) {
     $source = sourceFile($root, $relative, $failures);
     if ($source !== '') {
