@@ -23,6 +23,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
 final class CatalogProjectionReconciliationJobHandler implements JobHandler
 {
@@ -67,10 +68,6 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
             $stage = 'projection_prepare';
         }
 
-        // Old jobs only persisted display progress. There is no trustworthy
-        // per-owner recovery cursor in those snapshots, so convert them into the
-        // new durable child workflow. If the old job already reached game_stats,
-        // dependency work was complete and only final publication needs retrying.
         if ((int)($resume['workflow_version'] ?? 0) < self::WORKFLOW_VERSION) {
             $legacyStage = (string)($resume['stage'] ?? '');
             $stage = $legacyStage === 'game_stats' ? 'projection_finalize' : 'projection_prepare';
@@ -361,29 +358,7 @@ final class CatalogProjectionReconciliationJobHandler implements JobHandler
     /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
     private function childState(int $parentJobId): array
     {
-        $state = [
-            'total' => 0,
-            'queued' => 0,
-            'running' => 0,
-            'completed' => 0,
-            'failed' => 0,
-            'dead_letter' => 0,
-            'cancelled' => 0,
-        ];
-        $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ue_background_jobs '
-            . 'WHERE parent_job_id=? AND workflow_unit_key LIKE "affected:%" GROUP BY status'
-        );
-        $statement->execute([$parentJobId]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $status = (string)$row['status'];
-            $count = (int)$row['c'];
-            $state['total'] += $count;
-            if (array_key_exists($status, $state)) {
-                $state[$status] += $count;
-            }
-        }
-        return $state;
+        return (new PdoWorkflowChildStateQuery($this->db))->fetch($parentJobId, 'affected:');
     }
 
     /** @return array{processed_files:int,no_op_files:int,targeted_imports:int,changed_file_ids:list<int>} */
