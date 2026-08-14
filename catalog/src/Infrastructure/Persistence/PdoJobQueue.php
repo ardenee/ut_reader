@@ -64,8 +64,7 @@ final class PdoJobQueue implements JobQueue
         string $queue,
         string $workerId,
         int $leaseSeconds,
-        ?int $preferredRootJobId = null,
-        bool $requirePreferredRoot = false
+        ?int $preferredRootJobId = null
     ): ?ClaimedJob {
         for ($attempt = 1; ; $attempt++) {
             try {
@@ -73,8 +72,7 @@ final class PdoJobQueue implements JobQueue
                     $queue,
                     $workerId,
                     $leaseSeconds,
-                    $preferredRootJobId,
-                    $requirePreferredRoot
+                    $preferredRootJobId
                 );
             } catch (\Throwable $exception) {
                 if (!PdoJobQueueSupport::retryableContention($exception)
