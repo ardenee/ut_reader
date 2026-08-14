@@ -391,9 +391,9 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         string $temporaryPath,
         string $originalName,
         string $gameSlug,
-        string $reason
+        string $reason,
+        ?int $uploadedBy = null
     ): void {
-        $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
         $this->failedUploads->preserve(
             $temporaryPath,
             $originalName,
