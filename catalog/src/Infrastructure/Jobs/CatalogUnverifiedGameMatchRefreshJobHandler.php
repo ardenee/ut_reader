@@ -14,6 +14,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedGameMatchCache;
 use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedGameMatchQuery;
 
@@ -24,6 +25,7 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
 
     private readonly PdoUnverifiedGameMatchCache $cache;
     private readonly PdoUnverifiedGameMatchQuery $matcher;
+    private readonly PdoWorkflowChildStateQuery $childStates;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -33,6 +35,7 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         require_once dirname(__DIR__, 3) . '/lib/CatalogSupport.php';
         $this->cache = new PdoUnverifiedGameMatchCache($db);
         $this->matcher = new PdoUnverifiedGameMatchQuery($db);
+        $this->childStates = new PdoWorkflowChildStateQuery($db);
     }
 
     public function supports(string $jobType): bool
@@ -148,7 +151,7 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
             throw new \RuntimeException('Unknown Upload Bucket match workflow stage: ' . $stage);
         }
 
-        $state = $this->childState($job->id);
+        $state = $this->childStates->fetch($job->id, 'match:');
         $total = max(1, $state['total']);
         $percent = 5 + (int)floor(($state['completed'] * 94) / $total);
         if (($state['failed'] + $state['dead_letter'] + $state['cancelled']) > 0) {
@@ -244,26 +247,6 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
             'Planned ' . $planned . ' durable Upload Bucket match unit(s); waiting for workers.',
             ['planned_units' => $planned]
         ));
-    }
-
-    /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
-    private function childState(int $parentJobId): array
-    {
-        $state = ['total' => 0, 'queued' => 0, 'running' => 0, 'completed' => 0, 'failed' => 0, 'dead_letter' => 0, 'cancelled' => 0];
-        $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=? '
-            . 'AND workflow_unit_key LIKE "match:%" GROUP BY status'
-        );
-        $statement->execute([$parentJobId]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $status = (string)$row['status'];
-            $count = (int)$row['c'];
-            $state['total'] += $count;
-            if (array_key_exists($status, $state)) {
-                $state[$status] += $count;
-            }
-        }
-        return $state;
     }
 
     /** @param array<string,mixed> $extra @return array<string,mixed> */
