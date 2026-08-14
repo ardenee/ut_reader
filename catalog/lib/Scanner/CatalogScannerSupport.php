@@ -29,9 +29,9 @@ function scanner_store_failed_upload(
     string $tmp,
     string $originalName,
     string $gameSlug,
-    string $reason
+    string $reason,
+    ?int $uploadedBy = null
 ): void {
-    $uploadedBy = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : null;
     (new CatalogFailedUploadRetention($config))->preserve(
         $tmp,
         $originalName,
