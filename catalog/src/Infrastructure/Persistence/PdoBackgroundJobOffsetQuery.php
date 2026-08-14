@@ -48,7 +48,11 @@ final class PdoBackgroundJobOffsetQuery
         }
 
         if ($jobId < 1) {
-            $baseWhere[] = 'j.parent_job_id IS NULL';
+            // Keep routine child units folded into their parent, but never hide a
+            // child that is actively blocking parent completion and needs an
+            // administrator Restart/inspection action.
+            $baseWhere[] = '(j.parent_job_id IS NULL OR '
+                . '(j.parent_job_id IS NOT NULL AND j.status IN ("failed","dead_letter","cancelled")))';
         }
         if ($search !== '') {
             $baseWhere[] = '(CAST(j.id AS CHAR) LIKE ? OR j.job_type LIKE ? OR COALESCE(j.concurrency_key,"") LIKE ? '
