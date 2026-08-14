@@ -114,14 +114,15 @@ final class ProfiledUploadService
                         $userId
                     );
                 } else {
-                    // Compatibility for older composition roots. New wiring supplies
-                    // the dedicated retention port so Infrastructure never needs to
-                    // rediscover request identity from session state.
+                    // Compatibility for older composition roots. Preserve the
+                    // authenticated identity explicitly instead of asking the
+                    // Infrastructure adapter to inspect session state.
                     $this->importer->preserveFailedUpload(
                         (string)$temporaryPath,
                         $originalName,
                         $gameSlug,
-                        $exception->getMessage()
+                        $exception->getMessage(),
+                        $userId
                     );
                 }
                 $messages[] = UploadResult::create('failed', $originalName, $message, $uploadMeta);
