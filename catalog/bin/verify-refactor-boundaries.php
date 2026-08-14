@@ -95,6 +95,15 @@ foreach ([
     }
 }
 
+foreach ([
+    'UE4/UnrealPackageReader.php',
+    'UE4/.htaccess',
+] as $requiredRootPath) {
+    if (!is_file($repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $requiredRootPath))) {
+        $failures[] = $requiredRootPath . ': active UE4 reader boundary is missing';
+    }
+}
+
 $checks = [
     'config.example.php' => [
         'require' => [
@@ -114,10 +123,10 @@ $checks = [
             "return 'CatalogUE3PackageReader';",
         ],
         'forbid' => [
-            "if (\$engineKey === 'UE3') {\n            \$catalogReader",
             "../UE1/UnrealPackageReader.php",
             "../UE2/UnrealPackageReader.php",
             "../UE3/UnrealPackageReader.php",
+            "../UE5/UnrealPackageReader.php",
         ],
     ],
     'lib/CatalogSupport.php' => [
@@ -288,6 +297,44 @@ foreach ([
             ['SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=?'],
             $failures
         );
+    }
+}
+
+// Syntax-check the files directly changed by this retirement pass. This keeps
+// the manual verifier useful on the production PHP version without adding CI.
+if (function_exists('proc_open')) {
+    $syntaxTargets = [
+        'config.example.php',
+        'missing.php',
+        'lib/CatalogSupport.php',
+        'src/Infrastructure/Readers/CatalogReaderResolver.php',
+        'src/Infrastructure/Logging/CatalogUploadFailureLogger.php',
+        'src/Infrastructure/Composition/CatalogServiceFactory.php',
+        'src/Presentation/Http/CatalogPageResponseTransform.php',
+        'src/Presentation/Http/CatalogFileInfoRouteGuard.php',
+        'src/Presentation/Http/CatalogFederationInventoryFailureHandler.php',
+        'unverified-files-action.php',
+    ];
+    foreach ($syntaxTargets as $relative) {
+        $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+        $pipes = [];
+        $process = proc_open(
+            [PHP_BINARY, '-l', $path],
+            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
+            $pipes
+        );
+        if (!is_resource($process)) {
+            $failures[] = $relative . ': could not launch PHP syntax check';
+            continue;
+        }
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exit = proc_close($process);
+        if ($exit !== 0) {
+            $failures[] = $relative . ': syntax check failed: ' . trim((string)$stderr . ' ' . (string)$stdout);
+        }
     }
 }
 
