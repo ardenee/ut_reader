@@ -2,7 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Builds the authoritative Background Jobs queue/search persistence scope shared by list and bulk actions.
- * Why: The operator page reports stable top-level jobs; internal workflow units must never inflate or destabilise job counts.
+ * Why: The operator page reports stable top-level jobs while surfacing only child units that require operator attention.
  * Role: Infrastructure query builder; contains no HTTP or mutation behavior.
  */
 declare(strict_types=1);
@@ -25,16 +25,20 @@ final class PdoBackgroundJobSearchScope
     public function build(string $queue, string $search): array
     {
         $fromSql = 'ue_background_jobs j';
-        $where = ['j.parent_job_id IS NULL'];
+        // Routine child units are internal workflow state and stay folded into
+        // their parent. A failed/dead-letter/cancelled child is different: the
+        // parent cannot finish until that exact unit is repaired, so it must be
+        // visible and selectable by the same Restart action as any other job.
+        $where = [
+            '(j.parent_job_id IS NULL OR '
+            . '(j.parent_job_id IS NOT NULL AND j.status IN ("failed","dead_letter","cancelled")))',
+        ];
         $params = [];
         if ($queue !== '') {
             $where[] = 'j.queue_name=?';
             $params[] = $queue;
         }
 
-        // Child workflow units are durable implementation state. They remain
-        // queryable by exact job-id APIs, but the normal browser/search surface
-        // always returns parent jobs so the visible job count is stable.
         if ($search !== '') {
             $projectionAvailable = $this->searchRuntime->synchronize($this->db);
             $booleanSearch = $this->searchRuntime->booleanQuery($search);
