@@ -33,10 +33,22 @@ final class PdoJobClaimer
             if ($preferredRootJobId !== null) {
                 $candidate = $this->lockNextCandidate($queue, $blockedClasses, $blockedKeys, $preferredRootJobId);
                 if ($candidate === null) {
-                    if ($requirePreferredRoot && $this->workflowOpen($queue, $preferredRootJobId)) {
+                    /*
+                     * Root affinity is useful only while that workflow has work
+                     * which can actually be claimed now. A deferred parent or a
+                     * root whose remaining children are already running elsewhere
+                     * must not strand this worker while unrelated ready work waits.
+                     *
+                     * If the root still has ready rows but they are temporarily
+                     * blocked by its resource/concurrency policy, retain affinity;
+                     * another worker is already advancing that constrained work.
+                     */
+                    if ($requirePreferredRoot && $this->workflowHasReadyWork($queue, $preferredRootJobId)) {
                         return null;
                     }
                     $preferredRootJobId = null;
+                    $blockedClasses = [];
+                    $blockedKeys = [];
                 }
             }
             if ($candidate === null) {
@@ -132,13 +144,20 @@ final class PdoJobClaimer
         }
     }
 
-    private function workflowOpen(string $queue, int $rootJobId): bool
+    private function workflowHasReadyWork(string $queue, int $rootJobId): bool
     {
         $statement = $this->db->prepare(
-            'SELECT 1 FROM ue_background_jobs WHERE queue_name=? AND (id=? OR parent_job_id=?) '
-            . 'AND status IN ("queued","running") LIMIT 1'
+            'SELECT 1 FROM ue_background_jobs '
+            . 'WHERE queue_name=? AND (id=? OR parent_job_id=?) '
+            . 'AND status="queued" AND cancel_requested_at IS NULL '
+            . 'AND available_at<=? LIMIT 1'
         );
-        $statement->execute([$queue, $rootJobId, $rootJobId]);
+        $statement->execute([
+            $queue,
+            $rootJobId,
+            $rootJobId,
+            PdoJobQueueSupport::now()->format('Y-m-d H:i:s'),
+        ]);
         return $statement->fetchColumn() !== false;
     }
 
