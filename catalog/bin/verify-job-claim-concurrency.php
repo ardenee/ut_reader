@@ -18,7 +18,6 @@ if (PHP_SAPI !== 'cli') {
 
 require_once dirname(__DIR__) . '/bootstrap.php';
 
-use PDO;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobClaimer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
