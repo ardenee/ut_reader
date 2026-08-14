@@ -1,7 +1,7 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Executes durable jobs while keeping a worker attached to one root workflow until it finishes or blocks.
+ * Purpose: Executes durable jobs while keeping a worker attached to one root workflow when useful.
  * Role: Application-layer orchestration shared by detached workers and other job runners.
  */
 declare(strict_types=1);
@@ -15,7 +15,6 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 final class JobWorker
 {
     private ?int $preferredRootJobId = null;
-    private bool $requirePreferredRoot = false;
 
     /** @var array<string,JobHandler|Closure> */
     private array $handlersByType;
@@ -44,14 +43,13 @@ final class JobWorker
             $this->queueName,
             $this->workerId,
             $this->leaseSeconds,
-            $this->preferredRootJobId,
-            $this->requirePreferredRoot
+            $this->preferredRootJobId
         );
         if ($job === null) {
             return [
                 'status' => 'idle',
                 'root_job_id' => $this->preferredRootJobId,
-                'affinity_held' => $this->requirePreferredRoot,
+                'affinity_held' => $this->preferredRootJobId !== null,
             ];
         }
 
@@ -238,13 +236,11 @@ final class JobWorker
     private function retainAffinity(int $rootJobId): void
     {
         $this->preferredRootJobId = max(1, $rootJobId);
-        $this->requirePreferredRoot = true;
     }
 
     private function releaseAffinity(): void
     {
         $this->preferredRootJobId = null;
-        $this->requirePreferredRoot = false;
     }
 
     private function reportFailure(ClaimedJob $job, \Throwable $exception, string $disposition): void
