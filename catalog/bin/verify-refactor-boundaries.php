@@ -14,6 +14,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = dirname(__DIR__);
+$repoRoot = dirname($root);
 $failures = [];
 
 /** @return string */
@@ -67,6 +68,17 @@ function forbidMarkers(string $relative, string $source, array $markers, array &
     }
 }
 
+foreach ([
+    'catalog/upload-bucket.php',
+    'catalog/admin.php',
+    'catalog/download-bundle.php',
+    'catalog/src/Application/Search/CatalogCompactSearchService.php',
+] as $retiredPath) {
+    if (is_file($repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $retiredPath))) {
+        $failures[] = $retiredPath . ': retired compatibility path must stay removed';
+    }
+}
+
 $checks = [
     'src/Domain/Jobs/JobResourcePolicy.php' => [
         'require' => ['final class JobResourcePolicy', 'public static function for('],
@@ -75,10 +87,6 @@ $checks = [
     'src/Application/Search/CatalogSearchService.php' => [
         'require' => ['CatalogSearchRepository', 'private readonly CatalogSearchRepository $repository'],
         'forbid' => ['PDO', 'SELECT ', 'information_schema', '$_SESSION'],
-    ],
-    'src/Application/Search/CatalogCompactSearchService.php' => [
-        'require' => ['CatalogSearchRepository', 'CatalogSearchService'],
-        'forbid' => ['PDO', 'SELECT ', 'information_schema'],
     ],
     'src/Application/Unverified/CatalogUnverifiedActionService.php' => [
         'require' => ['CatalogUnverifiedQueueMutation', 'CatalogUnverifiedImporter'],
