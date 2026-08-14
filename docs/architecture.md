@@ -7,129 +7,102 @@ This document describes the current runtime architecture after the August 2026 q
 UnrealDB is a **modular monolith**. The namespaced `catalog/src` tree is the primary implementation surface:
 
 ```text
-Presentation
-    browser pages / api/v1 / CLI entry points
+Presentation / HTTP / CLI
               │
               ▼
-Application
-    use cases, policies, contracts, worker orchestration
+Application use cases + ports
               │
               ▼
-Domain
-    stable job types, claimed-job data, resource policy
+Domain policy + value objects
               │
               ▼
-Infrastructure
-    PDO queries, queue persistence, filesystem storage,
-    package readers/adapters, imports, workers, federation
+Infrastructure adapters
+    PDO / filesystem / package readers / workers / federation
 ```
 
-The intended direction remains a modular monolith with explicit boundaries, not microservices for their own sake.
+`catalog/lib` remains a compatibility surface for older global callers. New implementation code belongs under `catalog/src`.
 
 ## Layer responsibilities
 
 ### Presentation
 
-- `catalog/*.php`
-- `catalog/federation/*.php`
-- `catalog/api/v1/*.php`
-- `catalog/bin/*.php`
-- `catalog/src/Presentation/*`
+Entry points authenticate/authorize, validate transport input, invoke a use case/query and serialize/render the result. Request/session/CSRF state belongs here or in an explicit legacy compatibility facade.
 
-Entry points authenticate/authorize, validate transport input, invoke a use case/query and serialize/render the result. New entry points must not contain persistence SQL, worker scheduling policy, filesystem placement policy or package-reader internals.
-
-The Background Jobs APIs now follow this rule:
-
-- `job-worker-status.php` delegates queue counts to `PdoBackgroundJobOperationalQuery` and state policy to `CatalogWorkerStatusPolicy`.
-- `job-status-cursor.php` delegates search/count/page SQL to `PdoBackgroundJobBrowserQuery` and result mapping to `CatalogBackgroundJobResultHydrator`.
-- `job-status.php` preserves the compatibility offset contract through `PdoBackgroundJobOffsetQuery` and the same shared hydrator.
-- `job-bulk.php` delegates mutation SQL to `PdoBackgroundJobBulkAction`.
+`LegacySupportHooks` still provides limited page compatibility, but all HTML response rewrites now share one output buffer instead of stacking several full-response copies.
 
 ### Application
 
-Application code owns orchestration and policy, not PDO/filesystem implementations. Important job components include:
+Application owns use-case sequencing and contracts, not PDO/filesystem/process implementations. Current examples include:
 
-- `Application/Jobs/JobQueue.php`
-- `Application/Jobs/JobWorker.php`
-- `Application/Jobs/JobExecutionContext.php`
-- `Application/Jobs/CatalogWorkerStatusPolicy.php`
-
-`CatalogWorkerStatusPolicy` is deliberately pure: it derives administrator-visible worker state from process state and durable queue counts without HTTP, PDO or filesystem dependencies.
+- durable job execution and worker status policy;
+- profile upload policy;
+- unverified-file move/import/delete orchestration;
+- search repository contracts and search use case.
 
 ### Domain
 
-Domain code contains stable business concepts such as `JobType`, `ClaimedJob` and `JobResourcePolicy`. It must not depend on PDO, HTTP, filesystem or process-launching implementations.
+Domain contains stable concepts such as `JobType`, `ClaimedJob` and `JobResourcePolicy`. `JobResourcePolicy` is pure default classification/concurrency policy; it does not resolve PDO/environment settings.
 
 ### Infrastructure
 
-Infrastructure owns persistence, filesystem, package parsing/adapters and process management.
+Infrastructure owns persistence, filesystem, package readers/adapters, compact metadata publication, search SQL, process launch and federation/external integrations.
 
 ## Durable background jobs
 
-There is now **one authoritative JobQueue implementation**: `PdoJobQueue`. The former worker-specific queue implementation has been removed.
-
-`PdoJobQueue` is a façade over focused persistence collaborators:
+There is one authoritative `JobQueue` implementation: `PdoJobQueue`, backed by focused collaborators:
 
 ```text
 PdoJobQueue
     ├── PdoJobEnqueuer
-    │     durable inserts + active deduplication
     ├── PdoJobClaimer
-    │     parallel claim + resource/concurrency admission
     ├── PdoJobLeaseStore
-    │     heartbeat + completion + failure + cancellation
     └── PdoJobRecovery
-          expired-lease recovery + explicit retry
 ```
 
-Shared validation/time/JSON rules live in `PdoJobQueueSupport` rather than being duplicated across implementations.
+### Claim/admission flow
 
-### Claim flow
+1. Select a ready candidate with `FOR UPDATE SKIP LOCKED`.
+2. If a worker has preferred root affinity, try that root first. Affinity is preference-only.
+3. Acquire short MySQL admission locks for the resource class and optional concurrency key.
+4. Resolve the **current** resource limit from saved settings, with environment/persisted values as compatibility fallback.
+5. Re-check running resource/concurrency ownership while the admission locks are held.
+6. Transition the selected row to `running`, assign `worker_id` and a fresh `lease_token`, then commit.
+7. If the preferred root is blocked or empty, fall back immediately to unrelated runnable work.
 
-The old queue-wide claim mutex has been removed.
+This makes resource/concurrency admission atomic without restoring one queue-wide claim mutex. Administrator resource-limit changes are constant-time settings writes; current queued jobs use the new limit on their next claim and are not mass-rewritten.
 
-Current flow:
+### Worker ownership and recovery
 
-```text
-worker
-  │
-  ├─ opportunistic expired-lease recovery coordinator
-  │
-  ▼
-SELECT next ready row
-FOR UPDATE SKIP LOCKED
-  │
-  ▼
-short resource-class coordination lock
-  │
-  ├─ indexed running count < resource_limit
-  │
-  └─ optional short concurrency-key coordination lock
-          │
-          └─ indexed check that same key is not already running
-  │
-  ▼
-lease selected row
-  │
-  ▼
-commit
-```
+A worker process acquires a connection-scoped MySQL named lock through `PdoWorkerOwnership` for `(queue, worker_id)`.
 
-Workers assigned to unrelated resource classes can claim work concurrently. Jobs sharing a resource class are admitted atomically against the configured class limit, and jobs sharing a `concurrency_key` remain mutually exclusive.
+That lock is the process-liveness authority:
 
-The existing queue indexes `(queue_name,status,resource_class)` and `(queue_name,status,concurrency_key)` support the admission reads; no duplicate indexes are required.
+- healthy long-running jobs retain ownership regardless of elapsed time;
+- when the process/database connection dies, MySQL releases the ownership lock automatically;
+- orphan recovery can then recover rows belonging to a worker whose ownership lock no longer exists;
+- `lease_token` remains the fencing token for complete/fail/defer/cancel writes.
 
-### Lease lifecycle
+`PdoJobRecovery::recoverExpiredLeases()` deliberately does not implement timeout-based job theft.
 
-Completion, heartbeat, failure and cancellation now use `PdoJobLeaseStore` for every worker/API caller. The former divergence between one-hour and six-hour lease caps is gone; the authoritative persistence layer supports the existing long-running six-hour package-reader lease contract.
+Host-local detached-worker state files are supervisory only. The same database-visible ownership model applies to Windows detached workers, ordinary CLI workers, Docker and Kubernetes workers.
 
-### Display status read model
+### Workflow coordination
 
-Administrator display status is no longer repeatedly derived from `result_json` during live list/count queries.
+Large operations use durable root coordinators plus bounded/idempotent child units. Completed child units remain durable and are not replayed after coordinator retries.
 
-The consolidated schema defines a **stored generated** `ue_background_jobs.display_status` column derived atomically from `status` + `result_json`, plus indexes for queue/display filtering.
+`PdoWorkflowChildStateQuery` is the canonical child status-count read model. Coordinators should use it instead of repeating `status/COUNT(*)` SQL.
 
-This avoids a second mutable source of truth while making Failed/Completed counters and filters indexable.
+`BackgroundJobDisplaySql` is the canonical operator-status expression used by both row and count queries, preventing Background Jobs reporting drift.
+
+### Host-local detached workers
+
+`CatalogDetachedWorker` remains the stable supervisor facade but delegates its former mixed responsibilities to:
+
+- `CatalogWorkerRuntimeStateStore` — runtime JSON/files, file locks and log tails;
+- `CatalogWorkerProcessLauncher` — PHP CLI resolution and Windows/POSIX process launch;
+- `CatalogWorkerCodeVersion` — stale-code fingerprinting.
+
+`CatalogJobWorkerFactory` registers handlers lazily, so a worker constructs only the handler graph it actually uses.
 
 ## Upload Bucket v2
 
@@ -137,135 +110,113 @@ Canonical flow:
 
 ```text
 browser
-  │ extension checks + ordinary-file MD5/SHA-1
+  │ client-side inspection/hash where applicable
   ▼
-upload-bucket-chunk.php
-  │ bounded resumable staging
+resumable staging
   ▼
-upload-bucket-batch.php
-  │ CatalogBucketBatchQueue
+durable Upload Bucket jobs
   ▼
-ue_background_jobs
-  │ PROCESS_BUCKET_UPLOAD
+unverified metadata/indexing
   ▼
-CatalogBucketUploadJobHandler
-  │
-  ├─ ordinary package: copy + verify browser identity
-  └─ redirect wrapper: decompress + calculate package identity
-  │
+administrator promotion/import
   ▼
-CatalogBucketIdentityProcessor
-  │
-  ├─ CatalogUploadDuplicateDetector
-  └─ CatalogBucketPackageOperations
-          │
-          └─ CatalogBucketPackageOperationsService
-                 ├─ CatalogPackageIdentityHasher
-                 ├─ CatalogUploadBucketStorage
-                 └─ CatalogUnverifiedPackageIndexer
+verified package + compact metadata
+  ▼
+durable dependency/search/projection maintenance
 ```
 
-The old `CatalogBucketUploadProcessor` monolith and `LegacyCatalogBucketPackageOperations` Reflection bridge have been deleted. No Upload Bucket production path reaches private methods through `ReflectionMethod`.
+The former upload page is only a compatibility redirect; Upload Bucket v2 is the implementation.
 
-### Procedural reader compatibility boundary
+### Profiled upload and failed retention
 
-The Unreal reader/scanner ecosystem still exposes stable procedural `scanner_*`, `catalog_*` and `uvf_*` contracts used elsewhere in the application. The new Upload Bucket services no longer scatter those calls through business logic; `CatalogUnverifiedPackageRuntime` is the explicit Infrastructure adapter for the package-reader/unverified-storage operations required by this path.
+`ProfiledUploadService` owns upload-batch Application policy and passes the authenticated user identity explicitly to `FailedUploadPreserver`. Infrastructure retains failed files without reading session state.
 
-That adapter is a compatibility boundary, **not** a parallel implementation. As scanner internals become namespaced, its methods can be replaced one at a time without changing Upload Bucket orchestration.
+### Package import
 
-## Verified metadata and dependencies
+`scanner_scan_uploaded_file()` is a thin compatibility delegate to the namespaced importer. The importer is intentionally being decomposed conservatively through focused persistence/storage/metadata/dependency collaborators because parser selection, source identity, duplicate policy and maintenance replacement are tightly coupled Unreal package semantics. A folder-only rewrite is not considered an architecture improvement.
 
-Verified package metadata uses the compact per-file metadata/lookup model exclusively. The former expanded row-per-object metadata tables have been physically retired; verified runtime reads, rebuilds and maintenance paths must not depend on fallback SQL against them.
+## Unverified-file actions
 
-Dependency resolution/rebuilding is Infrastructure-owned through:
+`Application/Unverified/CatalogUnverifiedActionService` owns move/import/delete sequencing and result semantics.
 
-- `Persistence/PdoDependencyResolver.php`
-- `Persistence/PdoCatalogDependencyRebuilder.php`
-- `Persistence/PdoDependencyReadSource.php`
-- `Jobs/CatalogAffectedDependencyRefreshCoordinator.php`
-- `Metadata/CompactDependencyRebuilder.php`
+Application ports:
 
-`php catalog/bin/audit-legacy-runtime-references.php` guards this boundary.
+- `CatalogUnverifiedQueueMutation`
+- `CatalogUnverifiedImporter`
 
-## Other primary flows
+Infrastructure supplies filesystem/PDO/import adapters. The historical Infrastructure action service is now a thin compatibility/composition adapter so existing endpoints retain their public API.
 
-### Profiled upload / staged import
+## Verified compact metadata
 
-1. HTTP/API validates the game/profile and stages bytes.
-2. `IMPORT_STAGED_PACKAGE` or `IMPORT_STAGED_PAK` is enqueued.
-3. Worker handlers read package/container metadata.
-4. Catalog rows + compact projections are persisted.
-5. Dependency/search/projection maintenance remains durable background work.
+Verified package metadata uses the format-2 compact container/projection model.
 
-### Local source scan
+Publication state is explicit on `ue_files`:
 
-1. Enumerate configured source tree.
-2. PAK containers are queued separately.
-3. Package fingerprints are compared with known physical/catalog identities.
-4. New/changed files are scanned/imported; failures enter unverified review.
-5. Source-relative identity is retained.
+- `metadata_status = pending` — publication/verification is in progress or still requires repair;
+- `ready` — format-2 metadata publication verified successfully;
+- `failed` — publication failed; `metadata_error` and `metadata_updated_at` record the failure.
 
-### Unverified promotion
+`VerifiedFileCompactMetadataFinalizer` marks pending before work, ready on successful verification, and failed on publication errors. A verified primary row can therefore no longer silently appear fully healthy when compact publication is incomplete.
 
-1. Read paginated unverified inventory.
-2. Resolve physical staged row/file.
-3. Reuse valid staged identity/metadata.
-4. Validate selected game/profile/package identity.
-5. Promote to verified catalog state.
-6. Queue heavy dependency/projection work.
+## Dependency projections
 
-### Search
+Dependency resolution/rebuilding is Infrastructure-owned through focused persistence/metadata collaborators and durable job coordinators. Full Sync uses independently recoverable per-file reimport/dependency units followed by bounded final projection/stat publication.
 
-Exact hashes/GUIDs/package identities remain direct indexed lookups. Broad textual search uses bounded/search-projection paths where available. Leading-wildcard compatibility searches remain a known scaling concern in older non-job areas and should continue moving to explicit projections without changing result semantics.
+## Search
 
-### Federation
+Application search is persistence-free:
 
-Federation remains a bounded context sharing catalog identities/storage. Some older federation pages still contain page-local orchestration/SQL and should migrate behind intent-specific query/use-case boundaries without changing the wire protocol.
+- `Application/Search/CatalogSearchRepository` is the port;
+- `Application/Search/CatalogSearchService` owns the use-case call;
+- `Infrastructure/Search/PdoCatalogSearchRepository` owns PDO/SQL;
+- `catalog/lib/CatalogSearchService.php` is the existing global compatibility/composition facade.
 
-## Resolved architecture debt in this refactor
+Search order remains exact identity → prefix → aliases → compact object/path matches → bounded contains fallback. Broad global contains searches are additionally partitioned/capped by game. Leading-wildcard fallback remains a potential large-data cost; measure production latency/query plans before adding an n-gram projection or external search service.
 
-- Removed duplicate `WorkerJobQueue` lifecycle implementation.
-- Split queue enqueue/claim/lease/recovery responsibilities.
-- Removed queue-wide claim serialization.
-- Removed correlated candidate resource/concurrency subqueries.
-- Materialized/indexed Background Jobs display status without creating mutable duplicate state.
-- Removed Upload Bucket Reflection/private-method bridge.
-- Removed superseded Upload Bucket monolith.
-- Centralized Upload Bucket hashing/storage/unverified indexing.
-- Centralized Background Jobs result hydration.
-- Removed SQL from the worker-status and bulk job endpoints.
-- Moved live cursor/offset job query construction to Infrastructure.
-- Isolated job-search procedural compatibility behind one adapter.
-- Completed compact-metadata cutover and physical retirement of the former expanded metadata tables.
+## Reader architecture
 
-## Remaining architectural debt
+- UE1/UE2 use memory-bounded legacy readers.
+- UE3 uses the strict Epic serialized-layout reader. For compressed packages, the complete compressed package buffer is released before logical reconstruction and chunks are reread from disk one at a time, reducing peak memory without changing the serialized format rules.
+- UE4/UE5 use their configured generation-specific readers.
 
-These are repo-wide areas outside the job/upload refactor, not reasons to restore the removed implementations:
+Legacy/reference readers are not made canonical merely because they expose a unified API.
 
-1. **Procedural `catalog/lib` compatibility surface.** Migrate callers by bounded context; delete delegates when no active caller remains.
-2. **Scanner compatibility modules.** Continue moving parser/path/import responsibilities behind namespaced collaborators while retaining stable parser behaviour.
-3. **Large older controllers.** `unverified-files-action.php`, some federation pages, backup paths and maintenance pages still own orchestration/SQL.
-4. **Broad wildcard search outside the job subsystem.** Continue replacing proven hot paths with parity-tested indexed projections.
-5. **`CatalogDetachedWorker` size.** Process launch, runtime-state storage, pool reconciliation and diagnostics can be separated further after the new queue path has production validation.
-6. **Runtime schema verification in older compatibility paths.** DDL belongs only to install/migrations; runtime may verify schema and report an administrator action.
+## Federation
+
+Federation remains a bounded context sharing catalog identities/storage. Existing protocol/wire semantics must be preserved while older page-local orchestration is migrated behind explicit query/use-case boundaries.
 
 ## Validation discipline
 
-The repository intentionally does not rely on a broad automated PHP test suite. Architecture changes therefore require:
+There is deliberately no required application GitHub Actions quality workflow. Validation is local/manual so repository changes do not create a noisy email gate.
 
-- `php -l` on every changed PHP file;
-- `php catalog/bin/migrate.php migrate --dry-run` before applying schema changes;
-- `php catalog/bin/migrate.php migrate` then `verify`;
-- `php catalog/bin/audit-legacy-runtime-references.php`;
-- architecture-boundary verification;
-- real Background Jobs / Upload Bucket / unverified promotion testing under worker load.
+Before deployment or after this class of refactor, run:
+
+```text
+php -l <changed PHP files>
+php catalog/bin/migrate.php status
+php catalog/bin/migrate.php migrate --dry-run
+php catalog/bin/migrate.php migrate
+php catalog/bin/migrate.php verify
+php catalog/bin/verify-queue-runtime-invariants.php
+php catalog/bin/verify-job-root-affinity-contract.php
+php catalog/bin/verify-job-claim-concurrency.php --run
+php catalog/bin/audit-legacy-runtime-references.php
+```
+
+The real-MySQL concurrency verifier uses uniquely named temporary queue/resource rows, launches concurrent PHP claimers, verifies resource limits/concurrency-key exclusion/preferred-root fallback/worker ownership, and cleans up afterward.
+
+Architecture marker scripts are secondary guardrails only; they are not substitutes for real queue/database behaviour tests.
+
+## Remaining optimization rule
+
+Do not add Redis/RabbitMQ queueing, Elasticsearch, microservices or new data projections merely to make the design look more distributed. Add infrastructure only after measurement identifies a real bottleneck and the new component has a clear operational benefit.
 
 ## Non-negotiable behaviour-preservation rules
 
 - Do not change routes/API payloads/job types/queue names/dedupe keys/retry semantics during architecture cleanup.
 - Do not change MD5/SHA/GUID/package-name identity semantics without an explicit behavioural migration.
 - Do not change search-result semantics merely to optimize a query.
-- Do not impose automatic short timeouts on legitimate long-running package work.
-- Preserve Windows detached-worker behaviour.
-- Runtime code must not silently mutate schema.
-- Delete superseded implementations rather than retaining backup copies after callers migrate.
+- Do not steal legitimate running jobs because a timer elapsed.
+- Preserve Windows detached-worker behaviour as well as container/CLI workers.
+- Runtime code must not silently mutate schema; install/migrations own DDL.
+- Delete superseded implementations only after callers have migrated and compatibility is proven unnecessary.
