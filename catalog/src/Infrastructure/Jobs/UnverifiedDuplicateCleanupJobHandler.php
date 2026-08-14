@@ -18,6 +18,7 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Filesystem\NativeUnverifiedFileSystem;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoUnverifiedRecordStore;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 use UnrealDb\Catalog\Infrastructure\Unverified\LegacyUnverifiedQueueInventory;
 
 final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
@@ -453,9 +454,6 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
             }
         }
 
-        // These steps are deliberately idempotent. If a worker died immediately
-        // after unlinking the data file, Restart lands here and completes the
-        // note/database cleanup without needing the deleted bytes again.
         $reasonPath = (string)$paths['reason_path'];
         if (is_file($reasonPath) && !$filesystem->delete($reasonPath) && is_file($reasonPath)) {
             throw new \RuntimeException('Duplicate data file is gone, but its queue-note file could not be removed: ' . $queueName);
@@ -651,21 +649,7 @@ final class UnverifiedDuplicateCleanupJobHandler implements JobHandler
     /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
     private function childState(int $parentJobId, string $prefix): array
     {
-        $state = ['total' => 0, 'queued' => 0, 'running' => 0, 'completed' => 0, 'failed' => 0, 'dead_letter' => 0, 'cancelled' => 0];
-        $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=? '
-            . 'AND workflow_unit_key LIKE ? GROUP BY status'
-        );
-        $statement->execute([$parentJobId, $prefix . '%']);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $status = (string)$row['status'];
-            $count = (int)$row['c'];
-            $state['total'] += $count;
-            if (array_key_exists($status, $state)) {
-                $state[$status] += $count;
-            }
-        }
-        return $state;
+        return (new PdoWorkflowChildStateQuery($this->db))->fetch($parentJobId, $prefix);
     }
 
     /** @param array<string,mixed> $extra @return array<string,mixed> */
