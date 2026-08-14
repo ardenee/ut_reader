@@ -17,8 +17,10 @@ $GLOBALS['unverified_action_started_at'] = microtime(true);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/UploadProgress.php';
 
-use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedActionService;
+use UnrealDb\Catalog\Application\Unverified\CatalogUnverifiedActionService;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedActionSourceResolver;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedImporterAdapter;
+use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueMutationService;
 
 function unverified_action_json(array $payload): string
 {
@@ -195,8 +197,12 @@ try {
 
     unverified_action_emit($progress, 'starting', 0, 'Resolving queued file');
     $source = (new CatalogUnverifiedActionSourceResolver($db, $config))->resolve($token);
+    $service = new CatalogUnverifiedActionService(
+        new CatalogUnverifiedQueueMutationService($db, $config),
+        new CatalogUnverifiedImporterAdapter($db, $config)
+    );
 
-    $result = (new CatalogUnverifiedActionService($db, $config))->execute(
+    $result = $service->execute(
         $action,
         $source,
         $targetGameId,
