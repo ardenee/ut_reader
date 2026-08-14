@@ -6,6 +6,16 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 use PDO;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 
+/**
+ * Claims the next runnable durable job.
+ *
+ * Claiming is intentionally simple: one very short queue-level mutex serializes
+ * only the decision that changes a queued row to running. Within that critical
+ * section a single SELECT chooses a row which is queued, available, not
+ * cancelled, within its resource-class limit and not blocked by a running
+ * concurrency key. Worker/root affinity affects ordering only; it can never make
+ * a worker idle while another valid queue row is runnable.
+ */
 final class PdoJobClaimer
 {
     private ?string $databaseIdentity = null;
@@ -24,35 +34,34 @@ final class PdoJobClaimer
         $queue = PdoJobQueueSupport::requiredIdentifier($queue, 'queue');
         $workerId = PdoJobQueueSupport::requiredIdentifier($workerId, 'worker id');
         $leaseSeconds = max(15, min($leaseSeconds, 6 * 3600));
-        $preferredRootJobId = $preferredRootJobId !== null && $preferredRootJobId > 0 ? $preferredRootJobId : null;
+        $preferredRootJobId = $preferredRootJobId !== null && $preferredRootJobId > 0
+            ? $preferredRootJobId
+            : null;
 
-        $blockedClasses = [];
-        $blockedKeys = [];
-        while (true) {
+        // The old claimer stacked independent resource/key GET_LOCK calls on top
+        // of row locking. That made an otherwise runnable queue capable of
+        // returning idle simply because claim-coordination locks disagreed. One
+        // queue claim mutex is sufficient for a local 1-8 process worker pool and
+        // keeps resource/concurrency checks atomic with the ownership transition.
+        $claimLock = $this->coordinationLockName($queue);
+        if (!$this->acquireLock($claimLock, 1)) {
+            // Another worker is spending a few milliseconds claiming a row. This
+            // worker will poll again; this is not evidence that the queue is idle.
+            return null;
+        }
+
+        try {
             $candidate = null;
+
+            // Affinity is a preference, never a gate. Prefer a runnable row from
+            // the same root workflow, but immediately fall back to any valid job
+            // if that root is deferred, blocked, completed or otherwise unable to
+            // make progress now.
             if ($preferredRootJobId !== null) {
-                $candidate = $this->lockNextCandidate($queue, $blockedClasses, $blockedKeys, $preferredRootJobId);
-                if ($candidate === null) {
-                    /*
-                     * Root affinity is useful only while that workflow has work
-                     * which can actually be claimed now. A deferred parent or a
-                     * root whose remaining children are already running elsewhere
-                     * must not strand this worker while unrelated ready work waits.
-                     *
-                     * If the root still has ready rows but they are temporarily
-                     * blocked by its resource/concurrency policy, retain affinity;
-                     * another worker is already advancing that constrained work.
-                     */
-                    if ($requirePreferredRoot && $this->workflowHasReadyWork($queue, $preferredRootJobId)) {
-                        return null;
-                    }
-                    $preferredRootJobId = null;
-                    $blockedClasses = [];
-                    $blockedKeys = [];
-                }
+                $candidate = $this->lockNextValidCandidate($queue, $preferredRootJobId);
             }
             if ($candidate === null) {
-                $candidate = $this->lockNextCandidate($queue, $blockedClasses, $blockedKeys, null);
+                $candidate = $this->lockNextValidCandidate($queue, null);
             }
             if ($candidate === null) {
                 return null;
@@ -60,75 +69,72 @@ final class PdoJobClaimer
 
             $resourceClass = trim((string)($candidate['resource_class'] ?? 'default')) ?: 'default';
             $resourceLimit = max(1, (int)($candidate['resource_limit'] ?? 1));
-            $concurrencyKey = $candidate['concurrency_key'] !== null ? trim((string)$candidate['concurrency_key']) : '';
+            $concurrencyKey = $candidate['concurrency_key'] !== null
+                ? trim((string)$candidate['concurrency_key'])
+                : '';
 
-            $resourceLock = $this->coordinationLockName('resource', $queue, $resourceClass);
-            if (!$this->acquireLock($resourceLock, 2)) {
-                $this->rollbackClaimTransaction();
-                $blockedClasses[$resourceClass] = true;
-                continue;
-            }
-
-            $keyLock = null;
-            try {
-                if ($concurrencyKey !== '') {
-                    $keyLock = $this->coordinationLockName('key', $queue, $concurrencyKey);
-                    if (!$this->acquireLock($keyLock, 2)) {
-                        $this->rollbackClaimTransaction();
-                        $blockedKeys[$concurrencyKey] = true;
-                        continue;
-                    }
-                }
-                if ($this->runningResourceCount($queue, $resourceClass) >= $resourceLimit) {
-                    $this->rollbackClaimTransaction();
-                    $blockedClasses[$resourceClass] = true;
-                    continue;
-                }
-                if ($concurrencyKey !== '' && $this->concurrencyKeyRunning($queue, $concurrencyKey)) {
-                    $this->rollbackClaimTransaction();
-                    $blockedKeys[$concurrencyKey] = true;
-                    continue;
-                }
-                return $this->leaseLockedCandidate($candidate, $workerId, $leaseSeconds, $resourceClass, $resourceLimit, $concurrencyKey);
-            } finally {
-                if ($keyLock !== null) {
-                    $this->releaseLock($keyLock);
-                }
-                $this->releaseLock($resourceLock);
-            }
+            return $this->leaseLockedCandidate(
+                $candidate,
+                $workerId,
+                $leaseSeconds,
+                $resourceClass,
+                $resourceLimit,
+                $concurrencyKey
+            );
+        } finally {
+            // A selected row leaves its transaction open until
+            // leaseLockedCandidate() commits it. If anything exits early or
+            // throws, never leak that row transaction into the next poll.
+            $this->rollbackClaimTransaction();
+            $this->releaseLock($claimLock);
         }
     }
 
-    private function lockNextCandidate(string $queue, array $blockedClasses, array $blockedKeys, ?int $preferredRootJobId): ?array
+    /** @return array<string,mixed>|null */
+    private function lockNextValidCandidate(string $queue, ?int $preferredRootJobId): ?array
     {
         $this->db->beginTransaction();
         try {
-            $where = ['queue_name=?', 'status="queued"', 'cancel_requested_at IS NULL', 'available_at<=?'];
-            $params = [$queue, PdoJobQueueSupport::now()->format('Y-m-d H:i:s')];
-            if ($preferredRootJobId !== null && $preferredRootJobId > 0) {
-                $where[] = '(id=? OR parent_job_id=?)';
+            $where = [
+                'j.queue_name=?',
+                'j.status="queued"',
+                'j.cancel_requested_at IS NULL',
+                'j.available_at<=?',
+                // Resource limits are evaluated against rows actually owned now.
+                // Because every ownership transition passes through the queue
+                // claim mutex, two workers cannot race this count and both claim
+                // the final slot.
+                '(SELECT COUNT(*) FROM ue_background_jobs rr '
+                    . 'WHERE rr.queue_name=j.queue_name AND rr.status="running" '
+                    . 'AND rr.resource_class=j.resource_class) < GREATEST(1,j.resource_limit)',
+                // A concurrency key blocks only while another row with that exact
+                // key is genuinely running. Queued/deferred rows never block one
+                // another.
+                '(j.concurrency_key IS NULL OR j.concurrency_key="" OR NOT EXISTS('
+                    . 'SELECT 1 FROM ue_background_jobs rk '
+                    . 'WHERE rk.queue_name=j.queue_name AND rk.status="running" '
+                    . 'AND rk.concurrency_key=j.concurrency_key LIMIT 1))',
+            ];
+            $params = [
+                $queue,
+                PdoJobQueueSupport::now()->format('Y-m-d H:i:s'),
+            ];
+
+            if ($preferredRootJobId !== null) {
+                $where[] = '(j.id=? OR j.parent_job_id=?)';
                 $params[] = $preferredRootJobId;
                 $params[] = $preferredRootJobId;
-            }
-            if ($blockedClasses !== []) {
-                $classes = array_keys($blockedClasses);
-                $where[] = 'resource_class NOT IN (' . implode(',', array_fill(0, count($classes), '?')) . ')';
-                array_push($params, ...$classes);
-            }
-            if ($blockedKeys !== []) {
-                $keys = array_keys($blockedKeys);
-                $where[] = '(concurrency_key IS NULL OR concurrency_key NOT IN (' . implode(',', array_fill(0, count($keys), '?')) . '))';
-                array_push($params, ...$keys);
             }
 
-            // Once a worker has root-job affinity, useful child work must beat the
-            // coordinator row. Otherwise the lower parent ID wakes every few
-            // seconds only to defer again while its children remain queued.
+            // Within a preferred workflow, useful child work wins over the
+            // coordinator row. Globally, normal durable priority/FIFO ordering is
+            // retained.
             $order = $preferredRootJobId !== null
-                ? '(parent_job_id IS NULL) ASC,priority ASC,available_at ASC,id ASC'
-                : 'priority ASC,available_at ASC,id ASC';
+                ? '(j.parent_job_id IS NULL) ASC,j.priority ASC,j.available_at ASC,j.id ASC'
+                : 'j.priority ASC,j.available_at ASC,j.id ASC';
+
             $statement = $this->db->prepare(
-                'SELECT * FROM ue_background_jobs WHERE ' . implode(' AND ', $where)
+                'SELECT j.* FROM ue_background_jobs j WHERE ' . implode(' AND ', $where)
                 . ' ORDER BY ' . $order . ' LIMIT 1 FOR UPDATE SKIP LOCKED'
             );
             $statement->execute($params);
@@ -144,25 +150,15 @@ final class PdoJobClaimer
         }
     }
 
-    private function workflowHasReadyWork(string $queue, int $rootJobId): bool
-    {
-        $statement = $this->db->prepare(
-            'SELECT 1 FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND (id=? OR parent_job_id=?) '
-            . 'AND status="queued" AND cancel_requested_at IS NULL '
-            . 'AND available_at<=? LIMIT 1'
-        );
-        $statement->execute([
-            $queue,
-            $rootJobId,
-            $rootJobId,
-            PdoJobQueueSupport::now()->format('Y-m-d H:i:s'),
-        ]);
-        return $statement->fetchColumn() !== false;
-    }
-
-    private function leaseLockedCandidate(array $row, string $workerId, int $leaseSeconds, string $resourceClass, int $resourceLimit, string $concurrencyKey): ClaimedJob
-    {
+    /** @param array<string,mixed> $row */
+    private function leaseLockedCandidate(
+        array $row,
+        string $workerId,
+        int $leaseSeconds,
+        string $resourceClass,
+        int $resourceLimit,
+        string $concurrencyKey
+    ): ClaimedJob {
         $now = PdoJobQueueSupport::now();
         $timestamp = $now->format('Y-m-d H:i:s');
         $leaseExpiresAt = $now->modify('+' . $leaseSeconds . ' seconds');
@@ -174,18 +170,32 @@ final class PdoJobClaimer
                 $resumeProgress = $decoded;
             }
         }
+
         try {
             $update = $this->db->prepare(
                 'UPDATE ue_background_jobs SET status="running",attempts=attempts+1,worker_id=?,lease_token=?,leased_at=?,'
-                . 'lease_expires_at=?,last_heartbeat_at=?,updated_at=? WHERE id=? AND status="queued" AND cancel_requested_at IS NULL'
+                . 'lease_expires_at=?,last_heartbeat_at=?,updated_at=? '
+                . 'WHERE id=? AND status="queued" AND cancel_requested_at IS NULL'
             );
-            $update->execute([$workerId, $leaseToken, $timestamp, $leaseExpiresAt->format('Y-m-d H:i:s'), $timestamp, $timestamp, (int)$row['id']]);
+            $update->execute([
+                $workerId,
+                $leaseToken,
+                $timestamp,
+                $leaseExpiresAt->format('Y-m-d H:i:s'),
+                $timestamp,
+                $timestamp,
+                (int)$row['id'],
+            ]);
             if ($update->rowCount() !== 1) {
                 throw new \RuntimeException('Job claim lost before ownership update.');
             }
             $this->db->commit();
-            $parentJobId = isset($row['parent_job_id']) && (int)$row['parent_job_id'] > 0 ? (int)$row['parent_job_id'] : null;
+
+            $parentJobId = isset($row['parent_job_id']) && (int)$row['parent_job_id'] > 0
+                ? (int)$row['parent_job_id']
+                : null;
             $workflowUnitKey = trim((string)($row['workflow_unit_key'] ?? ''));
+
             return new ClaimedJob(
                 (int)$row['id'],
                 (string)$row['queue_name'],
@@ -208,30 +218,18 @@ final class PdoJobClaimer
         }
     }
 
-    private function runningResourceCount(string $queue, string $resourceClass): int
+    private function coordinationLockName(string $queue): string
     {
-        $statement = $this->db->prepare('SELECT COUNT(*) FROM ue_background_jobs WHERE queue_name=? AND status="running" AND resource_class=?');
-        $statement->execute([$queue, $resourceClass]);
-        return (int)$statement->fetchColumn();
-    }
-
-    private function concurrencyKeyRunning(string $queue, string $concurrencyKey): bool
-    {
-        $statement = $this->db->prepare('SELECT 1 FROM ue_background_jobs WHERE queue_name=? AND status="running" AND concurrency_key=? LIMIT 1');
-        $statement->execute([$queue, $concurrencyKey]);
-        return (bool)$statement->fetchColumn();
-    }
-
-    private function coordinationLockName(string $kind, string $queue, string $value): string
-    {
-        $identity = $this->databaseIdentity() . "\0" . $queue . "\0" . $kind . "\0" . $value;
-        return 'unrealdb:' . $kind . ':' . substr(hash('sha256', $identity), 0, 40);
+        $identity = $this->databaseIdentity() . "\0" . $queue;
+        return 'unrealdb:queue-claim:' . substr(hash('sha256', $identity), 0, 40);
     }
 
     private function databaseIdentity(): string
     {
         if ($this->databaseIdentity === null) {
-            $this->databaseIdentity = (string)($this->db->query('SELECT DATABASE()')->fetchColumn() ?: 'default');
+            $this->databaseIdentity = (string)(
+                $this->db->query('SELECT DATABASE()')->fetchColumn() ?: 'default'
+            );
         }
         return $this->databaseIdentity;
     }
@@ -249,7 +247,7 @@ final class PdoJobClaimer
             $statement = $this->db->prepare('SELECT RELEASE_LOCK(?)');
             $statement->execute([$lockName]);
         } catch (\Throwable $error) {
-            error_log('[UnrealDB jobs] Could not release claim coordination lock: ' . $error->getMessage());
+            error_log('[UnrealDB jobs] Could not release queue claim lock: ' . $error->getMessage());
         }
     }
 
