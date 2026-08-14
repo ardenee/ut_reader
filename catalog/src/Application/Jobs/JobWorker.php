@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Application\Jobs;
 
+use Closure;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 
@@ -16,18 +17,24 @@ final class JobWorker
     private ?int $preferredRootJobId = null;
     private bool $requirePreferredRoot = false;
 
-    /** @param array<string, JobHandler> $handlersByType */
+    /** @var array<string,JobHandler|Closure> */
+    private array $handlersByType;
+
+    /**
+     * @param array<string,JobHandler|Closure> $handlersByType
+     */
     public function __construct(
         private readonly JobQueue $queue,
-        private readonly array $handlersByType,
+        array $handlersByType,
         private readonly string $queueName,
         private readonly string $workerId,
         private readonly int $leaseSeconds = 120,
-        private readonly ?\Closure $eventAppender = null,
-        private readonly ?\Closure $diagnosticEnabled = null,
-        private readonly ?\Closure $failureReporter = null
+        private readonly ?Closure $eventAppender = null,
+        private readonly ?Closure $diagnosticEnabled = null,
+        private readonly ?Closure $failureReporter = null
     ) {
         self::assertCompleteHandlerMap($handlersByType);
+        $this->handlersByType = $handlersByType;
     }
 
     /** @return array<string,mixed> */
@@ -124,8 +131,6 @@ final class JobWorker
             );
             $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
             $failure = $this->recordFailure($job, $exception, $delay);
-            // A genuine execution failure is the explicit boundary where this
-            // worker is allowed to move on. The error has already been recorded.
             $this->releaseAffinity();
             return $failure;
         }
@@ -151,9 +156,6 @@ final class JobWorker
                 ];
             }
 
-            // Finishing a child unit does not finish its parent workflow. Keep the
-            // same worker on that root. Finishing the root row itself is the point
-            // where the worker advances to another queued job.
             if ($job->parentJobId === null) {
                 $this->releaseAffinity();
             } else {
@@ -247,7 +249,7 @@ final class JobWorker
 
     private function reportFailure(ClaimedJob $job, \Throwable $exception, string $disposition): void
     {
-        if (!$this->failureReporter instanceof \Closure) {
+        if (!$this->failureReporter instanceof Closure) {
             return;
         }
         try {
@@ -268,10 +270,26 @@ final class JobWorker
 
     private function findHandler(string $type): ?JobHandler
     {
-        return $this->handlersByType[$type] ?? null;
+        $registered = $this->handlersByType[$type] ?? null;
+        if ($registered instanceof JobHandler) {
+            return $registered;
+        }
+        if (!$registered instanceof Closure) {
+            return null;
+        }
+
+        $handler = $registered();
+        if (!$handler instanceof JobHandler) {
+            throw new \LogicException('Lazy job handler factory did not return JobHandler for type: ' . $type);
+        }
+        if (!$handler->supports($type)) {
+            throw new \LogicException(get_class($handler) . ' does not support routed job type: ' . $type);
+        }
+        $this->handlersByType[$type] = $handler;
+        return $handler;
     }
 
-    /** @param array<string, JobHandler> $handlersByType */
+    /** @param array<string,JobHandler|Closure> $handlersByType */
     private static function assertCompleteHandlerMap(array $handlersByType): void
     {
         $knownTypes = array_fill_keys(JobType::all(), true);
@@ -284,6 +302,9 @@ final class JobWorker
             throw new \LogicException('Missing job handler route(s): ' . implode(', ', $missingTypes));
         }
         foreach ($handlersByType as $type => $handler) {
+            if ($handler instanceof Closure) {
+                continue;
+            }
             if (!$handler instanceof JobHandler) {
                 throw new \LogicException('Invalid job handler registered for type: ' . $type);
             }
@@ -295,7 +316,7 @@ final class JobWorker
 
     private function diagnostic(string $stage, ClaimedJob $job, string $message): void
     {
-        if ($this->diagnosticEnabled instanceof \Closure) {
+        if ($this->diagnosticEnabled instanceof Closure) {
             try {
                 if (!(bool)($this->diagnosticEnabled)()) {
                     return;
