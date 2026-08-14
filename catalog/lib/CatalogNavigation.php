@@ -51,7 +51,7 @@ function catalog_admin_navigation_groups(string $root): array
             'Local Source Scan' => $root . 'source-scan.php',
             'HTTP Source Scan' => $root . 'http-source-scan.php',
             'Upload Files' => $root . 'profiled-upload.php',
-            'Upload Bucket' => $root . 'upload-bucket.php',
+            'Upload Bucket' => $root . 'upload-bucket-v2.php',
             'Upload Issues' => $root . 'upload-issues.php',
             'PAK Import' => $root . 'pak-import.php',
             'PAK Archives' => $root . 'paks.php',
