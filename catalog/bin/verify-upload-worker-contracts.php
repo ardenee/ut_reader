@@ -103,7 +103,8 @@ $record(
 $bucketHandler = $read('catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $identityProcessor = $read('catalog/src/Infrastructure/Import/CatalogBucketIdentityProcessor.php');
 $unverifiedImportAction = $read('catalog/unverified-files-action.php');
-$unverifiedActionService = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedActionService.php');
+$unverifiedActionService = $read('catalog/src/Application/Unverified/CatalogUnverifiedActionService.php');
+$unverifiedImporterAdapter = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedImporterAdapter.php');
 $unverifiedImportService = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php');
 $unverifiedPromotion = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php');
 $unverifiedDependencyRecovery = $read('catalog/src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php');
@@ -115,13 +116,17 @@ $record(
         && str_contains($identityProcessor, '$this->operations->store(')
         && str_contains($identityProcessor, '$this->operations->index(')
         && str_contains($unverifiedImportAction, 'CatalogUnverifiedActionService')
+        && str_contains($unverifiedImportAction, 'CatalogUnverifiedImporterAdapter')
+        && str_contains($unverifiedImportAction, 'CatalogUnverifiedQueueMutationService')
         && !str_contains($unverifiedImportAction, 'CatalogUnverifiedImportService')
-        && str_contains($unverifiedActionService, 'CatalogUnverifiedImportService')
+        && str_contains($unverifiedActionService, 'CatalogUnverifiedImporter')
+        && str_contains($unverifiedActionService, 'CatalogUnverifiedQueueMutation')
+        && str_contains($unverifiedImporterAdapter, 'CatalogUnverifiedImportService')
         && str_contains($unverifiedImportService, 'CatalogUnverifiedPromotion')
         && str_contains($unverifiedImportService, 'CatalogUnverifiedDependencyRecovery')
         && str_contains($unverifiedPromotion, '$this->dependencies->queueRefresh(')
         && str_contains($unverifiedDependencyRecovery, 'CatalogPostImportDependencyQueue::enqueue('),
-    'queued upload must reach unverified indexing, action/import services, promotion and durable dependency scheduling'
+    'queued upload must reach unverified indexing, Application action orchestration, Infrastructure import adapters, promotion and durable dependency scheduling'
 );
 
 $batchEndpoint = $read('catalog/api/v1/upload-bucket-batch.php');
@@ -226,11 +231,13 @@ $criticalPhp = [
     'catalog/api/v1/job-run.php',
     'catalog/api/v1/job-worker-status.php',
     'catalog/src/Application/Jobs/CatalogWorkerStatusPolicy.php',
+    'catalog/src/Application/Unverified/CatalogUnverifiedActionService.php',
     'catalog/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php',
     'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolReconciler.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolStaleRestartFailed.php',
-    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedActionService.php',
+    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedImporterAdapter.php',
+    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedQueueMutationService.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedImportService.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedPromotion.php',
     'catalog/src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php',
