@@ -33,12 +33,12 @@ interface JobQueue
         ?string $workflowUnitKey = null
     ): int;
 
+    /** Preferred root affinity only affects claim ordering; global runnable work remains eligible. */
     public function claim(
         string $queue,
         string $workerId,
         int $leaseSeconds,
-        ?int $preferredRootJobId = null,
-        bool $requirePreferredRoot = false
+        ?int $preferredRootJobId = null
     ): ?ClaimedJob;
 
     /**
