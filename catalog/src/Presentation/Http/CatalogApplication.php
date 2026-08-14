@@ -13,8 +13,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Presentation\Http;
 
 use PDO;
-use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitStore;
 
 final class CatalogApplication
 {
@@ -36,11 +34,10 @@ final class CatalogApplication
 
         $config = \catalog_config();
         $db = \catalog_db($config);
-        $resourceLimits = new CatalogJobResourceLimitStore($db);
-        JobResourcePolicy::setLimitResolver(
-            static fn(string $resourceClass, int $fallback): int => $resourceLimits->resolve($resourceClass, $fallback)
-        );
 
+        // Runtime resource limits are resolved by queue admission, where they
+        // belong. Presentation no longer mutates Domain policy through a global
+        // resolver while booting an HTTP/CLI request.
         return new self($config, $db);
     }
 }
