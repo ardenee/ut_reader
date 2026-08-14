@@ -1,27 +1,20 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Provides shared catalog support for catalog search service, centered on `CatalogSearchService`.
- * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
- *      that behavior at each call site.
- * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
- * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
- *        purpose.
+ * Legacy global facade for catalogue search.
+ *
+ * The global surface is retained for existing pages. Application search is now
+ * persistence-free; this compatibility boundary composes the PDO repository.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/CatalogSupport.php';
-require_once __DIR__ . '/../src/Application/Search/CatalogSearchService.php';
-require_once __DIR__ . '/../src/Application/Search/CatalogCompactSearchService.php';
 
-class_alias('UnrealDb\\Catalog\\Application\\Search\\CatalogSearchUnavailableException', 'CatalogSearchUnavailableException');
+use UnrealDb\Catalog\Application\Search\CatalogSearchService as ApplicationCatalogSearchService;
+use UnrealDb\Catalog\Application\Search\CatalogSearchUnavailableException as ApplicationSearchUnavailableException;
+use UnrealDb\Catalog\Infrastructure\Search\PdoCatalogSearchRepository;
 
-/**
- * Legacy global facade. Broad administrator searches without a selected game
- * are split into bounded game-scoped searches so one request cannot launch a
- * catalogue-wide wildcard scan over every search document or parser table.
- */
+class_alias(ApplicationSearchUnavailableException::class, 'CatalogSearchUnavailableException');
+
 final class CatalogSearchService
 {
     private const MAX_GLOBAL_GAMES = 64;
@@ -32,16 +25,14 @@ final class CatalogSearchService
         $query = trim($query);
         $limit = max(1, min($limit, 500));
         $gameId = $gameId !== null && $gameId > 0 ? $gameId : null;
+        $search = new ApplicationCatalogSearchService(new PdoCatalogSearchRepository($db));
 
         if ($gameId !== null || self::isExactIdentity($query)) {
-            return \UnrealDb\Catalog\Application\Search\CatalogCompactSearchService::findFiles(
-                $db,
-                $query,
-                $limit,
-                $gameId
-            );
+            return $search->findFiles($query, $limit, $gameId);
         }
 
+        // Broad global searches remain bounded by game so a single anonymous or
+        // administrator request cannot initiate one catalogue-wide contains scan.
         $games = catalog_all(
             $db,
             'SELECT g.id FROM ue_games g WHERE EXISTS ('
@@ -60,12 +51,7 @@ final class CatalogSearchService
                 break;
             }
             $gameLimit = min($remaining, $quota);
-            foreach (\UnrealDb\Catalog\Application\Search\CatalogCompactSearchService::findFiles(
-                $db,
-                $query,
-                $gameLimit,
-                (int)$game['id']
-            ) as $row) {
+            foreach ($search->findFiles($query, $gameLimit, (int)$game['id']) as $row) {
                 $results[(int)$row['id']] = $row;
                 if (count($results) >= $limit) {
                     break 2;
