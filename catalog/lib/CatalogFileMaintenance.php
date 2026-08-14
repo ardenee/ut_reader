@@ -41,12 +41,9 @@ function catalog_file_maintenance_remove(
     ?callable $progress = null,
     bool $deferDependencyRefresh = false
 ): array {
-    // Full Sync owns a complete second dependency pass after every package has
-    // been validated/re-imported. Keep missing-file removals in that same mode.
-    if ((string)($_POST['operation'] ?? '') === 'sync_reimport') {
-        $deferDependencyRefresh = true;
-    }
-
+    // The caller owns workflow mode explicitly. Full Sync already passes true
+    // when it removes a missing package during sync_reimport, so this facade no
+    // longer inspects request-global $_POST state.
     return (new CatalogFileMaintenanceRemovalService($db, $config))
         ->remove($fileId, $progress, $deferDependencyRefresh);
 }
