@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Owns physical move/delete mutations for database-backed unverified queue items.
  * Why: Active unverified actions should not depend on procedural action functions or staging persistence helpers.
- * Role: Infrastructure filesystem/persistence service preserving existing queue move and discard semantics.
+ * Role: Infrastructure filesystem/persistence adapter for the Application unverified mutation port.
  */
 declare(strict_types=1);
 
@@ -11,8 +11,9 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
 use RuntimeException;
+use UnrealDb\Catalog\Application\Unverified\CatalogUnverifiedQueueMutation;
 
-final class CatalogUnverifiedQueueMutationService
+final class CatalogUnverifiedQueueMutationService implements CatalogUnverifiedQueueMutation
 {
     private readonly CatalogUnverifiedStagingIndex $staging;
 
