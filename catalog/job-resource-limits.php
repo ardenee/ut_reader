@@ -15,6 +15,7 @@ require_once __DIR__ . '/lib/CatalogSupport.php';
 use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitStore;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitWriter;
 
 catalog_start_session();
 
@@ -51,23 +52,12 @@ try {
         if (session_status() === PHP_SESSION_ACTIVE) {
             session_write_close();
         }
-        try {
-            $db->exec('SET SESSION innodb_lock_wait_timeout=5');
-            $db->exec('SET SESSION lock_wait_timeout=5');
-        } catch (Throwable) {
-            // Compatible servers may expose only one of these variables.
-        }
-        $result = $store->save($limits, $userId);
+        $result = (new CatalogJobResourceLimitWriter($db))->save($limits, $userId);
 
         catalog_start_session();
-        // Saving resource limits must remain a short database operation. Worker
-        // process lifecycle belongs to Background Jobs; attempting a detached
-        // launch here can leave the settings request waiting after the database
-        // transaction has already committed.
         $_SESSION['job_resource_limits_flash'] = 'Saved ' . (int)$result['updated_settings']
             . ' changed resource limit' . ((int)$result['updated_settings'] === 1 ? '' : 's')
-            . ', updated ' . (int)$result['updated_jobs'] . ' current queued limit row(s), and rekeyed '
-            . (int)($result['rekeyed_jobs'] ?? 0) . ' affected-dependency job(s) for per-game serialization.';
+            . '. Current queued jobs will use the saved limit when they are next considered for execution; no backlog rewrite was required.';
         session_write_close();
         header('Location: job-resource-limits.php', true, 303);
         exit;
@@ -82,7 +72,7 @@ try {
     catalog_head('Job Resource Limits');
     catalog_page_header(
         'Job Resource Limits',
-        'Control how many jobs from each workload class may run concurrently. Saved changes apply to new jobs and immediately update every current queued row in that class.',
+        'Control how many jobs from each workload class may run concurrently. Saved changes are read at claim time and apply to current queued jobs without rewriting them.',
         ['Background Jobs' => 'background-jobs.php', 'Performance Readiness' => 'performance-readiness.php']
     );
 
@@ -108,7 +98,7 @@ try {
         . '<p>A worker can claim a ready job only while the number of running jobs in the same resource class is below that class limit. Per-file and per-game concurrency keys still prevent two workers from changing the same target.</p>'
         . '<p><strong>Current detached worker pool:</strong> ' . $activeWorkers . ' active / ' . $desiredWorkers
         . ' configured, maximum ' . $maximumWorkers . '.</p>'
-        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Saving updates queued rows immediately. Already-running jobs are allowed to finish; reducing a limit prevents further claims until the active count falls below it. Affected-dependency jobs for the same game are serialized because they otherwise rewrite overlapping files and compete with normal site requests. Use Background Jobs to change or restart worker processes.</p>'
+        . '<p class="muted">Effective concurrency is limited by both the workload limit and the number of worker processes. Limits are resolved when a queued job is considered for execution, so increasing or reducing a setting takes effect without updating every queued database row. Already-running jobs are allowed to finish; reducing a limit prevents further claims until the active count falls below it. Use Background Jobs to change or restart worker processes.</p>'
         . '</div>';
 
     echo '<form method="post">'
@@ -141,7 +131,7 @@ try {
     echo '</tbody></table></div>'
         . '<p class="muted small">“Class blocked” is the number of ready rows beyond the class capacity. A concurrency key may additionally serialize jobs that target the same file or game.</p>'
         . '</div>'
-        . '<p><button class="primary" type="submit">Save limits and update queued jobs</button> '
+        . '<p><button class="primary" type="submit">Save limits</button> '
         . '<a class="button" href="background-jobs.php">Open Background Jobs</a></p>'
         . '</form>';
 
