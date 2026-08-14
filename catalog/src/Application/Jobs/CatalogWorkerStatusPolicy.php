@@ -40,23 +40,12 @@ final class CatalogWorkerStatusPolicy
         $stateStatus = strtolower(trim((string)($workerState['status'] ?? '')));
         $exitReason = strtolower(trim((string)($workerState['exit_reason'] ?? '')));
         $lastError = trim((string)($workerState['error'] ?? ''));
-        $stateTimestamp = strtotime((string)($workerState['updated_at'] ?? $workerState['started_at'] ?? '')) ?: 0;
-        $stateAge = $stateTimestamp > 0 ? max(0, time() - $stateTimestamp) : PHP_INT_MAX;
 
-        $restartRecommended = $active
-            && $counts['ready'] > 0
-            && $counts['running'] === 0
-            && $stateAge >= 5;
-
-        if ($restartRecommended) {
-            return [
-                'authoritative_status' => 'stopped_with_queue',
-                'authoritative_message' => $activeCount . ' detached worker process(es) exist, but no ready job has been claimed for '
-                    . $stateAge . ' second(s). Restart the worker pool.',
-                'restart_recommended' => true,
-            ];
-        }
-
+        /*
+         * Process ownership is authoritative. A live detached worker must never be
+         * presented as "stopped" merely because it happens to be between claims.
+         * The exact currently-owned rows are reported separately by runningWork().
+         */
         if ($active) {
             if ($counts['ready'] > 0 && $activeCount < $desiredCount && $launchingCount === 0) {
                 return [
@@ -68,10 +57,17 @@ final class CatalogWorkerStatusPolicy
                 ];
             }
 
+            $message = $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.';
+            if ($launchingCount > 0) {
+                $message .= ' ' . $launchingCount . ' additional process(es) are launching.';
+            }
+            if ($counts['ready'] > 0 && $counts['running'] === 0) {
+                $message .= ' No queue row is owned at this instant; workers are between claims or waiting for their current workflow to become runnable.';
+            }
+
             return [
                 'authoritative_status' => 'running',
-                'authoritative_message' => $activeCount . ' of ' . $desiredCount . ' detached worker process(es) are running.'
-                    . ($launchingCount > 0 ? ' ' . $launchingCount . ' additional process(es) are launching.' : ''),
+                'authoritative_message' => $message,
                 'restart_recommended' => false,
             ];
         }
