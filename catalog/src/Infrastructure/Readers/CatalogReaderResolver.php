@@ -16,14 +16,9 @@ namespace UnrealDb\Catalog\Infrastructure\Readers;
 /**
  * Maps a detected engine generation to the reader used by catalog inventory.
  *
- * UE1 and UE2 previously loaded the standalone readers by reading their PHP
- * source into memory, rewriting it and evaluating it inside runtime namespaces.
- * Those readers then loaded the complete package into another PHP string. Large
- * packages could therefore exhaust a 128 MiB detached worker before inventory
- * reached the Names/Imports/Exports stages.
- *
- * Catalog inventory now uses direct, memory-bounded streaming readers for UE1
- * and UE2. Standalone reader pages remain unchanged.
+ * UE1 and UE2 use direct, memory-bounded streaming readers. UE3 uses the strict
+ * Epic catalog parser. Only UE4 still relies on a configured external reader
+ * path while its parser remains in the root UE4 reference tree.
  */
 final class CatalogReaderResolver
 {
@@ -58,17 +53,19 @@ final class CatalogReaderResolver
             return $className;
         }
 
-        $readerConfig = $config['engine_readers'][$engineKey] ?? [];
         if ($engineKey === 'UE3') {
             $catalogReader = realpath(__DIR__ . '/../../../parsers/UE3CatalogReader.php');
-            if ($catalogReader !== false && is_file($catalogReader)) {
-                require_once $catalogReader;
-                if (class_exists('CatalogUE3PackageReader', false)) {
-                    return 'CatalogUE3PackageReader';
-                }
+            if ($catalogReader === false || !is_file($catalogReader)) {
+                throw new \RuntimeException($notFoundMessagePrefix . ' UE3: catalog/parsers/UE3CatalogReader.php');
             }
+            require_once $catalogReader;
+            if (!class_exists('CatalogUE3PackageReader', false)) {
+                throw new \RuntimeException($missingClassMessagePrefix . 'UE3, but CatalogUE3PackageReader was not defined.');
+            }
+            return 'CatalogUE3PackageReader';
         }
 
+        $readerConfig = $config['engine_readers'][$engineKey] ?? [];
         $relativePath = (string)($readerConfig['reader'] ?? '');
         $readerPath = realpath(__DIR__ . '/../../../' . $relativePath);
         if ($readerPath === false || !is_file($readerPath)) {
