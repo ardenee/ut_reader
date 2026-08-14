@@ -3,7 +3,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Verifies Upload Bucket v2 retirement boundaries and detached-worker orchestration contracts.
- * Why: The legacy uploader and worker-pool regressions are easy to reintroduce through apparently local changes.
+ * Why: Retired upload routes and worker-pool regressions are easy to reintroduce through apparently local changes.
  * Role: Read-only CLI architecture/regression verification; never mutates schema or application data.
  */
 declare(strict_types=1);
@@ -31,18 +31,11 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
     }
 };
 
-$legacyPage = $read('catalog/upload-bucket.php');
+$legacyPath = $repoRoot . '/catalog/upload-bucket.php';
 $record(
-    'legacy_upload_route_redirect_only',
-    str_contains($legacyPage, "header('Location: upload-bucket-v2.php', true, 302);")
-        && str_contains($legacyPage, 'exit;')
-        && !str_contains($legacyPage, '$_FILES')
-        && !str_contains($legacyPage, 'hash_file(')
-        && !str_contains($legacyPage, 'md5_file(')
-        && !str_contains($legacyPage, 'move_uploaded_file(')
-        && !str_contains($legacyPage, 'CatalogBucketBatchQueue')
-        && !str_contains($legacyPage, 'ue_background_jobs'),
-    'upload-bucket.php must remain a compatibility redirect with no upload implementation'
+    'legacy_upload_route_removed',
+    !is_file($legacyPath),
+    'catalog/upload-bucket.php is retired; Upload Bucket v2 is the sole active bucket route'
 );
 
 $legacyRouteCallers = [];
@@ -59,7 +52,6 @@ foreach ($catalogIterator as $item) {
     }
     $relative = str_replace('\\', '/', substr($item->getPathname(), strlen($repoRoot) + 1));
     if (in_array($relative, [
-        'catalog/upload-bucket.php',
         'catalog/upload-bucket-v2.php',
         'catalog/bin/verify-upload-worker-contracts.php',
     ], true)) {
@@ -81,7 +73,7 @@ $record(
     'navigation_uses_upload_v2',
     str_contains($navigation, "'Upload Bucket' => \$root . 'upload-bucket-v2.php'")
         && !str_contains($navigation, "'Upload Bucket' => \$root . 'upload-bucket.php'"),
-    'administrator navigation must target the canonical v2 route'
+    'administrator navigation must target the sole maintained Upload Bucket route'
 );
 
 $uploadPage = $read('catalog/upload-bucket-v2.php');
