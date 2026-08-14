@@ -15,7 +15,6 @@ if (PHP_SAPI !== 'cli') {
 
 require_once dirname(__DIR__) . '/bootstrap.php';
 
-use PDO;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobAdmissionGuard;
 
 $application = catalog_bootstrap(false);
