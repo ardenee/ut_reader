@@ -12,6 +12,7 @@ namespace UnrealDb\Catalog\Application\Upload;
 
 use Throwable;
 use UnrealDb\Catalog\Application\Upload\Contract\CatalogPackageImporter;
+use UnrealDb\Catalog\Application\Upload\Contract\FailedUploadPreserver;
 use UnrealDb\Catalog\Application\Upload\Contract\ProfiledUploadGameCatalog;
 use UnrealDb\Catalog\Application\Upload\Contract\UploadFailureLogger;
 
@@ -20,7 +21,8 @@ final class ProfiledUploadService
     public function __construct(
         private readonly ProfiledUploadGameCatalog $games,
         private readonly CatalogPackageImporter $importer,
-        private readonly ?UploadFailureLogger $failureLogger = null
+        private readonly ?UploadFailureLogger $failureLogger = null,
+        private readonly ?FailedUploadPreserver $failedUploadPreserver = null
     ) {
     }
 
@@ -103,12 +105,25 @@ final class ProfiledUploadService
                 $failed++;
                 $message = UploadErrorFormatter::concise($exception);
                 $this->logFailure($originalName, $exception);
-                $this->importer->preserveFailedUpload(
-                    (string)$temporaryPath,
-                    $originalName,
-                    $gameSlug,
-                    $exception->getMessage()
-                );
+                if ($this->failedUploadPreserver !== null) {
+                    $this->failedUploadPreserver->preserve(
+                        (string)$temporaryPath,
+                        $originalName,
+                        $gameSlug,
+                        $exception->getMessage(),
+                        $userId
+                    );
+                } else {
+                    // Compatibility for older composition roots. New wiring supplies
+                    // the dedicated retention port so Infrastructure never needs to
+                    // rediscover request identity from session state.
+                    $this->importer->preserveFailedUpload(
+                        (string)$temporaryPath,
+                        $originalName,
+                        $gameSlug,
+                        $exception->getMessage()
+                    );
+                }
                 $messages[] = UploadResult::create('failed', $originalName, $message, $uploadMeta);
                 $this->emitFailureProgress($progress, $originalName, $message);
             }
