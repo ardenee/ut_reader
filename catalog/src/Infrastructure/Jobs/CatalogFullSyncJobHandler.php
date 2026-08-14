@@ -21,6 +21,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFullSyncProjectionService;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 
 final class CatalogFullSyncJobHandler implements JobHandler
 {
@@ -55,9 +56,6 @@ final class CatalogFullSyncJobHandler implements JobHandler
         $resume = $context->resumeProgress();
         $stage = $this->resumeStage($resume);
 
-        // Compatibility for a Full Sync created by the old monolithic handler.
-        // In particular, a job that died at 97% finalization now retries only
-        // finalization instead of replaying the package/dependency phases.
         if ((int)($resume['workflow_version'] ?? 0) < self::WORKFLOW_VERSION) {
             $legacyStage = (string)($resume['stage'] ?? '');
             if ($legacyStage === 'full_sync_finalize') {
@@ -172,8 +170,6 @@ final class CatalogFullSyncJobHandler implements JobHandler
         } catch (JobCancellationRequested $error) {
             throw $error;
         } catch (Throwable $error) {
-            // The checkpoint remains full_sync_finalize, so automatic retry or
-            // manual Restart executes only this finalization block.
             throw new RuntimeException('Full Sync finalization failed: ' . $error->getMessage(), 0, $error);
         }
 
@@ -333,29 +329,7 @@ final class CatalogFullSyncJobHandler implements JobHandler
     /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
     private function childState(int $parentJobId, string $prefix): array
     {
-        $state = [
-            'total' => 0,
-            'queued' => 0,
-            'running' => 0,
-            'completed' => 0,
-            'failed' => 0,
-            'dead_letter' => 0,
-            'cancelled' => 0,
-        ];
-        $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ue_background_jobs '
-            . 'WHERE parent_job_id=? AND workflow_unit_key LIKE ? GROUP BY status'
-        );
-        $statement->execute([$parentJobId, $prefix . '%']);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $status = (string)$row['status'];
-            $count = (int)$row['c'];
-            $state['total'] += $count;
-            if (array_key_exists($status, $state)) {
-                $state[$status] += $count;
-            }
-        }
-        return $state;
+        return (new PdoWorkflowChildStateQuery($this->db))->fetch($parentJobId, $prefix);
     }
 
     /** @param array<string,mixed> $resume */
