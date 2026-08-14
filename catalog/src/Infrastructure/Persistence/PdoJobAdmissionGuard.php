@@ -62,8 +62,8 @@ final class PdoJobAdmissionGuard
 
     public function currentLimit(string $resourceClass, int $fallback): int
     {
-        $fallback = self::limit($fallback);
         $resourceClass = trim($resourceClass) !== '' ? trim($resourceClass) : 'default';
+        $fallback = $this->environmentLimit($resourceClass, $fallback);
         try {
             $statement = $this->db->prepare(
                 'SELECT limit_value FROM ue_job_resource_limits WHERE resource_class=? LIMIT 1'
@@ -73,7 +73,7 @@ final class PdoJobAdmissionGuard
             return $value === false ? $fallback : self::limit((int)$value);
         } catch (Throwable) {
             // Fresh/legacy databases may not have the settings table yet. The
-            // persisted queue-row value remains the compatibility fallback.
+            // environment/default value remains the compatibility fallback.
             return $fallback;
         }
     }
@@ -108,6 +108,18 @@ final class PdoJobAdmissionGuard
         );
         $key->execute([$queue, $concurrencyKey]);
         return $key->fetchColumn() === false;
+    }
+
+    private function environmentLimit(string $resourceClass, int $fallback): int
+    {
+        $fallback = self::limit($fallback);
+        $name = 'UNREALDB_JOB_RESOURCE_LIMIT_' . strtoupper(str_replace('-', '_', $resourceClass));
+        $raw = getenv($name);
+        if ($raw === false || $raw === '') {
+            return $fallback;
+        }
+        $value = filter_var($raw, FILTER_VALIDATE_INT);
+        return $value === false ? $fallback : self::limit((int)$value);
     }
 
     private function acquireNamedLock(string $lock): bool
