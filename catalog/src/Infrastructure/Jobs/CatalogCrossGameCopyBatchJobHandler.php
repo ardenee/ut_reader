@@ -1,12 +1,6 @@
 <?php
 /**
  * Durable cross-game copy preparation workflow.
- *
- * The HTTP request creates one parent job. The parent creates one independently
- * restartable preparation unit per selected verified source file. Each unit
- * revalidates current destination need and queues the normal destination import.
- * Expected stale/already-present selections complete as skips; unexpected errors
- * fail only that unit and can be restarted without revalidating successful peers.
  */
 declare(strict_types=1);
 
@@ -18,6 +12,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogCrossGamePackageCopyService;
 
 final class CatalogCrossGameCopyBatchJobHandler implements JobHandler
@@ -296,21 +291,7 @@ final class CatalogCrossGameCopyBatchJobHandler implements JobHandler
     /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
     private function childState(int $parentJobId): array
     {
-        $state = ['total' => 0, 'queued' => 0, 'running' => 0, 'completed' => 0, 'failed' => 0, 'dead_letter' => 0, 'cancelled' => 0];
-        $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=? '
-            . 'AND workflow_unit_key LIKE "source:%" GROUP BY status'
-        );
-        $statement->execute([$parentJobId]);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $status = (string)$row['status'];
-            $count = (int)$row['c'];
-            $state['total'] += $count;
-            if (array_key_exists($status, $state)) {
-                $state[$status] += $count;
-            }
-        }
-        return $state;
+        return (new PdoWorkflowChildStateQuery($this->db))->fetch($parentJobId, 'source:');
     }
 
     /** @return array{queued:int,deduplicated:int,skipped:int,import_job_ids:list<int>,skips:list<array<string,mixed>>} */
