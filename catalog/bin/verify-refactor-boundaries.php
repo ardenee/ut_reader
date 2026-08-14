@@ -73,6 +73,9 @@ foreach ([
     'catalog/admin.php',
     'catalog/download-bundle.php',
     'catalog/src/Application/Search/CatalogCompactSearchService.php',
+    'catalog/src/Presentation/Http/LegacySupportHooks.php',
+    'catalog/src/Presentation/Http/CatalogTableSortAssets.php',
+    'catalog/src/Infrastructure/Unverified/CatalogUnverifiedActionService.php',
 ] as $retiredPath) {
     if (is_file($repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $retiredPath))) {
         $failures[] = $retiredPath . ': retired compatibility path must stay removed';
@@ -80,6 +83,30 @@ foreach ([
 }
 
 $checks = [
+    'lib/CatalogSupport.php' => [
+        'require' => [
+            'CatalogPageResponseTransform::register()',
+            'CatalogFileInfoRouteGuard::register()',
+            'CatalogFederationInventoryFailureHandler::register()',
+        ],
+        'forbid' => ['LegacySupportHooks', 'CatalogTableSortAssets'],
+    ],
+    'src/Presentation/Http/CatalogPageResponseTransform.php' => [
+        'require' => ['final class CatalogPageResponseTransform', 'catalog-table-sort.js', 'ob_start('],
+        'forbid' => ['LegacySupportHooks'],
+    ],
+    'src/Presentation/Http/CatalogFileInfoRouteGuard.php' => [
+        'require' => ['final class CatalogFileInfoRouteGuard', 'unverified-file-details.php'],
+        'forbid' => [],
+    ],
+    'src/Presentation/Http/CatalogFederationInventoryFailureHandler.php' => [
+        'require' => [
+            'final class CatalogFederationInventoryFailureHandler',
+            'set_exception_handler',
+            'register_shutdown_function',
+        ],
+        'forbid' => [],
+    ],
     'src/Domain/Jobs/JobResourcePolicy.php' => [
         'require' => ['final class JobResourcePolicy', 'public static function for('],
         'forbid' => ['getenv(', 'PDO', '$_SESSION', 'setLimitResolver', 'error_log('],
@@ -91,6 +118,14 @@ $checks = [
     'src/Application/Unverified/CatalogUnverifiedActionService.php' => [
         'require' => ['CatalogUnverifiedQueueMutation', 'CatalogUnverifiedImporter'],
         'forbid' => ['PDO', '$_POST', '$_SESSION', 'Infrastructure\\'],
+    ],
+    'unverified-files-action.php' => [
+        'require' => [
+            'CatalogUnverifiedActionService',
+            'CatalogUnverifiedImporterAdapter',
+            'CatalogUnverifiedQueueMutationService',
+        ],
+        'forbid' => ['Infrastructure\\Unverified\\CatalogUnverifiedActionService'],
     ],
     'src/Application/Upload/ProfiledUploadService.php' => [
         'require' => ['FailedUploadPreserver', '$userId'],
