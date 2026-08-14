@@ -51,21 +51,8 @@ final class PdoBackgroundJobBrowserQuery
         $whereSql = $baseWhereSql;
         $params = $baseParams;
 
-        // "In progress" is deliberately tied to worker ownership. A parent is
-        // active if it is itself claimed or one of its child units is claimed.
-        // A coordinator that merely has queued/completed children is Waiting.
-        $hasWorkflowSql = 'EXISTS(SELECT 1 FROM ue_background_jobs job_child WHERE job_child.parent_job_id=j.id LIMIT 1)';
-        $hasRunningChildSql = 'EXISTS(SELECT 1 FROM ue_background_jobs running_child '
-            . 'WHERE running_child.parent_job_id=j.id AND running_child.status="running" LIMIT 1)';
-        $operatorStatusSql = 'CASE '
-            . 'WHEN j.status="running" THEN "running" '
-            . 'WHEN j.parent_job_id IS NULL AND j.status="queued" AND ' . $hasRunningChildSql . ' THEN "running" '
-            . 'ELSE j.status END';
-
-        // Workflow parent elapsed time is intentionally stable across coordinator
-        // yields/reclaims. The separate Currently working panel reports the exact
-        // claim duration of each worker-owned child/task.
-        $operatorStartedSql = 'CASE WHEN ' . $hasWorkflowSql . ' THEN j.created_at ELSE j.leased_at END';
+        $operatorStatusSql = BackgroundJobDisplaySql::operatorStatus('j');
+        $operatorStartedSql = BackgroundJobDisplaySql::operatorStartedAt('j');
 
         if ($status !== '') {
             if (in_array($status, ['queued', 'running'], true)) {
@@ -82,7 +69,6 @@ final class PdoBackgroundJobBrowserQuery
             array_push($params, ...$conditionParams);
         }
 
-        // Parent-only counts are cheap enough to keep live with the rows.
         $counts = $this->countQuery->counts($fromSql, $baseWhereSql, $baseParams);
         $totalKey = $status !== '' ? $status : 'all';
         $total = max(0, (int)($counts[$totalKey] ?? 0));
