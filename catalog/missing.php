@@ -296,11 +296,11 @@ try {
         'Missing Files',
         'See which catalog files require each missing package or object, then inspect the owning file before requesting a dependency.',
         [
-            'Generate Request' => 'federation/request-generate.php',
-            'Request Status' => 'federation/request-status.php',
-            'Approved Downloads' => 'federation/approved-downloads.php',
-            'Parent Inventory' => 'federation/peer-inventory.php',
-            'Conflicts' => 'federation/conflicts.php',
+            'Generate Request' => 'federation/inventories.php',
+            'Request Status' => 'federation/requests.php',
+            'Approved Downloads' => 'federation/requests.php',
+            'Parent Inventory' => 'federation/inventories.php',
+            'Conflicts' => 'federation/diagnostics.php?tab=conflicts',
         ]
     );
 
@@ -328,12 +328,12 @@ CSS;
     echo '</div>';
 
     echo '<div class="card"><h2>Repair workflow</h2><div class="grid">';
-    catalog_tool_card('1. View parent inventory', 'federation/peer-inventory.php', 'See what the parent/peers have compared with this site.');
-    catalog_tool_card('2. Generate missing-file request', 'federation/request-generate.php', 'Submit missing dependency list to the parent for approval.');
-    catalog_tool_card('3. Check request status', 'federation/request-status.php', 'Poll parent approval/denial status and cancel active requests.');
-    catalog_tool_card('4. Queue approved downloads', 'federation/approved-downloads.php', 'Queue parent-approved files for controlled federation download.');
+    catalog_tool_card('1. View parent inventory', 'federation/inventories.php', 'See what the parent/peers have compared with this site.');
+    catalog_tool_card('2. Generate missing-file request', 'federation/inventories.php', 'Review peer inventory coverage before requesting missing files.');
+    catalog_tool_card('3. Check request status', 'federation/requests.php', 'Review parent approval/denial status and active requests.');
+    catalog_tool_card('4. Queue approved downloads', 'federation/requests.php', 'Queue parent-approved files for controlled federation download.');
     catalog_tool_card('5. Run transfers/imports', 'transfers.php', 'Download/import approved files using the worker.');
-    catalog_tool_card('6. Review conflicts', 'federation/conflicts.php', 'Check GUID/package/hash mismatches before trusting matches.');
+    catalog_tool_card('6. Review conflicts', 'federation/diagnostics.php?tab=conflicts', 'Check GUID/package/hash mismatches before trusting matches.');
     echo '</div></div>';
 
     if ($detailMode === 'file_objects') {
