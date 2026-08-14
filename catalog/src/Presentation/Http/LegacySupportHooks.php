@@ -1,12 +1,10 @@
 <?php
 /**
- * UnrealDB PHP File Audit
- * Purpose: Defines the presentation class `LegacySupportHooks` for legacy support hooks.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
- * Role: Presentation-layer code for HTTP/UI rendering and reusable interface components.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ * Compatibility boundary for remaining include-time HTTP behaviour.
+ *
+ * Legacy pages still include catalog/lib/CatalogSupport.php. All HTML response
+ * compatibility rewrites now share one output buffer so a response is copied at
+ * most once regardless of how many legacy presentation adjustments apply.
  */
 declare(strict_types=1);
 
@@ -14,25 +12,13 @@ namespace UnrealDb\Catalog\Presentation\Http;
 
 use Throwable;
 
-/**
- * Compatibility boundary for the remaining include-time HTTP behaviour.
- *
- * Legacy pages still include catalog/lib/CatalogSupport.php. Keeping these hooks
- * in one presentation-layer class makes that behaviour explicit and prevents new
- * database, routing, or rendering side effects from leaking into support helpers.
- */
 final class LegacySupportHooks
 {
     public static function register(): void
     {
-        self::registerIdentityAssets();
-        self::registerLayoutFixAssets();
-        self::registerDuplicateManagerAssets();
-        self::registerUnverifiedQueueAssets();
+        self::registerResponseTransform();
         self::redirectStagedFileInformation();
         self::registerFederationInventoryEmergencyHandling();
-        self::registerMissingDependencyFederationLinks();
-        self::registerGameManagerMissingCountAsset();
     }
 
     private static function currentScript(): string
@@ -40,101 +26,85 @@ final class LegacySupportHooks
         return basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
     }
 
-    private static function registerIdentityAssets(): void
+    private static function registerResponseTransform(): void
     {
+        $script = self::currentScript();
         $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
-        $source = str_contains($requestPath, '/catalog/federation/')
-            ? '../assets/catalog-identities.js'
-            : 'assets/catalog-identities.js';
-        $path = dirname(__DIR__, 3) . '/assets/catalog-identities.js';
-        $version = is_file($path) ? (string)filemtime($path) : '1';
+        $federation = str_contains($requestPath, '/catalog/federation/');
+        $headAssets = [];
 
-        ob_start(static function (string $output) use ($source, $version): string {
-            if (!str_contains($output, '</head>') || str_contains($output, 'catalog-identities.js')) {
-                return $output;
+        $identityPath = dirname(__DIR__, 3) . '/assets/catalog-identities.js';
+        $headAssets[$federation ? '../assets/catalog-identities.js' : 'assets/catalog-identities.js']
+            = is_file($identityPath) ? (string)filemtime($identityPath) : '1';
+
+        $layoutPath = dirname(__DIR__, 3) . '/assets/catalog-layout-fixes.js';
+        $headAssets[$federation ? '../assets/catalog-layout-fixes.js' : 'assets/catalog-layout-fixes.js']
+            = is_file($layoutPath) ? (string)filemtime($layoutPath) : '1';
+
+        if ($script === 'duplicates.php') {
+            $path = dirname(__DIR__, 3) . '/assets/duplicates-keep.js';
+            $headAssets['assets/duplicates-keep.js'] = is_file($path) ? (string)filemtime($path) : '1';
+        }
+        if ($script === 'unverified-files.php') {
+            foreach ([
+                'assets/unverified-files-layout.js',
+                'assets/unverified-duplicate-cleanup.js',
+            ] as $source) {
+                $path = dirname(__DIR__, 3) . '/' . $source;
+                $headAssets[$source] = is_file($path) ? (string)filemtime($path) : '1';
             }
-            $html = '<script src="'
-                . \catalog_h($source . '?v=' . rawurlencode($version))
-                . '" defer></script>';
-            return preg_replace('/<\/head>/', $html . '</head>', $output, 1) ?? $output;
-        });
-    }
-
-    private static function registerLayoutFixAssets(): void
-    {
-        $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
-        $source = str_contains($requestPath, '/catalog/federation/')
-            ? '../assets/catalog-layout-fixes.js'
-            : 'assets/catalog-layout-fixes.js';
-        $path = dirname(__DIR__, 3) . '/assets/catalog-layout-fixes.js';
-        $version = is_file($path) ? (string)filemtime($path) : '1';
-
-        ob_start(static function (string $output) use ($source, $version): string {
-            if (!str_contains($output, '</head>') || str_contains($output, 'catalog-layout-fixes.js')) {
-                return $output;
-            }
-            $html = '<script src="'
-                . \catalog_h($source . '?v=' . rawurlencode($version))
-                . '" defer></script>';
-            return preg_replace('/<\/head>/', $html . '</head>', $output, 1) ?? $output;
-        });
-    }
-
-    private static function registerDuplicateManagerAssets(): void
-    {
-        if (self::currentScript() !== 'duplicates.php') {
-            return;
         }
 
-        $source = 'assets/duplicates-keep.js';
-        $path = dirname(__DIR__, 3) . '/assets/duplicates-keep.js';
-        $version = is_file($path) ? (string)filemtime($path) : '1';
-
-        ob_start(static function (string $output) use ($source, $version): string {
-            if (!str_contains($output, '</head>') || str_contains($output, $source)) {
-                return $output;
-            }
-            $html = '<script src="'
-                . \catalog_h($source . '?v=' . rawurlencode($version))
-                . '" defer></script>';
-            return preg_replace('/<\/head>/', $html . '</head>', $output, 1) ?? $output;
-        });
-    }
-
-    private static function registerUnverifiedQueueAssets(): void
-    {
-        if (self::currentScript() !== 'unverified-files.php') {
-            return;
+        $rewriteMissingLinks = $script === 'missing.php';
+        $injectGameManagerCounts = $script === 'game-manager.php'
+            && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'GET'
+            && !isset($_GET['progress']);
+        $gameManagerVersion = '1';
+        if ($injectGameManagerCounts) {
+            $path = dirname(__DIR__, 3) . '/assets/game-manager-missing-counts.js';
+            $gameManagerVersion = is_file($path) ? (string)filemtime($path) : '1';
         }
 
-        $scripts = [
-            'assets/unverified-files-layout.js' => dirname(__DIR__, 3) . '/assets/unverified-files-layout.js',
-            'assets/unverified-duplicate-cleanup.js' => dirname(__DIR__, 3) . '/assets/unverified-duplicate-cleanup.js',
-        ];
-        $versions = [];
-        foreach ($scripts as $source => $path) {
-            $versions[$source] = is_file($path) ? (string)filemtime($path) : '1';
-        }
-
-        ob_start(static function (string $output) use ($versions): string {
-            if (!str_contains($output, '</head>')) {
-                return $output;
-            }
-
-            $html = '';
-            foreach ($versions as $source => $version) {
-                if (!str_contains($output, $source)) {
-                    $html .= '<script src="'
+        ob_start(static function (string $html) use (
+            $headAssets,
+            $rewriteMissingLinks,
+            $injectGameManagerCounts,
+            $gameManagerVersion
+        ): string {
+            if ($headAssets !== [] && str_contains($html, '</head>')) {
+                $injection = '';
+                foreach ($headAssets as $source => $version) {
+                    if (str_contains($html, $source)) {
+                        continue;
+                    }
+                    $injection .= '<script src="'
                         . \catalog_h($source . '?v=' . rawurlencode($version))
                         . '" defer></script>';
                 }
+                if ($injection !== '') {
+                    $html = preg_replace('/<\/head>/', $injection . '</head>', $html, 1) ?? $html;
+                }
             }
 
-            if ($html === '') {
-                return $output;
+            if ($rewriteMissingLinks) {
+                $html = strtr($html, [
+                    'federation/request-generate.php' => 'federation/inventories.php',
+                    'federation/request-status.php' => 'federation/requests.php',
+                    'federation/approved-downloads.php' => 'federation/requests.php',
+                    'federation/peer-inventory.php' => 'federation/inventories.php',
+                    'federation/conflicts.php' => 'federation/diagnostics.php?tab=conflicts',
+                ]);
             }
 
-            return preg_replace('/<\/head>/', $html . '</head>', $output, 1) ?? $output;
+            if ($injectGameManagerCounts
+                && str_contains($html, '</body>')
+                && !str_contains($html, 'game-manager-missing-counts.js')) {
+                $asset = '<script src="assets/game-manager-missing-counts.js?v='
+                    . \catalog_h($gameManagerVersion) . '" defer></script>';
+                $html = str_replace('</body>', $asset . '</body>', $html);
+            }
+
+            return $html;
         });
     }
 
@@ -279,43 +249,5 @@ final class LegacySupportHooks
             . '<p>Search the server error log for <code>[UnrealDB][' . $escape($reference) . ']</code>.</p>'
             . '<p><a href="inventories.php">Retry Federation Inventories</a> · <a href="diagnostics.php?tab=logs">Federation Logs</a></p>'
             . '</div></body></html>';
-    }
-
-    private static function registerMissingDependencyFederationLinks(): void
-    {
-        if (self::currentScript() !== 'missing.php') {
-            return;
-        }
-
-        ob_start(static function (string $html): string {
-            return strtr($html, [
-                'federation/request-generate.php' => 'federation/inventories.php',
-                'federation/request-status.php' => 'federation/requests.php',
-                'federation/approved-downloads.php' => 'federation/requests.php',
-                'federation/peer-inventory.php' => 'federation/inventories.php',
-                'federation/conflicts.php' => 'federation/diagnostics.php?tab=conflicts',
-            ]);
-        });
-    }
-
-    private static function registerGameManagerMissingCountAsset(): void
-    {
-        if (
-            self::currentScript() !== 'game-manager.php'
-            || strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET'
-            || isset($_GET['progress'])
-        ) {
-            return;
-        }
-
-        ob_start(static function (string $html): string {
-            if (!str_contains($html, '</body>')) {
-                return $html;
-            }
-            $assetPath = dirname(__DIR__, 3) . '/assets/game-manager-missing-counts.js';
-            $version = is_file($assetPath) ? (string)filemtime($assetPath) : '1';
-            $script = '<script src="assets/game-manager-missing-counts.js?v=' . \catalog_h($version) . '" defer></script>';
-            return str_replace('</body>', $script . '</body>', $html);
-        });
     }
 }
