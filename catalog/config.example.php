@@ -124,10 +124,10 @@ return [
     ],
     'allowed_extensions' => ['u','unr','utx','umx','uax','ut2','ut3','upk','uasset','umap'],
     'common_packages' => ['Core','Engine','Editor','Fire','IpDrv','UWindow','Botpack','UnrealShare','UnrealI','Gameplay','UnrealEd'],
+    // UE1/UE2 use namespaced streaming readers and UE3 uses the strict catalog
+    // parser directly. UE4 remains the only generation backed by a configured
+    // external reader path until its root parser is migrated.
     'engine_readers' => [
-        'UE1' => ['reader' => '../UE1/UnrealPackageReader.php', 'label' => 'UE1 / Unreal Tournament'],
-        'UE2' => ['reader' => '../UE2/UnrealPackageReader.php', 'label' => 'UE2 / UE2.5'],
-        'UE3' => ['reader' => '../UE3/UnrealPackageReader.php', 'label' => 'UE3 / UT3'],
         'UE4' => ['reader' => '../UE4/UnrealPackageReader.php', 'label' => 'UE4'],
     ],
 ];
