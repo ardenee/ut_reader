@@ -17,6 +17,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoWorkflowChildStateQuery;
 use UnrealDb\Catalog\Infrastructure\Storage\GeneratedPackageStore;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
 use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedStagingIndex;
@@ -452,21 +453,7 @@ final class CatalogStorageMaintenanceJobHandler implements JobHandler
     /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
     private function childState(int $parentJobId, string $prefix): array
     {
-        $state = ['total' => 0, 'queued' => 0, 'running' => 0, 'completed' => 0, 'failed' => 0, 'dead_letter' => 0, 'cancelled' => 0];
-        $statement = $this->db->prepare(
-            'SELECT status,COUNT(*) c FROM ue_background_jobs WHERE parent_job_id=? '
-            . 'AND workflow_unit_key LIKE ? GROUP BY status'
-        );
-        $statement->execute([$parentJobId, $prefix . '%']);
-        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $status = (string)$row['status'];
-            $count = (int)$row['c'];
-            $state['total'] += $count;
-            if (array_key_exists($status, $state)) {
-                $state[$status] += $count;
-            }
-        }
-        return $state;
+        return (new PdoWorkflowChildStateQuery($this->db))->fetch($parentJobId, $prefix);
     }
 
     /** @return array<string,mixed> */
