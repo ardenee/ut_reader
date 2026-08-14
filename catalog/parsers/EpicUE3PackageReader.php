@@ -65,11 +65,6 @@ final class CatalogEpicUE3BinaryReader
     }
     private function ansiToUtf8(string $raw): string
     {
-        // Epic's FString archive operator loads positive-length strings byte by
-        // byte with FromAnsi(ANSICHAR); the Unicode Core definition is exactly
-        // `(BYTE)In`. Preserve that 0x00-0xFF code-point mapping and encode the
-        // resulting TCHAR text as UTF-8 for PHP/JSON instead of treating the
-        // serialized ANSI bytes themselves as UTF-8.
         $out='';
         for ($i=0,$length=strlen($raw);$i<$length;$i++) {
             $code=ord($raw[$i]);
@@ -96,7 +91,9 @@ final class CatalogUE3PackageReader
     {
         try {
             $bytes=file_get_contents($path); if ($bytes===false) throw new RuntimeException("Failed to read UE3 package: $path");
-            $this->physical=$this->logical=$bytes; $this->parse();
+            // PHP strings are copy-on-write, so this is one physical allocation
+            // until compressed reconstruction starts.
+            $this->physical=$this->logical=$bytes; unset($bytes); $this->parse();
         } catch (Throwable $e) { $this->issues[]=$this->formatError($e); if (!$this->header) $this->header=$this->blankHeader(); }
     }
     /** @return array<string,mixed> */
@@ -150,8 +147,19 @@ final class CatalogUE3PackageReader
             $ac=$r->i32('AdditionalPackagesToCook.Count'); $this->arrayFits($r,$ac,4,'AdditionalPackagesToCook.Count');
             $h['additionalPackagesToCook']=[]; for ($i=0;$i<$ac;$i++) $h['additionalPackagesToCook'][]=$r->fstring("AdditionalPackagesToCook[$i]");
         }
-        $this->header=$h; if ($cc) $this->inflatePackage(); $this->header['logicalSize']=strlen($this->logical);
+        $this->header=$h;
+        if ($cc) {
+            // Release every reference to the full compressed file before the
+            // logical package is assembled. Compressed chunks are read from disk
+            // one at a time, bounding peak memory to logical package + one chunk.
+            unset($r);
+            $this->logical='';
+            $this->physical='';
+            $this->inflatePackage();
+        }
+        $this->header['logicalSize']=strlen($this->logical);
         $this->validateSummary(); $this->readNames(); $this->readImports(); $this->readExports();
+        $this->physical='';
     }
     private function arrayFits(CatalogEpicUE3BinaryReader $r,int $count,int $minBytes,string $field): void
     {
@@ -231,12 +239,53 @@ final class CatalogUE3PackageReader
     }
     private function inflatePackage(): void
     {
-        $chunks=(array)$this->header['chunks']; $logicalSize=strlen($this->physical);
-        foreach ($chunks as $c) { $logicalSize=max($logicalSize,(int)$c['uOff']+(int)$c['uLen']); if ((int)$c['cOff']+(int)$c['cLen']>strlen($this->physical)) throw new RuntimeException('Epic UE3 compressed chunk exceeds physical package size'); }
-        $first=min(array_map(static fn(array $c):int=>(int)$c['uOff'],$chunks)); if ($first<0 || $first>strlen($this->physical)) throw new RuntimeException('Invalid first Epic UE3 compressed chunk offset');
-        $logical=substr($this->physical,0,$first); if (strlen($logical)<$logicalSize) $logical.=str_repeat("\0",$logicalSize-strlen($logical));
-        foreach ($chunks as $i=>$c) { $payload=substr($this->physical,(int)$c['cOff'],(int)$c['cLen']); $decoded=$this->inflateChunk($payload,(int)$c['uLen'],(int)$i); $logical=substr_replace($logical,$decoded,(int)$c['uOff'],(int)$c['uLen']); }
-        $this->logical=$logical; $this->header['logicalDecompressed']=true;
+        $chunks=(array)$this->header['chunks'];
+        if ($chunks===[]) return;
+        $physicalSize=filesize($this->path);
+        if ($physicalSize===false || $physicalSize<1) throw new RuntimeException('Could not determine Epic UE3 physical package size');
+        $logicalSize=(int)$physicalSize;
+        foreach ($chunks as $c) {
+            $logicalSize=max($logicalSize,(int)$c['uOff']+(int)$c['uLen']);
+            if ((int)$c['cOff']+(int)$c['cLen']>$physicalSize) throw new RuntimeException('Epic UE3 compressed chunk exceeds physical package size');
+        }
+        usort($chunks,static fn(array $a,array $b):int=>(int)$a['uOff']<=>(int)$b['uOff']);
+        $first=(int)$chunks[0]['uOff'];
+        if ($first<0 || $first>$physicalSize) throw new RuntimeException('Invalid first Epic UE3 compressed chunk offset');
+
+        $handle=fopen($this->path,'rb');
+        if (!is_resource($handle)) throw new RuntimeException('Could not reopen Epic UE3 package for chunk decompression');
+        try {
+            $logical=$this->readFileRange($handle,0,$first,'uncompressed prefix');
+            $cursor=strlen($logical);
+            foreach ($chunks as $i=>$c) {
+                $uOff=(int)$c['uOff']; $uLen=(int)$c['uLen'];
+                if ($uOff<$cursor) throw new RuntimeException('Overlapping Epic UE3 compressed chunk ranges are invalid');
+                if ($uOff>$cursor) $logical.=str_repeat("\0",$uOff-$cursor);
+                $payload=$this->readFileRange($handle,(int)$c['cOff'],(int)$c['cLen'],"compressed chunk $i");
+                $decoded=$this->inflateChunk($payload,$uLen,(int)$i);
+                $logical.=$decoded;
+                $cursor=$uOff+$uLen;
+                unset($payload,$decoded);
+            }
+            if ($cursor<$logicalSize) $logical.=str_repeat("\0",$logicalSize-$cursor);
+            $this->logical=$logical;
+        } finally {
+            fclose($handle);
+        }
+        $this->header['logicalDecompressed']=true;
+    }
+    /** @param resource $handle */
+    private function readFileRange($handle,int $offset,int $length,string $field): string
+    {
+        if ($offset<0 || $length<0 || fseek($handle,$offset,SEEK_SET)!==0) throw new RuntimeException("Could not seek Epic UE3 $field");
+        $out='';
+        while (strlen($out)<$length) {
+            $chunk=fread($handle,$length-strlen($out));
+            if ($chunk===false || $chunk==='') break;
+            $out.=$chunk;
+        }
+        if (strlen($out)!==$length) throw new RuntimeException("Could not read complete Epic UE3 $field expected=$length got=".strlen($out));
+        return $out;
     }
     private function inflateChunk(string $payload,int $expected,int $index): string
     {
