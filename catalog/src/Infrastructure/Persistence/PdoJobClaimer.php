@@ -25,8 +25,7 @@ final class PdoJobClaimer
         string $queue,
         string $workerId,
         int $leaseSeconds,
-        ?int $preferredRootJobId = null,
-        bool $requirePreferredRoot = false
+        ?int $preferredRootJobId = null
     ): ?ClaimedJob {
         $queue = PdoJobQueueSupport::requiredIdentifier($queue, 'queue');
         $workerId = PdoJobQueueSupport::requiredIdentifier($workerId, 'worker id');
@@ -36,6 +35,9 @@ final class PdoJobClaimer
             : null;
         $guard = new PdoJobAdmissionGuard($this->db);
 
+        // Root affinity is preference-only. If the preferred workflow has no
+        // runnable row, immediately fall back to unrelated global work rather
+        // than leaving a healthy worker idle.
         if ($preferredRootJobId !== null) {
             $preferred = $this->claimFromScope(
                 $queue,
@@ -44,7 +46,7 @@ final class PdoJobClaimer
                 $preferredRootJobId,
                 $guard
             );
-            if ($preferred !== null || $requirePreferredRoot) {
+            if ($preferred !== null) {
                 return $preferred;
             }
         }
