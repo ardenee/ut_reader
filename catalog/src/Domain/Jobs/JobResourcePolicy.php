@@ -3,14 +3,11 @@
  * UnrealDB PHP File Audit
  * Purpose: Defines the domain class `JobResourcePolicy` for job type.
  * Why: It keeps resource/concurrency policy out of handlers and pages.
- * Role: Domain model/contract code representing durable-job resource limits.
+ * Role: Pure Domain model/contract code representing durable-job resource profiles.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Domain\Jobs;
-
-use Closure;
-use Throwable;
 
 final class JobResourcePolicy
 {
@@ -28,14 +25,6 @@ final class JobResourcePolicy
     public const HOUSEKEEPING = 'housekeeping';
     public const DEFAULT = 'default';
     public const PROJECTION_CONCURRENCY_KEY = 'projection:catalog-maintenance';
-
-    private static ?Closure $limitResolver = null;
-
-    /** @param callable(string,int):int|null $resolver */
-    public static function setLimitResolver(?callable $resolver): void
-    {
-        self::$limitResolver = $resolver === null ? null : Closure::fromCallable($resolver);
-    }
 
     /** @return array<string,array{label:string,default:int,description:string}> */
     public static function definitions(): array
@@ -115,124 +104,124 @@ final class JobResourcePolicy
         return match ($jobType) {
             JobType::FULL_SYNC_GAME => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
-                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::defaultLimit(1),
                 self::PROJECTION_CONCURRENCY_KEY
             ),
             JobType::FULL_SYNC_FILE,
             JobType::REPAIR_COMPACT_METADATA_FILE => new JobResourceProfile(
                 self::FULL_SYNC_UNIT,
-                self::configuredLimit(self::FULL_SYNC_UNIT, 2),
+                self::defaultLimit(2),
                 self::positiveKey('import:file-id:', $payload['file_id'] ?? null)
             ),
             JobType::FULL_SYNC_DEPENDENCY_FILE => new JobResourceProfile(
                 self::FULL_SYNC_UNIT,
-                self::configuredLimit(self::FULL_SYNC_UNIT, 2),
+                self::defaultLimit(2),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
             ),
             JobType::REBUILD_GAME_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
-                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('dependency:game:', $payload['game_id'] ?? null)
             ),
             JobType::REBUILD_FILE_DEPENDENCIES => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
-                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
             ),
             JobType::REBUILD_AFFECTED_DEPENDENCIES => self::affectedDependencyProfile($payload),
             JobType::RECONCILE_CATALOG_PROJECTIONS => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
-                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::defaultLimit(1),
                 self::projectionKey($payload)
             ),
             JobType::RECONCILE_CATALOG_PROJECTION_FILE => new JobResourceProfile(
                 self::AFFECTED_DEPENDENCY_BATCH,
-                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 4),
+                self::defaultLimit(4),
                 self::positiveKey('projection:file:', $payload['affected_file_id'] ?? null)
             ),
             JobType::REBUILD_FILE_SEARCH_INDEX => new JobResourceProfile(
                 self::SEARCH_HEAVY,
-                self::configuredLimit(self::SEARCH_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('search:file:', $payload['file_id'] ?? null)
             ),
             JobType::REPAIR_SOURCE_IDENTITY_FILE => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
-                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('source-identity:file:', $payload['file_id'] ?? null)
             ),
             JobType::REPAIR_SOURCE_IDENTITY_GAME => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
-                self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('source-identity:game:', $payload['game_id'] ?? null)
             ),
             JobType::PREPARE_BUCKET_REDIRECT,
             JobType::PROCESS_BUCKET_UPLOAD,
             JobType::REPAIR_UNVERIFIED_METADATA => new JobResourceProfile(
                 self::BUCKET_PROCESSING,
-                self::configuredLimit(self::BUCKET_PROCESSING, 8),
+                self::defaultLimit(8),
                 self::bucketFileKey($payload)
             ),
             JobType::REFRESH_UNVERIFIED_GAME_MATCHES => new JobResourceProfile(
                 self::UNVERIFIED_MATCHES,
-                self::configuredLimit(self::UNVERIFIED_MATCHES, 2),
+                self::defaultLimit(2),
                 self::unverifiedMatchKey($payload)
             ),
             JobType::IMPORT_STAGED_PACKAGE => new JobResourceProfile(
                 self::IMPORT_HEAVY,
-                self::configuredLimit(self::IMPORT_HEAVY, 8),
+                self::defaultLimit(8),
                 self::importFileKey($payload)
             ),
             JobType::IMPORT_STAGED_PAK => new JobResourceProfile(
                 self::ARCHIVE_IMPORT_HEAVY,
-                self::configuredLimit(self::ARCHIVE_IMPORT_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('import:game:', $payload['game_id'] ?? null)
             ),
             JobType::IMPORT_STAGED_PAK_ENTRY => new JobResourceProfile(
                 self::ARCHIVE_IMPORT_HEAVY,
-                self::configuredLimit(self::ARCHIVE_IMPORT_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('pak-entry-parent:', $payload['workflow_parent_job_id'] ?? null)
             ),
             JobType::IMPORT_GAME_BACKUP,
             JobType::IMPORT_GAME_BACKUP_ENTRY => new JobResourceProfile(
                 self::ARCHIVE_IMPORT_HEAVY,
-                self::configuredLimit(self::ARCHIVE_IMPORT_HEAVY, 1),
+                self::defaultLimit(1),
                 JobType::IMPORT_GAME_BACKUP_ENTRY === $jobType
                     ? self::positiveKey('backup-entry-parent:', $payload['workflow_parent_job_id'] ?? null)
                     : self::positiveKey('import:game:', $payload['game_id'] ?? null)
             ),
             JobType::EXPORT_GAME_BACKUP => new JobResourceProfile(
                 self::STORAGE_HEAVY,
-                self::configuredLimit(self::STORAGE_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('game-backup-export:', $payload['game_id'] ?? null)
             ),
             JobType::CLEAN_UNVERIFIED_DUPLICATES => new JobResourceProfile(
                 self::STORAGE_HEAVY,
-                self::configuredLimit(self::STORAGE_HEAVY, 1),
+                self::defaultLimit(1),
                 'unverified-duplicate-cleanup'
             ),
             JobType::HASH_UNVERIFIED_DUPLICATE,
             JobType::DELETE_UNVERIFIED_DUPLICATE => new JobResourceProfile(
                 self::UNVERIFIED_FILE_MAINTENANCE,
-                self::configuredLimit(self::UNVERIFIED_FILE_MAINTENANCE, 2),
+                self::defaultLimit(2),
                 self::unverifiedQueueFileKey($payload)
             ),
             JobType::RECONCILE_UNVERIFIED_STORAGE => self::unverifiedReconcileProfile($payload),
             JobType::GENERATE_MOD_PACKAGE => new JobResourceProfile(
                 self::PACKAGE_HEAVY,
-                self::configuredLimit(self::PACKAGE_HEAVY, 1),
+                self::defaultLimit(1),
                 self::positiveKey('package:file:', $payload['file_id'] ?? null)
             ),
             JobType::PRUNE_UPLOAD_PROGRESS,
             JobType::PRUNE_STALE_ARTIFACTS => new JobResourceProfile(
                 self::HOUSEKEEPING,
-                self::configuredLimit(self::HOUSEKEEPING, 2),
+                self::defaultLimit(2),
                 JobType::PRUNE_STALE_ARTIFACTS === $jobType && !empty($payload['prune_unit'])
                     ? 'stale-artifact-prune:' . strtolower(trim((string)$payload['prune_unit']))
                     : (JobType::PRUNE_STALE_ARTIFACTS === $jobType ? 'stale-artifact-pruning' : null)
             ),
             default => new JobResourceProfile(
                 self::DEFAULT,
-                self::configuredLimit(self::DEFAULT, 4)
+                self::defaultLimit(4)
             ),
         };
     }
@@ -245,7 +234,7 @@ final class JobResourcePolicy
             $sourceFileId = max(0, (int)($payload['file_id'] ?? 0));
             return new JobResourceProfile(
                 self::AFFECTED_DEPENDENCY_BATCH,
-                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 4),
+                self::defaultLimit(4),
                 'dependency:affected-file-unit:' . $sourceFileId . ':' . $affectedFileId
             );
         }
@@ -254,14 +243,14 @@ final class JobResourcePolicy
         if (is_array($batchIds) && $batchIds !== []) {
             return new JobResourceProfile(
                 self::AFFECTED_DEPENDENCY_BATCH,
-                self::configuredLimit(self::AFFECTED_DEPENDENCY_BATCH, 4),
+                self::defaultLimit(4),
                 self::affectedBatchKey($payload)
             );
         }
 
         return new JobResourceProfile(
             self::DEPENDENCY_HEAVY,
-            self::configuredLimit(self::DEPENDENCY_HEAVY, 1),
+            self::defaultLimit(1),
             self::affectedDependencyKey($payload)
         );
     }
@@ -272,7 +261,7 @@ final class JobResourcePolicy
         if (trim((string)($payload['reconcile_queue_name'] ?? '')) !== '') {
             return new JobResourceProfile(
                 self::UNVERIFIED_FILE_MAINTENANCE,
-                self::configuredLimit(self::UNVERIFIED_FILE_MAINTENANCE, 2),
+                self::defaultLimit(2),
                 self::unverifiedQueueFileKey([
                     'queue_game_id' => $payload['reconcile_game_id'] ?? 0,
                     'queue_name' => $payload['reconcile_queue_name'] ?? '',
@@ -281,35 +270,14 @@ final class JobResourcePolicy
         }
         return new JobResourceProfile(
             self::STORAGE_HEAVY,
-            self::configuredLimit(self::STORAGE_HEAVY, 1),
+            self::defaultLimit(1),
             'unverified-storage-reconciliation'
         );
     }
 
-    private static function configuredLimit(string $resourceClass, int $default): int
+    private static function defaultLimit(int $default): int
     {
-        $name = 'UNREALDB_JOB_RESOURCE_LIMIT_' . strtoupper(str_replace('-', '_', $resourceClass));
-        $raw = getenv($name);
-        $limit = $default;
-        if ($raw !== false && $raw !== '') {
-            $value = filter_var($raw, FILTER_VALIDATE_INT);
-            if ($value !== false) {
-                $limit = (int)$value;
-            }
-        }
-        $limit = max(1, min($limit, 100));
-
-        if (self::$limitResolver !== null) {
-            try {
-                $resolved = (self::$limitResolver)($resourceClass, $limit);
-                $limit = max(1, min((int)$resolved, 100));
-            } catch (Throwable $error) {
-                error_log('[UnrealDB jobs] Could not resolve saved resource limit for '
-                    . $resourceClass . ': ' . $error->getMessage());
-            }
-        }
-
-        return $limit;
+        return max(1, min($default, 100));
     }
 
     /** @param array<string,mixed> $payload */
