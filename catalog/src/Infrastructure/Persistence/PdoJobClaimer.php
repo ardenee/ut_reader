@@ -9,12 +9,11 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 /**
  * Claims the next runnable durable job.
  *
- * Claiming is intentionally simple: one very short queue-level mutex serializes
- * only the decision that changes a queued row to running. Within that critical
- * section a single SELECT chooses a row which is queued, available, not
- * cancelled, within its resource-class limit and not blocked by a running
- * concurrency key. Worker/root affinity affects ordering only; it can never make
- * a worker idle while another valid queue row is runnable.
+ * A worker must never report idle merely because advisory claim coordination is
+ * unavailable. The queue row transition itself is protected by a transaction and
+ * FOR UPDATE SKIP LOCKED. The advisory mutex is therefore best-effort only: it
+ * normally serializes resource/concurrency decisions, but failure to acquire it
+ * can never hide otherwise runnable work.
  */
 final class PdoJobClaimer
 {
@@ -38,21 +37,19 @@ final class PdoJobClaimer
             ? $preferredRootJobId
             : null;
 
-        // One queue claim mutex is sufficient for a local 1-8 process worker
-        // pool and keeps resource/concurrency checks atomic with the ownership
-        // transition. It is held only while choosing and marking one row.
+        // Keep the short advisory mutex when it is immediately available because
+        // it makes resource/concurrency decisions deterministic across the small
+        // local worker pool. It is deliberately NOT a prerequisite for claiming:
+        // a stale/contended named lock must never turn a non-empty queue into an
+        // apparently idle queue.
         $claimLock = $this->coordinationLockName($queue);
-        if (!$this->acquireLock($claimLock, 1)) {
-            return null;
-        }
+        $claimLockHeld = $this->tryAcquireLock($claimLock);
 
         try {
             $candidate = null;
 
-            // Affinity is a preference, never a gate. Prefer a runnable row from
-            // the same root workflow, but immediately fall back to any valid job
-            // if that root is deferred, blocked, completed or otherwise unable to
-            // make progress now.
+            // Affinity only affects ordering. If this root has no runnable row,
+            // immediately fall back to any valid queue job.
             if ($preferredRootJobId !== null) {
                 $candidate = $this->lockNextValidCandidate($queue, $preferredRootJobId);
             }
@@ -82,7 +79,9 @@ final class PdoJobClaimer
             // leaseLockedCandidate() commits it. If anything exits early or
             // throws, never leak that row transaction into the next poll.
             $this->rollbackClaimTransaction();
-            $this->releaseLock($claimLock);
+            if ($claimLockHeld) {
+                $this->releaseLock($claimLock);
+            }
         }
     }
 
@@ -95,19 +94,24 @@ final class PdoJobClaimer
                 'j.queue_name=?',
                 'j.status="queued"',
                 'j.cancel_requested_at IS NULL',
-                'j.available_at<=?',
+                // Use database time so PHP/DB clock or timezone differences can
+                // never make an already-available job invisible.
+                'COALESCE(j.available_at,j.created_at)<=UTC_TIMESTAMP()',
+                // Legacy rows may predate persisted resource policy. Normalize
+                // NULL/blank class and NULL limit in SQL before evaluating the
+                // runnable predicate rather than relying on PHP normalization
+                // after the row has already been excluded.
                 '(SELECT COUNT(*) FROM ue_background_jobs rr '
                     . 'WHERE rr.queue_name=j.queue_name AND rr.status="running" '
-                    . 'AND rr.resource_class=j.resource_class) < GREATEST(1,j.resource_limit)',
+                    . 'AND COALESCE(NULLIF(rr.resource_class,""),"default")='
+                    . 'COALESCE(NULLIF(j.resource_class,""),"default")) '
+                    . '< GREATEST(1,COALESCE(j.resource_limit,1))',
                 '(j.concurrency_key IS NULL OR j.concurrency_key="" OR NOT EXISTS('
                     . 'SELECT 1 FROM ue_background_jobs rk '
                     . 'WHERE rk.queue_name=j.queue_name AND rk.status="running" '
                     . 'AND rk.concurrency_key=j.concurrency_key LIMIT 1))',
             ];
-            $params = [
-                $queue,
-                PdoJobQueueSupport::now()->format('Y-m-d H:i:s'),
-            ];
+            $params = [$queue];
 
             if ($preferredRootJobId !== null) {
                 $where[] = '(j.id=? OR j.parent_job_id=?)';
@@ -115,16 +119,9 @@ final class PdoJobClaimer
                 $params[] = $preferredRootJobId;
             }
 
-            /*
-             * Within an active root workflow, let an available coordinator row
-             * briefly run before its children. The coordinator deliberately
-             * defers itself between checks, so this does not monopolize a worker:
-             * while it is deferred the child rows win automatically. This is
-             * essential for resumable workflows because the parent owns progress
-             * aggregation, legacy-child compaction and the final completion step.
-             * Starving the parent until every child finished left progress frozen
-             * for hours and prevented old one-file units from being compacted.
-             */
+            // When the coordinator becomes available it gets a brief turn so it
+            // can publish progress, compact legacy children and finalize. While it
+            // is deferred, its runnable child rows naturally win.
             $order = $preferredRootJobId !== null
                 ? '(j.parent_job_id IS NULL) DESC,j.priority ASC,j.available_at ASC,j.id ASC'
                 : 'j.priority ASC,j.available_at ASC,j.id ASC';
@@ -230,11 +227,16 @@ final class PdoJobClaimer
         return $this->databaseIdentity;
     }
 
-    private function acquireLock(string $lockName, int $timeoutSeconds): bool
+    private function tryAcquireLock(string $lockName): bool
     {
-        $statement = $this->db->prepare('SELECT GET_LOCK(?,?)');
-        $statement->execute([$lockName, max(0, $timeoutSeconds)]);
-        return (int)$statement->fetchColumn() === 1;
+        try {
+            $statement = $this->db->prepare('SELECT GET_LOCK(?,0)');
+            $statement->execute([$lockName]);
+            return (int)$statement->fetchColumn() === 1;
+        } catch (\Throwable) {
+            // Claim coordination is an optimization, never queue availability.
+            return false;
+        }
     }
 
     private function releaseLock(string $lockName): void
