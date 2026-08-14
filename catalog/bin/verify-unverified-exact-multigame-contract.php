@@ -27,7 +27,7 @@ $checks = [
         'present' => true,
     ],
     'action service dispatches exact multi-game import' => [
-        'path' => $root . '/src/Infrastructure/Unverified/CatalogUnverifiedActionService.php',
+        'path' => $root . '/src/Application/Unverified/CatalogUnverifiedActionService.php',
         'needle' => 'importExactCompatibleGames($source, $userId, $emit)',
         'present' => true,
     ],
