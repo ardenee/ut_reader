@@ -5,7 +5,7 @@
  * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
  *      that behavior at each call site.
  * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *       `catalog/src`.
+ *      `catalog/src`.
  * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
  *        purpose.
  */
@@ -17,8 +17,9 @@ require_once __DIR__ . '/CatalogResourceTracing.php';
 require_once __DIR__ . '/CatalogPublicResponseCache.php';
 require_once __DIR__ . '/CatalogPublicAccess.php';
 
-\UnrealDb\Catalog\Presentation\Http\LegacySupportHooks::register();
-\UnrealDb\Catalog\Presentation\Http\CatalogTableSortAssets::register();
+\UnrealDb\Catalog\Presentation\Http\CatalogPageResponseTransform::register();
+\UnrealDb\Catalog\Presentation\Http\CatalogFileInfoRouteGuard::register();
+\UnrealDb\Catalog\Presentation\Http\CatalogFederationInventoryFailureHandler::register();
 
 /*
  * Runtime job-resource limits are resolved when a worker attempts queue
