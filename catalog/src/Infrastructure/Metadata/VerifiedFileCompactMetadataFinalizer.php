@@ -66,6 +66,7 @@ final class VerifiedFileCompactMetadataFinalizer
 
         $fileId = self::fileId($result);
         $storageRoot = self::storageRoot($config);
+        VerifiedMetadataPublicationState::pending($db, $fileId);
         self::emit($progress, 99, 'Verifying compact metadata for file #' . $fileId);
 
         try {
@@ -80,6 +81,7 @@ final class VerifiedFileCompactMetadataFinalizer
             $conversion = (new BlockedCompressedMetadataReader($db, $storageRoot))->verify($fileId);
             $conversion['already_compact'] = true;
         } catch (Throwable $error) {
+            VerifiedMetadataPublicationState::failed($db, $fileId, $error->getMessage());
             self::recordFailure($db, $fileId, $error->getMessage());
             throw new RuntimeException(
                 'Compact metadata verification failed for verified file #' . $fileId . ': '
@@ -89,6 +91,7 @@ final class VerifiedFileCompactMetadataFinalizer
             );
         }
 
+        VerifiedMetadataPublicationState::ready($db, $fileId);
         return self::complete($result, $conversion, $progress);
     }
 
@@ -122,6 +125,7 @@ final class VerifiedFileCompactMetadataFinalizer
 
         $fileId = self::fileId($result);
         $storageRoot = self::storageRoot($config);
+        VerifiedMetadataPublicationState::pending($db, $fileId);
         self::emit($progress, 99, 'Reconciling compact metadata for verified file #' . $fileId);
 
         try {
@@ -191,6 +195,7 @@ final class VerifiedFileCompactMetadataFinalizer
                 throw new RuntimeException('Compact metadata reconciliation did not return format version 2.');
             }
         } catch (Throwable $error) {
+            VerifiedMetadataPublicationState::failed($db, $fileId, $error->getMessage());
             self::recordFailure($db, $fileId, $error->getMessage());
             throw new RuntimeException(
                 'Imported file #' . $fileId . ' was stored, but direct compact metadata publication failed: '
@@ -200,6 +205,7 @@ final class VerifiedFileCompactMetadataFinalizer
             );
         }
 
+        VerifiedMetadataPublicationState::ready($db, $fileId);
         return self::complete($result, $conversion, $progress);
     }
 
