@@ -10,23 +10,18 @@ $required = [
     ],
     'src/Application/Jobs/JobQueue.php' => [
         '?int $preferredRootJobId = null',
-        'bool $requirePreferredRoot = false',
+        'Preferred root affinity only affects claim ordering',
     ],
     'src/Infrastructure/Persistence/PdoJobClaimer.php' => [
-        'one very short queue-level mutex',
-        '$candidate = $this->lockNextValidCandidate($queue, $preferredRootJobId);',
-        '$candidate = $this->lockNextValidCandidate($queue, null);',
-        'status="queued"',
-        'available_at<=?',
-        'status="running"',
-        'GREATEST(1,j.resource_limit)',
-        'queue-claim:',
+        'FOR UPDATE SKIP LOCKED',
+        'PdoJobAdmissionGuard',
+        '$preferred = $this->claimFromScope(',
+        'return $this->claimFromScope($queue, $workerId, $leaseSeconds, null, $guard);',
+        'COALESCE(j.available_at,j.created_at)<=UTC_TIMESTAMP()',
+        'Root affinity is preference-only',
     ],
     'src/Application/Jobs/JobDeferred.php' => [
         '$retainWorkerAffinity',
-        '$children[\'failed\']',
-        '$children[\'dead_letter\']',
-        '$children[\'cancelled\']',
     ],
     'src/Application/Jobs/JobWorker.php' => [
         'private ?int $preferredRootJobId = null',
@@ -37,13 +32,21 @@ $required = [
 ];
 
 $forbidden = [
+    'src/Application/Jobs/JobQueue.php' => [
+        'requirePreferredRoot',
+    ],
+    'src/Infrastructure/Persistence/PdoJobQueue.php' => [
+        'requirePreferredRoot',
+    ],
     'src/Infrastructure/Persistence/PdoJobClaimer.php' => [
+        'requirePreferredRoot',
         'workflowOpen(',
         'workflowHasReadyWork(',
-        "coordinationLockName('resource'",
-        "coordinationLockName('key'",
         '$blockedClasses',
         '$blockedKeys',
+    ],
+    'src/Application/Jobs/JobWorker.php' => [
+        'requirePreferredRoot',
     ],
 ];
 
