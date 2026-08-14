@@ -1,9 +1,9 @@
 <?php
 /**
- * Shared presentation transform for catalog-wide assets and remaining page-link normalization.
+ * Shared presentation transform for catalog-wide assets.
  *
- * A single response buffer owns these cross-cutting HTML adjustments so pages are
- * copied at most once. Page-specific business logic remains outside this class.
+ * A single response buffer owns cross-cutting asset injection so pages are copied
+ * at most once. Page-specific routing and business logic remain at their source.
  */
 declare(strict_types=1);
 
@@ -46,7 +46,6 @@ final class CatalogPageResponseTransform
             }
         }
 
-        $normalizeMissingLinks = $script === 'missing.php';
         $injectGameManagerCounts = $script === 'game-manager.php'
             && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'GET'
             && !isset($_GET['progress']);
@@ -58,7 +57,6 @@ final class CatalogPageResponseTransform
 
         ob_start(static function (string $html) use (
             $headAssets,
-            $normalizeMissingLinks,
             $injectGameManagerCounts,
             $gameManagerVersion
         ): string {
@@ -75,16 +73,6 @@ final class CatalogPageResponseTransform
                 if ($injection !== '') {
                     $html = preg_replace('/<\/head>/', $injection . '</head>', $html, 1) ?? $html;
                 }
-            }
-
-            if ($normalizeMissingLinks) {
-                $html = strtr($html, [
-                    'federation/request-generate.php' => 'federation/inventories.php',
-                    'federation/request-status.php' => 'federation/requests.php',
-                    'federation/approved-downloads.php' => 'federation/requests.php',
-                    'federation/peer-inventory.php' => 'federation/inventories.php',
-                    'federation/conflicts.php' => 'federation/diagnostics.php?tab=conflicts',
-                ]);
             }
 
             if ($injectGameManagerCounts
