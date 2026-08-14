@@ -40,18 +40,18 @@ final class CatalogWorkerPoolReconciler
         $before = $launcher->status($queueName, false);
         $queueCounts = (new PdoBackgroundJobOperationalQuery($this->db, $this->config))
             ->queueCounts($queueName);
-        $idleRestart = null;
 
-        if (!empty($before['active']) && $queueCounts['ready'] > 0 && $queueCounts['running'] === 0) {
-            $state = is_array($before['state'] ?? null) ? $before['state'] : [];
-            $updatedAt = strtotime((string)($state['updated_at'] ?? $state['started_at'] ?? '')) ?: 0;
-            $stateAge = $updatedAt > 0 ? max(0, time() - $updatedAt) : PHP_INT_MAX;
-            if ($stateAge >= 5) {
-                $idleRestart = (new CatalogDetachedWorkerStop($this->db, $this->config))
-                    ->stopQueue($queueName, $userId, 'Restarting an idle worker pool that was not claiming ready jobs.');
-                $before = $launcher->status($queueName, false);
-            }
-        }
+        /*
+         * Start/resume must never kill a live worker merely because it has not
+         * claimed a database row within an arbitrary number of seconds. Process
+         * liveness is authoritative. A worker leaves the pool only through an
+         * explicit stop, an actual process failure, or stale-code replacement.
+         *
+         * The previous "idle restart" path called stopQueue(), which is the hard
+         * administrative stop path and could repeatedly tear down a healthy pool
+         * while ready work was temporarily blocked by affinity/resource policy.
+         */
+        $idleRestart = null;
 
         $orphanRecovery = null;
         if (empty($before['active']) && ($queueCounts['queued'] > 0 || $queueCounts['running'] > 0)) {
@@ -72,14 +72,24 @@ final class CatalogWorkerPoolReconciler
             $before = $launcher->status($queueName, false);
         }
 
-        // Persisted queue rows must be reconciled before new workers can claim
-        // them. This keeps current resource/concurrency policy authoritative.
-        $queuePolicySync = (new CatalogJobResourceLimitStore($this->db, $queueName))
-            ->synchronizeQueuedPolicies();
+        /*
+         * Do not mass-rewrite queued rows in the Start/Resume request. Resource
+         * policy is synchronized when administrator settings are saved, while new
+         * rows receive current policy at enqueue time. Starting a worker pool must
+         * remain O(worker-count), not O(queue-size), particularly when a dependency
+         * workflow has tens of thousands of durable child rows.
+         */
+        $queuePolicySync = [
+            'updated_jobs' => 0,
+            'updated_limits' => 0,
+            'projection_rows' => 0,
+            'rekeyed_jobs' => 0,
+            'per_class' => [],
+            'skipped_on_start' => true,
+        ];
 
         // Starting/resuming an empty queue is a successful no-op. Do not spawn
-        // workers merely to watch them exit four idle passes later, and do not
-        // turn that expected lifecycle into a worker_pool_incomplete API error.
+        // workers merely to watch them exit four idle passes later.
         $queueCounts = (new PdoBackgroundJobOperationalQuery($this->db, $this->config))
             ->queueCounts($queueName);
         if ($queueCounts['queued'] === 0 && $queueCounts['running'] === 0) {
@@ -128,9 +138,9 @@ final class CatalogWorkerPoolReconciler
     ): array {
         /*
          * Windows can take several seconds to create each hidden PHP process.
-         * Reconcile until every requested slot has remained active for one full
-         * second. Polling intentionally excludes log tails; logs are loaded only
-         * if reconciliation ultimately fails.
+         * Reconcile until every requested slot has remained active for two full
+         * seconds. This is long enough to catch immediate bootstrap/first-claim
+         * failures without inventing a job-claim timeout.
          */
         $deadline = microtime(true) + (PHP_OS_FAMILY === 'Windows' ? 45.0 : 25.0);
         $launchAttempts = 0;
@@ -145,7 +155,7 @@ final class CatalogWorkerPoolReconciler
 
             if ($active >= $workerCount) {
                 $satisfiedSince ??= microtime(true);
-                if (microtime(true) - $satisfiedSince >= 1.0) {
+                if (microtime(true) - $satisfiedSince >= 2.0) {
                     $worker = $launcher->status($queueName, true);
                     return array_merge($lastResult, [
                         'started' => !empty($lastResult['started']),
