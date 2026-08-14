@@ -9,7 +9,8 @@ use Throwable;
 /** Records the explicit publication lifecycle without making deployment order brittle. */
 final class VerifiedMetadataPublicationState
 {
-    private static ?bool $available = null;
+    /** @var array<int,bool> */
+    private static array $availability = [];
 
     public static function pending(PDO $db, int $fileId): void
     {
@@ -46,8 +47,9 @@ final class VerifiedMetadataPublicationState
 
     private static function available(PDO $db): bool
     {
-        if (self::$available !== null) {
-            return self::$available;
+        $key = spl_object_id($db);
+        if (array_key_exists($key, self::$availability)) {
+            return self::$availability[$key];
         }
         try {
             $statement = $db->query(
@@ -55,9 +57,9 @@ final class VerifiedMetadataPublicationState
                 . 'WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME="ue_files" '
                 . 'AND COLUMN_NAME="metadata_status" LIMIT 1'
             );
-            return self::$available = $statement->fetchColumn() !== false;
+            return self::$availability[$key] = $statement->fetchColumn() !== false;
         } catch (Throwable) {
-            return self::$available = false;
+            return self::$availability[$key] = false;
         }
     }
 }
