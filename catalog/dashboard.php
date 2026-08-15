@@ -37,7 +37,7 @@ try {
     catalog_page_header(
         'Dashboard',
         'Start here: setup files, identify missing packages, create game backups, manage federation, request downloads, and monitor background work.',
-        ['Setup' => 'setup.php', 'Game Backups' => 'game-backups.php', 'Administrator Security' => 'admin-security.php', 'Missing Files' => 'missing.php', 'Federation Connections' => 'federation/connections.php', 'Background Jobs' => 'background-jobs.php']
+        ['Setup' => 'setup.php', 'System Operations' => 'system-operations.php', 'Game Backups' => 'game-backups.php', 'Administrator Security' => 'admin-security.php', 'Missing Files' => 'missing.php', 'Federation Connections' => 'federation/connections.php', 'Background Jobs' => 'background-jobs.php']
     );
 
     echo '<div class="grid">';
@@ -62,10 +62,11 @@ try {
     catalog_tool_card('4. Game backups', 'game-backups.php', 'Create full-copy game exports with original filenames and restore them on this or another site.', 'backup');
     catalog_tool_card('5. Federation', 'federation/admin.php', 'Manage connections, inventories, file requests, transfers, settings and diagnostics.');
     catalog_tool_card('6. Background jobs', 'background-jobs.php', 'Monitor uploads and maintenance jobs; start or stop the detached worker without SSH.', 'primary');
-    catalog_tool_card('7. Transfers', 'transfers.php', 'Monitor federation downloads/uploads/imports and mirror work.');
-    catalog_tool_card('8. Downloads', 'download-admin.php', 'Control public download mode and external shared-provider links.');
-    catalog_tool_card('9. Base game protection', 'base-game-files.php', 'Seed official/base game GUIDs and block them from download, federation transfer, and ZIP bundles.');
-    catalog_tool_card('10. Administrator security', 'admin-security.php', 'Enable MFA, generate recovery codes, and manage administrator authentication.');
+    catalog_tool_card('7. System operations', 'system-operations.php', 'See worker, queue, resource-limit, database and package-storage health from one read-only console.', 'primary');
+    catalog_tool_card('8. Transfers', 'transfers.php', 'Monitor federation downloads/uploads/imports and mirror work.');
+    catalog_tool_card('9. Downloads', 'download-admin.php', 'Control public download mode and external shared-provider links.');
+    catalog_tool_card('10. Base game protection', 'base-game-files.php', 'Seed official/base game GUIDs and block them from download, federation transfer, and ZIP bundles.');
+    catalog_tool_card('11. Administrator security', 'admin-security.php', 'Enable MFA, generate recovery codes, and manage administrator authentication.');
     echo '</div></div>';
 
     echo '<div class="card"><h2>Needs attention</h2>';
