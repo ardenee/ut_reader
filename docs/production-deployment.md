@@ -2,86 +2,107 @@
 
 ## Deployment position
 
-UnrealDB is a modular PHP monolith with MySQL metadata, durable package storage, PHP sessions and a MySQL-backed job queue. Keep it as a modular monolith: package identity, parsing, storage and dependency updates are transactionally related, and splitting them into network services would add operational failure modes without demonstrated benefit.
+UnrealDB production is a **single-host Windows deployment**. The supported production stack is Apache + PHP + MySQL on one Windows server, with local package storage and durable background jobs stored in MySQL.
 
-The current Windows Apache/PHP/MySQL deployment remains supported. Docker Compose is useful for integration/single-host staging; Kubernetes is optional and should not be treated as a prerequisite for operating the application.
+Docker, Docker Compose and Kubernetes are not production targets for this installation and are intentionally not part of the repository deployment path.
 
-## Infrastructure architecture
+The application remains a modular PHP monolith. Package identity, parsing, storage, dependency publication and durable job state are transactionally related; splitting them into network services would add failure modes without a demonstrated operational benefit.
 
-For a containerized production deployment:
+## Production topology
 
-1. DNS/CDN/WAF protect the public edge.
-2. TLS ingress/load balancer forwards to the web service.
-3. Immutable web containers serve PHP/static assets.
-4. Shared/central session storage is required before horizontally scaling the web tier.
-5. MySQL 8.4-compatible infrastructure stores catalogue and durable-job metadata.
-6. Package storage must be available to both web and worker roles.
-7. Background workers run independently of HTTP requests.
-8. Logs are collected centrally.
-9. MySQL and package storage are backed up and restore-tested independently.
+```text
+Internet
+   |
+HTTPS / firewall / reverse-proxy boundary if used
+   |
+Apache 2.4 (Windows)
+   |
+PHP 8.5
+   |
+   +-- MySQL 8.4
+   +-- catalog/storage on local durable storage
+   +-- durable ue_background_jobs queue
+   +-- independent PHP worker processes
+   +-- scheduled maintenance and backup tasks
+```
 
-Object storage remains a possible long-term package-storage target. Do not migrate solely for architectural fashion; preserve existing storage semantics until the operational benefit is clear.
+The browser is not part of the worker lifecycle. Background work must continue when an administrator closes the browser or signs out.
 
-## Durable worker ownership
+## Runtime responsibilities
 
-Worker recovery is process-ownership based, not timeout-theft based.
+### Apache/PHP web role
 
-Each worker holds a connection-scoped MySQL ownership lock through `PdoWorkerOwnership`. A legitimate long-running job keeps that lock for as long as its PHP/MySQL connection is alive. If the process or connection dies, MySQL releases the lock and orphan recovery can safely recover its running row. `lease_token` remains the fencing token on queue lifecycle writes.
+Apache serves the public catalogue and administrator UI. Request handlers should perform bounded validation/query/submission work and enqueue durable jobs for expensive package processing, dependency rebuilds, archive extraction and maintenance.
 
-Host-local detached-worker state files are supervisor diagnostics only and are not the durable ownership authority.
+Do not run long package workflows for the lifetime of an HTTP request.
 
-## Scaling policy
+### MySQL
 
-### Stage 1: current/single-host production
+MySQL is the authoritative store for:
 
-- One web server/site instance.
-- A bounded detached worker pool.
-- MySQL with tested backups.
-- Durable package storage with capacity monitoring.
-- Resource-class limits configured for the actual server rather than assumed from the number of PHP worker processes.
+- catalogue identity and projections;
+- administrator/security state;
+- durable background jobs and workflow progress;
+- operational settings such as resource-class limits.
 
-### Stage 2: horizontally scaled web tier
+MySQL is also the queue coordination authority. Do not add Redis or an external message broker merely to replace the existing durable queue.
 
-Before adding web replicas, ensure sessions and package storage are shareable and MySQL connection/index capacity has been load-tested.
+### Package storage
 
-### Stage 3: additional workers
+The configured `catalog/storage` tree is local durable application storage. Monitor free space and storage errors. Cache/scratch data may be rebuilt, but verified package data, compact metadata and durable staging required for recovery must be protected with the database as one recovery set where consistency requires it.
 
-Before increasing worker replicas/processes materially:
+### Worker processes
 
-- run the real MySQL queue concurrency verifier;
-- check database lock waits/deadlocks/IO;
-- verify resource-class limits and concurrency keys match the workload;
-- confirm orphan recovery on a killed worker;
-- confirm a healthy long-running job is not recovered merely because it runs for a long time.
+Workers are independent PHP processes, not child work owned by Apache or a browser request.
 
-The queue is designed to allow multiple workers. Scale based on measured database/storage pressure, not CPU availability alone.
+Worker recovery is process/connection ownership based. A healthy long-running job must remain running until it completes, fails, is cancelled, or the operator explicitly kills it. Elapsed runtime alone is not a reason to fail or steal a job.
 
-### Stage 4: high-volume catalogue
+Resource-class concurrency limits and worker-process count are separate controls:
 
-Only after measurement:
+- worker count determines available execution capacity;
+- resource-class limits determine how much heavy work the server is allowed to run concurrently.
 
-- move package blobs to object storage if filesystem/RWX operations are the limiting factor;
-- add MySQL read replicas for demonstrated read pressure;
-- add an n-gram/derived search projection or external search service for demonstrated substring-search pressure;
-- split worker pools further by job/resource class when independent workload control is useful.
+A failed package must not block unrelated queued jobs.
 
-## Repository workflows
+## Windows service management
 
-There is **no required `catalog-quality.yml` GitHub Actions application gate**.
+Production workers should be started and supervised independently of Apache. Use a Windows service wrapper or another persistent service manager that can:
 
-The tracked release/deployment workflows are intentionally limited. Do not add an application workflow merely to reproduce local PHP/MySQL checks if it creates noisy failure email without improving deployment confidence.
+- start workers automatically at boot;
+- restart a worker process after an unexpected exit;
+- stop accepting new work during a controlled shutdown;
+- preserve worker stdout/stderr in a known log location;
+- expose the worker PID/process state to operations.
 
-### Container release
+Do not depend on an administrator opening `background-jobs.php` to keep workers alive.
 
-`.github/workflows/container-release.yml` handles container/release-specific checks such as image/config validation, image build and scanning/publishing according to its current definition.
+Scheduled maintenance and backups can use Windows Task Scheduler where an always-running service is unnecessary.
 
-### Production deployment
+## Deployment workflow
 
-`.github/workflows/deploy-production.yml` is the repository deployment workflow. Treat its protected environment/credentials as deployment infrastructure, not as a substitute for application/database verification.
+A production release should be a controlled code revision update, not a live file copy performed while migrations/workers are changing underneath it.
 
-## Application quality gate: manual/deployment-host
+Recommended release sequence:
 
-Run these on the test/deployment host where the real PHP extensions, filesystem and MySQL version are available:
+1. Record the current Git commit and verify the working tree/deployment source.
+2. Review changed migrations and deployment-sensitive configuration.
+3. Confirm a current recovery point when schema/storage changes are involved.
+4. Run PHP syntax and application contract checks.
+5. Run migration status and dry-run.
+6. Put only the required write paths into maintenance/drain mode when necessary.
+7. Stop or drain worker processes before replacing code they execute.
+8. Update the production code revision.
+9. Apply and verify database migrations.
+10. Restart Apache/PHP only when the changed runtime requires it.
+11. Start/reconcile workers so every process uses the new code revision.
+12. Run liveness/readiness and functional smoke tests.
+13. Review logs, failed jobs, queue progress, MySQL pressure and storage capacity.
+
+For normal PHP-only changes that do not alter schema or worker contracts, the maintenance window can be much smaller.
+
+## Application quality gate
+
+Run these on the deployment host where the real PHP extensions, filesystem and MySQL version are available:
 
 ```text
 php -l <every changed PHP file>
@@ -89,116 +110,206 @@ php catalog/bin/migrate.php status
 php catalog/bin/migrate.php migrate --dry-run
 php catalog/bin/migrate.php migrate
 php catalog/bin/migrate.php verify
+php catalog/bin/verify-security-hardening.php
+php catalog/bin/verify-system-readiness-contract.php
+php catalog/bin/verify-system-readiness-contract.php --run
 php catalog/bin/verify-queue-runtime-invariants.php
 php catalog/bin/verify-job-root-affinity-contract.php
 php catalog/bin/verify-job-claim-concurrency.php --run
 php catalog/bin/audit-legacy-runtime-references.php
 ```
 
-`verify-job-claim-concurrency.php --run` creates uniquely named temporary queue/resource rows, launches concurrent PHP claimers against the configured MySQL database, verifies admission/ownership invariants and cleans up its temporary data.
+Run additional focused contract tests for the subsystem being changed.
 
-Source-marker architecture scripts are useful guardrails only. A passing marker script is not evidence that concurrent queue behaviour is correct.
+A passing source-marker verifier is a guardrail, not proof of live concurrency behaviour. Queue changes should be exercised against the actual MySQL server.
 
 ## Database migrations
 
-Numbered migrations and schema-version tracking already exist under `catalog/migrations` and `catalog/bin/migrate.php`.
+Numbered migrations and schema-version tracking live under `catalog/migrations` and `catalog/bin/migrate.php`.
 
 For schema changes:
 
-1. take current MySQL/package-storage backups;
+1. take current MySQL/package-storage backups when appropriate;
 2. run migration status and dry-run;
 3. review potentially locking/backfill operations;
 4. apply migrations before code paths that require the new schema;
 5. run migration verification;
-6. deploy/restart code/workers;
-7. perform the application smoke tests.
+6. deploy/restart code and workers;
+7. perform application smoke tests.
 
-Use expand-and-contract for large/destructive changes. Long data backfills belong in bounded jobs/maintenance operations rather than one web request or an unbounded migration transaction.
+Use expand-and-contract for destructive or compatibility-sensitive changes. Large data backfills belong in bounded durable jobs, not one web request or an unbounded migration transaction.
 
-The verified-metadata publication-state migration adds `metadata_status`, `metadata_error` and `metadata_updated_at` to `ue_files`; apply current migrations before relying on those operational fields.
+A code rollback cannot automatically undo an incompatible database migration. Releases that change schema must therefore retain a forward-fix/compatibility path.
 
-## Release workflow
+## Health boundaries
 
-1. Review the commit range and changed migrations.
-2. Run PHP syntax checks and the relevant manual application verifiers.
-3. Back up MySQL and package storage before schema changes.
-4. Apply/verify migrations.
-5. Deploy the immutable release/code revision.
-6. Restart/reconcile worker processes so they load the current code fingerprint.
-7. Run liveness/readiness checks.
-8. Test authentication, search, one upload/import path, download policy and one background job.
-9. Review Apache/PHP/worker logs plus MySQL locks/deadlocks/slow queries.
-10. Review Background Jobs queue depth, running ownership and failed/dead-letter rows.
-11. Roll back/forward-fix if smoke tests fail.
+Use the existing endpoints for local monitoring and deployment checks:
 
-## Rollback strategy
+- `/catalog/api/v1/live.php` — process/PHP liveness only;
+- `/catalog/api/v1/readiness.php` — dependency-aware readiness including database, queue and storage requirements;
+- `/catalog/api/v1/metrics.php` — authenticated operational metrics.
 
-- Keep the previous code/image available.
-- A previous release must remain compatible with migrations applied during rollout, or the change needs an explicit forward-fix plan.
-- Storage changes require snapshots/versioned objects as appropriate.
-- Do not attempt to recover running work by arbitrary lease timeout; worker ownership determines whether a job is actually orphaned.
+Do not make liveness depend on MySQL. A MySQL outage should be reported as not-ready; repeatedly restarting healthy Apache/PHP processes does not repair the database.
 
 ## Monitoring
 
-Collect/observe at minimum:
+Monitor at minimum:
 
-- HTTP request rate/latency/4xx/5xx;
-- Apache/PHP errors and process crashes;
-- worker process count/restarts/OOM kills;
-- queue depth by status/resource type, active running jobs, retries and failures;
-- MySQL connections, lock waits, deadlocks, slow queries, buffer pool and disk latency;
-- package-storage capacity/latency/errors;
-- upload/import duration/failure rate;
-- backup age and restore-test status.
+### Host
 
-For queue operations, a stale `lease_expires_at` timestamp is not by itself a failure signal. Operator diagnostics should consider the database worker-ownership lock and running process state.
+- CPU and memory pressure;
+- free disk space on the MySQL and package-storage volumes;
+- disk latency/queue depth;
+- Apache/PHP process availability;
+- worker process count and unexpected restarts.
 
-## Capacity and safety rules
+### Web
 
-- Resource-class concurrency and worker-process count are separate controls.
-- Lower database-heavy workload classes before lowering the entire worker pool when only one workload is causing pressure.
-- Limit changes are live at claim time; saving them must not rewrite the entire queued backlog.
-- One package failure must not block unrelated queued packages.
-- Large coordinators must use durable bounded child units so completed work is not replayed.
-- Keep package parsing/import out of long synchronous HTTP requests.
-- Measure `%LIKE%`/substring search before adding a new search service.
-- Measure queue/database pressure before adding another message broker.
+- request rate;
+- response latency;
+- HTTP 4xx/5xx rates;
+- PHP fatal/error rate;
+- upload failures and request-size/time-limit errors.
+
+### MySQL
+
+- connections;
+- slow queries;
+- lock waits/deadlocks;
+- buffer-pool pressure;
+- redo/IO pressure;
+- database disk free space.
+
+### Background jobs
+
+- queued/running/failed/dead-letter counts;
+- oldest queued-job age;
+- completed-job throughput;
+- worker activity;
+- resource-class saturation;
+- unusually long-running jobs and their last progress time.
+
+A long runtime is an operator signal, not an automatic failure condition.
+
+### Storage and backup
+
+- package-storage used/free bytes and growth;
+- failed filesystem operations;
+- last successful backup time;
+- last successful backup verification;
+- restore-drill status.
+
+## Logging
+
+Keep Apache, PHP and worker logs in known durable locations and rotate them. Application errors should include the request/job identifiers required to correlate UI reports with server logs.
+
+Do not log passwords, session cookies, federation secrets, security master keys or bearer tokens.
+
+System Errors and Background Jobs remain the primary application-level operator views. OS/service logs are the secondary source for process crashes and infrastructure failures.
+
+## Backup and recovery
+
+The Windows backup and restore tooling under `deploy/backup/` is the supported recovery path. See `docs/windows-backup-recovery.md`.
+
+The important rules are:
+
+- database-only backups can normally be taken online using the provided process;
+- a coherent database + package-storage recovery point requires controlled write quiescence;
+- completed backups must pass verification before being considered recovery points;
+- keep recovery copies on storage independent from the live database/package disk;
+- run periodic restore drills against disposable targets.
+
+Backup encryption is not an application requirement for the public catalogue data. Protect backup media according to normal host/storage access policy.
+
+## Rollback strategy
+
+Before every deployment record the previous known-good Git revision.
+
+If a release fails smoke tests:
+
+1. stop/drain workers that are running the new code;
+2. determine whether the database migration remains backward compatible;
+3. return the code tree to the previous known-good revision when safe;
+4. restart Apache/PHP if required;
+5. restart workers on the selected revision;
+6. run readiness and smoke tests again;
+7. forward-fix rather than attempting unsafe schema rollback when migration compatibility does not permit code rollback.
+
+Do not recover running jobs by arbitrary elapsed-time timeout. Worker ownership and explicit operator action determine whether a running job is orphaned or should be stopped.
 
 ## Production checklist
 
-### Before first/current-platform deployment
+### Host baseline
 
+- [ ] Apache 2.4 is installed as a Windows service and starts automatically.
+- [ ] PHP 8.5 CLI and Apache module/runtime point to the intended installation.
+- [ ] MySQL 8.4 starts automatically and uses the intended production data directory/configuration.
+- [ ] OPcache is enabled for web PHP.
+- [ ] Production PHP error display is disabled.
+- [ ] HTTPS/security headers are verified at the public endpoint.
+- [ ] Storage and database volumes have free-space alerts.
+
+### Application
+
+- [ ] `catalog/config.php`/environment configuration is production-correct.
 - [ ] MySQL schema/migrations are current and verified.
-- [ ] Storage location/capacity/backup are tested.
-- [ ] PHP CLI used by detached workers resolves to the intended PHP installation.
-- [ ] Worker pool/resource limits reflect the server's actual database/storage capacity.
-- [ ] Logs and backup alerts are configured.
-- [ ] Administrator/security configuration is reviewed.
-- [ ] A restore test has been completed.
+- [ ] Federation secret encryption requirements are satisfied when federation is enabled.
+- [ ] Security hardening verifier passes.
+- [ ] Runtime readiness verifier passes with `--run`.
+- [ ] Worker pool/resource limits reflect actual server capacity.
+
+### Worker reliability
+
+- [ ] Workers run independently of Apache/browser sessions.
+- [ ] Workers start automatically at boot.
+- [ ] Unexpected worker exits restart automatically.
+- [ ] Controlled stop/drain behaviour is documented/tested.
+- [ ] A killed worker can be identified/recovered without stealing a healthy long-running job.
+- [ ] One failed package does not stop unrelated queued work.
+
+### Backup/recovery
+
+- [ ] Backup destination is independent from the live database/package disk.
+- [ ] Backup readiness preflight passes.
+- [ ] Scheduled backups run successfully.
+- [ ] Backup verification runs successfully.
+- [ ] At least one restore drill has been completed.
 
 ### Before every release
 
+- [ ] Current production Git revision recorded.
 - [ ] Changed PHP files pass `php -l`.
-- [ ] Migration dry-run/status reviewed.
-- [ ] Real queue concurrency verification passes for queue-affecting changes.
-- [ ] Database/storage backups are current when schema/storage changes are involved.
-- [ ] Worker code fingerprint/restart implications are understood.
+- [ ] Migration status/dry-run reviewed.
+- [ ] Relevant queue/runtime contract tests pass.
+- [ ] Current backup exists when schema/storage changes require one.
+- [ ] Worker restart/drain impact is understood.
 - [ ] Rollback/forward-fix path is known.
 
 ### After every release
 
-- [ ] Web health checks pass.
+- [ ] `live.php` responds successfully.
+- [ ] `readiness.php` reports ready.
+- [ ] Apache/PHP error log is clean of new fatal errors.
 - [ ] Expected worker count is active.
-- [ ] Running jobs show valid ownership and make progress.
-- [ ] Exact identity search and representative broad search work.
-- [ ] Upload/import and download smoke tests work.
-- [ ] Error log, failed-job count, MySQL pressure and storage capacity are reviewed.
+- [ ] Running jobs retain valid ownership and make progress.
+- [ ] Representative search works.
+- [ ] Representative upload/import path works when changed.
+- [ ] Representative download path works when changed.
+- [ ] Failed/dead-letter job counts are reviewed.
+- [ ] MySQL pressure and storage capacity are reviewed.
 
-## Remaining platform work
+## Scaling policy
 
-These are optional/platform improvements, not unresolved correctness defects in the application architecture:
+This deployment is intentionally single-host. Optimize the host and workload controls before adding infrastructure.
 
-- replace generic cluster credentials with cloud OIDC/workload identity if Kubernetes becomes the production platform;
-- add application metrics/OpenTelemetry when operational dashboards need finer-grained traces;
-- move to object storage when filesystem sharing/backup becomes a measured limit;
-- produce a stricter rootless container image if the production container platform requires it.
+Scale by:
+
+- tuning MySQL from measured queries/IO;
+- adjusting worker process count;
+- adjusting per-resource-class concurrency limits;
+- keeping expensive work asynchronous;
+- reducing duplicate queries/work;
+- moving large maintenance operations into bounded durable jobs;
+- upgrading host CPU/RAM/storage when measurements show a hardware limit.
+
+Do not introduce Redis, Kubernetes, replicas, message brokers or distributed storage unless the production deployment strategy changes explicitly in the future.
