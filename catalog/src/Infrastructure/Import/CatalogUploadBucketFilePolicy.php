@@ -13,6 +13,8 @@ use PDO;
 
 final class CatalogUploadBucketFilePolicy
 {
+    private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar'];
+
     /** @var list<string>|null */
     private ?array $allowedExtensions = null;
 
@@ -48,6 +50,9 @@ final class CatalogUploadBucketFilePolicy
                 }
             }
         }
+        foreach (self::ARCHIVE_EXTENSIONS as $extension) {
+            $extensions[$extension] = true;
+        }
         return $this->allowedExtensions = array_keys($extensions);
     }
 
@@ -62,7 +67,7 @@ final class CatalogUploadBucketFilePolicy
 
     public function validateName(string $name, bool $allowRedirectWrapper = true): void
     {
-        if ($allowRedirectWrapper && $this->isRedirectWrapper($name)) {
+        if (($allowRedirectWrapper && $this->isRedirectWrapper($name)) || $this->isArchive($name)) {
             return;
         }
         $extension = \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION));
@@ -78,6 +83,15 @@ final class CatalogUploadBucketFilePolicy
     public function isRedirectWrapper(string $name): bool
     {
         return \catalog_redirect_archive_is_supported_filename($name);
+    }
+
+    public function isArchive(string $name): bool
+    {
+        return in_array(
+            \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION)),
+            self::ARCHIVE_EXTENSIONS,
+            true
+        );
     }
 
     /** @param array<string,mixed> $source @return array{md5:string,sha1:string} */
