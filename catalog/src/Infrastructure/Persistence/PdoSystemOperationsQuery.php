@@ -55,7 +55,7 @@ final class PdoSystemOperationsQuery
             . 'SUM(status="dead_letter") dead_letter_total,'
             . 'SUM(status="cancelled") cancelled_total,'
             . 'COALESCE(MAX(CASE WHEN status="queued" THEN TIMESTAMPDIFF(SECOND,created_at,UTC_TIMESTAMP()) ELSE 0 END),0) oldest_queued_seconds,'
-            . 'COALESCE(MAX(CASE WHEN status="running" THEN TIMESTAMPDIFF(SECOND,COALESCE(leased_at,started_at,updated_at,created_at),UTC_TIMESTAMP()) ELSE 0 END),0) longest_running_seconds '
+            . 'COALESCE(MAX(CASE WHEN status="running" THEN TIMESTAMPDIFF(SECOND,COALESCE(leased_at,updated_at,created_at),UTC_TIMESTAMP()) ELSE 0 END),0) longest_running_seconds '
             . 'FROM ue_background_jobs GROUP BY queue_name ORDER BY queue_name'
         )->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
