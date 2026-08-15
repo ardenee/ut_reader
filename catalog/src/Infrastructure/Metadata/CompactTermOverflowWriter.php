@@ -19,6 +19,8 @@ use RuntimeException;
 /** Stores complete values for compact terms longer than the historical 200-byte prefix. */
 final class CompactTermOverflowWriter
 {
+    private const BATCH_SIZE = 200;
+
     public function __construct(private readonly PDO $db)
     {
     }
@@ -31,45 +33,130 @@ final class CompactTermOverflowWriter
             return 0;
         }
 
-        $statement = $this->db->prepare(
-            'UPDATE ue_terms SET value_prefix=? '
-            . 'WHERE value_hash=? AND value_length=? AND is_overflow=1'
-        );
-        $verify = $this->db->prepare(
-            'SELECT id,value_prefix FROM ue_terms '
-            . 'WHERE value_hash=? AND value_length=? AND is_overflow=1 LIMIT 1'
-        );
-
         $written = 0;
-        foreach ($values as $value) {
-            $hash = md5($value, true);
-            $length = strlen($value);
-            $statement->execute([$value, $hash, $length]);
-            $sqlBatches++;
-
-            $verify->execute([$hash, $length]);
-            $sqlBatches++;
-            $row = $verify->fetch(PDO::FETCH_ASSOC);
-            if (!is_array($row) || !hash_equals((string)$row['value_prefix'], $value)) {
-                throw new RuntimeException(
-                    'Compact overflow term could not be stored completely: length=' . $length . '.'
-                );
+        $chunk = [];
+        foreach ($values as $key => $value) {
+            $chunk[$key] = $value;
+            if (count($chunk) >= self::BATCH_SIZE) {
+                $written += $this->writeBatch($chunk, $sqlBatches);
+                $chunk = [];
             }
-            $written++;
+        }
+        if ($chunk !== []) {
+            $written += $this->writeBatch($chunk, $sqlBatches);
         }
         return $written;
     }
 
-    /** @param array<string,mixed> $snapshot @return list<string> */
+    /**
+     * Validate the existing hash/length rows before publishing full values, then
+     * write and verify the whole chunk in three SQL round trips. The historical
+     * implementation used UPDATE+SELECT per term, which scaled as 2N statements.
+     *
+     * @param array<string,string> $values
+     */
+    private function writeBatch(array $values, int &$sqlBatches): int
+    {
+        $this->validateStoredPrefixes($values, $sqlBatches);
+
+        $placeholders = [];
+        $arguments = [];
+        foreach ($values as $value) {
+            $placeholders[] = '(?,?,?,1)';
+            $arguments[] = md5($value, true);
+            $arguments[] = strlen($value);
+            $arguments[] = $value;
+        }
+        $statement = $this->db->prepare(
+            'INSERT INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
+            . implode(',', $placeholders)
+            . ' ON DUPLICATE KEY UPDATE value_prefix=VALUES(value_prefix),is_overflow=1'
+        );
+        $statement->execute($arguments);
+        $sqlBatches++;
+
+        $this->verifyStoredValues($values, $sqlBatches);
+        return count($values);
+    }
+
+    /** @param array<string,string> $values */
+    private function validateStoredPrefixes(array $values, int &$sqlBatches): void
+    {
+        $rows = $this->selectTerms($values, $sqlBatches);
+        if (count($rows) !== count($values)) {
+            throw new RuntimeException(
+                'Compact overflow terms were not fully primed before overflow publication.'
+            );
+        }
+
+        foreach ($rows as $key => $stored) {
+            $expected = $values[$key] ?? null;
+            if (!is_string($expected)) {
+                throw new RuntimeException('Compact overflow term lookup returned an unexpected identity.');
+            }
+            $prefix = substr($expected, 0, 200);
+            if (!hash_equals($stored, $expected) && !hash_equals($stored, $prefix)) {
+                throw new RuntimeException('Compact overflow term hash collision or stored-prefix mismatch.');
+            }
+        }
+    }
+
+    /** @param array<string,string> $values */
+    private function verifyStoredValues(array $values, int &$sqlBatches): void
+    {
+        $rows = $this->selectTerms($values, $sqlBatches);
+        if (count($rows) !== count($values)) {
+            throw new RuntimeException('Compact overflow term publication was incomplete.');
+        }
+        foreach ($values as $key => $expected) {
+            $stored = $rows[$key] ?? null;
+            if (!is_string($stored) || !hash_equals($stored, $expected)) {
+                throw new RuntimeException(
+                    'Compact overflow term could not be stored completely: length=' . strlen($expected) . '.'
+                );
+            }
+        }
+    }
+
+    /**
+     * @param array<string,string> $values
+     * @return array<string,string>
+     */
+    private function selectTerms(array $values, int &$sqlBatches): array
+    {
+        $predicates = [];
+        $arguments = [];
+        foreach ($values as $value) {
+            $predicates[] = '(value_hash=? AND value_length=?)';
+            $arguments[] = md5($value, true);
+            $arguments[] = strlen($value);
+        }
+        $statement = $this->db->prepare(
+            'SELECT value_hash,value_length,value_prefix FROM ue_terms WHERE is_overflow=1 AND ('
+            . implode(' OR ', $predicates) . ')'
+        );
+        $statement->execute($arguments);
+        $sqlBatches++;
+
+        $rows = [];
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
+            $rows[$key] = (string)$row['value_prefix'];
+        }
+        return $rows;
+    }
+
+    /** @param array<string,mixed> $snapshot @return array<string,string> */
     private function collect(array $snapshot): array
     {
         $values = [];
         $add = static function (mixed $value) use (&$values): void {
             $value = (string)$value;
-            if (strlen($value) <= 200) {
+            $length = strlen($value);
+            if ($length <= 200) {
                 return;
             }
-            $key = md5($value) . ':' . strlen($value);
+            $key = md5($value) . ':' . $length;
             if (isset($values[$key]) && !hash_equals($values[$key], $value)) {
                 throw new RuntimeException('Compact overflow term hash collision detected.');
             }
@@ -108,6 +195,6 @@ final class CompactTermOverflowWriter
             $add($row['resolution_confidence'] ?? '');
         }
 
-        return array_values($values);
+        return $values;
     }
 }
