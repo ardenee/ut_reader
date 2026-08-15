@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use PDOException;
 use RuntimeException;
 use Throwable;
 
@@ -107,10 +108,18 @@ final class PdoJobAdmissionGuard
             $statement->execute([$resourceClass]);
             $value = $statement->fetchColumn();
             return $value === false ? $fallback : self::limit((int)$value);
-        } catch (Throwable) {
-            // Fresh/legacy databases may not have the settings table yet. The
-            // environment/default value remains the compatibility fallback.
-            return $fallback;
+        } catch (PDOException $error) {
+            $sqlState = strtoupper((string)$error->getCode());
+            $driverCode = is_array($error->errorInfo ?? null)
+                ? (int)($error->errorInfo[1] ?? 0)
+                : 0;
+            if ($sqlState === '42S02' || $driverCode === 1146) {
+                // Compatibility only: a pre-settings-schema database may not
+                // have ue_job_resource_limits yet. Every other DB fault must
+                // surface so workers do not silently run with the wrong limits.
+                return $fallback;
+            }
+            throw $error;
         }
     }
 
