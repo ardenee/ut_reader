@@ -23,6 +23,16 @@ function catalog_public_access_client_ip(): string
     return (new CatalogPublicAccessGuard())->clientIp();
 }
 
+function catalog_public_access_guard_crawler_request(): void
+{
+    (new CatalogPublicAccessGuard())->guardCrawlerRequest();
+}
+
+function catalog_public_access_guard_burst_request(): void
+{
+    (new CatalogPublicAccessGuard())->guardBurstRequest();
+}
+
 function catalog_public_access_guard_request(): void
 {
     (new CatalogPublicAccessGuard())->guardRequest();
