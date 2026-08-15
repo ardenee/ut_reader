@@ -332,7 +332,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'message' => 'Redirect archive decompressed and durably prepared as '
                 . basename((string)$decoded['filename']) . ' (' . $this->bytes((int)$decoded['bytes']) . ').',
             'output_bytes' => (int)$decoded['bytes'],
-            'decoder' => (string)$decoded['decoder'],
+            'decoder' => (string)($decoded['decoder'] ?? ''),
             'prepared_reused' => false,
         ]);
 
@@ -408,6 +408,8 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'compact metadata',
             'blocked metadata',
             'metadata publication',
+            'package alias dependency refresh failed',
+            'post-import dependency recovery queue failed',
             'sqlstate[',
         ] as $fragment) {
             if (str_contains($message, $fragment)) {
