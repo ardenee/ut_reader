@@ -15,12 +15,17 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
+$repoRoot = dirname($root);
 $run = in_array('--run', array_slice($argv, 1), true);
 $checks = [];
 $failures = [];
 
 $read = static function (string $relative) use ($root): string {
     $source = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
+    return is_string($source) ? $source : '';
+};
+$readRepo = static function (string $relative) use ($repoRoot): string {
+    $source = @file_get_contents($repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
     return is_string($source) ? $source : '';
 };
 $record = static function (string $name, bool $ok, string $detail = '') use (&$checks, &$failures): void {
@@ -42,6 +47,9 @@ $factory = $read('src/Infrastructure/Composition/CatalogSystemReadinessFactory.p
 $dbProbe = $read('src/Infrastructure/Health/PdoDatabaseReadinessProbe.php');
 $queueProbe = $read('src/Infrastructure/Health/PdoQueueReadinessProbe.php');
 $storageProbe = $read('src/Infrastructure/Health/FilesystemStorageReadinessProbe.php');
+$compose = $readRepo('compose.yaml');
+$kubernetes = $readRepo('deploy/kubernetes/base/platform.yaml');
+$deploymentWorkflow = $readRepo('.github/workflows/deploy-production.yml');
 
 $record(
     'bootstrap_honors_session_flag',
@@ -123,6 +131,23 @@ $record(
         && str_contains($storageProbe, 'is_readable($path)')
         && str_contains($storageProbe, 'is_writable($path)'),
     'current all-in-one node requires readable and writable package storage'
+);
+$record(
+    'docker_uses_dependency_readiness',
+    str_contains($compose, '/catalog/api/v1/readiness.php'),
+    'container service health must include the dependencies required to accept traffic'
+);
+$record(
+    'kubernetes_splits_liveness_and_readiness',
+    substr_count($kubernetes, '/catalog/api/v1/live.php') >= 2
+        && str_contains($kubernetes, '/catalog/api/v1/readiness.php')
+        && !str_contains($kubernetes, "readinessProbe:\n            httpGet:\n              path: /catalog/api/v1/health.php"),
+    'Kubernetes must use dependency-free liveness and dependency-aware readiness'
+);
+$record(
+    'deployment_smoke_tests_readiness',
+    substr_count($deploymentWorkflow, '/catalog/api/v1/readiness.php') >= 2,
+    'post-deploy smoke tests must prove the release can actually receive production traffic'
 );
 
 $syntaxTargets = [
