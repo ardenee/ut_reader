@@ -16,6 +16,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 
 use JsonException;
 use RuntimeException;
+use Throwable;
 
 /** Builds the version-2 random-access, block-compressed metadata container. */
 final class BlockedCompressedMetadataContainer
@@ -26,121 +27,121 @@ final class BlockedCompressedMetadataContainer
 
     private const MAGIC = "UEDBM2\0\0";
     private const HEADER_LENGTH = 20;
+    private const COPY_BUFFER_BYTES = 1024 * 1024;
 
     /**
+     * Compatibility in-memory builder. Production publication uses buildToFile().
+     *
      * @param array<string,mixed> $snapshot
      * @return array{bytes:string,uncompressed_size:int,block_count:int,manifest:array<string,mixed>}
      */
     public static function build(array $snapshot, int $blockSize = self::DEFAULT_BLOCK_SIZE): array
     {
-        if (!function_exists('gzencode') || !function_exists('gzdecode')) {
-            throw new RuntimeException('The PHP zlib extension is required for block-compressed metadata.');
-        }
-        $blockSize = max(100, min(2000, $blockSize));
-        $file = (array)($snapshot['file'] ?? []);
-        $fileId = (int)($file['id'] ?? 0);
-        if ($fileId < 1) {
-            throw new RuntimeException('The metadata snapshot has no valid file ID.');
-        }
-
-        $manifest = [
-            'format' => 'unrealdb.blocked-file-metadata',
-            'format_version' => self::FORMAT_VERSION,
-            'codec' => 'gzip-blocks',
-            'block_size' => $blockSize,
-            'file' => [
-                'id' => $fileId,
-                'game_id' => (int)($file['game_id'] ?? 0),
-                'package_name' => (string)($file['package_name'] ?? ''),
-                'original_name' => (string)($file['original_name'] ?? ''),
-            ],
-            'counts' => [
-                'names' => count((array)($snapshot['names'] ?? [])),
-                'imports' => count((array)($snapshot['imports'] ?? [])),
-                'exports' => count((array)($snapshot['exports'] ?? [])),
-                'dependencies' => count((array)($snapshot['dependencies'] ?? [])),
-            ],
-            'sections' => [
-                'names' => [],
-                'imports' => [],
-                'exports' => [],
-                'dependencies' => [],
-            ],
-        ];
-
-        $payloadBlocks = [];
-        $payloadOffset = 0;
-        $uncompressedSize = 0;
-        $paths = (array)($snapshot['paths'] ?? []);
-
-        foreach (['names', 'imports', 'exports', 'dependencies'] as $section) {
-            $rows = array_values((array)($snapshot[$section] ?? []));
-            $rowStart = 0;
-            foreach (array_chunk($rows, $blockSize) as $chunk) {
-                $block = self::encodeBlock($section, $chunk, $paths);
-                try {
-                    $json = json_encode(
-                        $block,
-                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
-                    );
-                } catch (JsonException $error) {
-                    throw new RuntimeException(
-                        'Could not encode ' . $section . ' metadata block: ' . $error->getMessage(),
-                        0,
-                        $error
-                    );
-                }
-                if (!is_string($json)) {
-                    throw new RuntimeException('Could not encode ' . $section . ' metadata block.');
-                }
-                $compressed = gzencode($json, 6, ZLIB_ENCODING_GZIP);
-                if (!is_string($compressed) || $compressed === '') {
-                    throw new RuntimeException('Could not compress ' . $section . ' metadata block.');
-                }
-
-                $manifest['sections'][$section][] = [
-                    'row_start' => $rowStart,
-                    'row_count' => count($chunk),
-                    'offset' => $payloadOffset,
-                    'compressed_length' => strlen($compressed),
-                    'uncompressed_length' => strlen($json),
-                    'sha256' => hash('sha256', $compressed),
-                ];
-                $payloadBlocks[] = $compressed;
-                $payloadOffset += strlen($compressed);
-                $uncompressedSize += strlen($json);
-                $rowStart += count($chunk);
+        self::assertZlib();
+        $payload = '';
+        $built = self::buildPayload(
+            $snapshot,
+            $blockSize,
+            static function (string $compressed) use (&$payload): void {
+                // .= can extend the sole string buffer in place. Unlike retaining
+                // every block in an array and implode(), it does not require a
+                // second complete payload allocation at the end of block creation.
+                $payload .= $compressed;
             }
-        }
-
-        try {
-            $manifestJson = json_encode(
-                $manifest,
-                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
-            );
-        } catch (JsonException $error) {
-            throw new RuntimeException('Could not encode metadata manifest: ' . $error->getMessage(), 0, $error);
-        }
-        if (!is_string($manifestJson)) {
-            throw new RuntimeException('Could not encode metadata manifest.');
-        }
-
-        $header = pack(
-            'a8vvVV',
-            self::MAGIC,
-            self::FORMAT_VERSION,
-            self::CODEC_BLOCK_GZIP,
-            strlen($manifestJson),
-            0
         );
-        $bytes = $header . $manifestJson . implode('', $payloadBlocks);
+        $fileId = (int)$built['file_id'];
+        $manifestJson = self::encodeManifest((array)$built['manifest']);
+        $bytes = self::header($manifestJson) . $manifestJson . $payload;
+        unset($payload);
         self::verifyBytes($bytes, $fileId);
 
         return [
             'bytes' => $bytes,
-            'uncompressed_size' => $uncompressedSize + strlen($manifestJson),
-            'block_count' => count($payloadBlocks),
-            'manifest' => $manifest,
+            'uncompressed_size' => (int)$built['uncompressed_size'] + strlen($manifestJson),
+            'block_count' => (int)$built['block_count'],
+            'manifest' => (array)$built['manifest'],
+        ];
+    }
+
+    /**
+     * Build directly to disk with peak container memory bounded to one metadata
+     * block, one compressed block and the manifest. This is the production path.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return array{path:string,compressed_size:int,payload_sha256:string,uncompressed_size:int,block_count:int,manifest:array<string,mixed>}
+     */
+    public static function buildToFile(
+        array $snapshot,
+        string $path,
+        int $blockSize = self::DEFAULT_BLOCK_SIZE
+    ): array {
+        self::assertZlib();
+        if (trim($path) === '') {
+            throw new RuntimeException('A compact metadata output path is required.');
+        }
+        $directory = dirname($path);
+        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
+            throw new RuntimeException('Could not create compact metadata output directory: ' . $directory);
+        }
+
+        $payloadPath = $path . '.payload.' . bin2hex(random_bytes(8));
+        $payload = @fopen($payloadPath, 'w+b');
+        if (!is_resource($payload)) {
+            throw new RuntimeException('Could not create compact metadata payload staging file.');
+        }
+
+        try {
+            $built = self::buildPayload(
+                $snapshot,
+                $blockSize,
+                static function (string $compressed) use ($payload): void {
+                    self::writeAll($payload, $compressed);
+                }
+            );
+            $manifestJson = self::encodeManifest((array)$built['manifest']);
+            $header = self::header($manifestJson);
+
+            if (!@rewind($payload)) {
+                throw new RuntimeException('Could not rewind compact metadata payload staging file.');
+            }
+            $target = @fopen($path, 'wb');
+            if (!is_resource($target)) {
+                throw new RuntimeException('Could not create compact metadata container: ' . $path);
+            }
+            try {
+                self::writeAll($target, $header);
+                self::writeAll($target, $manifestJson);
+                while (!feof($payload)) {
+                    $chunk = fread($payload, self::COPY_BUFFER_BYTES);
+                    if ($chunk === false) {
+                        throw new RuntimeException('Could not read compact metadata payload staging file.');
+                    }
+                    if ($chunk !== '') {
+                        self::writeAll($target, $chunk);
+                    }
+                }
+                if (!fflush($target)) {
+                    throw new RuntimeException('Could not flush compact metadata container.');
+                }
+            } finally {
+                fclose($target);
+            }
+        } catch (Throwable $error) {
+            @unlink($path);
+            throw $error;
+        } finally {
+            fclose($payload);
+            @unlink($payloadPath);
+        }
+
+        $verified = self::verifyFile($path, (int)$built['file_id']);
+        return [
+            'path' => $path,
+            'compressed_size' => (int)$verified['compressed_size'],
+            'payload_sha256' => (string)$verified['payload_sha256'],
+            'uncompressed_size' => (int)$built['uncompressed_size'] + strlen($manifestJson),
+            'block_count' => (int)$built['block_count'],
+            'manifest' => (array)$built['manifest'],
         ];
     }
 
@@ -305,6 +306,140 @@ final class BlockedCompressedMetadataContainer
     }
 
     /**
+     * Build every section with at most one source chunk and one compressed block
+     * materialized at a time.
+     *
+     * @param array<string,mixed> $snapshot
+     * @param callable(string):void $consumeCompressed
+     * @return array{file_id:int,manifest:array<string,mixed>,uncompressed_size:int,block_count:int}
+     */
+    private static function buildPayload(array $snapshot, int $blockSize, callable $consumeCompressed): array
+    {
+        $blockSize = max(100, min(2000, $blockSize));
+        $file = (array)($snapshot['file'] ?? []);
+        $fileId = (int)($file['id'] ?? 0);
+        if ($fileId < 1) {
+            throw new RuntimeException('The metadata snapshot has no valid file ID.');
+        }
+
+        $manifest = [
+            'format' => 'unrealdb.blocked-file-metadata',
+            'format_version' => self::FORMAT_VERSION,
+            'codec' => 'gzip-blocks',
+            'block_size' => $blockSize,
+            'file' => [
+                'id' => $fileId,
+                'game_id' => (int)($file['game_id'] ?? 0),
+                'package_name' => (string)($file['package_name'] ?? ''),
+                'original_name' => (string)($file['original_name'] ?? ''),
+            ],
+            'counts' => [
+                'names' => count((array)($snapshot['names'] ?? [])),
+                'imports' => count((array)($snapshot['imports'] ?? [])),
+                'exports' => count((array)($snapshot['exports'] ?? [])),
+                'dependencies' => count((array)($snapshot['dependencies'] ?? [])),
+            ],
+            'sections' => [
+                'names' => [],
+                'imports' => [],
+                'exports' => [],
+                'dependencies' => [],
+            ],
+        ];
+
+        $payloadOffset = 0;
+        $uncompressedSize = 0;
+        $blockCount = 0;
+        $paths = (array)($snapshot['paths'] ?? []);
+
+        foreach (['names', 'imports', 'exports', 'dependencies'] as $section) {
+            $rows = (array)($snapshot[$section] ?? []);
+            $rowCount = count($rows);
+            for ($rowStart = 0; $rowStart < $rowCount; $rowStart += $blockSize) {
+                $chunk = array_slice($rows, $rowStart, $blockSize);
+                $block = self::encodeBlock($section, $chunk, $paths);
+                try {
+                    $json = json_encode(
+                        $block,
+                        JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+                    );
+                } catch (JsonException $error) {
+                    throw new RuntimeException(
+                        'Could not encode ' . $section . ' metadata block: ' . $error->getMessage(),
+                        0,
+                        $error
+                    );
+                }
+                if (!is_string($json)) {
+                    throw new RuntimeException('Could not encode ' . $section . ' metadata block.');
+                }
+                $compressed = gzencode($json, 6, ZLIB_ENCODING_GZIP);
+                if (!is_string($compressed) || $compressed === '') {
+                    throw new RuntimeException('Could not compress ' . $section . ' metadata block.');
+                }
+
+                $compressedLength = strlen($compressed);
+                $manifest['sections'][$section][] = [
+                    'row_start' => $rowStart,
+                    'row_count' => count($chunk),
+                    'offset' => $payloadOffset,
+                    'compressed_length' => $compressedLength,
+                    'uncompressed_length' => strlen($json),
+                    'sha256' => hash('sha256', $compressed),
+                ];
+                $consumeCompressed($compressed);
+                $payloadOffset += $compressedLength;
+                $uncompressedSize += strlen($json);
+                $blockCount++;
+                unset($block, $json, $compressed, $chunk);
+            }
+        }
+
+        return [
+            'file_id' => $fileId,
+            'manifest' => $manifest,
+            'uncompressed_size' => $uncompressedSize,
+            'block_count' => $blockCount,
+        ];
+    }
+
+    /** @param array<string,mixed> $manifest */
+    private static function encodeManifest(array $manifest): string
+    {
+        try {
+            $json = json_encode(
+                $manifest,
+                JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+            );
+        } catch (JsonException $error) {
+            throw new RuntimeException('Could not encode metadata manifest: ' . $error->getMessage(), 0, $error);
+        }
+        if (!is_string($json)) {
+            throw new RuntimeException('Could not encode metadata manifest.');
+        }
+        return $json;
+    }
+
+    private static function header(string $manifestJson): string
+    {
+        return pack(
+            'a8vvVV',
+            self::MAGIC,
+            self::FORMAT_VERSION,
+            self::CODEC_BLOCK_GZIP,
+            strlen($manifestJson),
+            0
+        );
+    }
+
+    private static function assertZlib(): void
+    {
+        if (!function_exists('gzencode') || !function_exists('gzdecode')) {
+            throw new RuntimeException('The PHP zlib extension is required for block-compressed metadata.');
+        }
+    }
+
+    /**
      * @param list<array<string,mixed>> $rows
      * @param array<string,mixed> $paths
      * @return array{strings:list<string>,rows:list<list<mixed>>}
@@ -432,5 +567,19 @@ final class BlockedCompressedMetadataContainer
             throw new RuntimeException('Blocked metadata container ended unexpectedly.');
         }
         return $buffer;
+    }
+
+    /** @param resource $stream */
+    private static function writeAll($stream, string $bytes): void
+    {
+        $length = strlen($bytes);
+        $offset = 0;
+        while ($offset < $length) {
+            $written = fwrite($stream, substr($bytes, $offset));
+            if ($written === false || $written < 1) {
+                throw new RuntimeException('Could not completely write blocked metadata container.');
+            }
+            $offset += $written;
+        }
     }
 }
