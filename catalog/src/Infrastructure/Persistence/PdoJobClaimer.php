@@ -15,8 +15,14 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
  */
 final class PdoJobClaimer
 {
+    private readonly PdoJobAdmissionGuard $admissionGuard;
+
     public function __construct(private readonly PDO $db, ?PdoJobRecovery $legacyRecovery = null)
     {
+        // PdoJobQueue retains one claimer for the worker connection lifetime. Keep
+        // one admission guard with it so hot-loop prepared statements are reused
+        // rather than rebuilt on every claim attempt.
+        $this->admissionGuard = new PdoJobAdmissionGuard($db);
     }
 
     public function claim(
@@ -31,7 +37,7 @@ final class PdoJobClaimer
         $preferredRootJobId = $preferredRootJobId !== null && $preferredRootJobId > 0
             ? $preferredRootJobId
             : null;
-        $guard = new PdoJobAdmissionGuard($this->db);
+        $guard = $this->admissionGuard;
 
         // Root affinity is preference-only. If the preferred workflow has no
         // runnable row, immediately fall back to unrelated global work rather
@@ -85,9 +91,6 @@ final class PdoJobClaimer
                     $concurrencyKey !== '' ? $concurrencyKey : null
                 );
             } catch (\Throwable $error) {
-                // lockNextCandidate deliberately leaves the candidate row locked
-                // until admission completes. A GET_LOCK/driver failure must not
-                // leak that transaction while the error propagates to the worker.
                 $this->rollbackClaimTransaction();
                 throw $error;
             }
@@ -167,7 +170,10 @@ final class PdoJobClaimer
             }
 
             if ($blockedResourceClasses !== []) {
-                $where[] = 'COALESCE(NULLIF(j.resource_class,""),"default") NOT IN ('
+                // Current schema makes resource_class NOT NULL with default, and
+                // every enqueuer writes the policy class explicitly. Keep the
+                // indexed column bare instead of wrapping it in COALESCE/NULLIF.
+                $where[] = 'j.resource_class NOT IN ('
                     . implode(',', array_fill(0, count($blockedResourceClasses), '?')) . ')';
                 foreach ($blockedResourceClasses as $resourceClass) {
                     $params[] = $resourceClass;
