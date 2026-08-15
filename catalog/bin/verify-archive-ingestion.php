@@ -5,6 +5,11 @@
  */
 declare(strict_types=1);
 
+use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobResultHydrator;
+
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "CLI only.\n");
     exit(1);
@@ -24,7 +29,9 @@ $phpFiles = [
     'src/Infrastructure/Archive/CatalogArchiveExtractor.php',
     'src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php',
     'src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php',
+    'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
     'src/Domain/Jobs/JobType.php',
+    'src/Domain/Jobs/JobResourcePolicy.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
     'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
@@ -62,9 +69,6 @@ $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
 require_once $root . '/bootstrap/autoload.php';
 
-use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
-use UnrealDb\Catalog\Domain\Jobs\JobType;
-
 $record(
     'archive_extensions_recognized',
     CatalogArchiveExtractor::isArchiveName('x.zip')
@@ -80,6 +84,17 @@ $record(
         && in_array(JobType::PROCESS_BUCKET_ARCHIVE, JobType::all(), true)
         && in_array(JobType::PROCESS_BUCKET_STAGED_PACKAGE, JobType::all(), true),
     'Archive coordinator and extracted Upload Bucket member job types must stay in the domain registry.'
+);
+
+$archiveProfile = JobResourcePolicy::for(JobType::IMPORT_STAGED_ARCHIVE, ['game_id' => 7]);
+$bucketArchiveProfile = JobResourcePolicy::for(JobType::PROCESS_BUCKET_ARCHIVE, ['staged_path' => 'jobs/incoming/archive.zip']);
+$bucketMemberProfile = JobResourcePolicy::for(JobType::PROCESS_BUCKET_STAGED_PACKAGE, ['staged_path' => 'jobs/incoming/Test.utx']);
+$record(
+    'archive_resource_profiles_registered',
+    $archiveProfile->resourceClass === JobResourcePolicy::ARCHIVE_IMPORT_HEAVY
+        && $bucketArchiveProfile->resourceClass === JobResourcePolicy::ARCHIVE_IMPORT_HEAVY
+        && $bucketMemberProfile->resourceClass === JobResourcePolicy::BUCKET_PROCESSING,
+    'Archive coordinators stay bounded while extracted Upload Bucket members use normal bucket-processing capacity.'
 );
 
 $factory = @file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
@@ -103,6 +118,32 @@ $record(
         && is_string($profiledBatchApi) && str_contains($profiledBatchApi, "['zip', '7z', 'rar']")
         && is_string($profiledChunkApi) && str_contains($profiledChunkApi, "['zip', '7z', 'rar']"),
     'Both Upload Bucket and selected-game upload ingress must recognize archive containers.'
+);
+
+$hydrator = new CatalogBackgroundJobResultHydrator(['storage_path' => sys_get_temp_dir()]);
+$redirectRows = $hydrator->hydrate([[
+    'id' => 91,
+    'job_type' => JobType::PROCESS_BUCKET_STAGED_PACKAGE,
+    'status' => 'completed',
+    'payload_json' => json_encode([
+        'original_name' => 'Example.utx.uz3',
+        'source_relative_path' => 'bundle.zip/Example.utx.uz3',
+    ], JSON_THROW_ON_ERROR),
+    'progress_json' => json_encode(['stage' => 'complete', 'percent' => 100], JSON_THROW_ON_ERROR),
+    'result_json' => json_encode([
+        'operation' => 'process_bucket_staged_package',
+        'status' => 'bucketed',
+        'original_name' => 'Example.utx',
+        'source_relative_path' => 'bundle.zip/Example.utx',
+        'decoder' => 'epic-uz3-zlib-uncompress',
+        'queue_name' => 'Example.utx',
+    ], JSON_THROW_ON_ERROR),
+]]);
+$redirectResult = is_array($redirectRows[0]['result'] ?? null) ? $redirectRows[0]['result'] : [];
+$record(
+    'archive_redirect_child_identity_is_valid',
+    empty($redirectResult['integrity_mismatch']) && (string)($redirectResult['status'] ?? '') === 'bucketed',
+    'An archive-extracted redirect child may return the decompressed package name without triggering a false result-identity failure.'
 );
 
 if (class_exists(ZipArchive::class)) {
