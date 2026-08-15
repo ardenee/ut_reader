@@ -12,9 +12,10 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 use PDO;
 use RuntimeException;
 use UnrealDb\Catalog\Application\Import\CatalogVerifiedPackageInspection;
+use UnrealDb\Catalog\Application\Import\Contract\VerifiedPackageIdentityPort;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogSourcePathStore;
 
-final class CatalogVerifiedPackageIdentityRepository
+final class CatalogVerifiedPackageIdentityRepository implements VerifiedPackageIdentityPort
 {
     private readonly PdoCatalogSourcePathStore $sourcePaths;
 
