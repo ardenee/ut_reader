@@ -53,6 +53,9 @@ try {
 
     $launcher = new CatalogDetachedWorker($config);
     $worker = $launcher->status($queueName, false);
+
+    // Worker-health policy intentionally uses durable execution-row counts. The
+    // operator-visible job totals below use the Background Jobs rolled-up scope.
     $operational = new PdoBackgroundJobOperationalQuery($db, $config);
     $workerQueueCounts = $operational->queueCounts($queueName);
     $workerStatus = CatalogWorkerStatusPolicy::evaluate(
@@ -93,10 +96,13 @@ try {
         'concurrency_blocked' => 0,
     ];
 
-    $classBlocked = 0;
+    $limitingClasses = 0;
     foreach ($limits as $row) {
-        $classBlocked += max(0, (int)($row['class_blocked'] ?? 0));
+        if (!empty($row['is_limiting'])) {
+            $limitingClasses++;
+        }
     }
+    $attentionJobs = (int)$queueCurrent['failed'] + (int)$queueCurrent['dead_letter'];
 
     $freePercent = null;
     if (($storage['total_bytes'] ?? null) !== null && (int)$storage['total_bytes'] > 0 && ($storage['free_bytes'] ?? null) !== null) {
@@ -106,7 +112,7 @@ try {
     catalog_head('System Operations');
     echo CatalogUi::pageHeader(
         'System Operations',
-        'Read-only production health for this UnrealDB host. Use this page to identify queue, worker, database or storage pressure before reaching for PowerShell or direct SQL.',
+        'Read-only production health for this UnrealDB host. Job totals use the same rolled-up operator scope as Background Jobs, so routine workflow children do not inflate the headline numbers.',
         [
             'Background Jobs' => 'background-jobs.php',
             'Resource Limits' => 'job-resource-limits.php',
@@ -123,12 +129,13 @@ try {
         $workerMessage !== '' ? $workerMessage : ucfirst(str_replace('_', ' ', $workerAuthority)),
         $workerAuthority === 'running' ? 'good' : ((int)$queueCurrent['queued'] > 0 ? 'warning' : '')
     );
-    catalog_stat_card('Queued jobs', number_format((int)$queueCurrent['queued']), 'Ready/current backlog', (int)$queueCurrent['queued'] > 0 ? 'attention' : 'good');
-    catalog_stat_card('Running jobs', number_format((int)$queueCurrent['running']), 'Database rows currently running', (int)$queueCurrent['running'] > 0 ? 'good' : '');
-    catalog_stat_card('Resource-class blocked', number_format($classBlocked), 'Ready jobs beyond class capacity', $classBlocked > 0 ? 'warning' : 'good');
-    catalog_stat_card('Concurrency-key blocked', number_format((int)$queueCurrent['concurrency_blocked']), 'Queued behind a running identical target', (int)$queueCurrent['concurrency_blocked'] > 0 ? 'attention' : 'good');
-    catalog_stat_card('Oldest queued', catalog_operations_duration((int)$queueCurrent['oldest_queued_seconds']), 'Age, not a timeout', (int)$queueCurrent['oldest_queued_seconds'] > 3600 ? 'warning' : '');
-    catalog_stat_card('Longest running', catalog_operations_duration((int)$queueCurrent['longest_running_seconds']), 'Operator visibility only; jobs are not failed by age', '');
+    catalog_stat_card('Queued jobs', number_format((int)$queueCurrent['queued']), 'Operator-visible jobs waiting', (int)$queueCurrent['queued'] > 0 ? 'attention' : 'good');
+    catalog_stat_card('Running jobs', number_format((int)$queueCurrent['running']), 'Operator-visible jobs in progress', (int)$queueCurrent['running'] > 0 ? 'good' : '');
+    catalog_stat_card('Needs attention', number_format($attentionJobs), 'Failed or retry-required jobs', $attentionJobs > 0 ? 'warning' : 'good');
+    catalog_stat_card('Resource limits', $limitingClasses > 0 ? number_format($limitingClasses) . ' limiting' : 'All clear', 'Execution capacity by workload class', $limitingClasses > 0 ? 'warning' : 'good');
+    catalog_stat_card('Concurrency blocked', number_format((int)$queueCurrent['concurrency_blocked']), 'Distinct jobs waiting on an identical target', (int)$queueCurrent['concurrency_blocked'] > 0 ? 'attention' : 'good');
+    catalog_stat_card('Oldest queued job', catalog_operations_duration((int)$queueCurrent['oldest_queued_seconds']), 'Age only; never an automatic timeout', (int)$queueCurrent['oldest_queued_seconds'] > 3600 ? 'warning' : '');
+    catalog_stat_card('Longest running job', catalog_operations_duration((int)$queueCurrent['longest_running_seconds']), 'Operator visibility only; jobs are not failed by age', '');
     catalog_stat_card('Database', catalog_bytes((int)$database['size_bytes']), (string)$database['database'], '');
     catalog_stat_card('Verified files', number_format((int)$database['verified_files']), number_format((int)$database['files']) . ' total catalog rows', '');
     catalog_stat_card('Storage free', ($storage['free_bytes'] ?? null) !== null ? catalog_bytes((int)$storage['free_bytes']) : 'Unknown', $freePercent !== null ? number_format($freePercent, 1) . '% free' : '', $freePercent !== null && $freePercent < 10 ? 'warning' : 'good');
@@ -148,38 +155,37 @@ try {
             . '</tr>';
     }
     if ($queueRows === '') {
-        $queueRows = '<tr><td colspan="8" class="muted">No actionable background-job rows exist.</td></tr>';
+        $queueRows = '<tr><td colspan="8" class="muted">No current jobs require operational reporting.</td></tr>';
     }
-    $queueTable = '<table><caption class="ui-sr-only">Background queue operational summary</caption>'
-        . '<thead><tr><th scope="col">Queue</th><th scope="col">Queued</th><th scope="col">Running</th><th scope="col">Failed</th><th scope="col">Dead letter</th><th scope="col">Oldest queued</th><th scope="col">Longest running</th><th scope="col">Concurrency blocked</th></tr></thead>'
+    $queueTable = '<table><caption class="ui-sr-only">Operator-visible background job summary</caption>'
+        . '<thead><tr><th scope="col">Queue</th><th scope="col">Queued jobs</th><th scope="col">Running jobs</th><th scope="col">Failed</th><th scope="col">Needs retry</th><th scope="col">Oldest queued</th><th scope="col">Longest running</th><th scope="col">Concurrency blocked</th></tr></thead>'
         . '<tbody>' . $queueRows . '</tbody></table>';
-    echo CatalogUi::section(CatalogUi::tableRegion($queueTable, ['label' => 'Queue operational summary']), [
+    echo CatalogUi::section(CatalogUi::tableRegion($queueTable, ['label' => 'Operator-visible queue summary']), [
         'title' => 'Queue pressure',
-        'description' => 'Runtime ages are diagnostic only. UnrealDB does not fail or steal a live job merely because it has been running for a long time. Completed/cancelled history is deliberately excluded from this operational view.',
+        'description' => 'One reported row represents one operator-visible job. Routine workflow children stay folded into their parent; failed or retry-required children remain visible because they need direct action. Runtime ages are diagnostic only and never trigger automatic failure or stealing.',
     ]);
 
     $limitRows = '';
     foreach ($limits as $row) {
         $blocked = max(0, (int)($row['class_blocked'] ?? 0));
         $capacityBadge = $blocked > 0
-            ? CatalogUi::statusBadge('queued', ['label' => $blocked . ' waiting'])
-            : CatalogUi::statusBadge('ready', ['label' => (int)$row['available_slots'] . ' slots free']);
+            ? CatalogUi::statusBadge('queued', ['label' => 'At capacity'])
+            : CatalogUi::statusBadge('ready', ['label' => 'Available']);
         $limitRows .= '<tr>'
             . '<td>' . catalog_h((string)($row['label'] ?? $row['resource_class'])) . '</td>'
             . '<td class="mono">' . catalog_h((string)$row['resource_class']) . '</td>'
             . '<td>' . (int)$row['limit'] . '</td>'
             . '<td>' . (int)$row['running'] . '</td>'
-            . '<td>' . (int)$row['ready'] . '</td>'
-            . '<td>' . (int)$row['queued'] . '</td>'
+            . '<td>' . (int)$row['available_slots'] . '</td>'
             . '<td>' . $capacityBadge . '</td>'
             . '</tr>';
     }
-    $limitsTable = '<table><caption class="ui-sr-only">Job resource class capacity</caption>'
-        . '<thead><tr><th scope="col">Workload</th><th scope="col">Class</th><th scope="col">Limit</th><th scope="col">Running</th><th scope="col">Ready</th><th scope="col">Queued</th><th scope="col">Capacity</th></tr></thead>'
+    $limitsTable = '<table><caption class="ui-sr-only">Job execution capacity by resource class</caption>'
+        . '<thead><tr><th scope="col">Workload</th><th scope="col">Class</th><th scope="col">Limit</th><th scope="col">Running slots</th><th scope="col">Free slots</th><th scope="col">State</th></tr></thead>'
         . '<tbody>' . $limitRows . '</tbody></table>';
-    echo CatalogUi::section(CatalogUi::tableRegion($limitsTable, ['label' => 'Job resource capacity']), [
+    echo CatalogUi::section(CatalogUi::tableRegion($limitsTable, ['label' => 'Job execution capacity']), [
         'title' => 'Resource limits',
-        'description' => 'These limits are applied when a worker considers the next job. Existing queued rows do not need to be rewritten.',
+        'description' => 'Capacity is shown as execution slots, not as another job total. Limits are evaluated when workers consider runnable queue rows; the job totals above remain the operator-facing source of truth.',
         'actions' => ['Change limits' => 'job-resource-limits.php'],
     ]);
 
