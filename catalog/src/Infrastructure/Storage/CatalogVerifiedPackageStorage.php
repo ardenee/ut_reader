@@ -2,21 +2,27 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Places one verified package in its canonical game storage location.
- * Why: Filesystem creation, physical-upload dedupe and rollback metadata should not be embedded in package orchestration.
- * Role: Infrastructure storage collaborator for verified package import.
+ * Why: Import orchestration should depend on a stable storage collaborator rather than duplicate filesystem policy.
+ * Role: Compatibility collaborator for verified-package publication; local filesystem behavior lives in
+ *       LocalFilesystemPackageStorage.
  */
 declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Storage;
 
-use RuntimeException;
+use UnrealDb\Catalog\Application\Storage\Contract\PackageStoragePort;
 
 final class CatalogVerifiedPackageStorage
 {
+    private readonly PackageStoragePort $storage;
+
     /** @param array<string,mixed> $config */
-    public function __construct(private readonly array $config)
+    public function __construct(array $config, ?PackageStoragePort $storage = null)
     {
-        require_once dirname(__DIR__, 3) . '/lib/Scanner/CatalogScannerPath.php';
+        $this->storage = $storage ?? new LocalFilesystemPackageStorage(
+            (string)$config['storage_path'],
+            dirname(__DIR__, 3)
+        );
     }
 
     /**
@@ -29,56 +35,18 @@ final class CatalogVerifiedPackageStorage
         string $extension,
         bool $discardDuplicateSource = true
     ): array {
-        $slug = \scanner_slug_text($gameSlug);
-        $directory = rtrim((string)$this->config['storage_path'], DIRECTORY_SEPARATOR)
-            . '/games/' . $slug . '/verified';
-        if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
-            throw new RuntimeException('Could not create storage folder: ' . $directory);
-        }
-
-        $storedName = $md5 . '.' . $extension;
-        $destination = $directory . '/' . $storedName;
-        $created = false;
-        if (is_file($destination)) {
-            // Full Sync/maintenance may still have a reader handle open on its
-            // isolated scanner copy, especially on Windows. The outer maintenance
-            // service owns that copy and removes it after the reader is released.
-            if ($discardDuplicateSource
-                && is_file($temporaryPath)
-                && !@unlink($temporaryPath)) {
-                throw new RuntimeException('Could not discard duplicate physical upload');
-            }
-        } elseif (!rename($temporaryPath, $destination)) {
-            throw new RuntimeException('Could not store upload');
-        } else {
-            $created = true;
-        }
-
-        return [
-            'stored_name' => $storedName,
-            'destination' => $destination,
-            'relative_path' => 'storage/games/' . $slug . '/verified/' . $storedName,
-            'created' => $created,
-            'source_path' => $temporaryPath,
-        ];
+        return $this->storage->storeVerified(
+            $temporaryPath,
+            $gameSlug,
+            $md5,
+            $extension,
+            $discardDuplicateSource
+        );
     }
 
     /** @param array{destination?:string,created?:bool,source_path?:string} $stored */
     public function rollbackCreated(array $stored): void
     {
-        $destination = (string)($stored['destination'] ?? '');
-        if (empty($stored['created']) || $destination === '' || !is_file($destination)) {
-            return;
-        }
-
-        // Persistence happens after the physical move. Restore the caller-owned
-        // source first so retry/unverified retention still has the original bytes.
-        // Falling back to the historical delete keeps rollback bounded if the
-        // source path unexpectedly became unavailable or could not be restored.
-        $sourcePath = (string)($stored['source_path'] ?? '');
-        if ($sourcePath !== '' && !is_file($sourcePath) && @rename($destination, $sourcePath)) {
-            return;
-        }
-        @unlink($destination);
+        $this->storage->rollbackVerified($stored);
     }
 }
