@@ -133,30 +133,36 @@ $record(
 );
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$identity = $read('src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php');
+$publisher = $read('src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php');
+$dependencyCoordinator = $read('src/Infrastructure/Import/CatalogVerifiedPackageDependencyCoordinator.php');
 $record(
     'duplicate_targets_only_verified_rows',
-    $importer !== ''
-        && str_contains($importer, 'WHERE game_id=? AND scan_status="verified"'),
+    $identity !== ''
+        && str_contains($identity, 'WHERE game_id=? AND scan_status="verified"')
+        && str_contains($importer, 'findVerifiedDuplicate('),
     'failed/duplicate/unverified history rows must not absorb a physical verified import'
 );
 $record(
     'verified_import_has_one_compact_publication_pass',
-    str_contains($importer, 'VerifiedFileCompactMetadataFinalizer::finalizeParsed(')
-        && !str_contains($importer, 'VerifiedFileCompactMetadataFinalizer::finalize('),
+    str_contains($publisher, 'VerifiedFileCompactMetadataFinalizer::finalizeParsed(')
+        && !str_contains($publisher, 'VerifiedFileCompactMetadataFinalizer::finalize(')
+        && str_contains($importer, '$this->publisher->publishMetadata('),
     'the package-import port must not immediately re-read the container it just published'
 );
 $record(
     'canonical_dependency_failure_has_durable_fallback',
-    str_contains($importer, 'CatalogPostImportDependencyQueue::enqueue(')
-        && str_contains($importer, 'post-import dependency recovery queue failed'),
+    str_contains($dependencyCoordinator, 'CatalogPostImportDependencyQueue::enqueue(')
+        && str_contains($dependencyCoordinator, 'post-import dependency recovery queue failed')
+        && str_contains($importer, '$this->dependencies->refreshCanonical('),
     'a synchronous dependency-refresh failure must either record durable repair work or fail the import attempt'
 );
 $record(
     'alias_dependency_failure_retries',
-    str_contains($importer, '$aliasAdded = \\catalog_package_alias_add(')
+    str_contains($identity, '\\catalog_package_alias_add(')
         && str_contains($importer, '$aliasAlreadyExisted = !$aliasAdded;')
-        && str_contains($importer, 'Package alias dependency refresh failed')
-        && !str_contains($importer, 'dependency refresh warning logged for maintenance'),
+        && str_contains($dependencyCoordinator, 'Package alias dependency refresh failed')
+        && str_contains($importer, '$this->dependencies->refreshAlias('),
     'idempotent alias insertion must not convert a failed dependency publication into success'
 );
 
@@ -181,6 +187,11 @@ $criticalPhp = [
     'src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
     'src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageDependencyCoordinator.php',
+    'src/Application/Import/CatalogVerifiedPackageInspection.php',
 ];
 
 if (!function_exists('proc_open')) {
