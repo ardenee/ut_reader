@@ -65,6 +65,6 @@ try {
     if (!headers_sent()) {
         catalog_head('PAK archive error');
     }
-    echo CatalogUi::alert('danger', $error->getMessage(), 'PAK archive management could not be loaded.');
+    echo CatalogUi::alert('danger', catalog_exception_display_message($error), 'PAK archive management could not be loaded.');
     catalog_foot();
 }
