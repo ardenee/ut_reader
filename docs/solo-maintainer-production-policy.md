@@ -62,7 +62,12 @@ Automated maintainability contracts protect:
 - explicit package-storage boundary;
 - in-product operational diagnostics.
 
-One historical exception is explicitly baselined: `Application/Catalog/CatalogPackageHeaderInspector.php` performs a bounded first-MiB file read. The exception does not permit new Application filesystem access elsewhere.
+Two historical filesystem probes are explicitly baselined rather than hidden by the verifier:
+
+- `Application/Catalog/CatalogPackageHeaderInspector.php` performs a bounded first-MiB package-header read;
+- `Application/Upload/ProfiledUploadService.php` checks the temporary upload file and reads its size for result metadata.
+
+Those exceptions are exact. They do not permit new Application filesystem access elsewhere, and they can be removed later when those workflows are next changed for functional reasons.
 
 ## P1 — Operational visibility
 
