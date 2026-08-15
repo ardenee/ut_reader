@@ -113,27 +113,31 @@ final class CatalogPublicAccessGuard
             $now = time();
             $blockedUntil = max(0, (int)($state['blocked_until'] ?? 0));
             if ($blockedUntil > $now) {
+                // The read-only pre-cache gate normally catches this case. Direct
+                // callers of burstState() should still avoid rewriting identical
+                // blocked state on every rejected request.
+                return $blockedUntil - $now;
+            }
+
+            $cutoff = $now - max(1, $windowSeconds);
+            $requests = [];
+            foreach ((array)($state['requests'] ?? []) as $timestamp) {
+                $timestamp = (int)$timestamp;
+                if ($timestamp >= $cutoff && $timestamp <= $now + 60) {
+                    $requests[] = $timestamp;
+                }
+            }
+            $requests[] = $now;
+            if (count($requests) > max(2, $maximum)) {
+                $blockedUntil = $now + max(10, $blockSeconds);
                 $retry = $blockedUntil - $now;
             } else {
-                $cutoff = $now - max(1, $windowSeconds);
-                $requests = [];
-                foreach ((array)($state['requests'] ?? []) as $timestamp) {
-                    $timestamp = (int)$timestamp;
-                    if ($timestamp >= $cutoff && $timestamp <= $now + 60) {
-                        $requests[] = $timestamp;
-                    }
-                }
-                $requests[] = $now;
-                if (count($requests) > max(2, $maximum)) {
-                    $blockedUntil = $now + max(10, $blockSeconds);
-                    $retry = $blockedUntil - $now;
-                } else {
-                    $blockedUntil = 0;
-                    $retry = 0;
-                }
-                $state['requests'] = $requests;
-                $state['blocked_until'] = $blockedUntil;
+                $blockedUntil = 0;
+                $retry = 0;
             }
+            $state['requests'] = $requests;
+            $state['blocked_until'] = $blockedUntil;
+
             $encoded = json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
             rewind($handle);
             if (!ftruncate($handle, 0) || fwrite($handle, $encoded) !== strlen($encoded) || !fflush($handle)) {
@@ -173,7 +177,11 @@ final class CatalogPublicAccessGuard
         exit;
     }
 
-    /** Cheap pre-cache crawler gate: no per-IP state lock/write. */
+    /**
+     * Cheap pre-cache gate: crawler detection plus read-only enforcement of an
+     * already-active temporary block. No request timestamp is appended here and
+     * no burst-state file is rewritten on ordinary cache hits.
+     */
     public function guardCrawlerRequest(): void
     {
         if ($this->exempt() || !$this->guardableMethod()) {
@@ -186,6 +194,16 @@ final class CatalogPublicAccessGuard
                 403,
                 'Automated access blocked',
                 'Automated crawlers and bulk link scanners are not permitted on this development service.'
+            );
+        }
+
+        $retryAfter = $this->activeBurstBlockRetry($this->clientIp());
+        if ($retryAfter > 0) {
+            $this->abort(
+                429,
+                'Temporarily blocked',
+                'Too many pages or links were opened in a short period. This IP has been temporarily blocked.',
+                $retryAfter
             );
         }
     }
@@ -297,6 +315,55 @@ final class CatalogPublicAccessGuard
     {
         $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
         return in_array($method, ['GET', 'HEAD'], true);
+    }
+
+    /**
+     * Read only enough state to preserve an already-active block before cache.
+     * The sharded path is current; the legacy flat path is also checked so a
+     * deployment cannot accidentally clear a live block during the layout change.
+     */
+    private function activeBurstBlockRetry(string $identity): int
+    {
+        $config = $this->resolvedConfig();
+        $directory = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR)
+            . DIRECTORY_SEPARATOR . 'security' . DIRECTORY_SEPARATOR . 'public-burst';
+        if (!is_dir($directory)) {
+            return 0;
+        }
+
+        $hash = hash('sha256', $identity);
+        $paths = [
+            $directory . DIRECTORY_SEPARATOR . substr($hash, 0, 2) . DIRECTORY_SEPARATOR . $hash . '.json',
+            $directory . DIRECTORY_SEPARATOR . $hash . '.json',
+        ];
+        $retry = 0;
+        $now = time();
+        foreach ($paths as $path) {
+            if (!is_file($path)) {
+                continue;
+            }
+            $handle = @fopen($path, 'rb');
+            if (!is_resource($handle)) {
+                continue;
+            }
+            try {
+                if (!@flock($handle, LOCK_SH)) {
+                    continue;
+                }
+                $raw = stream_get_contents($handle);
+                $state = is_string($raw) && trim($raw) !== '' ? json_decode($raw, true) : null;
+                if (is_array($state)) {
+                    $blockedUntil = max(0, (int)($state['blocked_until'] ?? 0));
+                    if ($blockedUntil > $now) {
+                        $retry = max($retry, $blockedUntil - $now);
+                    }
+                }
+            } finally {
+                @flock($handle, LOCK_UN);
+                fclose($handle);
+            }
+        }
+        return $retry;
     }
 
     /**
