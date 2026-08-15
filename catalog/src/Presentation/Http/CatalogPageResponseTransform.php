@@ -21,6 +21,9 @@ final class CatalogPageResponseTransform
         $requestPath = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? ''));
         $federation = str_contains($requestPath, '/catalog/federation/');
         $headAssets = [];
+        $cspNonce = function_exists('catalog_security_csp_nonce')
+            ? \catalog_security_csp_nonce()
+            : '';
 
         foreach ([
             'catalog-identities.js',
@@ -60,7 +63,8 @@ final class CatalogPageResponseTransform
         ob_start(static function (string $html) use (
             $headAssets,
             $injectGameManagerCounts,
-            $gameManagerVersion
+            $gameManagerVersion,
+            $cspNonce
         ): string {
             if ($headAssets !== [] && str_contains($html, '</head>')) {
                 $injection = '';
@@ -83,6 +87,26 @@ final class CatalogPageResponseTransform
                 $asset = '<script src="assets/game-manager-missing-counts.js?v='
                     . \catalog_h($gameManagerVersion) . '" defer></script>';
                 $html = str_replace('</body>', $asset . '</body>', $html);
+            }
+
+            // The catalog still contains a number of server-rendered inline
+            // script blocks. Rather than permit all inline script, attach the
+            // per-request CSP nonce to every script element in one shared output
+            // boundary. Public response-cache entries remain nonce-free at rest
+            // and receive the current request nonce when they pass this transform.
+            if ($cspNonce !== '' && stripos($html, '<script') !== false) {
+                $escapedNonce = htmlspecialchars($cspNonce, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+                $html = preg_replace_callback(
+                    '/<script\b([^>]*)>/i',
+                    static function (array $match) use ($escapedNonce): string {
+                        $attributes = (string)($match[1] ?? '');
+                        if (preg_match('/\bnonce\s*=/i', $attributes) === 1) {
+                            return (string)$match[0];
+                        }
+                        return '<script nonce="' . $escapedNonce . '"' . $attributes . '>';
+                    },
+                    $html
+                ) ?? $html;
             }
 
             return $html;
