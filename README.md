@@ -4,29 +4,27 @@ UnrealDB is a catalogue, dependency-analysis and preservation system for Unreal 
 
 It is designed to identify packages accurately, preserve physical and logical package identity, inspect Unreal package metadata, track dependencies, find missing requirements, reduce duplicate storage, repair catalogue state, and distribute verified files through controlled downloads and generated packages.
 
-> **Project status — August 2026:** UnrealDB is under active development and is already being used as a working catalogue/admin system. The current engineering focus is reliability, parser edge cases, queue/operator clarity, performance, and production hardening rather than adding more deployment platforms.
+> **Project status — August 2026:** UnrealDB is under active development and is already being used as a working catalogue/admin system. The current engineering focus is reliability, parser edge cases, queue/operator clarity, performance, and production hardening.
 
-## Current production target
+## Runtime model
 
-UnrealDB is intended to run as a **single-host Windows application**:
+UnrealDB is designed to run on a conventional web server:
 
 ```text
 Internet
    |
-Apache 2.4
+Web server
    |
-PHP 8.5
+PHP
    |
-   +-- MySQL 8.4
-   +-- local catalog/package storage
+   +-- MySQL
+   +-- catalogue/package storage
    +-- durable MySQL-backed job queue
    +-- independent PHP background workers
    +-- scheduled backup/maintenance tasks
 ```
 
-Docker, Docker Compose and Kubernetes deployment support have been removed. Redis, replicas, clustered storage and horizontal web scaling are not required by the current project.
-
-The application remains a modular PHP monolith. Web requests submit durable work; background workers execute long-running package, dependency and maintenance operations independently of the browser.
+The application is a modular PHP monolith. Web requests submit durable work; background workers execute long-running package, dependency and maintenance operations independently of the browser.
 
 ## Project status by area
 
@@ -42,7 +40,7 @@ The application remains a modular PHP monolith. Web requests submit durable work
 | UE5 packages | Partial | Supported where the package/container layout is understood; IoStore `.utoc`/`.ucas` is not fully supported. |
 | `.uz` redirects | Active | Historical 1234 and 5678 FCodec variants are supported. |
 | `.uz2` redirects | Active | Chunked zlib handling exists; malformed/non-standard archives fail without blocking unrelated jobs. |
-| `.uz3` redirects | Experimental | Not considered production-validated until additional known-good UT3 samples are confirmed. |
+| `.uz3` redirects | Validation | UT3 tagged whole-file zlib decoding is implemented; encoder/known-good fixture validation is the remaining step before marking this Active. |
 | Federation | Active | Parent/child inventory, dependency requests and controlled transfer workflows are supported. |
 | Game Backups | Active | Durable export/restore workflows plus separate production database/storage backup tooling. |
 
@@ -77,9 +75,9 @@ Verified package metadata uses the current format-2 compact metadata architectur
 - Names, Imports and Exports are stored in blocked compressed `.uedb2` metadata.
 - SQL lookup/projection tables provide indexed dependency/search access without restoring the old row-per-object schema.
 - legacy `ue_names`, `ue_imports`, `ue_exports` and `ue_dependencies` are no longer the verified runtime metadata model.
-- verified files now track explicit compact-metadata publication state so incomplete publication can be identified and repaired.
+- verified files track explicit compact-metadata publication state so incomplete publication can be identified and repaired.
 
-Compact publication is atomic and retryable database lock/deadlock failures retry the publication operation rather than leaving a partially published package.
+Compact publication is atomic. Retryable database lock/deadlock failures retry the publication operation rather than leaving a partially published package.
 
 ## Upload and import flow
 
@@ -167,7 +165,7 @@ Encrypted PAK content and unsupported compression/container variants are not sil
 
 - `.uz`: historical 1234 and 5678 FCodec variants.
 - `.uz2`: chunked zlib redirect format used by UE2-era games.
-- `.uz3`: retained as an experimental/validation area pending broader known-good UT3 coverage.
+- `.uz3`: UT3 tagged whole-file zlib format; decoder support is present and encoder/fixture validation is being completed before the status is promoted to Active.
 
 Catalogue identity is based on the decompressed Unreal package where a redirect wrapper is successfully decoded.
 
@@ -217,47 +215,26 @@ Durable job state/progress does not depend on verbose event logging.
 
 Default event logging is errors-first. Terminal job failures are promoted into **System Errors**, where diagnostics can be filtered/exported. Secret-like context values are redacted from diagnostic exports.
 
-## Security status
-
-Recent production hardening includes:
-
-- native PDO prepared statements;
-- CSRF protection for authenticated mutations;
-- strict/cookie-only PHP sessions with ID rotation;
-- account, IP and account+IP login throttling;
-- bounded JSON/request bodies;
-- generic public 5xx responses with internal request-reference logging;
-- CSP nonce handling and other browser security headers;
-- explicit trusted-proxy handling rather than trusting forwarded headers by default;
-- AES-256-GCM federation secret storage with encrypted storage required by default;
-- SSRF-resistant federation transport controls including HTTPS, DNS/IP validation and no redirects;
-- administrator MFA/security support where configured.
-
-Remember-me support remains intentionally available for the administrator workflow.
-
 ## Production deployment
 
-The maintained deployment target is one Windows host running Apache/PHP/MySQL and local package storage.
+A production installation needs a PHP-capable web server, MySQL, writable catalogue/package storage, and background workers that run independently from browser requests.
 
-Long-running workers must run independently from browser requests. The application provides liveness/readiness endpoints and queue/worker diagnostics; production operation should also monitor MySQL, disk capacity, Apache/PHP errors and backup age.
+The application provides liveness/readiness endpoints and queue/worker diagnostics. Production operation should also monitor database health, disk capacity, web/PHP errors and backup age.
 
 See:
 
 - [`docs/production-deployment.md`](docs/production-deployment.md)
-- [`docs/windows-backup-recovery.md`](docs/windows-backup-recovery.md)
 - [`docs/solo-maintainer-production-policy.md`](docs/solo-maintainer-production-policy.md)
 
 ## Backup and recovery
 
-Windows backup tooling is under [`deploy/backup`](deploy/backup).
+Backup/recovery tooling is kept under [`deploy/backup`](deploy/backup).
 
-It supports:
+Recovery planning should cover:
 
-- non-destructive backup readiness checks;
-- online database-only backups;
-- coherent database + package-storage recovery points during a maintenance window;
-- SHA-256 verification;
-- complete compressed-dump validation;
+- database backups;
+- catalogue/package storage backups;
+- integrity verification;
 - guarded restore;
 - post-restore schema and compact-metadata verification.
 
@@ -303,7 +280,6 @@ php catalog/bin/migrate.php verify
 php catalog/bin/verify-system-readiness-contract.php --run
 php catalog/bin/verify-queue-runtime-invariants.php
 php catalog/bin/verify-solo-maintainer-hardening.php --run
-php catalog/bin/verify-security-hardening.php
 ```
 
 ## Known limitations / active work
@@ -312,13 +288,11 @@ The main active areas are:
 
 - validating UE3 package/compression edge cases against source and known-good fixtures;
 - continuing UE4/UE5 package/dependency compatibility work;
-- broadening `.uz3` validation before treating it as reliable production input;
-- diagnosing malformed/non-standard redirect archives without weakening fail-closed parsing;
+- completing `.uz3` encoder and real-fixture validation;
+- diagnosing malformed/non-standard redirect archives without weakening strict parsing;
 - further reducing expensive catalogue/maintenance paths where measured performance still warrants it;
-- improving operator monitoring and worker/service supervision on the single Windows host;
+- improving operator monitoring and worker/service supervision;
 - expanding real-world fixture coverage without committing copyrighted game assets.
-
-The project deliberately avoids adding infrastructure such as message brokers, Redis, Docker or Kubernetes unless a real future requirement makes it necessary.
 
 ## Documentation
 
@@ -331,7 +305,6 @@ Technical material is under [`docs`](docs/). Useful starting points:
 - [`docs/pak-archive-management.md`](docs/pak-archive-management.md)
 - [`docs/upk-package-management.md`](docs/upk-package-management.md)
 - [`docs/production-deployment.md`](docs/production-deployment.md)
-- [`docs/windows-backup-recovery.md`](docs/windows-backup-recovery.md)
 
 ## Project principles
 
@@ -341,6 +314,6 @@ UnrealDB favors:
 - durable/recoverable work over long synchronous requests;
 - explicit failure over silent corruption;
 - operator-visible state over hidden worker behavior;
-- measured optimization over speculative infrastructure;
+- measured optimization over speculative complexity;
 - backwards-compatible migrations and incremental refactoring;
 - preserving working functionality while improving architecture and maintainability.
