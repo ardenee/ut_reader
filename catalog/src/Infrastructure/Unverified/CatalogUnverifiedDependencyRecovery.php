@@ -12,11 +12,9 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Dependency\CatalogPostImportDependencyQueue;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataContainer;
 
 final class CatalogUnverifiedDependencyRecovery
 {
-    private readonly CatalogUnverifiedMetadataStore $metadata;
     private readonly CatalogUnverifiedCompactMetadataFinalizer $compactFinalizer;
 
     /** @param array<string,mixed> $config */
@@ -24,7 +22,6 @@ final class CatalogUnverifiedDependencyRecovery
         private readonly PDO $db,
         private readonly array $config
     ) {
-        $this->metadata = new CatalogUnverifiedMetadataStore($db);
         $this->compactFinalizer = new CatalogUnverifiedCompactMetadataFinalizer($db, $config);
     }
 
@@ -71,21 +68,14 @@ final class CatalogUnverifiedDependencyRecovery
                 ];
             }
 
-            $registration = $this->db->prepare('SELECT format_version FROM ue_file_metadata WHERE file_id=?');
-            $registration->execute([$fileId]);
-            $formatVersion = (int)($registration->fetchColumn() ?: 0);
-            if ($formatVersion !== BlockedCompressedMetadataContainer::FORMAT_VERSION) {
-                if (!$this->metadata->has($fileId)) {
-                    throw new \RuntimeException(
-                        'Verified file #' . $fileId
-                        . ' is missing format-2 metadata and has no compressed staging snapshot for recovery.'
-                    );
-                }
-                if ($emit !== null) {
-                    $emit('compact_recovery', 60, 'Retrying compact metadata publication from compressed staging');
-                }
-                $this->compactFinalizer->finalize($fileId);
+            // Never infer health from ue_file_metadata.format_version alone. A
+            // registration can survive a missing/corrupt container. The finalizer
+            // verifies the physical container and, when necessary, republishes it
+            // from retained compressed staging before dependency work is queued.
+            if ($emit !== null) {
+                $emit('compact_recovery', 60, 'Verifying compact metadata and repairing from compressed staging if required');
             }
+            $this->compactFinalizer->finalize($fileId);
 
             if ($emit !== null) {
                 $emit('dependency_recovery', 72, 'Retrying post-import dependency queueing');
