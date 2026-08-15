@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobQueueSummaryQuery;
+use UnrealDb\Catalog\Presentation\Ui\CatalogUi;
 
 try {
     $config = catalog_config();
@@ -55,7 +56,8 @@ try {
         . '.jobs-queue-switcher select{min-width:340px}'
         . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar,.jobs-pagination{display:flex;gap:10px;align-items:center;flex-wrap:wrap}'
         . '.jobs-toolbar,.jobs-filterbar,.jobs-selectionbar{margin:0 0 14px}'
-        . '.jobs-worker-state{margin-left:auto;font-weight:600}'
+        . '.jobs-toolbar .ui-toolbar__aside{margin-left:auto}'
+        . '.jobs-worker-state{font-weight:600}'
         . '.jobs-worker-state[data-authoritative-status="running"]{color:#a7f3d0}'
         . '.jobs-worker-state[data-authoritative-status="orphaned"]{color:#fecdd3}'
         . '.jobs-worker-state[data-authoritative-status="stopped_with_queue"]{color:#fde68a}'
@@ -94,7 +96,7 @@ try {
         . '.job-status-completed,.job-status-imported,.job-status-verified,.job-status-alias,.job-status-bucketed,.job-status-decompressed{color:#a7f3d0;border-color:rgba(50,213,131,.75);background:rgba(50,213,131,.10)}'
         . '.job-status-duplicate{color:#bfdbfe;border-color:rgba(96,165,250,.8);background:rgba(96,165,250,.12)}'
         . '.job-status-failed,.job-status-rejected,.job-status-unverified,.job-status-dead_letter,.job-status-cancelled{color:#fecdd3;border-color:rgba(255,107,122,.75);background:rgba(255,107,122,.10)}'
-        . '@media(max-width:900px){.jobs-detail-card{grid-template-columns:1fr}.jobs-detail-meta{text-align:left}}'
+        . '@media(max-width:900px){.jobs-detail-card{grid-template-columns:1fr}.jobs-detail-meta{text-align:left}.jobs-toolbar .ui-toolbar__aside{width:100%;margin-left:0}}'
         . '</style>';
 
     catalog_page_header(
@@ -132,12 +134,21 @@ try {
         . 'data-pak-rerun-url="api/v1/job-rerun-pak.php" '
         . 'data-csrf="' . catalog_h(catalog_csrf('job_action')) . '">';
 
-    echo '<div class="jobs-toolbar">'
-        . '<button id="jobs-start" type="button">Start / resume queue</button>'
-        . '<button id="jobs-stop-worker" type="button">Stop worker</button>'
-        . '<button id="jobs-refresh" type="button">Refresh</button>'
-        . '<span id="jobs-worker-state" class="muted jobs-worker-state">Loading authoritative worker status…</span>'
-        . '</div>';
+    $toolbarActions = CatalogUi::button('Start / resume queue', [
+        'variant' => 'primary',
+        'attributes' => ['id' => 'jobs-start'],
+    ]) . CatalogUi::button('Stop worker', [
+        'variant' => 'danger',
+        'attributes' => ['id' => 'jobs-stop-worker'],
+    ]) . CatalogUi::button('Refresh', [
+        'variant' => 'secondary',
+        'attributes' => ['id' => 'jobs-refresh'],
+    ]);
+    $workerState = '<span id="jobs-worker-state" class="muted jobs-worker-state">Loading authoritative worker status…</span>';
+    echo CatalogUi::toolbar($toolbarActions, $workerState, [
+        'label' => 'Queue controls',
+        'class' => 'jobs-toolbar',
+    ]);
 
     echo '<nav id="jobs-status-tabs" class="jobs-tabs" aria-label="Job status">';
     foreach ([
@@ -164,7 +175,7 @@ try {
         . '</div>';
 
     echo '<div class="jobs-selectionbar">'
-        . '<label><input id="jobs-select-page" type="checkbox" class="jobs-row-checkbox"> Select page</label>'
+        . '<label><input id="jobs-select-page" type="checkbox" class="jobs-row-checkbox" aria-label="Select all jobs on this page"> Select page</label>'
         . '<span id="jobs-selection-summary" class="jobs-selection-summary muted">Nothing selected</span>'
         . '<button id="jobs-select-matching" type="button">Select all matching</button>'
         . '<button id="jobs-clear-selection" type="button" disabled>Clear selection</button>'
@@ -172,24 +183,33 @@ try {
         . '<button id="jobs-apply-action" type="button" disabled>Apply</button>'
         . '</div>';
 
-    echo '<p id="jobs-message" class="muted" aria-live="polite">Loading jobs…</p>';
+    echo CatalogUi::liveRegion('Loading jobs…', [
+        'id' => 'jobs-message',
+        'class' => 'muted',
+        'priority' => 'polite',
+    ]);
 
-    echo '<div class="table-wrap"><table class="jobs-table"><colgroup>'
+    $table = '<table class="jobs-table"><caption class="ui-sr-only">Background jobs for queue ' . catalog_h($queueName) . '</caption><colgroup>'
         . '<col class="jobs-col-select"><col class="jobs-col-id"><col class="jobs-col-status"><col class="jobs-col-type">'
         . '<col><col class="jobs-col-runtime"><col class="jobs-col-attempts"><col class="jobs-col-created"><col class="jobs-col-action">'
         . '</colgroup><thead><tr>'
-        . '<th></th><th>ID</th><th>Status</th><th>Type</th><th>File / target</th>'
-        . '<th>Running for</th><th>Attempts</th><th>Created</th><th>Action</th>'
-        . '</tr></thead><tbody id="jobs-table-body"><tr class="jobs-empty-row"><td colspan="9" class="jobs-empty muted">Loading…</td></tr></tbody></table></div>';
+        . '<th scope="col"><span class="ui-sr-only">Select</span></th><th scope="col">ID</th><th scope="col">Status</th><th scope="col">Type</th><th scope="col">File / target</th>'
+        . '<th scope="col">Running for</th><th scope="col">Attempts</th><th scope="col">Created</th><th scope="col">Action</th>'
+        . '</tr></thead><tbody id="jobs-table-body"><tr class="jobs-empty-row"><td colspan="9" class="jobs-empty muted">Loading…</td></tr></tbody></table>';
+    echo CatalogUi::tableRegion($table, [
+        'id' => 'jobs-table-region',
+        'label' => 'Background jobs',
+        'focusable' => true,
+    ]);
 
     echo '<div class="jobs-pagination">'
         . '<span id="jobs-page-summary" class="muted"></span>'
         . '<div class="jobs-page-controls">'
-        . '<button id="jobs-first-page" type="button">First</button>'
-        . '<button id="jobs-previous-page" type="button">Previous</button>'
+        . CatalogUi::button('First', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-first-page']])
+        . CatalogUi::button('Previous', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-previous-page']])
         . '<span id="jobs-page-label">Page 1 of 1</span>'
-        . '<button id="jobs-next-page" type="button">Next</button>'
-        . '<button id="jobs-last-page" type="button">Last</button>'
+        . CatalogUi::button('Next', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-next-page']])
+        . CatalogUi::button('Last', ['variant' => 'secondary', 'size' => 'sm', 'attributes' => ['id' => 'jobs-last-page']])
         . '</div></div>';
 
     echo '<details class="jobs-maintenance"><summary>Maintenance</summary><div class="jobs-maintenance-body">'
