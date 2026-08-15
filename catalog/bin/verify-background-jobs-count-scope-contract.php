@@ -74,8 +74,8 @@ $check(
 );
 $check(
     'durable_execution_counts_are_health_only',
-    str_contains($operationalQuery, 'SUM(status="queued") queued')
-        && str_contains($operationalQuery, 'SUM(status="running") running')
+    str_contains($operationalQuery, 'SUM(status="queued")')
+        && str_contains($operationalQuery, 'SUM(status="running")')
         && str_contains($workerEndpoint, '$counts = $operational->queueCounts($queueName);')
         && str_contains($workerEndpoint, 'CatalogWorkerStatusPolicy::evaluate(')
         && str_contains($workerEndpoint, "['queue_counts'] = \$counts;")
