@@ -15,6 +15,9 @@ use Throwable;
 
 final class CatalogPublicAccessSettingsStore
 {
+    /** @var array<string,array<string,mixed>> Request-local normalized settings by cache path. */
+    private static array $requestCache = [];
+
     /** @param array<string,mixed> $config */
     public function __construct(private readonly array $config)
     {
@@ -94,6 +97,11 @@ final class CatalogPublicAccessSettingsStore
     /** @return array<string,mixed> */
     public function settings(?PDO $db = null): array
     {
+        $path = $this->cachePath();
+        if (!$db instanceof PDO && isset(self::$requestCache[$path])) {
+            return self::$requestCache[$path];
+        }
+
         $values = [];
         if ($db instanceof PDO) {
             $names = self::settingNames();
@@ -106,6 +114,7 @@ final class CatalogPublicAccessSettingsStore
                 $values[(string)$row['setting_name']] = (string)($row['setting_value'] ?? '');
             }
             $settings = self::normalize($values);
+            self::$requestCache[$path] = $settings;
             try {
                 $this->writeCache($settings);
             } catch (Throwable $error) {
@@ -114,7 +123,6 @@ final class CatalogPublicAccessSettingsStore
             return $settings;
         }
 
-        $path = $this->cachePath();
         if (is_file($path) && is_readable($path)) {
             $raw = @file_get_contents($path);
             $decoded = is_string($raw) && trim($raw) !== '' ? json_decode($raw, true) : null;
@@ -122,7 +130,7 @@ final class CatalogPublicAccessSettingsStore
                 $values = $decoded;
             }
         }
-        return self::normalize($values);
+        return self::$requestCache[$path] = self::normalize($values);
     }
 
     /** @param array<string,mixed> $settings @return array<string,mixed> */
@@ -137,6 +145,7 @@ final class CatalogPublicAccessSettingsStore
             $statement->execute([$name, is_bool($value) ? ($value ? '1' : '0') : (string)$value]);
         }
         $this->writeCache($settings);
+        self::$requestCache[$this->cachePath()] = $settings;
         return $settings;
     }
 
