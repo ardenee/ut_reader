@@ -1,10 +1,11 @@
 #!/usr/bin/env php
 <?php
 /**
- * Read-only regression checks for the August 2026 security hardening pass.
+ * Read-only regression checks for the August 2026 application security hardening pass.
  *
  * Covers federation secret policy, administrator login throttling, CSP/proxy
- * safeguards, generic 5xx responses and deployment supply-chain defaults.
+ * safeguards and generic 5xx responses. Deployment-platform checks intentionally
+ * live outside this verifier; production is a native Windows Apache/PHP/MySQL host.
  */
 declare(strict_types=1);
 
@@ -14,7 +15,6 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $catalogRoot = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
-$repoRoot = realpath(dirname($catalogRoot)) ?: dirname($catalogRoot);
 require_once $catalogRoot . '/bootstrap/autoload.php';
 require_once $catalogRoot . '/lib/CatalogSecurity.php';
 
@@ -134,7 +134,7 @@ $record(
 );
 $record(
     'script_nonce_transform',
-    str_contains($transformSource, "preg_replace_callback(")
+    str_contains($transformSource, 'preg_replace_callback(')
         && str_contains($transformSource, "'<script nonce=\"'")
         && str_contains($transformSource, 'catalog_security_csp_nonce'),
     'shared HTML response transform attaches the request nonce to script elements'
@@ -145,42 +145,8 @@ $record(
     'generic_server_error_boundary',
     str_contains($jsonSource, 'if ($status >= 500)')
         && str_contains($jsonSource, 'The request could not be completed. Reference:')
-        && str_contains($jsonSource, "\$details = ['request_id' => \$requestId]"),
+        && str_contains($jsonSource, "$details = ['request_id' => $requestId]"),
     '5xx responses retain internal logging but expose only a request reference'
-);
-
-$compose = $read($repoRoot . '/compose.yaml');
-$composeSecurity = $read($repoRoot . '/compose.security.yaml');
-$record(
-    'compose_fail_closed_defaults',
-    !str_contains($compose, 'change-this-database-password')
-        && !str_contains($compose, 'change-this-root-password')
-        && str_contains($compose, 'UNREALDB_SESSION_COOKIE_SECURE:-1')
-        && str_contains($compose, 'UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS:-1')
-        && str_contains($composeSecurity, 'UNREALDB_SECURITY_MASTER_KEY:?')
-        && str_contains($composeSecurity, 'UNREALDB_FEDERATION_MASTER_KEY:?'),
-    'container deployment no longer falls back to known credentials or plaintext-secret mode'
-);
-
-$containerWorkflow = $read($repoRoot . '/.github/workflows/container-release.yml');
-$deployWorkflow = $read($repoRoot . '/.github/workflows/deploy-production.yml');
-$workflowSource = $containerWorkflow . "\n" . $deployWorkflow;
-$record(
-    'workflow_dependencies_pinned',
-    preg_match('/uses:\s+[^\s]+@v\d+/i', $workflowSource) !== 1
-        && !str_contains($workflowSource, 'version: latest')
-        && str_contains($workflowSource, 'version: v1.36.3')
-        && str_contains($containerWorkflow, 'sbom: true')
-        && str_contains($containerWorkflow, 'provenance: mode=max'),
-    'GitHub Actions use immutable SHAs and kubectl/SBOM/provenance are fixed explicitly'
-);
-
-$dockerfile = $read($repoRoot . '/Dockerfile');
-$record(
-    'php_redis_dependency_pinned',
-    str_contains($dockerfile, 'pecl install redis-6.3.0')
-        && !str_contains($dockerfile, 'pecl install redis \\'),
-    'PECL Redis extension uses a fixed release'
 );
 
 $result = [
