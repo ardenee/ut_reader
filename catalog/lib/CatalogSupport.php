@@ -5,7 +5,7 @@
  * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
  *      that behavior at each call site.
  * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *      `catalog/src`.
+ *       `catalog/src`.
  * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
  *        purpose.
  */
@@ -28,14 +28,14 @@ require_once __DIR__ . '/CatalogPublicAccess.php';
  */
 
 /*
- * Apply the anonymous crawler and rapid-link guard before public response-cache
- * lookup. This prevents a cached page from becoming a bypass for automated
- * bulk traversal. Logged-in administrators and non-GET requests are exempt.
+ * Keep the cheap crawler signature gate ahead of response-cache lookup so a
+ * cached page is not a crawler-policy bypass. This gate reads no per-IP burst
+ * state and takes no per-client exclusive lock.
  */
 try {
-    catalog_public_access_guard_request();
+    catalog_public_access_guard_crawler_request();
 } catch (Throwable $error) {
-    error_log('[UnrealDB public access] guard failed open: ' . $error->getMessage());
+    error_log('[UnrealDB public access] crawler guard failed open: ' . $error->getMessage());
 }
 
 /*
@@ -54,10 +54,21 @@ if (in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['upload-bucket-
 
 /*
  * Serve explicitly approved anonymous GET pages before they open a database
- * connection. Logged-in, remembered, POST and CSRF-bearing requests bypass it.
+ * connection or mutate per-IP burst-control state. A cache HIT exits here.
  */
 try {
     catalog_public_cache_bootstrap(catalog_config());
 } catch (Throwable $error) {
     error_log('[UnrealDB public cache] bootstrap skipped: ' . $error->getMessage());
+}
+
+/*
+ * Only cache misses/dynamic public GETs pay for synchronized per-IP burst state.
+ * This keeps abuse protection around expensive work while making cached traffic
+ * a read-only filesystem fast path.
+ */
+try {
+    catalog_public_access_guard_burst_request();
+} catch (Throwable $error) {
+    error_log('[UnrealDB public access] burst guard failed open: ' . $error->getMessage());
 }
