@@ -136,8 +136,10 @@ $checksumLines = foreach ($name in $artifactNames) {
 $checksumLines | Set-Content -LiteralPath (Join-Path $incomplete 'SHA256SUMS') -Encoding ASCII
 
 $verifyScript = Join-Path $PSScriptRoot 'verify-unrealdb-backup.ps1'
+# A PowerShell script communicates failure by throwing/terminating. Do not read
+# $LASTEXITCODE here: it belongs to the most recent native executable (for
+# example tar) and can contain stale state after invoking another .ps1 file.
 & $verifyScript -BackupDirectory $incomplete -TarExecutable $TarExecutable | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Backup verification failed.' }
 
 if (Test-Path -LiteralPath $destination) { throw "Backup destination already exists: $destination" }
 Move-Item -LiteralPath $incomplete -Destination $destination
