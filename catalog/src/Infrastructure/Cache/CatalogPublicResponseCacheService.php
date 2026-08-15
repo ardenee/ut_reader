@@ -16,6 +16,9 @@ use Throwable;
 
 final class CatalogPublicResponseCacheService
 {
+    private const PRUNE_INTERVAL_SECONDS = 300;
+    private const PRUNE_SCAN_LIMIT = 2000;
+
     /** @param array<string,mixed> $config */
     public static function routeTtl(array $config): int
     {
@@ -34,14 +37,26 @@ final class CatalogPublicResponseCacheService
             'upk-info.php' => 300,
         ];
 
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $overrides = is_array($cache['public_route_ttl_seconds'] ?? null)
+            ? $cache['public_route_ttl_seconds']
+            : [];
+
         if ($script === 'index.php') {
             if ($page === '' || $page === 'home') {
-                // The development notice and public limits are administrator-editable.
-                // Do not let a browser or shared page cache hide those updates.
-                return 0;
+                // At public traffic scale the home page must not hit PHP/MySQL for
+                // every anonymous request. Keep the default deliberately short so
+                // administrator-edited notices/limits become visible promptly.
+                $configured = isset($overrides['index.php:home'])
+                    ? (int)$overrides['index.php:home']
+                    : 15;
+                return max(0, min($configured, 3600));
             }
             if ($page === 'search') {
-                return 60;
+                $configured = isset($overrides['index.php:search'])
+                    ? (int)$overrides['index.php:search']
+                    : 60;
+                return max(0, min($configured, 3600));
             }
             return 0;
         }
@@ -50,10 +65,6 @@ final class CatalogPublicResponseCacheService
             return 0;
         }
 
-        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
-        $overrides = is_array($cache['public_route_ttl_seconds'] ?? null)
-            ? $cache['public_route_ttl_seconds']
-            : [];
         $configured = isset($overrides[$script]) ? (int)$overrides[$script] : $defaults[$script];
         return max(0, min($configured, 3600));
     }
@@ -139,20 +150,66 @@ final class CatalogPublicResponseCacheService
 
     public static function pruneDirectory(string $directory): void
     {
-        if (random_int(1, 100) !== 1) {
+        if ($directory === '' || !is_dir($directory)) {
             return;
         }
-        $cutoff = time() - 7200;
-        $checked = 0;
-        foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
-            if (++$checked > 2000 || !$entry instanceof SplFileInfo || !$entry->isFile()) {
-                continue;
+
+        // Never turn request volume into filesystem scan volume. The previous
+        // probabilistic 1-in-100 pruning meant a million cacheable requests could
+        // trigger roughly ten thousand directory walks. A timestamped nonblocking
+        // lock bounds pruning to once per interval for the whole host.
+        $lockPath = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . '.prune.lock';
+        clearstatcache(true, $lockPath);
+        $lastRun = is_file($lockPath) ? (int)@filemtime($lockPath) : 0;
+        $now = time();
+        if ($lastRun > 0 && $now - $lastRun < self::PRUNE_INTERVAL_SECONDS) {
+            return;
+        }
+
+        $lock = @fopen($lockPath, 'c+b');
+        if (!is_resource($lock)) {
+            return;
+        }
+        try {
+            if (!@flock($lock, LOCK_EX | LOCK_NB)) {
+                return;
             }
-            $name = $entry->getFilename();
-            if (($entry->getMTime() < $cutoff && str_ends_with($name, '.htmlcache'))
-                || ($entry->getMTime() < time() - 3600 && str_ends_with($name, '.lock'))) {
-                @unlink($entry->getPathname());
+            clearstatcache(true, $lockPath);
+            $lastRun = (int)(@filemtime($lockPath) ?: 0);
+            $now = time();
+            if ($lastRun > 0 && $now - $lastRun < self::PRUNE_INTERVAL_SECONDS) {
+                return;
             }
+
+            @ftruncate($lock, 0);
+            @rewind($lock);
+            @fwrite($lock, (string)$now);
+            @fflush($lock);
+            @touch($lockPath, $now);
+
+            $cacheCutoff = $now - 7200;
+            $lockCutoff = $now - 3600;
+            $checked = 0;
+            foreach (new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS) as $entry) {
+                if (++$checked > self::PRUNE_SCAN_LIMIT) {
+                    break;
+                }
+                if (!$entry instanceof SplFileInfo || !$entry->isFile()) {
+                    continue;
+                }
+                $name = $entry->getFilename();
+                if ($name === '.prune.lock') {
+                    continue;
+                }
+                $mtime = $entry->getMTime();
+                if (($mtime < $cacheCutoff && str_ends_with($name, '.htmlcache'))
+                    || ($mtime < $lockCutoff && str_ends_with($name, '.lock'))) {
+                    @unlink($entry->getPathname());
+                }
+            }
+        } finally {
+            @flock($lock, LOCK_UN);
+            @fclose($lock);
         }
     }
 
@@ -169,8 +226,8 @@ final class CatalogPublicResponseCacheService
         if (!is_string($header) || !is_string($body)) {
             return null;
         }
-        $meta = json_decode(trim($header), true);
-        if (!is_array($meta) || (int)($meta['stored_at'] ?? 0) < 1) {
+        $meta = self::decodeMeta($header);
+        if ($meta === null) {
             return null;
         }
         return ['meta' => $meta, 'body' => $body];
@@ -179,16 +236,7 @@ final class CatalogPublicResponseCacheService
     /** @param array{meta:array<string,mixed>,body:string} $entry */
     public static function serve(array $entry, string $status, int $ttl, int $staleSeconds): never
     {
-        $storedAt = (int)$entry['meta']['stored_at'];
-        $age = max(0, time() - $storedAt);
-        $remaining = max(0, $ttl - $age);
-        header('Content-Type: text/html; charset=UTF-8');
-        header('Cache-Control: public, max-age=' . $remaining . ', stale-while-revalidate=' . $staleSeconds);
-        header('Age: ' . $age);
-        header('X-UnrealDB-Page-Cache: ' . $status);
-        if ($status === 'STALE') {
-            header('Warning: 110 - "Response is stale"');
-        }
+        self::sendCacheHeaders((array)$entry['meta'], $status, $ttl, $staleSeconds);
         echo (string)$entry['body'];
         exit;
     }
@@ -230,23 +278,26 @@ final class CatalogPublicResponseCacheService
             min((int)($cache['public_response_max_bytes'] ?? 8 * 1024 * 1024), 64 * 1024 * 1024)
         );
 
-        $entry = self::read($path);
-        if ($entry !== null) {
-            $age = max(0, time() - (int)$entry['meta']['stored_at']);
+        // Cache hits are the highest-volume path. Read only the first metadata
+        // line here and stream the body directly from disk if it is usable; do
+        // not allocate an HTML-sized PHP string merely to echo it immediately.
+        $meta = self::readMeta($path);
+        if ($meta !== null) {
+            $age = max(0, time() - (int)$meta['stored_at']);
             if ($age <= $ttl) {
-                self::serve($entry, 'HIT', $ttl, $staleSeconds);
+                self::servePath($path, $meta, 'HIT', $ttl, $staleSeconds);
             }
         }
 
         $lock = @fopen($lockPath, 'c+b');
         $writer = is_resource($lock) && @flock($lock, LOCK_EX | LOCK_NB);
-        if (!$writer && $entry !== null) {
-            $age = max(0, time() - (int)$entry['meta']['stored_at']);
+        if (!$writer && $meta !== null) {
+            $age = max(0, time() - (int)$meta['stored_at']);
             if ($age <= $ttl + $staleSeconds) {
                 if (is_resource($lock)) {
                     fclose($lock);
                 }
-                self::serve($entry, 'STALE', $ttl, $staleSeconds);
+                self::servePath($path, $meta, 'STALE', $ttl, $staleSeconds);
             }
         }
 
@@ -275,8 +326,12 @@ final class CatalogPublicResponseCacheService
             if (empty($state['writer']) || ob_get_level() <= (int)$state['started_level']) {
                 return;
             }
-            $body = ob_get_contents();
-            if (!is_string($body) || $body === '' || strlen($body) > (int)$state['max_bytes']) {
+
+            // Check the buffer length before copying it into a PHP string. Large
+            // uncached responses must not temporarily double peak memory merely
+            // to discover that they exceed the cache publication limit.
+            $bodyLength = ob_get_length();
+            if (!is_int($bodyLength) || $bodyLength < 1 || $bodyLength > (int)$state['max_bytes']) {
                 return;
             }
             if ((int)http_response_code() !== 200
@@ -293,14 +348,33 @@ final class CatalogPublicResponseCacheService
                 }
             }
 
-            $payload = json_encode([
+            $body = ob_get_contents();
+            if (!is_string($body) || strlen($body) !== $bodyLength) {
+                return;
+            }
+            $header = json_encode([
                 'stored_at' => time(),
                 'ttl' => (int)$state['ttl'],
-                'bytes' => strlen($body),
-            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . "\n" . $body;
+                'bytes' => $bodyLength,
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            if (!is_string($header)) {
+                return;
+            }
             $temporary = (string)$state['path'] . '.' . bin2hex(random_bytes(6)) . '.tmp';
-            if (@file_put_contents($temporary, $payload, LOCK_EX) !== strlen($payload)
-                || !@rename($temporary, (string)$state['path'])) {
+            $stream = @fopen($temporary, 'wb');
+            if (!is_resource($stream)) {
+                return;
+            }
+            $written = false;
+            try {
+                $headerBytes = $header . "\n";
+                $written = @fwrite($stream, $headerBytes) === strlen($headerBytes)
+                    && @fwrite($stream, $body) === $bodyLength
+                    && @fflush($stream);
+            } finally {
+                @fclose($stream);
+            }
+            if (!$written || !@rename($temporary, (string)$state['path'])) {
                 @unlink($temporary);
                 return;
             }
@@ -318,6 +392,72 @@ final class CatalogPublicResponseCacheService
                 @flock($lock, LOCK_UN);
                 fclose($lock);
             }
+        }
+    }
+
+    /** @return array<string,mixed>|null */
+    private static function readMeta(string $path): ?array
+    {
+        $stream = @fopen($path, 'rb');
+        if (!is_resource($stream)) {
+            return null;
+        }
+        try {
+            $header = fgets($stream, 8192);
+        } finally {
+            fclose($stream);
+        }
+        return is_string($header) ? self::decodeMeta($header) : null;
+    }
+
+    /** @return array<string,mixed>|null */
+    private static function decodeMeta(string $header): ?array
+    {
+        $meta = json_decode(trim($header), true);
+        if (!is_array($meta) || (int)($meta['stored_at'] ?? 0) < 1) {
+            return null;
+        }
+        return $meta;
+    }
+
+    /** @param array<string,mixed> $meta */
+    private static function servePath(
+        string $path,
+        array $meta,
+        string $status,
+        int $ttl,
+        int $staleSeconds
+    ): never {
+        $stream = @fopen($path, 'rb');
+        if (!is_resource($stream)) {
+            // The file may have been pruned between metadata read and serving.
+            // Fall back to a normal cache miss rather than emitting a partial page.
+            throw new \RuntimeException('Cached response became unavailable before it could be served.');
+        }
+        $header = fgets($stream, 8192);
+        if (!is_string($header) || self::decodeMeta($header) === null) {
+            fclose($stream);
+            throw new \RuntimeException('Cached response metadata became invalid before it could be served.');
+        }
+
+        self::sendCacheHeaders($meta, $status, $ttl, $staleSeconds);
+        fpassthru($stream);
+        fclose($stream);
+        exit;
+    }
+
+    /** @param array<string,mixed> $meta */
+    private static function sendCacheHeaders(array $meta, string $status, int $ttl, int $staleSeconds): void
+    {
+        $storedAt = (int)$meta['stored_at'];
+        $age = max(0, time() - $storedAt);
+        $remaining = max(0, $ttl - $age);
+        header('Content-Type: text/html; charset=UTF-8');
+        header('Cache-Control: public, max-age=' . $remaining . ', stale-while-revalidate=' . $staleSeconds);
+        header('Age: ' . $age);
+        header('X-UnrealDB-Page-Cache: ' . $status);
+        if ($status === 'STALE') {
+            header('Warning: 110 - "Response is stale"');
         }
     }
 }
