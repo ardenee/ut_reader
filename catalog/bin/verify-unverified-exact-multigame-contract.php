@@ -171,9 +171,9 @@ $checks = [
         'needle' => 'resolveLocalCatalogReference(',
         'present' => true,
     ],
-    'worker factory routes cross-game batch job' => [
+    'worker factory routes cross-game batch job lazily' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
-        'needle' => 'JobType::CROSS_GAME_COPY_BATCH => $crossGameCopyBatch',
+        'needle' => 'JobType::CROSS_GAME_COPY_BATCH => static fn() => new CatalogCrossGameCopyBatchJobHandler(',
         'present' => true,
     ],
 ];
