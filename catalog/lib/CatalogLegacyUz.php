@@ -12,18 +12,19 @@
 declare(strict_types=1);
 
 /**
- * Unreal redirect archives using Epic's native FCodec chain.
+ * Unreal `.uz` redirect archives using Epic's native FCodec chain.
  *
- * Signature 1234 (UE1 .uz):
+ * Signature 1234:
  *   encode RLE -> BWT -> MTF -> Huffman
  *   decode Huffman -> MTF -> BWT -> RLE
  *
- * Signature 5678 (UE3 .uz3):
+ * Signature 5678:
  *   encode RLE -> BWT -> MTF -> RLE -> Huffman
  *   decode Huffman -> RLE -> MTF -> BWT -> RLE
  *
- * Both wrappers serialize the original filename immediately after the
- * little-endian signature.
+ * Both `.uz` wrappers serialize the original filename immediately after the
+ * little-endian signature. The UT3 `.uz3` format is separate even though its
+ * first little-endian tag is also 5678.
  */
 
 final class CatalogLegacyUzBitReader
@@ -370,7 +371,7 @@ function catalog_legacy_uz_decode(string $data, int $maxOutputBytes, ?int $expec
         $huffman = catalog_legacy_uz_decode_huffman(substr($data, $header['offset']), $stageLimit);
 
         if ($header['signature'] === 5678) {
-            // Epic UE3 adds a second RLE codec immediately before Huffman.
+            // The newer .uz wrapper adds a second RLE codec immediately before Huffman.
             $rle = catalog_legacy_uz_decode_rle($huffman, $stageLimit);
             unset($huffman);
             $mtf = catalog_legacy_uz_decode_mtf($rle);
@@ -388,8 +389,8 @@ function catalog_legacy_uz_decode(string $data, int $maxOutputBytes, ?int $expec
         }
 
         $decoder = $header['signature'] === 5678
-            ? 'epic-uz3-huffman+rle+mtf+bwt+rle'
-            : 'legacy-uz-huffman+mtf+bwt+rle';
+            ? 'epic-uz-5678-huffman+rle+mtf+bwt+rle'
+            : 'epic-uz-1234-huffman+mtf+bwt+rle';
 
         return [
             'data' => $output,
