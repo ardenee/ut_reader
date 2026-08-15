@@ -13,6 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Application\Dependency\CatalogPostImportDependencyQueue;
 use UnrealDb\Catalog\Application\Upload\Contract\CatalogPackageImporter;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
@@ -49,19 +50,15 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         bool $strictProfile,
         ?callable $progress
     ): array {
+        // importUploadedFile() already publishes and verifies format-2 metadata
+        // before returning a new verified result. Do not perform a second full
+        // compact-container verification pass here.
         $result = $this->importUploadedFile(
             $gameId,
             $temporaryPath,
             $originalName,
             $userId,
             $strictProfile,
-            $progress
-        );
-
-        $result = VerifiedFileCompactMetadataFinalizer::finalize(
-            $this->db,
-            $this->config,
-            $result,
             $progress
         );
 
@@ -213,7 +210,10 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         $packageName = \scanner_package_name_from_reader($packageName, $readerEngine, $names, $header);
         \catalog_package_aliases_ensure($this->db);
 
-        $duplicateSql = 'SELECT id, original_name, package_name, package_guid, file_size, md5 FROM ue_files WHERE game_id=?';
+        // Only an active verified row is a canonical duplicate target. Historical
+        // failed/duplicate/unverified rows must never absorb a new physical import.
+        $duplicateSql = 'SELECT id, original_name, package_name, package_guid, file_size, md5 '
+            . 'FROM ue_files WHERE game_id=? AND scan_status="verified"';
         $duplicateArgs = [$gameId];
         if ($packageGuid !== '') {
             $duplicateSql .= ' AND package_guid=? AND md5=?';
@@ -370,7 +370,26 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
                     '[UnrealDB dependency refresh] imported_file_id=' . $fileId
                     . ' error=' . $refreshError->getMessage()
                 );
-                $refreshWarning = '; dependency refresh warning logged for maintenance';
+                try {
+                    $queued = CatalogPostImportDependencyQueue::enqueue(
+                        $this->db,
+                        $this->config,
+                        $fileId,
+                        $gameId,
+                        $packageName,
+                        $userId
+                    );
+                    $refreshWarning = '; synchronous dependency refresh failed; durable repair job #'
+                        . (int)$queued['file_job_id'] . ' queued';
+                } catch (Throwable $queueError) {
+                    throw new RuntimeException(
+                        'Imported file #' . $fileId
+                        . ' is stored with verified compact metadata, but post-import dependency recovery queue failed: '
+                        . $queueError->getMessage(),
+                        0,
+                        $queueError
+                    );
+                }
             }
         }
         if ($refreshWarning !== '') {
