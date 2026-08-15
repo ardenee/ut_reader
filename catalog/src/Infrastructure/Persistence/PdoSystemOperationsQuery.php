@@ -41,6 +41,9 @@ final class PdoSystemOperationsQuery
     }
 
     /**
+     * Operational queue pressure deliberately excludes completed/cancelled
+     * history so opening diagnostics does not scan the entire retained archive.
+     *
      * @return list<array{queue:string,total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int,oldest_queued_seconds:int,longest_running_seconds:int,concurrency_blocked:int}>
      */
     public function queues(): array
@@ -50,13 +53,13 @@ final class PdoSystemOperationsQuery
             . 'COUNT(*) total,'
             . 'SUM(status="queued") queued_total,'
             . 'SUM(status="running") running_total,'
-            . 'SUM(status="completed") completed_total,'
             . 'SUM(status="failed") failed_total,'
             . 'SUM(status="dead_letter") dead_letter_total,'
-            . 'SUM(status="cancelled") cancelled_total,'
             . 'COALESCE(MAX(CASE WHEN status="queued" THEN TIMESTAMPDIFF(SECOND,created_at,UTC_TIMESTAMP()) ELSE 0 END),0) oldest_queued_seconds,'
             . 'COALESCE(MAX(CASE WHEN status="running" THEN TIMESTAMPDIFF(SECOND,COALESCE(leased_at,updated_at,created_at),UTC_TIMESTAMP()) ELSE 0 END),0) longest_running_seconds '
-            . 'FROM ue_background_jobs GROUP BY queue_name ORDER BY queue_name'
+            . 'FROM ue_background_jobs '
+            . 'WHERE status IN ("queued","running","failed","dead_letter") '
+            . 'GROUP BY queue_name ORDER BY queue_name'
         )->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
         $blocked = [];
@@ -81,10 +84,10 @@ final class PdoSystemOperationsQuery
                 'total' => max(0, (int)($row['total'] ?? 0)),
                 'queued' => max(0, (int)($row['queued_total'] ?? 0)),
                 'running' => max(0, (int)($row['running_total'] ?? 0)),
-                'completed' => max(0, (int)($row['completed_total'] ?? 0)),
+                'completed' => 0,
                 'failed' => max(0, (int)($row['failed_total'] ?? 0)),
                 'dead_letter' => max(0, (int)($row['dead_letter_total'] ?? 0)),
-                'cancelled' => max(0, (int)($row['cancelled_total'] ?? 0)),
+                'cancelled' => 0,
                 'oldest_queued_seconds' => max(0, (int)($row['oldest_queued_seconds'] ?? 0)),
                 'longest_running_seconds' => max(0, (int)($row['longest_running_seconds'] ?? 0)),
                 'concurrency_blocked' => $blocked[$queue] ?? 0,
