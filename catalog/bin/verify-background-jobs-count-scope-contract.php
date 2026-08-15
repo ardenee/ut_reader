@@ -67,7 +67,7 @@ $check(
         && str_contains($operationalQuery, 'SUM(status="running") running')
         && str_contains($workerEndpoint, '$counts = $operational->queueCounts($queueName);')
         && str_contains($workerEndpoint, 'CatalogWorkerStatusPolicy::evaluate(')
-        && str_contains($workerEndpoint, "$worker['queue_counts'] = $counts;")
+        && str_contains($workerEndpoint, "['queue_counts'] = \$counts;")
         && !str_contains($ui, 'queue_counts')
         && !str_contains($ui, 'Work units'),
     'Raw durable execution rows may drive worker health/admission but must not appear as a competing operator headline count.'
