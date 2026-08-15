@@ -14,13 +14,12 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use RuntimeException;
-use Throwable;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceActionService;
-use UnrealDb\Catalog\Infrastructure\Metadata\BlockedCompressedMetadataReader;
+use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
@@ -222,17 +221,7 @@ final class CatalogCompactMetadataRepairJobHandler implements JobHandler
 
     private function compactMetadataValid(int $fileId): bool
     {
-        $storageRoot = trim((string)($this->config['storage_path'] ?? ''));
-        if ($storageRoot === '') {
-            throw new RuntimeException('Catalog storage_path is required for compact metadata repair.');
-        }
-        try {
-            clearstatcache();
-            (new BlockedCompressedMetadataReader($this->db, $storageRoot))->verify($fileId);
-            return true;
-        } catch (Throwable) {
-            return false;
-        }
+        return VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId);
     }
 
     /** @return array<string,mixed>|null */
