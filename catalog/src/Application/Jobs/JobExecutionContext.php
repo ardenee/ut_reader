@@ -2,11 +2,8 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Defines the application class `JobExecutionContext` for job execution context.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
+ * Why: It keeps this responsibility in the application layer rather than repeating it in page/API/job entry points.
  * Role: Application-layer orchestration shared by pages, APIs, jobs, and infrastructure adapters.
- * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
  */
 declare(strict_types=1);
 
@@ -38,9 +35,12 @@ final class JobExecutionContext
                 JobType::FULL_SYNC_GAME,
                 JobType::PREPARE_BUCKET_REDIRECT,
                 JobType::PROCESS_BUCKET_UPLOAD,
+                JobType::PROCESS_BUCKET_ARCHIVE,
+                JobType::PROCESS_BUCKET_STAGED_PACKAGE,
                 JobType::REPAIR_UNVERIFIED_METADATA,
                 JobType::IMPORT_STAGED_PACKAGE,
                 JobType::IMPORT_STAGED_PAK,
+                JobType::IMPORT_STAGED_ARCHIVE,
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
             ],
             true
