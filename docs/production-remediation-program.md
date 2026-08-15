@@ -2,23 +2,23 @@
 
 ## Purpose
 
-This document turns the nine production-readiness reviews into one ordered engineering program. Changes are delivered incrementally on `main`, with compatibility tests and small rollback boundaries. Unreal package parsing behaviour is treated as protected behaviour unless a change is backed by fixtures.
+This document turns the production-readiness reviews into one ordered engineering program. Changes are delivered incrementally on `main`, with compatibility tests and small rollback boundaries. Unreal package parsing behaviour is treated as protected behaviour unless a change is backed by fixtures.
 
 ## Delivery principles
 
-- Keep a modular monolith. Do not introduce microservices without an independently scalable boundary and measured need.
+- Keep a modular monolith. Do not introduce microservices without an independently valuable boundary and measured need.
 - Preserve current URLs, response shapes, package identity rules, and database data during migration.
 - Fix exploitable security and data-loss risks before architecture cleanup.
 - Move expensive and failure-prone work out of browser requests.
 - Add a contract test with every compatibility or security boundary.
-- Use immutable production images and backward-compatible database migrations.
-- Do not scale web or worker replicas until shared state and concurrency assumptions are proven.
+- Deploy known Git revisions with backward-compatible database migrations.
+- Production remains one Windows host; scale the worker pool and host resources only from measured demand.
 
 ## Priority model
 
 - **P0:** exploitable security, unauthorized distribution, data loss, or service-wide denial of service.
 - **P1:** production reliability, recoverability, concurrency, and operational safety.
-- **P2:** maintainability, performance, developer experience, and planned scaling.
+- **P2:** maintainability, performance, developer experience, and operational tooling.
 - **P3:** optional optimization after production measurements exist.
 
 ## Workstream 1 — Security and authentication
@@ -28,8 +28,8 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Legacy `index.php?page=download` now delegates to the canonical download endpoint.
 - Canonical storage-path containment rejects sibling-prefix escapes.
 - Public downloads require a verified file and apply base-game and configured distribution policies.
-- Administrator login uses shared-storage throttling and randomized failure delay.
-- Administrator sessions have idle and absolute lifetimes.
+- Administrator login uses layered throttling and randomized failure delay.
+- Administrator sessions have idle and absolute lifetimes while the configured remember-me behaviour remains available.
 - Runtime error display is disabled by the shared application bootstrap.
 - HTTP federation workers require POST and a header token by default.
 - Generic JSON API and federation request bodies are size-bounded.
@@ -39,16 +39,16 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Pairing claims are POST-only, query-string claim tokens are removed, and the one-time transition is atomic.
 - Pairing secrets are no longer stored in administrative notes or returned by approval-status polling.
 - Public generated-package requests have an application-side observed-IP rate limit and session-bound artifact authorization.
-- Security boundaries are enforced by CI tests.
+- CSP/proxy and generic server-error boundaries are covered by the security hardening verifier.
 
 ### Next
 
-- Migrate symmetric federation HMAC identities to Ed25519 peer identities.
-- Add administrator MFA and reauthentication for security-sensitive operations.
-- Add public search, join-request and individual-download rate limits; retain WAF limits around package generation.
-- Centralize outbound federation HTTP through the existing SSRF-resistant client.
-- Remove every controller-level `display_errors` override and raw session bootstrap.
-- Add Content Security Policy and security event alerting.
+- Continue migration of federation identities toward Ed25519 where peer compatibility permits it.
+- Keep recent-auth requirements limited to genuinely security-sensitive operations rather than routine queue administration.
+- Continue endpoint-specific public search, join-request and download abuse controls.
+- Keep outbound federation HTTP behind the SSRF-resistant transport boundary.
+- Continue removing controller-level error-display/session-bootstrap drift.
+- Add security event alerting where it provides useful operator signal.
 
 ## Workstream 2 — Database schema and migrations
 
@@ -59,14 +59,14 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Added database-scoped advisory locking and checksum/orphan drift rejection.
 - Converted remember-login, package-alias, dependency-metadata/asset-registry, unverified-staging, background-job reliability and resource-limit upgrades into numbered idempotent migrations.
 - Added MySQL integration coverage for preview, upgrade, rerun and checksum-drift failure.
-- Gated Docker Compose startup and Kubernetes production rollout on the immutable release image completing migrations.
+- Added deployment-host migration status/dry-run/verify checks and a Windows production deployment runbook.
 - Added a database migration runbook and deployment compatibility policy.
 
 ### Next
 
 - Remove runtime table and column creation after all supported deployments pass `migrate verify`.
-- Treat the former `upgrade-*.sql` files as historical references and remove them after the compatibility window.
-- Separate web, worker and migration database credentials where the platform permits it.
+- Treat former one-off upgrade SQL files as historical references and remove them after the compatibility window.
+- Keep the production database account permissions as narrow as practical for the Windows deployment.
 - Add a representative populated previous-schema fixture, not only the structural legacy baseline.
 
 ## Workstream 3 — Ingestion and unverified staging
@@ -102,14 +102,12 @@ This document turns the nine production-readiness reviews into one ordered engin
 ### Completed
 
 - Preserved opaque lease-token ownership for claim, completion, failure, heartbeat and cancellation transitions.
-- Added configurable lease duration and persisted heartbeat timestamps.
+- Added configurable ownership/heartbeat state while keeping healthy long-running work under the owning process rather than failing it by elapsed runtime.
 - Added progress snapshots from maintenance handlers without changing durable result payloads.
 - Added immediate queued cancellation and cooperative running cancellation at safe checkpoints.
-- Added automatic finalization of cancelled jobs when their worker lease expires.
-- Added stale-lease recovery that clears former ownership and increments a recovery counter.
-- Added a distinct `dead_letter` terminal state for exhausted failures, unsupported handlers and expired final attempts.
-- Added explicit dead-letter retry with attempt, cancellation, progress, result and lease reset.
-- Fixed retry transitions so they clear the previous worker ID and lease timestamps.
+- Added a distinct `dead_letter` terminal state for exhausted failures and unsupported handlers.
+- Added explicit dead-letter retry with attempt, cancellation, progress, result and ownership reset.
+- Fixed retry transitions so they clear the previous worker identity/ownership state.
 - Added persisted resource classes, per-class capacity limits and target concurrency keys.
 - Added advisory claim coordination so competing workers cannot overbook a resource class.
 - Added fair claim selection that skips saturated classes and admits eligible work from another class.
@@ -119,55 +117,55 @@ This document turns the nine production-readiness reviews into one ordered engin
 - Preserved full-game start offsets, persisted progress and final dependency totals, cooperative cancellation and URL-based job resume.
 - Moved single-file and full-game UE4/UE5 Source Identity Repair behind durable jobs while keeping the mismatch audit read-only and immediate.
 - Preserved canonical package, original filename, export-path, source-derived alias and dependency-refresh behaviour through the existing repair library.
-- Kept one game-wide dependency pass after all identity updates, bounded stored failure details, and retained the legacy maintenance advisory lock during staged deployment.
+- Kept one game-wide dependency pass after all identity updates, bounded stored failure details, and retained the maintenance advisory lock where required.
 - Converted the former source-identity step API into an enqueue-only compatibility adapter; it no longer writes progress files or mutates catalog data in HTTP requests.
 - Moved exact size+MD5 unverified duplicate cleanup behind a `storage-heavy` worker job while preserving keeper selection and immediate pre-delete revalidation.
 - Added hash/delete progress, cooperative cancellation and bounded durable deletion/error details for duplicate cleanup.
 - Moved ZIP, UMOD-family and PAK generation out of Apache into `package-heavy` jobs using the existing package plan, format writers and validators.
-- Added unique `.part` output, validation-before-publication, atomic artifact rename, post-publication lease/cancellation cleanup, retention pruning and session-authorized download.
+- Added unique `.part` output, validation-before-publication, atomic artifact rename, post-publication cancellation cleanup, retention pruning and session-authorized download.
 - Added public package request throttling, random per-job browser access tokens stored only as SHA-256 in job payloads, and bounded artifact lifetimes.
 - Added bounded job-status polling by ID; completed results are omitted from general multi-job listings.
 - Added CLI and secured administrator API operations for status, enqueue, cancel, retry and recovery.
-- Added MySQL/filesystem integration tests for retry transitions, cancellation, progress, stale-owner rejection, lease recovery, dead letters, simultaneous competing workers, class saturation, fairness, target-key exclusion, dependency execution, source-identity repair, duplicate cleanup and generated package publication.
+- Added MySQL/filesystem integration tests for retry transitions, cancellation, progress, stale-owner rejection, orphan recovery, dead letters, simultaneous competing workers, class saturation, fairness, target-key exclusion, dependency execution, source-identity repair, duplicate cleanup and generated package publication.
 
 ### Next
 
-1. Define durable package-import and PAK-extraction stage records now that the structural reader baseline exists.
-2. Add checkpoints for intake, decompression/extraction, parser selection, table parsing, physical storage, database persistence and dependency refresh.
-3. Add worker termination/retry tests at every filesystem-to-database transition.
+1. Continue reducing any remaining monolithic package-import and PAK-extraction stages into durable bounded units where useful.
+2. Add checkpoints for intake, decompression/extraction, parser selection, table parsing, physical storage, database persistence and dependency refresh where replay cost remains high.
+3. Add worker termination/retry tests at filesystem-to-database transitions.
 4. Use externally validated compressed and companion-file fixtures before changing UE3/UE4 archive or payload handling.
-5. Add scheduled generated-artifact pruning rather than relying only on subsequent builds and expired downloads.
-6. Keep one production worker replica until heavy-job concurrency and shared-storage behaviour are validated.
+5. Keep generated-artifact pruning scheduled and observable.
+6. Tune the bounded Windows worker pool and resource-class limits from live MySQL/storage pressure rather than adding distributed worker infrastructure.
 
 ## Workstream 5 — Search and database performance
 
 ### Current state
 
-Exact hash lookups are indexed, while broad substring search issues many leading-wildcard queries.
+Exact hash lookups are indexed, while broad substring search issues leading-wildcard queries in some paths.
 
 ### Plan
 
-1. Separate exact MD5, SHA1, GUID, package and object lookup paths.
-2. Require longer terms for broad anonymous substring searches.
-3. Add request rate limits and bounded query execution time.
+1. Keep exact MD5, SHA1, GUID, package and object lookup paths separate from broad text search.
+2. Require sensible minimum terms for broad anonymous substring searches.
+3. Keep request rate limits and bounded query execution behaviour.
 4. Capture slow-query baselines and representative catalogue benchmarks.
 5. Add or adjust indexes only from measured query plans.
-6. Introduce a derived search index only when MySQL no longer meets the agreed latency budget.
+6. Introduce a derived search index only if MySQL no longer meets the agreed latency budget on the actual host.
 
 ## Workstream 6 — Presentation and frontend system
 
 ### Completed
 
 - Reusable server-rendered UI components exist for page headers, buttons, fields, alerts, empty/loading states, pagination, progress, filters and accessible table regions.
-- Component accessibility and escaping contracts run in CI.
+- Component accessibility and escaping contracts exist as executable verifiers/tests.
 - Responsive table and filter behaviour is documented.
-- Dependency refresh, source identity repair, duplicate cleanup and generated package progress clients use external JavaScript assets rather than embedding their orchestration logic in page controllers.
+- Dependency refresh, source identity repair, duplicate cleanup and generated package progress clients use external JavaScript assets rather than embedding their orchestration logic in page controllers where migration has been completed.
 
 ### Next
 
 - Migrate remaining high-use admin pages to shared components.
 - Remove duplicated inline CSS and JavaScript where shared behaviours exist.
-- Add CSP-compatible asset loading and eliminate remaining inline script dependencies incrementally.
+- Continue CSP-compatible asset loading and eliminate remaining inline script dependencies incrementally.
 - Add visual regression checks for critical pages after stable fixtures exist.
 
 ## Workstream 7 — Federation and API trust
@@ -186,40 +184,38 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 
 ### Next
 
-- Replace symmetric peer credentials with asymmetric signatures.
-- Add peer key rotation, revocation and audit history.
-- Route every outbound peer request through DNS-pinned, no-redirect, public-address validation.
-- Add endpoint-specific quotas, idempotency keys and peer rate limits.
-- Paginate inventory synchronization instead of generating one full catalogue payload.
+- Continue asymmetric-signature rollout where federation peers support it.
+- Maintain peer key rotation, revocation and audit history.
+- Keep every outbound peer request behind DNS-pinned, no-redirect, public-address validation.
+- Add endpoint-specific quotas and idempotency where demonstrated useful.
+- Keep inventory synchronization bounded/paginated.
 
 ## Workstream 8 — Deployment, monitoring and recovery
 
 ### Completed
 
-- Production Docker image, Compose staging stack, Kubernetes baseline, readiness/liveness probes, worker loop, GHCR release workflow, vulnerability scan, provenance, approval-gated deployment, smoke tests and rollback are present.
-- Kubernetes requires shared RWX package storage and defaults to one web and one worker replica.
-- Security runtime limits are declared in Compose and Kubernetes.
-- Kubernetes strict federation-secret policy is backed by a Secret-provided master key; Compose exposes the same controls for staged rollout.
-- Compose application startup and Kubernetes production rollout are gated on successful, drift-free database migrations.
-- Worker containers use the configured queue name and lease duration.
-- Dependency, storage-cleanup, package-generation, housekeeping and default capacity values are declared in Compose and Kubernetes.
-- The production image includes PHP ZipArchive for worker-generated ZIP output.
-- Generated artifact retention and public package request limits are declared in supported deployment examples.
-- A background-job operations runbook documents dependency/source repair, duplicate cleanup, package generation, cancellation, recovery, dead letters, resource saturation, artifact lifecycle and scaling gates.
+- The production target is explicitly the existing single Windows host running Apache, PHP 8.5 and MySQL 8.4 with local package storage.
+- Docker, Compose and Kubernetes deployment artifacts have been removed so they no longer create a second unsupported production path.
+- `live.php`, `readiness.php` and authenticated Prometheus-format metrics provide application/process/dependency observability without requiring a container platform.
+- The security and readiness verifier scripts now target the actual Windows deployment boundaries rather than container manifests.
+- Windows backup readiness, backup, verification and guarded restore scripts are present under `deploy/backup/`.
+- Full backup guidance treats database + package storage as one coherent recovery point when write consistency requires it.
+- Background workers are designed to run independently of browser requests and use MySQL as the durable queue/control plane.
 
 ### Next
 
-- Select the production platform and replace generic kubeconfig credentials with workload identity.
-- Provision managed MySQL, Redis, TLS, WAF, RWX or object storage and central logs.
-- Add application metrics or OpenTelemetry instrumentation.
-- Add dashboards and alerts for latency, errors, queue age, class saturation, lease recovery, dead letters, worker failures, database contention, artifact storage and overall storage capacity.
-- Implement point-in-time database recovery, package snapshots and quarterly restore tests.
+- Run workers under a persistent Windows service supervisor with boot startup, unexpected-exit restart and controlled stop/drain behaviour.
+- Add scheduled backup/verification jobs through Windows Task Scheduler and expose last-success status to operations.
+- Add practical host monitoring for disk space, Apache/PHP process availability, MySQL pressure, worker count, queue age and backup age.
+- Add dashboards/alerts only where they improve operator response; prefer the existing System Operations/Background Jobs pages for application-specific queue state.
+- Perform periodic restore drills against disposable database/storage targets.
+- Keep deployment as a controlled known-Git-revision update with migration status/dry-run/verify and post-deploy smoke checks.
 
 ## Workstream 9 — Testing and engineering governance
 
 ### Completed
 
-- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, synthetic-reader, container, manifest, security, federation-secret, migration, explicit-staging, job-reliability, job-resource, queued-dependency, queued-source-identity and durable storage/package checks are represented in CI.
+- Syntax, schema, architecture, UI, duplicate-cleanup, package-format, synthetic-reader, security, federation-secret, migration, explicit-staging, job-reliability, job-resource, queued-dependency, queued-source-identity and durable storage/package checks are represented by executable verifier/integration scripts.
 - The production resolver and readers are exercised with deterministic UE1–UE4 package bytes, fixed SHA-256 expectations, legacy UE2 compatibility, UE4 parser profiles and malformed fail-closed behavior.
 - A private fixture runner supports real UE1–UE5 packages and companion files without adding copyrighted assets to the repository.
 - Clean architecture boundaries and compatibility facades are documented.
@@ -233,29 +229,29 @@ Exact hash lookups are indexed, while broad substring search issues many leading
 - Add HTTP contract tests for critical public and admin endpoints.
 - Add heavy-job crash and resume tests.
 - Add performance budgets and baseline datasets.
-- Protect `main` with required checks once workflow stability is confirmed.
+- Add lightweight GitHub/Windows CI only where it provides reliable signal without duplicating deployment-host checks.
 - Track temporary compatibility wrappers with owners and removal conditions.
 
 ## Ordered delivery sequence
 
 1. Add external compressed/paired/property fixtures and dependency-pair/alias manifests.
-2. Define and test durable package-import and PAK-extraction checkpoints.
-3. Complete remaining P0 security controls and asymmetric identity planning.
+2. Continue durable package-import and PAK-extraction checkpoint work where replay remains expensive.
+3. Complete remaining security/operational hardening.
 4. Optimize search and persistence from measured profiles.
 5. Finish UI component migration and CSP work.
-6. Add production telemetry, backup automation and restore verification.
-7. Enable horizontal scaling only after shared-state and heavy-job concurrency gates pass.
+6. Add Windows production telemetry, backup scheduling and restore verification.
+7. Tune worker count, resource-class limits and host hardware from measured production pressure.
 
 ## Definition of production-ready
 
 The application is ready for general production deployment when:
 
 - No open P0 security findings remain.
-- Production secrets are externalized, existing federation rows have been migrated and strict encrypted-secret policy is enabled.
+- Production secrets are configured correctly and federation rows use the required encrypted-secret policy when federation is enabled.
 - Every schema change is delivered through a tested migration.
 - Heavy operations are bounded or queued.
 - Backup restoration has been demonstrated.
 - Reader and identity behaviour is protected by fixtures.
-- Required CI checks pass on the deployed commit.
-- Production monitoring and alert routing are active.
+- Required deployment-host verifier/test checks pass on the deployed commit.
+- Production monitoring and alert routing are active enough to detect host, database, worker, storage and backup failures.
 - Rollback compatibility with the current schema is confirmed.
