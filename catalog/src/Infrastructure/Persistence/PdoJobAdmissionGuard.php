@@ -22,29 +22,57 @@ final class PdoJobAdmissionGuard
     }
 
     /**
+     * Compatibility wrapper for callers that only need the acquired locks.
+     *
      * @return list<string>|null Lock names that must be released by release().
      */
     public function acquire(string $queue, string $resourceClass, ?string $concurrencyKey): ?array
     {
+        return $this->acquireWithBlocker($queue, $resourceClass, $concurrencyKey)['locks'];
+    }
+
+    /**
+     * Acquire the short-lived admission locks and identify the dimension that
+     * prevented acquisition. The claimer uses this to skip the whole blocked
+     * resource class/key instead of repeatedly probing rows that cannot run.
+     *
+     * @return array{locks:?list<string>,blocked_dimension:?string}
+     */
+    public function acquireWithBlocker(
+        string $queue,
+        string $resourceClass,
+        ?string $concurrencyKey
+    ): array {
         $resourceClass = trim($resourceClass) !== '' ? trim($resourceClass) : 'default';
-        $locks = [
-            $this->lockName('resource', $queue . "\0" . $resourceClass),
-        ];
+        $entries = [[
+            'name' => $this->lockName('resource', $queue . "\0" . $resourceClass),
+            'dimension' => 'resource',
+        ]];
         $concurrencyKey = trim((string)$concurrencyKey);
         if ($concurrencyKey !== '') {
-            $locks[] = $this->lockName('key', $queue . "\0" . $concurrencyKey);
+            $entries[] = [
+                'name' => $this->lockName('key', $queue . "\0" . $concurrencyKey),
+                'dimension' => 'concurrency',
+            ];
         }
 
-        sort($locks, SORT_STRING);
+        usort(
+            $entries,
+            static fn(array $left, array $right): int => strcmp((string)$left['name'], (string)$right['name'])
+        );
         $held = [];
-        foreach ($locks as $lock) {
+        foreach ($entries as $entry) {
+            $lock = (string)$entry['name'];
             if (!$this->acquireNamedLock($lock)) {
                 $this->release($held);
-                return null;
+                return [
+                    'locks' => null,
+                    'blocked_dimension' => (string)$entry['dimension'],
+                ];
             }
             $held[] = $lock;
         }
-        return $held;
+        return ['locks' => $held, 'blocked_dimension' => null];
     }
 
     /** @param list<string> $locks */
@@ -78,12 +106,17 @@ final class PdoJobAdmissionGuard
         }
     }
 
-    public function canRun(
+    /**
+     * Evaluate admission while the caller holds the resource/key locks.
+     *
+     * @return array{allowed:bool,resource_limit:int,blocked_dimension:?string}
+     */
+    public function decision(
         string $queue,
         string $resourceClass,
         int $resourceLimit,
         ?string $concurrencyKey
-    ): bool {
+    ): array {
         $resourceClass = trim($resourceClass) !== '' ? trim($resourceClass) : 'default';
         $resourceLimit = $this->currentLimit($resourceClass, $resourceLimit);
 
@@ -94,20 +127,43 @@ final class PdoJobAdmissionGuard
         );
         $running->execute([$queue, $resourceClass]);
         if ((int)$running->fetchColumn() >= $resourceLimit) {
-            return false;
+            return [
+                'allowed' => false,
+                'resource_limit' => $resourceLimit,
+                'blocked_dimension' => 'resource',
+            ];
         }
 
         $concurrencyKey = trim((string)$concurrencyKey);
-        if ($concurrencyKey === '') {
-            return true;
+        if ($concurrencyKey !== '') {
+            $key = $this->db->prepare(
+                'SELECT 1 FROM ue_background_jobs '
+                . 'WHERE queue_name=? AND status="running" AND concurrency_key=? LIMIT 1'
+            );
+            $key->execute([$queue, $concurrencyKey]);
+            if ($key->fetchColumn() !== false) {
+                return [
+                    'allowed' => false,
+                    'resource_limit' => $resourceLimit,
+                    'blocked_dimension' => 'concurrency',
+                ];
+            }
         }
 
-        $key = $this->db->prepare(
-            'SELECT 1 FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND status="running" AND concurrency_key=? LIMIT 1'
-        );
-        $key->execute([$queue, $concurrencyKey]);
-        return $key->fetchColumn() === false;
+        return [
+            'allowed' => true,
+            'resource_limit' => $resourceLimit,
+            'blocked_dimension' => null,
+        ];
+    }
+
+    public function canRun(
+        string $queue,
+        string $resourceClass,
+        int $resourceLimit,
+        ?string $concurrencyKey
+    ): bool {
+        return $this->decision($queue, $resourceClass, $resourceLimit, $concurrencyKey)['allowed'];
     }
 
     private function environmentLimit(string $resourceClass, int $fallback): int
