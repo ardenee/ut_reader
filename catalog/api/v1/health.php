@@ -11,14 +11,12 @@
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/_bootstrap.php';
+require_once dirname(__DIR__, 2) . '/bootstrap/operational.php';
 
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
-    // Health probes are intentionally session-free so high-frequency load
-    // balancer/service-manager checks never touch PHP session storage or locks.
-    $application = catalog_api_application(false);
+    $application = catalog_operational_application();
     $application->db->query('SELECT 1')->fetchColumn();
 
     JsonResponse::data([
