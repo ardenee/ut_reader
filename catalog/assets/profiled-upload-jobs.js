@@ -81,12 +81,16 @@
         return ['uz', 'uz2', 'uz3'].includes(extensionOf(file));
     }
 
+    function isArchive(file) {
+        return ['zip', '7z', 'rar'].includes(extensionOf(file));
+    }
+
     function preflightEligible(file) {
-        return Number(file.size || 0) > 0 && !isPak(file) && !isRedirectWrapper(file);
+        return Number(file.size || 0) > 0 && !isPak(file) && !isRedirectWrapper(file) && !isArchive(file);
     }
 
     function shouldUseChunks(file) {
-        return isPak(file) || Number(file.size || 0) > configuredChunkBytes;
+        return isPak(file) || isArchive(file) || Number(file.size || 0) > configuredChunkBytes;
     }
 
     function clientPolicy(file) {
@@ -97,6 +101,12 @@
             }
             if (containerLimit > 0 && Number(file.size || 0) > containerLimit) {
                 return {allowed: false, reason: 'File is ' + bytes(file.size) + '; configured PAK/container limit is ' + bytes(containerLimit) + '.'};
+            }
+            return {allowed: Number(file.size || 0) > 0, reason: Number(file.size || 0) > 0 ? '' : 'File is empty.'};
+        }
+        if (isArchive(file)) {
+            if (containerLimit > 0 && Number(file.size || 0) > containerLimit) {
+                return {allowed: false, reason: 'File is ' + bytes(file.size) + '; configured archive/container limit is ' + bytes(containerLimit) + '.'};
             }
             return {allowed: Number(file.size || 0) > 0, reason: Number(file.size || 0) > 0 ? '' : 'File is empty.'};
         }
@@ -474,9 +484,9 @@
     async function chunkedUpload(item, uploadIndex, uploadTotal) {
         const file = item.file;
         const name = shownName(file);
-        const pak = isPak(file);
+        const container = isPak(file) || isArchive(file);
         if (!chunkCsrf) throw new Error('Chunked upload CSRF token is unavailable.');
-        const effectiveLimit = pak ? containerLimit : normalUploadLimit;
+        const effectiveLimit = container ? containerLimit : normalUploadLimit;
         if (effectiveLimit > 0 && file.size > effectiveLimit) {
             throw new Error('File is ' + bytes(file.size) + '; configured upload limit is ' + bytes(effectiveLimit) + '.');
         }
