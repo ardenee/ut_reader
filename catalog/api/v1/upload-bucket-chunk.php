@@ -68,13 +68,17 @@ try {
             JsonResponse::error('invalid_size', 'Upload file size must be greater than zero.', 400);
         }
         $redirect = $filePolicy->isRedirectWrapper($originalName);
-        if ($redirect) {
+        $archive = $filePolicy->isArchive($originalName);
+        if ($redirect || $archive) {
             JsonResponse::send([
                 'ok' => true,
                 'duplicate' => false,
-                'redirect_wrapper' => true,
+                'redirect_wrapper' => $redirect,
+                'archive_container' => $archive,
                 'identity' => null,
-                'message' => 'Compressed redirect wrappers are not compared to package MD5/SHA-1 records. The real package identity will be calculated from the decompressed output after the complete batch uploads.',
+                'message' => $redirect
+                    ? 'Compressed redirect wrappers are not compared to package MD5/SHA-1 records. The real package identity will be calculated from the decompressed output after the complete batch uploads.'
+                    : 'Archive containers are unpack-only transport files. Unreal package identities and duplicate checks will be calculated from each extracted supported file after upload.',
             ], 200);
         }
 
@@ -87,6 +91,7 @@ try {
                 'ok' => true,
                 'duplicate' => true,
                 'redirect_wrapper' => false,
+                'archive_container' => false,
                 'identity' => $identity,
                 'match' => $duplicate,
                 'message' => 'An identical physical file already exists in '
@@ -101,6 +106,7 @@ try {
             'ok' => true,
             'duplicate' => false,
             'redirect_wrapper' => false,
+            'archive_container' => false,
             'identity' => $identity,
             'identity_matches' => (int)($inspection['identity_matches'] ?? 0),
             'missing_physical_matches' => $missing,
@@ -121,7 +127,9 @@ try {
             JsonResponse::error('invalid_size', 'Chunked bucket upload file size must be greater than zero.', 400);
         }
         $redirect = $filePolicy->isRedirectWrapper($originalName);
-        $identity = $redirect ? null : $filePolicy->browserIdentity($_POST);
+        $archive = $filePolicy->isArchive($originalName);
+        $transportContainer = $redirect || $archive;
+        $identity = $transportContainer ? null : $filePolicy->browserIdentity($_POST);
         $relativePath = trim((string)($_POST['relative_path'] ?? '')) ?: $originalName;
         $state = $store->initialize(
             $userId,
@@ -149,6 +157,7 @@ try {
             'upload' => $state,
             'identity' => $identity,
             'redirect_wrapper' => $redirect,
+            'archive_container' => $archive,
         ], 200);
     }
 
@@ -174,7 +183,8 @@ try {
         $submittedName = $filePolicy->cleanName(basename(str_replace('\\', '/', $relativePath)));
         $filePolicy->validateName($submittedName, true);
         $redirect = $filePolicy->isRedirectWrapper($submittedName);
-        $identity = $redirect ? null : $identityStore->load($uploadId, $userId);
+        $archive = $filePolicy->isArchive($submittedName);
+        $identity = ($redirect || $archive) ? null : $identityStore->load($uploadId, $userId);
 
         JsonResponse::send([
             'ok' => true,
@@ -184,12 +194,15 @@ try {
                 ? ['md5' => (string)$identity['md5'], 'sha1' => (string)$identity['sha1']]
                 : null,
             'redirect_wrapper' => $redirect,
+            'archive_container' => $archive,
             'messages' => [[
                 'status' => 'uploaded',
                 'file' => $relativePath !== '' ? $relativePath : $submittedName,
                 'message' => $redirect
                     ? 'Redirect wrapper transfer completed. Its real package MD5/SHA-1 and duplicate check will run after decompression.'
-                    : 'Transfer completed with its pre-calculated MD5 and SHA-1 retained in durable staging. Processing will begin after every selected file finishes uploading.',
+                    : ($archive
+                        ? 'Archive transfer completed. Supported Unreal files will be unpacked into durable child jobs after every selected file finishes uploading.'
+                        : 'Transfer completed with its pre-calculated MD5 and SHA-1 retained in durable staging. Processing will begin after every selected file finishes uploading.'),
                 'file_size' => (int)($state['file_size'] ?? 0),
                 'file_size_text' => catalog_bytes((int)($state['file_size'] ?? 0)),
             ]],
