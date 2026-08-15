@@ -145,7 +145,7 @@ $record(
     'generic_server_error_boundary',
     str_contains($jsonSource, 'if ($status >= 500)')
         && str_contains($jsonSource, 'The request could not be completed. Reference:')
-        && str_contains($jsonSource, "$details = ['request_id' => $requestId]") ,
+        && str_contains($jsonSource, "\$details = ['request_id' => \$requestId]"),
     '5xx responses retain internal logging but expose only a request reference'
 );
 
