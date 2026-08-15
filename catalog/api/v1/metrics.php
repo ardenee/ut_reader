@@ -57,7 +57,7 @@ try {
         . catalog_metrics_line('unrealdb_up', 1);
 
     $output .= "# HELP unrealdb_jobs Background jobs by queue, status and resource class.\n# TYPE unrealdb_jobs gauge\n";
-    $output .= "# HELP unrealdb_job_recoveries Recovery count represented by current jobs.\n# TYPE unrealdb_job_recoveries gauge\n";
+    $output .= "# HELP unrealdb_job_recoveries Lease recoveries represented by current jobs.\n# TYPE unrealdb_job_recoveries gauge\n";
     foreach ($snapshot->jobs() as $row) {
         $labels = [
             'queue' => (string)$row['queue_name'],
