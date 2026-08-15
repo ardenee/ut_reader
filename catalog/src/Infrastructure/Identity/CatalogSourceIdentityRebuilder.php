@@ -12,7 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Identity;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogProjectionReconciliationQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogSourcePathStore;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
