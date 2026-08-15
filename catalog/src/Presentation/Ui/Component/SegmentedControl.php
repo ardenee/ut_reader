@@ -27,7 +27,7 @@ final class SegmentedControl
             $attributes['id'] = $id;
         }
 
-        $class = Html::classes('ui-segmented', (string)($props['class'] ?? ''));
+        $class = Html::classes('ui-segmented', 'ui-action-group', (string)($props['class'] ?? ''));
         $html = '<div class="' . Html::escape($class) . '"' . Html::attributes($attributes) . '>';
         foreach ($items as $item) {
             $itemLabel = trim((string)($item['label'] ?? ''));
@@ -37,10 +37,11 @@ final class SegmentedControl
             $itemAttributes = is_array($item['attributes'] ?? null) ? $item['attributes'] : [];
             $itemAttributes['data-value'] = (string)($item['value'] ?? '');
             $itemAttributes['aria-pressed'] = !empty($item['active']) ? 'true' : 'false';
-            $html .= '<button class="ui-segmented__item" type="button"' . Html::attributes($itemAttributes) . '>';
+            $buttonClass = Html::classes('ui-segmented__item', 'ui-button', 'ui-button--quiet', 'ui-button--sm');
+            $html .= '<button class="' . Html::escape($buttonClass) . '" type="button"' . Html::attributes($itemAttributes) . '>';
             $html .= '<span class="ui-segmented__label">' . Html::escape($itemLabel) . '</span>';
             if (array_key_exists('count', $item)) {
-                $html .= '<span class="ui-segmented__count" aria-hidden="true">' . Html::escape($item['count']) . '</span>';
+                $html .= ' <span class="ui-segmented__count" aria-hidden="true">' . Html::escape($item['count']) . '</span>';
             }
             $html .= '</button>';
         }
