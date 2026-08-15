@@ -28,11 +28,22 @@ final class CatalogFederationPeerSecretService
         return $store;
     }
 
+    /**
+     * Encryption is the default security contract. Plaintext compatibility must
+     * now be opted into explicitly with UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS=0.
+     * This keeps old migrations possible without allowing a missing environment
+     * variable to silently downgrade production secret storage.
+     */
     public static function requireEncryptedSecrets(): bool
     {
-        return in_array(
-            strtolower(trim((string)(getenv('UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS') ?: '0'))),
-            ['1', 'true', 'yes', 'on'],
+        $configured = getenv('UNREALDB_REQUIRE_ENCRYPTED_FEDERATION_SECRETS');
+        if ($configured === false || trim((string)$configured) === '') {
+            return true;
+        }
+
+        return !in_array(
+            strtolower(trim((string)$configured)),
+            ['0', 'false', 'no', 'off'],
             true
         );
     }
@@ -55,8 +66,8 @@ final class CatalogFederationPeerSecretService
             static $warned = false;
             if (!$warned) {
                 error_log(
-                    '[UnrealDB federation] Peer secrets are using plaintext compatibility mode. '
-                    . 'Configure UNREALDB_FEDERATION_MASTER_KEY and run encrypt-federation-secrets.php.'
+                    '[UnrealDB federation] Peer secrets are using explicitly enabled plaintext compatibility mode. '
+                    . 'Configure UNREALDB_FEDERATION_MASTER_KEY and run encrypt-federation-secrets.php before production use.'
                 );
                 $warned = true;
             }

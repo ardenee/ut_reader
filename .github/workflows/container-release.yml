@@ -1,6 +1,8 @@
 name: Container release
 
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -21,22 +23,35 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: azure/setup-kubectl@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+      - uses: azure/setup-kubectl@776406bce94f63e41d621b960d78ee25c8b76ede # v4
         with:
-          version: latest
+          version: v1.36.3
       - name: Validate shell entrypoints
         run: sh -n deploy/docker/entrypoint.sh deploy/docker/worker-loop.sh
       - name: Validate Compose configuration
+        env:
+          UNREALDB_DB_PASSWORD: ci-database-password
+          UNREALDB_DB_ROOT_PASSWORD: ci-root-password
         run: docker compose config --quiet
-      - name: Validate Kubernetes manifests
+      - name: Validate Kubernetes manifests offline
         run: |
+          set -eu
           kubectl kustomize deploy/kubernetes/base > /tmp/unrealdb-platform.yaml
-          kubectl apply --dry-run=client --validate=false -f /tmp/unrealdb-platform.yaml
-          kubectl apply --dry-run=client --validate=false -f deploy/kubernetes/optional/web-scaling.yaml
+          test -s /tmp/unrealdb-platform.yaml
+          grep -q '^apiVersion:' /tmp/unrealdb-platform.yaml
+          grep -q '^kind:' /tmp/unrealdb-platform.yaml
+
+          mkdir -p /tmp/unrealdb-optional
+          cp deploy/kubernetes/optional/web-scaling.yaml /tmp/unrealdb-optional/web-scaling.yaml
+          printf '%s\n' 'resources:' '- web-scaling.yaml' > /tmp/unrealdb-optional/kustomization.yaml
+          kubectl kustomize /tmp/unrealdb-optional > /tmp/unrealdb-web-scaling.yaml
+          test -s /tmp/unrealdb-web-scaling.yaml
+          grep -q '^apiVersion:' /tmp/unrealdb-web-scaling.yaml
+          grep -q '^kind:' /tmp/unrealdb-web-scaling.yaml
       - name: Build test image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           load: true
@@ -52,8 +67,10 @@ jobs:
         run: |
           docker run --rm --entrypoint php unrealdb-ci:${{ github.sha }} -l /var/www/html/catalog/api/v1/live.php
           docker run --rm --entrypoint php unrealdb-ci:${{ github.sha }} -l /var/www/html/deploy/docker/config.php
+      - name: Verify security hardening contracts
+        run: docker run --rm -v "$PWD:/workspace:ro" -w /workspace --entrypoint php unrealdb-ci:${{ github.sha }} catalog/bin/verify-security-hardening.php
       - name: Scan image for vulnerabilities
-        uses: anchore/scan-action@v6
+        uses: anchore/scan-action@1638637db639e0ade3258b51db49a9a137574c3e # v6
         id: scan
         with:
           image: unrealdb-ci:${{ github.sha }}
@@ -62,7 +79,7 @@ jobs:
           output-format: sarif
       - name: Upload vulnerability report
         if: always() && steps.scan.outputs.sarif != ''
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@f3712979fa5f215279b101dd0a2e3bdfb4353324 # v3
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
@@ -78,17 +95,17 @@ jobs:
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
       - name: Log in to GHCR
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Generate image metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
@@ -97,7 +114,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
       - name: Build and publish immutable image
         id: build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           push: true
@@ -107,8 +124,10 @@ jobs:
             APP_VERSION=${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          sbom: true
+          provenance: mode=max
       - name: Attest image provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2
         with:
           subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           subject-digest: ${{ steps.build.outputs.digest }}

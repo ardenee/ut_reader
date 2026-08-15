@@ -29,39 +29,130 @@ final class FileLoginRateLimiter
             : \Closure::fromCallable($clock);
     }
 
+    /**
+     * Login throttling deliberately uses three independent buckets:
+     *
+     * - account: stops a distributed attack rotating through source IPs;
+     * - IP: stops one client rotating through account names;
+     * - account+IP: trips quickly for repeated failures against one account.
+     *
+     * The historical login_max_attempts setting remains the account threshold.
+     * The pair threshold is stricter and the IP threshold is broader so normal
+     * NAT/proxy traffic is not needlessly locked out.
+     */
     public function retryAfterSeconds(string $username, string $clientIp): int
     {
-        return $this->mutate($username, $clientIp, function (array $state, int $now): array {
-            $state = $this->normalize($state, $now);
-            return [$state, max(0, (int)$state['blocked_until'] - $now)];
-        });
+        $now = ($this->clock)();
+        $retryAfter = 0;
+        foreach ($this->buckets($username, $clientIp) as $bucket) {
+            $retryAfter = max(
+                $retryAfter,
+                $this->mutateIdentity(
+                    $bucket['identity'],
+                    $bucket['limit'],
+                    $now,
+                    false
+                )
+            );
+        }
+        return $retryAfter;
     }
 
     public function recordFailure(string $username, string $clientIp): int
     {
-        return $this->mutate($username, $clientIp, function (array $state, int $now): array {
-            $state = $this->normalize($state, $now);
-            $state['attempts'][] = $now;
-            if (count($state['attempts']) >= max(1, $this->maxAttempts)) {
-                $state['blocked_until'] = max((int)$state['blocked_until'], $now + max(60, $this->blockSeconds));
-            }
-            return [$state, max(0, (int)$state['blocked_until'] - $now)];
-        });
+        $now = ($this->clock)();
+        $retryAfter = 0;
+        foreach ($this->buckets($username, $clientIp) as $bucket) {
+            $retryAfter = max(
+                $retryAfter,
+                $this->mutateIdentity(
+                    $bucket['identity'],
+                    $bucket['limit'],
+                    $now,
+                    true
+                )
+            );
+        }
+        return $retryAfter;
     }
 
+    /**
+     * A successful login clears the account and account+IP buckets. The broader
+     * IP bucket is intentionally retained so one successful credential cannot
+     * erase failures generated against other accounts from the same source.
+     */
     public function clear(string $username, string $clientIp): void
     {
-        $path = $this->statePath($username, $clientIp);
-        if (is_file($path) && !@unlink($path)) {
-            error_log('[UnrealDB auth] Could not remove login rate-limit state: ' . basename($path));
+        foreach ($this->buckets($username, $clientIp) as $bucket) {
+            if (!$bucket['clear_on_success']) {
+                continue;
+            }
+            $path = $this->statePath($bucket['identity']);
+            if (is_file($path) && !@unlink($path)) {
+                error_log('[UnrealDB auth] Could not remove login rate-limit state: ' . basename($path));
+            }
         }
     }
 
-    /** @param callable(array<string,mixed>,int):array{0:array<string,mixed>,1:int} $callback */
-    private function mutate(string $username, string $clientIp, callable $callback): int
+    /**
+     * @return list<array{identity:string,limit:int,clear_on_success:bool}>
+     */
+    private function buckets(string $username, string $clientIp): array
     {
+        $account = strtolower(substr(trim($username), 0, 80));
+        $ip = trim($clientIp);
+        if ($ip !== '' && filter_var($ip, FILTER_VALIDATE_IP) === false) {
+            $ip = '';
+        }
+
+        $accountLimit = max(1, $this->maxAttempts);
+        $pairLimit = max(3, min($accountLimit, (int)ceil($accountLimit * 0.625)));
+        $ipLimit = max(20, min(200, ($accountLimit * 2) + 4));
+
+        $buckets = [];
+        if ($account !== '') {
+            $buckets[] = [
+                'identity' => 'account|' . $account,
+                'limit' => $accountLimit,
+                'clear_on_success' => true,
+            ];
+        }
+        if ($ip !== '') {
+            // Keep the historical ip|<address> identity so existing throttling
+            // state continues to apply after this security upgrade.
+            $buckets[] = [
+                'identity' => 'ip|' . $ip,
+                'limit' => $ipLimit,
+                'clear_on_success' => false,
+            ];
+        }
+        if ($account !== '' && $ip !== '') {
+            $buckets[] = [
+                'identity' => 'pair|' . $account . '|' . $ip,
+                'limit' => $pairLimit,
+                'clear_on_success' => true,
+            ];
+        }
+
+        if ($buckets === []) {
+            $buckets[] = [
+                'identity' => 'account|unknown',
+                'limit' => $accountLimit,
+                'clear_on_success' => true,
+            ];
+        }
+
+        return $buckets;
+    }
+
+    private function mutateIdentity(
+        string $identity,
+        int $limit,
+        int $now,
+        bool $recordFailure
+    ): int {
         $this->ensureDirectory();
-        $path = $this->statePath($username, $clientIp);
+        $path = $this->statePath($identity);
         $handle = @fopen($path, 'c+b');
         if (!is_resource($handle)) {
             throw new \RuntimeException('Login rate-limit storage is unavailable.');
@@ -78,16 +169,26 @@ final class FileLoginRateLimiter
             if (!is_array($state)) {
                 $state = [];
             }
+            $state = $this->normalize($state, $now);
 
-            [$nextState, $result] = $callback($state, ($this->clock)());
-            $encoded = json_encode($nextState, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+            if ($recordFailure) {
+                $state['attempts'][] = $now;
+                if (count($state['attempts']) >= max(1, $limit)) {
+                    $state['blocked_until'] = max(
+                        (int)$state['blocked_until'],
+                        $now + max(60, $this->blockSeconds)
+                    );
+                }
+            }
+
+            $encoded = json_encode($state, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
             rewind($handle);
             if (!ftruncate($handle, 0) || fwrite($handle, $encoded) !== strlen($encoded) || !fflush($handle)) {
                 throw new \RuntimeException('Could not persist login rate-limit state.');
             }
             @chmod($path, 0600);
 
-            return $result;
+            return max(0, (int)$state['blocked_until'] - $now);
         } finally {
             @flock($handle, LOCK_UN);
             fclose($handle);
@@ -122,12 +223,11 @@ final class FileLoginRateLimiter
         @chmod($this->directory, 0700);
     }
 
-    private function statePath(string $username, string $clientIp): string
+    private function statePath(string $identity): string
     {
-        $clientIp = trim($clientIp);
-        $identity = $clientIp !== ''
-            ? 'ip|' . $clientIp
-            : 'account|' . strtolower(substr(trim($username), 0, 80));
-        return rtrim($this->directory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . hash('sha256', $identity) . '.json';
+        return rtrim($this->directory, DIRECTORY_SEPARATOR)
+            . DIRECTORY_SEPARATOR
+            . hash('sha256', $identity)
+            . '.json';
     }
 }

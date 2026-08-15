@@ -15,6 +15,14 @@ $env = static function (string $name, string $default = ''): string {
     return $value === false || $value === '' ? $default : (string)$value;
 };
 
+$requiredEnv = static function (string $name) use ($env): string {
+    $value = trim($env($name));
+    if ($value === '') {
+        throw new RuntimeException($name . ' is required for the container deployment.');
+    }
+    return $value;
+};
+
 $int = static function (string $name, int $default, int $min, int $max) use ($env): int {
     $raw = $env($name, (string)$default);
     $value = filter_var($raw, FILTER_VALIDATE_INT);
@@ -29,7 +37,7 @@ $base['db'] = [
     'port' => $int('UNREALDB_DB_PORT', 3306, 1, 65535),
     'database' => $env('UNREALDB_DB_NAME', 'unrealdb'),
     'username' => $env('UNREALDB_DB_USER', 'unrealdb'),
-    'password' => $env('UNREALDB_DB_PASSWORD'),
+    'password' => $requiredEnv('UNREALDB_DB_PASSWORD'),
     'charset' => 'utf8mb4',
 ];
 $base['site_name'] = $env('UNREALDB_SITE_NAME', 'Unreal File Catalog');

@@ -16,7 +16,7 @@ RUN apt-get update \
         libzip-dev \
         unzip \
     && docker-php-ext-install -j"$(nproc)" curl mbstring opcache pdo_mysql zip \
-    && pecl install redis \
+    && pecl install redis-6.3.0 \
     && docker-php-ext-enable redis \
     && a2enmod expires headers reqtimeout rewrite \
     && printf '%s\n' 'ServerTokens Prod' 'ServerSignature Off' 'TraceEnable Off' > /etc/apache2/conf-available/unrealdb-security.conf \

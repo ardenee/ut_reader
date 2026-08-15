@@ -88,6 +88,6 @@ try {
     catalog_foot();
 } catch (Throwable $error) {
     catalog_head('Error');
-    echo CatalogUi::alert('danger', $error->getMessage(), 'The games page could not be loaded.');
+    echo CatalogUi::alert('danger', catalog_exception_display_message($error), 'The games page could not be loaded.');
     catalog_foot();
 }
