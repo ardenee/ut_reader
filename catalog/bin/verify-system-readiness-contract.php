@@ -1,11 +1,11 @@
 #!/usr/bin/env php
 <?php
 /**
- * Read-only architecture/runtime verifier for the scale-ready health boundary.
+ * Read-only architecture/runtime verifier for the production health boundary.
  *
- * Use --run on a deployment host to exercise the real configured PDO, durable
- * queue table and package storage path. Without --run this remains a source and
- * PHP-syntax contract.
+ * Use --run on the Windows deployment host to exercise the real configured PDO,
+ * durable queue table and package storage path. Without --run this remains a
+ * source and PHP-syntax contract.
  */
 declare(strict_types=1);
 
@@ -15,17 +15,12 @@ if (PHP_SAPI !== 'cli') {
 }
 
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
-$repoRoot = dirname($root);
 $run = in_array('--run', array_slice($argv, 1), true);
 $checks = [];
 $failures = [];
 
 $read = static function (string $relative) use ($root): string {
     $source = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
-    return is_string($source) ? $source : '';
-};
-$readRepo = static function (string $relative) use ($repoRoot): string {
-    $source = @file_get_contents($repoRoot . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
     return is_string($source) ? $source : '';
 };
 $record = static function (string $name, bool $ok, string $detail = '') use (&$checks, &$failures): void {
@@ -38,6 +33,7 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 $bootstrap = $read('bootstrap.php');
 $operationalBootstrap = $read('bootstrap/operational.php');
 $apiBootstrap = $read('api/v1/_bootstrap.php');
+$live = $read('api/v1/live.php');
 $health = $read('api/v1/health.php');
 $readiness = $read('api/v1/readiness.php');
 $support = $read('lib/CatalogSupport.php');
@@ -48,9 +44,6 @@ $factory = $read('src/Infrastructure/Composition/CatalogSystemReadinessFactory.p
 $dbProbe = $read('src/Infrastructure/Health/PdoDatabaseReadinessProbe.php');
 $queueProbe = $read('src/Infrastructure/Health/PdoQueueReadinessProbe.php');
 $storageProbe = $read('src/Infrastructure/Health/FilesystemStorageReadinessProbe.php');
-$compose = $readRepo('compose.yaml');
-$kubernetes = $readRepo('deploy/kubernetes/base/platform.yaml');
-$deploymentWorkflow = $readRepo('.github/workflows/deploy-production.yml');
 
 $record(
     'bootstrap_honors_session_flag',
@@ -75,9 +68,16 @@ $record(
 );
 $record(
     'operational_probes_do_not_persist_telemetry',
-    str_contains($operationalBootstrap, "\$GLOBALS['catalog_performance_persist_disabled'] = true;")
-        && str_contains($performance, "empty(\$GLOBALS['catalog_performance_persist_disabled'])"),
+    str_contains($operationalBootstrap, "$GLOBALS['catalog_performance_persist_disabled'] = true;")
+        && str_contains($performance, "empty($GLOBALS['catalog_performance_persist_disabled'])"),
     'infrastructure-generated probes must not randomly write request-performance samples to MySQL'
+);
+$record(
+    'live_is_dependency_free',
+    str_contains($live, "'process' => 'live'")
+        && !str_contains($live, 'catalog_operational_application()')
+        && !str_contains($live, 'PDO'),
+    'process liveness must remain independent of MySQL and package storage'
 );
 $record(
     'health_uses_operational_bootstrap',
@@ -93,7 +93,7 @@ $record(
         && str_contains($readiness, 'catalog_operational_application()')
         && str_contains($readiness, 'CatalogSystemReadinessFactory::create(')
         && str_contains($readiness, '$report->ready ? 200 : 503'),
-    'load balancer readiness must use minimal startup and return 503 when a critical dependency is unavailable'
+    'service-manager readiness must use minimal startup and return 503 when a critical dependency is unavailable'
 );
 $record(
     'operational_probes_bypass_public_middleware',
@@ -137,30 +137,14 @@ $record(
         && str_contains($storageProbe, 'is_dir($path)')
         && str_contains($storageProbe, 'is_readable($path)')
         && str_contains($storageProbe, 'is_writable($path)'),
-    'current all-in-one node requires readable and writable package storage'
-);
-$record(
-    'docker_uses_dependency_readiness',
-    str_contains($compose, '/catalog/api/v1/readiness.php'),
-    'container service health must include the dependencies required to accept traffic'
-);
-$record(
-    'kubernetes_splits_liveness_and_readiness',
-    substr_count($kubernetes, '/catalog/api/v1/live.php') >= 2
-        && str_contains($kubernetes, '/catalog/api/v1/readiness.php')
-        && !str_contains($kubernetes, "readinessProbe:\n            httpGet:\n              path: /catalog/api/v1/health.php"),
-    'Kubernetes must use dependency-free liveness and dependency-aware readiness'
-);
-$record(
-    'deployment_smoke_tests_readiness',
-    substr_count($deploymentWorkflow, '/catalog/api/v1/readiness.php') >= 2,
-    'post-deploy smoke tests must prove the release can actually receive production traffic'
+    'single-host production requires readable and writable package storage'
 );
 
 $syntaxTargets = [
     'bootstrap.php',
     'bootstrap/operational.php',
     'api/v1/_bootstrap.php',
+    'api/v1/live.php',
     'api/v1/health.php',
     'api/v1/readiness.php',
     'lib/CatalogSupport.php',
