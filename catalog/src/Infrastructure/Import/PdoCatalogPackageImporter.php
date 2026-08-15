@@ -452,13 +452,16 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             'duplicate_md5' => (string)($duplicate['md5'] ?? ''),
         ];
 
-        if (strcasecmp($duplicatePackageName, $packageName) === 0
-            || \catalog_package_alias_exists($this->db, $duplicateFileId, $gameId, $packageName)) {
+        if (strcasecmp($duplicatePackageName, $packageName) === 0) {
             \scanner_emit_percent($progress, 'done', 100, 'Duplicate in selected game');
             return ['duplicate', $duplicateFileId, 'Duplicate in selected game', $classification, $meta];
         }
 
-        \catalog_package_alias_add(
+        // Alias insertion is intentionally idempotent. The compatibility facade
+        // records whether the row already existed, but retries must still execute
+        // the dependency publication below; otherwise a previous refresh failure
+        // would become a permanent silent gap as soon as the alias row existed.
+        $aliasAdded = \catalog_package_alias_add(
             $this->db,
             $duplicateFileId,
             $gameId,
@@ -468,7 +471,8 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             $md5,
             $size
         );
-        $refreshWarning = '';
+        $aliasAlreadyExisted = !$aliasAdded;
+
         if ($deferDependencyRebuild) {
             \scanner_emit_percent(
                 $progress,
@@ -492,17 +496,33 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
                     . ' file_id=' . $duplicateFileId
                     . ' error=' . $refreshError->getMessage()
                 );
-                $refreshWarning = '; dependency refresh warning logged for maintenance';
+                throw new RuntimeException(
+                    'Package alias dependency refresh failed for ' . $packageName
+                    . ' on verified file #' . $duplicateFileId . ': '
+                    . $refreshError->getMessage(),
+                    0,
+                    $refreshError
+                );
             }
         }
 
-        \scanner_emit_percent($progress, 'done', 100, 'Alias package added for existing file identity');
+        \scanner_emit_percent(
+            $progress,
+            'done',
+            100,
+            $aliasAlreadyExisted
+                ? 'Existing package alias dependency refresh completed'
+                : 'Alias package added for existing file identity'
+        );
         $meta['alias_package_name'] = $packageName;
-        $meta['alias_added'] = true;
+        $meta['alias_added'] = $aliasAdded;
+        $meta['alias_already_exists'] = $aliasAlreadyExisted;
         return [
             'alias',
             $duplicateFileId,
-            'Package alias added for existing file identity' . $refreshWarning,
+            $aliasAlreadyExisted
+                ? 'Existing package alias dependency refresh completed'
+                : 'Package alias added for existing file identity',
             $classification,
             $meta,
         ];
