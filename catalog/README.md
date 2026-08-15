@@ -30,7 +30,7 @@ The catalogue is intended to answer questions such as:
 - Does another compatible game contain a verified provider for a missing dependency?
 - Is verified compact metadata complete and healthy for this file?
 
-It also provides workflows for uploads, unverified-file review, duplicate/alias handling, dependency repair, Full Sync, source-identity repair, PAK/UPK management, Game Backups, federation and generated download packages.
+It also provides workflows for uploads, archive unpacking, unverified-file review, duplicate/alias handling, dependency repair, Full Sync, source-identity repair, PAK/UPK management, Game Backups, federation and generated download packages.
 
 ## Install
 
@@ -44,6 +44,8 @@ It also provides workflows for uploads, unverified-file review, duplicate/alias 
 8. Create the initial administrator with `php catalog/bin/create-admin.php --username=admin`.
 9. Start/reconcile the background worker pool.
 10. Open `catalog/index.php` and sign in.
+
+For ZIP uploads, PHP `ZipArchive` is used when available. 7z and RAR unpacking requires a 7-Zip-compatible command-line binary (`7zz`, `7z` or `7za`) available to the worker process, or configured through `UNREALDB_7ZIP_BINARY` / `archive.seven_zip_binary`.
 
 For an existing database, **do not re-import `install.sql`**. Back up the database and package storage, then use the migration runner:
 
@@ -109,6 +111,30 @@ Important rules:
 
 Upload Files to Game and Upload Bucket use the same durable server-side boundary once a complete file reaches controlled storage.
 
+### ZIP / 7z / RAR unpacking
+
+ZIP, 7z and RAR are transport containers only. The archive itself is not published as an Unreal package.
+
+The archive coordinator lists entries first, filters them using the target game/profile or Upload Bucket policy, and extracts one accepted regular file at a time. Each extracted member is placed in controlled incoming storage and queued as its own durable job.
+
+- normal package members enter `catalog.import_staged_package` or the Upload Bucket package path;
+- `.uz`, `.uz2` and `.uz3` members are decoded by the existing redirect processor before normal package handling;
+- `.pak` members use the existing PAK import workflow when a selected UE4/UE5 target permits them;
+- unsupported files are skipped rather than extracted unnecessarily;
+- a failed member does not stop unrelated members from being queued;
+- nested ZIP/7z/RAR archives are skipped rather than recursively expanded;
+- encrypted/password-protected archive members are not imported;
+- unsafe archive paths and link entries are rejected before extraction;
+- archive/member-count and unpacked-byte limits are configurable under `archive` in `config.php`.
+
+The archive source is deleted once expansion succeeds. If one or more accepted members fail to unpack or queue, the source archive is retained for diagnosis/retry.
+
+Run the no-database archive regression verifier with:
+
+```text
+php catalog/bin/verify-archive-ingestion.php
+```
+
 ## Compact metadata
 
 Verified package metadata uses the format-2 compact metadata model.
@@ -152,6 +178,7 @@ Current broad status:
 - **`.uz`:** historical 1234 and 5678 FCodec variants supported.
 - **`.uz2`:** chunked zlib support present; malformed/non-standard archives fail safely.
 - **`.uz3`:** active UT3 tag + uncompressed-size + whole-file zlib compression/decompression, validated against real `UT3.exe Compress` output.
+- **`.zip` / `.7z` / `.rar`:** active unpack-only upload containers; supported Unreal members are passed to the normal durable import workflows.
 
 ## Operational endpoints
 
@@ -167,6 +194,7 @@ Useful verification commands include:
 php catalog/bin/migrate.php verify
 php catalog/bin/verify-system-readiness-contract.php --run
 php catalog/bin/verify-queue-runtime-invariants.php
+php catalog/bin/verify-archive-ingestion.php
 php catalog/bin/verify-solo-maintainer-hardening.php --run
 ```
 
