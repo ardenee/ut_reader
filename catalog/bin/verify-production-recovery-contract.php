@@ -132,7 +132,8 @@ $record(
     'repair verification must keep metadata_status aligned with physical health'
 );
 
-$importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$importer = $read('src/Infrastructure/Import/CatalogPackageImporterAdapter.php');
+$pdoImporter = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
 $identity = $read('src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php');
 $publisher = $read('src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php');
 $dependencyCoordinator = $read('src/Infrastructure/Import/CatalogVerifiedPackageDependencyCoordinator.php');
@@ -165,6 +166,14 @@ $record(
         && str_contains($importer, '$this->dependencies->refreshAlias('),
     'idempotent alias insertion must not convert a failed dependency publication into success'
 );
+$record(
+    'pdo_importer_is_thin_composition_adapter',
+    str_contains($pdoImporter, 'CatalogPackageImporterFactory::create(')
+        && str_contains($pdoImporter, '$this->delegate->importUploadedFile(')
+        && !str_contains($pdoImporter, 'findVerifiedDuplicate(')
+        && !str_contains($pdoImporter, 'VerifiedFileCompactMetadataFinalizer'),
+    'durable jobs may keep the stable PDO constructor, but no import behaviour may live in that wrapper'
+);
 
 $starvationVerifier = $read('bin/verify-job-claim-starvation.php');
 $record(
@@ -187,11 +196,17 @@ $criticalPhp = [
     'src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
     'src/Infrastructure/Jobs/CatalogCompactMetadataRepairJobHandler.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    'src/Infrastructure/Import/CatalogPackageImporterAdapter.php',
     'src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
     'src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
     'src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php',
     'src/Infrastructure/Import/CatalogVerifiedPackageDependencyCoordinator.php',
+    'src/Infrastructure/Composition/CatalogPackageImporterFactory.php',
     'src/Application/Import/CatalogVerifiedPackageInspection.php',
+    'src/Application/Import/Contract/VerifiedPackageInspectorPort.php',
+    'src/Application/Import/Contract/VerifiedPackageIdentityPort.php',
+    'src/Application/Import/Contract/VerifiedPackagePublisherPort.php',
+    'src/Application/Import/Contract/VerifiedPackageDependencyPort.php',
 ];
 
 if (!function_exists('proc_open')) {
