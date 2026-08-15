@@ -12,7 +12,7 @@ namespace UnrealDb\Catalog\Infrastructure\Games;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogProjectionReconciliationQueue;
 
 final class CatalogGameLifecycleService
 {
