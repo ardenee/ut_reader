@@ -92,7 +92,8 @@ $record(
     str_contains($lookup, 'public function primeSnapshotTerms(array $snapshot, int &$sqlBatches): array')
         && str_contains($lookup, '?array $resolvedTermIds = null')
         && str_contains($snapshotWriter, '$resolvedTermIds = $lookupWriter->primeSnapshotTerms(')
-        && str_contains($snapshotWriter, '$resolvedTermIds\n            );'),
+        && str_contains($snapshotWriter, '$lookupWriter->writeVersioned(')
+        && substr_count($snapshotWriter, '$resolvedTermIds') >= 3,
     'normal publication must reuse the dictionary IDs resolved before its transaction'
 );
 $record(
