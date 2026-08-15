@@ -65,6 +65,7 @@ $record(
 $container = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataContainer.php');
 $reader = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php');
 $snapshotWriter = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php');
+$converter = $read('src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php');
 $record(
     'compact_verification_streams_from_disk',
     str_contains($container, 'public static function verifyFile(')
@@ -80,10 +81,29 @@ $record(
     'metadata health checks must not allocate the complete container as a PHP string'
 );
 $record(
-    'snapshot_temp_write_uses_streaming_hash',
-    str_contains($snapshotWriter, "hash_file('sha256', \$temporaryPath, true)")
-        && !str_contains($snapshotWriter, '$temporaryBytes = file_get_contents('),
-    'temporary publication verification must not reread/decompress a second full container copy'
+    'production_container_build_is_streamed',
+    str_contains($container, 'public static function buildToFile(')
+        && str_contains($container, 'private static function buildPayload(')
+        && str_contains($container, '$chunk = array_slice($rows, $rowStart, $blockSize)')
+        && str_contains($container, 'COPY_BUFFER_BYTES')
+        && str_contains($snapshotWriter, 'BlockedCompressedMetadataContainer::buildToFile(')
+        && !str_contains($snapshotWriter, 'BlockedCompressedMetadataContainer::build($snapshot)')
+        && !str_contains($snapshotWriter, '$bytes ='),
+    'production publication must build the physical container block-by-block instead of allocating the complete compressed payload'
+);
+$record(
+    'successful_publication_avoids_second_full_scan',
+    str_contains($snapshotWriter, "'verified' => true")
+        && !str_contains($snapshotWriter, 'new BlockedCompressedMetadataReader('),
+    'the exact temp file is already fully verified before atomic rename; successful publication must not immediately rescan it'
+);
+$record(
+    'projection_maintenance_avoids_whole_container_copy',
+    str_contains($converter, 'BlockedCompressedMetadataContainer::verifyFile(')
+        && str_contains($converter, '$lookupWriter->writeVersionedMetadata(')
+        && !str_contains($converter, 'file_get_contents($path)')
+        && !str_contains($converter, 'verifyBytes($bytes'),
+    'projection maintenance must stream physical verification and register existing size/SHA without loading the complete container'
 );
 
 $lookup = $read('src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php');
@@ -91,8 +111,9 @@ $record(
     'compact_terms_are_resolved_once',
     str_contains($lookup, 'public function primeSnapshotTerms(array $snapshot, int &$sqlBatches): array')
         && str_contains($lookup, '?array $resolvedTermIds = null')
+        && str_contains($lookup, 'public function writeVersionedMetadata(')
         && str_contains($snapshotWriter, '$resolvedTermIds = $lookupWriter->primeSnapshotTerms(')
-        && str_contains($snapshotWriter, '$lookupWriter->writeVersioned(')
+        && str_contains($snapshotWriter, '$lookupWriter->writeVersionedMetadata(')
         && substr_count($snapshotWriter, '$resolvedTermIds') >= 3,
     'normal publication must reuse the dictionary IDs resolved before its transaction'
 );
@@ -109,6 +130,18 @@ $record(
         && str_contains($lookup, 'Compact lookup insert batch exceeded the bounded row limit.')
         && !str_contains($lookup, 'private function bulkInsert('),
     'export/dependency projection memory must be bounded independently of package size'
+);
+
+$searchProjection = $read('src/Infrastructure/Metadata/CompactSearchProjectionWriter.php');
+$record(
+    'search_projection_reuses_terms_and_batches_updates',
+    str_contains($searchProjection, '?array $resolvedTermIds = null')
+        && str_contains($searchProjection, 'count($importBatch) >= self::UPDATE_BATCH_SIZE')
+        && str_contains($searchProjection, 'count($exportBatch) >= self::UPDATE_BATCH_SIZE')
+        && str_contains($searchProjection, 'private static array $schemaAvailable')
+        && str_contains($snapshotWriter, '$resolvedTermIds\n            );') === false
+        && str_contains($snapshotWriter, 'new CompactSearchProjectionWriter($this->db))->write('),
+    'search projections must reuse the shared dictionary, bound update maps and avoid repeated information_schema checks'
 );
 
 $overflow = $read('src/Infrastructure/Metadata/CompactTermOverflowWriter.php');
@@ -154,6 +187,7 @@ $criticalPhp = [
     'src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php',
     'src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
     'src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php',
+    'src/Infrastructure/Metadata/CompactSearchProjectionWriter.php',
     'src/Infrastructure/Metadata/CompactTermOverflowWriter.php',
     'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
     'src/Infrastructure/Search/PdoCatalogSearchRepository.php',
