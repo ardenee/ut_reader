@@ -74,6 +74,8 @@ final class CatalogBackgroundJobResultHydrator
             'batch_count',
             'batch_start',
             'batch_end',
+            'archive_source_name',
+            'archive_entry_path',
         ] as $field) {
             if (array_key_exists($field, $decoded)) {
                 $payload[$field] = $decoded[$field];
@@ -230,7 +232,7 @@ final class CatalogBackgroundJobResultHydrator
                     . (int)$result['import_count'] . ' Imports and '
                     . (int)$result['export_count'] . ' Exports recorded.';
             }
-        } elseif ($jobType === JobType::PROCESS_BUCKET_UPLOAD
+        } elseif (in_array($jobType, [JobType::PROCESS_BUCKET_UPLOAD, JobType::PROCESS_BUCKET_STAGED_PACKAGE], true)
             && strtolower(trim((string)($result['status'] ?? ''))) === 'bucketed') {
             $this->appendBucketPhysicalState($progress, $result);
         }
@@ -289,7 +291,7 @@ final class CatalogBackgroundJobResultHydrator
             return $redirectSourceName === '' || strcasecmp($redirectSourceName, $expectedName) === 0;
         }
 
-        return $jobType === JobType::PROCESS_BUCKET_UPLOAD
+        return in_array($jobType, [JobType::PROCESS_BUCKET_UPLOAD, JobType::PROCESS_BUCKET_STAGED_PACKAGE], true)
             && trim((string)($result['decoder'] ?? '')) !== '';
     }
 
