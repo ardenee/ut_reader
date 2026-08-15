@@ -339,3 +339,23 @@ function catalog_public_error_message(): string
     $GLOBALS['catalog_public_cache_abort'] = true;
     return 'The request could not be completed. Reference: ' . catalog_request_id();
 }
+
+/**
+ * Public pages must not turn an internal Throwable into SQL, filesystem or
+ * implementation disclosure. An already authenticated administrator may still
+ * receive the detailed message because these diagnostics are useful for the
+ * maintenance UI; anonymous users receive only a request reference.
+ */
+function catalog_exception_display_message(Throwable $error): string
+{
+    $requestId = catalog_request_id();
+    error_log('[UnrealDB][' . $requestId . '] ' . get_class($error) . ': ' . $error->getMessage());
+
+    if (PHP_SAPI !== 'cli'
+        && session_status() === PHP_SESSION_ACTIVE
+        && (($_SESSION['user']['role'] ?? '') === 'admin')) {
+        return trim($error->getMessage()) !== '' ? $error->getMessage() : 'Unknown application error.';
+    }
+
+    return catalog_public_error_message();
+}
