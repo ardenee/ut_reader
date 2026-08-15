@@ -3,8 +3,9 @@
 /**
  * Umbrella verifier for the P0-P5 solo-maintainer production hardening pass.
  *
- * --run additionally exercises the configured database/queue/storage operations
- * snapshot. It does not create a backup or perform any destructive action.
+ * --run additionally exercises bounded current-job/operator reporting, admin read
+ * models and configured database/queue/storage health. It does not create a
+ * backup or perform any destructive action.
  */
 declare(strict_types=1);
 
@@ -22,10 +23,13 @@ $run = in_array('--run', array_slice($argv, 1), true);
 $definitions = [
     ['phase' => 'P0', 'script' => 'verify-maintainability-guardrails.php', 'run' => false],
     ['phase' => 'P1', 'script' => 'verify-system-operations-contract.php', 'run' => $run],
+    ['phase' => 'P1', 'script' => 'verify-background-jobs-count-scope-contract.php', 'run' => false],
     ['phase' => 'P2', 'script' => 'verify-read-model-boundaries.php', 'run' => false],
     ['phase' => 'P3', 'script' => 'verify-package-storage-boundary.php', 'run' => false],
     ['phase' => 'P4', 'script' => 'verify-windows-backup-recovery-contract.php', 'run' => false],
     ['phase' => 'P5', 'script' => 'verify-frontend-js-modules.php', 'run' => false],
+    ['phase' => 'operations', 'script' => 'verify-operator-reporting-contract.php', 'run' => $run],
+    ['phase' => 'operations', 'script' => 'verify-admin-runtime-smoke.php', 'run' => $run],
     ['phase' => 'baseline', 'script' => 'verify-clean-architecture.php', 'run' => false],
     ['phase' => 'baseline', 'script' => 'verify-performance-contract.php', 'run' => false],
     ['phase' => 'baseline', 'script' => 'verify-production-recovery-contract.php', 'run' => false],
