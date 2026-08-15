@@ -20,6 +20,14 @@ function catalog_redirect_archive_uncompress_epic_zlib(string $payload, int $lim
         return null;
     }
 
+    // Prefer the streaming path because it verifies that the complete input
+    // is exactly one zlib stream and that the declared output size matches.
+    $strict = catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expectedBytes);
+    if ($strict !== null) {
+        return ['data' => (string)$strict['data'], 'decoder' => 'zlib-inflate'];
+    }
+
+    // Compatibility fallback for PHP builds without the streaming zlib API.
     if (function_exists('gzuncompress')) {
         try {
             $decoded = @gzuncompress($payload, $expectedBytes);
@@ -29,11 +37,6 @@ function catalog_redirect_archive_uncompress_epic_zlib(string $payload, int $lim
         if (is_string($decoded) && strlen($decoded) === $expectedBytes) {
             return ['data' => $decoded, 'decoder' => 'zlib-uncompress'];
         }
-    }
-
-    $strict = catalog_redirect_archive_inflate_epic_zlib($payload, $limit, $expectedBytes);
-    if ($strict !== null) {
-        return ['data' => (string)$strict['data'], 'decoder' => 'zlib-inflate'];
     }
 
     return null;
