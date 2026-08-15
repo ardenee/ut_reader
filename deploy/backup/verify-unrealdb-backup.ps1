@@ -69,8 +69,8 @@ $storageArchive = Join-Path $backup 'storage.tar.gz'
 if ($storageIncluded) {
     if (-not (Test-Path -LiteralPath $storageArchive -PathType Leaf)) { throw 'metadata.json expects storage.tar.gz, but it is missing.' }
     $tar = Resolve-Executable -Configured $TarExecutable -Names @('tar.exe', 'tar')
-    $process = Start-Process -FilePath $tar -ArgumentList @('-tzf', $storageArchive) -Wait -NoNewWindow -PassThru
-    if ($process.ExitCode -ne 0) { throw "Storage archive listing failed with exit code $($process.ExitCode)." }
+    & $tar '-tzf' $storageArchive *> $null
+    if ($LASTEXITCODE -ne 0) { throw "Storage archive listing failed with exit code $LASTEXITCODE." }
 }
 
 $result = [ordered]@{
