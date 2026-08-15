@@ -12,10 +12,11 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 use PDO;
 use RuntimeException;
 use Throwable;
+use UnrealDb\Catalog\Application\Import\Contract\VerifiedPackageDependencyPort;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogPostImportDependencyQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 
-final class CatalogVerifiedPackageDependencyCoordinator
+final class CatalogVerifiedPackageDependencyCoordinator implements VerifiedPackageDependencyPort
 {
     private readonly PdoCatalogDependencyRebuilder $rebuilder;
 
@@ -24,6 +25,7 @@ final class CatalogVerifiedPackageDependencyCoordinator
         private readonly PDO $db,
         private readonly array $config
     ) {
+        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         $this->rebuilder = new PdoCatalogDependencyRebuilder($db, $config);
     }
 
