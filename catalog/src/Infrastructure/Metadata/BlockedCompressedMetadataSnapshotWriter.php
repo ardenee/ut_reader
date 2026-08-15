@@ -56,11 +56,11 @@ final class BlockedCompressedMetadataSnapshotWriter
             throw new RuntimeException('Could not create compact metadata directory: ' . $directory);
         }
 
-        // ue_terms is shared by every file. Publish the complete dictionary before
-        // starting the file-owned transaction, so unrelated file writers never
-        // retain global term locks while replacing their projections.
+        // ue_terms is shared by every file. Resolve it once before the file-owned
+        // transaction, then reuse those stable IDs for every contention retry.
         $dictionarySqlBatches = 0;
-        (new CompressedMetadataLookupWriter($this->db))->primeSnapshotTerms($snapshot, $dictionarySqlBatches);
+        $lookupWriter = new CompressedMetadataLookupWriter($this->db);
+        $resolvedTermIds = $lookupWriter->primeSnapshotTerms($snapshot, $dictionarySqlBatches);
         (new CompactTermOverflowWriter($this->db))->write($snapshot, $dictionarySqlBatches);
 
         for ($attempt = 1; ; $attempt++) {
@@ -71,7 +71,9 @@ final class BlockedCompressedMetadataSnapshotWriter
                     $bytes,
                     $path,
                     $fileId,
-                    $dictionarySqlBatches
+                    $dictionarySqlBatches,
+                    $lookupWriter,
+                    $resolvedTermIds
                 );
             } catch (Throwable $error) {
                 if (!PdoContention::retryable($error) || $attempt >= self::CONTENTION_ATTEMPTS) {
@@ -88,6 +90,7 @@ final class BlockedCompressedMetadataSnapshotWriter
     /**
      * @param array<string,mixed> $snapshot
      * @param array<string,mixed> $built
+     * @param array<string,int> $resolvedTermIds
      * @return array<string,mixed>
      */
     private function publishAttempt(
@@ -96,7 +99,9 @@ final class BlockedCompressedMetadataSnapshotWriter
         string $bytes,
         string $path,
         int $fileId,
-        int $dictionarySqlBatches
+        int $dictionarySqlBatches,
+        CompressedMetadataLookupWriter $lookupWriter,
+        array $resolvedTermIds
     ): array {
         $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(8));
         $backupPath = $path . '.bak.' . bin2hex(random_bytes(8));
@@ -126,13 +131,14 @@ final class BlockedCompressedMetadataSnapshotWriter
 
         $this->db->beginTransaction();
         try {
-            (new CompressedMetadataLookupWriter($this->db))->writeVersioned(
+            $lookupWriter->writeVersioned(
                 $snapshot,
                 $bytes,
                 (int)$built['uncompressed_size'],
                 BlockedCompressedMetadataContainer::FORMAT_VERSION,
                 BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP,
-                $sqlBatches
+                $sqlBatches,
+                $resolvedTermIds
             );
             (new CompactSearchProjectionWriter($this->db))->write($snapshot, $sqlBatches);
 
