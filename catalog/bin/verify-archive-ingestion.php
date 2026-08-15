@@ -40,6 +40,8 @@ $phpFiles = [
     'api/v1/profiled-upload-batch.php',
     'api/v1/profiled-upload-chunk.php',
     'api/v1/upload-bucket-chunk.php',
+    'profiled-upload.php',
+    'upload-bucket-v2.php',
     'config.example.php',
 ];
 
@@ -118,6 +120,26 @@ $record(
         && is_string($profiledBatchApi) && str_contains($profiledBatchApi, "['zip', '7z', 'rar']")
         && is_string($profiledChunkApi) && str_contains($profiledChunkApi, "['zip', '7z', 'rar']"),
     'Both Upload Bucket and selected-game upload ingress must recognize archive containers.'
+);
+
+$profiledClient = @file_get_contents($root . '/assets/profiled-upload-jobs.js');
+$bucketInspector = @file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
+$record(
+    'browser_archive_policy_uses_container_path',
+    is_string($profiledClient)
+        && str_contains($profiledClient, "function isArchive(file)")
+        && str_contains($profiledClient, "return isPak(file) || isArchive(file) ||")
+        && str_contains($profiledClient, "const container = isPak(file) || isArchive(file);")
+        && str_contains($profiledClient, "archive/container limit"),
+    'Selected-game browser uploads must treat ZIP/7z/RAR as resumable containers, not normal package files.'
+);
+$record(
+    'bucket_inspector_skips_archive_package_hashing',
+    is_string($bucketInspector)
+        && str_contains($bucketInspector, "['zip', '7z', 'rar'].includes(extension)")
+        && str_contains($bucketInspector, "archive: true")
+        && !str_contains($bucketInspector, "replace(/\\.uz$/i, '.uz3')"),
+    'Upload Bucket preflight must not hash archive bytes as package identity or relabel a 5678 .uz wrapper as UT3 .uz3.'
 );
 
 $hydrator = new CatalogBackgroundJobResultHydrator(['storage_path' => sys_get_temp_dir()]);
