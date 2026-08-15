@@ -1,0 +1,19 @@
+<?php
+/**
+ * Minimal bootstrap for machine health/readiness probes.
+ *
+ * Deliberately excludes CatalogSupport.php so probes do not traverse HTML page
+ * transforms, public response caching, crawler/burst middleware, MFA helpers or
+ * request resource tracing. The normal web/API bootstrap remains unchanged.
+ */
+declare(strict_types=1);
+
+require_once dirname(__DIR__) . '/lib/CatalogSupportCore.php';
+require_once __DIR__ . '/autoload.php';
+
+use UnrealDb\Catalog\Presentation\Http\CatalogApplication;
+
+function catalog_operational_application(): CatalogApplication
+{
+    return CatalogApplication::boot(false);
+}
