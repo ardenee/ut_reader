@@ -15,8 +15,8 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use PDOException;
-use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
 use UnrealDb\Catalog\Application\PackageAlias\PackageAliasRepository;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogProjectionReconciliationQueue;
 
 /** PDO implementation of logical package alias persistence. */
 final class PdoPackageAliasRepository implements PackageAliasRepository
