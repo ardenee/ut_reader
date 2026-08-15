@@ -35,10 +35,10 @@ final class LocalFilesystemPackageStorage implements PackageStoragePort
         bool $discardDuplicateSource = true
     ): array {
         $slug = \scanner_slug_text($gameSlug);
+        // Keep the historical path construction byte-for-byte. Mixed slash style
+        // is valid on Windows and existing error/log output may include this path.
         $directory = rtrim($this->storageRoot, DIRECTORY_SEPARATOR)
-            . DIRECTORY_SEPARATOR . 'games'
-            . DIRECTORY_SEPARATOR . $slug
-            . DIRECTORY_SEPARATOR . 'verified';
+            . '/games/' . $slug . '/verified';
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
             throw new RuntimeException('Could not create storage folder: ' . $directory);
         }
@@ -47,7 +47,7 @@ final class LocalFilesystemPackageStorage implements PackageStoragePort
         // Hash/extension normalization belongs to the importer that already owns
         // those values; this storage boundary must not silently rewrite them.
         $storedName = $md5 . '.' . $extension;
-        $destination = $directory . DIRECTORY_SEPARATOR . $storedName;
+        $destination = $directory . '/' . $storedName;
         $created = false;
 
         if (is_file($destination)) {
