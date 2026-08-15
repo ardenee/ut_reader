@@ -55,6 +55,8 @@ jobs:
         run: |
           docker run --rm --entrypoint php unrealdb-ci:${{ github.sha }} -l /var/www/html/catalog/api/v1/live.php
           docker run --rm --entrypoint php unrealdb-ci:${{ github.sha }} -l /var/www/html/deploy/docker/config.php
+      - name: Verify security hardening contracts
+        run: docker run --rm -v "$PWD:/workspace:ro" -w /workspace --entrypoint php unrealdb-ci:${{ github.sha }} catalog/bin/verify-security-hardening.php
       - name: Scan image for vulnerabilities
         uses: anchore/scan-action@1638637db639e0ade3258b51db49a9a137574c3e # v6
         id: scan
