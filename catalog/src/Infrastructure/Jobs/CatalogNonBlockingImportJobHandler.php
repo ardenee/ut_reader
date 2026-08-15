@@ -21,6 +21,7 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogFileMaintenanceReimportService;
+use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedCompactMetadataHealth;
 use UnrealDb\Catalog\Infrastructure\Redirect\CatalogRedirectArchiveProcessor;
 
 /**
@@ -132,11 +133,11 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
     }
 
     /**
-     * A metadata-publication deadlock can happen after ue_files and canonical
-     * package storage have already been committed. Retrying the staged import then
-     * detects that row as a duplicate. If that duplicate lacks format-2 metadata,
-     * repair the stable file in place instead of incorrectly completing as a
-     * harmless duplicate.
+     * Compact publication can fail after ue_files and canonical package storage
+     * have already committed. Retrying then detects that stable row as a duplicate.
+     * A format-2 registration is not sufficient evidence of health: verify the
+     * physical container and repair the stable file in place when it is missing,
+     * corrupt or incompletely published.
      *
      * @param array<string,mixed> $result
      * @return array<string,mixed>
@@ -156,14 +157,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             return $result;
         }
 
-        $statement = $this->db->prepare(
-            'SELECT m.format_version FROM ue_files f '
-            . 'LEFT JOIN ue_file_metadata m ON m.file_id=f.id '
-            . 'WHERE f.id=? AND f.scan_status="verified" LIMIT 1'
-        );
-        $statement->execute([$fileId]);
-        $formatVersion = (int)($statement->fetchColumn() ?: 0);
-        if ($formatVersion === 2) {
+        if (VerifiedCompactMetadataHealth::healthy($this->db, $this->config, $fileId)) {
             return $result;
         }
 
@@ -178,7 +172,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'status' => 'repairing',
             'file_id' => $fileId,
             'message' => 'Retry found verified file #' . $fileId
-                . ' without format-2 metadata; repairing the interrupted import in place.',
+                . ' without healthy format-2 metadata; repairing the interrupted import in place.',
         ]);
 
         $repair = (new CatalogFileMaintenanceReimportService($this->db, $this->config))->reimport(
@@ -198,8 +192,11 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             false
         );
 
+        // Do not report recovery until the authoritative container verifies.
+        VerifiedCompactMetadataHealth::verify($this->db, $this->config, $fileId);
+
         $message = 'Recovered interrupted verified import for file #' . $fileId
-            . '; format-2 compact metadata was rebuilt in place.';
+            . '; format-2 compact metadata was rebuilt and verified in place.';
         $context->checkpoint([
             'stage' => 'complete',
             'done' => 100,
@@ -335,7 +332,7 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'message' => 'Redirect archive decompressed and durably prepared as '
                 . basename((string)$decoded['filename']) . ' (' . $this->bytes((int)$decoded['bytes']) . ').',
             'output_bytes' => (int)$decoded['bytes'],
-            'decoder' => (string)($decoded['decoder'] ?? ''),
+            'decoder' => (string)$decoded['decoder'],
             'prepared_reused' => false,
         ]);
 
@@ -407,6 +404,10 @@ final class CatalogNonBlockingImportJobHandler implements JobHandler
             'job lease no longer belongs',
             'could not lock chunked upload state',
             'timed out waiting for chunked upload state',
+            'direct compact metadata publication failed',
+            'compact metadata',
+            'blocked metadata',
+            'metadata publication',
             'sqlstate[',
         ] as $fragment) {
             if (str_contains($message, $fragment)) {
