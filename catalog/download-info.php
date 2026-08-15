@@ -13,9 +13,9 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/ExternalMirrors.php';
 
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Downloads\CatalogPackageExportSettingsService;
 use UnrealDb\Catalog\Infrastructure\Downloads\PdoCatalogPackageExportPlanner;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 function render_availability(PDO $db, int $fileId): string
 {
@@ -73,7 +73,7 @@ try {
         $defaultFormat = $formats[0] ?? '';
     }
 
-    $dependencySource = CatalogDependencyReadSource::sql($db);
+    $dependencySource = PdoDependencyReadSource::sql($db);
     $depCount = (int)(catalog_one(
         $db,
         'SELECT COUNT(DISTINCT rf.id) c FROM ' . $dependencySource . ' d '
