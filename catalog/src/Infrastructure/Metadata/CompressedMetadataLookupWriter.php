@@ -25,30 +25,34 @@ final class CompressedMetadataLookupWriter
     }
 
     /**
-     * Prime the complete shared term dictionary before a file-owned metadata
-     * transaction begins. Every term needed by both lookup writers is inserted
-     * here in one deterministic global order. Each INSERT is autocommitted, so
-     * ue_terms locks are never held while a file's larger projections are being
-     * deleted/reinserted.
+     * Prime and resolve the complete shared term dictionary before a file-owned
+     * metadata transaction begins. Returning the IDs lets the atomic writer reuse
+     * the exact resolution instead of rebuilding the term map and requerying the
+     * dictionary a second time inside the transaction.
      *
      * @param array<string,mixed> $snapshot
+     * @return array<string,int>
      */
-    public function primeSnapshotTerms(array $snapshot, int &$sqlBatches): void
+    public function primeSnapshotTerms(array $snapshot, int &$sqlBatches): array
     {
         if ($this->db->inTransaction()) {
             throw new RuntimeException('Compact term dictionary priming must run outside a snapshot transaction.');
         }
-        $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
+        return $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
     }
 
-    /** @param array<string,mixed> $snapshot */
+    /**
+     * @param array<string,mixed> $snapshot
+     * @param array<string,int>|null $resolvedTermIds
+     */
     public function writeVersioned(
         array $snapshot,
         string $storedBytes,
         int $uncompressedSize,
         int $formatVersion,
         int $codec,
-        int &$sqlBatches
+        int &$sqlBatches,
+        ?array $resolvedTermIds = null
     ): void {
         $file = (array)$snapshot['file'];
         $imports = (array)$snapshot['imports'];
@@ -65,55 +69,19 @@ final class CompressedMetadataLookupWriter
             }
         }
 
-        $values = [];
-        foreach ($exports as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $index = (int)$row['export_index'];
-            $values[] = (string)$row['object_name'];
-            // Preserve the exact local-path bytes used by the existing path_hash
-            // projection, including the unusual but historically valid empty value.
-            $values[] = (string)($paths['exports'][$index]['local'] ?? '');
-            $className = trim((string)($row['class_name'] ?? ''));
-            if ($className !== '') {
-                $values[] = $className;
-            }
-        }
-        foreach ($dependencies as $row) {
-            if (!is_array($row)) {
-                continue;
-            }
-            $index = (int)$row['import_index'];
-            $labels = $resolutionLabels[$index] ?? null;
-            $import = $importsByIndex[$index] ?? null;
-            if (!is_array($labels)) {
-                throw new RuntimeException('Missing dependency resolution labels for import index ' . $index . '.');
-            }
-            if (!is_array($import)) {
-                throw new RuntimeException('Missing import metadata for dependency import index ' . $index . '.');
-            }
-            $values[] = (string)$row['required_package'];
-            $values[] = (string)$row['required_object_path'];
-            $values[] = (string)$labels['source'];
-            $values[] = (string)$labels['confidence'];
-            $classPackage = trim((string)($import['class_package'] ?? ''));
-            $className = trim((string)($import['class_name'] ?? ''));
-            if ($classPackage !== '') {
-                $values[] = $classPackage;
-            }
-            if ($className !== '') {
-                $values[] = $className;
-            }
-        }
-        // During the atomic file transaction this is now read-only. The complete
-        // dictionary was primed before the transaction began.
-        $termIds = $this->resolveTermIds($values, $sqlBatches);
+        // Compatibility for callers that do not prime outside the transaction.
+        // Current publication paths pass the pre-resolved IDs and therefore avoid
+        // constructing the same potentially large unique-term map twice.
+        $termIds = $resolvedTermIds
+            ?? $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
 
         $this->db->prepare('DELETE FROM ue_export_lookup WHERE file_id=?')->execute([$fileId]);
         $this->db->prepare('DELETE FROM ue_dependency_links WHERE file_id=?')->execute([$fileId]);
         $sqlBatches += 2;
 
+        $exportColumns = [
+            'file_id', 'export_index', 'object_term_id', 'class_term_id', 'path_hash', 'local_path_term_id',
+        ];
         $exportRows = [];
         foreach ($exports as $row) {
             if (!is_array($row)) {
@@ -122,22 +90,34 @@ final class CompressedMetadataLookupWriter
             $index = (int)$row['export_index'];
             $object = (string)$row['object_name'];
             $class = trim((string)($row['class_name'] ?? ''));
+            // Preserve the exact local-path bytes used by the existing path_hash
+            // projection, including the unusual but historically valid empty value.
             $localPath = (string)($paths['exports'][$index]['local'] ?? '');
             $exportRows[] = [
                 $fileId,
                 $index,
-                $termIds[$this->termKey($object)],
-                $class !== '' ? $termIds[$this->termKey($class)] : null,
+                $this->requiredTermId($termIds, $object),
+                $class !== '' ? $this->requiredTermId($termIds, $class) : null,
                 md5($localPath, true),
-                $termIds[$this->termKey($localPath)],
+                $this->requiredTermId($termIds, $localPath),
             ];
+            if (count($exportRows) >= self::WRITE_BATCH_SIZE) {
+                $this->insertBatch('ue_export_lookup', $exportColumns, $exportRows);
+                $sqlBatches++;
+                $exportRows = [];
+            }
         }
-        $sqlBatches += $this->bulkInsert(
-            'ue_export_lookup',
-            ['file_id', 'export_index', 'object_term_id', 'class_term_id', 'path_hash', 'local_path_term_id'],
-            $exportRows
-        );
+        if ($exportRows !== []) {
+            $this->insertBatch('ue_export_lookup', $exportColumns, $exportRows);
+            $sqlBatches++;
+        }
 
+        $dependencyColumns = [
+            'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
+            'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
+            'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
+            'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
+        ];
         $dependencyRows = [];
         foreach ($dependencies as $row) {
             if (!is_array($row)) {
@@ -163,30 +143,29 @@ final class CompressedMetadataLookupWriter
             $dependencyRows[] = [
                 $fileId,
                 $index,
-                $termIds[$this->termKey((string)$row['required_package'])],
+                $this->requiredTermId($termIds, (string)$row['required_package']),
                 md5((string)$paths['imports'][$index]['relative'], true),
-                $termIds[$this->termKey($requiredObject)],
-                $classPackage !== '' ? $termIds[$this->termKey($classPackage)] : null,
-                $className !== '' ? $termIds[$this->termKey($className)] : null,
+                $this->requiredTermId($termIds, $requiredObject),
+                $classPackage !== '' ? $this->requiredTermId($termIds, $classPackage) : null,
+                $className !== '' ? $this->requiredTermId($termIds, $className) : null,
                 $row['resolved_file_id'] !== null ? (int)$row['resolved_file_id'] : null,
                 $row['resolved_export_index'] !== null ? (int)$row['resolved_export_index'] : null,
                 $status,
                 $sourceCode,
                 $confidenceCode,
-                $termIds[$this->termKey($source)],
-                $termIds[$this->termKey($confidence)],
+                $this->requiredTermId($termIds, $source),
+                $this->requiredTermId($termIds, $confidence),
             ];
+            if (count($dependencyRows) >= self::WRITE_BATCH_SIZE) {
+                $this->insertBatch('ue_dependency_links', $dependencyColumns, $dependencyRows);
+                $sqlBatches++;
+                $dependencyRows = [];
+            }
         }
-        $sqlBatches += $this->bulkInsert(
-            'ue_dependency_links',
-            [
-                'file_id', 'import_index', 'required_package_term_id', 'required_path_hash',
-                'required_object_term_id', 'import_class_package_term_id', 'import_class_name_term_id',
-                'resolved_file_id', 'resolved_export_index', 'status', 'resolution_source',
-                'resolution_confidence', 'resolution_source_term_id', 'resolution_confidence_term_id',
-            ],
-            $dependencyRows
-        );
+        if ($dependencyRows !== []) {
+            $this->insertBatch('ue_dependency_links', $dependencyColumns, $dependencyRows);
+            $sqlBatches++;
+        }
 
         $timestamp = gmdate('Y-m-d H:i:s');
         $statement = $this->db->prepare(
@@ -247,10 +226,16 @@ final class CompressedMetadataLookupWriter
         return $labels;
     }
 
-    /** @param array<string,mixed> $snapshot @return list<string> */
-    private function snapshotTermValues(array $snapshot): array
+    /**
+     * Yield terms instead of first materializing a duplicate flat string list.
+     * resolveTermIds() still owns one deduplicated map, but peak memory no longer
+     * includes both that map and every repeated source value at the same time.
+     *
+     * @param array<string,mixed> $snapshot
+     * @return \Generator<int,string>
+     */
+    private function snapshotTermValues(array $snapshot): \Generator
     {
-        $values = [];
         $paths = (array)($snapshot['paths'] ?? []);
 
         foreach ((array)($snapshot['exports'] ?? []) as $row) {
@@ -258,11 +243,11 @@ final class CompressedMetadataLookupWriter
                 continue;
             }
             $index = (int)($row['export_index'] ?? -1);
-            $values[] = (string)($row['object_name'] ?? '');
-            $values[] = (string)($index >= 0 ? ($paths['exports'][$index]['local'] ?? '') : '');
+            yield (string)($row['object_name'] ?? '');
+            yield (string)($index >= 0 ? ($paths['exports'][$index]['local'] ?? '') : '');
             $className = trim((string)($row['class_name'] ?? ''));
             if ($className !== '') {
-                $values[] = $className;
+                yield $className;
             }
         }
 
@@ -270,14 +255,14 @@ final class CompressedMetadataLookupWriter
             if (!is_array($row)) {
                 continue;
             }
-            $values[] = (string)($row['object_name'] ?? '');
+            yield (string)($row['object_name'] ?? '');
             $classPackage = trim((string)($row['class_package'] ?? ''));
             $className = trim((string)($row['class_name'] ?? ''));
             if ($classPackage !== '') {
-                $values[] = $classPackage;
+                yield $classPackage;
             }
             if ($className !== '') {
-                $values[] = $className;
+                yield $className;
             }
         }
 
@@ -285,34 +270,35 @@ final class CompressedMetadataLookupWriter
             if (!is_array($row)) {
                 continue;
             }
-            $values[] = (string)($row['required_package'] ?? '');
-            $values[] = (string)($row['required_object_path'] ?? '');
-            $values[] = (string)($row['resolution_source'] ?? '');
-            $values[] = (string)($row['resolution_confidence'] ?? '');
+            yield (string)($row['required_package'] ?? '');
+            yield (string)($row['required_object_path'] ?? '');
+            yield (string)($row['resolution_source'] ?? '');
+            yield (string)($row['resolution_confidence'] ?? '');
         }
-
-        return $values;
     }
 
-    /** @param list<string> $values @return array<string,int> */
-    private function resolveTermIds(array $values, int &$sqlBatches): array
+    /** @param iterable<string> $values @return array<string,int> */
+    private function resolveTermIds(iterable $values, int &$sqlBatches): array
     {
         $terms = [];
         foreach ($values as $value) {
-            if (strlen($value) > 65535) {
+            $length = strlen($value);
+            if ($length > 65535) {
                 throw new RuntimeException('Compact lookup term exceeds 65,535 bytes.');
             }
             $key = $this->termKey($value);
             if (isset($terms[$key]) && !hash_equals((string)$terms[$key]['value'], $value)) {
                 throw new RuntimeException('Compact lookup term hash collision detected inside conversion batch.');
             }
-            $terms[$key] = [
-                'value' => $value,
-                'hash' => md5($value, true),
-                'length' => strlen($value),
-                'prefix' => substr($value, 0, 200),
-                'overflow' => strlen($value) > 200 ? 1 : 0,
-            ];
+            if (!isset($terms[$key])) {
+                $terms[$key] = [
+                    'value' => $value,
+                    'hash' => md5($value, true),
+                    'length' => $length,
+                    'prefix' => substr($value, 0, 200),
+                    'overflow' => $length > 200 ? 1 : 0,
+                ];
+            }
         }
         if ($terms === []) {
             return [];
@@ -321,56 +307,37 @@ final class CompressedMetadataLookupWriter
         ksort($terms, SORT_STRING);
 
         // Shared dictionary writes happen only outside a file-owned transaction.
-        // Inside the atomic snapshot transaction resolution is read-only, which
-        // prevents unrelated file writers from forming ue_terms lock cycles.
+        // Chunk directly from the unique map so we never allocate array_values()
+        // of the complete dictionary merely to split it into bounded SQL batches.
         if (!$this->db->inTransaction()) {
-            foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
-                $placeholders = [];
-                $arguments = [];
-                foreach ($chunk as $term) {
-                    $placeholders[] = '(?,?,?,?)';
-                    array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+            $chunk = [];
+            foreach ($terms as $term) {
+                $chunk[] = $term;
+                if (count($chunk) >= self::TERM_BATCH_SIZE) {
+                    $this->insertTermBatch($chunk);
+                    $sqlBatches++;
+                    $chunk = [];
                 }
-                $this->executeWithContentionRetry(
-                    'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
-                        . implode(',', $placeholders),
-                    $arguments
-                );
+            }
+            if ($chunk !== []) {
+                $this->insertTermBatch($chunk);
                 $sqlBatches++;
             }
         }
 
         $resolved = [];
-        foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
-            $predicates = [];
-            $arguments = [];
-            foreach ($chunk as $term) {
-                $predicates[] = '(value_hash=? AND value_length=?)';
-                $arguments[] = $term['hash'];
-                $arguments[] = $term['length'];
+        $chunk = [];
+        foreach ($terms as $term) {
+            $chunk[] = $term;
+            if (count($chunk) >= self::TERM_BATCH_SIZE) {
+                $this->resolveTermBatch($chunk, $terms, $resolved);
+                $sqlBatches++;
+                $chunk = [];
             }
-            $statement = $this->db->prepare(
-                'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
-                . implode(' OR ', $predicates)
-            );
-            $statement->execute($arguments);
+        }
+        if ($chunk !== []) {
+            $this->resolveTermBatch($chunk, $terms, $resolved);
             $sqlBatches++;
-            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-                $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
-                $expected = $terms[$key] ?? null;
-                if (!is_array($expected)) {
-                    continue;
-                }
-                $stored = (string)$row['value_prefix'];
-                $expectedPrefix = (string)$expected['prefix'];
-                $matches = (int)$row['is_overflow'] === 1
-                    ? str_starts_with($stored, $expectedPrefix)
-                    : hash_equals($stored, $expectedPrefix);
-                if (!$matches || (int)$row['is_overflow'] !== (int)$expected['overflow']) {
-                    throw new RuntimeException('Compact lookup term hash collision or stored-prefix mismatch.');
-                }
-                $resolved[$key] = (int)$row['id'];
-            }
         }
 
         if (count($resolved) !== count($terms)) {
@@ -380,6 +347,59 @@ final class CompressedMetadataLookupWriter
             );
         }
         return $resolved;
+    }
+
+    /** @param list<array{value:string,hash:string,length:int,prefix:string,overflow:int}> $chunk */
+    private function insertTermBatch(array $chunk): void
+    {
+        $placeholders = [];
+        $arguments = [];
+        foreach ($chunk as $term) {
+            $placeholders[] = '(?,?,?,?)';
+            array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+        }
+        $this->executeWithContentionRetry(
+            'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
+                . implode(',', $placeholders),
+            $arguments
+        );
+    }
+
+    /**
+     * @param list<array{value:string,hash:string,length:int,prefix:string,overflow:int}> $chunk
+     * @param array<string,array{value:string,hash:string,length:int,prefix:string,overflow:int}> $terms
+     * @param array<string,int> $resolved
+     */
+    private function resolveTermBatch(array $chunk, array $terms, array &$resolved): void
+    {
+        $predicates = [];
+        $arguments = [];
+        foreach ($chunk as $term) {
+            $predicates[] = '(value_hash=? AND value_length=?)';
+            $arguments[] = $term['hash'];
+            $arguments[] = $term['length'];
+        }
+        $statement = $this->db->prepare(
+            'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
+            . implode(' OR ', $predicates)
+        );
+        $statement->execute($arguments);
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
+            $expected = $terms[$key] ?? null;
+            if (!is_array($expected)) {
+                continue;
+            }
+            $stored = (string)$row['value_prefix'];
+            $expectedPrefix = (string)$expected['prefix'];
+            $matches = (int)$row['is_overflow'] === 1
+                ? str_starts_with($stored, $expectedPrefix)
+                : hash_equals($stored, $expectedPrefix);
+            if (!$matches || (int)$row['is_overflow'] !== (int)$expected['overflow']) {
+                throw new RuntimeException('Compact lookup term hash collision or stored-prefix mismatch.');
+            }
+            $resolved[$key] = (int)$row['id'];
+        }
     }
 
     /** @param list<mixed> $arguments */
@@ -399,16 +419,35 @@ final class CompressedMetadataLookupWriter
         }
     }
 
+    /** @param array<string,int> $termIds */
+    private function requiredTermId(array $termIds, string $value): int
+    {
+        $key = $this->termKey($value);
+        if (!isset($termIds[$key])) {
+            throw new RuntimeException('Compact lookup term was not resolved before projection publication.');
+        }
+        return (int)$termIds[$key];
+    }
+
     private function termKey(string $value): string
     {
         return md5($value) . ':' . strlen($value);
     }
 
-    /** @param list<string> $columns @param list<list<mixed>> $rows */
-    private function bulkInsert(string $table, array $columns, array $rows): int
+    /**
+     * Insert at most WRITE_BATCH_SIZE rows. Callers flush while constructing rows,
+     * so peak memory is independent of the package's total export/import count.
+     *
+     * @param list<string> $columns
+     * @param list<list<mixed>> $rows
+     */
+    private function insertBatch(string $table, array $columns, array $rows): void
     {
         if ($rows === []) {
-            return 0;
+            return;
+        }
+        if (count($rows) > self::WRITE_BATCH_SIZE) {
+            throw new RuntimeException('Compact lookup insert batch exceeded the bounded row limit.');
         }
         if (preg_match('/^[A-Za-z0-9_]+$/', $table) !== 1) {
             throw new RuntimeException('Invalid compact lookup table name.');
@@ -419,22 +458,17 @@ final class CompressedMetadataLookupWriter
             }
         }
 
-        $batches = 0;
-        foreach (array_chunk($rows, self::WRITE_BATCH_SIZE) as $chunk) {
-            $rowPlaceholder = '(' . implode(',', array_fill(0, count($columns), '?')) . ')';
-            $statement = $this->db->prepare(
-                'INSERT INTO ' . $table . '(' . implode(',', $columns) . ') VALUES '
-                . implode(',', array_fill(0, count($chunk), $rowPlaceholder))
-            );
-            $arguments = [];
-            foreach ($chunk as $row) {
-                foreach ($row as $value) {
-                    $arguments[] = $value;
-                }
+        $rowPlaceholder = '(' . implode(',', array_fill(0, count($columns), '?')) . ')';
+        $statement = $this->db->prepare(
+            'INSERT INTO ' . $table . '(' . implode(',', $columns) . ') VALUES '
+            . implode(',', array_fill(0, count($rows), $rowPlaceholder))
+        );
+        $arguments = [];
+        foreach ($rows as $row) {
+            foreach ($row as $value) {
+                $arguments[] = $value;
             }
-            $statement->execute($arguments);
-            $batches++;
         }
-        return $batches;
+        $statement->execute($arguments);
     }
 }
