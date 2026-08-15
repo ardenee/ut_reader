@@ -12,10 +12,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-use UnrealDb\Catalog\Application\Dependency\CatalogMissingDetailListService;
-use UnrealDb\Catalog\Application\Dependency\CatalogMissingFileListService;
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoMissingDetailListQuery;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoMissingFileListQuery;
 
 catalog_start_session();
 
@@ -132,6 +132,8 @@ try {
         throw new RuntimeException('Current dependency package summaries are unavailable.');
     }
 
+    $missingFileListQuery = new PdoMissingFileListQuery($db);
+    $missingDetailListQuery = new PdoMissingDetailListQuery($db);
     $selectedPackage = missing_selected_package();
     $selectedFileId = missing_page_int('file_id');
     $selectedView = missing_selected_view();
@@ -164,12 +166,12 @@ try {
         $filePage = 1;
     }
 
-    $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $perPage, $cursor, $filesMove);
+    $fileListPage = $missingFileListQuery->fetchCursorPage($perPage, $cursor, $filesMove);
     $affectedFiles = $fileListPage['rows'];
     if ($affectedFiles === [] && $filesWithMissing > 0 && $filesMove !== 'first') {
         $filesMove = 'first';
         $filePage = 1;
-        $fileListPage = CatalogMissingFileListService::fetchCursorPage($db, $perPage, null, 'first');
+        $fileListPage = $missingFileListQuery->fetchCursorPage($perPage, null, 'first');
         $affectedFiles = $fileListPage['rows'];
     }
     $previousCursor = is_array($fileListPage['first_cursor'])
@@ -254,18 +256,18 @@ try {
         }
 
         $detailListPage = match ($detailMode) {
-            'file_objects' => CatalogMissingDetailListService::fetchFileObjects($db, $selectedFileId, $detailPerPage, $detailCursor, $detailMove),
-            'package_files' => CatalogMissingDetailListService::fetchPackageFiles($db, $selectedPackage, $detailPerPage, $detailCursor, $detailMove),
-            default => CatalogMissingDetailListService::fetchPackageObjects($db, $selectedPackage, $detailPerPage, $detailCursor, $detailMove),
+            'file_objects' => $missingDetailListQuery->fetchFileObjects($selectedFileId, $detailPerPage, $detailCursor, $detailMove),
+            'package_files' => $missingDetailListQuery->fetchPackageFiles($selectedPackage, $detailPerPage, $detailCursor, $detailMove),
+            default => $missingDetailListQuery->fetchPackageObjects($selectedPackage, $detailPerPage, $detailCursor, $detailMove),
         };
         $detailRows = $detailListPage['rows'];
         if ($detailRows === [] && $detailTotal > 0 && $detailMove !== 'first') {
             $detailMove = 'first';
             $detailPage = 1;
             $detailListPage = match ($detailMode) {
-                'file_objects' => CatalogMissingDetailListService::fetchFileObjects($db, $selectedFileId, $detailPerPage, null, 'first'),
-                'package_files' => CatalogMissingDetailListService::fetchPackageFiles($db, $selectedPackage, $detailPerPage, null, 'first'),
-                default => CatalogMissingDetailListService::fetchPackageObjects($db, $selectedPackage, $detailPerPage, null, 'first'),
+                'file_objects' => $missingDetailListQuery->fetchFileObjects($selectedFileId, $detailPerPage, null, 'first'),
+                'package_files' => $missingDetailListQuery->fetchPackageFiles($selectedPackage, $detailPerPage, null, 'first'),
+                default => $missingDetailListQuery->fetchPackageObjects($selectedPackage, $detailPerPage, null, 'first'),
             };
             $detailRows = $detailListPage['rows'];
         }
