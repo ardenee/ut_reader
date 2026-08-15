@@ -26,6 +26,7 @@ $read = static function (string $relative) use ($root): string {
 
 $page = $read('system-operations.php');
 $query = $read('src/Infrastructure/Persistence/PdoSystemOperationsQuery.php');
+$operatorSnapshot = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php');
 $storage = $read('src/Infrastructure/Storage/LocalFilesystemPackageStorage.php');
 $dashboard = $read('dashboard.php');
 
@@ -48,26 +49,35 @@ $record(
     str_contains($page, 'CatalogWorkerStatusPolicy::evaluate(')
         && str_contains($page, 'PdoBackgroundJobOperationalQuery')
         && str_contains($page, 'queueCounts($queueName)'),
-    'System Operations and Background Jobs must derive running/orphaned/stopped-with-queue from the same authoritative policy.'
+    'Worker running/orphaned/stopped-with-queue status must still use exact durable queue state and the shared policy.'
+);
+$record(
+    'operator_counts_match_background_jobs_policy',
+    str_contains($query, 'PdoBackgroundJobOperatorSnapshotQuery')
+        && str_contains($operatorSnapshot, 'PdoBackgroundJobSearchScope')
+        && str_contains($operatorSnapshot, 'PdoBackgroundJobDisplayCountQuery')
+        && str_contains($page, 'same rolled-up operator scope as Background Jobs'),
+    'Headline queued/running/failed counts must report operator-visible jobs rather than internal workflow rows.'
 );
 $record(
     'queue_ages_are_visibility_not_timeouts',
-    str_contains($page, 'Age, not a timeout')
+    str_contains($page, 'Age only; never an automatic timeout')
         && str_contains($page, 'jobs are not failed by age')
-        && str_contains($page, 'does not fail or steal a live job merely because it has been running for a long time.'),
+        && str_contains($page, 'Runtime ages are diagnostic only and never trigger automatic failure or stealing.'),
     'Runtime age is diagnostic only and must not reintroduce lease/timeout semantics.'
 );
 $record(
-    'queue_blockers_are_explained',
-    str_contains($query, 'concurrency_key')
-        && str_contains($page, 'Concurrency-key blocked')
-        && str_contains($page, 'Resource-class blocked')
+    'queue_blockers_are_explained_as_jobs_and_capacity',
+    str_contains($operatorSnapshot, 'COUNT(DISTINCT COALESCE(q.parent_job_id,q.id))')
+        && str_contains($page, 'Distinct jobs waiting on an identical target')
+        && str_contains($page, 'Execution capacity by workload class')
         && str_contains($page, 'CatalogJobResourceLimitStore'),
-    'The UI must separate concurrency-key serialization from resource-class capacity.'
+    'Concurrency blocking should count affected jobs; resource pressure should be shown as capacity rather than another competing job total.'
 );
 $record(
     'operations_queue_history_is_bounded',
     str_contains($query, 'WHERE status IN ("queued","running","failed","dead_letter")')
+        && str_contains($operatorSnapshot, 'j.status IN ("queued","running","failed","dead_letter")')
         && !str_contains($query, 'SUM(status="completed")'),
     'Opening diagnostics must not aggregate the complete terminal job archive.'
 );
@@ -88,6 +98,7 @@ $syntaxTargets = [
     'system-operations.php',
     'dashboard.php',
     'src/Infrastructure/Persistence/PdoSystemOperationsQuery.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php',
     'src/Infrastructure/Storage/LocalFilesystemPackageStorage.php',
     'bin/verify-system-operations-contract.php',
 ];
