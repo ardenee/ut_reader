@@ -31,9 +31,11 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 };
 
 $bootstrap = $read('bootstrap.php');
+$operationalBootstrap = $read('bootstrap/operational.php');
 $apiBootstrap = $read('api/v1/_bootstrap.php');
 $health = $read('api/v1/health.php');
 $readiness = $read('api/v1/readiness.php');
+$support = $read('lib/CatalogSupport.php');
 $service = $read('src/Application/System/SystemReadinessService.php');
 $probePort = $read('src/Application/System/Contract/ReadinessProbe.php');
 $factory = $read('src/Infrastructure/Composition/CatalogSystemReadinessFactory.php');
@@ -45,27 +47,46 @@ $record(
     'bootstrap_honors_session_flag',
     str_contains($bootstrap, 'function catalog_bootstrap(bool $startSession = true)')
         && str_contains($bootstrap, '::boot($startSession)'),
-    'catalog_bootstrap(false) must actually suppress session startup'
+    'catalog_bootstrap(false) must actually suppress session startup for existing CLI callers'
 );
 $record(
     'api_bootstrap_honors_session_flag',
     str_contains($apiBootstrap, 'function catalog_api_application(bool $startSession = true)')
         && str_contains($apiBootstrap, 'catalog_bootstrap($startSession)'),
-    'API callers must be able to select session-free startup'
+    'normal API callers must be able to select session-free startup when appropriate'
 );
 $record(
-    'health_is_session_free',
-    str_contains($health, 'catalog_api_application(false)')
+    'operational_bootstrap_is_minimal',
+    str_contains($operationalBootstrap, "'/lib/CatalogSupportCore.php'")
+        && str_contains($operationalBootstrap, "'/autoload.php'")
+        && str_contains($operationalBootstrap, 'CatalogApplication::boot(false)')
+        && !str_contains($operationalBootstrap, 'CatalogSupport.php')
+        && !str_contains($operationalBootstrap, 'CatalogMfa.php'),
+    'machine probes must not traverse page/cache/abuse/MFA bootstrap layers'
+);
+$record(
+    'health_uses_operational_bootstrap',
+    str_contains($health, "'/bootstrap/operational.php'")
+        && str_contains($health, 'catalog_operational_application()')
         && str_contains($health, "'status' => 'ok'")
         && str_contains($health, "'service' => 'unrealdb-catalog'"),
-    'existing health response stays compatible while avoiding session storage'
+    'existing health response stays compatible while using the minimal session-free bootstrap'
 );
 $record(
-    'readiness_is_session_free_and_composed',
-    str_contains($readiness, 'catalog_api_application(false)')
+    'readiness_uses_operational_bootstrap',
+    str_contains($readiness, "'/bootstrap/operational.php'")
+        && str_contains($readiness, 'catalog_operational_application()')
         && str_contains($readiness, 'CatalogSystemReadinessFactory::create(')
         && str_contains($readiness, '$report->ready ? 200 : 503'),
-    'load balancer readiness must be session-free and return 503 when a critical dependency is unavailable'
+    'load balancer readiness must use minimal startup and return 503 when a critical dependency is unavailable'
+);
+$record(
+    'operational_probes_bypass_public_middleware',
+    str_contains($support, '$catalogOperationalProbe')
+        && str_contains($support, '/api/v1/health.php')
+        && str_contains($support, '/api/v1/readiness.php')
+        && str_contains($support, 'if (!$catalogOperationalProbe)'),
+    'health/readiness must remain outside crawler, burst and public response-cache middleware even if full support is included later'
 );
 $record(
     'application_readiness_is_port_driven',
@@ -106,9 +127,11 @@ $record(
 
 $syntaxTargets = [
     'bootstrap.php',
+    'bootstrap/operational.php',
     'api/v1/_bootstrap.php',
     'api/v1/health.php',
     'api/v1/readiness.php',
+    'lib/CatalogSupport.php',
     'src/Application/System/Contract/ReadinessProbe.php',
     'src/Application/System/ReadinessCheck.php',
     'src/Application/System/SystemReadinessReport.php',
@@ -149,8 +172,8 @@ if (!function_exists('proc_open')) {
 
 if ($run) {
     try {
-        require_once $root . '/bootstrap.php';
-        $application = catalog_bootstrap(false);
+        require_once $root . '/bootstrap/operational.php';
+        $application = catalog_operational_application();
         $report = \UnrealDb\Catalog\Infrastructure\Composition\CatalogSystemReadinessFactory::create(
             $application->db,
             $application->config
