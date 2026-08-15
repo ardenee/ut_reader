@@ -340,11 +340,11 @@ function catalog_redirect_archive_encode_native_codec(
         unset($mtf);
         $payload = catalog_redirect_archive_encode_huffman($secondRle);
         unset($secondRle);
-        $encoder = 'epic-uz3-rle+bwt+mtf+rle+huffman';
+        $encoder = 'epic-uz-5678-rle+bwt+mtf+rle+huffman';
     } else {
         $payload = catalog_redirect_archive_encode_huffman($mtf);
         unset($mtf);
-        $encoder = 'epic-uz-rle+bwt+mtf+huffman';
+        $encoder = 'epic-uz-1234-rle+bwt+mtf+huffman';
     }
 
     $filename = $packageFilename . "\0";
@@ -389,12 +389,40 @@ function catalog_redirect_archive_encode_epic_uz2(string $packageData, int $comp
     return ['data' => $output, 'encoder' => 'epic-uz2-zlib', 'chunks' => $chunks];
 }
 
+/** @return array{data:string,encoder:string,chunks:int,wrapper_signature:int} */
+function catalog_redirect_archive_encode_epic_uz3(string $packageData): array
+{
+    $uncompressedBytes = strlen($packageData);
+    if ($uncompressedBytes <= 0) {
+        throw new RuntimeException('Cannot compress an empty package.');
+    }
+    if ($uncompressedBytes > 0xFFFFFFFF) {
+        throw new RuntimeException('Epic UZ3 supports at most a 32-bit uncompressed file size.');
+    }
+    if (!function_exists('gzcompress')) {
+        throw new RuntimeException('Zlib compression support is unavailable.');
+    }
+
+    // UT3's commandlet uses zlib compress(), i.e. Z_DEFAULT_COMPRESSION.
+    $compressed = gzcompress($packageData);
+    if (!is_string($compressed) || $compressed === '') {
+        throw new RuntimeException('Could not zlib-compress an Epic UZ3 file.');
+    }
+
+    return [
+        'data' => pack('V2', 5678, $uncompressedBytes) . $compressed,
+        'encoder' => 'epic-uz3-zlib',
+        'chunks' => 1,
+        'wrapper_signature' => 5678,
+    ];
+}
+
 /**
  * Strict extension-aware decompression entry point.
  *
- * `.uz` uses the 1234 FCodec wrapper. `.uz3` uses the later 5678 FCodec
- * wrapper with the additional RLE stage. Both include the serialized original
- * filename before the compressed FCodec stream.
+ * `.uz` uses an FCodec wrapper with signature 1234 or 5678 and an embedded
+ * filename. `.uz3` uses a different layout: tag 5678, total uncompressed size,
+ * then one zlib stream containing the complete file.
  *
  * @return array{data:string,decoder:string,chunks:int,expected_bytes:int,embedded_filename?:string,wrapper_signature?:int}|null
  */
@@ -407,12 +435,7 @@ function catalog_redirect_archive_decompress_data(
     $limit = catalog_redirect_archive_output_limit($maxOutputBytes);
 
     return match ($extension) {
-        'uz' => (static function () use ($archiveData, $limit): ?array {
-            $decoded = catalog_redirect_archive_legacy_payload($archiveData, $limit);
-            return is_array($decoded) && (int)($decoded['wrapper_signature'] ?? 0) === 1234
-                ? $decoded
-                : null;
-        })(),
+        'uz' => catalog_redirect_archive_legacy_payload($archiveData, $limit),
         'uz2' => catalog_redirect_archive_epic_uz2_payload($archiveData, $limit),
         'uz3' => catalog_redirect_archive_epic_uz3_payload($archiveData, $limit),
         default => null,
@@ -441,14 +464,14 @@ function catalog_redirect_archive_compress_data(
     int $uzSignature = 1234
 ): array {
     $extension = catalog_redirect_archive_normalize_extension($targetExtension);
-    if ($extension === 'uz' && $uzSignature !== 1234) {
-        throw new InvalidArgumentException('UZ uses Epic FCodec signature 1234; use .uz3 for signature 5678.');
+    if ($extension === 'uz' && !in_array($uzSignature, [1234, 5678], true)) {
+        throw new InvalidArgumentException('UZ uses Epic FCodec signature 1234 or 5678.');
     }
 
     $encoded = match ($extension) {
-        'uz' => catalog_redirect_archive_encode_native_codec($packageData, $packageFilename, 1234, $bwtBlockBytes),
+        'uz' => catalog_redirect_archive_encode_native_codec($packageData, $packageFilename, $uzSignature, $bwtBlockBytes),
         'uz2' => catalog_redirect_archive_encode_epic_uz2($packageData, $compressionLevel),
-        'uz3' => catalog_redirect_archive_encode_native_codec($packageData, $packageFilename, 5678, $bwtBlockBytes),
+        'uz3' => catalog_redirect_archive_encode_epic_uz3($packageData),
         default => throw new InvalidArgumentException('Unsupported Unreal redirect extension: ' . $targetExtension),
     };
 
