@@ -30,7 +30,7 @@ final class Toolbar
         $html = '<div class="' . Html::escape($class) . '"' . Html::attributes($attributes) . '>';
         $html .= $actionsHtml;
         if ($asideHtml !== '') {
-            $html .= '<span class="ui-toolbar__aside">' . $asideHtml . '</span>';
+            $html .= '<div class="ui-toolbar__aside">' . $asideHtml . '</div>';
         }
 
         return $html . '</div>';
