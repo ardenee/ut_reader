@@ -2,248 +2,345 @@
 
 UnrealDB is a catalogue, dependency-analysis and preservation system for Unreal Engine game files.
 
-Its purpose is to identify packages correctly, preserve package identity, show how files relate to each other, find and repair missing dependencies, reduce duplicate storage, and make verified files easier to manage and distribute responsibly.
+It is designed to identify packages accurately, preserve physical and logical package identity, inspect Unreal package metadata, track dependencies, find missing requirements, reduce duplicate storage, repair catalogue state, and distribute verified files through controlled downloads and generated packages.
 
-> **Development status:** UnrealDB is under active development. The public catalogue can be browsed while administrative import, maintenance, federation and package-generation features continue to evolve.
+> **Project status — August 2026:** UnrealDB is under active development and is already being used as a working catalogue/admin system. The current engineering focus is reliability, parser edge cases, queue/operator clarity, performance, and production hardening rather than adding more deployment platforms.
 
-## Current architecture at a glance
+## Current production target
 
-UnrealDB now treats large operations as durable background workflows rather than long browser requests or single PHP loops.
+UnrealDB is intended to run as a **single-host Windows application**:
 
-- Long work is split into independently restartable child jobs wherever there is a natural file, archive-entry or maintenance-unit boundary.
-- A workflow restart keeps successful units and repeats only failed or incomplete units.
-- Sequential work that cannot use independent children, such as source discovery/copy streams, persists an exact durable cursor or journal.
-- Parent/coordinator jobs release their worker slot while waiting for children.
-- Routine successful child rows are hidden from the default Background Jobs view; failed/dead-letter/cancelled children remain visible for operator action.
-- Durable progress/checkpoint state is separate from optional event logging.
-- Background-job event logging defaults to actionable errors; progress, successful, duplicate, skipped and cancelled event streams can be enabled independently.
+```text
+Internet
+   |
+Apache 2.4
+   |
+PHP 8.5
+   |
+   +-- MySQL 8.4
+   +-- local catalog/package storage
+   +-- durable MySQL-backed job queue
+   +-- independent PHP background workers
+   +-- scheduled backup/maintenance tasks
+```
 
-The browser is not part of the recovery contract. For file uploads, recovery begins only **after a complete file exists in controlled server storage**. An interrupted browser/network transfer is not represented as a resumable background job. Once a complete file has been staged, the remaining preparation/import/dependency work is recoverable without asking the browser to resend it.
+Docker, Docker Compose and Kubernetes deployment support have been removed. Redis, replicas, clustered storage and horizontal web scaling are not required by the current project.
 
-## Public site functions
+The application remains a modular PHP monolith. Web requests submit durable work; background workers execute long-running package, dependency and maintenance operations independently of the browser.
 
-### Browse games and files
+## Project status by area
 
-Users can browse the files recorded for each supported game, including known package names, original filenames, versions, sizes, GUIDs and content hashes.
+| Area | Status | Notes |
+| --- | --- | --- |
+| Public catalogue/search | Active | Browse games/files, exact identity search, broader catalogue search, dependency information and controlled downloads. |
+| Administration | Active | Game/profile management, uploads, unverified files, jobs, backups, federation, maintenance and diagnostics. |
+| Durable background jobs | Active | Long work is split into recoverable jobs/child workflows with persisted progress and explicit operator control. |
+| UE1 packages | Strong support | Names, Imports, Exports, package identity and dependencies are well covered. |
+| UE2 / UE2.5 packages | Strong support | Includes UT2003/UT2004-era package handling and UZ2 redirect support. |
+| UE3 packages | Active validation | Core package/UPK support exists; less common package/compression variants are still being validated against source/reference material. |
+| UE4 packages | Active | Package/PAK handling, source-identity repair and dependency workflows exist; engine/version-specific edge cases remain under investigation. |
+| UE5 packages | Partial | Supported where the package/container layout is understood; IoStore `.utoc`/`.ucas` is not fully supported. |
+| `.uz` redirects | Active | Historical 1234 and 5678 FCodec variants are supported. |
+| `.uz2` redirects | Active | Chunked zlib handling exists; malformed/non-standard archives fail without blocking unrelated jobs. |
+| `.uz3` redirects | Experimental | Not considered production-validated until additional known-good UT3 samples are confirmed. |
+| Federation | Active | Parent/child inventory, dependency requests and controlled transfer workflows are supported. |
+| Game Backups | Active | Durable export/restore workflows plus separate production database/storage backup tooling. |
 
-### Search the catalogue
+## Core architecture
 
-Search can use package/file names, GUIDs, hashes and projected package metadata. This helps identify unknown files, locate another copy of a package or find the package that provides a required object.
+### Durable jobs, not long browser requests
 
-### View package information
+Large operations run through `ue_background_jobs` instead of relying on an open browser request.
 
-A verified file can expose its package header, versions, GUID/hashes, Names, Imports, Exports and dependency relationships.
+Important queue rules are:
 
-### Find missing dependencies
+- the UI reports **jobs**, not changing internal work-unit counts;
+- a parent job owns the operator-visible operation while child jobs report workflow progress back to it;
+- completed child work is retained so restart does not replay successful work;
+- one failed package or child job does not block unrelated queued jobs;
+- healthy long-running jobs are not failed merely because they exceed a timer;
+- worker/process ownership determines whether running work is still alive;
+- an operator can explicitly cancel/kill genuinely stuck work;
+- job runtime and last activity are available to help identify stalled work;
+- resource-class limits control expensive job types independently from the total worker-process count.
 
-UnrealDB records dependency links at package/object level and reports missing requirements per game. Missing dependencies can be cross-examined against verified packages in other compatible games so administrators can identify exact object-path providers and copy a verified source package into the destination game without moving/removing the source.
+The browser is not part of the recovery contract. Recovery begins once a complete uploaded/source file has reached controlled server storage.
 
-The Cross-Game Dependency page excludes package bytes that are already verified in the report target before candidate totals and coverage calculations are produced.
+See [`docs/background-jobs.md`](docs/background-jobs.md).
 
-### Download verified files
+### Compact metadata
 
-Verified files can be exposed through controlled local downloads or external mirrors. Public controls exist for per-IP limits, crawler/burst protection and generated-package limits.
+Verified package metadata uses the current format-2 compact metadata architecture.
 
-### Generate dependency packages
+- `ue_files` is the stable physical/catalogue identity row.
+- `ue_file_metadata` registers the authoritative compact metadata container.
+- Names, Imports and Exports are stored in blocked compressed `.uedb2` metadata.
+- SQL lookup/projection tables provide indexed dependency/search access without restoring the old row-per-object schema.
+- legacy `ue_names`, `ue_imports`, `ue_exports` and `ue_dependencies` are no longer the verified runtime metadata model.
+- verified files now track explicit compact-metadata publication state so incomplete publication can be identified and repaired.
 
-Where enabled, UnrealDB can build ZIP and game-specific package outputs such as UMOD-family installers and Unreal Tournament 4 package outputs. Generation happens in a background job and writes to a temporary artifact before publishing the validated result.
+Compact publication is atomic and retryable database lock/deadlock failures retry the publication operation rather than leaving a partially published package.
 
-### Send feedback
+## Upload and import flow
 
-When enabled, the Feedback page can send site reports and suggestions through the configured SMTP service.
+The current ingestion model is:
 
-## Catalogue and administration functions
+```text
+file/source
+   |
+identity/hash preflight
+   |
+controlled staging
+   |
+durable import job
+   |
+redirect/archive preparation if required
+   |
+package parser / identity resolution
+   |
+physical storage + database publication
+   |
+compact metadata
+   |
+dependency follow-up
+```
 
-### Compact metadata model
+### Upload Files to Game
 
-Verified package metadata uses the current **format-2 compact metadata** architecture.
+The browser processes one file at a time, performs advisory hashing/duplicate checks, and transfers the file to controlled server staging. Large files use chunked transport. Once the complete file is staged, the remaining import work is durable and can continue without the browser.
 
-- `ue_file_metadata` records the authoritative per-file compact container metadata.
-- Names/Imports/Exports are stored in the format-2 `.uedb2` container and projected into compact lookup tables only where indexed access is required.
-- `ue_export_lookup`, `ue_dependency_links`, `ue_terms`, package-provider projections and dependency summaries support fast catalogue/dependency queries.
-- Historical format-1 `.uedb.json.gz` runtime readers/converters have been retired.
-- Legacy row-per-object `ue_names`, `ue_imports`, `ue_exports` and `ue_dependencies` tables are no longer part of the verified runtime schema.
+### Upload Bucket
 
-Compact metadata publication is atomic and retries retryable MySQL lock/deadlock failures as a whole operation. Interrupted verified imports can repair missing format-2 metadata in place on retry.
-
-### File uploads and source scanning
-
-Administrators can add content through:
-
-- Upload Files to Game
-- Upload Bucket
-- Local Source Scan
-- HTTP/managed source workflows
-- PAK Import
-- federation transfer
-- Game Backup restore
-
-#### Upload Files to Game
-
-The browser hashes ordinary files for advisory duplicate preflight and uploads one file at a time. A successfully received file is moved into controlled server staging before its import job is created. Chunk transport is used for large files, but the recoverable background boundary starts only when the server has the complete file.
-
-After that boundary, redirect preparation, package scanning, compact metadata publication and dependency follow-up are background work. Durable prepared redirect output can be reused after an infrastructure retry.
-
-#### Upload Bucket
-
-Upload Bucket is intended for large unsorted collections. Browser-side inspection/preflight avoids unnecessary transfers where possible, and only one file is active at a time.
-
-A completed uploaded package/wrapper is handed to background processing. Package copy/hash work and redirect decompression use durable per-job preparation so a later database/storage failure can resume from the completed preparation phase rather than repeat the browser transfer or completed decompression.
-
-Only failed validation, transfer and finalisation results need to be retained as Upload Issues; routine live status remains UI telemetry.
-
-### Redirect archive support
-
-Unreal redirect wrappers can be decompressed and catalogued as their real package payload:
-
-- `.uz` supports the historical 1234 and 5678 FCodec variants.
-- `.uz2` uses chunked zlib records.
-- `.uz3` handling remains version/format dependent and should be validated against known-good UT3 material before relying on it for production archives.
-
-Package identity is calculated from the decompressed package, not merely from the redirect wrapper bytes.
+Upload Bucket is intended for large unsorted collections. Browser-side checks avoid unnecessary transfers where possible. Completed uploads/wrappers are handed to the background queue for preparation, decompression, import and dependency work.
 
 ### Unverified files
 
-Packages that cannot yet be assigned confidently to a game are retained in controlled unverified storage with compressed staging metadata.
+Files that cannot yet be assigned confidently are retained in controlled unverified storage instead of being discarded.
 
-Exact game-match evidence is generated in background jobs and cached in `ue_unverified_game_match_cache`, allowing the Unverified page to render without recomputing dependency/object-path matches on every request.
+Exact game-match evidence is generated in the background and cached. A file can be copied/imported into multiple compatible games only when exact dependency/object-path evidence supports the match; package-name similarity alone is not enough.
 
-A package may be imported into all exact compatible games when current dependency evidence proves it supplies required object paths. Package-name-only evidence is not sufficient for automatic multi-game copying.
+### Duplicate identity
 
-### Duplicate detection and aliases
+Physical duplicate decisions use file size and content hashes, not filenames. Byte-identical packages can retain alternate logical package names through aliases while sharing canonical physical content where appropriate.
 
-Physical duplicate decisions are based on file size and content hashes, not filename similarity. Byte-identical packages can retain alternate logical package names through aliases while sharing canonical physical content where appropriate.
+## Dependency system
 
-Upload Bucket identity checks serialize only identical size/MD5/SHA-1 identities to prevent concurrent workers from publishing the same physical package twice.
+UnrealDB tracks package/object requirements and providers and supports:
 
-Unverified duplicate cleanup is itself a recoverable workflow: same-size candidates are hashed independently and exact duplicate deletion is revalidated and performed as one durable unit per file.
-
-### Dependency rebuilding
-
-Dependency work supports several scopes:
-
-- one verified file;
-- targeted files affected by a newly available provider;
-- a complete game;
-- Full Sync / source-identity repair workflows;
-- cross-game dependency fulfilment.
-
-Affected dependency work is split into one recoverable unit per affected file. Each child performs a targeted rebuild only for the newly available package; the parent bulk-refreshes dependency summaries/game counters after all children complete.
+- single-file dependency rebuilds;
+- affected-dependant refresh after a new provider appears;
+- whole-game dependency rebuilds;
+- Full Sync;
+- source-identity repair;
+- provider/projection reconciliation;
+- cross-game dependency examination and fulfilment;
+- base-game dependency classification/protection.
 
 ### Full Sync
 
-Full Sync is a durable multi-phase workflow rather than one long PHP loop:
+Full Sync is a resumable multi-phase workflow:
 
-1. independently reimport/repair verified files;
+1. reimport/repair verified files;
 2. rebuild provider/projection state;
-3. independently rebuild dependency files;
-4. publish final dependency summaries and cached game statistics.
+3. rebuild dependency files;
+4. publish final dependency summaries and game statistics.
 
-Completed units are retained. If a Full Sync fails during finalisation, Restart resumes finalisation rather than rescanning the game from file 1. A failed child unit can be restarted without replaying successful siblings.
+Work already completed is retained. A restart resumes incomplete phases/children instead of returning to file 1.
 
-### Projection reconciliation
+## Package/container support
 
-Provider/projection reconciliation also uses per-file dependency-owner children. One bad owner file does not force all previously reconciled files to be processed again.
+### UE1 / UE2 / UE3 packages
 
-### UE3 UPK management
+Classic Unreal packages expose package header information, names, imports, exports, hashes/GUIDs and dependency relationships where supported by the engine/version parser.
 
-UE3 `.upk` packages are retained as packages and their internal exports can be examined without pretending individual exports are standalone package files.
+UE3 `.upk` files remain packages; their internal exports can be examined without pretending that each export is an independent package file.
 
-### UE4 and UE5 PAK management
+### UE4 / UE5 PAK files
 
-Supported unencrypted PAK files are retained as original archives, indexed and extracted when their layout/compression is supported.
+Supported unencrypted PAK files are retained as original archives and indexed/extracted when their version and compression layout are supported.
 
-PAK import uses a durable per-parent workspace. Extraction/index selection is completed once, then each PAK entry is processed as an independently restartable child job. After entry processing, the parent invokes the normal resumable game-dependency workflow and finalises the retained PAK record.
+PAK import uses a durable parent workspace and independently restartable entry jobs. An unsupported or damaged entry is recorded as an entry outcome rather than preventing unrelated entries from being processed.
 
-Encrypted entries, unsupported compression methods and unsupported package payloads are recorded as entry outcomes rather than blocking unrelated entries.
+Encrypted PAK content and unsupported compression/container variants are not silently accepted.
 
-### Base-game protection
+### Unreal redirect archives
 
-Official base-game package identities are stored in `ue_base_game_files`. Missing base-game dependency counts are a subset of all missing dependencies: a missing requirement is classified as base-game when its **required package** matches the configured base-game package inventory for that game.
+- `.uz`: historical 1234 and 5678 FCodec variants.
+- `.uz2`: chunked zlib redirect format used by UE2-era games.
+- `.uz3`: retained as an experimental/validation area pending broader known-good UT3 coverage.
 
-Protected/base-game files can be excluded from public downloads, generated packages and federation transfers while remaining available for dependency analysis.
+Catalogue identity is based on the decompressed Unreal package where a redirect wrapper is successfully decoded.
 
-### Game Backups
+## Public site features
 
-Game Backups create independent file copies plus a manifest describing package identity and intended paths.
+The public side can provide:
 
-Backup restore is per-manifest-entry and resumable, preserving canonical-before-alias ordering before invoking the normal game dependency workflow.
+- game/file browsing;
+- exact MD5/SHA-1/GUID lookups;
+- package/file search;
+- package metadata/details;
+- dependency and missing-dependency information;
+- verified downloads subject to policy;
+- generated dependency/download packages;
+- feedback submission when SMTP is configured.
 
-Backup export uses a durable immutable export plan/completion journal. A restart verifies/adopts already copied files and continues instead of deleting an incomplete backup and starting over.
+Protected/base-game packages can remain available for dependency analysis while being excluded from downloads, generated packages or federation transfers.
 
-### Federation
+## Administration and diagnostics
 
-Parent/child UnrealDB installations can exchange inventories, dependency requests and approved files. Federation policy can exclude base-game packages while still exposing enough identity/dependency evidence to determine what is missing.
+Current administration includes:
 
-## Background jobs and recovery
+- games and game profiles;
+- Upload Files to Game / Upload Bucket;
+- local/managed source scans;
+- unverified-file review and repair;
+- PAK/UPK management;
+- Background Jobs and job details;
+- job resource/concurrency limits;
+- System Operations/readiness;
+- System Errors;
+- Job Logging;
+- Game Backups;
+- federation management;
+- dependency/source-identity repair tools;
+- maintenance/reconciliation jobs.
 
-Background jobs are durable database-backed work units executed by detached PHP workers.
+### Job reporting
 
-The important distinction is:
+Background Jobs is intentionally job-centric. Internal child rows can exist for recoverability without making the headline queue counts jump as workflow children are created/completed.
 
-- **workflow/coordinator job** — plans bounded work and waits;
-- **child/unit job** — one independently retryable file/archive-entry/maintenance operation;
-- **exact-cursor/journal job** — sequential work whose completed position is persisted durably;
-- **atomic artifact job** — one output artifact written/validated/published as one unit.
+Routine successful child rows are not the primary operator view; failures, dead letters, cancellations and parent workflow status remain actionable.
 
-Restart/recovery preserves `progress_json`; it does not reset the operation to zero. Parent-child identity is stored with `parent_job_id` and `workflow_unit_key`, making child creation idempotent when a coordinator itself is replayed.
+### Errors-first logging
 
-Current durable workflows include Full Sync, whole-game dependency rebuild, affected dependency refresh, projection reconciliation, source-identity repair, unverified exact-match refresh, cross-game copy preparation, PAK entry import, Game Backup restore, unverified duplicate cleanup, unverified-storage reconciliation and stale-artifact cleanup.
+Durable job state/progress does not depend on verbose event logging.
 
-Source scanning uses a deterministic exact file cursor. Backup export uses an immutable plan/journal. Generated download packages remain one atomic artifact unit.
+Default event logging is errors-first. Terminal job failures are promoted into **System Errors**, where diagnostics can be filtered/exported. Secret-like context values are redacted from diagnostic exports.
 
-Concurrency is controlled by administrator-configurable resource classes rather than only a global worker count. The Job Resource Limits page shows current limits/pressure, and applying a setting updates compatible queued jobs without collapsing per-file child concurrency keys.
+## Security status
 
-See [`docs/background-jobs.md`](docs/background-jobs.md) for operational details.
+Recent production hardening includes:
 
-## Errors-first logging and diagnostics
+- native PDO prepared statements;
+- CSRF protection for authenticated mutations;
+- strict/cookie-only PHP sessions with ID rotation;
+- account, IP and account+IP login throttling;
+- bounded JSON/request bodies;
+- generic public 5xx responses with internal request-reference logging;
+- CSP nonce handling and other browser security headers;
+- explicit trusted-proxy handling rather than trusting forwarded headers by default;
+- AES-256-GCM federation secret storage with encrypted storage required by default;
+- SSRF-resistant federation transport controls including HTTPS, DNS/IP validation and no redirects;
+- administrator MFA/security support where configured.
 
-Durable job progress/results are always stored independently from optional event logging.
+Remember-me support remains intentionally available for the administrator workflow.
 
-The **Job Logging** admin page controls event streams. Defaults are intentionally errors-first:
+## Production deployment
 
-- errors: enabled;
-- progress: disabled;
-- success/completed: disabled;
-- duplicate: disabled;
-- skipped: disabled;
-- cancelled: disabled;
-- worker diagnostics: disabled.
+The maintained deployment target is one Windows host running Apache/PHP/MySQL and local package storage.
 
-Terminal background-job failures are promoted into **System Errors** so actionable problems have one operator inbox. System Errors can be filtered and exported as a diagnostic Markdown report including available exception/source/trace/context information; secret-like context values are redacted.
+Long-running workers must run independently from browser requests. The application provides liveness/readiness endpoints and queue/worker diagnostics; production operation should also monitor MySQL, disk capacity, Apache/PHP errors and backup age.
 
-Upload Issues is reserved for persistent browser/upload validation/transfer/finalisation problems.
+See:
 
-## Supported Unreal Engine generations
+- [`docs/production-deployment.md`](docs/production-deployment.md)
+- [`docs/windows-backup-recovery.md`](docs/windows-backup-recovery.md)
+- [`docs/solo-maintainer-production-policy.md`](docs/solo-maintainer-production-policy.md)
 
-UnrealDB contains workflows for Unreal Engine 1, 2, 2.5, 3, 4 and 5.
+## Backup and recovery
 
-Support varies by generation and package/container format. UE1–UE3 package parsing is generally more complete. UE4/UE5 package/container handling remains dependent on package version, available metadata and supported PAK layouts/compression. Encrypted PAK files and UE5 IoStore `.utoc`/`.ucas` containers are not fully supported.
+Windows backup tooling is under [`deploy/backup`](deploy/backup).
 
-## Why file identity matters
+It supports:
 
-Unreal packages are frequently renamed, copied between servers or distributed with duplicate suffixes. Two files with the same filename may be different; two differently named files may contain identical bytes.
+- non-destructive backup readiness checks;
+- online database-only backups;
+- coherent database + package-storage recovery points during a maintenance window;
+- SHA-256 verification;
+- complete compressed-dump validation;
+- guarded restore;
+- post-restore schema and compact-metadata verification.
 
-UnrealDB therefore uses hashes, package GUIDs, package structure and exact dependency/object-path evidence instead of trusting filenames alone. Exact cross-game dependency coverage proves that a candidate exports required object paths; it is dependency-fulfilment evidence, not proof that a file is the canonical retail package for another game.
+A backup should not be treated as a recovery point until verification has passed. Restore drills should be performed against disposable targets before an emergency requires the process.
 
-## Database migrations
+## Database installation and migrations
 
-`catalog/install.sql` is the consolidated base schema. Immutable migrations newer than that baseline live under `catalog/migrations/` and are applied with:
+`catalog/install.sql` is the consolidated base schema. Newer immutable migrations live under `catalog/migrations/`.
 
-```bash
+For a fresh/current database:
+
+```text
+load catalog/install.sql
 php catalog/bin/migrate.php migrate
+php catalog/bin/migrate.php verify
 ```
 
-The current workflow recovery/logging design requires migration `202608120001`, and the unverified exact-game-match cache requires `202608110001`. Applied migration files are byte-immutable because their checksums are recorded in `ue_schema_migrations`.
+For an existing database, inspect the upgrade first:
+
+```text
+php catalog/bin/migrate.php status
+php catalog/bin/migrate.php migrate --dry-run
+php catalog/bin/migrate.php migrate
+php catalog/bin/migrate.php verify
+```
+
+Applied migration files are byte-immutable because their SHA-256 checksums are stored in `ue_schema_migrations`.
+
+See [`catalog/migrations/README.md`](catalog/migrations/README.md) and [`docs/database-migrations.md`](docs/database-migrations.md).
+
+## Health and operational checks
+
+Machine-readable endpoints include:
+
+- `/catalog/api/v1/live.php` — lightweight PHP/process liveness;
+- `/catalog/api/v1/readiness.php` — dependency-aware readiness for MySQL, queue schema and writable package storage;
+- `/catalog/api/v1/metrics.php` — protected Prometheus-format application metrics when configured.
+
+Useful deployment/runtime verification commands include:
+
+```text
+php catalog/bin/migrate.php verify
+php catalog/bin/verify-system-readiness-contract.php --run
+php catalog/bin/verify-queue-runtime-invariants.php
+php catalog/bin/verify-solo-maintainer-hardening.php --run
+php catalog/bin/verify-security-hardening.php
+```
+
+## Known limitations / active work
+
+The main active areas are:
+
+- validating UE3 package/compression edge cases against source and known-good fixtures;
+- continuing UE4/UE5 package/dependency compatibility work;
+- broadening `.uz3` validation before treating it as reliable production input;
+- diagnosing malformed/non-standard redirect archives without weakening fail-closed parsing;
+- further reducing expensive catalogue/maintenance paths where measured performance still warrants it;
+- improving operator monitoring and worker/service supervision on the single Windows host;
+- expanding real-world fixture coverage without committing copyrighted game assets.
+
+The project deliberately avoids adding infrastructure such as message brokers, Redis, Docker or Kubernetes unless a real future requirement makes it necessary.
 
 ## Documentation
 
-Technical installation, migration and administration material is in [`docs`](docs/).
+Technical material is under [`docs`](docs/). Useful starting points:
 
-Useful references include:
-
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/catalog-architecture.md`](docs/catalog-architecture.md)
 - [`docs/background-jobs.md`](docs/background-jobs.md)
+- [`docs/database-migrations.md`](docs/database-migrations.md)
 - [`docs/pak-archive-management.md`](docs/pak-archive-management.md)
 - [`docs/upk-package-management.md`](docs/upk-package-management.md)
-- [`docs/database-migrations.md`](docs/database-migrations.md)
 - [`docs/production-deployment.md`](docs/production-deployment.md)
+- [`docs/windows-backup-recovery.md`](docs/windows-backup-recovery.md)
+
+## Project principles
+
+UnrealDB favors:
+
+- exact identity over filename assumptions;
+- durable/recoverable work over long synchronous requests;
+- explicit failure over silent corruption;
+- operator-visible state over hidden worker behavior;
+- measured optimization over speculative infrastructure;
+- backwards-compatible migrations and incremental refactoring;
+- preserving working functionality while improving architecture and maintainability.
