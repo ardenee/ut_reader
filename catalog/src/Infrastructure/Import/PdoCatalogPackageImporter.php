@@ -81,7 +81,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
         // remains determined by strictProfile, exactly as before this refactor.
         unset($allowProfileOverride);
 
-        $this->identity->ensureSchema();
+        $this->identity->ensureSourcePathSchema();
         $sourceRelativePath = (string)($scannerOptions['source_relative_path'] ?? '');
         $deferDependencyRebuild = !empty($scannerOptions['defer_dependency_rebuild']);
         $maintenanceReplaceFileId = max(0, (int)($scannerOptions['maintenance_replace_file_id'] ?? 0));
@@ -95,6 +95,7 @@ final class PdoCatalogPackageImporter implements CatalogPackageImporter
             $sourceRelativePath,
             $progress
         );
+        $this->identity->ensureAliasSchema();
 
         $duplicate = $this->identity->findVerifiedDuplicate(
             $gameId,
