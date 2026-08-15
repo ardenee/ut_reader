@@ -13,8 +13,9 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 use PDO;
 use RuntimeException;
 use UnrealDb\Catalog\Application\Import\CatalogVerifiedPackageInspection;
+use UnrealDb\Catalog\Application\Import\Contract\VerifiedPackageInspectorPort;
 
-final class CatalogVerifiedPackageInspector
+final class CatalogVerifiedPackageInspector implements VerifiedPackageInspectorPort
 {
     /** @param array<string,mixed> $config */
     public function __construct(
