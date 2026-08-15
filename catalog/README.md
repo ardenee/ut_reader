@@ -151,7 +151,7 @@ Current broad status:
 - **UE5:** partial support; IoStore `.utoc`/`.ucas` is not fully supported.
 - **`.uz`:** historical 1234 and 5678 FCodec variants supported.
 - **`.uz2`:** chunked zlib support present; malformed/non-standard archives fail safely.
-- **`.uz3`:** UT3 tagged whole-file zlib decoding is implemented; encoder/known-good fixture validation remains before promotion to Active.
+- **`.uz3`:** active UT3 tag + uncompressed-size + whole-file zlib compression/decompression, validated against real `UT3.exe Compress` output.
 
 ## Operational endpoints
 
