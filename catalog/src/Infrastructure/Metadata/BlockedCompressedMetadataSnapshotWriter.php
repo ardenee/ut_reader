@@ -63,23 +63,19 @@ final class BlockedCompressedMetadataSnapshotWriter
         $resolvedTermIds = $lookupWriter->primeSnapshotTerms($snapshot, $dictionarySqlBatches);
         (new CompactTermOverflowWriter($this->db))->write($snapshot, $dictionarySqlBatches);
 
+        $built = null;
         try {
             for ($attempt = 1; ; $attempt++) {
-                // The production builder writes/validates the complete .uedb2 on
-                // disk while retaining only one compressed block in PHP memory.
-                // A retry can reuse the already-verified temp file unless a prior
-                // attempt reached the atomic rename before its DB commit failed.
-                if (!is_file($temporaryPath)) {
+                clearstatcache(true, $temporaryPath);
+                if (!is_array($built) || !is_file($temporaryPath)) {
+                    // If a prior attempt failed before rename, the verified file
+                    // and its build metadata are reused. If it reached rename and
+                    // then rolled back its DB transaction, the temp path no longer
+                    // exists and is rebuilt here.
                     $built = BlockedCompressedMetadataContainer::buildToFile(
                         $snapshot,
                         $temporaryPath
                     );
-                } else {
-                    $built = BlockedCompressedMetadataContainer::verifyFile($temporaryPath, $fileId);
-                    // verifyFile() does not know the logical uncompressed size.
-                    // Rebuilding that number from the manifest is cheap and avoids
-                    // rebuilding the physical container merely for a DB retry.
-                    $built['uncompressed_size'] = $this->manifestUncompressedSize((array)$built['manifest']);
                 }
 
                 try {
@@ -165,7 +161,6 @@ final class BlockedCompressedMetadataSnapshotWriter
             }
             $published = true;
             clearstatcache(true, $path);
-
             $this->db->commit();
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {
@@ -185,10 +180,10 @@ final class BlockedCompressedMetadataSnapshotWriter
             @unlink($backupPath);
         }
 
-        // buildToFile() already performed a full streaming structural/SHA check on
-        // the exact file that was atomically renamed here. rename() does not alter
-        // the bytes, and the DB transaction committed the same size/SHA. Avoid a
-        // second full read/decompress pass after every successful import.
+        // buildToFile() verified the exact temp file before rename. The atomic
+        // rename cannot alter bytes, and the committed DB row contains the same
+        // size/SHA, so a second full read/decompress pass adds I/O but no stronger
+        // publication guarantee.
         return [
             'verified' => true,
             'file_id' => $fileId,
@@ -204,27 +199,6 @@ final class BlockedCompressedMetadataSnapshotWriter
             'container_rewritten' => true,
             'dependency_count' => count((array)($snapshot['dependencies'] ?? [])),
         ];
-    }
-
-    /** @param array<string,mixed> $manifest */
-    private function manifestUncompressedSize(array $manifest): int
-    {
-        $size = 0;
-        foreach ((array)($manifest['sections'] ?? []) as $blocks) {
-            foreach ((array)$blocks as $block) {
-                if (is_array($block)) {
-                    $size += max(0, (int)($block['uncompressed_length'] ?? 0));
-                }
-            }
-        }
-        $manifestJson = json_encode(
-            $manifest,
-            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
-        );
-        if (!is_string($manifestJson)) {
-            throw new RuntimeException('Could not re-encode compact metadata manifest during publication retry.');
-        }
-        return $size + strlen($manifestJson);
     }
 
     /** @param array<string,mixed> $snapshot */
