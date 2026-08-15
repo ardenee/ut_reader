@@ -38,7 +38,7 @@ $check(
         && str_contains($ui, "queueSelect.title = 'Queue selector'")
         && str_contains($page, '. catalog_h($name) . \'</option>\'')
         && !str_contains($page, 'active database row')
-        && !str_contains($page, "$label = \$name . ' — '"),
+        && !str_contains($page, '$label = $name'),
     'The server-rendered and enhanced queue selector must display only the queue identity; raw durable-row counts must never flash as job telemetry.'
 );
 $check(
