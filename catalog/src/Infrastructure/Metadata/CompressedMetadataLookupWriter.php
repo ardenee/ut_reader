@@ -24,15 +24,7 @@ final class CompressedMetadataLookupWriter
     {
     }
 
-    /**
-     * Prime and resolve the complete shared term dictionary before a file-owned
-     * metadata transaction begins. Returning the IDs lets the atomic writer reuse
-     * the exact resolution instead of rebuilding the term map and requerying the
-     * dictionary a second time inside the transaction.
-     *
-     * @param array<string,mixed> $snapshot
-     * @return array<string,int>
-     */
+    /** @param array<string,mixed> $snapshot @return array<string,int> */
     public function primeSnapshotTerms(array $snapshot, int &$sqlBatches): array
     {
         if ($this->db->inTransaction()) {
@@ -42,6 +34,10 @@ final class CompressedMetadataLookupWriter
     }
 
     /**
+     * Compatibility entry point for callers that already hold container bytes.
+     * Production publication uses writeVersionedMetadata() so it never needs a
+     * full .uedb2 PHP string merely to register size and SHA-256.
+     *
      * @param array<string,mixed> $snapshot
      * @param array<string,int>|null $resolvedTermIds
      */
@@ -54,6 +50,36 @@ final class CompressedMetadataLookupWriter
         int &$sqlBatches,
         ?array $resolvedTermIds = null
     ): void {
+        $this->writeVersionedMetadata(
+            $snapshot,
+            strlen($storedBytes),
+            hash('sha256', $storedBytes, true),
+            $uncompressedSize,
+            $formatVersion,
+            $codec,
+            $sqlBatches,
+            $resolvedTermIds
+        );
+    }
+
+    /**
+     * @param array<string,mixed> $snapshot
+     * @param array<string,int>|null $resolvedTermIds
+     */
+    public function writeVersionedMetadata(
+        array $snapshot,
+        int $compressedSize,
+        string $payloadSha256,
+        int $uncompressedSize,
+        int $formatVersion,
+        int $codec,
+        int &$sqlBatches,
+        ?array $resolvedTermIds = null
+    ): void {
+        if ($compressedSize < 1 || strlen($payloadSha256) !== 32) {
+            throw new RuntimeException('Compact metadata registration requires a valid size and binary SHA-256.');
+        }
+
         $file = (array)$snapshot['file'];
         $imports = (array)$snapshot['imports'];
         $exports = (array)$snapshot['exports'];
@@ -69,9 +95,6 @@ final class CompressedMetadataLookupWriter
             }
         }
 
-        // Compatibility for callers that do not prime outside the transaction.
-        // Current publication paths pass the pre-resolved IDs and therefore avoid
-        // constructing the same potentially large unique-term map twice.
         $termIds = $resolvedTermIds
             ?? $this->resolveTermIds($this->snapshotTermValues($snapshot), $sqlBatches);
 
@@ -90,8 +113,6 @@ final class CompressedMetadataLookupWriter
             $index = (int)$row['export_index'];
             $object = (string)$row['object_name'];
             $class = trim((string)($row['class_name'] ?? ''));
-            // Preserve the exact local-path bytes used by the existing path_hash
-            // projection, including the unusual but historically valid empty value.
             $localPath = (string)($paths['exports'][$index]['local'] ?? '');
             $exportRows[] = [
                 $fileId,
@@ -184,9 +205,9 @@ final class CompressedMetadataLookupWriter
             $fileId,
             $formatVersion,
             $codec,
-            strlen($storedBytes),
+            $compressedSize,
             $uncompressedSize,
-            hash('sha256', $storedBytes, true),
+            $payloadSha256,
             count((array)$snapshot['names']),
             count((array)$snapshot['imports']),
             count((array)$snapshot['exports']),
@@ -196,13 +217,7 @@ final class CompressedMetadataLookupWriter
         $sqlBatches++;
     }
 
-    /**
-     * Current snapshots must carry human-readable resolution labels inline.
-     * The writer never rereads retired SQL metadata.
-     *
-     * @param array<int,mixed> $dependencies
-     * @return array<int,array{source:string,confidence:string}>
-     */
+    /** @param array<int,mixed> $dependencies @return array<int,array{source:string,confidence:string}> */
     private function dependencyResolutionLabels(array $dependencies): array
     {
         $labels = [];
@@ -226,14 +241,7 @@ final class CompressedMetadataLookupWriter
         return $labels;
     }
 
-    /**
-     * Yield terms instead of first materializing a duplicate flat string list.
-     * resolveTermIds() still owns one deduplicated map, but peak memory no longer
-     * includes both that map and every repeated source value at the same time.
-     *
-     * @param array<string,mixed> $snapshot
-     * @return \Generator<int,string>
-     */
+    /** @param array<string,mixed> $snapshot @return \Generator<int,string> */
     private function snapshotTermValues(array $snapshot): \Generator
     {
         $paths = (array)($snapshot['paths'] ?? []);
@@ -305,10 +313,6 @@ final class CompressedMetadataLookupWriter
         }
 
         ksort($terms, SORT_STRING);
-
-        // Shared dictionary writes happen only outside a file-owned transaction.
-        // Chunk directly from the unique map so we never allocate array_values()
-        // of the complete dictionary merely to split it into bounded SQL batches.
         if (!$this->db->inTransaction()) {
             $chunk = [];
             foreach ($terms as $term) {
@@ -434,13 +438,7 @@ final class CompressedMetadataLookupWriter
         return md5($value) . ':' . strlen($value);
     }
 
-    /**
-     * Insert at most WRITE_BATCH_SIZE rows. Callers flush while constructing rows,
-     * so peak memory is independent of the package's total export/import count.
-     *
-     * @param list<string> $columns
-     * @param list<list<mixed>> $rows
-     */
+    /** @param list<string> $columns @param list<list<mixed>> $rows */
     private function insertBatch(string $table, array $columns, array $rows): void
     {
         if ($rows === []) {
