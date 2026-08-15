@@ -277,7 +277,8 @@ function catalog_performance_finish(): void
     $slowThresholdUs = max(250000, (int)(getenv('UNREALDB_SLOW_REQUEST_MS') ?: 1000) * 1000);
 
     $db = $state['db'] ?? null;
-    $persistSample = $elapsedUs >= $slowThresholdUs || random_int(1, 20) === 1;
+    $persistSample = empty($GLOBALS['catalog_performance_persist_disabled'])
+        && ($elapsedUs >= $slowThresholdUs || random_int(1, 20) === 1);
     if ($db instanceof PDO && !$db->inTransaction() && $persistSample) {
         try {
             $statement = $db->prepare(
