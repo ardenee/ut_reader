@@ -47,7 +47,6 @@
     function getJson(url, options) {
         var requestOptions = Object.assign({
             method: 'GET',
-            cache: 'no-store',
             credentials: 'same-origin',
             headers: { 'Accept': 'application/json' }
         }, options || {});
