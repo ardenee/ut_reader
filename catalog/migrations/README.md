@@ -41,7 +41,7 @@ Verify migration history/checksums/schema state:
 php catalog/bin/migrate.php verify
 ```
 
-For the current codebase, production should be migrated through the latest file in this directory before Apache/workers are expected to use the corresponding functionality.
+For the current codebase, production should be migrated through the latest file in this directory before the application and workers use the corresponding functionality.
 
 ## Important current prerequisites
 
@@ -101,7 +101,7 @@ Existing installations retain their historical rows in `ue_schema_migrations`; t
 
 ## Production deployment rule
 
-On the maintained single-host Windows deployment, schema changes should be applied deliberately before restarting code/workers that require them:
+Schema changes should be applied deliberately before restarting application code or workers that require them:
 
 ```text
 backup if the release changes schema/storage
