@@ -41,6 +41,7 @@ $apiBootstrap = $read('api/v1/_bootstrap.php');
 $health = $read('api/v1/health.php');
 $readiness = $read('api/v1/readiness.php');
 $support = $read('lib/CatalogSupport.php');
+$performance = $read('lib/CatalogPerformance.php');
 $service = $read('src/Application/System/SystemReadinessService.php');
 $probePort = $read('src/Application/System/Contract/ReadinessProbe.php');
 $factory = $read('src/Infrastructure/Composition/CatalogSystemReadinessFactory.php');
@@ -71,6 +72,12 @@ $record(
         && !str_contains($operationalBootstrap, 'CatalogSupport.php')
         && !str_contains($operationalBootstrap, 'CatalogMfa.php'),
     'machine probes must not traverse page/cache/abuse/MFA bootstrap layers'
+);
+$record(
+    'operational_probes_do_not_persist_telemetry',
+    str_contains($operationalBootstrap, "\$GLOBALS['catalog_performance_persist_disabled'] = true;")
+        && str_contains($performance, "empty(\$GLOBALS['catalog_performance_persist_disabled'])"),
+    'infrastructure-generated probes must not randomly write request-performance samples to MySQL'
 );
 $record(
     'health_uses_operational_bootstrap',
@@ -157,6 +164,7 @@ $syntaxTargets = [
     'api/v1/health.php',
     'api/v1/readiness.php',
     'lib/CatalogSupport.php',
+    'lib/CatalogPerformance.php',
     'src/Application/System/Contract/ReadinessProbe.php',
     'src/Application/System/ReadinessCheck.php',
     'src/Application/System/SystemReadinessReport.php',
