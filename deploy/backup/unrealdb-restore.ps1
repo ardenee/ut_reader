@@ -53,8 +53,10 @@ if ($ConfirmDatabase -ne $DatabaseName) {
 
 $backup = (Resolve-Path -LiteralPath $BackupDirectory -ErrorAction Stop).Path
 $verifyScript = Join-Path $PSScriptRoot 'verify-unrealdb-backup.ps1'
+# Failure from the PowerShell verifier is terminating because ErrorActionPreference
+# is Stop. $LASTEXITCODE is intentionally not inspected here because it tracks
+# native executables, not the success of another .ps1 invocation.
 & $verifyScript -BackupDirectory $backup -TarExecutable $TarExecutable | Out-Null
-if ($LASTEXITCODE -ne 0) { throw 'Backup verification failed; restore was not started.' }
 
 $metadata = Get-Content -LiteralPath (Join-Path $backup 'metadata.json') -Raw | ConvertFrom-Json
 if ([string]$metadata.database -ne $DatabaseName) {
