@@ -18,6 +18,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 final class CatalogProfiledUploadQueue
 {
     private const BATCH_HOLD_SECONDS = 86400;
+    private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar'];
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -50,16 +51,23 @@ final class CatalogProfiledUploadQueue
         $game = $this->requiredGame($gameId);
         $originalName = CatalogImportPathPolicy::filename($originalName);
         $size = (int)($staged['size'] ?? 0);
-        $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
-        $limit = $isPak ? $this->containerLimitBytes() : (int)($this->config['max_upload_bytes'] ?? 0);
+        $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+        $isPak = $extension === 'pak';
+        $isArchive = in_array($extension, self::ARCHIVE_EXTENSIONS, true);
+        $limit = ($isPak || $isArchive)
+            ? $this->containerLimitBytes()
+            : (int)($this->config['max_upload_bytes'] ?? 0);
         if ($size < 1 || ($limit > 0 && $size > $limit)) {
-            throw new \RuntimeException(($isPak ? 'PAK' : 'File') . ' exceeds the configured upload limit.');
+            $label = $isPak ? 'PAK' : ($isArchive ? 'Archive' : 'File');
+            throw new \RuntimeException($label . ' exceeds the configured upload limit.');
         }
         if ($isPak) {
             $this->requirePakGame($game);
         }
 
-        $jobType = $isPak ? JobType::IMPORT_STAGED_PAK : JobType::IMPORT_STAGED_PACKAGE;
+        $jobType = $isPak
+            ? JobType::IMPORT_STAGED_PAK
+            : ($isArchive ? JobType::IMPORT_STAGED_ARCHIVE : JobType::IMPORT_STAGED_PACKAGE);
         $stagedPath = (string)$staged['relative_path'];
         $cleanSourceRelativePath = CatalogImportPathPolicy::relative(
             $sourceRelativePath !== '' ? $sourceRelativePath : $originalName
@@ -78,7 +86,6 @@ final class CatalogProfiledUploadQueue
             $payload['sha256'] = $sha256;
         }
 
-        $dedupeKey = null;
         if ($sha256 !== '') {
             $dedupeKey = 'profiled-upload:' . hash(
                 'sha256',
@@ -110,7 +117,6 @@ final class CatalogProfiledUploadQueue
         }
 
         $queueName = $this->queueName();
-        $existingJobId = 0;
         $existing = $this->db->prepare(
             'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
         );
@@ -225,12 +231,13 @@ final class CatalogProfiledUploadQueue
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
         $sql = 'UPDATE ue_background_jobs SET available_at=UTC_TIMESTAMP(),updated_at=UTC_TIMESTAMP() '
             . 'WHERE status="queued" AND created_by=? '
-            . 'AND job_type IN (?,?) AND id IN (' . $placeholders . ')';
+            . 'AND job_type IN (?,?,?) AND id IN (' . $placeholders . ')';
         $statement = $this->db->prepare($sql);
         $statement->execute(array_merge([
             $userId,
             JobType::IMPORT_STAGED_PACKAGE,
             JobType::IMPORT_STAGED_PAK,
+            JobType::IMPORT_STAGED_ARCHIVE,
         ], $ids));
         return $statement->rowCount();
     }
