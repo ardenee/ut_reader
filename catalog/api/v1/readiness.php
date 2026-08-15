@@ -8,13 +8,13 @@
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/_bootstrap.php';
+require_once dirname(__DIR__, 2) . '/bootstrap/operational.php';
 
 use UnrealDb\Catalog\Infrastructure\Composition\CatalogSystemReadinessFactory;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
 try {
-    $application = catalog_api_application(false);
+    $application = catalog_operational_application();
     $report = CatalogSystemReadinessFactory::create($application->db, $application->config)->check();
 
     JsonResponse::send([
