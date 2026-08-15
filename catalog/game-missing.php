@@ -13,8 +13,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
 
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 catalog_start_session();
 
@@ -89,7 +89,7 @@ try {
     $selectedPackage = substr(trim((string)($_GET['package'] ?? '')), 0, 255);
     $perPage = 200;
 
-    $dependencySource = CatalogDependencyReadSource::sql($db);
+    $dependencySource = PdoDependencyReadSource::sql($db);
     $summaryAvailable = (new PdoDependencyPackageSummary($db))->available();
     $summaryWhere = 's.game_id=? AND s.missing_count>0';
     $summaryArgs = [$gameId];
