@@ -51,6 +51,8 @@ final class CatalogPageResponseTransform
             && !isset($_GET['progress']);
         $gameManagerVersion = '1';
         if ($injectGameManagerCounts) {
+            $corePath = dirname(__DIR__, 3) . '/assets/js/core/http.js';
+            $headAssets['assets/js/core/http.js'] = is_file($corePath) ? (string)filemtime($corePath) : '1';
             $path = dirname(__DIR__, 3) . '/assets/game-manager-missing-counts.js';
             $gameManagerVersion = is_file($path) ? (string)filemtime($path) : '1';
         }
