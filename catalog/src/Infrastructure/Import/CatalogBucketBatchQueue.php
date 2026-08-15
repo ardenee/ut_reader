@@ -72,7 +72,10 @@ final class CatalogBucketBatchQueue
         $size = (int)($manifest['file_size'] ?? 0);
         $relativePath = CatalogImportPathPolicy::relative((string)($manifest['relative_path'] ?? ''));
         $originalName = $this->requiredName(basename(str_replace('\\', '/', $relativePath)));
+        $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
         $redirect = \catalog_redirect_archive_is_supported_filename($originalName);
+        $archive = in_array($extension, ['zip', '7z', 'rar'], true);
+        $transportContainer = $redirect || $archive;
         $fingerprint = $this->fingerprint($manifest);
         if ($size < 1 || $relativePath === '' || $fingerprint === '' || !is_file($sourcePath)) {
             throw new \RuntimeException('Completed Upload Bucket source is incomplete.');
@@ -80,14 +83,14 @@ final class CatalogBucketBatchQueue
 
         $md5 = '';
         $sha1 = '';
-        if (!$redirect) {
+        if (!$transportContainer) {
             $identityStore = new CatalogBucketUploadIdentityStore($this->config);
             try {
                 $identity = $identityStore->load($uploadId, $userId);
             } catch (Throwable) {
                 // Compatibility for ordinary uploads completed before browser-side
-                // hashing was introduced. Redirect wrappers deliberately do not
-                // take this path because their source hashes are not package hashes.
+                // hashing was introduced. Redirect/archive wrappers deliberately do
+                // not take this path because their source hashes are not package hashes.
                 $legacyMd5 = hash_file('md5', $sourcePath);
                 $legacySha1 = hash_file('sha1', $sourcePath);
                 if (!is_string($legacyMd5) || !is_string($legacySha1)) {
@@ -137,7 +140,7 @@ final class CatalogBucketBatchQueue
         $existingUploadId = '';
         $existingSourceAvailable = false;
 
-        if (!$redirect) {
+        if (!$transportContainer) {
             $dedupeKey = 'bucket-upload-source:' . $fingerprint;
             $existing = $this->db->prepare(
                 'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
@@ -164,27 +167,31 @@ final class CatalogBucketBatchQueue
                 $existingUploadId = '';
                 $dedupeKey .= ':' . $uploadId;
             }
+        } elseif ($archive) {
+            $dedupeKey = 'bucket-archive-upload:' . $uploadId;
         } else {
             $dedupeKey = 'bucket-redirect-upload:' . $uploadId;
         }
 
+        $jobType = $archive ? JobType::PROCESS_BUCKET_ARCHIVE : JobType::PROCESS_BUCKET_UPLOAD;
         $jobId = (new PdoJobQueue($this->db))->enqueue(
             $queueName,
-            JobType::PROCESS_BUCKET_UPLOAD,
+            $jobType,
             [
                 'upload_id' => $uploadId,
                 'staged_path' => 'chunk-upload:' . $uploadId,
-                'source_kind' => 'chunk-upload',
+                'source_kind' => $archive ? 'archive-upload' : 'chunk-upload',
                 'source_fingerprint' => $fingerprint,
-                'source_md5' => $redirect ? '' : $md5,
-                'source_sha1' => $redirect ? '' : $sha1,
-                'package_md5' => $redirect ? '' : $md5,
-                'package_sha1' => $redirect ? '' : $sha1,
+                'source_md5' => $transportContainer ? '' : $md5,
+                'source_sha1' => $transportContainer ? '' : $sha1,
+                'package_md5' => $transportContainer ? '' : $md5,
+                'package_sha1' => $transportContainer ? '' : $sha1,
                 'source_relative_path' => $relativePath,
                 'original_name' => $originalName,
                 'size' => $size,
                 'user_id' => $userId,
                 'redirect_wrapper' => $redirect,
+                'archive_container' => $archive,
             ],
             5,
             null,
@@ -193,7 +200,7 @@ final class CatalogBucketBatchQueue
             3
         );
 
-        $deduplicated = !$redirect
+        $deduplicated = !$transportContainer
             && $existingSourceAvailable
             && $existingId > 0
             && $existingId === $jobId;
