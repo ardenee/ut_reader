@@ -12,12 +12,19 @@ namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
 use PDOException;
+use PDOStatement;
 use RuntimeException;
 use Throwable;
 
 final class PdoJobAdmissionGuard
 {
     private const LOCK_WAIT_SECONDS = 2;
+
+    private ?PDOStatement $acquireLockStatement = null;
+    private ?PDOStatement $releaseLockStatement = null;
+    private ?PDOStatement $limitStatement = null;
+    private ?PDOStatement $runningResourceStatement = null;
+    private ?PDOStatement $runningKeyStatement = null;
 
     public function __construct(private readonly PDO $db)
     {
@@ -76,8 +83,6 @@ final class PdoJobAdmissionGuard
                 $held[] = $lock;
             }
         } catch (Throwable $error) {
-            // GET_LOCK can fail after an earlier dimension was acquired. Never
-            // leak a connection-scoped lock when surfacing the database fault.
             $this->release($held);
             throw $error;
         }
@@ -89,8 +94,10 @@ final class PdoJobAdmissionGuard
     {
         foreach (array_reverse($locks) as $lock) {
             try {
-                $statement = $this->db->prepare('SELECT RELEASE_LOCK(?)');
+                $statement = $this->releaseLockStatement ??= $this->db->prepare('SELECT RELEASE_LOCK(?)');
                 $statement->execute([$lock]);
+                $statement->fetchColumn();
+                $statement->closeCursor();
             } catch (Throwable $error) {
                 error_log('[UnrealDB jobs] Could not release admission lock: ' . $error->getMessage());
             }
@@ -102,11 +109,12 @@ final class PdoJobAdmissionGuard
         $resourceClass = trim($resourceClass) !== '' ? trim($resourceClass) : 'default';
         $fallback = $this->environmentLimit($resourceClass, $fallback);
         try {
-            $statement = $this->db->prepare(
+            $statement = $this->limitStatement ??= $this->db->prepare(
                 'SELECT limit_value FROM ue_job_resource_limits WHERE resource_class=? LIMIT 1'
             );
             $statement->execute([$resourceClass]);
             $value = $statement->fetchColumn();
+            $statement->closeCursor();
             return $value === false ? $fallback : self::limit((int)$value);
         } catch (PDOException $error) {
             $sqlState = strtoupper((string)$error->getCode());
@@ -114,9 +122,6 @@ final class PdoJobAdmissionGuard
                 ? (int)($error->errorInfo[1] ?? 0)
                 : 0;
             if ($sqlState === '42S02' || $driverCode === 1146) {
-                // Compatibility only: a pre-settings-schema database may not
-                // have ue_job_resource_limits yet. Every other DB fault must
-                // surface so workers do not silently run with the wrong limits.
                 return $fallback;
             }
             throw $error;
@@ -137,13 +142,18 @@ final class PdoJobAdmissionGuard
         $resourceClass = trim($resourceClass) !== '' ? trim($resourceClass) : 'default';
         $resourceLimit = $this->currentLimit($resourceClass, $resourceLimit);
 
-        $running = $this->db->prepare(
+        // resource_class is NOT NULL DEFAULT 'default' and every current enqueue
+        // writes JobResourcePolicy's class explicitly. Direct equality lets MySQL
+        // use idx_ue_background_jobs_resource without wrapping the indexed column
+        // in COALESCE/NULLIF on every worker admission check.
+        $running = $this->runningResourceStatement ??= $this->db->prepare(
             'SELECT COUNT(*) FROM ue_background_jobs '
-            . 'WHERE queue_name=? AND status="running" '
-            . 'AND COALESCE(NULLIF(resource_class,""),"default")=?'
+            . 'WHERE queue_name=? AND status="running" AND resource_class=?'
         );
         $running->execute([$queue, $resourceClass]);
-        if ((int)$running->fetchColumn() >= $resourceLimit) {
+        $runningCount = (int)$running->fetchColumn();
+        $running->closeCursor();
+        if ($runningCount >= $resourceLimit) {
             return [
                 'allowed' => false,
                 'resource_limit' => $resourceLimit,
@@ -153,12 +163,14 @@ final class PdoJobAdmissionGuard
 
         $concurrencyKey = trim((string)$concurrencyKey);
         if ($concurrencyKey !== '') {
-            $key = $this->db->prepare(
+            $key = $this->runningKeyStatement ??= $this->db->prepare(
                 'SELECT 1 FROM ue_background_jobs '
                 . 'WHERE queue_name=? AND status="running" AND concurrency_key=? LIMIT 1'
             );
             $key->execute([$queue, $concurrencyKey]);
-            if ($key->fetchColumn() !== false) {
+            $occupied = $key->fetchColumn() !== false;
+            $key->closeCursor();
+            if ($occupied) {
                 return [
                     'allowed' => false,
                     'resource_limit' => $resourceLimit,
@@ -197,14 +209,13 @@ final class PdoJobAdmissionGuard
 
     private function acquireNamedLock(string $lock): bool
     {
-        $statement = $this->db->prepare('SELECT GET_LOCK(?,?)');
+        $statement = $this->acquireLockStatement ??= $this->db->prepare('SELECT GET_LOCK(?,?)');
         $statement->execute([$lock, self::LOCK_WAIT_SECONDS]);
         $value = $statement->fetchColumn();
+        $statement->closeCursor();
         if ($value === false || $value === null) {
             throw new RuntimeException('MySQL did not return a valid admission-lock result.');
         }
-        // GET_LOCK() returns 0 only for an ordinary timeout/contention case.
-        // SQL/driver failures must propagate instead of masquerading as a block.
         return (int)$value === 1;
     }
 
