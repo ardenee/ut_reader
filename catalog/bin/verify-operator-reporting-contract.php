@@ -112,11 +112,16 @@ if ($run) {
         $application = catalog_operational_application();
         $queue = trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
 
-        $browserQuery = new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBrowserQuery(
-            $application->db,
-            $application->config
-        );
-        $browserResult = $browserQuery->fetch($queue, '', '', 1, null, 'next');
+        // Rebuild the exact current/actionable Background Jobs display scope
+        // without invoking the full browser query, whose All/Completed tabs may
+        // legitimately aggregate retained terminal history.
+        $scopeQuery = new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobSearchScope($application->db);
+        $currentScope = $scopeQuery->build($queue, '');
+        $currentWhere = '(' . $currentScope['where'] . ') AND j.status IN ("queued","running","failed","dead_letter")';
+        $expectedCounts = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobDisplayCountQuery(
+            $application->db
+        ))->counts($currentScope['from'], $currentWhere, $currentScope['params']);
+
         $operatorResult = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperatorSnapshotQuery(
             $application->db
         ))->current($queue);
@@ -127,10 +132,10 @@ if ($run) {
 
         $mismatches = [];
         foreach (['queued', 'running', 'failed', 'dead_letter'] as $status) {
-            $browserCount = max(0, (int)($browserResult['counts'][$status] ?? 0));
+            $backgroundCount = max(0, (int)($expectedCounts[$status] ?? 0));
             $operatorCount = max(0, (int)($operatorResult[$status] ?? 0));
-            if ($browserCount !== $operatorCount) {
-                $mismatches[$status] = ['background_jobs' => $browserCount, 'system_operations' => $operatorCount];
+            if ($backgroundCount !== $operatorCount) {
+                $mismatches[$status] = ['background_jobs_policy' => $backgroundCount, 'system_operations' => $operatorCount];
             }
         }
         $record(
