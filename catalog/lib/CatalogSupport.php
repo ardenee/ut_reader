@@ -27,15 +27,21 @@ require_once __DIR__ . '/CatalogPublicAccess.php';
  * opens a settings connection merely because a page includes CatalogSupport.
  */
 
-/*
- * Keep the cheap crawler signature gate ahead of response-cache lookup so a
- * cached page is not a crawler-policy bypass. This gate reads no per-IP burst
- * state and takes no per-client exclusive lock.
- */
-try {
-    catalog_public_access_guard_crawler_request();
-} catch (Throwable $error) {
-    error_log('[UnrealDB public access] crawler guard failed open: ' . $error->getMessage());
+$catalogSupportScript = strtolower(str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '')));
+$catalogOperationalProbe = str_ends_with($catalogSupportScript, '/api/v1/health.php')
+    || str_ends_with($catalogSupportScript, '/api/v1/readiness.php');
+
+if (!$catalogOperationalProbe) {
+    /*
+     * Keep the cheap crawler signature gate ahead of response-cache lookup so a
+     * cached page is not a crawler-policy bypass. This gate reads no per-IP burst
+     * state and takes no per-client exclusive lock.
+     */
+    try {
+        catalog_public_access_guard_crawler_request();
+    } catch (Throwable $error) {
+        error_log('[UnrealDB public access] crawler guard failed open: ' . $error->getMessage());
+    }
 }
 
 /*
@@ -52,23 +58,25 @@ if (in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['upload-bucket-
     }
 }
 
-/*
- * Serve explicitly approved anonymous GET pages before they open a database
- * connection or mutate per-IP burst-control state. A cache HIT exits here.
- */
-try {
-    catalog_public_cache_bootstrap(catalog_config());
-} catch (Throwable $error) {
-    error_log('[UnrealDB public cache] bootstrap skipped: ' . $error->getMessage());
-}
+if (!$catalogOperationalProbe) {
+    /*
+     * Serve explicitly approved anonymous GET pages before they open a database
+     * connection or mutate per-IP burst-control state. A cache HIT exits here.
+     */
+    try {
+        catalog_public_cache_bootstrap(catalog_config());
+    } catch (Throwable $error) {
+        error_log('[UnrealDB public cache] bootstrap skipped: ' . $error->getMessage());
+    }
 
-/*
- * Only cache misses/dynamic public GETs pay for synchronized per-IP burst state.
- * This keeps abuse protection around expensive work while making cached traffic
- * a read-only filesystem fast path.
- */
-try {
-    catalog_public_access_guard_burst_request();
-} catch (Throwable $error) {
-    error_log('[UnrealDB public access] burst guard failed open: ' . $error->getMessage());
+    /*
+     * Only cache misses/dynamic public GETs pay for synchronized per-IP burst state.
+     * This keeps abuse protection around expensive work while making cached traffic
+     * a read-only filesystem fast path.
+     */
+    try {
+        catalog_public_access_guard_burst_request();
+    } catch (Throwable $error) {
+        error_log('[UnrealDB public access] burst guard failed open: ' . $error->getMessage());
+    }
 }
