@@ -20,10 +20,11 @@ final class StatusBadge
         }
         $attributes = is_array($props['attributes'] ?? null) ? $props['attributes'] : [];
         $attributes['data-status'] = $normalized !== '' ? $normalized : 'unknown';
+        $tone = self::tone($normalized);
         $class = Html::classes(
             'ui-badge',
+            'ui-badge--' . $tone,
             'ui-status-badge',
-            'ui-status-badge--' . self::tone($normalized),
             (string)($props['class'] ?? '')
         );
 
