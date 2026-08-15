@@ -11,7 +11,7 @@ use UnrealDb\Catalog\Presentation\Ui\Support\Html;
 final class SegmentedControl
 {
     /**
-     * @param list<array{label:string,value:string,active?:bool,count?:int|string,attributes?:array<string,scalar|null>}> $items
+     * @param list<array{label:string,value:string,active?:bool,count?:int|string,attributes?:array<string,scalar|null>,count_attributes?:array<string,scalar|null>}> $items
      * @param array{id?:string,label?:string,class?:string,attributes?:array<string,scalar|null>} $props
      */
     public static function render(array $items, array $props = []): string
@@ -41,7 +41,10 @@ final class SegmentedControl
             $html .= '<button class="' . Html::escape($buttonClass) . '" type="button"' . Html::attributes($itemAttributes) . '>';
             $html .= '<span class="ui-segmented__label">' . Html::escape($itemLabel) . '</span>';
             if (array_key_exists('count', $item)) {
-                $html .= ' <span class="ui-segmented__count" aria-hidden="true">' . Html::escape($item['count']) . '</span>';
+                $countAttributes = is_array($item['count_attributes'] ?? null) ? $item['count_attributes'] : [];
+                $countAttributes['aria-hidden'] = 'true';
+                $html .= ' <span class="ui-segmented__count"' . Html::attributes($countAttributes) . '>'
+                    . Html::escape($item['count']) . '</span>';
             }
             $html .= '</button>';
         }
