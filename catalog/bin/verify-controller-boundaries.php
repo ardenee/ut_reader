@@ -162,13 +162,18 @@ $record(
 
 $jobAction = $read('api/v1/job-action.php');
 $manualRecovery = $read('src/Infrastructure/Jobs/CatalogManualJobRecovery.php');
+$orphanRecovery = $read('src/Infrastructure/Jobs/CatalogOrphanedJobRecovery.php');
 $record(
     'manual_recovery_boundary',
     str_contains($jobAction, 'CatalogManualJobRecovery')
         && !str_contains($jobAction, 'ue_background_jobs')
-        && str_contains($manualRecovery, 'attempts=GREATEST(attempts-1,0)')
-        && str_contains($manualRecovery, 'recoverExpiredLeases'),
-    'administrator recovery must remain a free retry and stay distinct from automatic orphan recovery'
+        && str_contains($manualRecovery, 'CatalogOrphanedJobRecovery')
+        && str_contains($manualRecovery, 'recoverInactiveQueue($queueName)')
+        && !str_contains($manualRecovery, 'recoverExpiredLeases')
+        && str_contains($orphanRecovery, 'PdoWorkerOwnership')
+        && str_contains($orphanRecovery, 'isAlive($queueName, $workerId)')
+        && !str_contains($orphanRecovery, 'recoverExpiredLeases'),
+    'administrator recovery must remain process-liveness based and must never recover jobs because a lease timer elapsed'
 );
 
 $generatedAccess = $read('src/Infrastructure/Jobs/CatalogGeneratedPackageJobAccess.php');
