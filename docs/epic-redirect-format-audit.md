@@ -92,7 +92,7 @@ Observed reference values:
 - original MD5: `bb16a94f36fe2da9cbbe0995e0cd9a9d`
 - generated `.uz3` MD5: `46002bea1d7103f7b4fef5c2ab0655ea`
 
-Decompressing the payload produces the original package byte-for-byte. The UT3 payload is also byte-for-byte identical to zlib `compress()`/default compression of the original package, confirming both the header and encoder semantics without storing the copyrighted package as a repository fixture.
+Decompressing the payload produces the original package byte-for-byte. In the reference validation environment, default zlib compression also produced a byte-for-byte match to the UT3 payload. Different zlib versions or implementations may emit different but fully compatible compressed bytes; UZ3 compatibility is defined by the wrapper layout and exact decompressed output, not by identical compressed payload bytes.
 
 ## The two `5678` formats
 
