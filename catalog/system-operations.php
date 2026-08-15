@@ -10,8 +10,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
+use UnrealDb\Catalog\Application\Jobs\CatalogWorkerStatusPolicy;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobResourceLimitStore;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperationalQuery;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoSystemOperationsQuery;
 use UnrealDb\Catalog\Infrastructure\Storage\LocalFilesystemPackageStorage;
 use UnrealDb\Catalog\Presentation\Ui\CatalogUi;
@@ -48,7 +50,17 @@ try {
     $query = new PdoSystemOperationsQuery($db);
     $database = $query->database();
     $queues = $query->queues();
-    $worker = (new CatalogDetachedWorker($config))->status($queueName);
+
+    $launcher = new CatalogDetachedWorker($config);
+    $worker = $launcher->status($queueName, false);
+    $operational = new PdoBackgroundJobOperationalQuery($db, $config);
+    $workerQueueCounts = $operational->queueCounts($queueName);
+    $workerStatus = CatalogWorkerStatusPolicy::evaluate(
+        $worker,
+        $workerQueueCounts,
+        $launcher->configuredWorkerCount()
+    );
+
     $limits = (new CatalogJobResourceLimitStore($db, $queueName))->summaries();
     $storage = (new LocalFilesystemPackageStorage(
         (string)$config['storage_path'],
@@ -56,8 +68,10 @@ try {
     ))->health();
 
     $activeWorkers = max(0, (int)($worker['active_count'] ?? 0));
-    $desiredWorkers = max(1, (int)($worker['desired_count'] ?? CatalogDetachedWorker::DEFAULT_WORKERS));
-    $workerAuthority = trim((string)($worker['authoritative_status'] ?? 'stopped')) ?: 'stopped';
+    $desiredWorkers = max(1, (int)($worker['desired_count'] ?? $launcher->configuredWorkerCount()));
+    $workerAuthority = trim((string)($workerStatus['authoritative_status'] ?? 'stopped')) ?: 'stopped';
+    $workerMessage = trim((string)($workerStatus['authoritative_message'] ?? ''));
+
     $queueCurrent = null;
     foreach ($queues as $queue) {
         if ($queue['queue'] === $queueName) {
@@ -103,7 +117,12 @@ try {
     );
 
     echo '<div class="grid">';
-    catalog_stat_card('Worker processes', $activeWorkers . '/' . $desiredWorkers, ucfirst(str_replace('_', ' ', $workerAuthority)), $workerAuthority === 'running' ? 'good' : ((int)$queueCurrent['queued'] > 0 ? 'warning' : ''));
+    catalog_stat_card(
+        'Worker processes',
+        $activeWorkers . '/' . $desiredWorkers,
+        $workerMessage !== '' ? $workerMessage : ucfirst(str_replace('_', ' ', $workerAuthority)),
+        $workerAuthority === 'running' ? 'good' : ((int)$queueCurrent['queued'] > 0 ? 'warning' : '')
+    );
     catalog_stat_card('Queued jobs', number_format((int)$queueCurrent['queued']), 'Ready/current backlog', (int)$queueCurrent['queued'] > 0 ? 'attention' : 'good');
     catalog_stat_card('Running jobs', number_format((int)$queueCurrent['running']), 'Database rows currently running', (int)$queueCurrent['running'] > 0 ? 'good' : '');
     catalog_stat_card('Resource-class blocked', number_format($classBlocked), 'Ready jobs beyond class capacity', $classBlocked > 0 ? 'warning' : 'good');
