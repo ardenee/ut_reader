@@ -64,10 +64,16 @@ $record(
     'Verification must read the complete compressed database dump and validate every published artifact checksum.'
 );
 $record(
+    'powershell_script_invocation_does_not_use_stale_last_exit_code',
+    !preg_match('/&\s*\$verifyScript[^\r\n]*\R\s*if\s*\(\$LASTEXITCODE/', $backup)
+        && !preg_match('/&\s*\$verifyScript[^\r\n]*\R\s*if\s*\(\$LASTEXITCODE/', $restore),
+    'PowerShell .ps1 failures terminate/throw; $LASTEXITCODE belongs to native processes and may contain stale state.'
+);
+$record(
     'restore_requires_exact_confirmation',
     str_contains($restore, '$ConfirmDatabase -ne $DatabaseName')
         && str_contains($restore, '-not $MaintenanceConfirmed')
-        && str_contains($restore, "metadata.database -ne \$DatabaseName"),
+        && str_contains($restore, 'metadata.database -ne $DatabaseName'),
     'Destructive restore must require maintenance acknowledgement, target confirmation and backup/database identity match.'
 );
 $record(
@@ -83,8 +89,10 @@ $scriptPaths = [
     $repoRoot . '/deploy/backup/unrealdb-restore.ps1',
 ];
 $parser = null;
+$redirect = PHP_OS_FAMILY === 'Windows' ? ' 2>NUL' : ' 2>/dev/null';
 foreach (['powershell.exe', 'pwsh.exe', 'pwsh'] as $candidate) {
-    $path = trim((string)@shell_exec((PHP_OS_FAMILY === 'Windows' ? 'where ' : 'command -v ') . escapeshellarg($candidate) . ' 2>NUL'));
+    $locator = PHP_OS_FAMILY === 'Windows' ? 'where ' : 'command -v ';
+    $path = trim((string)@shell_exec($locator . escapeshellarg($candidate) . $redirect));
     if ($path !== '') {
         $parser = preg_split('/\R/', $path)[0] ?? null;
         if ($parser) break;
@@ -93,8 +101,9 @@ foreach (['powershell.exe', 'pwsh.exe', 'pwsh'] as $candidate) {
 if ($parser !== null && function_exists('proc_open')) {
     $parseFailures = [];
     foreach ($scriptPaths as $path) {
+        $powerShellPath = "'" . str_replace("'", "''", $path) . "'";
         $command = '$tokens=$null;$errors=$null;[System.Management.Automation.Language.Parser]::ParseFile('
-            . var_export($path, true)
+            . $powerShellPath
             . ',[ref]$tokens,[ref]$errors)|Out-Null;if($errors.Count){$errors|ForEach-Object{$_.Message};exit 2}';
         $pipes = [];
         $process = proc_open([$parser, '-NoProfile', '-NonInteractive', '-Command', $command], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
