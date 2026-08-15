@@ -58,12 +58,12 @@ final class JobResourcePolicy
             self::ARCHIVE_IMPORT_HEAVY => [
                 'label' => 'Archive and backup imports',
                 'default' => 1,
-                'description' => 'PAK and game-backup import coordinators/entry units. Entry units remain serial by default to avoid archive/storage contention and preserve canonical-before-alias restore ordering.',
+                'description' => 'PAK, ZIP/7z/RAR expansion and game-backup import coordinators/entry units. Archive coordinators remain serial by default to avoid sustained decompression/storage contention.',
             ],
             self::BUCKET_PROCESSING => [
                 'label' => 'Upload Bucket processing',
                 'default' => 8,
-                'description' => 'Redirect preparation, uploaded-file processing and unverified metadata repair.',
+                'description' => 'Redirect preparation, uploaded-file processing, archive-extracted file processing and unverified metadata repair.',
             ],
             self::UNVERIFIED_MATCHES => [
                 'label' => 'Unverified dependency matching',
@@ -156,9 +156,15 @@ final class JobResourcePolicy
             ),
             JobType::PREPARE_BUCKET_REDIRECT,
             JobType::PROCESS_BUCKET_UPLOAD,
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE,
             JobType::REPAIR_UNVERIFIED_METADATA => new JobResourceProfile(
                 self::BUCKET_PROCESSING,
                 self::defaultLimit(8),
+                self::bucketFileKey($payload)
+            ),
+            JobType::PROCESS_BUCKET_ARCHIVE => new JobResourceProfile(
+                self::ARCHIVE_IMPORT_HEAVY,
+                self::defaultLimit(1),
                 self::bucketFileKey($payload)
             ),
             JobType::REFRESH_UNVERIFIED_GAME_MATCHES => new JobResourceProfile(
@@ -171,7 +177,8 @@ final class JobResourcePolicy
                 self::defaultLimit(8),
                 self::importFileKey($payload)
             ),
-            JobType::IMPORT_STAGED_PAK => new JobResourceProfile(
+            JobType::IMPORT_STAGED_PAK,
+            JobType::IMPORT_STAGED_ARCHIVE => new JobResourceProfile(
                 self::ARCHIVE_IMPORT_HEAVY,
                 self::defaultLimit(1),
                 self::positiveKey('import:game:', $payload['game_id'] ?? null)
