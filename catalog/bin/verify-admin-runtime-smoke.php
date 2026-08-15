@@ -88,7 +88,11 @@ if ($run) {
             $application->db,
             $application->config
         )->check();
-        $record('runtime_readiness', $readiness->ready, json_encode($readiness->toArray(), JSON_UNESCAPED_SLASHES) ?: '');
+        $record(
+            'runtime_readiness',
+            $readiness->ready,
+            json_encode($readiness->checkData(), JSON_UNESCAPED_SLASHES) ?: ''
+        );
 
         $games = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogListQuery($application->db))->all();
         $record('runtime_game_catalog', is_array($games), 'games=' . count($games));
