@@ -68,8 +68,8 @@ $record(
 );
 $record(
     'operational_probes_do_not_persist_telemetry',
-    str_contains($operationalBootstrap, "$GLOBALS['catalog_performance_persist_disabled'] = true;")
-        && str_contains($performance, "empty($GLOBALS['catalog_performance_persist_disabled'])"),
+    str_contains($operationalBootstrap, "\$GLOBALS['catalog_performance_persist_disabled'] = true;")
+        && str_contains($performance, "empty(\$GLOBALS['catalog_performance_persist_disabled'])"),
     'infrastructure-generated probes must not randomly write request-performance samples to MySQL'
 );
 $record(
