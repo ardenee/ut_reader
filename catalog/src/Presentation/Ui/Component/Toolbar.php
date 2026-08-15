@@ -26,11 +26,11 @@ final class Toolbar
             $attributes['id'] = $id;
         }
 
-        $class = Html::classes('ui-toolbar', (string)($props['class'] ?? ''));
+        $class = Html::classes('ui-toolbar', 'ui-action-group', (string)($props['class'] ?? ''));
         $html = '<div class="' . Html::escape($class) . '"' . Html::attributes($attributes) . '>';
-        $html .= '<div class="ui-toolbar__actions">' . $actionsHtml . '</div>';
+        $html .= $actionsHtml;
         if ($asideHtml !== '') {
-            $html .= '<div class="ui-toolbar__aside">' . $asideHtml . '</div>';
+            $html .= '<span class="ui-toolbar__aside">' . $asideHtml . '</span>';
         }
 
         return $html . '</div>';
