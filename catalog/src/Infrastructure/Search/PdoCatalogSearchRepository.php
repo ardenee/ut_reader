@@ -86,7 +86,7 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                         . 'ORDER BY g.name,f.package_name,f.original_name,f.id'
                     );
                     $statement->execute($newIds);
-                    foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                    while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
                         $fileId = (int)$row['id'];
                         $rowsById[$fileId] = $row;
                         $order[] = $fileId;
@@ -238,24 +238,24 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         try {
             $statement = $this->db->prepare($sql . ' LIMIT ' . $rowLimit);
             $statement->execute($args);
-            $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                self::addMatch(
+                    $candidateMatches,
+                    (int)($row['id'] ?? 0),
+                    $label,
+                    (string)($row['match_value'] ?? '')
+                );
+                if (count($candidateMatches) >= $limit) {
+                    $statement->closeCursor();
+                    break;
+                }
+            }
         } catch (PDOException $error) {
             throw new CatalogSearchUnavailableException(
                 'Catalogue search stage ' . $stage . ' failed: ' . $error->getMessage(),
                 0,
                 $error
             );
-        }
-        foreach ($rows as $row) {
-            self::addMatch(
-                $candidateMatches,
-                (int)($row['id'] ?? 0),
-                $label,
-                (string)($row['match_value'] ?? '')
-            );
-            if (count($candidateMatches) >= $limit) {
-                break;
-            }
         }
     }
 
@@ -294,7 +294,12 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                 . 'ORDER BY g.name,f.package_name,f.original_name,f.id LIMIT ' . $limit
             );
             $statement->execute($ids);
-            $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+            $rows = [];
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $row['matched_fields'] = $candidateMatches[(int)$row['id']] ?? [];
+                $rows[] = $row;
+            }
+            return $rows;
         } catch (PDOException $error) {
             throw new CatalogSearchUnavailableException(
                 'Final catalogue search lookup failed: ' . $error->getMessage(),
@@ -302,11 +307,6 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
                 $error
             );
         }
-        foreach ($rows as &$row) {
-            $row['matched_fields'] = $candidateMatches[(int)$row['id']] ?? [];
-        }
-        unset($row);
-        return $rows;
     }
 
     private function compactAvailable(): bool
@@ -398,7 +398,7 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
             try {
                 $statement = $this->db->prepare($sql);
                 $statement->execute($args);
-                foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+                while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
                     self::addMatch($matches, (int)$row['id'], $label, (string)$row['match_value']);
                 }
             } catch (PDOException $error) {
@@ -441,7 +441,7 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         try {
             $statement = $this->db->prepare($sql);
             $statement->execute($args);
-            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
                 self::addMatch($matches, (int)$row['id'], 'Alias export path', (string)$row['match_value']);
             }
         } catch (PDOException $error) {
