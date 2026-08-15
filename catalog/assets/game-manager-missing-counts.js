@@ -1,13 +1,8 @@
 (function () {
     'use strict';
 
-    function ready(callback) {
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', callback, { once: true });
-        } else {
-            callback();
-        }
-    }
+    var http = window.UnrealDbHttp;
+    if (!http || typeof http.ready !== 'function' || typeof http.getJson !== 'function') return;
 
     function gameIdForRow(row) {
         var input = row.querySelector('input[name="game_id"]');
@@ -64,7 +59,7 @@
         });
     }
 
-    ready(function () {
+    http.ready(function () {
         var table = gamesTable();
         if (!table || table.dataset.gameMissingCountsBound === '1' || !table.rows.length) return;
 
@@ -86,18 +81,10 @@
         });
         if (!cells.size) return;
 
-        fetch('api/v1/game-missing-counts.php', {
-            method: 'GET',
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-        }).then(function (response) {
-            return response.json().then(function (json) {
-                if (!response.ok || !json || json.ok !== true) {
-                    throw new Error((json && json.error) || 'Count request failed');
-                }
-                return json;
-            });
-        }).then(function (result) {
+        http.getJson('api/v1/game-missing-counts.php').then(function (result) {
+            if (!result || result.ok !== true) {
+                throw new Error('Count request failed');
+            }
             cells.forEach(function (cell, gameId) {
                 showCount(cell, Number((result.counts || {})[gameId] || 0));
             });
