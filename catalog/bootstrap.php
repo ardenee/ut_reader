@@ -10,8 +10,8 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
-function catalog_bootstrap()
+function catalog_bootstrap(bool $startSession = true)
 {
     $class = 'UnrealDb\\Catalog\\Presentation\\Http\\CatalogApplication';
-    return $class::boot();
+    return $class::boot($startSession);
 }
