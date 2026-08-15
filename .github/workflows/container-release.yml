@@ -35,11 +35,21 @@ jobs:
           UNREALDB_DB_PASSWORD: ci-database-password
           UNREALDB_DB_ROOT_PASSWORD: ci-root-password
         run: docker compose config --quiet
-      - name: Validate Kubernetes manifests
+      - name: Validate Kubernetes manifests offline
         run: |
+          set -eu
           kubectl kustomize deploy/kubernetes/base > /tmp/unrealdb-platform.yaml
-          kubectl apply --dry-run=client --validate=false -f /tmp/unrealdb-platform.yaml
-          kubectl apply --dry-run=client --validate=false -f deploy/kubernetes/optional/web-scaling.yaml
+          test -s /tmp/unrealdb-platform.yaml
+          grep -q '^apiVersion:' /tmp/unrealdb-platform.yaml
+          grep -q '^kind:' /tmp/unrealdb-platform.yaml
+
+          mkdir -p /tmp/unrealdb-optional
+          cp deploy/kubernetes/optional/web-scaling.yaml /tmp/unrealdb-optional/web-scaling.yaml
+          printf '%s\n' 'resources:' '- web-scaling.yaml' > /tmp/unrealdb-optional/kustomization.yaml
+          kubectl kustomize /tmp/unrealdb-optional > /tmp/unrealdb-web-scaling.yaml
+          test -s /tmp/unrealdb-web-scaling.yaml
+          grep -q '^apiVersion:' /tmp/unrealdb-web-scaling.yaml
+          grep -q '^kind:' /tmp/unrealdb-web-scaling.yaml
       - name: Build test image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
