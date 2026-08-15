@@ -59,18 +59,27 @@ final class CompactTermOverflowWriter
     {
         $this->validateStoredPrefixes($values, $sqlBatches);
 
-        $placeholders = [];
+        // The rows were primed immediately before this phase. Use a bounded CASE
+        // update rather than INSERT ... ON DUPLICATE KEY so repeated maintenance
+        // cannot consume ue_terms AUTO_INCREMENT IDs merely by updating existing
+        // overflow rows.
+        $cases = [];
+        $where = [];
         $arguments = [];
         foreach ($values as $value) {
-            $placeholders[] = '(?,?,?,1)';
+            $hash = md5($value, true);
+            $length = strlen($value);
+            $cases[] = 'WHEN value_hash=? AND value_length=? THEN ?';
+            array_push($arguments, $hash, $length, $value);
+        }
+        foreach ($values as $value) {
+            $where[] = '(value_hash=? AND value_length=?)';
             $arguments[] = md5($value, true);
             $arguments[] = strlen($value);
-            $arguments[] = $value;
         }
         $statement = $this->db->prepare(
-            'INSERT INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
-            . implode(',', $placeholders)
-            . ' ON DUPLICATE KEY UPDATE value_prefix=VALUES(value_prefix),is_overflow=1'
+            'UPDATE ue_terms SET value_prefix=CASE ' . implode(' ', $cases)
+            . ' ELSE value_prefix END WHERE is_overflow=1 AND (' . implode(' OR ', $where) . ')'
         );
         $statement->execute($arguments);
         $sqlBatches++;
