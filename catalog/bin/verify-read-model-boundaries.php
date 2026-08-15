@@ -49,13 +49,16 @@ $record(
 
 $operations = $read('system-operations.php');
 $operationsQuery = $read('src/Infrastructure/Persistence/PdoSystemOperationsQuery.php');
+$operatorSnapshot = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php');
 $record(
-    'operations_console_uses_bounded_read_model',
+    'operations_console_uses_bounded_read_models',
     str_contains($operations, 'PdoSystemOperationsQuery')
         && !str_contains($operations, 'information_schema.tables')
         && str_contains($operationsQuery, 'information_schema.tables')
-        && str_contains($operationsQuery, 'concurrency_key'),
-    'Operational SQL must be isolated from presentation and expose concurrency blocking explicitly.'
+        && str_contains($operationsQuery, 'PdoBackgroundJobOperatorSnapshotQuery')
+        && str_contains($operatorSnapshot, 'COUNT(DISTINCT COALESCE(q.parent_job_id,q.id))')
+        && str_contains($operatorSnapshot, 'j.status IN ("queued","running","failed","dead_letter")'),
+    'Operational database/file summary and operator job pressure must remain isolated, bounded read models.'
 );
 
 $syntaxTargets = [
@@ -65,6 +68,7 @@ $syntaxTargets = [
     'src/Infrastructure/Persistence/PdoGameCatalogListQuery.php',
     'src/Infrastructure/Persistence/PdoMetricsSnapshotQuery.php',
     'src/Infrastructure/Persistence/PdoSystemOperationsQuery.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php',
     'src/Infrastructure/Storage/CatalogOperationalStorageMetrics.php',
     'bin/verify-read-model-boundaries.php',
 ];
