@@ -79,9 +79,6 @@ final class BlockedCompressedMetadataSnapshotWriter
                 if (!PdoContention::retryable($error) || $attempt >= self::CONTENTION_ATTEMPTS) {
                     throw $error;
                 }
-                // Retry the whole atomic publication. Retrying an individual SQL
-                // statement inside an aborted transaction is unsafe, and the file
-                // replacement must remain coupled to the successful DB projection.
                 usleep(PdoContention::backoffMicros($attempt, 25000));
             }
         }
@@ -113,10 +110,6 @@ final class BlockedCompressedMetadataSnapshotWriter
             throw new RuntimeException('Could not completely write compact metadata temporary file.');
         }
 
-        // build() has already structurally verified the exact byte string. After
-        // writing, a streaming SHA-256 equality check proves the temporary file is
-        // byte-for-byte identical without allocating a second full-container PHP
-        // string or decompressing every block a second time before publication.
         $temporaryHash = hash_file('sha256', $temporaryPath, true);
         if (!is_string($temporaryHash) || !hash_equals($expectedHash, $temporaryHash)) {
             @unlink($temporaryPath);
@@ -140,7 +133,11 @@ final class BlockedCompressedMetadataSnapshotWriter
                 $sqlBatches,
                 $resolvedTermIds
             );
-            (new CompactSearchProjectionWriter($this->db))->write($snapshot, $sqlBatches);
+            (new CompactSearchProjectionWriter($this->db))->write(
+                $snapshot,
+                $sqlBatches,
+                $resolvedTermIds
+            );
 
             if ($hadExistingFile) {
                 if (!rename($path, $backupPath)) {
