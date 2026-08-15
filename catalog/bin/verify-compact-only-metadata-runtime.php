@@ -105,20 +105,27 @@ $record(
 );
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$inspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
+$publisher = $read('src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php');
 $persistence = $read('src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php');
 $finalizer = $read('src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php');
 $finalizerExecutable = $withoutComments($finalizer);
 $record(
     'verified_import_publishes_parser_snapshot',
-    str_contains($importer, 'VerifiedFileCompactMetadataFinalizer::finalizeParsed(')
-        && str_contains($importer, '$names,')
-        && str_contains($importer, '$imports,')
-        && str_contains($importer, '$exports,')
+    str_contains($importer, 'CatalogVerifiedPackageInspector')
+        && str_contains($importer, '$this->publisher->publishMetadata(')
+        && str_contains($inspector, '$package->getNames()')
+        && str_contains($inspector, '$package->getImports()')
+        && str_contains($inspector, '$package->getExports()')
+        && str_contains($publisher, 'VerifiedFileCompactMetadataFinalizer::finalizeParsed(')
+        && str_contains($publisher, '$inspection->names')
+        && str_contains($publisher, '$inspection->imports')
+        && str_contains($publisher, '$inspection->exports')
         && str_contains($finalizer, 'CatalogParsedPackageMetadataSnapshotBuilder')
         && str_contains($finalizer, 'BlockedCompressedMetadataSnapshotWriter')
         && !str_contains($persistence, 'PdoCatalogDependencyRebuilder')
         && !str_contains($persistence, '->rebuild('),
-    'new verified imports must publish format-2 metadata directly from in-memory parser tables'
+    'new verified imports must publish format-2 metadata directly from the inspected parser snapshot'
 );
 $finalizerLegacyReferences = $retiredReferences($finalizerExecutable);
 $record(
@@ -183,7 +190,12 @@ $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
     'lib/CatalogPerformance.php',
     'missing.php',
     'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
+    'src/Application/Import/CatalogVerifiedPackageInspection.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php',
+    'src/Infrastructure/Import/CatalogVerifiedPackageDependencyCoordinator.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
     'src/Infrastructure/Metadata/VerifiedFileCompactMetadataFinalizer.php',
     'src/Infrastructure/Metadata/BlockedCompressedFileMetadataConverter.php',
