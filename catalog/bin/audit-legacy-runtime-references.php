@@ -10,7 +10,7 @@
  */
 declare(strict_types=1);
 
-use UnrealDb\Catalog\Application\Maintenance\LegacyMetadataRuntimeAudit;
+use UnrealDb\Catalog\Infrastructure\Maintenance\LegacyMetadataRuntimeScanner;
 
 if (PHP_SAPI !== 'cli') {
     fwrite(STDERR, "This command may only run from the PHP CLI.\n");
@@ -20,7 +20,7 @@ if (PHP_SAPI !== 'cli') {
 require_once __DIR__ . '/../bootstrap/autoload.php';
 
 try {
-    $result = LegacyMetadataRuntimeAudit::scan(dirname(__DIR__));
+    $result = LegacyMetadataRuntimeScanner::scan(dirname(__DIR__));
     fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
     exit($result['references'] === 0 ? 0 : 2);
 } catch (Throwable $error) {
