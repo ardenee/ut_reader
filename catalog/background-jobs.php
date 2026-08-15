@@ -28,6 +28,8 @@ try {
         $requestedQueue = '';
     }
 
+    // Queue summaries are used only to choose a queue containing live work. Raw
+    // durable-row counts are deliberately not rendered as operator job totals.
     $queueOptions = (new PdoBackgroundJobQueueSummaryQuery($db))->all();
     if (!isset($queueOptions[$configuredQueue])) {
         $queueOptions[$configuredQueue] = ['total' => 0, 'queued' => 0, 'running' => 0];
@@ -103,6 +105,7 @@ try {
         'Background Jobs',
         'Each job uses a fixed summary row plus a full-width live status row. Long workflows keep successful child units and retry only failed/incomplete work; routine child rows stay hidden unless they need attention.',
         [
+            'System Operations' => 'system-operations.php',
             'Upload Bucket' => 'upload-bucket-v2.php',
             'Upload Files' => 'profiled-upload.php',
             'PAK Import' => 'pak-import.php',
@@ -113,12 +116,8 @@ try {
     echo '<form method="get" class="jobs-queue-switcher">'
         . '<label><strong>Queue</strong> <select name="queue" onchange="this.form.submit()">';
     foreach ($queueOptions as $name => $summary) {
-        $label = $name . ' — ' . (int)$summary['total'] . ' jobs';
-        if ((int)$summary['running'] > 0 || (int)$summary['queued'] > 0) {
-            $label .= ' (' . (int)$summary['running'] . ' active database row, ' . (int)$summary['queued'] . ' queued)';
-        }
         echo '<option value="' . catalog_h($name) . '"' . ($name === $queueName ? ' selected' : '') . '>'
-            . catalog_h($label) . '</option>';
+            . catalog_h($name) . '</option>';
     }
     echo '</select></label><noscript><button type="submit">Open queue</button></noscript></form>';
 
