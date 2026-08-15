@@ -13,7 +13,7 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Application\Maintenance\CatalogProjectionReconciliationQueue;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogProjectionReconciliationQueue;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
@@ -40,9 +40,6 @@ final class CatalogFileMaintenanceReimportService
     ): array {
         $support = new CatalogFileMaintenanceSupport($this->db, $this->config);
 
-        // Capture the authoritative relational identity first. This path deliberately
-        // does not read .uedb2 so a damaged derived metadata file cannot prevent the
-        // maintenance operation whose purpose is to rebuild it from the stored package.
         $reimportState = $support->reimportState($fileId);
         $file = (array)$reimportState['file'];
         $storedPath = \catalog_file_maintenance_storage_path($this->config, $file);
@@ -93,8 +90,6 @@ final class CatalogFileMaintenanceReimportService
             if (is_array($snapshot)) {
                 VerifiedFileCompactMetadataFinalizer::setMaintenanceBaseline($fileId, $snapshot);
             } else {
-                // A corrupt/missing compact container must never be reused. Absence of
-                // a baseline makes finalizeParsed() publish fresh parser output.
                 VerifiedFileCompactMetadataFinalizer::clearMaintenanceBaseline($fileId);
             }
 
@@ -131,9 +126,6 @@ final class CatalogFileMaintenanceReimportService
                 throw new RuntimeException('Maintenance refresh unexpectedly changed the stable catalog file ID.');
             }
 
-            // scanner_scan_uploaded_file() only returns a verified result after
-            // compact metadata has either been proven unchanged against the validated
-            // baseline or atomically republished from the freshly parsed tables.
             $replacementPublished = true;
 
             $replacement = \catalog_one(
@@ -220,14 +212,8 @@ final class CatalogFileMaintenanceReimportService
                 if (is_array($snapshot)) {
                     $support->restoreExistingSnapshot($snapshot);
                 } elseif (!$replacementPublished) {
-                    // The old compact metadata was already unreadable. If reparsing or
-                    // publication failed, the compact writer has rolled its own changes
-                    // back atomically; restore only the ue_files row changed by persist().
                     $support->restoreReimportFileRow($reimportState);
                 } else {
-                    // Do not replace a successfully repaired metadata container with the
-                    // known-bad state merely because a later projection/reconciliation
-                    // step failed. The downstream maintenance pass can retry that work.
                     error_log(
                         '[UnrealDB reimport repair] file_id=' . $fileId
                         . ' retained successfully republished compact metadata after later failure: '
