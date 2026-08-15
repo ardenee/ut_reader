@@ -11,8 +11,6 @@ The Windows scripts live in `deploy/backup/`:
 - `verify-unrealdb-backup.ps1` — verify checksums, fully decompress the database dump, and validate the storage archive listing;
 - `unrealdb-restore.ps1` — destructive restore with explicit maintenance and target confirmation, followed by schema and compact-metadata verification.
 
-The existing shell/container scripts remain available for non-Windows deployments.
-
 ## Configuration
 
 The scripts accept parameters directly or these environment variables:
