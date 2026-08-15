@@ -28,6 +28,7 @@ $bootstrap = $read('bootstrap/operational.php');
 $readinessFactory = $read('src/Infrastructure/Composition/CatalogSystemReadinessFactory.php');
 $gameQuery = $read('src/Infrastructure/Persistence/PdoGameCatalogListQuery.php');
 $jobBrowser = $read('src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php');
+$operatorJobs = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php');
 $operations = $read('src/Infrastructure/Persistence/PdoSystemOperationsQuery.php');
 $storage = $read('src/Infrastructure/Storage/LocalFilesystemPackageStorage.php');
 
@@ -38,18 +39,26 @@ $record(
     'Deployment smoke must not acquire browser session state or page middleware.'
 );
 $record(
-    'smoke_targets_are_read_models',
+    'smoke_targets_are_existing_read_models',
     str_contains($readinessFactory, 'SystemReadinessService')
         && str_contains($gameQuery, 'public function all(): array')
         && str_contains($jobBrowser, 'public function fetch(')
+        && str_contains($operatorJobs, 'public function current(')
         && str_contains($operations, 'public function database(): array')
         && str_contains($storage, 'public function health(): array'),
     'Smoke coverage should exercise existing production read/composition surfaces rather than duplicate their SQL.'
 );
 $record(
+    'smoke_runtime_job_query_is_current_scope',
+    str_contains($operatorJobs, 'j.status IN ("queued","running","failed","dead_letter")')
+        && !str_contains($operatorJobs, 'status="completed"'),
+    'The live post-deploy smoke must not aggregate retained Background Jobs terminal history.'
+);
+$record(
     'smoke_has_no_mutation_path',
     !preg_match('/\b(?:INSERT|UPDATE|DELETE|TRUNCATE|ALTER|DROP)\b/i', $gameQuery)
-        && !preg_match('/\b(?:INSERT|UPDATE|DELETE|TRUNCATE|ALTER|DROP)\b/i', $operations),
+        && !preg_match('/\b(?:INSERT|UPDATE|DELETE|TRUNCATE|ALTER|DROP)\b/i', $operations)
+        && !preg_match('/\b(?:INSERT|UPDATE|DELETE|TRUNCATE|ALTER|DROP)\b/i', $operatorJobs),
     'The bounded post-deploy smoke must remain read-only.'
 );
 
@@ -97,14 +106,13 @@ if ($run) {
         $games = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogListQuery($application->db))->all();
         $record('runtime_game_catalog', is_array($games), 'games=' . count($games));
 
-        $jobResult = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBrowserQuery(
-            $application->db,
-            $application->config
-        ))->fetch($queue, '', '', 1, null, 'next');
+        $jobSnapshot = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperatorSnapshotQuery(
+            $application->db
+        ))->current($queue);
         $record(
-            'runtime_background_jobs',
-            isset($jobResult['counts'], $jobResult['rows']) && is_array($jobResult['counts']) && is_array($jobResult['rows']),
-            json_encode(['queue' => $queue, 'counts' => $jobResult['counts'] ?? []], JSON_UNESCAPED_SLASHES) ?: ''
+            'runtime_background_jobs_current_scope',
+            isset($jobSnapshot['queued'], $jobSnapshot['running'], $jobSnapshot['failed'], $jobSnapshot['dead_letter']),
+            json_encode(['queue' => $queue, 'current_jobs' => $jobSnapshot], JSON_UNESCAPED_SLASHES) ?: ''
         );
 
         $operationsQuery = new \UnrealDb\Catalog\Infrastructure\Persistence\PdoSystemOperationsQuery($application->db);
