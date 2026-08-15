@@ -18,6 +18,34 @@ declare(strict_types=1);
  * configuration or session state is available.
  */
 
+function catalog_security_forwarded_proto_trusted(): bool
+{
+    $enabled = strtolower(trim((string)(getenv('UNREALDB_TRUST_PROXY_HEADERS') ?: '')));
+    if (!in_array($enabled, ['1', 'true', 'yes', 'on'], true)) {
+        return false;
+    }
+
+    $remote = trim((string)($_SERVER['REMOTE_ADDR'] ?? ''));
+    if ($remote === '' || filter_var($remote, FILTER_VALIDATE_IP) === false) {
+        return false;
+    }
+
+    $configured = trim((string)(getenv('UNREALDB_TRUSTED_PROXY_IPS') ?: ''));
+    if ($configured === '') {
+        return false;
+    }
+
+    foreach (preg_split('/[\s,;]+/', $configured) ?: [] as $candidate) {
+        $candidate = trim((string)$candidate);
+        if ($candidate !== ''
+            && filter_var($candidate, FILTER_VALIDATE_IP) !== false
+            && hash_equals($candidate, $remote)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function catalog_security_is_https(): bool
 {
     if (PHP_SAPI === 'cli') {
@@ -29,12 +57,56 @@ function catalog_security_is_https(): bool
         return true;
     }
 
-    $forwardedProto = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
-    if ($forwardedProto === 'https') {
+    if ((string)($_SERVER['SERVER_PORT'] ?? '') === '443') {
         return true;
     }
 
-    return (string)($_SERVER['SERVER_PORT'] ?? '') === '443';
+    if (catalog_security_forwarded_proto_trusted()) {
+        $forwardedProto = strtolower(trim(explode(',', (string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''), 2)[0]));
+        return $forwardedProto === 'https';
+    }
+
+    return false;
+}
+
+function catalog_security_csp_nonce(): string
+{
+    static $nonce = null;
+    if (is_string($nonce)) {
+        return $nonce;
+    }
+    $nonce = rtrim(strtr(base64_encode(random_bytes(18)), '+/', '-_'), '=');
+    return $nonce;
+}
+
+function catalog_security_content_security_policy(): string
+{
+    $nonce = catalog_security_csp_nonce();
+    $policy = [
+        "default-src 'self'",
+        "base-uri 'self'",
+        "frame-ancestors 'none'",
+        "object-src 'none'",
+        "form-action 'self'",
+        "img-src 'self' data:",
+        "font-src 'self'",
+        "connect-src 'self'",
+        // Inline styles remain a legacy UI requirement. JavaScript elements are
+        // separately nonce-restricted below.
+        "style-src 'self' 'unsafe-inline'",
+        // script-src-elem is authoritative in modern browsers. The unsafe-inline
+        // fallback in script-src is retained only for CSP1 clients; when a nonce
+        // source is understood it does not authorize un-nonced script elements.
+        "script-src 'self' 'nonce-{$nonce}' 'unsafe-inline'",
+        "script-src-elem 'self' 'nonce-{$nonce}'",
+        // Existing server-rendered confirm/onchange attributes are deliberately
+        // isolated to script attributes rather than reopening inline <script>.
+        "script-src-attr 'unsafe-inline'",
+    ];
+    if (catalog_security_is_https()) {
+        $policy[] = 'upgrade-insecure-requests';
+    }
+    return implode('; ', $policy);
 }
 
 function catalog_security_env_seconds(string $name, int $default, int $minimum, int $maximum): int
@@ -96,6 +168,11 @@ function catalog_apply_runtime_safeguards(): void
         header('Referrer-Policy: same-origin');
         header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
         header('Cross-Origin-Opener-Policy: same-origin');
+        header('Cross-Origin-Resource-Policy: same-origin');
+        header('Content-Security-Policy: ' . catalog_security_content_security_policy());
+        if (catalog_security_is_https()) {
+            header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+        }
     }
 }
 
