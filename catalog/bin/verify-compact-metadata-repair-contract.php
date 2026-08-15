@@ -67,9 +67,11 @@ $check(
 $check(
     'repair_job_is_registered',
     str_contains($jobType, "REPAIR_COMPACT_METADATA_FILE = 'catalog.repair_compact_metadata_file'")
-        && str_contains($factory, 'new CatalogCompactMetadataRepairJobHandler')
-        && str_contains($factory, 'JobType::REPAIR_COMPACT_METADATA_FILE => $compactMetadataRepair'),
-    'The one-file compact metadata repair job must be executable by detached workers.'
+        && str_contains(
+            $factory,
+            'JobType::REPAIR_COMPACT_METADATA_FILE => static fn() => new CatalogCompactMetadataRepairJobHandler'
+        ),
+    'The one-file compact metadata repair job must be lazily executable by detached workers.'
 );
 $check(
     'repair_reuses_one_file_import_lock',
