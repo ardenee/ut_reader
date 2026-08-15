@@ -22,12 +22,18 @@ final class CompactSearchProjectionWriter
     private const TERM_BATCH_SIZE = 350;
     private const UPDATE_BATCH_SIZE = 500;
 
+    /** @var array<int,bool> */
+    private static array $schemaAvailable = [];
+
     public function __construct(private readonly PDO $db)
     {
     }
 
-    /** @param array<string,mixed> $snapshot */
-    public function write(array $snapshot, int &$sqlBatches): void
+    /**
+     * @param array<string,mixed> $snapshot
+     * @param array<string,int>|null $resolvedTermIds
+     */
+    public function write(array $snapshot, int &$sqlBatches, ?array $resolvedTermIds = null): void
     {
         $this->assertSchema();
         $file = (array)($snapshot['file'] ?? []);
@@ -39,61 +45,76 @@ final class CompactSearchProjectionWriter
             throw new RuntimeException('Compact search projection requires a positive file ID.');
         }
 
-        $values = [];
-        $importValues = [];
+        // Normal compact publication already resolved every import object and
+        // export local path before entering the transaction. Standalone callers
+        // retain a compatibility resolution path without forcing the hot path to
+        // build a second unique-term map and issue duplicate SELECT batches.
+        $termIds = $resolvedTermIds
+            ?? $this->resolveTermIds($this->snapshotSearchTermValues($snapshot), $sqlBatches);
+
+        $this->assertProjectionCounts($fileId, count($imports), count($exports), $sqlBatches);
+
+        $importBatch = [];
         foreach ($imports as $row) {
             if (!is_array($row)) {
                 continue;
             }
             $index = (int)$row['import_index'];
             $value = (string)$row['object_name'];
-            $values[] = $value;
-            $importValues[$index] = $value;
+            $importBatch[$index] = $this->requiredTermId($termIds, $value);
+            if (count($importBatch) >= self::UPDATE_BATCH_SIZE) {
+                $this->updateTermBatch(
+                    'ue_dependency_links',
+                    'import_index',
+                    'import_object_term_id',
+                    $fileId,
+                    $importBatch
+                );
+                $sqlBatches++;
+                $importBatch = [];
+            }
+        }
+        if ($importBatch !== []) {
+            $this->updateTermBatch(
+                'ue_dependency_links',
+                'import_index',
+                'import_object_term_id',
+                $fileId,
+                $importBatch
+            );
+            $sqlBatches++;
         }
 
-        $exportValues = [];
+        $exportBatch = [];
         foreach ($exports as $row) {
             if (!is_array($row)) {
                 continue;
             }
             $index = (int)$row['export_index'];
-            $path = (string)($paths['exports'][$index]['local'] ?? '');
-            $values[] = $path;
-            $exportValues[$index] = $path;
+            $value = (string)($paths['exports'][$index]['local'] ?? '');
+            $exportBatch[$index] = $this->requiredTermId($termIds, $value);
+            if (count($exportBatch) >= self::UPDATE_BATCH_SIZE) {
+                $this->updateTermBatch(
+                    'ue_export_lookup',
+                    'export_index',
+                    'local_path_term_id',
+                    $fileId,
+                    $exportBatch
+                );
+                $sqlBatches++;
+                $exportBatch = [];
+            }
         }
-
-        // The complete shared dictionary is primed before the file-owned
-        // transaction begins. During snapshot publication this method therefore
-        // performs read-only term resolution and cannot participate in ue_terms
-        // insert/update deadlocks with another file writer.
-        $termIds = $this->resolveTermIds($values, $sqlBatches);
-        $this->assertProjectionCounts($fileId, count($imports), count($exports), $sqlBatches);
-
-        $importTerms = [];
-        foreach ($importValues as $index => $value) {
-            $importTerms[(int)$index] = $termIds[$this->termKey($value)];
+        if ($exportBatch !== []) {
+            $this->updateTermBatch(
+                'ue_export_lookup',
+                'export_index',
+                'local_path_term_id',
+                $fileId,
+                $exportBatch
+            );
+            $sqlBatches++;
         }
-        $this->updateTermColumn(
-            'ue_dependency_links',
-            'import_index',
-            'import_object_term_id',
-            $fileId,
-            $importTerms,
-            $sqlBatches
-        );
-
-        $exportTerms = [];
-        foreach ($exportValues as $index => $value) {
-            $exportTerms[(int)$index] = $termIds[$this->termKey($value)];
-        }
-        $this->updateTermColumn(
-            'ue_export_lookup',
-            'export_index',
-            'local_path_term_id',
-            $fileId,
-            $exportTerms,
-            $sqlBatches
-        );
 
         $this->assertTermProjectionCounts(
             $fileId,
@@ -105,6 +126,11 @@ final class CompactSearchProjectionWriter
 
     private function assertSchema(): void
     {
+        $key = spl_object_id($this->db);
+        if (!empty(self::$schemaAvailable[$key])) {
+            return;
+        }
+
         $columns = [
             ['ue_export_lookup', 'local_path_term_id'],
             ['ue_dependency_links', 'import_object_term_id'],
@@ -121,6 +147,7 @@ final class CompactSearchProjectionWriter
                 );
             }
         }
+        self::$schemaAvailable[$key] = true;
     }
 
     private function assertProjectionCounts(
@@ -184,59 +211,83 @@ final class CompactSearchProjectionWriter
     }
 
     /** @param array<int,int> $termIdsByIndex */
-    private function updateTermColumn(
+    private function updateTermBatch(
         string $table,
         string $indexColumn,
         string $termColumn,
         int $fileId,
-        array $termIdsByIndex,
-        int &$sqlBatches
+        array $termIdsByIndex
     ): void {
         if ($termIdsByIndex === []) {
             return;
         }
-        foreach (array_chunk($termIdsByIndex, self::UPDATE_BATCH_SIZE, true) as $chunk) {
-            $cases = [];
-            $in = [];
-            $arguments = [];
-            foreach ($chunk as $index => $termId) {
-                $cases[] = 'WHEN ? THEN ?';
-                $arguments[] = (int)$index;
-                $arguments[] = (int)$termId;
-                $in[] = '?';
+        if (count($termIdsByIndex) > self::UPDATE_BATCH_SIZE) {
+            throw new RuntimeException('Compact search update exceeded the bounded row limit.');
+        }
+
+        $cases = [];
+        $in = [];
+        $arguments = [];
+        foreach ($termIdsByIndex as $index => $termId) {
+            $cases[] = 'WHEN ? THEN ?';
+            $arguments[] = (int)$index;
+            $arguments[] = (int)$termId;
+            $in[] = '?';
+        }
+        $arguments[] = $fileId;
+        foreach (array_keys($termIdsByIndex) as $index) {
+            $arguments[] = (int)$index;
+        }
+        $sql = 'UPDATE ' . $table . ' SET ' . $termColumn . '=CASE ' . $indexColumn . ' '
+            . implode(' ', $cases) . ' ELSE ' . $termColumn . ' END '
+            . 'WHERE file_id=? AND ' . $indexColumn . ' IN (' . implode(',', $in) . ')';
+        $statement = $this->db->prepare($sql);
+        $statement->execute($arguments);
+    }
+
+    /**
+     * @param array<string,mixed> $snapshot
+     * @return \Generator<int,string>
+     */
+    private function snapshotSearchTermValues(array $snapshot): \Generator
+    {
+        $paths = (array)($snapshot['paths'] ?? []);
+        foreach ((array)($snapshot['imports'] ?? []) as $row) {
+            if (is_array($row)) {
+                yield (string)($row['object_name'] ?? '');
             }
-            $arguments[] = $fileId;
-            foreach (array_keys($chunk) as $index) {
-                $arguments[] = (int)$index;
+        }
+        foreach ((array)($snapshot['exports'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
             }
-            $sql = 'UPDATE ' . $table . ' SET ' . $termColumn . '=CASE ' . $indexColumn . ' '
-                . implode(' ', $cases) . ' ELSE ' . $termColumn . ' END '
-                . 'WHERE file_id=? AND ' . $indexColumn . ' IN (' . implode(',', $in) . ')';
-            $statement = $this->db->prepare($sql);
-            $statement->execute($arguments);
-            $sqlBatches++;
+            $index = (int)($row['export_index'] ?? -1);
+            yield (string)($index >= 0 ? ($paths['exports'][$index]['local'] ?? '') : '');
         }
     }
 
-    /** @param list<string> $values @return array<string,int> */
-    private function resolveTermIds(array $values, int &$sqlBatches): array
+    /** @param iterable<string> $values @return array<string,int> */
+    private function resolveTermIds(iterable $values, int &$sqlBatches): array
     {
         $terms = [];
         foreach ($values as $value) {
-            if (strlen($value) > 65535) {
+            $length = strlen($value);
+            if ($length > 65535) {
                 throw new RuntimeException('Compact search term exceeds 65,535 bytes.');
             }
             $key = $this->termKey($value);
             if (isset($terms[$key]) && !hash_equals((string)$terms[$key]['value'], $value)) {
                 throw new RuntimeException('Compact search term hash collision detected inside conversion batch.');
             }
-            $terms[$key] = [
-                'value' => $value,
-                'hash' => md5($value, true),
-                'length' => strlen($value),
-                'prefix' => substr($value, 0, 200),
-                'overflow' => strlen($value) > 200 ? 1 : 0,
-            ];
+            if (!isset($terms[$key])) {
+                $terms[$key] = [
+                    'value' => $value,
+                    'hash' => md5($value, true),
+                    'length' => $length,
+                    'prefix' => substr($value, 0, 200),
+                    'overflow' => $length > 200 ? 1 : 0,
+                ];
+            }
         }
         if ($terms === []) {
             return [];
@@ -244,56 +295,37 @@ final class CompactSearchProjectionWriter
 
         ksort($terms, SORT_STRING);
 
-        // Retain compatibility for any future standalone caller, but never write
-        // the shared dictionary from inside a file snapshot transaction.
+        // Retain compatibility for standalone callers. Snapshot publication is in
+        // a file-owned transaction and therefore performs read-only resolution.
         if (!$this->db->inTransaction()) {
-            foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
-                $placeholders = [];
-                $arguments = [];
-                foreach ($chunk as $term) {
-                    $placeholders[] = '(?,?,?,?)';
-                    array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+            $chunk = [];
+            foreach ($terms as $term) {
+                $chunk[] = $term;
+                if (count($chunk) >= self::TERM_BATCH_SIZE) {
+                    $this->insertTermBatch($chunk);
+                    $sqlBatches++;
+                    $chunk = [];
                 }
-                $statement = $this->db->prepare(
-                    'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
-                    . implode(',', $placeholders)
-                );
-                $statement->execute($arguments);
+            }
+            if ($chunk !== []) {
+                $this->insertTermBatch($chunk);
                 $sqlBatches++;
             }
         }
 
         $resolved = [];
-        foreach (array_chunk(array_values($terms), self::TERM_BATCH_SIZE) as $chunk) {
-            $predicates = [];
-            $arguments = [];
-            foreach ($chunk as $term) {
-                $predicates[] = '(value_hash=? AND value_length=?)';
-                $arguments[] = $term['hash'];
-                $arguments[] = $term['length'];
+        $chunk = [];
+        foreach ($terms as $term) {
+            $chunk[] = $term;
+            if (count($chunk) >= self::TERM_BATCH_SIZE) {
+                $this->resolveTermBatch($chunk, $terms, $resolved);
+                $sqlBatches++;
+                $chunk = [];
             }
-            $statement = $this->db->prepare(
-                'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
-                . implode(' OR ', $predicates)
-            );
-            $statement->execute($arguments);
+        }
+        if ($chunk !== []) {
+            $this->resolveTermBatch($chunk, $terms, $resolved);
             $sqlBatches++;
-            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-                $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
-                $expected = $terms[$key] ?? null;
-                if (!is_array($expected)) {
-                    continue;
-                }
-                $stored = (string)$row['value_prefix'];
-                $expectedPrefix = (string)$expected['prefix'];
-                $matches = (int)$row['is_overflow'] === 1
-                    ? str_starts_with($stored, $expectedPrefix)
-                    : hash_equals($stored, $expectedPrefix);
-                if (!$matches || (int)$row['is_overflow'] !== (int)$expected['overflow']) {
-                    throw new RuntimeException('Compact search term hash collision or stored-prefix mismatch.');
-                }
-                $resolved[$key] = (int)$row['id'];
-            }
         }
         if (count($resolved) !== count($terms)) {
             throw new RuntimeException(
@@ -302,6 +334,69 @@ final class CompactSearchProjectionWriter
             );
         }
         return $resolved;
+    }
+
+    /** @param list<array{value:string,hash:string,length:int,prefix:string,overflow:int}> $chunk */
+    private function insertTermBatch(array $chunk): void
+    {
+        $placeholders = [];
+        $arguments = [];
+        foreach ($chunk as $term) {
+            $placeholders[] = '(?,?,?,?)';
+            array_push($arguments, $term['hash'], $term['length'], $term['prefix'], $term['overflow']);
+        }
+        $statement = $this->db->prepare(
+            'INSERT IGNORE INTO ue_terms(value_hash,value_length,value_prefix,is_overflow) VALUES '
+            . implode(',', $placeholders)
+        );
+        $statement->execute($arguments);
+    }
+
+    /**
+     * @param list<array{value:string,hash:string,length:int,prefix:string,overflow:int}> $chunk
+     * @param array<string,array{value:string,hash:string,length:int,prefix:string,overflow:int}> $terms
+     * @param array<string,int> $resolved
+     */
+    private function resolveTermBatch(array $chunk, array $terms, array &$resolved): void
+    {
+        $predicates = [];
+        $arguments = [];
+        foreach ($chunk as $term) {
+            $predicates[] = '(value_hash=? AND value_length=?)';
+            $arguments[] = $term['hash'];
+            $arguments[] = $term['length'];
+        }
+        $statement = $this->db->prepare(
+            'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
+            . implode(' OR ', $predicates)
+        );
+        $statement->execute($arguments);
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $key = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
+            $expected = $terms[$key] ?? null;
+            if (!is_array($expected)) {
+                continue;
+            }
+            $stored = (string)$row['value_prefix'];
+            $expectedPrefix = (string)$expected['prefix'];
+            $matches = (int)$row['is_overflow'] === 1
+                ? str_starts_with($stored, $expectedPrefix)
+                : hash_equals($stored, $expectedPrefix);
+            if (!$matches || (int)$row['is_overflow'] !== (int)$expected['overflow']) {
+                throw new RuntimeException('Compact search term hash collision or stored-prefix mismatch.');
+            }
+            $resolved[$key] = (int)$row['id'];
+        }
+    }
+
+    /** @param array<string,int> $termIds */
+    private function requiredTermId(array $termIds, string $value): int
+    {
+        $key = $this->termKey($value);
+        if (!isset($termIds[$key])) {
+            throw new RuntimeException('Compact search term was not resolved before projection publication.');
+        }
+        return (int)$termIds[$key];
     }
 
     private function termKey(string $value): string
