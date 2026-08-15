@@ -13,7 +13,6 @@ namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Application\Jobs\JobCancellationRequested;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
@@ -84,33 +83,37 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         $maxTotalBytes = $this->maxTotalUnpackedBytes();
 
         for ($index = $cursor; $index < $total; $index++) {
-            $context->throwIfCancellationRequested();
+            $context->heartbeatIfDue();
             $entry = $entries[$index];
             $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
-            $entryName = CatalogImportPathPolicy::filename(basename($entryPath));
-            $extension = strtolower((string)pathinfo($entryName, PATHINFO_EXTENSION));
-            $reason = '';
 
             if (empty($entry['safe'])) {
+                $failed++;
                 $reason = 'Unsafe archive path: ' . trim((string)($entry['reason'] ?? 'invalid member path'));
-            } elseif (!empty($entry['encrypted'])) {
-                $reason = 'Encrypted/password-protected archive member is not supported.';
-            } elseif (!isset($allowed[$extension])) {
-                $skipped++;
-                $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
-                    'Skipped unsupported archive member ' . $entryPath . '.');
+                $errors = $this->retainError($errors, $entryPath, $reason);
+                $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors, $reason);
                 continue;
-            } elseif (CatalogArchiveExtractor::isArchiveName($entryName)) {
+            }
+            if (!empty($entry['encrypted'])) {
+                $failed++;
+                $reason = 'Encrypted/password-protected archive member is not supported.';
+                $errors = $this->retainError($errors, $entryPath, $reason);
+                $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors, $reason);
+                continue;
+            }
+
+            $entryName = CatalogImportPathPolicy::filename(basename($entryPath));
+            $extension = strtolower((string)pathinfo($entryName, PATHINFO_EXTENSION));
+            if (CatalogArchiveExtractor::isArchiveName($entryName)) {
                 $skipped++;
                 $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
                     'Skipped nested archive ' . $entryPath . '.');
                 continue;
             }
-
-            if ($reason !== '') {
-                $failed++;
-                $errors = $this->retainError($errors, $entryPath, $reason);
-                $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors, $reason);
+            if (!isset($allowed[$extension])) {
+                $skipped++;
+                $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
+                    'Skipped unsupported archive member ' . $entryPath . '.');
                 continue;
             }
 
@@ -185,18 +188,6 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                     $job->id,
                     'archive:' . hash('sha256', strtolower($entryPath))
                 );
-                $queued++;
-                $unpackedBytes += $entryBytes;
-                $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
-                    'Queued archive member ' . $entryPath . '.');
-            } catch (JobCancellationRequested $error) {
-                if ($temporary !== '') {
-                    @unlink($temporary);
-                }
-                if (is_array($staged)) {
-                    $incoming->delete((string)($staged['relative_path'] ?? ''));
-                }
-                throw $error;
             } catch (Throwable $error) {
                 if ($temporary !== '') {
                     @unlink($temporary);
@@ -209,7 +200,15 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 $errors = $this->retainError($errors, $entryPath, $message);
                 $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
                     'Archive member failed: ' . $entryPath . ' — ' . $message);
+                continue;
             }
+
+            // The child now owns its durable staged member. From this point on a
+            // cancellation/lease exception must not remove that child's source.
+            $queued++;
+            $unpackedBytes += $entryBytes;
+            $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
+                'Queued archive member ' . $entryPath . '.');
         }
 
         $sourceRetained = $failed > 0;
@@ -365,7 +364,8 @@ final class CatalogArchiveImportJobHandler implements JobHandler
 
     private function maxTotalUnpackedBytes(): int
     {
-        $configured = (int)($this->config['archive']['max_unpacked_bytes'] ?? getenv('UNREALDB_ARCHIVE_MAX_UNPACKED_BYTES') ?: 0);
+        $environment = getenv('UNREALDB_ARCHIVE_MAX_UNPACKED_BYTES');
+        $configured = (int)($this->config['archive']['max_unpacked_bytes'] ?? (is_string($environment) ? $environment : 0));
         if ($configured > 0) {
             return $configured;
         }
