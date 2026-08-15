@@ -34,10 +34,6 @@ final class LocalFilesystemPackageStorage implements PackageStoragePort
         string $extension,
         bool $discardDuplicateSource = true
     ): array {
-        if (!is_file($sourcePath)) {
-            throw new RuntimeException('Verified package source is unavailable.');
-        }
-
         $slug = \scanner_slug_text($gameSlug);
         $directory = rtrim($this->storageRoot, DIRECTORY_SEPARATOR)
             . DIRECTORY_SEPARATOR . 'games'
@@ -47,17 +43,21 @@ final class LocalFilesystemPackageStorage implements PackageStoragePort
             throw new RuntimeException('Could not create storage folder: ' . $directory);
         }
 
-        $extension = strtolower(trim($extension));
-        $extension = preg_replace('/[^a-z0-9]+/', '', $extension) ?: 'bin';
-        $storedName = strtolower(trim($md5)) . '.' . $extension;
+        // Preserve the historical caller-controlled filename construction.
+        // Hash/extension normalization belongs to the importer that already owns
+        // those values; this storage boundary must not silently rewrite them.
+        $storedName = $md5 . '.' . $extension;
         $destination = $directory . DIRECTORY_SEPARATOR . $storedName;
         $created = false;
 
         if (is_file($destination)) {
+            // Full Sync/maintenance may still have a reader handle open on its
+            // isolated scanner copy, especially on Windows. The outer maintenance
+            // service owns that copy and removes it after the reader is released.
             if ($discardDuplicateSource && is_file($sourcePath) && !@unlink($sourcePath)) {
                 throw new RuntimeException('Could not discard duplicate physical upload');
             }
-        } elseif (!@rename($sourcePath, $destination)) {
+        } elseif (!rename($sourcePath, $destination)) {
             throw new RuntimeException('Could not store upload');
         } else {
             $created = true;
