@@ -78,11 +78,19 @@ final class PdoJobClaimer
             $resourceClass = trim((string)($candidate['resource_class'] ?? 'default')) ?: 'default';
             $persistedLimit = max(1, (int)($candidate['resource_limit'] ?? 1));
             $concurrencyKey = trim((string)($candidate['concurrency_key'] ?? ''));
-            $lockResult = $guard->acquireWithBlocker(
-                $queue,
-                $resourceClass,
-                $concurrencyKey !== '' ? $concurrencyKey : null
-            );
+            try {
+                $lockResult = $guard->acquireWithBlocker(
+                    $queue,
+                    $resourceClass,
+                    $concurrencyKey !== '' ? $concurrencyKey : null
+                );
+            } catch (\Throwable $error) {
+                // lockNextCandidate deliberately leaves the candidate row locked
+                // until admission completes. A GET_LOCK/driver failure must not
+                // leak that transaction while the error propagates to the worker.
+                $this->rollbackClaimTransaction();
+                throw $error;
+            }
             $locks = $lockResult['locks'];
 
             if ($locks === null) {
