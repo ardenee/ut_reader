@@ -112,8 +112,8 @@ if ($storageIncluded) {
     if (-not (Test-Path -LiteralPath $storageFull -PathType Container)) { throw "Storage path is unavailable: $storageFull" }
     $tar = Resolve-Executable -ConfiguredFile $TarExecutable -Names @('tar.exe', 'tar')
     $storageArchive = Join-Path $incomplete 'storage.tar.gz'
-    $tarProcess = Start-Process -FilePath $tar -ArgumentList @('-C', $storageFull, '-czf', $storageArchive, '.') -Wait -NoNewWindow -PassThru
-    if ($tarProcess.ExitCode -ne 0) { throw "Storage archive failed with exit code $($tarProcess.ExitCode)." }
+    & $tar '-C' $storageFull '-czf' $storageArchive '.'
+    if ($LASTEXITCODE -ne 0) { throw "Storage archive failed with exit code $LASTEXITCODE." }
 }
 
 $metadata = [ordered]@{
