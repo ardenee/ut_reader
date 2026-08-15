@@ -53,6 +53,10 @@ $scan = static function (array $paths, array $markers, array $allowed = []) use 
     }
     return $violations;
 };
+$read = static function (string $relative) use ($root): string {
+    $source = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
+    return is_string($source) ? $source : '';
+};
 
 $applicationFiles = $phpFiles($root . '/src/Application');
 $applicationArchitecture = $scan($applicationFiles, [
@@ -81,17 +85,42 @@ $record(
         : implode(' | ', $applicationFilesystem)
 );
 
+$legacyPolicy = $read('src/Application/Maintenance/LegacyMetadataRuntimeAudit.php');
+$legacyScanner = $read('src/Infrastructure/Maintenance/LegacyMetadataRuntimeScanner.php');
+$legacyCli = $read('bin/audit-legacy-runtime-references.php');
+$record(
+    'legacy_runtime_scan_is_infrastructure_owned',
+    $legacyPolicy !== ''
+        && $legacyScanner !== ''
+        && $legacyCli !== ''
+        && !str_contains($legacyPolicy, 'RecursiveDirectoryIterator')
+        && !str_contains($legacyPolicy, 'is_dir(')
+        && str_contains($legacyScanner, 'RecursiveDirectoryIterator')
+        && str_contains($legacyScanner, 'LegacyMetadataRuntimeAudit::retiredTables()')
+        && str_contains($legacyCli, 'LegacyMetadataRuntimeScanner::scan('),
+    'Source-tree traversal belongs in Infrastructure while Application owns only the retired-table policy.'
+);
+
 $domain = $scan($phpFiles($root . '/src/Domain'), [
     'UnrealDb\\Catalog\\Application\\', 'UnrealDb\\Catalog\\Infrastructure\\', 'UnrealDb\\Catalog\\Presentation\\',
     'use PDO;', '\\PDO', 'file_get_contents(', 'file_put_contents(', 'fopen(', 'is_file(', 'filesize(',
 ]);
 $record('domain_has_no_outward_or_io_dependencies', $domain === [], $domain === [] ? 'Domain remains pure policy/data.' : implode(' | ', $domain));
 
-$ui = $scan($phpFiles($root . '/src/Presentation/Ui'), [
-    'use PDO;', '\\PDO', 'catalog_db(', '->prepare(', '->query(', '$_GET', '$_POST', '$_REQUEST',
-    'file_get_contents(', 'file_put_contents(', 'is_file(', 'filesize(',
+/*
+ * Presentation/Ui/CatalogUi.php is intentionally an HTTP-aware compatibility
+ * facade: it injects a versioned asset and preserves legacy game-page actions.
+ * The reusable component layer underneath it is the render-only boundary.
+ */
+$uiComponents = $scan($phpFiles($root . '/src/Presentation/Ui/Component'), [
+    'use PDO;', '\\PDO', 'catalog_db(', '->prepare(', '->query(', '$_GET', '$_POST', '$_REQUEST', '$_SERVER',
+    'file_get_contents(', 'file_put_contents(', 'is_file(', 'is_dir(', 'filesize(',
 ]);
-$record('ui_components_are_render_only', $ui === [], $ui === [] ? 'Reusable UI components remain escaped presentation primitives.' : implode(' | ', $ui));
+$record(
+    'ui_components_are_render_only',
+    $uiComponents === [],
+    $uiComponents === [] ? 'Reusable UI components remain escaped render primitives; HTTP compatibility stays in the CatalogUi facade.' : implode(' | ', $uiComponents)
+);
 
 $claimerPath = $root . '/src/Infrastructure/Persistence/PdoJobClaimer.php';
 $claimer = is_file($claimerPath) ? $executable((string)file_get_contents($claimerPath)) : '';
@@ -105,7 +134,13 @@ $storagePort = $root . '/src/Application/Storage/Contract/PackageStoragePort.php
 $record('package_storage_is_an_explicit_boundary', is_file($storagePort), 'Physical package access must remain isolated behind a stable port.');
 $record('operations_are_visible_in_product', is_file($root . '/system-operations.php'), 'Queue/worker/database/storage health must remain available in the admin UI.');
 
-$syntaxTargets = [__FILE__, $storagePort];
+$syntaxTargets = [
+    __FILE__,
+    $storagePort,
+    $root . '/src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
+    $root . '/src/Infrastructure/Maintenance/LegacyMetadataRuntimeScanner.php',
+    $root . '/bin/audit-legacy-runtime-references.php',
+];
 $syntaxFailures = [];
 if (function_exists('proc_open')) {
     foreach ($syntaxTargets as $path) {
