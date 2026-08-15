@@ -1,152 +1,60 @@
 <?php
 /**
  * UnrealDB PHP File Audit
- * Purpose: Renders the canonical Upload Bucket interface using the JavaScript/API chunked uploader.
- * Why: This is the proven upload workflow and replaces the retired legacy uploader while retaining the same server APIs.
- * Role: Primary Upload Bucket UI for unsorted files, chunked transfer, validation, and durable background queue handoff.
- * Audit: Canonical implementation; keep `upload-bucket.php` only as a temporary compatibility redirect.
+ * Purpose: Renders the current Upload Bucket v2 workflow for large browser file/folder ingestion.
+ * Why: Upload Bucket needs a durable, one-file-at-a-time transport UI without tying background processing to the browser.
+ * Role: Thin presentation entry point; upload validation, chunking and queue orchestration live in shared services/APIs.
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/lib/Auth.php';
+require_once __DIR__ . '/lib/CatalogUi.php';
 require_once __DIR__ . '/lib/CatalogSupport.php';
+require_once __DIR__ . '/bootstrap/autoload.php';
 
-use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadTransferStoreFactory;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
-use UnrealDb\Catalog\Infrastructure\Unverified\CatalogUnverifiedQueueStorage;
-
-catalog_start_session();
+use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
+use UnrealDb\Catalog\Presentation\CatalogUi;
 
 function upload_bucket_v2_short_error(Throwable $error): string
 {
     $message = trim($error->getMessage());
-    $message = preg_replace('/^RuntimeException:\s*/', '', $message) ?? $message;
-    $message = preg_split('/\s+File:\s+|\s+Trace:\s+/', $message)[0] ?? $message;
-    return trim($message) !== '' ? trim($message) : 'Unknown error';
-}
-
-/** @return array{count:int,bytes:int} */
-function upload_bucket_v2_stats(string $bucketDir): array
-{
-    $count = 0;
-    $bytes = 0;
-    if (!is_dir($bucketDir) || !is_readable($bucketDir)) {
-        return ['count' => 0, 'bytes' => 0];
+    if ($message === '') {
+        return get_class($error);
     }
-    $iterator = new FilesystemIterator($bucketDir, FilesystemIterator::SKIP_DOTS);
-    foreach ($iterator as $entry) {
-        if (!$entry instanceof SplFileInfo || !$entry->isFile() || $entry->isLink()) {
-            continue;
-        }
-        $name = $entry->getFilename();
-        if (str_starts_with($name, '.') || str_ends_with(strtolower($name), '.txt')) {
-            continue;
-        }
-        $count++;
-        $size = $entry->getSize();
-        if ($size > 0) {
-            $bytes += $size;
-        }
-    }
-    return ['count' => $count, 'bytes' => $bytes];
+    return function_exists('mb_substr') ? mb_substr($message, 0, 800, 'UTF-8') : substr($message, 0, 800);
 }
 
 try {
     $config = catalog_config();
+    catalog_session_start($config);
+    catalog_require_admin($config);
     $db = catalog_db($config);
-    if (!catalog_require_admin_page('Upload Bucket')) {
-        exit;
-    }
-
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        throw new RuntimeException(
-            'The new Upload Bucket requires JavaScript and its API uploader. Reload the page with JavaScript enabled.'
-        );
-    }
-
-    $bucketDir = CatalogUnverifiedQueueStorage::uploadBucketDirectory($config, true);
-    $bucketStats = upload_bucket_v2_stats($bucketDir);
-    $allowedExtensions = (new CatalogUploadBucketFilePolicy($db, $config))->allowedExtensions();
+    $config = (new CatalogProgramSettingsStore($db, $config))->applyUploadLimits($config);
+    $policy = new CatalogUploadBucketFilePolicy($db, $config);
+    $allowedExtensions = $policy->allowedExtensions();
     sort($allowedExtensions, SORT_NATURAL | SORT_FLAG_CASE);
-    $allowedExtensionJson = json_encode(
-        array_values($allowedExtensions),
-        JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+
+    $chunkBytes = max(1024 * 1024, (int)($config['chunk_upload']['chunk_bytes'] ?? (16 * 1024 * 1024)));
+    $processingUrl = 'background-jobs.php?queue=' . rawurlencode(
+        (trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog') . ':bucket-processing'
     );
-    $chunkBytes = CatalogBucketUploadTransferStoreFactory::effectiveChunkBytes($config);
-    $processingUrl = 'background-jobs.php?queue=catalog%3Abucket-processing';
 
     catalog_head('Upload Bucket');
+    echo '<section class="hero"><p class="eyebrow">Administration</p><h1>Upload Bucket</h1>'
+        . '<p class="muted">Upload large folders one file at a time. The browser performs lightweight validation and duplicate preflight, then transfers each required file into durable server staging. Package/archive processing starts only after completed transfers are handed to the background queue.</p></section>';
 
-    echo <<<'CSS'
-<style>
-.bucket-stats { grid-template-columns:minmax(125px,.55fr) minmax(145px,.7fr) minmax(300px,2.75fr); }
-.bucket-stats .stat { min-width:0; }
-.bucket-path-card { min-width:0; }
-.bucket-path { white-space:normal; overflow-wrap:anywhere; word-break:break-word; line-height:1.35; }
-.bucket-progress { margin-top:12px; border:1px solid var(--line); border-radius:14px; padding:12px; background:rgba(255,255,255,.03); }
-.bucket-progress progress { width:100%; height:18px; }
-.bucket-progress .progress-row + progress { margin-bottom:10px; }
-.bucket-progress-note { margin:8px 0 0; color:var(--muted); }
-.bucket-log-filter { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:10px; }
-.bucket-log-filter label { font-weight:700; }
-.bucket-log-filter a { margin-left:auto; }
-.bucket-log { position:relative; height:420px; overflow:auto; margin-top:10px; border-top:1px solid var(--line); font-family:Consolas,ui-monospace,monospace; font-size:12px; line-height:22px; color:var(--muted); contain:strict; }
-.bucket-log-spacer { width:1px; opacity:0; pointer-events:none; }
-.bucket-log-viewport { position:absolute; top:0; left:0; min-width:100%; }
-.bucket-log-line { height:22px; white-space:pre; padding:0 4px; box-sizing:border-box; }
-.bucket-log-line-empty { color:var(--muted); }
-.bucket-log-line-checked,.bucket-log-line-ready,.bucket-log-line-uploaded,.bucket-log-line-queued { color:#a7f3d0; }
-.bucket-log-line-duplicate,.bucket-log-line-skipped { color:#fde68a; }
-.bucket-log-line-failed,.bucket-log-line-stopped { color:#fecdd3; }
-.bucket-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.bucket-submit-row,.bucket-folder-row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-.bucket-folder-summary { color:var(--muted); }
-.bucket-folder-fallback { margin:8px 0 12px; }
-.bucket-folder-fallback summary { cursor:pointer; color:var(--muted); }
-.bucket-stop { border-color:#ef4444; color:#fecaca; }
-.bucket-phases { margin:0 0 16px; padding-left:22px; }
-.bucket-phases li + li { margin-top:5px; }
-.bucket-next-phase { margin-top:12px; padding:12px; border:1px solid rgba(96,165,250,.65); border-radius:10px; background:rgba(96,165,250,.08); }
-.bucket-next-phase .button { margin-left:8px; }
-@media (max-width:900px) { .bucket-stats { grid-template-columns:1fr; } .bucket-log-filter a { margin-left:0; } }
-</style>
-CSS;
-
-    echo CatalogUi::pageHeader(
-        'Upload Bucket',
-        'One file is inspected, uploaded and queued at a time. Large Chrome folder selections use incremental directory discovery instead of constructing and copying one enormous FileList. Background recovery begins only after a complete file is durably present on the server.',
-        [
-            'Upload Issues' => 'upload-issues.php',
-            'System Errors' => 'system-errors.php',
-            'Open Bucket Queue' => 'unverified-files.php?source_game_id=-1',
-            'Processing Jobs' => $processingUrl,
-            'Upload Files to Game' => 'profiled-upload.php',
-        ]
-    );
-
-    echo '<div class="grid bucket-stats">';
-    echo '<div class="stat"><h2>' . (int)$bucketStats['count'] . '</h2><p>Files in upload bucket</p></div>';
-    echo '<div class="stat"><h2>' . catalog_h(catalog_bytes((int)$bucketStats['bytes'])) . '</h2><p>Bucket storage</p></div>';
-    echo '<div class="stat bucket-path-card"><h2 class="mono small bucket-path">' . catalog_h($bucketDir) . '</h2><p>Physical bucket folder</p></div>';
+    echo '<section class="card"><div class="card-body">';
+    echo '<form id="upload-bucket-form" data-allowed-extensions="'
+        . catalog_h(json_encode($allowedExtensions, JSON_UNESCAPED_SLASHES) ?: '[]') . '">';
+    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload_bucket_chunk')) . '">';
+    echo '<div class="bucket-picker-grid">';
+    echo '<div><label for="upload-bucket-files"><strong>Files</strong></label><br>'
+        . '<input id="upload-bucket-files" type="file" multiple></div>';
+    echo '<div><strong>Folder</strong><br>'
+        . '<button id="upload-bucket-folder-button" class="secondary" type="button">Choose folder</button> '
+        . '<span id="upload-bucket-folder-summary" class="muted">No folder selected</span></div>';
     echo '</div>';
-
-    echo '<section class="ui-section"><div class="ui-section__header"><div><h2>Upload unsorted files</h2>'
-        . '<p>Folder discovery, file inspection and progress rendering yield back to Chrome so the page remains usable with very large folders.</p>'
-        . '</div></div><div class="ui-section__body">';
-    echo '<ol class="bucket-phases">'
-        . '<li>Use the recommended folder button in Chrome to discover subfolders incrementally without creating a 70,000-file browser FileList.</li>'
-        . '<li>Validate the extension and inspect only the active file in the reusable Web Worker.</li>'
-        . '<li>Ask the API whether that physical file already exists, then upload it in bounded chunks only when needed.</li>'
-        . '<li>Once the complete file is durably staged on the server, create its recoverable background processing job before moving to the next file.</li>'
-        . '<li>Keep one compact status line per file. The default view shows errors only; uncheck it to see the complete live status.</li>'
-        . '<li>Persist only failed validation, transfer and finalisation results to Upload Issues so they remain reviewable after this page is closed.</li>'
-        . '<li>The Stop button works during folder discovery, hashing, transfer and queue finalisation. An incomplete browser transfer is not a resumable background job.</li>'
-        . '</ol>';
-    echo '<form id="upload-bucket-form" method="post" enctype="multipart/form-data" data-allowed-extensions="'
-        . catalog_h($allowedExtensionJson) . '">';
-    echo '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload-bucket')) . '">';
-    echo '<p><label>Choose individual files<br><input id="upload-bucket-files" type="file" name="files[]" multiple></label></p>';
-    echo '<div class="bucket-folder-row"><button id="upload-bucket-folder-button" class="secondary" type="button">Choose folder / subfolders</button>'
-        . '<span id="upload-bucket-folder-summary" class="bucket-folder-summary">No folder selected</span></div>';
     echo '<details class="bucket-folder-fallback"><summary>Fallback folder selector for browsers without direct folder access</summary>'
         . '<p><input id="upload-bucket-folder" type="file" multiple webkitdirectory directory mozdirectory></p>'
         . '<p class="muted">Chrome users should use the button above. The fallback browser control may pause while Chrome constructs a very large FileList.</p></details>';
@@ -156,6 +64,7 @@ CSS;
         . catalog_h($allowedExtensions ? implode(', ', $allowedExtensions) : 'none configured')
         . ', plus .uz/.uz2/.uz3 wrappers whose decompressed extension is allowed.</p>';
     echo '<p class="muted"><strong>Redirect archives:</strong> .uz accepts both historic 1234 and 5678 FCodec signatures. .uz/.uz2/.uz3 are transferred in their compressed wrapper form. Server processing then decompresses the wrapper, calculates the real package MD5/SHA-1, runs the duplicate check and stores the uncompressed package in the Upload Bucket.</p>';
+    echo '<p class="muted"><strong>ZIP / 7z / RAR:</strong> these are unpack-only transport containers. They are not catalogued as Unreal packages. Supported Unreal files are extracted one at a time into durable staging and each extracted file follows the normal package/redirect processing path. Nested archives and password-protected members are not recursively processed.</p>';
     echo '<p class="muted"><strong>Recovery boundary:</strong> chunking is transport only. If the browser/session disappears before a file reaches the server in complete form, that upload is incomplete and must be started again. Once complete staging succeeds, all processing after that point is background/recoverable.</p>';
     echo '<p class="muted"><strong>Status format:</strong> each file keeps one line, for example CHECKED : READY : UPLOADED : QUEUED : UPLOADED : path/file.uz : 513.62 KB. Only errors are written to <a href="upload-issues.php">Upload Issues</a>.</p>';
     echo '<p class="muted"><strong>Upload sizing:</strong> No UnrealDB total batch-size limit is applied. Only one file is active and it is split into chunks of up to '
