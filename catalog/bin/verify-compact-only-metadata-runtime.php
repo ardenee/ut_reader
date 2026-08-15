@@ -182,8 +182,6 @@ $syntaxFiles = array_values(array_unique(array_merge($runtimeFiles, [
     'lib/CatalogSupportCore.php',
     'lib/CatalogPerformance.php',
     'missing.php',
-    'src/Application/Dependency/CatalogMissingFileListService.php',
-    'src/Application/Dependency/CatalogMissingDetailListService.php',
     'src/Application/Maintenance/LegacyMetadataRuntimeAudit.php',
     'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
     'src/Infrastructure/Persistence/PdoCatalogVerifiedPackagePersistence.php',
