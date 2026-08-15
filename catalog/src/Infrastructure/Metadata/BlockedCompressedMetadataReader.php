@@ -176,19 +176,16 @@ final class BlockedCompressedMetadataReader
     public function verify(int $fileId): array
     {
         $context = $this->manifest($fileId, false);
-        $bytes = file_get_contents((string)$context['path']);
-        if (!is_string($bytes)) {
-            throw new RuntimeException('Could not read blocked metadata container.');
-        }
-        if (!hash_equals((string)$context['row']['payload_sha256'], hash('sha256', $bytes, true))) {
-            throw new RuntimeException('Blocked metadata container SHA-256 mismatch.');
-        }
-        $verified = BlockedCompressedMetadataContainer::verifyBytes($bytes, $fileId);
+        $verified = BlockedCompressedMetadataContainer::verifyFile(
+            (string)$context['path'],
+            $fileId,
+            (string)$context['row']['payload_sha256']
+        );
         return [
             'verified' => true,
             'file_id' => $fileId,
             'metadata_path' => (string)$context['path'],
-            'compressed_size' => strlen($bytes),
+            'compressed_size' => (int)$verified['compressed_size'],
             'uncompressed_size' => (int)$context['row']['uncompressed_size'],
             'name_count' => (int)$context['row']['name_count'],
             'import_count' => (int)$context['row']['import_count'],
