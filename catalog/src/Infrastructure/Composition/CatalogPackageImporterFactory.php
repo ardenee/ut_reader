@@ -11,18 +11,18 @@ namespace UnrealDb\Catalog\Infrastructure\Composition;
 
 use PDO;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogFailedUploadPreserverAdapter;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogPackageImporterAdapter;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogVerifiedPackageDependencyCoordinator;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogVerifiedPackageIdentityRepository;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogVerifiedPackageInspector;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogVerifiedPackagePublisher;
-use UnrealDb\Catalog\Infrastructure\Import\PdoCatalogPackageImporter;
 
 final class CatalogPackageImporterFactory
 {
     /** @param array<string,mixed> $config */
-    public static function create(PDO $db, array $config): PdoCatalogPackageImporter
+    public static function create(PDO $db, array $config): CatalogPackageImporterAdapter
     {
-        return new PdoCatalogPackageImporter(
+        return new CatalogPackageImporterAdapter(
             new CatalogVerifiedPackageInspector($db, $config),
             new CatalogVerifiedPackageIdentityRepository($db),
             new CatalogVerifiedPackagePublisher($db, $config),
