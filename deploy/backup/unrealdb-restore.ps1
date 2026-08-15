@@ -116,8 +116,8 @@ if ($RestoreStorage) {
     Get-ChildItem -LiteralPath $storageFull -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
     $tar = Resolve-Executable -ConfiguredFile $TarExecutable -Names @('tar.exe', 'tar')
     $storageArchive = Join-Path $backup 'storage.tar.gz'
-    $tarProcess = Start-Process -FilePath $tar -ArgumentList @('-C', $storageFull, '-xzf', $storageArchive) -Wait -NoNewWindow -PassThru
-    if ($tarProcess.ExitCode -ne 0) { throw "Storage restore failed with exit code $($tarProcess.ExitCode)." }
+    & $tar '-C' $storageFull '-xzf' $storageArchive
+    if ($LASTEXITCODE -ne 0) { throw "Storage restore failed with exit code $LASTEXITCODE." }
 }
 
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
