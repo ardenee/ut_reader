@@ -12,6 +12,8 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Dependency\CatalogPostImportDependencyQueue;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogUnverifiedDependencyRecovery
 {
@@ -54,10 +56,11 @@ final class CatalogUnverifiedDependencyRecovery
         ?int $userId = null,
         ?callable $emit = null
     ): array {
+        $file = [];
         try {
             $file = \catalog_one(
                 $this->db,
-                'SELECT id,game_id,package_name,scan_status FROM ue_files WHERE id=? LIMIT 1',
+                'SELECT id,game_id,package_name,original_name,scan_status FROM ue_files WHERE id=? LIMIT 1',
                 [$fileId]
             ) ?: [];
             if ((string)($file['scan_status'] ?? '') !== 'verified') {
@@ -93,12 +96,89 @@ final class CatalogUnverifiedDependencyRecovery
                 'message' => 'Verified compact metadata and queued a fresh dependency scan.',
             ];
         } catch (Throwable $recoveryError) {
+            // The row is already verified, so losing both synchronous recovery
+            // and the original staging snapshot must not leave an operator-only
+            // warning as the sole recovery mechanism. Queue the existing bounded,
+            // resumable one-file repair workflow from authoritative package storage.
+            if ((string)($file['scan_status'] ?? '') === 'verified' && $fileId > 0) {
+                try {
+                    $repairJobId = $this->queueCompactRepair(
+                        $fileId,
+                        (int)($file['game_id'] ?? 0),
+                        (string)($file['original_name'] ?? ''),
+                        $userId
+                    );
+                    if ($emit !== null) {
+                        $emit(
+                            'compact_repair_queued',
+                            76,
+                            'Queued durable compact metadata repair job #' . $repairJobId
+                        );
+                    }
+                    return [
+                        // "recovered" here means the recovery responsibility has
+                        // been durably secured; the repair itself remains visible
+                        // as a background job and is not claimed to be complete.
+                        'recovered' => true,
+                        'recovery_queued' => true,
+                        'removed' => 0,
+                        'jobs' => [
+                            'search_job_id' => 0,
+                            'file_job_id' => 0,
+                            'affected_job_id' => 0,
+                            'compact_repair_job_id' => $repairJobId,
+                            'worker_started' => false,
+                            'worker_error' => '',
+                        ],
+                        'message' => 'Synchronous compact metadata recovery failed; durable repair job #'
+                            . $repairJobId . ' was queued from authoritative package storage. Cause: '
+                            . $this->errorText($recoveryError),
+                    ];
+                } catch (Throwable $queueError) {
+                    return [
+                        'recovered' => false,
+                        'removed' => 0,
+                        'message' => $this->errorText($recoveryError)
+                            . ' Durable compact repair could not be queued: '
+                            . $this->errorText($queueError),
+                    ];
+                }
+            }
+
             return [
                 'recovered' => false,
                 'removed' => 0,
                 'message' => $this->errorText($recoveryError),
             ];
         }
+    }
+
+    private function queueCompactRepair(
+        int $fileId,
+        int $gameId,
+        string $originalName,
+        ?int $userId
+    ): int {
+        if ($fileId < 1 || $gameId < 1) {
+            throw new \RuntimeException('Compact metadata recovery job requires valid file and game IDs.');
+        }
+        $queueName = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        return (new PdoJobQueue($this->db))->enqueue(
+            $queueName,
+            JobType::REPAIR_COMPACT_METADATA_FILE,
+            [
+                'file_id' => $fileId,
+                'game_id' => $gameId,
+                'requested_by' => $userId,
+                'source_relative_path' => 'Compact metadata recovery · '
+                    . (trim($originalName) !== '' ? $originalName : ('file #' . $fileId)),
+            ],
+            15,
+            null,
+            'compact-metadata-repair:' . $fileId,
+            $userId,
+            5
+        );
     }
 
     private function errorText(Throwable $error): string
