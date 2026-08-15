@@ -27,6 +27,7 @@ $read = static function (string $relative) use ($root): string {
 
 $phpFiles = [
     'lib/CatalogRedirectArchivePayload.php',
+    'lib/CatalogRedirectCodec.php',
     'src/Infrastructure/Jobs/CatalogBackgroundJobResultHydrator.php',
     'src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php',
     'src/Infrastructure/Jobs/CatalogStagedImportJobHandler.php',
@@ -131,8 +132,34 @@ $record(
 );
 
 try {
+    require_once $root . '/lib/CatalogRedirectCodec.php';
     require_once $root . '/src/Infrastructure/Jobs/CatalogRedirectArchiveStream.php';
     require_once $root . '/src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php';
+
+    $uz3Package = "\xC1\x83\x2A\x9E" . "UnrealDB UZ3 regression fixture\0" . str_repeat("0123456789ABCDEF", 16);
+    $uz3ExpectedPayload = gzcompress($uz3Package);
+    if (!is_string($uz3ExpectedPayload)) {
+        throw new RuntimeException('gzcompress unavailable for UZ3 fixture.');
+    }
+    $uz3Encoded = catalog_redirect_archive_compress_data($uz3Package, 'Fixture.upk', 'uz3');
+    $uz3Archive = (string)($uz3Encoded['data'] ?? '');
+    $uz3Decoded = catalog_redirect_archive_decompress_data($uz3Archive, 'uz3', 1024 * 1024);
+    $record(
+        'uz3_matches_ut3_tag_size_whole_file_zlib_layout',
+        $uz3Archive === pack('V2', 5678, strlen($uz3Package)) . $uz3ExpectedPayload
+            && catalog_redirect_archive_read_u32($uz3Archive, 0, 'le') === 5678
+            && catalog_redirect_archive_read_u32($uz3Archive, 4, 'le') === strlen($uz3Package)
+            && (string)($uz3Encoded['encoder'] ?? '') === 'epic-uz3-zlib'
+            && (int)($uz3Encoded['chunks'] ?? 0) === 1
+            && !isset($uz3Encoded['embedded_filename'])
+            && is_array($uz3Decoded)
+            && (string)($uz3Decoded['data'] ?? '') === $uz3Package
+            && (int)($uz3Decoded['expected_bytes'] ?? 0) === strlen($uz3Package)
+            && (int)($uz3Decoded['chunks'] ?? 0) === 1
+            && !isset($uz3Decoded['embedded_filename']),
+        'UT3 UZ3 must be tag 5678 + total uncompressed size + one zlib compress() stream, with no embedded filename or FCodec stages.'
+    );
+
     $payload = "NOT_AN_UNREAL_PACKAGE";
     $compressed = gzcompress($payload);
     if (!is_string($compressed)) {
@@ -183,7 +210,7 @@ try {
         'Strict UZ3 rejection must identify whether the wrapper tag or tagged whole-file zlib stream failed without trying another format.'
     );
 } catch (Throwable $error) {
-    $record('decoded_non_package_uz2_is_rejected_before_profile_detection', false, get_class($error) . ': ' . $error->getMessage());
+    $record('redirect_format_regressions', false, get_class($error) . ': ' . $error->getMessage());
 }
 
 $result = [
