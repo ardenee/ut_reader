@@ -4,9 +4,9 @@
  * Read-only maintainability guardrails for the single-host modular monolith.
  *
  * These checks protect high-value boundaries without pretending historical code
- * is already perfect. One pre-existing package-header inspector still performs
- * a bounded file read in Application; that exact file is baselined explicitly
- * so any additional Application filesystem I/O fails this contract.
+ * is already perfect. Two pre-existing Application classes still perform small
+ * filesystem probes; those exact calls are baselined explicitly so any added
+ * Application filesystem I/O fails this contract.
  */
 declare(strict_types=1);
 
@@ -65,28 +65,31 @@ $record(
 );
 
 $filesystemMarkers = [
-    'file_get_contents(', 'file_put_contents(', 'fopen(', 'rename(', 'unlink(', 'mkdir(', 'scandir(', 'glob(', 'RecursiveDirectoryIterator',
+    'file_get_contents(', 'file_put_contents(', 'fopen(', 'rename(', 'unlink(', 'mkdir(', 'scandir(', 'glob(',
+    'is_file(', 'is_dir(', 'filesize(', 'RecursiveDirectoryIterator',
 ];
 $knownApplicationFilesystem = [
-    'src/Application/Catalog/CatalogPackageHeaderInspector.php' => ['file_get_contents('],
+    'src/Application/Catalog/CatalogPackageHeaderInspector.php' => ['file_get_contents(', 'is_file('],
+    'src/Application/Upload/ProfiledUploadService.php' => ['is_file(', 'filesize('],
 ];
 $applicationFilesystem = $scan($applicationFiles, $filesystemMarkers, $knownApplicationFilesystem);
 $record(
     'no_new_application_filesystem_io',
     $applicationFilesystem === [],
     $applicationFilesystem === []
-        ? 'Only the explicitly baselined bounded package-header read remains; new Application filesystem I/O is rejected.'
+        ? 'Only the explicitly baselined package-header/upload-size probes remain; new Application filesystem I/O is rejected.'
         : implode(' | ', $applicationFilesystem)
 );
 
 $domain = $scan($phpFiles($root . '/src/Domain'), [
     'UnrealDb\\Catalog\\Application\\', 'UnrealDb\\Catalog\\Infrastructure\\', 'UnrealDb\\Catalog\\Presentation\\',
-    'use PDO;', '\\PDO', 'file_get_contents(', 'file_put_contents(', 'fopen(',
+    'use PDO;', '\\PDO', 'file_get_contents(', 'file_put_contents(', 'fopen(', 'is_file(', 'filesize(',
 ]);
 $record('domain_has_no_outward_or_io_dependencies', $domain === [], $domain === [] ? 'Domain remains pure policy/data.' : implode(' | ', $domain));
 
 $ui = $scan($phpFiles($root . '/src/Presentation/Ui'), [
-    'use PDO;', '\\PDO', 'catalog_db(', '->prepare(', '->query(', '$_GET', '$_POST', '$_REQUEST', 'file_get_contents(', 'file_put_contents(',
+    'use PDO;', '\\PDO', 'catalog_db(', '->prepare(', '->query(', '$_GET', '$_POST', '$_REQUEST',
+    'file_get_contents(', 'file_put_contents(', 'is_file(', 'filesize(',
 ]);
 $record('ui_components_are_render_only', $ui === [], $ui === [] ? 'Reusable UI components remain escaped presentation primitives.' : implode(' | ', $ui));
 
