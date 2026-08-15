@@ -42,8 +42,11 @@ final class JobType
     public const IMPORT_STAGED_PACKAGE = 'catalog.import_staged_package';
     public const IMPORT_STAGED_PAK = 'catalog.import_staged_pak';
     public const IMPORT_STAGED_PAK_ENTRY = 'catalog.import_staged_pak_entry';
+    public const IMPORT_STAGED_ARCHIVE = 'catalog.import_staged_archive';
     public const PREPARE_BUCKET_REDIRECT = 'catalog.prepare_bucket_redirect';
     public const PROCESS_BUCKET_UPLOAD = 'catalog.process_bucket_upload';
+    public const PROCESS_BUCKET_ARCHIVE = 'catalog.process_bucket_archive';
+    public const PROCESS_BUCKET_STAGED_PACKAGE = 'catalog.process_bucket_staged_package';
     public const RECONCILE_UNVERIFIED_STORAGE = 'catalog.reconcile_unverified_storage';
     public const PRUNE_STALE_ARTIFACTS = 'catalog.prune_stale_artifacts';
     public const PRUNE_UPLOAD_PROGRESS = 'catalog.prune_upload_progress';
@@ -80,8 +83,11 @@ final class JobType
             self::IMPORT_STAGED_PACKAGE,
             self::IMPORT_STAGED_PAK,
             self::IMPORT_STAGED_PAK_ENTRY,
+            self::IMPORT_STAGED_ARCHIVE,
             self::PREPARE_BUCKET_REDIRECT,
             self::PROCESS_BUCKET_UPLOAD,
+            self::PROCESS_BUCKET_ARCHIVE,
+            self::PROCESS_BUCKET_STAGED_PACKAGE,
             self::RECONCILE_UNVERIFIED_STORAGE,
             self::PRUNE_STALE_ARTIFACTS,
             self::PRUNE_UPLOAD_PROGRESS,
