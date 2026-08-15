@@ -41,6 +41,7 @@ The application is a modular PHP monolith. Web requests submit durable work; bac
 | `.uz` redirects | Active | Historical 1234 and 5678 FCodec variants are supported. |
 | `.uz2` redirects | Active | Chunked zlib handling exists; malformed/non-standard archives fail without blocking unrelated jobs. |
 | `.uz3` redirects | Active | UT3 tag + uncompressed-size + whole-file zlib encoding/decoding is implemented and validated against real `UT3.exe Compress` output. |
+| ZIP / 7z / RAR uploads | Active | Unpack-only ingestion extracts supported Unreal files and hands each file to the normal durable package/redirect/PAK workflow. |
 | Federation | Active | Parent/child inventory, dependency requests and controlled transfer workflows are supported. |
 | Game Backups | Active | Durable export/restore workflows plus separate production database/storage backup tooling. |
 
@@ -110,6 +111,23 @@ The browser processes one file at a time, performs advisory hashing/duplicate ch
 ### Upload Bucket
 
 Upload Bucket is intended for large unsorted collections. Browser-side checks avoid unnecessary transfers where possible. Completed uploads/wrappers are handed to the background queue for preparation, decompression, import and dependency work.
+
+### ZIP / 7z / RAR archives
+
+`.zip`, `.7z` and `.rar` are accepted as **unpack-only transport containers**. UnrealDB does not catalogue the archive itself as an Unreal package and does not create ZIP/7z/RAR files.
+
+The archive is listed first and supported Unreal members are expanded one at a time into controlled staging. Each extracted file then enters the existing durable workflow:
+
+- ordinary Unreal packages use the normal package importer;
+- `.uz`, `.uz2` and `.uz3` members use the redirect decoder before package import;
+- `.pak` members can enter the existing PAK workflow when the selected game/profile supports PAK files;
+- one bad member is recorded without preventing unrelated members from being queued;
+- nested archives are not recursively expanded;
+- password-protected/encrypted archive members are not imported.
+
+ZIP uses PHP `ZipArchive` when available and can fall back to the configured 7-Zip command-line tool. 7z/RAR extraction requires a 7-Zip-compatible command-line binary available as `7zz`, `7z` or `7za`, or configured with `UNREALDB_7ZIP_BINARY` / `archive.seven_zip_binary`.
+
+Archive limits are configured under `archive` in `catalog/config.php`; see `catalog/config.example.php`. The archive source is removed after successful expansion, or retained when one or more members fail so the operation can be inspected/retried.
 
 ### Unverified files
 
@@ -279,6 +297,7 @@ Useful deployment/runtime verification commands include:
 php catalog/bin/migrate.php verify
 php catalog/bin/verify-system-readiness-contract.php --run
 php catalog/bin/verify-queue-runtime-invariants.php
+php catalog/bin/verify-archive-ingestion.php
 php catalog/bin/verify-solo-maintainer-hardening.php --run
 ```
 
