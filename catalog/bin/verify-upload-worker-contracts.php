@@ -94,10 +94,12 @@ $record(
         && str_contains($coordinator, "initData.append('action', 'init')")
         && str_contains($coordinator, "data.append('action', 'chunk')")
         && str_contains($coordinator, "completeData.append('action', 'complete')")
-        && str_contains($coordinator, 'async function finalizeOne(')
+        && str_contains($coordinator, 'async function finalizeUploaded(')
+        && str_contains($coordinator, 'FINALIZE_BATCH_SIZE')
+        && str_contains($coordinator, 'async function startProcessing(')
         && str_contains($coordinator, 'start_worker: false')
         && str_contains($coordinator, 'start_worker: true'),
-    'v2 must inspect/hash/preflight, stage chunks, finalize durable jobs, then start processing'
+    'v2 must inspect/hash/preflight, stage chunks, finalize durable jobs in bounded batches, then start processing once'
 );
 
 $bucketHandler = $read('catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
@@ -158,11 +160,12 @@ $record(
     'worker_pool_reconciliation_contract',
     str_contains($poolReconciler, 'PdoBackgroundJobOperationalQuery')
         && str_contains($poolReconciler, 'CatalogOrphanedJobRecovery')
-        && str_contains($poolReconciler, 'CatalogJobResourceLimitStore')
+        && !str_contains($poolReconciler, 'CatalogJobResourceLimitStore')
+        && str_contains($poolReconciler, "'skipped_on_start' => true")
         && str_contains($poolReconciler, '$launcher->start($queueName, $maxJobs, $workerCount)')
         && str_contains($poolReconciler, '$launcher->status($queueName, false)')
         && str_contains($poolReconciler, '$launcher->status($queueName, true)'),
-    'pool reconciliation must use indexed operational reads, explicit pool size and log-free polling'
+    'pool reconciliation must use indexed operational reads, explicit pool size, log-free polling and never rewrite queued rows on Start/Resume'
 );
 
 $statusPolicy = $read('catalog/src/Application/Jobs/CatalogWorkerStatusPolicy.php');
