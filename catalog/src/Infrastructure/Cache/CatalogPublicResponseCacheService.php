@@ -18,6 +18,7 @@ final class CatalogPublicResponseCacheService
 {
     private const PRUNE_INTERVAL_SECONDS = 300;
     private const PRUNE_SCAN_LIMIT = 2000;
+    private const DEFAULT_SEARCH_CACHE_SLOTS = 4096;
 
     /** @param array<string,mixed> $config */
     public static function routeTtl(array $config): int
@@ -44,9 +45,6 @@ final class CatalogPublicResponseCacheService
 
         if ($script === 'index.php') {
             if ($page === '' || $page === 'home') {
-                // At public traffic scale the home page must not hit PHP/MySQL for
-                // every anonymous request. Keep the default deliberately short so
-                // administrator-edited notices/limits become visible promptly.
                 $configured = isset($overrides['index.php:home'])
                     ? (int)$overrides['index.php:home']
                     : 15;
@@ -154,10 +152,6 @@ final class CatalogPublicResponseCacheService
             return;
         }
 
-        // Never turn request volume into filesystem scan volume. The previous
-        // probabilistic 1-in-100 pruning meant a million cacheable requests could
-        // trigger roughly ten thousand directory walks. A timestamped nonblocking
-        // lock bounds pruning to once per interval for the whole host.
         $lockPath = rtrim($directory, '/\\') . DIRECTORY_SEPARATOR . '.prune.lock';
         clearstatcache(true, $lockPath);
         $lastRun = is_file($lockPath) ? (int)@filemtime($lockPath) : 0;
@@ -268,20 +262,35 @@ final class CatalogPublicResponseCacheService
         if ($query === '' && $_GET !== []) {
             return;
         }
-        $key = hash('sha256', $script . "\n" . $query);
+
+        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
+        $identityHash = hash('sha256', $script . "\n" . $query);
+        $boundedSearch = self::isSearchRoute($script);
+        if ($boundedSearch) {
+            $slots = max(
+                256,
+                min((int)($cache['public_search_cache_slots'] ?? self::DEFAULT_SEARCH_CACHE_SLOTS), 65536)
+            );
+            $slot = hexdec(substr($identityHash, 0, 8)) % $slots;
+            $key = 'search-' . str_pad(dechex($slot), 4, '0', STR_PAD_LEFT);
+        } else {
+            $key = $identityHash;
+        }
+
         $path = $directory . DIRECTORY_SEPARATOR . $key . '.htmlcache';
         $lockPath = $directory . DIRECTORY_SEPARATOR . $key . '.lock';
-        $cache = is_array($config['cache'] ?? null) ? $config['cache'] : [];
         $staleSeconds = max(0, min((int)($cache['public_response_stale_seconds'] ?? 300), 3600));
         $maxBytes = max(
             65536,
             min((int)($cache['public_response_max_bytes'] ?? 8 * 1024 * 1024), 64 * 1024 * 1024)
         );
 
-        // Cache hits are the highest-volume path. Read only the first metadata
-        // line here and stream the body directly from disk if it is usable; do
-        // not allocate an HTML-sized PHP string merely to echo it immediately.
         $meta = self::readMeta($path);
+        if ($meta !== null && !self::matchesIdentity($meta, $identityHash, $boundedSearch)) {
+            // Search slots intentionally collide. Identity metadata turns a slot
+            // collision into a cache miss instead of serving another query's HTML.
+            $meta = null;
+        }
         if ($meta !== null) {
             $age = max(0, time() - (int)$meta['stored_at']);
             if ($age <= $ttl && self::servePath($path, $meta, 'HIT', $ttl, $staleSeconds)) {
@@ -311,6 +320,7 @@ final class CatalogPublicResponseCacheService
             'ttl' => $ttl,
             'stale' => $staleSeconds,
             'max_bytes' => $maxBytes,
+            'identity_hash' => $identityHash,
             'started_level' => ob_get_level(),
         ];
         ob_start();
@@ -330,9 +340,6 @@ final class CatalogPublicResponseCacheService
                 return;
             }
 
-            // Check the buffer length before copying it into a PHP string. Large
-            // uncached responses must not temporarily double peak memory merely
-            // to discover that they exceed the cache publication limit.
             $bodyLength = ob_get_length();
             if (!is_int($bodyLength) || $bodyLength < 1 || $bodyLength > (int)$state['max_bytes']) {
                 return;
@@ -359,6 +366,7 @@ final class CatalogPublicResponseCacheService
                 'stored_at' => time(),
                 'ttl' => (int)$state['ttl'],
                 'bytes' => $bodyLength,
+                'key_hash' => (string)($state['identity_hash'] ?? ''),
             ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
             if (!is_string($header)) {
                 return;
@@ -421,6 +429,25 @@ final class CatalogPublicResponseCacheService
             return null;
         }
         return $meta;
+    }
+
+    /** @param array<string,mixed> $meta */
+    private static function matchesIdentity(array $meta, string $identityHash, bool $required): bool
+    {
+        $stored = trim((string)($meta['key_hash'] ?? ''));
+        if ($stored === '') {
+            // Existing bounded-route cache files from before identity metadata are
+            // safe because their filename is the complete identity hash. Search
+            // slots require an explicit identity because their path is shared.
+            return !$required;
+        }
+        return hash_equals($stored, $identityHash);
+    }
+
+    private static function isSearchRoute(string $script): bool
+    {
+        return basename($script) === 'index.php'
+            && strtolower(trim((string)($_GET['page'] ?? ''))) === 'search';
     }
 
     /** @param array<string,mixed> $meta */
