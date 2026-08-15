@@ -35,13 +35,24 @@ $check = static function (string $name, bool $ok, string $detail) use (&$checks,
 $check(
     'queue_selector_is_navigation_not_telemetry',
     str_contains($ui, 'option.textContent = name')
-        && str_contains($ui, "queueSelect.title = 'Queue selector'"),
-    'The queue selector must display only the queue identity; live operational numbers belong in job/worker reporting.'
+        && str_contains($ui, "queueSelect.title = 'Queue selector'")
+        && str_contains($page, '. catalog_h($name) . \'</option>\'')
+        && !str_contains($page, 'active database row')
+        && !str_contains($page, "$label = \$name . ' — '"),
+    'The server-rendered and enhanced queue selector must display only the queue identity; raw durable-row counts must never flash as job telemetry.'
+);
+$check(
+    'system_operations_is_directly_reachable',
+    str_contains($page, "'System Operations' => 'system-operations.php'"),
+    'Background Jobs must provide a direct path to the production diagnostics view.'
 );
 $check(
     'operator_job_scope_is_explicit',
-    str_contains($searchScope, 'j.parent_job_id IS NULL OR ')
-        && str_contains($searchScope, 'j.status IN (\"failed\",\"dead_letter\",\"cancelled\")')
+    str_contains($searchScope, 'j.parent_job_id IS NULL')
+        && str_contains($searchScope, 'j.parent_job_id IS NOT NULL')
+        && str_contains($searchScope, 'failed')
+        && str_contains($searchScope, 'dead_letter')
+        && str_contains($searchScope, 'cancelled')
         && str_contains($page, 'routine child rows stay hidden unless they need attention'),
     'Routine workflow children must stay folded into their parent while failed/dead-letter/cancelled children remain actionable.'
 );
