@@ -15,9 +15,14 @@ $read = static function (string $relative) use ($root): string {
 };
 
 $ui = $read('assets/background-jobs-async-cleanup.js');
-$bridge = $read('assets/background-jobs-cursor-bridge.js');
-$displayQuery = $read('src/Infrastructure/Persistence/PdoBackgroundJobOffsetQuery.php');
+$page = $read('background-jobs.php');
+$searchScope = $read('src/Infrastructure/Persistence/PdoBackgroundJobSearchScope.php');
+$displayCounts = $read('src/Infrastructure/Persistence/PdoBackgroundJobDisplayCountQuery.php');
+$browser = $read('src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php');
+$operatorSnapshot = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php');
 $operationalQuery = $read('src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php');
+$workerEndpoint = $read('api/v1/job-worker-status.php');
+$systemOperations = $read('system-operations.php');
 $checks = [];
 $failures = [];
 $check = static function (string $name, bool $ok, string $detail) use (&$checks, &$failures): void {
@@ -28,49 +33,67 @@ $check = static function (string $name, bool $ok, string $detail) use (&$checks,
 };
 
 $check(
-    'queue_selector_is_navigation_not_stale_telemetry',
-    str_contains($ui, 'The queue selector is navigation, not telemetry')
-        && str_contains($ui, 'option.textContent = queueName')
-        && str_contains($ui, 'Live work-unit counts are shown in the worker summary'),
-    'The queue selector must not keep server-rendered counts that immediately diverge from live polling.'
+    'queue_selector_is_navigation_not_telemetry',
+    str_contains($ui, 'option.textContent = name')
+        && str_contains($ui, "queueSelect.title = 'Queue selector'"),
+    'The queue selector must display only the queue identity; live operational numbers belong in job/worker reporting.'
 );
 $check(
-    'operator_view_scope_is_explicit',
-    str_contains($ui, 'Operator view — parent workflows plus child units requiring attention')
-        && str_contains($displayQuery, 'j.parent_job_id IS NULL OR j.status IN ("failed","dead_letter","cancelled")'),
-    'Tabs/table intentionally fold routine child units into parent workflows and must say so.'
+    'operator_job_scope_is_explicit',
+    str_contains($searchScope, 'j.parent_job_id IS NULL OR ')
+        && str_contains($searchScope, 'j.status IN (\"failed\",\"dead_letter\",\"cancelled\")')
+        && str_contains($page, 'routine child rows stay hidden unless they need attention'),
+    'Routine workflow children must stay folded into their parent while failed/dead-letter/cancelled children remain actionable.'
 );
 $check(
-    'raw_work_units_use_authoritative_live_counts',
-    str_contains($bridge, 'const counts = worker.queue_counts || {}')
-        && str_contains($operationalQuery, 'SUM(status="queued") queued')
+    'background_jobs_counts_use_operator_scope',
+    str_contains($browser, 'PdoBackgroundJobSearchScope')
+        && str_contains($browser, 'PdoBackgroundJobDisplayCountQuery')
+        && str_contains($browser, '$this->countQuery->counts(')
+        && str_contains($displayCounts, 'BackgroundJobDisplaySql::operatorStatus('),
+    'Tabs and result totals must derive from the same operator-visible scope/status rules as the displayed rows.'
+);
+$check(
+    'system_operations_reuses_operator_count_policy',
+    str_contains($operatorSnapshot, 'PdoBackgroundJobSearchScope')
+        && str_contains($operatorSnapshot, 'PdoBackgroundJobDisplayCountQuery')
+        && str_contains($operatorSnapshot, '$this->counts->counts(')
+        && str_contains($systemOperations, 'same rolled-up operator scope as Background Jobs'),
+    'System Operations must not invent a competing queued/running job count.'
+);
+$check(
+    'durable_execution_counts_are_health_only',
+    str_contains($operationalQuery, 'SUM(status="queued") queued')
         && str_contains($operationalQuery, 'SUM(status="running") running')
-        && str_contains($operationalQuery, 'available_at<=UTC_TIMESTAMP()')
-        && str_contains($ui, "const counts = worker.queue_counts")
-        && str_contains($ui, "' · Work units: '")
-        && str_contains($ui, "' available now'"),
-    'The visible summary must use the same raw durable queue-unit counts as the authoritative worker-status endpoint.'
+        && str_contains($workerEndpoint, '$counts = $operational->queueCounts($queueName);')
+        && str_contains($workerEndpoint, 'CatalogWorkerStatusPolicy::evaluate(')
+        && str_contains($workerEndpoint, "$worker['queue_counts'] = $counts;")
+        && !str_contains($ui, 'queue_counts')
+        && !str_contains($ui, 'Work units'),
+    'Raw durable execution rows may drive worker health/admission but must not appear as a competing operator headline count.'
 );
 $check(
     'one_visible_worker_summary',
-    str_contains($ui, "legacyWorkerState.hidden = true")
+    str_contains($ui, 'legacyWorkerState.hidden = true')
         && str_contains($ui, "readableWorkerState.id = 'jobs-worker-summary-readable'")
         && str_contains($ui, "document.getElementById('jobs-worker-pool-state')")
         && str_contains($ui, 'poolState.hidden = true'),
-    'Stable/bridge internal status elements may remain for control logic, but only one worker/process/work-unit summary should be visible.'
+    'Internal status elements may remain for control logic, but only one worker-process summary should be visible.'
 );
 $check(
-    'worker_processed_scope_is_explicit',
-    str_contains($ui, 'completed this worker session'),
-    'Processed/completed must be labelled as a worker-session counter, not a queue total.'
+    'operator_language_is_job_centric',
+    !str_contains($page, 'Work units')
+        && !str_contains($page, 'work units')
+        && !str_contains($ui, 'Work units')
+        && !str_contains($ui, 'work units')
+        && !str_contains($systemOperations, 'Work units')
+        && !str_contains($systemOperations, 'work units'),
+    'Operator-facing queue reporting must use jobs; internal workflow/execution detail must not compete with the job count.'
 );
 $check(
-    'clarity_reuses_existing_status_response',
-    str_contains($ui, 'Reuse the worker-status response already requested by the established')
-        && str_contains($ui, "url.includes(workerStatusUrl)")
-        && str_contains($ui, 'response.clone().json()')
-        && !str_contains($ui, 'originalFetch(workerStatusUrl'),
-    'The readable summary must consume the existing worker-status response and must not create another polling request.'
+    'worker_session_counter_is_not_a_queue_total',
+    !str_contains($ui, 'completed this worker session'),
+    'The streamlined worker summary must not present a process-session counter beside durable job totals.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
