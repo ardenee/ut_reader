@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
-use UnrealDb\Catalog\Application\Dependency\CatalogDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
@@ -33,7 +33,7 @@ try {
             . 'FROM ue_games g LEFT JOIN ue_game_catalog_stats s ON s.game_id=g.id ORDER BY g.id'
         );
     } else {
-        $dependencySource = CatalogDependencyReadSource::sql($application->db);
+        $dependencySource = PdoDependencyReadSource::sql($application->db);
         $rows = catalog_all(
             $application->db,
             'SELECT g.id game_id, COALESCE(md.missing_dependency_count,0) missing_dependency_count '
