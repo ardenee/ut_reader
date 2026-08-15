@@ -15,6 +15,9 @@ use Throwable;
 
 final class CatalogPublicAccessGuard
 {
+    private const BURST_SHARD_COUNT = 256;
+    private const BURST_PRUNE_INTERVAL_SECONDS = 60;
+
     /** @param array<string,mixed>|null $config */
     public function __construct(private readonly ?array $config = null)
     {
@@ -75,7 +78,24 @@ final class CatalogPublicAccessGuard
         if (!is_dir($directory) && !mkdir($directory, 0700, true) && !is_dir($directory)) {
             throw new RuntimeException('Could not create public burst-control storage.');
         }
-        $path = $directory . DIRECTORY_SEPARATOR . hash('sha256', $identity) . '.json';
+
+        // One flat directory becomes pathological with millions of historical IPs.
+        // Hash sharding keeps directory lookup bounded, while rotating cleanup
+        // deletes state after it can no longer affect either the rolling window or
+        // an active temporary block.
+        $hash = hash('sha256', $identity);
+        $shardDirectory = $directory . DIRECTORY_SEPARATOR . substr($hash, 0, 2);
+        if (!is_dir($shardDirectory)
+            && !mkdir($shardDirectory, 0700, true)
+            && !is_dir($shardDirectory)) {
+            throw new RuntimeException('Could not create public burst-control shard.');
+        }
+        $this->pruneBurstState(
+            $directory,
+            max(max(1, $windowSeconds), max(10, $blockSeconds)) + 60
+        );
+
+        $path = $shardDirectory . DIRECTORY_SEPARATOR . $hash . '.json';
         $handle = @fopen($path, 'c+b');
         if (!is_resource($handle)) {
             throw new RuntimeException('Could not open public burst-control state.');
@@ -277,6 +297,69 @@ final class CatalogPublicAccessGuard
     {
         $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
         return in_array($method, ['GET', 'HEAD'], true);
+    }
+
+    /**
+     * Rotate through one of 256 shards per interval. Cleanup is best-effort and
+     * never blocks ordinary requests on another request's scan.
+     */
+    private function pruneBurstState(string $directory, int $retentionSeconds): void
+    {
+        $lockPath = $directory . DIRECTORY_SEPARATOR . '.prune.lock';
+        clearstatcache(true, $lockPath);
+        $now = time();
+        $lastRun = is_file($lockPath) ? (int)@filemtime($lockPath) : 0;
+        if ($lastRun > 0 && $now - $lastRun < self::BURST_PRUNE_INTERVAL_SECONDS) {
+            return;
+        }
+
+        $lock = @fopen($lockPath, 'c+b');
+        if (!is_resource($lock)) {
+            return;
+        }
+        try {
+            if (!@flock($lock, LOCK_EX | LOCK_NB)) {
+                return;
+            }
+            clearstatcache(true, $lockPath);
+            $lastRun = (int)(@filemtime($lockPath) ?: 0);
+            $now = time();
+            if ($lastRun > 0 && $now - $lastRun < self::BURST_PRUNE_INTERVAL_SECONDS) {
+                return;
+            }
+
+            $cursorPath = $directory . DIRECTORY_SEPARATOR . '.prune.cursor';
+            $rawCursor = @file_get_contents($cursorPath);
+            $cursor = is_string($rawCursor) && ctype_digit(trim($rawCursor))
+                ? ((int)trim($rawCursor) % self::BURST_SHARD_COUNT)
+                : 0;
+            $shard = sprintf('%02x', $cursor);
+            $next = ($cursor + 1) % self::BURST_SHARD_COUNT;
+            @file_put_contents($cursorPath, (string)$next, LOCK_EX);
+
+            $shardDirectory = $directory . DIRECTORY_SEPARATOR . $shard;
+            $cutoff = $now - max(60, $retentionSeconds);
+            if (is_dir($shardDirectory)) {
+                foreach (new \FilesystemIterator($shardDirectory, \FilesystemIterator::SKIP_DOTS) as $entry) {
+                    if ($entry->isFile()
+                        && str_ends_with($entry->getFilename(), '.json')
+                        && $entry->getMTime() < $cutoff) {
+                        @unlink($entry->getPathname());
+                    }
+                }
+            }
+
+            @ftruncate($lock, 0);
+            @rewind($lock);
+            @fwrite($lock, (string)$now);
+            @fflush($lock);
+            @touch($lockPath, $now);
+        } catch (Throwable $error) {
+            error_log('[UnrealDB public access] burst-state pruning failed: ' . $error->getMessage());
+        } finally {
+            @flock($lock, LOCK_UN);
+            @fclose($lock);
+        }
     }
 
     /** @return array<string,mixed> */
