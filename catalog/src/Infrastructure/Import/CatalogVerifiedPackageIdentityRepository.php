@@ -24,9 +24,13 @@ final class CatalogVerifiedPackageIdentityRepository
         $this->sourcePaths = new PdoCatalogSourcePathStore($db);
     }
 
-    public function ensureSchema(): void
+    public function ensureSourcePathSchema(): void
     {
         $this->sourcePaths->ensureSchema();
+    }
+
+    public function ensureAliasSchema(): void
+    {
         \catalog_package_aliases_ensure($this->db);
     }
 
