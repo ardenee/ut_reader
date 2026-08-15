@@ -6,7 +6,7 @@
  * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
  *      entry points.
  * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
- *      services.
+ *       services.
  * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
  *        same behavior.
  */
@@ -100,17 +100,23 @@ final class BlockedCompressedMetadataSnapshotWriter
     ): array {
         $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(8));
         $backupPath = $path . '.bak.' . bin2hex(random_bytes(8));
+        $byteLength = strlen($bytes);
+        $expectedHash = hash('sha256', $bytes, true);
         $written = file_put_contents($temporaryPath, $bytes, LOCK_EX);
-        if ($written !== strlen($bytes)) {
+        if ($written !== $byteLength) {
             @unlink($temporaryPath);
             throw new RuntimeException('Could not completely write compact metadata temporary file.');
         }
-        $temporaryBytes = file_get_contents($temporaryPath);
-        if (!is_string($temporaryBytes)) {
+
+        // build() has already structurally verified the exact byte string. After
+        // writing, a streaming SHA-256 equality check proves the temporary file is
+        // byte-for-byte identical without allocating a second full-container PHP
+        // string or decompressing every block a second time before publication.
+        $temporaryHash = hash_file('sha256', $temporaryPath, true);
+        if (!is_string($temporaryHash) || !hash_equals($expectedHash, $temporaryHash)) {
             @unlink($temporaryPath);
-            throw new RuntimeException('Could not read back compact metadata temporary file.');
+            throw new RuntimeException('Compact metadata temporary file failed write verification.');
         }
-        BlockedCompressedMetadataContainer::verifyBytes($temporaryBytes, $fileId);
 
         clearstatcache(true, $path);
         $hadExistingFile = is_file($path);
