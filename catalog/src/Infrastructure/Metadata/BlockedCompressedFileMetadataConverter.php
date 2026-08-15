@@ -68,9 +68,6 @@ final class BlockedCompressedFileMetadataConverter
         }
         BlockedCompressedMetadataContainer::verifyBytes($bytes, $fileId);
 
-        // Shared dictionary rows are append-mostly global state. Resolve once
-        // before the file-owned projection transaction and reuse the stable IDs
-        // instead of rebuilding the unique term map inside the transaction.
         $sqlBatches = 0;
         $lookupWriter = new CompressedMetadataLookupWriter($this->db);
         $resolvedTermIds = $lookupWriter->primeSnapshotTerms($snapshot, $sqlBatches);
@@ -87,7 +84,11 @@ final class BlockedCompressedFileMetadataConverter
                 $sqlBatches,
                 $resolvedTermIds
             );
-            (new CompactSearchProjectionWriter($this->db))->write($snapshot, $sqlBatches);
+            (new CompactSearchProjectionWriter($this->db))->write(
+                $snapshot,
+                $sqlBatches,
+                $resolvedTermIds
+            );
             $this->db->commit();
         } catch (Throwable $error) {
             if ($this->db->inTransaction()) {
