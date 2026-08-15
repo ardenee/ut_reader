@@ -22,10 +22,30 @@ $read = static function (string $relative) use ($repoRoot): string {
     return is_string($value) ? $value : '';
 };
 
+$readiness = $read('deploy/backup/unrealdb-backup-readiness.ps1');
 $backup = $read('deploy/backup/unrealdb-backup.ps1');
 $verify = $read('deploy/backup/verify-unrealdb-backup.ps1');
 $restore = $read('deploy/backup/unrealdb-restore.ps1');
 
+$record(
+    'backup_readiness_is_non_destructive',
+    str_contains($readiness, '--execute=SELECT 1')
+        && str_contains($readiness, 'backup_destination_space_readable')
+        && str_contains($readiness, 'storage_space_readable')
+        && !str_contains($readiness, '[System.IO.File]::Create(')
+        && !str_contains($readiness, 'Set-Content')
+        && !str_contains($readiness, 'Move-Item')
+        && !str_contains($readiness, "'-czf'"),
+    'Preflight may resolve executables, inspect paths/capacity and run SELECT 1; it must not create a backup or mutate package data.'
+);
+$record(
+    'backup_readiness_checks_required_tools',
+    str_contains($readiness, "@('mysqldump.exe', 'mysqldump')")
+        && str_contains($readiness, "@('mysql.exe', 'mysql')")
+        && str_contains($readiness, "@('php.exe', 'php')")
+        && str_contains($readiness, "@('tar.exe', 'tar')"),
+    'The maintenance window should not begin before required native tools are known to be available.'
+);
 $record(
     'full_backup_requires_maintenance_confirmation',
     str_contains($backup, '-not $DatabaseOnly')
@@ -84,6 +104,7 @@ $record(
 );
 
 $scriptPaths = [
+    $repoRoot . '/deploy/backup/unrealdb-backup-readiness.ps1',
     $repoRoot . '/deploy/backup/unrealdb-backup.ps1',
     $repoRoot . '/deploy/backup/verify-unrealdb-backup.ps1',
     $repoRoot . '/deploy/backup/unrealdb-restore.ps1',
