@@ -4,37 +4,15 @@
  * Purpose: Handles the catalog v1 HTTP endpoint for metrics.
  * Why: It exposes this operation as a narrowly scoped machine-readable request instead of mixing API behavior into
  *      HTML pages.
- * Role: HTTP API entry point; reusable work should be delegated to shared application/services rather than duplicated
- *       here.
- * Audit: Active API surface unless its callers/tests prove otherwise; preserve request/response compatibility when
- *        consolidating.
+ * Role: HTTP API entry point backed by focused Infrastructure read models.
  */
 declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoMetricsSnapshotQuery;
+use UnrealDb\Catalog\Infrastructure\Storage\CatalogOperationalStorageMetrics;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
-
-/** @return array{files:int,bytes:int} */
-function catalog_metrics_directory(string $directory): array
-{
-    if (!is_dir($directory)) {
-        return ['files' => 0, 'bytes' => 0];
-    }
-    $files = 0;
-    $bytes = 0;
-    $iterator = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS)
-    );
-    foreach ($iterator as $entry) {
-        if (!$entry instanceof SplFileInfo || !$entry->isFile() || $entry->isLink()) {
-            continue;
-        }
-        $files++;
-        $bytes += max(0, (int)$entry->getSize());
-    }
-    return ['files' => $files, 'bytes' => $bytes];
-}
 
 function catalog_metrics_authorized(): bool
 {
@@ -70,19 +48,17 @@ try {
 
     $application = catalog_api_application();
     $db = $application->db;
-    $storage = rtrim((string)$application->config['storage_path'], DIRECTORY_SEPARATOR);
+    $storageRoot = rtrim((string)$application->config['storage_path'], DIRECTORY_SEPARATOR);
+    $snapshot = new PdoMetricsSnapshotQuery($db);
+    $storage = new CatalogOperationalStorageMetrics($storageRoot);
+
     $output = "# HELP unrealdb_up UnrealDB metrics endpoint availability.\n"
         . "# TYPE unrealdb_up gauge\n"
         . catalog_metrics_line('unrealdb_up', 1);
 
-    $jobs = catalog_all(
-        $db,
-        'SELECT queue_name,status,resource_class,COUNT(*) count,COALESCE(SUM(recovery_count),0) recoveries '
-        . 'FROM ue_background_jobs GROUP BY queue_name,status,resource_class ORDER BY queue_name,status,resource_class'
-    );
     $output .= "# HELP unrealdb_jobs Background jobs by queue, status and resource class.\n# TYPE unrealdb_jobs gauge\n";
-    $output .= "# HELP unrealdb_job_recoveries Lease recoveries represented by current jobs.\n# TYPE unrealdb_job_recoveries gauge\n";
-    foreach ($jobs as $row) {
+    $output .= "# HELP unrealdb_job_recoveries Recovery count represented by current jobs.\n# TYPE unrealdb_job_recoveries gauge\n";
+    foreach ($snapshot->jobs() as $row) {
         $labels = [
             'queue' => (string)$row['queue_name'],
             'status' => (string)$row['status'],
@@ -92,45 +68,32 @@ try {
         $output .= catalog_metrics_line('unrealdb_job_recoveries', (int)$row['recoveries'], $labels);
     }
 
-    $oldest = catalog_all(
-        $db,
-        'SELECT queue_name,COALESCE(TIMESTAMPDIFF(SECOND,MIN(created_at),UTC_TIMESTAMP()),0) age_seconds '
-        . 'FROM ue_background_jobs WHERE status="queued" GROUP BY queue_name'
-    );
     $output .= "# HELP unrealdb_oldest_queued_job_age_seconds Age of the oldest queued job.\n# TYPE unrealdb_oldest_queued_job_age_seconds gauge\n";
-    foreach ($oldest as $row) {
+    foreach ($snapshot->oldestQueued() as $row) {
         $output .= catalog_metrics_line('unrealdb_oldest_queued_job_age_seconds', max(0, (int)$row['age_seconds']), ['queue' => (string)$row['queue_name']]);
     }
 
-    $files = catalog_all($db, 'SELECT scan_status,COUNT(*) count,COALESCE(SUM(file_size),0) bytes FROM ue_files GROUP BY scan_status');
     $output .= "# HELP unrealdb_catalog_files Catalog files by scan status.\n# TYPE unrealdb_catalog_files gauge\n";
     $output .= "# HELP unrealdb_catalog_file_bytes Catalog file bytes by scan status.\n# TYPE unrealdb_catalog_file_bytes gauge\n";
-    foreach ($files as $row) {
+    foreach ($snapshot->files() as $row) {
         $labels = ['status' => (string)$row['scan_status']];
         $output .= catalog_metrics_line('unrealdb_catalog_files', (int)$row['count'], $labels);
         $output .= catalog_metrics_line('unrealdb_catalog_file_bytes', (int)$row['bytes'], $labels);
     }
 
-    $directories = [
-        'generated_packages' => $storage . DIRECTORY_SEPARATOR . 'generated-packages',
-        'staged_imports' => $storage . DIRECTORY_SEPARATOR . 'jobs' . DIRECTORY_SEPARATOR . 'incoming',
-        'incoming_federation' => $storage . DIRECTORY_SEPARATOR . 'federation' . DIRECTORY_SEPARATOR . 'incoming',
-    ];
     $output .= "# HELP unrealdb_storage_files Physical files in controlled operational storage.\n# TYPE unrealdb_storage_files gauge\n";
     $output .= "# HELP unrealdb_storage_bytes Physical bytes in controlled operational storage.\n# TYPE unrealdb_storage_bytes gauge\n";
-    foreach ($directories as $kind => $directory) {
-        $usage = catalog_metrics_directory($directory);
+    foreach ($storage->controlledDirectories() as $kind => $usage) {
         $output .= catalog_metrics_line('unrealdb_storage_files', $usage['files'], ['kind' => $kind]);
         $output .= catalog_metrics_line('unrealdb_storage_bytes', $usage['bytes'], ['kind' => $kind]);
     }
 
-    $total = @disk_total_space($storage);
-    $free = @disk_free_space($storage);
-    if (is_float($total) || is_int($total)) {
-        $output .= catalog_metrics_line('unrealdb_storage_capacity_bytes', (int)$total);
+    $capacity = $storage->capacity();
+    if ($capacity['total_bytes'] !== null) {
+        $output .= catalog_metrics_line('unrealdb_storage_capacity_bytes', $capacity['total_bytes']);
     }
-    if (is_float($free) || is_int($free)) {
-        $output .= catalog_metrics_line('unrealdb_storage_free_bytes', (int)$free);
+    if ($capacity['free_bytes'] !== null) {
+        $output .= catalog_metrics_line('unrealdb_storage_free_bytes', $capacity['free_bytes']);
     }
 
     header('Content-Type: text/plain; version=0.0.4; charset=utf-8');
