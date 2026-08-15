@@ -16,9 +16,9 @@ require_once dirname(__DIR__, 2) . '/lib/CatalogMfa.php';
 
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
 
-function catalog_api_application()
+function catalog_api_application(bool $startSession = true)
 {
-    return catalog_bootstrap();
+    return catalog_bootstrap($startSession);
 }
 
 /**
