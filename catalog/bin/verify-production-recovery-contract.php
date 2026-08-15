@@ -96,6 +96,14 @@ $record(
         && !str_contains($dependencyRecovery, 'SELECT format_version FROM ue_file_metadata'),
     'dependency work must not be queued from a stale format_version registration'
 );
+$record(
+    'unverified_recovery_has_durable_compact_fallback',
+    str_contains($dependencyRecovery, 'JobType::REPAIR_COMPACT_METADATA_FILE')
+        && str_contains($dependencyRecovery, "'compact-metadata-repair:' . \$fileId")
+        && str_contains($dependencyRecovery, "'compact_repair_job_id'")
+        && str_contains($dependencyRecovery, "'recovery_queued' => true"),
+    'when retained staging cannot repair metadata, the verified row must receive a durable bounded repair job'
+);
 
 $nonBlocking = $read('src/Infrastructure/Jobs/CatalogNonBlockingImportJobHandler.php');
 $record(
