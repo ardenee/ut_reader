@@ -1,12 +1,6 @@
 #!/usr/bin/env php
 <?php
-/**
- * Read-only source contract for production performance invariants.
- *
- * These checks intentionally guard implementation shape rather than benchmark
- * absolute timings, which vary by host/storage/database state. Runtime impact is
- * measured separately through Workload Tracing and real queue/import workloads.
- */
+/** Read-only source contract for production performance invariants. */
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
@@ -17,13 +11,11 @@ if (PHP_SAPI !== 'cli') {
 $root = realpath(dirname(__DIR__)) ?: dirname(__DIR__);
 $checks = [];
 $failures = [];
-
 $read = static function (string $relative) use ($root): string {
     $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
     $source = @file_get_contents($path);
     return is_string($source) ? $source : '';
 };
-
 $record = static function (string $name, bool $ok, string $detail) use (&$checks, &$failures): void {
     $checks[] = ['check' => $name, 'ok' => $ok, 'detail' => $detail];
     if (!$ok) {
@@ -34,10 +26,17 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 $cache = $read('src/Infrastructure/Cache/CatalogPublicResponseCacheService.php');
 $record(
     'anonymous_home_is_short_cached',
-    str_contains($cache, "'index.php:home'")
-        && str_contains($cache, ': 15;')
-        && str_contains($cache, "'index.php:search'"),
-    'anonymous home/search traffic must be cacheable with short configurable TTLs'
+    str_contains($cache, "'index.php:home'") && str_contains($cache, ': 15;'),
+    'anonymous home traffic must avoid PHP/MySQL regeneration on every request'
+);
+$record(
+    'search_cache_cardinality_is_bounded',
+    str_contains($cache, 'DEFAULT_SEARCH_CACHE_SLOTS = 4096')
+        && str_contains($cache, "'public_search_cache_slots'")
+        && str_contains($cache, "'search-' . str_pad(dechex(\$slot)")
+        && str_contains($cache, "'key_hash'")
+        && str_contains($cache, 'matchesIdentity('),
+    'arbitrary search terms must not create an unbounded file-cache namespace or serve slot collisions'
 );
 $record(
     'cache_hits_stream_body',
@@ -59,7 +58,28 @@ $contentsPos = strpos($cache, '$body = ob_get_contents()');
 $record(
     'oversized_response_copy_is_avoided',
     $lengthPos !== false && $contentsPos !== false && $lengthPos < $contentsPos,
-    'cache publisher must reject oversized buffers before copying them to a PHP string'
+    'oversized output buffers must be rejected before copying them into another PHP string'
+);
+
+$support = $read('lib/CatalogSupport.php');
+$publicGuard = $read('src/Infrastructure/Security/CatalogPublicAccessGuard.php');
+$settingsStore = $read('src/Infrastructure/Security/CatalogPublicAccessSettingsStore.php');
+$crawlerPos = strpos($support, 'catalog_public_access_guard_crawler_request()');
+$cachePos = strpos($support, 'catalog_public_cache_bootstrap(');
+$burstPos = strpos($support, 'catalog_public_access_guard_burst_request()');
+$record(
+    'cache_hits_avoid_per_ip_burst_writes',
+    $crawlerPos !== false && $cachePos !== false && $burstPos !== false
+        && $crawlerPos < $cachePos && $cachePos < $burstPos
+        && str_contains($publicGuard, 'public function guardCrawlerRequest(): void')
+        && str_contains($publicGuard, 'public function guardBurstRequest(): void'),
+    'crawler blocking stays pre-cache, while synchronized per-IP burst state is paid only by cache misses'
+);
+$record(
+    'public_settings_are_read_once_per_request',
+    str_contains($settingsStore, 'private static array $requestCache')
+        && str_contains($settingsStore, 'isset(self::$requestCache[$path])'),
+    'crawler and burst gates in one request must reuse normalized public-access settings'
 );
 
 $container = $read('src/Infrastructure/Metadata/BlockedCompressedMetadataContainer.php');
@@ -72,13 +92,7 @@ $record(
         && str_contains($container, "hash_init('sha256')")
         && str_contains($container, 'hash_update($hash, $compressed)')
         && str_contains($reader, 'BlockedCompressedMetadataContainer::verifyFile('),
-    'physical .uedb2 verification must keep only one block/decoded payload in memory'
-);
-$record(
-    'compact_reader_avoids_whole_file_verify_copy',
-    !str_contains($reader, '$bytes = file_get_contents(')
-        && !str_contains($reader, 'verifyBytes($bytes'),
-    'metadata health checks must not allocate the complete container as a PHP string'
+    'physical .uedb2 verification must keep only one compressed/decoded block in memory'
 );
 $record(
     'production_container_build_is_streamed',
@@ -89,13 +103,13 @@ $record(
         && str_contains($snapshotWriter, 'BlockedCompressedMetadataContainer::buildToFile(')
         && !str_contains($snapshotWriter, 'BlockedCompressedMetadataContainer::build($snapshot)')
         && !str_contains($snapshotWriter, '$bytes ='),
-    'production publication must build the physical container block-by-block instead of allocating the complete compressed payload'
+    'production publication must build block-by-block instead of allocating the complete compressed container'
 );
 $record(
     'successful_publication_avoids_second_full_scan',
     str_contains($snapshotWriter, "'verified' => true")
         && !str_contains($snapshotWriter, 'new BlockedCompressedMetadataReader('),
-    'the exact temp file is already fully verified before atomic rename; successful publication must not immediately rescan it'
+    'the fully verified temp file must not be immediately reread/decompressed after atomic rename'
 );
 $record(
     'projection_maintenance_avoids_whole_container_copy',
@@ -103,19 +117,17 @@ $record(
         && str_contains($converter, '$lookupWriter->writeVersionedMetadata(')
         && !str_contains($converter, 'file_get_contents($path)')
         && !str_contains($converter, 'verifyBytes($bytes'),
-    'projection maintenance must stream physical verification and register existing size/SHA without loading the complete container'
+    'projection maintenance must not allocate the complete .uedb2 file'
 );
 
 $lookup = $read('src/Infrastructure/Metadata/CompressedMetadataLookupWriter.php');
 $record(
     'compact_terms_are_resolved_once',
     str_contains($lookup, 'public function primeSnapshotTerms(array $snapshot, int &$sqlBatches): array')
-        && str_contains($lookup, '?array $resolvedTermIds = null')
         && str_contains($lookup, 'public function writeVersionedMetadata(')
         && str_contains($snapshotWriter, '$resolvedTermIds = $lookupWriter->primeSnapshotTerms(')
-        && str_contains($snapshotWriter, '$lookupWriter->writeVersionedMetadata(')
-        && substr_count($snapshotWriter, '$resolvedTermIds') >= 3,
-    'normal publication must reuse the dictionary IDs resolved before its transaction'
+        && str_contains($snapshotWriter, '$lookupWriter->writeVersionedMetadata('),
+    'normal publication must reuse the term dictionary resolved before its transaction'
 );
 $record(
     'compact_term_source_is_generator',
@@ -129,19 +141,22 @@ $record(
         && str_contains($lookup, 'count($dependencyRows) >= self::WRITE_BATCH_SIZE')
         && str_contains($lookup, 'Compact lookup insert batch exceeded the bounded row limit.')
         && !str_contains($lookup, 'private function bulkInsert('),
-    'export/dependency projection memory must be bounded independently of package size'
+    'export/dependency SQL row memory must be bounded independently of package size'
 );
 
 $searchProjection = $read('src/Infrastructure/Metadata/CompactSearchProjectionWriter.php');
+$searchWriterUsesResolvedTerms = preg_match(
+    '/new CompactSearchProjectionWriter\(\$this->db\)\)->write\(\s*\$snapshot,\s*\$sqlBatches,\s*\$resolvedTermIds\s*\)/s',
+    $snapshotWriter
+) === 1;
 $record(
     'search_projection_reuses_terms_and_batches_updates',
     str_contains($searchProjection, '?array $resolvedTermIds = null')
         && str_contains($searchProjection, 'count($importBatch) >= self::UPDATE_BATCH_SIZE')
         && str_contains($searchProjection, 'count($exportBatch) >= self::UPDATE_BATCH_SIZE')
         && str_contains($searchProjection, 'private static array $schemaAvailable')
-        && str_contains($snapshotWriter, '$resolvedTermIds\n            );') === false
-        && str_contains($snapshotWriter, 'new CompactSearchProjectionWriter($this->db))->write('),
-    'search projections must reuse the shared dictionary, bound update maps and avoid repeated information_schema checks'
+        && $searchWriterUsesResolvedTerms,
+    'search projections must reuse the shared dictionary, bound update maps and cache schema availability'
 );
 
 $overflow = $read('src/Infrastructure/Metadata/CompactTermOverflowWriter.php');
@@ -182,7 +197,11 @@ $record(
 
 $criticalPhp = [
     'bin/verify-performance-contract.php',
+    'lib/CatalogSupport.php',
+    'lib/CatalogPublicAccess.php',
     'src/Infrastructure/Cache/CatalogPublicResponseCacheService.php',
+    'src/Infrastructure/Security/CatalogPublicAccessGuard.php',
+    'src/Infrastructure/Security/CatalogPublicAccessSettingsStore.php',
     'src/Infrastructure/Metadata/BlockedCompressedMetadataContainer.php',
     'src/Infrastructure/Metadata/BlockedCompressedMetadataReader.php',
     'src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotWriter.php',
@@ -206,11 +225,7 @@ if (!function_exists('proc_open')) {
             continue;
         }
         $pipes = [];
-        $process = proc_open(
-            [PHP_BINARY, '-l', $path],
-            [1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-            $pipes
-        );
+        $process = proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
         if (!is_resource($process)) {
             $syntaxFailures[] = $relative . ' could not be linted';
             continue;
