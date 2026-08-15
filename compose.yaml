@@ -102,7 +102,7 @@ services:
     volumes:
       - catalog-storage:/var/www/html/catalog/storage
     healthcheck:
-      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/catalog/api/v1/health.php"]
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8080/catalog/api/v1/readiness.php"]
       interval: 30s
       timeout: 5s
       retries: 5
