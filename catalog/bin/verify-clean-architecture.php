@@ -3,8 +3,9 @@
 /**
  * Read-only clean-architecture dependency-direction verifier.
  *
- * Application owns use cases and ports. Domain owns pure policy. PDO, SQL,
- * filesystem, parser loading and durable queue persistence live in Infrastructure.
+ * Application owns use cases, ports and immutable transfer models. Domain owns
+ * pure policy. PDO, SQL, filesystem, parser loading and durable queue
+ * persistence live in Infrastructure.
  */
 declare(strict_types=1);
 
@@ -53,6 +54,11 @@ $phpFiles = static function (string $directory): array {
     return $files;
 };
 
+$read = static function (string $relative) use ($root): string {
+    $source = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
+    return is_string($source) ? $source : '';
+};
+
 $retired = [
     'catalog/src/Application/Dependency/CatalogDependencyReadSource.php',
     'catalog/src/Application/Dependency/CatalogMissingFileListService.php',
@@ -74,6 +80,10 @@ $activeInfrastructure = [
     'catalog/src/Infrastructure/Persistence/PdoDependencyReadSource.php',
     'catalog/src/Infrastructure/Persistence/PdoMissingFileListQuery.php',
     'catalog/src/Infrastructure/Persistence/PdoMissingDetailListQuery.php',
+    'catalog/src/Infrastructure/Import/CatalogVerifiedPackageInspector.php',
+    'catalog/src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php',
+    'catalog/src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php',
+    'catalog/src/Infrastructure/Import/CatalogVerifiedPackageDependencyCoordinator.php',
 ];
 foreach ($activeInfrastructure as $relative) {
     $record(
@@ -82,19 +92,25 @@ foreach ($activeInfrastructure as $relative) {
         'current infrastructure adapter is required'
     );
 }
+$record(
+    'active:catalog/src/Application/Import/CatalogVerifiedPackageInspection.php',
+    is_file($root . '/src/Application/Import/CatalogVerifiedPackageInspection.php'),
+    'pure inspected-package transfer model is required'
+);
 
 $applicationViolations = [];
 foreach ($phpFiles($root . '/src/Application') as $path) {
     $source = $withoutComments((string)file_get_contents($path));
     $relative = str_replace('\\', '/', substr($path, strlen($root) + 1));
-    $markers = [
+    foreach ([
         'UnrealDb\\Catalog\\Infrastructure\\',
         'use PDO;',
         'use \\PDO;',
         '\\PDO $',
         'PDO $',
-    ];
-    foreach ($markers as $marker) {
+        '->prepare(',
+        '->query(',
+    ] as $marker) {
         if (str_contains($source, $marker)) {
             $applicationViolations[] = $relative . ' contains ' . $marker;
         }
@@ -104,7 +120,7 @@ $record(
     'application_dependency_direction',
     $applicationViolations === [],
     $applicationViolations === []
-        ? 'Application contains no PDO or Infrastructure dependencies'
+        ? 'Application contains no PDO, SQL-adapter or Infrastructure dependencies'
         : implode(' | ', $applicationViolations)
 );
 
@@ -132,11 +148,6 @@ $record(
         : implode(' | ', $domainViolations)
 );
 
-$read = static function (string $relative) use ($root): string {
-    $source = @file_get_contents($root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative));
-    return is_string($source) ? $source : '';
-};
-
 $missingPage = $read('missing.php');
 $record(
     'missing_page_composes_infrastructure_queries',
@@ -160,12 +171,75 @@ $record(
 );
 
 $importer = $read('src/Infrastructure/Import/PdoCatalogPackageImporter.php');
+$importerExecutable = $withoutComments($importer);
+$inspector = $read('src/Infrastructure/Import/CatalogVerifiedPackageInspector.php');
+$identity = $read('src/Infrastructure/Import/CatalogVerifiedPackageIdentityRepository.php');
+$publisher = $read('src/Infrastructure/Import/CatalogVerifiedPackagePublisher.php');
+$dependencyCoordinator = $read('src/Infrastructure/Import/CatalogVerifiedPackageDependencyCoordinator.php');
 $unverifiedRecovery = $read('src/Infrastructure/Unverified/CatalogUnverifiedDependencyRecovery.php');
+
+$record(
+    'verified_importer_is_orchestration_only',
+    str_contains($importer, 'CatalogVerifiedPackageInspector')
+        && str_contains($importer, 'CatalogVerifiedPackageIdentityRepository')
+        && str_contains($importer, 'CatalogVerifiedPackagePublisher')
+        && str_contains($importer, 'CatalogVerifiedPackageDependencyCoordinator')
+        && !str_contains($importerExecutable, 'gp_classify_file(')
+        && !str_contains($importerExecutable, 'md5_file(')
+        && !str_contains($importerExecutable, 'sha1_file(')
+        && !str_contains($importerExecutable, 'scanner_load_reader_class(')
+        && !str_contains($importerExecutable, 'CatalogVerifiedPackageStorage')
+        && !str_contains($importerExecutable, 'PdoCatalogVerifiedPackagePersistence')
+        && !str_contains($importerExecutable, 'PdoCatalogDependencyRebuilder')
+        && !str_contains($importerExecutable, 'VerifiedFileCompactMetadataFinalizer'),
+    'verified import adapter must coordinate focused collaborators rather than own parser/storage/metadata/refresh implementations'
+);
+$record(
+    'verified_package_inspection_isolated',
+    str_contains($inspector, 'gp_classify_file(')
+        && str_contains($inspector, 'md5_file(')
+        && str_contains($inspector, 'sha1_file(')
+        && str_contains($inspector, 'scanner_load_reader_class(')
+        && str_contains($inspector, 'CatalogVerifiedPackageInspection'),
+    'reader selection, hashing and classification belong to the inspection adapter'
+);
+$record(
+    'verified_package_identity_isolated',
+    str_contains($identity, 'scan_status="verified"')
+        && str_contains($identity, 'findVerifiedDuplicate(')
+        && str_contains($identity, '\\catalog_package_alias_add('),
+    'duplicate/alias identity persistence belongs to one repository boundary'
+);
+$record(
+    'verified_package_publication_isolated',
+    str_contains($publisher, 'CatalogVerifiedPackageStorage')
+        && str_contains($publisher, 'PdoCatalogVerifiedPackagePersistence')
+        && str_contains($publisher, 'VerifiedFileCompactMetadataFinalizer::finalizeParsed(')
+        && str_contains($publisher, 'rollbackCreated('),
+    'physical storage, row persistence, compensation and compact publication belong to one publisher boundary'
+);
+$record(
+    'verified_package_dependency_coordination_isolated',
+    str_contains($dependencyCoordinator, 'PdoCatalogDependencyRebuilder')
+        && str_contains($dependencyCoordinator, 'CatalogPostImportDependencyQueue::enqueue(')
+        && str_contains($dependencyCoordinator, 'refreshCanonical(')
+        && str_contains($dependencyCoordinator, 'refreshAlias('),
+    'post-import dependency publication and durable fallback belong to one coordinator'
+);
 $record(
     'durable_dependency_queue_is_infrastructure_owned',
-    str_contains($importer, 'Infrastructure\\Jobs\\CatalogPostImportDependencyQueue')
+    str_contains($dependencyCoordinator, 'Infrastructure\\Jobs\\CatalogPostImportDependencyQueue')
         && str_contains($unverifiedRecovery, 'Infrastructure\\Jobs\\CatalogPostImportDependencyQueue'),
     'durable job persistence must not leak into Application'
+);
+
+$inspectionDto = $read('src/Application/Import/CatalogVerifiedPackageInspection.php');
+$record(
+    'inspection_transfer_model_is_pure',
+    str_contains($inspectionDto, 'final readonly class CatalogVerifiedPackageInspection')
+        && !str_contains($withoutComments($inspectionDto), 'PDO')
+        && !str_contains($withoutComments($inspectionDto), 'Infrastructure\\'),
+    'Application import data model must remain immutable and infrastructure-free'
 );
 
 $projectionCallers = [
@@ -192,9 +266,16 @@ $record(
 );
 
 $syntaxTargets = array_merge(
-    ['bin/verify-clean-architecture.php', 'missing.php', 'download-info.php', 'game-missing.php', 'api/v1/game-missing-counts.php'],
+    [
+        'bin/verify-clean-architecture.php',
+        'missing.php',
+        'download-info.php',
+        'game-missing.php',
+        'api/v1/game-missing-counts.php',
+        'src/Infrastructure/Import/PdoCatalogPackageImporter.php',
+    ],
     array_map(static fn(string $path): string => substr($path, strlen($root) + 1), $phpFiles($root . '/src/Application')),
-    $activeInfrastructure === [] ? [] : array_map(
+    array_map(
         static fn(string $relative): string => substr($relative, strlen('catalog/')),
         $activeInfrastructure
     )
