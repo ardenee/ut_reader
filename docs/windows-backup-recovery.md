@@ -6,6 +6,7 @@ The primary UnrealDB deployment is a single Windows host. Recovery therefore opt
 
 The Windows scripts live in `deploy/backup/`:
 
+- `unrealdb-backup-readiness.ps1` — non-destructive preflight for tools, paths, database connectivity and destination/storage capacity;
 - `unrealdb-backup.ps1` — create a database-only or full database+storage recovery point;
 - `verify-unrealdb-backup.ps1` — verify checksums, fully decompress the database dump, and validate the storage archive listing;
 - `unrealdb-restore.ps1` — destructive restore with explicit maintenance and target confirmation, followed by schema and compact-metadata verification.
@@ -37,6 +38,35 @@ $env:UNREALDB_TAR = 'C:\Windows\System32\tar.exe'
 
 Do not commit credentials into the repository.
 
+## Backup readiness preflight
+
+Before the first backup on a host, or before entering a planned full-backup maintenance window, run the non-destructive preflight.
+
+For an online database-only backup:
+
+```powershell
+.\deploy\backup\unrealdb-backup-readiness.ps1 -DatabaseOnly
+```
+
+For a full database + package-storage backup:
+
+```powershell
+.\deploy\backup\unrealdb-backup-readiness.ps1
+```
+
+The preflight does **not** create a backup, write package data, stop workers or change the database. It checks:
+
+- required configuration is present;
+- `mysqldump` is available;
+- the MySQL client is available and `SELECT 1` succeeds against the configured database;
+- PHP is available for recovery/post-restore verification;
+- `tar` is available when a storage backup is requested;
+- the configured backup destination already exists;
+- the package-storage directory exists for a full backup;
+- destination and storage-drive free-space figures can be read.
+
+Capacity is reported rather than guessed. The preflight deliberately does not invent a required free-space multiplier because database/storage compression ratios vary significantly between installations.
+
 ## Database-only backup
 
 A database-only backup uses `mysqldump --single-transaction --quick` and can normally run while the site is online:
@@ -55,10 +85,11 @@ A coherent full backup requires a short maintenance window because package files
 
 Before running a full backup:
 
-1. Stop or pause new uploads/imports and other write-producing maintenance activity.
-2. Stop UnrealDB workers after the current intended work has been dealt with.
-3. Confirm that no package-storage write operation is still running.
-4. Run the full backup with explicit acknowledgement:
+1. Run the full backup readiness preflight while the site is still operating.
+2. Stop or pause new uploads/imports and other write-producing maintenance activity.
+3. Stop UnrealDB workers after the current intended work has been dealt with.
+4. Confirm that no package-storage write operation is still running.
+5. Run the full backup with explicit acknowledgement:
 
 ```powershell
 .\deploy\backup\unrealdb-backup.ps1 -MaintenanceConfirmed
