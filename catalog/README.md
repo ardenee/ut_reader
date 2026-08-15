@@ -4,21 +4,19 @@
 
 The catalogue builds on the Unreal Engine readers in the repository and currently targets UE1 through UE5 material, with the strongest coverage in UE1/UE2 and ongoing validation of UE3/UE4/UE5 edge cases.
 
-## Current runtime model
+## Runtime model
 
-The maintained production target is a **single Windows host** running:
+A normal installation consists of:
 
 ```text
-Apache 2.4
-PHP 8.5
-MySQL 8.4
-local catalog/package storage
+Web server
+PHP
+MySQL
+catalogue/package storage
 independent PHP background workers
 ```
 
 The browser is not responsible for completing long-running work. Upload/import, dependency, repair, backup and maintenance operations that can take significant time are handed to the durable MySQL-backed job queue and continue independently from the web request.
-
-Docker/Kubernetes/Redis are not part of the maintained production deployment.
 
 ## What the catalogue does
 
@@ -36,15 +34,13 @@ It also provides workflows for uploads, unverified-file review, duplicate/alias 
 
 ## Install
 
-For the maintained Windows deployment:
-
-1. Create a MySQL 8.4-compatible database.
+1. Create a MySQL-compatible database.
 2. Import `catalog/install.sql` into the new empty database.
 3. Copy `catalog/config.example.php` to `catalog/config.php`.
 4. Configure database credentials, storage paths and required application settings.
 5. Run `php catalog/bin/migrate.php migrate` from a trusted shell.
 6. Run `php catalog/bin/migrate.php verify`.
-7. Ensure `catalog/storage/` and its required subdirectories are writable by the Apache/PHP and worker identities.
+7. Ensure `catalog/storage/` and its required subdirectories are writable by the PHP/web-server and worker identities.
 8. Create the initial administrator with `php catalog/bin/create-admin.php --username=admin`.
 9. Start/reconcile the background worker pool.
 10. Open `catalog/index.php` and sign in.
@@ -155,11 +151,11 @@ Current broad status:
 - **UE5:** partial support; IoStore `.utoc`/`.ucas` is not fully supported.
 - **`.uz`:** historical 1234 and 5678 FCodec variants supported.
 - **`.uz2`:** chunked zlib support present; malformed/non-standard archives fail safely.
-- **`.uz3`:** experimental pending broader known-good UT3 validation.
+- **`.uz3`:** UT3 tagged whole-file zlib decoding is implemented; encoder/known-good fixture validation remains before promotion to Active.
 
 ## Operational endpoints
 
-The catalogue exposes session-free/protected operational endpoints for the single-host deployment:
+The catalogue exposes operational endpoints for deployment monitoring:
 
 - `/catalog/api/v1/live.php` — lightweight PHP/process liveness;
 - `/catalog/api/v1/readiness.php` — MySQL, queue-schema and writable-storage readiness;
@@ -172,7 +168,6 @@ php catalog/bin/migrate.php verify
 php catalog/bin/verify-system-readiness-contract.php --run
 php catalog/bin/verify-queue-runtime-invariants.php
 php catalog/bin/verify-solo-maintainer-hardening.php --run
-php catalog/bin/verify-security-hardening.php
 ```
 
 ## Production and recovery documentation
@@ -180,8 +175,7 @@ php catalog/bin/verify-security-hardening.php
 See:
 
 - [`../docs/production-deployment.md`](../docs/production-deployment.md)
-- [`../docs/windows-backup-recovery.md`](../docs/windows-backup-recovery.md)
 - [`../docs/background-jobs.md`](../docs/background-jobs.md)
 - [`../docs/catalog-architecture.md`](../docs/catalog-architecture.md)
 
-Windows backup/restore tooling is maintained under [`../deploy/backup`](../deploy/backup).
+Backup/restore tooling is maintained under [`../deploy/backup`](../deploy/backup).
