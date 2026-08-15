@@ -36,7 +36,7 @@ function profiled_chunk_extensions(mixed $raw): array
 {
     $decoded = is_array($raw) ? $raw : json_decode((string)$raw, true);
     if (!is_array($decoded)) {
-        return [];
+        $decoded = [];
     }
     $extensions = [];
     foreach ($decoded as $extension) {
@@ -45,15 +45,19 @@ function profiled_chunk_extensions(mixed $raw): array
             $extensions[$extension] = $extension;
         }
     }
+    foreach (['zip', '7z', 'rar'] as $extension) {
+        $extensions[$extension] = $extension;
+    }
     return array_values($extensions);
 }
 
-/** @return array{allowed:bool,is_pak:bool,is_redirect:bool,reason:string} */
+/** @return array{allowed:bool,is_pak:bool,is_redirect:bool,is_archive:bool,reason:string} */
 function profiled_chunk_file_policy(string $originalName, string $engineKey, mixed $allowedExtensions): array
 {
     $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
     $isPak = $extension === 'pak';
     $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
+    $isArchive = in_array($extension, ['zip', '7z', 'rar'], true);
     $engineKey = strtoupper(trim($engineKey));
     if ($isPak) {
         $allowed = in_array($engineKey, ['UE4', 'UE5'], true);
@@ -61,17 +65,34 @@ function profiled_chunk_file_policy(string $originalName, string $engineKey, mix
             'allowed' => $allowed,
             'is_pak' => true,
             'is_redirect' => false,
+            'is_archive' => false,
             'reason' => $allowed ? '' : 'PAK container upload requires a UE4 or UE5 target game.',
         ];
     }
     if ($isRedirect) {
-        return ['allowed' => true, 'is_pak' => false, 'is_redirect' => true, 'reason' => ''];
+        return [
+            'allowed' => true,
+            'is_pak' => false,
+            'is_redirect' => true,
+            'is_archive' => false,
+            'reason' => '',
+        ];
+    }
+    if ($isArchive) {
+        return [
+            'allowed' => true,
+            'is_pak' => false,
+            'is_redirect' => false,
+            'is_archive' => true,
+            'reason' => '',
+        ];
     }
     $allowed = in_array($extension, profiled_chunk_extensions($allowedExtensions), true);
     return [
         'allowed' => $allowed,
         'is_pak' => false,
         'is_redirect' => false,
+        'is_archive' => false,
         'reason' => $allowed
             ? ''
             : 'File extension .' . ($extension !== '' ? $extension : '(none)') . ' is not allowed by the selected game profile.',
@@ -150,11 +171,12 @@ try {
         }
 
         $fileSize = (int)($_POST['file_size'] ?? 0);
-        $limit = $policy['is_pak'] ? $containerLimit : $normalLimit;
+        $container = $policy['is_pak'] || $policy['is_archive'];
+        $limit = $container ? $containerLimit : $normalLimit;
         if ($fileSize < 1 || $fileSize > $limit) {
             JsonResponse::error(
                 'file_too_large',
-                'File exceeds the configured ' . ($policy['is_pak'] ? 'container' : 'normal upload')
+                'File exceeds the configured ' . ($container ? 'container' : 'normal upload')
                     . ' limit of ' . catalog_bytes($limit) . '.',
                 413
             );
@@ -180,7 +202,7 @@ try {
             (string)($_POST['strict_profile'] ?? '1') === '1'
         );
         $state['logical_original_name'] = $originalName;
-        $state['upload_kind'] = $policy['is_pak'] ? 'pak' : 'package';
+        $state['upload_kind'] = $policy['is_pak'] ? 'pak' : ($policy['is_archive'] ? 'archive' : 'package');
         JsonResponse::send(['ok' => true, 'upload' => $state], 200);
     }
 
@@ -203,7 +225,8 @@ try {
         $uploadId = (string)($_POST['upload_id'] ?? '');
         $state = $store->complete($userId, $uploadId);
         $originalName = profiled_chunk_original_name_from_state($state);
-        $isPak = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION)) === 'pak';
+        $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
+        $isPak = $extension === 'pak';
 
         if ($batchId !== '') {
             $batch = $batchStore->info($batchId, $userId);
@@ -212,6 +235,8 @@ try {
                 JsonResponse::error('invalid_batch', 'Completed chunk does not match the active upload batch.', 409);
             }
             $item = $batchStore->append($userId, $batchId, [
+                // Archive type is inferred from original_name by the batch
+                // coordinator, preserving the established manifest kinds.
                 'kind' => $isPak ? 'pak' : 'package',
                 'staged_path' => 'chunk-upload:' . $uploadId,
                 'original_name' => $originalName,
