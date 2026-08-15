@@ -20,16 +20,27 @@ return [
     ],
     'site_name' => 'Unreal File Catalog',
     'storage_path' => __DIR__ . '/storage',
-    // Ordinary package upload limit. PAK containers have a separate, much
-    // larger limit and are transferred by the browser in resumable chunks.
+    // Ordinary package upload limit. PAK and ZIP/7z/RAR containers have a
+    // separate larger limit and are transferred by the browser in chunks.
     'max_upload_bytes' => 256 * 1024 * 1024,
     'max_container_upload_bytes' => 64 * 1024 * 1024 * 1024,
     'chunk_upload' => [
-        // Each HTTP request carries only one chunk, avoiding PHP/Apache limits
-        // on a single multi-gigabyte request. 16 MiB is safe for typical hosts.
+        // Each HTTP request carries only one chunk, avoiding web/PHP limits on
+        // a single multi-gigabyte request. 16 MiB is safe for typical hosts.
         'chunk_bytes' => 16 * 1024 * 1024,
         // Incomplete/resumable chunk stores older than this may be pruned.
         'stale_hours' => 168,
+    ],
+    'archive' => [
+        // ZIP extraction uses PHP ZipArchive when available. 7z/RAR extraction
+        // uses a 7-Zip compatible CLI. Leave empty to auto-detect 7zz, 7z or 7za,
+        // or set an absolute path / UNREALDB_7ZIP_BINARY.
+        'seven_zip_binary' => '',
+        // Hard cap on listed regular-file entries per uploaded archive.
+        'max_entries' => 10000,
+        // Total bytes that one archive-expansion job may unpack. Zero uses a
+        // bounded default derived from max_container_upload_bytes.
+        'max_unpacked_bytes' => 0,
     ],
     'auth' => [
         // Persistent rotating remember-me token lifetime.
@@ -49,7 +60,7 @@ return [
         // still need headroom. Existing higher or unlimited limits are preserved.
         'worker_memory_limit' => '512M',
         // Usually auto-detected. Set an absolute CLI PHP path when the web PHP
-        // binary differs, for example 'D:/PHP/php.exe' or '/usr/local/bin/php82'.
+        // binary differs, for example '/usr/local/bin/php82'.
         'worker_php_binary' => '',
     ],
     'game_backups' => [
@@ -79,8 +90,8 @@ return [
             'upk-info.php' => 300,
         ],
     ],
-    // Targets shown by Maintenance -> Workload Tracing. These defaults are for
-    // the current 64 GB Windows host running Apache, PHP and MySQL together.
+    // Targets shown by Maintenance -> Workload Tracing. Tune these defaults for
+    // the resources available to the server running the web app and database.
     'performance' => [
         'host_memory_gb' => 64,
         'mysql_buffer_pool_bytes' => 36 * 1024 * 1024 * 1024,
