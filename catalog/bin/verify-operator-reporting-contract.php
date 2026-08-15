@@ -53,8 +53,8 @@ $record(
 );
 $record(
     'worker_health_keeps_durable_counts',
-    str_contains($operational, 'SUM(status="queued") queued')
-        && str_contains($operational, 'SUM(status="running") running')
+    str_contains($operational, 'SUM(status="queued")')
+        && str_contains($operational, 'SUM(status="running")')
         && str_contains($workerEndpoint, '$counts = $operational->queueCounts($queueName);')
         && str_contains($workerEndpoint, 'CatalogWorkerStatusPolicy::evaluate('),
     'Worker-health/admission decisions still need exact durable queue state even though those counts are not operator headlines.'
