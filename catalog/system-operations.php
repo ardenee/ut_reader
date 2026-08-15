@@ -129,19 +129,22 @@ try {
             . '</tr>';
     }
     if ($queueRows === '') {
-        $queueRows = '<tr><td colspan="8" class="muted">No background-job rows exist.</td></tr>';
+        $queueRows = '<tr><td colspan="8" class="muted">No actionable background-job rows exist.</td></tr>';
     }
     $queueTable = '<table><caption class="ui-sr-only">Background queue operational summary</caption>'
         . '<thead><tr><th scope="col">Queue</th><th scope="col">Queued</th><th scope="col">Running</th><th scope="col">Failed</th><th scope="col">Dead letter</th><th scope="col">Oldest queued</th><th scope="col">Longest running</th><th scope="col">Concurrency blocked</th></tr></thead>'
         . '<tbody>' . $queueRows . '</tbody></table>';
     echo CatalogUi::section(CatalogUi::tableRegion($queueTable, ['label' => 'Queue operational summary']), [
         'title' => 'Queue pressure',
-        'description' => 'Runtime ages are diagnostic only. UnrealDB does not fail or steal a live job merely because it has been running for a long time.',
+        'description' => 'Runtime ages are diagnostic only. UnrealDB does not fail or steal a live job merely because it has been running for a long time. Completed/cancelled history is deliberately excluded from this operational view.',
     ]);
 
     $limitRows = '';
     foreach ($limits as $row) {
         $blocked = max(0, (int)($row['class_blocked'] ?? 0));
+        $capacityBadge = $blocked > 0
+            ? CatalogUi::statusBadge('queued', ['label' => $blocked . ' waiting'])
+            : CatalogUi::statusBadge('ready', ['label' => (int)$row['available_slots'] . ' slots free']);
         $limitRows .= '<tr>'
             . '<td>' . catalog_h((string)($row['label'] ?? $row['resource_class'])) . '</td>'
             . '<td class="mono">' . catalog_h((string)$row['resource_class']) . '</td>'
@@ -149,7 +152,7 @@ try {
             . '<td>' . (int)$row['running'] . '</td>'
             . '<td>' . (int)$row['ready'] . '</td>'
             . '<td>' . (int)$row['queued'] . '</td>'
-            . '<td>' . ($blocked > 0 ? CatalogUi::statusBadge('blocked', ['label' => $blocked . ' waiting']) : CatalogUi::statusBadge('ready', ['label' => (int)$row['available_slots'] . ' slots free'])) . '</td>'
+            . '<td>' . $capacityBadge . '</td>'
             . '</tr>';
     }
     $limitsTable = '<table><caption class="ui-sr-only">Job resource class capacity</caption>'
@@ -158,11 +161,11 @@ try {
     echo CatalogUi::section(CatalogUi::tableRegion($limitsTable, ['label' => 'Job resource capacity']), [
         'title' => 'Resource limits',
         'description' => 'These limits are applied when a worker considers the next job. Existing queued rows do not need to be rewritten.',
-        'actions' => CatalogUi::button('Change limits', ['href' => 'job-resource-limits.php', 'variant' => 'secondary', 'size' => 'sm']),
+        'actions' => ['Change limits' => 'job-resource-limits.php'],
     ]);
 
-    $storageTone = !empty($storage['available']) && !empty($storage['readable']) && !empty($storage['writable']) ? 'success' : 'danger';
-    $storageStatus = CatalogUi::statusBadge($storageTone === 'success' ? 'ready' : 'not_ready');
+    $storageReady = !empty($storage['available']) && !empty($storage['readable']) && !empty($storage['writable']);
+    $storageStatus = CatalogUi::statusBadge($storageReady ? 'ready' : 'not_ready');
     $storageTable = '<table><caption class="ui-sr-only">Database and package storage health</caption><tbody>'
         . '<tr><th scope="row">MySQL version</th><td class="mono">' . catalog_h((string)$database['version']) . '</td></tr>'
         . '<tr><th scope="row">Database size</th><td>' . catalog_h(catalog_bytes((int)$database['size_bytes'])) . '</td></tr>'
