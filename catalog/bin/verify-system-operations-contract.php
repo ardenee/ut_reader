@@ -44,6 +44,13 @@ $record(
     'A solo maintainer must be able to reach diagnostics from the normal admin dashboard.'
 );
 $record(
+    'worker_status_matches_background_jobs_policy',
+    str_contains($page, 'CatalogWorkerStatusPolicy::evaluate(')
+        && str_contains($page, 'PdoBackgroundJobOperationalQuery')
+        && str_contains($page, 'queueCounts($queueName)'),
+    'System Operations and Background Jobs must derive running/orphaned/stopped-with-queue from the same authoritative policy.'
+);
+$record(
     'queue_ages_are_visibility_not_timeouts',
     str_contains($page, 'Age, not a timeout')
         && str_contains($page, 'jobs are not failed by age')
@@ -57,6 +64,12 @@ $record(
         && str_contains($page, 'Resource-class blocked')
         && str_contains($page, 'CatalogJobResourceLimitStore'),
     'The UI must separate concurrency-key serialization from resource-class capacity.'
+);
+$record(
+    'operations_queue_history_is_bounded',
+    str_contains($query, 'WHERE status IN ("queued","running","failed","dead_letter")')
+        && !str_contains($query, 'SUM(status="completed")'),
+    'Opening diagnostics must not aggregate the complete terminal job archive.'
 );
 $record(
     'storage_health_uses_package_boundary',
