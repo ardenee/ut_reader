@@ -62,16 +62,23 @@ final class PdoJobAdmissionGuard
             static fn(array $left, array $right): int => strcmp((string)$left['name'], (string)$right['name'])
         );
         $held = [];
-        foreach ($entries as $entry) {
-            $lock = (string)$entry['name'];
-            if (!$this->acquireNamedLock($lock)) {
-                $this->release($held);
-                return [
-                    'locks' => null,
-                    'blocked_dimension' => (string)$entry['dimension'],
-                ];
+        try {
+            foreach ($entries as $entry) {
+                $lock = (string)$entry['name'];
+                if (!$this->acquireNamedLock($lock)) {
+                    $this->release($held);
+                    return [
+                        'locks' => null,
+                        'blocked_dimension' => (string)$entry['dimension'],
+                    ];
+                }
+                $held[] = $lock;
             }
-            $held[] = $lock;
+        } catch (Throwable $error) {
+            // GET_LOCK can fail after an earlier dimension was acquired. Never
+            // leak a connection-scoped lock when surfacing the database fault.
+            $this->release($held);
+            throw $error;
         }
         return ['locks' => $held, 'blocked_dimension' => null];
     }
