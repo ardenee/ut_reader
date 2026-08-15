@@ -18,14 +18,18 @@ use UnrealDb\Catalog\Presentation\Ui\Component\Button;
 use UnrealDb\Catalog\Presentation\Ui\Component\EmptyState;
 use UnrealDb\Catalog\Presentation\Ui\Component\FilterBar;
 use UnrealDb\Catalog\Presentation\Ui\Component\IconButton;
+use UnrealDb\Catalog\Presentation\Ui\Component\LiveRegion;
 use UnrealDb\Catalog\Presentation\Ui\Component\LoadingState;
 use UnrealDb\Catalog\Presentation\Ui\Component\PageHeader;
 use UnrealDb\Catalog\Presentation\Ui\Component\Pagination;
 use UnrealDb\Catalog\Presentation\Ui\Component\Progress;
 use UnrealDb\Catalog\Presentation\Ui\Component\Section;
+use UnrealDb\Catalog\Presentation\Ui\Component\SegmentedControl;
 use UnrealDb\Catalog\Presentation\Ui\Component\SelectField;
+use UnrealDb\Catalog\Presentation\Ui\Component\StatusBadge;
 use UnrealDb\Catalog\Presentation\Ui\Component\TableRegion;
 use UnrealDb\Catalog\Presentation\Ui\Component\TextField;
+use UnrealDb\Catalog\Presentation\Ui\Component\Toolbar;
 
 /**
  * Backward-compatible facade for the server-rendered catalog design system.
@@ -157,6 +161,33 @@ final class CatalogUi
     public static function badge(string $label, string $tone = 'neutral'): string
     {
         return Badge::render($label, $tone);
+    }
+
+    /** @param array{label?:string,class?:string,attributes?:array<string,scalar|null>} $props */
+    public static function statusBadge(string $status, array $props = []): string
+    {
+        return StatusBadge::render($status, $props);
+    }
+
+    /** @param array{id?:string,tone?:string,priority?:string,atomic?:bool,class?:string,attributes?:array<string,scalar|null>} $props */
+    public static function liveRegion(string $message, array $props = []): string
+    {
+        return LiveRegion::render($message, $props);
+    }
+
+    /**
+     * @param list<array{label:string,value:string,active?:bool,count?:int|string,attributes?:array<string,scalar|null>}> $items
+     * @param array{id?:string,label?:string,class?:string,attributes?:array<string,scalar|null>} $props
+     */
+    public static function segmentedControl(array $items, array $props = []): string
+    {
+        return SegmentedControl::render($items, $props);
+    }
+
+    /** @param array{id?:string,label?:string,class?:string,attributes?:array<string,scalar|null>} $props */
+    public static function toolbar(string $actionsHtml, string $asideHtml = '', array $props = []): string
+    {
+        return Toolbar::render($actionsHtml, $asideHtml, $props);
     }
 
     public static function identity(string $guid = '', string $md5 = '', string $sha = ''): string
