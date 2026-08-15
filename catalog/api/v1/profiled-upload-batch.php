@@ -33,7 +33,7 @@ function profiled_upload_allowed_extensions(mixed $json): array
 {
     $decoded = is_array($json) ? $json : json_decode((string)$json, true);
     if (!is_array($decoded)) {
-        return [];
+        $decoded = [];
     }
     $result = [];
     foreach ($decoded as $extension) {
@@ -42,17 +42,21 @@ function profiled_upload_allowed_extensions(mixed $json): array
             $result[$extension] = $extension;
         }
     }
+    foreach (['zip', '7z', 'rar'] as $extension) {
+        $result[$extension] = $extension;
+    }
     $result = array_values($result);
     sort($result, SORT_NATURAL | SORT_FLAG_CASE);
     return $result;
 }
 
-/** @return array{allowed:bool,is_pak:bool,is_redirect:bool,extension:string,reason:string} */
+/** @return array{allowed:bool,is_pak:bool,is_redirect:bool,is_archive:bool,extension:string,reason:string} */
 function profiled_upload_batch_file_policy(array $batch, string $originalName): array
 {
     $extension = strtolower((string)pathinfo($originalName, PATHINFO_EXTENSION));
     $isPak = $extension === 'pak';
     $isRedirect = in_array($extension, ['uz', 'uz2', 'uz3'], true);
+    $isArchive = in_array($extension, ['zip', '7z', 'rar'], true);
     $engine = strtoupper(trim((string)($batch['engine_key'] ?? '')));
 
     if ($isPak) {
@@ -61,6 +65,7 @@ function profiled_upload_batch_file_policy(array $batch, string $originalName): 
             'allowed' => $allowed,
             'is_pak' => true,
             'is_redirect' => false,
+            'is_archive' => false,
             'extension' => $extension,
             'reason' => $allowed ? '' : 'PAK container upload requires a UE4 or UE5 target game.',
         ];
@@ -72,6 +77,17 @@ function profiled_upload_batch_file_policy(array $batch, string $originalName): 
             'allowed' => true,
             'is_pak' => false,
             'is_redirect' => true,
+            'is_archive' => false,
+            'extension' => $extension,
+            'reason' => '',
+        ];
+    }
+    if ($isArchive) {
+        return [
+            'allowed' => true,
+            'is_pak' => false,
+            'is_redirect' => false,
+            'is_archive' => true,
             'extension' => $extension,
             'reason' => '',
         ];
@@ -86,6 +102,7 @@ function profiled_upload_batch_file_policy(array $batch, string $originalName): 
         'allowed' => $allowed,
         'is_pak' => false,
         'is_redirect' => false,
+        'is_archive' => false,
         'extension' => $extension,
         'reason' => $allowed
             ? ''
@@ -205,7 +222,7 @@ try {
             $normalLimit,
             (int)($batch['container_upload_limit_bytes'] ?? ($config['max_container_upload_bytes'] ?? 0))
         );
-        $limit = $policy['is_pak'] ? $containerLimit : $normalLimit;
+        $limit = ($policy['is_pak'] || $policy['is_archive']) ? $containerLimit : $normalLimit;
         if ($size === false || $size < 1 || (int)$size > $limit) {
             JsonResponse::error(
                 'file_too_large',
@@ -218,6 +235,8 @@ try {
         $staged = $incoming->stageUploadedFile($temporaryPath, $originalName, false);
         try {
             $item = $batchStore->append($userId, $batchId, [
+                // Archive type is inferred from original_name by the background
+                // batch coordinator, preserving the existing manifest contract.
                 'kind' => $policy['is_pak'] ? 'pak' : 'package',
                 'staged_path' => (string)$staged['relative_path'],
                 'original_name' => $originalName,
