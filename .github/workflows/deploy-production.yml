@@ -141,12 +141,12 @@ jobs:
             --restart=Never \
             --rm --attach \
             --command -- curl --fail --silent --show-error \
-            http://unrealdb-web/catalog/api/v1/health.php
+            http://unrealdb-web/catalog/api/v1/readiness.php
       - name: Public smoke test
         if: inputs.public_url != ''
         env:
           PUBLIC_URL: ${{ inputs.public_url }}
-        run: curl --fail --silent --show-error --retry 5 --retry-all-errors "$PUBLIC_URL/catalog/api/v1/health.php"
+        run: curl --fail --silent --show-error --retry 5 --retry-all-errors "$PUBLIC_URL/catalog/api/v1/readiness.php"
       - name: Record deployed release
         run: |
           echo "Deployed ghcr.io/ardenee/ut_reader@${{ inputs.image_digest }}" >> "$GITHUB_STEP_SUMMARY"
