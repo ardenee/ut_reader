@@ -191,26 +191,107 @@ final class BlockedCompressedMetadataContainer
                     throw new RuntimeException('Blocked metadata block bounds are invalid.');
                 }
                 $compressed = substr($bytes, $payloadStart + $offset, $length);
-                if (!hash_equals((string)($block['sha256'] ?? ''), hash('sha256', $compressed))) {
-                    throw new RuntimeException('Blocked metadata block checksum mismatch.');
-                }
-                $json = gzdecode($compressed);
-                if (!is_string($json) || strlen($json) !== (int)($block['uncompressed_length'] ?? -1)) {
-                    throw new RuntimeException('Blocked metadata block decompression failed.');
-                }
-                try {
-                    $decoded = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
-                } catch (JsonException $error) {
-                    throw new RuntimeException('Blocked metadata block is invalid JSON.', 0, $error);
-                }
-                if (!is_array($decoded) || count((array)($decoded['rows'] ?? [])) !== (int)($block['row_count'] ?? -1)) {
-                    throw new RuntimeException('Blocked metadata block row count mismatch.');
-                }
+                self::verifyCompressedBlock($compressed, $block);
                 $verifiedBlocks++;
             }
         }
 
         return ['manifest' => $manifest, 'block_count' => $verifiedBlocks];
+    }
+
+    /**
+     * Verify a container directly from disk while keeping only one compressed
+     * block and its decoded JSON in memory at a time.
+     *
+     * @return array{manifest:array<string,mixed>,block_count:int,payload_sha256:string,compressed_size:int}
+     */
+    public static function verifyFile(
+        string $path,
+        int $expectedFileId,
+        ?string $expectedPayloadSha256 = null
+    ): array {
+        clearstatcache(true, $path);
+        $size = @filesize($path);
+        if ($size === false || $size < self::HEADER_LENGTH) {
+            throw new RuntimeException('Blocked metadata container is missing or too small: ' . $path);
+        }
+        $stream = @fopen($path, 'rb');
+        if (!is_resource($stream)) {
+            throw new RuntimeException('Could not open blocked metadata container: ' . $path);
+        }
+
+        $hash = hash_init('sha256');
+        try {
+            $headerBytes = self::readExactly($stream, self::HEADER_LENGTH);
+            hash_update($hash, $headerBytes);
+            $header = unpack('a8magic/vversion/vcodec/Vmanifest_length/Vreserved', $headerBytes);
+            if (!is_array($header) || (string)$header['magic'] !== self::MAGIC) {
+                throw new RuntimeException('Blocked metadata container magic is invalid.');
+            }
+            if ((int)$header['version'] !== self::FORMAT_VERSION || (int)$header['codec'] !== self::CODEC_BLOCK_GZIP) {
+                throw new RuntimeException('Blocked metadata container version or codec is unsupported.');
+            }
+
+            $manifestLength = (int)$header['manifest_length'];
+            if ($manifestLength < 2 || self::HEADER_LENGTH + $manifestLength > (int)$size) {
+                throw new RuntimeException('Blocked metadata manifest length is invalid.');
+            }
+            $manifestBytes = self::readExactly($stream, $manifestLength);
+            hash_update($hash, $manifestBytes);
+            try {
+                $manifest = json_decode($manifestBytes, true, 512, JSON_THROW_ON_ERROR);
+            } catch (JsonException $error) {
+                throw new RuntimeException('Blocked metadata manifest is invalid JSON.', 0, $error);
+            }
+            if (!is_array($manifest) || (int)($manifest['file']['id'] ?? 0) !== $expectedFileId) {
+                throw new RuntimeException('Blocked metadata manifest identity mismatch.');
+            }
+
+            $expectedOffset = 0;
+            $verifiedBlocks = 0;
+            foreach ((array)($manifest['sections'] ?? []) as $section => $blocks) {
+                if (!in_array($section, ['names', 'imports', 'exports', 'dependencies'], true)) {
+                    throw new RuntimeException('Blocked metadata manifest contains an unknown section.');
+                }
+                foreach ((array)$blocks as $block) {
+                    if (!is_array($block)) {
+                        throw new RuntimeException('Blocked metadata manifest contains an invalid block.');
+                    }
+                    $offset = (int)($block['offset'] ?? -1);
+                    $length = (int)($block['compressed_length'] ?? 0);
+                    if ($offset !== $expectedOffset || $length < 1 || $expectedOffset + $length > (int)$size) {
+                        throw new RuntimeException('Blocked metadata block bounds or ordering are invalid.');
+                    }
+                    $compressed = self::readExactly($stream, $length);
+                    hash_update($hash, $compressed);
+                    self::verifyCompressedBlock($compressed, $block);
+                    $expectedOffset += $length;
+                    $verifiedBlocks++;
+                }
+            }
+
+            $expectedSize = self::HEADER_LENGTH + $manifestLength + $expectedOffset;
+            if ($expectedSize !== (int)$size) {
+                throw new RuntimeException(
+                    'Blocked metadata container has unexpected trailing or missing bytes: expected='
+                    . $expectedSize . ', actual=' . (int)$size . '.'
+                );
+            }
+            $payloadSha256 = hash_final($hash, true);
+            if ($expectedPayloadSha256 !== null
+                && !hash_equals($expectedPayloadSha256, $payloadSha256)) {
+                throw new RuntimeException('Blocked metadata container SHA-256 mismatch.');
+            }
+
+            return [
+                'manifest' => $manifest,
+                'block_count' => $verifiedBlocks,
+                'payload_sha256' => $payloadSha256,
+                'compressed_size' => (int)$size,
+            ];
+        } finally {
+            fclose($stream);
+        }
     }
 
     public static function path(string $storageRoot, int $gameId, int $fileId): string
@@ -311,5 +392,45 @@ final class BlockedCompressedMetadataContainer
         }
 
         return ['strings' => $strings, 'rows' => $encoded];
+    }
+
+    /** @param array<string,mixed> $block */
+    private static function verifyCompressedBlock(string $compressed, array $block): void
+    {
+        if (!hash_equals((string)($block['sha256'] ?? ''), hash('sha256', $compressed))) {
+            throw new RuntimeException('Blocked metadata block checksum mismatch.');
+        }
+        $json = gzdecode($compressed);
+        if (!is_string($json) || strlen($json) !== (int)($block['uncompressed_length'] ?? -1)) {
+            throw new RuntimeException('Blocked metadata block decompression failed.');
+        }
+        try {
+            $decoded = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
+        } catch (JsonException $error) {
+            throw new RuntimeException('Blocked metadata block is invalid JSON.', 0, $error);
+        }
+        if (!is_array($decoded) || count((array)($decoded['rows'] ?? [])) !== (int)($block['row_count'] ?? -1)) {
+            throw new RuntimeException('Blocked metadata block row count mismatch.');
+        }
+    }
+
+    /** @param resource $stream */
+    private static function readExactly($stream, int $length): string
+    {
+        if ($length < 0) {
+            throw new RuntimeException('Invalid blocked metadata read length.');
+        }
+        $buffer = '';
+        while (strlen($buffer) < $length && !feof($stream)) {
+            $chunk = fread($stream, $length - strlen($buffer));
+            if ($chunk === false) {
+                throw new RuntimeException('Could not read blocked metadata container.');
+            }
+            $buffer .= $chunk;
+        }
+        if (strlen($buffer) !== $length) {
+            throw new RuntimeException('Blocked metadata container ended unexpectedly.');
+        }
+        return $buffer;
     }
 }
