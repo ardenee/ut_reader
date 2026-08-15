@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
+use RuntimeException;
 use Throwable;
 
 final class PdoJobAdmissionGuard
@@ -180,13 +181,15 @@ final class PdoJobAdmissionGuard
 
     private function acquireNamedLock(string $lock): bool
     {
-        try {
-            $statement = $this->db->prepare('SELECT GET_LOCK(?,?)');
-            $statement->execute([$lock, self::LOCK_WAIT_SECONDS]);
-            return (int)$statement->fetchColumn() === 1;
-        } catch (Throwable) {
-            return false;
+        $statement = $this->db->prepare('SELECT GET_LOCK(?,?)');
+        $statement->execute([$lock, self::LOCK_WAIT_SECONDS]);
+        $value = $statement->fetchColumn();
+        if ($value === false || $value === null) {
+            throw new RuntimeException('MySQL did not return a valid admission-lock result.');
         }
+        // GET_LOCK() returns 0 only for an ordinary timeout/contention case.
+        // SQL/driver failures must propagate instead of masquerading as a block.
+        return (int)$value === 1;
     }
 
     private function lockName(string $kind, string $identity): string
