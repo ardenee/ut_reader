@@ -68,9 +68,12 @@ final class CatalogProfiledUploadBatchJobHandler implements JobHandler
 
         foreach ($slice['items'] as $item) {
             $stagedPath = (string)$item['staged_path'];
+            $extension = strtolower((string)pathinfo((string)$item['original_name'], PATHINFO_EXTENSION));
             $type = (string)$item['kind'] === 'pak'
                 ? JobType::IMPORT_STAGED_PAK
-                : JobType::IMPORT_STAGED_PACKAGE;
+                : (in_array($extension, ['zip', '7z', 'rar'], true)
+                    ? JobType::IMPORT_STAGED_ARCHIVE
+                    : JobType::IMPORT_STAGED_PACKAGE);
             $payload = [
                 'game_id' => $gameId,
                 'staged_path' => $stagedPath,
