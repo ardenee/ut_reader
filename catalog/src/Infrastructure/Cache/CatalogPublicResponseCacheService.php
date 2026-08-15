@@ -284,8 +284,8 @@ final class CatalogPublicResponseCacheService
         $meta = self::readMeta($path);
         if ($meta !== null) {
             $age = max(0, time() - (int)$meta['stored_at']);
-            if ($age <= $ttl) {
-                self::servePath($path, $meta, 'HIT', $ttl, $staleSeconds);
+            if ($age <= $ttl && self::servePath($path, $meta, 'HIT', $ttl, $staleSeconds)) {
+                exit;
             }
         }
 
@@ -296,8 +296,11 @@ final class CatalogPublicResponseCacheService
             if ($age <= $ttl + $staleSeconds) {
                 if (is_resource($lock)) {
                     fclose($lock);
+                    $lock = null;
                 }
-                self::servePath($path, $meta, 'STALE', $ttl, $staleSeconds);
+                if (self::servePath($path, $meta, 'STALE', $ttl, $staleSeconds)) {
+                    exit;
+                }
             }
         }
 
@@ -427,23 +430,21 @@ final class CatalogPublicResponseCacheService
         string $status,
         int $ttl,
         int $staleSeconds
-    ): never {
+    ): bool {
         $stream = @fopen($path, 'rb');
         if (!is_resource($stream)) {
-            // The file may have been pruned between metadata read and serving.
-            // Fall back to a normal cache miss rather than emitting a partial page.
-            throw new \RuntimeException('Cached response became unavailable before it could be served.');
+            return false;
         }
         $header = fgets($stream, 8192);
         if (!is_string($header) || self::decodeMeta($header) === null) {
             fclose($stream);
-            throw new \RuntimeException('Cached response metadata became invalid before it could be served.');
+            return false;
         }
 
         self::sendCacheHeaders($meta, $status, $ttl, $staleSeconds);
         fpassthru($stream);
         fclose($stream);
-        exit;
+        return true;
     }
 
     /** @param array<string,mixed> $meta */
