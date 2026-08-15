@@ -56,17 +56,18 @@ final class BlockedCompressedFileMetadataConverter
             (int)$file['game_id'],
             $fileId
         );
-        $bytes = file_get_contents($path);
-        if (!is_string($bytes)) {
-            throw new RuntimeException('Could not read blocked metadata container: ' . $path);
-        }
-        if (strlen($bytes) !== (int)$existing['compressed_size']) {
+
+        // Verify the authoritative physical container block-by-block. Projection
+        // maintenance no longer allocates another complete .uedb2 PHP string just
+        // to recover size/SHA values that are already registered in MySQL.
+        $verified = BlockedCompressedMetadataContainer::verifyFile(
+            $path,
+            $fileId,
+            (string)$existing['payload_sha256']
+        );
+        if ((int)$verified['compressed_size'] !== (int)$existing['compressed_size']) {
             throw new RuntimeException('Blocked metadata container size does not match ue_file_metadata.');
         }
-        if (!hash_equals((string)$existing['payload_sha256'], hash('sha256', $bytes, true))) {
-            throw new RuntimeException('Blocked metadata container SHA-256 does not match ue_file_metadata.');
-        }
-        BlockedCompressedMetadataContainer::verifyBytes($bytes, $fileId);
 
         $sqlBatches = 0;
         $lookupWriter = new CompressedMetadataLookupWriter($this->db);
@@ -75,9 +76,10 @@ final class BlockedCompressedFileMetadataConverter
 
         $this->db->beginTransaction();
         try {
-            $lookupWriter->writeVersioned(
+            $lookupWriter->writeVersionedMetadata(
                 $snapshot,
-                $bytes,
+                (int)$existing['compressed_size'],
+                (string)$existing['payload_sha256'],
                 (int)$existing['uncompressed_size'],
                 BlockedCompressedMetadataContainer::FORMAT_VERSION,
                 BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP,
@@ -97,7 +99,17 @@ final class BlockedCompressedFileMetadataConverter
             throw $error;
         }
 
-        return array_merge($this->verify($fileId), [
+        return [
+            'verified' => true,
+            'file_id' => $fileId,
+            'metadata_path' => $path,
+            'compressed_size' => (int)$verified['compressed_size'],
+            'uncompressed_size' => (int)$existing['uncompressed_size'],
+            'name_count' => count((array)$snapshot['names']),
+            'import_count' => count((array)$snapshot['imports']),
+            'export_count' => count((array)$snapshot['exports']),
+            'block_count' => (int)$verified['block_count'],
+            'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
             'game_id' => (int)$file['game_id'],
             'package_name' => (string)$file['package_name'],
             'dependency_count' => count((array)$snapshot['dependencies']),
@@ -105,7 +117,7 @@ final class BlockedCompressedFileMetadataConverter
             'projection_rebuilt' => true,
             'container_rewritten' => false,
             'legacy_rows_deleted' => false,
-        ]);
+        ];
     }
 
     /** @return array<string,mixed> */
