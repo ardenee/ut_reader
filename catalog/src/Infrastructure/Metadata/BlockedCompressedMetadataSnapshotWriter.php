@@ -48,39 +48,60 @@ final class BlockedCompressedMetadataSnapshotWriter
         }
 
         $this->assertSnapshotCounts($snapshot);
-        $built = BlockedCompressedMetadataContainer::build($snapshot);
-        $bytes = (string)$built['bytes'];
         $path = BlockedCompressedMetadataContainer::path($this->storageRoot, $gameId, $fileId);
         $directory = dirname($path);
         if (!is_dir($directory) && !mkdir($directory, 0775, true) && !is_dir($directory)) {
             throw new RuntimeException('Could not create compact metadata directory: ' . $directory);
         }
+        $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(8));
 
         // ue_terms is shared by every file. Resolve it once before the file-owned
-        // transaction, then reuse those stable IDs for every contention retry.
+        // transaction, then reuse those stable IDs for every contention retry and
+        // for both lookup/search projections.
         $dictionarySqlBatches = 0;
         $lookupWriter = new CompressedMetadataLookupWriter($this->db);
         $resolvedTermIds = $lookupWriter->primeSnapshotTerms($snapshot, $dictionarySqlBatches);
         (new CompactTermOverflowWriter($this->db))->write($snapshot, $dictionarySqlBatches);
 
-        for ($attempt = 1; ; $attempt++) {
-            try {
-                return $this->publishAttempt(
-                    $snapshot,
-                    $built,
-                    $bytes,
-                    $path,
-                    $fileId,
-                    $dictionarySqlBatches,
-                    $lookupWriter,
-                    $resolvedTermIds
-                );
-            } catch (Throwable $error) {
-                if (!PdoContention::retryable($error) || $attempt >= self::CONTENTION_ATTEMPTS) {
-                    throw $error;
+        try {
+            for ($attempt = 1; ; $attempt++) {
+                // The production builder writes/validates the complete .uedb2 on
+                // disk while retaining only one compressed block in PHP memory.
+                // A retry can reuse the already-verified temp file unless a prior
+                // attempt reached the atomic rename before its DB commit failed.
+                if (!is_file($temporaryPath)) {
+                    $built = BlockedCompressedMetadataContainer::buildToFile(
+                        $snapshot,
+                        $temporaryPath
+                    );
+                } else {
+                    $built = BlockedCompressedMetadataContainer::verifyFile($temporaryPath, $fileId);
+                    // verifyFile() does not know the logical uncompressed size.
+                    // Rebuilding that number from the manifest is cheap and avoids
+                    // rebuilding the physical container merely for a DB retry.
+                    $built['uncompressed_size'] = $this->manifestUncompressedSize((array)$built['manifest']);
                 }
-                usleep(PdoContention::backoffMicros($attempt, 25000));
+
+                try {
+                    return $this->publishAttempt(
+                        $snapshot,
+                        $built,
+                        $temporaryPath,
+                        $path,
+                        $fileId,
+                        $dictionarySqlBatches,
+                        $lookupWriter,
+                        $resolvedTermIds
+                    );
+                } catch (Throwable $error) {
+                    if (!PdoContention::retryable($error) || $attempt >= self::CONTENTION_ATTEMPTS) {
+                        throw $error;
+                    }
+                    usleep(PdoContention::backoffMicros($attempt, 25000));
+                }
             }
+        } finally {
+            @unlink($temporaryPath);
         }
     }
 
@@ -93,27 +114,20 @@ final class BlockedCompressedMetadataSnapshotWriter
     private function publishAttempt(
         array $snapshot,
         array $built,
-        string $bytes,
+        string $temporaryPath,
         string $path,
         int $fileId,
         int $dictionarySqlBatches,
         CompressedMetadataLookupWriter $lookupWriter,
         array $resolvedTermIds
     ): array {
-        $temporaryPath = $path . '.tmp.' . bin2hex(random_bytes(8));
         $backupPath = $path . '.bak.' . bin2hex(random_bytes(8));
-        $byteLength = strlen($bytes);
-        $expectedHash = hash('sha256', $bytes, true);
-        $written = file_put_contents($temporaryPath, $bytes, LOCK_EX);
-        if ($written !== $byteLength) {
-            @unlink($temporaryPath);
-            throw new RuntimeException('Could not completely write compact metadata temporary file.');
-        }
-
-        $temporaryHash = hash_file('sha256', $temporaryPath, true);
-        if (!is_string($temporaryHash) || !hash_equals($expectedHash, $temporaryHash)) {
-            @unlink($temporaryPath);
-            throw new RuntimeException('Compact metadata temporary file failed write verification.');
+        $compressedSize = (int)($built['compressed_size'] ?? 0);
+        $payloadSha256 = (string)($built['payload_sha256'] ?? '');
+        $uncompressedSize = (int)($built['uncompressed_size'] ?? 0);
+        $blockCount = (int)($built['block_count'] ?? 0);
+        if ($compressedSize < 1 || strlen($payloadSha256) !== 32 || $uncompressedSize < 1) {
+            throw new RuntimeException('Streamed compact metadata build returned incomplete publication metadata.');
         }
 
         clearstatcache(true, $path);
@@ -124,10 +138,11 @@ final class BlockedCompressedMetadataSnapshotWriter
 
         $this->db->beginTransaction();
         try {
-            $lookupWriter->writeVersioned(
+            $lookupWriter->writeVersionedMetadata(
                 $snapshot,
-                $bytes,
-                (int)$built['uncompressed_size'],
+                $compressedSize,
+                $payloadSha256,
+                $uncompressedSize,
                 BlockedCompressedMetadataContainer::FORMAT_VERSION,
                 BlockedCompressedMetadataContainer::CODEC_BLOCK_GZIP,
                 $sqlBatches,
@@ -162,7 +177,6 @@ final class BlockedCompressedMetadataSnapshotWriter
             if ($backedUp && is_file($backupPath)) {
                 @rename($backupPath, $path);
             }
-            @unlink($temporaryPath);
             clearstatcache(true, $path);
             throw $error;
         }
@@ -170,15 +184,47 @@ final class BlockedCompressedMetadataSnapshotWriter
         if ($backedUp && is_file($backupPath)) {
             @unlink($backupPath);
         }
-        @unlink($temporaryPath);
 
-        clearstatcache(true, $path);
-        $verified = (new BlockedCompressedMetadataReader($this->db, $this->storageRoot))->verify($fileId);
-        return array_merge($verified, [
+        // buildToFile() already performed a full streaming structural/SHA check on
+        // the exact file that was atomically renamed here. rename() does not alter
+        // the bytes, and the DB transaction committed the same size/SHA. Avoid a
+        // second full read/decompress pass after every successful import.
+        return [
+            'verified' => true,
+            'file_id' => $fileId,
+            'metadata_path' => $path,
+            'compressed_size' => $compressedSize,
+            'uncompressed_size' => $uncompressedSize,
+            'name_count' => count((array)($snapshot['names'] ?? [])),
+            'import_count' => count((array)($snapshot['imports'] ?? [])),
+            'export_count' => count((array)($snapshot['exports'] ?? [])),
+            'block_count' => $blockCount,
+            'format_version' => BlockedCompressedMetadataContainer::FORMAT_VERSION,
             'sql_batches' => $sqlBatches,
             'container_rewritten' => true,
             'dependency_count' => count((array)($snapshot['dependencies'] ?? [])),
-        ]);
+        ];
+    }
+
+    /** @param array<string,mixed> $manifest */
+    private function manifestUncompressedSize(array $manifest): int
+    {
+        $size = 0;
+        foreach ((array)($manifest['sections'] ?? []) as $blocks) {
+            foreach ((array)$blocks as $block) {
+                if (is_array($block)) {
+                    $size += max(0, (int)($block['uncompressed_length'] ?? 0));
+                }
+            }
+        }
+        $manifestJson = json_encode(
+            $manifest,
+            JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE
+        );
+        if (!is_string($manifestJson)) {
+            throw new RuntimeException('Could not re-encode compact metadata manifest during publication retry.');
+        }
+        return $size + strlen($manifestJson);
     }
 
     /** @param array<string,mixed> $snapshot */
