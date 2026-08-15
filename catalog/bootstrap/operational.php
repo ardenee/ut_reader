@@ -2,9 +2,10 @@
 /**
  * Minimal bootstrap for machine health/readiness probes.
  *
- * Deliberately excludes CatalogSupport.php so probes do not traverse HTML page
- * transforms, public response caching, crawler/burst middleware, MFA helpers or
- * request resource tracing. The normal web/API bootstrap remains unchanged.
+ * Deliberately excludes the full page-support bootstrap so probes do not
+ * traverse HTML transforms, public response caching, crawler/burst middleware,
+ * authentication helpers or request resource tracing. The normal web/API
+ * bootstrap remains unchanged.
  */
 declare(strict_types=1);
 
