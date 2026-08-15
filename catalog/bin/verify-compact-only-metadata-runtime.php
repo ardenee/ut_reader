@@ -136,7 +136,10 @@ $writerLegacyReferences = $retiredReferences($withoutComments($writer));
 $record(
     'compact_export_lookup_is_self_sufficient',
     str_contains($writer, "'local_path_term_id'")
-        && str_contains($writer, '$termIds[$this->termKey($localPath)]')
+        && str_contains($writer, '$this->requiredTermId($termIds, $localPath)')
+        && str_contains($writer, '$this->requiredTermId($termIds, $source)')
+        && str_contains($writer, '$this->requiredTermId($termIds, $confidence)')
+        && str_contains($writer, 'private function requiredTermId(')
         && $writerLegacyReferences === [],
     $writerLegacyReferences === []
         ? 'current projection writes include local paths and dependency labels without retired metadata rereads'
