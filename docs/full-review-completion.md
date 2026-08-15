@@ -1,170 +1,155 @@
 # Full production review completion
 
-This runbook describes the repository changes delivered from the production-readiness review and the external actions required to activate them safely.
+This runbook records the major production-readiness work that remains relevant to the supported **single-host Windows deployment** and the external actions required to activate it safely.
+
+Docker, Docker Compose and Kubernetes are no longer deployment targets for UnrealDB and their repository deployment assets have been removed.
 
 ## Application changes completed
 
 ### Durable ingestion
 
-Profiled Upload and PAK Import now copy incoming files into controlled job storage and enqueue background work. The worker performs redirect decompression, PAK extraction, package parsing, identity matching, physical storage, database persistence, dependency refresh and unverified fallback. Browser closure no longer interrupts the work.
+Profiled Upload and PAK Import move work into controlled durable staging and enqueue background processing. Workers perform redirect decompression, PAK extraction, package parsing, identity matching, physical storage, database persistence, dependency refresh and unverified fallback. Browser closure does not interrupt work after the durable staging boundary.
 
-The `import-heavy` resource class defaults to one concurrent job per queue. Staged originals are immutable and retained until successful import, deterministic unverified retention, cancellation or age-based cleanup.
+The `import-heavy` resource class limits concurrent heavy imports independently from the total worker-process count. Staged originals are retained until successful import, deterministic unverified retention, cancellation or bounded cleanup.
 
 ### Storage maintenance
 
-Two durable maintenance jobs are available:
+Durable maintenance jobs include:
 
 ```text
 php catalog/bin/job-control.php enqueue-reconcile-unverified --max-files=1000
 php catalog/bin/job-control.php enqueue-prune-artifacts --incoming-max-age-seconds=172800
 ```
 
-Compose can run `deploy/docker/maintenance-loop.sh`; Kubernetes includes daily CronJobs with `concurrencyPolicy: Forbid`.
+On production these are scheduled through the normal Windows operations path, such as Task Scheduler or an administrator-controlled maintenance job, rather than a container scheduler.
 
 ### Authentication and administrator security
 
-Migration 008 adds encrypted TOTP MFA and one-time recovery codes. Configure a dedicated application security key before enrollment:
+Administrator MFA/security state uses the application security master key where those features are enabled:
 
 ```text
 UNREALDB_SECURITY_MASTER_KEY=base64:<32-byte-key>
 ```
 
-Generate a key with a trusted secret manager or operating-system cryptographic tool. Do not reuse the database password or federation master key.
+Generate the key with a trusted operating-system cryptographic tool. Do not reuse the database password or federation master key.
 
-Administrators enroll and reauthenticate at `catalog/admin-security.php`. MFA-enabled accounts cannot use persistent remember-me tokens. Administrator API mutations require a recent password and MFA confirmation; the default recent-auth window is 600 seconds.
+Recent-auth requirements should remain limited to genuinely security-sensitive operations. Routine background-job administration should not be made impractical by unnecessary reauthentication prompts.
 
 ### Federation trust
 
-Migration 007 adds Ed25519 public-key rotation and revocation while retaining HMAC compatibility. Federation JSON and binary transfers use HTTPS-only, DNS-pinned, no-redirect cURL requests and reject private/link-local/reserved target addresses.
-
-Generate a local signing key:
+Federation supports signed requests, replay protection, bounded request handling and encrypted peer secrets. Configure the federation encryption key before using strict encrypted-secret mode:
 
 ```text
-php catalog/bin/federation-key.php generate
+UNREALDB_FEDERATION_MASTER_KEY=base64:<32-byte-key>
 ```
 
-Store the returned private seed only in the deployment secret:
-
-```text
-UNREALDB_FEDERATION_ED25519_PRIVATE_KEY=<base64url-seed>
-UNREALDB_FEDERATION_SIGNATURE_ALGORITHM=ed25519
-```
-
-Install the remote public key for each peer:
-
-```text
-php catalog/bin/federation-key.php set-peer --peer-id=1 --public-key=<remote-public-key>
-```
-
-Keep `UNREALDB_FEDERATION_SIGNATURE_ALGORITHM=hmac-sha256` until both sides have migration 007, sodium support and each other's public key. Use `use-hmac` for compatibility rollback and `revoke-peer` to reject a compromised key.
+When Ed25519 is used, generate/manage the local signing key with the existing federation key tooling and keep private key material outside the repository.
 
 ### Public request controls
 
-Application-side limits now cover broad search, individual downloads, package generation and federation join submissions. Defaults may be adjusted with:
-
-```text
-UNREALDB_PUBLIC_SEARCH_MAX_REQUESTS=60
-UNREALDB_PUBLIC_SEARCH_WINDOW_SECONDS=600
-UNREALDB_PUBLIC_DOWNLOAD_MAX_REQUESTS=30
-UNREALDB_PUBLIC_DOWNLOAD_WINDOW_SECONDS=600
-UNREALDB_FEDERATION_JOIN_MAX_REQUESTS=5
-UNREALDB_FEDERATION_JOIN_WINDOW_SECONDS=3600
-```
-
-Exact MD5, SHA1 and GUID input uses indexed identity queries and returns without executing broad wildcard stages. Broad search requires at least three characters and remains limited to 200 files.
+Application-side controls cover broad search, downloads, package generation and federation join submissions. Exact MD5, SHA1 and GUID input uses indexed identity queries and avoids broad wildcard stages.
 
 ### Metrics
 
-`catalog/api/v1/metrics.php` exposes Prometheus text metrics for:
+`catalog/api/v1/metrics.php` exposes Prometheus-format operational metrics including:
 
-- queue status and resource class counts
-- lease recoveries and oldest queued job age
-- verified/unverified file counts and bytes
-- generated artifact, staged import and federation incoming storage
-- total and free filesystem capacity
+- queue status and resource-class counts;
+- job recoveries and oldest queued-job age;
+- verified/unverified file counts and bytes;
+- operational storage usage;
+- total and free filesystem capacity.
 
-Set a long random bearer value:
+Set a long random bearer value when machine scraping is used:
 
 ```text
 UNREALDB_METRICS_TOKEN=<random-token>
 ```
 
-Send it as `Authorization: Bearer <token>`. An authenticated administrator may also view the endpoint interactively.
+An authenticated administrator may also view the endpoint interactively.
 
 ### Browser and PHP policy
 
-The production Apache configuration enforces PHP error display off with `php_admin_flag`, blocks source/storage/development directories and emits CSP, frame, MIME, referrer, permissions and cross-origin isolation headers. The CSP currently permits same-origin inline script/style for legacy pages; removing those remaining inline blocks is a future tightening step, not a missing baseline header.
+Production PHP error display is disabled by the shared runtime security boundary. Apache/.htaccess protections block internal source/storage paths and the application emits CSP and related browser-security headers.
+
+## Supported production platform
+
+The production server is one Windows host running:
+
+```text
+Apache 2.4
+PHP 8.5
+MySQL 8.4
+local catalog/package storage
+independent PHP worker processes
+Windows backup/maintenance scheduling
+```
+
+MySQL remains the durable job queue and application system of record. Redis, external message brokers, replicas and distributed storage are not required for this deployment.
 
 ## Deployment sequence
 
-1. Pause workers and browser maintenance operations.
-2. Create a database and storage backup.
-3. Deploy the immutable image.
-4. Run migration dry-run, migration, then verification through migration 008.
-5. Configure security, metrics and optional Ed25519 secrets.
-6. Start web, worker and maintenance services.
-7. Test login and MFA before ending the current administrator session.
-8. Test one package upload and one PAK job.
-9. Test cancellation, reconciliation and artifact pruning.
-10. Test exact MD5/GUID search and a public download limit.
-11. Validate metrics scraping.
-12. Rotate one federation peer to Ed25519 and confirm bidirectional JSON and binary transfers before rotating others.
+1. Record the currently deployed Git revision.
+2. Review changed PHP, migrations and operational configuration.
+3. Create/verify a current recovery point when schema or storage changes require one.
+4. Run migration status and dry-run.
+5. Drain/stop workers before replacing worker-executed code when required.
+6. Update the production code to the intended Git revision.
+7. Apply and verify migrations.
+8. Restart Apache/PHP only when required by the changed runtime/configuration.
+9. Restart/reconcile workers so all processes use the current code.
+10. Test `live.php` and `readiness.php`.
+11. Test representative authentication, search, upload/import, download and background-job paths affected by the release.
+12. Review Apache/PHP/worker logs, failed jobs, MySQL pressure and storage capacity.
 
-## Compose
+## Deployment-host verification
+
+Use the real production PHP/MySQL/filesystem environment for the important checks:
 
 ```text
-docker compose -f compose.yaml -f compose.security.yaml build
-docker compose -f compose.yaml -f compose.security.yaml run --rm migrate
-docker compose -f compose.yaml -f compose.security.yaml up -d
+php catalog/bin/migrate.php status
+php catalog/bin/migrate.php migrate --dry-run
+php catalog/bin/migrate.php migrate
+php catalog/bin/migrate.php verify
+php catalog/bin/verify-security-hardening.php
+php catalog/bin/verify-system-readiness-contract.php
+php catalog/bin/verify-system-readiness-contract.php --run
+php catalog/bin/verify-queue-runtime-invariants.php
+php catalog/bin/verify-job-claim-concurrency.php --run
 ```
 
-## Kubernetes
-
-The base kustomization includes the security ConfigMap patch and maintenance CronJobs. Supply the following keys through the existing `unrealdb-secrets` Secret or an external secret operator:
-
-- `UNREALDB_SECURITY_MASTER_KEY`
-- `UNREALDB_METRICS_TOKEN`
-- `UNREALDB_FEDERATION_MASTER_KEY`
-- `UNREALDB_FEDERATION_ED25519_PRIVATE_KEY` when Ed25519 is activated
-- database and Redis credentials
-
-Use immutable image digests in production overlays instead of `latest`.
+Run focused subsystem verifiers for the files changed in each release.
 
 ## Backup and restore
 
-Create a consistent compressed database and storage backup:
+The supported Windows recovery tooling lives in `deploy/backup/`:
 
 ```text
-UNREALDB_BACKUP_PATH=/backups/unrealdb deploy/backup/unrealdb-backup.sh
+unrealdb-backup-readiness.ps1
+unrealdb-backup.ps1
+verify-unrealdb-backup.ps1
+unrealdb-restore.ps1
 ```
 
-The script writes `database.sql.gz`, `storage.tar.gz`, `SHA256SUMS` and metadata, then removes directories older than `UNREALDB_BACKUP_RETENTION_DAYS`.
+A database-only backup can normally be taken online. A coherent database + package-storage recovery point requires controlled write quiescence so the two represent one consistent application state.
 
-Restore only during an approved outage:
+Completed backups are not considered recovery points until verification succeeds. Perform periodic restore drills against disposable database/storage targets.
 
-```text
-export UNREALDB_RESTORE_CONFIRM="$UNREALDB_DB_NAME"
-export UNREALDB_RESTORE_STORAGE=1
-deploy/backup/unrealdb-restore.sh /backups/unrealdb/20260719T020000Z
-```
+See `docs/windows-backup-recovery.md` for the full procedure.
 
-The restore verifies checksums and runs migration verification. Quarterly restore tests should use an isolated database and copied storage rather than production paths.
+## External production actions
 
-## External platform actions
+The repository cannot operate the Windows host by itself. Production operations must provide:
 
-The repository cannot provision or operate the following by itself:
+- HTTPS certificate/DNS/firewall configuration;
+- Windows service supervision for Apache/MySQL/workers;
+- disk-space and process-health monitoring;
+- backup scheduling and independent backup storage;
+- alert routing for critical failures;
+- production storage sizing;
+- private real-world package fixtures that cannot legally be committed.
 
-- managed MySQL point-in-time recovery
-- managed Redis and secret-manager integration
-- TLS certificates, DNS and WAF policy
-- workload identity and cloud IAM
-- off-site/object-storage backup replication
-- alert routing and incident escalation
-- production storage sizing
-- real retail package fixtures that cannot legally be committed
+## Known compatibility boundary
 
-These are deployment obligations. The code, manifests, metrics and backup commands required to integrate them are present, but successful execution must be verified in the selected environment.
+Some compatibility code remains for older scanner/unverified data paths. `migrate verify` is required before relying on a release, and runtime schema mutation should not be treated as the production migration mechanism.
 
-## Known retained compatibility boundary
-
-A small amount of legacy schema-inspection code remains in older scanner/unverified helpers. Production database users should not have DDL privileges, and `migrate verify` is required before web/worker startup. Runtime schema mutation is no longer a supported deployment path. Removing the final compatibility branches requires a controlled compatibility-window decision for older shared-host installations.
+Database migrations and code rollback must remain compatible. If a migration is not backward compatible, use a forward fix rather than blindly reverting PHP code against a newer schema.
