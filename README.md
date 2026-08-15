@@ -40,7 +40,7 @@ The application is a modular PHP monolith. Web requests submit durable work; bac
 | UE5 packages | Partial | Supported where the package/container layout is understood; IoStore `.utoc`/`.ucas` is not fully supported. |
 | `.uz` redirects | Active | Historical 1234 and 5678 FCodec variants are supported. |
 | `.uz2` redirects | Active | Chunked zlib handling exists; malformed/non-standard archives fail without blocking unrelated jobs. |
-| `.uz3` redirects | Validation | UT3 tagged whole-file zlib decoding is implemented; encoder/known-good fixture validation is the remaining step before marking this Active. |
+| `.uz3` redirects | Active | UT3 tag + uncompressed-size + whole-file zlib encoding/decoding is implemented and validated against real `UT3.exe Compress` output. |
 | Federation | Active | Parent/child inventory, dependency requests and controlled transfer workflows are supported. |
 | Game Backups | Active | Durable export/restore workflows plus separate production database/storage backup tooling. |
 
@@ -165,7 +165,7 @@ Encrypted PAK content and unsupported compression/container variants are not sil
 
 - `.uz`: historical 1234 and 5678 FCodec variants.
 - `.uz2`: chunked zlib redirect format used by UE2-era games.
-- `.uz3`: UT3 tagged whole-file zlib format; decoder support is present and encoder/fixture validation is being completed before the status is promoted to Active.
+- `.uz3`: UT3 tagged whole-file zlib format, with compression and decompression validated against real `UT3.exe Compress` output.
 
 Catalogue identity is based on the decompressed Unreal package where a redirect wrapper is successfully decoded.
 
@@ -288,7 +288,6 @@ The main active areas are:
 
 - validating UE3 package/compression edge cases against source and known-good fixtures;
 - continuing UE4/UE5 package/dependency compatibility work;
-- completing `.uz3` encoder and real-fixture validation;
 - diagnosing malformed/non-standard redirect archives without weakening strict parsing;
 - further reducing expensive catalogue/maintenance paths where measured performance still warrants it;
 - improving operator monitoring and worker/service supervision;
