@@ -13,11 +13,12 @@ namespace UnrealDb\Catalog\Infrastructure\Import;
 use PDO;
 use Throwable;
 use UnrealDb\Catalog\Application\Import\CatalogVerifiedPackageInspection;
+use UnrealDb\Catalog\Application\Import\Contract\VerifiedPackagePublisherPort;
 use UnrealDb\Catalog\Infrastructure\Metadata\VerifiedFileCompactMetadataFinalizer;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogVerifiedPackagePersistence;
 use UnrealDb\Catalog\Infrastructure\Storage\CatalogVerifiedPackageStorage;
 
-final class CatalogVerifiedPackagePublisher
+final class CatalogVerifiedPackagePublisher implements VerifiedPackagePublisherPort
 {
     private readonly PdoCatalogVerifiedPackagePersistence $persistence;
     private readonly CatalogVerifiedPackageStorage $storage;
@@ -27,6 +28,7 @@ final class CatalogVerifiedPackagePublisher
         private readonly PDO $db,
         private readonly array $config
     ) {
+        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         $this->persistence = new PdoCatalogVerifiedPackagePersistence($db, $config);
         $this->storage = new CatalogVerifiedPackageStorage($config);
     }
