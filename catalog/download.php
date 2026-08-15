@@ -16,17 +16,14 @@ require_once __DIR__ . '/lib/ExternalMirrors.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
 require_once __DIR__ . '/lib/DownloadActivity.php';
 
-use UnrealDb\Catalog\Infrastructure\Storage\LocalStoragePathGuard;
+use UnrealDb\Catalog\Infrastructure\Storage\LocalFilesystemPackageStorage;
 
 catalog_start_session();
 
 function public_download_storage_path(array $config, array $file): string
 {
-    return LocalStoragePathGuard::resolveFile(
-        (string)$config['storage_path'],
-        __DIR__,
-        (string)$file['relative_path']
-    );
+    $storage = new LocalFilesystemPackageStorage((string)$config['storage_path'], __DIR__);
+    return $storage->resolveExisting((string)$file['relative_path']);
 }
 
 function public_download_original_name(array $file): string
