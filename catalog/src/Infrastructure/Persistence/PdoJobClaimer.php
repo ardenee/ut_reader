@@ -15,8 +15,6 @@ use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
  */
 final class PdoJobClaimer
 {
-    private const MAX_BLOCKED_CANDIDATES_PER_SCOPE = 32;
-
     public function __construct(private readonly PDO $db, ?PdoJobRecovery $legacyRecovery = null)
     {
     }
@@ -61,44 +59,60 @@ final class PdoJobClaimer
         ?int $preferredRootJobId,
         PdoJobAdmissionGuard $guard
     ): ?ClaimedJob {
-        $excluded = [];
+        /** @var array<string,true> $blockedResourceClasses */
+        $blockedResourceClasses = [];
+        /** @var array<string,true> $blockedConcurrencyKeys */
+        $blockedConcurrencyKeys = [];
 
-        for ($attempt = 0; $attempt < self::MAX_BLOCKED_CANDIDATES_PER_SCOPE; $attempt++) {
-            $candidate = $this->lockNextCandidate($queue, $preferredRootJobId, $excluded);
+        while (true) {
+            $candidate = $this->lockNextCandidate(
+                $queue,
+                $preferredRootJobId,
+                array_keys($blockedResourceClasses),
+                array_keys($blockedConcurrencyKeys)
+            );
             if ($candidate === null) {
                 return null;
             }
 
-            $candidateId = (int)($candidate['id'] ?? 0);
             $resourceClass = trim((string)($candidate['resource_class'] ?? 'default')) ?: 'default';
             $persistedLimit = max(1, (int)($candidate['resource_limit'] ?? 1));
             $concurrencyKey = trim((string)($candidate['concurrency_key'] ?? ''));
-            $locks = $guard->acquire(
+            $lockResult = $guard->acquireWithBlocker(
                 $queue,
                 $resourceClass,
                 $concurrencyKey !== '' ? $concurrencyKey : null
             );
+            $locks = $lockResult['locks'];
 
             if ($locks === null) {
                 $this->rollbackClaimTransaction();
-                if ($candidateId > 0) {
-                    $excluded[] = $candidateId;
-                }
+                $this->rememberBlockedDimension(
+                    (string)($lockResult['blocked_dimension'] ?? 'resource'),
+                    $resourceClass,
+                    $concurrencyKey,
+                    $blockedResourceClasses,
+                    $blockedConcurrencyKeys
+                );
                 continue;
             }
 
             try {
-                $resourceLimit = $guard->currentLimit($resourceClass, $persistedLimit);
-                if (!$guard->canRun(
+                $decision = $guard->decision(
                     $queue,
                     $resourceClass,
-                    $resourceLimit,
+                    $persistedLimit,
                     $concurrencyKey !== '' ? $concurrencyKey : null
-                )) {
+                );
+                if (empty($decision['allowed'])) {
                     $this->rollbackClaimTransaction();
-                    if ($candidateId > 0) {
-                        $excluded[] = $candidateId;
-                    }
+                    $this->rememberBlockedDimension(
+                        (string)($decision['blocked_dimension'] ?? 'resource'),
+                        $resourceClass,
+                        $concurrencyKey,
+                        $blockedResourceClasses,
+                        $blockedConcurrencyKeys
+                    );
                     continue;
                 }
 
@@ -107,7 +121,7 @@ final class PdoJobClaimer
                     $workerId,
                     $leaseSeconds,
                     $resourceClass,
-                    $resourceLimit,
+                    max(1, (int)$decision['resource_limit']),
                     $concurrencyKey
                 );
             } finally {
@@ -115,18 +129,18 @@ final class PdoJobClaimer
                 $guard->release($locks);
             }
         }
-
-        return null;
     }
 
     /**
-     * @param list<int> $excludedIds
+     * @param list<string> $blockedResourceClasses
+     * @param list<string> $blockedConcurrencyKeys
      * @return array<string,mixed>|null
      */
     private function lockNextCandidate(
         string $queue,
         ?int $preferredRootJobId,
-        array $excludedIds
+        array $blockedResourceClasses,
+        array $blockedConcurrencyKeys
     ): ?array {
         $this->db->beginTransaction();
         try {
@@ -144,10 +158,19 @@ final class PdoJobClaimer
                 $params[] = $preferredRootJobId;
             }
 
-            if ($excludedIds !== []) {
-                $where[] = 'j.id NOT IN (' . implode(',', array_fill(0, count($excludedIds), '?')) . ')';
-                foreach ($excludedIds as $excludedId) {
-                    $params[] = $excludedId;
+            if ($blockedResourceClasses !== []) {
+                $where[] = 'COALESCE(NULLIF(j.resource_class,""),"default") NOT IN ('
+                    . implode(',', array_fill(0, count($blockedResourceClasses), '?')) . ')';
+                foreach ($blockedResourceClasses as $resourceClass) {
+                    $params[] = $resourceClass;
+                }
+            }
+
+            if ($blockedConcurrencyKeys !== []) {
+                $where[] = '(j.concurrency_key IS NULL OR j.concurrency_key="" OR j.concurrency_key NOT IN ('
+                    . implode(',', array_fill(0, count($blockedConcurrencyKeys), '?')) . '))';
+                foreach ($blockedConcurrencyKeys as $concurrencyKey) {
+                    $params[] = $concurrencyKey;
                 }
             }
 
@@ -170,6 +193,29 @@ final class PdoJobClaimer
             $this->rollbackClaimTransaction();
             throw $exception;
         }
+    }
+
+    /**
+     * A saturated resource class blocks every row in that class. An occupied
+     * concurrency key blocks only rows carrying that key. Recording the semantic
+     * blocker prevents an arbitrarily long run of high-priority blocked rows from
+     * starving unrelated runnable jobs later in the queue.
+     *
+     * @param array<string,true> $blockedResourceClasses
+     * @param array<string,true> $blockedConcurrencyKeys
+     */
+    private function rememberBlockedDimension(
+        string $dimension,
+        string $resourceClass,
+        string $concurrencyKey,
+        array &$blockedResourceClasses,
+        array &$blockedConcurrencyKeys
+    ): void {
+        if ($dimension === 'concurrency' && $concurrencyKey !== '') {
+            $blockedConcurrencyKeys[$concurrencyKey] = true;
+            return;
+        }
+        $blockedResourceClasses[$resourceClass] = true;
     }
 
     /** @param array<string,mixed> $row */
