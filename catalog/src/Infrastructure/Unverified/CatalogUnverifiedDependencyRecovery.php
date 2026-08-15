@@ -11,8 +11,8 @@ namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
 use Throwable;
-use UnrealDb\Catalog\Application\Dependency\CatalogPostImportDependencyQueue;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogPostImportDependencyQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogUnverifiedDependencyRecovery
@@ -71,10 +71,6 @@ final class CatalogUnverifiedDependencyRecovery
                 ];
             }
 
-            // Never infer health from ue_file_metadata.format_version alone. A
-            // registration can survive a missing/corrupt container. The finalizer
-            // verifies the physical container and, when necessary, republishes it
-            // from retained compressed staging before dependency work is queued.
             if ($emit !== null) {
                 $emit('compact_recovery', 60, 'Verifying compact metadata and repairing from compressed staging if required');
             }
@@ -96,10 +92,6 @@ final class CatalogUnverifiedDependencyRecovery
                 'message' => 'Verified compact metadata and queued a fresh dependency scan.',
             ];
         } catch (Throwable $recoveryError) {
-            // The row is already verified, so losing both synchronous recovery
-            // and the original staging snapshot must not leave an operator-only
-            // warning as the sole recovery mechanism. Queue the existing bounded,
-            // resumable one-file repair workflow from authoritative package storage.
             if ((string)($file['scan_status'] ?? '') === 'verified' && $fileId > 0) {
                 try {
                     $repairJobId = $this->queueCompactRepair(
@@ -116,9 +108,6 @@ final class CatalogUnverifiedDependencyRecovery
                         );
                     }
                     return [
-                        // "recovered" here means the recovery responsibility has
-                        // been durably secured; the repair itself remains visible
-                        // as a background job and is not claimed to be complete.
                         'recovered' => true,
                         'recovery_queued' => true,
                         'removed' => 0,
