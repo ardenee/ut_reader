@@ -40,11 +40,24 @@ final class JsonResponse
      */
     public static function error(string $code, string $message, int $status, array $details = []): never
     {
+        // Record the full internal diagnostic before applying the public 5xx
+        // boundary. Client mistakes (4xx) retain their actionable validation
+        // text; server failures never expose SQL, paths, exception strings or
+        // other implementation details even if a call site passes them here.
         if (function_exists('catalog_system_error_record_http')) {
             \catalog_system_error_record_http($code, $message, $status, [
                 'detail_keys' => array_values(array_map('strval', array_keys($details))),
             ]);
         }
+
+        if ($status >= 500) {
+            $requestId = function_exists('catalog_request_id')
+                ? \catalog_request_id()
+                : bin2hex(random_bytes(12));
+            $message = 'The request could not be completed. Reference: ' . $requestId;
+            $details = ['request_id' => $requestId];
+        }
+
         self::send([
             'error' => [
                 'code' => $code,
