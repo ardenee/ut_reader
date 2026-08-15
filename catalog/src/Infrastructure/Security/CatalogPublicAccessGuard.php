@@ -48,9 +48,6 @@ final class CatalogPublicAccessGuard
             return true;
         }
 
-        // Never trust the presence of a remember cookie by itself: any visitor can
-        // create a cookie with that name. Restore and verify the administrator token
-        // through the normal authentication path before granting an exemption.
         $sessionCookie = session_name();
         $hasSessionCookie = $sessionCookie !== ''
             && isset($_COOKIE[$sessionCookie])
@@ -156,13 +153,10 @@ final class CatalogPublicAccessGuard
         exit;
     }
 
-    public function guardRequest(): void
+    /** Cheap pre-cache crawler gate: no per-IP state lock/write. */
+    public function guardCrawlerRequest(): void
     {
-        if ($this->exempt()) {
-            return;
-        }
-        $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
-        if (!in_array($method, ['GET', 'HEAD'], true)) {
+        if ($this->exempt() || !$this->guardableMethod()) {
             return;
         }
         $settings = $this->settingsStore()->settings();
@@ -174,6 +168,15 @@ final class CatalogPublicAccessGuard
                 'Automated crawlers and bulk link scanners are not permitted on this development service.'
             );
         }
+    }
+
+    /** Stateful burst gate for requests that were not served from response cache. */
+    public function guardBurstRequest(): void
+    {
+        if ($this->exempt() || !$this->guardableMethod()) {
+            return;
+        }
+        $settings = $this->settingsStore()->settings();
         $retryAfter = $this->burstState(
             $this->clientIp(),
             $settings['public_burst_max_requests'],
@@ -188,6 +191,13 @@ final class CatalogPublicAccessGuard
                 $retryAfter
             );
         }
+    }
+
+    /** Compatibility entry point for callers that need both gates immediately. */
+    public function guardRequest(): void
+    {
+        $this->guardCrawlerRequest();
+        $this->guardBurstRequest();
     }
 
     public function rateLimit(PDO $db, string $scope, int $maximum, int $windowSeconds): int
@@ -261,6 +271,12 @@ final class CatalogPublicAccessGuard
     {
         $settings = $this->settingsStore()->settings($db);
         return max(0, (int)$settings['public_download_speed_kbps']) * 1024;
+    }
+
+    private function guardableMethod(): bool
+    {
+        $method = strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+        return in_array($method, ['GET', 'HEAD'], true);
     }
 
     /** @return array<string,mixed> */
