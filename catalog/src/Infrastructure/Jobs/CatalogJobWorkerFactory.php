@@ -85,6 +85,7 @@ final class CatalogJobWorkerFactory
             JobType::REBUILD_FILE_DEPENDENCIES => static fn() => new CatalogDependencyRefreshJobHandler($db, $config),
             JobType::REBUILD_AFFECTED_DEPENDENCIES => static fn() => new CatalogAffectedDependencyRefreshJobHandler($db, $config),
             JobType::REBUILD_FILE_SEARCH_INDEX => static fn() => new CatalogSearchIndexJobHandler($db),
+            JobType::SCAN_POSSIBLE_MISNAMED_FILES => static fn() => new CatalogMisnamedFileScanJobHandler($db),
             JobType::RECONCILE_CATALOG_PROJECTIONS => static fn() => new CatalogProjectionReconciliationJobHandler($db, $config),
             JobType::RECONCILE_CATALOG_PROJECTION_FILE => static fn() => new CatalogProjectionReconciliationJobHandler($db, $config),
             JobType::REPAIR_SOURCE_IDENTITY_FILE => static fn() => new CatalogMaintenanceJobHandler($db, $config),
