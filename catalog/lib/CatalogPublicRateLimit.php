@@ -49,7 +49,14 @@ function catalog_public_rate_limit_or_throw(string $scope, int $maxRequests, int
 
 function catalog_public_search_rate_limit(): void
 {
-    if (catalog_support_is_admin()) {
+    // Search deliberately releases PHP's session lock before the potentially
+    // non-trivial database query. session_write_close() leaves the authenticated
+    // $_SESSION snapshot available to this request, so honor it without calling
+    // catalog_support_is_admin() and reopening/locking the same session again.
+    if (($_SESSION['user']['role'] ?? '') === 'admin') {
+        return;
+    }
+    if (session_status() === PHP_SESSION_ACTIVE && catalog_support_is_admin()) {
         return;
     }
     catalog_public_rate_limit_or_throw(
