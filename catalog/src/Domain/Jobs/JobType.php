@@ -22,6 +22,7 @@ final class JobType
     public const REBUILD_FILE_DEPENDENCIES = 'catalog.rebuild_file_dependencies';
     public const REBUILD_AFFECTED_DEPENDENCIES = 'catalog.rebuild_affected_dependencies';
     public const REBUILD_FILE_SEARCH_INDEX = 'catalog.rebuild_file_search_index';
+    public const SCAN_POSSIBLE_MISNAMED_FILES = 'catalog.scan_possible_misnamed_files';
     public const RECONCILE_CATALOG_PROJECTIONS = 'catalog.reconcile_catalog_projections';
     public const RECONCILE_CATALOG_PROJECTION_FILE = 'catalog.reconcile_catalog_projection_file';
     public const REPAIR_SOURCE_IDENTITY_FILE = 'catalog.repair_source_identity_file';
@@ -63,6 +64,7 @@ final class JobType
             self::REBUILD_FILE_DEPENDENCIES,
             self::REBUILD_AFFECTED_DEPENDENCIES,
             self::REBUILD_FILE_SEARCH_INDEX,
+            self::SCAN_POSSIBLE_MISNAMED_FILES,
             self::RECONCILE_CATALOG_PROJECTIONS,
             self::RECONCILE_CATALOG_PROJECTION_FILE,
             self::REPAIR_SOURCE_IDENTITY_FILE,
