@@ -42,6 +42,7 @@ final class JobExecutionContext
                 JobType::IMPORT_STAGED_PAK,
                 JobType::IMPORT_STAGED_ARCHIVE,
                 JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                JobType::SCAN_POSSIBLE_MISNAMED_FILES,
             ],
             true
         );
