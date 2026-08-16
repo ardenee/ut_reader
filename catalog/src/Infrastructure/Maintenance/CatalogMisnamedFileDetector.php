@@ -2,9 +2,10 @@
 /**
  * Detects likely historical filename/package-name corruption from dependency evidence.
  *
- * The detector never renames files. It compares unresolved import object terms with
- * exact export object terms in the same game, rejects highly ambiguous object names,
- * and ranks candidate providers using repeated matches plus current dependant count.
+ * The detector never renames files. It considers true missing dependency rows only,
+ * compares their object terms with exact exports in the same game, excludes official
+ * base-game/common-package noise, rejects highly ambiguous object names, and ranks
+ * community-file candidates using repeated matches plus current dependant count.
  */
 declare(strict_types=1);
 
@@ -18,12 +19,15 @@ final class CatalogMisnamedFileDetector
     public const MAX_OBJECT_PROVIDER_FANOUT = 40;
     private const TERM_CHUNK_SIZE = 350;
 
+    /** @var array<int,array{names:array<string,true>,file_ids:array<int,true>}> */
+    private array $officialIdentityCache = [];
+
     public function __construct(private readonly PDO $db)
     {
     }
 
     /**
-     * Scan one file that owns unresolved imports.
+     * Scan one community file that owns true missing imports.
      *
      * @return array{candidates:list<array<string,mixed>>,imports_examined:int,truncated:bool,ambiguous_terms:int}
      */
@@ -39,10 +43,20 @@ final class CatalogMisnamedFileDetector
             return ['candidates' => [], 'imports_examined' => 0, 'truncated' => false, 'ambiguous_terms' => 0];
         }
 
+        $gameId = (int)$owner['game_id'];
+        $official = $this->officialBaseGameIdentity($gameId);
+        if (isset($official['file_ids'][(int)$owner['id']])
+            || $this->isOfficialPackage((string)$owner['package_name'], $official['names'])) {
+            return ['candidates' => [], 'imports_examined' => 0, 'truncated' => false, 'ambiguous_terms' => 0];
+        }
+
+        // Status 0 is the authoritative compact "missing" state. In particular,
+        // status 3 (common) is intentionally excluded even though it normally has
+        // no resolved_file_id. Common/base-game imports are not rename evidence.
         $statement = $this->db->prepare(
             'SELECT import_index,required_package_term_id,import_object_term_id '
             . 'FROM ue_dependency_links '
-            . 'WHERE file_id=? AND resolved_file_id IS NULL '
+            . 'WHERE file_id=? AND status=0 AND resolved_file_id IS NULL '
             . 'AND required_package_term_id IS NOT NULL AND import_object_term_id IS NOT NULL '
             . 'ORDER BY import_index LIMIT ' . (self::MAX_IMPORTS_PER_OWNER + 1)
         );
@@ -93,9 +107,14 @@ final class CatalogMisnamedFileDetector
         $packageNames = $this->termValues(array_map('intval', array_keys($requiredPackageTermIds)));
         $providers = $this->providersForTerms(
             $safeObjectTermIds,
-            (int)$owner['game_id'],
+            $gameId,
             $ownerFileId
         );
+        $providers = array_values(array_filter(
+            $providers,
+            fn(array $provider): bool => !isset($official['file_ids'][(int)$provider['file_id']])
+                && !$this->isOfficialPackage((string)$provider['package_name'], $official['names'])
+        ));
         if ($providers === []) {
             return [
                 'candidates' => [],
@@ -119,7 +138,9 @@ final class CatalogMisnamedFileDetector
             foreach (array_keys($requirementsByObject[$objectTermId] ?? []) as $packageTermId) {
                 $packageTermId = (int)$packageTermId;
                 $suggestedPackage = trim((string)($packageNames[$packageTermId] ?? ''));
-                if ($suggestedPackage === '' || strcasecmp($suggestedPackage, (string)$provider['package_name']) === 0) {
+                if ($suggestedPackage === ''
+                    || strcasecmp($suggestedPackage, (string)$provider['package_name']) === 0
+                    || $this->isOfficialPackage($suggestedPackage, $official['names'])) {
                     continue;
                 }
                 $key = $candidateFileId . ':' . $packageTermId;
@@ -304,6 +325,90 @@ final class CatalogMisnamedFileDetector
             }
         }
         return $counts;
+    }
+
+    /** @return array{names:array<string,true>,file_ids:array<int,true>} */
+    private function officialBaseGameIdentity(int $gameId): array
+    {
+        if (isset($this->officialIdentityCache[$gameId])) {
+            return $this->officialIdentityCache[$gameId];
+        }
+
+        $identity = ['names' => [], 'file_ids' => []];
+        if ($gameId < 1) {
+            return $this->officialIdentityCache[$gameId] = $identity;
+        }
+
+        $statement = $this->db->prepare(
+            'SELECT b.source_file_id,b.package_name,b.original_name,'
+            . 'f.package_name source_package_name,f.original_name source_original_name '
+            . 'FROM ue_base_game_files b '
+            . 'LEFT JOIN ue_files f ON f.id=b.source_file_id AND f.game_id=b.game_id '
+            . 'WHERE b.game_id=?'
+        );
+        $statement->execute([$gameId]);
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $sourceFileId = (int)($row['source_file_id'] ?? 0);
+            if ($sourceFileId > 0) {
+                $identity['file_ids'][$sourceFileId] = true;
+            }
+            foreach ([(string)($row['package_name'] ?? ''), (string)($row['source_package_name'] ?? '')] as $packageName) {
+                foreach (self::packageIdentityKeys($packageName) as $key) {
+                    $identity['names'][$key] = true;
+                }
+            }
+            foreach ([(string)($row['original_name'] ?? ''), (string)($row['source_original_name'] ?? '')] as $filename) {
+                foreach (self::packageIdentityKeys(self::filenameStem($filename)) as $key) {
+                    $identity['names'][$key] = true;
+                }
+            }
+        }
+
+        return $this->officialIdentityCache[$gameId] = $identity;
+    }
+
+    /** @param array<string,true> $officialNames */
+    private function isOfficialPackage(string $packageName, array $officialNames): bool
+    {
+        foreach (self::packageIdentityKeys($packageName) as $key) {
+            if (isset($officialNames[$key])) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @return list<string> */
+    private static function packageIdentityKeys(string $packageName): array
+    {
+        $packageName = trim(str_replace('\\', '/', $packageName));
+        if ($packageName === '') {
+            return [];
+        }
+        $keys = [];
+        foreach ([$packageName, self::packageLeaf($packageName)] as $value) {
+            $value = trim($value);
+            if ($value === '') {
+                continue;
+            }
+            $key = function_exists('mb_strtolower')
+                ? mb_strtolower($value, 'UTF-8')
+                : strtolower($value);
+            $keys[$key] = true;
+        }
+        return array_keys($keys);
+    }
+
+    private static function filenameStem(string $filename): string
+    {
+        $filename = trim(str_replace('\\', '/', $filename));
+        if ($filename === '') {
+            return '';
+        }
+        $slash = strrpos($filename, '/');
+        $leaf = $slash === false ? $filename : substr($filename, $slash + 1);
+        $dot = strrpos($leaf, '.');
+        return $dot === false ? $leaf : substr($leaf, 0, $dot);
     }
 
     /** @return array{0:string,1:int,2:int|null} */
