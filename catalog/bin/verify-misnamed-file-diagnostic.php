@@ -104,7 +104,8 @@ $record(
     'common_dependencies_are_not_evidence',
     str_contains($handler, 'd.status=0 AND d.resolved_file_id IS NULL')
         && str_contains($detector, 'WHERE file_id=? AND status=0 AND resolved_file_id IS NULL')
-        && str_contains($detector, 'status 3 (common)'),
+        && str_contains($detector, 'Status 3')
+        && str_contains($detector, '(common) is deliberately excluded'),
     'Only authoritative missing rows may feed rename evidence; Common rows must be excluded.'
 );
 
@@ -120,10 +121,10 @@ $record(
 
 $record(
     'scan_policy_discards_old_loose_progress',
-    str_contains($handler, "POLICY_VERSION = 'community-missing-only-v2'")
+    str_contains($handler, "POLICY_VERSION = 'community-path-name-strict-v3'")
         && str_contains($handler, '$resume[\'policy_version\']')
         && str_contains($handler, "'policy_version' => self::POLICY_VERSION"),
-    'A job resumed after deployment must not retain candidates gathered by the older loose policy.'
+    'A resumed job must discard candidates gathered before strict relative-path/name/orphan matching.'
 );
 
 $record(
@@ -137,19 +138,37 @@ $record(
 );
 
 $record(
+    'relative_object_paths_must_match',
+    str_contains($detector, 'HEX(required_path_hash) required_path_hash_hex')
+        && str_contains($detector, 'HEX(e.path_hash) path_hash_hex')
+        && str_contains($detector, 'required_path_hash IS NOT NULL')
+        && str_contains($detector, 'e.path_hash IS NOT NULL')
+        && str_contains($detector, 'if (!isset($requiredPathHashes[$providerPathHash]))'),
+    'A shared leaf name is not enough: the object hierarchy below the package root must match exactly.'
+);
+
+$record(
+    'candidate_must_be_orphaned',
+    str_contains($detector, '(int)($dependants[$candidateFileId] ?? 0) !== 0')
+        && str_contains($detector, "'current_dependants' => 0")
+        && str_contains($detector, 'COUNT(DISTINCT file_id) dependant_count'),
+    'A rename candidate must have zero currently resolved dependant files.'
+);
+
+$record(
+    'candidate_package_names_must_be_similar',
+    str_contains($detector, 'MIN_NAME_SIMILARITY_POINTS = 10')
+        && str_contains($detector, '$similarityPoints < self::MIN_NAME_SIMILARITY_POINTS')
+        && str_contains($detector, 'same letters/numbers after punctuation cleanup'),
+    'Object overlap cannot justify renaming unrelated package names; current and suggested roots must be similar.'
+);
+
+$record(
     'same_file_multiple_matches_are_required',
     str_contains($detector, 'if ($matched < 2)')
         && str_contains($detector, '$group[\'best_same_file_matches\'] = $matched;')
         && str_contains($detector, "'matching_files' => 1"),
-    'A candidate must have at least two distinct object-term matches from the same importing file.'
-);
-
-$record(
-    'zero_dependants_strengthen_confidence',
-    str_contains($detector, '$dependants === 0 ? 35')
-        && str_contains($detector, '$confidence = \'very_high\'')
-        && str_contains($detector, 'COUNT(DISTINCT file_id) dependant_count'),
-    'Files with no current resolved dependants must receive the strongest confidence boost.'
+    'A candidate must have at least two distinct exact-path object matches from the same importing file.'
 );
 
 $record(
@@ -177,7 +196,22 @@ $record(
     (string)($fixture['confidence'] ?? '') === 'very_high'
         && (string)($fixture['name_similarity'] ?? '') === 'same letters/numbers after punctuation cleanup'
         && (int)($fixture['score'] ?? 0) >= 100,
-    '_GO_tex_1 versus [GO]tex_1 with four same-file object matches and zero dependants must rank Very high.'
+    '_GO_tex_1 versus [GO]tex_1 with four exact-path matches and zero dependants must rank Very high.'
+);
+
+$badNameFixture = \UnrealDb\Catalog\Infrastructure\Maintenance\CatalogMisnamedFileDetector::rankCandidate([
+    'candidate_package_name' => 'TeamSymbols_UT2003',
+    'suggested_package_name' => 'AnnouncerFemale2K4',
+    'best_same_file_matches' => 4,
+    'matching_objects' => 4,
+    'matching_files' => 3,
+    'current_dependants' => 0,
+]);
+$record(
+    'unrelated_names_do_not_gain_similarity',
+    (string)($badNameFixture['name_similarity'] ?? '') === 'different'
+        && (int)($badNameFixture['name_distance'] ?? 0) > 4,
+    'TeamSymbols_UT2003 and AnnouncerFemale2K4 must be recognized as unrelated package identities.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
