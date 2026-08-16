@@ -46,9 +46,9 @@ final class JobResourcePolicy
                 'description' => 'Bounded targeted dependency batches and projection-reconciliation file units. Batches process one file at a time internally; individual failures are isolated into retry jobs. Lower this if dependency maintenance causes database pressure.',
             ],
             self::SEARCH_HEAVY => [
-                'label' => 'Search-index rebuilds',
+                'label' => 'Search and catalogue diagnostics',
                 'default' => 1,
-                'description' => 'Rebuilds file search projections and indexes.',
+                'description' => 'Search-index rebuilds and bounded catalogue-wide diagnostic scans. Database read intensive.',
             ],
             self::IMPORT_HEAVY => [
                 'label' => 'Normal staged package imports',
@@ -143,6 +143,11 @@ final class JobResourcePolicy
                 self::SEARCH_HEAVY,
                 self::defaultLimit(1),
                 self::positiveKey('search:file:', $payload['file_id'] ?? null)
+            ),
+            JobType::SCAN_POSSIBLE_MISNAMED_FILES => new JobResourceProfile(
+                self::SEARCH_HEAVY,
+                self::defaultLimit(1),
+                'diagnostic:possible-misnamed-files'
             ),
             JobType::REPAIR_SOURCE_IDENTITY_FILE => new JobResourceProfile(
                 self::DEPENDENCY_HEAVY,
