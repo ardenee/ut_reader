@@ -3,7 +3,7 @@
  * UnrealDB PHP File Audit
  * Purpose: Serves the main catalog entry point for the public home/search views and administrator login/logout flow.
  * Why: It centralizes the small set of top-level catalog routes before specialized workflows redirect to dedicated
- *      pages.
+ *       pages.
  * Role: Primary `/catalog/` web entry point for home, search, authentication, and compatibility redirects.
  * Audit: Keep routing/authentication here, but continue moving reusable search, security, and rendering logic into
  *        shared services.
@@ -231,7 +231,16 @@ try {
         foreach ($games as $game) {
             echo '<option value="' . (int)$game['id'] . '"' . ((int)$game['id'] === $gameId ? ' selected' : '') . '>' . catalog_h($game['name']) . '</option>';
         }
-        echo '</select></label><button>Search</button></form><p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Broad public searches return at most 100 files and do not calculate an exact result total.</p></div>';
+        echo '</select></label><button>Search</button></form><p class="muted small">Public searches must be limited to one game. Logged-in administrators may search all games. Exact GUID, MD5 and SHA1 lookups use indexed identity searches. Filename/package search supports broad matching; compact object/import/export metadata uses indexed exact-term matching so a search cannot trigger a catalogue-wide metadata scan.</p></div>';
+
+        // Authentication has already been resolved and the search page header is
+        // rendered. Never hold PHP's per-session lock while MySQL performs a
+        // potentially non-trivial catalogue search; other tabs/pages from the
+        // same administrator session must remain usable.
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         if ($query !== '') {
             if (!$adminSearch && $gameId < 1) {
                 echo '<div class="card"><p class="muted">Choose a game before searching.</p></div>';
