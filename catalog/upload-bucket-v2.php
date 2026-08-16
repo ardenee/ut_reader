@@ -7,7 +7,6 @@
  */
 declare(strict_types=1);
 
-require_once __DIR__ . '/lib/Auth.php';
 require_once __DIR__ . '/lib/CatalogUi.php';
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/bootstrap/autoload.php';
@@ -27,9 +26,14 @@ function upload_bucket_v2_short_error(Throwable $error): string
 
 try {
     $config = catalog_config();
-    catalog_session_start($config);
-    catalog_require_admin($config);
     $db = catalog_db($config);
+    catalog_start_session();
+    if (!catalog_support_is_admin()) {
+        if (!catalog_require_admin_page('Upload Bucket')) {
+            exit;
+        }
+    }
+
     $config = (new CatalogProgramSettingsStore($db, $config))->applyUploadLimits($config);
     $policy = new CatalogUploadBucketFilePolicy($db, $config);
     $allowedExtensions = $policy->allowedExtensions();
