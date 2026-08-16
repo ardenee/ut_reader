@@ -3,9 +3,10 @@
  * Detects likely historical filename/package-name corruption from dependency evidence.
  *
  * The detector never renames files. It considers true missing dependency rows only,
- * compares their object terms with exact exports in the same game, excludes official
- * base-game/common-package noise, rejects highly ambiguous object names, and ranks
- * community-file candidates using repeated matches plus current dependant count.
+ * requires exact relative-object-path matches against exports in the same game,
+ * excludes official/base-game/common-package noise, and only retains community
+ * providers whose current package name is close to the missing package name and
+ * which currently have no resolved dependants.
  */
 declare(strict_types=1);
 
@@ -18,6 +19,7 @@ final class CatalogMisnamedFileDetector
     public const MAX_IMPORTS_PER_OWNER = 3000;
     public const MAX_OBJECT_PROVIDER_FANOUT = 40;
     private const TERM_CHUNK_SIZE = 350;
+    private const MIN_NAME_SIMILARITY_POINTS = 10;
 
     /** @var array<int,array{names:array<string,true>,file_ids:array<int,true>}> */
     private array $officialIdentityCache = [];
@@ -50,14 +52,17 @@ final class CatalogMisnamedFileDetector
             return ['candidates' => [], 'imports_examined' => 0, 'truncated' => false, 'ambiguous_terms' => 0];
         }
 
-        // Status 0 is the authoritative compact "missing" state. In particular,
-        // status 3 (common) is intentionally excluded even though it normally has
-        // no resolved_file_id. Common/base-game imports are not rename evidence.
+        // Status 0 is the authoritative compact "missing" state. Status 3
+        // (common) is deliberately excluded. required_path_hash represents the
+        // object path below the package root, so package-name damage can be
+        // detected without reducing the comparison to a coincidental leaf name.
         $statement = $this->db->prepare(
-            'SELECT import_index,required_package_term_id,import_object_term_id '
+            'SELECT import_index,required_package_term_id,import_object_term_id,'
+            . 'HEX(required_path_hash) required_path_hash_hex '
             . 'FROM ue_dependency_links '
             . 'WHERE file_id=? AND status=0 AND resolved_file_id IS NULL '
             . 'AND required_package_term_id IS NOT NULL AND import_object_term_id IS NOT NULL '
+            . 'AND required_path_hash IS NOT NULL '
             . 'ORDER BY import_index LIMIT ' . (self::MAX_IMPORTS_PER_OWNER + 1)
         );
         $statement->execute([$ownerFileId]);
@@ -70,17 +75,18 @@ final class CatalogMisnamedFileDetector
             return ['candidates' => [], 'imports_examined' => 0, 'truncated' => $truncated, 'ambiguous_terms' => 0];
         }
 
-        /** @var array<int,array<int,true>> $requirementsByObject */
+        /** @var array<int,array<int,array<string,true>>> $requirementsByObject */
         $requirementsByObject = [];
         $requiredPackageTermIds = [];
         $objectTermIds = [];
         foreach ($dependencies as $dependency) {
             $objectTermId = (int)($dependency['import_object_term_id'] ?? 0);
             $packageTermId = (int)($dependency['required_package_term_id'] ?? 0);
-            if ($objectTermId < 1 || $packageTermId < 1) {
+            $pathHash = strtoupper(trim((string)($dependency['required_path_hash_hex'] ?? '')));
+            if ($objectTermId < 1 || $packageTermId < 1 || $pathHash === '') {
                 continue;
             }
-            $requirementsByObject[$objectTermId][$packageTermId] = true;
+            $requirementsByObject[$objectTermId][$packageTermId][$pathHash] = true;
             $requiredPackageTermIds[$packageTermId] = true;
             $objectTermIds[$objectTermId] = true;
         }
@@ -135,14 +141,39 @@ final class CatalogMisnamedFileDetector
         foreach ($providers as $provider) {
             $objectTermId = (int)$provider['object_term_id'];
             $candidateFileId = (int)$provider['file_id'];
-            foreach (array_keys($requirementsByObject[$objectTermId] ?? []) as $packageTermId) {
+            $providerPathHash = strtoupper(trim((string)($provider['path_hash_hex'] ?? '')));
+
+            // A historical filename-cleanup victim should be effectively orphaned.
+            // If the current package identity is already resolving dependencies,
+            // do not suggest replacing it with another package name.
+            if ($providerPathHash === '' || (int)($dependants[$candidateFileId] ?? 0) !== 0) {
+                continue;
+            }
+
+            foreach (($requirementsByObject[$objectTermId] ?? []) as $packageTermId => $requiredPathHashes) {
                 $packageTermId = (int)$packageTermId;
+
+                // Leaf-name collisions are not evidence. The object hierarchy below
+                // the package root must be exactly the same on both sides.
+                if (!isset($requiredPathHashes[$providerPathHash])) {
+                    continue;
+                }
+
                 $suggestedPackage = trim((string)($packageNames[$packageTermId] ?? ''));
                 if ($suggestedPackage === ''
                     || strcasecmp($suggestedPackage, (string)$provider['package_name']) === 0
                     || $this->isOfficialPackage($suggestedPackage, $official['names'])) {
                     continue;
                 }
+
+                [, $similarityPoints] = self::nameSimilarity(
+                    (string)$provider['package_name'],
+                    $suggestedPackage
+                );
+                if ($similarityPoints < self::MIN_NAME_SIMILARITY_POINTS) {
+                    continue;
+                }
+
                 $key = $candidateFileId . ':' . $packageTermId;
                 if (!isset($groups[$key])) {
                     $groups[$key] = [
@@ -157,7 +188,7 @@ final class CatalogMisnamedFileDetector
                             $suggestedPackage,
                             (string)$provider['extension']
                         ),
-                        'current_dependants' => (int)($dependants[$candidateFileId] ?? 0),
+                        'current_dependants' => 0,
                         'matched_object_term_ids' => [],
                         'best_same_file_matches' => 0,
                         'matching_files' => 1,
@@ -214,9 +245,7 @@ final class CatalogMisnamedFileDetector
 
         if ($best >= 3 && $dependants === 0 && $similarityPoints >= 20) {
             $confidence = 'very_high';
-        } elseif (($best >= 2 && $dependants === 0 && $similarityPoints >= 10)
-            || ($best >= 4 && $dependants === 0)
-            || ($best >= 3 && $similarityPoints >= 20)) {
+        } elseif ($best >= 2 && $dependants === 0 && $similarityPoints >= self::MIN_NAME_SIMILARITY_POINTS) {
             $confidence = 'high';
         } else {
             $confidence = 'possible';
@@ -271,11 +300,13 @@ final class CatalogMisnamedFileDetector
         foreach (array_chunk($termIds, self::TERM_CHUNK_SIZE) as $chunk) {
             $placeholders = implode(',', array_fill(0, count($chunk), '?'));
             $statement = $this->db->prepare(
-                'SELECT e.object_term_id,c.id file_id,c.game_id,c.package_name,c.original_name,c.extension,g.name game_name '
+                'SELECT e.object_term_id,HEX(e.path_hash) path_hash_hex,'
+                . 'c.id file_id,c.game_id,c.package_name,c.original_name,c.extension,g.name game_name '
                 . 'FROM ue_export_lookup e '
                 . 'JOIN ue_files c ON c.id=e.file_id AND c.scan_status="verified" '
                 . 'JOIN ue_games g ON g.id=c.game_id '
                 . 'WHERE e.object_term_id IN (' . $placeholders . ') AND c.game_id=? AND c.id<>? '
+                . 'AND e.path_hash IS NOT NULL '
                 . 'ORDER BY e.object_term_id,c.id'
             );
             $statement->execute(array_merge($chunk, [$gameId, $ownerFileId]));
