@@ -41,6 +41,16 @@ final class CatalogAffectedDependencyRefreshCoordinator
     ): array {
         self::syncProvider($db, $newFileId);
 
+        // Existing callers predate rename-aware discovery. When a running root
+        // affected job carries rename options, recover them from that durable
+        // row so the existing handler can plan old-name/new-name/resolved-owner
+        // work without introducing a parallel workflow implementation.
+        if ($additionalPackageNames === [] && !$includeResolvedProvider) {
+            $options = self::activeDiscoveryOptions($db, $newFileId);
+            $additionalPackageNames = $options['additional_package_names'];
+            $includeResolvedProvider = $options['include_resolved_provider'];
+        }
+
         $activeRefresh = self::isActiveRefreshJob($db, $newFileId);
         if (!$activeRefresh && $additionalPackageNames === [] && !$includeResolvedProvider) {
             $jobId = self::enqueueIfNeeded($db, $gameId, $newFileId, $packageName, true, true);
@@ -203,6 +213,45 @@ final class CatalogAffectedDependencyRefreshCoordinator
             $gameId,
         ]);
         return $statement->fetchColumn() !== false;
+    }
+
+    /**
+     * @return array{additional_package_names:list<string>,include_resolved_provider:bool}
+     */
+    private static function activeDiscoveryOptions(PDO $db, int $fileId): array
+    {
+        $empty = ['additional_package_names' => [], 'include_resolved_provider' => false];
+        try {
+            [$dedupeKey, $chainPattern] = self::chainKeys($fileId);
+            $statement = $db->prepare(
+                'SELECT payload_json FROM ue_background_jobs'
+                . ' WHERE job_type=? AND status="running"'
+                . ' AND (dedupe_key=? OR dedupe_key LIKE ?)'
+                . ' ORDER BY id DESC LIMIT 1'
+            );
+            $statement->execute([
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                $dedupeKey,
+                $chainPattern,
+            ]);
+            $json = $statement->fetchColumn();
+            if (!is_string($json) || $json === '') {
+                return $empty;
+            }
+            $payload = json_decode($json, true);
+            if (!is_array($payload)) {
+                return $empty;
+            }
+            $rawNames = is_array($payload['additional_package_names'] ?? null)
+                ? $payload['additional_package_names']
+                : [];
+            return [
+                'additional_package_names' => self::packageNames('', $rawNames),
+                'include_resolved_provider' => !empty($payload['include_resolved_provider']),
+            ];
+        } catch (Throwable) {
+            return $empty;
+        }
     }
 
     private static function isActiveRefreshJob(PDO $db, int $fileId): bool
