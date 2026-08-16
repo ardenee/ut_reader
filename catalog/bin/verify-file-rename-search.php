@@ -167,10 +167,8 @@ try {
     $service = $class->newInstanceWithoutConstructor();
     $packageMethod = $class->getMethod('correctedPackageName');
     $sourceMethod = $class->getMethod('correctedSourceRelativePath');
-    if (method_exists($packageMethod, 'setAccessible')) {
-        $packageMethod->setAccessible(true);
-        $sourceMethod->setAccessible(true);
-    }
+    // ReflectionMethod::setAccessible() has had no effect since PHP 8.1 and is
+    // deprecated in PHP 8.5. Reflection can invoke these private helpers directly.
     $classic = $packageMethod->invoke($service, '_GO_tex_1', '[GO]tex_1.utx');
     $mounted = $packageMethod->invoke($service, '/Game/Textures/_GO_tex_1', '[GO]tex_1.uasset');
     $source = $sourceMethod->invoke($service, 'UTGame/CookedPC/Textures/_GO_tex_1.utx', '[GO]tex_1.utx');
