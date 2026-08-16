@@ -150,7 +150,7 @@ final class CatalogAffectedDependencyRefreshCoordinator
         $newPackageName = trim($newPackageName);
         $oldPackageName = trim($oldPackageName);
         if ($gameId < 1 || $fileId < 1 || $newPackageName === '') {
-            return 0;
+            throw new \InvalidArgumentException('Rename dependency refresh requires a valid file, game and package name.');
         }
 
         self::syncProvider($db, $fileId);
@@ -180,9 +180,12 @@ final class CatalogAffectedDependencyRefreshCoordinator
                 3
             );
         } catch (Throwable $error) {
-            error_log('[UnrealDB dependency rename refresh queue] file_id=' . $fileId
-                . ' enqueue failed: ' . $error->getMessage());
-            return 0;
+            throw new \RuntimeException(
+                'Could not queue the affected dependency refresh for renamed file #' . $fileId . ': '
+                    . $error->getMessage(),
+                0,
+                $error
+            );
         }
     }
 
