@@ -88,12 +88,15 @@ $record(
     'The diagnostic must use the single-slot search-heavy resource class and a long-running lease profile.'
 );
 
+$deferReleasesAffinity = preg_match(
+    '/\$context->defer\(\s*1\s*,.*?\s*,\s*false\s*\);/s',
+    $handler
+) === 1;
 $record(
     'scan_is_batched_and_yields_worker',
     str_contains($handler, 'OWNER_BATCH_SIZE = 8')
         && str_contains($handler, 'nextOwnerIds(')
-        && str_contains($handler, '$context->defer(')
-        && str_contains($handler, "false\n        );"),
+        && $deferReleasesAffinity,
     'The catalogue scan must advance in small owner-file batches and release worker affinity between turns.'
 );
 
@@ -102,7 +105,7 @@ $record(
     str_contains($detector, 'MAX_OBJECT_PROVIDER_FANOUT = 40')
         && str_contains($detector, 'e.object_term_id IN (')
         && str_contains($detector, 'resolved_file_id IN (')
-        && str_contains($detector, 'd.import_object_term_id IS NOT NULL')
+        && str_contains($detector, 'import_object_term_id IS NOT NULL')
         && !str_contains($detector, ' LIKE '),
     'Candidate discovery must use compact term IDs and bounded provider fan-out, never wildcard metadata scans.'
 );
@@ -110,7 +113,7 @@ $record(
 $record(
     'same_file_multiple_matches_are_required',
     str_contains($detector, 'if ($matched < 2)')
-        && str_contains($detector, "'best_same_file_matches' => \$matched")
+        && str_contains($detector, '$group[\'best_same_file_matches\'] = $matched;')
         && str_contains($detector, "'matching_files' => 1"),
     'A candidate must have at least two distinct object-term matches from the same importing file.'
 );
