@@ -18,7 +18,6 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     private const MIN_BROAD_QUERY_LENGTH = 3;
     private const MAX_MATCHES_PER_FILE = 12;
     private const MAX_ROWS = 5000;
-    private const TEXT_COLLATION = 'utf8mb4_unicode_ci';
 
     /** @var array<int,bool> */
     private static array $compactAvailability = [];
@@ -57,11 +56,17 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
             $order[] = $fileId;
         }
 
+        // Deep metadata search must stay index-driven. The previous implementation
+        // applied leading-wildcard LIKE predicates to converted term BLOBs while
+        // joined to very large export/dependency projections. On a mature catalog
+        // that can scan tens of millions of rows and monopolise MySQL. Exact term
+        // identity uses ue_terms(value_hash,value_length), then indexed term-id
+        // references in the compact projections. Filename/package search above
+        // still supports prefix/contains matching.
         $matches = [];
-        $like = '%' . $query . '%';
         $rowLimit = min(self::MAX_ROWS, max(100, $limit * 12));
-        $this->collectMetadataMatches($gameId, $like, $rowLimit, $matches);
-        $this->collectAliasExportMatches($gameId, $query, $like, $rowLimit, $matches);
+        $this->collectExactMetadataMatches($gameId, $query, $rowLimit, $matches);
+        $this->collectExactQualifiedExportMatches($gameId, $query, $rowLimit, $matches);
         if ($matches === []) {
             return $base;
         }
@@ -172,6 +177,9 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
         $this->collectAlias($gameId, 'package_name', $prefix, 'Package alias', $limit, $candidateMatches);
         $this->collectAlias($gameId, 'original_name', $prefix, 'Alias file', $limit, $candidateMatches);
 
+        // Contains search is retained only on the comparatively small file/alias
+        // identity tables. It is deliberately not used on compact metadata term
+        // projections, where leading wildcards are prohibitively expensive.
         if (count($candidateMatches) < $limit) {
             foreach ([
                 ['package_name_contains', 'package_name', $contains, 'Package'],
@@ -337,116 +345,213 @@ final class PdoCatalogSearchRepository implements CatalogSearchRepository
     }
 
     /** @param array<int,list<array{field:string,value:string}>> $matches */
-    private function collectMetadataMatches(?int $gameId, string $like, int $rowLimit, array &$matches): void
+    private function collectExactMetadataMatches(?int $gameId, string $query, int $rowLimit, array &$matches): void
     {
-        $collation = self::TEXT_COLLATION;
-        $gameSql = $gameId !== null ? ' AND f.game_id=?' : '';
-        $queries = [
-            [
-                'Export object',
-                'SELECT l.file_id id,(CONVERT(t.value_prefix USING utf8mb4) COLLATE ' . $collation . ') match_value '
-                . 'FROM ue_export_lookup l '
-                . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
-                . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
-                . 'JOIN ue_terms t ON t.id=l.object_term_id '
-                . 'WHERE (CONVERT(t.value_prefix USING utf8mb4) COLLATE ' . $collation . ') LIKE ?'
-                . $gameSql . ' ORDER BY l.file_id,l.export_index LIMIT ' . $rowLimit,
-                [$like],
-            ],
-            [
-                'Export path',
-                'SELECT l.file_id id,'
-                . '(CONCAT(f.package_name,".",CONVERT(t.value_prefix USING utf8mb4)) COLLATE ' . $collation . ') match_value '
-                . 'FROM ue_export_lookup l '
-                . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
-                . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
-                . 'JOIN ue_terms t ON t.id=l.local_path_term_id '
-                . 'WHERE ((CONVERT(t.value_prefix USING utf8mb4) COLLATE ' . $collation . ') LIKE ? '
-                . 'OR (CONCAT(f.package_name,".",CONVERT(t.value_prefix USING utf8mb4)) COLLATE '
-                . $collation . ') LIKE ?)'
-                . $gameSql . ' ORDER BY l.file_id,l.export_index LIMIT ' . $rowLimit,
-                [$like, $like],
-            ],
-            [
-                'Import object',
-                'SELECT l.file_id id,(CONVERT(t.value_prefix USING utf8mb4) COLLATE ' . $collation . ') match_value '
-                . 'FROM ue_dependency_links l '
-                . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
-                . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
-                . 'JOIN ue_terms t ON t.id=l.import_object_term_id '
-                . 'WHERE (CONVERT(t.value_prefix USING utf8mb4) COLLATE ' . $collation . ') LIKE ?'
-                . $gameSql . ' ORDER BY l.file_id,l.import_index LIMIT ' . $rowLimit,
-                [$like],
-            ],
-            [
-                'Import path',
-                'SELECT l.file_id id,(CONVERT(t.value_prefix USING utf8mb4) COLLATE ' . $collation . ') match_value '
-                . 'FROM ue_dependency_links l '
-                . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
-                . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
-                . 'JOIN ue_terms t ON t.id=l.required_object_term_id '
-                . 'WHERE (CONVERT(t.value_prefix USING utf8mb4) COLLATE ' . $collation . ') LIKE ?'
-                . $gameSql . ' ORDER BY l.file_id,l.import_index LIMIT ' . $rowLimit,
-                [$like],
-            ],
-        ];
-
-        foreach ($queries as [$label, $sql, $args]) {
-            if ($gameId !== null) {
-                $args[] = $gameId;
-            }
-            try {
-                $statement = $this->db->prepare($sql);
-                $statement->execute($args);
-                while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                    self::addMatch($matches, (int)$row['id'], $label, (string)$row['match_value']);
-                }
-            } catch (PDOException $error) {
-                throw new CatalogSearchUnavailableException(
-                    'Compact catalogue metadata search failed: ' . $error->getMessage(),
-                    0,
-                    $error
-                );
-            }
+        $term = $this->exactTerm($query);
+        if ($term === null) {
+            return;
         }
+        $termId = (int)$term['id'];
+        $value = (string)$term['value'];
+
+        $this->collectTermReferenceMatches(
+            'ue_export_lookup',
+            'object_term_id',
+            'export_index',
+            'Export object',
+            $termId,
+            $value,
+            $gameId,
+            $rowLimit,
+            $matches
+        );
+        $this->collectTermReferenceMatches(
+            'ue_export_lookup',
+            'local_path_term_id',
+            'export_index',
+            'Export local path',
+            $termId,
+            $value,
+            $gameId,
+            $rowLimit,
+            $matches
+        );
+        $this->collectTermReferenceMatches(
+            'ue_dependency_links',
+            'import_object_term_id',
+            'import_index',
+            'Import object',
+            $termId,
+            $value,
+            $gameId,
+            $rowLimit,
+            $matches
+        );
+        $this->collectTermReferenceMatches(
+            'ue_dependency_links',
+            'required_object_term_id',
+            'import_index',
+            'Import path',
+            $termId,
+            $value,
+            $gameId,
+            $rowLimit,
+            $matches
+        );
+        $this->collectTermReferenceMatches(
+            'ue_dependency_links',
+            'required_package_term_id',
+            'import_index',
+            'Required package',
+            $termId,
+            $value,
+            $gameId,
+            $rowLimit,
+            $matches
+        );
     }
 
-    /** @param array<int,list<array{field:string,value:string}>> $matches */
-    private function collectAliasExportMatches(
+    /**
+     * @param array<int,list<array{field:string,value:string}>> $matches
+     */
+    private function collectTermReferenceMatches(
+        string $table,
+        string $termColumn,
+        string $orderColumn,
+        string $label,
+        int $termId,
+        string $value,
         ?int $gameId,
-        string $query,
-        string $like,
         int $rowLimit,
         array &$matches
     ): void {
-        if (strpos($query, '.') === false) {
-            return;
-        }
-        $collation = self::TEXT_COLLATION;
-        $sql = 'SELECT a.file_id id,'
-            . '(CONCAT(a.package_name,".",CONVERT(t.value_prefix USING utf8mb4)) COLLATE ' . $collation . ') match_value '
-            . 'FROM ue_file_package_aliases a '
-            . 'JOIN ue_file_metadata m ON m.file_id=a.file_id AND m.format_version=2 '
-            . 'JOIN ue_files f ON f.id=a.file_id AND f.scan_status="verified" '
-            . 'JOIN ue_export_lookup l ON l.file_id=a.file_id '
-            . 'JOIN ue_terms t ON t.id=l.local_path_term_id '
-            . 'WHERE (CONCAT(a.package_name,".",CONVERT(t.value_prefix USING utf8mb4)) COLLATE '
-            . $collation . ') LIKE ?';
-        $args = [$like];
+        $sql = 'SELECT l.file_id id FROM ' . $table . ' l '
+            . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
+            . 'WHERE l.' . $termColumn . '=?';
+        $args = [$termId];
         if ($gameId !== null) {
-            $sql .= ' AND a.game_id=?';
+            $sql .= ' AND f.game_id=?';
             $args[] = $gameId;
         }
-        $sql .= ' ORDER BY a.file_id,l.export_index LIMIT ' . $rowLimit;
+        $sql .= ' ORDER BY l.file_id,l.' . $orderColumn . ' LIMIT ' . $rowLimit;
+
         try {
             $statement = $this->db->prepare($sql);
             $statement->execute($args);
             while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
-                self::addMatch($matches, (int)$row['id'], 'Alias export path', (string)$row['match_value']);
+                self::addMatch($matches, (int)$row['id'], $label, $value);
             }
         } catch (PDOException $error) {
             throw new CatalogSearchUnavailableException(
-                'Alias export search failed: ' . $error->getMessage(),
+                'Indexed compact metadata search failed: ' . $error->getMessage(),
+                0,
+                $error
+            );
+        }
+    }
+
+    /**
+     * Search a fully-qualified export such as Package.Group.Object without a
+     * contains scan. The package part is compared directly and the local export
+     * path is resolved through the exact term dictionary.
+     *
+     * @param array<int,list<array{field:string,value:string}>> $matches
+     */
+    private function collectExactQualifiedExportMatches(
+        ?int $gameId,
+        string $query,
+        int $rowLimit,
+        array &$matches
+    ): void {
+        $separator = strpos($query, '.');
+        if ($separator === false || $separator < 1 || $separator >= strlen($query) - 1) {
+            return;
+        }
+        $packageName = substr($query, 0, $separator);
+        $localPath = substr($query, $separator + 1);
+        $term = $this->exactTerm($localPath);
+        if ($term === null) {
+            return;
+        }
+        $termId = (int)$term['id'];
+
+        $sql = 'SELECT l.file_id id,f.package_name match_package '
+            . 'FROM ue_export_lookup l '
+            . 'JOIN ue_files f ON f.id=l.file_id AND f.scan_status="verified" '
+            . 'WHERE l.local_path_term_id=? AND f.package_name=?';
+        $args = [$termId, $packageName];
+        if ($gameId !== null) {
+            $sql .= ' AND f.game_id=?';
+            $args[] = $gameId;
+        }
+        $sql .= ' ORDER BY l.file_id,l.export_index LIMIT ' . $rowLimit;
+
+        try {
+            $statement = $this->db->prepare($sql);
+            $statement->execute($args);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                self::addMatch(
+                    $matches,
+                    (int)$row['id'],
+                    'Export path',
+                    (string)$row['match_package'] . '.' . $localPath
+                );
+            }
+
+            $aliasSql = 'SELECT l.file_id id,a.package_name match_package '
+                . 'FROM ue_export_lookup l '
+                . 'JOIN ue_file_package_aliases a ON a.file_id=l.file_id '
+                . 'JOIN ue_files f ON f.id=l.file_id AND f.game_id=a.game_id AND f.scan_status="verified" '
+                . 'WHERE l.local_path_term_id=? AND a.package_name=?';
+            $aliasArgs = [$termId, $packageName];
+            if ($gameId !== null) {
+                $aliasSql .= ' AND a.game_id=?';
+                $aliasArgs[] = $gameId;
+            }
+            $aliasSql .= ' ORDER BY l.file_id,l.export_index LIMIT ' . $rowLimit;
+            $aliasStatement = $this->db->prepare($aliasSql);
+            $aliasStatement->execute($aliasArgs);
+            while (($row = $aliasStatement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                self::addMatch(
+                    $matches,
+                    (int)$row['id'],
+                    'Alias export path',
+                    (string)$row['match_package'] . '.' . $localPath
+                );
+            }
+        } catch (PDOException $error) {
+            throw new CatalogSearchUnavailableException(
+                'Indexed qualified export search failed: ' . $error->getMessage(),
+                0,
+                $error
+            );
+        }
+    }
+
+    /** @return array{id:int,value:string}|null */
+    private function exactTerm(string $value): ?array
+    {
+        $length = strlen($value);
+        if ($value === '' || $length > 65535) {
+            return null;
+        }
+        try {
+            $statement = $this->db->prepare(
+                'SELECT id,value_prefix FROM ue_terms WHERE value_hash=? AND value_length=? LIMIT 1'
+            );
+            $statement->execute([md5($value, true), $length]);
+            $row = $statement->fetch(PDO::FETCH_ASSOC);
+            if (!is_array($row)) {
+                return null;
+            }
+            $stored = (string)$row['value_prefix'];
+            if (!hash_equals($stored, $value)) {
+                return null;
+            }
+            return ['id' => (int)$row['id'], 'value' => $stored];
+        } catch (PDOException $error) {
+            throw new CatalogSearchUnavailableException(
+                'Compact term lookup failed: ' . $error->getMessage(),
                 0,
                 $error
             );
