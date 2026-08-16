@@ -65,7 +65,7 @@ final class CatalogVerifiedFileRenameService
                 );
             }
 
-            $newPackageName = (string)pathinfo($newOriginalName, PATHINFO_FILENAME);
+            $newPackageName = $this->correctedPackageName($oldPackageName, $newOriginalName);
             if ($newPackageName === '' || $newPackageName === '.' || $newPackageName === '..') {
                 throw new RuntimeException('The corrected filename does not contain a valid package name.');
             }
@@ -242,6 +242,23 @@ final class CatalogVerifiedFileRenameService
             return strcasecmp((string)$left['package_name'], (string)$right['package_name']);
         });
         return array_slice($result, 0, $limit);
+    }
+
+    private function correctedPackageName(string $currentPackageName, string $newOriginalName): string
+    {
+        $leaf = (string)pathinfo($newOriginalName, PATHINFO_FILENAME);
+        if ($leaf === '') {
+            return '';
+        }
+        $currentPackageName = trim(str_replace('\\', '/', $currentPackageName));
+        if (!str_starts_with($currentPackageName, '/')) {
+            return $leaf;
+        }
+        $separator = strrpos($currentPackageName, '/');
+        if ($separator === false) {
+            return '/' . $leaf;
+        }
+        return substr($currentPackageName, 0, $separator + 1) . $leaf;
     }
 
     private function correctedSourceRelativePath(string $current, string $newOriginalName): string
