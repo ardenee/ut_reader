@@ -25,7 +25,9 @@ $record = static function (string $name, bool $ok, string $detail) use (&$checks
 
 $phpFiles = [
     'possible-misnamed-files.php',
+    'src/Application/Jobs/JobExecutionContext.php',
     'src/Domain/Jobs/JobType.php',
+    'src/Domain/Jobs/JobResourcePolicy.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
     'src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php',
     'src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php',
@@ -60,6 +62,8 @@ if (!function_exists('proc_open')) {
 $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
 $jobType = $read('src/Domain/Jobs/JobType.php');
+$resourcePolicy = $read('src/Domain/Jobs/JobResourcePolicy.php');
+$executionContext = $read('src/Application/Jobs/JobExecutionContext.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $handler = $read('src/Infrastructure/Jobs/CatalogMisnamedFileScanJobHandler.php');
 $detector = $read('src/Infrastructure/Maintenance/CatalogMisnamedFileDetector.php');
@@ -73,6 +77,15 @@ $record(
         && str_contains($factory, 'JobType::SCAN_POSSIBLE_MISNAMED_FILES')
         && str_contains($factory, 'new CatalogMisnamedFileScanJobHandler($db)'),
     'The durable diagnostic must be a registered job type with a worker route.'
+);
+
+$record(
+    'scan_resource_is_serial_and_long_running_safe',
+    str_contains($resourcePolicy, 'JobType::SCAN_POSSIBLE_MISNAMED_FILES')
+        && str_contains($resourcePolicy, "'diagnostic:possible-misnamed-files'")
+        && str_contains($resourcePolicy, 'self::SEARCH_HEAVY')
+        && str_contains($executionContext, 'JobType::SCAN_POSSIBLE_MISNAMED_FILES'),
+    'The diagnostic must use the single-slot search-heavy resource class and a long-running lease profile.'
 );
 
 $record(
@@ -111,13 +124,14 @@ $record(
 );
 
 $record(
-    'admin_page_is_non_destructive_and_linked',
+    'admin_page_is_non_destructive_and_serial',
     str_contains($page, 'catalog_support_is_admin()')
         && str_contains($page, "catalog_check_csrf('possible_misnamed_files_scan')")
+        && str_contains($page, "'possible-misnamed-files',")
         && str_contains($page, 'Nothing is renamed automatically')
         && str_contains($page, 'Review / rename')
         && str_contains($navigation, "'Possible Misnamed Files' => \$root . 'possible-misnamed-files.php'"),
-    'The diagnostic must remain admin-only, queue scans by POST, and require manual review before the existing rename action.'
+    'The diagnostic must remain admin-only, allow one active scan, and require manual review before the existing rename action.'
 );
 
 require_once $root . '/bootstrap/autoload.php';
