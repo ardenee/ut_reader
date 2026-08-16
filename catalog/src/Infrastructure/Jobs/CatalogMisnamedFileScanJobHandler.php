@@ -2,10 +2,9 @@
 /**
  * Durable catalogue-wide scan for likely historical filename/package-name corruption.
  *
- * Each turn examines a small number of files that currently own unresolved imports,
- * persists the ranked candidate state in job progress, then yields the worker. This
- * keeps the diagnostic out of HTTP requests and prevents a single scan monopolising
- * the database or worker pool.
+ * Each turn examines a small number of community files that currently own true
+ * missing imports, persists the ranked candidate state in job progress, then yields
+ * the worker. Common/base-game dependency noise is intentionally excluded.
  */
 declare(strict_types=1);
 
@@ -20,6 +19,7 @@ use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogMisnamedFileDetector;
 
 final class CatalogMisnamedFileScanJobHandler implements JobHandler
 {
+    private const POLICY_VERSION = 'community-missing-only-v2';
     private const OWNER_BATCH_SIZE = 8;
     private const MAX_PROGRESS_CANDIDATES = 1000;
     private const MAX_RESULT_CANDIDATES = 500;
@@ -40,6 +40,12 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
     {
         $gameId = max(0, (int)($job->payload['game_id'] ?? 0));
         $resume = $context->resumeProgress();
+        if ((string)($resume['policy_version'] ?? '') !== self::POLICY_VERSION) {
+            // A worker may resume a job created by an older detector policy. Do
+            // not retain candidates gathered before Common/base-game exclusions.
+            $resume = [];
+        }
+
         $snapshotMaxId = max(0, (int)($resume['snapshot_max_file_id'] ?? 0));
         if ($snapshotMaxId < 1) {
             $snapshotMaxId = $this->snapshotMaxFileId($gameId);
@@ -74,6 +80,7 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
                 'done' => 100,
                 'total' => 100,
                 'message' => (string)$result['message'],
+                'policy_version' => self::POLICY_VERSION,
                 'scanned_owner_files' => $scannedOwners,
                 'candidate_count' => count((array)$result['candidates']),
             ]);
@@ -132,9 +139,13 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
             $sql .= 'AND f.game_id=? ';
             $arguments[] = $gameId;
         }
-        $sql .= 'AND EXISTS ('
+        $sql .= 'AND NOT EXISTS ('
+            . 'SELECT 1 FROM ue_base_game_files bg '
+            . 'WHERE bg.game_id=f.game_id AND bg.source_file_id=f.id'
+            . ') '
+            . 'AND EXISTS ('
             . 'SELECT 1 FROM ue_dependency_links d WHERE d.file_id=f.id '
-            . 'AND d.resolved_file_id IS NULL '
+            . 'AND d.status=0 AND d.resolved_file_id IS NULL '
             . 'AND d.required_package_term_id IS NOT NULL AND d.import_object_term_id IS NOT NULL'
             . ') ORDER BY f.id LIMIT ' . self::OWNER_BATCH_SIZE;
 
@@ -264,8 +275,9 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
             'percent' => $percent,
             'done' => $cursor,
             'total' => $snapshotMaxId,
-            'message' => 'Checked ' . $scannedOwners . ' file(s) with unresolved imports; '
+            'message' => 'Checked ' . $scannedOwners . ' community file(s) with true missing imports; '
                 . count($candidateState) . ' possible rename candidate(s) retained.',
+            'policy_version' => self::POLICY_VERSION,
             'snapshot_max_file_id' => $snapshotMaxId,
             'cursor_file_id' => $cursor,
             'scanned_owner_files' => $scannedOwners,
@@ -312,6 +324,7 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
 
         return [
             'operation' => 'scan_possible_misnamed_files',
+            'policy_version' => self::POLICY_VERSION,
             'game_id' => $gameId,
             'scanned_owner_files' => $scannedOwners,
             'imports_examined' => $importsExamined,
@@ -321,7 +334,8 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
             'confidence_counts' => $confidence,
             'candidates' => $rows,
             'message' => 'Possible misnamed-file scan complete: ' . count($rows)
-                . ' ranked candidate(s) retained from ' . $scannedOwners . ' file(s) with unresolved imports.',
+                . ' ranked community candidate(s) retained from ' . $scannedOwners
+                . ' file(s) with true missing imports.',
         ];
     }
 }
