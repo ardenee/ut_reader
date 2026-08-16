@@ -80,7 +80,7 @@ $record(
     str_contains($handler, 'OWNER_BATCH_SIZE = 8')
         && str_contains($handler, 'nextOwnerIds(')
         && str_contains($handler, '$context->defer(')
-        && str_contains($handler, 'false\n        );'),
+        && str_contains($handler, "false\n        );"),
     'The catalogue scan must advance in small owner-file batches and release worker affinity between turns.'
 );
 
@@ -97,7 +97,7 @@ $record(
 $record(
     'same_file_multiple_matches_are_required',
     str_contains($detector, 'if ($matched < 2)')
-        && str_contains($detector, "'best_same_file_matches' => $matched")
+        && str_contains($detector, "'best_same_file_matches' => \$matched")
         && str_contains($detector, "'matching_files' => 1"),
     'A candidate must have at least two distinct object-term matches from the same importing file.'
 );
@@ -105,7 +105,7 @@ $record(
 $record(
     'zero_dependants_strengthen_confidence',
     str_contains($detector, '$dependants === 0 ? 35')
-        && str_contains($detector, "$confidence = 'very_high'")
+        && str_contains($detector, "\$confidence = 'very_high'")
         && str_contains($detector, 'COUNT(DISTINCT file_id) dependant_count'),
     'Files with no current resolved dependants must receive the strongest confidence boost.'
 );
@@ -116,7 +116,7 @@ $record(
         && str_contains($page, "catalog_check_csrf('possible_misnamed_files_scan')")
         && str_contains($page, 'Nothing is renamed automatically')
         && str_contains($page, 'Review / rename')
-        && str_contains($navigation, "'Possible Misnamed Files' => $root . 'possible-misnamed-files.php'"),
+        && str_contains($navigation, "'Possible Misnamed Files' => \$root . 'possible-misnamed-files.php'"),
     'The diagnostic must remain admin-only, queue scans by POST, and require manual review before the existing rename action.'
 );
 
