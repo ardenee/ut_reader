@@ -80,10 +80,11 @@ $record(
 
 $record(
     'rename_changes_logical_identity_only',
-    str_contains($rename, 'UPDATE ue_files SET original_name=?,package_name=?')
+    str_contains($rename, 'UPDATE ue_files SET original_name=?,package_name=?,source_relative_path=?')
         && !str_contains($rename, 'UPDATE ue_files SET stored_name=')
-        && !str_contains($rename, 'UPDATE ue_files SET relative_path='),
-    'A correction changes catalogue/package identity without moving the internal stored object.'
+        && !str_contains($rename, 'UPDATE ue_files SET relative_path=')
+        && !str_contains($rename, 'UPDATE ue_file_locations'),
+    'A correction updates durable logical identity while leaving the internal stored object and physical source-location records untouched.'
 );
 
 $record(
@@ -160,6 +161,29 @@ $record(
         && scanner_logical_package_name($fixture) === '[GO]tex_1',
     'Current import/maintenance filename policy must not recreate the historical bracket-to-underscore corruption.'
 );
+
+try {
+    $class = new ReflectionClass(UnrealDb\Catalog\Infrastructure\Maintenance\CatalogVerifiedFileRenameService::class);
+    $service = $class->newInstanceWithoutConstructor();
+    $packageMethod = $class->getMethod('correctedPackageName');
+    $sourceMethod = $class->getMethod('correctedSourceRelativePath');
+    if (method_exists($packageMethod, 'setAccessible')) {
+        $packageMethod->setAccessible(true);
+        $sourceMethod->setAccessible(true);
+    }
+    $classic = $packageMethod->invoke($service, '_GO_tex_1', '[GO]tex_1.utx');
+    $mounted = $packageMethod->invoke($service, '/Game/Textures/_GO_tex_1', '[GO]tex_1.uasset');
+    $source = $sourceMethod->invoke($service, 'UTGame/CookedPC/Textures/_GO_tex_1.utx', '[GO]tex_1.utx');
+    $record(
+        'rename_preserves_classic_and_mounted_identity_shapes',
+        $classic === '[GO]tex_1'
+            && $mounted === '/Game/Textures/[GO]tex_1'
+            && $source === 'UTGame/CookedPC/Textures/[GO]tex_1.utx',
+        'Classic package identity uses the corrected stem; mounted UE4/UE5 identity keeps its package path; maintenance source identity keeps its directory.'
+    );
+} catch (Throwable $error) {
+    $record('rename_preserves_classic_and_mounted_identity_shapes', false, $error->getMessage());
+}
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
 fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
