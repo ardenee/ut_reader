@@ -102,24 +102,38 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
 
         $affectedJobId = 0;
         $postImport = !empty($job->payload['post_import']);
+        $renameRefresh = !empty($job->payload['rename_refresh']);
         if ($postImport) {
             $context->checkpoint([
                 'stage' => 'affected_detection',
                 'done' => 3,
                 'total' => 4,
                 'percent' => 90,
-                'message' => 'Checking whether existing files reference the imported package.',
+                'message' => $renameRefresh
+                    ? 'Checking dependencies affected by the corrected package identity.'
+                    : 'Checking whether existing files reference the imported package.',
                 'file_id' => $fileId,
                 'dependency_summary_rows' => (int)$summary['summary_rows'],
             ]);
-            $affectedJobId = CatalogAffectedDependencyRefreshCoordinator::enqueueIfNeeded(
-                $this->db,
-                (int)$file['game_id'],
-                $fileId,
-                (string)$file['package_name'],
-                true,
-                true
-            );
+
+            if ($renameRefresh) {
+                $affectedJobId = CatalogAffectedDependencyRefreshCoordinator::enqueueRenameRefresh(
+                    $this->db,
+                    (int)$file['game_id'],
+                    $fileId,
+                    (string)$file['package_name'],
+                    (string)($job->payload['old_package_name'] ?? '')
+                );
+            } else {
+                $affectedJobId = CatalogAffectedDependencyRefreshCoordinator::enqueueIfNeeded(
+                    $this->db,
+                    (int)$file['game_id'],
+                    $fileId,
+                    (string)$file['package_name'],
+                    true,
+                    true
+                );
+            }
         }
 
         $deferGameStats = !empty($job->payload['workflow_defer_game_stats']);
@@ -166,6 +180,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'package_name' => (string)$file['package_name'],
             'original_name' => (string)$file['original_name'],
             'post_import' => $postImport,
+            'rename_refresh' => $renameRefresh,
             'package_provider_reconciled' => true,
             'dependency_summary_rows' => (int)$summary['summary_rows'],
             'affected_job_id' => $affectedJobId,
