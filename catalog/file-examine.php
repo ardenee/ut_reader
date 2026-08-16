@@ -13,6 +13,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 
 use UnrealDb\Catalog\Application\Catalog\CatalogPackageHeaderInspector;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogQueueWorkerStarter;
+use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogVerifiedFileRenameService;
 
 /**
  * Render serialized FName control bytes visibly without altering their stored
@@ -94,29 +96,130 @@ function file_examine_header_html(?array $inspection): string
     return $html . '</div>';
 }
 
-$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-$id = $id === false || $id === null ? 0 : max(0, (int)$id);
-$headerInspection = null;
-if ($id > 0) {
-    try {
-        $config = catalog_config();
-        $db = catalog_db($config);
-        $row = catalog_one($db, 'SELECT * FROM ue_files WHERE id=? LIMIT 1', [$id]);
-        if ($row && (string)$row['scan_status'] === 'unverified') {
-            header('Location: unverified-file-details.php?id=' . $id, true, 302);
-            exit;
-        }
-        if ($row) {
-            $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
-            $storedPath = realpath(__DIR__ . '/' . (string)$row['relative_path']);
-            if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
-                $storedPath = null;
-            }
-            $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
-        }
-    } catch (Throwable $error) {
-        error_log('[UnrealDB file examiner routing] ' . $error->getMessage());
+/**
+ * @param array<string,mixed> $file
+ * @param array<string,mixed>|null $flash
+ * @param list<array{package_name:string,suggested_filename:string,matched_objects:int,referencing_files:int}> $suggestions
+ */
+function file_examine_admin_rename_html(array $file, ?array $flash, array $suggestions, bool $suggestionsRequested): string
+{
+    $fileId = (int)$file['id'];
+    $html = '<div class="card"><h2>Correct filename / package identity</h2>';
+    if (is_array($flash)) {
+        $ok = !empty($flash['ok']);
+        $html .= '<p class="' . ($ok ? '' : 'muted') . '"><strong>'
+            . ($ok ? 'Saved:' : 'Rename failed:') . '</strong> '
+            . catalog_h((string)($flash['message'] ?? '')) . '</p>';
     }
+    $html .= '<p class="muted">Use this when an older cleanup/import rule changed characters in the logical filename. '
+        . 'The catalogue filename and package name are corrected; the internal stored-file path is left unchanged. '
+        . 'A durable dependency refresh is queued automatically so this provider and packages that require the corrected name are reconciled.</p>';
+    $html .= '<form method="post" action="file-examine.php?id=' . $fileId . '">'
+        . '<input type="hidden" name="action" value="rename_file">'
+        . '<input type="hidden" name="id" value="' . $fileId . '">'
+        . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('file_examine_rename')) . '">'
+        . '<label>Filename<br><input class="mono" style="min-width:min(620px,100%)" name="new_original_name" maxlength="255" required value="'
+        . catalog_h((string)$file['original_name']) . '"></label> '
+        . '<button type="submit">Rename and refresh dependencies</button></form>';
+    $html .= '<p class="muted small">Current package identity: <span class="mono">'
+        . catalog_h((string)$file['package_name']) . '</span>.</p>';
+
+    if (!$suggestionsRequested) {
+        $html .= '<p><a class="button secondary" href="file-examine.php?id=' . $fileId
+            . '&rename_suggestions=1">Find possible package-name mismatches</a></p>';
+    } elseif ($suggestions === []) {
+        $html .= '<p class="muted">No bounded rename candidates were found from unresolved imports whose object names are exported by this file.</p>';
+    } else {
+        $html .= '<h3>Possible names referenced by unresolved dependencies</h3>'
+            . '<p class="muted small">These are hints, not automatic corrections. They are ranked by exported object names that overlap unresolved imports in the same game.</p>'
+            . '<table><thead><tr><th>Referenced package</th><th>Matching objects</th><th>Referencing files</th><th>Suggested filename</th></tr></thead><tbody>';
+        foreach ($suggestions as $suggestion) {
+            $suggested = (string)$suggestion['suggested_filename'];
+            $html .= '<tr><td class="mono">' . catalog_h((string)$suggestion['package_name']) . '</td>'
+                . '<td>' . (int)$suggestion['matched_objects'] . '</td>'
+                . '<td>' . (int)$suggestion['referencing_files'] . '</td>'
+                . '<td class="mono">' . catalog_h($suggested) . '</td></tr>';
+        }
+        $html .= '</tbody></table>';
+    }
+    return $html . '</div>';
+}
+
+$id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
+$id = $id === false || $id === null ? (int)($_POST['id'] ?? 0) : max(0, (int)$id);
+$headerInspection = null;
+$renameCardHtml = '';
+
+try {
+    $config = catalog_config();
+    $db = catalog_db($config);
+    catalog_start_session();
+    $isAdmin = catalog_support_is_admin();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'rename_file') {
+        if (!$isAdmin) {
+            http_response_code(403);
+            throw new RuntimeException('Administrator authentication is required to rename a verified file.');
+        }
+        catalog_check_csrf('file_examine_rename');
+        $userId = isset($_SESSION['user']['id']) ? (int)$_SESSION['user']['id'] : 0;
+        try {
+            $result = (new CatalogVerifiedFileRenameService($db, $config))->rename(
+                $id,
+                (string)($_POST['new_original_name'] ?? ''),
+                $userId > 0 ? $userId : null
+            );
+            $workerState = (new CatalogQueueWorkerStarter($db, $config))->start(
+                trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog',
+                !empty($result['changed']),
+                $userId > 0 ? $userId : null
+            );
+            $message = !empty($result['changed'])
+                ? (string)$result['old_original_name'] . ' → ' . (string)$result['new_original_name']
+                    . '. Dependency refresh job #' . (int)$result['dependency_job_id'] . ' queued.'
+                : 'The requested filename already matches the current catalogue identity.';
+            $workerError = trim((string)($workerState['worker_error'] ?? ''));
+            if ($workerError !== '') {
+                $message .= ' The job remains durable, but worker start reported: ' . $workerError;
+            }
+            $_SESSION['file_examine_rename_flash'][$id] = ['ok' => true, 'message' => $message];
+        } catch (Throwable $error) {
+            $_SESSION['file_examine_rename_flash'][$id] = [
+                'ok' => false,
+                'message' => trim($error->getMessage()) !== '' ? trim($error->getMessage()) : 'Unknown rename error.',
+            ];
+        }
+        header('Location: file-examine.php?id=' . $id, true, 303);
+        exit;
+    }
+
+    $row = $id > 0 ? catalog_one($db, 'SELECT * FROM ue_files WHERE id=? LIMIT 1', [$id]) : null;
+    if ($row && (string)$row['scan_status'] === 'unverified') {
+        header('Location: unverified-file-details.php?id=' . $id, true, 302);
+        exit;
+    }
+    if ($row) {
+        $storageRoot = realpath(rtrim((string)$config['storage_path'], DIRECTORY_SEPARATOR));
+        $storedPath = realpath(__DIR__ . '/' . (string)$row['relative_path']);
+        if ($storageRoot && $storedPath && !str_starts_with($storedPath, $storageRoot)) {
+            $storedPath = null;
+        }
+        $headerInspection = CatalogPackageHeaderInspector::inspect($storedPath ?: null, $row);
+
+        if ($isAdmin && (string)$row['scan_status'] === 'verified') {
+            $flash = is_array($_SESSION['file_examine_rename_flash'][$id] ?? null)
+                ? $_SESSION['file_examine_rename_flash'][$id]
+                : null;
+            unset($_SESSION['file_examine_rename_flash'][$id]);
+            $suggestionsRequested = (string)($_GET['rename_suggestions'] ?? '') === '1';
+            $suggestions = $suggestionsRequested
+                ? (new CatalogVerifiedFileRenameService($db, $config))->possiblePackageNames($id)
+                : [];
+            $renameCardHtml = file_examine_admin_rename_html($row, $flash, $suggestions, $suggestionsRequested);
+        }
+    }
+} catch (Throwable $error) {
+    error_log('[UnrealDB file examiner routing] ' . $error->getMessage());
 }
 
 if (session_status() === PHP_SESSION_ACTIVE) {
@@ -136,6 +239,11 @@ if ($opaqueControlBytes > 0) {
         . 'Their stored values and import/export reference identities have not been changed.</p></div>';
     $marker = '<div class="card"><h2>Package header</h2>';
     $html = str_replace($marker, $notice . $marker, $html);
+}
+
+if ($renameCardHtml !== '') {
+    $marker = '<div class="card"><h2>Package header</h2>';
+    $html = str_replace($marker, $renameCardHtml . $marker, $html);
 }
 
 $headerHtml = file_examine_header_html($headerInspection);
