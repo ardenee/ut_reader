@@ -13,8 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/lib/BaseGameProtection.php';
 
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameMissingDependencyQuery;
 
 catalog_start_session();
 
@@ -89,134 +88,48 @@ try {
     $selectedPackage = substr(trim((string)($_GET['package'] ?? '')), 0, 255);
     $perPage = 200;
 
-    $dependencySource = PdoDependencyReadSource::sql($db);
-    $summaryAvailable = (new PdoDependencyPackageSummary($db))->available();
-    $summaryWhere = 's.game_id=? AND s.missing_count>0';
-    $summaryArgs = [$gameId];
-    $dependencyWhere = 'd.status="missing" AND f.game_id=?';
-    $dependencyArgs = [$gameId];
-    if ($baseGameOnly) {
-        $summaryWhere .= ' AND ' . base_game_package_exists_sql('s.required_package', 's.game_id');
-        $dependencyWhere .= ' AND ' . base_game_dependency_is_official_sql('f', 'd');
+    // Authentication is complete and this page performs no session writes from
+    // here until rendering. Release the PHP session lock before any catalogue
+    // aggregation so a slow dependency request cannot block other admin pages.
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
     }
 
-    if ($summaryAvailable) {
-        $missingObjects = catalog_count(
-            $db,
-            'SELECT COALESCE(SUM(s.missing_count),0) c FROM ue_dependency_package_summaries s WHERE ' . $summaryWhere,
-            $summaryArgs
-        );
-        $missingPackages = catalog_count(
-            $db,
-            'SELECT COUNT(DISTINCT s.required_package) c FROM ue_dependency_package_summaries s WHERE ' . $summaryWhere,
-            $summaryArgs
-        );
-        $filesWithMissing = catalog_count(
-            $db,
-            'SELECT COUNT(DISTINCT s.file_id) c FROM ue_dependency_package_summaries s WHERE ' . $summaryWhere,
-            $summaryArgs
-        );
-    } else {
-        $missingObjects = catalog_count(
-            $db,
-            'SELECT COUNT(*) c FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id WHERE ' . $dependencyWhere,
-            $dependencyArgs
-        );
-        $missingPackages = catalog_count(
-            $db,
-            'SELECT COUNT(DISTINCT d.required_package) c FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id WHERE ' . $dependencyWhere . ' AND d.required_package<>""',
-            $dependencyArgs
-        );
-        $filesWithMissing = catalog_count(
-            $db,
-            'SELECT COUNT(DISTINCT d.file_id) c FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id WHERE ' . $dependencyWhere,
-            $dependencyArgs
-        );
-    }
+    $missingQuery = new PdoGameMissingDependencyQuery($db);
+    $packageScope = $baseGameOnly
+        ? $missingQuery->officialBaseGamePackageNames($gameId)
+        : null;
+
+    $totals = $missingQuery->totals($gameId, $packageScope);
+    $missingObjects = (int)$totals['missing_objects'];
+    $missingPackages = (int)$totals['missing_packages'];
+    $filesWithMissing = (int)$totals['files_with_missing'];
 
     $filePages = max(1, (int)ceil($filesWithMissing / $perPage));
     $filePage = max(1, min($filePages, game_missing_int('file_page', 1)));
     $fileOffset = ($filePage - 1) * $perPage;
-    if ($summaryAvailable) {
-        $fileRows = catalog_all(
-            $db,
-            'SELECT f.id file_id,f.package_name,f.original_name,g.name game_name,'
-            . 'SUM(s.missing_count) missing_object_rows,COUNT(*) missing_package_count,'
-            . 'GROUP_CONCAT(s.required_package ORDER BY s.required_package SEPARATOR ", ") missing_package_names '
-            . 'FROM ue_dependency_package_summaries s '
-            . 'JOIN ue_files f ON f.id=s.file_id JOIN ue_games g ON g.id=s.game_id '
-            . 'WHERE ' . $summaryWhere . ' '
-            . 'GROUP BY f.id,f.package_name,f.original_name,g.name '
-            . 'ORDER BY missing_object_rows DESC,missing_package_count DESC,f.package_name,f.original_name,f.id '
-            . 'LIMIT ' . $perPage . ' OFFSET ' . $fileOffset,
-            $summaryArgs
-        );
-    } else {
-        $fileRows = catalog_all(
-            $db,
-            'SELECT f.id file_id,f.package_name,f.original_name,g.name game_name,'
-            . 'COUNT(d.id) missing_object_rows,COUNT(DISTINCT d.required_package) missing_package_count,'
-            . 'GROUP_CONCAT(DISTINCT d.required_package ORDER BY d.required_package SEPARATOR ", ") missing_package_names '
-            . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id JOIN ue_games g ON g.id=f.game_id '
-            . 'WHERE ' . $dependencyWhere . ' '
-            . 'GROUP BY f.id,f.package_name,f.original_name,g.name '
-            . 'ORDER BY missing_object_rows DESC,missing_package_count DESC,f.package_name,f.original_name,f.id '
-            . 'LIMIT ' . $perPage . ' OFFSET ' . $fileOffset,
-            $dependencyArgs
-        );
-    }
+    $fileRows = $missingQuery->fileRows($gameId, $packageScope, $perPage, $fileOffset);
 
     $packagePages = max(1, (int)ceil($missingPackages / $perPage));
     $packagePage = max(1, min($packagePages, game_missing_int('package_page', 1)));
     $packageOffset = ($packagePage - 1) * $perPage;
-    if ($summaryAvailable) {
-        $packageRows = catalog_all(
-            $db,
-            'SELECT s.required_package,SUM(s.missing_count) missing_object_rows,COUNT(*) requiring_file_count '
-            . 'FROM ue_dependency_package_summaries s WHERE ' . $summaryWhere . ' '
-            . 'GROUP BY s.required_package '
-            . 'ORDER BY missing_object_rows DESC,requiring_file_count DESC,s.required_package '
-            . 'LIMIT ' . $perPage . ' OFFSET ' . $packageOffset,
-            $summaryArgs
-        );
-    } else {
-        $packageRows = catalog_all(
-            $db,
-            'SELECT d.required_package,COUNT(*) missing_object_rows,COUNT(DISTINCT d.file_id) requiring_file_count '
-            . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
-            . 'WHERE ' . $dependencyWhere . ' AND d.required_package<>"" '
-            . 'GROUP BY d.required_package '
-            . 'ORDER BY missing_object_rows DESC,requiring_file_count DESC,d.required_package '
-            . 'LIMIT ' . $perPage . ' OFFSET ' . $packageOffset,
-            $dependencyArgs
-        );
-    }
+    $packageRows = $missingQuery->packageRows($gameId, $packageScope, $perPage, $packageOffset);
 
     $detailRows = [];
     $detailTotal = 0;
     $detailPage = 1;
     $detailPages = 1;
     if ($selectedPackage !== '') {
-        $detailWhere = $dependencyWhere . ' AND d.required_package=?';
-        $detailArgs = array_merge($dependencyArgs, [$selectedPackage]);
-        $detailTotal = catalog_count(
-            $db,
-            'SELECT COUNT(*) c FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id WHERE ' . $detailWhere,
-            $detailArgs
-        );
+        $detailTotal = $missingQuery->detailTotal($gameId, $selectedPackage, $packageScope);
         $detailPages = max(1, (int)ceil($detailTotal / $perPage));
         $detailPage = max(1, min($detailPages, game_missing_int('detail_page', 1)));
         $detailOffset = ($detailPage - 1) * $perPage;
-        $detailRows = catalog_all(
-            $db,
-            'SELECT d.required_package,d.required_object_path,f.id file_id,f.package_name owner_package_name,'
-            . 'f.original_name owner_original_name,g.name game_name,d.class_package,d.class_name,d.import_full_path '
-            . 'FROM ' . $dependencySource . ' d JOIN ue_files f ON f.id=d.file_id '
-            . 'JOIN ue_games g ON g.id=f.game_id '
-            . 'WHERE ' . $detailWhere . ' '
-            . 'ORDER BY f.package_name,f.original_name,d.required_object_path,d.id '
-            . 'LIMIT ' . $perPage . ' OFFSET ' . $detailOffset,
-            $detailArgs
+        $detailRows = $missingQuery->detailRows(
+            $gameId,
+            $selectedPackage,
+            $packageScope,
+            $perPage,
+            $detailOffset
         );
     }
 
