@@ -101,6 +101,32 @@ $record(
 );
 
 $record(
+    'common_dependencies_are_not_evidence',
+    str_contains($handler, 'd.status=0 AND d.resolved_file_id IS NULL')
+        && str_contains($detector, 'WHERE file_id=? AND status=0 AND resolved_file_id IS NULL')
+        && str_contains($detector, 'status 3 (common)'),
+    'Only authoritative missing rows may feed rename evidence; Common rows must be excluded.'
+);
+
+$record(
+    'official_base_game_files_and_names_are_excluded',
+    str_contains($handler, 'FROM ue_base_game_files bg')
+        && str_contains($detector, 'officialBaseGameIdentity')
+        && str_contains($detector, 'FROM ue_base_game_files b')
+        && str_contains($detector, 'isOfficialPackage($suggestedPackage')
+        && str_contains($detector, "!isset(\$official['file_ids']"),
+    'Official/base-game importing files, provider files and suggested package identities must be rejected rather than merely down-ranked.'
+);
+
+$record(
+    'scan_policy_discards_old_loose_progress',
+    str_contains($handler, "POLICY_VERSION = 'community-missing-only-v2'")
+        && str_contains($handler, "\$resume['policy_version']")
+        && str_contains($handler, "'policy_version' => self::POLICY_VERSION"),
+    'A job resumed after deployment must not retain candidates gathered by the older loose policy.'
+);
+
+$record(
     'detector_uses_indexed_term_identity_without_text_scan',
     str_contains($detector, 'MAX_OBJECT_PROVIDER_FANOUT = 40')
         && str_contains($detector, 'e.object_term_id IN (')
@@ -113,7 +139,7 @@ $record(
 $record(
     'same_file_multiple_matches_are_required',
     str_contains($detector, 'if ($matched < 2)')
-        && str_contains($detector, '$group[\'best_same_file_matches\'] = $matched;')
+        && str_contains($detector, "$group['best_same_file_matches'] = $matched;")
         && str_contains($detector, "'matching_files' => 1"),
     'A candidate must have at least two distinct object-term matches from the same importing file.'
 );
@@ -121,7 +147,7 @@ $record(
 $record(
     'zero_dependants_strengthen_confidence',
     str_contains($detector, '$dependants === 0 ? 35')
-        && str_contains($detector, "\$confidence = 'very_high'")
+        && str_contains($detector, "$confidence = 'very_high'")
         && str_contains($detector, 'COUNT(DISTINCT file_id) dependant_count'),
     'Files with no current resolved dependants must receive the strongest confidence boost.'
 );
@@ -133,7 +159,7 @@ $record(
         && str_contains($page, "'possible-misnamed-files',")
         && str_contains($page, 'Nothing is renamed automatically')
         && str_contains($page, 'Review / rename')
-        && str_contains($navigation, "'Possible Misnamed Files' => \$root . 'possible-misnamed-files.php'"),
+        && str_contains($navigation, "'Possible Misnamed Files' => $root . 'possible-misnamed-files.php'"),
     'The diagnostic must remain admin-only, allow one active scan, and require manual review before the existing rename action.'
 );
 
