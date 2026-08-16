@@ -14,7 +14,8 @@ namespace UnrealDb\Catalog\Infrastructure\Maintenance;
 use PDO;
 use RuntimeException;
 use Throwable;
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogPostImportDependencyQueue;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogVerifiedFileRenameService
 {
@@ -100,19 +101,31 @@ final class CatalogVerifiedFileRenameService
             );
             $deleteAlias->execute([$fileId, $gameId, $oldPackageName, $oldOriginalName]);
 
-            // Reuse the normal provider/dependency publication chain. The file
-            // unit reconciles the renamed provider first, rebuilds this file's
-            // own dependency rows, then schedules files that reference the new
-            // corrected package name.
-            $queued = CatalogPostImportDependencyQueue::enqueue(
-                $this->db,
-                $this->config,
-                $fileId,
-                $gameId,
-                $newPackageName,
-                $userId
+            // Always create a post-rename dependency pass with its own active
+            // dedupe identity. Reusing the ordinary rebuild-file key is unsafe:
+            // an older rebuild may already be running and could have read the old
+            // package name before this transaction commits. This fresh unit will
+            // reconcile the corrected provider, rebuild this file, then enqueue
+            // the normal affected-file chain for packages requiring the new name.
+            $queueName = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+            $dependencyJobId = (new PdoJobQueue($this->db))->enqueue(
+                $queueName,
+                JobType::REBUILD_FILE_DEPENDENCIES,
+                [
+                    'file_id' => $fileId,
+                    'game_id' => $gameId,
+                    'package_name' => $newPackageName,
+                    'post_import' => true,
+                    'rename_refresh' => true,
+                    'old_package_name' => $oldPackageName,
+                ],
+                15,
+                null,
+                'rename-file-dependencies:' . $fileId . ':'
+                    . substr(hash('sha256', $oldOriginalName . "\0" . $newOriginalName), 0, 32),
+                $userId,
+                3
             );
-            $dependencyJobId = (int)($queued['file_job_id'] ?? 0);
             if ($dependencyJobId < 1) {
                 throw new RuntimeException('The filename correction could not queue its dependency refresh.');
             }
@@ -213,8 +226,15 @@ final class CatalogVerifiedFileRenameService
             ];
         }
         usort($result, static function (array $left, array $right): int {
-            return [$right['matched_objects'], $right['referencing_files'], $left['package_name']]
-                <=> [$left['matched_objects'], $left['referencing_files'], $right['package_name']];
+            $objects = (int)$right['matched_objects'] <=> (int)$left['matched_objects'];
+            if ($objects !== 0) {
+                return $objects;
+            }
+            $files = (int)$right['referencing_files'] <=> (int)$left['referencing_files'];
+            if ($files !== 0) {
+                return $files;
+            }
+            return strcasecmp((string)$left['package_name'], (string)$right['package_name']);
         });
         return array_slice($result, 0, $limit);
     }
