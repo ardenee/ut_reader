@@ -53,6 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
         }
     }
 
+    // Only one catalogue-wide misname diagnostic may be active at once. A second
+    // request returns the existing durable job rather than creating competing
+    // scans over the same large dependency/export projections.
     $jobId = (new PdoJobQueue($db))->enqueue(
         $queueName,
         JobType::SCAN_POSSIBLE_MISNAMED_FILES,
@@ -62,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
         ],
         70,
         null,
-        'possible-misnamed-files:' . ($gameId > 0 ? $gameId : 'all'),
+        'possible-misnamed-files',
         $userId > 0 ? $userId : null,
         3
     );
@@ -73,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
         $userId > 0 ? $userId : null
     );
     $workerError = trim((string)($worker['worker_error'] ?? ''));
-    $_SESSION['possible_misnamed_files_flash'] = 'Scan job #' . $jobId . ' queued.'
+    $_SESSION['possible_misnamed_files_flash'] = 'Scan job #' . $jobId . ' queued or already active.'
         . ($workerError !== '' ? ' Worker start reported: ' . $workerError : '');
     header('Location: possible-misnamed-files.php?job_id=' . $jobId, true, 303);
     exit;
@@ -121,7 +124,7 @@ if ($flash !== '') {
 }
 
 echo '<div class="card"><h2>Run diagnostic</h2>'
-    . '<p class="muted">The scan runs as a bounded background job. Common object names exported by more than 40 files are ignored so generic names do not create false matches or expensive fan-out.</p>'
+    . '<p class="muted">The scan runs as a bounded background job. Common object names exported by more than 40 files are ignored so generic names do not create false matches or expensive fan-out. Only one scan runs at a time.</p>'
     . '<form method="post">'
     . '<input type="hidden" name="action" value="start_scan">'
     . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('possible_misnamed_files_scan')) . '">'
