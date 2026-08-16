@@ -5,7 +5,7 @@
  * Why: It centralizes behavior reused by multiple pages, APIs, workers, or maintenance scripts instead of repeating
  *      that behavior at each call site.
  * Role: Legacy/shared library layer; some files are transitional bridges while newer implementation code lives under
- *      `catalog/src`.
+ *       `catalog/src`.
  * Audit: Shared code: reuse or migrate this responsibility before adding another implementation with the same
  *        purpose.
  */
@@ -37,6 +37,7 @@ function catalog_admin_navigation_groups(string $root): array
         ],
         'Catalog' => [
             'Missing Dependencies' => $root . 'missing.php',
+            'Possible Misnamed Files' => $root . 'possible-misnamed-files.php',
             'Cross-Game Dependencies' => $root . 'dependency-cross-examine.php',
             'Duplicate Files' => $root . 'duplicates.php',
             'Unverified Files' => $root . 'unverified-files.php',
