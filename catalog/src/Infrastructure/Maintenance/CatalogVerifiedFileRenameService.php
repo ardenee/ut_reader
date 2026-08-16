@@ -3,9 +3,9 @@
  * Corrects the logical filename/package identity of an already verified file.
  *
  * The physical stored object is intentionally left in place. `stored_name` and
- * `relative_path` are storage identities; `original_name` and `package_name` are
- * the catalogue/package identities used by downloads, provider reconciliation
- * and dependency resolution.
+ * `relative_path` are storage identities. `original_name`, `package_name` and
+ * the ue_files source-relative identity are corrected together so a later
+ * maintenance reimport cannot restore a historical cleanup mistake.
  */
 declare(strict_types=1);
 
@@ -45,7 +45,7 @@ final class CatalogVerifiedFileRenameService
         $this->db->beginTransaction();
         try {
             $statement = $this->db->prepare(
-                'SELECT id,game_id,package_name,original_name,extension,scan_status '
+                'SELECT id,game_id,package_name,original_name,source_relative_path,extension,scan_status '
                 . 'FROM ue_files WHERE id=? FOR UPDATE'
             );
             $statement->execute([$fileId]);
@@ -84,10 +84,15 @@ final class CatalogVerifiedFileRenameService
                 ];
             }
 
-            $update = $this->db->prepare(
-                'UPDATE ue_files SET original_name=?,package_name=? WHERE id=? AND scan_status="verified"'
+            $sourceRelativePath = $this->correctedSourceRelativePath(
+                (string)($file['source_relative_path'] ?? ''),
+                $newOriginalName
             );
-            $update->execute([$newOriginalName, $newPackageName, $fileId]);
+            $update = $this->db->prepare(
+                'UPDATE ue_files SET original_name=?,package_name=?,source_relative_path=? '
+                . 'WHERE id=? AND scan_status="verified"'
+            );
+            $update->execute([$newOriginalName, $newPackageName, $sourceRelativePath, $fileId]);
             if ($update->rowCount() !== 1) {
                 throw new RuntimeException('The verified file identity changed before the rename could be saved.');
             }
@@ -106,7 +111,7 @@ final class CatalogVerifiedFileRenameService
             // an older rebuild may already be running and could have read the old
             // package name before this transaction commits. This fresh unit will
             // reconcile the corrected provider, rebuild this file, then enqueue
-            // the normal affected-file chain for packages requiring the new name.
+            // the rename-aware affected-file chain.
             $queueName = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
             $dependencyJobId = (new PdoJobQueue($this->db))->enqueue(
                 $queueName,
@@ -237,6 +242,18 @@ final class CatalogVerifiedFileRenameService
             return strcasecmp((string)$left['package_name'], (string)$right['package_name']);
         });
         return array_slice($result, 0, $limit);
+    }
+
+    private function correctedSourceRelativePath(string $current, string $newOriginalName): string
+    {
+        $current = trim(str_replace('\\', '/', $current), '/');
+        if ($current === '') {
+            return $newOriginalName;
+        }
+        $separator = strrpos($current, '/');
+        return $separator === false
+            ? $newOriginalName
+            : substr($current, 0, $separator + 1) . $newOriginalName;
     }
 
     private function validatedFilename(string $filename): string
