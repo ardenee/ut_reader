@@ -19,22 +19,30 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
 /**
  * Finds dependency owners whose exact package/object resolution can change after
- * a package is imported.
+ * a package is imported or its canonical package identity is corrected.
  *
  * Foreground imports never load affected IDs. The exact-file dependency worker
- * first makes the new provider and its own dependency rows authoritative, then
- * calls enqueueIfNeeded(). The affected worker calls findAffectedFileIds() while
- * its durable queue row is running.
+ * first makes the provider and its own dependency rows authoritative, then calls
+ * this coordinator. The affected worker performs bounded discovery/planning.
  */
 final class CatalogAffectedDependencyRefreshCoordinator
 {
-    /** @return list<int> */
-    public static function findAffectedFileIds(PDO $db, int $gameId, int $newFileId, string $packageName): array
-    {
+    /**
+     * @param list<string> $additionalPackageNames
+     * @return list<int>
+     */
+    public static function findAffectedFileIds(
+        PDO $db,
+        int $gameId,
+        int $newFileId,
+        string $packageName,
+        array $additionalPackageNames = [],
+        bool $includeResolvedProvider = false
+    ): array {
         self::syncProvider($db, $newFileId);
 
         $activeRefresh = self::isActiveRefreshJob($db, $newFileId);
-        if (!$activeRefresh) {
+        if (!$activeRefresh && $additionalPackageNames === [] && !$includeResolvedProvider) {
             $jobId = self::enqueueIfNeeded($db, $gameId, $newFileId, $packageName, true, true);
             if ($jobId > 0) {
                 $GLOBALS['catalog_affected_dependency_refresh_job_id'] = $jobId;
@@ -42,22 +50,41 @@ final class CatalogAffectedDependencyRefreshCoordinator
             }
         }
 
-        // Affected-file discovery must use the authoritative dependency links,
-        // never the package-summary projection that may be partway through a
-        // rebuild. The term identity columns are indexed and avoid a text scan.
+        // Affected-file discovery must use authoritative dependency links and
+        // indexed term identities, never package-summary text scans.
         $fileIds = [];
-        self::collectFileIds(
-            $db,
-            'SELECT DISTINCT l.file_id'
-            . ' FROM ue_dependency_links l'
-            . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
-            . ' JOIN ue_files f ON f.id=l.file_id'
-            . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
-            . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
-            . ' ORDER BY l.file_id',
-            [md5($packageName, true), strlen($packageName), substr($packageName, 0, 200), $newFileId, $gameId],
-            $fileIds
-        );
+        $packageNames = self::packageNames($packageName, $additionalPackageNames);
+        foreach ($packageNames as $name) {
+            self::collectFileIds(
+                $db,
+                'SELECT DISTINCT l.file_id'
+                . ' FROM ue_dependency_links l'
+                . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
+                . ' JOIN ue_files f ON f.id=l.file_id'
+                . ' WHERE t.value_hash=? AND t.value_length=?'
+                . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified"'
+                . ' ORDER BY l.file_id',
+                [md5($name, true), strlen($name), $newFileId, $gameId],
+                $fileIds
+            );
+        }
+
+        // A rename must also invalidate files that were already resolved to the
+        // old provider. The provider row is reconciled to the new canonical name,
+        // but those dependency rows remain stale until their owning files rebuild.
+        if ($includeResolvedProvider) {
+            self::collectFileIds(
+                $db,
+                'SELECT DISTINCT l.file_id'
+                . ' FROM ue_dependency_links l'
+                . ' JOIN ue_files f ON f.id=l.file_id'
+                . ' WHERE l.resolved_file_id=? AND l.file_id<>?'
+                . ' AND f.game_id=? AND f.scan_status="verified"'
+                . ' ORDER BY l.file_id',
+                [$newFileId, $newFileId, $gameId],
+                $fileIds
+            );
+        }
 
         return array_map('intval', array_keys($fileIds));
     }
@@ -95,6 +122,60 @@ final class CatalogAffectedDependencyRefreshCoordinator
         );
     }
 
+    /**
+     * Queue an affected-file pass after a canonical filename/package rename.
+     *
+     * Unlike a normal import, rename discovery must cover three groups:
+     * - files requiring the corrected/new package name;
+     * - files requiring the old package name;
+     * - files already resolved to this provider before its identity changed.
+     */
+    public static function enqueueRenameRefresh(
+        PDO $db,
+        int $gameId,
+        int $fileId,
+        string $newPackageName,
+        string $oldPackageName
+    ): int {
+        $newPackageName = trim($newPackageName);
+        $oldPackageName = trim($oldPackageName);
+        if ($gameId < 1 || $fileId < 1 || $newPackageName === '') {
+            return 0;
+        }
+
+        self::syncProvider($db, $fileId);
+        $config = function_exists('catalog_config') ? \catalog_config() : [];
+        $queueName = trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $identity = strtolower($oldPackageName) . "\0" . strtolower($newPackageName);
+
+        try {
+            return (new PdoJobQueue($db))->enqueue(
+                $queueName,
+                JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                [
+                    'file_id' => $fileId,
+                    'game_id' => $gameId,
+                    'package_name' => $newPackageName,
+                    'additional_package_names' => $oldPackageName !== '' && strcasecmp($oldPackageName, $newPackageName) !== 0
+                        ? [$oldPackageName]
+                        : [],
+                    'include_resolved_provider' => true,
+                    'source_summary_ready' => true,
+                    'rename_refresh' => true,
+                ],
+                35,
+                null,
+                self::dedupeKey($fileId) . ':rename:' . substr(hash('sha256', $identity), 0, 32),
+                null,
+                3
+            );
+        } catch (Throwable $error) {
+            error_log('[UnrealDB dependency rename refresh queue] file_id=' . $fileId
+                . ' enqueue failed: ' . $error->getMessage());
+            return 0;
+        }
+    }
+
     private static function syncProvider(PDO $db, int $fileId): void
     {
         try {
@@ -112,13 +193,12 @@ final class CatalogAffectedDependencyRefreshCoordinator
             'SELECT 1 FROM ue_dependency_links l'
             . ' JOIN ue_terms t ON t.id=l.required_package_term_id'
             . ' JOIN ue_files f ON f.id=l.file_id'
-            . ' WHERE t.value_hash=? AND t.value_length=? AND t.value_prefix=?'
+            . ' WHERE t.value_hash=? AND t.value_length=?'
             . ' AND l.file_id<>? AND f.game_id=? AND f.scan_status="verified" LIMIT 1'
         );
         $statement->execute([
             md5($packageName, true),
             strlen($packageName),
-            substr($packageName, 0, 200),
             $newFileId,
             $gameId,
         ]);
@@ -224,11 +304,25 @@ final class CatalogAffectedDependencyRefreshCoordinator
         return $jobId;
     }
 
+    /** @param list<string> $additionalPackageNames @return list<string> */
+    private static function packageNames(string $primary, array $additionalPackageNames): array
+    {
+        $names = [];
+        foreach (array_merge([$primary], $additionalPackageNames) as $name) {
+            $name = trim((string)$name);
+            if ($name === '' || strlen($name) > 255) {
+                continue;
+            }
+            $names[strtolower($name)] = $name;
+        }
+        return array_values($names);
+    }
+
     /** @return array{0:string,1:string} */
     private static function chainKeys(int $fileId): array
     {
         $dedupeKey = self::dedupeKey($fileId);
-        // Match legacy :offset: continuations and current :batch: children.
+        // Match legacy :offset: continuations, batch children and rename refreshes.
         return [$dedupeKey, $dedupeKey . ':%'];
     }
 
@@ -243,8 +337,13 @@ final class CatalogAffectedDependencyRefreshCoordinator
      */
     private static function collectFileIds(PDO $db, string $sql, array $args, array &$fileIds): void
     {
-        foreach (\catalog_all($db, $sql, $args) as $row) {
-            $fileIds[(int)$row['file_id']] = true;
+        $statement = $db->prepare($sql);
+        $statement->execute($args);
+        while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+            $fileId = (int)($row['file_id'] ?? 0);
+            if ($fileId > 0) {
+                $fileIds[$fileId] = true;
+            }
         }
     }
 }
