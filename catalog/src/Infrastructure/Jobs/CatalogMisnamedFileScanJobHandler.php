@@ -19,7 +19,7 @@ use UnrealDb\Catalog\Infrastructure\Maintenance\CatalogMisnamedFileDetector;
 
 final class CatalogMisnamedFileScanJobHandler implements JobHandler
 {
-    private const POLICY_VERSION = 'community-missing-only-v2';
+    private const POLICY_VERSION = 'community-path-name-strict-v3';
     private const OWNER_BATCH_SIZE = 8;
     private const MAX_PROGRESS_CANDIDATES = 1000;
     private const MAX_RESULT_CANDIDATES = 500;
@@ -42,7 +42,7 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
         $resume = $context->resumeProgress();
         if ((string)($resume['policy_version'] ?? '') !== self::POLICY_VERSION) {
             // A worker may resume a job created by an older detector policy. Do
-            // not retain candidates gathered before Common/base-game exclusions.
+            // not retain candidates gathered before strict path/name matching.
             $resume = [];
         }
 
@@ -146,7 +146,8 @@ final class CatalogMisnamedFileScanJobHandler implements JobHandler
             . 'AND EXISTS ('
             . 'SELECT 1 FROM ue_dependency_links d WHERE d.file_id=f.id '
             . 'AND d.status=0 AND d.resolved_file_id IS NULL '
-            . 'AND d.required_package_term_id IS NOT NULL AND d.import_object_term_id IS NOT NULL'
+            . 'AND d.required_package_term_id IS NOT NULL AND d.import_object_term_id IS NOT NULL '
+            . 'AND d.required_path_hash IS NOT NULL'
             . ') ORDER BY f.id LIMIT ' . self::OWNER_BATCH_SIZE;
 
         $statement = $this->db->prepare($sql);
