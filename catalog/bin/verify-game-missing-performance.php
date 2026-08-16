@@ -70,13 +70,17 @@ $record(
     'game-missing.php must not filter the large compatibility dependency view or correlated base-game SQL.'
 );
 
+$combinedSummaryTotals = preg_match(
+    '/SELECT COALESCE\(SUM\(s\.missing_count\),0\) missing_objects,\s*' .
+    '.*COUNT\(DISTINCT s\.required_package\) missing_packages,\s*' .
+    '.*COUNT\(DISTINCT s\.file_id\) files_with_missing\s*' .
+    '.*FROM ue_dependency_package_summaries s WHERE/s',
+    $query
+) === 1;
 $record(
     'totals_use_one_summary_projection_scan',
-    str_contains($query, 'COALESCE(SUM(s.missing_count),0) missing_objects')
-        && str_contains($query, 'COUNT(DISTINCT s.required_package) missing_packages')
-        && str_contains($query, 'COUNT(DISTINCT s.file_id) files_with_missing')
-        && substr_count($query, 'FROM ue_dependency_package_summaries s WHERE') >= 3,
-    'Summary totals should be calculated together from the package-summary projection rather than three independent full dependency scans.'
+    $combinedSummaryTotals,
+    'Summary totals should be calculated together by one SELECT over the package-summary projection rather than three independent dependency scans.'
 );
 
 $record(
