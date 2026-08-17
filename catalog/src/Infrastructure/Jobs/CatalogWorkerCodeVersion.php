@@ -32,6 +32,8 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketPakJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
+            $this->catalogRoot . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php',
         ];
         $parts = [];
         foreach ($paths as $path) {
