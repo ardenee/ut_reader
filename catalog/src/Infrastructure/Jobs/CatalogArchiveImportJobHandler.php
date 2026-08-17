@@ -300,9 +300,10 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         foreach (['uz', 'uz2', 'uz3'] as $extension) {
             $allowed[$extension] = true;
         }
-        // PAK requires a selected UE4/UE5 game/profile and therefore is not
-        // expanded into the unsorted Upload Bucket path.
-        unset($allowed['zip'], $allowed['7z'], $allowed['rar'], $allowed['pak']);
+        // A PAK is a retained container in the neutral Upload Bucket. The child
+        // PROCESS_BUCKET_STAGED_PACKAGE route diverts it to CatalogBucketPakJobHandler.
+        $allowed['pak'] = true;
+        unset($allowed['zip'], $allowed['7z'], $allowed['rar']);
         return $allowed;
     }
 
