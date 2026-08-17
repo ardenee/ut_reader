@@ -107,12 +107,9 @@ final class CatalogUploadBucketIssueStore
         if (!in_array($status, ['open', 'resolved', 'ignored'], true)) {
             throw new \InvalidArgumentException('Invalid Upload Issue status.');
         }
-        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn(int $id): bool => $id > 0)));
+        $ids = self::cleanIds($ids);
         if ($ids === []) {
             return 0;
-        }
-        if (count($ids) > 1000) {
-            throw new \InvalidArgumentException('Update no more than 1,000 Upload Issues at once.');
         }
         $note = self::cleanText($note, 500);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
@@ -130,6 +127,58 @@ final class CatalogUploadBucketIssueStore
         $statement = $this->db->prepare($sql);
         $statement->execute($args);
         return $statement->rowCount();
+    }
+
+    /** @param list<int> $ids */
+    public function deleteSelected(array $ids): int
+    {
+        if (!$this->available()) {
+            throw new \RuntimeException('The Upload Issues schema is not migrated.');
+        }
+        $ids = self::cleanIds($ids);
+        if ($ids === []) {
+            return 0;
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $statement = $this->db->prepare(
+            'DELETE FROM ue_upload_bucket_issues WHERE id IN (' . $placeholders . ')'
+        );
+        $statement->execute($ids);
+        return $statement->rowCount();
+    }
+
+    /**
+     * Remove historical closed issue records only. Open issues are never touched
+     * by bulk retention cleanup.
+     */
+    public function purgeClosedOlderThan(int $days): int
+    {
+        if (!$this->available()) {
+            throw new \RuntimeException('The Upload Issues schema is not migrated.');
+        }
+        if (!in_array($days, [7, 30, 90, 180, 365], true)) {
+            throw new \InvalidArgumentException('Choose a supported Upload Issue retention period.');
+        }
+        $cutoff = gmdate('Y-m-d H:i:s', time() - ($days * 86400));
+        $statement = $this->db->prepare(
+            'DELETE FROM ue_upload_bucket_issues '
+            . 'WHERE status IN ("resolved","ignored") AND last_seen_at<?'
+        );
+        $statement->execute([$cutoff]);
+        return $statement->rowCount();
+    }
+
+    /** @param list<int>|array<int,mixed> $ids @return list<int> */
+    private static function cleanIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(
+            array_map('intval', $ids),
+            static fn(int $id): bool => $id > 0
+        )));
+        if (count($ids) > 1000) {
+            throw new \InvalidArgumentException('Update no more than 1,000 Upload Issues at once.');
+        }
+        return $ids;
     }
 
     private static function cleanPath(string $value): string
