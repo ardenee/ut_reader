@@ -110,13 +110,15 @@ $record(
 $record(
     'libarchive_backend_is_format_restricted_and_streamed',
     str_contains($extractorSource, 'new \\libarchive\\Archive($archivePath)')
-        && str_contains($extractorSource, 'supportFormats($format)')
+        && str_contains($extractorSource, 'supportFormats($first, ...$formats)')
         && str_contains($extractorSource, 'currentEntryStream()')
         && str_contains($extractorSource, "'backend' => 'libarchive'")
+        && str_contains($extractorSource, 'FORMAT_RAR_V5')
+        && str_contains($extractorSource, 'FORMAT_7ZIP')
         && str_contains($extractorSource, 'isEncrypted')
         && str_contains($extractorSource, 'isSymlink')
         && str_contains($extractorSource, 'hardlink'),
-    'RAR/7z must be read directly through libarchive entry streams while retaining encryption/link/path safety gates.'
+    'RAR/RAR5/7z must be read directly through libarchive entry streams while retaining encryption/link/path safety gates.'
 );
 
 $record(
