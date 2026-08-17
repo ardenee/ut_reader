@@ -25,6 +25,7 @@ $read = static function (string $relative) use ($root): string {
 
 $phpFiles = [
     'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
+    'src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php',
     'src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
 ];
@@ -65,6 +66,13 @@ $record(
     '.uz3 must expose its target filename from the transport name before zlib/package validation.'
 );
 $record(
+    'redirect_download_duplicate_suffix_is_removed',
+    CatalogUploadBucketFilePolicy::deterministicRedirectOutputName('Doorsanc.uax(1).uz2') === 'Doorsanc.uax'
+        && CatalogUploadBucketFilePolicy::deterministicRedirectOutputName('Doorsanc.uax (1).uz2') === 'Doorsanc.uax'
+        && CatalogUploadBucketFilePolicy::deterministicRedirectOutputName('Map(2).ut2.uz2') === 'Map(2).ut2',
+    'A numeric download collision marker after the real package extension must be removed without changing legitimate markers inside the package stem.'
+);
+$record(
     'classic_uz_requires_embedded_name_probe',
     CatalogUploadBucketFilePolicy::deterministicRedirectOutputName('anything.uz') === null,
     'Classic .uz embeds the authoritative filename and must not be guessed from the outer wrapper name.'
@@ -73,6 +81,7 @@ $record(
 $guard = $read('src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php');
 $factory = $read('src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $policy = $read('src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php');
+$processor = $read('src/Infrastructure/Redirect/CatalogRedirectArchiveProcessor.php');
 
 $record(
     'unsupported_targets_finish_as_excluded',
@@ -104,6 +113,12 @@ $record(
         && str_contains($policy, 'ARCHIVE_EXTENSIONS')
         && str_contains($policy, 'array_fill_keys($this->allowedPackageExtensions(), true)'),
     'ZIP/7z/RAR transport support must remain separate from catalogued Unreal package extensions.'
+);
+$record(
+    'decoded_redirect_name_is_cleaned_before_downstream_validation',
+    str_contains($processor, 'CatalogUploadBucketFilePolicy::cleanRedirectOutputName(')
+        && substr_count($processor, 'CatalogUploadBucketFilePolicy::cleanRedirectOutputName(') >= 2,
+    'Both streamed UZ2 and payload-based redirect decoders must normalize the target filename before import extension checks.'
 );
 
 $result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
