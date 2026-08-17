@@ -108,6 +108,25 @@ final class CatalogUploadBucketFilePolicy
     }
 
     /**
+     * Normalize the filename produced by a redirect wrapper without applying
+     * broad duplicate heuristics to ordinary package filenames.
+     *
+     * Download mirrors commonly rename a collision by appending a numeric marker
+     * after the real package extension, for example Name.uax(1) or Name.uax (1).
+     * That marker is transport/download noise: the package target is Name.uax.
+     */
+    public static function cleanRedirectOutputName(string $name): string
+    {
+        $name = basename(str_replace(["\0", '\\'], ['', '/'], trim($name)));
+        $name = preg_replace(
+            '/^(.*\.[A-Za-z0-9_]+)\s*\([0-9]+\)$/u',
+            '$1',
+            $name
+        ) ?? $name;
+        return \catalog_clean_unreal_filename($name);
+    }
+
+    /**
      * UZ2 and UZ3 never serialize a replacement filename, so their output name
      * is deterministically the wrapper name with the final redirect extension
      * removed. Classic UZ embeds the original filename and therefore cannot be
@@ -125,7 +144,7 @@ final class CatalogUploadBucketFilePolicy
         if (!is_string($base) || trim($base) === '') {
             return null;
         }
-        return \catalog_clean_unreal_filename($base);
+        return self::cleanRedirectOutputName($base);
     }
 
     /** @param array<string,mixed> $source @return array{md5:string,sha1:string} */
