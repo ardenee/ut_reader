@@ -28,6 +28,12 @@ final class CatalogUnverifiedQueueMutationService implements CatalogUnverifiedQu
     /** @param array<string,mixed> $source @return array{original_name:string,source_game:string,target_game:string} */
     public function move(array $source, int $targetGameId): array
     {
+        if ($this->isPak($source)) {
+            throw new RuntimeException(
+                'PAK containers cannot be moved as a single unverified package. Use Import selected so the retained PAK and all supported files inside it are assigned together.'
+            );
+        }
+
         $target = \catalog_one(
             $this->db,
             'SELECT id,name,slug,profile_id FROM ue_games WHERE id=?',
@@ -69,6 +75,14 @@ final class CatalogUnverifiedQueueMutationService implements CatalogUnverifiedQu
     /** @param array<string,mixed> $source @return array{original_name:string,source_game:string} */
     public function discard(array $source): array
     {
+        if ($this->isPak($source) && (int)($source['file_id'] ?? 0) > 0) {
+            (new CatalogUnverifiedPakCleanupService($this->db, $this->config))->remove((int)$source['file_id']);
+            return [
+                'original_name' => (string)$source['original_name'],
+                'source_game' => (string)$source['game']['name'],
+            ];
+        }
+
         if (!@unlink((string)$source['path'])) {
             throw new RuntimeException('Could not remove the selected unverified package.');
         }
@@ -85,5 +99,12 @@ final class CatalogUnverifiedQueueMutationService implements CatalogUnverifiedQu
             'original_name' => (string)$source['original_name'],
             'source_game' => (string)$source['game']['name'],
         ];
+    }
+
+    /** @param array<string,mixed> $source */
+    private function isPak(array $source): bool
+    {
+        return strtolower(trim((string)($source['extension'] ?? ''))) === 'pak'
+            || strtolower((string)pathinfo((string)($source['original_name'] ?? ''), PATHINFO_EXTENSION)) === 'pak';
     }
 }
