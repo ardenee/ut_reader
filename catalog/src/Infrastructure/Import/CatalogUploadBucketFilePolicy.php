@@ -21,6 +21,8 @@ final class CatalogUploadBucketFilePolicy
     /** @var list<string>|null */
     private ?array $allowedPackageExtensions = null;
 
+    private ?bool $pakContainerAllowed = null;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -40,7 +42,9 @@ final class CatalogUploadBucketFilePolicy
         foreach (\gp_all_profiles($this->db) as $profile) {
             foreach (\gp_extensions($profile) as $extension) {
                 $extension = \catalog_clean_unreal_extension((string)$extension);
-                if ($extension !== '') {
+                // PAK is a transport/container identity. It is deliberately not
+                // a package-table extension even if an older profile listed it.
+                if ($extension !== '' && $extension !== 'pak') {
                     $extensions[$extension] = true;
                 }
             }
@@ -48,7 +52,7 @@ final class CatalogUploadBucketFilePolicy
         if ($extensions === []) {
             foreach (($this->config['allowed_extensions'] ?? []) as $extension) {
                 $extension = \catalog_clean_unreal_extension((string)$extension);
-                if ($extension !== '') {
+                if ($extension !== '' && $extension !== 'pak') {
                     $extensions[$extension] = true;
                 }
             }
@@ -66,6 +70,9 @@ final class CatalogUploadBucketFilePolicy
         foreach (self::ARCHIVE_EXTENSIONS as $extension) {
             $extensions[$extension] = true;
         }
+        if ($this->pakContainerAllowed()) {
+            $extensions['pak'] = true;
+        }
         return $this->allowedExtensions = array_keys($extensions);
     }
 
@@ -81,6 +88,14 @@ final class CatalogUploadBucketFilePolicy
     public function validateName(string $name, bool $allowRedirectWrapper = true): void
     {
         if (($allowRedirectWrapper && $this->isRedirectWrapper($name)) || $this->isArchive($name)) {
+            return;
+        }
+        if ($this->isPakContainer($name)) {
+            if (!$this->pakContainerAllowed()) {
+                throw new \InvalidArgumentException(
+                    'PAK container upload requires at least one active UE4 or UE5 game profile.'
+                );
+            }
             return;
         }
         $extension = \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION));
@@ -105,6 +120,24 @@ final class CatalogUploadBucketFilePolicy
             self::ARCHIVE_EXTENSIONS,
             true
         );
+    }
+
+    public function isPakContainer(string $name): bool
+    {
+        return \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION)) === 'pak';
+    }
+
+    private function pakContainerAllowed(): bool
+    {
+        if ($this->pakContainerAllowed !== null) {
+            return $this->pakContainerAllowed;
+        }
+        foreach (\gp_all_profiles($this->db) as $profile) {
+            if (in_array(strtoupper(trim((string)($profile['engine_key'] ?? ''))), ['UE4', 'UE5'], true)) {
+                return $this->pakContainerAllowed = true;
+            }
+        }
+        return $this->pakContainerAllowed = false;
     }
 
     /**
