@@ -69,6 +69,9 @@ final class PdoUnverifiedFileDetailsQuery
         }
 
         $pakContainer = strtolower(trim((string)($file['extension'] ?? ''))) === 'pak';
+        if ($pakContainer) {
+            $file['package_guid'] = 'N/A (PAK container)';
+        }
         $matches = $pakContainer ? [] : $this->matches->one($fileId);
         $possible = array_values(array_filter(
             $matches,
