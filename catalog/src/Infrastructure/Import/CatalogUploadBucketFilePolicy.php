@@ -18,6 +18,9 @@ final class CatalogUploadBucketFilePolicy
     /** @var list<string>|null */
     private ?array $allowedExtensions = null;
 
+    /** @var list<string>|null */
+    private ?array $allowedPackageExtensions = null;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly PDO $db,
@@ -28,10 +31,10 @@ final class CatalogUploadBucketFilePolicy
     }
 
     /** @return list<string> */
-    public function allowedExtensions(): array
+    public function allowedPackageExtensions(): array
     {
-        if ($this->allowedExtensions !== null) {
-            return $this->allowedExtensions;
+        if ($this->allowedPackageExtensions !== null) {
+            return $this->allowedPackageExtensions;
         }
         $extensions = [];
         foreach (\gp_all_profiles($this->db) as $profile) {
@@ -50,6 +53,16 @@ final class CatalogUploadBucketFilePolicy
                 }
             }
         }
+        return $this->allowedPackageExtensions = array_keys($extensions);
+    }
+
+    /** @return list<string> */
+    public function allowedExtensions(): array
+    {
+        if ($this->allowedExtensions !== null) {
+            return $this->allowedExtensions;
+        }
+        $extensions = array_fill_keys($this->allowedPackageExtensions(), true);
         foreach (self::ARCHIVE_EXTENSIONS as $extension) {
             $extensions[$extension] = true;
         }
@@ -71,7 +84,7 @@ final class CatalogUploadBucketFilePolicy
             return;
         }
         $extension = \catalog_clean_unreal_extension((string)pathinfo($name, PATHINFO_EXTENSION));
-        $allowed = $this->allowedExtensions();
+        $allowed = $this->allowedPackageExtensions();
         if ($allowed !== [] && !in_array($extension, $allowed, true)) {
             throw new \InvalidArgumentException(
                 'Extension .' . ($extension !== '' ? $extension : '(none)')
@@ -92,6 +105,27 @@ final class CatalogUploadBucketFilePolicy
             self::ARCHIVE_EXTENSIONS,
             true
         );
+    }
+
+    /**
+     * UZ2 and UZ3 never serialize a replacement filename, so their output name
+     * is deterministically the wrapper name with the final redirect extension
+     * removed. Classic UZ embeds the original filename and therefore cannot be
+     * classified safely from the transport filename alone.
+     */
+    public static function deterministicRedirectOutputName(string $name): ?string
+    {
+        $name = basename(str_replace(["\0", '\\'], ['', '/'], trim($name)));
+        $extension = strtolower((string)pathinfo($name, PATHINFO_EXTENSION));
+        if (!in_array($extension, ['uz2', 'uz3'], true)) {
+            return null;
+        }
+        $suffix = '.' . $extension;
+        $base = substr($name, 0, -strlen($suffix));
+        if (!is_string($base) || trim($base) === '') {
+            return null;
+        }
+        return \catalog_clean_unreal_filename($base);
     }
 
     /** @param array<string,mixed> $source @return array{md5:string,sha1:string} */
