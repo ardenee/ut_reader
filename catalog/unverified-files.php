@@ -177,7 +177,7 @@ try {
     catalog_head('Unverified Files');
     echo <<<'CSS'
 <style>
-.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
+.uv-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:14px}.uv-controls{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:8px;align-items:end}.uv-controls label{display:flex;flex-direction:column;gap:4px}.uv-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:12px 0}.uv-table{min-width:1450px}.uv-table td{vertical-align:top}.uv-file strong{display:block}.uv-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.uv-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-game-links{display:grid;gap:9px;min-width:290px}.uv-game-evidence{padding-bottom:8px;border-bottom:1px solid var(--line2)}.uv-game-evidence:last-child{padding-bottom:0;border-bottom:0}.uv-game-evidence small{display:block;color:var(--muted);margin-top:2px}.uv-evidence-badge{display:inline-flex;margin-left:7px;padding:2px 6px;border-radius:999px;font-size:10px;font-weight:700;vertical-align:1px}.uv-evidence-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.uv-evidence-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.uv-evidence-badge.neutral{color:#f5d98b;background:rgba(246,196,83,.13)}.uv-note-row td{padding-top:0;border-top:0}.uv-note{padding:7px 10px;border-left:3px solid #f6c453;color:var(--muted)}.uv-note.bad{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.uv-evidence-help{margin:0 0 10px;padding:9px 11px;border:1px solid var(--line2);border-radius:8px;color:var(--muted);background:rgba(255,255,255,.025)}.uv-cache-panel{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.uv-cache-panel p{margin:3px 0;color:var(--muted)}.uv-cache-state{margin:0 0 7px;padding:6px 8px;border-left:3px solid #f6c453;background:rgba(246,196,83,.06)}.uv-cache-state.failed{border-left-color:#e64e4e;background:rgba(230,78,78,.06)}.uv-cache-state strong,.uv-cache-state small,.uv-cache-time{display:block}.uv-cache-state small,.uv-cache-time{color:var(--muted);font-size:11px}.uv-cache-time{margin-bottom:6px}@media(max-width:1100px){.uv-controls{grid-template-columns:repeat(3,1fr)}.uv-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 CSS;
 
@@ -212,7 +212,7 @@ CSS;
         . '<h2>Dependency evidence cache</h2><p>Upload Bucket: '
         . number_format((int)($matchCacheSummary['ready'] ?? 0)) . ' ready · '
         . number_format((int)($matchCacheSummary['pending'] ?? 0)) . ' pending · '
-        . number_format((int)($matchCacheSummary['failed'] ?? 0)) . ' failed · '
+        . number_format((int)($matchCacheSummary['failed'] ?? 0)) . ' failed/unavailable · '
         . number_format((int)($matchCacheSummary['missing'] ?? 0)) . ' not calculated.</p>'
         . '<p>New bucket files are calculated automatically in the background. Refresh rebuilds all current bucket entries when dependency data may have changed.</p></div>'
         . '<form method="post" action="unverified-game-matches-refresh.php">'
@@ -300,6 +300,8 @@ CSS;
             $token = (string)($item['queue_token'] ?? '');
             $fileId = (int)$item['id'];
             $detailsUrl = 'unverified-file-details.php?id=' . $fileId;
+            $parseError = trim((string)($item['package_parse_error'] ?? ''));
+            $tablesReadable = $parseError === '';
             $possibleGames = is_array($gameMatches[$fileId] ?? null)
                 ? $gameMatches[$fileId]
                 : [];
@@ -319,18 +321,38 @@ CSS;
                 . catalog_h((string)$item['original_name']) . '</a></strong>'
                 . '<span>Package: <span class="mono">' . catalog_h((string)$item['package_name']) . '</span></span>'
                 . '<small>Queue name: ' . catalog_h($queueName) . '</small></td>';
-            echo '<td><span class="mono small">GUID: ' . catalog_h((string)($item['package_guid'] ?? '')) . '</span><br>'
+            $guid = trim((string)($item['package_guid'] ?? ''));
+            echo '<td><span class="mono small">GUID: '
+                . catalog_h($tablesReadable ? ($guid !== '' ? $guid : '—') : 'unavailable') . '</span><br>'
                 . '<span class="mono small">MD5: ' . catalog_h((string)$item['md5']) . '</span><br>'
                 . '<span class="mono small">SHA: ' . catalog_h((string)($item['sha1'] ?? '')) . '</span></td>';
-            echo '<td><span class="uv-badge good">Indexed</span>'
-                . '<div><a href="' . catalog_h($detailsUrl) . '">DB file #' . $fileId . '</a></div>'
-                . '<small>Game assignment: none (NULL)</small><small>'
-                . (int)$item['name_count'] . ' / ' . (int)$item['import_count'] . ' / '
-                . (int)$item['export_count'] . ' N/I/E</small></td>';
+            if ($tablesReadable) {
+                echo '<td><span class="uv-badge good">Indexed</span>'
+                    . '<div><a href="' . catalog_h($detailsUrl) . '">DB file #' . $fileId . '</a></div>'
+                    . '<small>Game assignment: none (NULL)</small><small>'
+                    . (int)$item['name_count'] . ' / ' . (int)$item['import_count'] . ' / '
+                    . (int)$item['export_count'] . ' N/I/E</small></td>';
+            } else {
+                echo '<td><span class="uv-badge bad">Package tables unreadable</span>'
+                    . '<div><a href="' . catalog_h($detailsUrl) . '">DB file #' . $fileId . '</a></div>'
+                    . '<small>Basic identity only</small><small>N/I/E unavailable</small></td>';
+            }
+            $evidence = $tablesReadable
+                ? uv_list_possible_games($possibleGames, $matchState)
+                : '<div class="uv-cache-state failed"><strong>Unavailable</strong>'
+                    . '<small>Package tables could not be read, so exact dependency evidence was not calculated.</small></div>';
             echo '<td class="mono">' . catalog_h(uv_list_detected($item)) . '</td>'
                 . '<td>' . catalog_h(catalog_bytes((int)$item['file_size'])) . '</td>'
-                . '<td>' . uv_list_possible_games($possibleGames, $matchState) . '</td></tr>';
+                . '<td>' . $evidence . '</td></tr>';
 
+            if (!$tablesReadable) {
+                echo '<tr class="uv-note-row"><td></td><td colspan="7"><div class="uv-note bad">'
+                    . '<strong>Parser issue</strong><br>'
+                    . nl2br(catalog_h($parseError))
+                    . '<br><a href="' . catalog_h($detailsUrl) . '">Open file details</a>'
+                    . ' · <a href="unverified-database-import.php?source_game_id=-1">Repair missing metadata</a>'
+                    . '</div></td></tr>';
+            }
             if (trim((string)($item['unverified_reason'] ?? '')) !== '') {
                 echo '<tr class="uv-note-row"><td></td><td colspan="7"><div class="uv-note">'
                     . '<strong>Queue note</strong><br>'
