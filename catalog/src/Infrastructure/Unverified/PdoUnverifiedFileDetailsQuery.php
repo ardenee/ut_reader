@@ -33,7 +33,8 @@ final class PdoUnverifiedFileDetailsQuery
      * @return array{
      *   file:array<string,mixed>,queue_name:string,queue_label:string,
      *   matches:list<array<string,mixed>>,best:?array<string,mixed>,
-     *   rows:list<array<string,mixed>>,row_count:int,pages:int,page:int,tab:string
+     *   rows:list<array<string,mixed>>,row_count:int,pages:int,page:int,tab:string,
+     *   pak_container:bool,pak_members:array<string,int>
      * }
      */
     public function fetch(int $fileId, string $tab, int $page, int $limit = 250): array
@@ -67,7 +68,8 @@ final class PdoUnverifiedFileDetailsQuery
             $queueLabel = (string)($queueGame['name'] ?? ('Game #' . $queueGameId));
         }
 
-        $matches = $this->matches->one($fileId);
+        $pakContainer = strtolower(trim((string)($file['extension'] ?? ''))) === 'pak';
+        $matches = $pakContainer ? [] : $this->matches->one($fileId);
         $possible = array_values(array_filter(
             $matches,
             static fn(array $row): bool => (int)($row['rank'] ?? 99) <= 4
@@ -80,6 +82,27 @@ final class PdoUnverifiedFileDetailsQuery
         $page = min($page, $pages);
         $rows = array_slice($allRows, ($page - 1) * $limit, $limit);
 
+        $pakMembers = ['total' => 0, 'indexed' => 0, 'duplicate' => 0, 'skipped' => 0, 'rejected' => 0, 'pending' => 0, 'queued' => 0];
+        if ($pakContainer) {
+            try {
+                $statement = $this->db->prepare(
+                    'SELECT status,COUNT(*) c FROM ue_unverified_pak_members WHERE parent_file_id=? GROUP BY status'
+                );
+                $statement->execute([$fileId]);
+                foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $member) {
+                    $status = strtolower(trim((string)($member['status'] ?? '')));
+                    $count = max(0, (int)($member['c'] ?? 0));
+                    $pakMembers['total'] += $count;
+                    if (array_key_exists($status, $pakMembers)) {
+                        $pakMembers[$status] += $count;
+                    }
+                }
+            } catch (\Throwable) {
+                // Rolling deployment before the PAK-membership migration: keep
+                // the container page readable; processing itself requires schema.
+            }
+        }
+
         return [
             'file' => $file,
             'queue_name' => $queueName,
@@ -91,6 +114,8 @@ final class PdoUnverifiedFileDetailsQuery
             'pages' => $pages,
             'page' => $page,
             'tab' => $tab,
+            'pak_container' => $pakContainer,
+            'pak_members' => $pakMembers,
         ];
     }
 }
