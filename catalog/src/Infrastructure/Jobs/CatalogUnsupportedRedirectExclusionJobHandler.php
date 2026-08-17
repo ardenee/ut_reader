@@ -2,7 +2,8 @@
 /**
  * Prevents redirect wrappers for non-catalogued file types from entering
  * decompression/package parsing. Unsupported targets are intentional exclusions,
- * not failed jobs.
+ * not failed jobs. The same boundary also diverts Upload Bucket PAK containers
+ * into their retained-container workflow before ordinary package parsing.
  */
 declare(strict_types=1);
 
@@ -41,6 +42,10 @@ final class CatalogUnsupportedRedirectExclusionJobHandler implements JobHandler
     /** @return array<string,mixed> */
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
+        if ($this->isBucketPakWork($job)) {
+            return (new CatalogBucketPakJobHandler($this->db, $this->config))->handle($job, $context);
+        }
+
         $payload = $job->payload;
         $originalName = trim((string)($payload['original_name'] ?? ''));
         $outputName = $this->redirectOutputName($job, $originalName);
@@ -80,6 +85,18 @@ final class CatalogUnsupportedRedirectExclusionJobHandler implements JobHandler
             'excluded_extension' => $outputExtension,
             'source_relative_path' => trim((string)($payload['source_relative_path'] ?? $originalName)),
         ];
+    }
+
+    private function isBucketPakWork(ClaimedJob $job): bool
+    {
+        if (!in_array($job->type, [JobType::PROCESS_BUCKET_UPLOAD, JobType::PROCESS_BUCKET_STAGED_PACKAGE], true)) {
+            return false;
+        }
+        if ((int)($job->payload['bucket_pak_member_id'] ?? 0) > 0) {
+            return true;
+        }
+        $name = trim((string)($job->payload['original_name'] ?? ''));
+        return strtolower((string)pathinfo($name, PATHINFO_EXTENSION)) === 'pak';
     }
 
     private function redirectOutputName(ClaimedJob $job, string $originalName): ?string
