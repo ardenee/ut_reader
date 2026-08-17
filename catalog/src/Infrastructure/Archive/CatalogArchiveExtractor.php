@@ -2,6 +2,11 @@
 /**
  * Safe unpack-only ZIP/7z/RAR reader used by catalog ingestion jobs.
  *
+ * Archive decoding is entirely in-process through PHP extensions. No shell,
+ * command-line 7-Zip/unrar binary, or platform-specific executable is used.
+ * ZIP prefers ext-zip (ZipArchive); RAR and 7z use ext-archive
+ * (cataphract/libarchive), which also provides a ZIP fallback.
+ *
  * Archives are never extracted wholesale into a filesystem tree. Entries are
  * listed first, validated, then one requested regular file is streamed to a
  * temporary file. This avoids path traversal and lets callers impose their own
@@ -14,9 +19,6 @@ namespace UnrealDb\Catalog\Infrastructure\Archive;
 final class CatalogArchiveExtractor
 {
     private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar'];
-    private const LIST_OUTPUT_LIMIT = 16 * 1024 * 1024;
-
-    private ?string $sevenZipBinary = null;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly array $config)
@@ -26,6 +28,18 @@ final class CatalogArchiveExtractor
     public static function isArchiveName(string $name): bool
     {
         return in_array(strtolower((string)pathinfo($name, PATHINFO_EXTENSION)), self::ARCHIVE_EXTENSIONS, true);
+    }
+
+    /** @return array{zip:bool,libarchive:bool,rar:bool,seven_zip:bool} */
+    public static function runtimeCapabilities(): array
+    {
+        $libarchive = class_exists(\libarchive\Archive::class);
+        return [
+            'zip' => class_exists(\ZipArchive::class) || $libarchive,
+            'libarchive' => $libarchive,
+            'rar' => $libarchive,
+            'seven_zip' => $libarchive,
+        ];
     }
 
     /**
@@ -47,7 +61,9 @@ final class CatalogArchiveExtractor
         if ($extension === 'zip' && class_exists(\ZipArchive::class)) {
             return $this->zipEntries($archivePath);
         }
-        return $this->sevenZipEntries($archivePath);
+
+        $this->requireLibarchive($extension);
+        return $this->libarchiveEntries($archivePath, $extension);
     }
 
     /**
@@ -72,10 +88,16 @@ final class CatalogArchiveExtractor
             throw new \RuntimeException('Archive member exceeds the configured extraction limit.');
         }
 
-        $backend = (string)($entry['backend'] ?? '');
-        return $backend === 'zip'
-            ? $this->extractZipEntry($archivePath, $entry, $maxBytes)
-            : $this->extractSevenZipEntry($archivePath, $entry, $maxBytes);
+        return match ((string)($entry['backend'] ?? '')) {
+            'zip' => $this->extractZipEntry($archivePath, $entry, $maxBytes),
+            'libarchive' => $this->extractLibarchiveEntry(
+                $archivePath,
+                strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION)),
+                $entry,
+                $maxBytes
+            ),
+            default => throw new \RuntimeException('Archive member backend is unavailable or invalid.'),
+        };
     }
 
     /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string}> */
@@ -142,61 +164,44 @@ final class CatalogArchiveExtractor
     }
 
     /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string}> */
-    private function sevenZipEntries(string $archivePath): array
+    private function libarchiveEntries(string $archivePath, string $extension): array
     {
-        $binary = $this->sevenZipBinary();
-        $result = $this->capture([
-            $binary,
-            'l',
-            '-slt',
-            '-sccUTF-8',
-            '-p__UNREALDB_REJECT_ENCRYPTED__',
-            '--',
-            $archivePath,
-        ]);
-        if ($result['exit'] !== 0) {
-            throw new \RuntimeException(
-                '7-Zip could not list the archive: ' . $this->shortError($result['stderr'], $result['stdout'])
-            );
-        }
-
-        $blocks = preg_split('/\R\s*\R/u', str_replace("\r\n", "\n", $result['stdout'])) ?: [];
+        $archive = $this->newLibarchive($archivePath, $extension);
         $entries = [];
-        $index = 0;
-        foreach ($blocks as $block) {
-            $properties = [];
-            foreach (preg_split('/\R/u', trim($block)) ?: [] as $line) {
-                $separator = strpos($line, ' = ');
-                if ($separator === false) {
-                    continue;
-                }
-                $key = trim(substr($line, 0, $separator));
-                $value = substr($line, $separator + 3);
-                if ($key !== '') {
-                    $properties[$key] = $value;
-                }
-            }
-            if (!isset($properties['Path'], $properties['Size'])) {
-                continue;
-            }
-            if (($properties['Folder'] ?? '-') === '+' || str_contains((string)($properties['Attributes'] ?? ''), 'D')) {
+        $ordinal = 0;
+        foreach ($archive as $archiveEntry) {
+            $index = $ordinal++;
+            if (!is_object($archiveEntry)) {
                 continue;
             }
 
-            $rawPath = (string)$properties['Path'];
+            $rawPath = trim((string)($archiveEntry->pathname ?? ''));
+            $isDirectory = !empty($archiveEntry->isDir);
+            if ($rawPath === '' || $isDirectory) {
+                continue;
+            }
+
             [$safePath, $reason] = $this->safeMemberPath($rawPath);
-            if (isset($properties['Symbolic Link']) || isset($properties['Hard Link'])) {
+            $isFile = !empty($archiveEntry->isFile);
+            $isSymlink = !empty($archiveEntry->isSymlink);
+            $hardlink = trim((string)($archiveEntry->hardlink ?? ''));
+            if ($isSymlink || $hardlink !== '') {
                 $safePath = '';
                 $reason = 'link entries are not accepted';
+            } elseif (!$isFile) {
+                $safePath = '';
+                $reason = 'non-regular archive entries are not accepted';
             }
+
+            $sizeValue = $archiveEntry->size ?? null;
             $entries[] = [
-                'index' => $index++,
+                'index' => $index,
                 'path' => $safePath !== '' ? $safePath : str_replace('\\', '/', $rawPath),
-                'size' => max(0, (int)$properties['Size']),
-                'encrypted' => ($properties['Encrypted'] ?? '-') === '+',
+                'size' => $sizeValue !== null ? max(0, (int)$sizeValue) : 0,
+                'encrypted' => !empty($archiveEntry->isEncrypted),
                 'safe' => $safePath !== '',
                 'reason' => $reason,
-                'backend' => '7zip',
+                'backend' => 'libarchive',
             ];
             if (count($entries) > $this->maxEntries()) {
                 throw new \RuntimeException(
@@ -233,28 +238,7 @@ final class CatalogArchiveExtractor
             if (!is_resource($output)) {
                 throw new \RuntimeException('Could not create temporary archive member.');
             }
-
-            $written = 0;
-            while (!feof($input)) {
-                $buffer = fread($input, 1024 * 1024);
-                if (!is_string($buffer)) {
-                    throw new \RuntimeException('Could not read ZIP member stream.');
-                }
-                if ($buffer === '') {
-                    if (feof($input)) {
-                        break;
-                    }
-                    throw new \RuntimeException('ZIP member stream stopped unexpectedly.');
-                }
-                $written += strlen($buffer);
-                if ($written > $maxBytes) {
-                    throw new \RuntimeException('Archive member exceeded the configured extraction limit while unpacking.');
-                }
-                if (fwrite($output, $buffer) !== strlen($buffer)) {
-                    throw new \RuntimeException('Could not write temporary archive member.');
-                }
-            }
-            fflush($output);
+            $this->copyBoundedStream($input, $output, $maxBytes, 'ZIP');
         } catch (\Throwable $error) {
             @unlink($temporary);
             throw $error;
@@ -272,45 +256,94 @@ final class CatalogArchiveExtractor
         return $temporary;
     }
 
-    /** @param array{path:string,size:int} $entry */
-    private function extractSevenZipEntry(string $archivePath, array $entry, int $maxBytes): string
+    /** @param array{index:int,path:string,size:int} $entry */
+    private function extractLibarchiveEntry(string $archivePath, string $extension, array $entry, int $maxBytes): string
     {
-        $temporary = $this->temporaryPath();
-        $stderr = null;
-        $process = @proc_open(
-            [
-                $this->sevenZipBinary(),
-                'x',
-                '-so',
-                '-y',
-                '-spd',
-                '-p__UNREALDB_REJECT_ENCRYPTED__',
-                '--',
-                $archivePath,
-                (string)$entry['path'],
-            ],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['file', $temporary, 'wb'],
-                2 => ['pipe', 'w'],
-            ],
-            $pipes
-        );
-        if (!is_resource($process)) {
-            @unlink($temporary);
-            throw new \RuntimeException('Could not start 7-Zip extraction process.');
-        }
-        fclose($pipes[0]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[2]);
-        $exit = proc_close($process);
-        if ($exit !== 0) {
-            @unlink($temporary);
-            throw new \RuntimeException('7-Zip could not unpack archive member: ' . $this->shortError((string)$stderr, ''));
+        $this->requireLibarchive($extension);
+        $archive = $this->newLibarchive($archivePath, $extension);
+        $targetIndex = (int)$entry['index'];
+        $targetPath = (string)$entry['path'];
+        $ordinal = 0;
+
+        foreach ($archive as $archiveEntry) {
+            $index = $ordinal++;
+            if ($index !== $targetIndex) {
+                continue;
+            }
+            if (!is_object($archiveEntry)) {
+                break;
+            }
+
+            $rawPath = trim((string)($archiveEntry->pathname ?? ''));
+            [$safePath, $reason] = $this->safeMemberPath($rawPath);
+            if ($safePath === '' || !hash_equals($targetPath, $safePath)) {
+                throw new \RuntimeException(
+                    'Archive member identity changed between listing and extraction'
+                    . ($reason !== '' ? ': ' . $reason : '.')
+                );
+            }
+            if (empty($archiveEntry->isFile)
+                || !empty($archiveEntry->isSymlink)
+                || trim((string)($archiveEntry->hardlink ?? '')) !== '') {
+                throw new \RuntimeException('Archive member is no longer a regular standalone file.');
+            }
+            if (!empty($archiveEntry->isEncrypted)) {
+                throw new \RuntimeException('Encrypted/password-protected archive members are not supported.');
+            }
+
+            $input = $archive->currentEntryStream();
+            if (!is_resource($input)) {
+                throw new \RuntimeException('Could not open libarchive member stream.');
+            }
+            $temporary = $this->temporaryPath();
+            $output = fopen($temporary, 'wb');
+            if (!is_resource($output)) {
+                fclose($input);
+                @unlink($temporary);
+                throw new \RuntimeException('Could not create temporary archive member.');
+            }
+
+            try {
+                $this->copyBoundedStream($input, $output, $maxBytes, 'libarchive');
+            } catch (\Throwable $error) {
+                @unlink($temporary);
+                throw $error;
+            } finally {
+                fclose($input);
+                fclose($output);
+            }
+
+            $this->verifyExtractedFile($temporary, (int)$entry['size'], $maxBytes);
+            return $temporary;
         }
 
-        $this->verifyExtractedFile($temporary, (int)$entry['size'], $maxBytes);
-        return $temporary;
+        throw new \RuntimeException('Archive member could not be located again for extraction.');
+    }
+
+    /** @param resource $input @param resource $output */
+    private function copyBoundedStream($input, $output, int $maxBytes, string $label): void
+    {
+        $written = 0;
+        while (!feof($input)) {
+            $buffer = fread($input, 1024 * 1024);
+            if (!is_string($buffer)) {
+                throw new \RuntimeException('Could not read ' . $label . ' member stream.');
+            }
+            if ($buffer === '') {
+                if (feof($input)) {
+                    break;
+                }
+                throw new \RuntimeException($label . ' member stream stopped unexpectedly.');
+            }
+            $written += strlen($buffer);
+            if ($written > $maxBytes) {
+                throw new \RuntimeException('Archive member exceeded the configured extraction limit while unpacking.');
+            }
+            if (fwrite($output, $buffer) !== strlen($buffer)) {
+                throw new \RuntimeException('Could not write temporary archive member.');
+            }
+        }
+        fflush($output);
     }
 
     private function verifyExtractedFile(string $path, int $expectedBytes, int $maxBytes): void
@@ -326,64 +359,32 @@ final class CatalogArchiveExtractor
         }
     }
 
-    /** @return array{exit:int,stdout:string,stderr:string} */
-    private function capture(array $command): array
+    private function requireLibarchive(string $extension): void
     {
-        $process = @proc_open(
-            $command,
-            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-            $pipes
+        if (class_exists(\libarchive\Archive::class)) {
+            return;
+        }
+        $label = $extension === '7z' ? '7-Zip' : strtoupper($extension);
+        throw new \RuntimeException(
+            $label . ' archive support requires the PHP ext-archive/libarchive extension. '
+            . 'UnrealDB does not execute command-line archive tools.'
         );
-        if (!is_resource($process)) {
-            throw new \RuntimeException('Could not start 7-Zip. Set UNREALDB_7ZIP_BINARY if it is not on PATH.');
-        }
-        fclose($pipes[0]);
-        $stdout = stream_get_contents($pipes[1], self::LIST_OUTPUT_LIMIT + 1);
-        $stderr = stream_get_contents($pipes[2], self::LIST_OUTPUT_LIMIT + 1);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        $exit = proc_close($process);
-        $stdout = is_string($stdout) ? $stdout : '';
-        $stderr = is_string($stderr) ? $stderr : '';
-        if (strlen($stdout) > self::LIST_OUTPUT_LIMIT || strlen($stderr) > self::LIST_OUTPUT_LIMIT) {
-            throw new \RuntimeException('Archive listing output exceeded the safety limit.');
-        }
-        return ['exit' => $exit, 'stdout' => $stdout, 'stderr' => $stderr];
     }
 
-    private function sevenZipBinary(): string
+    private function newLibarchive(string $archivePath, string $extension): object
     {
-        if ($this->sevenZipBinary !== null) {
-            return $this->sevenZipBinary;
+        $this->requireLibarchive($extension);
+        $archive = new \libarchive\Archive($archivePath);
+        $format = match ($extension) {
+            'zip' => defined('libarchive\\FORMAT_ZIP') ? constant('libarchive\\FORMAT_ZIP') : null,
+            'rar' => defined('libarchive\\FORMAT_RAR') ? constant('libarchive\\FORMAT_RAR') : null,
+            '7z' => defined('libarchive\\FORMAT_7ZIP') ? constant('libarchive\\FORMAT_7ZIP') : null,
+            default => null,
+        };
+        if (is_int($format)) {
+            $archive->supportFormats($format);
         }
-        $configured = trim((string)($this->config['archive']['seven_zip_binary'] ?? getenv('UNREALDB_7ZIP_BINARY') ?: ''));
-        if ($configured !== '') {
-            return $this->sevenZipBinary = $configured;
-        }
-
-        foreach (['7zz', '7z', '7za'] as $candidate) {
-            $probe = @proc_open(
-                [$candidate, 'i'],
-                [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']],
-                $pipes
-            );
-            if (!is_resource($probe)) {
-                continue;
-            }
-            fclose($pipes[0]);
-            stream_get_contents($pipes[1]);
-            stream_get_contents($pipes[2]);
-            fclose($pipes[1]);
-            fclose($pipes[2]);
-            $exit = proc_close($probe);
-            if ($exit === 0) {
-                return $this->sevenZipBinary = $candidate;
-            }
-        }
-        throw new \RuntimeException(
-            '7z/RAR extraction requires a 7-Zip command-line binary (7zz, 7z or 7za). '
-            . 'Install it on the server or set UNREALDB_7ZIP_BINARY.'
-        );
+        return $archive;
     }
 
     /** @return array{0:string,1:string} */
@@ -453,15 +454,5 @@ final class CatalogArchiveExtractor
             throw new \RuntimeException('Could not allocate temporary archive-member storage.');
         }
         return $path;
-    }
-
-    private function shortError(string $primary, string $fallback): string
-    {
-        $message = trim($primary) !== '' ? trim($primary) : trim($fallback);
-        $message = preg_replace('/\s+/u', ' ', $message) ?? $message;
-        if ($message === '') {
-            return 'unknown archive error';
-        }
-        return function_exists('mb_substr') ? mb_substr($message, 0, 700, 'UTF-8') : substr($message, 0, 700);
     }
 }
