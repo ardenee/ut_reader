@@ -65,10 +65,16 @@ final class CatalogBucketPakJobHandler implements JobHandler
         }
 
         $resume = $context->resumeProgress();
-        if ((int)($resume['workflow_version'] ?? 0) === self::WORKFLOW_VERSION
-            && (string)($resume['stage'] ?? '') === 'pak_wait'
-            && (int)($resume['parent_file_id'] ?? 0) > 0) {
-            return $this->waitForMembers($job, $context, (int)$resume['parent_file_id']);
+        $resumeVersion = (int)($resume['workflow_version'] ?? 0);
+        $resumeStage = (string)($resume['stage'] ?? '');
+        $resumeParentId = (int)($resume['parent_file_id'] ?? 0);
+        if ($resumeVersion === self::WORKFLOW_VERSION && $resumeParentId > 0) {
+            if ($resumeStage === 'pak_wait') {
+                return $this->waitForMembers($job, $context, $resumeParentId);
+            }
+            if ($resumeStage === 'pak_plan') {
+                return $this->resumeMemberPlanning($job, $context, $resumeParentId, $userId, $originalName);
+            }
         }
 
         $sourcePath = $this->parentSourcePath($job);
@@ -143,17 +149,18 @@ final class CatalogBucketPakJobHandler implements JobHandler
             }
 
             $parentFileId = (int)$parent['file_id'];
-            $this->planMembers($job, $context, $parentFileId, $files, $userId);
-            $this->cleanupParentSource($job);
             $context->checkpoint([
                 'workflow_version' => self::WORKFLOW_VERSION,
-                'stage' => 'pak_wait',
-                'done' => 60,
+                'stage' => 'pak_plan',
+                'done' => 10,
                 'total' => 100,
-                'percent' => 60,
+                'percent' => 10,
                 'parent_file_id' => $parentFileId,
-                'message' => 'Retained PAK container; waiting for extracted package inspection jobs.',
+                'message' => 'PAK container retained; planning durable contained-package jobs.',
             ]);
+            $this->planMembers($job, $context, $parentFileId, $files, $userId);
+            $this->checkpointWait($context, $parentFileId);
+            $this->cleanupParentSource($job);
         } finally {
             if ($workDir !== '') {
                 \catalog_pak_archive_delete_tree($workDir);
@@ -161,6 +168,57 @@ final class CatalogBucketPakJobHandler implements JobHandler
         }
 
         return $this->waitForMembers($job, $context, $parentFileId);
+    }
+
+    /** @return array<string,mixed> */
+    private function resumeMemberPlanning(
+        ClaimedJob $job,
+        JobExecutionContext $context,
+        int $parentFileId,
+        int $userId,
+        string $originalName
+    ): array {
+        $sourcePath = $this->parentSourcePath($job);
+        $context->heartbeatIfDue([
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'stage' => 'pak_plan',
+            'done' => 10,
+            'total' => 100,
+            'percent' => 10,
+            'parent_file_id' => $parentFileId,
+            'message' => 'Resuming contained-package planning for retained PAK file #' . $parentFileId . '.',
+        ]);
+        $extracted = \catalog_pak_archive_extract_to_temp($this->config, $sourcePath, $originalName);
+        $workDir = (string)$extracted['dir'];
+        try {
+            $this->planMembers(
+                $job,
+                $context,
+                $parentFileId,
+                array_values((array)$extracted['files']),
+                $userId
+            );
+            $this->checkpointWait($context, $parentFileId);
+            $this->cleanupParentSource($job);
+        } finally {
+            if ($workDir !== '') {
+                \catalog_pak_archive_delete_tree($workDir);
+            }
+        }
+        return $this->waitForMembers($job, $context, $parentFileId);
+    }
+
+    private function checkpointWait(JobExecutionContext $context, int $parentFileId): void
+    {
+        $context->checkpoint([
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'stage' => 'pak_wait',
+            'done' => 60,
+            'total' => 100,
+            'percent' => 60,
+            'parent_file_id' => $parentFileId,
+            'message' => 'Retained PAK container; waiting for extracted package inspection jobs.',
+        ]);
     }
 
     /** @param list<array<string,mixed>> $files */
@@ -181,6 +239,7 @@ final class CatalogBucketPakJobHandler implements JobHandler
             unset($allowed[$extension]);
         }
         $queue = new PdoJobQueue($this->db);
+        $existingUnits = $this->existingMemberUnits($job->id);
         $total = max(1, count($files));
         $queued = 0;
 
@@ -218,7 +277,14 @@ final class CatalogBucketPakJobHandler implements JobHandler
                 continue;
             }
 
+            $unitKey = self::UNIT_PREFIX . (int)$index;
+            if (isset($existingUnits[$unitKey])) {
+                $queued++;
+                continue;
+            }
+
             $memberId = 0;
+            $staged = null;
             try {
                 $memberId = $store->ensureMember(
                     $parentFileId,
@@ -252,10 +318,21 @@ final class CatalogBucketPakJobHandler implements JobHandler
                     $userId,
                     3,
                     $job->id,
-                    self::UNIT_PREFIX . (int)$index
+                    $unitKey
                 );
+                $existingUnits[$unitKey] = true;
                 $queued++;
+                $staged = null;
             } catch (Throwable $error) {
+                if (is_array($staged)) {
+                    try {
+                        $incoming->delete((string)($staged['relative_path'] ?? ''));
+                    } catch (Throwable) {
+                    }
+                }
+                if ($this->infrastructureFailure($error)) {
+                    throw $error;
+                }
                 if ($memberId > 0) {
                     $store->completeMember($memberId, 'rejected', null, false, $error->getMessage());
                 }
@@ -273,6 +350,24 @@ final class CatalogBucketPakJobHandler implements JobHandler
                 'message' => 'Preparing PAK member ' . ((int)$index + 1) . ' of ' . count($files) . '.',
             ]);
         }
+    }
+
+    /** @return array<string,true> */
+    private function existingMemberUnits(int $parentJobId): array
+    {
+        $statement = $this->db->prepare(
+            'SELECT workflow_unit_key FROM ue_background_jobs '
+            . 'WHERE parent_job_id=? AND workflow_unit_key LIKE ?'
+        );
+        $statement->execute([$parentJobId, self::UNIT_PREFIX . '%']);
+        $out = [];
+        foreach ($statement->fetchAll(PDO::FETCH_COLUMN) ?: [] as $key) {
+            $key = trim((string)$key);
+            if ($key !== '') {
+                $out[$key] = true;
+            }
+        }
+        return $out;
     }
 
     /** @return array<string,mixed> */
@@ -442,16 +537,20 @@ final class CatalogBucketPakJobHandler implements JobHandler
 
     private function cleanupParentSource(ClaimedJob $job): void
     {
-        if ($job->type === JobType::PROCESS_BUCKET_UPLOAD) {
-            $uploadId = trim((string)($job->payload['upload_id'] ?? ''));
-            if (preg_match('/^[a-f0-9]{64}$/', $uploadId) === 1) {
-                (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
+        try {
+            if ($job->type === JobType::PROCESS_BUCKET_UPLOAD) {
+                $uploadId = trim((string)($job->payload['upload_id'] ?? ''));
+                if (preg_match('/^[a-f0-9]{64}$/', $uploadId) === 1) {
+                    (new CatalogChunkedUploadCleanup($this->config))->delete($uploadId);
+                }
+                return;
             }
-            return;
-        }
-        $stagedPath = trim((string)($job->payload['staged_path'] ?? ''));
-        if ($stagedPath !== '') {
-            (new CatalogIncomingFileStore($this->config))->delete($stagedPath);
+            $stagedPath = trim((string)($job->payload['staged_path'] ?? ''));
+            if ($stagedPath !== '') {
+                (new CatalogIncomingFileStore($this->config))->delete($stagedPath);
+            }
+        } catch (Throwable $error) {
+            error_log('[UnrealDB bucket PAK cleanup] job=' . $job->id . ' ' . $error->getMessage());
         }
     }
 
