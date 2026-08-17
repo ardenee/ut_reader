@@ -81,8 +81,8 @@ $strictIndexer = $read('src/Infrastructure/Import/CatalogUnverifiedPackageIndexe
 
 $record(
     'pak_is_container_extension_not_package_extension',
-    str_contains($policy, "if ($extension !== '' && $extension !== 'pak')")
-        && str_contains($policy, "$extensions['pak'] = true;")
+    str_contains($policy, 'if ($extension !== \'\' && $extension !== \'pak\')')
+        && str_contains($policy, '$extensions[\'pak\'] = true;')
         && str_contains($policy, 'PAK container upload requires at least one active UE4 or UE5 game profile.')
         && str_contains($policy, 'isPakContainer'),
     'PAK must be admitted as a UE4/UE5 container capability, never by pretending it is an ordinary package-table extension.'
@@ -144,7 +144,7 @@ $record(
     str_contains($pageQuery, 'rollUpPakChildren')
         && str_contains($pageQuery, 'N/A (PAK container)')
         && str_contains($pageQuery, 'ue_unverified_pak_members')
-        && str_contains($pageQuery, "$item['pak_container'] = true;")
+        && str_contains($pageQuery, '$item[\'pak_container\'] = true;')
         && str_contains($detailsQuery, '$pakContainer ? [] : $this->matches->one($fileId)')
         && str_contains($detailsQuery, 'N/A (PAK container)')
         && str_contains($detailsQuery, 'pak_members'),
