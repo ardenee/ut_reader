@@ -68,7 +68,8 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
     {
         $row = \catalog_one(
             $this->db,
-            'SELECT id,original_name FROM ue_files WHERE id=? AND scan_status="unverified" LIMIT 1',
+            'SELECT id,original_name,scan_notes FROM ue_files '
+            . 'WHERE id=? AND scan_status="unverified" LIMIT 1',
             [$fileId]
         );
         if (!$row) {
@@ -82,6 +83,31 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         }
 
         $name = (string)$row['original_name'];
+        $parseError = $this->packageParseError((string)($row['scan_notes'] ?? ''));
+        if ($parseError !== '') {
+            $message = 'Dependency evidence unavailable for ' . $name
+                . ': package tables could not be read: ' . $parseError;
+            $this->cache->storeFailed($fileId, $message);
+            $context->checkpoint([
+                'stage' => 'complete',
+                'done' => 1,
+                'total' => 1,
+                'percent' => 100,
+                'file_id' => $fileId,
+                'status' => 'unavailable',
+                'message' => $message,
+            ]);
+            return [
+                'operation' => 'refresh_unverified_game_matches',
+                'scope' => 'file',
+                'file_id' => $fileId,
+                'status' => 'unavailable',
+                'game_evidence_count' => 0,
+                'exact_compatible_game_count' => 0,
+                'message' => $message,
+            ];
+        }
+
         $context->checkpoint([
             'stage' => 'match_refresh',
             'done' => 0,
@@ -247,6 +273,20 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
             'Planned ' . $planned . ' durable Upload Bucket match unit(s); waiting for workers.',
             ['planned_units' => $planned]
         ));
+    }
+
+    private function packageParseError(string $notes): string
+    {
+        $notes = str_replace(["\r\n", "\r"], "\n", $notes);
+        $marker = 'Unverified table parse failed:';
+        $position = strpos($notes, $marker);
+        if ($position === false) {
+            return '';
+        }
+        $error = trim(substr($notes, $position + strlen($marker)));
+        $parts = preg_split('/\n(?:Queue reason:|Metadata repair attempted:)/', $error, 2);
+        $error = trim((string)($parts[0] ?? $error));
+        return trim(preg_replace('/\s+/', ' ', $error) ?? $error);
     }
 
     /** @param array<string,mixed> $extra @return array<string,mixed> */
