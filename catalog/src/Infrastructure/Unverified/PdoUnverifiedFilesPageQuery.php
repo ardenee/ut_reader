@@ -96,6 +96,7 @@ final class PdoUnverifiedFilesPageQuery
         );
 
         $bucketGame = CatalogUnverifiedQueueStorage::bucketGame();
+        $pakParentIds = [];
         foreach ($items as &$item) {
             $queueGameId = (int)($item['unverified_queue_game_id'] ?? 0);
             $queueName = basename(trim((string)($item['unverified_queue_name'] ?? '')));
@@ -125,12 +126,20 @@ final class PdoUnverifiedFilesPageQuery
                 && CatalogUnverifiedQueueStorage::pathInside($path, $directory);
             $item['queue_token'] = CatalogUnverifiedQueueStorage::token($queueGameId, $queueName);
             $item['package_parse_error'] = $this->packageParseError((string)($item['scan_notes'] ?? ''));
+            if (strtolower(trim((string)($item['extension'] ?? ''))) === 'pak') {
+                $pakParentIds[] = (int)$item['id'];
+                $item['package_guid'] = 'N/A (PAK container)';
+                $item['package_parse_error'] = '';
+                $item['pak_container'] = true;
+            } else {
+                $item['pak_container'] = false;
+            }
         }
         unset($item);
 
         // Exact dependency/object-path matching is intentionally absent from the
         // page request path. The worker projection stores all evidence as one row
-        // per unverified file, so rendering a page is one indexed cache lookup.
+        // per unverified package, so rendering a page is one indexed cache lookup.
         $fileIds = array_values(array_map(
             static fn(array $item): int => (int)($item['id'] ?? 0),
             $items
@@ -138,6 +147,11 @@ final class PdoUnverifiedFilesPageQuery
         $cachedMatches = $this->gameMatchCache->read($fileIds);
         $gameMatches = $cachedMatches['matches'];
         $gameMatchStates = $cachedMatches['states'];
+
+        if ($pakParentIds !== []) {
+            $this->rollUpPakChildren($items, $pakParentIds, $gameMatches, $gameMatchStates);
+        }
+
         $matchCacheSummary = $this->gameMatchCache->bucketSummary();
 
         $summary = \catalog_one(
@@ -181,6 +195,147 @@ final class PdoUnverifiedFilesPageQuery
             'extension_options' => $extensionOptions,
             'engine_options' => $engineOptions,
         ];
+    }
+
+    /**
+     * Roll retained PAK child package metadata/evidence into the parent row for
+     * display only. The PAK itself remains excluded from package matching.
+     *
+     * @param list<array<string,mixed>> $items
+     * @param list<int> $parentIds
+     * @param array<int,list<array<string,mixed>>> $gameMatches
+     * @param array<int,array<string,mixed>> $gameMatchStates
+     */
+    private function rollUpPakChildren(
+        array &$items,
+        array $parentIds,
+        array &$gameMatches,
+        array &$gameMatchStates
+    ): void {
+        try {
+            $placeholders = implode(',', array_fill(0, count($parentIds), '?'));
+            $statement = $this->db->prepare(
+                'SELECT m.parent_file_id,m.child_file_id,m.status,'
+                . 'c.name_count,c.import_count,c.export_count '
+                . 'FROM ue_unverified_pak_members m '
+                . 'LEFT JOIN ue_files c ON c.id=m.child_file_id '
+                . 'WHERE m.parent_file_id IN (' . $placeholders . ') ORDER BY m.parent_file_id,m.entry_index'
+            );
+            $statement->execute($parentIds);
+            $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        } catch (\Throwable) {
+            // Rolling deployment before migration: PAK processing itself will
+            // refuse to run, but the page remains readable.
+            foreach ($parentIds as $parentId) {
+                $gameMatches[$parentId] = [];
+                $gameMatchStates[$parentId] = ['status' => 'ready', 'calculated_at' => null];
+            }
+            return;
+        }
+
+        $childrenByParent = [];
+        $countsByParent = [];
+        foreach ($rows as $row) {
+            $parentId = (int)$row['parent_file_id'];
+            $childId = (int)($row['child_file_id'] ?? 0);
+            $countsByParent[$parentId]['entries'] = 1 + (int)($countsByParent[$parentId]['entries'] ?? 0);
+            $status = strtolower(trim((string)($row['status'] ?? '')));
+            $countsByParent[$parentId][$status] = 1 + (int)($countsByParent[$parentId][$status] ?? 0);
+            if ($childId < 1 || isset($childrenByParent[$parentId][$childId])) {
+                continue;
+            }
+            $childrenByParent[$parentId][$childId] = true;
+            $countsByParent[$parentId]['name_count'] = (int)($countsByParent[$parentId]['name_count'] ?? 0)
+                + (int)($row['name_count'] ?? 0);
+            $countsByParent[$parentId]['import_count'] = (int)($countsByParent[$parentId]['import_count'] ?? 0)
+                + (int)($row['import_count'] ?? 0);
+            $countsByParent[$parentId]['export_count'] = (int)($countsByParent[$parentId]['export_count'] ?? 0)
+                + (int)($row['export_count'] ?? 0);
+        }
+
+        $childIds = [];
+        foreach ($childrenByParent as $children) {
+            foreach (array_keys($children) as $childId) {
+                $childIds[(int)$childId] = true;
+            }
+        }
+        $childCache = $this->gameMatchCache->read(array_keys($childIds));
+        $childMatches = $childCache['matches'];
+        $childStates = $childCache['states'];
+
+        foreach ($items as &$item) {
+            $parentId = (int)($item['id'] ?? 0);
+            if (empty($item['pak_container']) || !in_array($parentId, $parentIds, true)) {
+                continue;
+            }
+            $summary = $countsByParent[$parentId] ?? [];
+            $item['name_count'] = (int)($summary['name_count'] ?? 0);
+            $item['import_count'] = (int)($summary['import_count'] ?? 0);
+            $item['export_count'] = (int)($summary['export_count'] ?? 0);
+            $item['pak_entry_count'] = (int)($summary['entries'] ?? 0);
+            $item['pak_indexed_count'] = (int)($summary['indexed'] ?? 0);
+            $item['pak_duplicate_count'] = (int)($summary['duplicate'] ?? 0);
+            $item['pak_skipped_count'] = (int)($summary['skipped'] ?? 0);
+            $item['pak_rejected_count'] = (int)($summary['rejected'] ?? 0);
+
+            $aggregated = [];
+            $latestCalculated = null;
+            foreach (array_keys($childrenByParent[$parentId] ?? []) as $childId) {
+                $state = $childStates[(int)$childId] ?? [];
+                $calculated = trim((string)($state['calculated_at'] ?? ''));
+                if ($calculated !== '' && ($latestCalculated === null || strcmp($calculated, $latestCalculated) > 0)) {
+                    $latestCalculated = $calculated;
+                }
+                foreach ($childMatches[(int)$childId] ?? [] as $match) {
+                    $gameId = (int)($match['game_id'] ?? 0);
+                    if ($gameId < 1) {
+                        continue;
+                    }
+                    if (!isset($aggregated[$gameId])) {
+                        $aggregated[$gameId] = $match;
+                        $aggregated[$gameId]['import_count'] = 0;
+                        $aggregated[$gameId]['owner_count'] = 0;
+                        $aggregated[$gameId]['exact_object_matches'] = 0;
+                    }
+                    $aggregated[$gameId]['import_count'] += (int)($match['import_count'] ?? 0);
+                    $aggregated[$gameId]['owner_count'] += (int)($match['owner_count'] ?? 0);
+                    $aggregated[$gameId]['exact_object_matches'] += (int)($match['exact_object_matches'] ?? 0);
+                    $aggregated[$gameId]['compatible'] = !empty($aggregated[$gameId]['compatible']) || !empty($match['compatible']);
+                    $aggregated[$gameId]['rank'] = min(
+                        (int)($aggregated[$gameId]['rank'] ?? 99),
+                        (int)($match['rank'] ?? 99)
+                    );
+                }
+            }
+            foreach ($aggregated as &$match) {
+                $imports = max(0, (int)$match['import_count']);
+                $exact = max(0, (int)$match['exact_object_matches']);
+                $match['unmatched_object_count'] = max(0, $imports - $exact);
+                $match['match_percent'] = $imports > 0 ? round(($exact / $imports) * 100, 1) : null;
+            }
+            unset($match);
+            $values = array_values($aggregated);
+            usort($values, static function (array $left, array $right): int {
+                return ((int)($left['rank'] ?? 99) <=> (int)($right['rank'] ?? 99))
+                    ?: ((int)($right['exact_object_matches'] ?? 0) <=> (int)($left['exact_object_matches'] ?? 0))
+                    ?: strcasecmp((string)($left['game_name'] ?? ''), (string)($right['game_name'] ?? ''));
+            });
+            $gameMatches[$parentId] = $values;
+            $gameMatchStates[$parentId] = [
+                'status' => 'ready',
+                'calculated_at' => $latestCalculated,
+                'updated_at' => $latestCalculated,
+                'last_error' => null,
+                'match_count' => count($values),
+                'exact_compatible_game_count' => count(array_filter(
+                    $values,
+                    static fn(array $match): bool => !empty($match['compatible'])
+                        && (int)($match['exact_object_matches'] ?? 0) > 0
+                )),
+                'cache_version' => PdoUnverifiedGameMatchCache::VERSION,
+            ];
+        }
+        unset($item);
     }
 
     /** @return array{0:string,1:list<mixed>} */
