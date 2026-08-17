@@ -60,6 +60,14 @@ final class CatalogUnverifiedPackageIndexer
 
         $this->emit($progress, 'engine_detect', 64, 'Detecting Unreal Engine generation and package summary.');
         [$detectedEngine, $summary] = $this->runtime->detectEngine($path, $originalName);
+        if (empty($summary['ok']) || !in_array($detectedEngine, ['UE1', 'UE2', 'UE3', 'UE4', 'UE5'], true)) {
+            $reasonText = trim((string)($summary['reason'] ?? ''));
+            throw new \RuntimeException(
+                'The uploaded file does not contain a supported Unreal package header.'
+                . ($reasonText !== '' ? ' ' . $reasonText . '.' : '')
+            );
+        }
+
         $packageName = in_array($detectedEngine, ['UE4', 'UE5'], true) && $sourceRelativePath !== ''
             ? $this->runtime->uePackageNameFromSourceRelative($sourceRelativePath)
             : $this->runtime->logicalPackageName($originalName);
@@ -67,58 +75,50 @@ final class CatalogUnverifiedPackageIndexer
             $packageName = $this->runtime->logicalPackageName($originalName);
         }
 
-        $header = [];
-        $names = [];
-        $imports = [];
-        $exports = [];
-        $notes = [];
-        $parseError = null;
-        try {
-            $readerClass = $this->runtime->readerClass($detectedEngine);
-            $reader = new $readerClass($path);
+        $readerClass = $this->runtime->readerClass($detectedEngine);
+        $reader = new $readerClass($path);
 
-            $this->emit($progress, 'reader_validate', 66, 'Validating the Unreal package reader.');
-            $issues = method_exists($reader, 'validatePackage')
-                ? $reader->validatePackage()
-                : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);
-            [$fatal, $readerNotes] = $this->runtime->splitReaderIssues(is_array($issues) ? $issues : []);
-            if ($fatal !== []) {
-                throw new \RuntimeException(implode("\n", $fatal));
+        $this->emit($progress, 'reader_validate', 66, 'Validating the Unreal package reader.');
+        $issues = method_exists($reader, 'validatePackage')
+            ? $reader->validatePackage()
+            : (method_exists($reader, 'getDebugErrors') ? $reader->getDebugErrors() : []);
+        [$fatal, $readerNotes] = $this->runtime->splitReaderIssues(is_array($issues) ? $issues : []);
+        if ($fatal !== []) {
+            throw new \RuntimeException(implode("\n", $fatal));
+        }
+        $notes = array_values($readerNotes);
+        foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
+            if (!method_exists($reader, $method)) {
+                throw new \RuntimeException('Reader is missing method: ' . $method);
             }
-            $notes = array_values($readerNotes);
-            foreach (['getHeader', 'getNames', 'getImports', 'getExports'] as $method) {
-                if (!method_exists($reader, $method)) {
-                    throw new \RuntimeException('Reader is missing method: ' . $method);
-                }
-            }
+        }
 
-            $this->emit($progress, 'read_header', 69, 'Reading the package header.');
-            $header = $reader->getHeader();
-            if (!is_array($header)) {
-                throw new \RuntimeException('Reader returned an invalid package header.');
-            }
-            $this->emit($progress, 'read_names', 73, 'Reading the Names table.');
-            $names = $reader->getNames();
-            $this->emit($progress, 'read_imports', 77, 'Reading the Imports table.');
-            $imports = $reader->getImports();
-            $this->emit($progress, 'read_exports', 81, 'Reading the Exports table.');
-            $exports = $reader->getExports();
-            if (!is_array($names) || !is_array($imports) || !is_array($exports)) {
-                throw new \RuntimeException('Reader returned an invalid package table.');
-            }
-        } catch (Throwable $error) {
-            $parseError = trim($error->getMessage()) ?: 'Package tables could not be read.';
-            $notes[] = 'Unverified table parse failed: ' . $parseError;
-            $this->emit(
-                $progress,
-                'reader_warning',
-                82,
-                'Package table parsing failed; indexing basic metadata: ' . $parseError
+        $this->emit($progress, 'read_header', 69, 'Reading the package header.');
+        $header = $reader->getHeader();
+        if (!is_array($header)) {
+            throw new \RuntimeException('Reader returned an invalid package header.');
+        }
+
+        $headerVersion = array_key_exists('version', $header)
+            ? (int)$header['version']
+            : (int)($summary['version'] ?? 0);
+        $guid = trim((string)($header['guid'] ?? ''));
+        if (in_array($detectedEngine, ['UE1', 'UE2', 'UE3'], true)
+            && $headerVersion >= 68
+            && $guid === '') {
+            throw new \RuntimeException(
+                'The Unreal package header is missing the required package GUID.'
             );
-            $header = [];
-            $names = [];
-            $imports = [];
-            $exports = [];
+        }
+
+        $this->emit($progress, 'read_names', 73, 'Reading the Names table.');
+        $names = $reader->getNames();
+        $this->emit($progress, 'read_imports', 77, 'Reading the Imports table.');
+        $imports = $reader->getImports();
+        $this->emit($progress, 'read_exports', 81, 'Reading the Exports table.');
+        $exports = $reader->getExports();
+        if (!is_array($names) || !is_array($imports) || !is_array($exports)) {
+            throw new \RuntimeException('Reader returned an invalid package table.');
         }
 
         if (in_array($detectedEngine, ['UE4', 'UE5'], true) && $sourceRelativePath === '') {
@@ -128,16 +128,14 @@ final class CatalogUnverifiedPackageIndexer
             $notes[] = 'Queue reason: ' . $reason;
         }
 
-        $guid = trim((string)($header['guid'] ?? ''));
         $version = array_key_exists('version', $header)
             ? (int)$header['version']
-            : (!empty($summary['ok']) ? (int)($summary['version'] ?? 0) : 0);
+            : (int)($summary['version'] ?? 0);
         $licensee = array_key_exists('licensee', $header)
             ? (int)$header['licensee']
             : (array_key_exists('licenseeVersion', $header)
                 ? (int)$header['licenseeVersion']
                 : (($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : 0));
-        $confidence = $parseError === null ? 'high' : (!empty($summary['ok']) ? 'medium' : 'unknown');
         $relativePath = $this->runtime->storageRelative($path);
         $scanNotes = implode("\n", array_values(array_filter(
             array_map('trim', $notes),
@@ -161,9 +159,9 @@ final class CatalogUnverifiedPackageIndexer
                 $statement->execute([
                     $packageName, $originalName, $sourceRelativePath !== '' ? $sourceRelativePath : null,
                     $queueName, $relativePath, $extension, $detectedEngine,
-                    !empty($summary['ok']) ? (int)($summary['version'] ?? 0) : null,
+                    (int)($summary['version'] ?? 0),
                     ($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : null,
-                    $confidence, $scanNotes, $size, strtolower($md5), strtolower($sha1),
+                    'high', $scanNotes, $size, strtolower($md5), strtolower($sha1),
                     $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,
                     (int)($header['compressionFlags'] ?? 0), $version, $licensee,
                     count($names), count($imports), count($exports), $scanNotes, $uploadedBy,
@@ -181,9 +179,9 @@ final class CatalogUnverifiedPackageIndexer
                 $statement->execute([
                     $packageName, $originalName, $sourceRelativePath !== '' ? $sourceRelativePath : null,
                     $queueName, $relativePath, $extension, $detectedEngine,
-                    !empty($summary['ok']) ? (int)($summary['version'] ?? 0) : null,
+                    (int)($summary['version'] ?? 0),
                     ($summary['licensee'] ?? null) !== null ? (int)$summary['licensee'] : null,
-                    $confidence, 'unverified', null, $scanNotes, $size, strtolower($md5), strtolower($sha1),
+                    'high', 'unverified', null, $scanNotes, $size, strtolower($md5), strtolower($sha1),
                     $guid !== '' ? $guid : null, !empty($header['compressed']) ? 1 : 0,
                     (int)($header['compressionFlags'] ?? 0), $version, $licensee,
                     count($names), count($imports), count($exports), $scanNotes, $uploadedBy,
@@ -230,10 +228,8 @@ final class CatalogUnverifiedPackageIndexer
             'original_name' => $originalName,
             'path' => $path,
             'size' => $size,
-            'message' => $parseError === null
-                ? 'Stored and indexed compressed package metadata.'
-                : 'Stored and indexed basic metadata; package tables could not be read.',
-            'parse_error' => $parseError,
+            'message' => 'Stored and indexed compressed package metadata.',
+            'parse_error' => null,
         ];
     }
 
