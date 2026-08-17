@@ -197,19 +197,26 @@ final class PdoUnverifiedGameMatchCache
         if (!$this->available()) {
             return ['ready' => 0, 'pending' => 0, 'failed' => 0, 'missing' => $total, 'total' => $total];
         }
+
+        // A package-table parse failure makes exact object-path evidence
+        // unavailable regardless of a stale cache row left by an older worker.
+        // Count that file as failed/unavailable immediately so the admin summary
+        // cannot claim the cache is ready when no package tables were readable.
+        $parseFailure = 'LOCATE("Unverified table parse failed:",COALESCE(f.scan_notes,""))>0';
         $row = $this->db->query(
             'SELECT '
-            . 'SUM(c.status="ready") ready_count,SUM(c.status="pending") pending_count,SUM(c.status="failed") failed_count,'
-            . 'COUNT(c.file_id) cached_count '
+            . 'SUM(CASE WHEN NOT (' . $parseFailure . ') AND c.status="ready" THEN 1 ELSE 0 END) ready_count,'
+            . 'SUM(CASE WHEN NOT (' . $parseFailure . ') AND c.status="pending" THEN 1 ELSE 0 END) pending_count,'
+            . 'SUM(CASE WHEN (' . $parseFailure . ') OR c.status="failed" THEN 1 ELSE 0 END) failed_count,'
+            . 'SUM(CASE WHEN NOT (' . $parseFailure . ') AND c.file_id IS NULL THEN 1 ELSE 0 END) missing_count '
             . 'FROM ue_files f LEFT JOIN ue_unverified_game_match_cache c ON c.file_id=f.id '
             . 'WHERE f.scan_status="unverified" AND f.unverified_queue_game_id=0'
         )->fetch(PDO::FETCH_ASSOC) ?: [];
-        $cached = (int)($row['cached_count'] ?? 0);
         return [
             'ready' => (int)($row['ready_count'] ?? 0),
             'pending' => (int)($row['pending_count'] ?? 0),
             'failed' => (int)($row['failed_count'] ?? 0),
-            'missing' => max(0, $total - $cached),
+            'missing' => (int)($row['missing_count'] ?? 0),
             'total' => $total,
         ];
     }
