@@ -20,7 +20,7 @@ use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogJobWorkerFactory
 {
-    // Worker fingerprint marker: 20260814-lazy-handler-registry-v1.
+    // Worker fingerprint marker: 20260817-unsupported-redirect-exclusion-v1.
     /** @param array<string,mixed> $config */
     public static function create(
         PDO $db,
@@ -109,18 +109,34 @@ final class CatalogJobWorkerFactory
                 new GameBackupImportJobHandler($db, $trustedImportConfig),
                 $trustedImportConfig
             ),
-            JobType::IMPORT_STAGED_PACKAGE => static fn() => new CatalogNonBlockingImportJobHandler(
-                new CatalogStagedImportJobHandler($db, $trustedImportConfig),
+            JobType::IMPORT_STAGED_PACKAGE => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
+                new CatalogNonBlockingImportJobHandler(
+                    new CatalogStagedImportJobHandler($db, $trustedImportConfig),
+                    $db,
+                    $trustedImportConfig
+                ),
                 $db,
                 $trustedImportConfig
             ),
             JobType::IMPORT_STAGED_PAK => static fn() => new CatalogPakImportJobHandler($db, $trustedImportConfig),
             JobType::IMPORT_STAGED_PAK_ENTRY => static fn() => new CatalogPakImportJobHandler($db, $trustedImportConfig),
             JobType::IMPORT_STAGED_ARCHIVE => static fn() => new CatalogArchiveImportJobHandler($db, $trustedImportConfig),
-            JobType::PREPARE_BUCKET_REDIRECT => static fn() => new CatalogBucketRedirectJobHandler($db, $trustedImportConfig),
-            JobType::PROCESS_BUCKET_UPLOAD => static fn() => new CatalogBucketUploadJobHandler($db, $trustedImportConfig),
+            JobType::PREPARE_BUCKET_REDIRECT => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
+                new CatalogBucketRedirectJobHandler($db, $trustedImportConfig),
+                $db,
+                $trustedImportConfig
+            ),
+            JobType::PROCESS_BUCKET_UPLOAD => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
+                new CatalogBucketUploadJobHandler($db, $trustedImportConfig),
+                $db,
+                $trustedImportConfig
+            ),
             JobType::PROCESS_BUCKET_ARCHIVE => static fn() => new CatalogArchiveImportJobHandler($db, $trustedImportConfig),
-            JobType::PROCESS_BUCKET_STAGED_PACKAGE => static fn() => new CatalogBucketStagedPackageJobHandler($db, $trustedImportConfig),
+            JobType::PROCESS_BUCKET_STAGED_PACKAGE => static fn() => new CatalogUnsupportedRedirectExclusionJobHandler(
+                new CatalogBucketStagedPackageJobHandler($db, $trustedImportConfig),
+                $db,
+                $trustedImportConfig
+            ),
             JobType::RECONCILE_UNVERIFIED_STORAGE => static fn() => new CatalogStorageMaintenanceJobHandler($db, $config),
             JobType::PRUNE_STALE_ARTIFACTS => static fn() => new CatalogStorageMaintenanceJobHandler($db, $config),
             JobType::PRUNE_UPLOAD_PROGRESS => static fn() => new CatalogMaintenanceJobHandler($db, $config),
