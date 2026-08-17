@@ -1,8 +1,8 @@
 <?php
 /**
- * Prevents deterministic redirect wrappers for non-catalogued file types from
- * entering decompression/package parsing. Unsupported targets are intentional
- * exclusions, not failed jobs.
+ * Prevents redirect wrappers for non-catalogued file types from entering
+ * decompression/package parsing. Unsupported targets are intentional exclusions,
+ * not failed jobs.
  */
 declare(strict_types=1);
 
@@ -15,11 +15,14 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
+use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 
 final class CatalogUnsupportedRedirectExclusionJobHandler implements JobHandler
 {
+    private const LEGACY_UZ_HEADER_BYTES = 4096;
+
     /** @param array<string,mixed> $config */
     public function __construct(
         private readonly JobHandler $inner,
@@ -40,7 +43,7 @@ final class CatalogUnsupportedRedirectExclusionJobHandler implements JobHandler
     {
         $payload = $job->payload;
         $originalName = trim((string)($payload['original_name'] ?? ''));
-        $outputName = CatalogUploadBucketFilePolicy::deterministicRedirectOutputName($originalName);
+        $outputName = $this->redirectOutputName($job, $originalName);
         if ($outputName === null) {
             return $this->inner->handle($job, $context);
         }
@@ -77,6 +80,64 @@ final class CatalogUnsupportedRedirectExclusionJobHandler implements JobHandler
             'excluded_extension' => $outputExtension,
             'source_relative_path' => trim((string)($payload['source_relative_path'] ?? $originalName)),
         ];
+    }
+
+    private function redirectOutputName(ClaimedJob $job, string $originalName): ?string
+    {
+        $deterministic = CatalogUploadBucketFilePolicy::deterministicRedirectOutputName($originalName);
+        if ($deterministic !== null) {
+            return $deterministic;
+        }
+        if (\catalog_redirect_archive_extension($originalName) !== 'uz') {
+            return null;
+        }
+
+        // Classic UZ embeds the original filename immediately after its 1234/5678
+        // signature. Read only enough bytes for that header; do not enter the
+        // Huffman/RLE/MTF/BWT decoder merely to discover an unsupported target.
+        try {
+            $sourcePath = $this->sourcePath($job);
+            if ($sourcePath === '' || !is_file($sourcePath) || !is_readable($sourcePath)) {
+                return null;
+            }
+            $headerBytes = @file_get_contents($sourcePath, false, null, 0, self::LEGACY_UZ_HEADER_BYTES);
+            if (!is_string($headerBytes) || $headerBytes === '') {
+                return null;
+            }
+            $header = \catalog_legacy_uz_header($headerBytes);
+            if (!is_array($header)) {
+                return null;
+            }
+            $embeddedName = \catalog_clean_unreal_filename((string)($header['filename'] ?? ''));
+            return $embeddedName !== '' ? $embeddedName : null;
+        } catch (Throwable) {
+            // If the lightweight header probe cannot classify the wrapper, defer
+            // to the established redirect handler so real corruption is still
+            // reported normally rather than being silently discarded.
+            return null;
+        }
+    }
+
+    private function sourcePath(ClaimedJob $job): string
+    {
+        $payload = $job->payload;
+        if ($job->type === JobType::PROCESS_BUCKET_UPLOAD
+            || ($job->type === JobType::PREPARE_BUCKET_REDIRECT
+                && (string)($payload['source_kind'] ?? '') === 'chunk-upload')) {
+            $uploadId = trim((string)($payload['upload_id'] ?? ''));
+            $userId = (int)($payload['user_id'] ?? 0);
+            if ($userId < 1 || preg_match('/^[a-f0-9]{64}$/', $uploadId) !== 1) {
+                return '';
+            }
+            $resolved = (new CatalogChunkedUploadStore($this->config))->resolveCompletedFile($uploadId, $userId);
+            return (string)($resolved['path'] ?? '');
+        }
+
+        $stagedPath = trim((string)($payload['staged_path'] ?? ''));
+        if ($stagedPath === '') {
+            return '';
+        }
+        return (new CatalogIncomingFileStore($this->config))->resolve($stagedPath);
     }
 
     /** @return array<string,true>|null */
