@@ -68,6 +68,20 @@ final class CatalogUnverifiedActionService
     /** @param array<string,mixed> $result @param array<string,mixed> $details @param array<string,mixed>|null $recovery */
     private function importMessage(array $result, array $details, string $warning, ?array $recovery): string
     {
+        if (!empty($result['pak_container'])) {
+            $message = 'Queued retained PAK ' . (string)$result['original_name']
+                . ' for ' . (string)$result['target_game']
+                . ' as job #' . (int)($result['pak_job_id'] ?? 0)
+                . '. The original PAK will be retained for that game and every supported package inside it will be imported by the PAK workflow.';
+            if (is_array($recovery) && !empty($recovery['recovered'])) {
+                $message .= ' Worker recovery: ' . (string)($recovery['message'] ?? 'recovered.');
+            }
+            if ($warning !== '') {
+                $message .= ' Warning: ' . $warning;
+            }
+            return $message;
+        }
+
         $guid = trim((string)($details['package_guid'] ?? ''));
         $statusLabel = match (strtolower((string)($result['status'] ?? ''))) {
             'verified' => 'Imported',
@@ -148,6 +162,8 @@ final class CatalogUnverifiedActionService
             'dependency_jobs' => is_array($result['dependency_jobs'] ?? null) ? $result['dependency_jobs'] : null,
             'queued_game_jobs' => is_array($result['queued_game_jobs'] ?? null) ? $result['queued_game_jobs'] : null,
             'target_games' => is_array($result['target_games'] ?? null) ? $result['target_games'] : null,
+            'pak_job_id' => isset($result['pak_job_id']) ? (int)$result['pak_job_id'] : null,
+            'pak_container' => !empty($result['pak_container']),
             'identity_reused' => !empty($result['identity_reused']),
             'message' => $message,
         ];
