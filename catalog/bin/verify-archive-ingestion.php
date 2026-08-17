@@ -1,8 +1,6 @@
 #!/usr/bin/env php
 <?php
-/**
- * Read-only/no-database regression verifier for ZIP/7z/RAR ingestion plumbing.
- */
+/** Read-only/no-database regression verifier for ZIP/7z/RAR ingestion plumbing. */
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Domain\Jobs\JobResourcePolicy;
@@ -33,6 +31,7 @@ $phpFiles = [
     'src/Domain/Jobs/JobType.php',
     'src/Domain/Jobs/JobResourcePolicy.php',
     'src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+    'src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
     'src/Infrastructure/Import/CatalogProfiledUploadQueue.php',
     'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
     'src/Infrastructure/Import/CatalogBucketBatchQueue.php',
@@ -46,30 +45,43 @@ $phpFiles = [
 ];
 
 $syntaxFailures = [];
-if (!function_exists('proc_open')) {
-    $syntaxFailures[] = 'proc_open unavailable';
-} else {
-    foreach ($phpFiles as $relative) {
-        $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
-        $pipes = [];
-        $process = proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
-        if (!is_resource($process)) {
-            $syntaxFailures[] = $relative . ' could not be linted';
-            continue;
-        }
-        $stdout = stream_get_contents($pipes[1]);
-        $stderr = stream_get_contents($pipes[2]);
-        fclose($pipes[1]);
-        fclose($pipes[2]);
-        $exit = proc_close($process);
-        if ($exit !== 0) {
-            $syntaxFailures[] = $relative . ': ' . trim((string)$stderr . ' ' . (string)$stdout);
-        }
+foreach ($phpFiles as $relative) {
+    $path = $root . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relative);
+    $pipes = [];
+    $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (!is_resource($process)) {
+        $syntaxFailures[] = $relative . ' could not be linted';
+        continue;
+    }
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    $exit = proc_close($process);
+    if ($exit !== 0) {
+        $syntaxFailures[] = $relative . ': ' . trim((string)$stderr . ' ' . (string)$stdout);
     }
 }
 $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
 require_once $root . '/bootstrap/autoload.php';
+
+$extractorSource = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
+$configSource = (string)@file_get_contents($root . '/config.example.php');
+$workerVersion = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
+
+$record(
+    'archive_runtime_uses_no_command_line_tools',
+    !str_contains($extractorSource, 'proc_open(')
+        && !str_contains($extractorSource, 'shell_exec(')
+        && !str_contains($extractorSource, 'exec(')
+        && !str_contains($extractorSource, 'popen(')
+        && !str_contains($extractorSource, 'sevenZipBinary')
+        && !str_contains($extractorSource, 'UNREALDB_7ZIP_BINARY')
+        && !str_contains($configSource, 'seven_zip_binary')
+        && !str_contains($configSource, 'UNREALDB_7ZIP_BINARY'),
+    'ZIP/RAR/7z runtime decoding must be performed only through PHP extensions; no 7z/unrar executable configuration or subprocess fallback may remain.'
+);
 
 $record(
     'archive_extensions_recognized',
@@ -78,6 +90,40 @@ $record(
         && CatalogArchiveExtractor::isArchiveName('x.rar')
         && !CatalogArchiveExtractor::isArchiveName('x.uz3'),
     'ZIP, 7z and RAR are unpack-only containers; redirect wrappers remain separate.'
+);
+
+$capabilities = CatalogArchiveExtractor::runtimeCapabilities();
+$record(
+    'libarchive_php_extension_available',
+    !empty($capabilities['libarchive'])
+        && class_exists(\libarchive\Archive::class)
+        && method_exists(\libarchive\Archive::class, 'currentEntryStream')
+        && method_exists(\libarchive\Archive::class, 'supportFormats'),
+    'RAR and 7z require PHP ext-archive (cataphract/libarchive). Install/enable it in both web PHP and worker/CLI PHP; UnrealDB intentionally has no command-line fallback.'
+);
+$record(
+    'archive_capabilities_cover_zip_rar_7z',
+    !empty($capabilities['zip']) && !empty($capabilities['rar']) && !empty($capabilities['seven_zip']),
+    'The active PHP runtime must provide ZIP, RAR and 7z archive readers through ext-zip/ext-archive.'
+);
+
+$record(
+    'libarchive_backend_is_format_restricted_and_streamed',
+    str_contains($extractorSource, 'new \\libarchive\\Archive($archivePath)')
+        && str_contains($extractorSource, 'supportFormats($format)')
+        && str_contains($extractorSource, 'currentEntryStream()')
+        && str_contains($extractorSource, "'backend' => 'libarchive'")
+        && str_contains($extractorSource, 'isEncrypted')
+        && str_contains($extractorSource, 'isSymlink')
+        && str_contains($extractorSource, 'hardlink'),
+    'RAR/7z must be read directly through libarchive entry streams while retaining encryption/link/path safety gates.'
+);
+
+$record(
+    'archive_worker_fingerprint_tracks_backend',
+    str_contains($workerVersion, 'CatalogArchiveExtractor.php')
+        && str_contains($workerVersion, 'CatalogArchiveImportJobHandler.php'),
+    'Changing archive decoding code must invalidate the detached-worker fingerprint so stale workers are reconciled.'
 );
 
 $record(
@@ -99,11 +145,10 @@ $record(
     'Archive coordinators stay bounded while extracted Upload Bucket members use normal bucket-processing capacity.'
 );
 
-$factory = @file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
+$factory = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php');
 $record(
     'archive_worker_routes_registered',
-    is_string($factory)
-        && str_contains($factory, 'JobType::IMPORT_STAGED_ARCHIVE')
+    str_contains($factory, 'JobType::IMPORT_STAGED_ARCHIVE')
         && str_contains($factory, 'JobType::PROCESS_BUCKET_ARCHIVE')
         && str_contains($factory, 'JobType::PROCESS_BUCKET_STAGED_PACKAGE')
         && str_contains($factory, 'new CatalogArchiveImportJobHandler')
@@ -111,33 +156,31 @@ $record(
     'Every archive job type must resolve to a worker handler.'
 );
 
-$bucketApi = @file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
-$profiledBatchApi = @file_get_contents($root . '/api/v1/profiled-upload-batch.php');
-$profiledChunkApi = @file_get_contents($root . '/api/v1/profiled-upload-chunk.php');
+$bucketApi = (string)@file_get_contents($root . '/api/v1/upload-bucket-chunk.php');
+$profiledBatchApi = (string)@file_get_contents($root . '/api/v1/profiled-upload-batch.php');
+$profiledChunkApi = (string)@file_get_contents($root . '/api/v1/profiled-upload-chunk.php');
 $record(
     'upload_ingress_recognizes_archives',
-    is_string($bucketApi) && str_contains($bucketApi, 'archive_container')
-        && is_string($profiledBatchApi) && str_contains($profiledBatchApi, "['zip', '7z', 'rar']")
-        && is_string($profiledChunkApi) && str_contains($profiledChunkApi, "['zip', '7z', 'rar']"),
+    str_contains($bucketApi, 'archive_container')
+        && str_contains($profiledBatchApi, "['zip', '7z', 'rar']")
+        && str_contains($profiledChunkApi, "['zip', '7z', 'rar']"),
     'Both Upload Bucket and selected-game upload ingress must recognize archive containers.'
 );
 
-$profiledClient = @file_get_contents($root . '/assets/profiled-upload-jobs.js');
-$bucketInspector = @file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
+$profiledClient = (string)@file_get_contents($root . '/assets/profiled-upload-jobs.js');
+$bucketInspector = (string)@file_get_contents($root . '/assets/upload-file-inspector-worker-compatible.js');
 $record(
     'browser_archive_policy_uses_container_path',
-    is_string($profiledClient)
-        && str_contains($profiledClient, "function isArchive(file)")
-        && str_contains($profiledClient, "return isPak(file) || isArchive(file) ||")
-        && str_contains($profiledClient, "const container = isPak(file) || isArchive(file);")
-        && str_contains($profiledClient, "archive/container limit"),
+    str_contains($profiledClient, 'function isArchive(file)')
+        && str_contains($profiledClient, 'return isPak(file) || isArchive(file) ||')
+        && str_contains($profiledClient, 'const container = isPak(file) || isArchive(file);')
+        && str_contains($profiledClient, 'archive/container limit'),
     'Selected-game browser uploads must treat ZIP/7z/RAR as resumable containers, not normal package files.'
 );
 $record(
     'bucket_inspector_skips_archive_package_hashing',
-    is_string($bucketInspector)
-        && str_contains($bucketInspector, "['zip', '7z', 'rar'].includes(extension)")
-        && str_contains($bucketInspector, "archive: true")
+    str_contains($bucketInspector, "['zip', '7z', 'rar'].includes(extension)")
+        && str_contains($bucketInspector, 'archive: true')
         && !str_contains($bucketInspector, "replace(/\\.uz$/i, '.uz3')"),
     'Upload Bucket preflight must not hash archive bytes as package identity or relabel a 5678 .uz wrapper as UT3 .uz3.'
 );
@@ -221,21 +264,16 @@ if (class_exists(ZipArchive::class)) {
             $record('zip_runtime_extraction', false, get_class($error) . ': ' . $error->getMessage());
         }
     }
-
     @unlink($archivePath);
     @rmdir($directory);
 } else {
-    $checks[] = [
-        'check' => 'zip_runtime_extraction',
-        'ok' => true,
-        'detail' => 'ZipArchive is unavailable in this CLI runtime; ZIP can use the 7-Zip backend on a configured server.',
-    ];
+    $record(
+        'zip_runtime_backend_available',
+        !empty($capabilities['zip']),
+        'ZIP needs either ext-zip (ZipArchive) or ext-archive/libarchive.'
+    );
 }
 
-$result = [
-    'ok' => $failures === [],
-    'checks' => $checks,
-    'failures' => $failures,
-];
+$result = ['ok' => $failures === [], 'checks' => $checks, 'failures' => $failures];
 fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
 exit($failures === [] ? 0 : 2);
