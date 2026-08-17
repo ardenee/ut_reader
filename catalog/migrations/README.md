@@ -12,6 +12,7 @@ The current migration sequence is:
 - `202608120001_job_workflow_recovery_logging.php` — adds durable parent/child workflow identity (`parent_job_id`, `workflow_unit_key`) and job-event logging settings used by resumable/recoverable background workflows.
 - `202608130001_program_upload_settings.php` — adds `ue_program_settings`, currently used for administrator-configurable program/upload ingress limits.
 - `202608140001_verified_metadata_publication_state.php` — adds explicit compact-metadata publication state to `ue_files` (`metadata_status`, `metadata_error`, `metadata_updated_at`) so incomplete verified metadata publication can be detected and repaired rather than silently treated as healthy.
+- `202608170001_unverified_pak_members.php` — links retained neutral Upload Bucket PAK containers to their extracted package children and records ownership so assignment/deletion keeps the PAK and its contained packages together safely.
 
 A fresh/current deployment loads `catalog/install.sql` and then runs the migration runner so every post-baseline migration is applied.
 
@@ -64,6 +65,12 @@ This migration provides the general program-settings table used by current uploa
 This migration makes verified compact-metadata state explicit. Existing verified files with a registered format-2 metadata container are marked ready; verified files without a current registration remain pending so maintenance can identify/repair them.
 
 Current deployments should not assume that `scan_status = verified` by itself means compact metadata publication is complete; `metadata_status` is the explicit publication-state boundary introduced by this migration.
+
+### `202608170001`
+
+This migration is required before a `.pak` can be processed through the neutral Upload Bucket. The original PAK is retained as a container row while each supported extracted package is indexed independently; `ue_unverified_pak_members` records which child belongs to the PAK and whether the PAK owns that child.
+
+The ownership flag is the deletion/assignment safety boundary: an extracted child that was already present as a duplicate is linked but is never deleted merely because the PAK parent is removed.
 
 ## Applied migrations are byte-immutable
 
