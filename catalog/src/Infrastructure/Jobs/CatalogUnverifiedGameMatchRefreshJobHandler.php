@@ -68,7 +68,7 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
     {
         $row = \catalog_one(
             $this->db,
-            'SELECT id,original_name,scan_notes FROM ue_files '
+            'SELECT id,original_name,extension,scan_notes FROM ue_files '
             . 'WHERE id=? AND scan_status="unverified" LIMIT 1',
             [$fileId]
         );
@@ -83,6 +83,28 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
         }
 
         $name = (string)$row['original_name'];
+        if (strtolower(trim((string)($row['extension'] ?? ''))) === 'pak') {
+            $message = 'PAK container dependency evidence is provided by its extracted package children, not the container itself.';
+            $context->checkpoint([
+                'stage' => 'complete',
+                'done' => 1,
+                'total' => 1,
+                'percent' => 100,
+                'file_id' => $fileId,
+                'status' => 'container',
+                'message' => $message,
+            ]);
+            return [
+                'operation' => 'refresh_unverified_game_matches',
+                'scope' => 'file',
+                'file_id' => $fileId,
+                'status' => 'container',
+                'game_evidence_count' => 0,
+                'exact_compatible_game_count' => 0,
+                'message' => $message,
+            ];
+        }
+
         $parseError = $this->packageParseError((string)($row['scan_notes'] ?? ''));
         if ($parseError !== '') {
             $message = 'Dependency evidence unavailable for ' . $name
@@ -225,17 +247,19 @@ final class CatalogUnverifiedGameMatchRefreshJobHandler implements JobHandler
             $row = \catalog_one(
                 $this->db,
                 'SELECT COUNT(*) c,COALESCE(MAX(id),0) max_id FROM ue_files '
-                . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0'
+                . 'WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
+                . 'AND LOWER(COALESCE(extension,""))<>"pak"'
             ) ?: [];
             $snapshotMaxId = (int)($row['max_id'] ?? 0);
         }
         if ($snapshotMaxId < 1) {
-            $context->checkpoint($this->workflowProgress('bucket_match_wait', 5, 'Upload Bucket contains no unverified files to refresh.'));
+            $context->checkpoint($this->workflowProgress('bucket_match_wait', 5, 'Upload Bucket contains no package files to refresh.'));
             return;
         }
 
         $statement = $this->db->prepare(
             'SELECT id FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0 '
+            . 'AND LOWER(COALESCE(extension,""))<>"pak" '
             . 'AND id>? AND id<=? ORDER BY id LIMIT ' . self::PLAN_BATCH_SIZE
         );
         $statement->execute([$lastId, $snapshotMaxId]);
