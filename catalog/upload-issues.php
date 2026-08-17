@@ -58,20 +58,31 @@ try {
         if (!$available) {
             throw new RuntimeException('Run the pending database migration before updating Upload Issues.');
         }
-        $ids = is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [];
         $action = strtolower(trim((string)($_POST['action'] ?? '')));
-        $targetStatus = match ($action) {
-            'resolve' => 'resolved',
-            'ignore' => 'ignored',
-            'reopen' => 'open',
-            default => '',
-        };
-        if ($targetStatus === '') {
-            throw new RuntimeException('Choose Resolve, Ignore or Reopen.');
+        if ($action === 'purge_closed') {
+            $days = (int)($_POST['purge_days'] ?? 30);
+            $deleted = $store->purgeClosedOlderThan($days);
+            $message = $deleted . ' resolved/ignored Upload Issue record(s) older than ' . $days . ' day(s) deleted.';
+        } else {
+            $ids = is_array($_POST['ids'] ?? null) ? $_POST['ids'] : [];
+            if ($action === 'delete') {
+                $deleted = $store->deleteSelected($ids);
+                $message = $deleted . ' selected Upload Issue record(s) permanently deleted.';
+            } else {
+                $targetStatus = match ($action) {
+                    'resolve' => 'resolved',
+                    'ignore' => 'ignored',
+                    'reopen' => 'open',
+                    default => '',
+                };
+                if ($targetStatus === '') {
+                    throw new RuntimeException('Choose Resolve, Ignore, Reopen or Delete selected.');
+                }
+                $note = trim((string)($_POST['resolution_note'] ?? ''));
+                $updated = $store->setStatus($ids, $targetStatus, (int)($_SESSION['user']['id'] ?? 0), $note);
+                $message = $updated . ' Upload Issue record(s) updated.';
+            }
         }
-        $note = trim((string)($_POST['resolution_note'] ?? ''));
-        $updated = $store->setStatus($ids, $targetStatus, (int)($_SESSION['user']['id'] ?? 0), $note);
-        $message = $updated . ' Upload Issue record(s) updated.';
     }
 
     $status = upload_issue_status((string)($_GET['status'] ?? 'open'));
@@ -131,9 +142,11 @@ try {
     catalog_head('Upload Issues');
     echo '<style>'
         . '.upload-issue-cards{grid-template-columns:repeat(4,minmax(130px,1fr));margin-bottom:14px}'
-        . '.upload-issue-toolbar,.upload-issue-actions,.upload-issue-pagination{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
+        . '.upload-issue-toolbar,.upload-issue-actions,.upload-issue-pagination,.upload-issue-cleanup{display:flex;gap:9px;align-items:center;flex-wrap:wrap}'
         . '.upload-issue-toolbar,.upload-issue-actions{margin-bottom:12px}'
         . '.upload-issue-toolbar .search{min-width:280px;flex:1}'
+        . '.upload-issue-cleanup{padding:10px 12px;margin:0 0 14px;border:1px solid var(--line);border-radius:10px}'
+        . '.upload-issue-cleanup .muted{margin-right:auto}'
         . '.upload-issue-table{table-layout:fixed;min-width:1250px}'
         . '.upload-issue-table .col-select{width:42px}.upload-issue-table .col-status{width:92px}.upload-issue-table .col-stage{width:120px}'
         . '.upload-issue-table .col-size{width:105px}.upload-issue-table .col-count{width:80px}.upload-issue-table .col-date{width:170px}'
@@ -190,13 +203,26 @@ try {
     }
     echo '</select></label><button type="submit">Apply</button></form>';
 
+    if ($available) {
+        echo '<form method="post" class="upload-issue-cleanup" onsubmit="return confirm(\'Delete resolved/ignored Upload Issue records older than the selected age? Open issues will not be touched.\')">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload_issues')) . '">'
+            . '<input type="hidden" name="action" value="purge_closed">'
+            . '<span class="muted"><strong>Old log cleanup:</strong> removes resolved/ignored records only.</span>'
+            . '<label>Older than <select name="purge_days">';
+        foreach ([7, 30, 90, 180, 365] as $days) {
+            echo '<option value="' . $days . '"' . ($days === 30 ? ' selected' : '') . '>' . $days . ' days</option>';
+        }
+        echo '</select></label><button class="secondary" type="submit">Purge old closed logs</button></form>';
+    }
+
     if (!$available || $rows === []) {
         echo CatalogUi::emptyState('No matching Upload Issues', $available ? 'No persistent upload failures match the current filters.' : 'Apply the database migration to begin recording failures.');
     } else {
-        echo '<form method="post"><input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload_issues')) . '">';
+        echo '<form method="post" onsubmit="if(this.elements.action.value===\'delete\'){return confirm(\'Permanently delete the selected Upload Issue records?\');}return true;">'
+            . '<input type="hidden" name="csrf" value="' . catalog_h(catalog_csrf('upload_issues')) . '">';
         echo '<div class="upload-issue-actions">'
             . '<label><input type="checkbox" onclick="document.querySelectorAll(\'.upload-issue-check\').forEach(c=>c.checked=this.checked)"> Select page</label>'
-            . '<select name="action" required><option value="">Choose action</option><option value="resolve">Resolve</option><option value="ignore">Ignore</option><option value="reopen">Reopen</option></select>'
+            . '<select name="action" required><option value="">Choose action</option><option value="resolve">Resolve</option><option value="ignore">Ignore</option><option value="reopen">Reopen</option><option value="delete">Delete selected</option></select>'
             . '<input name="resolution_note" maxlength="500" placeholder="Optional resolution note">'
             . '<button type="submit">Apply to selected</button></div>';
         echo '<div class="table-wrap"><table class="upload-issue-table"><colgroup>'
@@ -235,7 +261,7 @@ try {
     echo '</div></section>';
 
     echo '<section class="ui-section processing-issues"><div class="ui-section__header"><div><h2>Processing job failures</h2>'
-        . '<p>These files reached the durable queue and then failed during decompression, duplicate inspection, inventory or package processing.</p></div>'
+        . '<p>These files reached the durable queue and then failed during decompression, duplicate inspection, inventory or package processing. These are Background Job records, so their lifecycle is managed from Background Jobs rather than deleted here.</p></div>'
         . '<a class="button secondary" href="background-jobs.php?queue=' . rawurlencode($processingQueues[0]) . '">Open Background Jobs</a>'
         . '</div><div class="ui-section__body">';
     if ($processing === []) {
