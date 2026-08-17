@@ -218,6 +218,7 @@ final class CatalogBucketPakJobHandler implements JobHandler
                 continue;
             }
 
+            $memberId = 0;
             try {
                 $memberId = $store->ensureMember(
                     $parentFileId,
@@ -255,7 +256,7 @@ final class CatalogBucketPakJobHandler implements JobHandler
                 );
                 $queued++;
             } catch (Throwable $error) {
-                if (isset($memberId) && $memberId > 0) {
+                if ($memberId > 0) {
                     $store->completeMember($memberId, 'rejected', null, false, $error->getMessage());
                 }
             }
