@@ -88,7 +88,7 @@ final class PdoUnverifiedFilesPageQuery
             $this->db,
             'SELECT f.id,f.package_name,f.original_name,f.stored_name,f.extension,f.md5,f.sha1,f.package_guid,'
             . 'f.file_size,f.detected_engine_key,f.detected_package_version,f.detected_licensee_version,'
-            . 'f.name_count,f.import_count,f.export_count,f.unverified_queue_key,'
+            . 'f.name_count,f.import_count,f.export_count,f.scan_notes,f.unverified_queue_key,'
             . 'f.unverified_queue_game_id,f.unverified_queue_name,f.unverified_reason'
             . ' FROM ue_files f WHERE ' . $whereSql
             . ' ORDER BY f.id DESC LIMIT ' . $limit . ' OFFSET ' . $offset,
@@ -124,6 +124,7 @@ final class PdoUnverifiedFilesPageQuery
                 && !is_link($path)
                 && CatalogUnverifiedQueueStorage::pathInside($path, $directory);
             $item['queue_token'] = CatalogUnverifiedQueueStorage::token($queueGameId, $queueName);
+            $item['package_parse_error'] = $this->packageParseError((string)($item['scan_notes'] ?? ''));
         }
         unset($item);
 
@@ -231,5 +232,18 @@ final class PdoUnverifiedFilesPageQuery
             }
         }
         return [implode(' AND ', $where), $args];
+    }
+
+    private function packageParseError(string $notes): string
+    {
+        $notes = str_replace(["\r\n", "\r"], "\n", $notes);
+        $marker = 'Unverified table parse failed:';
+        $position = strpos($notes, $marker);
+        if ($position === false) {
+            return '';
+        }
+        $error = trim(substr($notes, $position + strlen($marker)));
+        $parts = preg_split('/\n(?:Queue reason:|Metadata repair attempted:)/', $error, 2);
+        return trim((string)($parts[0] ?? $error));
     }
 }
