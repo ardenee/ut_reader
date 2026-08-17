@@ -375,16 +375,32 @@ final class CatalogArchiveExtractor
     {
         $this->requireLibarchive($extension);
         $archive = new \libarchive\Archive($archivePath);
-        $format = match ($extension) {
-            'zip' => defined('libarchive\\FORMAT_ZIP') ? constant('libarchive\\FORMAT_ZIP') : null,
-            'rar' => defined('libarchive\\FORMAT_RAR') ? constant('libarchive\\FORMAT_RAR') : null,
-            '7z' => defined('libarchive\\FORMAT_7ZIP') ? constant('libarchive\\FORMAT_7ZIP') : null,
-            default => null,
+        $formats = match ($extension) {
+            'zip' => $this->definedFormats(['libarchive\\FORMAT_ZIP']),
+            'rar' => $this->definedFormats(['libarchive\\FORMAT_RAR', 'libarchive\\FORMAT_RAR_V5']),
+            '7z' => $this->definedFormats(['libarchive\\FORMAT_7ZIP']),
+            default => [],
         };
-        if (is_int($format)) {
-            $archive->supportFormats($format);
+        if ($formats !== []) {
+            $first = array_shift($formats);
+            $archive->supportFormats($first, ...$formats);
         }
         return $archive;
+    }
+
+    /** @param list<string> $names @return list<int> */
+    private function definedFormats(array $names): array
+    {
+        $formats = [];
+        foreach ($names as $name) {
+            if (defined($name)) {
+                $value = constant($name);
+                if (is_int($value)) {
+                    $formats[] = $value;
+                }
+            }
+        }
+        return $formats;
     }
 
     /** @return array{0:string,1:string} */
