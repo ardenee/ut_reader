@@ -37,11 +37,15 @@ final class CatalogUnverifiedGameMatchRefreshQueue
             throw new \InvalidArgumentException('A positive unverified file ID is required.');
         }
         $row = $this->db->prepare(
-            'SELECT id FROM ue_files WHERE id=? AND scan_status="unverified" LIMIT 1'
+            'SELECT id,extension FROM ue_files WHERE id=? AND scan_status="unverified" LIMIT 1'
         );
         $row->execute([$fileId]);
-        if ((int)($row->fetchColumn() ?: 0) !== $fileId) {
+        $file = $row->fetch(PDO::FETCH_ASSOC);
+        if (!is_array($file) || (int)($file['id'] ?? 0) !== $fileId) {
             throw new \RuntimeException('The unverified file is no longer available for game-match refresh.');
+        }
+        if (strtolower(trim((string)($file['extension'] ?? ''))) === 'pak') {
+            return 0;
         }
 
         // Bucket staging must remain successful during a rolling deployment in
