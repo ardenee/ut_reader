@@ -86,6 +86,7 @@ $sourceSuites = [
     'verify-federation-settings-identity-boundary.php',
     'verify-federation-http-boundary.php',
     'verify-worker-pool-resilience.php',
+    'verify-job-observability-contract.php',
     'verify-staged-import-performance-boundary.php',
     'verify-legacy-lib-facades.php',
 ];

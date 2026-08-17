@@ -17,6 +17,7 @@ final class JobExecutionContext
     private int $lastHeartbeatAt;
     private readonly int $heartbeatIntervalSeconds;
     private readonly int $leaseSeconds;
+    private readonly JobPerformanceTrace $performance;
     /** @var array<string,mixed> */
     private array $pendingProgress = [];
     private string $lastEventStage = '';
@@ -51,6 +52,7 @@ final class JobExecutionContext
             : $leaseSeconds;
         $this->lastHeartbeatAt = time();
         $this->heartbeatIntervalSeconds = max(5, min(30, intdiv(max(15, $this->leaseSeconds), 3)));
+        $this->performance = new JobPerformanceTrace();
     }
 
     /** @return array<string,mixed> */
@@ -106,7 +108,7 @@ final class JobExecutionContext
             $this->pendingProgress = $progress;
         }
 
-        $snapshot = $this->pendingProgress;
+        $snapshot = $this->withTelemetry($this->pendingProgress);
         $state = $this->queue->heartbeat($this->job, $this->leaseSeconds, $snapshot);
         if ($state === 'cancel_requested') {
             throw new JobCancellationRequested('Job cancellation was requested: ' . $this->job->id);
@@ -120,6 +122,31 @@ final class JobExecutionContext
         }
         $this->pendingProgress = [];
         $this->lastHeartbeatAt = time();
+    }
+
+    /**
+     * Add diagnostic timing/resource data to the existing durable progress
+     * payload. Telemetry is fail-open: instrumentation must never decide whether
+     * useful job work succeeds, retries, cancels or completes.
+     *
+     * @param array<string,mixed> $progress
+     * @return array<string,mixed>
+     */
+    private function withTelemetry(array $progress): array
+    {
+        if ($progress === []) {
+            return $progress;
+        }
+
+        try {
+            $stage = trim((string)($progress['stage'] ?? 'running')) ?: 'running';
+            $this->performance->observe($stage);
+            $progress['job_telemetry'] = $this->performance->snapshot();
+        } catch (\Throwable) {
+            // Diagnostics are intentionally non-functional and fail open.
+        }
+
+        return $progress;
     }
 
     /** @param array<string,mixed> $progress */

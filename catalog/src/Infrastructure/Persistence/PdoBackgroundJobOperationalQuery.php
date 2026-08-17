@@ -61,6 +61,8 @@ final class PdoBackgroundJobOperationalQuery
         $statement = $this->db->prepare(
             'SELECT r.id task_id,r.parent_job_id,r.job_type task_type,r.worker_id,r.leased_at,'
             . 'r.last_heartbeat_at,r.progress_updated_at,r.updated_at,r.payload_json,r.progress_json,'
+            . 'GREATEST(0,TIMESTAMPDIFF(SECOND,r.leased_at,UTC_TIMESTAMP())) runtime_seconds,'
+            . 'GREATEST(0,TIMESTAMPDIFF(SECOND,COALESCE(r.progress_updated_at,r.last_heartbeat_at,r.updated_at),UTC_TIMESTAMP())) activity_age_seconds,'
             . 'COALESCE(p.id,r.id) job_id,COALESCE(p.job_type,r.job_type) job_type,p.payload_json parent_payload_json '
             . 'FROM ue_background_jobs r LEFT JOIN ue_background_jobs p ON p.id=r.parent_job_id '
             . 'WHERE r.queue_name=? AND r.status="running" ORDER BY COALESCE(r.worker_id,""),r.id LIMIT 64'
@@ -83,11 +85,14 @@ final class PdoBackgroundJobOperationalQuery
                 'worker_id' => (string)($row['worker_id'] ?? ''),
                 'started_at' => (string)($row['leased_at'] ?? ''),
                 'last_activity_at' => (string)($row['progress_updated_at'] ?? $row['last_heartbeat_at'] ?? $row['updated_at'] ?? ''),
+                'runtime_seconds' => max(0, (int)($row['runtime_seconds'] ?? 0)),
+                'activity_age_seconds' => max(0, (int)($row['activity_age_seconds'] ?? 0)),
                 'target' => $this->targetLabel($taskPayload, $taskId),
                 'job_target' => $this->targetLabel($parentPayload !== [] ? $parentPayload : $taskPayload, $jobId),
                 'stage' => trim((string)($progress['stage'] ?? 'running')) ?: 'running',
                 'percent' => max(0, min(100, (int)($progress['percent'] ?? 0))),
                 'message' => trim((string)($progress['message'] ?? '')),
+                'job_telemetry' => is_array($progress['job_telemetry'] ?? null) ? $progress['job_telemetry'] : [],
             ];
         }
         return $result;

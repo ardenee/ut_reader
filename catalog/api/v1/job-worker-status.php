@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Application\Jobs\CatalogWorkerMonitoringSummary;
 use UnrealDb\Catalog\Application\Jobs\CatalogWorkerStatusPolicy;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperationalQuery;
@@ -54,10 +55,13 @@ try {
     $worker['state'] = $workerState;
     $worker['active_processed'] = $activeProcessed;
 
+    $monitoring = CatalogWorkerMonitoringSummary::fromRunningWork($working);
+
     $worker['authoritative_status'] = $status['authoritative_status'];
     $worker['authoritative_message'] = $status['authoritative_message'];
     $worker['queue_counts'] = $counts;
     $worker['restart_recommended'] = $status['restart_recommended'];
+    $worker['monitoring'] = $monitoring;
     $worker['status_read_only'] = true;
     $worker['auto_recovery'] = null;
     $worker['auto_start'] = null;
