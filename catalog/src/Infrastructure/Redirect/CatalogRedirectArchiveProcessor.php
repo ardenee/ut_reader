@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Redirect;
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogRedirectArchiveStream;
 
 /**
@@ -63,19 +64,26 @@ final class CatalogRedirectArchiveProcessor
 
         $extension = \catalog_redirect_archive_extension($sourceName);
         if ($extension === 'uz2') {
-            return CatalogRedirectArchiveStream::decompressUz2(
+            $decoded = CatalogRedirectArchiveStream::decompressUz2(
                 $sourcePath,
                 $sourceName,
                 $this->outputLimit(),
                 $progress,
                 $requirePackageTag
             );
+            $decoded['filename'] = CatalogUploadBucketFilePolicy::cleanRedirectOutputName(
+                (string)$decoded['filename']
+            );
+            return $decoded;
         }
 
         $decoded = \catalog_redirect_archive_decompress_payload_to_temp(
             $sourcePath,
             $sourceName,
             $this->outputLimit()
+        );
+        $decoded['filename'] = CatalogUploadBucketFilePolicy::cleanRedirectOutputName(
+            (string)($decoded['filename'] ?? '')
         );
         if ($requirePackageTag && empty($decoded['is_unreal_package'])) {
             if (is_file((string)($decoded['path'] ?? ''))) {
