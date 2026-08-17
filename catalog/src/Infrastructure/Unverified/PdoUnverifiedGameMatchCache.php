@@ -190,8 +190,11 @@ final class PdoUnverifiedGameMatchCache
     /** @return array{ready:int,pending:int,failed:int,missing:int,total:int} */
     public function bucketSummary(): array
     {
+        // PAK rows are retained transport containers. Exact dependency evidence
+        // belongs to their extracted package children, never to the container.
         $totalRow = $this->db->query(
-            'SELECT COUNT(*) c FROM ue_files WHERE scan_status="unverified" AND unverified_queue_game_id=0'
+            'SELECT COUNT(*) c FROM ue_files WHERE scan_status="unverified" '
+            . 'AND unverified_queue_game_id=0 AND LOWER(COALESCE(extension,""))<>"pak"'
         )->fetch(PDO::FETCH_ASSOC) ?: [];
         $total = (int)($totalRow['c'] ?? 0);
         if (!$this->available()) {
@@ -210,7 +213,8 @@ final class PdoUnverifiedGameMatchCache
             . 'SUM(CASE WHEN (' . $parseFailure . ') OR c.status="failed" THEN 1 ELSE 0 END) failed_count,'
             . 'SUM(CASE WHEN NOT (' . $parseFailure . ') AND c.file_id IS NULL THEN 1 ELSE 0 END) missing_count '
             . 'FROM ue_files f LEFT JOIN ue_unverified_game_match_cache c ON c.file_id=f.id '
-            . 'WHERE f.scan_status="unverified" AND f.unverified_queue_game_id=0'
+            . 'WHERE f.scan_status="unverified" AND f.unverified_queue_game_id=0 '
+            . 'AND LOWER(COALESCE(f.extension,""))<>"pak"'
         )->fetch(PDO::FETCH_ASSOC) ?: [];
         return [
             'ready' => (int)($row['ready_count'] ?? 0),
