@@ -25,6 +25,7 @@ $read = static function (string $relative) use ($root): string {
 
 $phpFiles = [
     'migrations/202608170001_unverified_pak_members.php',
+    'src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php',
     'src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
     'src/Infrastructure/Jobs/CatalogBucketPakJobHandler.php',
     'src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php',
@@ -61,6 +62,7 @@ foreach ($phpFiles as $relative) {
 $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
 $migration = $read('migrations/202608170001_unverified_pak_members.php');
+$policy = $read('src/Infrastructure/Import/CatalogUploadBucketFilePolicy.php');
 $container = $read('src/Infrastructure/Import/CatalogBucketPakContainerStore.php');
 $pakHandler = $read('src/Infrastructure/Jobs/CatalogBucketPakJobHandler.php');
 $router = $read('src/Infrastructure/Jobs/CatalogUnsupportedRedirectExclusionJobHandler.php');
@@ -77,6 +79,15 @@ $detailsQuery = $read('src/Infrastructure/Unverified/PdoUnverifiedFileDetailsQue
 $workerVersion = $read('src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 $strictIndexer = $read('src/Infrastructure/Import/CatalogUnverifiedPackageIndexer.php');
 
+$record(
+    'pak_is_container_extension_not_package_extension',
+    str_contains($policy, "if ($extension !== '' && $extension !== 'pak')")
+        && str_contains($policy, "$extensions['pak'] = true;")
+        && str_contains($policy, 'PAK container upload requires at least one active UE4 or UE5 game profile.')
+        && str_contains($policy, 'isPakContainer'),
+    'PAK must be admitted as a UE4/UE5 container capability, never by pretending it is an ordinary package-table extension.'
+);
+
 $routeCheck = strpos($router, 'isBucketPakWork($job)');
 $innerCheck = strpos($router, 'return $this->inner->handle($job, $context);');
 $record(
@@ -91,7 +102,7 @@ $record(
 $record(
     'pak_parent_is_retained_container_not_package',
     str_contains($container, '"pak","PAK"')
-        && str_contains($container, 'N/A') === false
+        && !str_contains($container, 'N/A')
         && str_contains($container, 'CatalogUploadBucketStorage')
         && !str_contains($container, 'CatalogUnverifiedPackageIndexer')
         && !str_contains($container, 'required package GUID'),
@@ -133,8 +144,9 @@ $record(
     str_contains($pageQuery, 'rollUpPakChildren')
         && str_contains($pageQuery, 'N/A (PAK container)')
         && str_contains($pageQuery, 'ue_unverified_pak_members')
-        && str_contains($pageQuery, "'pak_container' =>")
+        && str_contains($pageQuery, "$item['pak_container'] = true;")
         && str_contains($detailsQuery, '$pakContainer ? [] : $this->matches->one($fileId)')
+        && str_contains($detailsQuery, 'N/A (PAK container)')
         && str_contains($detailsQuery, 'pak_members'),
     'The retained parent should display child N/I/E/evidence without itself being parsed as a package, and its details page must never invoke the package matcher.'
 );
