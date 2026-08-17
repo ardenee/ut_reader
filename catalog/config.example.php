@@ -32,10 +32,10 @@ return [
         'stale_hours' => 168,
     ],
     'archive' => [
-        // ZIP extraction uses PHP ZipArchive when available. 7z/RAR extraction
-        // uses a 7-Zip compatible CLI. Leave empty to auto-detect 7zz, 7z or 7za,
-        // or set an absolute path / UNREALDB_7ZIP_BINARY.
-        'seven_zip_binary' => '',
+        // Archive decoding is PHP-extension-only and therefore portable across
+        // Windows/Linux web servers without invoking 7z/unrar command-line tools.
+        // ZIP prefers ext-zip (ZipArchive). RAR and 7z require ext-archive
+        // (cataphract/libarchive); ext-archive also provides a ZIP fallback.
         // Hard cap on listed regular-file entries per uploaded archive.
         'max_entries' => 10000,
         // Total bytes that one archive-expansion job may unpack. Zero uses a
