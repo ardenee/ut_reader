@@ -26,6 +26,7 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Domain/Jobs/JobResourcePolicy.php',
             $this->catalogRoot . '/src/Application/Jobs/JobWorker.php',
             $this->catalogRoot . '/src/Infrastructure/Persistence/PdoJobQueue.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBucketRedirectJobHandler.php',
