@@ -20,6 +20,8 @@ $record = static function (string $name, bool $ok, string $detail = '') use (&$c
 
 $handlerPath = $root . '/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php';
 $handler = (string)@file_get_contents($handlerPath);
+$pakTargetPath = $root . '/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php';
+$pakTarget = (string)@file_get_contents($pakTargetPath);
 $rebuilderPath = $root . '/src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php';
 $rebuilder = (string)@file_get_contents($rebuilderPath);
 $summaryPath = $root . '/src/Infrastructure/Persistence/PdoDependencyPackageSummary.php';
@@ -47,7 +49,7 @@ $record(
     'whole_game_children_defer_summary_publication',
     str_contains($handler, '$deferWorkflowSummary')
         && str_contains($handler, "'dependency_summary_deferred'")
-        && str_contains($handler, 'parent workflow bulk publisher'),
+        && str_contains($handler, "'workflow_defer_dependency_summary' => true"),
     'Whole-game file units should finish dependency resolution without opening one summary transaction per child.'
 );
 
@@ -102,6 +104,32 @@ $record(
 );
 
 $record(
+    'pak_dependencies_use_targeted_mode',
+    str_contains($handler, 'isPakDependencyWorkflow($job)')
+        && str_contains($handler, 'rebuildPakDependencies($job, $context, $gameId)')
+        && str_contains($handler, "'pak-dependency:' . \$fileId")
+        && str_contains($handler, "'workflow_defer_dependency_summary' => false"),
+    'A PAK dependency child must target only imported/provider/affected files rather than invoking the whole-game planner.'
+);
+
+$record(
+    'pak_target_discovery_uses_compact_term_index',
+    str_contains($pakTarget, 'workflow_unit_key LIKE "pak-entry:%"')
+        && str_contains($pakTarget, 'ue_file_package_aliases')
+        && str_contains($pakTarget, '(value_hash=? AND value_length=?)')
+        && str_contains($pakTarget, 'l.required_package_term_id IN ('),
+    'PAK target discovery must derive provider packages from durable entry results and use indexed compact dependency term IDs.'
+);
+
+$record(
+    'legacy_pak_whole_game_children_are_superseded',
+    str_contains($handler, 'cancelQueuedLegacyChildren($job->id)')
+        && str_contains($handler, 'isLegacyPakDependencyFileUnit($job)')
+        && str_contains($handler, 'Superseded by targeted PAK dependency refresh.'),
+    'Already-queued PAK whole-game children must drain without replaying unrelated game dependencies.'
+);
+
+$record(
     'legacy_finalize_resume_gets_summary_phase',
     str_contains($handler, '$stage === \'dependency_game_finalize\' && empty($resume[\'dependency_summary_complete\'])'),
     'Already-running version-2 workflows must receive the idempotent bulk-summary phase after deployment.'
@@ -116,6 +144,7 @@ $record(
 
 foreach ([
     $handlerPath,
+    $pakTargetPath,
     $rebuilderPath,
     $summaryPath,
     $queuePath,
