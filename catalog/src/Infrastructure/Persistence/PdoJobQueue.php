@@ -60,6 +60,31 @@ final class PdoJobQueue implements JobQueue
         );
     }
 
+    /**
+     * @param list<array{payload:array<string,mixed>,workflow_unit_key:string}> $units
+     */
+    public function enqueueWorkflowUnits(
+        string $queue,
+        string $type,
+        array $units,
+        int $priority,
+        ?DateTimeImmutable $availableAt,
+        ?int $createdBy,
+        int $maxAttempts,
+        int $parentJobId
+    ): int {
+        return $this->enqueuer->enqueueWorkflowUnits(
+            $queue,
+            $type,
+            $units,
+            $priority,
+            $availableAt,
+            $createdBy,
+            $maxAttempts,
+            $parentJobId
+        );
+    }
+
     public function claim(
         string $queue,
         string $workerId,
