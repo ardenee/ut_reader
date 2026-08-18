@@ -100,7 +100,7 @@ final class CatalogUnverifiedMetadataStore
     }
 
     /** @return array<string,mixed> */
-    public function load(int $fileId): array
+    public function load(int $fileId, ?string $knownPackageName = null): array
     {
         $this->ensureSchema();
         if ($fileId < 1) {
@@ -155,10 +155,15 @@ final class CatalogUnverifiedMetadataStore
 
         // A staged-file rename changes package identity but not parser table
         // structure. Rebase export full paths at read time so no large payload
-        // rewrite is needed for a rename operation.
-        $package = $this->db->prepare('SELECT package_name FROM ue_files WHERE id=?');
-        $package->execute([$fileId]);
-        $packageName = trim((string)($package->fetchColumn() ?: ($snapshot['package_name'] ?? '')));
+        // rewrite is needed for a rename operation. Callers that already loaded
+        // the current ue_files row can supply its package name and avoid another
+        // database round trip on hot bulk/matching paths.
+        $packageName = trim((string)($knownPackageName ?? ''));
+        if ($packageName === '') {
+            $package = $this->db->prepare('SELECT package_name FROM ue_files WHERE id=?');
+            $package->execute([$fileId]);
+            $packageName = trim((string)($package->fetchColumn() ?: ($snapshot['package_name'] ?? '')));
+        }
         if ($packageName !== '') {
             $snapshot['package_name'] = $packageName;
             foreach ($snapshot['exports'] as $index => $export) {
