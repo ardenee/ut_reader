@@ -10,12 +10,19 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Unverified;
 
 use PDO;
+use RuntimeException;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 
 final class PdoUnverifiedGameMatchQuery
 {
+    private const TERM_ID_BATCH_SIZE = 350;
+    private const DEPENDENCY_TERM_BATCH_SIZE = 250;
+
     private readonly CatalogUnverifiedStagingIndex $staging;
     private readonly CatalogUnverifiedMetadataStore $metadata;
+
+    /** @var array<string,list<int>>|null */
+    private ?array $requiredPackageTermIdsByKey = null;
 
     public function __construct(private readonly PDO $db)
     {
@@ -70,24 +77,7 @@ final class PdoUnverifiedGameMatchQuery
             }
         }
 
-        $dependencyEvidence = [];
-        if ($packageNames !== []) {
-            $dependencySource = PdoDependencyReadSource::sql($this->db);
-            $wanted = array_values($packageNames);
-            $statement = $this->db->prepare(
-                'SELECT d.id,d.file_id owner_file_id,d.required_package,d.required_object_path,'
-                . 'owner.game_id,g.name game_name '
-                . 'FROM ' . $dependencySource . ' d '
-                . 'JOIN ue_files owner ON owner.id=d.file_id AND owner.scan_status="verified" '
-                . 'JOIN ue_games g ON g.id=owner.game_id '
-                . 'WHERE d.required_package IN (' . implode(',', array_fill(0, count($wanted), '?')) . ')'
-            );
-            $statement->execute($wanted);
-            foreach ($statement->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-                $dependencyEvidence[$this->key((string)$row['required_package'])][] = $row;
-            }
-        }
-
+        $dependencyEvidence = $this->dependencyEvidenceForPackages($packageNames);
         $evidenceByFile = [];
         foreach ($filesById as $fileId => $file) {
             $packageKey = $this->key((string)$file['package_name']);
@@ -96,7 +86,10 @@ final class PdoUnverifiedGameMatchQuery
                 continue;
             }
 
-            $snapshot = $this->metadata->load($fileId);
+            // bulk() already loaded the authoritative current package name for
+            // every staged file. Pass it through so metadata loading does not
+            // issue a second ue_files lookup for each package.
+            $snapshot = $this->metadata->load($fileId, (string)$file['package_name']);
             $exportPaths = [];
             foreach ((array)($snapshot['exports'] ?? []) as $export) {
                 $path = trim((string)($export['full_path'] ?? ''));
@@ -108,7 +101,7 @@ final class PdoUnverifiedGameMatchQuery
             $byGame = [];
             foreach ($rows as $row) {
                 $gameId = (int)$row['game_id'];
-                $dependencyId = (int)$row['id'];
+                $dependencyId = (string)$row['dependency_key'];
                 $ownerId = (int)$row['owner_file_id'];
                 $byGame[$gameId]['game_name'] = (string)$row['game_name'];
                 $byGame[$gameId]['dependencies'][$dependencyId] = true;
@@ -255,6 +248,219 @@ final class PdoUnverifiedGameMatchQuery
         }
 
         return $result;
+    }
+
+    /**
+     * Resolve dependency package text to the compact term IDs once per worker,
+     * preserving the previous case-insensitive package semantics while allowing
+     * every hot dependency lookup to use idx_ue_dependency_required directly.
+     *
+     * @param array<string,string> $packageNames logical-key => current package name
+     * @return array<string,list<array{dependency_key:string,owner_file_id:int,required_object_path:string,game_id:int,game_name:string}>>
+     */
+    private function dependencyEvidenceForPackages(array $packageNames): array
+    {
+        if ($packageNames === []) {
+            return [];
+        }
+
+        [$termIdsByKey, $packageKeyByTermId] = $this->packageTermIds($packageNames);
+        $wantedTermIds = [];
+        foreach (array_keys($packageNames) as $packageKey) {
+            foreach ($termIdsByKey[$packageKey] ?? [] as $termId) {
+                $wantedTermIds[$termId] = true;
+            }
+        }
+        if ($wantedTermIds === []) {
+            return [];
+        }
+
+        $evidence = [];
+        foreach (array_chunk(array_keys($wantedTermIds), self::DEPENDENCY_TERM_BATCH_SIZE) as $termIds) {
+            $statement = $this->db->prepare(
+                'SELECT l.file_id owner_file_id,l.import_index,l.required_package_term_id,'
+                . 'CONVERT(object_term.value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci required_object_path,'
+                . 'owner.game_id,g.name game_name '
+                . 'FROM ue_dependency_links l '
+                . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+                . 'JOIN ue_terms object_term ON object_term.id=l.required_object_term_id '
+                . 'JOIN ue_files owner ON owner.id=l.file_id AND owner.scan_status="verified" '
+                . 'JOIN ue_games g ON g.id=owner.game_id '
+                . 'WHERE l.required_package_term_id IN ('
+                . implode(',', array_fill(0, count($termIds), '?')) . ')'
+            );
+            $statement->execute($termIds);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $termId = (int)$row['required_package_term_id'];
+                $packageKey = $packageKeyByTermId[$termId] ?? null;
+                if (!is_string($packageKey) || !isset($packageNames[$packageKey])) {
+                    continue;
+                }
+                $ownerFileId = (int)$row['owner_file_id'];
+                $importIndex = (int)$row['import_index'];
+                $evidence[$packageKey][] = [
+                    'dependency_key' => $ownerFileId . ':' . $importIndex,
+                    'owner_file_id' => $ownerFileId,
+                    'required_object_path' => (string)$row['required_object_path'],
+                    'game_id' => (int)$row['game_id'],
+                    'game_name' => (string)$row['game_name'],
+                ];
+            }
+        }
+        return $evidence;
+    }
+
+    /**
+     * @param array<string,string> $packageNames logical-key => current package name
+     * @return array{0:array<string,list<int>>,1:array<int,string>}
+     */
+    private function packageTermIds(array $packageNames): array
+    {
+        $this->ensureRequiredPackageTermIndex();
+        $termIdsByKey = [];
+        $packageKeyByTermId = [];
+
+        foreach (array_keys($packageNames) as $packageKey) {
+            foreach ($this->requiredPackageTermIdsByKey[$packageKey] ?? [] as $termId) {
+                $termIdsByKey[$packageKey][$termId] = $termId;
+                $packageKeyByTermId[$termId] = $packageKey;
+            }
+        }
+
+        // Workers can stay alive while verified metadata is being added. Resolve
+        // the exact current package spellings through the hash/length dictionary
+        // as well, so a newly introduced package term does not require a restart.
+        foreach ($this->resolveExactTermIds(array_values($packageNames)) as $packageKey => $termIds) {
+            foreach ($termIds as $termId) {
+                $termIdsByKey[$packageKey][$termId] = $termId;
+                $packageKeyByTermId[$termId] = $packageKey;
+            }
+        }
+
+        foreach ($termIdsByKey as $packageKey => $ids) {
+            $termIdsByKey[$packageKey] = array_values($ids);
+        }
+        return [$termIdsByKey, $packageKeyByTermId];
+    }
+
+    private function ensureRequiredPackageTermIndex(): void
+    {
+        if ($this->requiredPackageTermIdsByKey !== null) {
+            return;
+        }
+
+        // Preserve the compact-only runtime contract before touching projection
+        // tables directly. sql() performs the authoritative schema availability
+        // check without executing the old derived read source.
+        PdoDependencyReadSource::sql($this->db);
+
+        // required_package_term_id is the left-most column of
+        // idx_ue_dependency_required. GROUP BY can therefore enumerate distinct
+        // package terms from the compact index instead of repeatedly converting
+        // term text while scanning dependency rows for every staged file.
+        $statement = $this->db->query(
+            'SELECT required_package_term_id FROM ue_dependency_links '
+            . 'GROUP BY required_package_term_id ORDER BY NULL'
+        );
+        if ($statement === false) {
+            throw new RuntimeException('Could not enumerate compact dependency package terms.');
+        }
+        $termIds = [];
+        while (($value = $statement->fetchColumn()) !== false) {
+            $termId = (int)$value;
+            if ($termId > 0) {
+                $termIds[$termId] = $termId;
+            }
+        }
+
+        $byKey = [];
+        foreach (array_chunk(array_values($termIds), self::TERM_ID_BATCH_SIZE) as $chunk) {
+            $terms = $this->db->prepare(
+                'SELECT id,CONVERT(value_prefix USING utf8mb4) COLLATE utf8mb4_unicode_ci value_text '
+                . 'FROM ue_terms WHERE id IN ('
+                . implode(',', array_fill(0, count($chunk), '?')) . ')'
+            );
+            $terms->execute($chunk);
+            while (($row = $terms->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $termId = (int)$row['id'];
+                $packageKey = $this->key((string)$row['value_text']);
+                if ($termId < 1 || $packageKey === '') {
+                    continue;
+                }
+                $byKey[$packageKey][$termId] = $termId;
+            }
+        }
+        foreach ($byKey as $packageKey => $ids) {
+            $byKey[$packageKey] = array_values($ids);
+        }
+
+        $this->requiredPackageTermIdsByKey = $byKey;
+    }
+
+    /**
+     * @param list<string> $values
+     * @return array<string,list<int>> logical-key => exact term IDs
+     */
+    private function resolveExactTermIds(array $values): array
+    {
+        $terms = [];
+        foreach ($values as $value) {
+            $value = trim($value);
+            if ($value === '') {
+                continue;
+            }
+            $length = strlen($value);
+            if ($length > 65535) {
+                throw new RuntimeException('Compact package lookup term exceeds 65,535 bytes.');
+            }
+            $identity = md5($value) . ':' . $length;
+            $terms[$identity] = [
+                'value' => $value,
+                'hash' => md5($value, true),
+                'length' => $length,
+                'key' => $this->key($value),
+            ];
+        }
+        if ($terms === []) {
+            return [];
+        }
+
+        $resolved = [];
+        foreach (array_chunk(array_values($terms), self::TERM_ID_BATCH_SIZE) as $chunk) {
+            $predicates = [];
+            $arguments = [];
+            $expected = [];
+            foreach ($chunk as $term) {
+                $predicates[] = '(value_hash=? AND value_length=?)';
+                $arguments[] = $term['hash'];
+                $arguments[] = $term['length'];
+                $expected[bin2hex($term['hash']) . ':' . $term['length']] = $term;
+            }
+            $statement = $this->db->prepare(
+                'SELECT id,value_hash,value_length,value_prefix,is_overflow FROM ue_terms WHERE '
+                . implode(' OR ', $predicates)
+            );
+            $statement->execute($arguments);
+            while (($row = $statement->fetch(PDO::FETCH_ASSOC)) !== false) {
+                $identity = bin2hex((string)$row['value_hash']) . ':' . (int)$row['value_length'];
+                $term = $expected[$identity] ?? null;
+                if (!is_array($term)) {
+                    continue;
+                }
+                $stored = (string)$row['value_prefix'];
+                $value = (string)$term['value'];
+                $matches = hash_equals($stored, $value)
+                    || ((int)$row['is_overflow'] === 1 && hash_equals($stored, substr($value, 0, 200)));
+                if (!$matches) {
+                    throw new RuntimeException('Compact package term hash collision or stored-value mismatch.');
+                }
+                $resolved[(string)$term['key']][] = (int)$row['id'];
+            }
+        }
+        foreach ($resolved as $packageKey => $ids) {
+            $resolved[$packageKey] = array_values(array_unique(array_map('intval', $ids)));
+        }
+        return $resolved;
     }
 
     private function key(string $value): string
