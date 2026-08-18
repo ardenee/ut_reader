@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-/** Read-only contract for dependency workflow summary batching and duplicate-work removal. */
+/** Read-only contract for dependency workflow summary batching and planner performance. */
 declare(strict_types=1);
 
 if (PHP_SAPI !== 'cli') {
@@ -24,6 +24,10 @@ $rebuilderPath = $root . '/src/Infrastructure/Persistence/PdoCatalogDependencyRe
 $rebuilder = (string)@file_get_contents($rebuilderPath);
 $summaryPath = $root . '/src/Infrastructure/Persistence/PdoDependencyPackageSummary.php';
 $summary = (string)@file_get_contents($summaryPath);
+$queuePath = $root . '/src/Infrastructure/Persistence/PdoJobQueue.php';
+$queue = (string)@file_get_contents($queuePath);
+$enqueuerPath = $root . '/src/Infrastructure/Persistence/PdoJobEnqueuer.php';
+$enqueuer = (string)@file_get_contents($enqueuerPath);
 
 $record(
     'dependency_handler_uses_direct_rebuilder_without_implicit_summary',
@@ -66,6 +70,38 @@ $record(
 );
 
 $record(
+    'dependency_planner_uses_bulk_child_enqueue',
+    str_contains($handler, '->enqueueWorkflowUnits(')
+        && !str_contains($handler, '$queue->enqueue('),
+    'A 500-file planning page must not perform 500 separate child INSERT statements.'
+);
+
+$record(
+    'workflow_enqueuer_batches_rows',
+    str_contains($enqueuer, 'private const WORKFLOW_INSERT_BATCH_SIZE = 100;')
+        && str_contains($enqueuer, 'foreach (array_chunk(array_values($units), self::WORKFLOW_INSERT_BATCH_SIZE) as $chunk)')
+        && str_contains($enqueuer, "' VALUES ' . implode(',', $tuples)")
+        && str_contains($enqueuer, 'ON DUPLICATE KEY UPDATE id=id,updated_at=updated_at'),
+    'Workflow child creation must use bounded multi-row inserts and retain idempotent replay.'
+);
+
+$record(
+    'workflow_batch_preserves_resource_policy',
+    str_contains($enqueuer, 'JobResourcePolicy::for($type, $payload)')
+        && str_contains($enqueuer, '$resource->resourceClass')
+        && str_contains($enqueuer, '$resource->limit')
+        && str_contains($enqueuer, '$resource->concurrencyKey'),
+    'Batch enqueue must preserve each child resource class, limit and per-file concurrency key.'
+);
+
+$record(
+    'queue_exposes_workflow_batch_api',
+    str_contains($queue, 'public function enqueueWorkflowUnits(')
+        && str_contains($queue, '$this->enqueuer->enqueueWorkflowUnits('),
+    'The durable queue facade should own the workflow batching API rather than embedding queue SQL in a handler.'
+);
+
+$record(
     'legacy_finalize_resume_gets_summary_phase',
     str_contains($handler, '$stage === \'dependency_game_finalize\' && empty($resume[\'dependency_summary_complete\'])'),
     'Already-running version-2 workflows must receive the idempotent bulk-summary phase after deployment.'
@@ -82,6 +118,8 @@ foreach ([
     $handlerPath,
     $rebuilderPath,
     $summaryPath,
+    $queuePath,
+    $enqueuerPath,
 ] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
