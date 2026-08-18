@@ -160,11 +160,16 @@ final class CatalogJobResourceLimitStore
      * Normalize only the projection coordinator to dependency-heavy and one
      * global concurrency key before a worker pool is started or resized.
      *
+     * Per-file dependency rebuilds are independent durable units. Older rows
+     * used dependency-heavy, serializing an entire whole-game workflow to one
+     * worker. Reclassify only queued file units to the bounded parallel class;
+     * preserve their per-file concurrency keys and all retry/progress state.
+     *
      * Affected-dependency coordinators also have a legacy rekey rule. Per-file
      * children and pre-upgrade batch compatibility rows are intentionally excluded
      * because their narrower concurrency keys are required for safe fan-out.
      *
-     * @return array{updated_jobs:int,updated_limits:int,projection_rows:int,rekeyed_jobs:int,per_class:array<string,int>}
+     * @return array{updated_jobs:int,updated_limits:int,projection_rows:int,dependency_file_rows:int,rekeyed_jobs:int,per_class:array<string,int>}
      */
     public function synchronizeQueuedPolicies(): array
     {
@@ -173,6 +178,7 @@ final class CatalogJobResourceLimitStore
                 'updated_jobs' => 0,
                 'updated_limits' => 0,
                 'projection_rows' => 0,
+                'dependency_file_rows' => 0,
                 'rekeyed_jobs' => 0,
                 'per_class' => [],
             ];
@@ -182,6 +188,8 @@ final class CatalogJobResourceLimitStore
         $definitions = JobResourcePolicy::definitions();
         $dependencyDefault = self::limit((int)($definitions[JobResourcePolicy::DEPENDENCY_HEAVY]['default'] ?? 1));
         $dependencyLimit = $this->limits[JobResourcePolicy::DEPENDENCY_HEAVY] ?? $dependencyDefault;
+        $dependencyFileDefault = self::limit((int)($definitions[JobResourcePolicy::AFFECTED_DEPENDENCY_BATCH]['default'] ?? 4));
+        $dependencyFileLimit = $this->limits[JobResourcePolicy::AFFECTED_DEPENDENCY_BATCH] ?? $dependencyFileDefault;
 
         $projection = $this->db->prepare(
             'UPDATE ue_background_jobs SET resource_class=?,resource_limit=?,concurrency_key=? '
@@ -200,6 +208,21 @@ final class CatalogJobResourceLimitStore
         ]);
         $projectionRows = $projection->rowCount();
 
+        $dependencyFiles = $this->db->prepare(
+            'UPDATE ue_background_jobs SET resource_class=?,resource_limit=? '
+            . 'WHERE queue_name=? AND status="queued" AND job_type=? '
+            . 'AND (resource_class<>? OR resource_limit<>?)'
+        );
+        $dependencyFiles->execute([
+            JobResourcePolicy::AFFECTED_DEPENDENCY_BATCH,
+            $dependencyFileLimit,
+            $this->queueName,
+            JobType::REBUILD_FILE_DEPENDENCIES,
+            JobResourcePolicy::AFFECTED_DEPENDENCY_BATCH,
+            $dependencyFileLimit,
+        ]);
+        $dependencyFileRows = $dependencyFiles->rowCount();
+
         $updateLimit = $this->db->prepare(
             'UPDATE ue_background_jobs SET resource_limit=? '
             . 'WHERE queue_name=? AND status="queued" AND resource_class=? AND resource_limit<>?'
@@ -216,9 +239,10 @@ final class CatalogJobResourceLimitStore
 
         $rekeyedJobs = $this->rekeyQueuedAffectedDependencyJobs();
         return [
-            'updated_jobs' => $projectionRows + $updatedLimits,
+            'updated_jobs' => $projectionRows + $dependencyFileRows + $updatedLimits,
             'updated_limits' => $updatedLimits,
             'projection_rows' => $projectionRows,
+            'dependency_file_rows' => $dependencyFileRows,
             'rekeyed_jobs' => $rekeyedJobs,
             'per_class' => $perClass,
         ];
