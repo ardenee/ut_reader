@@ -53,6 +53,24 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     private function rebuildFile(ClaimedJob $job, JobExecutionContext $context): array
     {
         $fileId = $this->positiveInt($job->payload, 'file_id');
+        if ($this->isObsoletePakDependencyFileUnit($job)) {
+            $context->checkpoint([
+                'stage' => 'complete',
+                'done' => 1,
+                'total' => 1,
+                'percent' => 100,
+                'file_id' => $fileId,
+                'status' => 'superseded',
+                'message' => 'Legacy PAK whole-game dependency unit superseded by targeted PAK dependency refresh.',
+            ]);
+            return [
+                'operation' => 'rebuild_file_dependencies',
+                'file_id' => $fileId,
+                'status' => 'superseded',
+                'message' => 'Legacy PAK whole-game dependency unit superseded by targeted PAK dependency refresh.',
+            ];
+        }
+
         $file = $this->one(
             'SELECT id,game_id,package_name,original_name FROM ue_files WHERE id=? AND scan_status="verified"',
             [$fileId]
@@ -72,9 +90,13 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         $postImport = !empty($job->payload['post_import']);
         $renameRefresh = !empty($job->payload['rename_refresh']);
         $deferGameStats = !empty($job->payload['workflow_defer_game_stats']);
+        $deferSummaryPolicy = array_key_exists('workflow_defer_dependency_summary', $job->payload)
+            ? !empty($job->payload['workflow_defer_dependency_summary'])
+            : true;
         $deferWorkflowSummary = !$postImport
             && !empty($job->payload['workflow_parent_job_id'])
-            && $deferGameStats;
+            && $deferGameStats
+            && $deferSummaryPolicy;
 
         // This handler owns summary publication. Disable the rebuilder's optional
         // summary refresh so standalone jobs publish it exactly once and whole-game
@@ -193,7 +215,9 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'percent' => 100,
                 'message' => $deferWorkflowSummary
                     ? 'Dependency file unit complete; parent workflow will publish summaries and game counters once.'
-                    : 'Dependency file unit complete; parent workflow will publish game counters once.',
+                    : ($deferGameStats
+                        ? 'Dependency file unit complete; parent workflow will publish game counters once.'
+                        : 'Dependency file unit complete.'),
                 'file_id' => $fileId,
                 'dependency_summary_rows' => $summaryRows,
                 'dependency_summary_deferred' => $deferWorkflowSummary,
@@ -221,6 +245,23 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     private function rebuildGame(ClaimedJob $job, JobExecutionContext $context): array
     {
         $gameId = $this->positiveInt($job->payload, 'game_id');
+        if ($this->isObsoletePakWholeGameWorkflow($job)) {
+            $cancelledChildren = $this->cancelQueuedChildren($job->id);
+            $message = 'Legacy PAK whole-game dependency workflow superseded by targeted PAK dependency refresh.';
+            $context->checkpoint($this->workflowProgress('complete', 100, $message, [
+                'status' => 'superseded',
+                'cancelled_queued_children' => $cancelledChildren,
+            ]));
+            return [
+                'operation' => 'rebuild_game_dependencies',
+                'workflow_version' => self::WORKFLOW_VERSION,
+                'game_id' => $gameId,
+                'status' => 'superseded',
+                'cancelled_queued_children' => $cancelledChildren,
+                'message' => $message,
+            ];
+        }
+
         $offset = max(0, (int)($job->payload['offset'] ?? 0));
         $game = $this->one('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
         if ($game === null) {
@@ -278,9 +319,6 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             $stage = 'dependency_game_summary';
         }
 
-        // Version-2 workflows may already have reached the old finalize stage when
-        // this optimization is deployed. Run the idempotent bulk-summary phase once
-        // unless a new checkpoint explicitly records that it completed.
         if ($stage === 'dependency_game_finalize' && empty($resume['dependency_summary_complete'])) {
             $stage = 'dependency_game_summary';
         }
@@ -443,6 +481,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                     'file_id' => $fileId,
                     'workflow_parent_job_id' => $job->id,
                     'workflow_defer_game_stats' => true,
+                    'workflow_defer_dependency_summary' => true,
                 ],
                 'workflow_unit_key' => 'dependency:' . $fileId,
             ];
@@ -481,6 +520,45 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'Planned ' . $planned . ' durable dependency file unit(s); waiting for workers.',
             ['planned_units' => $planned]
         ));
+    }
+
+    private function isObsoletePakWholeGameWorkflow(ClaimedJob $job): bool
+    {
+        if ($job->parentJobId === null || $job->parentJobId < 1 || $job->workflowUnitKey !== 'dependencies') {
+            return false;
+        }
+        $statement = $this->db->prepare('SELECT job_type FROM ue_background_jobs WHERE id=? LIMIT 1');
+        $statement->execute([$job->parentJobId]);
+        return (string)($statement->fetchColumn() ?: '') === JobType::IMPORT_STAGED_PAK;
+    }
+
+    private function isObsoletePakDependencyFileUnit(ClaimedJob $job): bool
+    {
+        if ($job->parentJobId === null || $job->parentJobId < 1) {
+            return false;
+        }
+        $statement = $this->db->prepare(
+            'SELECT pak.job_type FROM ue_background_jobs legacy '
+            . 'JOIN ue_background_jobs pak ON pak.id=legacy.parent_job_id '
+            . 'WHERE legacy.id=? AND legacy.job_type=? AND legacy.workflow_unit_key="dependencies" LIMIT 1'
+        );
+        $statement->execute([$job->parentJobId, JobType::REBUILD_GAME_DEPENDENCIES]);
+        return (string)($statement->fetchColumn() ?: '') === JobType::IMPORT_STAGED_PAK;
+    }
+
+    private function cancelQueuedChildren(int $parentJobId): int
+    {
+        $timestamp = gmdate('Y-m-d H:i:s');
+        $statement = $this->db->prepare(
+            'UPDATE ue_background_jobs SET status="cancelled",dedupe_key=NULL,worker_id=NULL,lease_token=NULL,'
+            . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,'
+            . 'cancel_requested_at=COALESCE(cancel_requested_at,?),' 
+            . 'cancel_reason=CASE WHEN cancel_reason IS NULL OR cancel_reason="" '
+            . 'THEN "Superseded by targeted PAK dependency refresh." ELSE cancel_reason END,'
+            . 'completed_at=?,updated_at=? WHERE parent_job_id=? AND status="queued"'
+        );
+        $statement->execute([$timestamp, $timestamp, $timestamp, $parentJobId]);
+        return max(0, $statement->rowCount());
     }
 
     /** @return array{total:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int} */
