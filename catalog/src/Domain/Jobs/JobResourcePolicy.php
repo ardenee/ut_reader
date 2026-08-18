@@ -33,7 +33,7 @@ final class JobResourcePolicy
             self::DEPENDENCY_HEAVY => [
                 'label' => 'Dependency and projection work',
                 'default' => 1,
-                'description' => 'Full Sync coordinators, whole-game/file dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
+                'description' => 'Full Sync coordinators, whole-game dependency rebuilds, projection reconciliation and source-identity repairs. Database intensive.',
             ],
             self::FULL_SYNC_UNIT => [
                 'label' => 'Full Sync file units',
@@ -41,9 +41,9 @@ final class JobResourcePolicy
                 'description' => 'Independent per-file Full Sync reimport, compact-metadata repair and dependency units. Completed units remain durable and are never replayed after a workflow restart.',
             ],
             self::AFFECTED_DEPENDENCY_BATCH => [
-                'label' => 'Affected dependency batches',
+                'label' => 'Dependency file units and affected batches',
                 'default' => 4,
-                'description' => 'Bounded targeted dependency batches and projection-reconciliation file units. Batches process one file at a time internally; individual failures are isolated into retry jobs. Lower this if dependency maintenance causes database pressure.',
+                'description' => 'Independent per-file dependency rebuilds, bounded targeted dependency batches and projection-reconciliation file units. Work is isolated by file/concurrency key; lower this if dependency maintenance causes database pressure.',
             ],
             self::SEARCH_HEAVY => [
                 'label' => 'Search and catalogue diagnostics',
@@ -124,8 +124,8 @@ final class JobResourcePolicy
                 self::positiveKey('dependency:game:', $payload['game_id'] ?? null)
             ),
             JobType::REBUILD_FILE_DEPENDENCIES => new JobResourceProfile(
-                self::DEPENDENCY_HEAVY,
-                self::defaultLimit(1),
+                self::AFFECTED_DEPENDENCY_BATCH,
+                self::defaultLimit(4),
                 self::positiveKey('dependency:file:', $payload['file_id'] ?? null)
             ),
             JobType::REBUILD_AFFECTED_DEPENDENCIES => self::affectedDependencyProfile($payload),
