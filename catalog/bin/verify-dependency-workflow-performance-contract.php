@@ -67,7 +67,7 @@ $record(
 
 $record(
     'legacy_finalize_resume_gets_summary_phase',
-    str_contains($handler, "$stage === 'dependency_game_finalize' && empty($resume['dependency_summary_complete'])"),
+    str_contains($handler, '$stage === \'dependency_game_finalize\' && empty($resume[\'dependency_summary_complete\'])'),
     'Already-running version-2 workflows must receive the idempotent bulk-summary phase after deployment.'
 );
 
