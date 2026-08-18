@@ -435,27 +435,34 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         }
         $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
         $queue = new PdoJobQueue($this->db);
+        $units = [];
         foreach ($rows as $row) {
             $fileId = (int)$row['id'];
-            $lastPackage = (string)$row['package_name'];
-            $lastFileId = $fileId;
-            $queue->enqueue(
-                $job->queue,
-                JobType::REBUILD_FILE_DEPENDENCIES,
-                [
+            $units[] = [
+                'payload' => [
                     'file_id' => $fileId,
                     'workflow_parent_job_id' => $job->id,
                     'workflow_defer_game_stats' => true,
                 ],
+                'workflow_unit_key' => 'dependency:' . $fileId,
+            ];
+        }
+
+        if ($units !== []) {
+            $queue->enqueueWorkflowUnits(
+                $job->queue,
+                JobType::REBUILD_FILE_DEPENDENCIES,
+                $units,
                 30,
-                null,
                 null,
                 (int)($job->payload['requested_by'] ?? 0) ?: null,
                 3,
-                $job->id,
-                'dependency:' . $fileId
+                $job->id
             );
-            $planned++;
+            $planned += count($units);
+            $lastRow = $rows[array_key_last($rows)];
+            $lastPackage = (string)$lastRow['package_name'];
+            $lastFileId = (int)$lastRow['id'];
         }
 
         $progress = $this->workflowProgress('dependency_game_plan', 3,
