@@ -31,7 +31,7 @@ $record(
 );
 $record(
     'dependency_file_units_default_to_four_slots',
-    $profile->resourceLimit === 4,
+    $profile->limit === 4,
     'The bounded dependency-file class should use four slots by default; administrators can still lower the saved class limit.'
 );
 $record(
