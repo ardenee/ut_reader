@@ -80,7 +80,7 @@ $record(
     'workflow_enqueuer_batches_rows',
     str_contains($enqueuer, 'private const WORKFLOW_INSERT_BATCH_SIZE = 100;')
         && str_contains($enqueuer, 'foreach (array_chunk(array_values($units), self::WORKFLOW_INSERT_BATCH_SIZE) as $chunk)')
-        && str_contains($enqueuer, "' VALUES ' . implode(',', $tuples)")
+        && str_contains($enqueuer, 'implode(\',\', $tuples)')
         && str_contains($enqueuer, 'ON DUPLICATE KEY UPDATE id=id,updated_at=updated_at'),
     'Workflow child creation must use bounded multi-row inserts and retain idempotent replay.'
 );
