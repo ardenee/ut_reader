@@ -28,7 +28,7 @@ $summary = (string)@file_get_contents($summaryPath);
 $record(
     'dependency_handler_uses_direct_rebuilder_without_implicit_summary',
     str_contains($handler, 'new PdoCatalogDependencyRebuilder($this->db, $this->config)')
-        && str_contains($handler, "'Refreshing file dependency links',\n            false")
+        && preg_match("/'Refreshing file dependency links',\\s*false\\s*\\)/", $handler) === 1
         && !str_contains($handler, 'scanner_rebuild_dependencies('),
     'The file job must disable the rebuilder summary hook so summary publication has one explicit owner.'
 );
