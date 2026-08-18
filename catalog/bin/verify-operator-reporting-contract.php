@@ -40,9 +40,20 @@ $record(
         && str_contains($browser, 'PdoBackgroundJobDisplayCountQuery')
         && str_contains($snapshot, 'PdoBackgroundJobSearchScope')
         && str_contains($snapshot, 'PdoBackgroundJobDisplayCountQuery')
-        && str_contains($scope, 'j.parent_job_id IS NULL OR ')
+        && str_contains($scope, 'SELECT root_job.* FROM ue_background_jobs root_job')
+        && str_contains($scope, 'SELECT problem_child.* FROM ue_background_jobs problem_child')
+        && str_contains($scope, 'UNION ALL')
         && str_contains($displayCounts, 'BackgroundJobDisplaySql::operatorStatus('),
     'Background Jobs and System Operations must derive job visibility/counts from the same persistence policy.'
+);
+$record(
+    'operator_visibility_avoids_full_execution_ledger_or_scan',
+    str_contains($scope, 'root_job.parent_job_id IS NULL')
+        && str_contains($scope, 'problem_child.parent_job_id IS NOT NULL')
+        && str_contains($scope, 'problem_child.status IN ("failed","dead_letter","cancelled")')
+        && substr_count($scope, 'queue_name=?') >= 2
+        && !str_contains($scope, 'j.parent_job_id IS NULL OR '),
+    'Routine operator polling must union indexed root/problem branches instead of OR-scanning all hidden workflow units.'
 );
 $record(
     'system_operations_does_not_count_raw_rows',
@@ -82,6 +93,7 @@ $record(
 
 $syntaxTargets = [
     'bin/verify-operator-reporting-contract.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobSearchScope.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php',
     'src/Infrastructure/Persistence/PdoSystemOperationsQuery.php',
     'system-operations.php',
