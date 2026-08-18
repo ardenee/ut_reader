@@ -8,12 +8,14 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
+use RuntimeException;
 use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
+use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyReadSource;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
@@ -23,6 +25,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
 {
     private const WORKFLOW_VERSION = 2;
     private const PLAN_BATCH_SIZE = 500;
+    private const SUMMARY_BATCH_SIZE = 1000;
 
     /** @param array<string,mixed> $config */
     public function __construct(
@@ -41,7 +44,6 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
 
     public function handle(ClaimedJob $job, JobExecutionContext $context): array
     {
-        require_once __DIR__ . '/../../../lib/CatalogScanner.php';
         return $job->type === JobType::REBUILD_GAME_DEPENDENCIES
             ? $this->rebuildGame($job, $context)
             : $this->rebuildFile($job, $context);
@@ -64,12 +66,20 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                     'message' => 'Verified file was removed after workflow planning; no dependency work remains.',
                 ];
             }
-            throw new \RuntimeException('Verified file no longer exists: ' . $fileId);
+            throw new RuntimeException('Verified file no longer exists: ' . $fileId);
         }
 
-        \scanner_rebuild_dependencies(
-            $this->db,
-            $this->config,
+        $postImport = !empty($job->payload['post_import']);
+        $renameRefresh = !empty($job->payload['rename_refresh']);
+        $deferGameStats = !empty($job->payload['workflow_defer_game_stats']);
+        $deferWorkflowSummary = !$postImport
+            && !empty($job->payload['workflow_parent_job_id'])
+            && $deferGameStats;
+
+        // This handler owns summary publication. Disable the rebuilder's optional
+        // summary refresh so standalone jobs publish it exactly once and whole-game
+        // workflows can defer it to the parent's bounded bulk-summary phase.
+        (new PdoCatalogDependencyRebuilder($this->db, $this->config))->rebuild(
             $fileId,
             static function (array $progress) use ($context, $fileId): void {
                 $progress['file_id'] = $fileId;
@@ -77,7 +87,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             },
             0,
             70,
-            'Refreshing file dependency links'
+            'Refreshing file dependency links',
+            false
         );
 
         $context->checkpoint([
@@ -90,19 +101,33 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         ]);
         (new PdoPackageProviderRepository($this->db))->reconcileFile($fileId);
 
-        $context->checkpoint([
-            'stage' => 'dependency_summary',
-            'done' => 2,
-            'total' => 4,
-            'percent' => 82,
-            'message' => 'Rebuilding the file dependency summary.',
-            'file_id' => $fileId,
-        ]);
-        $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
+        $summaryRows = 0;
+        if ($deferWorkflowSummary) {
+            $context->checkpoint([
+                'stage' => 'dependency_summary_deferred',
+                'done' => 2,
+                'total' => 4,
+                'percent' => 82,
+                'message' => 'Dependency summary deferred to the parent workflow bulk publisher.',
+                'file_id' => $fileId,
+            ]);
+        } else {
+            $context->checkpoint([
+                'stage' => 'dependency_summary',
+                'done' => 2,
+                'total' => 4,
+                'percent' => 82,
+                'message' => 'Rebuilding the file dependency summary.',
+                'file_id' => $fileId,
+            ]);
+            $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($fileId);
+            if (empty($summary['available'])) {
+                throw new RuntimeException('Dependency package summary projection is unavailable after compact rebuild.');
+            }
+            $summaryRows = (int)($summary['summary_rows'] ?? 0);
+        }
 
         $affectedJobId = 0;
-        $postImport = !empty($job->payload['post_import']);
-        $renameRefresh = !empty($job->payload['rename_refresh']);
         if ($postImport) {
             $context->checkpoint([
                 'stage' => 'affected_detection',
@@ -113,7 +138,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                     ? 'Checking dependencies affected by the corrected package identity.'
                     : 'Checking whether existing files reference the imported package.',
                 'file_id' => $fileId,
-                'dependency_summary_rows' => (int)$summary['summary_rows'],
+                'dependency_summary_rows' => $summaryRows,
             ]);
 
             if ($renameRefresh) {
@@ -136,7 +161,6 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             }
         }
 
-        $deferGameStats = !empty($job->payload['workflow_defer_game_stats']);
         $gameStats = null;
         if ($affectedJobId < 1 && !$deferGameStats) {
             $context->checkpoint([
@@ -146,7 +170,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'percent' => 95,
                 'message' => 'Refreshing cached game counters.',
                 'file_id' => $fileId,
-                'dependency_summary_rows' => (int)$summary['summary_rows'],
+                'dependency_summary_rows' => $summaryRows,
             ]);
             $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame((int)$file['game_id']);
         } elseif ($affectedJobId > 0) {
@@ -159,7 +183,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                     . '; that chain will publish final game counters.',
                 'file_id' => $fileId,
                 'affected_job_id' => $affectedJobId,
-                'dependency_summary_rows' => (int)$summary['summary_rows'],
+                'dependency_summary_rows' => $summaryRows,
             ]);
         } else {
             $context->checkpoint([
@@ -167,9 +191,12 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                 'done' => 4,
                 'total' => 4,
                 'percent' => 100,
-                'message' => 'Dependency file unit complete; parent workflow will publish game counters once.',
+                'message' => $deferWorkflowSummary
+                    ? 'Dependency file unit complete; parent workflow will publish summaries and game counters once.'
+                    : 'Dependency file unit complete; parent workflow will publish game counters once.',
                 'file_id' => $fileId,
-                'dependency_summary_rows' => (int)$summary['summary_rows'],
+                'dependency_summary_rows' => $summaryRows,
+                'dependency_summary_deferred' => $deferWorkflowSummary,
             ]);
         }
 
@@ -182,7 +209,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'post_import' => $postImport,
             'rename_refresh' => $renameRefresh,
             'package_provider_reconciled' => true,
-            'dependency_summary_rows' => (int)$summary['summary_rows'],
+            'dependency_summary_rows' => $summaryRows,
+            'dependency_summary_deferred' => $deferWorkflowSummary,
             'affected_job_id' => $affectedJobId,
             'game_stats_refreshed' => $gameStats !== null,
             'stats' => $deferGameStats ? null : $this->stats([$fileId]),
@@ -196,7 +224,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         $offset = max(0, (int)($job->payload['offset'] ?? 0));
         $game = $this->one('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
         if ($game === null) {
-            throw new \RuntimeException('Game no longer exists: ' . $gameId);
+            throw new RuntimeException('Game no longer exists: ' . $gameId);
         }
 
         $resume = $context->resumeProgress();
@@ -235,17 +263,49 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
                     ['children' => $state]
                 ));
             }
-            $context->checkpoint($this->workflowProgress(
-                'dependency_game_finalize',
+            $resume = $this->workflowProgress(
+                'dependency_game_summary',
                 95,
-                'All dependency file units completed; refreshing cached game counters.',
-                ['children' => $state]
-            ));
+                'All dependency file units completed; publishing dependency summaries in bounded batches.',
+                [
+                    'children' => $state,
+                    'summary_last_child_job_id' => 0,
+                    'summary_files' => 0,
+                    'summary_rows' => 0,
+                ]
+            );
+            $context->checkpoint($resume);
+            $stage = 'dependency_game_summary';
+        }
+
+        // Version-2 workflows may already have reached the old finalize stage when
+        // this optimization is deployed. Run the idempotent bulk-summary phase once
+        // unless a new checkpoint explicitly records that it completed.
+        if ($stage === 'dependency_game_finalize' && empty($resume['dependency_summary_complete'])) {
+            $stage = 'dependency_game_summary';
+        }
+
+        if ($stage === 'dependency_game_summary') {
+            $summary = $this->rebuildGameSummaryBatch($job, $context, $resume);
+            $state = $this->childState($job->id);
+            $resume = $this->workflowProgress(
+                'dependency_game_finalize',
+                99,
+                'Dependency summaries published; refreshing cached game counters.',
+                [
+                    'children' => $state,
+                    'dependency_summary_complete' => true,
+                    'summary_last_child_job_id' => (int)$summary['last_child_job_id'],
+                    'summary_files' => (int)$summary['files'],
+                    'summary_rows' => (int)$summary['rows'],
+                ]
+            );
+            $context->checkpoint($resume);
             $stage = 'dependency_game_finalize';
         }
 
         if ($stage !== 'dependency_game_finalize') {
-            throw new \RuntimeException('Unknown game dependency workflow stage: ' . $stage);
+            throw new RuntimeException('Unknown game dependency workflow stage: ' . $stage);
         }
 
         $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame($gameId);
@@ -257,6 +317,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'game_name' => (string)$game['name'],
             'offset' => $offset,
             'processed_files' => $state['completed'],
+            'dependency_summary_files' => (int)($resume['summary_files'] ?? 0),
+            'dependency_summary_rows' => (int)($resume['summary_rows'] ?? 0),
             'game_stats_refreshed' => $gameStats !== null,
             'children' => $state,
             'stats' => $this->statsForGame($gameId),
@@ -264,6 +326,70 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         ];
         $context->checkpoint($this->workflowProgress('complete', 100, (string)$result['message'], $result));
         return $result;
+    }
+
+    /**
+     * Publishes dependency summaries for completed child jobs without holding one
+     * worker for the entire game. PdoDependencyPackageSummary performs its own
+     * 250-file transaction batching inside each durable 1,000-child cursor step.
+     *
+     * @param array<string,mixed> $resume
+     * @return array{last_child_job_id:int,files:int,rows:int}
+     */
+    private function rebuildGameSummaryBatch(ClaimedJob $job, JobExecutionContext $context, array $resume): array
+    {
+        $lastChildJobId = max(0, (int)($resume['summary_last_child_job_id'] ?? 0));
+        $summaryFiles = max(0, (int)($resume['summary_files'] ?? 0));
+        $summaryRows = max(0, (int)($resume['summary_rows'] ?? 0));
+
+        $statement = $this->db->prepare(
+            'SELECT id,payload_json FROM ue_background_jobs '
+            . 'WHERE parent_job_id=? AND job_type=? AND status="completed" AND id>? '
+            . 'ORDER BY id LIMIT ' . self::SUMMARY_BATCH_SIZE
+        );
+        $statement->execute([$job->id, JobType::REBUILD_FILE_DEPENDENCIES, $lastChildJobId]);
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        $fileIds = [];
+        foreach ($rows as $row) {
+            $lastChildJobId = max($lastChildJobId, (int)($row['id'] ?? 0));
+            $payload = json_decode((string)($row['payload_json'] ?? ''), true);
+            $fileId = is_array($payload) ? (int)($payload['file_id'] ?? 0) : 0;
+            if ($fileId > 0) {
+                $fileIds[] = $fileId;
+            }
+        }
+
+        if ($fileIds !== []) {
+            $published = (new PdoDependencyPackageSummary($this->db))->rebuildFiles($fileIds);
+            if (empty($published['available'])) {
+                throw new RuntimeException('Dependency package summary projection is unavailable during game bulk publication.');
+            }
+            $summaryFiles += (int)($published['files'] ?? 0);
+            $summaryRows += (int)($published['summary_rows'] ?? 0);
+        }
+
+        if (count($rows) === self::SUMMARY_BATCH_SIZE) {
+            $state = $this->childState($job->id);
+            $total = max(1, $state['completed']);
+            $percent = 95 + min(3, (int)floor(($summaryFiles * 3) / $total));
+            $context->defer(1, $this->workflowProgress(
+                'dependency_game_summary',
+                $percent,
+                'Published dependency summaries for ' . $summaryFiles . '/' . $state['completed'] . ' file unit(s).',
+                [
+                    'children' => $state,
+                    'summary_last_child_job_id' => $lastChildJobId,
+                    'summary_files' => $summaryFiles,
+                    'summary_rows' => $summaryRows,
+                ]
+            ));
+        }
+
+        return [
+            'last_child_job_id' => $lastChildJobId,
+            'files' => $summaryFiles,
+            'rows' => $summaryRows,
+        ];
     }
 
     /** @param array<string,mixed> $resume */
@@ -361,7 +487,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     {
         $value = (int)($payload[$key] ?? 0);
         if ($value < 1) {
-            throw new \RuntimeException('A positive ' . $key . ' is required.');
+            throw new RuntimeException('A positive ' . $key . ' is required.');
         }
         return $value;
     }
