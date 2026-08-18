@@ -93,13 +93,27 @@ $record(
 );
 
 $capabilities = CatalogArchiveExtractor::runtimeCapabilities();
+$libarchiveClass = class_exists(\libarchive\Archive::class);
+$libarchiveStream = $libarchiveClass && method_exists(\libarchive\Archive::class, 'currentEntryStream');
+$libarchiveRestrictedApi = $libarchiveClass
+    && method_exists(\libarchive\Archive::class, 'supportFormats')
+    && defined('libarchive\\FORMAT_RAR')
+    && defined('libarchive\\FORMAT_RAR_V5')
+    && defined('libarchive\\FORMAT_7ZIP');
+$libarchiveAutomaticApi = $libarchiveClass
+    && !method_exists(\libarchive\Archive::class, 'supportFormats')
+    && !defined('libarchive\\FORMAT_RAR')
+    && !defined('libarchive\\FORMAT_RAR_V5')
+    && !defined('libarchive\\FORMAT_7ZIP');
 $record(
     'libarchive_php_extension_available',
-    !empty($capabilities['libarchive'])
-        && class_exists(\libarchive\Archive::class)
-        && method_exists(\libarchive\Archive::class, 'currentEntryStream')
-        && method_exists(\libarchive\Archive::class, 'supportFormats'),
-    'RAR and 7z require PHP ext-archive (cataphract/libarchive). Install/enable it in both web PHP and worker/CLI PHP; UnrealDB intentionally has no command-line fallback.'
+    !empty($capabilities['libarchive']) && $libarchiveStream,
+    'RAR and 7z require PHP ext-archive (cataphract/libarchive) with currentEntryStream(). Released 0.2.0 auto-detects formats and does not expose supportFormats(); newer builds may expose explicit format restriction.'
+);
+$record(
+    'libarchive_api_generation_is_supported',
+    !$libarchiveClass || $libarchiveAutomaticApi || $libarchiveRestrictedApi,
+    'Supported APIs are released 0.2.0 automatic format detection or the newer explicit supportFormats()/FORMAT_* API as a complete set.'
 );
 $record(
     'archive_capabilities_cover_zip_rar_7z',
@@ -108,7 +122,7 @@ $record(
 );
 
 $record(
-    'libarchive_backend_is_format_restricted_and_streamed',
+    'libarchive_backend_is_streamed_and_optionally_format_restricted',
     str_contains($extractorSource, 'new \\libarchive\\Archive($archivePath)')
         && str_contains($extractorSource, 'supportFormats($first, ...$formats)')
         && str_contains($extractorSource, 'currentEntryStream()')
@@ -118,7 +132,7 @@ $record(
         && str_contains($extractorSource, 'isEncrypted')
         && str_contains($extractorSource, 'isSymlink')
         && str_contains($extractorSource, 'hardlink'),
-    'RAR/RAR5/7z must be read directly through libarchive entry streams while retaining encryption/link/path safety gates.'
+    'RAR/RAR5/7z are streamed directly through libarchive. Newer ext-archive builds use explicit format restriction; released 0.2.0 relies on libarchive automatic format detection while retaining encryption/link/path safety gates.'
 );
 
 $record(
