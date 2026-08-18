@@ -31,6 +31,17 @@ final class CatalogJobWorkerFactory
     ): JobWorker {
         self::raiseWorkerMemoryLimit($config);
 
+        // Durable rows persist the resource policy that existed when they were
+        // queued. Repair queued rows on process startup so a code-level policy
+        // correction applies to already-waiting work after a normal worker
+        // restart; running rows retain their current ownership and finish
+        // untouched.
+        try {
+            (new CatalogJobResourceLimitStore($db, $queueName))->synchronizeQueuedPolicies();
+        } catch (\Throwable $error) {
+            error_log('[UnrealDB worker policy sync] ' . $error->getMessage());
+        }
+
         $trustedImportConfig = $config;
         $ingressLimit = max(1, (int)($config['max_upload_bytes'] ?? (256 * 1024 * 1024)));
         $defaultRedirectLimit = $ingressLimit > intdiv(PHP_INT_MAX, 8)
