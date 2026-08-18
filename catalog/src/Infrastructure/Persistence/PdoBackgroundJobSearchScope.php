@@ -24,20 +24,45 @@ final class PdoBackgroundJobSearchScope
     /** @return array{from:string,where:string,params:list<mixed>} */
     public function build(string $queue, string $search): array
     {
-        $fromSql = 'ue_background_jobs j';
-        // Routine child units are internal workflow state and stay folded into
-        // their parent. A failed/dead-letter/cancelled child is different: the
-        // parent cannot finish until that exact unit is repaired, so it must be
-        // visible and selectable by the same Restart action as any other job.
-        $where = [
-            '(j.parent_job_id IS NULL OR '
-            . '(j.parent_job_id IS NOT NULL AND j.status IN ("failed","dead_letter","cancelled")))',
-        ];
+        /*
+         * Never make the operator page discover its tiny visible row set through
+         * an OR predicate over the complete execution ledger. Large workflows can
+         * leave hundreds of thousands of routine child rows behind; the previous
+         * `parent IS NULL OR failed child` predicate allowed MySQL to scan that
+         * ledger for every two-second browser poll.
+         *
+         * Split visibility into two independently indexable branches instead:
+         * top-level jobs, plus only problem children that need direct operator
+         * attention. The derived set is normally only a few hundred rows, so the
+         * later status aggregation, correlated running-child check and pagination
+         * operate on operator-visible jobs rather than internal workflow history.
+         */
         $params = [];
         if ($queue !== '') {
-            $where[] = 'j.queue_name=?';
+            $fromSql = '('
+                . 'SELECT root_job.* FROM ue_background_jobs root_job '
+                . 'WHERE root_job.queue_name=? AND root_job.parent_job_id IS NULL '
+                . 'UNION ALL '
+                . 'SELECT problem_child.* FROM ue_background_jobs problem_child '
+                . 'WHERE problem_child.queue_name=? AND problem_child.parent_job_id IS NOT NULL '
+                . 'AND problem_child.status IN ("failed","dead_letter","cancelled")'
+                . ') j';
             $params[] = $queue;
+            $params[] = $queue;
+        } else {
+            $fromSql = '('
+                . 'SELECT root_job.* FROM ue_background_jobs root_job '
+                . 'WHERE root_job.parent_job_id IS NULL '
+                . 'UNION ALL '
+                . 'SELECT problem_child.* FROM ue_background_jobs problem_child '
+                . 'WHERE problem_child.parent_job_id IS NOT NULL '
+                . 'AND problem_child.status IN ("failed","dead_letter","cancelled")'
+                . ') j';
         }
+
+        // Keep a non-empty base condition because several shared operator queries
+        // append current/actionable status conditions around this scope.
+        $where = ['1=1'];
 
         if ($search !== '') {
             $projectionAvailable = $this->searchRuntime->synchronize($this->db);
