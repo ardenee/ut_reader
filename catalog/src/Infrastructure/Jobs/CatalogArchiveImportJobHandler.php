@@ -77,7 +77,10 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         $failed = max(0, (int)($resume['failed'] ?? 0));
         $unpackedBytes = max(0, (int)($resume['unpacked_bytes'] ?? 0));
         $errors = is_array($resume['errors'] ?? null) ? array_values($resume['errors']) : [];
-        $queueName = trim((string)($this->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+        $queueName = trim($job->queue);
+        if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
+            throw new \RuntimeException('Archive job queue identity is invalid.');
+        }
         $queue = new PdoJobQueue($this->db);
         $total = count($entries);
         $maxTotalBytes = $this->maxTotalUnpackedBytes();
