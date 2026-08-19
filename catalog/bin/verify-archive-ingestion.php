@@ -124,15 +124,26 @@ $record(
 $record(
     'libarchive_backend_is_streamed_and_optionally_format_restricted',
     str_contains($extractorSource, 'new \\libarchive\\Archive($archivePath)')
-        && str_contains($extractorSource, 'supportFormats($first, ...$formats)')
+        && str_contains($extractorSource, "method_exists(\$archive, 'supportFormats')")
         && str_contains($extractorSource, 'currentEntryStream()')
         && str_contains($extractorSource, "'backend' => 'libarchive'")
         && str_contains($extractorSource, 'FORMAT_RAR_V5')
         && str_contains($extractorSource, 'FORMAT_7ZIP')
-        && str_contains($extractorSource, 'isEncrypted')
-        && str_contains($extractorSource, 'isSymlink')
-        && str_contains($extractorSource, 'hardlink'),
-    'RAR/RAR5/7z are streamed directly through libarchive. Newer ext-archive builds use explicit format restriction; released 0.2.0 relies on libarchive automatic format detection while retaining encryption/link/path safety gates.'
+        && str_contains($extractorSource, 'safeMemberPath($rawPath)')
+        && str_contains($extractorSource, 'verifyExtractedFile('),
+    'RAR/RAR5/7z are streamed directly through libarchive. Newer ext-archive builds use explicit format restriction; released 0.2.0 relies on automatic detection while path, size and bounded-output safety remain enforced.'
+);
+
+$record(
+    'released_libarchive_entry_metadata_is_supported',
+    str_contains($extractorSource, '$archiveEntry->pathname')
+        && str_contains($extractorSource, '$archiveEntry->size')
+        && !str_contains($extractorSource, '$archiveEntry->isFile')
+        && !str_contains($extractorSource, '$archiveEntry->isDir')
+        && !str_contains($extractorSource, '$archiveEntry->isSymlink')
+        && !str_contains($extractorSource, '$archiveEntry->hardlink')
+        && !str_contains($extractorSource, '$archiveEntry->isEncrypted'),
+    'Released ext-archive 0.2.0 exposes pathname/size but not the richer entry-type/link/encryption virtual properties used by development builds.'
 );
 
 $record(
