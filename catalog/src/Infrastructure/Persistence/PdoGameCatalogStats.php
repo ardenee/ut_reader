@@ -25,6 +25,8 @@ final class PdoGameCatalogStats
 {
     /** @var array<int,bool> */
     private static array $availability = [];
+    /** @var array<int,bool> */
+    private static array $dependencyKeyAvailability = [];
 
     public function __construct(private readonly PDO $db)
     {
@@ -123,25 +125,7 @@ final class PdoGameCatalogStats
         $dependencyStatement->execute([$gameId]);
         $dependencies = $dependencyStatement->fetch(PDO::FETCH_ASSOC) ?: [];
 
-        $baseGameStatement = $this->db->prepare(
-            'SELECT COALESCE(SUM(s.missing_count),0) missing_base_game_dependency_count '
-            . 'FROM ue_dependency_package_summaries s '
-            . 'WHERE s.game_id=? AND s.missing_count>0 AND EXISTS ('
-            . 'SELECT 1 FROM ue_base_game_files bg '
-            . 'LEFT JOIN ue_files src ON src.id=bg.source_file_id '
-            . 'WHERE bg.game_id=s.game_id AND ('
-            . 'LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(s.required_package)) '
-            . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(bg.original_name,""))>0 '
-            . 'THEN LEFT(bg.original_name,CHAR_LENGTH(bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg.original_name,".",-1))-1) '
-            . 'ELSE COALESCE(bg.original_name,"") END))=LOWER(TRIM(s.required_package)) '
-            . 'OR LOWER(TRIM(COALESCE(src.package_name,"")))=LOWER(TRIM(s.required_package)) '
-            . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(src.original_name,""))>0 '
-            . 'THEN LEFT(src.original_name,CHAR_LENGTH(src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(src.original_name,".",-1))-1) '
-            . 'ELSE COALESCE(src.original_name,"") END))=LOWER(TRIM(s.required_package))'
-            . '))'
-        );
-        $baseGameStatement->execute([$gameId]);
-        $baseGame = $baseGameStatement->fetch(PDO::FETCH_ASSOC) ?: [];
+        $baseGameMissingCount = $this->baseGameMissingCount($gameId);
 
         $row = [
             'game_id' => $gameId,
@@ -158,7 +142,7 @@ final class PdoGameCatalogStats
             'package_only_dependency_count' => (int)($dependencies['package_only_dependency_count'] ?? 0),
             'common_dependency_count' => (int)($dependencies['common_dependency_count'] ?? 0),
             'missing_package_count' => (int)($dependencies['missing_package_count'] ?? 0),
-            'missing_base_game_dependency_count' => (int)($baseGame['missing_base_game_dependency_count'] ?? 0),
+            'missing_base_game_dependency_count' => $baseGameMissingCount,
         ];
 
         $statement = $this->db->prepare(
@@ -179,6 +163,81 @@ final class PdoGameCatalogStats
         );
         $statement->execute(array_values($row));
         return $row;
+    }
+
+    private function baseGameMissingCount(int $gameId): int
+    {
+        if ($this->hasDependencyPackageKeys()) {
+            // Package identities are materialized/indexed by migration. Each
+            // EXISTS becomes a small equality lookup instead of repeatedly
+            // LOWER/TRIM/SUBSTRING processing both tables for every summary row.
+            $statement = $this->db->prepare(
+                'SELECT COALESCE(SUM(s.missing_count),0) '
+                . 'FROM ue_dependency_package_summaries s '
+                . 'WHERE s.game_id=? AND s.missing_count>0 AND ('
+                . 'EXISTS ('
+                . 'SELECT 1 FROM ue_base_game_files bg '
+                . 'WHERE bg.game_id=s.game_id AND ('
+                . 'bg.dependency_package_key=s.required_package '
+                . 'OR bg.dependency_original_stem_key=s.required_package'
+                . ') LIMIT 1'
+                . ') OR EXISTS ('
+                . 'SELECT 1 FROM ue_files src '
+                . 'JOIN ue_base_game_files bg_src '
+                . 'ON bg_src.source_file_id=src.id AND bg_src.game_id=s.game_id '
+                . 'WHERE src.game_id=s.game_id AND ('
+                . 'src.dependency_package_key=s.required_package '
+                . 'OR src.dependency_original_stem_key=s.required_package'
+                . ') LIMIT 1'
+                . '))'
+            );
+            $statement->execute([$gameId]);
+            return (int)($statement->fetchColumn() ?: 0);
+        }
+
+        // Upgrade compatibility until the performance migration has been run.
+        $statement = $this->db->prepare(
+            'SELECT COALESCE(SUM(s.missing_count),0) '
+            . 'FROM ue_dependency_package_summaries s '
+            . 'WHERE s.game_id=? AND s.missing_count>0 AND EXISTS ('
+            . 'SELECT 1 FROM ue_base_game_files bg '
+            . 'LEFT JOIN ue_files src ON src.id=bg.source_file_id '
+            . 'WHERE bg.game_id=s.game_id AND ('
+            . 'LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(s.required_package)) '
+            . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(bg.original_name,""))>0 '
+            . 'THEN LEFT(bg.original_name,CHAR_LENGTH(bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg.original_name,".",-1))-1) '
+            . 'ELSE COALESCE(bg.original_name,"") END))=LOWER(TRIM(s.required_package)) '
+            . 'OR LOWER(TRIM(COALESCE(src.package_name,"")))=LOWER(TRIM(s.required_package)) '
+            . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(src.original_name,""))>0 '
+            . 'THEN LEFT(src.original_name,CHAR_LENGTH(src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(src.original_name,".",-1))-1) '
+            . 'ELSE COALESCE(src.original_name,"") END))=LOWER(TRIM(s.required_package))'
+            . '))'
+        );
+        $statement->execute([$gameId]);
+        return (int)($statement->fetchColumn() ?: 0);
+    }
+
+    private function hasDependencyPackageKeys(): bool
+    {
+        $connectionId = spl_object_id($this->db);
+        if (array_key_exists($connectionId, self::$dependencyKeyAvailability)) {
+            return self::$dependencyKeyAvailability[$connectionId];
+        }
+
+        try {
+            $statement = $this->db->query(
+                'SELECT COUNT(*) FROM information_schema.COLUMNS '
+                . 'WHERE TABLE_SCHEMA=DATABASE() AND ('
+                . '(TABLE_NAME="ue_files" AND COLUMN_NAME IN '
+                . '("dependency_package_key","dependency_original_stem_key")) '
+                . 'OR (TABLE_NAME="ue_base_game_files" AND COLUMN_NAME IN '
+                . '("dependency_package_key","dependency_original_stem_key"))'
+                . ')'
+            );
+            return self::$dependencyKeyAvailability[$connectionId] = ((int)$statement->fetchColumn() === 4);
+        } catch (Throwable) {
+            return self::$dependencyKeyAvailability[$connectionId] = false;
+        }
     }
 
     private function isRetryableConcurrencyFailure(Throwable $error): bool
