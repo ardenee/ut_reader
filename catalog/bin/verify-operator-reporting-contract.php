@@ -78,7 +78,7 @@ $record(
     str_contains($operational, 'public function queueCounts(')
         && str_contains($operational, 'SUM(status="queued")')
         && str_contains($operational, 'SUM(status="running")')
-        && str_contains($operational, 'Do not call it from high-frequency browser polling'),
+        && !str_contains($workerEndpoint, '$operational->queueCounts($queueName)'),
     'Exact execution-row totals remain available to diagnostics without being part of browser polling.'
 );
 $record(
