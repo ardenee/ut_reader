@@ -64,7 +64,54 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         $incoming = new CatalogIncomingFileStore($this->config);
         $sourcePath = $incoming->resolve($stagedPath);
         $extractor = new CatalogArchiveExtractor($this->config);
-        $entries = $extractor->entries($sourcePath, $originalName);
+        try {
+            $entries = $extractor->entries($sourcePath, $originalName);
+        } catch (Throwable $error) {
+            if (!$this->isTerminalArchiveCapabilityFailure($error)) {
+                throw $error;
+            }
+
+            // The installed decoder has explicitly reported a permanent format
+            // capability gap. Re-running identical durable bytes cannot fix it,
+            // so retain the source and finish visibly as partial instead of
+            // consuming all attempts and producing duplicate retry errors.
+            $decoderError = trim($error->getMessage()) !== '' ? trim($error->getMessage()) : get_class($error);
+            $message = 'Archive could not be expanded because solid RAR support is unavailable in the installed '
+                . 'libarchive build; source archive retained. Decoder: ' . $decoderError;
+            $errors = [[
+                'file' => $sourceRelativePath !== '' ? $sourceRelativePath : $originalName,
+                'error' => $message,
+            ]];
+            $context->checkpoint([
+                'workflow_version' => self::WORKFLOW_VERSION,
+                'stage' => 'complete',
+                'entry_cursor' => 0,
+                'done' => 1,
+                'total' => 1,
+                'percent' => 100,
+                'queued' => 0,
+                'skipped' => 0,
+                'failed' => 1,
+                'unpacked_bytes' => 0,
+                'errors' => $errors,
+                'status' => 'partial',
+                'message' => $message,
+            ]);
+            return [
+                'operation' => $profiled ? 'import_staged_archive' : 'process_bucket_archive',
+                'status' => 'partial',
+                'original_name' => $originalName,
+                'source_relative_path' => $sourceRelativePath,
+                'archive_entries' => 0,
+                'queued_files' => 0,
+                'skipped_files' => 0,
+                'failed_files' => 1,
+                'unpacked_bytes' => 0,
+                'source_retained' => true,
+                'errors' => $errors,
+                'message' => $message,
+            ];
+        }
         $allowed = $profiled ? $this->profiledExtensions($gameId) : $this->bucketExtensions();
 
         $resume = $context->resumeProgress();
@@ -259,6 +306,13 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'errors' => $errors,
             'message' => $message,
         ];
+    }
+
+    private function isTerminalArchiveCapabilityFailure(Throwable $error): bool
+    {
+        $message = strtolower(trim($error->getMessage()));
+        return str_contains($message, 'rar solid archive support unavailable')
+            || (str_contains($message, 'solid rar') && str_contains($message, 'unavailable'));
     }
 
     /** @return array<string,bool> */
