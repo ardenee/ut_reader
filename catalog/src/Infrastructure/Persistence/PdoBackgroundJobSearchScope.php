@@ -32,10 +32,11 @@ final class PdoBackgroundJobSearchScope
          * ledger for every two-second browser poll.
          *
          * Split visibility into two independently indexable branches instead:
-         * top-level jobs, plus only problem children that need direct operator
-         * attention. The derived set is normally only a few hundred rows, so the
-         * later status aggregation, correlated running-child check and pagination
-         * operate on operator-visible jobs rather than internal workflow history.
+         * top-level jobs, plus only failed/dead-letter children that still need
+         * direct operator attention. Cancelled child execution units are routine
+         * workflow history, not jobs that require action. Keeping them folded into
+         * the parent is especially important after large workflow supersession or
+         * recovery operations, which can leave millions of cancelled child rows.
          */
         $params = [];
         if ($queue !== '') {
@@ -45,7 +46,7 @@ final class PdoBackgroundJobSearchScope
                 . 'UNION ALL '
                 . 'SELECT problem_child.* FROM ue_background_jobs problem_child '
                 . 'WHERE problem_child.queue_name=? AND problem_child.parent_job_id IS NOT NULL '
-                . 'AND problem_child.status IN ("failed","dead_letter","cancelled")'
+                . 'AND problem_child.status IN ("failed","dead_letter")'
                 . ') j';
             $params[] = $queue;
             $params[] = $queue;
@@ -56,7 +57,7 @@ final class PdoBackgroundJobSearchScope
                 . 'UNION ALL '
                 . 'SELECT problem_child.* FROM ue_background_jobs problem_child '
                 . 'WHERE problem_child.parent_job_id IS NOT NULL '
-                . 'AND problem_child.status IN ("failed","dead_letter","cancelled")'
+                . 'AND problem_child.status IN ("failed","dead_letter")'
                 . ') j';
         }
 
