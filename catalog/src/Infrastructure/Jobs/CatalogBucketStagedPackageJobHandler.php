@@ -142,7 +142,8 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
         }
         $policy->validateName($workingName, false);
 
-        $workingPath = $this->workingCopy((string)$prepared['path'], $workingName);
+        $preparedPath = (string)($prepared['path'] ?? '');
+        $workingPath = $this->workingCopy($preparedPath, $workingName);
         try {
             $note = 'Extracted from archive ' . trim((string)($payload['archive_source_name'] ?? '')) . '.';
             if ($redirect) {
@@ -161,6 +162,40 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
                 }
             );
             $workingPath = '';
+        } catch (Throwable $error) {
+            if (!$this->isDeterministicNonPackage($error)) {
+                throw $error;
+            }
+
+            // The bytes are durable and unchanged between attempts. A package
+            // extension whose content has no Unreal magic/header cannot become a
+            // valid package on retry, so complete this child as a rejected member
+            // instead of consuming all retry attempts and becoming dead_letter.
+            $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
+            $incoming->delete($stagedPath);
+            $preparedStore->clear();
+            $context->checkpoint([
+                'stage' => 'complete',
+                'done' => 100,
+                'total' => 100,
+                'percent' => 100,
+                'status' => 'rejected',
+                'message' => $message,
+            ]);
+            return [
+                'operation' => 'process_bucket_staged_package',
+                'status' => 'rejected',
+                'message' => $message,
+                'file_id' => 0,
+                'queue_name' => '',
+                'original_name' => $workingName,
+                'source_relative_path' => $relativePath,
+                'bytes' => is_file($preparedPath) ? (int)(filesize($preparedPath) ?: 0) : 0,
+                'compressed_bytes' => $compressedBytes,
+                'decoder' => $decoder,
+                'md5' => $md5,
+                'sha1' => $sha1,
+            ];
         } finally {
             if ($workingPath !== '' && is_file($workingPath)) {
                 @unlink($workingPath);
@@ -196,6 +231,41 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             'md5' => (string)($staged['md5'] ?? $md5),
             'sha1' => (string)($staged['sha1'] ?? $sha1),
         ];
+    }
+
+    private function isDeterministicNonPackage(Throwable $error): bool
+    {
+        $message = strtolower($this->errorText($error));
+        return str_contains($message, 'does not contain a supported unreal package header')
+            || str_contains($message, 'unreal package magic not found');
+    }
+
+    private function firstBytesDiagnostic(string $path): string
+    {
+        if ($path === '' || !is_file($path) || !is_readable($path)) {
+            return 'First bytes unavailable.';
+        }
+        $handle = @fopen($path, 'rb');
+        if (!is_resource($handle)) {
+            return 'First bytes unavailable.';
+        }
+        try {
+            $bytes = fread($handle, 16);
+        } finally {
+            fclose($handle);
+        }
+        if (!is_string($bytes) || $bytes === '') {
+            return 'File is empty or its first bytes are unavailable.';
+        }
+        $hex = strtoupper(implode(' ', str_split(bin2hex($bytes), 2)));
+        $ascii = preg_replace('/[^\x20-\x7E]/', '.', $bytes) ?? '';
+        return 'First bytes: ' . $hex . ' (ASCII "' . $ascii . '").';
+    }
+
+    private function errorText(Throwable $error): string
+    {
+        $message = trim($error->getMessage());
+        return $message !== '' ? $message : get_class($error);
     }
 
     private function workingCopy(string $sourcePath, string $name): string
