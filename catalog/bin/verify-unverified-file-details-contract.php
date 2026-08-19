@@ -34,7 +34,7 @@ $record(
     str_contains($page, 'function ufd_is_zero_guid')
         && str_contains($page, "str_repeat('0', 32)")
         && str_contains($page, 'Zero GUID · source value')
-        && str_contains($page, "catalog_h($guid)"),
+        && str_contains($page, 'catalog_h($guid)'),
     'An all-zero 128-bit GUID must remain visible exactly as stored while being identified as a deliberate zero source value.'
 );
 
@@ -42,7 +42,7 @@ $record(
     'compression_status_and_flags_are_visible',
     str_contains($page, 'function ufd_compression_label')
         && str_contains($page, 'function ufd_compression_flags')
-        && str_contains($page, "'Compression' => $compressionLabel")
+        && str_contains($page, "'Compression' => \$compressionLabel")
         && str_contains($page, '$compressionFlags'),
     'Unverified package details must expose persisted compression state and raw flags.'
 );
@@ -58,7 +58,7 @@ $record(
 $record(
     'compression_flags_are_hexadecimal',
     str_contains($page, "sprintf('0x%08X'")
-        && str_contains($page, "compression_flags"),
+        && str_contains($page, 'compression_flags'),
     'Raw compression flags should be displayed in the same hexadecimal form used by UE tooling.'
 );
 
