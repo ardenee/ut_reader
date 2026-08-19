@@ -1,0 +1,35 @@
+name: Admin all-matching validation
+
+on:
+  pull_request:
+    paths:
+      - 'catalog/**'
+      - '.github/workflows/admin-all-matching-validation.yml'
+
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Lint changed PHP
+        shell: bash
+        run: |
+          php -l catalog/api/v1/unverified-bulk.php
+          php -l catalog/api/v1/system-errors-bulk.php
+          php -l catalog/api/v1/upload-issues-bulk.php
+          php -l catalog/src/Domain/Jobs/JobType.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php
+          php -l catalog/src/Infrastructure/Maintenance/CatalogAdminMatchingBulkActionService.php
+          php -l catalog/src/Infrastructure/Unverified/PdoUnverifiedBulkSelectionQuery.php
+          php -l catalog/src/Presentation/Http/CatalogPageResponseTransform.php
+          php -l catalog/bin/verify-admin-all-matching-contract.php
+      - name: Check JavaScript syntax
+        run: node --check catalog/assets/admin-all-matching.js
+      - name: Run all-matching static contract
+        run: php catalog/bin/verify-admin-all-matching-contract.php
