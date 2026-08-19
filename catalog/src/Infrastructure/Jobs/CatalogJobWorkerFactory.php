@@ -108,6 +108,8 @@ final class CatalogJobWorkerFactory
             JobType::DELETE_UNVERIFIED_DUPLICATE => static fn() => new UnverifiedDuplicateCleanupJobHandler($db, $config),
             JobType::REPAIR_UNVERIFIED_METADATA => static fn() => new CatalogUnverifiedMetadataRepairJobHandler($db, $trustedImportConfig),
             JobType::REFRESH_UNVERIFIED_GAME_MATCHES => static fn() => new CatalogUnverifiedGameMatchRefreshJobHandler($db, $trustedImportConfig),
+            JobType::UNVERIFIED_BULK_ACTION => static fn() => new CatalogUnverifiedBulkActionJobHandler($db, $trustedImportConfig),
+            JobType::UNVERIFIED_BULK_ACTION_BATCH => static fn() => new CatalogUnverifiedBulkActionJobHandler($db, $trustedImportConfig),
             JobType::CROSS_GAME_COPY_BATCH => static fn() => new CatalogCrossGameCopyBatchJobHandler($db, $trustedImportConfig),
             JobType::PROFILED_UPLOAD_BATCH => static fn() => new CatalogProfiledUploadBatchJobHandler($db, $trustedImportConfig),
             JobType::GENERATE_MOD_PACKAGE => static fn() => new GeneratedPackageJobHandler($db, $config),
