@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/_bootstrap.php';
 
 use UnrealDb\Catalog\Application\Pagination\CatalogKeysetPaginator;
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogArchiveJobOutcomeProjector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobResultHydrator;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobBrowserQuery;
@@ -83,6 +84,7 @@ try {
     }
 
     $rows = (new CatalogBackgroundJobResultHydrator($application->config))->hydrate($pageResult['rows']);
+    $rows = (new CatalogArchiveJobOutcomeProjector($application->db))->project($rows);
     $previousCursor = is_array($pageResult['first_cursor'])
         ? CatalogKeysetPaginator::encode($application->config, $context, $pageResult['first_cursor'])
         : '';
