@@ -94,7 +94,9 @@ $record(
 $record(
     'archive_uploads_dedupe_by_content_and_source_path',
     str_contains($batch, "'bucket-archive-source:'")
-        && str_contains($batch, '$fingerprint . "\\0" . strtolower($relativePath)')
+        && str_contains($batch, '$archiveSourceIdentity = hash(')
+        && str_contains($batch, '$fingerprint')
+        && str_contains($batch, 'strtolower($relativePath)')
         && str_contains($batch, 'activeSourceForDedupe(')
         && !str_contains($batch, "'bucket-archive-upload:' . $uploadId"),
     'Two active submissions of identical archive bytes at the same logical mirror path must share one archive job; different paths retain distinct provenance.'
