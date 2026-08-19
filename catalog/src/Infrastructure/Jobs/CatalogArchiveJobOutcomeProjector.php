@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
 use PDO;
+use UnrealDb\Catalog\Domain\Jobs\JobType;
 
 final class CatalogArchiveJobOutcomeProjector
 {
