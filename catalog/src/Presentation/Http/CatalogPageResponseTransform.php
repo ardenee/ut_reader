@@ -48,6 +48,10 @@ final class CatalogPageResponseTransform
                 $headAssets[$source] = is_file($path) ? (string)filemtime($path) : '1';
             }
         }
+        if (in_array($script, ['unverified-files.php', 'system-errors.php', 'upload-issues.php'], true)) {
+            $path = dirname(__DIR__, 3) . '/assets/admin-all-matching.js';
+            $headAssets['assets/admin-all-matching.js'] = is_file($path) ? (string)filemtime($path) : '1';
+        }
 
         $injectGameManagerCounts = $script === 'game-manager.php'
             && strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) === 'GET'
