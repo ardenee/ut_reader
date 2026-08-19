@@ -27,7 +27,7 @@ $checks = [
     ],
     'unverified_selection_does_not_render_all_rows' => [
         'path' => $root . '/src/Infrastructure/Unverified/PdoUnverifiedBulkSelectionQuery.php',
-        'needle' => 'LIMIT ' . "' . \$limit",
+        'needle' => "LIMIT ' . \$limit",
         'present' => true,
     ],
     'unverified_parent_plans_bounded_children' => [
@@ -37,7 +37,7 @@ $checks = [
     ],
     'unverified_children_checkpoint_each_file' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php',
-        'needle' => "$context->checkpoint([",
+        'needle' => '$context->checkpoint([',
         'present' => true,
     ],
     'unverified_per_file_failures_do_not_abort_batch' => [
