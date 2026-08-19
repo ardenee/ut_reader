@@ -56,11 +56,11 @@ final class CompactDependencyRebuilder
     private function rebuildInternal(int $fileId, ?array $packageKeys): array
     {
         $loader = new BlockedCompressedMetadataSnapshotLoader($this->db, $this->storageRoot);
-        $snapshot = $loader->load($fileId);
-        $file = (array)$snapshot['file'];
-        $imports = array_values((array)$snapshot['imports']);
+        $dependencySnapshot = $loader->loadDependencySnapshot($fileId);
+        $file = (array)$dependencySnapshot['file'];
+        $imports = array_values((array)$dependencySnapshot['imports']);
         $previous = [];
-        foreach ((array)$snapshot['dependencies'] as $row) {
+        foreach ((array)$dependencySnapshot['dependencies'] as $row) {
             if (is_array($row)) {
                 $previous[(int)$row['import_index']] = $row;
             }
@@ -165,7 +165,7 @@ final class CompactDependencyRebuilder
 
         // This is the critical reconciliation fast path. Resolving an affected
         // provider often confirms the existing dependency rows are already right;
-        // do not rebuild/recompress the whole metadata container in that case.
+        // do not inflate names/exports or rebuild/recompress the container.
         if ($changed === 0) {
             return array_merge($baseResult, [
                 'sql_batches' => 0,
@@ -173,6 +173,10 @@ final class CompactDependencyRebuilder
             ]);
         }
 
+        // The writer owns complete-container publication. Only pay to load names
+        // and exports after the dependency-only comparison proved that bytes must
+        // change.
+        $snapshot = $loader->load($fileId);
         $snapshot['dependencies'] = $dependencies;
         $written = (new BlockedCompressedMetadataSnapshotWriter($this->db, $this->storageRoot))->write($snapshot);
         return array_merge($written, $baseResult);
