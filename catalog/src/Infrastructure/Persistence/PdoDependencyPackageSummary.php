@@ -16,6 +16,7 @@ use Throwable;
 final class PdoDependencyPackageSummary
 {
     private const BULK_FILE_BATCH = 250;
+    private const TEXT_COLLATION = 'utf8mb4_unicode_ci';
 
     /** @var array<int,bool> */
     private static array $availability = [];
@@ -60,6 +61,11 @@ final class PdoDependencyPackageSummary
     /**
      * Rebuild package summaries for many files in bounded transactions.
      *
+     * The summary projection reads the compact lookup tables directly. The
+     * generic dependency read source reconstructs human-readable source,
+     * confidence and class labels that this aggregate never consumes; avoiding
+     * those joins/conversions materially reduces work for large publications.
+     *
      * @param list<int> $fileIds
      * @return array{files:int,summary_rows:int,available:bool}
      */
@@ -94,32 +100,36 @@ final class PdoDependencyPackageSummary
                 $insertColumns = 'game_id,file_id,required_package,'
                     . ($exampleColumn ? 'example_required_object_path,' : '')
                     . 'dependency_count,resolved_count,missing_count,package_only_count,common_count,summary_status,provider_file_id';
-                $selectColumns = 'f.game_id,d.file_id,d.required_package,'
-                    . ($exampleColumn ? 'MIN(NULLIF(d.required_object_path,"")) example_required_object_path,' : '')
+                $collation = self::TEXT_COLLATION;
+                $packageExpr = '(CONVERT(package_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ')';
+                $objectExpr = '(CONVERT(object_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ')';
+                $selectColumns = 'f.game_id,l.file_id,' . $packageExpr . ' required_package,'
+                    . ($exampleColumn ? 'MIN(NULLIF(' . $objectExpr . ',"")) example_required_object_path,' : '')
                     . 'COUNT(*) dependency_count,'
-                    . 'SUM(d.status="resolved") resolved_count,SUM(d.status="missing") missing_count,'
-                    . 'SUM(d.status="package_only") package_only_count,SUM(d.status="common") common_count,'
+                    . 'SUM(l.status=1) resolved_count,'
+                    . 'SUM(l.status=0) missing_count,'
+                    . 'SUM(l.status=2) package_only_count,'
+                    . 'SUM(l.status=3) common_count,'
                     . 'CASE '
-                    . 'WHEN SUM(d.status="missing")>0 THEN "missing" '
-                    . 'WHEN SUM(d.status="common")=COUNT(*) THEN "common" '
-                    . 'WHEN SUM(d.status="resolved")=COUNT(*) THEN "resolved" '
-                    . 'WHEN SUM(d.status IN ("resolved","package_only"))=COUNT(*) THEN "package_only" '
+                    . 'WHEN SUM(l.status=0)>0 THEN "missing" '
+                    . 'WHEN SUM(l.status=3)=COUNT(*) THEN "common" '
+                    . 'WHEN SUM(l.status=1)=COUNT(*) THEN "resolved" '
+                    . 'WHEN SUM(l.status IN (1,2))=COUNT(*) THEN "package_only" '
                     . 'ELSE "mixed" END summary_status,'
-                    // resolved_file_id is a compact projection hint and can briefly point at a provider
-                    // that has been removed while another maintenance pass is rebuilding owners. Only
-                    // publish an FK-backed provider that still exists in ue_files.
                     . 'CASE WHEN COUNT(DISTINCT provider.id)=1 THEN MAX(provider.id) ELSE NULL END provider_file_id ';
-                $dependencySource = PdoDependencyReadSource::sql($this->db);
 
                 $insert = $this->db->prepare(
                     'INSERT INTO ue_dependency_package_summaries(' . $insertColumns . ') '
                     . 'SELECT ' . $selectColumns
-                    . 'FROM ' . $dependencySource . ' d '
-                    . 'JOIN ue_files f ON f.id=d.file_id '
-                    . 'LEFT JOIN ue_files provider ON provider.id=d.resolved_file_id '
-                    . 'WHERE d.file_id IN (' . $placeholders . ') AND f.scan_status="verified" '
-                    . 'AND d.required_package IS NOT NULL AND d.required_package<>"" '
-                    . 'GROUP BY f.game_id,d.file_id,d.required_package'
+                    . 'FROM ue_dependency_links l '
+                    . 'JOIN ue_file_metadata m ON m.file_id=l.file_id AND m.format_version=2 '
+                    . 'JOIN ue_files f ON f.id=l.file_id '
+                    . 'JOIN ue_terms package_term ON package_term.id=l.required_package_term_id '
+                    . 'JOIN ue_terms object_term ON object_term.id=l.required_object_term_id '
+                    . 'LEFT JOIN ue_files provider ON provider.id=l.resolved_file_id '
+                    . 'WHERE l.file_id IN (' . $placeholders . ') AND f.scan_status="verified" '
+                    . 'AND package_term.value_length>0 '
+                    . 'GROUP BY f.game_id,l.file_id,l.required_package_term_id,' . $packageExpr
                 );
                 $insert->execute($chunk);
                 $summaryRows += $insert->rowCount();
