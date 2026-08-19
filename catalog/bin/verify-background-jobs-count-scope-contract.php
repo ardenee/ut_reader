@@ -48,8 +48,8 @@ $check(
 );
 $check(
     'operator_job_scope_is_explicit',
-    str_contains($searchScope, 'j.parent_job_id IS NULL')
-        && str_contains($searchScope, 'j.parent_job_id IS NOT NULL')
+    str_contains($searchScope, 'root_job.parent_job_id IS NULL')
+        && str_contains($searchScope, 'problem_child.parent_job_id IS NOT NULL')
         && str_contains($searchScope, 'failed')
         && str_contains($searchScope, 'dead_letter')
         && str_contains($searchScope, 'cancelled')
@@ -73,15 +73,24 @@ $check(
     'System Operations must not invent a competing queued/running job count.'
 );
 $check(
-    'durable_execution_counts_are_health_only',
-    str_contains($operationalQuery, 'SUM(status="queued")')
-        && str_contains($operationalQuery, 'SUM(status="running")')
-        && str_contains($workerEndpoint, '$counts = $operational->queueCounts($queueName);')
-        && str_contains($workerEndpoint, 'CatalogWorkerStatusPolicy::evaluate(')
-        && str_contains($workerEndpoint, "['queue_counts'] = \$counts;")
-        && !str_contains($ui, 'queue_counts')
+    'browser_worker_status_is_bounded_and_job_centric',
+    str_contains($operationalQuery, 'public function queuePresence(')
+        && str_contains($operationalQuery, 'public function operatorActiveCounts(')
+        && str_contains($workerEndpoint, '$presence = $operational->queuePresence($queueName);')
+        && str_contains($workerEndpoint, '$operatorCounts = $operational->operatorActiveCounts($queueName);')
+        && !str_contains($workerEndpoint, '$operational->queueCounts($queueName)')
+        && str_contains($workerEndpoint, "['queue_counts'] = \$operatorCounts;")
+        && str_contains($workerEndpoint, "['queue_counts_scope'] = 'operator_jobs'")
         && !str_contains($ui, 'Work units'),
-    'Raw durable execution rows may drive worker health/admission but must not appear as a competing operator headline count.'
+    'Browser worker polling must use bounded durable presence plus operator-job counts, never raw multi-million execution-row totals.'
+);
+$check(
+    'exact_durable_counts_remain_diagnostic_only',
+    str_contains($operationalQuery, 'public function queueCounts(')
+        && str_contains($operationalQuery, 'SUM(status="queued")')
+        && str_contains($operationalQuery, 'SUM(status="running")')
+        && str_contains($operationalQuery, 'Do not call it from high-frequency browser polling'),
+    'Exact durable execution counts remain available for diagnostics without being part of the live browser polling path.'
 );
 $check(
     'one_visible_worker_summary',
