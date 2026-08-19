@@ -49,6 +49,19 @@ $record(
 );
 
 $record(
+    'job_status_failures_persist_real_exception_details',
+    str_contains($statusApi, "'error_type' => get_class(\$exception)")
+        && str_contains($cursorApi, "'error_type' => get_class(\$exception)")
+        && str_contains($statusApi, "'source_file' => \$exception->getFile()")
+        && str_contains($cursorApi, "'source_file' => \$exception->getFile()")
+        && str_contains($statusApi, "'trace_text' => \$exception->getTraceAsString()")
+        && str_contains($cursorApi, "'trace_text' => \$exception->getTraceAsString()")
+        && str_contains($statusApi, 'catalog_system_error_record([')
+        && str_contains($cursorApi, 'catalog_system_error_record(['),
+    'A future 503 must persist its underlying exception class/message/file/line/trace instead of leaving only the generic jobs-service-unavailable record.'
+);
+
+$record(
     'archive_projection_is_read_only',
     !preg_match('/\b(?:UPDATE|DELETE|INSERT)\s+ue_background_jobs\b/i', $projector)
         && str_contains($projector, 'SELECT parent_job_id,status,result_json,last_error'),
