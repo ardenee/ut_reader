@@ -242,6 +242,9 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     private function rebuildGame(ClaimedJob $job, JobExecutionContext $context): array
     {
         $gameId = $this->positiveInt($job->payload, 'game_id');
+        if (!empty($job->payload['game_stats_only'])) {
+            return $this->rebuildGameStatsOnly($job, $context, $gameId);
+        }
         if ($this->isPakDependencyWorkflow($job)) {
             return $this->rebuildPakDependencies($job, $context, $gameId);
         }
@@ -351,6 +354,49 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
     }
 
     /** @return array<string,mixed> */
+    private function rebuildGameStatsOnly(ClaimedJob $job, JobExecutionContext $context, int $gameId): array
+    {
+        $game = $this->one('SELECT id,name FROM ue_games WHERE id=?', [$gameId]);
+        if ($game === null) {
+            throw new RuntimeException('Game no longer exists: ' . $gameId);
+        }
+
+        $stats = new PdoGameCatalogStats($this->db);
+        if (!$stats->available()) {
+            throw new RuntimeException('Cached game statistics projection is unavailable.');
+        }
+
+        $context->checkpoint($this->workflowProgress(
+            'game_stats_refresh',
+            25,
+            'Refreshing coalesced cached game counters for ' . (string)$game['name'] . '.',
+            ['game_id' => $gameId, 'mode' => 'stats_only']
+        ));
+        $rebuilt = $stats->rebuildGame($gameId, 5);
+        if ($rebuilt === null) {
+            $context->defer(5, $this->workflowProgress(
+                'game_stats_refresh',
+                50,
+                'Cached game counters are busy in another publisher; retrying shortly.',
+                ['game_id' => $gameId, 'mode' => 'stats_only']
+            ));
+        }
+
+        $message = 'Cached game counters refreshed for ' . (string)$game['name'] . '.';
+        $result = [
+            'operation' => 'refresh_game_catalog_stats',
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'mode' => 'stats_only',
+            'game_id' => $gameId,
+            'game_name' => (string)$game['name'],
+            'game_stats_refreshed' => true,
+            'message' => $message,
+        ];
+        $context->checkpoint($this->workflowProgress('complete', 100, $message, $result));
+        return $result;
+    }
+
+    /** @return array<string,mixed> */
     private function rebuildPakDependencies(ClaimedJob $job, JobExecutionContext $context, int $gameId): array
     {
         $pakParentJobId = (int)($job->parentJobId ?? 0);
@@ -441,7 +487,7 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             $resume = $this->workflowProgress(
                 'pak_dependency_finalize',
                 97,
-                'Targeted PAK dependency files completed; refreshing cached game counters once.',
+                'Targeted PAK dependency files completed; scheduling one coalesced cached-counter refresh.',
                 ['children' => $state] + $resume
             );
             $context->checkpoint($resume);
@@ -452,9 +498,16 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             throw new RuntimeException('Unknown targeted PAK dependency workflow stage: ' . $stage);
         }
 
-        $gameStats = (new PdoGameCatalogStats($this->db))->rebuildGame($gameId);
+        $requestedBy = (int)($job->payload['requested_by'] ?? 0) ?: null;
+        $statsJobId = CatalogGameStatsRefreshCoordinator::request(
+            $this->db,
+            $job->queue,
+            $gameId,
+            $requestedBy
+        );
         $state = $this->childState($job->id, 'pak-dependency:');
-        $message = 'Targeted PAK dependency refresh complete: ' . $state['completed'] . ' file unit(s).';
+        $message = 'Targeted PAK dependency refresh complete: ' . $state['completed']
+            . ' file unit(s); cached game counters coalesced into job #' . $statsJobId . '.';
         $result = [
             'operation' => 'rebuild_game_dependencies',
             'workflow_version' => self::WORKFLOW_VERSION,
@@ -466,7 +519,8 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             'pak_provider_packages' => (int)($resume['pak_provider_packages'] ?? 0),
             'pak_affected_files' => (int)($resume['pak_affected_files'] ?? 0),
             'pak_target_files' => (int)($resume['pak_target_files'] ?? 0),
-            'game_stats_refreshed' => $gameStats !== null,
+            'game_stats_refreshed' => false,
+            'game_stats_refresh_job_id' => $statsJobId,
             'children' => $state,
             'message' => $message,
         ];
