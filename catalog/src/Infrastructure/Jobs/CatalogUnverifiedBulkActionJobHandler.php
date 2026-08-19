@@ -2,10 +2,12 @@
 /**
  * Durable all-matching actions for the Unverified Files page.
  *
- * The parent snapshots the current filtered id range, plans bounded child batches,
- * then waits without occupying a worker slot. Children checkpoint after each file,
- * continue past ordinary per-file failures and reuse the exact same single-file
- * application services as the browser-selected path.
+ * The parent snapshots the current highest matching id and walks deterministic
+ * numeric id windows. Child identity is derived from fixed 100-id buckets rather
+ * than the mutable set of rows still matching the filter. If the coordinator
+ * crashes after inserting children but before checkpointing its cursor, replaying
+ * the same window therefore resolves to the same workflow_unit_key values and
+ * cannot duplicate already-planned work.
  */
 declare(strict_types=1);
 
@@ -28,9 +30,9 @@ use UnrealDb\Catalog\Infrastructure\Unverified\PdoUnverifiedBulkSelectionQuery;
 
 final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
 {
-    private const WORKFLOW_VERSION = 1;
-    private const PLAN_PAGE_SIZE = 1000;
-    private const CHILD_BATCH_SIZE = 100;
+    private const WORKFLOW_VERSION = 2;
+    private const PLAN_ID_WINDOW = 5000;
+    private const CHILD_ID_SPAN = 100;
     private const FAILURE_SAMPLE_LIMIT = 50;
 
     /** @param array<string,mixed> $config */
@@ -65,16 +67,7 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
         $snapshotMaxId = max(0, (int)($job->payload['snapshot_max_id'] ?? 0));
         $snapshotTotal = max(0, (int)($job->payload['snapshot_total'] ?? 0));
         if ($snapshotMaxId < 1 || $snapshotTotal < 1) {
-            return [
-                'operation' => 'unverified_bulk_action',
-                'action' => $payload['action'],
-                'matched_files' => 0,
-                'processed_files' => 0,
-                'succeeded_files' => 0,
-                'failed_files' => 0,
-                'skipped_files' => 0,
-                'message' => 'No matching unverified files remained to process.',
-            ];
+            return $this->emptyCoordinatorResult($payload['action']);
         }
 
         $resume = $context->resumeProgress();
@@ -84,73 +77,54 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
         $stage = trim((string)($resume['stage'] ?? '')) ?: 'plan';
 
         if ($stage === 'plan') {
-            $selector = new PdoUnverifiedBulkSelectionQuery($this->db);
             $cursor = max(0, (int)($resume['cursor_id'] ?? 0));
-            $planned = max(0, (int)($resume['planned_files'] ?? 0));
-            $batchNumber = max(0, (int)($resume['planned_batches'] ?? 0));
-            $rows = $selector->page($filters, $cursor, $snapshotMaxId, self::PLAN_PAGE_SIZE);
-
-            if ($rows !== []) {
-                $units = [];
-                foreach (array_chunk($rows, self::CHILD_BATCH_SIZE) as $chunk) {
-                    if ($chunk === []) {
-                        continue;
-                    }
-                    $batchNumber++;
-                    $firstId = (int)$chunk[0]['id'];
-                    $lastId = (int)$chunk[count($chunk) - 1]['id'];
-                    $units[] = [
-                        'workflow_unit_key' => 'unverified:batch:' . $batchNumber . ':' . $firstId . '-' . $lastId,
-                        'payload' => [
-                            'action' => $payload['action'],
-                            'target_game_id' => $payload['target_game_id'],
-                            'allow_profile_override' => $payload['allow_profile_override'],
-                            'requested_by' => $payload['requested_by'],
-                            'items' => $chunk,
-                            'batch_number' => $batchNumber,
-                            'workflow_parent_job_id' => $job->id,
-                        ],
-                    ];
+            if ($cursor < $snapshotMaxId) {
+                $windowEnd = min($snapshotMaxId, $cursor + self::PLAN_ID_WINDOW);
+                $rows = (new PdoUnverifiedBulkSelectionQuery($this->db))->page(
+                    $filters,
+                    $cursor,
+                    $windowEnd,
+                    self::PLAN_ID_WINDOW
+                );
+                $units = $this->windowUnits($rows, $job, $payload, $snapshotMaxId);
+                if ($units !== []) {
+                    (new PdoJobQueue($this->db))->enqueueWorkflowUnits(
+                        $job->queue,
+                        JobType::UNVERIFIED_BULK_ACTION_BATCH,
+                        $units,
+                        20,
+                        null,
+                        $payload['requested_by'] > 0 ? $payload['requested_by'] : null,
+                        3,
+                        $job->id
+                    );
                 }
-                (new PdoJobQueue($this->db))->enqueueWorkflowUnits(
-                    $job->queue,
-                    JobType::UNVERIFIED_BULK_ACTION_BATCH,
-                    $units,
-                    20,
-                    null,
-                    $payload['requested_by'] > 0 ? $payload['requested_by'] : null,
-                    3,
-                    $job->id
-                );
-                $cursor = (int)$rows[count($rows) - 1]['id'];
-                $planned += count($rows);
-                $progress = $this->progress(
+
+                $planPercent = min(20, (int)floor(($windowEnd * 20) / max(1, $snapshotMaxId)));
+                $context->defer(1, $this->progress(
                     'plan',
-                    min(20, (int)floor(($planned * 20) / max(1, $snapshotTotal))),
-                    'Planned ' . number_format($planned) . '/' . number_format($snapshotTotal)
-                        . ' matching unverified file(s) into ' . number_format($batchNumber) . ' durable batch(es).',
+                    $planPercent,
+                    'Planning all matching files by stable id range: through file #'
+                        . number_format($windowEnd) . ' of snapshot maximum #'
+                        . number_format($snapshotMaxId) . '.',
                     [
-                        'cursor_id' => $cursor,
-                        'planned_files' => $planned,
-                        'planned_batches' => $batchNumber,
+                        'cursor_id' => $windowEnd,
                         'snapshot_total' => $snapshotTotal,
+                        'snapshot_max_id' => $snapshotMaxId,
                     ]
-                );
-                $context->defer(1, $progress);
+                ));
             }
 
-            $resume = $this->progress(
+            $context->checkpoint($this->progress(
                 'wait',
                 20,
                 'Bulk selection planning is complete; waiting for durable file batches.',
                 [
                     'cursor_id' => $snapshotMaxId,
-                    'planned_files' => $planned,
-                    'planned_batches' => $batchNumber,
                     'snapshot_total' => $snapshotTotal,
+                    'snapshot_max_id' => $snapshotMaxId,
                 ]
-            );
-            $context->checkpoint($resume);
+            ));
             $stage = 'wait';
         }
 
@@ -180,13 +154,18 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
         }
 
         $problemBatches = $children['failed'] + $children['dead_letter'] + $children['cancelled'];
+        $noLongerMatching = max(0, $snapshotTotal - $aggregate['processed_files']);
         $message = ucfirst($payload['action']) . ' all matching complete: '
             . number_format($aggregate['succeeded_files']) . ' succeeded, '
             . number_format($aggregate['failed_files']) . ' failed, '
             . number_format($aggregate['skipped_files']) . ' skipped.';
+        if ($noLongerMatching > 0) {
+            $message .= ' ' . number_format($noLongerMatching)
+                . ' snapshot file(s) were no longer available/matching before a completed batch reported them.';
+        }
         if ($problemBatches > 0) {
             $message .= ' ' . number_format($problemBatches)
-                . ' batch job(s) ended before returning a normal per-file result; completed batches were retained.';
+                . ' batch job(s) ended abnormally; successful completed batches were retained.';
         }
 
         $context->checkpoint($this->progress('complete', 100, $message, [
@@ -194,6 +173,7 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
             'children' => $children,
             'aggregate' => $aggregate,
             'problem_batches' => $problemBatches,
+            'no_longer_matching' => $noLongerMatching,
         ]));
 
         return [
@@ -206,6 +186,7 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
             'succeeded_files' => $aggregate['succeeded_files'],
             'failed_files' => $aggregate['failed_files'],
             'skipped_files' => $aggregate['skipped_files'],
+            'no_longer_matching' => $noLongerMatching,
             'problem_batches' => $problemBatches,
             'children' => $children,
             'failure_samples' => $aggregate['failure_samples'],
@@ -213,13 +194,48 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
         ];
     }
 
+    /**
+     * @param list<array{id:int,token:string,original_name:string}> $rows
+     * @param array{action:string,target_game_id:int,allow_profile_override:bool,requested_by:int} $payload
+     * @return list<array{payload:array<string,mixed>,workflow_unit_key:string}>
+     */
+    private function windowUnits(array $rows, ClaimedJob $job, array $payload, int $snapshotMaxId): array
+    {
+        $buckets = [];
+        foreach ($rows as $row) {
+            $id = max(1, (int)$row['id']);
+            $start = intdiv($id - 1, self::CHILD_ID_SPAN) * self::CHILD_ID_SPAN + 1;
+            $buckets[$start][] = $row;
+        }
+        ksort($buckets, SORT_NUMERIC);
+
+        $units = [];
+        foreach ($buckets as $start => $items) {
+            $end = min($snapshotMaxId, $start + self::CHILD_ID_SPAN - 1);
+            $units[] = [
+                'workflow_unit_key' => 'unverified:batch:' . $start . '-' . $end,
+                'payload' => [
+                    'action' => $payload['action'],
+                    'target_game_id' => $payload['target_game_id'],
+                    'allow_profile_override' => $payload['allow_profile_override'],
+                    'requested_by' => $payload['requested_by'],
+                    'items' => array_values($items),
+                    'batch_start_id' => $start,
+                    'batch_end_id' => $end,
+                    'workflow_parent_job_id' => $job->id,
+                ],
+            ];
+        }
+        return $units;
+    }
+
     /** @return array<string,mixed> */
     private function runBatch(ClaimedJob $job, JobExecutionContext $context): array
     {
         $payload = $this->validatedCommonPayload($job->payload);
         $items = is_array($job->payload['items'] ?? null) ? array_values($job->payload['items']) : [];
-        if ($items === [] || count($items) > self::CHILD_BATCH_SIZE) {
-            throw new \RuntimeException('Unverified bulk batch payload is empty or exceeds its bounded size.');
+        if ($items === [] || count($items) > self::CHILD_ID_SPAN) {
+            throw new \RuntimeException('Unverified bulk batch payload is empty or exceeds its fixed id span.');
         }
 
         $resume = $context->resumeProgress();
@@ -253,12 +269,13 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
                         $index,
                         $total,
                         $name,
-                        $succeeded,
-                        $failed,
-                        $skipped,
-                        $failureSamples
+                        &$succeeded,
+                        &$failed,
+                        &$skipped,
+                        &$failureSamples
                     ): void {
-                        $overall = (int)floor((($index + (max(0, min(100, $filePercent)) / 100)) * 100) / max(1, $total));
+                        $filePercent = max(0, min(100, $filePercent));
+                        $overall = (int)floor((($index + ($filePercent / 100)) * 100) / max(1, $total));
                         $context->heartbeatIfDue([
                             'workflow_version' => self::WORKFLOW_VERSION,
                             'stage' => 'batch_file',
@@ -266,7 +283,7 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
                             'total' => $total,
                             'percent' => $overall,
                             'current_file' => $name,
-                            'file_percent' => max(0, min(100, $filePercent)),
+                            'file_percent' => $filePercent,
                             'message' => $message,
                             'succeeded_files' => $succeeded,
                             'failed_files' => $failed,
@@ -286,12 +303,16 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
                 } catch (JobCancellationRequested $error) {
                     throw $error;
                 } catch (Throwable $error) {
-                    $message = trim($error->getMessage());
-                    if ($this->isAlreadyGone($message)) {
+                    $errorMessage = trim($error->getMessage());
+                    if ($this->isAlreadyGone($errorMessage)) {
                         $skipped++;
                     } else {
                         $failed++;
-                        $this->rememberFailure($failureSamples, $name, $message !== '' ? $message : get_class($error));
+                        $this->rememberFailure(
+                            $failureSamples,
+                            $name,
+                            $errorMessage !== '' ? $errorMessage : get_class($error)
+                        );
                     }
                 }
             }
@@ -402,6 +423,22 @@ final class CatalogUnverifiedBulkActionJobHandler implements JobHandler
         return str_contains($message, 'no longer available')
             || str_contains($message, 'no longer exists')
             || str_contains($message, 'source game no longer exists');
+    }
+
+    /** @return array<string,mixed> */
+    private function emptyCoordinatorResult(string $action): array
+    {
+        return [
+            'operation' => 'unverified_bulk_action',
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'action' => $action,
+            'matched_files' => 0,
+            'processed_files' => 0,
+            'succeeded_files' => 0,
+            'failed_files' => 0,
+            'skipped_files' => 0,
+            'message' => 'No matching unverified files remained to process.',
+        ];
     }
 
     /** @param array<string,mixed> $extra @return array<string,mixed> */
