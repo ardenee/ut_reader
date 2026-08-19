@@ -50,10 +50,11 @@ $record(
     'operator_visibility_avoids_full_execution_ledger_or_scan',
     str_contains($scope, 'root_job.parent_job_id IS NULL')
         && str_contains($scope, 'problem_child.parent_job_id IS NOT NULL')
-        && str_contains($scope, 'problem_child.status IN ("failed","dead_letter","cancelled")')
+        && str_contains($scope, 'problem_child.status IN ("failed","dead_letter")')
+        && !str_contains($scope, 'problem_child.status IN ("failed","dead_letter","cancelled")')
         && substr_count($scope, 'queue_name=?') >= 2
         && !str_contains($scope, 'j.parent_job_id IS NULL OR '),
-    'Routine operator polling must union indexed root/problem branches instead of OR-scanning all hidden workflow units.'
+    'Routine operator polling must union indexed root/problem branches while keeping cancelled child execution history folded into the parent job.'
 );
 $record(
     'system_operations_does_not_count_raw_rows',
