@@ -87,6 +87,7 @@ $sourceSuites = [
     'verify-federation-http-boundary.php',
     'verify-worker-pool-resilience.php',
     'verify-job-observability-contract.php',
+    'verify-job-history-cleanup-contract.php',
     'verify-dependency-worker-parallelism-contract.php',
     'verify-dependency-workflow-performance-contract.php',
     'verify-unverified-match-performance-contract.php',
