@@ -63,93 +63,22 @@ final class PdoGameCatalogStats
         }
 
         try {
-            $exists = $this->db->prepare('SELECT id FROM ue_games WHERE id=?');
-            $exists->execute([$gameId]);
-            if ($exists->fetchColumn() === false) {
-                return null;
+            // Dependency writers and cached-counter readers can briefly meet in
+            // opposite InnoDB lock order even though stats rebuilds themselves
+            // are serialized by GET_LOCK(). Retrying the small stats operation
+            // here avoids failing/replaying the entire parent dependency job for
+            // a transient 1213/1205 concurrency conflict.
+            for ($attempt = 1; $attempt <= 3; $attempt++) {
+                try {
+                    return $this->rebuildGameLocked($gameId);
+                } catch (Throwable $error) {
+                    if (!$this->isRetryableConcurrencyFailure($error) || $attempt >= 3) {
+                        throw $error;
+                    }
+                    usleep($attempt * 150000);
+                }
             }
-
-            $fileStatement = $this->db->prepare(
-                'SELECT COUNT(*) file_count,'
-                . 'COALESCE(SUM(scan_status="verified"),0) verified_count,'
-                . 'COALESCE(SUM(scan_status="failed"),0) failed_count,'
-                . 'COALESCE(SUM(scan_status="duplicate"),0) duplicate_count,'
-                . 'COALESCE(SUM(scan_status="unverified"),0) unverified_count,'
-                . 'COALESCE(SUM(file_size),0) total_size,'
-                . 'COALESCE(SUM(CASE WHEN scan_status="verified" THEN file_size ELSE 0 END),0) verified_size '
-                . 'FROM ue_files WHERE game_id=?'
-            );
-            $fileStatement->execute([$gameId]);
-            $files = $fileStatement->fetch(PDO::FETCH_ASSOC) ?: [];
-
-            $dependencyStatement = $this->db->prepare(
-                'SELECT COALESCE(SUM(dependency_count),0) dependency_count,'
-                . 'COALESCE(SUM(missing_count),0) missing_dependency_count,'
-                . 'COALESCE(SUM(resolved_count),0) resolved_dependency_count,'
-                . 'COALESCE(SUM(package_only_count),0) package_only_dependency_count,'
-                . 'COALESCE(SUM(common_count),0) common_dependency_count,'
-                . 'COUNT(DISTINCT CASE WHEN missing_count>0 THEN required_package END) missing_package_count '
-                . 'FROM ue_dependency_package_summaries WHERE game_id=?'
-            );
-            $dependencyStatement->execute([$gameId]);
-            $dependencies = $dependencyStatement->fetch(PDO::FETCH_ASSOC) ?: [];
-
-            $baseGameStatement = $this->db->prepare(
-                'SELECT COALESCE(SUM(s.missing_count),0) missing_base_game_dependency_count '
-                . 'FROM ue_dependency_package_summaries s '
-                . 'WHERE s.game_id=? AND s.missing_count>0 AND EXISTS ('
-                . 'SELECT 1 FROM ue_base_game_files bg '
-                . 'LEFT JOIN ue_files src ON src.id=bg.source_file_id '
-                . 'WHERE bg.game_id=s.game_id AND ('
-                . 'LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(s.required_package)) '
-                . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(bg.original_name,""))>0 '
-                . 'THEN LEFT(bg.original_name,CHAR_LENGTH(bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg.original_name,".",-1))-1) '
-                . 'ELSE COALESCE(bg.original_name,"") END))=LOWER(TRIM(s.required_package)) '
-                . 'OR LOWER(TRIM(COALESCE(src.package_name,"")))=LOWER(TRIM(s.required_package)) '
-                . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(src.original_name,""))>0 '
-                . 'THEN LEFT(src.original_name,CHAR_LENGTH(src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(src.original_name,".",-1))-1) '
-                . 'ELSE COALESCE(src.original_name,"") END))=LOWER(TRIM(s.required_package))'
-                . '))'
-            );
-            $baseGameStatement->execute([$gameId]);
-            $baseGame = $baseGameStatement->fetch(PDO::FETCH_ASSOC) ?: [];
-
-            $row = [
-                'game_id' => $gameId,
-                'file_count' => (int)($files['file_count'] ?? 0),
-                'verified_count' => (int)($files['verified_count'] ?? 0),
-                'failed_count' => (int)($files['failed_count'] ?? 0),
-                'duplicate_count' => (int)($files['duplicate_count'] ?? 0),
-                'unverified_count' => (int)($files['unverified_count'] ?? 0),
-                'total_size' => (int)($files['total_size'] ?? 0),
-                'verified_size' => (int)($files['verified_size'] ?? 0),
-                'dependency_count' => (int)($dependencies['dependency_count'] ?? 0),
-                'missing_dependency_count' => (int)($dependencies['missing_dependency_count'] ?? 0),
-                'resolved_dependency_count' => (int)($dependencies['resolved_dependency_count'] ?? 0),
-                'package_only_dependency_count' => (int)($dependencies['package_only_dependency_count'] ?? 0),
-                'common_dependency_count' => (int)($dependencies['common_dependency_count'] ?? 0),
-                'missing_package_count' => (int)($dependencies['missing_package_count'] ?? 0),
-                'missing_base_game_dependency_count' => (int)($baseGame['missing_base_game_dependency_count'] ?? 0),
-            ];
-
-            $statement = $this->db->prepare(
-                'INSERT INTO ue_game_catalog_stats('
-                . 'game_id,file_count,verified_count,failed_count,duplicate_count,unverified_count,total_size,verified_size,'
-                . 'dependency_count,missing_dependency_count,resolved_dependency_count,package_only_dependency_count,'
-                . 'common_dependency_count,missing_package_count,missing_base_game_dependency_count,updated_at'
-                . ') VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW()) '
-                . 'ON DUPLICATE KEY UPDATE '
-                . 'file_count=VALUES(file_count),verified_count=VALUES(verified_count),failed_count=VALUES(failed_count),'
-                . 'duplicate_count=VALUES(duplicate_count),unverified_count=VALUES(unverified_count),'
-                . 'total_size=VALUES(total_size),verified_size=VALUES(verified_size),'
-                . 'dependency_count=VALUES(dependency_count),missing_dependency_count=VALUES(missing_dependency_count),'
-                . 'resolved_dependency_count=VALUES(resolved_dependency_count),'
-                . 'package_only_dependency_count=VALUES(package_only_dependency_count),'
-                . 'common_dependency_count=VALUES(common_dependency_count),missing_package_count=VALUES(missing_package_count),'
-                . 'missing_base_game_dependency_count=VALUES(missing_base_game_dependency_count),updated_at=NOW()'
-            );
-            $statement->execute(array_values($row));
-            return $row;
+            return null;
         } finally {
             try {
                 $release = $this->db->prepare('SELECT RELEASE_LOCK(?)');
@@ -158,6 +87,111 @@ final class PdoGameCatalogStats
                 // The connection closing also releases the advisory lock.
             }
         }
+    }
+
+    /** @return array<string,int>|null */
+    private function rebuildGameLocked(int $gameId): ?array
+    {
+        $exists = $this->db->prepare('SELECT id FROM ue_games WHERE id=?');
+        $exists->execute([$gameId]);
+        if ($exists->fetchColumn() === false) {
+            return null;
+        }
+
+        $fileStatement = $this->db->prepare(
+            'SELECT COUNT(*) file_count,'
+            . 'COALESCE(SUM(scan_status="verified"),0) verified_count,'
+            . 'COALESCE(SUM(scan_status="failed"),0) failed_count,'
+            . 'COALESCE(SUM(scan_status="duplicate"),0) duplicate_count,'
+            . 'COALESCE(SUM(scan_status="unverified"),0) unverified_count,'
+            . 'COALESCE(SUM(file_size),0) total_size,'
+            . 'COALESCE(SUM(CASE WHEN scan_status="verified" THEN file_size ELSE 0 END),0) verified_size '
+            . 'FROM ue_files WHERE game_id=?'
+        );
+        $fileStatement->execute([$gameId]);
+        $files = $fileStatement->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        $dependencyStatement = $this->db->prepare(
+            'SELECT COALESCE(SUM(dependency_count),0) dependency_count,'
+            . 'COALESCE(SUM(missing_count),0) missing_dependency_count,'
+            . 'COALESCE(SUM(resolved_count),0) resolved_dependency_count,'
+            . 'COALESCE(SUM(package_only_count),0) package_only_dependency_count,'
+            . 'COALESCE(SUM(common_count),0) common_dependency_count,'
+            . 'COUNT(DISTINCT CASE WHEN missing_count>0 THEN required_package END) missing_package_count '
+            . 'FROM ue_dependency_package_summaries WHERE game_id=?'
+        );
+        $dependencyStatement->execute([$gameId]);
+        $dependencies = $dependencyStatement->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        $baseGameStatement = $this->db->prepare(
+            'SELECT COALESCE(SUM(s.missing_count),0) missing_base_game_dependency_count '
+            . 'FROM ue_dependency_package_summaries s '
+            . 'WHERE s.game_id=? AND s.missing_count>0 AND EXISTS ('
+            . 'SELECT 1 FROM ue_base_game_files bg '
+            . 'LEFT JOIN ue_files src ON src.id=bg.source_file_id '
+            . 'WHERE bg.game_id=s.game_id AND ('
+            . 'LOWER(TRIM(COALESCE(bg.package_name,"")))=LOWER(TRIM(s.required_package)) '
+            . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(bg.original_name,""))>0 '
+            . 'THEN LEFT(bg.original_name,CHAR_LENGTH(bg.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(bg.original_name,".",-1))-1) '
+            . 'ELSE COALESCE(bg.original_name,"") END))=LOWER(TRIM(s.required_package)) '
+            . 'OR LOWER(TRIM(COALESCE(src.package_name,"")))=LOWER(TRIM(s.required_package)) '
+            . 'OR LOWER(TRIM(CASE WHEN LOCATE(".",COALESCE(src.original_name,""))>0 '
+            . 'THEN LEFT(src.original_name,CHAR_LENGTH(src.original_name)-CHAR_LENGTH(SUBSTRING_INDEX(src.original_name,".",-1))-1) '
+            . 'ELSE COALESCE(src.original_name,"") END))=LOWER(TRIM(s.required_package))'
+            . '))'
+        );
+        $baseGameStatement->execute([$gameId]);
+        $baseGame = $baseGameStatement->fetch(PDO::FETCH_ASSOC) ?: [];
+
+        $row = [
+            'game_id' => $gameId,
+            'file_count' => (int)($files['file_count'] ?? 0),
+            'verified_count' => (int)($files['verified_count'] ?? 0),
+            'failed_count' => (int)($files['failed_count'] ?? 0),
+            'duplicate_count' => (int)($files['duplicate_count'] ?? 0),
+            'unverified_count' => (int)($files['unverified_count'] ?? 0),
+            'total_size' => (int)($files['total_size'] ?? 0),
+            'verified_size' => (int)($files['verified_size'] ?? 0),
+            'dependency_count' => (int)($dependencies['dependency_count'] ?? 0),
+            'missing_dependency_count' => (int)($dependencies['missing_dependency_count'] ?? 0),
+            'resolved_dependency_count' => (int)($dependencies['resolved_dependency_count'] ?? 0),
+            'package_only_dependency_count' => (int)($dependencies['package_only_dependency_count'] ?? 0),
+            'common_dependency_count' => (int)($dependencies['common_dependency_count'] ?? 0),
+            'missing_package_count' => (int)($dependencies['missing_package_count'] ?? 0),
+            'missing_base_game_dependency_count' => (int)($baseGame['missing_base_game_dependency_count'] ?? 0),
+        ];
+
+        $statement = $this->db->prepare(
+            'INSERT INTO ue_game_catalog_stats('
+            . 'game_id,file_count,verified_count,failed_count,duplicate_count,unverified_count,total_size,verified_size,'
+            . 'dependency_count,missing_dependency_count,resolved_dependency_count,package_only_dependency_count,'
+            . 'common_dependency_count,missing_package_count,missing_base_game_dependency_count,updated_at'
+            . ') VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW()) '
+            . 'ON DUPLICATE KEY UPDATE '
+            . 'file_count=VALUES(file_count),verified_count=VALUES(verified_count),failed_count=VALUES(failed_count),'
+            . 'duplicate_count=VALUES(duplicate_count),unverified_count=VALUES(unverified_count),'
+            . 'total_size=VALUES(total_size),verified_size=VALUES(verified_size),'
+            . 'dependency_count=VALUES(dependency_count),missing_dependency_count=VALUES(missing_dependency_count),'
+            . 'resolved_dependency_count=VALUES(resolved_dependency_count),'
+            . 'package_only_dependency_count=VALUES(package_only_dependency_count),'
+            . 'common_dependency_count=VALUES(common_dependency_count),missing_package_count=VALUES(missing_package_count),'
+            . 'missing_base_game_dependency_count=VALUES(missing_base_game_dependency_count),updated_at=NOW()'
+        );
+        $statement->execute(array_values($row));
+        return $row;
+    }
+
+    private function isRetryableConcurrencyFailure(Throwable $error): bool
+    {
+        $code = strtoupper(trim((string)$error->getCode()));
+        $message = strtolower(trim($error->getMessage()));
+        return $code === '40001'
+            || str_contains($message, 'deadlock found')
+            || str_contains($message, 'error 1213')
+            || str_contains($message, ' 1213 ')
+            || str_contains($message, 'lock wait timeout')
+            || str_contains($message, 'error 1205')
+            || str_contains($message, ' 1205 ');
     }
 
     public function rebuildAll(): int
