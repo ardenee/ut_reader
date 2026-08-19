@@ -153,9 +153,14 @@ $record(
     'The low-priority stats publisher must yield while real dependency coordinators for the same game remain active.'
 );
 
+$statsOnlyBranch = strpos($handler, "if (!empty(\$job->payload['game_stats_only']))");
+$pakBranch = strpos($handler, 'if ($this->isPakDependencyWorkflow($job))');
 $record(
     'stats_only_job_short_circuits_dependency_planning',
-    preg_match('/if\s*\(!empty\(\$job->payload\[\'game_stats_only\'\]\)\)\s*\{\s*return\s+\$this->rebuildGameStatsOnly/s', $handler) === 1,
+    $statsOnlyBranch !== false
+        && $pakBranch !== false
+        && $statsOnlyBranch < $pakBranch
+        && str_contains($handler, 'return $this->rebuildGameStatsOnly($job, $context, $gameId);'),
     'The shared stats job must never enter the whole-game dependency planner.'
 );
 
