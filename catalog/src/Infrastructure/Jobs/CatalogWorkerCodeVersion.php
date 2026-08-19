@@ -42,6 +42,9 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Import/CatalogBucketPakContainerStore.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobHistoryCleanupJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobSubtreePruner.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobCleanup.php',
         ];
         $parts = [];
         foreach ($paths as $path) {
