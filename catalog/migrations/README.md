@@ -13,6 +13,7 @@ The current migration sequence is:
 - `202608130001_program_upload_settings.php` — adds `ue_program_settings`, currently used for administrator-configurable program/upload ingress limits.
 - `202608140001_verified_metadata_publication_state.php` — adds explicit compact-metadata publication state to `ue_files` (`metadata_status`, `metadata_error`, `metadata_updated_at`) so incomplete verified metadata publication can be detected and repaired rather than silently treated as healthy.
 - `202608170001_unverified_pak_members.php` — links retained neutral Upload Bucket PAK containers to their extracted package children and records ownership so assignment/deletion keeps the PAK and its contained packages together safely.
+- `202608190001_dependency_refresh_performance.php` — adds generated/indexed package identity keys and targeted dependency-link indexes used by high-volume affected-dependency discovery and cached game-stat publication.
 
 A fresh/current deployment loads `catalog/install.sql` and then runs the migration runner so every post-baseline migration is applied.
 
@@ -71,6 +72,12 @@ Current deployments should not assume that `scan_status = verified` by itself me
 This migration is required before a `.pak` can be processed through the neutral Upload Bucket. The original PAK is retained as a container row while each supported extracted package is indexed independently; `ue_unverified_pak_members` records which child belongs to the PAK and whether the PAK owns that child.
 
 The ownership flag is the deletion/assignment safety boundary: an extracted child that was already present as a duplicate is linked but is never deleted merely because the PAK parent is removed.
+
+### `202608190001`
+
+This migration removes the remaining expression-heavy package identity comparisons from cached game-stat rebuilds by materializing normalized package/stem keys as STORED generated columns with supporting indexes. It also adds direct `(required_package_term_id,file_id)` and `(resolved_file_id,file_id)` indexes for affected-dependency discovery.
+
+Apply this migration before restarting workers with the matching dependency-refresh code. `PdoGameCatalogStats` retains the previous expression-based query only as an upgrade-compatibility fallback while the migration is still pending.
 
 ## Applied migrations are byte-immutable
 
