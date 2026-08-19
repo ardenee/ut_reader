@@ -18,6 +18,7 @@ use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogSequentialArchiveReader;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogChunkedUploadCleanup;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogImportPathPolicy;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogIncomingFileStore;
@@ -26,7 +27,7 @@ use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
 final class CatalogArchiveImportJobHandler implements JobHandler
 {
-    private const WORKFLOW_VERSION = 1;
+    private const WORKFLOW_VERSION = 2;
     private const ERROR_RETENTION = 50;
 
     /** @param array<string,mixed> $config */
@@ -63,6 +64,24 @@ final class CatalogArchiveImportJobHandler implements JobHandler
 
         $incoming = new CatalogIncomingFileStore($this->config);
         $sourcePath = $incoming->resolve($stagedPath);
+        $sequential = new CatalogSequentialArchiveReader($this->config);
+        if ($sequential->shouldUse($sourcePath, $originalName)) {
+            return $this->handleSequentialArchive(
+                $job,
+                $context,
+                $profiled,
+                $stagedPath,
+                $originalName,
+                $sourceRelativePath,
+                $userId,
+                $gameId,
+                $strictProfile,
+                $incoming,
+                $sourcePath,
+                $sequential
+            );
+        }
+
         $extractor = new CatalogArchiveExtractor($this->config);
         try {
             $entries = $extractor->entries($sourcePath, $originalName);
@@ -70,47 +89,16 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             if (!$this->isTerminalArchiveCapabilityFailure($error)) {
                 throw $error;
             }
-
-            // The installed decoder has explicitly reported a permanent format
-            // capability gap. Re-running identical durable bytes cannot fix it,
-            // so retain the source and finish visibly as partial instead of
-            // consuming all attempts and producing duplicate retry errors.
-            $decoderError = trim($error->getMessage()) !== '' ? trim($error->getMessage()) : get_class($error);
-            $message = 'Archive could not be expanded because solid RAR support is unavailable in the installed '
-                . 'libarchive build; source archive retained. Decoder: ' . $decoderError;
-            $errors = [[
-                'file' => $sourceRelativePath !== '' ? $sourceRelativePath : $originalName,
-                'error' => $message,
-            ]];
-            $context->checkpoint([
-                'workflow_version' => self::WORKFLOW_VERSION,
-                'stage' => 'complete',
-                'entry_cursor' => 0,
-                'done' => 1,
-                'total' => 1,
-                'percent' => 100,
-                'queued' => 0,
-                'skipped' => 0,
-                'failed' => 1,
-                'unpacked_bytes' => 0,
-                'errors' => $errors,
-                'status' => 'partial',
-                'message' => $message,
-            ]);
-            return [
-                'operation' => $profiled ? 'import_staged_archive' : 'process_bucket_archive',
-                'status' => 'partial',
-                'original_name' => $originalName,
-                'source_relative_path' => $sourceRelativePath,
-                'archive_entries' => 0,
-                'queued_files' => 0,
-                'skipped_files' => 0,
-                'failed_files' => 1,
-                'unpacked_bytes' => 0,
-                'source_retained' => true,
-                'errors' => $errors,
-                'message' => $message,
-            ];
+            return $this->terminalArchiveCapabilityResult(
+                $context,
+                $profiled,
+                $originalName,
+                $sourceRelativePath,
+                0,
+                0,
+                0,
+                $error
+            );
         }
         $allowed = $profiled ? $this->profiledExtensions($gameId) : $this->bucketExtensions();
 
@@ -124,10 +112,7 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         $failed = max(0, (int)($resume['failed'] ?? 0));
         $unpackedBytes = max(0, (int)($resume['unpacked_bytes'] ?? 0));
         $errors = is_array($resume['errors'] ?? null) ? array_values($resume['errors']) : [];
-        $queueName = trim($job->queue);
-        if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
-            throw new \RuntimeException('Archive job queue identity is invalid.');
-        }
+        $queueName = $this->queueName($job);
         $queue = new PdoJobQueue($this->db);
         $total = count($entries);
         $maxTotalBytes = $this->maxTotalUnpackedBytes();
@@ -183,12 +168,8 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 );
             }
 
-            $dedupeKey = 'archive-entry:' . $job->id . ':' . hash('sha256', strtolower($entryPath));
-            $existing = $this->db->prepare(
-                'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
-            );
-            $existing->execute([$queueName, $dedupeKey]);
-            if ((int)($existing->fetchColumn() ?: 0) > 0) {
+            $dedupeKey = $this->dedupeKey($job->id, $entryPath);
+            if ($this->queuedChildExists($queueName, $dedupeKey)) {
                 $queued++;
                 $unpackedBytes += $entryBytes;
                 $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
@@ -204,39 +185,21 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 @unlink($temporary);
                 $temporary = '';
 
-                $memberRelativePath = CatalogImportPathPolicy::relative($sourceRelativePath . '/' . $entryPath);
-                $childType = $profiled
-                    ? ($extension === 'pak' ? JobType::IMPORT_STAGED_PAK : JobType::IMPORT_STAGED_PACKAGE)
-                    : JobType::PROCESS_BUCKET_STAGED_PACKAGE;
-                $childPayload = [
-                    'staged_path' => (string)$staged['relative_path'],
-                    'original_name' => $entryName,
-                    'source_relative_path' => $memberRelativePath,
-                    'user_id' => $userId,
-                    'size' => (int)$staged['size'],
-                    'sha256' => (string)$staged['sha256'],
-                    'archive_parent_job_id' => $job->id,
-                    'archive_source_name' => $originalName,
-                    'archive_entry_path' => $entryPath,
-                ];
-                if ($profiled) {
-                    $childPayload['game_id'] = $gameId;
-                    $childPayload['strict_profile'] = $strictProfile;
-                } else {
-                    $childPayload['source_kind'] = 'archive-entry';
-                }
-
-                $queue->enqueue(
+                $this->enqueueChild(
+                    $queue,
                     $queueName,
-                    $childType,
-                    $childPayload,
-                    5,
-                    null,
-                    $dedupeKey,
+                    $job,
+                    $profiled,
+                    $gameId,
+                    $strictProfile,
                     $userId,
-                    3,
-                    $job->id,
-                    'archive:' . hash('sha256', strtolower($entryPath))
+                    $originalName,
+                    $sourceRelativePath,
+                    $entryPath,
+                    $entryName,
+                    $extension,
+                    $dedupeKey,
+                    $staged
                 );
             } catch (Throwable $error) {
                 if ($temporary !== '') {
@@ -253,14 +216,384 @@ final class CatalogArchiveImportJobHandler implements JobHandler
                 continue;
             }
 
-            // The child now owns its durable staged member. From this point on a
-            // cancellation/lease exception must not remove that child's source.
             $queued++;
             $unpackedBytes += $entryBytes;
             $this->checkpoint($context, $index + 1, $total, $queued, $skipped, $failed, $unpackedBytes, $errors,
                 'Queued archive member ' . $entryPath . '.');
         }
 
+        return $this->completeArchive(
+            $context,
+            $profiled,
+            $stagedPath,
+            $originalName,
+            $sourceRelativePath,
+            $incoming,
+            $total,
+            $queued,
+            $skipped,
+            $failed,
+            $unpackedBytes,
+            $errors
+        );
+    }
+
+    /** @return array<string,mixed> */
+    private function handleSequentialArchive(
+        ClaimedJob $job,
+        JobExecutionContext $context,
+        bool $profiled,
+        string $stagedPath,
+        string $originalName,
+        string $sourceRelativePath,
+        int $userId,
+        int $gameId,
+        bool $strictProfile,
+        CatalogIncomingFileStore $incoming,
+        string $sourcePath,
+        CatalogSequentialArchiveReader $reader
+    ): array {
+        $allowed = $profiled ? $this->profiledExtensions($gameId) : $this->bucketExtensions();
+        $queueName = $this->queueName($job);
+        $queue = new PdoJobQueue($this->db);
+        $maxTotalBytes = $this->maxTotalUnpackedBytes();
+
+        // A sequential retry must begin at the archive start to rebuild solid
+        // decompression state. Recompute counters from this pass; already-created
+        // child jobs are recognized by dedupe key and are not enqueued twice.
+        $processed = 0;
+        $queued = 0;
+        $skipped = 0;
+        $failed = 0;
+        $unpackedBytes = 0;
+        $errors = [];
+
+        $plan = function (array $entry) use ($allowed, $queueName, $job): array {
+            $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
+            if (empty($entry['safe'])) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'failed',
+                        'reason' => 'Unsafe archive path: ' . trim((string)($entry['reason'] ?? 'invalid member path')),
+                    ],
+                ];
+            }
+            if (!empty($entry['encrypted'])) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'failed',
+                        'reason' => 'Encrypted/password-protected archive member is not supported.',
+                    ],
+                ];
+            }
+
+            $entryName = CatalogImportPathPolicy::filename(basename($entryPath));
+            $extension = strtolower((string)pathinfo($entryName, PATHINFO_EXTENSION));
+            if (CatalogArchiveExtractor::isArchiveName($entryName)) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'skipped',
+                        'reason' => 'Skipped nested archive ' . $entryPath . '.',
+                    ],
+                ];
+            }
+            if (!isset($allowed[$extension])) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'skipped',
+                        'reason' => 'Skipped unsupported archive member ' . $entryPath . '.',
+                    ],
+                ];
+            }
+
+            $entryBytes = max(0, (int)($entry['size'] ?? 0));
+            $entryLimit = $extension === 'pak' ? $this->containerLimitBytes() : $this->normalLimitBytes();
+            if ($entryBytes < 1 || $entryBytes > $entryLimit) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'failed',
+                        'reason' => 'Archive member ' . $entryPath . ' exceeds its configured import limit.',
+                    ],
+                ];
+            }
+
+            $dedupeKey = $this->dedupeKey($job->id, $entryPath);
+            if ($this->queuedChildExists($queueName, $dedupeKey)) {
+                return [
+                    'extract' => false,
+                    'state' => [
+                        'kind' => 'reused',
+                        'entry_name' => $entryName,
+                        'extension' => $extension,
+                        'dedupe_key' => $dedupeKey,
+                    ],
+                ];
+            }
+
+            return [
+                'extract' => true,
+                'max_bytes' => $entryLimit,
+                'state' => [
+                    'kind' => 'extract',
+                    'entry_name' => $entryName,
+                    'extension' => $extension,
+                    'dedupe_key' => $dedupeKey,
+                ],
+            ];
+        };
+
+        $complete = function (array $entry, ?string $temporary, mixed $state) use (
+            &$processed,
+            &$queued,
+            &$skipped,
+            &$failed,
+            &$unpackedBytes,
+            &$errors,
+            $context,
+            $queue,
+            $queueName,
+            $job,
+            $profiled,
+            $gameId,
+            $strictProfile,
+            $userId,
+            $originalName,
+            $sourceRelativePath,
+            $incoming
+        ): void {
+            $processed++;
+            $entryPath = str_replace('\\', '/', (string)($entry['path'] ?? ''));
+            $entryBytes = max(0, (int)($entry['size'] ?? 0));
+            $state = is_array($state) ? $state : [];
+            $kind = (string)($state['kind'] ?? 'failed');
+
+            if ($kind === 'failed') {
+                $failed++;
+                $reason = trim((string)($state['reason'] ?? 'Archive member could not be processed.'));
+                $errors = $this->retainError($errors, $entryPath, $reason);
+                $this->sequentialCheckpoint(
+                    $context,
+                    $processed,
+                    $queued,
+                    $skipped,
+                    $failed,
+                    $unpackedBytes,
+                    $errors,
+                    $reason
+                );
+                return;
+            }
+            if ($kind === 'skipped') {
+                $skipped++;
+                $this->sequentialCheckpoint(
+                    $context,
+                    $processed,
+                    $queued,
+                    $skipped,
+                    $failed,
+                    $unpackedBytes,
+                    $errors,
+                    (string)($state['reason'] ?? ('Skipped ' . $entryPath . '.'))
+                );
+                return;
+            }
+            if ($kind === 'reused') {
+                $queued++;
+                $unpackedBytes += $entryBytes;
+                $this->sequentialCheckpoint(
+                    $context,
+                    $processed,
+                    $queued,
+                    $skipped,
+                    $failed,
+                    $unpackedBytes,
+                    $errors,
+                    'Reused already queued archive member ' . $entryPath . '.'
+                );
+                return;
+            }
+
+            $entryName = (string)($state['entry_name'] ?? CatalogImportPathPolicy::filename(basename($entryPath)));
+            $extension = (string)($state['extension'] ?? strtolower((string)pathinfo($entryName, PATHINFO_EXTENSION)));
+            $dedupeKey = (string)($state['dedupe_key'] ?? $this->dedupeKey($job->id, $entryPath));
+            $staged = null;
+            try {
+                if ($temporary === null || !is_file($temporary)) {
+                    throw new \RuntimeException('Sequential archive member temporary file is unavailable.');
+                }
+                $staged = $incoming->stageLocalFile($temporary, $entryName);
+                $this->enqueueChild(
+                    $queue,
+                    $queueName,
+                    $job,
+                    $profiled,
+                    $gameId,
+                    $strictProfile,
+                    $userId,
+                    $originalName,
+                    $sourceRelativePath,
+                    $entryPath,
+                    $entryName,
+                    $extension,
+                    $dedupeKey,
+                    $staged
+                );
+            } catch (Throwable $error) {
+                if (is_array($staged)) {
+                    $incoming->delete((string)($staged['relative_path'] ?? ''));
+                }
+                $failed++;
+                $message = trim($error->getMessage()) !== '' ? trim($error->getMessage()) : get_class($error);
+                $errors = $this->retainError($errors, $entryPath, $message);
+                $this->sequentialCheckpoint(
+                    $context,
+                    $processed,
+                    $queued,
+                    $skipped,
+                    $failed,
+                    $unpackedBytes,
+                    $errors,
+                    'Archive member failed: ' . $entryPath . ' — ' . $message
+                );
+                return;
+            }
+
+            $queued++;
+            $unpackedBytes += $entryBytes;
+            $this->sequentialCheckpoint(
+                $context,
+                $processed,
+                $queued,
+                $skipped,
+                $failed,
+                $unpackedBytes,
+                $errors,
+                'Queued archive member ' . $entryPath . ' from the sequential archive stream.'
+            );
+        };
+
+        try {
+            $walk = $reader->walk(
+                $sourcePath,
+                $originalName,
+                $maxTotalBytes,
+                $plan,
+                $complete,
+                static function () use ($context): void {
+                    $context->heartbeatIfDue();
+                }
+            );
+        } catch (Throwable $error) {
+            if (!$this->isTerminalArchiveCapabilityFailure($error)) {
+                throw $error;
+            }
+            return $this->terminalArchiveCapabilityResult(
+                $context,
+                $profiled,
+                $originalName,
+                $sourceRelativePath,
+                $queued,
+                $skipped,
+                $unpackedBytes,
+                $error,
+                $failed,
+                $errors
+            );
+        }
+
+        return $this->completeArchive(
+            $context,
+            $profiled,
+            $stagedPath,
+            $originalName,
+            $sourceRelativePath,
+            $incoming,
+            (int)($walk['entries'] ?? $processed),
+            $queued,
+            $skipped,
+            $failed,
+            $unpackedBytes,
+            $errors,
+            true,
+            (string)($walk['format'] ?? '')
+        );
+    }
+
+    /** @param array<string,mixed> $staged */
+    private function enqueueChild(
+        PdoJobQueue $queue,
+        string $queueName,
+        ClaimedJob $job,
+        bool $profiled,
+        int $gameId,
+        bool $strictProfile,
+        int $userId,
+        string $originalName,
+        string $sourceRelativePath,
+        string $entryPath,
+        string $entryName,
+        string $extension,
+        string $dedupeKey,
+        array $staged
+    ): void {
+        $memberRelativePath = CatalogImportPathPolicy::relative($sourceRelativePath . '/' . $entryPath);
+        $childType = $profiled
+            ? ($extension === 'pak' ? JobType::IMPORT_STAGED_PAK : JobType::IMPORT_STAGED_PACKAGE)
+            : JobType::PROCESS_BUCKET_STAGED_PACKAGE;
+        $childPayload = [
+            'staged_path' => (string)$staged['relative_path'],
+            'original_name' => $entryName,
+            'source_relative_path' => $memberRelativePath,
+            'user_id' => $userId,
+            'size' => (int)$staged['size'],
+            'sha256' => (string)$staged['sha256'],
+            'archive_parent_job_id' => $job->id,
+            'archive_source_name' => $originalName,
+            'archive_entry_path' => $entryPath,
+        ];
+        if ($profiled) {
+            $childPayload['game_id'] = $gameId;
+            $childPayload['strict_profile'] = $strictProfile;
+        } else {
+            $childPayload['source_kind'] = 'archive-entry';
+        }
+
+        $queue->enqueue(
+            $queueName,
+            $childType,
+            $childPayload,
+            5,
+            null,
+            $dedupeKey,
+            $userId,
+            3,
+            $job->id,
+            'archive:' . hash('sha256', strtolower($entryPath))
+        );
+    }
+
+    /** @return array<string,mixed> */
+    private function completeArchive(
+        JobExecutionContext $context,
+        bool $profiled,
+        string $stagedPath,
+        string $originalName,
+        string $sourceRelativePath,
+        CatalogIncomingFileStore $incoming,
+        int $total,
+        int $queued,
+        int $skipped,
+        int $failed,
+        int $unpackedBytes,
+        array $errors,
+        bool $sequential = false,
+        string $format = ''
+    ): array {
         $sourceRetained = $failed > 0;
         if (!$sourceRetained) {
             $this->deleteSource($stagedPath, $incoming);
@@ -273,6 +606,10 @@ final class CatalogArchiveImportJobHandler implements JobHandler
         }
         if ($failed > 0) {
             $message .= ', ' . number_format($failed) . ' member(s) failed; source archive retained';
+        }
+        if ($sequential) {
+            $label = $format === '7z' ? '7-Zip' : strtoupper($format);
+            $message .= '; ' . ($label !== '' ? $label . ' ' : '') . 'members were consumed sequentially on one libarchive handle';
         }
         $message .= '.';
 
@@ -289,6 +626,8 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'unpacked_bytes' => $unpackedBytes,
             'errors' => $errors,
             'status' => $status,
+            'sequential_archive' => $sequential,
+            'archive_format' => $format,
             'message' => $message,
         ]);
 
@@ -303,9 +642,90 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'failed_files' => $failed,
             'unpacked_bytes' => $unpackedBytes,
             'source_retained' => $sourceRetained,
+            'sequential_archive' => $sequential,
+            'archive_format' => $format,
             'errors' => $errors,
             'message' => $message,
         ];
+    }
+
+    /** @return array<string,mixed> */
+    private function terminalArchiveCapabilityResult(
+        JobExecutionContext $context,
+        bool $profiled,
+        string $originalName,
+        string $sourceRelativePath,
+        int $queued,
+        int $skipped,
+        int $unpackedBytes,
+        Throwable $error,
+        int $failed = 0,
+        array $errors = []
+    ): array {
+        $decoderError = trim($error->getMessage()) !== '' ? trim($error->getMessage()) : get_class($error);
+        $message = 'Archive could not be fully expanded because solid RAR support is unavailable in the installed '
+            . 'libarchive build even during sequential streaming; source archive retained. Decoder: ' . $decoderError;
+        $failed++;
+        $errors = $this->retainError(
+            $errors,
+            $sourceRelativePath !== '' ? $sourceRelativePath : $originalName,
+            $message
+        );
+        $total = max(1, $queued + $skipped + $failed);
+        $context->checkpoint([
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'stage' => 'complete',
+            'entry_cursor' => $total,
+            'done' => $total,
+            'total' => $total,
+            'percent' => 100,
+            'queued' => $queued,
+            'skipped' => $skipped,
+            'failed' => $failed,
+            'unpacked_bytes' => $unpackedBytes,
+            'errors' => $errors,
+            'status' => 'partial',
+            'sequential_archive' => true,
+            'message' => $message,
+        ]);
+        return [
+            'operation' => $profiled ? 'import_staged_archive' : 'process_bucket_archive',
+            'status' => 'partial',
+            'original_name' => $originalName,
+            'source_relative_path' => $sourceRelativePath,
+            'archive_entries' => $total,
+            'queued_files' => $queued,
+            'skipped_files' => $skipped,
+            'failed_files' => $failed,
+            'unpacked_bytes' => $unpackedBytes,
+            'source_retained' => true,
+            'sequential_archive' => true,
+            'errors' => $errors,
+            'message' => $message,
+        ];
+    }
+
+    private function queueName(ClaimedJob $job): string
+    {
+        $queueName = trim($job->queue);
+        if ($queueName === '' || strlen($queueName) > 80 || preg_match('/^[A-Za-z0-9._:-]+$/', $queueName) !== 1) {
+            throw new \RuntimeException('Archive job queue identity is invalid.');
+        }
+        return $queueName;
+    }
+
+    private function dedupeKey(int $jobId, string $entryPath): string
+    {
+        return 'archive-entry:' . $jobId . ':' . hash('sha256', strtolower($entryPath));
+    }
+
+    private function queuedChildExists(string $queueName, string $dedupeKey): bool
+    {
+        $existing = $this->db->prepare(
+            'SELECT id FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
+        );
+        $existing->execute([$queueName, $dedupeKey]);
+        return (int)($existing->fetchColumn() ?: 0) > 0;
     }
 
     private function isTerminalArchiveCapabilityFailure(Throwable $error): bool
@@ -402,6 +822,35 @@ final class CatalogArchiveImportJobHandler implements JobHandler
             'unpacked_bytes' => $unpackedBytes,
             'errors' => $errors,
             'message' => $message,
+        ]);
+    }
+
+    /** @param list<array{file:string,error:string}> $errors */
+    private function sequentialCheckpoint(
+        JobExecutionContext $context,
+        int $processed,
+        int $queued,
+        int $skipped,
+        int $failed,
+        int $unpackedBytes,
+        array $errors,
+        string $message
+    ): void {
+        $totalHint = max(1, $processed + 1);
+        $context->checkpoint([
+            'workflow_version' => self::WORKFLOW_VERSION,
+            'stage' => 'expand_archive_sequential',
+            'entry_cursor' => $processed,
+            'done' => $processed,
+            'total' => $totalHint,
+            'percent' => min(95, (int)floor(($processed * 100) / $totalHint)),
+            'queued' => $queued,
+            'skipped' => $skipped,
+            'failed' => $failed,
+            'unpacked_bytes' => $unpackedBytes,
+            'errors' => $errors,
+            'sequential_archive' => true,
+            'message' => $message . ' ' . number_format($processed) . ' member(s) consumed sequentially.',
         ]);
     }
 
