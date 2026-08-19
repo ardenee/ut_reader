@@ -49,9 +49,9 @@ $check(
 
 $check(
     'worker_factory_executes_cleanup_job',
-    str_contains($factory, 'new CatalogBackgroundJobHistoryCleanupJobHandler')
-        && str_contains($factory, 'JobType::CLEAN_BACKGROUND_JOB_HISTORY => $jobHistoryCleanup'),
-    'A queued history cleanup must have a registered worker handler.'
+    str_contains($factory, 'JobType::CLEAN_BACKGROUND_JOB_HISTORY')
+        && str_contains($factory, 'new CatalogBackgroundJobHistoryCleanupJobHandler($db, $config)'),
+    'A queued history cleanup must have a registered worker handler, including the current lazy-factory route.'
 );
 
 $check(
@@ -156,12 +156,13 @@ $check(
 );
 
 $check(
-    'stable_client_still_owns_general_job_ui',
+    'stable_client_remains_primary_with_scoped_cleanup_interception',
     str_contains($stableClient, "cleanupButton.addEventListener('click'")
         && str_contains($stableClient, 'runBulk(')
-        && str_contains($cleanupClient, 'all other')
-        && str_contains($cleanupClient, 'background-jobs-stable.js'),
-    'The compatibility shim should only correct async cleanup notices, not replace the established Background Jobs client.'
+        && str_contains($cleanupClient, 'const isBulkDelete =')
+        && str_contains($cleanupClient, 'const isRetentionCleanup =')
+        && str_contains($cleanupClient, 'if (!isBulkDelete && !isRetentionCleanup) return response;'),
+    'The established Background Jobs client must remain present while async cleanup response handling stays explicitly scoped to cleanup requests.'
 );
 
 $syntaxFailures = [];
