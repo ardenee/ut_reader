@@ -87,6 +87,37 @@ try {
         ],
     ]);
 } catch (Throwable $exception) {
-    error_log('[UnrealDB job status API] ' . $exception->getMessage());
+    $requestId = function_exists('catalog_request_id') ? catalog_request_id() : '';
+    $message = trim($exception->getMessage()) !== ''
+        ? trim($exception->getMessage())
+        : get_class($exception) . ' was thrown without an error message.';
+    $detail = get_class($exception) . ': ' . $message . ' at '
+        . str_replace('\\', '/', $exception->getFile()) . ':' . $exception->getLine();
+    error_log('[UnrealDB job status API]'
+        . ($requestId !== '' ? '[' . $requestId . ']' : '') . ' ' . $detail);
+
+    if (function_exists('catalog_system_error_record')) {
+        try {
+            catalog_system_error_record([
+                'source_kind' => 'api',
+                'severity' => 'critical',
+                'error_type' => get_class($exception),
+                'message' => $message,
+                'http_status' => 503,
+                'source_file' => $exception->getFile(),
+                'source_line' => $exception->getLine(),
+                'trace_text' => $exception->getTraceAsString(),
+                'request_id' => $requestId,
+                'context' => [
+                    'endpoint' => 'job-status',
+                    'job_id' => isset($jobId) ? $jobId : 0,
+                    'queue' => isset($queue) ? $queue : '',
+                    'status' => isset($status) ? $status : '',
+                ],
+            ]);
+        } catch (Throwable) {
+        }
+    }
+
     JsonResponse::error('unavailable', 'The jobs service is temporarily unavailable.', 503);
 }
