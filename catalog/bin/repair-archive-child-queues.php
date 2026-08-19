@@ -64,6 +64,8 @@ SQL;
             $update = $db->prepare(
                 'UPDATE ue_background_jobs c '
                 . 'JOIN ue_background_jobs p ON p.id=c.parent_job_id '
+                . 'LEFT JOIN ue_background_jobs x '
+                . 'ON x.id<>c.id AND x.queue_name=p.queue_name AND x.dedupe_key=c.dedupe_key '
                 . 'SET c.queue_name=p.queue_name '
                 . 'WHERE c.status="queued" '
                 . 'AND c.queue_name<>p.queue_name '
@@ -75,9 +77,7 @@ SQL;
                 . 'AND p.job_type IN ('
                 . '"catalog.process_bucket_archive",'
                 . '"catalog.import_staged_archive") '
-                . 'AND (c.dedupe_key IS NULL OR NOT EXISTS('
-                . 'SELECT 1 FROM ue_background_jobs x '
-                . 'WHERE x.id<>c.id AND x.queue_name=p.queue_name AND x.dedupe_key=c.dedupe_key LIMIT 1))'
+                . 'AND (c.dedupe_key IS NULL OR x.id IS NULL)'
             );
             $update->execute();
             $updated = max(0, $update->rowCount());
