@@ -60,6 +60,7 @@ final class CatalogAffectedDependencyBatchService
 
         $done = $resuming ? max(0, min($total, (int)($resume['done'] ?? 0))) : 0;
         $processedIds = $this->idSet($resuming ? ($resume['processed_file_ids'] ?? []) : []);
+        $changedIds = $this->idSet($resuming ? ($resume['changed_file_ids'] ?? []) : []);
         $skippedIds = $this->idSet($resuming ? ($resume['skipped_file_ids'] ?? []) : []);
         $retryIds = $this->idSet($resuming ? ($resume['retry_file_ids'] ?? []) : []);
         $importsProcessed = $resuming ? max(0, (int)($resume['imports_processed'] ?? 0)) : 0;
@@ -78,8 +79,12 @@ final class CatalogAffectedDependencyBatchService
                     $skippedIds[$affectedFileId] = true;
                 } else {
                     $processedIds[$affectedFileId] = true;
+                    $fileChanges = max(0, (int)($result['dependencies_changed'] ?? 0));
+                    if ($fileChanges > 0) {
+                        $changedIds[$affectedFileId] = true;
+                    }
                     $importsProcessed += max(0, (int)($result['imports_processed'] ?? 0));
-                    $dependenciesChanged += max(0, (int)($result['dependencies_changed'] ?? 0));
+                    $dependenciesChanged += $fileChanges;
                     if (!empty($result['container_rewritten'])) {
                         $containersRewritten++;
                     }
@@ -130,6 +135,7 @@ final class CatalogAffectedDependencyBatchService
                 $done,
                 $total,
                 $processedIds,
+                $changedIds,
                 $skippedIds,
                 $retryIds,
                 $importsProcessed,
@@ -157,13 +163,15 @@ final class CatalogAffectedDependencyBatchService
             $total,
             $total,
             $processedIds,
+            $changedIds,
             $skippedIds,
             $retryIds,
             $importsProcessed,
             $dependenciesChanged,
             $containersRewritten,
             'Affected dependency batch complete: ' . count($processedIds) . ' refreshed, '
-                . count($skippedIds) . ' skipped, ' . count($retryIds) . ' isolated retry file(s).',
+                . count($changedIds) . ' changed, ' . count($skippedIds) . ' skipped, '
+                . count($retryIds) . ' isolated retry file(s).',
             'complete'
         ));
 
@@ -175,9 +183,11 @@ final class CatalogAffectedDependencyBatchService
             'package_name' => $packageName,
             'requested_files' => $total,
             'processed_files' => count($processedIds),
+            'changed_files' => count($changedIds),
             'skipped_files' => count($skippedIds),
             'retry_scheduled' => count($retryIds),
             'processed_file_ids' => array_map('intval', array_keys($processedIds)),
+            'changed_file_ids' => array_map('intval', array_keys($changedIds)),
             'skipped_file_ids' => array_map('intval', array_keys($skippedIds)),
             'retry_file_ids' => array_map('intval', array_keys($retryIds)),
             'imports_processed' => $importsProcessed,
@@ -240,6 +250,7 @@ final class CatalogAffectedDependencyBatchService
 
     /**
      * @param array<int,true> $processedIds
+     * @param array<int,true> $changedIds
      * @param array<int,true> $skippedIds
      * @param array<int,true> $retryIds
      * @return array<string,mixed>
@@ -249,6 +260,7 @@ final class CatalogAffectedDependencyBatchService
         int $done,
         int $total,
         array $processedIds,
+        array $changedIds,
         array $skippedIds,
         array $retryIds,
         int $importsProcessed,
@@ -265,6 +277,7 @@ final class CatalogAffectedDependencyBatchService
             'percent' => (int)floor(($done * 100) / max(1, $total)),
             'completed_files' => count($processedIds) + count($skippedIds),
             'processed_file_ids' => array_map('intval', array_keys($processedIds)),
+            'changed_file_ids' => array_map('intval', array_keys($changedIds)),
             'skipped_file_ids' => array_map('intval', array_keys($skippedIds)),
             'retry_file_ids' => array_map('intval', array_keys($retryIds)),
             'imports_processed' => $importsProcessed,

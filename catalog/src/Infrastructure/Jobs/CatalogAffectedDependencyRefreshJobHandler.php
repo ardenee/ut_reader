@@ -21,7 +21,6 @@ use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoCatalogDependencyRebuilder;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoContention;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoDependencyPackageSummary;
-use UnrealDb\Catalog\Infrastructure\Persistence\PdoGameCatalogStats;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoPackageProviderRepository;
 
@@ -216,7 +215,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             $context->checkpoint($this->progress(
                 'affected_finalize',
                 88,
-                'All affected file work completed; publishing dependency summaries and game counters.',
+                'All affected file work completed; publishing changed dependency summaries and scheduling cached game counters.',
                 [
                     'package_name' => $packageName,
                     'affected_total' => $affectedTotal,
@@ -234,14 +233,15 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
 
         $aggregate = $this->aggregateFileUnits($job->id);
         $summaryRows = 0;
-        if ($aggregate['processed_file_ids'] !== []) {
+        if ($aggregate['changed_file_ids'] !== []) {
             $context->checkpoint($this->progress(
                 'affected_finalize',
                 92,
-                'Bulk-refreshing dependency summaries for ' . count($aggregate['processed_file_ids']) . ' file(s).',
+                'Bulk-refreshing dependency summaries for ' . count($aggregate['changed_file_ids'])
+                    . ' changed file(s).',
                 ['package_name' => $packageName]
             ));
-            $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFiles($aggregate['processed_file_ids']);
+            $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFiles($aggregate['changed_file_ids']);
             if (empty($summary['available'])) {
                 throw new RuntimeException('Dependency package summary projection is unavailable after affected refresh.');
             }
@@ -251,10 +251,17 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         $context->checkpoint($this->progress(
             'affected_finalize',
             97,
-            'Refreshing cached game counters after affected dependency work.',
+            'Scheduling one coalesced cached game-counter refresh after affected dependency work.',
             ['package_name' => $packageName, 'game_id' => $gameId]
         ));
-        $gameStats = $this->refreshGameStats($gameId);
+        $requestedBy = (int)($job->payload['requested_by'] ?? 0);
+        $statsJobId = CatalogGameStatsRefreshCoordinator::request(
+            $this->db,
+            $job->queue,
+            $gameId,
+            $requestedBy > 0 ? $requestedBy : null
+        );
+
         $children = $this->childState($job->id);
         $affectedTotal = max(
             (int)($resume['affected_total'] ?? 0),
@@ -262,15 +269,18 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         );
 
         $message = 'Affected dependency refresh complete for ' . $packageName . ': '
-            . $aggregate['processed_files'] . ' processed, ' . $aggregate['skipped_files'] . ' skipped, '
-            . $aggregate['dependencies_changed'] . ' dependency change(s).';
+            . $aggregate['processed_files'] . ' processed, ' . $aggregate['changed_files'] . ' changed, '
+            . $aggregate['skipped_files'] . ' skipped, ' . $aggregate['dependencies_changed']
+            . ' dependency change(s); cached counters coalesced into job #' . $statsJobId . '.';
         $context->checkpoint($this->progress('complete', 100, $message, [
             'package_name' => $packageName,
             'affected_total' => $affectedTotal,
             'children' => $children,
             'processed' => $aggregate['processed_files'],
+            'changed' => $aggregate['changed_files'],
             'skipped' => $aggregate['skipped_files'],
             'dependencies_changed' => $aggregate['dependencies_changed'],
+            'game_stats_refresh_job_id' => $statsJobId,
         ]));
 
         return [
@@ -283,12 +293,14 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'original_name' => (string)$source['original_name'],
             'affected_files' => $affectedTotal,
             'processed_files' => $aggregate['processed_files'],
+            'changed_files' => $aggregate['changed_files'],
             'skipped_files' => $aggregate['skipped_files'],
             'imports_processed' => $aggregate['imports_processed'],
             'dependencies_changed' => $aggregate['dependencies_changed'],
             'containers_rewritten' => $aggregate['containers_rewritten'],
             'dependency_summary_rows' => $summaryRows,
-            'game_stats_refreshed' => $gameStats !== null,
+            'game_stats_refreshed' => false,
+            'game_stats_refresh_job_id' => $statsJobId,
             'failure_count' => 0,
             'failures' => [],
             'children' => $children,
@@ -362,9 +374,11 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             ));
         }
 
+        // existingBatchCount() includes any batches just inserted above. Returning
+        // the durable count avoids double-reporting newly planned batches.
         return [
             'total_files' => count($affectedIds),
-            'batches' => $plannedBatches + $this->existingBatchCount($job->id),
+            'batches' => $this->existingBatchCount($job->id),
         ];
     }
 
@@ -542,6 +556,7 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         $skipped = !empty($result['skipped_missing_file']);
         $importsProcessed = max(0, (int)($result['imports_processed'] ?? 0));
         $dependenciesChanged = max(0, (int)($result['dependencies_changed'] ?? 0));
+        $changedFileIds = !$skipped && $dependenciesChanged > 0 ? [$affectedFileId] : [];
 
         $context->checkpoint([
             'stage' => 'complete',
@@ -565,6 +580,8 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'game_id' => (int)$source['game_id'],
             'package_name' => $packageName,
             'affected_file_id' => $affectedFileId,
+            'changed_files' => count($changedFileIds),
+            'changed_file_ids' => $changedFileIds,
             'skipped_missing_file' => $skipped,
             'imports_processed' => $importsProcessed,
             'dependencies_changed' => $dependenciesChanged,
@@ -663,10 +680,16 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
         ];
     }
 
-    /** @return array{processed_files:int,skipped_files:int,imports_processed:int,dependencies_changed:int,containers_rewritten:int,processed_file_ids:list<int>} */
+    /**
+     * @return array{
+     *   processed_files:int,changed_files:int,skipped_files:int,imports_processed:int,
+     *   dependencies_changed:int,containers_rewritten:int,processed_file_ids:list<int>,changed_file_ids:list<int>
+     * }
+     */
     private function aggregateFileUnits(int $parentJobId): array
     {
         $processedIds = [];
+        $changedIds = [];
         $skippedIds = [];
         $imports = 0;
         $changed = 0;
@@ -682,11 +705,13 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                 continue;
             }
 
+            $resultProcessedIds = [];
             if (is_array($result['processed_file_ids'] ?? null)) {
                 foreach ($result['processed_file_ids'] as $id) {
                     $id = (int)$id;
                     if ($id > 0) {
                         $processedIds[$id] = $id;
+                        $resultProcessedIds[$id] = $id;
                     }
                 }
             }
@@ -705,25 +730,48 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
                     $skippedIds[$affectedFileId] = $affectedFileId;
                 } else {
                     $processedIds[$affectedFileId] = $affectedFileId;
+                    $resultProcessedIds[$affectedFileId] = $affectedFileId;
+                }
+            }
+
+            $resultDependencyChanges = max(0, (int)($result['dependencies_changed'] ?? 0));
+            $hasExplicitChangedIds = is_array($result['changed_file_ids'] ?? null);
+            if ($hasExplicitChangedIds) {
+                foreach ($result['changed_file_ids'] as $id) {
+                    $id = (int)$id;
+                    if ($id > 0) {
+                        $changedIds[$id] = $id;
+                    }
+                }
+            } elseif ($resultDependencyChanges > 0) {
+                // Compatibility for completed pre-change batch rows. They only
+                // recorded an aggregate change count, so all processed owners in
+                // that old row are conservatively republished once. New rows carry
+                // exact changed_file_ids and avoid this fallback entirely.
+                foreach ($resultProcessedIds as $id) {
+                    $changedIds[$id] = $id;
                 }
             }
 
             $imports += max(0, (int)($result['imports_processed'] ?? 0));
-            $changed += max(0, (int)($result['dependencies_changed'] ?? 0));
+            $changed += $resultDependencyChanges;
             $rewritten += max(0, (int)($result['containers_rewritten'] ?? 0));
             if (!empty($result['container_rewritten'])) {
                 $rewritten++;
             }
         }
         ksort($processedIds, SORT_NUMERIC);
+        ksort($changedIds, SORT_NUMERIC);
         ksort($skippedIds, SORT_NUMERIC);
         return [
             'processed_files' => count($processedIds),
+            'changed_files' => count($changedIds),
             'skipped_files' => count($skippedIds),
             'imports_processed' => $imports,
             'dependencies_changed' => $changed,
             'containers_rewritten' => $rewritten,
             'processed_file_ids' => array_values($processedIds),
+            'changed_file_ids' => array_values($changedIds),
         ];
     }
 
@@ -761,27 +809,6 @@ final class CatalogAffectedDependencyRefreshJobHandler implements JobHandler
             'processed_files' => 0,
             'failure_count' => 0,
         ];
-    }
-
-    /** @return array<string,int>|null */
-    private function refreshGameStats(int $gameId): ?array
-    {
-        $stats = new PdoGameCatalogStats($this->db);
-        if (!$stats->available()) {
-            return null;
-        }
-        for ($attempt = 1; $attempt <= 3; $attempt++) {
-            $result = $stats->rebuildGame($gameId, 5);
-            if (is_array($result)) {
-                return $result;
-            }
-            if ($attempt < 3) {
-                usleep(100000 * $attempt);
-            }
-        }
-        throw new RuntimeException(
-            'Could not refresh cached game counters after affected dependency work due to concurrent stats work.'
-        );
     }
 
     /** @param array<string,mixed> $extra @return array<string,mixed> */

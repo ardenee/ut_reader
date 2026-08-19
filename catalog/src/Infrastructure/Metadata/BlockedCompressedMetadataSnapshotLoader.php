@@ -17,7 +17,7 @@ namespace UnrealDb\Catalog\Infrastructure\Metadata;
 use PDO;
 use RuntimeException;
 
-/** Loads a complete in-memory snapshot from a format-2 blocked container. */
+/** Loads complete or dependency-only snapshots from a format-2 blocked container. */
 final class BlockedCompressedMetadataSnapshotLoader
 {
     private const PAGE_SIZE = 5000;
@@ -33,6 +33,74 @@ final class BlockedCompressedMetadataSnapshotLoader
 
     /** @return array<string,mixed> */
     public function load(int $fileId): array
+    {
+        $file = $this->loadFileRow($fileId);
+        $reader = new BlockedCompressedMetadataReader($this->db, $this->storageRoot);
+        $names = $this->loadSection($reader, $fileId, 'names', (int)$file['name_count']);
+        $imports = $this->loadSection($reader, $fileId, 'imports', (int)$file['import_count']);
+        $exports = $this->loadSection($reader, $fileId, 'exports', (int)$file['export_count']);
+        $dependencies = $this->decorateDependencies(
+            $fileId,
+            $this->loadSection($reader, $fileId, 'dependencies', (int)$file['import_count'])
+        );
+
+        $paths = ['imports' => [], 'exports' => []];
+        foreach ($imports as $row) {
+            $index = (int)$row['import_index'];
+            $paths['imports'][$index] = [
+                'full' => (string)$row['full_path'],
+                'root' => (string)$row['root_package'],
+                'relative' => (string)$row['relative_object_path'],
+            ];
+        }
+        foreach ($exports as $row) {
+            $index = (int)$row['export_index'];
+            $paths['exports'][$index] = [
+                'local' => (string)$row['local_path'],
+                'full' => (string)$row['full_path'],
+            ];
+        }
+
+        return [
+            'file' => $this->snapshotFile($fileId, $file),
+            'names' => $names,
+            'imports' => $imports,
+            'exports' => $exports,
+            'dependencies' => $dependencies,
+            'paths' => $paths,
+            'source_format' => 'blocked-metadata-v2',
+        ];
+    }
+
+    /**
+     * Load only the sections required to re-resolve dependencies.
+     *
+     * Targeted provider refreshes frequently confirm that the current resolution
+     * is already correct. Avoid inflating names and exports for that no-change
+     * path; callers can request load() only when a container rewrite is needed.
+     *
+     * @return array<string,mixed>
+     */
+    public function loadDependencySnapshot(int $fileId): array
+    {
+        $file = $this->loadFileRow($fileId);
+        $reader = new BlockedCompressedMetadataReader($this->db, $this->storageRoot);
+        $imports = $this->loadSection($reader, $fileId, 'imports', (int)$file['import_count']);
+        $dependencies = $this->decorateDependencies(
+            $fileId,
+            $this->loadSection($reader, $fileId, 'dependencies', (int)$file['import_count'])
+        );
+
+        return [
+            'file' => $this->snapshotFile($fileId, $file),
+            'imports' => $imports,
+            'dependencies' => $dependencies,
+            'source_format' => 'blocked-metadata-v2-dependencies',
+        ];
+    }
+
+    /** @return array<string,mixed> */
+    private function loadFileRow(int $fileId): array
     {
         if ($fileId < 1) {
             throw new RuntimeException('A positive file ID is required.');
@@ -64,66 +132,21 @@ final class BlockedCompressedMetadataSnapshotLoader
                 throw new RuntimeException('File #' . $fileId . ' ' . $type . ' count differs from ue_file_metadata.');
             }
         }
+        return $file;
+    }
 
-        $reader = new BlockedCompressedMetadataReader($this->db, $this->storageRoot);
-        $names = $this->loadSection($reader, $fileId, 'names', (int)$file['name_count']);
-        $imports = $this->loadSection($reader, $fileId, 'imports', (int)$file['import_count']);
-        $exports = $this->loadSection($reader, $fileId, 'exports', (int)$file['export_count']);
-        $dependencies = $this->loadSection($reader, $fileId, 'dependencies', (int)$file['import_count']);
-
-        $labels = $this->resolutionLabels($fileId);
-        if (count($labels) !== count($dependencies)) {
-            throw new RuntimeException(
-                'Compact dependency label count mismatch for file #' . $fileId
-                . ': dependencies=' . count($dependencies) . ', labels=' . count($labels) . '.'
-            );
-        }
-        foreach ($dependencies as &$dependency) {
-            $index = (int)$dependency['import_index'];
-            $label = $labels[$index] ?? null;
-            if (!is_array($label)) {
-                throw new RuntimeException('Missing compact resolution labels for Import #' . $index . '.');
-            }
-            $dependency['file_id'] = $fileId;
-            $dependency['resolution_source'] = $label['source'];
-            $dependency['resolution_confidence'] = $label['confidence'];
-        }
-        unset($dependency);
-
-        $paths = ['imports' => [], 'exports' => []];
-        foreach ($imports as $row) {
-            $index = (int)$row['import_index'];
-            $paths['imports'][$index] = [
-                'full' => (string)$row['full_path'],
-                'root' => (string)$row['root_package'],
-                'relative' => (string)$row['relative_object_path'],
-            ];
-        }
-        foreach ($exports as $row) {
-            $index = (int)$row['export_index'];
-            $paths['exports'][$index] = [
-                'local' => (string)$row['local_path'],
-                'full' => (string)$row['full_path'],
-            ];
-        }
-
+    /** @param array<string,mixed> $file @return array<string,mixed> */
+    private function snapshotFile(int $fileId, array $file): array
+    {
         return [
-            'file' => [
-                'id' => $fileId,
-                'game_id' => (int)$file['game_id'],
-                'package_name' => (string)$file['package_name'],
-                'original_name' => (string)$file['original_name'],
-                'name_count' => (int)$file['name_count'],
-                'import_count' => (int)$file['import_count'],
-                'export_count' => (int)$file['export_count'],
-                'scan_status' => (string)$file['scan_status'],
-            ],
-            'names' => $names,
-            'imports' => $imports,
-            'exports' => $exports,
-            'dependencies' => $dependencies,
-            'paths' => $paths,
-            'source_format' => 'blocked-metadata-v2',
+            'id' => $fileId,
+            'game_id' => (int)$file['game_id'],
+            'package_name' => (string)$file['package_name'],
+            'original_name' => (string)$file['original_name'],
+            'name_count' => (int)$file['name_count'],
+            'import_count' => (int)$file['import_count'],
+            'export_count' => (int)$file['export_count'],
+            'scan_status' => (string)$file['scan_status'],
         ];
     }
 
@@ -152,6 +175,30 @@ final class BlockedCompressedMetadataSnapshotLoader
             );
         }
         return $rows;
+    }
+
+    /** @param list<array<string,mixed>> $dependencies @return list<array<string,mixed>> */
+    private function decorateDependencies(int $fileId, array $dependencies): array
+    {
+        $labels = $this->resolutionLabels($fileId);
+        if (count($labels) !== count($dependencies)) {
+            throw new RuntimeException(
+                'Compact dependency label count mismatch for file #' . $fileId
+                . ': dependencies=' . count($dependencies) . ', labels=' . count($labels) . '.'
+            );
+        }
+        foreach ($dependencies as &$dependency) {
+            $index = (int)$dependency['import_index'];
+            $label = $labels[$index] ?? null;
+            if (!is_array($label)) {
+                throw new RuntimeException('Missing compact resolution labels for Import #' . $index . '.');
+            }
+            $dependency['file_id'] = $fileId;
+            $dependency['resolution_source'] = $label['source'];
+            $dependency['resolution_confidence'] = $label['confidence'];
+        }
+        unset($dependency);
+        return $dependencies;
     }
 
     /** @return array<int,array{source:string,confidence:string}> */
