@@ -54,6 +54,36 @@ function ufd_page_url(int $id, string $tab, int $page): string
         . http_build_query(['id' => $id, 'tab' => $tab, 'table_page' => $page]);
 }
 
+function ufd_is_zero_guid(string $guid): bool
+{
+    $hex = strtoupper((string)(preg_replace('/[^0-9A-F]/i', '', trim($guid)) ?? ''));
+    return strlen($hex) === 32 && $hex === str_repeat('0', 32);
+}
+
+function ufd_compression_flags(array $file): string
+{
+    return sprintf('0x%08X', (int)($file['compression_flags'] ?? 0) & 0xFFFFFFFF);
+}
+
+function ufd_compression_label(array $file): string
+{
+    if (empty($file['is_compressed'])) {
+        return 'Uncompressed';
+    }
+
+    $engine = strtoupper(trim((string)($file['detected_engine_key'] ?? '')));
+    $flags = (int)($file['compression_flags'] ?? 0);
+    if ($engine === 'UE3') {
+        return match ($flags & 0x0F) {
+            1 => 'ZLIB compressed',
+            2 => 'LZO compressed',
+            default => 'Compressed',
+        };
+    }
+
+    return 'Compressed';
+}
+
 try {
     $config = catalog_config();
     $db = catalog_db($config);
@@ -81,11 +111,15 @@ try {
     $pages = (int)$model['pages'];
     $page = (int)$model['page'];
     $tab = (string)$model['tab'];
+    $guid = trim((string)($file['package_guid'] ?? ''));
+    $zeroGuid = ufd_is_zero_guid($guid);
+    $compressionLabel = ufd_compression_label($file);
+    $compressionFlags = ufd_compression_flags($file);
 
     catalog_head('Unverified ' . (string)$file['package_name']);
     echo <<<'CSS'
 <style>
-.ufd-hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,.8fr);gap:14px}.ufd-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:9px}.ufd-stat{padding:10px;border:1px solid var(--line2);border-radius:8px}.ufd-stat strong{display:block;font-size:17px}.ufd-stat span{display:block;color:var(--muted);font-size:12px}.ufd-decision{padding:13px;border:1px solid var(--line2);border-radius:9px;background:rgba(72,132,255,.08)}.ufd-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.ufd-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.ufd-badge.warn{color:#ffe1a0;background:rgba(246,196,83,.14)}.ufd-badge.info{color:#b8d7ff;background:rgba(72,132,255,.15)}.ufd-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.ufd-rename-form{display:grid;grid-template-columns:minmax(260px,560px) auto;gap:10px;align-items:end}.ufd-rename-form label{display:grid;gap:5px}.ufd-games{min-width:1050px}.ufd-games td{vertical-align:top}.ufd-games small{display:block;color:var(--muted)}.ufd-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}.ufd-tabs a{padding:7px 10px;border:1px solid var(--line2);border-radius:8px}.ufd-tabs a.active{background:rgba(72,132,255,.18);border-color:var(--blue)}.ufd-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.ufd-table{min-width:1100px}.ufd-table td{vertical-align:top}.ufd-path{overflow-wrap:anywhere}.ufd-note{white-space:pre-wrap}.mono-block{display:block;font-family:Consolas,ui-monospace,monospace;overflow-wrap:anywhere}@media(max-width:1000px){.ufd-hero{grid-template-columns:1fr}.ufd-grid{grid-template-columns:repeat(3,1fr)}.ufd-rename-form{grid-template-columns:1fr}}
+.ufd-hero{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,.8fr);gap:14px}.ufd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:9px}.ufd-stat{padding:10px;border:1px solid var(--line2);border-radius:8px}.ufd-stat strong{display:block;font-size:17px}.ufd-stat span{display:block;color:var(--muted);font-size:12px}.ufd-decision{padding:13px;border:1px solid var(--line2);border-radius:9px;background:rgba(72,132,255,.08)}.ufd-badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700}.ufd-badge.good{color:#b8f3cb;background:rgba(67,190,110,.15)}.ufd-badge.warn{color:#ffe1a0;background:rgba(246,196,83,.14)}.ufd-badge.info{color:#b8d7ff;background:rgba(72,132,255,.15)}.ufd-badge.bad{color:#ffb5b5;background:rgba(230,78,78,.14)}.ufd-identity-note{display:inline-flex;margin-left:8px;vertical-align:middle}.ufd-rename-form{display:grid;grid-template-columns:minmax(260px,560px) auto;gap:10px;align-items:end}.ufd-rename-form label{display:grid;gap:5px}.ufd-games{min-width:1050px}.ufd-games td{vertical-align:top}.ufd-games small{display:block;color:var(--muted)}.ufd-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}.ufd-tabs a{padding:7px 10px;border:1px solid var(--line2);border-radius:8px}.ufd-tabs a.active{background:rgba(72,132,255,.18);border-color:var(--blue)}.ufd-pagination{display:flex;justify-content:space-between;align-items:center;margin:10px 0}.ufd-table{min-width:1100px}.ufd-table td{vertical-align:top}.ufd-path{overflow-wrap:anywhere}.ufd-note{white-space:pre-wrap}.mono-block{display:block;font-family:Consolas,ui-monospace,monospace;overflow-wrap:anywhere}@media(max-width:1000px){.ufd-hero{grid-template-columns:1fr}.ufd-grid{grid-template-columns:repeat(3,1fr)}.ufd-rename-form{grid-template-columns:1fr}}
 </style>
 CSS;
 
@@ -118,7 +152,11 @@ CSS;
     echo '<tr><th>Physical queue</th><td>' . catalog_h($queueLabel) . '<span class="mono-block">' . catalog_h($queueName) . '</span></td></tr>';
     echo '<tr><th>MD5</th><td class="mono">' . catalog_h((string)$file['md5']) . '</td></tr>';
     echo '<tr><th>SHA1</th><td class="mono">' . catalog_h((string)$file['sha1']) . '</td></tr>';
-    echo '<tr><th>GUID</th><td class="mono">' . catalog_h((string)($file['package_guid'] ?? '')) . '</td></tr>';
+    echo '<tr><th>GUID</th><td><span class="mono">' . catalog_h($guid) . '</span>'
+        . ($zeroGuid ? '<span class="ufd-badge info ufd-identity-note">Zero GUID · source value</span>' : '')
+        . '</td></tr>';
+    echo '<tr><th>Compression</th><td>' . catalog_h($compressionLabel)
+        . ' <span class="mono muted">' . catalog_h($compressionFlags) . '</span></td></tr>';
     echo '<tr><th>Source-relative path</th><td class="mono ufd-path">' . catalog_h((string)($file['source_relative_path'] ?? '')) . '</td></tr>';
     echo '</table></div></section>';
 
@@ -140,6 +178,7 @@ CSS;
         'Engine' => (string)($file['detected_engine_key'] ?? 'UNKNOWN'),
         'Package version' => $file['detected_package_version'] === null ? '—' : (string)$file['detected_package_version'],
         'Licensee' => $file['detected_licensee_version'] === null ? '—' : (string)$file['detected_licensee_version'],
+        'Compression' => $compressionLabel,
         'Names' => (string)$file['name_count'],
         'Imports' => (string)$file['import_count'],
         'Exports' => (string)$file['export_count'],
