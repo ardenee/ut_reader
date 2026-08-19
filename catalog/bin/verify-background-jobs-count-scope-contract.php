@@ -50,11 +50,10 @@ $check(
     'operator_job_scope_is_explicit',
     str_contains($searchScope, 'root_job.parent_job_id IS NULL')
         && str_contains($searchScope, 'problem_child.parent_job_id IS NOT NULL')
-        && str_contains($searchScope, 'failed')
-        && str_contains($searchScope, 'dead_letter')
-        && str_contains($searchScope, 'cancelled')
+        && str_contains($searchScope, 'problem_child.status IN ("failed","dead_letter")')
+        && !str_contains($searchScope, 'problem_child.status IN ("failed","dead_letter","cancelled")')
         && str_contains($page, 'routine child rows stay hidden unless they need attention'),
-    'Routine workflow children must stay folded into their parent while failed/dead-letter/cancelled children remain actionable.'
+    'Routine workflow children, including cancelled internal history, must stay folded into their parent; failed/dead-letter children remain directly actionable.'
 );
 $check(
     'background_jobs_counts_use_operator_scope',
