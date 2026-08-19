@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
+use UnrealDb\Catalog\Infrastructure\Jobs\CatalogArchiveJobOutcomeProjector;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogBackgroundJobResultHydrator;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobEventLog;
@@ -53,6 +54,7 @@ try {
         $perPage
     );
     $rows = (new CatalogBackgroundJobResultHydrator($application->config))->hydrate($result['rows']);
+    $rows = (new CatalogArchiveJobOutcomeProjector($application->db))->project($rows);
 
     $eventState = ['events' => [], 'offset' => $eventOffset, 'has_more' => false];
     if ($jobId > 0 && $rows !== []) {
