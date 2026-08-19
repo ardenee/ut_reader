@@ -361,6 +361,15 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
             throw new RuntimeException('Game no longer exists: ' . $gameId);
         }
 
+        if ($this->pendingGameDependencyWorkExists($job, $gameId)) {
+            $context->defer(15, $this->workflowProgress(
+                'game_stats_wait',
+                10,
+                'Coalesced cached-counter refresh is waiting for game dependency work to drain.',
+                ['game_id' => $gameId, 'mode' => 'stats_only']
+            ));
+        }
+
         $stats = new PdoGameCatalogStats($this->db);
         if (!$stats->available()) {
             throw new RuntimeException('Cached game statistics projection is unavailable.');
@@ -394,6 +403,22 @@ final class CatalogDependencyRefreshJobHandler implements JobHandler
         ];
         $context->checkpoint($this->workflowProgress('complete', 100, $message, $result));
         return $result;
+    }
+
+    private function pendingGameDependencyWorkExists(ClaimedJob $job, int $gameId): bool
+    {
+        $statement = $this->db->prepare(
+            'SELECT 1 FROM ue_background_jobs WHERE queue_name=? AND status IN ("queued","running") '
+            . 'AND concurrency_key=? AND id<>? '
+            . 'AND (dedupe_key IS NULL OR dedupe_key NOT LIKE ?) LIMIT 1'
+        );
+        $statement->execute([
+            $job->queue,
+            'dependency:game:' . $gameId,
+            $job->id,
+            'game-stats:' . $gameId . ':%',
+        ]);
+        return $statement->fetchColumn() !== false;
     }
 
     /** @return array<string,mixed> */
