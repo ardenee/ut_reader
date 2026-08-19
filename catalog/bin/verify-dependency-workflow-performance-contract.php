@@ -22,6 +22,8 @@ $handlerPath = $root . '/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHand
 $handler = (string)@file_get_contents($handlerPath);
 $pakTargetPath = $root . '/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php';
 $pakTarget = (string)@file_get_contents($pakTargetPath);
+$statsCoordinatorPath = $root . '/src/Infrastructure/Jobs/CatalogGameStatsRefreshCoordinator.php';
+$statsCoordinator = (string)@file_get_contents($statsCoordinatorPath);
 $rebuilderPath = $root . '/src/Infrastructure/Persistence/PdoCatalogDependencyRebuilder.php';
 $rebuilder = (string)@file_get_contents($rebuilderPath);
 $summaryPath = $root . '/src/Infrastructure/Persistence/PdoDependencyPackageSummary.php';
@@ -122,6 +124,42 @@ $record(
 );
 
 $record(
+    'pak_game_stats_are_coalesced',
+    str_contains($handler, 'CatalogGameStatsRefreshCoordinator::request(')
+        && str_contains($handler, "'game_stats_refresh_job_id' => \$statsJobId")
+        && str_contains($handler, "'game_stats_refreshed' => false")
+        && !str_contains($handler, 'Targeted PAK dependency files completed; refreshing cached game counters once.'),
+    'A completed targeted PAK dependency workflow must schedule/reuse one shared stats publisher instead of rescanning the whole game synchronously.'
+);
+
+$record(
+    'coalesced_stats_job_is_debounced_and_deduplicated',
+    str_contains($statsCoordinator, 'private const QUIET_SECONDS = 20;')
+        && str_contains($statsCoordinator, 'private const MAX_DEBOUNCE_SECONDS = 90;')
+        && str_contains($statsCoordinator, 'private const PRIORITY = 90;')
+        && str_contains($statsCoordinator, 'status IN ("queued","running")')
+        && str_contains($statsCoordinator, 'postponeQueued(')
+        && str_contains($statsCoordinator, "'game_stats_only' => true")
+        && str_contains($statsCoordinator, "'game-stats:' . \$gameId"),
+    'Burst PAK completions should collapse into a bounded delayed stats job rather than create one whole-game aggregate per PAK.'
+);
+
+$record(
+    'coalesced_stats_waits_for_dependency_burst',
+    str_contains($handler, 'pendingGameDependencyWorkExists($job, $gameId)')
+        && str_contains($handler, "'game_stats_wait'")
+        && str_contains($handler, "'dependency:game:' . \$gameId")
+        && str_contains($handler, "'game-stats:' . \$gameId . ':%'"),
+    'The low-priority stats publisher must yield while real dependency coordinators for the same game remain active.'
+);
+
+$record(
+    'stats_only_job_short_circuits_dependency_planning',
+    preg_match('/if\s*\(!empty\(\$job->payload\[\'game_stats_only\'\]\)\)\s*\{\s*return\s+\$this->rebuildGameStatsOnly/s', $handler) === 1,
+    'The shared stats job must never enter the whole-game dependency planner.'
+);
+
+$record(
     'legacy_pak_whole_game_children_are_superseded',
     str_contains($handler, 'cancelQueuedLegacyChildren($job->id)')
         && str_contains($handler, 'isLegacyPakDependencyFileUnit($job)')
@@ -145,6 +183,7 @@ $record(
 foreach ([
     $handlerPath,
     $pakTargetPath,
+    $statsCoordinatorPath,
     $rebuilderPath,
     $summaryPath,
     $queuePath,
