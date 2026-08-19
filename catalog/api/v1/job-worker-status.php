@@ -31,15 +31,31 @@ try {
     /*
      * This GET is deliberately read-only and excludes worker log tails. Browser
      * polling must never launch/recover workers or perform avoidable log I/O.
+     *
+     * Do not call queueCounts() here. Parent/child workflows can leave millions
+     * of internal execution rows behind one small operator-visible job set, and
+     * exact durable aggregation on every two-second poll can dominate MySQL.
      */
     $launcher = new CatalogDetachedWorker($application->config);
     $worker = $launcher->status($queueName, false);
     $operational = new PdoBackgroundJobOperationalQuery($application->db, $application->config);
-    $counts = $operational->queueCounts($queueName);
+    $presence = $operational->queuePresence($queueName);
     $working = $operational->runningWork($queueName);
+    $operatorCounts = $operational->operatorActiveCounts($queueName);
+
+    // Browser worker-health policy needs durable presence, not multi-million-row
+    // totals. Treat queued presence as potentially claimable for UI health; the
+    // worker claimer remains authoritative for exact available_at admission.
+    $policyCounts = [
+        'queued' => $presence['queued'] ? 1 : 0,
+        'ready' => $presence['queued'] ? 1 : 0,
+        'running' => $presence['running'] ? 1 : 0,
+        'terminal' => 0,
+        'total' => ($presence['queued'] ? 1 : 0) + ($presence['running'] ? 1 : 0),
+    ];
     $status = CatalogWorkerStatusPolicy::evaluate(
         $worker,
-        $counts,
+        $policyCounts,
         $launcher->configuredWorkerCount()
     );
 
@@ -59,7 +75,11 @@ try {
 
     $worker['authoritative_status'] = $status['authoritative_status'];
     $worker['authoritative_message'] = $status['authoritative_message'];
-    $worker['queue_counts'] = $counts;
+    // Keep this field job-centric for UI/backward compatibility. Exact durable
+    // execution-row totals remain available from operational diagnostics only.
+    $worker['queue_counts'] = $operatorCounts;
+    $worker['queue_counts_scope'] = 'operator_jobs';
+    $worker['durable_queue_presence'] = $presence;
     $worker['restart_recommended'] = $status['restart_recommended'];
     $worker['monitoring'] = $monitoring;
     $worker['status_read_only'] = true;
