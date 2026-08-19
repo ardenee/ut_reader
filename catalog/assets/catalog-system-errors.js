@@ -142,11 +142,22 @@
         toolbar.appendChild(link);
     }
 
+    function shouldIgnoreResourceError(source) {
+        const value = String(source || '').trim();
+        if (value === '') return true;
+        // blob:/data: resources are generated locally by the current page and are
+        // intentionally short-lived. Once revoked they cannot be retried or
+        // diagnosed as HTTP resources, so recording them as server resource
+        // failures creates noisy, non-actionable System Error records.
+        return /^(?:blob:|data:)/i.test(value);
+    }
+
     window.addEventListener('error', function (event) {
         if (reporting) return;
         const target = event.target;
         if (target && target !== window && !event.message) {
             const source = target.src || target.href || '';
+            if (shouldIgnoreResourceError(source)) return;
             const payload = basePayload('resource_load_error', 'Browser resource failed to load: ' + source);
             payload.source_file = clean(source, 1000);
             enqueue(payload);
