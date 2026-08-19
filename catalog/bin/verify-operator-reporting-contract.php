@@ -63,12 +63,23 @@ $record(
     'Operator diagnostics must not recreate durable execution-row totals as job totals.'
 );
 $record(
-    'worker_health_keeps_durable_counts',
-    str_contains($operational, 'SUM(status="queued")')
+    'browser_worker_health_avoids_full_durable_aggregation',
+    str_contains($operational, 'public function queuePresence(')
+        && str_contains($operational, 'public function operatorActiveCounts(')
+        && str_contains($workerEndpoint, '$presence = $operational->queuePresence($queueName);')
+        && str_contains($workerEndpoint, '$operatorCounts = $operational->operatorActiveCounts($queueName);')
+        && !str_contains($workerEndpoint, '$operational->queueCounts($queueName)')
+        && str_contains($workerEndpoint, "['queue_counts_scope'] = 'operator_jobs'")
+        && str_contains($workerEndpoint, "['durable_queue_presence'] = \$presence"),
+    'Two-second browser worker polling must use bounded presence/operator reads, never exact multi-million execution-row aggregation.'
+);
+$record(
+    'exact_durable_counts_remain_diagnostic_only',
+    str_contains($operational, 'public function queueCounts(')
+        && str_contains($operational, 'SUM(status="queued")')
         && str_contains($operational, 'SUM(status="running")')
-        && str_contains($workerEndpoint, '$counts = $operational->queueCounts($queueName);')
-        && str_contains($workerEndpoint, 'CatalogWorkerStatusPolicy::evaluate('),
-    'Worker-health/admission decisions still need exact durable queue state even though those counts are not operator headlines.'
+        && str_contains($operational, 'Do not call it from high-frequency browser polling'),
+    'Exact execution-row totals remain available to diagnostics without being part of browser polling.'
 );
 $record(
     'operator_pages_are_job_centric',
@@ -94,8 +105,10 @@ $record(
 $syntaxTargets = [
     'bin/verify-operator-reporting-contract.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobSearchScope.php',
+    'src/Infrastructure/Persistence/PdoBackgroundJobOperationalQuery.php',
     'src/Infrastructure/Persistence/PdoBackgroundJobOperatorSnapshotQuery.php',
     'src/Infrastructure/Persistence/PdoSystemOperationsQuery.php',
+    'api/v1/job-worker-status.php',
     'system-operations.php',
 ];
 $syntaxFailures = [];
@@ -119,10 +132,27 @@ if (function_exists('proc_open')) {
 $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 
 if ($run) {
+    $startedSnapshot = false;
     try {
         require_once $root . '/bootstrap/operational.php';
         $application = catalog_operational_application();
         $queue = trim((string)($application->config['queue']['name'] ?? 'catalog')) ?: 'catalog';
+
+        // Both operator policies must be compared against one consistent DB
+        // snapshot. Without this, a real worker can move one job queued->running
+        // between the two SELECTs and create a false parity failure even though
+        // both policies are identical.
+        if (!$application->db->inTransaction()) {
+            try {
+                $application->db->exec('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+            } catch (Throwable) {
+                // Use the configured isolation level if the server disallows a
+                // per-transaction override; beginTransaction still gives both
+                // policy reads one transaction boundary.
+            }
+            $application->db->beginTransaction();
+            $startedSnapshot = true;
+        }
 
         // Rebuild the exact current/actionable Background Jobs display scope
         // without invoking the full browser query, whose All/Completed tabs may
@@ -137,10 +167,11 @@ if ($run) {
         $operatorResult = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperatorSnapshotQuery(
             $application->db
         ))->current($queue);
-        $durableResult = (new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperationalQuery(
+        $operationalQuery = new \UnrealDb\Catalog\Infrastructure\Persistence\PdoBackgroundJobOperationalQuery(
             $application->db,
             $application->config
-        ))->queueCounts($queue);
+        );
+        $presence = $operationalQuery->queuePresence($queue);
 
         $mismatches = [];
         foreach (['queued', 'running', 'failed', 'dead_letter'] as $status) {
@@ -161,16 +192,20 @@ if ($run) {
                     'failed' => $operatorResult['failed'],
                     'dead_letter' => $operatorResult['dead_letter'],
                 ],
-                'durable_health_counts' => [
-                    'queued' => $durableResult['queued'],
-                    'ready' => $durableResult['ready'],
-                    'running' => $durableResult['running'],
-                ],
+                'durable_presence' => $presence,
                 'mismatches' => $mismatches,
             ], JSON_UNESCAPED_SLASHES) ?: ''
         );
     } catch (Throwable $error) {
         $record('runtime_operator_count_parity', false, get_class($error) . ': ' . $error->getMessage());
+    } finally {
+        if (isset($application) && $startedSnapshot && $application->db->inTransaction()) {
+            try {
+                $application->db->rollBack();
+            } catch (Throwable) {
+                // Read-only verifier cleanup is best-effort.
+            }
+        }
     }
 }
 
