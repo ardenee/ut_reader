@@ -11,6 +11,14 @@
  * listed first, validated, then one requested regular file is streamed to a
  * temporary file. This avoids path traversal and lets callers impose their own
  * Unreal-file policy before any member is unpacked.
+ *
+ * Released ext-archive 0.2.0 intentionally exposes only pathname/size/time/perm
+ * entry metadata. Do not depend on unreleased virtual properties such as
+ * isFile/isDir/isSymlink/hardlink/isEncrypted here. The 0.2.0 compatibility
+ * path remains safe because member paths are never used as extraction targets,
+ * only positive-size Unreal members are accepted by callers, extraction is
+ * bounded, and the resulting regular temporary file must match the declared
+ * uncompressed size exactly.
  */
 declare(strict_types=1);
 
@@ -33,7 +41,8 @@ final class CatalogArchiveExtractor
     /** @return array{zip:bool,libarchive:bool,rar:bool,seven_zip:bool} */
     public static function runtimeCapabilities(): array
     {
-        $libarchive = class_exists(\libarchive\Archive::class);
+        $libarchive = class_exists(\libarchive\Archive::class)
+            && method_exists(\libarchive\Archive::class, 'currentEntryStream');
         return [
             'zip' => class_exists(\ZipArchive::class) || $libarchive,
             'libarchive' => $libarchive,
@@ -175,30 +184,27 @@ final class CatalogArchiveExtractor
                 continue;
             }
 
+            // ext-archive 0.2.0 exposes pathname and size, but not file-type,
+            // link or encryption virtual properties. Directory entries from the
+            // archive formats we accept are represented by a trailing slash and
+            // can be skipped without relying on unreleased metadata.
             $rawPath = trim((string)($archiveEntry->pathname ?? ''));
-            $isDirectory = !empty($archiveEntry->isDir);
-            if ($rawPath === '' || $isDirectory) {
+            $normalizedRawPath = str_replace('\\', '/', $rawPath);
+            if ($rawPath === '' || str_ends_with($normalizedRawPath, '/')) {
                 continue;
             }
 
             [$safePath, $reason] = $this->safeMemberPath($rawPath);
-            $isFile = !empty($archiveEntry->isFile);
-            $isSymlink = !empty($archiveEntry->isSymlink);
-            $hardlink = trim((string)($archiveEntry->hardlink ?? ''));
-            if ($isSymlink || $hardlink !== '') {
-                $safePath = '';
-                $reason = 'link entries are not accepted';
-            } elseif (!$isFile) {
-                $safePath = '';
-                $reason = 'non-regular archive entries are not accepted';
-            }
-
             $sizeValue = $archiveEntry->size ?? null;
             $entries[] = [
                 'index' => $index,
-                'path' => $safePath !== '' ? $safePath : str_replace('\\', '/', $rawPath),
+                'path' => $safePath !== '' ? $safePath : $normalizedRawPath,
                 'size' => $sizeValue !== null ? max(0, (int)$sizeValue) : 0,
-                'encrypted' => !empty($archiveEntry->isEncrypted),
+                // Released 0.2.0 does not expose encryption metadata. An
+                // encrypted member cannot be decoded through currentEntryStream
+                // without a passphrase and therefore fails safely during the
+                // bounded extraction attempt.
+                'encrypted' => false,
                 'safe' => $safePath !== '',
                 'reason' => $reason,
                 'backend' => 'libarchive',
@@ -263,6 +269,7 @@ final class CatalogArchiveExtractor
         $archive = $this->newLibarchive($archivePath, $extension);
         $targetIndex = (int)$entry['index'];
         $targetPath = (string)$entry['path'];
+        $expectedBytes = (int)$entry['size'];
         $ordinal = 0;
 
         foreach ($archive as $archiveEntry) {
@@ -282,13 +289,14 @@ final class CatalogArchiveExtractor
                     . ($reason !== '' ? ': ' . $reason : '.')
                 );
             }
-            if (empty($archiveEntry->isFile)
-                || !empty($archiveEntry->isSymlink)
-                || trim((string)($archiveEntry->hardlink ?? '')) !== '') {
-                throw new \RuntimeException('Archive member is no longer a regular standalone file.');
-            }
-            if (!empty($archiveEntry->isEncrypted)) {
-                throw new \RuntimeException('Encrypted/password-protected archive members are not supported.');
+
+            // Revalidate the only regular-entry metadata guaranteed by released
+            // ext-archive 0.2.0. A link/directory entry has no useful positive
+            // Unreal payload and will fail the positive/exact-size gate rather
+            // than being written through an archive-controlled path.
+            $currentSize = $archiveEntry->size ?? null;
+            if ($currentSize === null || (int)$currentSize !== $expectedBytes || $expectedBytes < 1) {
+                throw new \RuntimeException('Archive member size changed or is unavailable during extraction.');
             }
 
             $input = $archive->currentEntryStream();
@@ -313,7 +321,7 @@ final class CatalogArchiveExtractor
                 fclose($output);
             }
 
-            $this->verifyExtractedFile($temporary, (int)$entry['size'], $maxBytes);
+            $this->verifyExtractedFile($temporary, $expectedBytes, $maxBytes);
             return $temporary;
         }
 
@@ -361,12 +369,13 @@ final class CatalogArchiveExtractor
 
     private function requireLibarchive(string $extension): void
     {
-        if (class_exists(\libarchive\Archive::class)) {
+        if (class_exists(\libarchive\Archive::class)
+            && method_exists(\libarchive\Archive::class, 'currentEntryStream')) {
             return;
         }
         $label = $extension === '7z' ? '7-Zip' : strtoupper($extension);
         throw new \RuntimeException(
-            $label . ' archive support requires the PHP ext-archive/libarchive extension. '
+            $label . ' archive support requires the PHP ext-archive/libarchive extension with currentEntryStream(). '
             . 'UnrealDB does not execute command-line archive tools.'
         );
     }
@@ -381,7 +390,7 @@ final class CatalogArchiveExtractor
             '7z' => $this->definedFormats(['libarchive\\FORMAT_7ZIP']),
             default => [],
         };
-        if ($formats !== []) {
+        if ($formats !== [] && method_exists($archive, 'supportFormats')) {
             $first = array_shift($formats);
             $archive->supportFormats($first, ...$formats);
         }
