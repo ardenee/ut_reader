@@ -1,0 +1,31 @@
+name: Dependency refresh validation
+
+on:
+  pull_request:
+    paths:
+      - 'catalog/**'
+      - '.github/workflows/dependency-refresh-validation.yml'
+
+jobs:
+  php-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          coverage: none
+      - name: Lint changed dependency PHP
+        shell: bash
+        run: |
+          php -l catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php
+          php -l catalog/src/Infrastructure/Metadata/BlockedCompressedMetadataSnapshotLoader.php
+          php -l catalog/src/Infrastructure/Metadata/CompactDependencyRebuilder.php
+          php -l catalog/src/Infrastructure/Persistence/PdoDependencyPackageSummary.php
+          php -l catalog/src/Infrastructure/Persistence/PdoGameCatalogStats.php
+          php -l catalog/migrations/202608190001_dependency_refresh_performance.php
+          php -l catalog/bin/verify-affected-dependency-batching-contract.php
+      - name: Run affected dependency static contract
+        run: php catalog/bin/verify-affected-dependency-batching-contract.php
