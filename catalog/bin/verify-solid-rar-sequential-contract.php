@@ -78,7 +78,7 @@ $record(
     str_contains($handler, 'A sequential retry must begin at the archive start')
         && str_contains($handler, '$processed = 0;')
         && str_contains($handler, '$this->queuedChildExists($queueName, $dedupeKey)')
-        && str_contains($handler, "'archive-entry:' . $jobId"),
+        && str_contains($handler, '\'archive-entry:\' . $jobId'),
     'A retry must rebuild decoder state from member zero while reusing already-created durable child jobs.'
 );
 
