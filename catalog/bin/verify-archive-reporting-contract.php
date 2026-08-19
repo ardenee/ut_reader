@@ -25,6 +25,12 @@ $trace = (string)@file_get_contents($root . '/bin/trace-archive-job.php');
 $browserErrors = (string)@file_get_contents($root . '/assets/catalog-system-errors.js');
 
 $record(
+    'archive_projector_imports_domain_job_type',
+    str_contains($projector, 'use UnrealDb\\Catalog\\Domain\\Jobs\\JobType;'),
+    'The archive outcome projector must import the domain JobType class; an unqualified missing import crashes live job-status APIs when an archive row is projected.'
+);
+
+$record(
     'archive_parent_reports_child_outcomes',
     str_contains($projector, 'Archive processing complete: ')
         && str_contains($projector, "'successful'")
