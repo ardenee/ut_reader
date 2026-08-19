@@ -233,6 +233,9 @@ try {
     $cleanupScript = __DIR__ . '/assets/background-jobs-async-cleanup.js';
     $cleanupVersion = is_file($cleanupScript) ? (string)filemtime($cleanupScript) : '1';
     echo '<script src="assets/background-jobs-async-cleanup.js?v=' . catalog_h($cleanupVersion) . '"></script>';
+    $archiveErrorScript = __DIR__ . '/assets/background-jobs-archive-errors.js';
+    $archiveErrorVersion = is_file($archiveErrorScript) ? (string)filemtime($archiveErrorScript) : '1';
+    echo '<script src="assets/background-jobs-archive-errors.js?v=' . catalog_h($archiveErrorVersion) . '"></script>';
     catalog_foot();
 } catch (Throwable $error) {
     error_log('[UnrealDB background jobs][' . catalog_request_id() . '] ' . $error->getMessage());
