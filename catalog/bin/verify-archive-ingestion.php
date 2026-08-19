@@ -39,6 +39,7 @@ $phpFiles = [
     'api/v1/profiled-upload-batch.php',
     'api/v1/profiled-upload-chunk.php',
     'api/v1/upload-bucket-chunk.php',
+    'bin/repair-archive-child-queues.php',
     'profiled-upload.php',
     'upload-bucket-v2.php',
     'background-jobs.php',
@@ -68,6 +69,8 @@ $record('php_syntax', $syntaxFailures === [], implode(' | ', $syntaxFailures));
 require_once $root . '/bootstrap/autoload.php';
 
 $extractorSource = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
+$archiveHandlerSource = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php');
+$repairQueueSource = (string)@file_get_contents($root . '/bin/repair-archive-child-queues.php');
 $configSource = (string)@file_get_contents($root . '/config.example.php');
 $workerVersion = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
 $pageSource = (string)@file_get_contents($root . '/background-jobs.php');
@@ -178,6 +181,26 @@ $record(
         && str_contains($archiveErrorClient, 'job.last_error = detail')
         && str_contains($archiveErrorClient, 'archive_error_count'),
     'Partial archive jobs must promote retained member errors into the normal Background Jobs detail/error display so operators do not need direct SQL to discover the cause.'
+);
+
+$record(
+    'archive_children_inherit_parent_queue',
+    str_contains($archiveHandlerSource, '$queueName = trim($job->queue);')
+        && str_contains($archiveHandlerSource, '$queue->enqueue(')
+        && str_contains($archiveHandlerSource, '$queueName,')
+        && !str_contains($archiveHandlerSource, "\$this->config['queue']['name'] ?? 'catalog'"),
+    'Extracted archive members must stay on the same queue as their claimed archive parent instead of silently moving from catalog:bucket-processing to catalog.'
+);
+
+$record(
+    'misplaced_archive_children_have_bounded_repair',
+    str_contains($repairQueueSource, "c.status='queued'")
+        && str_contains($repairQueueSource, "c.workflow_unit_key LIKE 'archive:%'")
+        && str_contains($repairQueueSource, 'c.queue_name<>p.queue_name')
+        && str_contains($repairQueueSource, 'SET c.queue_name=p.queue_name')
+        && str_contains($repairQueueSource, 'LEFT JOIN ue_background_jobs x')
+        && str_contains($repairQueueSource, "in_array('--execute', \$argv, true)"),
+    'A dry-run-first repair command must move only still-queued archive children back to their parent queue and leave running/terminal rows untouched.'
 );
 
 $record(
