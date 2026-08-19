@@ -168,28 +168,29 @@ final class PdoGameCatalogStats
     private function baseGameMissingCount(int $gameId): int
     {
         if ($this->hasDependencyPackageKeys()) {
-            // Package identities are materialized/indexed by migration. Each
-            // EXISTS becomes a small equality lookup instead of repeatedly
-            // LOWER/TRIM/SUBSTRING processing both tables for every summary row.
+            // Materialize the small official-package key set once per stats
+            // refresh, then join it to the summary projection. This replaces a
+            // correlated expression-heavy EXISTS per summary row with indexed
+            // equality keys on both sides of one bounded derived-table join.
             $statement = $this->db->prepare(
                 'SELECT COALESCE(SUM(s.missing_count),0) '
                 . 'FROM ue_dependency_package_summaries s '
-                . 'WHERE s.game_id=? AND s.missing_count>0 AND ('
-                . 'EXISTS ('
-                . 'SELECT 1 FROM ue_base_game_files bg '
-                . 'WHERE bg.game_id=s.game_id AND ('
-                . 'bg.dependency_package_key=s.required_package '
-                . 'OR bg.dependency_original_stem_key=s.required_package'
-                . ') LIMIT 1'
-                . ') OR EXISTS ('
-                . 'SELECT 1 FROM ue_files src '
-                . 'JOIN ue_base_game_files bg_src '
-                . 'ON bg_src.source_file_id=src.id AND bg_src.game_id=s.game_id '
-                . 'WHERE src.game_id=s.game_id AND ('
-                . 'src.dependency_package_key=s.required_package '
-                . 'OR src.dependency_original_stem_key=s.required_package'
-                . ') LIMIT 1'
-                . '))'
+                . 'JOIN ('
+                . 'SELECT game_id,dependency_package_key package_key '
+                . 'FROM ue_base_game_files WHERE dependency_package_key<>"" '
+                . 'UNION '
+                . 'SELECT game_id,dependency_original_stem_key package_key '
+                . 'FROM ue_base_game_files WHERE dependency_original_stem_key<>"" '
+                . 'UNION '
+                . 'SELECT bg.game_id,src.dependency_package_key package_key '
+                . 'FROM ue_base_game_files bg JOIN ue_files src ON src.id=bg.source_file_id '
+                . 'WHERE src.dependency_package_key<>"" '
+                . 'UNION '
+                . 'SELECT bg.game_id,src.dependency_original_stem_key package_key '
+                . 'FROM ue_base_game_files bg JOIN ue_files src ON src.id=bg.source_file_id '
+                . 'WHERE src.dependency_original_stem_key<>""'
+                . ') base_keys ON base_keys.game_id=s.game_id AND base_keys.package_key=s.required_package '
+                . 'WHERE s.game_id=? AND s.missing_count>0'
             );
             $statement->execute([$gameId]);
             return (int)($statement->fetchColumn() ?: 0);
