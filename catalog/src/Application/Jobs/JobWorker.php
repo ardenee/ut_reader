@@ -127,7 +127,7 @@ final class JobWorker
                 get_class($exception) . ': ' . $this->errorText($exception) . ' at '
                     . str_replace('\\', '/', $exception->getFile()) . ':' . $exception->getLine()
             );
-            $delay = min(300, max(1, 2 ** min(8, $job->attempt)));
+            $delay = JobFailureRetryPolicy::retryDelaySeconds($job, $exception);
             $failure = $this->recordFailure($job, $exception, $delay);
             $this->releaseAffinity();
             return $failure;
@@ -258,7 +258,7 @@ final class JobWorker
     private function errorText(\Throwable $exception): string
     {
         $message = trim($exception->getMessage());
-        if ($message === '' || $message === "''" || $message === '""') {
+        if ($message === '' || $message === "''" || $message === '\"\"') {
             return get_class($exception) . ' was thrown without an error message.';
         }
         return $message;
