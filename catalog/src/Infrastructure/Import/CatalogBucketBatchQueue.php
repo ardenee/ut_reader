@@ -142,33 +142,35 @@ final class CatalogBucketBatchQueue
 
         if (!$transportContainer) {
             $dedupeKey = 'bucket-upload-source:' . $fingerprint;
-            $existing = $this->db->prepare(
-                'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
+            [$existingId, $existingUploadId, $existingSourceAvailable] = $this->activeSourceForDedupe(
+                $store,
+                $queueName,
+                $dedupeKey
             );
-            $existing->execute([$queueName, $dedupeKey]);
-            $existingRow = $existing->fetch(PDO::FETCH_ASSOC);
-            $existingId = is_array($existingRow) ? (int)($existingRow['id'] ?? 0) : 0;
-            if (is_array($existingRow) && !empty($existingRow['payload_json'])) {
-                $decoded = json_decode((string)$existingRow['payload_json'], true);
-                if (is_array($decoded)) {
-                    $existingUploadId = trim((string)($decoded['upload_id'] ?? ''));
-                }
-            }
-            if (preg_match('/^[a-f0-9]{64}$/', $existingUploadId) === 1) {
-                try {
-                    $store->resolveCompletedFile($existingUploadId, null);
-                    $existingSourceAvailable = true;
-                } catch (Throwable) {
-                    $existingSourceAvailable = false;
-                }
-            }
             if ($existingId > 0 && !$existingSourceAvailable) {
                 $existingId = 0;
                 $existingUploadId = '';
                 $dedupeKey .= ':' . $uploadId;
             }
         } elseif ($archive) {
-            $dedupeKey = 'bucket-archive-upload:' . $uploadId;
+            // Archive uploads previously used the upload ID as their dedupe key,
+            // so the same mirror path/bytes submitted twice produced two expensive
+            // archive jobs. Use verified chunk identity plus logical source path:
+            // identical bytes at the same source path share one active job, while
+            // the same archive discovered at a different mirror path keeps its
+            // distinct provenance.
+            $archiveSourceIdentity = hash('sha256', $fingerprint . "\0" . strtolower($relativePath));
+            $dedupeKey = 'bucket-archive-source:' . $archiveSourceIdentity;
+            [$existingId, $existingUploadId, $existingSourceAvailable] = $this->activeSourceForDedupe(
+                $store,
+                $queueName,
+                $dedupeKey
+            );
+            if ($existingId > 0 && !$existingSourceAvailable) {
+                $existingId = 0;
+                $existingUploadId = '';
+                $dedupeKey .= ':' . $uploadId;
+            }
         } else {
             $dedupeKey = 'bucket-redirect-upload:' . $uploadId;
         }
@@ -200,8 +202,7 @@ final class CatalogBucketBatchQueue
             3
         );
 
-        $deduplicated = !$transportContainer
-            && $existingSourceAvailable
+        $deduplicated = $existingSourceAvailable
             && $existingId > 0
             && $existingId === $jobId;
         $removed = false;
@@ -223,6 +224,41 @@ final class CatalogBucketBatchQueue
             'md5' => $md5,
             'sha1' => $sha1,
         ];
+    }
+
+    /**
+     * @return array{0:int,1:string,2:bool}
+     */
+    private function activeSourceForDedupe(
+        CatalogChunkedUploadStore $store,
+        string $queueName,
+        string $dedupeKey
+    ): array {
+        $existing = $this->db->prepare(
+            'SELECT id,payload_json FROM ue_background_jobs WHERE queue_name=? AND dedupe_key=? LIMIT 1'
+        );
+        $existing->execute([$queueName, $dedupeKey]);
+        $existingRow = $existing->fetch(PDO::FETCH_ASSOC);
+        $existingId = is_array($existingRow) ? (int)($existingRow['id'] ?? 0) : 0;
+        $existingUploadId = '';
+        if (is_array($existingRow) && !empty($existingRow['payload_json'])) {
+            $decoded = json_decode((string)$existingRow['payload_json'], true);
+            if (is_array($decoded)) {
+                $existingUploadId = trim((string)($decoded['upload_id'] ?? ''));
+            }
+        }
+
+        $available = false;
+        if (preg_match('/^[a-f0-9]{64}$/', $existingUploadId) === 1) {
+            try {
+                $store->resolveCompletedFile($existingUploadId, null);
+                $available = true;
+            } catch (Throwable) {
+                $available = false;
+            }
+        }
+
+        return [$existingId, $existingUploadId, $available];
     }
 
     /** @param array<string,mixed> $manifest */
