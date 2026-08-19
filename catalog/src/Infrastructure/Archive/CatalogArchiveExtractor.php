@@ -7,6 +7,11 @@
  * ZIP prefers ext-zip (ZipArchive); RAR and 7z use ext-archive
  * (cataphract/libarchive), which also provides a ZIP fallback.
  *
+ * Archive filename extensions are transport hints rather than authoritative
+ * format declarations. Historic mirrors can contain mislabeled archives and ZIP
+ * files may contain a prepended self-extracting stub. The complete server-side
+ * parser therefore determines the actual format before listing/extraction.
+ *
  * Archives are never extracted wholesale into a filesystem tree. Entries are
  * listed first, validated, then one requested regular file is extracted to a
  * controlled temporary file. This avoids path traversal and lets callers impose
@@ -25,6 +30,7 @@ namespace UnrealDb\Catalog\Infrastructure\Archive;
 final class CatalogArchiveExtractor
 {
     private const ARCHIVE_EXTENSIONS = ['zip', '7z', 'rar'];
+    private const FORMAT_SNIFF_BYTES = 65536;
 
     /** @param array<string,mixed> $config */
     public function __construct(private readonly array $config)
@@ -57,27 +63,47 @@ final class CatalogArchiveExtractor
      *   encrypted:bool,
      *   safe:bool,
      *   reason:string,
-     *   backend:string
+     *   backend:string,
+     *   format:string
      * }>
      */
     public function entries(string $archivePath, string $archiveName): array
     {
         $this->requireArchive($archivePath, $archiveName);
-        $extension = strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION));
+        $declaredExtension = strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION));
+        $format = $this->detectArchiveFormat($archivePath, $declaredExtension);
 
-        if ($extension === 'zip' && class_exists(\ZipArchive::class)) {
-            return $this->zipEntries($archivePath);
+        if ($format === 'zip' && class_exists(\ZipArchive::class)) {
+            try {
+                return $this->zipEntries($archivePath);
+            } catch (\Throwable $zipError) {
+                if (!$this->libarchiveAvailable()) {
+                    throw $zipError;
+                }
+                try {
+                    return $this->libarchiveEntries($archivePath, 'zip');
+                } catch (\Throwable $libarchiveError) {
+                    throw new \RuntimeException(
+                        'Archive "' . $archiveName . '" could not be opened as ZIP. '
+                        . 'ZipArchive: ' . $this->errorText($zipError) . ' '
+                        . 'libarchive: ' . $this->errorText($libarchiveError) . ' '
+                        . $this->formatDiagnostic($archivePath),
+                        (int)$libarchiveError->getCode(),
+                        $libarchiveError
+                    );
+                }
+            }
         }
 
-        $this->requireLibarchive($extension);
-        return $this->libarchiveEntries($archivePath, $extension);
+        $this->requireLibarchive($format);
+        return $this->libarchiveEntries($archivePath, $format);
     }
 
     /**
      * Extract one previously listed entry to a temporary regular file.
      * Caller owns the returned file and must unlink it.
      *
-     * @param array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string} $entry
+     * @param array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string,format?:string} $entry
      */
     public function extractToTemp(string $archivePath, string $archiveName, array $entry, int $maxBytes): string
     {
@@ -95,19 +121,22 @@ final class CatalogArchiveExtractor
             throw new \RuntimeException('Archive member exceeds the configured extraction limit.');
         }
 
+        $format = strtolower(trim((string)($entry['format'] ?? '')));
+        if (!in_array($format, self::ARCHIVE_EXTENSIONS, true)) {
+            $format = $this->detectArchiveFormat(
+                $archivePath,
+                strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION))
+            );
+        }
+
         return match ((string)($entry['backend'] ?? '')) {
             'zip' => $this->extractZipEntry($archivePath, $entry, $maxBytes),
-            'libarchive' => $this->extractLibarchiveEntry(
-                $archivePath,
-                strtolower((string)pathinfo($archiveName, PATHINFO_EXTENSION)),
-                $entry,
-                $maxBytes
-            ),
+            'libarchive' => $this->extractLibarchiveEntry($archivePath, $format, $entry, $maxBytes),
             default => throw new \RuntimeException('Archive member backend is unavailable or invalid.'),
         };
     }
 
-    /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string}> */
+    /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string,format:string}> */
     private function zipEntries(string $archivePath): array
     {
         $zip = new \ZipArchive();
@@ -161,6 +190,7 @@ final class CatalogArchiveExtractor
                     'safe' => $safePath !== '',
                     'reason' => $reason,
                     'backend' => 'zip',
+                    'format' => 'zip',
                 ];
             }
         } finally {
@@ -170,7 +200,7 @@ final class CatalogArchiveExtractor
         return $this->stableOrder($entries);
     }
 
-    /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string}> */
+    /** @return list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string,format:string}> */
     private function libarchiveEntries(string $archivePath, string $extension): array
     {
         $archive = $this->newLibarchive($archivePath, $extension);
@@ -205,6 +235,7 @@ final class CatalogArchiveExtractor
                 'safe' => $safePath !== '',
                 'reason' => $reason,
                 'backend' => 'libarchive',
+                'format' => $extension,
             ];
             if (count($entries) > $this->maxEntries()) {
                 throw new \RuntimeException(
@@ -414,10 +445,103 @@ final class CatalogArchiveExtractor
         }
     }
 
+    private function detectArchiveFormat(string $archivePath, string $declaredExtension): string
+    {
+        $declaredExtension = strtolower(trim($declaredExtension));
+        if (!in_array($declaredExtension, self::ARCHIVE_EXTENSIONS, true)) {
+            throw new \InvalidArgumentException('Unsupported archive extension: ' . $declaredExtension);
+        }
+
+        // ZipArchive is authoritative for ZIP and correctly accepts legal
+        // prepended/self-extracting data that a byte-zero signature test rejects.
+        if (class_exists(\ZipArchive::class)) {
+            $zip = new \ZipArchive();
+            try {
+                $opened = $zip->open($archivePath, \ZipArchive::RDONLY);
+                if ($opened === true) {
+                    return 'zip';
+                }
+            } finally {
+                if (isset($opened) && $opened === true) {
+                    $zip->close();
+                }
+            }
+        }
+
+        $prefix = $this->readPrefix($archivePath, self::FORMAT_SNIFF_BYTES);
+        $candidates = [
+            '7z' => ["7z\xBC\xAF\x27\x1C"],
+            'rar' => ["Rar!\x1A\x07\x00", "Rar!\x1A\x07\x01\x00"],
+            'zip' => ["PK\x03\x04", "PK\x05\x06", "PK\x07\x08"],
+        ];
+        $bestFormat = '';
+        $bestOffset = PHP_INT_MAX;
+        foreach ($candidates as $format => $signatures) {
+            foreach ($signatures as $signature) {
+                $offset = strpos($prefix, $signature);
+                if ($offset !== false && $offset < $bestOffset) {
+                    $bestFormat = $format;
+                    $bestOffset = $offset;
+                }
+            }
+        }
+        if ($bestFormat !== '') {
+            return $bestFormat;
+        }
+
+        // No small-prefix signature is conclusive. Keep the declared format and
+        // let the complete parser decide; this is important for unusual SFX
+        // stubs whose embedded archive begins after the bounded sniff window.
+        return $declaredExtension;
+    }
+
+    private function readPrefix(string $path, int $limit): string
+    {
+        $handle = @fopen($path, 'rb');
+        if (!is_resource($handle)) {
+            throw new \RuntimeException('Archive source could not be opened for format detection.');
+        }
+        try {
+            $data = fread($handle, max(1, $limit));
+            if (!is_string($data)) {
+                throw new \RuntimeException('Archive source could not be read for format detection.');
+            }
+            return $data;
+        } finally {
+            fclose($handle);
+        }
+    }
+
+    private function formatDiagnostic(string $path): string
+    {
+        try {
+            $prefix = $this->readPrefix($path, 16);
+        } catch (\Throwable) {
+            return 'First bytes unavailable.';
+        }
+        if ($prefix === '') {
+            return 'Archive is empty.';
+        }
+        $hex = strtoupper(implode(' ', str_split(bin2hex($prefix), 2)));
+        $ascii = preg_replace('/[^\x20-\x7E]/', '.', $prefix) ?? '';
+        return 'First bytes: ' . $hex . ' (ASCII "' . $ascii . '").';
+    }
+
+    private function libarchiveAvailable(): bool
+    {
+        return class_exists(\libarchive\Archive::class)
+            && method_exists(\libarchive\Archive::class, 'currentEntryStream');
+    }
+
+    private function errorText(\Throwable $error): string
+    {
+        $message = trim($error->getMessage());
+        return $message !== '' ? $message : get_class($error);
+    }
+
     private function requireLibarchive(string $extension): void
     {
-        if (class_exists(\libarchive\Archive::class)
-            && method_exists(\libarchive\Archive::class, 'currentEntryStream')) {
+        if ($this->libarchiveAvailable()) {
             return;
         }
         $label = $extension === '7z' ? '7-Zip' : strtoupper($extension);
@@ -494,7 +618,7 @@ final class CatalogArchiveExtractor
         return [$safe, ''];
     }
 
-    /** @param list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string}> $entries */
+    /** @param list<array{index:int,path:string,size:int,encrypted:bool,safe:bool,reason:string,backend:string,format?:string}> $entries */
     private function stableOrder(array $entries): array
     {
         usort($entries, static function (array $left, array $right): int {
