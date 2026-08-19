@@ -89,7 +89,7 @@ $check(
     str_contains($operationalQuery, 'public function queueCounts(')
         && str_contains($operationalQuery, 'SUM(status="queued")')
         && str_contains($operationalQuery, 'SUM(status="running")')
-        && str_contains($operationalQuery, 'Do not call it from high-frequency browser polling'),
+        && !str_contains($workerEndpoint, '$operational->queueCounts($queueName)'),
     'Exact durable execution counts remain available for diagnostics without being part of the live browser polling path.'
 );
 $check(
