@@ -141,6 +141,7 @@ final class CatalogSequentialArchiveReader
             $input = null;
             $output = null;
             $temporary = null;
+            $actualBytes = 0;
             try {
                 $input = $archive->currentEntryStream();
                 if (!is_resource($input)) {
@@ -185,7 +186,6 @@ final class CatalogSequentialArchiveReader
                 if ($temporary !== null) {
                     $this->verifyTemporary($temporary, $actualBytes, $entryLimit);
                 }
-                $complete($entry, $temporary, $state);
             } catch (\Throwable $error) {
                 $label = $format === '7z' ? '7-Zip' : strtoupper($format);
                 throw new \RuntimeException(
@@ -201,6 +201,14 @@ final class CatalogSequentialArchiveReader
                 if (is_resource($output)) {
                     fclose($output);
                 }
+            }
+
+            // Coordinator callbacks can throw cancellation, lease-loss or DB
+            // exceptions. Do not recast those as decoder failures; the worker
+            // lifecycle must see their original exception type and semantics.
+            try {
+                $complete($entry, $temporary, $state);
+            } finally {
                 if ($temporary !== null && is_file($temporary)) {
                     @unlink($temporary);
                 }
