@@ -68,7 +68,7 @@ final class PdoJobLeaseStore
             }
 
             $statement = $this->db->prepare(
-                'UPDATE ue_background_jobs SET status="completed",result_json=?,dedupe_key=NULL,'
+                'UPDATE ue_background_jobs SET status="completed",result_json=?,dedupe_key=NULL,last_error=NULL,'
                 . 'worker_id=NULL,lease_token=NULL,lease_expires_at=NULL,'
                 . 'progress_json=?,progress_updated_at=?,completed_at=?,updated_at=? '
                 . 'WHERE id=? AND status="running" AND lease_token=?'
