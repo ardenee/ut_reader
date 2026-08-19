@@ -28,12 +28,30 @@ function trace_decode_json(mixed $value): array
     return is_array($decoded) ? $decoded : [];
 }
 
+function trace_seconds_between(mixed $from, mixed $to): ?int
+{
+    $fromText = trim((string)$from);
+    $toText = trim((string)$to);
+    if ($fromText === '' || $toText === '') {
+        return null;
+    }
+    $fromTime = strtotime($fromText);
+    $toTime = strtotime($toText);
+    if ($fromTime === false || $toTime === false || $toTime < $fromTime) {
+        return null;
+    }
+    return $toTime - $fromTime;
+}
+
 /** @return array<string,mixed> */
 function trace_job_summary(array $row): array
 {
     $payload = trace_decode_json($row['payload_json'] ?? null);
     $progress = trace_decode_json($row['progress_json'] ?? null);
     $result = trace_decode_json($row['result_json'] ?? null);
+    $availableAt = $row['available_at'] ?? null;
+    $leasedAt = $row['leased_at'] ?? null;
+    $completedAt = $row['completed_at'] ?? ($row['finished_at'] ?? null);
 
     $summary = [
         'id' => (int)($row['id'] ?? 0),
@@ -44,9 +62,14 @@ function trace_job_summary(array $row): array
         'workflow_unit_key' => (string)($row['workflow_unit_key'] ?? ''),
         'attempts' => isset($row['attempts']) ? (int)$row['attempts'] : null,
         'max_attempts' => isset($row['max_attempts']) ? (int)$row['max_attempts'] : null,
-        'available_at' => $row['available_at'] ?? null,
-        'started_at' => $row['started_at'] ?? null,
-        'finished_at' => $row['finished_at'] ?? ($row['completed_at'] ?? null),
+        'created_at' => $row['created_at'] ?? null,
+        'available_at' => $availableAt,
+        'leased_at' => $leasedAt,
+        'last_heartbeat_at' => $row['last_heartbeat_at'] ?? null,
+        'progress_updated_at' => $row['progress_updated_at'] ?? null,
+        'completed_at' => $completedAt,
+        'queue_wait_seconds' => trace_seconds_between($availableAt, $leasedAt),
+        'claimed_runtime_seconds' => trace_seconds_between($leasedAt, $completedAt),
         'last_error' => trim((string)($row['last_error'] ?? '')) ?: null,
         'payload' => [
             'original_name' => $payload['original_name'] ?? null,
@@ -102,9 +125,18 @@ function trace_file(PDO $db, array $config, int $fileId): ?array
 
     $storageRoot = rtrim((string)($config['storage_path'] ?? ''), DIRECTORY_SEPARATOR);
     $relativePath = ltrim(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, (string)($row['relative_path'] ?? '')), DIRECTORY_SEPARATOR);
-    $relativePhysical = $storageRoot !== '' && $relativePath !== ''
-        ? $storageRoot . DIRECTORY_SEPARATOR . $relativePath
-        : '';
+    $relativePhysical = '';
+    if ($storageRoot !== '' && $relativePath !== '') {
+        $storagePrefix = 'storage' . DIRECTORY_SEPARATOR;
+        if (str_starts_with(strtolower($relativePath), strtolower($storagePrefix))) {
+            // ue_files.relative_path is catalog-root relative and intentionally
+            // begins with "storage/". Do not append it to storage_path itself or
+            // diagnostics produce a false .../storage/storage/... location.
+            $relativePhysical = dirname($storageRoot) . DIRECTORY_SEPARATOR . $relativePath;
+        } else {
+            $relativePhysical = $storageRoot . DIRECTORY_SEPARATOR . $relativePath;
+        }
+    }
 
     $queueGameId = (int)($row['unverified_queue_game_id'] ?? -1);
     $queueName = basename(trim((string)($row['unverified_queue_name'] ?? '')));
