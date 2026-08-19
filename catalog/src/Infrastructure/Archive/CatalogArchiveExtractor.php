@@ -8,17 +8,15 @@
  * (cataphract/libarchive), which also provides a ZIP fallback.
  *
  * Archives are never extracted wholesale into a filesystem tree. Entries are
- * listed first, validated, then one requested regular file is streamed to a
- * temporary file. This avoids path traversal and lets callers impose their own
- * Unreal-file policy before any member is unpacked.
+ * listed first, validated, then one requested regular file is extracted to a
+ * controlled temporary file. This avoids path traversal and lets callers impose
+ * their own Unreal-file policy before any member is unpacked.
  *
  * Released ext-archive 0.2.0 intentionally exposes only pathname/size/time/perm
  * entry metadata. Do not depend on unreleased virtual properties such as
- * isFile/isDir/isSymlink/hardlink/isEncrypted here. The 0.2.0 compatibility
- * path remains safe because member paths are never used as extraction targets,
- * only positive-size Unreal members are accepted by callers, extraction is
- * bounded, and the resulting regular temporary file must match the declared
- * uncompressed size exactly.
+ * isFile/isDir/isSymlink/hardlink/isEncrypted here. For libarchive extraction we
+ * replace the current entry pathname with our own random temporary path before
+ * calling extractCurrent(); archive-controlled paths are never written to disk.
  */
 declare(strict_types=1);
 
@@ -201,9 +199,8 @@ final class CatalogArchiveExtractor
                 'path' => $safePath !== '' ? $safePath : $normalizedRawPath,
                 'size' => $sizeValue !== null ? max(0, (int)$sizeValue) : 0,
                 // Released 0.2.0 does not expose encryption metadata. An
-                // encrypted member cannot be decoded through currentEntryStream
-                // without a passphrase and therefore fails safely during the
-                // bounded extraction attempt.
+                // encrypted member cannot be decoded without a passphrase and
+                // therefore fails safely during the bounded extraction attempt.
                 'encrypted' => false,
                 'safe' => $safePath !== '',
                 'reason' => $reason,
@@ -290,20 +287,41 @@ final class CatalogArchiveExtractor
                 );
             }
 
-            // Revalidate the only regular-entry metadata guaranteed by released
-            // ext-archive 0.2.0. A link/directory entry has no useful positive
-            // Unreal payload and will fail the positive/exact-size gate rather
-            // than being written through an archive-controlled path.
             $currentSize = $archiveEntry->size ?? null;
             if ($currentSize === null || (int)$currentSize !== $expectedBytes || $expectedBytes < 1) {
                 throw new \RuntimeException('Archive member size changed or is unavailable during extraction.');
             }
 
+            $temporary = $this->temporaryPath();
+            if (method_exists($archive, 'extractCurrent')) {
+                try {
+                    // tempnam() creates an empty file. Remove it before handing
+                    // the path to libarchive's disk writer, then force the entry
+                    // to our controlled absolute path rather than its archive path.
+                    @unlink($temporary);
+                    $archiveEntry->pathname = $temporary;
+                    $archive->extractCurrent($archiveEntry);
+                } catch (\Throwable $error) {
+                    @unlink($temporary);
+                    throw new \RuntimeException(
+                        $this->libarchiveFailureMessage($extension, $targetPath, $expectedBytes, $error),
+                        (int)$error->getCode(),
+                        $error
+                    );
+                }
+
+                $this->verifyExtractedFile($temporary, $expectedBytes, $maxBytes);
+                return $temporary;
+            }
+
+            // Compatibility fallback for older/nonstandard builds that expose
+            // currentEntryStream() but not extractCurrent(). Released 0.2.0 uses
+            // the native extractCurrent() path above.
             $input = $archive->currentEntryStream();
             if (!is_resource($input)) {
+                @unlink($temporary);
                 throw new \RuntimeException('Could not open libarchive member stream.');
             }
-            $temporary = $this->temporaryPath();
             $output = fopen($temporary, 'wb');
             if (!is_resource($output)) {
                 fclose($input);
@@ -315,7 +333,11 @@ final class CatalogArchiveExtractor
                 $this->copyBoundedStream($input, $output, $maxBytes, 'libarchive');
             } catch (\Throwable $error) {
                 @unlink($temporary);
-                throw $error;
+                throw new \RuntimeException(
+                    $this->libarchiveFailureMessage($extension, $targetPath, $expectedBytes, $error),
+                    (int)$error->getCode(),
+                    $error
+                );
             } finally {
                 fclose($input);
                 fclose($output);
@@ -341,7 +363,13 @@ final class CatalogArchiveExtractor
                 if (feof($input)) {
                     break;
                 }
-                throw new \RuntimeException($label . ' member stream stopped unexpectedly.');
+                $meta = stream_get_meta_data($input);
+                throw new \RuntimeException(
+                    $label . ' member stream stopped unexpectedly'
+                    . '; bytes_copied=' . $written
+                    . '; eof=' . (!empty($meta['eof']) ? 'true' : 'false')
+                    . '; timed_out=' . (!empty($meta['timed_out']) ? 'true' : 'false') . '.'
+                );
             }
             $written += strlen($buffer);
             if ($written > $maxBytes) {
@@ -354,6 +382,21 @@ final class CatalogArchiveExtractor
         fflush($output);
     }
 
+    private function libarchiveFailureMessage(
+        string $extension,
+        string $entryPath,
+        int $expectedBytes,
+        \Throwable $error
+    ): string {
+        $detail = trim($error->getMessage());
+        if ($detail === '') {
+            $detail = get_class($error);
+        }
+        $label = $extension === '7z' ? '7-Zip' : strtoupper($extension);
+        return $label . ' archive member "' . $entryPath . '" could not be extracted by libarchive '
+            . '(' . get_class($error) . ', declared ' . number_format($expectedBytes) . ' bytes): ' . $detail;
+    }
+
     private function verifyExtractedFile(string $path, int $expectedBytes, int $maxBytes): void
     {
         if (!is_file($path) || is_link($path)) {
@@ -362,8 +405,12 @@ final class CatalogArchiveExtractor
         }
         $size = filesize($path);
         if ($size === false || $size < 1 || (int)$size > $maxBytes || (int)$size !== $expectedBytes) {
+            $actual = $size === false ? 'unknown' : number_format((int)$size);
             @unlink($path);
-            throw new \RuntimeException('Archive member output size does not match its declared size.');
+            throw new \RuntimeException(
+                'Archive member output size does not match its declared size; expected '
+                . number_format($expectedBytes) . ' bytes, got ' . $actual . ' bytes.'
+            );
         }
     }
 
