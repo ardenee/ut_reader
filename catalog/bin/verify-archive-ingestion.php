@@ -41,6 +41,7 @@ $phpFiles = [
     'api/v1/upload-bucket-chunk.php',
     'profiled-upload.php',
     'upload-bucket-v2.php',
+    'background-jobs.php',
     'config.example.php',
 ];
 
@@ -69,6 +70,8 @@ require_once $root . '/bootstrap/autoload.php';
 $extractorSource = (string)@file_get_contents($root . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php');
 $configSource = (string)@file_get_contents($root . '/config.example.php');
 $workerVersion = (string)@file_get_contents($root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php');
+$pageSource = (string)@file_get_contents($root . '/background-jobs.php');
+$archiveErrorClient = (string)@file_get_contents($root . '/assets/background-jobs-archive-errors.js');
 
 $record(
     'archive_runtime_uses_no_command_line_tools',
@@ -95,6 +98,7 @@ $record(
 $capabilities = CatalogArchiveExtractor::runtimeCapabilities();
 $libarchiveClass = class_exists(\libarchive\Archive::class);
 $libarchiveStream = $libarchiveClass && method_exists(\libarchive\Archive::class, 'currentEntryStream');
+$libarchiveExtractCurrent = $libarchiveClass && method_exists(\libarchive\Archive::class, 'extractCurrent');
 $libarchiveRestrictedApi = $libarchiveClass
     && method_exists(\libarchive\Archive::class, 'supportFormats')
     && defined('libarchive\\FORMAT_RAR')
@@ -108,7 +112,12 @@ $libarchiveAutomaticApi = $libarchiveClass
 $record(
     'libarchive_php_extension_available',
     !empty($capabilities['libarchive']) && $libarchiveStream,
-    'RAR and 7z require PHP ext-archive (cataphract/libarchive) with currentEntryStream(). Released 0.2.0 auto-detects formats and does not expose supportFormats(); newer builds may expose explicit format restriction.'
+    'RAR and 7z require PHP ext-archive (cataphract/libarchive). Released 0.2.0 exposes currentEntryStream() and extractCurrent(); newer builds may also expose explicit format restriction.'
+);
+$record(
+    'libarchive_native_extraction_available',
+    !$libarchiveClass || $libarchiveExtractCurrent,
+    'Released ext-archive 0.2.0 should provide extractCurrent() so one selected RAR/7z member can use libarchive native block extraction.'
 );
 $record(
     'libarchive_api_generation_is_supported',
@@ -122,16 +131,30 @@ $record(
 );
 
 $record(
-    'libarchive_backend_is_streamed_and_optionally_format_restricted',
+    'libarchive_backend_uses_controlled_native_member_extraction',
     str_contains($extractorSource, 'new \\libarchive\\Archive($archivePath)')
         && str_contains($extractorSource, "method_exists(\$archive, 'supportFormats')")
+        && str_contains($extractorSource, "method_exists(\$archive, 'extractCurrent')")
+        && str_contains($extractorSource, '$archiveEntry->pathname = $temporary')
+        && str_contains($extractorSource, '$archive->extractCurrent($archiveEntry)')
         && str_contains($extractorSource, 'currentEntryStream()')
+        && str_contains($extractorSource, 'libarchiveFailureMessage(')
         && str_contains($extractorSource, "'backend' => 'libarchive'")
         && str_contains($extractorSource, 'FORMAT_RAR_V5')
         && str_contains($extractorSource, 'FORMAT_7ZIP')
         && str_contains($extractorSource, 'safeMemberPath($rawPath)')
         && str_contains($extractorSource, 'verifyExtractedFile('),
-    'RAR/RAR5/7z are streamed directly through libarchive. Newer ext-archive builds use explicit format restriction; released 0.2.0 relies on automatic detection while path, size and bounded-output safety remain enforced.'
+    'RAR/RAR5/7z must prefer one-entry native extractCurrent() to a controlled temporary path, retain currentEntryStream() only as a compatibility fallback, and preserve exact-size/path validation.'
+);
+
+$record(
+    'libarchive_failures_include_actionable_context',
+    str_contains($extractorSource, 'could not be extracted by libarchive')
+        && str_contains($extractorSource, 'declared ')
+        && str_contains($extractorSource, 'bytes_copied=')
+        && str_contains($extractorSource, 'expected ')
+        && str_contains($extractorSource, 'bytes, got '),
+    'A failed archive member must report the archive format/member, exception context and exact size diagnostics instead of a generic stream failure.'
 );
 
 $record(
@@ -144,6 +167,17 @@ $record(
         && !str_contains($extractorSource, '$archiveEntry->hardlink')
         && !str_contains($extractorSource, '$archiveEntry->isEncrypted'),
     'Released ext-archive 0.2.0 exposes pathname/size but not the richer entry-type/link/encryption virtual properties used by development builds.'
+);
+
+$record(
+    'archive_failures_are_visible_in_background_jobs',
+    str_contains($pageSource, 'assets/background-jobs-archive-errors.js')
+        && str_contains($archiveErrorClient, 'result.errors')
+        && str_contains($archiveErrorClient, 'progress.errors')
+        && str_contains($archiveErrorClient, 'Failed archive member(s):')
+        && str_contains($archiveErrorClient, 'job.last_error = detail')
+        && str_contains($archiveErrorClient, 'archive_error_count'),
+    'Partial archive jobs must promote retained member errors into the normal Background Jobs detail/error display so operators do not need direct SQL to discover the cause.'
 );
 
 $record(
@@ -282,7 +316,7 @@ if (class_exists(ZipArchive::class)) {
                 $record(
                     'zip_member_extracts_exact_bytes',
                     $bytes === 'UNREALDB_ARCHIVE_TEST',
-                    'One selected member should be streamed to a temporary regular file without unpacking the archive tree.'
+                    'One selected member should be extracted to a controlled temporary regular file without unpacking the archive tree.'
                 );
             } else {
                 $record('zip_member_extracts_exact_bytes', false, 'Valid fixture member was not listed.');
