@@ -30,9 +30,19 @@ $checks = [
         'needle' => "LIMIT ' . \$limit",
         'present' => true,
     ],
-    'unverified_parent_plans_bounded_children' => [
+    'unverified_parent_plans_fixed_id_windows' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php',
-        'needle' => 'private const CHILD_BATCH_SIZE = 100;',
+        'needle' => 'private const PLAN_ID_WINDOW = 5000;',
+        'present' => true,
+    ],
+    'unverified_children_use_fixed_id_buckets' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php',
+        'needle' => 'private const CHILD_ID_SPAN = 100;',
+        'present' => true,
+    ],
+    'unverified_workflow_key_is_replay_stable' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogUnverifiedBulkActionJobHandler.php',
+        'needle' => "'unverified:batch:' . \$start . '-' . \$end",
         'present' => true,
     ],
     'unverified_children_checkpoint_each_file' => [
