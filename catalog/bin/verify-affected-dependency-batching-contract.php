@@ -94,7 +94,12 @@ $checks = [
     ],
     'game_stats_use_materialized_dependency_keys' => [
         'path' => $root . '/src/Infrastructure/Persistence/PdoGameCatalogStats.php',
-        'needle' => 'dependency_package_key=s.required_package',
+        'needle' => 'base_keys.package_key=s.required_package',
+        'present' => true,
+    ],
+    'game_stats_do_not_use_correlated_key_expressions_when_migrated' => [
+        'path' => $root . '/src/Infrastructure/Persistence/PdoGameCatalogStats.php',
+        'needle' => 'Materialize the small official-package key set once per stats',
         'present' => true,
     ],
     'performance_migration_adds_required_file_index' => [
