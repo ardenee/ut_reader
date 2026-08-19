@@ -103,7 +103,10 @@ final class PdoDependencyPackageSummary
                 $collation = self::TEXT_COLLATION;
                 $packageExpr = '(CONVERT(package_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ')';
                 $objectExpr = '(CONVERT(object_term.value_prefix USING utf8mb4) COLLATE ' . $collation . ')';
-                $selectColumns = 'f.game_id,l.file_id,' . $packageExpr . ' required_package,'
+                // required_package_term_id is the group identity. Aggregate the
+                // display value instead of grouping by converted text so MySQL
+                // performs the grouping on compact integer keys only.
+                $selectColumns = 'f.game_id,l.file_id,MAX(' . $packageExpr . ') required_package,'
                     . ($exampleColumn ? 'MIN(NULLIF(' . $objectExpr . ',"")) example_required_object_path,' : '')
                     . 'COUNT(*) dependency_count,'
                     . 'SUM(l.status=1) resolved_count,'
@@ -129,7 +132,7 @@ final class PdoDependencyPackageSummary
                     . 'LEFT JOIN ue_files provider ON provider.id=l.resolved_file_id '
                     . 'WHERE l.file_id IN (' . $placeholders . ') AND f.scan_status="verified" '
                     . 'AND package_term.value_length>0 '
-                    . 'GROUP BY f.game_id,l.file_id,l.required_package_term_id,' . $packageExpr
+                    . 'GROUP BY f.game_id,l.file_id,l.required_package_term_id'
                 );
                 $insert->execute($chunk);
                 $summaryRows += $insert->rowCount();
