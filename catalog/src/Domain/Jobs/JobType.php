@@ -36,6 +36,8 @@ final class JobType
     public const REFRESH_UNVERIFIED_GAME_MATCHES = 'catalog.refresh_unverified_game_matches';
     public const UNVERIFIED_BULK_ACTION = 'catalog.unverified_bulk_action';
     public const UNVERIFIED_BULK_ACTION_BATCH = 'catalog.unverified_bulk_action_batch';
+    public const GAME_FILE_REASSIGN = 'catalog.game_file_reassign';
+    public const GAME_FILE_REASSIGN_BATCH = 'catalog.game_file_reassign_batch';
     public const CROSS_GAME_COPY_BATCH = 'catalog.cross_game_copy_batch';
     public const PROFILED_UPLOAD_BATCH = 'catalog.profiled_upload_batch';
     public const GENERATE_MOD_PACKAGE = 'catalog.generate_mod_package';
@@ -80,6 +82,8 @@ final class JobType
             self::REFRESH_UNVERIFIED_GAME_MATCHES,
             self::UNVERIFIED_BULK_ACTION,
             self::UNVERIFIED_BULK_ACTION_BATCH,
+            self::GAME_FILE_REASSIGN,
+            self::GAME_FILE_REASSIGN_BATCH,
             self::CROSS_GAME_COPY_BATCH,
             self::PROFILED_UPLOAD_BATCH,
             self::GENERATE_MOD_PACKAGE,

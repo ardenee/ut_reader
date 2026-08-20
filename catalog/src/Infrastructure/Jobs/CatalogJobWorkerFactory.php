@@ -20,7 +20,7 @@ use UnrealDb\Catalog\Infrastructure\Telemetry\CatalogSystemErrorRecorder;
 
 final class CatalogJobWorkerFactory
 {
-    // Worker fingerprint marker: 20260817-unsupported-redirect-exclusion-v1.
+    // Worker fingerprint marker: 20260820-game-file-reassignment-v1.
     /** @param array<string,mixed> $config */
     public static function create(
         PDO $db,
@@ -110,6 +110,8 @@ final class CatalogJobWorkerFactory
             JobType::REFRESH_UNVERIFIED_GAME_MATCHES => static fn() => new CatalogUnverifiedGameMatchRefreshJobHandler($db, $trustedImportConfig),
             JobType::UNVERIFIED_BULK_ACTION => static fn() => new CatalogUnverifiedBulkActionJobHandler($db, $trustedImportConfig),
             JobType::UNVERIFIED_BULK_ACTION_BATCH => static fn() => new CatalogUnverifiedBulkActionJobHandler($db, $trustedImportConfig),
+            JobType::GAME_FILE_REASSIGN => static fn() => new CatalogGameFileReassignmentJobHandler($db, $trustedImportConfig),
+            JobType::GAME_FILE_REASSIGN_BATCH => static fn() => new CatalogGameFileReassignmentJobHandler($db, $trustedImportConfig),
             JobType::CROSS_GAME_COPY_BATCH => static fn() => new CatalogCrossGameCopyBatchJobHandler($db, $trustedImportConfig),
             JobType::PROFILED_UPLOAD_BATCH => static fn() => new CatalogProfiledUploadBatchJobHandler($db, $trustedImportConfig),
             JobType::GENERATE_MOD_PACKAGE => static fn() => new GeneratedPackageJobHandler($db, $config),
