@@ -151,11 +151,15 @@ $record(
     'An archive member that is definitively not an Unreal package may complete as rejected instead of wasting retries.'
 );
 $record(
-    'legacy_reader_compatibility_failures_are_not_destroyed_as_bad_content',
-    !str_contains($stagedPackage, "'invalid exports table offset:'")
-        && !str_contains($stagedPackage, "'invalid imports table offset:'")
-        && !str_contains($stagedPackage, "'invalid names table offset:'"),
-    'Package-table parse failures can be reader compatibility bugs; archive-member staging must retain/retry those bytes rather than reject and delete them.'
+    'reader_validation_failures_are_retained_without_dead_letter_loop',
+    str_contains($stagedPackage, 'isReaderValidationFailure')
+        && str_contains($stagedPackage, "'invalid exports table offset:'")
+        && str_contains($stagedPackage, "'invalid imports table offset:'")
+        && str_contains($stagedPackage, "'invalid names table offset:'")
+        && str_contains($stagedPackage, "'status' => 'unverified'")
+        && str_contains($stagedPackage, "'source_retained' => true")
+        && str_contains($stagedPackage, 'durable source retained for a future reader fix'),
+    'Deterministic reader-validation failures must stop automatic retries while preserving the archive member as unverified/restartable input.'
 );
 $record(
     'retained_archive_operator_controls_exist',
