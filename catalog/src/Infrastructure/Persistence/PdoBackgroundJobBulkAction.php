@@ -66,7 +66,9 @@ final class PdoBackgroundJobBulkAction
 
         $actionCondition = match ($action) {
             'restart' => '(j.status IN ("cancelled","failed","dead_letter") '
-                . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified")))',
+                . 'OR (j.status="completed" AND j.display_status IN ("failed","rejected","unverified")) '
+                . 'OR (j.status="completed" AND j.job_type IN ("' . JobType::PROCESS_BUCKET_ARCHIVE . '","'
+                . JobType::IMPORT_STAGED_ARCHIVE . '") AND j.display_status="partial"))',
             'cancel' => 'j.status="queued"',
             // Queued/deferred rows are safe to purge only after they are first
             // atomically moved to cancelled below. Running rows are deliberately
@@ -163,6 +165,25 @@ final class PdoBackgroundJobBulkAction
             }
         }
 
+        // A retained partial archive must be replayed from the beginning of its
+        // container. Existing successful archive-member child jobs are deduped by
+        // parent/member key, while members that never produced a child are tried
+        // again. Capture these IDs before result/status are reset.
+        $archiveSelect = $this->db->prepare(
+            'SELECT id FROM ue_background_jobs WHERE queue_name=? AND id IN (' . $idSql . ') '
+            . 'AND status="completed" AND display_status="partial" '
+            . 'AND job_type IN (?,?)'
+        );
+        $archiveSelect->execute(array_merge(
+            [$queueName],
+            $eligibleIds,
+            [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE]
+        ));
+        $retainedArchiveIds = array_values(array_unique(array_map(
+            'intval',
+            $archiveSelect->fetchAll(PDO::FETCH_COLUMN) ?: []
+        )));
+
         $statement = $this->db->prepare(
             'UPDATE ue_background_jobs SET status="queued",attempts=0,available_at=?,worker_id=NULL,lease_token=NULL,'
             . 'leased_at=NULL,lease_expires_at=NULL,last_heartbeat_at=NULL,last_error=NULL,result_json=NULL,'
@@ -171,11 +192,22 @@ final class PdoBackgroundJobBulkAction
             . 'WHERE queue_name=? AND id IN (' . $idSql . ') AND '
             . str_replace('j.', '', $actionCondition)
         );
-        // Do not clear progress_json/progress_updated_at. The durable progress
-        // snapshot is recovery state. Only legacy affected-dependency batch rows
-        // receive the resume_offset compatibility projection above.
+        // Ordinary resumable jobs retain progress_json as recovery state. Archive
+        // parents are handled below because their retained source needs a fresh
+        // archive walk rather than resuming at an already-complete entry cursor.
         $statement->execute(array_merge([$now, $now, $queueName], $eligibleIds));
-        return $statement->rowCount();
+        $affected = $statement->rowCount();
+
+        if ($retainedArchiveIds !== []) {
+            $archiveIdSql = implode(',', array_fill(0, count($retainedArchiveIds), '?'));
+            $resetArchive = $this->db->prepare(
+                'UPDATE ue_background_jobs SET progress_json=NULL,progress_updated_at=NULL '
+                . 'WHERE queue_name=? AND id IN (' . $archiveIdSql . ') AND status="queued"'
+            );
+            $resetArchive->execute(array_merge([$queueName], $retainedArchiveIds));
+        }
+
+        return $affected;
     }
 
     /** @param list<int> $eligibleIds */
