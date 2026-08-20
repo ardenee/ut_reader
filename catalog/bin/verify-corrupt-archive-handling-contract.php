@@ -77,6 +77,8 @@ $displayStatusPath = $root . '/src/Infrastructure/Jobs/CatalogJobDisplayStatus.p
 $countQueryPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobDisplayCountQuery.php';
 $bulkActionPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php';
 $stagedPackagePath = $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php';
+$storageCleanupPath = $root . '/src/Infrastructure/Jobs/CatalogJobStorageCleanup.php';
+$outcomeProjectorPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php';
 $archiveRecoveryJsPath = $root . '/assets/background-jobs-archive-errors.js';
 $worker = (string)@file_get_contents($workerPath);
 $policy = (string)@file_get_contents($policyPath);
@@ -86,6 +88,8 @@ $displayStatus = (string)@file_get_contents($displayStatusPath);
 $countQuery = (string)@file_get_contents($countQueryPath);
 $bulkAction = (string)@file_get_contents($bulkActionPath);
 $stagedPackage = (string)@file_get_contents($stagedPackagePath);
+$storageCleanup = (string)@file_get_contents($storageCleanupPath);
+$outcomeProjector = (string)@file_get_contents($outcomeProjectorPath);
 $archiveRecoveryJs = (string)@file_get_contents($archiveRecoveryJsPath);
 
 $record(
@@ -162,6 +166,18 @@ $record(
     'Deterministic reader-validation failures must stop automatic retries while preserving the archive member as unverified/restartable input.'
 );
 $record(
+    'completed_retained_sources_survive_storage_cleanup',
+    str_contains($storageCleanup, 'SELECT status,result_json FROM ue_background_jobs')
+        && str_contains($storageCleanup, 'isRecoveryOwner')
+        && str_contains($storageCleanup, "\$result['source_retained']"),
+    'A completed unverified job with source_retained=true must remain a storage owner instead of losing its prepared bytes to routine cleanup.'
+);
+$record(
+    'archive_parent_reports_unverified_child_as_failed',
+    str_contains($outcomeProjector, "['failed', 'rejected', 'unverified', 'partial', 'error']"),
+    'Archive parent rollups must not count an unreadable/unverified child as a successful added file.'
+);
+$record(
     'retained_archive_operator_controls_exist',
     str_contains($archiveRecoveryJs, "data-status=\"partial_archive\"")
         || (str_contains($archiveRecoveryJs, "dataset.status = 'partial_archive'")
@@ -177,13 +193,25 @@ $record(
     'Administrators need both per-archive retry and all-matching retained archive retry actions.'
 );
 $record(
-    'worker_fingerprint_tracks_retry_policy',
-    str_contains($fingerprint, '/src/Application/Jobs/JobFailureRetryPolicy.php'),
-    'Changing deterministic failure classification must invalidate detached workers.'
+    'worker_fingerprint_tracks_reader_and_retry_policy',
+    str_contains($fingerprint, '/src/Application/Jobs/JobFailureRetryPolicy.php')
+        && str_contains($fingerprint, '/src/Infrastructure/Readers/CatalogLegacyPackageReader.php'),
+    'Changing retry classification or the legacy package reader must invalidate detached workers.'
 );
 
 $syntaxFailures = [];
-foreach ([$workerPath, $policyPath, $batchPath, $fingerprintPath, $displayStatusPath, $countQueryPath, $bulkActionPath, $stagedPackagePath] as $path) {
+foreach ([
+    $workerPath,
+    $policyPath,
+    $batchPath,
+    $fingerprintPath,
+    $displayStatusPath,
+    $countQueryPath,
+    $bulkActionPath,
+    $stagedPackagePath,
+    $storageCleanupPath,
+    $outcomeProjectorPath,
+] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
