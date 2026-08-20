@@ -1,0 +1,286 @@
+name: Apply affected wait recovery fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-affected-wait-recovery-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - name: Apply focused fixes
+        shell: python
+        run: |
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text(encoding='utf-8')
+              if text.count(old) != 1:
+                  raise SystemExit(f'{path}: expected exactly one match, got {text.count(old)}')
+              p.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+          replace_once(
+              'catalog/assets/background-jobs-stable.js',
+              "const validStatuses = ['', 'queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled'];",
+              "const validStatuses = ['', 'queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled', 'partial_archive'];"
+          )
+
+          handler = 'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php'
+          replace_once(
+              handler,
+              """            $problems = $children['failed'] + $children['dead_letter'] + $children['cancelled'];
+            if ($problems > 0) {
+                $context->defer(30, $this->progress(
+                    'affected_wait',
+                    min(85, $percent),
+                    'Affected dependency workflow is waiting on ' . $problems . ' failed/cancelled unit(s). '
+                        . 'Only those problem units need attention; completed file work is retained.',
+                    [
+                        'package_name' => $packageName,
+                        'affected_total' => $affectedTotal,
+                        'children' => $children,
+                        'file_state' => $files,
+                    ]
+                ));
+            }
+
+""",
+              """            $problems = $children['failed'] + $children['dead_letter'] + $children['cancelled'];
+            // A terminal child is an operator-visible recovery item, not a reason
+            // to keep the coordinator queued forever. Finish the successful work
+            // once no runnable child remains; failed/cancelled units stay in the
+            // durable ledger and can be retried independently later.
+
+"""
+          )
+          replace_once(
+              handler,
+              """            $context->checkpoint($this->progress(
+                'affected_finalize',
+                88,
+                'All affected file work completed; publishing changed dependency summaries and scheduling cached game counters.',
+""",
+              """            $finalizeMessage = $problems > 0
+                ? 'Affected file work reached terminal state with ' . $problems
+                    . ' failed/cancelled unit(s); finalizing successful work while those recovery items remain visible.'
+                : 'All affected file work completed; publishing changed dependency summaries and scheduling cached game counters.';
+            $context->checkpoint($this->progress(
+                'affected_finalize',
+                88,
+                $finalizeMessage,
+"""
+          )
+          replace_once(
+              handler,
+              """        $children = $this->childState($job->id);
+        $affectedTotal = max(
+""",
+              """        $children = $this->childState($job->id);
+        $terminalProblems = $children['failed'] + $children['dead_letter'] + $children['cancelled'];
+        $affectedTotal = max(
+"""
+          )
+          replace_once(
+              handler,
+              """        $message = 'Affected dependency refresh complete for ' . $packageName . ': '
+            . $aggregate['processed_files'] . ' processed, ' . $aggregate['changed_files'] . ' changed, '
+            . $aggregate['skipped_files'] . ' skipped, ' . $aggregate['dependencies_changed']
+            . ' dependency change(s); cached counters coalesced into job #' . $statsJobId . '.';
+""",
+              """        $message = ($terminalProblems > 0
+            ? 'Affected dependency refresh finalized with ' . $terminalProblems . ' recovery item(s) for '
+            : 'Affected dependency refresh complete for ')
+            . $packageName . ': ' . $aggregate['processed_files'] . ' processed, '
+            . $aggregate['changed_files'] . ' changed, ' . $aggregate['skipped_files'] . ' skipped, '
+            . $aggregate['dependencies_changed'] . ' dependency change(s); cached counters coalesced into job #'
+            . $statsJobId . '.';
+"""
+          )
+          replace_once(
+              handler,
+              """            'game_stats_refresh_job_id' => $statsJobId,
+        ]));
+
+        return [
+""",
+              """            'game_stats_refresh_job_id' => $statsJobId,
+            'failure_count' => $terminalProblems,
+        ]));
+
+        return [
+"""
+          )
+          replace_once(
+              handler,
+              """            'operation' => 'rebuild_affected_dependencies',
+            'workflow_version' => self::WORKFLOW_VERSION,
+""",
+              """            'operation' => 'rebuild_affected_dependencies',
+            'status' => $terminalProblems > 0 ? 'partial' : 'completed',
+            'workflow_version' => self::WORKFLOW_VERSION,
+"""
+          )
+          replace_once(
+              handler,
+              """            'game_stats_refresh_job_id' => $statsJobId,
+            'failure_count' => 0,
+            'failures' => [],
+""",
+              """            'game_stats_refresh_job_id' => $statsJobId,
+            'failure_count' => $terminalProblems,
+            'failures' => [],
+"""
+          )
+
+          # Existing pre-fix affected:retry children may be restarted after their
+          # parent has already finalized. Let those legacy units publish their own
+          # summary/counter refresh so recovery remains correct.
+          replace_once(
+              handler,
+              """        $changedFileIds = !$skipped && $dependenciesChanged > 0 ? [$affectedFileId] : [];
+
+        $context->checkpoint([
+""",
+              """        $changedFileIds = !$skipped && $dependenciesChanged > 0 ? [$affectedFileId] : [];
+        $legacyRetrySummaryRows = 0;
+        $legacyRetryStatsJobId = 0;
+        if (!$skipped && (int)($job->payload['retry_of_batch_job_id'] ?? 0) > 0) {
+            $summary = (new PdoDependencyPackageSummary($this->db))->rebuildFile($affectedFileId);
+            if (empty($summary['available'])) {
+                throw new RuntimeException('Dependency package summary projection is unavailable after affected recovery.');
+            }
+            $legacyRetrySummaryRows = (int)($summary['summary_rows'] ?? 0);
+            $legacyRetryStatsJobId = CatalogGameStatsRefreshCoordinator::request(
+                $this->db,
+                $job->queue,
+                (int)$source['game_id'],
+                null
+            );
+        }
+
+        $context->checkpoint([
+"""
+          )
+          replace_once(
+              handler,
+              """            'container_rewritten' => !empty($result['container_rewritten']),
+        ];
+""",
+              """            'container_rewritten' => !empty($result['container_rewritten']),
+            'recovery_summary_rows' => $legacyRetrySummaryRows,
+            'recovery_game_stats_job_id' => $legacyRetryStatsJobId,
+        ];
+"""
+          )
+
+          batch = 'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php'
+          replace_once(
+              batch,
+              """                    $queue->enqueue(
+                        $job->queue,
+                        JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                        [
+                            'file_id' => $sourceFileId,
+                            'game_id' => $gameId,
+                            'package_name' => $packageName,
+                            'affected_file_id' => $affectedFileId,
+                            'workflow_parent_job_id' => $job->rootJobId(),
+                            'retry_of_batch_job_id' => $job->id,
+                        ],
+                        40,
+                        null,
+                        null,
+                        null,
+                        3,
+                        $job->rootJobId(),
+                        'affected:retry:' . $affectedFileId
+                    );
+""",
+              """                    $queue->enqueue(
+                        $job->queue,
+                        JobType::REBUILD_FILE_DEPENDENCIES,
+                        [
+                            'file_id' => $affectedFileId,
+                            'affected_recovery_source_file_id' => $sourceFileId,
+                            'affected_recovery_package_name' => $packageName,
+                            'affected_recovery_root_job_id' => $job->rootJobId(),
+                            'affected_retry_of_batch_job_id' => $job->id,
+                        ],
+                        40,
+                        null,
+                        'affected-dependency-recovery:' . $affectedFileId,
+                        null,
+                        3,
+                        null,
+                        null
+                    );
+"""
+          )
+          replace_once(
+              batch,
+              "Affected file #' . $affectedFileId . ' failed in the batch; queued an isolated retry and continuing.",
+              "Affected file #' . $affectedFileId . ' failed in the batch; queued an independent full-file recovery and continuing."
+          )
+          replace_once(
+              batch,
+              "Affected file #' . $affectedFileId . ' remained contended after local retries; queued an isolated retry and continuing.",
+              "Affected file #' . $affectedFileId . ' remained contended after local retries; queued an independent full-file recovery and continuing."
+          )
+          replace_once(
+              batch,
+              "'disposition' => 'isolated_retry_queued',",
+              "'disposition' => 'independent_recovery_queued',"
+          )
+
+          verifier = 'catalog/bin/verify-affected-dependency-batching-contract.php'
+          marker = """    'job_hydrator_preserves_affected_batch_identity' => [
+"""
+          addition = """    'affected_parent_does_not_wait_forever_on_terminal_children' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php',
+        'needle' => 'Affected dependency workflow is waiting on ',
+        'present' => false,
+    ],
+    'affected_batch_failures_become_independent_full_file_recovery' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php',
+        'needle' => "'affected-dependency-recovery:' . \\$affectedFileId",
+        'present' => true,
+    ],
+    'affected_worker_fingerprint_tracks_handler_and_batch_service' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
+        'needle' => '/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php',
+        'present' => true,
+    ],
+"""
+          replace_once(verifier, marker, addition + marker)
+
+          # Remove this one-shot workflow in the same patch commit.
+          Path('.github/workflows/apply-affected-wait-recovery-fix.yml').unlink()
+      - name: Validate
+        run: |
+          php -l catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php
+          php -l catalog/src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php
+          php -l catalog/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php
+          php -l catalog/bin/verify-affected-dependency-batching-contract.php
+          node --check catalog/assets/background-jobs-stable.js
+          php catalog/bin/verify-affected-dependency-batching-contract.php
+          php catalog/bin/verify-corrupt-archive-handling-contract.php
+          php catalog/bin/verify-upload-worker-contracts.php
+      - name: Commit to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Stop terminal dependency units from stalling the queue"
+          git push origin HEAD:main
