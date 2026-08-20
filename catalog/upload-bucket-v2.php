@@ -11,6 +11,7 @@ require_once __DIR__ . '/lib/CatalogUi.php';
 require_once __DIR__ . '/lib/CatalogSupport.php';
 require_once __DIR__ . '/bootstrap/autoload.php';
 
+use UnrealDb\Catalog\Infrastructure\Import\CatalogBucketUploadTransferStoreFactory;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogUploadBucketFilePolicy;
 use UnrealDb\Catalog\Infrastructure\Settings\CatalogProgramSettingsStore;
 use UnrealDb\Catalog\Presentation\CatalogUi;
@@ -39,7 +40,9 @@ try {
     $allowedExtensions = $policy->allowedExtensions();
     sort($allowedExtensions, SORT_NATURAL | SORT_FLAG_CASE);
 
-    $chunkBytes = max(1024 * 1024, (int)($config['chunk_upload']['chunk_bytes'] ?? (16 * 1024 * 1024)));
+    // Keep the browser-advertised chunk size identical to the server transfer
+    // store, including PHP upload_max_filesize/post_max_size safety headroom.
+    $chunkBytes = CatalogBucketUploadTransferStoreFactory::effectiveChunkBytes($config);
     $processingUrl = 'background-jobs.php?queue=' . rawurlencode(
         (trim((string)($config['queue']['name'] ?? 'catalog')) ?: 'catalog') . ':bucket-processing'
     );
