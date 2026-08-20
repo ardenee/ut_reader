@@ -32,6 +32,16 @@ $checks = [
         'needle' => "'changed_file_ids' => array_map('intval', array_keys(\$changedIds))",
         'present' => true,
     ],
+    'affected_batch_failures_become_independent_full_file_recovery' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php',
+        'needle' => "'affected-dependency-recovery:' . \$affectedFileId",
+        'present' => true,
+    ],
+    'affected_batch_recovery_is_not_parented_to_blocked_root' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php',
+        'needle' => "JobType::REBUILD_FILE_DEPENDENCIES",
+        'present' => true,
+    ],
     'affected_parent_bulk_refreshes_changed_summaries_only' => [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php',
         'needle' => "rebuildFiles(\$aggregate['changed_file_ids'])",
@@ -56,6 +66,31 @@ $checks = [
         'path' => $root . '/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php',
         'needle' => 'scanner_rebuild_dependencies(',
         'present' => false,
+    ],
+    'blocked_affected_roots_have_nonblocking_compatibility_handler' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogNonBlockingAffectedDependencyJobHandler.php',
+        'needle' => 'No affected dependency unit is still runnable. Finalizing successful work',
+        'present' => true,
+    ],
+    'blocked_affected_roots_complete_partial_instead_of_looping' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogNonBlockingAffectedDependencyJobHandler.php',
+        'needle' => "'status' => 'partial'",
+        'present' => true,
+    ],
+    'worker_factory_uses_nonblocking_affected_handler' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+        'needle' => 'new CatalogNonBlockingAffectedDependencyJobHandler($db, $config)',
+        'present' => true,
+    ],
+    'worker_fingerprint_tracks_nonblocking_affected_handler' => [
+        'path' => $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
+        'needle' => '/src/Infrastructure/Jobs/CatalogNonBlockingAffectedDependencyJobHandler.php',
+        'present' => true,
+    ],
+    'retained_archive_page_uses_direct_bounded_root_query' => [
+        'path' => $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php',
+        'needle' => 'return $this->fetchRetainedArchives($queue, $perPage, $cursor, $move);',
+        'present' => true,
     ],
     'affected_batches_have_dedicated_resource_class' => [
         'path' => $root . '/src/Domain/Jobs/JobResourcePolicy.php',
@@ -138,9 +173,32 @@ foreach ($checks as $label => $check) {
     }
 }
 
+$syntaxFiles = [
+    $root . '/src/Infrastructure/Jobs/CatalogNonBlockingAffectedDependencyJobHandler.php',
+    $root . '/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php',
+    $root . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
+    $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php',
+    $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php',
+];
+foreach ($syntaxFiles as $path) {
+    $pipes = [];
+    $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+    if (!is_resource($process)) {
+        $failed[] = 'php_syntax_' . basename($path) . '_could_not_run';
+        continue;
+    }
+    $stdout = stream_get_contents($pipes[1]);
+    $stderr = stream_get_contents($pipes[2]);
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+    if (proc_close($process) !== 0) {
+        $failed[] = 'php_syntax_' . basename($path) . ': ' . trim((string)$stderr . ' ' . (string)$stdout);
+    }
+}
+
 if ($failed !== []) {
     fwrite(STDERR, "Affected dependency batching contract FAILED:\n - " . implode("\n - ", $failed) . "\n");
     exit(1);
 }
 
-echo 'Affected dependency batching contract passed (' . count($checks) . " checks).\n";
+echo 'Affected dependency batching contract passed (' . count($checks) . " checks + syntax).\n";
