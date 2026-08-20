@@ -79,11 +79,18 @@ final class CatalogJobDisplayStatus
 
         $prefix = self::prefix($alias);
         if ($status === 'partial_archive') {
+            // Keep this filter literal. Background Jobs scopes the visible ledger
+            // through a UNION-derived table whose queue placeholders appear before
+            // WHERE placeholders. Several PDO/MySQL configurations proved brittle
+            // when this synthetic operator-only filter added two more bound values:
+            // the count could report retained archives while the page query returned
+            // no rows. JobType constants are fixed application literals, not input.
             return [
                 'sql' => $prefix . 'status="completed" AND '
-                    . $prefix . 'job_type IN (?,?) AND '
+                    . $prefix . 'job_type IN ("' . JobType::PROCESS_BUCKET_ARCHIVE . '","'
+                    . JobType::IMPORT_STAGED_ARCHIVE . '") AND '
                     . $prefix . 'display_status="partial"',
-                'params' => [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE],
+                'params' => [],
             ];
         }
         if (in_array($status, ['queued', 'running', 'dead_letter', 'cancelled'], true)) {
