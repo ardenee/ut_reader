@@ -7,7 +7,7 @@
  * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external
  *       services.
  * Audit: Primary namespaced implementation; prefer reusing this layer over creating parallel page-local copies of the
- *        same behavior.
+ *       same behavior.
  */
 declare(strict_types=1);
 
@@ -22,9 +22,9 @@ use RecursiveIteratorIterator;
  * Removes disposable and orphaned job-storage files without deleting sources
  * still owned by a background job that can be resumed/restarted.
  *
- * Completed jobs are deliberately not treated as recovery owners. Their durable
- * source/preparation artifacts become eligible for age-based pruning even while
- * the historical job row is retained for reporting.
+ * Most completed jobs are not recovery owners. A completed result may explicitly
+ * declare source_retained=true, however, when an operator must be able to retry
+ * durable bytes after a reader/parser fix. Those workspaces remain protected.
  */
 final class CatalogJobStorageCleanup
 {
@@ -166,7 +166,7 @@ final class CatalogJobStorageCleanup
         }
 
         $threshold = time() - $minimumAgeSeconds;
-        $status = $this->db->prepare('SELECT status FROM ue_background_jobs WHERE id=? LIMIT 1');
+        $owner = $this->db->prepare('SELECT status,result_json FROM ue_background_jobs WHERE id=? LIMIT 1');
         foreach (new FilesystemIterator($root, FilesystemIterator::SKIP_DOTS) as $entry) {
             if (!$entry instanceof \SplFileInfo || !$entry->isDir() || $entry->isLink()) {
                 continue;
@@ -175,8 +175,9 @@ final class CatalogJobStorageCleanup
             $name = $entry->getFilename();
             $jobId = preg_match('/^job-([0-9]+)$/', $name, $match) === 1 ? (int)$match[1] : 0;
             if ($jobId > 0) {
-                $status->execute([$jobId]);
-                if ($this->isRestartableStatus((string)($status->fetchColumn() ?: ''))) {
+                $owner->execute([$jobId]);
+                $row = $owner->fetch(PDO::FETCH_ASSOC);
+                if (is_array($row) && $this->isRecoveryOwner($row)) {
                     $result['retained']++;
                     continue;
                 }
@@ -252,6 +253,29 @@ final class CatalogJobStorageCleanup
             }
         }
         return $ids;
+    }
+
+    /** @param array<string,mixed> $row */
+    private function isRecoveryOwner(array $row): bool
+    {
+        $status = strtolower(trim((string)($row['status'] ?? '')));
+        if (in_array($status, self::RESTARTABLE_STATUSES, true)) {
+            return true;
+        }
+        if ($status !== 'completed') {
+            return false;
+        }
+
+        $json = trim((string)($row['result_json'] ?? ''));
+        if ($json === '') {
+            return false;
+        }
+        try {
+            $result = json_decode($json, true, 64, JSON_THROW_ON_ERROR);
+        } catch (\JsonException) {
+            return false;
+        }
+        return is_array($result) && !empty($result['source_retained']);
     }
 
     private function isRestartableStatus(string $status): bool
