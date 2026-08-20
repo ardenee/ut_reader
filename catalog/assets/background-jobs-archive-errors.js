@@ -5,11 +5,23 @@
     if (!root || typeof window.fetch !== 'function') return;
 
     const statusUrl = String(root.dataset.statusUrl || '');
+    const bulkUrl = String(root.dataset.bulkUrl || 'api/v1/job-bulk.php');
+    const queue = String(root.dataset.queue || 'catalog');
+    const csrf = String(root.dataset.csrf || '');
+    const tabs = document.getElementById('jobs-status-tabs');
+    const tableBody = document.getElementById('jobs-table-body');
+    const searchInput = document.getElementById('jobs-search');
+    const selectMatchingButton = document.getElementById('jobs-select-matching');
+    const notice = document.getElementById('jobs-message');
+    const refreshButton = document.getElementById('jobs-refresh');
     const originalFetch = window.fetch.bind(window);
     const archiveTypes = new Set([
         'catalog.process_bucket_archive',
         'catalog.import_staged_archive'
     ]);
+    const retainedArchiveIds = new Set();
+    let retainedArchiveCount = 0;
+    let retryMatchingButton = null;
 
     const requestUrl = (input) => {
         try {
@@ -66,6 +78,13 @@
         return main + (meta.length ? ' [' + meta.join(', ') + ']' : '');
     };
 
+    const isRetainedPartialArchive = (job) => {
+        if (!job || typeof job !== 'object') return false;
+        return archiveTypes.has(String(job.job_type || ''))
+            && String(job.status || '').toLowerCase() === 'completed'
+            && String(job.display_status || '').toLowerCase() === 'partial';
+    };
+
     const decorateArchiveJob = (job) => {
         if (!job || typeof job !== 'object' || !archiveTypes.has(String(job.job_type || ''))) return false;
         const progress = job.progress && typeof job.progress === 'object' ? job.progress : {};
@@ -97,6 +116,132 @@
         return true;
     };
 
+    const ensureRecoveryTab = () => {
+        if (!tabs) return null;
+        let button = tabs.querySelector('button[data-status="partial_archive"]');
+        if (button) return button;
+
+        button = document.createElement('button');
+        button.type = 'button';
+        button.dataset.status = 'partial_archive';
+        button.setAttribute('aria-selected', 'false');
+        button.appendChild(document.createTextNode('Retained archives '));
+        const count = document.createElement('span');
+        count.dataset.statusCount = 'partial_archive';
+        count.textContent = '0';
+        button.appendChild(count);
+
+        const cancelled = tabs.querySelector('button[data-status="cancelled"]');
+        tabs.insertBefore(button, cancelled || null);
+        return button;
+    };
+
+    const partialTabActive = () => {
+        const button = tabs ? tabs.querySelector('button[data-status="partial_archive"]') : null;
+        return Boolean(button && button.getAttribute('aria-selected') === 'true');
+    };
+
+    const syncRecoveryRows = () => {
+        if (!tableBody) return;
+        tableBody.querySelectorAll('.jobs-main-row[data-job-id]').forEach((row) => {
+            const id = Number(row.dataset.jobId || 0);
+            if (!retainedArchiveIds.has(id)) return;
+            const button = row.querySelector('.jobs-actions button');
+            if (!button) return;
+            button.hidden = false;
+            button.dataset.action = 'restart';
+            button.textContent = 'Retry archive';
+            button.title = 'Replay the retained source archive. Already queued successful members are reused.';
+        });
+    };
+
+    const syncRecoveryControls = () => {
+        ensureRecoveryTab();
+        syncRecoveryRows();
+        if (!retryMatchingButton || !tabs) return;
+        const active = partialTabActive();
+        retryMatchingButton.hidden = !active;
+        retryMatchingButton.disabled = !active || retainedArchiveCount < 1;
+        retryMatchingButton.textContent = retainedArchiveCount > 0
+            ? 'Retry all ' + retainedArchiveCount + ' matching archives'
+            : 'Retry all matching archives';
+    };
+
+    const postBulkRetry = async () => {
+        if (!bulkUrl || retainedArchiveCount < 1) return;
+        const search = searchInput ? String(searchInput.value || '').trim() : '';
+        if (!window.confirm('Retry all ' + retainedArchiveCount + ' retained archive job(s) matching the current search?')) return;
+
+        retryMatchingButton.disabled = true;
+        try {
+            const response = await originalFetch(bulkUrl, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {'Content-Type': 'application/json', 'X-CSRF-Token': csrf},
+                body: JSON.stringify({
+                    action: 'restart',
+                    scope: 'matching',
+                    queue: queue,
+                    status: 'partial_archive',
+                    search: search,
+                    job_ids: []
+                })
+            });
+            const body = await responseBody(response);
+            if (!response.ok) {
+                const message = body && body.error && body.error.message
+                    ? String(body.error.message)
+                    : 'Could not retry retained archives (HTTP ' + response.status + ').';
+                throw new Error(message);
+            }
+            const data = body && body.data ? body.data : {};
+            let text = 'Retried ' + String(data.affected || 0) + ' retained archive job(s).';
+            if (data.limited) text += ' The 10,000-job safety limit was reached; retry the remaining matching archives again.';
+            if (data.worker_error) text += ' Jobs were queued, but the worker could not start: ' + String(data.worker_error);
+            if (notice) notice.textContent = text;
+            if (refreshButton) refreshButton.click();
+        } catch (error) {
+            if (notice) notice.textContent = error && error.message ? error.message : 'Could not retry retained archives.';
+        } finally {
+            retryMatchingButton.disabled = false;
+        }
+    };
+
+    const installRecoveryControls = () => {
+        ensureRecoveryTab();
+        if (!retryMatchingButton && selectMatchingButton && selectMatchingButton.parentNode) {
+            retryMatchingButton = document.createElement('button');
+            retryMatchingButton.id = 'jobs-retry-retained-matching';
+            retryMatchingButton.type = 'button';
+            retryMatchingButton.hidden = true;
+            retryMatchingButton.textContent = 'Retry all matching archives';
+            retryMatchingButton.addEventListener('click', postBulkRetry);
+            selectMatchingButton.parentNode.insertBefore(retryMatchingButton, selectMatchingButton.nextSibling);
+        }
+
+        if (tabs && typeof MutationObserver !== 'undefined') {
+            new MutationObserver(syncRecoveryControls).observe(tabs, {
+                subtree: true,
+                childList: true,
+                attributes: true,
+                attributeFilter: ['aria-selected']
+            });
+        }
+        if (tableBody && typeof MutationObserver !== 'undefined') {
+            new MutationObserver(() => window.queueMicrotask(syncRecoveryRows)).observe(tableBody, {
+                subtree: true,
+                childList: true
+            });
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        if (String(params.get('status') || '').toLowerCase() === 'partial_archive') {
+            const tab = tabs ? tabs.querySelector('button[data-status="partial_archive"]') : null;
+            if (tab) window.setTimeout(() => tab.click(), 0);
+        }
+        syncRecoveryControls();
+    };
+
     window.fetch = async (input, init) => {
         const url = requestUrl(input);
         const response = await originalFetch(input, init);
@@ -106,10 +251,19 @@
         const jobs = body && body.data && Array.isArray(body.data.jobs) ? body.data.jobs : null;
         if (!jobs) return response;
 
+        retainedArchiveIds.clear();
         let changed = false;
         jobs.forEach((job) => {
+            if (isRetainedPartialArchive(job)) retainedArchiveIds.add(Number(job.id || 0));
             if (decorateArchiveJob(job)) changed = true;
         });
+        const counts = body && body.meta && body.meta.counts && typeof body.meta.counts === 'object'
+            ? body.meta.counts
+            : {};
+        retainedArchiveCount = integer(counts.partial_archive);
+        window.setTimeout(syncRecoveryControls, 0);
         return changed ? replaceResponse(response, body) : response;
     };
+
+    installRecoveryControls();
 })();
