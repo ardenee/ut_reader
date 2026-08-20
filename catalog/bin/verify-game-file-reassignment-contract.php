@@ -26,8 +26,8 @@ $api = $root . '/api/v1/game-files-reassign.php';
 require_text($api, [
     'catalog_api_require_admin(false);',
     "catalog_api_require_csrf('catalog-maintenance');",
-    "JobType::GAME_FILE_REASSIGN",
-    "'scope' => $scope",
+    'JobType::GAME_FILE_REASSIGN',
+    "'scope' => \$scope",
     "'snapshot_total'",
     'CatalogQueueWorkerStarter',
 ], $failures);
@@ -95,14 +95,14 @@ $selector = $root . '/src/Infrastructure/Games/PdoGameFileReassignmentSelectionQ
 require_text($selector, [
     'f.scan_status="verified"',
     'COUNT(*) c,COALESCE(MAX(f.id),0) max_id',
-    'LIMIT ' . '$limit',
+    'LIMIT $limit',
     'Select no more than 1,000 visible files at once.',
 ], $failures);
 
 $responseTransform = $root . '/src/Presentation/Http/CatalogPageResponseTransform.php';
 require_text($responseTransform, [
-    "if ($script === 'game-files.php')",
-    "assets/game-file-reassignment.js",
+    "if (\$script === 'game-files.php')",
+    'assets/game-file-reassignment.js',
 ], $failures);
 
 if ($failures !== []) {
