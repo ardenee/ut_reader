@@ -142,13 +142,13 @@ $record(
     'The synthetic retained-archive filter must not add bound job-type parameters after the shared UNION queue scope.'
 );
 $record(
-    'retained_archive_view_avoids_generic_workflow_count_model',
+    'retained_archive_view_is_narrow_indexed_query_only',
     str_contains($browserQuery, 'return $this->fetchRetainedArchives($queue, $perPage, $cursor, $move);')
-        && str_contains($browserQuery, '$counts = $this->fastQueueCounts($queue);')
-        && str_contains($browserQuery, 'FROM ue_background_jobs j WHERE j.parent_job_id IS NULL')
-        && str_contains($browserQuery, 'j.parent_job_id IS NOT NULL')
-        && !str_contains($browserQuery, "\$countScope = \$this->searchScope->build(\$queue, '');"),
-    'Opening Retained archives must use bounded direct table predicates instead of materialising the generic root/problem-child count model.'
+        && str_contains($browserQuery, "'SELECT COUNT(*) FROM ue_background_jobs j WHERE ' . \$whereSql")
+        && str_contains($browserQuery, "\$counts = ['partial_archive' => \$total];")
+        && !str_contains($browserQuery, 'fastQueueCounts(')
+        && !str_contains($browserQuery, 'GROUP BY j.status,j.display_status,j.job_type'),
+    'Opening Retained archives must count only the indexed partial archive roots; it must not scan/group every root or problem child merely to populate unrelated tabs.'
 );
 $record(
     'rar_zero_byte_non_extracted_records_do_not_open_member_stream',
