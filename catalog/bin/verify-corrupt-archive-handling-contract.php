@@ -1,6 +1,6 @@
 #!/usr/bin/env php
 <?php
-/** Read-only/no-database verifier for corrupt archive retry and duplicate admission handling. */
+/** Read-only/no-database verifier for corrupt archive retry, retained recovery and duplicate admission handling. */
 declare(strict_types=1);
 
 use UnrealDb\Catalog\Application\Jobs\JobFailureRetryPolicy;
@@ -73,10 +73,18 @@ $workerPath = $root . '/src/Application/Jobs/JobWorker.php';
 $policyPath = $root . '/src/Application/Jobs/JobFailureRetryPolicy.php';
 $batchPath = $root . '/src/Infrastructure/Import/CatalogBucketBatchQueue.php';
 $fingerprintPath = $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php';
+$displayStatusPath = $root . '/src/Infrastructure/Jobs/CatalogJobDisplayStatus.php';
+$countQueryPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobDisplayCountQuery.php';
+$bulkActionPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php';
+$archiveRecoveryJsPath = $root . '/assets/background-jobs-archive-errors.js';
 $worker = (string)@file_get_contents($workerPath);
 $policy = (string)@file_get_contents($policyPath);
 $batch = (string)@file_get_contents($batchPath);
 $fingerprint = (string)@file_get_contents($fingerprintPath);
+$displayStatus = (string)@file_get_contents($displayStatusPath);
+$countQuery = (string)@file_get_contents($countQueryPath);
+$bulkAction = (string)@file_get_contents($bulkActionPath);
+$archiveRecoveryJs = (string)@file_get_contents($archiveRecoveryJsPath);
 
 $record(
     'worker_uses_failure_retry_policy',
@@ -108,13 +116,47 @@ $record(
     'When an active archive job already owns valid staged bytes, the redundant second upload source should be removed after the job is reused.'
 );
 $record(
+    'retained_partial_archive_filter_is_first_class',
+    str_contains($displayStatus, "'partial_archive'")
+        && str_contains($displayStatus, 'JobType::PROCESS_BUCKET_ARCHIVE')
+        && str_contains($displayStatus, 'JobType::IMPORT_STAGED_ARCHIVE')
+        && str_contains($displayStatus, 'display_status="partial"')
+        && str_contains($countQuery, "'partial_archive' => 0")
+        && str_contains($countQuery, "\$counts['partial_archive'] += \$amount"),
+    'Background Jobs must expose completed partial archive parents as a dedicated retained-archive recovery scope.'
+);
+$record(
+    'retained_archive_restart_replays_parent_from_start',
+    str_contains($bulkAction, 'j.display_status="partial"')
+        && str_contains($bulkAction, 'JobType::PROCESS_BUCKET_ARCHIVE')
+        && str_contains($bulkAction, 'JobType::IMPORT_STAGED_ARCHIVE')
+        && str_contains($bulkAction, 'progress_json=NULL,progress_updated_at=NULL')
+        && str_contains($bulkAction, '$retainedArchiveIds'),
+    'Retrying a retained partial archive must requeue the parent and clear its completed archive cursor while preserving already-created child jobs for dedupe.'
+);
+$record(
+    'retained_archive_operator_controls_exist',
+    str_contains($archiveRecoveryJs, "data-status=\"partial_archive\"")
+        || (str_contains($archiveRecoveryJs, "dataset.status = 'partial_archive'")
+            && str_contains($archiveRecoveryJs, 'Retained archives')),
+    'Background Jobs must expose the retained-archive filter in the administrator UI.'
+);
+$record(
+    'retained_archive_retry_controls_exist',
+    str_contains($archiveRecoveryJs, 'Retry archive')
+        && str_contains($archiveRecoveryJs, 'Retry all ')
+        && str_contains($archiveRecoveryJs, "status: 'partial_archive'")
+        && str_contains($archiveRecoveryJs, "action: 'restart'"),
+    'Administrators need both per-archive retry and all-matching retained archive retry actions.'
+);
+$record(
     'worker_fingerprint_tracks_retry_policy',
     str_contains($fingerprint, '/src/Application/Jobs/JobFailureRetryPolicy.php'),
     'Changing deterministic failure classification must invalidate detached workers.'
 );
 
 $syntaxFailures = [];
-foreach ([$workerPath, $policyPath, $batchPath, $fingerprintPath] as $path) {
+foreach ([$workerPath, $policyPath, $batchPath, $fingerprintPath, $displayStatusPath, $countQueryPath, $bulkActionPath] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
