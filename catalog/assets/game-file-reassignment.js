@@ -58,16 +58,6 @@
         return new URL(window.location.href).searchParams.get(name) || '';
     }
 
-    function matchingTotal() {
-        var paragraphs = document.querySelectorAll('.ui-section__header p');
-        for (var i = 0; i < paragraphs.length; i++) {
-            var text = String(paragraphs[i].textContent || '');
-            var match = text.match(/([0-9][0-9,]*)\s+matching files/i);
-            if (match) return parseInt(match[1].replace(/,/g, ''), 10) || 0;
-        }
-        return 0;
-    }
-
     function fileIdForRow(row) {
         var link = row.querySelector('a[href*="file-info.php?id="],a[href*="file-examine.php?id="]');
         if (!link) return 0;
@@ -90,7 +80,9 @@
             '.game-file-reassign-status{flex:1 1 280px;color:var(--muted);font-size:12px}',
             '.game-file-reassign-toolbar.is-busy{opacity:.72;pointer-events:none}',
             '.game-file-reassign-select{width:18px;height:18px}',
-            '#game-files-table .game-file-reassign-col{width:42px!important;min-width:42px!important;text-align:center;white-space:nowrap}',
+            '#game-files-table .game-file-reassign-col{width:42px!important;min-width:42px!important;max-width:42px!important;text-align:center;white-space:nowrap}',
+            '#game-files-table th:nth-child(3),#game-files-table td:nth-child(3){width:auto;min-width:0;max-width:none}',
+            '#game-files-table .game-files-size{white-space:nowrap}',
             '.game-file-reassign-note{width:100%;font-size:12px;color:var(--muted)}',
             '@media(max-width:800px){.game-file-reassign-toolbar select{min-width:180px}.game-file-reassign-status{flex-basis:100%}}'
         ].join('\n');
@@ -106,9 +98,19 @@
         };
     }
 
+    function setupUrl(sourceGameId) {
+        var params = new URLSearchParams();
+        params.set('source_game_id', String(sourceGameId));
+        var filters = currentFilters();
+        Object.keys(filters).forEach(function (key) {
+            if (filters[key]) params.set(key, filters[key]);
+        });
+        return 'api/v1/game-files-reassign.php?' + params.toString();
+    }
+
     function confirmMove(scope, count, sourceName, targetName, targetId) {
         var amount = scope === 'matching'
-            ? (count > 0 ? count.toLocaleString() + ' matching file(s)' : 'all matching files')
+            ? (count > 0 ? count.toLocaleString() + ' matching verified file(s)' : 'all matching verified files')
             : count.toLocaleString() + ' selected file(s)';
         if (targetId === 0) {
             return window.confirm(
@@ -175,11 +177,10 @@
             + '<span class="game-file-reassign-status" aria-live="polite">Loading destinations…</span>'
             + '<span class="game-file-reassign-note">Move is separate from the × action, which permanently deletes a package from storage and the catalog.</span>';
 
-        var firstPagination = table.closest('.ui-table-region');
         var sectionBody = table.closest('.ui-section__body');
         if (sectionBody) {
             var tableRegion = table.closest('.ui-table-region');
-            sectionBody.insertBefore(toolbar, tableRegion || firstPagination || table);
+            sectionBody.insertBefore(toolbar, tableRegion || table);
         } else {
             table.parentNode.insertBefore(toolbar, table);
         }
@@ -189,7 +190,7 @@
         var targetSelect = document.getElementById('game-file-reassign-target');
         var selectedButton = document.getElementById('game-file-reassign-selected');
         var matchingButton = document.getElementById('game-file-reassign-matching');
-        var total = matchingTotal();
+        var total = 0;
         var sourceName = 'this game';
         var destinationNames = {};
 
@@ -216,8 +217,9 @@
         });
 
         try {
-            var setup = await getJson('api/v1/game-files-reassign.php?source_game_id=' + encodeURIComponent(sourceGameId));
+            var setup = await getJson(setupUrl(sourceGameId));
             sourceName = setup.source_game && setup.source_game.name ? String(setup.source_game.name) : sourceName;
+            total = parseInt(setup.movable_total || '0', 10) || 0;
             targetSelect.innerHTML = '';
             (setup.destinations || []).forEach(function (destination) {
                 var id = parseInt(destination.id, 10) || 0;
@@ -231,8 +233,8 @@
             targetSelect.disabled = targetSelect.options.length < 1;
             matchingButton.disabled = targetSelect.disabled || total === 0;
             setBusy(toolbar, false, total > 0
-                ? total.toLocaleString() + ' file(s) match the current filters.'
-                : 'Choose selected files to move.');
+                ? total.toLocaleString() + ' verified file(s) match the current filters.'
+                : 'No verified files match the current filters.');
             updateSelection();
         } catch (error) {
             targetSelect.innerHTML = '<option>Unavailable</option>';
