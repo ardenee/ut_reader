@@ -163,39 +163,69 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             );
             $workingPath = '';
         } catch (Throwable $error) {
-            if (!$this->isDeterministicNonPackage($error)) {
-                throw $error;
+            if ($this->isDeterministicNonPackage($error)) {
+                // The bytes are durable and unchanged between attempts. A package
+                // extension whose content has no Unreal magic/header cannot become
+                // a valid package on retry, so record it as rejected content.
+                $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
+                $incoming->delete($stagedPath);
+                $preparedStore->clear();
+                $context->checkpoint([
+                    'stage' => 'complete',
+                    'done' => 100,
+                    'total' => 100,
+                    'percent' => 100,
+                    'status' => 'rejected',
+                    'message' => $message,
+                ]);
+                return $this->terminalResult(
+                    'rejected',
+                    $message,
+                    $workingName,
+                    $relativePath,
+                    $preparedPath,
+                    $compressedBytes,
+                    $decoder,
+                    $md5,
+                    $sha1,
+                    false
+                );
             }
 
-            // The bytes are durable and unchanged between attempts. A package
-            // extension whose content has no Unreal magic/header cannot become a
-            // valid package on retry, so complete this child as a rejected member
-            // instead of consuming all retry attempts and becoming dead_letter.
-            $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
-            $incoming->delete($stagedPath);
-            $preparedStore->clear();
-            $context->checkpoint([
-                'stage' => 'complete',
-                'done' => 100,
-                'total' => 100,
-                'percent' => 100,
-                'status' => 'rejected',
-                'message' => $message,
-            ]);
-            return [
-                'operation' => 'process_bucket_staged_package',
-                'status' => 'rejected',
-                'message' => $message,
-                'file_id' => 0,
-                'queue_name' => '',
-                'original_name' => $workingName,
-                'source_relative_path' => $relativePath,
-                'bytes' => is_file($preparedPath) ? (int)(filesize($preparedPath) ?: 0) : 0,
-                'compressed_bytes' => $compressedBytes,
-                'decoder' => $decoder,
-                'md5' => $md5,
-                'sha1' => $sha1,
-            ];
+            if ($this->isReaderValidationFailure($error)) {
+                // Do not retry immutable bytes three times just because our reader
+                // cannot currently interpret them, and do not label the bytes as
+                // corrupt. Keep the durable prepared member so a later reader fix
+                // can be retried manually from Background Jobs without re-uploading
+                // or re-extracting the parent archive.
+                $message = 'Unreal package reader could not validate this archive member; durable source retained for a future reader fix. '
+                    . $this->errorText($error)
+                    . ' SHA1=' . $sha1 . '. '
+                    . $this->firstBytesDiagnostic($preparedPath);
+                $context->checkpoint([
+                    'stage' => 'complete',
+                    'done' => 100,
+                    'total' => 100,
+                    'percent' => 100,
+                    'status' => 'unverified',
+                    'message' => $message,
+                    'source_retained' => true,
+                ]);
+                return $this->terminalResult(
+                    'unverified',
+                    $message,
+                    $workingName,
+                    $relativePath,
+                    $preparedPath,
+                    $compressedBytes,
+                    $decoder,
+                    $md5,
+                    $sha1,
+                    true
+                );
+            }
+
+            throw $error;
         } finally {
             if ($workingPath !== '' && is_file($workingPath)) {
                 @unlink($workingPath);
@@ -240,6 +270,63 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             || str_contains($message, 'unreal package magic not found');
     }
 
+    private function isReaderValidationFailure(Throwable $error): bool
+    {
+        $message = strtolower($this->errorText($error));
+        foreach ([
+            'invalid names table count:',
+            'invalid names table offset:',
+            'invalid exports table count:',
+            'invalid exports table offset:',
+            'invalid imports table count:',
+            'invalid imports table offset:',
+            'invalid legacy package generation count:',
+            'legacy package seek is outside the file:',
+            'legacy package read exceeds the file:',
+            'legacy package read stopped before the requested bytes were available',
+            'invalid compact package index length',
+            'invalid legacy fstring byte length:',
+            'invalid legacy wide fstring length:',
+            'legacy package string has no terminator within the safe limit',
+            'the unreal package header is missing the required package guid',
+        ] as $marker) {
+            if (str_contains($message, $marker)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @return array<string,mixed> */
+    private function terminalResult(
+        string $status,
+        string $message,
+        string $workingName,
+        string $relativePath,
+        string $preparedPath,
+        int $compressedBytes,
+        string $decoder,
+        string $md5,
+        string $sha1,
+        bool $sourceRetained
+    ): array {
+        return [
+            'operation' => 'process_bucket_staged_package',
+            'status' => $status,
+            'message' => $message,
+            'file_id' => 0,
+            'queue_name' => '',
+            'original_name' => $workingName,
+            'source_relative_path' => $relativePath,
+            'bytes' => is_file($preparedPath) ? (int)(filesize($preparedPath) ?: 0) : 0,
+            'compressed_bytes' => $compressedBytes,
+            'decoder' => $decoder,
+            'md5' => $md5,
+            'sha1' => $sha1,
+            'source_retained' => $sourceRetained,
+        ];
+    }
+
     private function firstBytesDiagnostic(string $path): string
     {
         if ($path === '' || !is_file($path) || !is_readable($path)) {
@@ -250,7 +337,7 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             return 'First bytes unavailable.';
         }
         try {
-            $bytes = fread($handle, 16);
+            $bytes = fread($handle, 32);
         } finally {
             fclose($handle);
         }
