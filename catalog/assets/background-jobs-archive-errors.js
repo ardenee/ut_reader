@@ -207,6 +207,26 @@
         }
     };
 
+    const activateRetainedArchiveDeepLink = () => {
+        const params = new URLSearchParams(window.location.search);
+        if (String(params.get('status') || '').toLowerCase() !== 'partial_archive') return;
+
+        // The base Background Jobs client predates this synthetic status and may
+        // already have started its first unfiltered request. Clicking once during
+        // that in-flight refresh updates its state but cannot start a second fetch.
+        // Retry activation for a bounded period so, as soon as the initial request
+        // settles or times out, the dedicated retained-archive request starts.
+        let attempts = 0;
+        const activate = () => {
+            const tab = ensureRecoveryTab();
+            if (!tab || partialTabActive() || attempts >= 40) return;
+            attempts++;
+            tab.click();
+            if (!partialTabActive()) window.setTimeout(activate, 500);
+        };
+        activate();
+    };
+
     const installRecoveryControls = () => {
         ensureRecoveryTab();
         if (!retryMatchingButton && selectMatchingButton && selectMatchingButton.parentNode) {
@@ -234,11 +254,7 @@
             });
         }
 
-        const params = new URLSearchParams(window.location.search);
-        if (String(params.get('status') || '').toLowerCase() === 'partial_archive') {
-            const tab = tabs ? tabs.querySelector('button[data-status="partial_archive"]') : null;
-            if (tab) window.setTimeout(() => tab.click(), 0);
-        }
+        activateRetainedArchiveDeepLink();
         syncRecoveryControls();
     };
 
