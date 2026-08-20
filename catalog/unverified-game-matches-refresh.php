@@ -48,11 +48,10 @@ try {
     try {
         $status = $launcher->status($queue->queueName(), false);
         if (empty($status['active'])) {
-            $launcher->start(
-                $queue->queueName(),
-                10000,
-                $launcher->configuredWorkerCount()
-            );
+            // Preserve the queue's durable desired_count. This refresh is an
+            // automatic producer and must not reset an operator-selected worker
+            // count back to the configured default.
+            $launcher->start($queue->queueName(), 10000);
         }
     } catch (Throwable $error) {
         $workerError = trim($error->getMessage());
