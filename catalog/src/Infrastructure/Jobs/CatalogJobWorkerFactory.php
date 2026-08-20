@@ -2,8 +2,7 @@
 /**
  * UnrealDB PHP File Audit
  * Purpose: Defines the infrastructure class `CatalogJobWorkerFactory` for catalog job worker factory.
- * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page, API, or worker
- *      entry points.
+ * Why: It keeps this responsibility in the namespaced architecture instead of repeating it in page/API/job entry points.
  * Role: Infrastructure implementation for persistence, files, parsing, workers, security, storage, or external services.
  */
 declare(strict_types=1);
@@ -94,7 +93,7 @@ final class CatalogJobWorkerFactory
             JobType::REPAIR_COMPACT_METADATA_FILE => static fn() => new CatalogCompactMetadataRepairJobHandler($db, $trustedImportConfig),
             JobType::REBUILD_GAME_DEPENDENCIES => static fn() => new CatalogDependencyRefreshJobHandler($db, $config),
             JobType::REBUILD_FILE_DEPENDENCIES => static fn() => new CatalogDependencyRefreshJobHandler($db, $config),
-            JobType::REBUILD_AFFECTED_DEPENDENCIES => static fn() => new CatalogAffectedDependencyRefreshJobHandler($db, $config),
+            JobType::REBUILD_AFFECTED_DEPENDENCIES => static fn() => new CatalogNonBlockingAffectedDependencyJobHandler($db, $config),
             JobType::REBUILD_FILE_SEARCH_INDEX => static fn() => new CatalogSearchIndexJobHandler($db),
             JobType::SCAN_POSSIBLE_MISNAMED_FILES => static fn() => new CatalogMisnamedFileScanJobHandler($db),
             JobType::RECONCILE_CATALOG_PROJECTIONS => static fn() => new CatalogProjectionReconciliationJobHandler($db, $config),
