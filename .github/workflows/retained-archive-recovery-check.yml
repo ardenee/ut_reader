@@ -1,0 +1,20 @@
+name: Retained archive recovery check
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+      - name: PHP archive recovery contract
+        run: php catalog/bin/verify-corrupt-archive-handling-contract.php
+      - name: Upload worker contract
+        run: php catalog/bin/verify-upload-worker-contracts.php
+      - name: Archive recovery JavaScript syntax
+        run: node --check catalog/assets/background-jobs-archive-errors.js
