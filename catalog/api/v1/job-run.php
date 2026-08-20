@@ -9,7 +9,6 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/_bootstrap.php';
 
-use UnrealDb\Catalog\Infrastructure\Jobs\CatalogDetachedWorker;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogWorkerPoolReconciler;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogWorkerPoolStaleRestartFailed;
 use UnrealDb\Catalog\Presentation\Http\JsonResponse;
@@ -38,31 +37,6 @@ try {
 
     if (session_status() === PHP_SESSION_ACTIVE) {
         session_write_close();
-    }
-
-    /*
-     * CatalogWorkerPoolReconciler historically treated active_count >= requested
-     * as a satisfied pool. That is correct for expansion, but it meant reducing
-     * an already-running pool (for example 4 -> 2) never reached
-     * CatalogDetachedWorker::start(), which is the code that persists the new
-     * desired_count and requests cooperative stops for surplus slots.
-     *
-     * Apply a requested reduction before ordinary reconciliation. Existing jobs
-     * are not killed: workers above the requested slot count finish/checkpoint
-     * their current unit and then honor the slot-stop request. The authoritative
-     * status therefore changes to the requested desired_count immediately while
-     * active_count drains down naturally.
-     */
-    if ($mode === 'drain' && $requestedWorkers !== null) {
-        $launcher = new CatalogDetachedWorker($application->config);
-        $requestedWorkers = $launcher->normalizeWorkerCount($requestedWorkers);
-        $currentWorker = $launcher->status($queueName, false);
-        $activeWorkers = max(0, (int)($currentWorker['active_count'] ?? 0));
-        $desiredWorkers = max(1, (int)($currentWorker['desired_count'] ?? $requestedWorkers));
-        if ($activeWorkers > 0
-            && ($activeWorkers > $requestedWorkers || $desiredWorkers !== $requestedWorkers)) {
-            $launcher->start($queueName, 10000, $requestedWorkers);
-        }
     }
 
     $result = (new CatalogWorkerPoolReconciler($application->db, $application->config))
