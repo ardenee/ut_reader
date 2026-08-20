@@ -29,6 +29,14 @@ try {
         if (!$source) {
             JsonResponse::error('invalid_source', 'Choose a valid source game.', 400);
         }
+        $filters = [
+            'file_filter' => (string)($_GET['file_filter'] ?? ''),
+            'dep_filter' => (string)($_GET['dep_filter'] ?? ''),
+            'type_filter' => (string)($_GET['type_filter'] ?? ''),
+            'compression_filter' => (string)($_GET['compression_filter'] ?? ''),
+        ];
+        $snapshot = (new PdoGameFileReassignmentSelectionQuery($application->db))
+            ->snapshot($sourceGameId, $filters);
         $games = catalog_all(
             $application->db,
             'SELECT g.id,g.name,g.slug,COALESCE(p.engine_key,"") engine_key '
@@ -38,6 +46,8 @@ try {
         );
         JsonResponse::send(['data' => [
             'source_game' => $source,
+            'movable_total' => $snapshot['total'],
+            'filters' => $snapshot['filters'],
             'destinations' => array_merge([
                 [
                     'id' => 0,
