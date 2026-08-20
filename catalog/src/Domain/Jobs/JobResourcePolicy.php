@@ -20,6 +20,7 @@ final class JobResourcePolicy
     public const BUCKET_PROCESSING = 'bucket-processing';
     public const UNVERIFIED_MATCHES = 'unverified-matches';
     public const UNVERIFIED_FILE_MAINTENANCE = 'unverified-file-maintenance';
+    public const GAME_FILE_REASSIGNMENT = 'game-file-reassignment';
     public const STORAGE_HEAVY = 'storage-heavy';
     public const PACKAGE_HEAVY = 'package-heavy';
     public const HOUSEKEEPING = 'housekeeping';
@@ -74,6 +75,11 @@ final class JobResourcePolicy
                 'label' => 'Unverified file maintenance',
                 'default' => 2,
                 'description' => 'Independent unverified duplicate hash/delete and storage-reconciliation file units. Errors are isolated to one physical queue file.',
+            ],
+            self::GAME_FILE_REASSIGNMENT => [
+                'label' => 'Game file reassignment',
+                'default' => 2,
+                'description' => 'Moves verified files back to Unverified Files or safely verifies them in another game before retiring the source copy.',
             ],
             self::STORAGE_HEAVY => [
                 'label' => 'Storage and backup maintenance',
@@ -176,6 +182,16 @@ final class JobResourcePolicy
                 self::UNVERIFIED_MATCHES,
                 self::defaultLimit(2),
                 self::unverifiedMatchKey($payload)
+            ),
+            JobType::GAME_FILE_REASSIGN => new JobResourceProfile(
+                self::STORAGE_HEAVY,
+                self::defaultLimit(1),
+                self::positiveKey('game-file-reassign:source-game:', $payload['source_game_id'] ?? null)
+            ),
+            JobType::GAME_FILE_REASSIGN_BATCH => new JobResourceProfile(
+                self::GAME_FILE_REASSIGNMENT,
+                self::defaultLimit(2),
+                self::gameFileReassignmentKey($payload)
             ),
             JobType::IMPORT_STAGED_PACKAGE => new JobResourceProfile(
                 self::IMPORT_HEAVY,
@@ -347,6 +363,17 @@ final class JobResourcePolicy
         $gameId = max(0, (int)($payload['queue_game_id'] ?? 0));
         $name = strtolower(trim(str_replace('\\', '/', (string)($payload['queue_name'] ?? ''))));
         return 'unverified:file:' . $gameId . ':' . substr(hash('sha256', $name), 0, 40);
+    }
+
+    /** @param array<string,mixed> $payload */
+    private static function gameFileReassignmentKey(array $payload): string
+    {
+        $parentId = max(0, (int)($payload['workflow_parent_job_id'] ?? 0));
+        $startId = max(0, (int)($payload['batch_start_id'] ?? 0));
+        if ($parentId > 0 && $startId > 0) {
+            return 'game-file-reassign:batch:' . $parentId . ':' . $startId;
+        }
+        return 'game-file-reassign:batch:' . substr(hash('sha256', json_encode($payload) ?: ''), 0, 40);
     }
 
     /** @param array<string,mixed> $payload */
