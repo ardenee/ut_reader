@@ -75,7 +75,9 @@ $batchPath = $root . '/src/Infrastructure/Import/CatalogBucketBatchQueue.php';
 $fingerprintPath = $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.php';
 $displayStatusPath = $root . '/src/Infrastructure/Jobs/CatalogJobDisplayStatus.php';
 $countQueryPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobDisplayCountQuery.php';
+$browserQueryPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBrowserQuery.php';
 $bulkActionPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php';
+$sequentialReaderPath = $root . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php';
 $stagedPackagePath = $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php';
 $storageCleanupPath = $root . '/src/Infrastructure/Jobs/CatalogJobStorageCleanup.php';
 $outcomeProjectorPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php';
@@ -86,7 +88,9 @@ $batch = (string)@file_get_contents($batchPath);
 $fingerprint = (string)@file_get_contents($fingerprintPath);
 $displayStatus = (string)@file_get_contents($displayStatusPath);
 $countQuery = (string)@file_get_contents($countQueryPath);
+$browserQuery = (string)@file_get_contents($browserQueryPath);
 $bulkAction = (string)@file_get_contents($bulkActionPath);
+$sequentialReader = (string)@file_get_contents($sequentialReaderPath);
 $stagedPackage = (string)@file_get_contents($stagedPackagePath);
 $storageCleanup = (string)@file_get_contents($storageCleanupPath);
 $outcomeProjector = (string)@file_get_contents($outcomeProjectorPath);
@@ -136,6 +140,22 @@ $record(
     str_contains($displayStatus, "JobType::PROCESS_BUCKET_ARCHIVE . '\",\"'")
         && str_contains($displayStatus, "'params' => []"),
     'The synthetic retained-archive filter must not add bound job-type parameters after the shared UNION queue scope.'
+);
+$record(
+    'retained_archive_view_avoids_generic_workflow_count_model',
+    str_contains($browserQuery, 'return $this->fetchRetainedArchives($queue, $perPage, $cursor, $move);')
+        && str_contains($browserQuery, '$counts = $this->fastQueueCounts($queue);')
+        && str_contains($browserQuery, 'FROM ue_background_jobs j WHERE j.parent_job_id IS NULL')
+        && str_contains($browserQuery, 'j.parent_job_id IS NOT NULL')
+        && !str_contains($browserQuery, "$countScope = \$this->searchScope->build(\$queue, '');"),
+    'Opening Retained archives must use bounded direct table predicates instead of materialising the generic root/problem-child count model.'
+);
+$record(
+    'rar_zero_byte_non_extracted_records_do_not_open_member_stream',
+    str_contains($sequentialReader, '$declaredSize !== null && (int)$declaredSize === 0 && !$extract')
+        && str_contains($sequentialReader, '$complete($entry, null, $state);')
+        && str_contains($sequentialReader, 'continue;'),
+    'RAR directory records exposed without a trailing slash but with a known zero size must not be opened as data streams.'
 );
 $record(
     'retained_archive_restart_replays_parent_from_start',
@@ -195,8 +215,9 @@ $record(
 $record(
     'worker_fingerprint_tracks_reader_and_retry_policy',
     str_contains($fingerprint, '/src/Application/Jobs/JobFailureRetryPolicy.php')
-        && str_contains($fingerprint, '/src/Infrastructure/Readers/CatalogLegacyPackageReader.php'),
-    'Changing retry classification or the legacy package reader must invalidate detached workers.'
+        && str_contains($fingerprint, '/src/Infrastructure/Readers/CatalogLegacyPackageReader.php')
+        && str_contains($fingerprint, '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php'),
+    'Changing retry classification or either archive/package reader must invalidate detached workers.'
 );
 
 $syntaxFailures = [];
@@ -207,7 +228,9 @@ foreach ([
     $fingerprintPath,
     $displayStatusPath,
     $countQueryPath,
+    $browserQueryPath,
     $bulkActionPath,
+    $sequentialReaderPath,
     $stagedPackagePath,
     $storageCleanupPath,
     $outcomeProjectorPath,
