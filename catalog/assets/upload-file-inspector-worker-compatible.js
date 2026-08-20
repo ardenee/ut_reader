@@ -3,7 +3,7 @@
 /*
  * Compatibility wrapper around the established file inspector.
  *
- * Two transport-container cases deliberately bypass package hashing:
+ * Transport containers deliberately bypass package hashing:
  * - `.uz` accepts both historic FCodec signatures 1234 and 5678 while retaining
  *   the `.uz` identity. A 5678 `.uz` is NOT UT3 `.uz3`.
  * - `.zip`, `.7z` and `.rar` are unpack-only transport containers. Package
@@ -15,23 +15,49 @@
  * The browser therefore performs a bounded signature sniff for operator feedback
  * but never rejects an allowed archive extension solely because byte zero does
  * not match the suffix. The server archive parser remains authoritative.
+ *
+ * Keep the transport-container path independent from the full package inspector.
+ * Large archive uploads do not need MD5/SHA package hashing in the browser, and
+ * an unrelated load/runtime failure in the package inspector must not reject ZIP,
+ * 7-Zip or RAR before the file even reaches durable server staging.
  */
 const nativeAddEventListener = self.addEventListener;
 const capturedMessageListeners = [];
 const ARCHIVE_SNIFF_BYTES = 64 * 1024;
+let inspectorLoaded = false;
+let inspectorLoadError = null;
 
-self.addEventListener = function (type, listener, options) {
-    if (type === 'message') {
-        capturedMessageListeners.push({listener: listener, options: options});
-        return;
+function ensureInspectorLoaded() {
+    if (inspectorLoaded) return;
+    if (inspectorLoadError) throw inspectorLoadError;
+
+    const previousAddEventListener = self.addEventListener;
+    self.addEventListener = function (type, listener, options) {
+        if (type === 'message') {
+            capturedMessageListeners.push({listener: listener, options: options});
+            return;
+        }
+        nativeAddEventListener.call(self, type, listener, options);
+    };
+
+    try {
+        // The wrapper itself is cache-busted by upload-bucket-v2.php. Carry the
+        // same query string to the delegated inspector so a browser cannot keep
+        // an old package-inspector script beside a new compatibility wrapper.
+        importScripts('upload-file-inspector-worker.js' + (self.location.search || ''));
+        inspectorLoaded = true;
+    } catch (error) {
+        inspectorLoadError = error instanceof Error
+            ? error
+            : new Error(String(error || 'The package inspector could not be loaded.'));
+        throw inspectorLoadError;
+    } finally {
+        self.addEventListener = previousAddEventListener;
     }
-    nativeAddEventListener.call(self, type, listener, options);
-};
-
-importScripts('upload-file-inspector-worker.js');
-self.addEventListener = nativeAddEventListener;
+}
 
 function dispatchToInspector(data) {
+    ensureInspectorLoaded();
     const event = new MessageEvent('message', {data: data});
     capturedMessageListeners.forEach(function (entry) {
         if (typeof entry.listener === 'function') {
@@ -109,8 +135,18 @@ function archiveHeader(extension, bytes) {
 nativeAddEventListener.call(self, 'message', async function (event) {
     const data = event.data || {};
     const file = data.file;
-    if (!(file instanceof Blob) || !file.name) {
-        dispatchToInspector(data);
+    const readableFile = file && typeof file.slice === 'function' && typeof file.name === 'string' && file.name !== '';
+
+    if (!readableFile) {
+        try {
+            dispatchToInspector(data);
+        } catch (error) {
+            self.postMessage({
+                type: 'error',
+                id: String(data.id || ''),
+                message: error && error.message ? error.message : 'The package inspector could not be loaded.'
+            });
+        }
         return;
     }
 
@@ -119,12 +155,20 @@ nativeAddEventListener.call(self, 'message', async function (event) {
     const archive = ['zip', '7z', 'rar'].includes(extension);
     const legacyUz = extension === 'uz';
     if (!archive && !legacyUz) {
-        dispatchToInspector(data);
+        try {
+            dispatchToInspector(data);
+        } catch (error) {
+            self.postMessage({
+                type: 'error',
+                id: String(data.id || ''),
+                message: error && error.message ? error.message : 'The package inspector could not be loaded.'
+            });
+        }
         return;
     }
 
     try {
-        const readBytes = legacyUz ? 16 : Math.min(Math.max(16, file.size), ARCHIVE_SNIFF_BYTES);
+        const readBytes = legacyUz ? 16 : Math.min(Math.max(16, Number(file.size || 0)), ARCHIVE_SNIFF_BYTES);
         const bytes = new Uint8Array(await file.slice(0, readBytes).arrayBuffer());
         if (legacyUz) {
             const signature = littleU32(bytes, 0);
