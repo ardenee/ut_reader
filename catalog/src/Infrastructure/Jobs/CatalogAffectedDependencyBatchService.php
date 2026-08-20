@@ -4,7 +4,8 @@
  *
  * The common path deliberately avoids one durable queue row per file. Each file
  * still owns its compact metadata lock and targeted package resolution, while a
- * bad file is split into its own retry row so the rest of the batch continues.
+ * bad file is promoted to an independent full-file recovery job so one bad owner
+ * can never keep the affected-dependency parent workflow queued indefinitely.
  */
 declare(strict_types=1);
 
@@ -92,36 +93,39 @@ final class CatalogAffectedDependencyBatchService
             } catch (Throwable $error) {
                 $failure = $error;
                 // Transient database contention is an execution condition, not a
-                // corrupt-file/system-error event. It receives an isolated retry
-                // without polluting the system error log. Non-contention failures
-                // remain visible for diagnosis.
+                // corrupt-file/system-error event. It receives an independent
+                // recovery without polluting the system error log. Non-contention
+                // failures remain visible for diagnosis.
                 if (!PdoContention::retryable($error)) {
                     $this->recordFailure($job, $affectedFileId, $packageName, $error);
                 }
                 try {
+                    // A failed targeted owner is deliberately detached from the
+                    // affected parent. A full-file dependency rebuild is safe here:
+                    // it publishes its own summary/stats and its failure/retry state
+                    // cannot hold the original provider workflow open.
                     $queue->enqueue(
                         $job->queue,
-                        JobType::REBUILD_AFFECTED_DEPENDENCIES,
+                        JobType::REBUILD_FILE_DEPENDENCIES,
                         [
-                            'file_id' => $sourceFileId,
-                            'game_id' => $gameId,
-                            'package_name' => $packageName,
-                            'affected_file_id' => $affectedFileId,
-                            'workflow_parent_job_id' => $job->rootJobId(),
-                            'retry_of_batch_job_id' => $job->id,
+                            'file_id' => $affectedFileId,
+                            'affected_recovery_source_file_id' => $sourceFileId,
+                            'affected_recovery_package_name' => $packageName,
+                            'affected_recovery_root_job_id' => $job->rootJobId(),
+                            'affected_retry_of_batch_job_id' => $job->id,
                         ],
                         40,
                         null,
-                        null,
+                        'affected-dependency-recovery:' . $affectedFileId,
                         null,
                         3,
-                        $job->rootJobId(),
-                        'affected:retry:' . $affectedFileId
+                        null,
+                        null
                     );
                     $retryIds[$affectedFileId] = true;
                 } catch (Throwable $retryError) {
                     throw new RuntimeException(
-                        'Affected file #' . $affectedFileId . ' failed and its durable retry could not be queued: '
+                        'Affected file #' . $affectedFileId . ' failed and its independent recovery could not be queued: '
                         . $retryError->getMessage(),
                         0,
                         $error
@@ -143,12 +147,12 @@ final class CatalogAffectedDependencyBatchService
                 $containersRewritten,
                 $failure instanceof Throwable
                     ? (PdoContention::retryable($failure)
-                        ? 'Affected file #' . $affectedFileId . ' remained contended after local retries; queued an isolated retry and continuing.'
-                        : 'Affected file #' . $affectedFileId . ' failed in the batch; queued an isolated retry and continuing.')
+                        ? 'Affected file #' . $affectedFileId . ' remained contended after local retries; queued an independent full-file recovery and continuing.'
+                        : 'Affected file #' . $affectedFileId . ' failed in the batch; queued an independent full-file recovery and continuing.')
                     : 'Targeted dependency batch ' . $done . '/' . $total . ' for ' . $packageName . '.'
             );
 
-            // A failure boundary is checkpointed immediately so the retry and
+            // A failure boundary is checkpointed immediately so the recovery and
             // cursor remain in sync. Successful files use the normal heartbeat
             // cadence, avoiding one queue UPDATE for every file.
             if ($failure instanceof Throwable) {
@@ -171,7 +175,7 @@ final class CatalogAffectedDependencyBatchService
             $containersRewritten,
             'Affected dependency batch complete: ' . count($processedIds) . ' refreshed, '
                 . count($changedIds) . ' changed, ' . count($skippedIds) . ' skipped, '
-                . count($retryIds) . ' isolated retry file(s).',
+                . count($retryIds) . ' independent recovery file(s).',
             'complete'
         ));
 
@@ -295,7 +299,7 @@ final class CatalogAffectedDependencyBatchService
                 'severity' => 'error',
                 'error_type' => get_class($error),
                 'message' => 'Affected dependency batch #' . $job->id . ' file #' . $fileId
-                    . ' failed; isolated retry queued: ' . $error->getMessage(),
+                    . ' failed; independent full-file recovery queued: ' . $error->getMessage(),
                 'source_file' => $error->getFile(),
                 'source_line' => $error->getLine(),
                 'trace_text' => $error->getTraceAsString(),
@@ -305,7 +309,7 @@ final class CatalogAffectedDependencyBatchService
                     'parent_job_id' => $job->rootJobId(),
                     'file_id' => $fileId,
                     'package_name' => $packageName,
-                    'disposition' => 'isolated_retry_queued',
+                    'disposition' => 'independent_recovery_queued',
                 ],
             ]);
         } catch (Throwable $recordError) {
