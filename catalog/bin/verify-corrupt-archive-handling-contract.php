@@ -116,7 +116,7 @@ $record(
         && str_contains($batch, '$fingerprint')
         && str_contains($batch, 'strtolower($relativePath)')
         && str_contains($batch, 'activeSourceForDedupe(')
-        && !str_contains($batch, "'bucket-archive-upload:' . $uploadId"),
+        && !str_contains($batch, "'bucket-archive-upload:' . \$uploadId"),
     'Two active submissions of identical archive bytes at the same logical mirror path must share one archive job; different paths retain distinct provenance.'
 );
 $record(
@@ -147,7 +147,7 @@ $record(
         && str_contains($browserQuery, '$counts = $this->fastQueueCounts($queue);')
         && str_contains($browserQuery, 'FROM ue_background_jobs j WHERE j.parent_job_id IS NULL')
         && str_contains($browserQuery, 'j.parent_job_id IS NOT NULL')
-        && !str_contains($browserQuery, "$countScope = \$this->searchScope->build(\$queue, '');"),
+        && !str_contains($browserQuery, "\$countScope = \$this->searchScope->build(\$queue, '');"),
     'Opening Retained archives must use bounded direct table predicates instead of materialising the generic root/problem-child count model.'
 );
 $record(
