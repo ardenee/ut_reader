@@ -102,6 +102,22 @@ $record(
     'v2 must inspect/hash/preflight, stage chunks, finalize durable jobs in bounded batches, then start processing once'
 );
 
+$compatibleInspector = $read('catalog/assets/upload-file-inspector-worker-compatible.js');
+$archiveBranchPosition = strpos($compatibleInspector, "const archive = ['zip', '7z', 'rar'].includes(extension);");
+$delegatePosition = strpos($compatibleInspector, 'dispatchToInspector(data);', $archiveBranchPosition === false ? 0 : $archiveBranchPosition);
+$importPosition = strpos($compatibleInspector, "importScripts('upload-file-inspector-worker.js'");
+$record(
+    'transport_archive_preflight_isolated',
+    str_contains($compatibleInspector, 'function ensureInspectorLoaded()')
+        && str_contains($compatibleInspector, "importScripts('upload-file-inspector-worker.js' + (self.location.search || ''))")
+        && str_contains($compatibleInspector, "const archive = ['zip', '7z', 'rar'].includes(extension);")
+        && str_contains($compatibleInspector, "archive: true")
+        && $importPosition !== false
+        && $archiveBranchPosition !== false
+        && $delegatePosition !== false,
+    'ZIP/7z/RAR preflight must remain standalone; the full package inspector is lazy-loaded only for delegated file types'
+);
+
 $bucketHandler = $read('catalog/src/Infrastructure/Jobs/CatalogBucketUploadJobHandler.php');
 $identityProcessor = $read('catalog/src/Infrastructure/Import/CatalogBucketIdentityProcessor.php');
 $unverifiedImportAction = $read('catalog/unverified-files-action.php');
@@ -141,8 +157,9 @@ $record(
         && str_contains($batchQueue, 'CatalogUploadDuplicateDetector')
         && str_contains($batchQueue, 'PdoJobQueue')
         && str_contains($batchQueue, 'JobType::PROCESS_BUCKET_UPLOAD')
-        && str_contains($batchFinalizer, '$launcher->configuredWorkerCount()'),
-    'dedupe/enqueue must stay in the shared queue service and worker start must honor configured pool size'
+        && str_contains($batchFinalizer, '$launcher->start($queue->queueName(), 10000);')
+        && !str_contains($batchFinalizer, '$launcher->configuredWorkerCount()'),
+    'dedupe/enqueue must stay in the shared queue service and automatic worker starts must preserve the durable operator pool size'
 );
 
 $jobRun = $read('catalog/api/v1/job-run.php');
@@ -165,7 +182,7 @@ $record(
         && str_contains($poolReconciler, '$launcher->start($queueName, $maxJobs, $workerCount)')
         && str_contains($poolReconciler, '$launcher->status($queueName, false)')
         && str_contains($poolReconciler, '$launcher->status($queueName, true)'),
-    'pool reconciliation must use indexed operational reads, explicit pool size, log-free polling and never rewrite queued rows on Start/Resume'
+    'pool reconciliation must use indexed operational reads, explicit operator pool size, log-free polling and never rewrite queued rows on Start/Resume'
 );
 
 $statusPolicy = $read('catalog/src/Application/Jobs/CatalogWorkerStatusPolicy.php');
@@ -199,12 +216,29 @@ try {
 }
 
 $affectedRefresh = $read('catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php');
+$matchRefresh = $read('catalog/unverified-game-matches-refresh.php');
 $record(
-    'dependency_refresh_expands_pool',
-    str_contains($affectedRefresh, '$desiredWorkers = $launcher->configuredWorkerCount()')
-        && str_contains($affectedRefresh, '$activeOrLaunching < $desiredWorkers')
-        && str_contains($affectedRefresh, '$launcher->start($queueName, 10000, $desiredWorkers)'),
-    'dependency follow-up scheduling must repair a partially active worker pool'
+    'automatic_producers_preserve_operator_pool',
+    str_contains($affectedRefresh, '$activeOrLaunching === 0')
+        && str_contains($affectedRefresh, '$launcher->start($queueName, 10000);')
+        && !str_contains($affectedRefresh, '$desiredWorkers = $launcher->configuredWorkerCount()')
+        && !str_contains($affectedRefresh, '$launcher->start($queueName, 10000, $desiredWorkers)')
+        && str_contains($batchFinalizer, '$launcher->start($queue->queueName(), 10000);')
+        && !str_contains($batchFinalizer, '$launcher->configuredWorkerCount()')
+        && str_contains($matchRefresh, '$launcher->start($queue->queueName(), 10000);')
+        && !str_contains($matchRefresh, '$launcher->configuredWorkerCount()'),
+    'automatic dependency/upload/match producers must never expand an operator-selected 1- or 2-worker pool back to configured defaults'
+);
+
+$sequentialArchive = $read('catalog/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php');
+$record(
+    'sequential_archive_declared_size_boundary',
+    str_contains($sequentialArchive, 'int $expectedBytes = 0')
+        && str_contains($sequentialArchive, '$written < $expectedBytes')
+        && str_contains($sequentialArchive, '$expectedBytes - $written')
+        && str_contains($sequentialArchive, 'max(0, (int)$entry[\'size\'])')
+        && str_contains($sequentialArchive, '; expected_bytes='),
+    'currentEntryStream must stop at the declared member size instead of performing a false-failure read beyond a completed RAR/7z member'
 );
 
 $legacyStager = $read('catalog/src/Infrastructure/Legacy/LegacyUnverifiedFileStager.php');
@@ -231,10 +265,12 @@ $record(
 $criticalPhp = [
     'catalog/bin/verify-upload-worker-contracts.php',
     'catalog/upload-bucket-v2.php',
+    'catalog/unverified-game-matches-refresh.php',
     'catalog/api/v1/job-run.php',
     'catalog/api/v1/job-worker-status.php',
     'catalog/src/Application/Jobs/CatalogWorkerStatusPolicy.php',
     'catalog/src/Application/Unverified/CatalogUnverifiedActionService.php',
+    'catalog/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
     'catalog/src/Infrastructure/Import/CatalogBucketBatchFinalizer.php',
     'catalog/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshCoordinator.php',
     'catalog/src/Infrastructure/Jobs/CatalogWorkerPoolReconciler.php',
