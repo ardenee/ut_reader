@@ -40,15 +40,29 @@ final class PdoBackgroundJobBulkAction
     ): array {
         $this->setShortLockWait();
 
-        // Use the exact same search/workflow-child visibility scope as the list
-        // endpoint. "Select all matching" must never mutate hidden routine child
-        // rows that were not part of the administrator's current result set.
-        $browserScope = (new PdoBackgroundJobSearchScope($this->db))->build($queueName, $search);
-        $where = [];
-        $params = [];
-        if (trim((string)$browserScope['where']) !== '') {
-            $where[] = '(' . $browserScope['where'] . ')';
-            $params = $browserScope['params'];
+        $directRetainedArchiveScope = $scope === 'matching'
+            && $status === 'partial_archive'
+            && $search === '';
+        if ($directRetainedArchiveScope) {
+            // Retained archives are completed top-level archive roots. Do not
+            // materialise the generic root/problem-child browser UNION merely to
+            // select this already-specific recovery set; large child ledgers made
+            // both the view and "Retry all" unnecessarily expensive.
+            $fromSql = 'ue_background_jobs j';
+            $where = ['j.parent_job_id IS NULL', 'j.queue_name=?'];
+            $params = [$queueName];
+        } else {
+            // Use the exact same search/workflow-child visibility scope as the
+            // list endpoint. "Select all matching" must never mutate hidden routine
+            // child rows that were not part of the administrator's current result.
+            $browserScope = (new PdoBackgroundJobSearchScope($this->db))->build($queueName, $search);
+            $fromSql = (string)$browserScope['from'];
+            $where = [];
+            $params = [];
+            if (trim((string)$browserScope['where']) !== '') {
+                $where[] = '(' . $browserScope['where'] . ')';
+                $params = $browserScope['params'];
+            }
         }
 
         if ($scope === 'selected') {
@@ -78,7 +92,6 @@ final class PdoBackgroundJobBulkAction
         };
         $where[] = $actionCondition;
         $whereSql = implode(' AND ', $where);
-        $fromSql = (string)$browserScope['from'];
 
         $count = $this->db->prepare('SELECT COUNT(*) FROM ' . $fromSql . ' WHERE ' . $whereSql);
         $count->execute($params);
