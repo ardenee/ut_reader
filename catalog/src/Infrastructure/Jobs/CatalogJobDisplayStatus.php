@@ -9,10 +9,12 @@ declare(strict_types=1);
 
 namespace UnrealDb\Catalog\Infrastructure\Jobs;
 
+use UnrealDb\Catalog\Domain\Jobs\JobType;
+
 final class CatalogJobDisplayStatus
 {
     private const FAILED_OUTCOMES = ['failed', 'rejected', 'unverified'];
-    private const FILTERS = ['queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled'];
+    private const FILTERS = ['queued', 'running', 'completed', 'failed', 'dead_letter', 'cancelled', 'partial_archive'];
 
     public static function normalize(string $queueStatus, ?string $resultStatus): string
     {
@@ -76,6 +78,14 @@ final class CatalogJobDisplayStatus
         }
 
         $prefix = self::prefix($alias);
+        if ($status === 'partial_archive') {
+            return [
+                'sql' => $prefix . 'status="completed" AND '
+                    . $prefix . 'job_type IN (?,?) AND '
+                    . $prefix . 'display_status="partial"',
+                'params' => [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE],
+            ];
+        }
         if (in_array($status, ['queued', 'running', 'dead_letter', 'cancelled'], true)) {
             return ['sql' => $prefix . 'status=?', 'params' => [$status]];
         }
