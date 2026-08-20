@@ -10,7 +10,6 @@ declare(strict_types=1);
 namespace UnrealDb\Catalog\Infrastructure\Persistence;
 
 use PDO;
-use UnrealDb\Catalog\Domain\Jobs\JobType;
 use UnrealDb\Catalog\Infrastructure\Jobs\CatalogJobDisplayStatus;
 
 final class PdoBackgroundJobBrowserQuery
@@ -34,7 +33,7 @@ final class PdoBackgroundJobBrowserQuery
      * @return array{
      *   rows:list<array<string,mixed>>,has_previous:bool,has_next:bool,
      *   first_cursor:?array,last_cursor:?array,
-     *   counts:array{all:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int,partial_archive:int},total:int
+     *   counts:array<string,int>,total:int
      * }
      */
     public function fetch(
@@ -45,11 +44,11 @@ final class PdoBackgroundJobBrowserQuery
         ?array $cursor,
         string $move
     ): array {
-        // Retained archives are always completed top-level archive jobs. Do not
-        // discover that small recovery set by materialising the generic
-        // root/problem-child UNION and then applying the archive predicate on top.
-        // The retained view also uses direct queue counts below so opening this
-        // operator recovery page can never be held hostage by a deep child ledger.
+        // Retained archives are a very small, fully indexed subset of completed
+        // top-level archive jobs. Keep this recovery view independent of the
+        // generic root/problem-child browser model: that model intentionally scans
+        // the wider operator-visible job ledger to populate every status counter
+        // and is unnecessary when the administrator asks for retained archives.
         if ($status === 'partial_archive' && $search === '') {
             return $this->fetchRetainedArchives($queue, $perPage, $cursor, $move);
         }
@@ -98,7 +97,7 @@ final class PdoBackgroundJobBrowserQuery
      * @return array{
      *   rows:list<array<string,mixed>>,has_previous:bool,has_next:bool,
      *   first_cursor:?array,last_cursor:?array,
-     *   counts:array{all:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int,partial_archive:int},total:int
+     *   counts:array<string,int>,total:int
      * }
      */
     private function fetchRetainedArchives(
@@ -107,9 +106,6 @@ final class PdoBackgroundJobBrowserQuery
         ?array $cursor,
         string $move
     ): array {
-        $counts = $this->fastQueueCounts($queue);
-        $total = max(0, (int)($counts['partial_archive'] ?? 0));
-
         $where = ['j.parent_job_id IS NULL'];
         $params = [];
         if ($queue !== '') {
@@ -119,6 +115,21 @@ final class PdoBackgroundJobBrowserQuery
         $condition = CatalogJobDisplayStatus::filterCondition('partial_archive', 'j');
         $where[] = $condition['sql'];
         array_push($params, ...$condition['params']);
+        $whereSql = implode(' AND ', $where);
+
+        // Count only the retained archive roots. The queue/display-status index
+        // narrows this to the small partial subset before parent/type predicates
+        // are evaluated; there is no scan/group-by across every root or child job.
+        $count = $this->db->prepare(
+            'SELECT COUNT(*) FROM ue_background_jobs j WHERE ' . $whereSql
+        );
+        $count->execute($params);
+        $total = max(0, (int)$count->fetchColumn());
+
+        // Only this synthetic counter is needed to render/retry the current view.
+        // Omitting unrelated status totals is intentional: calculating them was
+        // the expensive work that made Retained archives appear frozen.
+        $counts = ['partial_archive' => $total];
 
         // These are completed roots, so their operator status/start timestamp do
         // not require the correlated child-state expressions used by live roots.
@@ -130,103 +141,12 @@ final class PdoBackgroundJobBrowserQuery
             . 'j.updated_at,j.completed_at,j.dead_lettered_at FROM ue_background_jobs j';
         $page = $this->pageQuery->fetch(
             $selectSql,
-            implode(' AND ', $where),
+            $whereSql,
             $params,
             $perPage,
             $cursor,
             $move
         );
         return $page + ['counts' => $counts, 'total' => $total];
-    }
-
-    /**
-     * Direct count path for the no-search retained-archive view.
-     *
-     * The generic browser count intentionally supports arbitrary search scopes,
-     * but it must materialise the root/problem-child read model and evaluate
-     * operator-state expressions across it. For the recovery page we already know
-     * there is no search term, so count roots and visible problem children directly
-     * from their indexed table predicates instead.
-     *
-     * @return array{all:int,queued:int,running:int,completed:int,failed:int,dead_letter:int,cancelled:int,partial_archive:int}
-     */
-    private function fastQueueCounts(string $queue): array
-    {
-        $counts = [
-            'all' => 0,
-            'queued' => 0,
-            'running' => 0,
-            'completed' => 0,
-            'failed' => 0,
-            'dead_letter' => 0,
-            'cancelled' => 0,
-            'partial_archive' => 0,
-        ];
-
-        $queueSql = '';
-        $params = [];
-        if ($queue !== '') {
-            $queueSql = ' AND j.queue_name=?';
-            $params[] = $queue;
-        }
-
-        $root = $this->db->prepare(
-            'SELECT j.status,j.display_status,j.job_type,COUNT(*) AS total,'
-            . 'SUM(CASE WHEN j.status="queued" AND EXISTS('
-            . 'SELECT 1 FROM ue_background_jobs running_child '
-            . 'WHERE running_child.parent_job_id=j.id AND running_child.status="running" LIMIT 1'
-            . ') THEN 1 ELSE 0 END) AS queued_running '
-            . 'FROM ue_background_jobs j WHERE j.parent_job_id IS NULL' . $queueSql . ' '
-            . 'GROUP BY j.status,j.display_status,j.job_type'
-        );
-        $root->execute($params);
-        foreach ($root->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $this->accumulateCountRow($counts, $row, max(0, (int)($row['queued_running'] ?? 0)));
-        }
-
-        $problem = $this->db->prepare(
-            'SELECT j.status,j.display_status,j.job_type,COUNT(*) AS total '
-            . 'FROM ue_background_jobs j WHERE j.parent_job_id IS NOT NULL '
-            . 'AND j.status IN ("failed","dead_letter")' . $queueSql . ' '
-            . 'GROUP BY j.status,j.display_status,j.job_type'
-        );
-        $problem->execute($params);
-        foreach ($problem->fetchAll(PDO::FETCH_ASSOC) ?: [] as $row) {
-            $this->accumulateCountRow($counts, $row, 0);
-        }
-
-        return $counts;
-    }
-
-    /** @param array<string,int> $counts @param array<string,mixed> $row */
-    private function accumulateCountRow(array &$counts, array $row, int $queuedRunning): void
-    {
-        $amount = max(0, (int)($row['total'] ?? 0));
-        if ($amount < 1) {
-            return;
-        }
-        $counts['all'] += $amount;
-
-        $queueStatus = strtolower(trim((string)($row['status'] ?? '')));
-        $displayStatus = strtolower(trim((string)($row['display_status'] ?? '')));
-        $jobType = trim((string)($row['job_type'] ?? ''));
-
-        if ($queueStatus === 'completed'
-            && $displayStatus === 'partial'
-            && in_array($jobType, [JobType::PROCESS_BUCKET_ARCHIVE, JobType::IMPORT_STAGED_ARCHIVE], true)) {
-            $counts['partial_archive'] += $amount;
-        }
-
-        if ($queueStatus === 'queued' && $queuedRunning > 0) {
-            $queuedRunning = min($amount, $queuedRunning);
-            $counts['running'] += $queuedRunning;
-            $counts['queued'] += $amount - $queuedRunning;
-            return;
-        }
-
-        $group = CatalogJobDisplayStatus::groupDisplayStatus($queueStatus, $displayStatus);
-        if (array_key_exists($group, $counts)) {
-            $counts[$group] += $amount;
-        }
     }
 }
