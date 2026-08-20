@@ -99,11 +99,12 @@ final class CatalogBucketBatchFinalizer
             try {
                 (new CatalogOrphanedJobRecovery($this->db, $this->config))
                     ->recoverInactiveQueue($queue->queueName());
-                $worker = $launcher->start(
-                    $queue->queueName(),
-                    10000,
-                    $launcher->configuredWorkerCount()
-                );
+
+                // Automatic Upload Bucket starts must honor the durable pool
+                // preference chosen by the operator. Passing the configured
+                // default here used to overwrite a live/manual 1- or 2-worker
+                // choice back to four workers whenever a new batch was queued.
+                $worker = $launcher->start($queue->queueName(), 10000);
             } catch (Throwable $error) {
                 $workerError = trim($error->getMessage()) ?: get_class($error) . ' was thrown without an error message.';
                 error_log('[UnrealDB bucket worker] ' . get_class($error) . ': ' . $workerError);
