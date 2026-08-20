@@ -76,6 +76,7 @@ $fingerprintPath = $root . '/src/Infrastructure/Jobs/CatalogWorkerCodeVersion.ph
 $displayStatusPath = $root . '/src/Infrastructure/Jobs/CatalogJobDisplayStatus.php';
 $countQueryPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobDisplayCountQuery.php';
 $bulkActionPath = $root . '/src/Infrastructure/Persistence/PdoBackgroundJobBulkAction.php';
+$stagedPackagePath = $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php';
 $archiveRecoveryJsPath = $root . '/assets/background-jobs-archive-errors.js';
 $worker = (string)@file_get_contents($workerPath);
 $policy = (string)@file_get_contents($policyPath);
@@ -84,6 +85,7 @@ $fingerprint = (string)@file_get_contents($fingerprintPath);
 $displayStatus = (string)@file_get_contents($displayStatusPath);
 $countQuery = (string)@file_get_contents($countQueryPath);
 $bulkAction = (string)@file_get_contents($bulkActionPath);
+$stagedPackage = (string)@file_get_contents($stagedPackagePath);
 $archiveRecoveryJs = (string)@file_get_contents($archiveRecoveryJsPath);
 
 $record(
@@ -126,6 +128,12 @@ $record(
     'Background Jobs must expose completed partial archive parents as a dedicated retained-archive recovery scope.'
 );
 $record(
+    'retained_partial_archive_filter_uses_no_bound_type_params',
+    str_contains($displayStatus, "JobType::PROCESS_BUCKET_ARCHIVE . '\",\"'")
+        && str_contains($displayStatus, "'params' => []"),
+    'The synthetic retained-archive filter must not add bound job-type parameters after the UNION queue scope; counts and rows must use the same stable SQL shape.'
+);
+$record(
     'retained_archive_restart_replays_parent_from_start',
     str_contains($bulkAction, 'j.display_status="partial"')
         && str_contains($bulkAction, 'JobType::PROCESS_BUCKET_ARCHIVE')
@@ -133,6 +141,16 @@ $record(
         && str_contains($bulkAction, 'progress_json=NULL,progress_updated_at=NULL')
         && str_contains($bulkAction, '$retainedArchiveIds'),
     'Retrying a retained partial archive must requeue the parent and clear its completed archive cursor while preserving already-created child jobs for dedupe.'
+);
+$record(
+    'structurally_invalid_archive_members_complete_without_retry',
+    str_contains($stagedPackage, 'isDeterministicInvalidPackage')
+        && str_contains($stagedPackage, "'invalid exports table offset:'")
+        && str_contains($stagedPackage, "'invalid names table offset:'")
+        && str_contains($stagedPackage, "'invalid imports table offset:'")
+        && str_contains($stagedPackage, "'status' => 'rejected'")
+        && str_contains($stagedPackage, 'polluting Needs retry'),
+    'Archive members whose immutable package tables point outside their own file must complete as rejected content instead of cycling to dead letter.'
 );
 $record(
     'retained_archive_operator_controls_exist',
@@ -156,7 +174,7 @@ $record(
 );
 
 $syntaxFailures = [];
-foreach ([$workerPath, $policyPath, $batchPath, $fingerprintPath, $displayStatusPath, $countQueryPath, $bulkActionPath] as $path) {
+foreach ([$workerPath, $policyPath, $batchPath, $fingerprintPath, $displayStatusPath, $countQueryPath, $bulkActionPath, $stagedPackagePath] as $path) {
     $pipes = [];
     $process = @proc_open([PHP_BINARY, '-l', $path], [1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
     if (!is_resource($process)) {
