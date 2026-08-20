@@ -89,7 +89,7 @@ final class CatalogArchiveJobOutcomeProjector
             } elseif ($status === 'completed') {
                 if ($resultStatus === 'duplicate') {
                     $summary['duplicate']++;
-                } elseif (in_array($resultStatus, ['failed', 'rejected', 'partial', 'error'], true)) {
+                } elseif (in_array($resultStatus, ['failed', 'rejected', 'unverified', 'partial', 'error'], true)) {
                     $summary['failed']++;
                     $error = trim((string)($result['message'] ?? $child['last_error'] ?? ''));
                     if ($error !== '' && count($summary['errors']) < 10) {
