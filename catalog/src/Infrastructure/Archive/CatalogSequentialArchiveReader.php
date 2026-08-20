@@ -138,6 +138,18 @@ final class CatalogSequentialArchiveReader
                 );
             }
 
+            // libarchive RAR frequently exposes directory records without a
+            // trailing slash (for example "Maps") but with an authoritative
+            // declared size of zero. Asking currentEntryStream() for such a record
+            // can return an empty read while feof() remains false, which used to
+            // turn a harmless directory into a dead-letter archive job. A known
+            // zero-byte member has no payload to advance through; when the caller
+            // does not want to extract it, complete the bookkeeping directly.
+            if ($declaredSize !== null && (int)$declaredSize === 0 && !$extract) {
+                $complete($entry, null, $state);
+                continue;
+            }
+
             $input = null;
             $output = null;
             $temporary = null;
