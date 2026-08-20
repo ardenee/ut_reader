@@ -131,7 +131,7 @@ $record(
     'retained_partial_archive_filter_uses_no_bound_type_params',
     str_contains($displayStatus, "JobType::PROCESS_BUCKET_ARCHIVE . '\",\"'")
         && str_contains($displayStatus, "'params' => []"),
-    'The synthetic retained-archive filter must not add bound job-type parameters after the UNION queue scope; counts and rows must use the same stable SQL shape.'
+    'The synthetic retained-archive filter must not add bound job-type parameters after the shared UNION queue scope.'
 );
 $record(
     'retained_archive_restart_replays_parent_from_start',
@@ -143,14 +143,19 @@ $record(
     'Retrying a retained partial archive must requeue the parent and clear its completed archive cursor while preserving already-created child jobs for dedupe.'
 );
 $record(
-    'structurally_invalid_archive_members_complete_without_retry',
-    str_contains($stagedPackage, 'isDeterministicInvalidPackage')
-        && str_contains($stagedPackage, "'invalid exports table offset:'")
-        && str_contains($stagedPackage, "'invalid names table offset:'")
-        && str_contains($stagedPackage, "'invalid imports table offset:'")
-        && str_contains($stagedPackage, "'status' => 'rejected'")
-        && str_contains($stagedPackage, 'polluting Needs retry'),
-    'Archive members whose immutable package tables point outside their own file must complete as rejected content instead of cycling to dead letter.'
+    'non_package_archive_members_complete_without_retry',
+    str_contains($stagedPackage, 'isDeterministicNonPackage')
+        && str_contains($stagedPackage, 'does not contain a supported unreal package header')
+        && str_contains($stagedPackage, 'unreal package magic not found')
+        && str_contains($stagedPackage, "'status' => 'rejected'"),
+    'An archive member that is definitively not an Unreal package may complete as rejected instead of wasting retries.'
+);
+$record(
+    'legacy_reader_compatibility_failures_are_not_destroyed_as_bad_content',
+    !str_contains($stagedPackage, "'invalid exports table offset:'")
+        && !str_contains($stagedPackage, "'invalid imports table offset:'")
+        && !str_contains($stagedPackage, "'invalid names table offset:'"),
+    'Package-table parse failures can be reader compatibility bugs; archive-member staging must retain/retry those bytes rather than reject and delete them.'
 );
 $record(
     'retained_archive_operator_controls_exist',
