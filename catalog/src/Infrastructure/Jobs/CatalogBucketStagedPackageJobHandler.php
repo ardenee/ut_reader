@@ -163,14 +163,16 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
             );
             $workingPath = '';
         } catch (Throwable $error) {
-            if (!$this->isDeterministicNonPackage($error)) {
+            if (!$this->isDeterministicInvalidPackage($error)) {
                 throw $error;
             }
 
-            // The bytes are durable and unchanged between attempts. A package
-            // extension whose content has no Unreal magic/header cannot become a
-            // valid package on retry, so complete this child as a rejected member
-            // instead of consuming all retry attempts and becoming dead_letter.
+            // The bytes are durable and unchanged between attempts. Structural
+            // package-header/table failures cannot be repaired by replaying the
+            // same extracted bytes, so complete this child as rejected instead
+            // of consuming worker attempts and polluting Needs retry. This also
+            // covers files that have Unreal magic but impossible table offsets,
+            // which are just as deterministic as a missing package header.
             $message = $this->errorText($error) . ' ' . $this->firstBytesDiagnostic($preparedPath);
             $incoming->delete($stagedPath);
             $preparedStore->clear();
@@ -233,11 +235,33 @@ final class CatalogBucketStagedPackageJobHandler implements JobHandler
         ];
     }
 
-    private function isDeterministicNonPackage(Throwable $error): bool
+    private function isDeterministicInvalidPackage(Throwable $error): bool
     {
         $message = strtolower($this->errorText($error));
-        return str_contains($message, 'does not contain a supported unreal package header')
-            || str_contains($message, 'unreal package magic not found');
+        foreach ([
+            'does not contain a supported unreal package header',
+            'unreal package magic not found',
+            'invalid names table count:',
+            'invalid names table offset:',
+            'invalid exports table count:',
+            'invalid exports table offset:',
+            'invalid imports table count:',
+            'invalid imports table offset:',
+            'invalid legacy package generation count:',
+            'legacy package seek is outside the file:',
+            'legacy package read exceeds the file:',
+            'legacy package read stopped before the requested bytes were available',
+            'invalid compact package index length',
+            'invalid legacy fstring byte length:',
+            'invalid legacy wide fstring length:',
+            'legacy package string has no terminator within the safe limit',
+            'the unreal package header is missing the required package guid',
+        ] as $marker) {
+            if (str_contains($message, $marker)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private function firstBytesDiagnostic(string $path): string
