@@ -340,12 +340,18 @@ final class CatalogAffectedDependencyRefreshCoordinator
         if ($config !== []) {
             try {
                 $launcher = new CatalogDetachedWorker($config);
-                $desiredWorkers = $launcher->configuredWorkerCount();
                 $worker = $launcher->status($queueName, false);
                 $activeOrLaunching = max(0, (int)($worker['active_count'] ?? 0))
                     + max(0, (int)($worker['launching_count'] ?? 0));
-                if ($activeOrLaunching < $desiredWorkers) {
-                    $launcher->start($queueName, 10000, $desiredWorkers);
+
+                // Dependency fan-out is an automatic producer, not an operator
+                // pool-size decision. Never expand back to configured defaults
+                // after an administrator deliberately resized the live pool.
+                // If the queue is stopped, start() without an explicit count uses
+                // the persisted desired_count (or the configured default only for
+                // a queue that has never had a runtime pool preference).
+                if ($activeOrLaunching === 0) {
+                    $launcher->start($queueName, 10000);
                 }
             } catch (Throwable $workerError) {
                 error_log('[UnrealDB dependency refresh worker] job_id=' . $jobId
