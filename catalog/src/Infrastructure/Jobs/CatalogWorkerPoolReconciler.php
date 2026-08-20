@@ -141,17 +141,40 @@ final class CatalogWorkerPoolReconciler
          * Reconcile until every requested slot has remained active for two full
          * seconds. This is long enough to catch immediate bootstrap/first-claim
          * failures without inventing a job-claim timeout.
+         *
+         * A live pool reduction is different from expansion: CatalogDetachedWorker
+         * owns the desired_count file and cooperative per-slot stop requests. Make
+         * sure it sees the new target once before considering active >= requested
+         * satisfied, otherwise 4 -> 2 is incorrectly treated as already satisfied
+         * and the two surplus workers are never asked to stop.
          */
         $deadline = microtime(true) + (PHP_OS_FAMILY === 'Windows' ? 45.0 : 25.0);
         $launchAttempts = 0;
         $lastResult = [];
         $launchErrors = [];
         $satisfiedSince = null;
+        $resizeRequested = false;
 
         do {
             $worker = $launcher->status($queueName, false);
             $active = max(0, (int)($worker['active_count'] ?? 0));
             $launching = max(0, (int)($worker['launching_count'] ?? 0));
+            $desired = max(1, (int)($worker['desired_count'] ?? $workerCount));
+
+            if (!$resizeRequested && ($desired !== $workerCount || $active > $workerCount)) {
+                try {
+                    $lastResult = $launcher->start($queueName, $maxJobs, $workerCount);
+                    $resizeRequested = true;
+                    $worker = $launcher->status($queueName, false);
+                    $active = max(0, (int)($worker['active_count'] ?? 0));
+                    $launching = max(0, (int)($worker['launching_count'] ?? 0));
+                } catch (Throwable $error) {
+                    $launchErrors[] = trim($error->getMessage()) !== ''
+                        ? trim($error->getMessage())
+                        : get_class($error);
+                }
+                $launchAttempts++;
+            }
 
             if ($active >= $workerCount) {
                 $satisfiedSince ??= microtime(true);
