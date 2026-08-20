@@ -33,6 +33,8 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobResourceLimitStore.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogJobWorkerFactory.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogDependencyRefreshJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogAffectedDependencyRefreshJobHandler.php',
+            $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogAffectedDependencyBatchService.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogGameStatsRefreshCoordinator.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogPakDependencyTargetQuery.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogPakImportJobHandler.php',
