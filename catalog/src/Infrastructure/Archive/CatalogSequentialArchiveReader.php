@@ -157,7 +157,14 @@ final class CatalogSequentialArchiveReader
                     }
                 }
 
-                $actualBytes = $this->consumeStream($input, $output, $streamLimit, $format, (string)$entry['path']);
+                $actualBytes = $this->consumeStream(
+                    $input,
+                    $output,
+                    $streamLimit,
+                    $format,
+                    (string)$entry['path'],
+                    max(0, (int)$entry['size'])
+                );
                 $decodedBytes += $actualBytes;
                 if ((int)$entry['size'] > 0 && $actualBytes !== (int)$entry['size']) {
                     throw new \RuntimeException(
@@ -223,21 +230,49 @@ final class CatalogSequentialArchiveReader
     }
 
     /** @param resource $input @param resource|null $output */
-    private function consumeStream($input, $output, int $maxBytes, string $format, string $entryPath): int
-    {
+    private function consumeStream(
+        $input,
+        $output,
+        int $maxBytes,
+        string $format,
+        string $entryPath,
+        int $expectedBytes = 0
+    ): int {
         $written = 0;
-        while (!feof($input)) {
-            $buffer = fread($input, 1024 * 1024);
+        $expectedBytes = max(0, $expectedBytes);
+        if ($expectedBytes > $maxBytes) {
+            throw new \RuntimeException(
+                'Archive member exceeded its configured sequential decode limit while reading '
+                . $format . ' member ' . $entryPath . '.'
+            );
+        }
+
+        /*
+         * Released ext-archive/currentEntryStream builds can return an empty read
+         * at the exact end of a member while PHP still reports feof()=false. An
+         * additional read then looks like a decoder failure even though the full
+         * declared member has already been produced. When libarchive supplies a
+         * declared size, make that size the forward-stream boundary and never ask
+         * the wrapper for bytes from the following member. Unknown-size members
+         * retain the ordinary EOF-driven path.
+         */
+        while ($expectedBytes > 0 ? $written < $expectedBytes : !feof($input)) {
+            $readBytes = 1024 * 1024;
+            if ($expectedBytes > 0) {
+                $readBytes = min($readBytes, $expectedBytes - $written);
+            }
+            $buffer = fread($input, $readBytes);
             if (!is_string($buffer)) {
                 throw new \RuntimeException('Could not read libarchive member stream.');
             }
             if ($buffer === '') {
-                if (feof($input)) {
+                if ($expectedBytes < 1 && feof($input)) {
                     break;
                 }
                 $meta = stream_get_meta_data($input);
                 throw new \RuntimeException(
                     'libarchive member stream stopped unexpectedly; bytes_consumed=' . $written
+                    . ($expectedBytes > 0 ? '; expected_bytes=' . $expectedBytes : '')
                     . '; eof=' . (!empty($meta['eof']) ? 'true' : 'false')
                     . '; timed_out=' . (!empty($meta['timed_out']) ? 'true' : 'false') . '.'
                 );
@@ -245,7 +280,7 @@ final class CatalogSequentialArchiveReader
 
             $length = strlen($buffer);
             $written += $length;
-            if ($written > $maxBytes) {
+            if ($written > $maxBytes || ($expectedBytes > 0 && $written > $expectedBytes)) {
                 throw new \RuntimeException(
                     'Archive member exceeded its configured sequential decode limit while reading '
                     . $format . ' member ' . $entryPath . '.'
