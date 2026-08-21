@@ -81,6 +81,7 @@ $sequentialReaderPath = $root . '/src/Infrastructure/Archive/CatalogSequentialAr
 $stagedPackagePath = $root . '/src/Infrastructure/Jobs/CatalogBucketStagedPackageJobHandler.php';
 $storageCleanupPath = $root . '/src/Infrastructure/Jobs/CatalogJobStorageCleanup.php';
 $outcomeProjectorPath = $root . '/src/Infrastructure/Jobs/CatalogArchiveJobOutcomeProjector.php';
+$stableJobsJsPath = $root . '/assets/background-jobs-stable.js';
 $archiveRecoveryJsPath = $root . '/assets/background-jobs-archive-errors.js';
 $worker = (string)@file_get_contents($workerPath);
 $policy = (string)@file_get_contents($policyPath);
@@ -94,6 +95,7 @@ $sequentialReader = (string)@file_get_contents($sequentialReaderPath);
 $stagedPackage = (string)@file_get_contents($stagedPackagePath);
 $storageCleanup = (string)@file_get_contents($storageCleanupPath);
 $outcomeProjector = (string)@file_get_contents($outcomeProjectorPath);
+$stableJobsJs = (string)@file_get_contents($stableJobsJsPath);
 $archiveRecoveryJs = (string)@file_get_contents($archiveRecoveryJsPath);
 
 $record(
@@ -149,6 +151,19 @@ $record(
         && !str_contains($browserQuery, 'fastQueueCounts(')
         && !str_contains($browserQuery, 'GROUP BY j.status,j.display_status,j.job_type'),
     'Opening Retained archives must count only the indexed partial archive roots; it must not scan/group every root or problem child merely to populate unrelated tabs.'
+);
+$record(
+    'stable_client_keeps_retained_archive_deep_link_on_first_fetch',
+    str_contains($stableJobsJs, "'partial_archive', 'cancelled'")
+        && str_contains($stableJobsJs, 'validStatuses.includes(requestedStatus)'),
+    'The base Background Jobs client must recognise partial_archive before its initial refresh; otherwise the deep link starts an expensive unfiltered All-jobs request first.'
+);
+$record(
+    'retained_archive_row_sync_cannot_self_trigger_renderer_loop',
+    str_contains($archiveRecoveryJs, "setText(button, 'Retry archive')")
+        && str_contains($archiveRecoveryJs, 'Do not observe table childList mutations here')
+        && !str_contains($archiveRecoveryJs, 'new MutationObserver(() => window.queueMicrotask(syncRecoveryRows)).observe(tableBody'),
+    'Retained archive row decoration must be idempotent and must not mutate textContent from a MutationObserver watching the same table subtree.'
 );
 $record(
     'rar_zero_byte_non_extracted_records_do_not_open_member_stream',
