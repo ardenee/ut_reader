@@ -15,6 +15,7 @@ use UnrealDb\Catalog\Application\Jobs\JobExecutionContext;
 use UnrealDb\Catalog\Application\Jobs\JobHandler;
 use UnrealDb\Catalog\Domain\Jobs\ClaimedJob;
 use UnrealDb\Catalog\Domain\Jobs\JobType;
+use UnrealDb\Catalog\Infrastructure\Archive\CatalogArchiveExtractor;
 use UnrealDb\Catalog\Infrastructure\Import\CatalogProfiledUploadBatchStore;
 use UnrealDb\Catalog\Infrastructure\Persistence\PdoJobQueue;
 
@@ -68,16 +69,16 @@ final class CatalogProfiledUploadBatchJobHandler implements JobHandler
 
         foreach ($slice['items'] as $item) {
             $stagedPath = (string)$item['staged_path'];
-            $extension = strtolower((string)pathinfo((string)$item['original_name'], PATHINFO_EXTENSION));
+            $originalName = (string)$item['original_name'];
             $type = (string)$item['kind'] === 'pak'
                 ? JobType::IMPORT_STAGED_PAK
-                : (in_array($extension, ['zip', '7z', 'rar'], true)
+                : (CatalogArchiveExtractor::isArchiveName($originalName)
                     ? JobType::IMPORT_STAGED_ARCHIVE
                     : JobType::IMPORT_STAGED_PACKAGE);
             $payload = [
                 'game_id' => $gameId,
                 'staged_path' => $stagedPath,
-                'original_name' => (string)$item['original_name'],
+                'original_name' => $originalName,
                 'source_relative_path' => (string)$item['source_relative_path'],
                 'strict_profile' => (bool)$item['strict_profile'],
                 'user_id' => $userId,
