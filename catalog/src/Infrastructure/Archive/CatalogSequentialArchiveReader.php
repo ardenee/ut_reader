@@ -196,6 +196,17 @@ final class CatalogSequentialArchiveReader
                     );
                 }
 
+                // ZIP entries are independently compressed. Once the coordinator
+                // has decided that a ZIP member is unsupported/nested/reused, do
+                // not decode its payload merely to reach the next header. This is
+                // especially important for historic method-6 (implode) metadata:
+                // the installed PHP decoders may not understand that method even
+                // though later Unreal members remain independently addressable.
+                if ($format === 'zip' && !$extract) {
+                    $complete($entry, null, $state);
+                    continue;
+                }
+
                 // libarchive can expose RAR directory records without a trailing
                 // slash but with a declared zero size. There are no bytes to drain.
                 if ($declaredSize !== null && (int)$declaredSize === 0 && !$extract) {
