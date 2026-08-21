@@ -1,14 +1,16 @@
 <?php
 /**
- * Streams non-ZIP libarchive-backed containers in one forward-only pass.
+ * Streams libarchive-backed containers in one forward-only pass when the
+ * format's primary random-access reader cannot safely consume every member.
  *
  * RAR handling prefers the PHP rar extension (RarArchive/RarEntry) whenever it
  * is loaded. That decoder supports RAR features which libarchive does not, and
  * using it from member zero avoids trying to recover after libarchive has already
- * lost solid/filter state. 7z, and RAR only when ext-rar is unavailable, retain
- * the forward-only libarchive path. Native UMOD-family containers deliberately
- * bypass this reader and are handled by CatalogUmodArchiveReader instead.
- * No archive executable or shell process is used by this reader.
+ * lost solid/filter state. 7z, RAR only when ext-rar is unavailable, and legacy
+ * ZIP files which ext-zip can list but cannot stream use the forward-only
+ * libarchive path. Native UMOD-family containers deliberately bypass this reader
+ * and are handled by CatalogUmodArchiveReader instead. No archive executable or
+ * shell process is used by this reader.
  */
 declare(strict_types=1);
 
@@ -32,14 +34,44 @@ final class CatalogSequentialArchiveReader
         $this->requireSource($archivePath, $archiveName);
         $format = $this->detectFormat($archivePath, $archiveName);
 
-        // ext-zip can safely seek/reopen ordinary ZIP members and remains the
-        // preferred ZIP implementation. RAR/7z use a forward reader; walk()
-        // selects ext-rar as the primary RAR implementation when available.
+        // Ordinary ZIP files stay on ext-zip's efficient random-access path, but
+        // opening the central directory is not enough proof that libzip can
+        // actually decode every member. Historic UT archives can be listed by
+        // ZipArchive while getStreamIndex() fails for legacy compression methods.
+        // Probe each regular member without consuming it; if any stream cannot be
+        // opened, replay the complete archive through the PHP libarchive reader.
+        // Control-character filenames (classic Mac Icon metadata is common) also
+        // use the sequential path so those unrepresentable entries can be ignored
+        // without turning an otherwise healthy archive into partial recovery work.
         if ($format === 'zip' && class_exists(\ZipArchive::class)) {
             $zip = new \ZipArchive();
             try {
                 $opened = $zip->open($archivePath, \ZipArchive::RDONLY);
                 if ($opened === true) {
+                    for ($index = 0; $index < $zip->numFiles; $index++) {
+                        $stat = $zip->statIndex($index, \ZipArchive::FL_UNCHANGED);
+                        if (!is_array($stat)) {
+                            return true;
+                        }
+                        $rawPath = (string)($stat['name'] ?? '');
+                        $normalized = str_replace('\\', '/', $rawPath);
+                        if ($rawPath === '' || str_ends_with($normalized, '/')) {
+                            continue;
+                        }
+                        if ($this->hasControlCharacters($rawPath)) {
+                            return true;
+                        }
+
+                        if (method_exists($zip, 'getStreamIndex')) {
+                            $stream = @$zip->getStreamIndex($index, \ZipArchive::FL_UNCHANGED);
+                        } else {
+                            $stream = @$zip->getStream($rawPath);
+                        }
+                        if (!is_resource($stream)) {
+                            return true;
+                        }
+                        fclose($stream);
+                    }
                     return false;
                 }
             } finally {
@@ -57,7 +89,8 @@ final class CatalogSequentialArchiveReader
      *
      * RAR is delegated directly to the PHP rar extension when it is loaded.
      * Otherwise the installed libarchive extension is used as a best-effort
-     * compatibility reader. 7z always uses the forward-only libarchive path.
+     * compatibility reader. 7z and ZIP compatibility decoding use the same
+     * forward-only libarchive path.
      *
      * @param callable(array<string,mixed>):array{extract:bool,max_bytes?:int,state?:mixed} $plan
      * @param callable(array<string,mixed>,?string,mixed):void $complete
@@ -110,6 +143,15 @@ final class CatalogSequentialArchiveReader
                 $rawPath = trim((string)($archiveEntry->pathname ?? ''));
                 $normalizedRawPath = str_replace('\\', '/', $rawPath);
                 if ($rawPath === '' || str_ends_with($normalizedRawPath, '/')) {
+                    continue;
+                }
+
+                // Classic Mac ZIPs commonly carry Finder icon metadata in a name
+                // ending with a carriage return. Such a path cannot be represented
+                // safely on the Windows catalog host and is never an Unreal
+                // package. Ignore control-character members at the decoder layer
+                // rather than manufacturing permanent partial-archive failures.
+                if ($this->hasControlCharacters($rawPath)) {
                     continue;
                 }
 
@@ -445,10 +487,15 @@ final class CatalogSequentialArchiveReader
         }
     }
 
+    private function hasControlCharacters(string $path): bool
+    {
+        return str_contains($path, "\0") || preg_match('/[\x00-\x1F\x7F]/u', $path) === 1;
+    }
+
     /** @return array{0:string,1:string} */
     private function safeMemberPath(string $path): array
     {
-        if ($path === '' || str_contains($path, "\0") || preg_match('/[\x00-\x1F\x7F]/u', $path) === 1) {
+        if ($path === '' || $this->hasControlCharacters($path)) {
             return ['', 'empty/control-character path'];
         }
         $path = str_replace('\\', '/', $path);
