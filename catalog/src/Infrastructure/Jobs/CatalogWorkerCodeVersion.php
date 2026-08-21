@@ -51,6 +51,8 @@ final class CatalogWorkerCodeVersion
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogArchiveExtractor.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogSequentialArchiveReader.php',
             $this->catalogRoot . '/src/Infrastructure/Archive/CatalogExternalArchiveReader.php',
+            $this->catalogRoot . '/src/Infrastructure/Archive/CatalogUmodArchiveReader.php',
+            $this->catalogRoot . '/src/Infrastructure/Downloads/CatalogUmodBinaryCodec.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogArchiveImportJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobHistoryCleanupJobHandler.php',
             $this->catalogRoot . '/src/Infrastructure/Jobs/CatalogBackgroundJobSubtreePruner.php',
